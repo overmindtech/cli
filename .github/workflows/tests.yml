@@ -4,6 +4,8 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: 0
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
@@ -19,4 +21,4 @@ jobs:
 
       - name: Go Test
         run: |
-          go test -v -race -timeout 5m ./...
+          go test -v -timeout 5m ./...

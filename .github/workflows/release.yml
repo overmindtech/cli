@@ -1,0 +1,48 @@
+name: goreleaser
+
+on:
+  pull_request:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest-8cpu
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+
+      - name: Run GoReleaser (publish)
+        uses: goreleaser/goreleaser-action@v4
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          version: latest
+          args: release --clean
+          workdir: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run GoReleaser (dry run)
+        uses: goreleaser/goreleaser-action@v4
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          version: latest
+          args: release --clean --snapshot --skip-publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload assets
+        uses: actions/upload-artifact@v3
+        # only upload artifacts on pull requests
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          name: test-release
+          path: dist/*
