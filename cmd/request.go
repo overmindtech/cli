@@ -28,9 +28,6 @@ import (
 	"nhooyr.io/websocket/wspb"
 )
 
-// The value here doesn't matter as long as the server can send it back to us
-const oAuthStateString = "98723nd98273d28ydg279"
-
 // requestCmd represents the start command
 var requestCmd = &cobra.Command{
 	Use:   "request",
@@ -103,6 +100,8 @@ func Request(signals chan os.Signal, ready chan bool) int {
 			}
 
 			tokenChan := make(chan *oauth2.Token, 1)
+			// create a random token for this exchange
+			oAuthStateString := uuid.New().String()
 
 			// Start the web server to listen for the callback
 			handler := func(w http.ResponseWriter, r *http.Request) {
