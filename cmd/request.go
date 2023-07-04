@@ -60,11 +60,8 @@ func Request(signals chan os.Signal, ready chan bool) int {
 
 	// Construct the request
 	req, err := createInitialRequest()
-
 	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err,
-		}).Error("Failed to create request")
+		log.WithContext(ctx).WithError(err).Error("Failed to create initial request")
 		return 1
 	}
 
@@ -77,9 +74,8 @@ func Request(signals chan os.Signal, ready chan bool) int {
 
 	// Check to see if the URL is secure
 	gatewayURL, err := url.Parse(viper.GetString("url"))
-
 	if err != nil {
-		log.WithContext(ctx).Error(err)
+		log.WithContext(ctx).WithError(err).Error("Failed to parse --url")
 		return 1
 	}
 
