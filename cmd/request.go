@@ -79,95 +79,96 @@ func Request(signals chan os.Signal, ready chan bool) int {
 		return 1
 	}
 
-	if gatewayURL.Scheme == "wss" || gatewayURL.Scheme == "https" {
-		if viper.GetString("token") != "" {
-			options.HTTPHeader = make(http.Header)
-			options.HTTPHeader.Set("Authorization", fmt.Sprintf("Bearer %v", viper.GetString("token")))
-		} else {
-			// Authenticate using the oauth resource owner password flow
-			config := oauth2.Config{
-				ClientID: viper.GetString("client-id"),
-				Scopes:   []string{"gateway:stream", "request:send", "reverselink:request", "account:read", "source:read", "source:write", "api:read", "api:write", "gateway:objects"},
-				Endpoint: oauth2.Endpoint{
-					AuthURL:  fmt.Sprintf("https://%v/authorize", viper.GetString("auth0-domain")),
-					TokenURL: fmt.Sprintf("https://%v/oauth/token", viper.GetString("auth0-domain")),
-				},
-				RedirectURL: "http://127.0.0.1:7837/oauth/callback",
-			}
-
-			tokenChan := make(chan *oauth2.Token, 1)
-			// create a random token for this exchange
-			oAuthStateString := uuid.New().String()
-
-			// Start the web server to listen for the callback
-			handler := func(w http.ResponseWriter, r *http.Request) {
-				ctx := r.Context()
-
-				queryParts, _ := url.ParseQuery(r.URL.RawQuery)
-
-				// Use the authorization code that is pushed to the redirect
-				// URL.
-				code := queryParts["code"][0]
-				log.WithContext(ctx).Debugf("Got code: %v", code)
-
-				state := queryParts["state"][0]
-				log.WithContext(ctx).Debugf("Got state: %v", state)
-
-				if state != oAuthStateString {
-					log.WithContext(ctx).Errorf("Invalid state, expected %v, got %v", oAuthStateString, state)
-				}
-
-				// Exchange will do the handshake to retrieve the initial access token.
-				log.WithContext(ctx).Debug("Exchanging code for token")
-				tok, err := config.Exchange(ctx, code)
-				if err != nil {
-					log.WithContext(ctx).Error(err)
-					return
-				}
-				log.WithContext(ctx).Debug("Got token 1!")
-
-				tokenChan <- tok
-
-				// show success page
-				msg := "<p><strong>Success!</strong></p>"
-				msg = msg + "<p>You are authenticated and can now return to the CLI.</p>"
-				fmt.Fprint(w, msg)
-			}
-
-			audienceOption := oauth2.SetAuthURLParam("audience", "https://api.overmind.tech")
-
-			u := config.AuthCodeURL(oAuthStateString, oauth2.AccessTypeOnline, audienceOption)
-
-			log.WithContext(ctx).Infof("Log in here: %v", u)
-
-			// Start the webserver
-			log.WithContext(ctx).Trace("Starting webserver to listen for callback")
-			srv := &http.Server{Addr: ":7837"}
-			http.HandleFunc("/oauth/callback", handler)
-
-			go func() {
-				if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-					// unexpected error. port in use?
-					log.WithContext(ctx).Errorf("HTTP Server error: %v", err)
-				}
-			}()
-
-			// Wait for the token or cancel
-			var token *oauth2.Token
-			select {
-			case token = <-tokenChan:
-				log.WithContext(ctx).Debug("Got token 2!")
-			case <-signals:
-				log.WithContext(ctx).Info("Received interrupt, exiting")
-				return 0
-			}
-
-			// Stop the server
-			srv.Shutdown(ctx)
-
-			// Set the token
-			viper.Set("token", token.AccessToken)
+	if viper.GetString("token") == "" && (gatewayURL.Scheme == "wss" || gatewayURL.Scheme == "https" || gatewayURL.Hostname() == "localhost") {
+		// Authenticate using the oauth resource owner password flow
+		config := oauth2.Config{
+			ClientID: viper.GetString("client-id"),
+			Scopes:   []string{"gateway:stream", "request:send", "reverselink:request", "account:read", "source:read", "source:write", "api:read", "api:write", "gateway:objects"},
+			Endpoint: oauth2.Endpoint{
+				AuthURL:  fmt.Sprintf("https://%v/authorize", viper.GetString("auth0-domain")),
+				TokenURL: fmt.Sprintf("https://%v/oauth/token", viper.GetString("auth0-domain")),
+			},
+			RedirectURL: "http://127.0.0.1:7837/oauth/callback",
 		}
+
+		tokenChan := make(chan *oauth2.Token, 1)
+		// create a random token for this exchange
+		oAuthStateString := uuid.New().String()
+
+		// Start the web server to listen for the callback
+		handler := func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
+			queryParts, _ := url.ParseQuery(r.URL.RawQuery)
+
+			// Use the authorization code that is pushed to the redirect
+			// URL.
+			code := queryParts["code"][0]
+			log.WithContext(ctx).Debugf("Got code: %v", code)
+
+			state := queryParts["state"][0]
+			log.WithContext(ctx).Debugf("Got state: %v", state)
+
+			if state != oAuthStateString {
+				log.WithContext(ctx).Errorf("Invalid state, expected %v, got %v", oAuthStateString, state)
+			}
+
+			// Exchange will do the handshake to retrieve the initial access token.
+			log.WithContext(ctx).Debug("Exchanging code for token")
+			tok, err := config.Exchange(ctx, code)
+			if err != nil {
+				log.WithContext(ctx).Error(err)
+				return
+			}
+			log.WithContext(ctx).Debug("Got token 1!")
+
+			tokenChan <- tok
+
+			// show success page
+			msg := "<p><strong>Success!</strong></p>"
+			msg = msg + "<p>You are authenticated and can now return to the CLI.</p>"
+			fmt.Fprint(w, msg)
+		}
+
+		audienceOption := oauth2.SetAuthURLParam("audience", "https://api.overmind.tech")
+
+		u := config.AuthCodeURL(oAuthStateString, oauth2.AccessTypeOnline, audienceOption)
+
+		log.WithContext(ctx).Infof("Log in here: %v", u)
+
+		// Start the webserver
+		log.WithContext(ctx).Trace("Starting webserver to listen for callback, press Ctrl+C to cancel")
+		srv := &http.Server{Addr: ":7837"}
+		http.HandleFunc("/oauth/callback", handler)
+
+		go func() {
+			if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+				// unexpected error. port in use?
+				log.WithContext(ctx).Errorf("HTTP Server error: %v", err)
+			}
+		}()
+
+		// Wait for the token or cancel
+		var token *oauth2.Token
+		select {
+		case token = <-tokenChan:
+			log.WithContext(ctx).Debug("Got token 2!")
+		case <-signals:
+			log.WithContext(ctx).Info("Received interrupt, exiting")
+			return 0
+		}
+
+		// Stop the server
+		srv.Shutdown(ctx)
+
+		// Set the token
+		viper.Set("token", token.AccessToken)
+	}
+
+	if viper.GetString("token") != "" {
+		log.Info("Setting authorization token")
+		options.HTTPHeader = make(http.Header)
+		options.HTTPHeader.Set("Authorization", fmt.Sprintf("Bearer %v", viper.GetString("token")))
 	}
 
 	c, _, err := websocket.Dial(ctx, viper.GetString("url"), options)
