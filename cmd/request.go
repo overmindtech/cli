@@ -424,8 +424,6 @@ func createInitialRequest() (*sdp.GatewayRequest, error) {
 func init() {
 	rootCmd.AddCommand(requestCmd)
 
-	requestCmd.PersistentFlags().String("url", "https://api.prod.overmind.tech/", "The overmind API endpoint")
-
 	requestCmd.PersistentFlags().String("request-type", "query", "The type of request to send (query, load-bookmark, load-snapshot)")
 
 	requestCmd.PersistentFlags().String("query-method", "get", "The method to use (get, list, search)")
