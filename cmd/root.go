@@ -144,7 +144,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
 
 	// api endpoint
-	rootCmd.PersistentFlags().String("url", "https://api.prod.overmind.tech/", "The overmind API endpoint")
+	rootCmd.PersistentFlags().String("url", "https://api.prod.overmind.tech/api/gateway", "The overmind API endpoint")
 
 	// authorization
 	rootCmd.PersistentFlags().String("auth0-client-id", "j3LylZtIosVPZtouKI8WuVHmE6Lluva1", "OAuth Client ID to use when connecting with auth")
