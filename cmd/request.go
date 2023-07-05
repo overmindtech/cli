@@ -66,13 +66,13 @@ func Request(signals chan os.Signal, ready chan bool) int {
 	// Connect to the websocket
 	log.WithContext(ctx).Debugf("Connecting to overmind API: %v", viper.GetString("url"))
 
-	options := &websocket.DialOptions{
-		HTTPClient: otelhttp.DefaultClient,
-	}
-
 	err = ensureToken(ctx, signals)
 	if err != nil {
 		return 1
+	}
+
+	options := &websocket.DialOptions{
+		HTTPClient: otelhttp.DefaultClient,
 	}
 
 	if viper.GetString("token") != "" {
@@ -82,7 +82,6 @@ func Request(signals chan os.Signal, ready chan bool) int {
 	}
 
 	c, _, err := websocket.Dial(ctx, viper.GetString("url"), options)
-
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
 			"url": viper.GetString("url"),
@@ -93,7 +92,6 @@ func Request(signals chan os.Signal, ready chan bool) int {
 
 	// Log the request in JSON
 	b, err := json.MarshalIndent(req, "", "  ")
-
 	if err != nil {
 		log.WithContext(ctx).WithError(err).Error("Failed to marshal request")
 		return 1
