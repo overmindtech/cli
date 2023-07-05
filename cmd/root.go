@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/overmindtech/ovm-cli/tracing"
+	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -37,12 +39,12 @@ func Execute() {
 }
 
 // ensureToken
-func ensureToken(ctx context.Context, signals chan os.Signal) error {
+func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, error) {
 	// Check to see if the URL is secure
 	gatewayURL, err := url.Parse(viper.GetString("url"))
 	if err != nil {
 		log.WithContext(ctx).WithError(err).Error("Failed to parse --url")
-		return err
+		return ctx, err
 	}
 
 	if viper.GetString("token") == "" && (gatewayURL.Scheme == "wss" || gatewayURL.Scheme == "https" || gatewayURL.Hostname() == "localhost") {
@@ -120,8 +122,8 @@ func ensureToken(ctx context.Context, signals chan os.Signal) error {
 		case token = <-tokenChan:
 			log.WithContext(ctx).Debug("Got token 2!")
 		case <-signals:
-			log.WithContext(ctx).Info("Received interrupt, exiting")
-			return nil
+			log.WithContext(ctx).Debug("Received interrupt, exiting")
+			return ctx, errors.New("cancelled")
 		}
 
 		// Stop the server
@@ -129,8 +131,9 @@ func ensureToken(ctx context.Context, signals chan os.Signal) error {
 
 		// Set the token
 		viper.Set("token", token.AccessToken)
+		return context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken), nil
 	}
-	return nil
+	return ctx, fmt.Errorf("no token configured and target URL (%v) is insecure", gatewayURL)
 }
 
 func init() {

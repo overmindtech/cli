@@ -66,7 +66,7 @@ func Request(signals chan os.Signal, ready chan bool) int {
 	// Connect to the websocket
 	log.WithContext(ctx).Debugf("Connecting to overmind API: %v", viper.GetString("url"))
 
-	err = ensureToken(ctx, signals)
+	ctx, err = ensureToken(ctx, signals)
 	if err != nil {
 		return 1
 	}
