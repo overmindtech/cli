@@ -127,8 +127,12 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 			last_log = time.Now()
 			first_log = false
 		}
-
 	}
+
+	log.WithContext(ctx).WithFields(log.Fields{
+		"change":     createResponse.Msg.Change.Metadata.GetUUIDParsed(),
+		"change-url": fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), createResponse.Msg.Change.Metadata.GetUUIDParsed()),
+	}).Info("change ready")
 
 	return 0
 }
@@ -137,6 +141,7 @@ func init() {
 	rootCmd.AddCommand(changeFromTfplanCmd)
 
 	changeFromTfplanCmd.PersistentFlags().String("changes-url", "https://api.prod.overmind.tech/", "The changes service API endpoint")
+	changeFromTfplanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 
 	changeFromTfplanCmd.PersistentFlags().String("title", "", "Short title for this change.")
 	changeFromTfplanCmd.PersistentFlags().String("description", "", "Quick description of the change.")
