@@ -40,6 +40,11 @@ func Execute() {
 
 // ensureToken
 func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, error) {
+	// shortcut if we already have a token set
+	if viper.GetString("token") != "" {
+		return context.WithValue(ctx, sdp.UserTokenContextKey{}, viper.GetString("token")), nil
+	}
+
 	// Check to see if the URL is secure
 	gatewayURL, err := url.Parse(viper.GetString("url"))
 	if err != nil {
@@ -47,7 +52,7 @@ func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, 
 		return ctx, err
 	}
 
-	if viper.GetString("token") == "" && (gatewayURL.Scheme == "wss" || gatewayURL.Scheme == "https" || gatewayURL.Hostname() == "localhost") {
+	if gatewayURL.Scheme == "wss" || gatewayURL.Scheme == "https" || gatewayURL.Hostname() == "localhost" {
 		// Authenticate using the oauth resource owner password flow
 		config := oauth2.Config{
 			ClientID: viper.GetString("auth0-client-id"),
