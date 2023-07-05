@@ -68,6 +68,9 @@ func Request(signals chan os.Signal, ready chan bool) int {
 
 	ctx, err = ensureToken(ctx, signals)
 	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
+			"url": viper.GetString("url"),
+		}).Error("failed to authenticate")
 		return 1
 	}
 
