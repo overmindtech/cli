@@ -49,7 +49,7 @@ func ensureToken(ctx context.Context, signals chan os.Signal) error {
 		// Authenticate using the oauth resource owner password flow
 		config := oauth2.Config{
 			ClientID: viper.GetString("auth0-client-id"),
-			Scopes:   []string{"gateway:stream", "request:send", "reverselink:request", "account:read", "source:read", "source:write", "api:read", "api:write", "gateway:objects"},
+			Scopes:   []string{"openid", "profile", "email", "gateway:stream", "request:send", "reverselink:request", "account:read", "source:read", "source:write", "api:read", "api:write", "gateway:objects"},
 			Endpoint: oauth2.Endpoint{
 				AuthURL:  fmt.Sprintf("https://%v/authorize", viper.GetString("auth0-domain")),
 				TokenURL: fmt.Sprintf("https://%v/oauth/token", viper.GetString("auth0-domain")),
