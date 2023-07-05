@@ -132,7 +132,10 @@ func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, 
 		}
 
 		// Stop the server
-		srv.Shutdown(ctx)
+		err = srv.Shutdown(ctx)
+		if err != nil {
+			log.WithContext(ctx).WithError(err).Info("failed to shutdown auth callback server, but continuing anyways")
+		}
 
 		// Set the token
 		viper.Set("token", token.AccessToken)
@@ -155,7 +158,10 @@ func init() {
 	rootCmd.PersistentFlags().String("auth0-client-id", "j3LylZtIosVPZtouKI8WuVHmE6Lluva1", "OAuth Client ID to use when connecting with auth")
 	rootCmd.PersistentFlags().String("auth0-domain", "om-prod.eu.auth0.com", "Auth0 domain to connect to")
 	rootCmd.PersistentFlags().String("token", "", "The token to use for authentication")
-	viper.BindEnv("token", "OVM_TOKEN", "TOKEN")
+	err := viper.BindEnv("token", "OVM_TOKEN", "TOKEN")
+	if err != nil {
+		log.WithError(err).Fatal("could not bind token")
+	}
 
 	// tracing
 	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb")
@@ -166,7 +172,10 @@ func init() {
 	// debugging
 	rootCmd.PersistentFlags().Bool("stdout-trace-dump", false, "Dump all otel traces to stdout for debugging")
 
-	viper.BindPFlags(rootCmd.PersistentFlags())
+	err = viper.BindPFlags(rootCmd.PersistentFlags())
+	if err != nil {
+		log.WithError(err).Fatal("could not bind flags")
+	}
 
 	// Run this before we do anything to set up the loglevel
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {

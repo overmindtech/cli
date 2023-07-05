@@ -351,5 +351,8 @@ func init() {
 	requestCmd.PersistentFlags().Bool("blast-radius", false, "Whether to query using blast radius, note that if using this option, link-depth should be set to > 0")
 
 	// Bind these to viper
-	viper.BindPFlags(requestCmd.PersistentFlags())
+	err := viper.BindPFlags(requestCmd.PersistentFlags())
+	if err != nil {
+		log.WithError(err).Fatal("could not bind `request` flags")
+	}
 }

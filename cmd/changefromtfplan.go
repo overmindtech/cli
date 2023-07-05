@@ -147,5 +147,8 @@ func init() {
 	changeFromTfplanCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
 
 	// Bind these to viper
-	viper.BindPFlags(changeFromTfplanCmd.PersistentFlags())
+	err := viper.BindPFlags(changeFromTfplanCmd.PersistentFlags())
+	if err != nil {
+		log.WithError(err).Fatal("could not bind `change-from-tfplan` flags")
+	}
 }
