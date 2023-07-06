@@ -53,9 +53,6 @@ func Request(signals chan os.Signal, ready chan bool) int {
 	))
 	defer span.End()
 
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	// Construct the request
 	req, err := createInitialRequest()
 	if err != nil {
@@ -73,6 +70,10 @@ func Request(signals chan os.Signal, ready chan bool) int {
 		}).Error("failed to authenticate")
 		return 1
 	}
+
+	// apply a timeout to the main body of processing
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	options := &websocket.DialOptions{
 		HTTPClient: otelhttp.DefaultClient,

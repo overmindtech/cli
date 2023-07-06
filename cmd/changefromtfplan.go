@@ -58,9 +58,6 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 	))
 	defer span.End()
 
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	// Connect to the websocket
 	log.WithContext(ctx).Debugf("Connecting to overmind API: %v", viper.GetString("url"))
 
@@ -71,6 +68,10 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 		}).Error("failed to authenticate")
 		return 1
 	}
+
+	// apply a timeout to the main body of processing
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	client := AuthenticatedChangesClient(ctx)
 	createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
