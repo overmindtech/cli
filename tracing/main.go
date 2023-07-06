@@ -153,11 +153,12 @@ func ShutdownTracer() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := tp.ForceFlush(ctx); err != nil {
-		log.WithContext(ctx).Printf("Error flushing tracer provider: %v", err)
+		log.WithContext(ctx).WithError(err).Error("Error flushing tracer provider")
 	}
 	if err := tp.Shutdown(ctx); err != nil {
-		log.WithContext(ctx).Printf("Error shutting down tracer provider: %v", err)
+		log.WithContext(ctx).WithError(err).Error("Error shutting down tracer provider")
 	}
+	log.WithContext(ctx).Trace("tracing has shut down")
 }
 
 type UserAgentSampler struct {
