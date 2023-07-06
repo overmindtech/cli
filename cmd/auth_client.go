@@ -35,6 +35,18 @@ func AuthenticatedBookmarkClient(ctx context.Context) sdpconnect.BookmarksServic
 	return sdpconnect.NewBookmarksServiceClient(httpClient, url)
 }
 
+// AuthenticatedSnapshotsClient Returns a Snapshots client that uses the auth
+// embedded in the context and otel instrumentation
+func AuthenticatedSnapshotsClient(ctx context.Context) sdpconnect.SnapshotsServiceClient {
+	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	url := viper.GetString("snapshot-url")
+	if url == "" {
+		url = viper.GetString("url")
+		viper.Set("snapshot-url", url)
+	}
+	return sdpconnect.NewSnapshotsServiceClient(httpClient, url)
+}
+
 // AuthenticatedClient is a http.Client that will automatically add the required
 // Authorization header to the request, which is taken from the context that it
 // is created with. We also always set the X-overmind-interactive header to
