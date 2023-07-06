@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/bufbuild/connect-go"
+	"github.com/google/uuid"
 	"github.com/overmindtech/ovm-cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
@@ -148,6 +149,34 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 		"change":     createResponse.Msg.Change.Metadata.GetUUIDParsed(),
 		"change-url": fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), createResponse.Msg.Change.Metadata.GetUUIDParsed()),
 	}).Info("change ready")
+
+	fetchResponse, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
+		Msg: &sdp.GetChangeRequest{
+			UUID: createResponse.Msg.Change.Metadata.UUID,
+		},
+	})
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
+			"url": viper.GetString("url"),
+		}).Error("failed to get updated change")
+		return 1
+	}
+	for _, a := range fetchResponse.Msg.Change.Properties.AffectedAppsUUID {
+		appUuid, err := uuid.FromBytes(a)
+		if err != nil {
+			log.WithContext(ctx).WithError(err).WithFields(log.Fields{
+				"url":   viper.GetString("url"),
+				"value": a,
+			}).Error("received invalid app uuid")
+			continue
+		}
+		log.WithContext(ctx).WithFields(log.Fields{
+			"change":     createResponse.Msg.Change.Metadata.GetUUIDParsed(),
+			"change-url": fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), createResponse.Msg.Change.Metadata.GetUUIDParsed()),
+			"app":        appUuid,
+			"app-url":    fmt.Sprintf("%v/apps/%v", viper.GetString("frontend"), appUuid),
+		}).Info("affected app")
+	}
 
 	return 0
 }
