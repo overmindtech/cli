@@ -11,15 +11,28 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-// AuthenticatedBookmarkClient Returns a bookmark client that uses the auth
+// AuthenticatedChangesClient Returns a bookmark client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedChangesClient(ctx context.Context) sdpconnect.ChangesServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
 	url := viper.GetString("changes-url")
 	if url == "" {
 		url = viper.GetString("url")
+		viper.Set("changes-url", url)
 	}
 	return sdpconnect.NewChangesServiceClient(httpClient, url)
+}
+
+// AuthenticatedBookmarkClient Returns a bookmark client that uses the auth
+// embedded in the context and otel instrumentation
+func AuthenticatedBookmarkClient(ctx context.Context) sdpconnect.BookmarksServiceClient {
+	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	url := viper.GetString("bookmark-url")
+	if url == "" {
+		url = viper.GetString("url")
+		viper.Set("bookmark-url", url)
+	}
+	return sdpconnect.NewBookmarksServiceClient(httpClient, url)
 }
 
 // AuthenticatedClient is a http.Client that will automatically add the required
