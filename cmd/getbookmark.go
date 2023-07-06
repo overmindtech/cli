@@ -77,17 +77,28 @@ func GetBookmark(signals chan os.Signal, ready chan bool) int {
 		return 1
 	}
 	log.WithContext(ctx).WithFields(log.Fields{
-		"url":      viper.GetString("url"),
-		"bookmark": response.Msg.Bookmark,
+		"bookmark-uuid":        response.Msg.Bookmark.Metadata.UUID,
+		"bookmark-created":     response.Msg.Bookmark.Metadata.Created,
+		"bookmark-name":        response.Msg.Bookmark.Properties.Name,
+		"bookmark-description": response.Msg.Bookmark.Properties.Description,
 	}).Info("found bookmark")
-
+	for _, q := range response.Msg.Bookmark.Properties.Queries {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"bookmark-query": q,
+		}).Info("found bookmark query")
+	}
+	for _, i := range response.Msg.Bookmark.Properties.ExcludedItems {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"bookmark-excluded-item": i,
+		}).Info("found bookmark excluded item")
+	}
 	return 0
 }
 
 func init() {
 	rootCmd.AddCommand(getBookmarkCmd)
 
-	getBookmarkCmd.PersistentFlags().String("bookmark-url", "https://api.prod.overmind.tech/", "The changes service API endpoint")
+	getBookmarkCmd.PersistentFlags().String("bookmark-url", "https://api.prod.overmind.tech/", "The bookmark service API endpoint")
 	getBookmarkCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 
 	getBookmarkCmd.PersistentFlags().String("uuid", "", "The UUID of the bookmark that should be displayed.")
