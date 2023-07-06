@@ -18,7 +18,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// changeFromTfplanCmd represents the start command
+// changeFromTfplanCmd represents the change-from-tfplan command
 var changeFromTfplanCmd = &cobra.Command{
 	Use:   "change-from-tfplan [--title TITLE] [--description DESCRIPTION] [--ticket-link URL] [--tfplan FILE]",
 	Short: "Creates a new Change from a given terraform plan (in JSON format)",
