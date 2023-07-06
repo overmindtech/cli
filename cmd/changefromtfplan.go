@@ -23,6 +23,13 @@ import (
 var changeFromTfplanCmd = &cobra.Command{
 	Use:   "change-from-tfplan [--title TITLE] [--description DESCRIPTION] [--ticket-link URL] [--tfplan FILE]",
 	Short: "Creates a new Change from a given terraform plan (in JSON format)",
+	PreRun: func(cmd *cobra.Command, args []string) {
+		// Bind these to viper
+		err := viper.BindPFlags(cmd.PersistentFlags())
+		if err != nil {
+			log.WithError(err).Fatal("could not bind `change-from-tfplan` flags")
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		sigs := make(chan os.Signal, 1)
 
@@ -198,10 +205,4 @@ func init() {
 
 	changeFromTfplanCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
 	changeFromTfplanCmd.PersistentFlags().Bool("test-affecting", true, "Choose from the hardcoded test data whether to use a resource that is affecting the test app or not.")
-
-	// Bind these to viper
-	err := viper.BindPFlags(changeFromTfplanCmd.PersistentFlags())
-	if err != nil {
-		log.WithError(err).Fatal("could not bind `change-from-tfplan` flags")
-	}
 }

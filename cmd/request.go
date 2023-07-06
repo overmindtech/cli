@@ -30,6 +30,13 @@ import (
 var requestCmd = &cobra.Command{
 	Use:   "request",
 	Short: "Runs a request against the overmind API",
+	PreRun: func(cmd *cobra.Command, args []string) {
+		// Bind these to viper
+		err := viper.BindPFlags(cmd.PersistentFlags())
+		if err != nil {
+			log.WithError(err).Fatal("could not bind `request` flags")
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		sigs := make(chan os.Signal, 1)
 
@@ -350,10 +357,4 @@ func init() {
 	requestCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
 	requestCmd.PersistentFlags().Uint32("link-depth", 0, "How deeply to link")
 	requestCmd.PersistentFlags().Bool("blast-radius", false, "Whether to query using blast radius, note that if using this option, link-depth should be set to > 0")
-
-	// Bind these to viper
-	err := viper.BindPFlags(requestCmd.PersistentFlags())
-	if err != nil {
-		log.WithError(err).Fatal("could not bind `request` flags")
-	}
 }

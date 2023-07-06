@@ -27,6 +27,13 @@ var rootCmd = &cobra.Command{
 	Use:   "ovm-cli",
 	Short: "A CLI to interact with the overmind API",
 	Long:  `The ovm-cli allows direct access to the overmind API`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+		// Bind these to viper
+		err := viper.BindPFlags(cmd.PersistentFlags())
+		if err != nil {
+			log.WithError(err).Fatal("could not bind `root` flags")
+		}
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -171,11 +178,6 @@ func init() {
 
 	// debugging
 	rootCmd.PersistentFlags().Bool("stdout-trace-dump", false, "Dump all otel traces to stdout for debugging")
-
-	err = viper.BindPFlags(rootCmd.PersistentFlags())
-	if err != nil {
-		log.WithError(err).Fatal("could not bind flags")
-	}
 
 	// Run this before we do anything to set up the loglevel
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {

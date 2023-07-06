@@ -23,6 +23,13 @@ import (
 var getBookmarkCmd = &cobra.Command{
 	Use:   "get-bookmark --uuid ID",
 	Short: "Displays the contents of a bookmark.",
+	PreRun: func(cmd *cobra.Command, args []string) {
+		// Bind these to viper
+		err := viper.BindPFlags(cmd.PersistentFlags())
+		if err != nil {
+			log.WithError(err).Fatal("could not bind `get-bookmark` flags")
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -104,10 +111,4 @@ func init() {
 	getBookmarkCmd.PersistentFlags().String("uuid", "", "The UUID of the bookmark that should be displayed.")
 
 	getBookmarkCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
-
-	// Bind these to viper
-	err := viper.BindPFlags(getBookmarkCmd.PersistentFlags())
-	if err != nil {
-		log.WithError(err).Fatal("could not bind `get-bookmark` flags")
-	}
 }
