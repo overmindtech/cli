@@ -33,6 +33,19 @@ var changeFromTfplanCmd = &cobra.Command{
 	},
 }
 
+var (
+	affecting_resource *sdp.Reference = &sdp.Reference{
+		Type:                 "elbv2-load-balancer",
+		UniqueAttributeValue: "ingress",
+		Scope:                "944651592624.eu-west-2",
+	}
+	safe_resource *sdp.Reference = &sdp.Reference{
+		Type:                 "ec2-security-group",
+		UniqueAttributeValue: "sg-09533c300cd1a41c1",
+		Scope:                "944651592624.eu-west-2",
+	}
+)
+
 func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
@@ -82,16 +95,17 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 		"change": createResponse.Msg.Change.Metadata.GetUUIDParsed(),
 	}).Info("created a new change")
 
+	var changing_items []*sdp.Reference
+	if viper.GetBool("test-affecting") {
+		changing_items = []*sdp.Reference{affecting_resource}
+	} else {
+		changing_items = []*sdp.Reference{safe_resource}
+	}
+
 	resultStream, err := client.UpdateChangingItems(ctx, &connect.Request[sdp.UpdateChangingItemsRequest]{
 		Msg: &sdp.UpdateChangingItemsRequest{
-			ChangeUUID: createResponse.Msg.Change.Metadata.UUID,
-			ChangingItems: []*sdp.Reference{
-				{
-					Type:                 "ec2-security-group",
-					UniqueAttributeValue: "sg-09533c300cd1a41c1",
-					Scope:                "944651592624.eu-west-2",
-				},
-			},
+			ChangeUUID:    createResponse.Msg.Change.Metadata.UUID,
+			ChangingItems: changing_items,
 		},
 	})
 	if err != nil {
@@ -153,6 +167,7 @@ func init() {
 	// changeFromTfplanCmd.PersistentFlags().String("cc-emails", "", "A comma-separated list of emails to keep updated with the status of this change.")
 
 	changeFromTfplanCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
+	changeFromTfplanCmd.PersistentFlags().Bool("test-affecting", true, "Choose from the hardcoded test data whether to use a resource that is affecting the test app or not.")
 
 	// Bind these to viper
 	err := viper.BindPFlags(changeFromTfplanCmd.PersistentFlags())
