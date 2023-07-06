@@ -20,7 +20,7 @@ import (
 
 // changeFromTfplanCmd represents the start command
 var changeFromTfplanCmd = &cobra.Command{
-	Use:   "change-from-tfplan [--title TITLE] [--description DESCRIPTION] [--ticket-link URL]",
+	Use:   "change-from-tfplan [--title TITLE] [--description DESCRIPTION] [--ticket-link URL] [--tfplan FILE]",
 	Short: "Creates a new Change from a given terraform plan (in JSON format)",
 	Run: func(cmd *cobra.Command, args []string) {
 		sigs := make(chan os.Signal, 1)
@@ -142,6 +142,9 @@ func init() {
 
 	changeFromTfplanCmd.PersistentFlags().String("changes-url", "https://api.prod.overmind.tech/", "The changes service API endpoint")
 	changeFromTfplanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
+
+	changeFromTfplanCmd.PersistentFlags().String("terraform", "terraform", "The binary to use for calling terraform. Will be looked up in the system PATH.")
+	changeFromTfplanCmd.PersistentFlags().String("tfplan", "./tfplan", "Parse changing items from this terraform plan file.")
 
 	changeFromTfplanCmd.PersistentFlags().String("title", "", "Short title for this change.")
 	changeFromTfplanCmd.PersistentFlags().String("description", "", "Quick description of the change.")
