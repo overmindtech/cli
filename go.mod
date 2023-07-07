@@ -3,9 +3,10 @@ module github.com/overmindtech/ovm-cli
 go 1.20
 
 require (
+	github.com/bufbuild/connect-go v1.9.0
 	github.com/getsentry/sentry-go v0.22.0
 	github.com/google/uuid v1.3.0
-	github.com/overmindtech/sdp-go v0.34.2
+	github.com/overmindtech/sdp-go v0.36.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
@@ -26,7 +27,6 @@ require (
 require (
 	github.com/auth0/go-jwt-middleware/v2 v2.1.0 // indirect
 	github.com/aws/aws-sdk-go v1.44.266 // indirect
-	github.com/bufbuild/connect-go v1.8.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
