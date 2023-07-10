@@ -20,6 +20,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
 
+      - name: Go Generate
+        run: go generate ./...
+
       - name: Run GoReleaser (publish)
         uses: goreleaser/goreleaser-action@v4
         if: ${{ github.event_name != 'pull_request' }}
