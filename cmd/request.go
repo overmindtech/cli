@@ -101,6 +101,9 @@ func Request(signals chan os.Signal, ready chan bool) int {
 	}
 	defer c.Close(websocket.StatusGoingAway, "")
 
+	// the default, 32kB is too small for cert bundles and rds-db-cluster-parameter-groups
+	c.SetReadLimit(2 * 1024 * 1024)
+
 	// Log the request in JSON
 	b, err := json.MarshalIndent(req, "", "  ")
 	if err != nil {
