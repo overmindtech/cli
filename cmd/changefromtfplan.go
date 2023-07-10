@@ -22,7 +22,7 @@ import (
 // changeFromTfplanCmd represents the change-from-tfplan command
 var changeFromTfplanCmd = &cobra.Command{
 	Use:   "change-from-tfplan [--title TITLE] [--description DESCRIPTION] [--ticket-link URL] [--tfplan FILE]",
-	Short: "Creates a new Change from a given terraform plan (in JSON format)",
+	Short: "Creates a new Change from a given terraform plan file",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
 		err := viper.BindPFlags(cmd.PersistentFlags())
@@ -41,6 +41,7 @@ var changeFromTfplanCmd = &cobra.Command{
 	},
 }
 
+// test data
 var (
 	affecting_resource *sdp.Reference = &sdp.Reference{
 		Type:                 "elbv2-load-balancer",
@@ -138,7 +139,7 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 
 		msg := resultStream.Msg()
 
-		// log the first message and at most every 500ms during discovery
+		// log the first message and at most every 250ms during discovery
 		// to avoid spanning the cli output
 		time_since_last_log := time.Since(last_log)
 		if first_log || msg.State != sdp.CalculateBlastRadiusResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
