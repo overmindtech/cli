@@ -145,7 +145,6 @@ func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, 
 		}
 
 		// Set the token
-		viper.Set("token", token.AccessToken)
 		return context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken), nil
 	}
 	return ctx, fmt.Errorf("no token configured and target URL (%v) is insecure", gatewayURL)

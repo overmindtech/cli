@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -83,13 +82,7 @@ func Request(signals chan os.Signal, ready chan bool) int {
 	defer cancel()
 
 	options := &websocket.DialOptions{
-		HTTPClient: otelhttp.DefaultClient,
-	}
-
-	if viper.GetString("token") != "" {
-		log.Info("Setting authorization token")
-		options.HTTPHeader = make(http.Header)
-		options.HTTPHeader.Set("Authorization", fmt.Sprintf("Bearer %v", viper.GetString("token")))
+		HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
 	}
 
 	c, _, err := websocket.Dial(ctx, viper.GetString("url"), options)
