@@ -225,7 +225,7 @@ responses:
 					"post_processing_complete": status.PostProcessingComplete,
 				}
 
-				if status.Summary != nil && status.Summary.Responders > 0 && status.Summary.Working == 0 && status.PostProcessingComplete {
+				if status.Done() {
 					// fall through from all "final" query states, check if there's still queries in progress;
 					// only break from the loop if all queries have already been sent
 					// TODO: see above, still needs DefaultStartTimeout implemented to account for slow sources
