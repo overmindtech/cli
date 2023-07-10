@@ -7,17 +7,12 @@ jobs:
     env:
       CGO_ENABLED: 0
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: 1.x
+      - name: Go Init
+        uses: ./.github/actions/go_init/action.yml
 
       - name: Get dependencies
         run: |
           go get -v -t -d ./...
-
-      - name: Go Generate
-        run: go generate ./...
 
       - name: Go Vet
         run: go vet ./...
@@ -30,14 +25,8 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: '1.20'
-          cache: false
-
-      - name: Go Generate
-        run: go generate ./...
+      - name: Go Init
+        uses: ./.github/actions/go_init/action.yml
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
