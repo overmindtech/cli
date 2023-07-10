@@ -153,6 +153,7 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 	go func() {
 		for _, q := range queries {
 			req := sdp.GatewayRequest{
+				MinStatusInterval: minStatusInterval,
 				RequestType: &sdp.GatewayRequest_Query{
 					Query: q,
 				},

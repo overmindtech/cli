@@ -223,6 +223,7 @@ responses:
 		log.WithContext(ctx).Info("Starting snapshot")
 		msgId := uuid.New()
 		snapReq := &sdp.GatewayRequest{
+			MinStatusInterval: minStatusInterval,
 			RequestType: &sdp.GatewayRequest_StoreSnapshot{
 				StoreSnapshot: &sdp.StoreSnapshot{
 					Name:        viper.GetString("snapshot-name"),
@@ -270,7 +271,9 @@ responses:
 }
 
 func createInitialRequest() (*sdp.GatewayRequest, error) {
-	req := new(sdp.GatewayRequest)
+	req := &sdp.GatewayRequest{
+		MinStatusInterval: minStatusInterval,
+	}
 	u := uuid.New()
 
 	switch viper.GetString("request-type") {

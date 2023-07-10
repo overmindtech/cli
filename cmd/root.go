@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/overmindtech/ovm-cli/tracing"
@@ -17,10 +18,13 @@ import (
 	"github.com/spf13/viper"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	"golang.org/x/oauth2"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 var cfgFile string
 var logLevel string
+
+var minStatusInterval = durationpb.New(250 * time.Millisecond)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
