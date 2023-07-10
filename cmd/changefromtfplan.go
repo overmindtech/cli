@@ -98,11 +98,13 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 	// Connect to the websocket
 	log.WithContext(ctx).Debugf("Connecting to overmind API: %v", viper.GetString("url"))
 
+	lf := log.Fields{
+		"url": viper.GetString("url"),
+	}
+
 	ctx, err = ensureToken(ctx, signals)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"url": viper.GetString("url"),
-		}).Error("failed to authenticate")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to authenticate")
 		return 1
 	}
 
@@ -123,16 +125,14 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"url": viper.GetString("url"),
-		}).Error("failed to create change")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to create change")
 		return 1
 	}
-	log.WithContext(ctx).WithFields(log.Fields{
-		"url":    viper.GetString("url"),
-		"change": createResponse.Msg.Change.Metadata.GetUUIDParsed(),
-	}).Info("created a new change")
 
+	lf["change"] = createResponse.Msg.Change.Metadata.GetUUIDParsed()
+	log.WithContext(ctx).WithFields(lf).Info("created a new change")
+
+	log.WithContext(ctx).WithFields(lf).Info("resolving items from terraform plan")
 	queries := changingItemQueriesFromTfplan()
 
 	options := &websocket.DialOptions{
@@ -141,9 +141,7 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 
 	c, _, err := websocket.Dial(ctx, viper.GetString("url"), options)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"url": viper.GetString("url"),
-		}).Error("Failed to connect to overmind API")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
 		return 1
 	}
 	defer c.Close(websocket.StatusGoingAway, "")
@@ -161,9 +159,7 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 			}
 			err = wspb.Write(ctx, c, &req)
 			if err != nil {
-				log.WithContext(ctx).WithFields(log.Fields{
-					"error": err,
-				}).Error("Failed to send request")
+				log.WithContext(ctx).WithFields(lf).WithError(err).WithField("req", &req).Error("Failed to send request")
 				continue
 			}
 		}
@@ -182,15 +178,13 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 			if err != nil {
 				var e websocket.CloseError
 				if errors.As(err, &e) {
-					log.WithContext(ctx).WithFields(log.Fields{
+					log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
 						"code":   e.Code.String(),
 						"reason": e.Reason,
 					}).Info("Websocket closing")
 					return
 				}
-				log.WithContext(ctx).WithFields(log.Fields{
-					"error": err,
-				}).Error("Failed to read response")
+				log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to read response")
 				return
 			}
 
@@ -209,12 +203,15 @@ responses:
 		select {
 		case <-queriesSentChan:
 			queriesSent = true
+
 		case <-signals:
-			log.WithContext(ctx).Info("Received interrupt, exiting")
+			log.WithContext(ctx).WithFields(lf).Info("Received interrupt, exiting")
 			return 1
+
 		case <-ctx.Done():
-			log.WithContext(ctx).Info("Context cancelled, exiting")
+			log.WithContext(ctx).WithFields(lf).Info("Context cancelled, exiting")
 			return 1
+
 		case resp := <-responses:
 			switch resp.ResponseType.(type) {
 			case *sdp.GatewayResponse_QueryStatus:
@@ -261,24 +258,24 @@ responses:
 				}
 			case *sdp.GatewayResponse_NewItem:
 				item := resp.GetNewItem()
-				log.WithContext(ctx).Infof("New item: %v", item.GloballyUniqueName())
+				log.WithContext(ctx).WithFields(lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
 
 				receivedItems = append(receivedItems, item.Reference())
 
 			case *sdp.GatewayResponse_NewEdge:
-				log.WithContext(ctx).Debug("ignored edge")
+				log.WithContext(ctx).WithFields(lf).Debug("ignored edge")
 
 			case *sdp.GatewayResponse_QueryError:
 				err := resp.GetQueryError()
+				log.WithContext(ctx).WithFields(lf).WithError(err).Errorf("Error from %v(%v)", err.ResponderName, err.SourceName)
 
-				log.WithContext(ctx).Errorf("Error from %v(%v): %v", err.ResponderName, err.SourceName, err)
 			case *sdp.GatewayResponse_Error:
 				err := resp.GetError()
-				log.WithContext(ctx).Errorf("generic error: %v", err)
+				log.WithContext(ctx).WithFields(lf).WithField(log.ErrorKey, err).Errorf("generic error")
+
 			default:
 				j := protojson.Format(resp)
-
-				log.WithContext(ctx).Infof("Unknown %T Response:\n%v", resp.ResponseType, j)
+				log.WithContext(ctx).WithFields(lf).Infof("Unknown %T Response:\n%v", resp.ResponseType, j)
 			}
 		}
 	}
@@ -290,10 +287,7 @@ responses:
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"url":    viper.GetString("url"),
-			"change": createResponse.Msg.Change.Metadata.GetUUIDParsed(),
-		}).Error("failed to update changing items")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to update changing items")
 		return 1
 	}
 
@@ -301,10 +295,7 @@ responses:
 	first_log := true
 	for resultStream.Receive() {
 		if resultStream.Err() != nil {
-			log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-				"url":    viper.GetString("url"),
-				"change": createResponse.Msg.Change.Metadata.GetUUIDParsed(),
-			}).Error("error streaming results")
+			log.WithContext(ctx).WithFields(lf).WithError(err).Error("error streaming results")
 			return 1
 		}
 
@@ -314,20 +305,14 @@ responses:
 		// to avoid spanning the cli output
 		time_since_last_log := time.Since(last_log)
 		if first_log || msg.State != sdp.CalculateBlastRadiusResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
-			log.WithContext(ctx).WithFields(log.Fields{
-				"url":    viper.GetString("url"),
-				"change": createResponse.Msg.Change.Metadata.GetUUIDParsed(),
-				"msg":    msg,
-			}).Info("status update")
+			log.WithContext(ctx).WithFields(lf).WithField("msg", msg).Info("status update")
 			last_log = time.Now()
 			first_log = false
 		}
 	}
 
-	log.WithContext(ctx).WithFields(log.Fields{
-		"change":     createResponse.Msg.Change.Metadata.GetUUIDParsed(),
-		"change-url": fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), createResponse.Msg.Change.Metadata.GetUUIDParsed()),
-	}).Info("change ready")
+	changeUrl := fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), createResponse.Msg.Change.Metadata.GetUUIDParsed())
+	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("change ready")
 
 	fetchResponse, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
 		Msg: &sdp.GetChangeRequest{
@@ -335,23 +320,18 @@ responses:
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"url": viper.GetString("url"),
-		}).Error("failed to get updated change")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to get updated change")
 		return 1
 	}
+
 	for _, a := range fetchResponse.Msg.Change.Properties.AffectedAppsUUID {
 		appUuid, err := uuid.FromBytes(a)
 		if err != nil {
-			log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-				"url":   viper.GetString("url"),
-				"value": a,
-			}).Error("received invalid app uuid")
+			log.WithContext(ctx).WithFields(lf).WithError(err).WithField("app", a).Error("received invalid app uuid")
 			continue
 		}
-		log.WithContext(ctx).WithFields(log.Fields{
-			"change":     createResponse.Msg.Change.Metadata.GetUUIDParsed(),
-			"change-url": fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), createResponse.Msg.Change.Metadata.GetUUIDParsed()),
+		log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
+			"change-url": changeUrl,
 			"app":        appUuid,
 			"app-url":    fmt.Sprintf("%v/apps/%v", viper.GetString("frontend"), appUuid),
 		}).Info("affected app")
