@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -15,8 +16,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/protobuf/encoding/protojson"
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wspb"
 )
 
 // changeFromTfplanCmd represents the change-from-tfplan command
@@ -43,17 +48,40 @@ var changeFromTfplanCmd = &cobra.Command{
 
 // test data
 var (
-	affecting_resource *sdp.Reference = &sdp.Reference{
-		Type:                 "elbv2-load-balancer",
-		UniqueAttributeValue: "ingress",
-		Scope:                "944651592624.eu-west-2",
+	affecting_uuid     uuid.UUID  = uuid.New()
+	affecting_resource *sdp.Query = &sdp.Query{
+		Type:   "elbv2-load-balancer",
+		Method: sdp.QueryMethod_GET,
+		Query:  "ingress",
+		RecursionBehaviour: &sdp.Query_RecursionBehaviour{
+			LinkDepth: 0,
+		},
+		Scope: "944651592624.eu-west-2",
+		UUID:  affecting_uuid[:],
 	}
-	safe_resource *sdp.Reference = &sdp.Reference{
-		Type:                 "ec2-security-group",
-		UniqueAttributeValue: "sg-09533c300cd1a41c1",
-		Scope:                "944651592624.eu-west-2",
+
+	safe_uuid     uuid.UUID  = uuid.New()
+	safe_resource *sdp.Query = &sdp.Query{
+		Type:   "ec2-security-group",
+		Method: sdp.QueryMethod_GET,
+		Query:  "sg-09533c300cd1a41c1",
+		RecursionBehaviour: &sdp.Query_RecursionBehaviour{
+			LinkDepth: 0,
+		},
+		Scope: "944651592624.eu-west-2",
+		UUID:  safe_uuid[:],
 	}
 )
+
+func changingItemQueriesFromTfplan() []*sdp.Query {
+	var changing_items []*sdp.Query
+	if viper.GetBool("test-affecting") {
+		changing_items = []*sdp.Query{affecting_resource}
+	} else {
+		changing_items = []*sdp.Query{safe_resource}
+	}
+	return changing_items
+}
 
 func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
@@ -105,17 +133,160 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 		"change": createResponse.Msg.Change.Metadata.GetUUIDParsed(),
 	}).Info("created a new change")
 
-	var changing_items []*sdp.Reference
-	if viper.GetBool("test-affecting") {
-		changing_items = []*sdp.Reference{affecting_resource}
-	} else {
-		changing_items = []*sdp.Reference{safe_resource}
+	queries := changingItemQueriesFromTfplan()
+
+	options := &websocket.DialOptions{
+		HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
+	}
+
+	c, _, err := websocket.Dial(ctx, viper.GetString("url"), options)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
+			"url": viper.GetString("url"),
+		}).Error("Failed to connect to overmind API")
+		return 1
+	}
+	defer c.Close(websocket.StatusGoingAway, "")
+
+	// the default, 32kB is too small for cert bundles and rds-db-cluster-parameter-groups
+	c.SetReadLimit(2 * 1024 * 1024)
+
+	queriesSentChan := make(chan struct{})
+	go func() {
+		for _, q := range queries {
+			req := sdp.GatewayRequest{
+				RequestType: &sdp.GatewayRequest_Query{
+					Query: q,
+				},
+			}
+			err = wspb.Write(ctx, c, &req)
+			if err != nil {
+				log.WithContext(ctx).WithFields(log.Fields{
+					"error": err,
+				}).Error("Failed to send request")
+				continue
+			}
+		}
+		queriesSentChan <- struct{}{}
+	}()
+
+	responses := make(chan *sdp.GatewayResponse)
+
+	// Start a goroutine that reads responses
+	go func() {
+		for {
+			res := new(sdp.GatewayResponse)
+
+			err = wspb.Read(ctx, c, res)
+
+			if err != nil {
+				var e websocket.CloseError
+				if errors.As(err, &e) {
+					log.WithContext(ctx).WithFields(log.Fields{
+						"code":   e.Code.String(),
+						"reason": e.Reason,
+					}).Info("Websocket closing")
+					return
+				}
+				log.WithContext(ctx).WithFields(log.Fields{
+					"error": err,
+				}).Error("Failed to read response")
+				return
+			}
+
+			responses <- res
+		}
+	}()
+
+	activeQueries := make(map[uuid.UUID]bool)
+	queriesSent := false
+
+	receivedItems := []*sdp.Reference{}
+
+	// Read the responses
+responses:
+	for {
+		select {
+		case <-queriesSentChan:
+			queriesSent = true
+		case <-signals:
+			log.WithContext(ctx).Info("Received interrupt, exiting")
+			return 1
+		case <-ctx.Done():
+			log.WithContext(ctx).Info("Context cancelled, exiting")
+			return 1
+		case resp := <-responses:
+			switch resp.ResponseType.(type) {
+			case *sdp.GatewayResponse_QueryStatus:
+				status := resp.GetQueryStatus()
+				queryUuid := status.GetUUIDParsed()
+				if queryUuid == nil {
+					log.WithContext(ctx).Debugf("Received QueryStatus with nil UUID: %v", status.Status.String())
+					continue responses
+				}
+
+				log.WithContext(ctx).Debugf("Status for %v: %v", queryUuid, status.Status.String())
+
+				switch status.Status {
+				case sdp.QueryStatus_STARTED:
+					activeQueries[*queryUuid] = true
+					continue responses
+				case sdp.QueryStatus_FINISHED:
+					activeQueries[*queryUuid] = false
+				case sdp.QueryStatus_ERRORED:
+					activeQueries[*queryUuid] = false
+				case sdp.QueryStatus_CANCELLED:
+					activeQueries[*queryUuid] = false
+				default:
+					log.WithContext(ctx).Debugf("unexpected status %v: %v", queryUuid, status.Status.String())
+					continue responses
+				}
+
+				// fall through from all "final" query states, check if there's still queries in progress
+				// TODO: needs DefaultStartTimeout implemented to account for slow sources
+				allDone := true
+			active:
+				for q := range activeQueries {
+					if activeQueries[q] {
+						log.WithContext(ctx).Debugf("%v still active", q)
+						allDone = false
+						break active
+					}
+				}
+
+				// only break from `responses` if all queries have already been sent
+				// TODO: see above, still needs DefaultStartTimeout implemented to account for slow sources
+				if allDone && queriesSent {
+					break responses
+				}
+			case *sdp.GatewayResponse_NewItem:
+				item := resp.GetNewItem()
+				log.WithContext(ctx).Infof("New item: %v", item.GloballyUniqueName())
+
+				receivedItems = append(receivedItems, item.Reference())
+
+			case *sdp.GatewayResponse_NewEdge:
+				log.WithContext(ctx).Debug("ignored edge")
+
+			case *sdp.GatewayResponse_QueryError:
+				err := resp.GetQueryError()
+
+				log.WithContext(ctx).Errorf("Error from %v(%v): %v", err.ResponderName, err.SourceName, err)
+			case *sdp.GatewayResponse_Error:
+				err := resp.GetError()
+				log.WithContext(ctx).Errorf("generic error: %v", err)
+			default:
+				j := protojson.Format(resp)
+
+				log.WithContext(ctx).Infof("Unknown %T Response:\n%v", resp.ResponseType, j)
+			}
+		}
 	}
 
 	resultStream, err := client.UpdateChangingItems(ctx, &connect.Request[sdp.UpdateChangingItemsRequest]{
 		Msg: &sdp.UpdateChangingItemsRequest{
 			ChangeUUID:    createResponse.Msg.Change.Metadata.UUID,
-			ChangingItems: changing_items,
+			ChangingItems: receivedItems,
 		},
 	})
 	if err != nil {
@@ -192,8 +363,8 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 func init() {
 	rootCmd.AddCommand(changeFromTfplanCmd)
 
-	changeFromTfplanCmd.PersistentFlags().String("changes-url", "https://api.prod.overmind.tech/", "The changes service API endpoint")
-	changeFromTfplanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
+	changeFromTfplanCmd.PersistentFlags().String("changes-url", "https://api.prod.overmind.tech", "The changes service API endpoint")
+	changeFromTfplanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
 
 	changeFromTfplanCmd.PersistentFlags().String("terraform", "terraform", "The binary to use for calling terraform. Will be looked up in the system PATH.")
 	changeFromTfplanCmd.PersistentFlags().String("tfplan", "./tfplan", "Parse changing items from this terraform plan file.")
