@@ -215,20 +215,47 @@ responses:
 
 		case resp := <-responses:
 			switch resp.ResponseType.(type) {
-			case *sdp.GatewayResponse_QueryStatus:
-				status := resp.GetQueryStatus()
-				queryUuid := status.GetUUIDParsed()
-				if queryUuid == nil {
-					log.WithContext(ctx).Debugf("Received QueryStatus with nil UUID: %v", status.Status.String())
-					continue responses
+
+			case *sdp.GatewayResponse_Status:
+				status := resp.GetStatus()
+				statusFields := log.Fields{
+					"summary":                  status.Summary,
+					"responders":               status.Summary.Responders,
+					"queriesSent":              queriesSent,
+					"post_processing_complete": status.PostProcessingComplete,
 				}
 
-				log.WithContext(ctx).Debugf("Status for %v: %v", queryUuid, status.Status.String())
+				if status.Summary != nil && status.Summary.Responders > 0 && status.Summary.Working == 0 && status.PostProcessingComplete {
+					// fall through from all "final" query states, check if there's still queries in progress;
+					// only break from the loop if all queries have already been sent
+					// TODO: see above, still needs DefaultStartTimeout implemented to account for slow sources
+					allDone := allDone(ctx, activeQueries, lf)
+					statusFields["allDone"] = allDone
+					if allDone && queriesSent {
+						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders and queries done")
+						break responses
+					} else {
+						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders done, with unfinished queries")
+					}
+				} else {
+					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("still waiting for responders")
+				}
+
+			case *sdp.GatewayResponse_QueryStatus:
+				status := resp.GetQueryStatus()
+				statusFields := log.Fields{
+					"status": status.Status.String(),
+				}
+				queryUuid := status.GetUUIDParsed()
+				if queryUuid == nil {
+					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("Received QueryStatus with nil UUID")
+					continue responses
+				}
+				statusFields["query"] = queryUuid
 
 				switch status.Status {
 				case sdp.QueryStatus_STARTED:
 					activeQueries[*queryUuid] = true
-					continue responses
 				case sdp.QueryStatus_FINISHED:
 					activeQueries[*queryUuid] = false
 				case sdp.QueryStatus_ERRORED:
@@ -236,27 +263,11 @@ responses:
 				case sdp.QueryStatus_CANCELLED:
 					activeQueries[*queryUuid] = false
 				default:
-					log.WithContext(ctx).Debugf("unexpected status %v: %v", queryUuid, status.Status.String())
-					continue responses
+					statusFields["unexpected_status"] = true
 				}
 
-				// fall through from all "final" query states, check if there's still queries in progress
-				// TODO: needs DefaultStartTimeout implemented to account for slow sources
-				allDone := true
-			active:
-				for q := range activeQueries {
-					if activeQueries[q] {
-						log.WithContext(ctx).Debugf("%v still active", q)
-						allDone = false
-						break active
-					}
-				}
+				log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("query status update")
 
-				// only break from `responses` if all queries have already been sent
-				// TODO: see above, still needs DefaultStartTimeout implemented to account for slow sources
-				if allDone && queriesSent {
-					break responses
-				}
 			case *sdp.GatewayResponse_NewItem:
 				item := resp.GetNewItem()
 				log.WithContext(ctx).WithFields(lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
@@ -339,6 +350,18 @@ responses:
 	}
 
 	return 0
+}
+
+func allDone(ctx context.Context, activeQueries map[uuid.UUID]bool, lf log.Fields) bool {
+	allDone := true
+	for q := range activeQueries {
+		if activeQueries[q] {
+			log.WithContext(ctx).WithFields(lf).WithField("query", q).Debugf("query still active")
+			allDone = false
+			break
+		}
+	}
+	return allDone
 }
 
 func init() {

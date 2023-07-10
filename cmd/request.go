@@ -66,14 +66,16 @@ func Request(signals chan os.Signal, ready chan bool) int {
 		return 1
 	}
 
+	lf := log.Fields{
+		"url": viper.GetString("url"),
+	}
+
 	// Connect to the websocket
 	log.WithContext(ctx).Debugf("Connecting to overmind API: %v", viper.GetString("url"))
 
 	ctx, err = ensureToken(ctx, signals)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"url": viper.GetString("url"),
-		}).Error("failed to authenticate")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1
 	}
 
@@ -87,9 +89,7 @@ func Request(signals chan os.Signal, ready chan bool) int {
 
 	c, _, err := websocket.Dial(ctx, viper.GetString("url"), options)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"url": viper.GetString("url"),
-		}).Error("Failed to connect to overmind API")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
 		return 1
 	}
 	defer c.Close(websocket.StatusGoingAway, "")
@@ -100,19 +100,19 @@ func Request(signals chan os.Signal, ready chan bool) int {
 	// Log the request in JSON
 	b, err := json.MarshalIndent(req, "", "  ")
 	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("Failed to marshal request")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to marshal request")
 		return 1
 	}
 
-	log.WithContext(ctx).Infof("Request:\n%v", string(b))
+	log.WithContext(ctx).WithFields(lf).Infof("Request:\n%v", string(b))
 
 	err = wspb.Write(ctx, c, req)
 	if err != nil {
-		log.WithContext(ctx).WithFields(log.Fields{
-			"error": err,
-		}).Error("Failed to send request")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to send request")
 		return 1
 	}
+
+	queriesSent := true
 
 	responses := make(chan *sdp.GatewayResponse)
 
@@ -149,27 +149,55 @@ responses:
 	for {
 		select {
 		case <-signals:
-			log.WithContext(ctx).Info("Received interrupt, exiting")
+			log.WithContext(ctx).WithFields(lf).Info("Received interrupt, exiting")
 			return 1
+
 		case <-ctx.Done():
-			log.WithContext(ctx).Info("Context cancelled, exiting")
+			log.WithContext(ctx).WithFields(lf).Info("Context cancelled, exiting")
 			return 1
+
 		case resp := <-responses:
 			switch resp.ResponseType.(type) {
-			case *sdp.GatewayResponse_QueryStatus:
-				status := resp.GetQueryStatus()
-				queryUuid := status.GetUUIDParsed()
-				if queryUuid == nil {
-					log.WithContext(ctx).Debugf("Received QueryStatus with nil UUID: %v", status.Status.String())
-					continue responses
+			case *sdp.GatewayResponse_Status:
+				status := resp.GetStatus()
+				statusFields := log.Fields{
+					"summary":                  status.Summary,
+					"responders":               status.Summary.Responders,
+					"queriesSent":              queriesSent,
+					"post_processing_complete": status.PostProcessingComplete,
 				}
 
-				log.WithContext(ctx).Debugf("Status for %v: %v", queryUuid, status.Status.String())
+				if status.Summary != nil && status.Summary.Responders > 0 && status.Summary.Working == 0 && status.PostProcessingComplete {
+					// fall through from all "final" query states, check if there's still queries in progress;
+					// only break from the loop if all queries have already been sent
+					// TODO: see above, still needs DefaultStartTimeout implemented to account for slow sources
+					allDone := allDone(ctx, activeQueries, lf)
+					statusFields["allDone"] = allDone
+					if allDone && queriesSent {
+						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders and queries done")
+						break responses
+					} else {
+						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders done, with unfinished queries")
+					}
+				} else {
+					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("still waiting for responders")
+				}
+
+			case *sdp.GatewayResponse_QueryStatus:
+				status := resp.GetQueryStatus()
+				statusFields := log.Fields{
+					"status": status.Status.String(),
+				}
+				queryUuid := status.GetUUIDParsed()
+				if queryUuid == nil {
+					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("Received QueryStatus with nil UUID")
+					continue responses
+				}
+				statusFields["query"] = queryUuid
 
 				switch status.Status {
 				case sdp.QueryStatus_STARTED:
 					activeQueries[*queryUuid] = true
-					continue responses
 				case sdp.QueryStatus_FINISHED:
 					activeQueries[*queryUuid] = false
 				case sdp.QueryStatus_ERRORED:
@@ -177,44 +205,33 @@ responses:
 				case sdp.QueryStatus_CANCELLED:
 					activeQueries[*queryUuid] = false
 				default:
-					log.WithContext(ctx).Debugf("unexpected status %v: %v", queryUuid, status.Status.String())
-					continue responses
+					statusFields["unexpected_status"] = true
 				}
 
-				// fall through from all "final" query states, check if there's still queries in progress
-				// TODO: needs DefaultStartTimeout implemented to account for slow sources
-				allDone := true
-			active:
-				for q := range activeQueries {
-					if activeQueries[q] {
-						log.WithContext(ctx).Debugf("%v still active", q)
-						allDone = false
-						break active
-					}
-				}
+				log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("query status update")
 
-				if allDone {
-					break responses
-				}
 			case *sdp.GatewayResponse_NewItem:
 				item := resp.GetNewItem()
+				log.WithContext(ctx).WithFields(lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
 
-				log.WithContext(ctx).Infof("New item: %v", item.GloballyUniqueName())
 			case *sdp.GatewayResponse_NewEdge:
 				edge := resp.GetNewEdge()
+				log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
+					"from": edge.From.GloballyUniqueName(),
+					"to":   edge.To.GloballyUniqueName(),
+				}).Info("new edge")
 
-				log.WithContext(ctx).Infof("New edge: %v->%v", edge.From.GloballyUniqueName(), edge.To.GloballyUniqueName())
 			case *sdp.GatewayResponse_QueryError:
 				err := resp.GetQueryError()
+				log.WithContext(ctx).WithFields(lf).Errorf("Error from %v(%v): %v", err.ResponderName, err.SourceName, err)
 
-				log.WithContext(ctx).Errorf("Error from %v(%v): %v", err.ResponderName, err.SourceName, err)
 			case *sdp.GatewayResponse_Error:
 				err := resp.GetError()
-				log.WithContext(ctx).Errorf("generic error: %v", err)
+				log.WithContext(ctx).WithFields(lf).Errorf("generic error: %v", err)
+
 			default:
 				j := protojson.Format(resp)
-
-				log.WithContext(ctx).Infof("Unknown %T Response:\n%v", resp.ResponseType, j)
+				log.WithContext(ctx).WithFields(lf).Infof("Unknown %T Response:\n%v", resp.ResponseType, j)
 			}
 		}
 	}
