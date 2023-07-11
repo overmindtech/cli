@@ -48,33 +48,6 @@ var changeFromTfplanCmd = &cobra.Command{
 	},
 }
 
-// test data
-var (
-	affecting_uuid     uuid.UUID  = uuid.New()
-	affecting_resource *sdp.Query = &sdp.Query{
-		Type:   "elbv2-load-balancer",
-		Method: sdp.QueryMethod_GET,
-		Query:  "ingress",
-		RecursionBehaviour: &sdp.Query_RecursionBehaviour{
-			LinkDepth: 0,
-		},
-		Scope: "944651592624.eu-west-2",
-		UUID:  affecting_uuid[:],
-	}
-
-	safe_uuid     uuid.UUID  = uuid.New()
-	safe_resource *sdp.Query = &sdp.Query{
-		Type:   "ec2-security-group",
-		Method: sdp.QueryMethod_GET,
-		Query:  "sg-09533c300cd1a41c1",
-		RecursionBehaviour: &sdp.Query_RecursionBehaviour{
-			LinkDepth: 0,
-		},
-		Scope: "944651592624.eu-west-2",
-		UUID:  safe_uuid[:],
-	}
-)
-
 type TfData struct {
 	Address string
 	Type    string
