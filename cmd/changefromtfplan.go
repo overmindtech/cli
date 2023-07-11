@@ -196,6 +196,13 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	log.WithContext(ctx).WithFields(lf).Info("resolving items from terraform plan")
+	queries, err := changingItemQueriesFromTfplan(ctx, lf)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read terraform plan")
+		return 1
+	}
+
 	client := AuthenticatedChangesClient(ctx)
 	createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 		Msg: &sdp.CreateChangeRequest{
@@ -216,172 +223,173 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 	lf["change"] = createResponse.Msg.Change.Metadata.GetUUIDParsed()
 	log.WithContext(ctx).WithFields(lf).Info("created a new change")
 
-	log.WithContext(ctx).WithFields(lf).Info("resolving items from terraform plan")
-	queries, err := changingItemQueriesFromTfplan(ctx, lf)
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read terraform plan")
-		return 1
-	}
-
-	options := &websocket.DialOptions{
-		HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
-	}
-
-	log.WithContext(ctx).WithFields(lf).WithField("item_count", len(queries)).Info("identifying items")
-	c, _, err := websocket.Dial(ctx, viper.GetString("url"), options)
-	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
-		return 1
-	}
-	defer c.Close(websocket.StatusGoingAway, "")
-
-	// the default, 32kB is too small for cert bundles and rds-db-cluster-parameter-groups
-	c.SetReadLimit(2 * 1024 * 1024)
-
-	queriesSentChan := make(chan struct{})
-	go func() {
-		for _, q := range queries {
-			req := sdp.GatewayRequest{
-				MinStatusInterval: minStatusInterval,
-				RequestType: &sdp.GatewayRequest_Query{
-					Query: q,
-				},
-			}
-			err = wspb.Write(ctx, c, &req)
-			if err != nil {
-				log.WithContext(ctx).WithFields(lf).WithError(err).WithField("req", &req).Error("Failed to send request")
-				continue
-			}
-		}
-		queriesSentChan <- struct{}{}
-	}()
-
-	responses := make(chan *sdp.GatewayResponse)
-
-	// Start a goroutine that reads responses
-	go func() {
-		for {
-			res := new(sdp.GatewayResponse)
-
-			err = wspb.Read(ctx, c, res)
-
-			if err != nil {
-				var e websocket.CloseError
-				if errors.As(err, &e) {
-					log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
-						"code":   e.Code.String(),
-						"reason": e.Reason,
-					}).Info("Websocket closing")
-					return
-				}
-				log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to read response")
-				return
-			}
-
-			responses <- res
-		}
-	}()
-
-	activeQueries := make(map[uuid.UUID]bool)
-	queriesSent := false
-
 	receivedItems := []*sdp.Reference{}
 
-	// Read the responses
-responses:
-	for {
-		select {
-		case <-queriesSentChan:
-			queriesSent = true
+	if len(queries) > 0 {
+		options := &websocket.DialOptions{
+			HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
+		}
 
-		case <-signals:
-			log.WithContext(ctx).WithFields(lf).Info("Received interrupt, exiting")
+		log.WithContext(ctx).WithFields(lf).WithField("item_count", len(queries)).Info("identifying items")
+		c, _, err := websocket.Dial(ctx, viper.GetString("url"), options)
+		if err != nil {
+			log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
 			return 1
+		}
+		defer c.Close(websocket.StatusGoingAway, "")
 
-		case <-ctx.Done():
-			log.WithContext(ctx).WithFields(lf).Info("Context cancelled, exiting")
-			return 1
+		// the default, 32kB is too small for cert bundles and rds-db-cluster-parameter-groups
+		c.SetReadLimit(2 * 1024 * 1024)
 
-		case resp := <-responses:
-			switch resp.ResponseType.(type) {
-
-			case *sdp.GatewayResponse_Status:
-				status := resp.GetStatus()
-				statusFields := log.Fields{
-					"summary":                  status.Summary,
-					"responders":               status.Summary.Responders,
-					"queriesSent":              queriesSent,
-					"post_processing_complete": status.PostProcessingComplete,
+		queriesSentChan := make(chan struct{})
+		go func() {
+			for _, q := range queries {
+				req := sdp.GatewayRequest{
+					MinStatusInterval: minStatusInterval,
+					RequestType: &sdp.GatewayRequest_Query{
+						Query: q,
+					},
 				}
+				err = wspb.Write(ctx, c, &req)
+				if err != nil {
+					log.WithContext(ctx).WithFields(lf).WithError(err).WithField("req", &req).Error("Failed to send request")
+					continue
+				}
+			}
+			queriesSentChan <- struct{}{}
+		}()
 
-				if status.Done() {
-					// fall through from all "final" query states, check if there's still queries in progress;
-					// only break from the loop if all queries have already been sent
-					// TODO: see above, still needs DefaultStartTimeout implemented to account for slow sources
-					allDone := allDone(ctx, activeQueries, lf)
-					statusFields["allDone"] = allDone
-					if allDone && queriesSent {
-						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders and queries done")
-						break responses
-					} else {
-						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders done, with unfinished queries")
+		responses := make(chan *sdp.GatewayResponse)
+
+		// Start a goroutine that reads responses
+		go func() {
+			for {
+				res := new(sdp.GatewayResponse)
+
+				err = wspb.Read(ctx, c, res)
+
+				if err != nil {
+					var e websocket.CloseError
+					if errors.As(err, &e) {
+						log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
+							"code":   e.Code.String(),
+							"reason": e.Reason,
+						}).Info("Websocket closing")
+						return
 					}
-				} else {
-					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("still waiting for responders")
+					log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to read response")
+					return
 				}
 
-			case *sdp.GatewayResponse_QueryStatus:
-				status := resp.GetQueryStatus()
-				statusFields := log.Fields{
-					"status": status.Status.String(),
-				}
-				queryUuid := status.GetUUIDParsed()
-				if queryUuid == nil {
-					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("Received QueryStatus with nil UUID")
-					continue responses
-				}
-				statusFields["query"] = queryUuid
+				responses <- res
+			}
+		}()
 
-				switch status.Status {
-				case sdp.QueryStatus_STARTED:
-					activeQueries[*queryUuid] = true
-				case sdp.QueryStatus_FINISHED:
-					activeQueries[*queryUuid] = false
-				case sdp.QueryStatus_ERRORED:
-					activeQueries[*queryUuid] = false
-				case sdp.QueryStatus_CANCELLED:
-					activeQueries[*queryUuid] = false
+		activeQueries := make(map[uuid.UUID]bool)
+		queriesSent := false
+
+		// Read the responses
+	responses:
+		for {
+			select {
+			case <-queriesSentChan:
+				queriesSent = true
+
+			case <-signals:
+				log.WithContext(ctx).WithFields(lf).Info("Received interrupt, exiting")
+				return 1
+
+			case <-ctx.Done():
+				log.WithContext(ctx).WithFields(lf).Info("Context cancelled, exiting")
+				return 1
+
+			case resp := <-responses:
+				switch resp.ResponseType.(type) {
+
+				case *sdp.GatewayResponse_Status:
+					status := resp.GetStatus()
+					statusFields := log.Fields{
+						"summary":                  status.Summary,
+						"responders":               status.Summary.Responders,
+						"queriesSent":              queriesSent,
+						"post_processing_complete": status.PostProcessingComplete,
+					}
+
+					if status.Done() {
+						// fall through from all "final" query states, check if there's still queries in progress;
+						// only break from the loop if all queries have already been sent
+						// TODO: see above, still needs DefaultStartTimeout implemented to account for slow sources
+						allDone := allDone(ctx, activeQueries, lf)
+						statusFields["allDone"] = allDone
+						if allDone && queriesSent {
+							log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders and queries done")
+							break responses
+						} else {
+							log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders done, with unfinished queries")
+						}
+					} else {
+						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("still waiting for responders")
+					}
+
+				case *sdp.GatewayResponse_QueryStatus:
+					status := resp.GetQueryStatus()
+					statusFields := log.Fields{
+						"status": status.Status.String(),
+					}
+					queryUuid := status.GetUUIDParsed()
+					if queryUuid == nil {
+						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("Received QueryStatus with nil UUID")
+						continue responses
+					}
+					statusFields["query"] = queryUuid
+
+					switch status.Status {
+					case sdp.QueryStatus_STARTED:
+						activeQueries[*queryUuid] = true
+					case sdp.QueryStatus_FINISHED:
+						activeQueries[*queryUuid] = false
+					case sdp.QueryStatus_ERRORED:
+						activeQueries[*queryUuid] = false
+					case sdp.QueryStatus_CANCELLED:
+						activeQueries[*queryUuid] = false
+					default:
+						statusFields["unexpected_status"] = true
+					}
+
+					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("query status update")
+
+				case *sdp.GatewayResponse_NewItem:
+					item := resp.GetNewItem()
+					log.WithContext(ctx).WithFields(lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
+
+					receivedItems = append(receivedItems, item.Reference())
+
+				case *sdp.GatewayResponse_NewEdge:
+					log.WithContext(ctx).WithFields(lf).Debug("ignored edge")
+
+				case *sdp.GatewayResponse_QueryError:
+					err := resp.GetQueryError()
+					log.WithContext(ctx).WithFields(lf).WithError(err).Errorf("Error from %v(%v)", err.ResponderName, err.SourceName)
+
+				case *sdp.GatewayResponse_Error:
+					err := resp.GetError()
+					log.WithContext(ctx).WithFields(lf).WithField(log.ErrorKey, err).Errorf("generic error")
+
 				default:
-					statusFields["unexpected_status"] = true
+					j := protojson.Format(resp)
+					log.WithContext(ctx).WithFields(lf).Infof("Unknown %T Response:\n%v", resp.ResponseType, j)
 				}
-
-				log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("query status update")
-
-			case *sdp.GatewayResponse_NewItem:
-				item := resp.GetNewItem()
-				log.WithContext(ctx).WithFields(lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
-
-				receivedItems = append(receivedItems, item.Reference())
-
-			case *sdp.GatewayResponse_NewEdge:
-				log.WithContext(ctx).WithFields(lf).Debug("ignored edge")
-
-			case *sdp.GatewayResponse_QueryError:
-				err := resp.GetQueryError()
-				log.WithContext(ctx).WithFields(lf).WithError(err).Errorf("Error from %v(%v)", err.ResponderName, err.SourceName)
-
-			case *sdp.GatewayResponse_Error:
-				err := resp.GetError()
-				log.WithContext(ctx).WithFields(lf).WithField(log.ErrorKey, err).Errorf("generic error")
-
-			default:
-				j := protojson.Format(resp)
-				log.WithContext(ctx).WithFields(lf).Infof("Unknown %T Response:\n%v", resp.ResponseType, j)
 			}
 		}
+	} else {
+		log.WithContext(ctx).WithFields(lf).Info("no item queries mapped, skipping changing items")
 	}
 
-	log.WithContext(ctx).WithFields(lf).Info("updating changing items on the change record")
+	if len(receivedItems) > 0 {
+		log.WithContext(ctx).WithFields(lf).WithField("received_items", len(receivedItems)).Info("updating changing items on the change record")
+	} else {
+		log.WithContext(ctx).WithFields(lf).WithField("received_items", len(receivedItems)).Info("updating change record with no items")
+	}
 	resultStream, err := client.UpdateChangingItems(ctx, &connect.Request[sdp.UpdateChangingItemsRequest]{
 		Msg: &sdp.UpdateChangingItemsRequest{
 			ChangeUUID:    createResponse.Msg.Change.Metadata.UUID,
