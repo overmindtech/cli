@@ -7,6 +7,9 @@ jobs:
     env:
       CGO_ENABLED: 0
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Go Init
         uses: ./.github/actions/go_init/action.yml
 
@@ -25,6 +28,9 @@ jobs:
     name: lint
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Go Init
         uses: ./.github/actions/go_init/action.yml
 
