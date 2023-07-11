@@ -105,30 +105,32 @@ func changingItemQueriesFromTfplan(ctx context.Context, lf log.Fields) []*sdp.Qu
 
 	// for all managed resources:
 	for _, r := range exampleResults {
-		mapData, ok := datamaps.AwssourceData[r.Type]
+		mappings, ok := datamaps.AwssourceData[r.Type]
 		if !ok {
 			log.WithContext(ctx).WithFields(lf).WithField("terraform-address", r.Address).Warn("skipping unmapped resource")
 			break
 		}
 
-		queryStr, ok := r.Values[mapData.QueryField]
-		if !ok {
-			log.WithContext(ctx).
-				WithFields(lf).
-				WithField("terraform-address", r.Address).
-				WithField("terraform-query-field", mapData.QueryField).Warn("skipping resource without query field")
-			break
-		}
+		for _, mapData := range mappings {
+			queryStr, ok := r.Values[mapData.QueryField]
+			if !ok {
+				log.WithContext(ctx).
+					WithFields(lf).
+					WithField("terraform-address", r.Address).
+					WithField("terraform-query-field", mapData.QueryField).Warn("skipping resource without query field")
+				break
+			}
 
-		u := uuid.New()
-		changing_items = append(changing_items, &sdp.Query{
-			Type:               mapData.Type,
-			Method:             mapData.Method,
-			Query:              queryStr,
-			Scope:              mapData.Scope,
-			RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
-			UUID:               u[:],
-		})
+			u := uuid.New()
+			changing_items = append(changing_items, &sdp.Query{
+				Type:               mapData.Type,
+				Method:             mapData.Method,
+				Query:              queryStr,
+				Scope:              mapData.Scope,
+				RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
+				UUID:               u[:],
+			})
+		}
 	}
 
 	return changing_items
