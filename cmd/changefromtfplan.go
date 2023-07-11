@@ -105,6 +105,10 @@ func changingItemQueriesFromTfplan(ctx context.Context, lf log.Fields) ([]*sdp.Q
 			// skip resources with no changes
 			continue
 		}
+		log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
+			"actions": actions,
+			"address": changed_item_map["address"],
+		}).Debugf("mapping item")
 
 		changed_item := TfData{
 			Address: changed_item_map["address"].(string),
