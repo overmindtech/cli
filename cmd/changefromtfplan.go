@@ -481,5 +481,4 @@ func init() {
 	// changeFromTfplanCmd.PersistentFlags().String("cc-emails", "", "A comma-separated list of emails to keep updated with the status of this change.")
 
 	changeFromTfplanCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
-	changeFromTfplanCmd.PersistentFlags().Bool("test-affecting", true, "Choose from the hardcoded test data whether to use a resource that is affecting the test app or not.")
 }
