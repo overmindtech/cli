@@ -2,6 +2,7 @@ package tracing
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"os"
 	"runtime/debug"
@@ -23,10 +24,11 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const (
-	instrumentationName    = "github.com/overmindtech/ovm-cli"
-	instrumentationVersion = "0.0.1"
-)
+//go:generate sh -c "echo -n $(git describe --long) > commit.txt"
+//go:embed commit.txt
+var instrumentationVersion string
+
+const instrumentationName = "github.com/overmindtech/ovm-cli"
 
 var (
 	tracer = otel.GetTracerProvider().Tracer(

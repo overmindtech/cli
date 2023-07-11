@@ -17,8 +17,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
+      - name: Go Init
+        uses: ./.github/actions/go_init
 
       - name: Run GoReleaser (publish)
         uses: goreleaser/goreleaser-action@v4

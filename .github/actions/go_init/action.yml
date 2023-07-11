@@ -1,0 +1,30 @@
+name: Go Init
+description: Initializes go and runs go generate
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v4
+
+    - name: Reset sources
+      shell: bash
+      run: rm -Rf sources/
+
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        repository: overmindtech/aws-source
+        path: sources/aws-source
+
+    - name: Go Generate
+      shell: bash
+      run: |
+        go generate ./...
+        if [ -z "$(git status --porcelain | grep -v 'T sources/')" ]; then
+          echo "No pending changes from 'go generate'"
+        else
+          echo "Pending changes from 'go generate' found, please run 'go generate ./...' and commit the changes"
+          git status
+          exit 1
+        fi
