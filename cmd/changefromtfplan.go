@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -77,34 +78,46 @@ var (
 type TfData struct {
 	Address string
 	Type    string
-	Values  map[string]string
+	Values  map[string]any
 }
 
-func changingItemQueriesFromTfplan(ctx context.Context, lf log.Fields) []*sdp.Query {
+func changingItemQueriesFromTfplan(ctx context.Context, lf log.Fields) ([]*sdp.Query, error) {
 	// read results from `terraform show -json ${tfplan file}`
-	exampleResults := map[string]TfData{
-		"aws_iam_policy.aws_source_assume_customer": {
-			Address: "aws_iam_policy.aws_source_assume_customer",
-			Type:    "aws_iam_policy",
-			Values: map[string]string{
-				"arn":         "arn:aws:iam::944651592624:policy/AwsSourceAssumeCustomerRole",
-				"description": "Allows the aws-source pod to assume the provided customer roles",
-				"id":          "arn:aws:iam::944651592624:policy/AwsSourceAssumeCustomerRole",
-				"name":        "AwsSourceAssumeCustomerRole",
-				// ...
-			},
-		},
+	contents, err := os.ReadFile(viper.GetString("tfplan-json"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read %v: %w", viper.GetString("tfplan-json"), err)
+	}
+
+	changing_items_tf := map[string]TfData{}
+
+	var parsed map[string]any
+	json.Unmarshal(contents, &parsed)
+	root_module := parsed["planned_values"].(map[string]any)["root_module"].(map[string]any)
+	resourceValues := map[string]map[string]any{}
+	resourceValuesFromModule(root_module, &resourceValues)
+
+	resource_changes := parsed["resource_changes"].([]any)
+	for _, changed_item_data := range resource_changes {
+		changed_item_map := changed_item_data.(map[string]any)
+		change := changed_item_map["change"].(map[string]any)
+		actions := change["actions"].([]any)
+		if len(actions) == 0 || actions[0] == "no-op" {
+			// skip resources with no changes
+			continue
+		}
+
+		changed_item := TfData{
+			Address: changed_item_map["address"].(string),
+			Type:    changed_item_map["type"].(string),
+			Values:  resourceValues[changed_item_map["address"].(string)],
+		}
+
+		changing_items_tf[changed_item.Address] = changed_item
 	}
 
 	var changing_items []*sdp.Query
-	if viper.GetBool("test-affecting") {
-		changing_items = []*sdp.Query{affecting_resource}
-	} else {
-		changing_items = []*sdp.Query{safe_resource}
-	}
-
 	// for all managed resources:
-	for _, r := range exampleResults {
+	for _, r := range changing_items_tf {
 		mappings, ok := datamaps.AwssourceData[r.Type]
 		if !ok {
 			log.WithContext(ctx).WithFields(lf).WithField("terraform-address", r.Address).Warn("skipping unmapped resource")
@@ -125,7 +138,7 @@ func changingItemQueriesFromTfplan(ctx context.Context, lf log.Fields) []*sdp.Qu
 			changing_items = append(changing_items, &sdp.Query{
 				Type:               mapData.Type,
 				Method:             mapData.Method,
-				Query:              queryStr,
+				Query:              queryStr.(string),
 				Scope:              mapData.Scope,
 				RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
 				UUID:               u[:],
@@ -133,7 +146,25 @@ func changingItemQueriesFromTfplan(ctx context.Context, lf log.Fields) []*sdp.Qu
 		}
 	}
 
-	return changing_items
+	return changing_items, nil
+}
+
+func resourceValuesFromModule(module map[string]any, result *map[string]map[string]any) {
+	resource_data, ok := module["resources"]
+	if ok {
+		for _, r := range resource_data.([]any) {
+			resource := r.(map[string]any)
+			(*result)[resource["address"].(string)] = resource["values"].(map[string]any)
+		}
+	}
+
+	child_modules_data, ok := module["child_modules"]
+	if ok {
+		for _, cm := range child_modules_data.([]any) {
+			child_module := cm.(map[string]any)
+			resourceValuesFromModule(child_module, result)
+		}
+	}
 }
 
 func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
@@ -186,12 +217,17 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 	log.WithContext(ctx).WithFields(lf).Info("created a new change")
 
 	log.WithContext(ctx).WithFields(lf).Info("resolving items from terraform plan")
-	queries := changingItemQueriesFromTfplan(ctx, lf)
+	queries, err := changingItemQueriesFromTfplan(ctx, lf)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read terraform plan")
+		return 1
+	}
 
 	options := &websocket.DialOptions{
 		HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
 	}
 
+	log.WithContext(ctx).WithFields(lf).WithField("item_count", len(queries)).Info("identifying items")
 	c, _, err := websocket.Dial(ctx, viper.GetString("url"), options)
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
@@ -345,6 +381,7 @@ responses:
 		}
 	}
 
+	log.WithContext(ctx).WithFields(lf).Info("updating changing items on the change record")
 	resultStream, err := client.UpdateChangingItems(ctx, &connect.Request[sdp.UpdateChangingItemsRequest]{
 		Msg: &sdp.UpdateChangingItemsRequest{
 			ChangeUUID:    createResponse.Msg.Change.Metadata.UUID,
@@ -423,8 +460,7 @@ func init() {
 	changeFromTfplanCmd.PersistentFlags().String("changes-url", "https://api.prod.overmind.tech", "The changes service API endpoint")
 	changeFromTfplanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
 
-	changeFromTfplanCmd.PersistentFlags().String("terraform", "terraform", "The binary to use for calling terraform. Will be looked up in the system PATH.")
-	changeFromTfplanCmd.PersistentFlags().String("tfplan", "./tfplan", "Parse changing items from this terraform plan file.")
+	changeFromTfplanCmd.PersistentFlags().String("tfplan-json", "./tfplan.json", "Parse changing items from this terraform plan JSON file. Generate this using `terraform show -json PLAN_FILE`")
 
 	changeFromTfplanCmd.PersistentFlags().String("title", "", "Short title for this change.")
 	changeFromTfplanCmd.PersistentFlags().String("description", "", "Quick description of the change.")
