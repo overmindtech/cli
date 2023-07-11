@@ -64,7 +64,11 @@ func changingItemQueriesFromTfplan(ctx context.Context, lf log.Fields) ([]*sdp.Q
 	changing_items_tf := map[string]TfData{}
 
 	var parsed map[string]any
-	json.Unmarshal(contents, &parsed)
+	err = json.Unmarshal(contents, &parsed)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse %v: %w", viper.GetString("tfplan-json"), err)
+	}
+
 	root_module := parsed["planned_values"].(map[string]any)["root_module"].(map[string]any)
 	resourceValues := map[string]map[string]any{}
 	resourceValuesFromModule(root_module, &resourceValues)
