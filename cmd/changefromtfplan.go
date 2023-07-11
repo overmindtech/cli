@@ -11,6 +11,7 @@ import (
 
 	"github.com/bufbuild/connect-go"
 	"github.com/google/uuid"
+	"github.com/overmindtech/ovm-cli/cmd/datamaps"
 	"github.com/overmindtech/ovm-cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
@@ -73,13 +74,63 @@ var (
 	}
 )
 
-func changingItemQueriesFromTfplan() []*sdp.Query {
+type TfData struct {
+	Address string
+	Type    string
+	Values  map[string]string
+}
+
+func changingItemQueriesFromTfplan(ctx context.Context, lf log.Fields) []*sdp.Query {
+	// read results from `terraform show -json ${tfplan file}`
+	exampleResults := map[string]TfData{
+		"aws_iam_policy.aws_source_assume_customer": {
+			Address: "aws_iam_policy.aws_source_assume_customer",
+			Type:    "aws_iam_policy",
+			Values: map[string]string{
+				"arn":         "arn:aws:iam::944651592624:policy/AwsSourceAssumeCustomerRole",
+				"description": "Allows the aws-source pod to assume the provided customer roles",
+				"id":          "arn:aws:iam::944651592624:policy/AwsSourceAssumeCustomerRole",
+				"name":        "AwsSourceAssumeCustomerRole",
+				// ...
+			},
+		},
+	}
+
 	var changing_items []*sdp.Query
 	if viper.GetBool("test-affecting") {
 		changing_items = []*sdp.Query{affecting_resource}
 	} else {
 		changing_items = []*sdp.Query{safe_resource}
 	}
+
+	// for all managed resources:
+	for _, r := range exampleResults {
+		mapData, ok := datamaps.AwssourceData[r.Type]
+		if !ok {
+			log.WithContext(ctx).WithFields(lf).WithField("terraform-address", r.Address).Warn("skipping unmapped resource")
+			break
+		}
+
+		queryStr, ok := r.Values[mapData.QueryField]
+		if !ok {
+			log.WithContext(ctx).
+				WithFields(lf).
+				WithField("terraform-address", r.Address).
+				WithField("terraform-query-field", mapData.QueryField).Warn("skipping resource without query field")
+			break
+		}
+
+		u := uuid.New()
+		changing_items = append(changing_items, &sdp.Query{
+			Type:               mapData.Type,
+			Method:             mapData.Method,
+			Query:              queryStr,
+			Scope:              mapData.Scope,
+			RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
+			UUID:               u[:],
+		})
+	}
+
 	return changing_items
 }
 
@@ -133,7 +184,7 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 	log.WithContext(ctx).WithFields(lf).Info("created a new change")
 
 	log.WithContext(ctx).WithFields(lf).Info("resolving items from terraform plan")
-	queries := changingItemQueriesFromTfplan()
+	queries := changingItemQueriesFromTfplan(ctx, lf)
 
 	options := &websocket.DialOptions{
 		HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
