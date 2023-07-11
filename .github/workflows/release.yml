@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Go Init
-        uses: ./.github/actions/go_init/action.yml
+        uses: ./.github/actions/go_init
 
       - name: Run GoReleaser (publish)
         uses: goreleaser/goreleaser-action@v4
