@@ -7,26 +7,22 @@ runs:
     - name: Set up Go
       uses: actions/setup-go@v4
 
-    - name: Reset sources
-      shell: bash
-      run: rm -Rf sources/
-
     - name: Checkout
       uses: actions/checkout@v3
       with:
         repository: overmindtech/aws-source
-        path: sources/aws-source
+        path: ./aws-source
+
+    - name: Move sources in place
+      shell: bash
+      run: mv -v aws-source ..
 
     - name: Go Generate
       shell: bash
       run: |
         go generate ./...
-        if [ -z "$(git status --porcelain | grep -v 'T sources/')" ]; then
+        if [ -z "$(git status --porcelain)" ]; then
           echo "No pending changes from 'go generate'"
-
-          # undo changes from testing `go generate`
-          rm -rf sources/
-          git checkout HEAD -- sources/
         else
           echo "Pending changes from 'go generate' found, please run 'go generate ./...' and commit the changes"
           git status
