@@ -23,6 +23,10 @@ runs:
         go generate ./...
         if [ -z "$(git status --porcelain | grep -v 'T sources/')" ]; then
           echo "No pending changes from 'go generate'"
+
+          # undo changes from testing `go generate`
+          rm -rf sources/
+          git checkout HEAD -- sources/
         else
           echo "Pending changes from 'go generate' found, please run 'go generate ./...' and commit the changes"
           git status
