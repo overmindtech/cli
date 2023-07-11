@@ -21,7 +21,7 @@ runs:
       shell: bash
       run: |
         go generate ./...
-        if [ -z "$(git status --porcelain | grep -v 'typechange: sources/')" ]; then
+        if [ -z "$(git status --porcelain | grep -v 'T sources/')" ]; then
           echo "No pending changes from 'go generate'"
         else
           echo "Pending changes from 'go generate' found, please run 'go generate ./...' and commit the changes"
