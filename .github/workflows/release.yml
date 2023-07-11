@@ -34,7 +34,7 @@ jobs:
         if: ${{ github.event_name == 'pull_request' }}
         with:
           version: latest
-          args: release --clean --skip-announce --skip-publish
+          args: release --clean --snapshot --skip-publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
