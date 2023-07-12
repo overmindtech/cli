@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/sdpconnect"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
@@ -20,6 +21,7 @@ func AuthenticatedApiKeyClient(ctx context.Context) sdpconnect.ApiKeyServiceClie
 		url = viper.GetString("url")
 		viper.Set("apikey-url", url)
 	}
+	log.WithContext(ctx).WithField("apikey-url", url).Debug("Connecting to overmind apikeys API")
 	return sdpconnect.NewApiKeyServiceClient(httpClient, url)
 }
 
@@ -31,6 +33,7 @@ func UnauthenticatedApiKeyClient(ctx context.Context) sdpconnect.ApiKeyServiceCl
 		url = viper.GetString("url")
 		viper.Set("apikey-url", url)
 	}
+	log.WithContext(ctx).WithField("apikey-url", url).Debug("Connecting to overmind apikeys API (unauthenticated)")
 	return sdpconnect.NewApiKeyServiceClient(otelhttp.DefaultClient, url)
 }
 
@@ -43,6 +46,7 @@ func AuthenticatedBookmarkClient(ctx context.Context) sdpconnect.BookmarksServic
 		url = viper.GetString("url")
 		viper.Set("bookmark-url", url)
 	}
+	log.WithContext(ctx).WithField("bookmark-url", url).Debug("Connecting to overmind bookmark API")
 	return sdpconnect.NewBookmarksServiceClient(httpClient, url)
 }
 
@@ -55,6 +59,7 @@ func AuthenticatedChangesClient(ctx context.Context) sdpconnect.ChangesServiceCl
 		url = viper.GetString("url")
 		viper.Set("changes-url", url)
 	}
+	log.WithContext(ctx).WithField("changes-url", url).Debug("Connecting to overmind changes API")
 	return sdpconnect.NewChangesServiceClient(httpClient, url)
 }
 
@@ -67,6 +72,7 @@ func AuthenticatedSnapshotsClient(ctx context.Context) sdpconnect.SnapshotsServi
 		url = viper.GetString("url")
 		viper.Set("snapshot-url", url)
 	}
+	log.WithContext(ctx).WithField("snapshot-url", url).Debug("Connecting to overmind snapshot API")
 	return sdpconnect.NewSnapshotsServiceClient(httpClient, url)
 }
 

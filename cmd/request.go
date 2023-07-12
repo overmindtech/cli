@@ -77,9 +77,6 @@ func Request(signals chan os.Signal, ready chan bool) int {
 		"url":         viper.GetString("url"),
 	}
 
-	// Connect to the websocket
-	log.WithContext(ctx).WithFields(lf).Debug("Connecting to overmind API")
-
 	ctx, err = ensureToken(ctx, signals)
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithField("apikey-url", viper.GetString("apikey-url")).WithError(err).Error("failed to authenticate")

@@ -170,9 +170,6 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 		"gateway_url": gatewayUrl,
 	}
 
-	// Connect to the websocket
-	log.WithContext(ctx).WithFields(lf).Debug("Connecting to overmind API")
-
 	ctx, err = ensureToken(ctx, signals)
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithField("apikey-url", viper.GetString("apikey-url")).WithError(err).Error("failed to authenticate")
