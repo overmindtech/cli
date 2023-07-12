@@ -54,6 +54,7 @@ func Execute() {
 func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, error) {
 	// shortcut if we already have a token set
 	if viper.GetString("token") != "" {
+		log.WithContext(ctx).Debug("using provided token for authentication")
 		token := viper.GetString("token")
 		if strings.HasPrefix(token, "ovm_api_") {
 			// exchange api token for JWT
@@ -66,6 +67,7 @@ func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, 
 			if err != nil {
 				return ctx, fmt.Errorf("error authenticating the API token: %w", err)
 			}
+			log.WithContext(ctx).Debug("successfully authenticated")
 			token = resp.Msg.AccessToken
 		} else {
 			return ctx, errors.New("token does not match pattern 'ovm_api_*'")
@@ -74,13 +76,18 @@ func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, 
 	}
 
 	// Check to see if the URL is secure
-	gatewayURL, err := url.Parse(viper.GetString("url"))
+	gatewayUrl := viper.GetString("gateway-url")
+	if gatewayUrl == "" {
+		gatewayUrl = fmt.Sprintf("%v/api/gateway", viper.GetString("url"))
+		viper.Set("gateway-url", gatewayUrl)
+	}
+	parsed, err := url.Parse(gatewayUrl)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).Error("Failed to parse --url")
-		return ctx, err
+		return ctx, fmt.Errorf("error parsing --gateway-url: %w", err)
 	}
 
-	if gatewayURL.Scheme == "wss" || gatewayURL.Scheme == "https" || gatewayURL.Hostname() == "localhost" {
+	if parsed.Scheme == "wss" || parsed.Scheme == "https" || parsed.Hostname() == "localhost" {
 		// Authenticate using the oauth resource owner password flow
 		config := oauth2.Config{
 			ClientID: viper.GetString("auth0-client-id"),
@@ -168,7 +175,7 @@ func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, 
 		// Set the token
 		return context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken), nil
 	}
-	return ctx, fmt.Errorf("no token configured and target URL (%v) is insecure", gatewayURL)
+	return ctx, fmt.Errorf("no token configured and target URL (%v) is insecure", parsed)
 }
 
 func init() {
