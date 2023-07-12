@@ -22,3 +22,4 @@ go.work
 
 dist/
 tracing/commit.txt
+cmd/commit.txt
