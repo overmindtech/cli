@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"net/http"
@@ -27,11 +28,16 @@ var logLevel string
 
 var minStatusInterval = durationpb.New(250 * time.Millisecond)
 
+//go:generate sh -c "echo -n $(git describe --long) > commit.txt"
+//go:embed commit.txt
+var cliVersion string
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "ovm-cli",
-	Short: "A CLI to interact with the overmind API",
-	Long:  `The ovm-cli allows direct access to the overmind API`,
+	Use:     "ovm-cli",
+	Short:   "A CLI to interact with the overmind API",
+	Long:    `The ovm-cli allows direct access to the overmind API`,
+	Version: cliVersion,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
 		err := viper.BindPFlags(cmd.Flags())
