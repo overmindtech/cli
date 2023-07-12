@@ -105,7 +105,7 @@ func GetBookmark(signals chan os.Signal, ready chan bool) int {
 func init() {
 	rootCmd.AddCommand(getBookmarkCmd)
 
-	getBookmarkCmd.PersistentFlags().String("bookmark-url", "https://api.prod.overmind.tech/", "The bookmark service API endpoint")
+	getBookmarkCmd.PersistentFlags().String("bookmark-url", "", "The bookmark service API endpoint (defaults to --url)")
 	getBookmarkCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 
 	getBookmarkCmd.PersistentFlags().String("uuid", "", "The UUID of the bookmark that should be displayed.")

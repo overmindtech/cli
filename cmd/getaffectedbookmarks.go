@@ -107,7 +107,7 @@ func GetAffectedBookmarks(signals chan os.Signal, ready chan bool) int {
 func init() {
 	rootCmd.AddCommand(getAffectedBookmarksCmd)
 
-	getAffectedBookmarksCmd.PersistentFlags().String("bookmark-url", "https://api.prod.overmind.tech/", "The bookmark service API endpoint")
+	getAffectedBookmarksCmd.PersistentFlags().String("bookmark-url", "", "The bookmark service API endpoint (defaults to --url)")
 	getAffectedBookmarksCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 
 	getAffectedBookmarksCmd.PersistentFlags().String("snapshot-uuid", "", "The UUID of the snapshot that should be checked.")
