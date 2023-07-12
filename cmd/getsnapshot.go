@@ -110,7 +110,7 @@ func GetSnapshot(signals chan os.Signal, ready chan bool) int {
 func init() {
 	rootCmd.AddCommand(getSnapshotCmd)
 
-	getSnapshotCmd.PersistentFlags().String("snapshot-url", "https://api.prod.overmind.tech/", "The snapshot service API endpoint")
+	getSnapshotCmd.PersistentFlags().String("snapshot-url", "", "The snapshot service API endpoint (defaults to --url)")
 	getSnapshotCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 
 	getSnapshotCmd.PersistentFlags().String("uuid", "", "The UUID of the snapshot that should be displayed.")

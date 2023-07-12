@@ -449,7 +449,7 @@ func allDone(ctx context.Context, activeQueries map[uuid.UUID]bool, lf log.Field
 func init() {
 	rootCmd.AddCommand(changeFromTfplanCmd)
 
-	changeFromTfplanCmd.PersistentFlags().String("changes-url", "https://api.prod.overmind.tech", "The changes service API endpoint")
+	changeFromTfplanCmd.PersistentFlags().String("changes-url", "", "The changes service API endpoint (defaults to --url)")
 	changeFromTfplanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
 
 	changeFromTfplanCmd.PersistentFlags().String("tfplan-json", "./tfplan.json", "Parse changing items from this terraform plan JSON file. Generate this using 'terraform show -json PLAN_FILE'")
