@@ -11,16 +11,27 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-// AuthenticatedChangesClient Returns a bookmark client that uses the auth
+// AuthenticatedApiKeyClient Returns an apikey client that uses the auth
 // embedded in the context and otel instrumentation
-func AuthenticatedChangesClient(ctx context.Context) sdpconnect.ChangesServiceClient {
+func AuthenticatedApiKeyClient(ctx context.Context) sdpconnect.ApiKeyServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("changes-url")
+	url := viper.GetString("apikey-url")
 	if url == "" {
 		url = viper.GetString("url")
-		viper.Set("changes-url", url)
+		viper.Set("apikey-url", url)
 	}
-	return sdpconnect.NewChangesServiceClient(httpClient, url)
+	return sdpconnect.NewApiKeyServiceClient(httpClient, url)
+}
+
+// UnauthenticatedApiKeyClient Returns an apikey client with otel instrumentation
+// but no authentication. Can only be used for ExchangeKeyForToken
+func UnauthenticatedApiKeyClient(ctx context.Context) sdpconnect.ApiKeyServiceClient {
+	url := viper.GetString("apikey-url")
+	if url == "" {
+		url = viper.GetString("url")
+		viper.Set("apikey-url", url)
+	}
+	return sdpconnect.NewApiKeyServiceClient(otelhttp.DefaultClient, url)
 }
 
 // AuthenticatedBookmarkClient Returns a bookmark client that uses the auth
@@ -33,6 +44,18 @@ func AuthenticatedBookmarkClient(ctx context.Context) sdpconnect.BookmarksServic
 		viper.Set("bookmark-url", url)
 	}
 	return sdpconnect.NewBookmarksServiceClient(httpClient, url)
+}
+
+// AuthenticatedChangesClient Returns a bookmark client that uses the auth
+// embedded in the context and otel instrumentation
+func AuthenticatedChangesClient(ctx context.Context) sdpconnect.ChangesServiceClient {
+	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	url := viper.GetString("changes-url")
+	if url == "" {
+		url = viper.GetString("url")
+		viper.Set("changes-url", url)
+	}
+	return sdpconnect.NewChangesServiceClient(httpClient, url)
 }
 
 // AuthenticatedSnapshotsClient Returns a Snapshots client that uses the auth

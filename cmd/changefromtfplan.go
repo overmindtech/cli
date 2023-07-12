@@ -32,7 +32,7 @@ var changeFromTfplanCmd = &cobra.Command{
 	Short: "Creates a new Change from a given terraform plan file",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
-		err := viper.BindPFlags(cmd.PersistentFlags())
+		err := viper.BindPFlags(cmd.Flags())
 		if err != nil {
 			log.WithError(err).Fatal("could not bind `change-from-tfplan` flags")
 		}
@@ -160,16 +160,22 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 	))
 	defer span.End()
 
-	// Connect to the websocket
-	log.WithContext(ctx).Debugf("Connecting to overmind API: %v", viper.GetString("url"))
+	gatewayUrl := viper.GetString("gateway-url")
+	if gatewayUrl == "" {
+		gatewayUrl = fmt.Sprintf("%v/api/gateway", viper.GetString("url"))
+		viper.Set("gateway-url", gatewayUrl)
+	}
 
 	lf := log.Fields{
-		"url": viper.GetString("url"),
+		"gateway_url": gatewayUrl,
 	}
+
+	// Connect to the websocket
+	log.WithContext(ctx).WithFields(lf).Debug("Connecting to overmind API")
 
 	ctx, err = ensureToken(ctx, signals)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to authenticate")
+		log.WithContext(ctx).WithFields(lf).WithField("apikey-url", viper.GetString("apikey-url")).WithError(err).Error("failed to authenticate")
 		return 1
 	}
 
@@ -449,7 +455,7 @@ func init() {
 	changeFromTfplanCmd.PersistentFlags().String("changes-url", "https://api.prod.overmind.tech", "The changes service API endpoint")
 	changeFromTfplanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
 
-	changeFromTfplanCmd.PersistentFlags().String("tfplan-json", "./tfplan.json", "Parse changing items from this terraform plan JSON file. Generate this using `terraform show -json PLAN_FILE`")
+	changeFromTfplanCmd.PersistentFlags().String("tfplan-json", "./tfplan.json", "Parse changing items from this terraform plan JSON file. Generate this using 'terraform show -json PLAN_FILE'")
 
 	changeFromTfplanCmd.PersistentFlags().String("title", "", "Short title for this change.")
 	changeFromTfplanCmd.PersistentFlags().String("description", "", "Quick description of the change.")

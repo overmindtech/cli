@@ -25,7 +25,7 @@ var getBookmarkCmd = &cobra.Command{
 	Short: "Displays the contents of a bookmark.",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
-		err := viper.BindPFlags(cmd.PersistentFlags())
+		err := viper.BindPFlags(cmd.Flags())
 		if err != nil {
 			log.WithError(err).Fatal("could not bind `get-bookmark` flags")
 		}
