@@ -31,7 +31,7 @@ var requestCmd = &cobra.Command{
 	Short: "Runs a request against the overmind API",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
-		err := viper.BindPFlags(cmd.PersistentFlags())
+		err := viper.BindPFlags(cmd.Flags())
 		if err != nil {
 			log.WithError(err).Fatal("could not bind `request` flags")
 		}
@@ -66,16 +66,23 @@ func Request(signals chan os.Signal, ready chan bool) int {
 		return 1
 	}
 
+	gatewayUrl := viper.GetString("gateway-url")
+	if gatewayUrl == "" {
+		gatewayUrl = fmt.Sprintf("%v/api/gateway", viper.GetString("url"))
+		viper.Set("gateway-url", gatewayUrl)
+	}
+
 	lf := log.Fields{
-		"url": viper.GetString("url"),
+		"gateway_url": gatewayUrl,
+		"url":         viper.GetString("url"),
 	}
 
 	// Connect to the websocket
-	log.WithContext(ctx).Debugf("Connecting to overmind API: %v", viper.GetString("url"))
+	log.WithContext(ctx).WithFields(lf).Debug("Connecting to overmind API")
 
 	ctx, err = ensureToken(ctx, signals)
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
+		log.WithContext(ctx).WithFields(lf).WithField("apikey-url", viper.GetString("apikey-url")).WithError(err).Error("failed to authenticate")
 		return 1
 	}
 
@@ -87,7 +94,7 @@ func Request(signals chan os.Signal, ready chan bool) int {
 		HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
 	}
 
-	c, _, err := websocket.Dial(ctx, viper.GetString("url"), options)
+	c, _, err := websocket.Dial(ctx, gatewayUrl, options)
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
 		return 1

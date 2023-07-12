@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/google/uuid"
 	"github.com/overmindtech/ovm-cli/tracing"
 	"github.com/overmindtech/sdp-go"
@@ -33,7 +34,7 @@ var rootCmd = &cobra.Command{
 	Long:  `The ovm-cli allows direct access to the overmind API`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
-		err := viper.BindPFlags(cmd.PersistentFlags())
+		err := viper.BindPFlags(cmd.Flags())
 		if err != nil {
 			log.WithError(err).Fatal("could not bind `root` flags")
 		}
@@ -53,7 +54,23 @@ func Execute() {
 func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, error) {
 	// shortcut if we already have a token set
 	if viper.GetString("token") != "" {
-		return context.WithValue(ctx, sdp.UserTokenContextKey{}, viper.GetString("token")), nil
+		token := viper.GetString("token")
+		if strings.HasPrefix(token, "ovm_api_") {
+			// exchange api token for JWT
+			client := UnauthenticatedApiKeyClient(ctx)
+			resp, err := client.ExchangeKeyForToken(ctx, &connect.Request[sdp.ExchangeKeyForTokenRequest]{
+				Msg: &sdp.ExchangeKeyForTokenRequest{
+					ApiKey: token,
+				},
+			})
+			if err != nil {
+				return ctx, fmt.Errorf("error authenticating the API token: %w", err)
+			}
+			token = resp.Msg.AccessToken
+		} else {
+			return ctx, errors.New("token does not match pattern 'ovm_api_*'")
+		}
+		return context.WithValue(ctx, sdp.UserTokenContextKey{}, token), nil
 	}
 
 	// Check to see if the URL is secure
@@ -162,16 +179,18 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
 
 	// api endpoint
-	rootCmd.PersistentFlags().String("url", "https://api.prod.overmind.tech/api/gateway", "The overmind API endpoint")
+	rootCmd.PersistentFlags().String("url", "https://api.prod.overmind.tech", "The overmind API endpoint")
+	rootCmd.PersistentFlags().String("gateway-url", "", "The overmind Gateway endpoint (defaults to /api/gateway on --url)")
 
 	// authorization
-	rootCmd.PersistentFlags().String("auth0-client-id", "j3LylZtIosVPZtouKI8WuVHmE6Lluva1", "OAuth Client ID to use when connecting with auth")
-	rootCmd.PersistentFlags().String("auth0-domain", "om-prod.eu.auth0.com", "Auth0 domain to connect to")
-	rootCmd.PersistentFlags().String("token", "", "The token to use for authentication")
+	rootCmd.PersistentFlags().String("token", "", "The API token to use for authentication, also read from OVM_TOKEN environment variable")
 	err := viper.BindEnv("token", "OVM_TOKEN", "TOKEN")
 	if err != nil {
 		log.WithError(err).Fatal("could not bind token")
 	}
+	rootCmd.PersistentFlags().String("apikey-url", "", "The overmind API Keys endpoint (defaults to --url)")
+	rootCmd.PersistentFlags().String("auth0-client-id", "j3LylZtIosVPZtouKI8WuVHmE6Lluva1", "OAuth Client ID to use when connecting with auth")
+	rootCmd.PersistentFlags().String("auth0-domain", "om-prod.eu.auth0.com", "Auth0 domain to connect to")
 
 	// tracing
 	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb")
