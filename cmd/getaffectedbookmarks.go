@@ -19,7 +19,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// getAffectedBookmarksCmd represents the change-from-tfplan command
+// getAffectedBookmarksCmd represents the get-affected-bookmarks command
 var getAffectedBookmarksCmd = &cobra.Command{
 	Use:   "get-affected-bookmarks --snapshot-uuid ID --bookmark-uuids ID,ID,ID",
 	Short: "Calculates the bookmarks that would be overlapping with a snapshot.",

@@ -26,15 +26,15 @@ import (
 	"nhooyr.io/websocket/wspb"
 )
 
-// changeFromTfplanCmd represents the change-from-tfplan command
-var changeFromTfplanCmd = &cobra.Command{
-	Use:   "change-from-tfplan [--title TITLE] [--description DESCRIPTION] [--ticket-link URL] [--tfplan FILE]",
+// submitPlanCmd represents the submit-plan command
+var submitPlanCmd = &cobra.Command{
+	Use:   "submit-plan [--title TITLE] [--description DESCRIPTION] [--ticket-link URL] [--plan-json FILE]",
 	Short: "Creates a new Change from a given terraform plan file",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
 		err := viper.BindPFlags(cmd.Flags())
 		if err != nil {
-			log.WithError(err).Fatal("could not bind `change-from-tfplan` flags")
+			log.WithError(err).Fatal("could not bind `submit-plan` flags")
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -42,7 +42,7 @@ var changeFromTfplanCmd = &cobra.Command{
 
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-		exitcode := ChangeFromTfplan(sigs, nil)
+		exitcode := SubmitPlan(sigs, nil)
 		tracing.ShutdownTracer()
 		os.Exit(exitcode)
 	},
@@ -54,11 +54,11 @@ type TfData struct {
 	Values  map[string]any
 }
 
-func changingItemQueriesFromTfplan(ctx context.Context, lf log.Fields) ([]*sdp.Query, error) {
+func changingItemQueriesFromPlan(ctx context.Context, lf log.Fields) ([]*sdp.Query, error) {
 	// read results from `terraform show -json ${tfplan file}`
-	contents, err := os.ReadFile(viper.GetString("tfplan-json"))
+	contents, err := os.ReadFile(viper.GetString("plan-json"))
 	if err != nil {
-		return nil, fmt.Errorf("failed to read %v: %w", viper.GetString("tfplan-json"), err)
+		return nil, fmt.Errorf("failed to read %v: %w", viper.GetString("plan-json"), err)
 	}
 
 	changing_items_tf := map[string]TfData{}
@@ -66,7 +66,7 @@ func changingItemQueriesFromTfplan(ctx context.Context, lf log.Fields) ([]*sdp.Q
 	var parsed map[string]any
 	err = json.Unmarshal(contents, &parsed)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse %v: %w", viper.GetString("tfplan-json"), err)
+		return nil, fmt.Errorf("failed to parse %v: %w", viper.GetString("plan-json"), err)
 	}
 
 	root_module := parsed["planned_values"].(map[string]any)["root_module"].(map[string]any)
@@ -148,14 +148,14 @@ func resourceValuesFromModule(module map[string]any, result *map[string]map[stri
 	}
 }
 
-func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
+func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
 		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
 		return 1
 	}
 	ctx := context.Background()
-	ctx, span := tracing.Tracer().Start(ctx, "CLI ChangeFromTfplan", trace.WithAttributes(
+	ctx, span := tracing.Tracer().Start(ctx, "CLI SubmitPlan", trace.WithAttributes(
 		attribute.String("om.config", fmt.Sprintf("%v", viper.AllSettings())),
 	))
 	defer span.End()
@@ -172,7 +172,7 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 
 	ctx, err = ensureToken(ctx, signals)
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithField("apikey-url", viper.GetString("apikey-url")).WithError(err).Error("failed to authenticate")
+		log.WithContext(ctx).WithFields(lf).WithField("api-key-url", viper.GetString("api-key-url")).WithError(err).Error("failed to authenticate")
 		return 1
 	}
 
@@ -181,7 +181,7 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 	defer cancel()
 
 	log.WithContext(ctx).WithFields(lf).Info("resolving items from terraform plan")
-	queries, err := changingItemQueriesFromTfplan(ctx, lf)
+	queries, err := changingItemQueriesFromPlan(ctx, lf)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read terraform plan")
 		return 1
@@ -448,18 +448,18 @@ func allDone(ctx context.Context, activeQueries map[uuid.UUID]bool, lf log.Field
 }
 
 func init() {
-	rootCmd.AddCommand(changeFromTfplanCmd)
+	rootCmd.AddCommand(submitPlanCmd)
 
-	changeFromTfplanCmd.PersistentFlags().String("changes-url", "", "The changes service API endpoint (defaults to --url)")
-	changeFromTfplanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
+	submitPlanCmd.PersistentFlags().String("changes-url", "", "The changes service API endpoint (defaults to --url)")
+	submitPlanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
 
-	changeFromTfplanCmd.PersistentFlags().String("tfplan-json", "./tfplan.json", "Parse changing items from this terraform plan JSON file. Generate this using 'terraform show -json PLAN_FILE'")
+	submitPlanCmd.PersistentFlags().String("plan-json", "./tfplan.json", "Parse changing items from this terraform plan JSON file. Generate this using 'terraform show -json PLAN_FILE'")
 
-	changeFromTfplanCmd.PersistentFlags().String("title", "", "Short title for this change.")
-	changeFromTfplanCmd.PersistentFlags().String("description", "", "Quick description of the change.")
-	changeFromTfplanCmd.PersistentFlags().String("ticket-link", "*", "Link to the ticket for this change.")
-	changeFromTfplanCmd.PersistentFlags().String("owner", "", "The owner of this change.")
-	// changeFromTfplanCmd.PersistentFlags().String("cc-emails", "", "A comma-separated list of emails to keep updated with the status of this change.")
+	submitPlanCmd.PersistentFlags().String("title", "", "Short title for this change.")
+	submitPlanCmd.PersistentFlags().String("description", "", "Quick description of the change.")
+	submitPlanCmd.PersistentFlags().String("ticket-link", "*", "Link to the ticket for this change.")
+	submitPlanCmd.PersistentFlags().String("owner", "", "The owner of this change.")
+	// submitPlanCmd.PersistentFlags().String("cc-emails", "", "A comma-separated list of emails to keep updated with the status of this change.")
 
-	changeFromTfplanCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
+	submitPlanCmd.PersistentFlags().String("timeout", "3m", "How long to wait for responses")
 }

@@ -19,7 +19,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// getSnapshotCmd represents the change-from-tfplan command
+// getSnapshotCmd represents the get-snapshot command
 var getSnapshotCmd = &cobra.Command{
 	Use:   "get-snapshot --uuid ID",
 	Short: "Displays the contents of a snapshot.",

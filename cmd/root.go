@@ -58,27 +58,27 @@ func Execute() {
 
 // ensureToken
 func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, error) {
-	// shortcut if we already have a token set
-	if viper.GetString("token") != "" {
+	// get a token from the api key if present
+	if viper.GetString("api-key") != "" {
 		log.WithContext(ctx).Debug("using provided token for authentication")
-		token := viper.GetString("token")
-		if strings.HasPrefix(token, "ovm_api_") {
+		apiKey := viper.GetString("api-key")
+		if strings.HasPrefix(apiKey, "ovm_api_") {
 			// exchange api token for JWT
 			client := UnauthenticatedApiKeyClient(ctx)
 			resp, err := client.ExchangeKeyForToken(ctx, &connect.Request[sdp.ExchangeKeyForTokenRequest]{
 				Msg: &sdp.ExchangeKeyForTokenRequest{
-					ApiKey: token,
+					ApiKey: apiKey,
 				},
 			})
 			if err != nil {
 				return ctx, fmt.Errorf("error authenticating the API token: %w", err)
 			}
 			log.WithContext(ctx).Debug("successfully authenticated")
-			token = resp.Msg.AccessToken
+			apiKey = resp.Msg.AccessToken
 		} else {
-			return ctx, errors.New("token does not match pattern 'ovm_api_*'")
+			return ctx, errors.New("--api-key does not match pattern 'ovm_api_*'")
 		}
-		return context.WithValue(ctx, sdp.UserTokenContextKey{}, token), nil
+		return context.WithValue(ctx, sdp.UserTokenContextKey{}, apiKey), nil
 	}
 
 	// Check to see if the URL is secure
@@ -181,7 +181,7 @@ func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, 
 		// Set the token
 		return context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken), nil
 	}
-	return ctx, fmt.Errorf("no token configured and target URL (%v) is insecure", parsed)
+	return ctx, fmt.Errorf("no --api-key configured and target URL (%v) is insecure", parsed)
 }
 
 func init() {
@@ -196,12 +196,12 @@ func init() {
 	rootCmd.PersistentFlags().String("gateway-url", "", "The overmind Gateway endpoint (defaults to /api/gateway on --url)")
 
 	// authorization
-	rootCmd.PersistentFlags().String("token", "", "The API token to use for authentication, also read from OVM_TOKEN environment variable")
-	err := viper.BindEnv("token", "OVM_TOKEN", "TOKEN")
+	rootCmd.PersistentFlags().String("api-key", "", "The API key to use for authentication, also read from OVM_API_KEY environment variable")
+	err := viper.BindEnv("api-key", "OVM_API_KEY", "API_KEY")
 	if err != nil {
 		log.WithError(err).Fatal("could not bind token")
 	}
-	rootCmd.PersistentFlags().String("apikey-url", "", "The overmind API Keys endpoint (defaults to --url)")
+	rootCmd.PersistentFlags().String("api-key-url", "", "The overmind API Keys endpoint (defaults to --url)")
 	rootCmd.PersistentFlags().String("auth0-client-id", "j3LylZtIosVPZtouKI8WuVHmE6Lluva1", "OAuth Client ID to use when connecting with auth")
 	rootCmd.PersistentFlags().String("auth0-domain", "om-prod.eu.auth0.com", "Auth0 domain to connect to")
 

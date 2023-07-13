@@ -19,7 +19,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// getBookmarkCmd represents the change-from-tfplan command
+// getBookmarkCmd represents the get-bookmark command
 var getBookmarkCmd = &cobra.Command{
 	Use:   "get-bookmark --uuid ID",
 	Short: "Displays the contents of a bookmark.",
