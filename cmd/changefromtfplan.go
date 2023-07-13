@@ -407,6 +407,7 @@ func ChangeFromTfplan(signals chan os.Signal, ready chan bool) int {
 
 	changeUrl := fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), createResponse.Msg.Change.Metadata.GetUUIDParsed())
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("change ready")
+	fmt.Println(changeUrl)
 
 	fetchResponse, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
 		Msg: &sdp.GetChangeRequest{
