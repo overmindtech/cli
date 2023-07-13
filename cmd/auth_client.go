@@ -16,24 +16,24 @@ import (
 // embedded in the context and otel instrumentation
 func AuthenticatedApiKeyClient(ctx context.Context) sdpconnect.ApiKeyServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("apikey-url")
+	url := viper.GetString("api-key-url")
 	if url == "" {
 		url = viper.GetString("url")
-		viper.Set("apikey-url", url)
+		viper.Set("api-key-url", url)
 	}
-	log.WithContext(ctx).WithField("apikey-url", url).Debug("Connecting to overmind apikeys API")
+	log.WithContext(ctx).WithField("api-key-url", url).Debug("Connecting to overmind apikeys API")
 	return sdpconnect.NewApiKeyServiceClient(httpClient, url)
 }
 
 // UnauthenticatedApiKeyClient Returns an apikey client with otel instrumentation
 // but no authentication. Can only be used for ExchangeKeyForToken
 func UnauthenticatedApiKeyClient(ctx context.Context) sdpconnect.ApiKeyServiceClient {
-	url := viper.GetString("apikey-url")
+	url := viper.GetString("api-key-url")
 	if url == "" {
 		url = viper.GetString("url")
-		viper.Set("apikey-url", url)
+		viper.Set("api-key-url", url)
 	}
-	log.WithContext(ctx).WithField("apikey-url", url).Debug("Connecting to overmind apikeys API (unauthenticated)")
+	log.WithContext(ctx).WithField("api-key-url", url).Debug("Connecting to overmind apikeys API (unauthenticated)")
 	return sdpconnect.NewApiKeyServiceClient(otelhttp.DefaultClient, url)
 }
 
