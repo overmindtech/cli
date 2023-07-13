@@ -7,13 +7,13 @@ Usage:
   ovm-cli [command]
 
 Available Commands:
-  change-from-tfplan     Creates a new Change from a given terraform plan file
   completion             Generate the autocompletion script for the specified shell
   get-affected-bookmarks Calculates the bookmarks that would be overlapping with a snapshot.
   get-bookmark           Displays the contents of a bookmark.
   get-snapshot           Displays the contents of a snapshot.
   help                   Help about any command
   request                Runs a request against the overmind API
+  submit-plan            Creates a new Change from a given terraform plan file
 
 Flags:
       --api-key string             The API key to use for authentication, also read from OVM_API_KEY environment variable
@@ -41,6 +41,6 @@ Upload a terraform plan to overmind for Blast Radius Analysis:
 
 ```
 terraform show -json ./tfplan > ./tfplan.json
-ovm-cli change-from-tfplan --title "example change" --tfplan-json ./tfplan.json
+ovm-cli submit-plan --title "example change" --plan-json ./tfplan.json
 ```
 
