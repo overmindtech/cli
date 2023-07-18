@@ -8,7 +8,7 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_alb_listener": {
 		{
 			Type:       "elbv2-listener",
-			Method:     sdp.QueryMethod_LIST,
+			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "arn",
 			Scope:      "*",
 		},
@@ -16,7 +16,7 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_alb_listener_rule": {
 		{
 			Type:       "elbv2-rule",
-			Method:     sdp.QueryMethod_LIST,
+			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "arn",
 			Scope:      "*",
 		},
@@ -128,7 +128,7 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_ecs_service": {
 		{
 			Type:       "ecs-service",
-			Method:     sdp.QueryMethod_LIST,
+			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "arn",
 			Scope:      "*",
 		},
@@ -184,7 +184,7 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_eks_addon": {
 		{
 			Type:       "eks-addon",
-			Method:     sdp.QueryMethod_LIST,
+			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "arn",
 			Scope:      "*",
 		},
@@ -200,7 +200,7 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_eks_fargate_profile": {
 		{
 			Type:       "eks-fargate-profile",
-			Method:     sdp.QueryMethod_LIST,
+			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "arn",
 			Scope:      "*",
 		},
@@ -208,7 +208,7 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_eks_node_group": {
 		{
 			Type:       "eks-nodegroup",
-			Method:     sdp.QueryMethod_LIST,
+			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "arn",
 			Scope:      "*",
 		},
@@ -248,7 +248,7 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_iam_policy": {
 		{
 			Type:       "iam-policy",
-			Method:     sdp.QueryMethod_LIST,
+			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "arn",
 			Scope:      "*",
 		},
@@ -264,7 +264,7 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_iam_role_policy_attachment": {
 		{
 			Type:       "iam-policy",
-			Method:     sdp.QueryMethod_LIST,
+			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "policy_arn",
 			Scope:      "*",
 		},
@@ -308,7 +308,7 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_iam_user_policy_attachment": {
 		{
 			Type:       "iam-policy",
-			Method:     sdp.QueryMethod_LIST,
+			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "policy_arn",
 			Scope:      "*",
 		},
@@ -378,7 +378,7 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_lambda_layer_version": {
 		{
 			Type:       "lambda-layer-version",
-			Method:     sdp.QueryMethod_LIST,
+			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "arn",
 			Scope:      "*",
 		},
@@ -402,7 +402,7 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_lb_listener": {
 		{
 			Type:       "elbv2-listener",
-			Method:     sdp.QueryMethod_LIST,
+			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "arn",
 			Scope:      "*",
 		},
@@ -410,7 +410,7 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_lb_listener_rule": {
 		{
 			Type:       "elbv2-rule",
-			Method:     sdp.QueryMethod_LIST,
+			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "arn",
 			Scope:      "*",
 		},
