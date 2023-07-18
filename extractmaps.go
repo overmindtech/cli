@@ -124,12 +124,7 @@ func dataFromFiles(path string) map[string][]map[string]string {
 			data["query-field"] = qSplit[1]
 
 			data["scope"] = parsed["terraformScope"].(string)
-			switch parsed["terraformMethod"].(string) {
-			case "GET":
-				data["method"] = "GET"
-			case "SEARCH":
-				data["method"] = "LIST"
-			}
+			data["method"] = parsed["terraformMethod"].(string)
 
 			result[data["query-type"]] = append(result[data["query-type"]], data)
 		}

@@ -216,7 +216,7 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 		}
 
 		log.WithContext(ctx).WithFields(lf).WithField("item_count", len(queries)).Info("identifying items")
-		c, _, err := websocket.Dial(ctx, viper.GetString("url"), options)
+		c, _, err := websocket.Dial(ctx, viper.GetString("gateway-url"), options)
 		if err != nil {
 			log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
 			return 1
@@ -236,6 +236,16 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 					},
 				}
 				err = wspb.Write(ctx, c, &req)
+
+				if err == nil {
+					log.WithContext(ctx).WithFields(log.Fields{
+						"scope":  q.Scope,
+						"type":   q.Type,
+						"query":  q.Query,
+						"method": q.Method.String(),
+						"uuid":   q.ParseUuid().String(),
+					}).Trace("Started query")
+				}
 				if err != nil {
 					log.WithContext(ctx).WithFields(lf).WithError(err).WithField("req", &req).Error("Failed to send request")
 					continue
