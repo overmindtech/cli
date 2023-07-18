@@ -1,0 +1,3015 @@
+{
+    "planned_values": {
+        "root_module": {
+            "resources": [
+                {
+                    "address": "module.eks_elb_controller.aws_iam_policy.lb_controller[0]",
+                    "mode": "managed",
+                    "type": "aws_iam_policy",
+                    "name": "lb_controller",
+                    "index": 0,
+                    "provider_name": "registry.terraform.io/hashicorp/aws",
+                    "schema_version": 0,
+                    "values": {
+                        "arn": "arn:aws:iam::123456789012:policy/test-alb-ingress",
+                        "description": "Policy for alb-ingress service",
+                        "id": "arn:aws:iam::123456789012:policy/test-alb-ingress",
+                        "name": "test-alb-ingress",
+                        "name_prefix": "",
+                        "path": "/",
+                        "policy_id": "ANPA5X4M7MOYCYTEF5VUE",
+                        "tags": {},
+                        "tags_all": {}
+                    },
+                    "sensitive_values": {
+                        "tags": {},
+                        "tags_all": {}
+                    }
+                },
+                {
+                    "address": "aws_iam_policy.auth0_ses_send_emails",
+                    "mode": "managed",
+                    "type": "aws_iam_policy",
+                    "name": "auth0_ses_send_emails",
+                    "provider_name": "registry.terraform.io/hashicorp/aws",
+                    "schema_version": 0,
+                    "values": {
+                        "arn": "arn:aws:iam::123456789012:policy/auth0-ses-send-emails",
+                        "description": "Allows Auth0 to send emails via SES",
+                        "id": "arn:aws:iam::123456789012:policy/auth0-ses-send-emails",
+                        "name": "auth0-ses-send-emails",
+                        "name_prefix": "",
+                        "path": "/",
+                        "policy": "{\"Statement\":[{\"Action\":[\"ses:SendRawEmail\",\"ses:SendEmail\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}],\"Version\":\"2012-10-17\"}",
+                        "policy_id": "ANPA5X4M7MOYO7KE6G4J4",
+                        "tags": {},
+                        "tags_all": {}
+                    },
+                    "sensitive_values": {
+                        "tags": {},
+                        "tags_all": {}
+                    }
+                },
+                {
+                    "address": "module.eks.aws_iam_policy.cluster_encryption[0]",
+                    "mode": "managed",
+                    "type": "aws_iam_policy",
+                    "name": "cluster_encryption",
+                    "index": 0,
+                    "provider_name": "registry.terraform.io/hashicorp/aws",
+                    "schema_version": 0,
+                    "values": {
+                        "arn": "arn:aws:iam::123456789012:policy/test-cluster-ClusterEncryption2023061613390591120000000e",
+                        "description": "Cluster encryption policy to allow cluster role to utilize CMK provided",
+                        "id": "arn:aws:iam::123456789012:policy/test-cluster-ClusterEncryption2023061613390591120000000e",
+                        "name": "test-cluster-ClusterEncryption2023061613390591120000000e",
+                        "name_prefix": "test-cluster-ClusterEncryption",
+                        "path": "/",
+                        "policy": "{\"Statement\":[{\"Action\":[\"kms:Encrypt\",\"kms:Decrypt\",\"kms:ListGrants\",\"kms:DescribeKey\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:kms:eu-west-2:944651592624:key/e10b7c35-f5ec-48ce-8699-81497e5c2f57\"}],\"Version\":\"2012-10-17\"}",
+                        "policy_id": "ANPA5X4M7MOYA4TZO6GN3",
+                        "tags": {},
+                        "tags_all": {}
+                    },
+                    "sensitive_values": {
+                        "tags": {},
+                        "tags_all": {}
+                    }
+                },
+                {
+                    "address": "module.eks.aws_iam_policy.cni_ipv6_policy[0]",
+                    "mode": "managed",
+                    "type": "aws_iam_policy",
+                    "name": "cni_ipv6_policy",
+                    "index": 0,
+                    "provider_name": "registry.terraform.io/hashicorp/aws",
+                    "schema_version": 0,
+                    "values": {
+                        "arn": "arn:aws:iam::123456789012:policy/AmazonEKS_CNI_IPv6_Policy",
+                        "description": "IAM policy for EKS CNI to assign IPV6 addresses",
+                        "id": "arn:aws:iam::123456789012:policy/AmazonEKS_CNI_IPv6_Policy",
+                        "name": "AmazonEKS_CNI_IPv6_Policy",
+                        "name_prefix": "",
+                        "path": "/",
+                        "policy": "{\"Statement\":[{\"Action\":[\"ec2:DescribeTags\",\"ec2:DescribeNetworkInterfaces\",\"ec2:DescribeInstances\",\"ec2:DescribeInstanceTypes\",\"ec2:AssignIpv6Addresses\"],\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"AssignDescribe\"},{\"Action\":\"ec2:CreateTags\",\"Effect\":\"Allow\",\"Resource\":\"arn:aws:ec2:*:*:network-interface/*\",\"Sid\":\"CreateTags\"}],\"Version\":\"2012-10-17\"}",
+                        "policy_id": "ANPA5X4M7MOYIF2MVJEGJ",
+                        "tags": {},
+                        "tags_all": {}
+                    },
+                    "sensitive_values": {
+                        "tags": {},
+                        "tags_all": {}
+                    }
+                },
+
+                {
+                    "address": "module.eks_elb_controller.data.aws_iam_policy_document.lb_controller[0]",
+                    "mode": "data",
+                    "type": "aws_iam_policy_document",
+                    "name": "lb_controller",
+                    "index": 0,
+                    "provider_name": "registry.terraform.io/hashicorp/aws",
+                    "schema_version": 0,
+                    "values": {
+                        "override_policy_documents": null,
+                        "policy_id": null,
+                        "source_policy_documents": null,
+                        "statement": [
+                            {
+                                "actions": [
+                                    "iam:CreateServiceLinkedRole"
+                                ],
+                                "condition": [
+                                    {
+                                        "test": "StringEquals",
+                                        "values": [
+                                            "elasticloadbalancing.amazonaws.com"
+                                        ],
+                                        "variable": "iam:AWSServiceName"
+                                    }
+                                ],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "ec2:DescribeAccountAttributes",
+                                    "ec2:DescribeAddresses",
+                                    "ec2:DescribeAvailabilityZones",
+                                    "ec2:DescribeCoipPools",
+                                    "ec2:DescribeInstances",
+                                    "ec2:DescribeInternetGateways",
+                                    "ec2:DescribeNetworkInterfaces",
+                                    "ec2:DescribeSecurityGroups",
+                                    "ec2:DescribeSubnets",
+                                    "ec2:DescribeTags",
+                                    "ec2:DescribeVpcPeeringConnections",
+                                    "ec2:DescribeVpcs",
+                                    "ec2:GetCoipPoolUsage",
+                                    "elasticloadbalancing:DescribeListenerCertificates",
+                                    "elasticloadbalancing:DescribeListeners",
+                                    "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                                    "elasticloadbalancing:DescribeLoadBalancers",
+                                    "elasticloadbalancing:DescribeRules",
+                                    "elasticloadbalancing:DescribeSSLPolicies",
+                                    "elasticloadbalancing:DescribeTags",
+                                    "elasticloadbalancing:DescribeTargetGroupAttributes",
+                                    "elasticloadbalancing:DescribeTargetGroups",
+                                    "elasticloadbalancing:DescribeTargetHealth"
+                                ],
+                                "condition": [],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "acm:DescribeCertificate",
+                                    "acm:ListCertificates",
+                                    "cognito-idp:DescribeUserPoolClient",
+                                    "iam:GetServerCertificate",
+                                    "iam:ListServerCertificates",
+                                    "shield:CreateProtection",
+                                    "shield:DeleteProtection",
+                                    "shield:DescribeProtection",
+                                    "shield:GetSubscriptionState",
+                                    "waf-regional:AssociateWebACL",
+                                    "waf-regional:DisassociateWebACL",
+                                    "waf-regional:GetWebACL",
+                                    "waf-regional:GetWebACLForResource",
+                                    "wafv2:AssociateWebACL",
+                                    "wafv2:DisassociateWebACL",
+                                    "wafv2:GetWebACL",
+                                    "wafv2:GetWebACLForResource"
+                                ],
+                                "condition": [],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "ec2:AuthorizeSecurityGroupIngress",
+                                    "ec2:RevokeSecurityGroupIngress"
+                                ],
+                                "condition": [],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "ec2:CreateSecurityGroup"
+                                ],
+                                "condition": [],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "ec2:CreateTags"
+                                ],
+                                "condition": [
+                                    {
+                                        "test": "Null",
+                                        "values": [
+                                            "false"
+                                        ],
+                                        "variable": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                    },
+                                    {
+                                        "test": "StringEquals",
+                                        "values": [
+                                            "CreateSecurityGroup"
+                                        ],
+                                        "variable": "ec2:CreateAction"
+                                    }
+                                ],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "arn:aws:ec2:*:*:security-group/*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "ec2:CreateTags",
+                                    "ec2:DeleteTags"
+                                ],
+                                "condition": [
+                                    {
+                                        "test": "Null",
+                                        "values": [
+                                            "false"
+                                        ],
+                                        "variable": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                    },
+                                    {
+                                        "test": "Null",
+                                        "values": [
+                                            "true"
+                                        ],
+                                        "variable": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                    }
+                                ],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "arn:aws:ec2:*:*:security-group/*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "ec2:AuthorizeSecurityGroupIngress",
+                                    "ec2:DeleteSecurityGroup",
+                                    "ec2:RevokeSecurityGroupIngress"
+                                ],
+                                "condition": [
+                                    {
+                                        "test": "Null",
+                                        "values": [
+                                            "false"
+                                        ],
+                                        "variable": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                    }
+                                ],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "elasticloadbalancing:CreateLoadBalancer",
+                                    "elasticloadbalancing:CreateTargetGroup"
+                                ],
+                                "condition": [
+                                    {
+                                        "test": "Null",
+                                        "values": [
+                                            "false"
+                                        ],
+                                        "variable": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                    }
+                                ],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "elasticloadbalancing:CreateListener",
+                                    "elasticloadbalancing:CreateRule",
+                                    "elasticloadbalancing:DeleteListener",
+                                    "elasticloadbalancing:DeleteRule"
+                                ],
+                                "condition": [],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "elasticloadbalancing:AddTags",
+                                    "elasticloadbalancing:RemoveTags"
+                                ],
+                                "condition": [
+                                    {
+                                        "test": "Null",
+                                        "values": [
+                                            "false"
+                                        ],
+                                        "variable": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                    },
+                                    {
+                                        "test": "Null",
+                                        "values": [
+                                            "true"
+                                        ],
+                                        "variable": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                    }
+                                ],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*",
+                                    "arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*",
+                                    "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "elasticloadbalancing:AddTags",
+                                    "elasticloadbalancing:RemoveTags"
+                                ],
+                                "condition": [],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "arn:aws:elasticloadbalancing:*:*:listener-rule/app/*/*/*",
+                                    "arn:aws:elasticloadbalancing:*:*:listener-rule/net/*/*/*",
+                                    "arn:aws:elasticloadbalancing:*:*:listener/app/*/*/*",
+                                    "arn:aws:elasticloadbalancing:*:*:listener/net/*/*/*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "elasticloadbalancing:DeleteLoadBalancer",
+                                    "elasticloadbalancing:DeleteTargetGroup",
+                                    "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                                    "elasticloadbalancing:ModifyTargetGroup",
+                                    "elasticloadbalancing:ModifyTargetGroupAttributes",
+                                    "elasticloadbalancing:SetIpAddressType",
+                                    "elasticloadbalancing:SetSecurityGroups",
+                                    "elasticloadbalancing:SetSubnets"
+                                ],
+                                "condition": [
+                                    {
+                                        "test": "Null",
+                                        "values": [
+                                            "false"
+                                        ],
+                                        "variable": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                    }
+                                ],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "elasticloadbalancing:DeregisterTargets",
+                                    "elasticloadbalancing:RegisterTargets"
+                                ],
+                                "condition": [],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*"
+                                ],
+                                "sid": null
+                            },
+                            {
+                                "actions": [
+                                    "elasticloadbalancing:AddListenerCertificates",
+                                    "elasticloadbalancing:ModifyListener",
+                                    "elasticloadbalancing:ModifyRule",
+                                    "elasticloadbalancing:RemoveListenerCertificates",
+                                    "elasticloadbalancing:SetWebAcl"
+                                ],
+                                "condition": [],
+                                "effect": "Allow",
+                                "not_actions": null,
+                                "not_principals": [],
+                                "not_resources": null,
+                                "principals": [],
+                                "resources": [
+                                    "*"
+                                ],
+                                "sid": null
+                            }
+                        ],
+                        "version": null
+                    },
+                    "sensitive_values": {
+                        "statement": [
+                            {
+                                "actions": [
+                                    false
+                                ],
+                                "condition": [
+                                    {
+                                        "values": [
+                                            false
+                                        ]
+                                    }
+                                ],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false
+                                ],
+                                "condition": [],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false
+                                ],
+                                "condition": [],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false,
+                                    false
+                                ],
+                                "condition": [],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false
+                                ],
+                                "condition": [],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false
+                                ],
+                                "condition": [
+                                    {
+                                        "values": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "values": [
+                                            false
+                                        ]
+                                    }
+                                ],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false,
+                                    false
+                                ],
+                                "condition": [
+                                    {
+                                        "values": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "values": [
+                                            false
+                                        ]
+                                    }
+                                ],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false,
+                                    false,
+                                    false
+                                ],
+                                "condition": [
+                                    {
+                                        "values": [
+                                            false
+                                        ]
+                                    }
+                                ],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false,
+                                    false
+                                ],
+                                "condition": [
+                                    {
+                                        "values": [
+                                            false
+                                        ]
+                                    }
+                                ],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false,
+                                    false,
+                                    false,
+                                    false
+                                ],
+                                "condition": [],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false,
+                                    false
+                                ],
+                                "condition": [
+                                    {
+                                        "values": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "values": [
+                                            false
+                                        ]
+                                    }
+                                ],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false,
+                                    false,
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false,
+                                    false
+                                ],
+                                "condition": [],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false,
+                                    false,
+                                    false,
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false
+                                ],
+                                "condition": [
+                                    {
+                                        "values": [
+                                            false
+                                        ]
+                                    }
+                                ],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false,
+                                    false
+                                ],
+                                "condition": [],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false
+                                ]
+                            },
+                            {
+                                "actions": [
+                                    false,
+                                    false,
+                                    false,
+                                    false,
+                                    false
+                                ],
+                                "condition": [],
+                                "not_principals": [],
+                                "principals": [],
+                                "resources": [
+                                    false
+                                ]
+                            }
+                        ]
+                    }
+                }
+            ],
+            "child_modules": [
+                {
+                    "resources": [
+                        {
+                            "address": "module.efs_csi_irsa_role.aws_iam_policy.efs_csi[0]",
+                            "mode": "managed",
+                            "type": "aws_iam_policy",
+                            "name": "efs_csi",
+                            "index": 0,
+                            "provider_name": "registry.terraform.io/hashicorp/aws",
+                            "schema_version": 0,
+                            "values": {
+                                "arn": "arn:aws:iam::123456789012:policy/AmazonEKS_EFS_CSI_Policy-20230317134301609600000001",
+                                "description": "Provides permissions to manage EFS volumes via the container storage interface driver",
+                                "id": "arn:aws:iam::123456789012:policy/AmazonEKS_EFS_CSI_Policy-20230317134301609600000001",
+                                "name": "AmazonEKS_EFS_CSI_Policy-20230317134301609600000001",
+                                "name_prefix": "AmazonEKS_EFS_CSI_Policy-",
+                                "path": "/",
+                                "policy": "{\"Statement\":[{\"Action\":[\"elasticfilesystem:DescribeMountTargets\",\"elasticfilesystem:DescribeFileSystems\",\"elasticfilesystem:DescribeAccessPoints\",\"ec2:DescribeAvailabilityZones\"],\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:CreateAccessPoint\",\"Condition\":{\"StringLike\":{\"aws:RequestTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:TagResource\",\"Condition\":{\"StringLike\":{\"aws:RequestTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:DeleteAccessPoint\",\"Condition\":{\"StringEquals\":{\"aws:ResourceTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"}],\"Version\":\"2012-10-17\"}",
+                                "policy_id": "ANPA5X4M7MOYJS4FPQGBX",
+                                "tags": {},
+                                "tags_all": {}
+                            },
+                            "sensitive_values": {
+                                "tags": {},
+                                "tags_all": {}
+                            }
+                        },
+                        {
+                            "address": "module.efs_csi_irsa_role.aws_iam_role.this[0]",
+                            "mode": "managed",
+                            "type": "aws_iam_role",
+                            "name": "this",
+                            "index": 0,
+                            "provider_name": "registry.terraform.io/hashicorp/aws",
+                            "schema_version": 0,
+                            "values": {
+                                "arn": "arn:aws:iam::123456789012:role/efs-csi",
+                                "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRoleWithWebIdentity\",\"Condition\":{\"StringEquals\":{\"oidc.eks.eu-west-2.amazonaws.com/id/F41E26F5371FABBCFA5F3129C57D4AD8:aud\":\"sts.amazonaws.com\",\"oidc.eks.eu-west-2.amazonaws.com/id/F41E26F5371FABBCFA5F3129C57D4AD8:sub\":[\"system:serviceaccount:kube-system:efs-csi-controller-sa\",\"system:serviceaccount:kube-system:efs-csi-node-sa\"]}},\"Effect\":\"Allow\",\"Principal\":{\"Federated\":\"arn:aws:iam::123456789012:oidc-provider/oidc.eks.eu-west-2.amazonaws.com/id/F41E26F5371FABBCFA5F3129C57D4AD8\"}}],\"Version\":\"2012-10-17\"}",
+                                "create_date": "2023-03-17T13:43:01Z",
+                                "description": "",
+                                "force_detach_policies": true,
+                                "id": "efs-csi",
+                                "inline_policy": [],
+                                "managed_policy_arns": [
+                                    "arn:aws:iam::123456789012:policy/AmazonEKS_EFS_CSI_Policy-20230317134301609600000001"
+                                ],
+                                "max_session_duration": 3600,
+                                "name": "efs-csi",
+                                "name_prefix": "",
+                                "path": "/",
+                                "permissions_boundary": null,
+                                "tags": {},
+                                "tags_all": {},
+                                "unique_id": "AROA5X4M7MOYP6QYXIIVP"
+                            },
+                            "sensitive_values": {
+                                "inline_policy": [],
+                                "managed_policy_arns": [
+                                    false
+                                ],
+                                "tags": {},
+                                "tags_all": {}
+                            }
+                        },
+                        {
+                            "address": "module.efs_csi_irsa_role.aws_iam_role_policy_attachment.efs_csi[0]",
+                            "mode": "managed",
+                            "type": "aws_iam_role_policy_attachment",
+                            "name": "efs_csi",
+                            "index": 0,
+                            "provider_name": "registry.terraform.io/hashicorp/aws",
+                            "schema_version": 0,
+                            "values": {
+                                "id": "efs-csi-20230317134302181300000003",
+                                "policy_arn": "arn:aws:iam::123456789012:policy/AmazonEKS_EFS_CSI_Policy-20230317134301609600000001",
+                                "role": "efs-csi"
+                            },
+                            "sensitive_values": {}
+                        }
+                    ],
+                    "address": "module.efs_csi_irsa_role"
+                },
+                {
+                    "resources": [
+                        {
+                            "address": "module.eks_elb_controller.aws_iam_policy.lb_controller[0]",
+                            "mode": "managed",
+                            "type": "aws_iam_policy",
+                            "name": "lb_controller",
+                            "index": 0,
+                            "provider_name": "registry.terraform.io/hashicorp/aws",
+                            "schema_version": 0,
+                            "values": {
+                                "arn": "arn:aws:iam::123456789012:policy/test-alb-ingress",
+                                "description": "Policy for alb-ingress service",
+                                "id": "arn:aws:iam::123456789012:policy/test-alb-ingress",
+                                "name": "test-alb-ingress",
+                                "name_prefix": "",
+                                "path": "/",
+                                "policy_id": "ANPA5X4M7MOYCYTEF5VUE",
+                                "tags": {},
+                                "tags_all": {}
+                            },
+                            "sensitive_values": {
+                                "tags": {},
+                                "tags_all": {}
+                            }
+                        },
+                        {
+                            "address": "module.eks_elb_controller.aws_iam_role.lb_controller[0]",
+                            "mode": "managed",
+                            "type": "aws_iam_role",
+                            "name": "lb_controller",
+                            "index": 0,
+                            "provider_name": "registry.terraform.io/hashicorp/aws",
+                            "schema_version": 0,
+                            "values": {
+                                "arn": "arn:aws:iam::123456789012:role/test-alb-ingress",
+                                "create_date": "2023-06-16T14:41:17Z",
+                                "description": "",
+                                "force_detach_policies": false,
+                                "id": "test-alb-ingress",
+                                "inline_policy": [],
+                                "managed_policy_arns": [
+                                    "arn:aws:iam::123456789012:policy/test-alb-ingress"
+                                ],
+                                "max_session_duration": 3600,
+                                "name": "test-alb-ingress",
+                                "name_prefix": "",
+                                "path": "/",
+                                "permissions_boundary": null,
+                                "tags": {},
+                                "tags_all": {},
+                                "unique_id": "AROA5X4M7MOYDU5GZ7DFT"
+                            },
+                            "sensitive_values": {
+                                "inline_policy": [],
+                                "managed_policy_arns": [
+                                    false
+                                ],
+                                "tags": {},
+                                "tags_all": {}
+                            }
+                        },
+                        {
+                            "address": "module.eks_elb_controller.aws_iam_role_policy_attachment.lb_controller[0]",
+                            "mode": "managed",
+                            "type": "aws_iam_role_policy_attachment",
+                            "name": "lb_controller",
+                            "index": 0,
+                            "provider_name": "registry.terraform.io/hashicorp/aws",
+                            "schema_version": 0,
+                            "values": {
+                                "id": "test-alb-ingress-20230616144117244100000001",
+                                "policy_arn": "arn:aws:iam::123456789012:policy/test-alb-ingress",
+                                "role": "test-alb-ingress"
+                            },
+                            "sensitive_values": {}
+                        },
+                        {
+                            "address": "module.eks_elb_controller.data.aws_iam_policy_document.lb_controller[0]",
+                            "mode": "data",
+                            "type": "aws_iam_policy_document",
+                            "name": "lb_controller",
+                            "index": 0,
+                            "provider_name": "registry.terraform.io/hashicorp/aws",
+                            "schema_version": 0,
+                            "values": {
+                                "override_policy_documents": null,
+                                "policy_id": null,
+                                "source_policy_documents": null,
+                                "statement": [
+                                    {
+                                        "actions": [
+                                            "iam:CreateServiceLinkedRole"
+                                        ],
+                                        "condition": [
+                                            {
+                                                "test": "StringEquals",
+                                                "values": [
+                                                    "elasticloadbalancing.amazonaws.com"
+                                                ],
+                                                "variable": "iam:AWSServiceName"
+                                            }
+                                        ],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "ec2:DescribeAccountAttributes",
+                                            "ec2:DescribeAddresses",
+                                            "ec2:DescribeAvailabilityZones",
+                                            "ec2:DescribeCoipPools",
+                                            "ec2:DescribeInstances",
+                                            "ec2:DescribeInternetGateways",
+                                            "ec2:DescribeNetworkInterfaces",
+                                            "ec2:DescribeSecurityGroups",
+                                            "ec2:DescribeSubnets",
+                                            "ec2:DescribeTags",
+                                            "ec2:DescribeVpcPeeringConnections",
+                                            "ec2:DescribeVpcs",
+                                            "ec2:GetCoipPoolUsage",
+                                            "elasticloadbalancing:DescribeListenerCertificates",
+                                            "elasticloadbalancing:DescribeListeners",
+                                            "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                                            "elasticloadbalancing:DescribeLoadBalancers",
+                                            "elasticloadbalancing:DescribeRules",
+                                            "elasticloadbalancing:DescribeSSLPolicies",
+                                            "elasticloadbalancing:DescribeTags",
+                                            "elasticloadbalancing:DescribeTargetGroupAttributes",
+                                            "elasticloadbalancing:DescribeTargetGroups",
+                                            "elasticloadbalancing:DescribeTargetHealth"
+                                        ],
+                                        "condition": [],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "acm:DescribeCertificate",
+                                            "acm:ListCertificates",
+                                            "cognito-idp:DescribeUserPoolClient",
+                                            "iam:GetServerCertificate",
+                                            "iam:ListServerCertificates",
+                                            "shield:CreateProtection",
+                                            "shield:DeleteProtection",
+                                            "shield:DescribeProtection",
+                                            "shield:GetSubscriptionState",
+                                            "waf-regional:AssociateWebACL",
+                                            "waf-regional:DisassociateWebACL",
+                                            "waf-regional:GetWebACL",
+                                            "waf-regional:GetWebACLForResource",
+                                            "wafv2:AssociateWebACL",
+                                            "wafv2:DisassociateWebACL",
+                                            "wafv2:GetWebACL",
+                                            "wafv2:GetWebACLForResource"
+                                        ],
+                                        "condition": [],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "ec2:AuthorizeSecurityGroupIngress",
+                                            "ec2:RevokeSecurityGroupIngress"
+                                        ],
+                                        "condition": [],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "ec2:CreateSecurityGroup"
+                                        ],
+                                        "condition": [],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "ec2:CreateTags"
+                                        ],
+                                        "condition": [
+                                            {
+                                                "test": "Null",
+                                                "values": [
+                                                    "false"
+                                                ],
+                                                "variable": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                            },
+                                            {
+                                                "test": "StringEquals",
+                                                "values": [
+                                                    "CreateSecurityGroup"
+                                                ],
+                                                "variable": "ec2:CreateAction"
+                                            }
+                                        ],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "arn:aws:ec2:*:*:security-group/*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "ec2:CreateTags",
+                                            "ec2:DeleteTags"
+                                        ],
+                                        "condition": [
+                                            {
+                                                "test": "Null",
+                                                "values": [
+                                                    "false"
+                                                ],
+                                                "variable": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                            },
+                                            {
+                                                "test": "Null",
+                                                "values": [
+                                                    "true"
+                                                ],
+                                                "variable": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                            }
+                                        ],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "arn:aws:ec2:*:*:security-group/*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "ec2:AuthorizeSecurityGroupIngress",
+                                            "ec2:DeleteSecurityGroup",
+                                            "ec2:RevokeSecurityGroupIngress"
+                                        ],
+                                        "condition": [
+                                            {
+                                                "test": "Null",
+                                                "values": [
+                                                    "false"
+                                                ],
+                                                "variable": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                            }
+                                        ],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "elasticloadbalancing:CreateLoadBalancer",
+                                            "elasticloadbalancing:CreateTargetGroup"
+                                        ],
+                                        "condition": [
+                                            {
+                                                "test": "Null",
+                                                "values": [
+                                                    "false"
+                                                ],
+                                                "variable": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                            }
+                                        ],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "elasticloadbalancing:CreateListener",
+                                            "elasticloadbalancing:CreateRule",
+                                            "elasticloadbalancing:DeleteListener",
+                                            "elasticloadbalancing:DeleteRule"
+                                        ],
+                                        "condition": [],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "elasticloadbalancing:AddTags",
+                                            "elasticloadbalancing:RemoveTags"
+                                        ],
+                                        "condition": [
+                                            {
+                                                "test": "Null",
+                                                "values": [
+                                                    "false"
+                                                ],
+                                                "variable": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                            },
+                                            {
+                                                "test": "Null",
+                                                "values": [
+                                                    "true"
+                                                ],
+                                                "variable": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                            }
+                                        ],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*",
+                                            "arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*",
+                                            "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "elasticloadbalancing:AddTags",
+                                            "elasticloadbalancing:RemoveTags"
+                                        ],
+                                        "condition": [],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "arn:aws:elasticloadbalancing:*:*:listener-rule/app/*/*/*",
+                                            "arn:aws:elasticloadbalancing:*:*:listener-rule/net/*/*/*",
+                                            "arn:aws:elasticloadbalancing:*:*:listener/app/*/*/*",
+                                            "arn:aws:elasticloadbalancing:*:*:listener/net/*/*/*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "elasticloadbalancing:DeleteLoadBalancer",
+                                            "elasticloadbalancing:DeleteTargetGroup",
+                                            "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                                            "elasticloadbalancing:ModifyTargetGroup",
+                                            "elasticloadbalancing:ModifyTargetGroupAttributes",
+                                            "elasticloadbalancing:SetIpAddressType",
+                                            "elasticloadbalancing:SetSecurityGroups",
+                                            "elasticloadbalancing:SetSubnets"
+                                        ],
+                                        "condition": [
+                                            {
+                                                "test": "Null",
+                                                "values": [
+                                                    "false"
+                                                ],
+                                                "variable": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                            }
+                                        ],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "elasticloadbalancing:DeregisterTargets",
+                                            "elasticloadbalancing:RegisterTargets"
+                                        ],
+                                        "condition": [],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*"
+                                        ],
+                                        "sid": null
+                                    },
+                                    {
+                                        "actions": [
+                                            "elasticloadbalancing:AddListenerCertificates",
+                                            "elasticloadbalancing:ModifyListener",
+                                            "elasticloadbalancing:ModifyRule",
+                                            "elasticloadbalancing:RemoveListenerCertificates",
+                                            "elasticloadbalancing:SetWebAcl"
+                                        ],
+                                        "condition": [],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [],
+                                        "resources": [
+                                            "*"
+                                        ],
+                                        "sid": null
+                                    }
+                                ],
+                                "version": null
+                            },
+                            "sensitive_values": {
+                                "statement": [
+                                    {
+                                        "actions": [
+                                            false
+                                        ],
+                                        "condition": [
+                                            {
+                                                "values": [
+                                                    false
+                                                ]
+                                            }
+                                        ],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false
+                                        ],
+                                        "condition": [],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false
+                                        ],
+                                        "condition": [],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false,
+                                            false
+                                        ],
+                                        "condition": [],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false
+                                        ],
+                                        "condition": [],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false
+                                        ],
+                                        "condition": [
+                                            {
+                                                "values": [
+                                                    false
+                                                ]
+                                            },
+                                            {
+                                                "values": [
+                                                    false
+                                                ]
+                                            }
+                                        ],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false,
+                                            false
+                                        ],
+                                        "condition": [
+                                            {
+                                                "values": [
+                                                    false
+                                                ]
+                                            },
+                                            {
+                                                "values": [
+                                                    false
+                                                ]
+                                            }
+                                        ],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false,
+                                            false,
+                                            false
+                                        ],
+                                        "condition": [
+                                            {
+                                                "values": [
+                                                    false
+                                                ]
+                                            }
+                                        ],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false,
+                                            false
+                                        ],
+                                        "condition": [
+                                            {
+                                                "values": [
+                                                    false
+                                                ]
+                                            }
+                                        ],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false,
+                                            false,
+                                            false,
+                                            false
+                                        ],
+                                        "condition": [],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false,
+                                            false
+                                        ],
+                                        "condition": [
+                                            {
+                                                "values": [
+                                                    false
+                                                ]
+                                            },
+                                            {
+                                                "values": [
+                                                    false
+                                                ]
+                                            }
+                                        ],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false,
+                                            false,
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false,
+                                            false
+                                        ],
+                                        "condition": [],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false,
+                                            false,
+                                            false,
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false
+                                        ],
+                                        "condition": [
+                                            {
+                                                "values": [
+                                                    false
+                                                ]
+                                            }
+                                        ],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false,
+                                            false
+                                        ],
+                                        "condition": [],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false
+                                        ]
+                                    },
+                                    {
+                                        "actions": [
+                                            false,
+                                            false,
+                                            false,
+                                            false,
+                                            false
+                                        ],
+                                        "condition": [],
+                                        "not_principals": [],
+                                        "principals": [],
+                                        "resources": [
+                                            false
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "address": "module.eks_elb_controller.data.aws_iam_policy_document.lb_controller_assume[0]",
+                            "mode": "data",
+                            "type": "aws_iam_policy_document",
+                            "name": "lb_controller_assume",
+                            "index": 0,
+                            "provider_name": "registry.terraform.io/hashicorp/aws",
+                            "schema_version": 0,
+                            "values": {
+                                "override_policy_documents": null,
+                                "policy_id": null,
+                                "source_policy_documents": null,
+                                "statement": [
+                                    {
+                                        "actions": [
+                                            "sts:AssumeRoleWithWebIdentity"
+                                        ],
+                                        "condition": [
+                                            {
+                                                "test": "StringEquals",
+                                                "values": [
+                                                    "system:serviceaccount:kube-system:aws-alb-ingress-controller"
+                                                ],
+                                                "variable": "oidc.eks.eu-west-2.amazonaws.com/id/F41E26F5371FABBCFA5F3129C57D4AD8:sub"
+                                            }
+                                        ],
+                                        "effect": "Allow",
+                                        "not_actions": null,
+                                        "not_principals": [],
+                                        "not_resources": null,
+                                        "principals": [
+                                            {
+                                                "identifiers": [
+                                                    "arn:aws:iam::123456789012:oidc-provider/oidc.eks.eu-west-2.amazonaws.com/id/F41E26F5371FABBCFA5F3129C57D4AD8"
+                                                ],
+                                                "type": "Federated"
+                                            }
+                                        ],
+                                        "resources": null,
+                                        "sid": null
+                                    }
+                                ],
+                                "version": null
+                            },
+                            "sensitive_values": {
+                                "statement": [
+                                    {
+                                        "actions": [
+                                            false
+                                        ],
+                                        "condition": [
+                                            {
+                                                "values": [
+                                                    false
+                                                ]
+                                            }
+                                        ],
+                                        "not_principals": [],
+                                        "principals": [
+                                            {
+                                                "identifiers": [
+                                                    false
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            "address": "module.eks_elb_controller.helm_release.lb_controller[0]",
+                            "mode": "managed",
+                            "type": "helm_release",
+                            "name": "lb_controller",
+                            "index": 0,
+                            "provider_name": "registry.terraform.io/hashicorp/helm",
+                            "schema_version": 1,
+                            "values": {
+                                "atomic": false,
+                                "chart": "aws-load-balancer-controller",
+                                "cleanup_on_fail": false,
+                                "create_namespace": false,
+                                "dependency_update": false,
+                                "description": null,
+                                "devel": null,
+                                "disable_crd_hooks": false,
+                                "disable_openapi_validation": false,
+                                "disable_webhooks": false,
+                                "force_update": false,
+                                "id": "aws-load-balancer-controller",
+                                "keyring": null,
+                                "lint": false,
+                                "manifest": null,
+                                "max_history": 0,
+                                "metadata": [
+                                    {
+                                        "app_version": "v2.4.3",
+                                        "chart": "aws-load-balancer-controller",
+                                        "name": "aws-load-balancer-controller",
+                                        "namespace": "kube-system",
+                                        "revision": 1,
+                                        "values": "{\"clusterName\":\"test\",\"rbac\":{\"create\":true},\"serviceAccount\":{\"annotations\":{\"eks.amazonaws.com/role-arn\":\"arn:aws:iam::123456789012:role/test-alb-ingress\"},\"create\":true,\"name\":\"aws-alb-ingress-controller\"}}",
+                                        "version": "1.4.4"
+                                    }
+                                ],
+                                "name": "aws-load-balancer-controller",
+                                "namespace": "kube-system",
+                                "pass_credentials": false,
+                                "postrender": [],
+                                "recreate_pods": false,
+                                "render_subchart_notes": true,
+                                "replace": false,
+                                "repository": "https://aws.github.io/eks-charts",
+                                "repository_ca_file": null,
+                                "repository_cert_file": null,
+                                "repository_key_file": null,
+                                "repository_password": null,
+                                "repository_username": null,
+                                "reset_values": false,
+                                "reuse_values": false,
+                                "set": [
+                                    {
+                                        "name": "clusterName",
+                                        "type": "",
+                                        "value": "test"
+                                    },
+                                    {
+                                        "name": "rbac.create",
+                                        "type": "",
+                                        "value": "true"
+                                    },
+                                    {
+                                        "name": "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn",
+                                        "type": "",
+                                        "value": "arn:aws:iam::123456789012:role/test-alb-ingress"
+                                    },
+                                    {
+                                        "name": "serviceAccount.create",
+                                        "type": "",
+                                        "value": "true"
+                                    },
+                                    {
+                                        "name": "serviceAccount.name",
+                                        "type": "",
+                                        "value": "aws-alb-ingress-controller"
+                                    }
+                                ],
+                                "set_list": [],
+                                "set_sensitive": [],
+                                "skip_crds": false,
+                                "status": "deployed",
+                                "timeout": 300,
+                                "values": [
+                                    "{}\n"
+                                ],
+                                "verify": false,
+                                "version": "1.4.4",
+                                "wait": true,
+                                "wait_for_jobs": false
+                            },
+                            "sensitive_values": {
+                                "metadata": [
+                                    {}
+                                ],
+                                "postrender": [],
+                                "set": [
+                                    {},
+                                    {},
+                                    {},
+                                    {},
+                                    {}
+                                ],
+                                "set_list": [],
+                                "set_sensitive": [],
+                                "values": [
+                                    false
+                                ]
+                            }
+                        }
+                    ],
+                    "address": "module.eks_elb_controller"
+                }
+            ]
+        }
+    },
+    "resource_changes": [
+        {
+            "address": "aws_iam_policy.auth0_ses_send_emails",
+            "mode": "managed",
+            "type": "aws_iam_policy",
+            "name": "auth0_ses_send_emails",
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "no-op"
+                ],
+                "before": {
+                    "arn": "arn:aws:iam::123456789012:policy/auth0-ses-send-emails",
+                    "description": "Allows Auth0 to send emails via SES",
+                    "id": "arn:aws:iam::123456789012:policy/auth0-ses-send-emails",
+                    "name": "auth0-ses-send-emails",
+                    "name_prefix": "",
+                    "path": "/",
+                    "policy": "{\"Statement\":[{\"Action\":[\"ses:SendRawEmail\",\"ses:SendEmail\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}],\"Version\":\"2012-10-17\"}",
+                    "policy_id": "ANPA5X4M7MOYO7KE6G4J4",
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after": {
+                    "arn": "arn:aws:iam::123456789012:policy/auth0-ses-send-emails",
+                    "description": "Allows Auth0 to send emails via SES",
+                    "id": "arn:aws:iam::123456789012:policy/auth0-ses-send-emails",
+                    "name": "auth0-ses-send-emails",
+                    "name_prefix": "",
+                    "path": "/",
+                    "policy": "{\"Statement\":[{\"Action\":[\"ses:SendRawEmail\",\"ses:SendEmail\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}],\"Version\":\"2012-10-17\"}",
+                    "policy_id": "ANPA5X4M7MOYO7KE6G4J4",
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after_unknown": {},
+                "before_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "module.efs_csi_irsa_role.aws_iam_policy.efs_csi[0]",
+            "module_address": "module.efs_csi_irsa_role",
+            "mode": "managed",
+            "type": "aws_iam_policy",
+            "name": "efs_csi",
+            "index": 0,
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "no-op"
+                ],
+                "before": {
+                    "arn": "arn:aws:iam::123456789012:policy/AmazonEKS_EFS_CSI_Policy-20230317134301609600000001",
+                    "description": "Provides permissions to manage EFS volumes via the container storage interface driver",
+                    "id": "arn:aws:iam::123456789012:policy/AmazonEKS_EFS_CSI_Policy-20230317134301609600000001",
+                    "name": "AmazonEKS_EFS_CSI_Policy-20230317134301609600000001",
+                    "name_prefix": "AmazonEKS_EFS_CSI_Policy-",
+                    "path": "/",
+                    "policy": "{\"Statement\":[{\"Action\":[\"elasticfilesystem:DescribeMountTargets\",\"elasticfilesystem:DescribeFileSystems\",\"elasticfilesystem:DescribeAccessPoints\",\"ec2:DescribeAvailabilityZones\"],\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:CreateAccessPoint\",\"Condition\":{\"StringLike\":{\"aws:RequestTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:TagResource\",\"Condition\":{\"StringLike\":{\"aws:RequestTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:DeleteAccessPoint\",\"Condition\":{\"StringEquals\":{\"aws:ResourceTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"}],\"Version\":\"2012-10-17\"}",
+                    "policy_id": "ANPA5X4M7MOYJS4FPQGBX",
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after": {
+                    "arn": "arn:aws:iam::123456789012:policy/AmazonEKS_EFS_CSI_Policy-20230317134301609600000001",
+                    "description": "Provides permissions to manage EFS volumes via the container storage interface driver",
+                    "id": "arn:aws:iam::123456789012:policy/AmazonEKS_EFS_CSI_Policy-20230317134301609600000001",
+                    "name": "AmazonEKS_EFS_CSI_Policy-20230317134301609600000001",
+                    "name_prefix": "AmazonEKS_EFS_CSI_Policy-",
+                    "path": "/",
+                    "policy": "{\"Statement\":[{\"Action\":[\"elasticfilesystem:DescribeMountTargets\",\"elasticfilesystem:DescribeFileSystems\",\"elasticfilesystem:DescribeAccessPoints\",\"ec2:DescribeAvailabilityZones\"],\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:CreateAccessPoint\",\"Condition\":{\"StringLike\":{\"aws:RequestTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:TagResource\",\"Condition\":{\"StringLike\":{\"aws:RequestTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:DeleteAccessPoint\",\"Condition\":{\"StringEquals\":{\"aws:ResourceTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"}],\"Version\":\"2012-10-17\"}",
+                    "policy_id": "ANPA5X4M7MOYJS4FPQGBX",
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after_unknown": {},
+                "before_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "module.eks.aws_iam_policy.cluster_encryption[0]",
+            "module_address": "module.eks",
+            "mode": "managed",
+            "type": "aws_iam_policy",
+            "name": "cluster_encryption",
+            "index": 0,
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "no-op"
+                ],
+                "before": {
+                    "arn": "arn:aws:iam::123456789012:policy/test-cluster-ClusterEncryption2023061613390591120000000e",
+                    "description": "Cluster encryption policy to allow cluster role to utilize CMK provided",
+                    "id": "arn:aws:iam::123456789012:policy/test-cluster-ClusterEncryption2023061613390591120000000e",
+                    "name": "test-cluster-ClusterEncryption2023061613390591120000000e",
+                    "name_prefix": "test-cluster-ClusterEncryption",
+                    "path": "/",
+                    "policy": "{\"Statement\":[{\"Action\":[\"kms:Encrypt\",\"kms:Decrypt\",\"kms:ListGrants\",\"kms:DescribeKey\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:kms:eu-west-2:944651592624:key/e10b7c35-f5ec-48ce-8699-81497e5c2f57\"}],\"Version\":\"2012-10-17\"}",
+                    "policy_id": "ANPA5X4M7MOYA4TZO6GN3",
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after": {
+                    "arn": "arn:aws:iam::123456789012:policy/test-cluster-ClusterEncryption2023061613390591120000000e",
+                    "description": "Cluster encryption policy to allow cluster role to utilize CMK provided",
+                    "id": "arn:aws:iam::123456789012:policy/test-cluster-ClusterEncryption2023061613390591120000000e",
+                    "name": "test-cluster-ClusterEncryption2023061613390591120000000e",
+                    "name_prefix": "test-cluster-ClusterEncryption",
+                    "path": "/",
+                    "policy": "{\"Statement\":[{\"Action\":[\"kms:Encrypt\",\"kms:Decrypt\",\"kms:ListGrants\",\"kms:DescribeKey\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:kms:eu-west-2:944651592624:key/e10b7c35-f5ec-48ce-8699-81497e5c2f57\"}],\"Version\":\"2012-10-17\"}",
+                    "policy_id": "ANPA5X4M7MOYA4TZO6GN3",
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after_unknown": {},
+                "before_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "module.eks.aws_iam_policy.cni_ipv6_policy[0]",
+            "module_address": "module.eks",
+            "mode": "managed",
+            "type": "aws_iam_policy",
+            "name": "cni_ipv6_policy",
+            "index": 0,
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "no-op"
+                ],
+                "before": {
+                    "arn": "arn:aws:iam::123456789012:policy/AmazonEKS_CNI_IPv6_Policy",
+                    "description": "IAM policy for EKS CNI to assign IPV6 addresses",
+                    "id": "arn:aws:iam::123456789012:policy/AmazonEKS_CNI_IPv6_Policy",
+                    "name": "AmazonEKS_CNI_IPv6_Policy",
+                    "name_prefix": "",
+                    "path": "/",
+                    "policy": "{\"Statement\":[{\"Action\":[\"ec2:DescribeTags\",\"ec2:DescribeNetworkInterfaces\",\"ec2:DescribeInstances\",\"ec2:DescribeInstanceTypes\",\"ec2:AssignIpv6Addresses\"],\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"AssignDescribe\"},{\"Action\":\"ec2:CreateTags\",\"Effect\":\"Allow\",\"Resource\":\"arn:aws:ec2:*:*:network-interface/*\",\"Sid\":\"CreateTags\"}],\"Version\":\"2012-10-17\"}",
+                    "policy_id": "ANPA5X4M7MOYIF2MVJEGJ",
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after": {
+                    "arn": "arn:aws:iam::123456789012:policy/AmazonEKS_CNI_IPv6_Policy",
+                    "description": "IAM policy for EKS CNI to assign IPV6 addresses",
+                    "id": "arn:aws:iam::123456789012:policy/AmazonEKS_CNI_IPv6_Policy",
+                    "name": "AmazonEKS_CNI_IPv6_Policy",
+                    "name_prefix": "",
+                    "path": "/",
+                    "policy": "{\"Statement\":[{\"Action\":[\"ec2:DescribeTags\",\"ec2:DescribeNetworkInterfaces\",\"ec2:DescribeInstances\",\"ec2:DescribeInstanceTypes\",\"ec2:AssignIpv6Addresses\"],\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"AssignDescribe\"},{\"Action\":\"ec2:CreateTags\",\"Effect\":\"Allow\",\"Resource\":\"arn:aws:ec2:*:*:network-interface/*\",\"Sid\":\"CreateTags\"}],\"Version\":\"2012-10-17\"}",
+                    "policy_id": "ANPA5X4M7MOYIF2MVJEGJ",
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after_unknown": {},
+                "before_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                }
+            }
+        },
+        {
+            "address": "module.eks_elb_controller.data.aws_iam_policy_document.lb_controller[0]",
+            "module_address": "module.eks_elb_controller",
+            "mode": "data",
+            "type": "aws_iam_policy_document",
+            "name": "lb_controller",
+            "index": 0,
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "read"
+                ],
+                "before": null,
+                "after": {
+                    "override_policy_documents": null,
+                    "policy_id": null,
+                    "source_policy_documents": null,
+                    "statement": [
+                        {
+                            "actions": [
+                                "iam:CreateServiceLinkedRole"
+                            ],
+                            "condition": [
+                                {
+                                    "test": "StringEquals",
+                                    "values": [
+                                        "elasticloadbalancing.amazonaws.com"
+                                    ],
+                                    "variable": "iam:AWSServiceName"
+                                }
+                            ],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "ec2:DescribeAccountAttributes",
+                                "ec2:DescribeAddresses",
+                                "ec2:DescribeAvailabilityZones",
+                                "ec2:DescribeCoipPools",
+                                "ec2:DescribeInstances",
+                                "ec2:DescribeInternetGateways",
+                                "ec2:DescribeNetworkInterfaces",
+                                "ec2:DescribeSecurityGroups",
+                                "ec2:DescribeSubnets",
+                                "ec2:DescribeTags",
+                                "ec2:DescribeVpcPeeringConnections",
+                                "ec2:DescribeVpcs",
+                                "ec2:GetCoipPoolUsage",
+                                "elasticloadbalancing:DescribeListenerCertificates",
+                                "elasticloadbalancing:DescribeListeners",
+                                "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                                "elasticloadbalancing:DescribeLoadBalancers",
+                                "elasticloadbalancing:DescribeRules",
+                                "elasticloadbalancing:DescribeSSLPolicies",
+                                "elasticloadbalancing:DescribeTags",
+                                "elasticloadbalancing:DescribeTargetGroupAttributes",
+                                "elasticloadbalancing:DescribeTargetGroups",
+                                "elasticloadbalancing:DescribeTargetHealth"
+                            ],
+                            "condition": [],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "acm:DescribeCertificate",
+                                "acm:ListCertificates",
+                                "cognito-idp:DescribeUserPoolClient",
+                                "iam:GetServerCertificate",
+                                "iam:ListServerCertificates",
+                                "shield:CreateProtection",
+                                "shield:DeleteProtection",
+                                "shield:DescribeProtection",
+                                "shield:GetSubscriptionState",
+                                "waf-regional:AssociateWebACL",
+                                "waf-regional:DisassociateWebACL",
+                                "waf-regional:GetWebACL",
+                                "waf-regional:GetWebACLForResource",
+                                "wafv2:AssociateWebACL",
+                                "wafv2:DisassociateWebACL",
+                                "wafv2:GetWebACL",
+                                "wafv2:GetWebACLForResource"
+                            ],
+                            "condition": [],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "ec2:AuthorizeSecurityGroupIngress",
+                                "ec2:RevokeSecurityGroupIngress"
+                            ],
+                            "condition": [],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "ec2:CreateSecurityGroup"
+                            ],
+                            "condition": [],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "ec2:CreateTags"
+                            ],
+                            "condition": [
+                                {
+                                    "test": "Null",
+                                    "values": [
+                                        "false"
+                                    ],
+                                    "variable": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                },
+                                {
+                                    "test": "StringEquals",
+                                    "values": [
+                                        "CreateSecurityGroup"
+                                    ],
+                                    "variable": "ec2:CreateAction"
+                                }
+                            ],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "arn:aws:ec2:*:*:security-group/*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "ec2:CreateTags",
+                                "ec2:DeleteTags"
+                            ],
+                            "condition": [
+                                {
+                                    "test": "Null",
+                                    "values": [
+                                        "false"
+                                    ],
+                                    "variable": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                },
+                                {
+                                    "test": "Null",
+                                    "values": [
+                                        "true"
+                                    ],
+                                    "variable": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                }
+                            ],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "arn:aws:ec2:*:*:security-group/*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "ec2:AuthorizeSecurityGroupIngress",
+                                "ec2:DeleteSecurityGroup",
+                                "ec2:RevokeSecurityGroupIngress"
+                            ],
+                            "condition": [
+                                {
+                                    "test": "Null",
+                                    "values": [
+                                        "false"
+                                    ],
+                                    "variable": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                }
+                            ],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "elasticloadbalancing:CreateLoadBalancer",
+                                "elasticloadbalancing:CreateTargetGroup"
+                            ],
+                            "condition": [
+                                {
+                                    "test": "Null",
+                                    "values": [
+                                        "false"
+                                    ],
+                                    "variable": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                }
+                            ],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "elasticloadbalancing:CreateListener",
+                                "elasticloadbalancing:CreateRule",
+                                "elasticloadbalancing:DeleteListener",
+                                "elasticloadbalancing:DeleteRule"
+                            ],
+                            "condition": [],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "elasticloadbalancing:AddTags",
+                                "elasticloadbalancing:RemoveTags"
+                            ],
+                            "condition": [
+                                {
+                                    "test": "Null",
+                                    "values": [
+                                        "false"
+                                    ],
+                                    "variable": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                },
+                                {
+                                    "test": "Null",
+                                    "values": [
+                                        "true"
+                                    ],
+                                    "variable": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                }
+                            ],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*",
+                                "arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*",
+                                "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "elasticloadbalancing:AddTags",
+                                "elasticloadbalancing:RemoveTags"
+                            ],
+                            "condition": [],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "arn:aws:elasticloadbalancing:*:*:listener-rule/app/*/*/*",
+                                "arn:aws:elasticloadbalancing:*:*:listener-rule/net/*/*/*",
+                                "arn:aws:elasticloadbalancing:*:*:listener/app/*/*/*",
+                                "arn:aws:elasticloadbalancing:*:*:listener/net/*/*/*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "elasticloadbalancing:DeleteLoadBalancer",
+                                "elasticloadbalancing:DeleteTargetGroup",
+                                "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                                "elasticloadbalancing:ModifyTargetGroup",
+                                "elasticloadbalancing:ModifyTargetGroupAttributes",
+                                "elasticloadbalancing:SetIpAddressType",
+                                "elasticloadbalancing:SetSecurityGroups",
+                                "elasticloadbalancing:SetSubnets"
+                            ],
+                            "condition": [
+                                {
+                                    "test": "Null",
+                                    "values": [
+                                        "false"
+                                    ],
+                                    "variable": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                }
+                            ],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "elasticloadbalancing:DeregisterTargets",
+                                "elasticloadbalancing:RegisterTargets"
+                            ],
+                            "condition": [],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*"
+                            ],
+                            "sid": null
+                        },
+                        {
+                            "actions": [
+                                "elasticloadbalancing:AddListenerCertificates",
+                                "elasticloadbalancing:ModifyListener",
+                                "elasticloadbalancing:ModifyRule",
+                                "elasticloadbalancing:RemoveListenerCertificates",
+                                "elasticloadbalancing:SetWebAcl"
+                            ],
+                            "condition": [],
+                            "effect": "Allow",
+                            "not_actions": null,
+                            "not_principals": [],
+                            "not_resources": null,
+                            "principals": [],
+                            "resources": [
+                                "*"
+                            ],
+                            "sid": null
+                        }
+                    ],
+                    "version": null
+                },
+                "after_unknown": {
+                    "id": true,
+                    "json": true,
+                    "statement": [
+                        {
+                            "actions": [
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                },
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                },
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false,
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false,
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                },
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false,
+                                false,
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false,
+                                false,
+                                false,
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false,
+                                false,
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        }
+                    ]
+                },
+                "before_sensitive": false,
+                "after_sensitive": {
+                    "statement": [
+                        {
+                            "actions": [
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                },
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                },
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false,
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false,
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                },
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false,
+                                false,
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false,
+                                false,
+                                false,
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false
+                            ],
+                            "condition": [
+                                {
+                                    "values": [
+                                        false
+                                    ]
+                                }
+                            ],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        },
+                        {
+                            "actions": [
+                                false,
+                                false,
+                                false,
+                                false,
+                                false
+                            ],
+                            "condition": [],
+                            "not_principals": [],
+                            "principals": [],
+                            "resources": [
+                                false
+                            ]
+                        }
+                    ]
+                }
+            },
+            "action_reason": "read_because_dependency_pending"
+        },
+        {
+            "address": "module.eks_elb_controller.aws_iam_policy.lb_controller[0]",
+            "module_address": "module.eks_elb_controller",
+            "mode": "managed",
+            "type": "aws_iam_policy",
+            "name": "lb_controller",
+            "index": 0,
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "update"
+                ],
+                "before": {
+                    "arn": "arn:aws:iam::123456789012:policy/test-alb-ingress",
+                    "description": "Policy for alb-ingress service",
+                    "id": "arn:aws:iam::123456789012:policy/test-alb-ingress",
+                    "name": "test-alb-ingress",
+                    "name_prefix": "",
+                    "path": "/",
+                    "policy": "{\"Statement\":[{\"Action\":\"iam:CreateServiceLinkedRole\",\"Condition\":{\"StringEquals\":{\"iam:AWSServiceName\":\"elasticloadbalancing.amazonaws.com\"}},\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"elasticloadbalancing:DescribeTargetHealth\",\"elasticloadbalancing:DescribeTargetGroups\",\"elasticloadbalancing:DescribeTargetGroupAttributes\",\"elasticloadbalancing:DescribeTags\",\"elasticloadbalancing:DescribeSSLPolicies\",\"elasticloadbalancing:DescribeRules\",\"elasticloadbalancing:DescribeLoadBalancers\",\"elasticloadbalancing:DescribeLoadBalancerAttributes\",\"elasticloadbalancing:DescribeListeners\",\"elasticloadbalancing:DescribeListenerCertificates\",\"ec2:GetCoipPoolUsage\",\"ec2:DescribeVpcs\",\"ec2:DescribeVpcPeeringConnections\",\"ec2:DescribeTags\",\"ec2:DescribeSubnets\",\"ec2:DescribeSecurityGroups\",\"ec2:DescribeNetworkInterfaces\",\"ec2:DescribeInternetGateways\",\"ec2:DescribeInstances\",\"ec2:DescribeCoipPools\",\"ec2:DescribeAvailabilityZones\",\"ec2:DescribeAddresses\",\"ec2:DescribeAccountAttributes\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"wafv2:GetWebACLForResource\",\"wafv2:GetWebACL\",\"wafv2:DisassociateWebACL\",\"wafv2:AssociateWebACL\",\"waf-regional:GetWebACLForResource\",\"waf-regional:GetWebACL\",\"waf-regional:DisassociateWebACL\",\"waf-regional:AssociateWebACL\",\"shield:GetSubscriptionState\",\"shield:DescribeProtection\",\"shield:DeleteProtection\",\"shield:CreateProtection\",\"iam:ListServerCertificates\",\"iam:GetServerCertificate\",\"cognito-idp:DescribeUserPoolClient\",\"acm:ListCertificates\",\"acm:DescribeCertificate\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"ec2:RevokeSecurityGroupIngress\",\"ec2:AuthorizeSecurityGroupIngress\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":\"ec2:CreateSecurityGroup\",\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":\"ec2:CreateTags\",\"Condition\":{\"Null\":{\"aws:RequestTag/elbv2.k8s.aws/cluster\":\"false\"},\"StringEquals\":{\"ec2:CreateAction\":\"CreateSecurityGroup\"}},\"Effect\":\"Allow\",\"Resource\":\"arn:aws:ec2:*:*:security-group/*\"},{\"Action\":[\"ec2:DeleteTags\",\"ec2:CreateTags\"],\"Condition\":{\"Null\":{\"aws:RequestTag/elbv2.k8s.aws/cluster\":\"true\",\"aws:ResourceTag/elbv2.k8s.aws/cluster\":\"false\"}},\"Effect\":\"Allow\",\"Resource\":\"arn:aws:ec2:*:*:security-group/*\"},{\"Action\":[\"ec2:RevokeSecurityGroupIngress\",\"ec2:DeleteSecurityGroup\",\"ec2:AuthorizeSecurityGroupIngress\"],\"Condition\":{\"Null\":{\"aws:ResourceTag/elbv2.k8s.aws/cluster\":\"false\"}},\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"elasticloadbalancing:CreateTargetGroup\",\"elasticloadbalancing:CreateLoadBalancer\"],\"Condition\":{\"Null\":{\"aws:RequestTag/elbv2.k8s.aws/cluster\":\"false\"}},\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"elasticloadbalancing:DeleteRule\",\"elasticloadbalancing:DeleteListener\",\"elasticloadbalancing:CreateRule\",\"elasticloadbalancing:CreateListener\"],\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"elasticloadbalancing:RemoveTags\",\"elasticloadbalancing:AddTags\"],\"Condition\":{\"Null\":{\"aws:RequestTag/elbv2.k8s.aws/cluster\":\"true\",\"aws:ResourceTag/elbv2.k8s.aws/cluster\":\"false\"}},\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:elasticloadbalancing:*:*:targetgroup/*/*\",\"arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*\",\"arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*\"]},{\"Action\":[\"elasticloadbalancing:RemoveTags\",\"elasticloadbalancing:AddTags\"],\"Effect\":\"Allow\",\"Resource\":[\"arn:aws:elasticloadbalancing:*:*:listener/net/*/*/*\",\"arn:aws:elasticloadbalancing:*:*:listener/app/*/*/*\",\"arn:aws:elasticloadbalancing:*:*:listener-rule/net/*/*/*\",\"arn:aws:elasticloadbalancing:*:*:listener-rule/app/*/*/*\"]},{\"Action\":[\"elasticloadbalancing:SetSubnets\",\"elasticloadbalancing:SetSecurityGroups\",\"elasticloadbalancing:SetIpAddressType\",\"elasticloadbalancing:ModifyTargetGroupAttributes\",\"elasticloadbalancing:ModifyTargetGroup\",\"elasticloadbalancing:ModifyLoadBalancerAttributes\",\"elasticloadbalancing:DeleteTargetGroup\",\"elasticloadbalancing:DeleteLoadBalancer\"],\"Condition\":{\"Null\":{\"aws:ResourceTag/elbv2.k8s.aws/cluster\":\"false\"}},\"Effect\":\"Allow\",\"Resource\":\"*\"},{\"Action\":[\"elasticloadbalancing:RegisterTargets\",\"elasticloadbalancing:DeregisterTargets\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:elasticloadbalancing:*:*:targetgroup/*/*\"},{\"Action\":[\"elasticloadbalancing:SetWebAcl\",\"elasticloadbalancing:RemoveListenerCertificates\",\"elasticloadbalancing:ModifyRule\",\"elasticloadbalancing:ModifyListener\",\"elasticloadbalancing:AddListenerCertificates\"],\"Effect\":\"Allow\",\"Resource\":\"*\"}],\"Version\":\"2012-10-17\"}",
+                    "policy_id": "ANPA5X4M7MOYCYTEF5VUE",
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after": {
+                    "arn": "arn:aws:iam::123456789012:policy/test-alb-ingress",
+                    "description": "Policy for alb-ingress service",
+                    "id": "arn:aws:iam::123456789012:policy/test-alb-ingress",
+                    "name": "test-alb-ingress",
+                    "name_prefix": "",
+                    "path": "/",
+                    "policy_id": "ANPA5X4M7MOYCYTEF5VUE",
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after_unknown": {
+                    "policy": true,
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "before_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                },
+                "after_sensitive": {
+                    "tags": {},
+                    "tags_all": {}
+                }
+            }
+        }
+    ],
+    "timestamp": "2023-07-17T15:48:38Z"
+}
