@@ -54,17 +54,11 @@ type TfData struct {
 	Values  map[string]any
 }
 
-func changingItemQueriesFromPlan(ctx context.Context, lf log.Fields) ([]*sdp.Query, error) {
-	// read results from `terraform show -json ${tfplan file}`
-	contents, err := os.ReadFile(viper.GetString("plan-json"))
-	if err != nil {
-		return nil, fmt.Errorf("failed to read %v: %w", viper.GetString("plan-json"), err)
-	}
-
+func changingItemQueriesFromPlan(ctx context.Context, planJSON []byte, lf log.Fields) ([]*sdp.Query, error) {
 	changing_items_tf := map[string]TfData{}
 
 	var parsed map[string]any
-	err = json.Unmarshal(contents, &parsed)
+	err := json.Unmarshal(planJSON, &parsed)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse %v: %w", viper.GetString("plan-json"), err)
 	}
@@ -102,7 +96,7 @@ func changingItemQueriesFromPlan(ctx context.Context, lf log.Fields) ([]*sdp.Que
 		mappings, ok := datamaps.AwssourceData[r.Type]
 		if !ok {
 			log.WithContext(ctx).WithFields(lf).WithField("terraform-address", r.Address).Warn("skipping unmapped resource")
-			break
+			continue
 		}
 
 		for _, mapData := range mappings {
@@ -112,7 +106,7 @@ func changingItemQueriesFromPlan(ctx context.Context, lf log.Fields) ([]*sdp.Que
 					WithFields(lf).
 					WithField("terraform-address", r.Address).
 					WithField("terraform-query-field", mapData.QueryField).Warn("skipping resource without query field")
-				break
+				continue
 			}
 
 			u := uuid.New()
@@ -180,10 +174,17 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	log.WithContext(ctx).WithFields(lf).Info("resolving items from terraform plan")
-	queries, err := changingItemQueriesFromPlan(ctx, lf)
+	// read results from `terraform show -json ${tfplan file}`
+	contents, err := os.ReadFile(viper.GetString("plan-json"))
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read terraform plan")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read terraform file")
+		return 1
+	}
+
+	log.WithContext(ctx).WithFields(lf).Info("resolving items from terraform plan")
+	queries, err := changingItemQueriesFromPlan(ctx, contents, lf)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("parse terraform plan")
 		return 1
 	}
 
