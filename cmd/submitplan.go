@@ -177,14 +177,14 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 	// read results from `terraform show -json ${tfplan file}`
 	contents, err := os.ReadFile(viper.GetString("plan-json"))
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to read terraform plan")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read terraform file")
 		return 1
 	}
 
 	log.WithContext(ctx).WithFields(lf).Info("resolving items from terraform plan")
 	queries, err := changingItemQueriesFromPlan(ctx, contents, lf)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read terraform plan")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("parse terraform plan")
 		return 1
 	}
 
