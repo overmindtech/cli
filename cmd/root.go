@@ -23,7 +23,6 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
-var cfgFile string
 var logLevel string
 
 var minStatusInterval = durationpb.New(250 * time.Millisecond)
@@ -188,7 +187,6 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	// General Config
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is redacted.yaml)")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
 
 	// api endpoint
@@ -249,17 +247,8 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	viper.SetConfigFile(cfgFile)
-
 	replacer := strings.NewReplacer("-", "_")
 
 	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv() // read in environment variables that match
-
-	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		log.Infof("Using config file: %v", viper.ConfigFileUsed())
-	} else {
-		log.WithFields(log.Fields{"err": err}).Errorf("Error reading config file")
-	}
 }
