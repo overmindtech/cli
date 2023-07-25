@@ -24,8 +24,8 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_alb_target_group": {
 		{
 			Type:       "elbv2-target-group",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
@@ -40,8 +40,8 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_autoscaling_group": {
 		{
 			Type:       "autoscaling-auto-scaling-group",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
@@ -72,32 +72,32 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_db_option_group": {
 		{
 			Type:       "rds-option-group",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
 	"aws_db_parameter_group": {
 		{
 			Type:       "rds-db-parameter-group",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
 	"aws_db_subnet_group": {
 		{
 			Type:       "rds-db-subnet-group",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
 	"aws_dynamodb_table": {
 		{
 			Type:       "dynamodb-table",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
@@ -112,16 +112,16 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_ecs_capacity_provider": {
 		{
 			Type:       "ecs-capacity-provider",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
 	"aws_ecs_cluster": {
 		{
 			Type:       "ecs-cluster",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
@@ -192,8 +192,8 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_eks_cluster": {
 		{
 			Type:       "eks-cluster",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
@@ -216,32 +216,16 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_elb": {
 		{
 			Type:       "elb-load-balancer",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
-			Scope:      "*",
-		},
-	},
-	"aws_elb_attachment": {
-		{
-			Type:       "elb-load-balancer",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "elb",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
 	"aws_iam_group": {
 		{
 			Type:       "iam-group",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
-			Scope:      "*",
-		},
-	},
-	"aws_iam_group_membership": {
-		{
-			Type:       "iam-group",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "group",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
@@ -256,8 +240,8 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_iam_role": {
 		{
 			Type:       "iam-role",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
@@ -268,40 +252,12 @@ var AwssourceData = map[string][]TfMapData{
 			QueryField: "policy_arn",
 			Scope:      "*",
 		},
-		{
-			Type:       "iam-role",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "role",
-			Scope:      "*",
-		},
 	},
 	"aws_iam_user": {
 		{
 			Type:       "iam-user",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
-			Scope:      "*",
-		},
-	},
-	"aws_iam_user_group_membership": {
-		{
-			Type:       "iam-group",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "group",
-			Scope:      "*",
-		},
-		{
-			Type:       "iam-user",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "user",
-			Scope:      "*",
-		},
-	},
-	"aws_iam_user_policy": {
-		{
-			Type:       "iam-user",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "user",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
@@ -310,12 +266,6 @@ var AwssourceData = map[string][]TfMapData{
 			Type:       "iam-policy",
 			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "policy_arn",
-			Scope:      "*",
-		},
-		{
-			Type:       "iam-user",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "user",
 			Scope:      "*",
 		},
 	},
@@ -346,32 +296,24 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_lambda_function": {
 		{
 			Type:       "lambda-function",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
 	"aws_lambda_function_event_invoke_config": {
 		{
 			Type:       "lambda-function",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "function_name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "id",
 			Scope:      "*",
 		},
 	},
 	"aws_lambda_function_url": {
 		{
 			Type:       "lambda-function",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "function_name",
-			Scope:      "*",
-		},
-	},
-	"aws_lambda_invocation": {
-		{
-			Type:       "lambda-function",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "function_name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "function_arn",
 			Scope:      "*",
 		},
 	},
@@ -394,8 +336,8 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_lb": {
 		{
 			Type:       "elbv2-load-balancer",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
@@ -418,8 +360,8 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_lb_target_group": {
 		{
 			Type:       "elbv2-target-group",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
@@ -466,8 +408,8 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_rds_cluster_parameter_group": {
 		{
 			Type:       "rds-db-cluster-parameter-group",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
@@ -490,8 +432,8 @@ var AwssourceData = map[string][]TfMapData{
 	"aws_route53_record": {
 		{
 			Type:       "route53-resource-record-set",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "name",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
 			Scope:      "*",
 		},
 	},
