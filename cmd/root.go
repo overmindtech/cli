@@ -233,10 +233,7 @@ func init() {
 		}
 
 		log.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
-			log.PanicLevel,
-			log.FatalLevel,
-			log.ErrorLevel,
-			log.WarnLevel,
+			log.AllLevels[:log.GetLevel()]...,
 		)))
 	}
 	// shut down tracing at the end of the process
