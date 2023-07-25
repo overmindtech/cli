@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
@@ -84,7 +85,7 @@ func GetBookmark(signals chan os.Signal, ready chan bool) int {
 		return 1
 	}
 	log.WithContext(ctx).WithFields(log.Fields{
-		"bookmark-uuid":        response.Msg.Bookmark.Metadata.UUID,
+		"bookmark-uuid":        uuid.UUID(response.Msg.Bookmark.Metadata.UUID),
 		"bookmark-created":     response.Msg.Bookmark.Metadata.Created,
 		"bookmark-name":        response.Msg.Bookmark.Properties.Name,
 		"bookmark-description": response.Msg.Bookmark.Properties.Description,
@@ -99,6 +100,10 @@ func GetBookmark(signals chan os.Signal, ready chan bool) int {
 			"bookmark-excluded-item": i,
 		}).Info("found bookmark excluded item")
 	}
+
+	b, _ := json.MarshalIndent(response.Msg.Bookmark.Properties, "", "  ")
+	log.Info(string(b))
+
 	return 0
 }
 
@@ -106,7 +111,6 @@ func init() {
 	rootCmd.AddCommand(getBookmarkCmd)
 
 	getBookmarkCmd.PersistentFlags().String("bookmark-url", "", "The bookmark service API endpoint (defaults to --url)")
-	getBookmarkCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 
 	getBookmarkCmd.PersistentFlags().String("uuid", "", "The UUID of the bookmark that should be displayed.")
 
