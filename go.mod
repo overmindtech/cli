@@ -6,7 +6,7 @@ require (
 	github.com/bufbuild/connect-go v1.10.0
 	github.com/getsentry/sentry-go v0.22.0
 	github.com/google/uuid v1.3.0
-	github.com/overmindtech/sdp-go v0.36.2
+	github.com/overmindtech/sdp-go v0.41.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
@@ -42,7 +42,7 @@ require (
 	github.com/minio/highwayhash v1.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nats-io/jwt/v2 v2.4.1 // indirect
-	github.com/nats-io/nats.go v1.27.1 // indirect
+	github.com/nats-io/nats.go v1.28.0 // indirect
 	github.com/nats-io/nkeys v0.4.4 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
