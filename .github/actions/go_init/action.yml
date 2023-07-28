@@ -12,10 +12,17 @@ runs:
       with:
         repository: overmindtech/aws-source
         path: ./aws-source
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        repository: overmindtech/k8s-source
+        path: ./k8s-source
 
     - name: Move sources in place
       shell: bash
-      run: mv -v aws-source ..
+      run: |
+        mv -v aws-source ..
+        mv -v k8s-source ..
 
     - name: Go Generate
       shell: bash
