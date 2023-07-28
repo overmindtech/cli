@@ -3,7 +3,7 @@ module github.com/overmindtech/ovm-cli
 go 1.20
 
 require (
-	github.com/bufbuild/connect-go v1.9.0
+	github.com/bufbuild/connect-go v1.10.0
 	github.com/getsentry/sentry-go v0.22.0
 	github.com/google/uuid v1.3.0
 	github.com/overmindtech/sdp-go v0.36.2
