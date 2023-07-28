@@ -55,66 +55,116 @@ type TfData struct {
 }
 
 func changingItemQueriesFromPlan(ctx context.Context, planJSON []byte, lf log.Fields) ([]*sdp.Query, error) {
-	changing_items_tf := map[string]TfData{}
-
-	var parsed map[string]any
-	err := json.Unmarshal(planJSON, &parsed)
+	var plan Plan
+	err := json.Unmarshal(planJSON, &plan)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse %v: %w", viper.GetString("plan-json"), err)
 	}
 
-	root_module := parsed["planned_values"].(map[string]any)["root_module"].(map[string]any)
-	resourceValues := map[string]map[string]any{}
-	resourceValuesFromModule(root_module, &resourceValues)
-
-	resource_changes := parsed["resource_changes"].([]any)
-	for _, changed_item_data := range resource_changes {
-		changed_item_map := changed_item_data.(map[string]any)
-		change := changed_item_map["change"].(map[string]any)
-		actions := change["actions"].([]any)
-		if len(actions) == 0 || actions[0] == "no-op" {
+	var changing_items []*sdp.Query
+	// for all managed resources:
+	for _, resourceChange := range plan.ResourceChanges {
+		if len(resourceChange.Change.Actions) == 0 || resourceChange.Change.Actions[0] == "no-op" {
 			// skip resources with no changes
 			continue
 		}
-		log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
-			"actions": actions,
-			"address": changed_item_map["address"],
-		}).Debugf("mapping item")
 
-		changed_item := TfData{
-			Address: changed_item_map["address"].(string),
-			Type:    changed_item_map["type"].(string),
-			Values:  resourceValues[changed_item_map["address"].(string)],
-		}
+		awsMappings := datamaps.AwssourceData[resourceChange.Type]
+		k8sMappings := datamaps.K8ssourceData[resourceChange.Type]
 
-		changing_items_tf[changed_item.Address] = changed_item
-	}
+		mappings := append(awsMappings, k8sMappings...)
 
-	var changing_items []*sdp.Query
-	// for all managed resources:
-	for _, r := range changing_items_tf {
-		mappings, ok := datamaps.AwssourceData[r.Type]
-		if !ok {
-			log.WithContext(ctx).WithFields(lf).WithField("terraform-address", r.Address).Warn("skipping unmapped resource")
+		if len(mappings) == 0 {
+			log.WithContext(ctx).WithFields(lf).WithField("terraform-address", resourceChange.Address).Warn("skipping unmapped resource")
 			continue
 		}
 
+		var currentResource *Resource
 		for _, mapData := range mappings {
-			queryStr, ok := r.Values[mapData.QueryField]
+			currentResource = plan.PlannedValues.RootModule.DigResource(resourceChange.Address)
+			if currentResource == nil {
+				log.WithContext(ctx).
+					WithFields(lf).
+					WithField("terraform-address", resourceChange.Address).
+					WithField("terraform-query-field", mapData.QueryField).Warn("skipping resource without values")
+				continue
+			}
+
+			query, ok := currentResource.AttributeValues.Dig(mapData.QueryField)
 			if !ok {
 				log.WithContext(ctx).
 					WithFields(lf).
-					WithField("terraform-address", r.Address).
+					WithField("terraform-address", resourceChange.Address).
 					WithField("terraform-query-field", mapData.QueryField).Warn("skipping resource without query field")
 				continue
+			}
+
+			// Create the map that variables will pull data from
+			dataMap := make(map[string]interface{})
+
+			// Populate resource values
+			dataMap["values"] = currentResource.AttributeValues
+
+			if overmindMappings, ok := plan.PlannedValues.Outputs["overmind_mappings"]; ok {
+				// TODO: Check for provider mappings
+				//
+				// This will need to follow the logic form the readme. We now have
+				// the entire plan parsed in a typesafe manner so it shouldn't be
+				// terribly hard. We just need to map from the changing resource to
+				// the provider, which probably should be its own function. Once we
+				// have that we can check the outputs for mappings
+
+				configResource := plan.Config.RootModule.DigResource(resourceChange.Address)
+
+				if configResource == nil {
+					log.WithContext(ctx).
+						WithFields(lf).
+						WithField("terraform-address", resourceChange.Address).
+						Warn("skipping resource without config")
+				} else {
+					// Look up the provider config key in the mappings
+					mappings := make(map[string]map[string]string)
+
+					err = json.Unmarshal(overmindMappings.Value, &mappings)
+
+					if err != nil {
+						log.WithContext(ctx).
+							WithFields(lf).
+							WithField("terraform-address", resourceChange.Address).
+							WithError(err).
+							Error("failed to parse overmind_mappings output")
+					} else {
+						currentProviderMappings, ok := mappings[configResource.ProviderConfigKey]
+
+						if ok {
+							log.WithContext(ctx).
+								WithFields(lf).
+								WithField("terraform-address", resourceChange.Address).
+								WithField("provider-config-key", configResource.ProviderConfigKey).
+								Debug("found provider mappings")
+
+							// We have mappings for this provider, so set them
+							// in the `provider_mapping` value
+							dataMap["provider_mapping"] = currentProviderMappings
+						}
+					}
+				}
+			}
+
+			// Interpolate variables in the scope
+			scope, err := InterpolateScope(mapData.Scope, dataMap)
+
+			if err != nil {
+				log.WithContext(ctx).WithError(err).Infof("could not find scope mapping variables %v, adding them will result in better results. Error: ", mapData.Scope)
+				scope = "*"
 			}
 
 			u := uuid.New()
 			changing_items = append(changing_items, &sdp.Query{
 				Type:               mapData.Type,
 				Method:             mapData.Method,
-				Query:              queryStr.(string),
-				Scope:              mapData.Scope,
+				Query:              query.(string),
+				Scope:              scope,
 				RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
 				UUID:               u[:],
 			})
@@ -122,24 +172,6 @@ func changingItemQueriesFromPlan(ctx context.Context, planJSON []byte, lf log.Fi
 	}
 
 	return changing_items, nil
-}
-
-func resourceValuesFromModule(module map[string]any, result *map[string]map[string]any) {
-	resource_data, ok := module["resources"]
-	if ok {
-		for _, r := range resource_data.([]any) {
-			resource := r.(map[string]any)
-			(*result)[resource["address"].(string)] = resource["values"].(map[string]any)
-		}
-	}
-
-	child_modules_data, ok := module["child_modules"]
-	if ok {
-		for _, cm := range child_modules_data.([]any) {
-			child_module := cm.(map[string]any)
-			resourceValuesFromModule(child_module, result)
-		}
-	}
 }
 
 func SubmitPlan(signals chan os.Signal, ready chan bool) int {

@@ -3,6 +3,544 @@
         "root_module": {
             "resources": [
                 {
+                    "address": "kubernetes_deployment.api_server",
+                    "mode": "managed",
+                    "type": "kubernetes_deployment",
+                    "name": "api_server",
+                    "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+                    "schema_version": 1,
+                    "values": {
+                        "id": "default/api-server",
+                        "metadata": [
+                            {
+                                "annotations": {},
+                                "generate_name": "",
+                                "generation": 18,
+                                "labels": {},
+                                "name": "api-server",
+                                "namespace": "default",
+                                "resource_version": "16505436",
+                                "uid": "cd11a255-2964-434a-b366-063ea673bbd2"
+                            }
+                        ],
+                        "spec": [
+                            {
+                                "min_ready_seconds": 0,
+                                "paused": false,
+                                "progress_deadline_seconds": 600,
+                                "replicas": "1",
+                                "revision_history_limit": 10,
+                                "selector": [
+                                    {
+                                        "match_expressions": [],
+                                        "match_labels": {
+                                            "app": "api-server"
+                                        }
+                                    }
+                                ],
+                                "strategy": [
+                                    {
+                                        "rolling_update": [
+                                            {
+                                                "max_surge": "25%",
+                                                "max_unavailable": "25%"
+                                            }
+                                        ],
+                                        "type": "RollingUpdate"
+                                    }
+                                ],
+                                "template": [
+                                    {
+                                        "metadata": [
+                                            {
+                                                "annotations": {},
+                                                "generate_name": "",
+                                                "generation": 0,
+                                                "labels": {
+                                                    "app": "api-server"
+                                                },
+                                                "name": "",
+                                                "namespace": "",
+                                                "resource_version": "",
+                                                "uid": ""
+                                            }
+                                        ],
+                                        "spec": [
+                                            {
+                                                "active_deadline_seconds": 0,
+                                                "affinity": [],
+                                                "automount_service_account_token": true,
+                                                "container": [
+                                                    {
+                                                        "args": [],
+                                                        "command": [],
+                                                        "env": [
+                                                        ],
+                                                        "env_from": [],
+                                                        "image": "ghcr.io/overmindtech/api-server@sha256:d10d15d0bce640a7e4e505b57652d7a7e46f8092a3dbd64408de4368cda40270",
+                                                        "image_pull_policy": "IfNotPresent",
+                                                        "lifecycle": [],
+                                                        "liveness_probe": [],
+                                                        "name": "api-server",
+                                                        "port": [
+                                                            {
+                                                                "container_port": 8080,
+                                                                "host_ip": "",
+                                                                "host_port": 0,
+                                                                "name": "",
+                                                                "protocol": "TCP"
+                                                            }
+                                                        ],
+                                                        "readiness_probe": [],
+                                                        "resources": [
+                                                            {
+                                                                "limits": {
+                                                                    "memory": "2Gi"
+                                                                },
+                                                                "requests": {
+                                                                    "cpu": "250m",
+                                                                    "memory": "200Mi"
+                                                                }
+                                                            }
+                                                        ],
+                                                        "security_context": [],
+                                                        "startup_probe": [],
+                                                        "stdin": false,
+                                                        "stdin_once": false,
+                                                        "termination_message_path": "/dev/termination-log",
+                                                        "termination_message_policy": "File",
+                                                        "tty": false,
+                                                        "volume_mount": [
+                                                            {
+                                                                "mount_path": "/nats-nkeys",
+                                                                "mount_propagation": "None",
+                                                                "name": "nats-nkeys",
+                                                                "read_only": false,
+                                                                "sub_path": ""
+                                                            }
+                                                        ],
+                                                        "working_dir": ""
+                                                    }
+                                                ],
+                                                "dns_config": [],
+                                                "dns_policy": "ClusterFirst",
+                                                "enable_service_links": true,
+                                                "host_aliases": [],
+                                                "host_ipc": false,
+                                                "host_network": false,
+                                                "host_pid": false,
+                                                "hostname": "",
+                                                "image_pull_secrets": [
+                                                    {
+                                                        "name": "srcman-registry-credentials"
+                                                    }
+                                                ],
+                                                "init_container": [
+                                                    {
+                                                        "args": [],
+                                                        "command": [
+                                                            "/bin/mkdir",
+                                                            "-p",
+                                                            "/nats-nkeys/nsc"
+                                                        ],
+                                                        "env": [],
+                                                        "env_from": [],
+                                                        "image": "alpine:latest",
+                                                        "image_pull_policy": "Always",
+                                                        "lifecycle": [],
+                                                        "liveness_probe": [],
+                                                        "name": "create-folder",
+                                                        "port": [],
+                                                        "readiness_probe": [],
+                                                        "resources": [
+                                                            {
+                                                                "limits": {},
+                                                                "requests": {}
+                                                            }
+                                                        ],
+                                                        "security_context": [],
+                                                        "startup_probe": [],
+                                                        "stdin": false,
+                                                        "stdin_once": false,
+                                                        "termination_message_path": "/dev/termination-log",
+                                                        "termination_message_policy": "File",
+                                                        "tty": false,
+                                                        "volume_mount": [
+                                                            {
+                                                                "mount_path": "/nats-nkeys",
+                                                                "mount_propagation": "None",
+                                                                "name": "nats-nkeys",
+                                                                "read_only": false,
+                                                                "sub_path": ""
+                                                            }
+                                                        ],
+                                                        "working_dir": ""
+                                                    },
+                                                    {
+                                                        "args": [
+                                                            "init",
+                                                            "--nsc-location",
+                                                            "/nats-nkeys/nsc",
+                                                            "--nsc-operator",
+                                                            "dogfood",
+                                                            "--revlink-account",
+                                                            "revlink"
+                                                        ],
+                                                        "command": [],
+                                                        "env": [],
+                                                        "env_from": [],
+                                                        "image": "ghcr.io/overmindtech/api-server@sha256:d10d15d0bce640a7e4e505b57652d7a7e46f8092a3dbd64408de4368cda40270",
+                                                        "image_pull_policy": "IfNotPresent",
+                                                        "lifecycle": [],
+                                                        "liveness_probe": [],
+                                                        "name": "generate-nkeys",
+                                                        "port": [],
+                                                        "readiness_probe": [],
+                                                        "resources": [
+                                                            {
+                                                                "limits": {},
+                                                                "requests": {}
+                                                            }
+                                                        ],
+                                                        "security_context": [],
+                                                        "startup_probe": [],
+                                                        "stdin": false,
+                                                        "stdin_once": false,
+                                                        "termination_message_path": "/dev/termination-log",
+                                                        "termination_message_policy": "File",
+                                                        "tty": false,
+                                                        "volume_mount": [
+                                                            {
+                                                                "mount_path": "/nats-nkeys",
+                                                                "mount_propagation": "None",
+                                                                "name": "nats-nkeys",
+                                                                "read_only": false,
+                                                                "sub_path": ""
+                                                            }
+                                                        ],
+                                                        "working_dir": ""
+                                                    }
+                                                ],
+                                                "node_name": "",
+                                                "node_selector": {},
+                                                "priority_class_name": "",
+                                                "readiness_gate": [],
+                                                "restart_policy": "Always",
+                                                "runtime_class_name": "",
+                                                "scheduler_name": "default-scheduler",
+                                                "security_context": [],
+                                                "service_account_name": "api-server-service-account",
+                                                "share_process_namespace": false,
+                                                "subdomain": "",
+                                                "termination_grace_period_seconds": 30,
+                                                "toleration": [],
+                                                "topology_spread_constraint": [],
+                                                "volume": [
+                                                    {
+                                                        "aws_elastic_block_store": [],
+                                                        "azure_disk": [],
+                                                        "azure_file": [],
+                                                        "ceph_fs": [],
+                                                        "cinder": [],
+                                                        "config_map": [],
+                                                        "csi": [],
+                                                        "downward_api": [],
+                                                        "empty_dir": [],
+                                                        "fc": [],
+                                                        "flex_volume": [],
+                                                        "flocker": [],
+                                                        "gce_persistent_disk": [],
+                                                        "git_repo": [],
+                                                        "glusterfs": [],
+                                                        "host_path": [],
+                                                        "iscsi": [],
+                                                        "local": [],
+                                                        "name": "nats-nkeys",
+                                                        "nfs": [],
+                                                        "persistent_volume_claim": [
+                                                            {
+                                                                "claim_name": "nats-nkeys",
+                                                                "read_only": false
+                                                            }
+                                                        ],
+                                                        "photon_persistent_disk": [],
+                                                        "projected": [],
+                                                        "quobyte": [],
+                                                        "rbd": [],
+                                                        "secret": [],
+                                                        "vsphere_volume": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "timeouts": {
+                            "create": "2m",
+                            "delete": "2m",
+                            "update": "2m"
+                        },
+                        "wait_for_rollout": true
+                    },
+                    "sensitive_values": {
+                        "metadata": [
+                            {
+                                "annotations": {},
+                                "labels": {}
+                            }
+                        ],
+                        "spec": [
+                            {
+                                "selector": [
+                                    {
+                                        "match_expressions": [],
+                                        "match_labels": {}
+                                    }
+                                ],
+                                "strategy": [
+                                    {
+                                        "rolling_update": [
+                                            {}
+                                        ]
+                                    }
+                                ],
+                                "template": [
+                                    {
+                                        "metadata": [
+                                            {
+                                                "annotations": {},
+                                                "labels": {}
+                                            }
+                                        ],
+                                        "spec": [
+                                            {
+                                                "affinity": [],
+                                                "container": [
+                                                    {
+                                                        "args": [],
+                                                        "command": [],
+                                                        "env": [
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value": true,
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value": true,
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value": true,
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            },
+                                                            {
+                                                                "value_from": [
+                                                                    {
+                                                                        "config_map_key_ref": [],
+                                                                        "field_ref": [],
+                                                                        "resource_field_ref": [],
+                                                                        "secret_key_ref": [
+                                                                            {}
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "value_from": [
+                                                                    {
+                                                                        "config_map_key_ref": [],
+                                                                        "field_ref": [],
+                                                                        "resource_field_ref": [],
+                                                                        "secret_key_ref": [
+                                                                            {}
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "value_from": []
+                                                            }
+                                                        ],
+                                                        "env_from": [],
+                                                        "lifecycle": [],
+                                                        "liveness_probe": [],
+                                                        "port": [
+                                                            {}
+                                                        ],
+                                                        "readiness_probe": [],
+                                                        "resources": [
+                                                            {
+                                                                "limits": {},
+                                                                "requests": {}
+                                                            }
+                                                        ],
+                                                        "security_context": [],
+                                                        "startup_probe": [],
+                                                        "volume_mount": [
+                                                            {}
+                                                        ]
+                                                    }
+                                                ],
+                                                "dns_config": [],
+                                                "host_aliases": [],
+                                                "image_pull_secrets": [
+                                                    {}
+                                                ],
+                                                "init_container": [
+                                                    {
+                                                        "args": [],
+                                                        "command": [
+                                                            false,
+                                                            false,
+                                                            false
+                                                        ],
+                                                        "env": [],
+                                                        "env_from": [],
+                                                        "lifecycle": [],
+                                                        "liveness_probe": [],
+                                                        "port": [],
+                                                        "readiness_probe": [],
+                                                        "resources": [
+                                                            {
+                                                                "limits": {},
+                                                                "requests": {}
+                                                            }
+                                                        ],
+                                                        "security_context": [],
+                                                        "startup_probe": [],
+                                                        "volume_mount": [
+                                                            {}
+                                                        ]
+                                                    },
+                                                    {
+                                                        "args": [
+                                                            false,
+                                                            false,
+                                                            false,
+                                                            false,
+                                                            false,
+                                                            false,
+                                                            false
+                                                        ],
+                                                        "command": [],
+                                                        "env": [],
+                                                        "env_from": [],
+                                                        "lifecycle": [],
+                                                        "liveness_probe": [],
+                                                        "port": [],
+                                                        "readiness_probe": [],
+                                                        "resources": [
+                                                            {
+                                                                "limits": {},
+                                                                "requests": {}
+                                                            }
+                                                        ],
+                                                        "security_context": [],
+                                                        "startup_probe": [],
+                                                        "volume_mount": [
+                                                            {}
+                                                        ]
+                                                    }
+                                                ],
+                                                "node_selector": {},
+                                                "readiness_gate": [],
+                                                "security_context": [],
+                                                "toleration": [],
+                                                "topology_spread_constraint": [],
+                                                "volume": [
+                                                    {
+                                                        "aws_elastic_block_store": [],
+                                                        "azure_disk": [],
+                                                        "azure_file": [],
+                                                        "ceph_fs": [],
+                                                        "cinder": [],
+                                                        "config_map": [],
+                                                        "csi": [],
+                                                        "downward_api": [],
+                                                        "empty_dir": [],
+                                                        "fc": [],
+                                                        "flex_volume": [],
+                                                        "flocker": [],
+                                                        "gce_persistent_disk": [],
+                                                        "git_repo": [],
+                                                        "glusterfs": [],
+                                                        "host_path": [],
+                                                        "iscsi": [],
+                                                        "local": [],
+                                                        "nfs": [],
+                                                        "persistent_volume_claim": [
+                                                            {}
+                                                        ],
+                                                        "photon_persistent_disk": [],
+                                                        "projected": [],
+                                                        "quobyte": [],
+                                                        "rbd": [],
+                                                        "secret": [],
+                                                        "vsphere_volume": []
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "timeouts": {}
+                    }
+                },
+                {
                     "address": "module.eks_elb_controller.aws_iam_policy.lb_controller[0]",
                     "mode": "managed",
                     "type": "aws_iam_policy",
@@ -65,8 +603,8 @@
                         "name": "test-cluster-ClusterEncryption2023061613390591120000000e",
                         "name_prefix": "test-cluster-ClusterEncryption",
                         "path": "/",
-                        "policy": "{\"Statement\":[{\"Action\":[\"kms:Encrypt\",\"kms:Decrypt\",\"kms:ListGrants\",\"kms:DescribeKey\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:kms:eu-west-2:944651592624:key/e10b7c35-f5ec-48ce-8699-81497e5c2f57\"}],\"Version\":\"2012-10-17\"}",
-                        "policy_id": "ANPA5X4M7MOYA4TZO6GN3",
+                        "policy": "{\"Statement\":[{\"Action\":[\"kms:Encrypt\",\"kms:Decrypt\",\"kms:ListGrants\",\"kms:DescribeKey\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:kms:eu-west-2:12345678901:key/1234567\"}],\"Version\":\"2012-10-17\"}",
+                        "policy_id": "foobar",
                         "tags": {},
                         "tags_all": {}
                     },
@@ -796,7 +1334,7 @@
                                 "name_prefix": "AmazonEKS_EFS_CSI_Policy-",
                                 "path": "/",
                                 "policy": "{\"Statement\":[{\"Action\":[\"elasticfilesystem:DescribeMountTargets\",\"elasticfilesystem:DescribeFileSystems\",\"elasticfilesystem:DescribeAccessPoints\",\"ec2:DescribeAvailabilityZones\"],\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:CreateAccessPoint\",\"Condition\":{\"StringLike\":{\"aws:RequestTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:TagResource\",\"Condition\":{\"StringLike\":{\"aws:RequestTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:DeleteAccessPoint\",\"Condition\":{\"StringEquals\":{\"aws:ResourceTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"}],\"Version\":\"2012-10-17\"}",
-                                "policy_id": "ANPA5X4M7MOYJS4FPQGBX",
+                                "policy_id": "foobar",
                                 "tags": {},
                                 "tags_all": {}
                             },
@@ -815,7 +1353,7 @@
                             "schema_version": 0,
                             "values": {
                                 "arn": "arn:aws:iam::123456789012:role/efs-csi",
-                                "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRoleWithWebIdentity\",\"Condition\":{\"StringEquals\":{\"oidc.eks.eu-west-2.amazonaws.com/id/F41E26F5371FABBCFA5F3129C57D4AD8:aud\":\"sts.amazonaws.com\",\"oidc.eks.eu-west-2.amazonaws.com/id/F41E26F5371FABBCFA5F3129C57D4AD8:sub\":[\"system:serviceaccount:kube-system:efs-csi-controller-sa\",\"system:serviceaccount:kube-system:efs-csi-node-sa\"]}},\"Effect\":\"Allow\",\"Principal\":{\"Federated\":\"arn:aws:iam::123456789012:oidc-provider/oidc.eks.eu-west-2.amazonaws.com/id/F41E26F5371FABBCFA5F3129C57D4AD8\"}}],\"Version\":\"2012-10-17\"}",
+                                "assume_role_policy": "{\"Statement\":[{\"Action\":\"sts:AssumeRoleWithWebIdentity\",\"Condition\":{\"StringEquals\":{\"foobar:aud\":\"sts.amazonaws.com\",\"foobar:sub\":[\"system:serviceaccount:kube-system:efs-csi-controller-sa\",\"system:serviceaccount:kube-system:efs-csi-node-sa\"]}},\"Effect\":\"Allow\",\"Principal\":{\"Federated\":\"arn:aws:iam::123456789012:oidc-provider/foobar\"}}],\"Version\":\"2012-10-17\"}",
                                 "create_date": "2023-03-17T13:43:01Z",
                                 "description": "",
                                 "force_detach_policies": true,
@@ -1635,7 +2173,7 @@
                                                 "values": [
                                                     "system:serviceaccount:kube-system:aws-alb-ingress-controller"
                                                 ],
-                                                "variable": "oidc.eks.eu-west-2.amazonaws.com/id/F41E26F5371FABBCFA5F3129C57D4AD8:sub"
+                                                "variable": "foobar:sub"
                                             }
                                         ],
                                         "effect": "Allow",
@@ -1645,7 +2183,7 @@
                                         "principals": [
                                             {
                                                 "identifiers": [
-                                                    "arn:aws:iam::123456789012:oidc-provider/oidc.eks.eu-west-2.amazonaws.com/id/F41E26F5371FABBCFA5F3129C57D4AD8"
+                                                    "arn:aws:iam::123456789012:oidc-provider/foobar"
                                                 ],
                                                 "type": "Federated"
                                             }
@@ -1795,9 +2333,1103 @@
                     "address": "module.eks_elb_controller"
                 }
             ]
+        },
+        "outputs": {
+            "overmind_mappings": {
+                "sensitive": false,
+                "type": [
+                    "object",
+                    {
+                        "kubernetes": [
+                            "object",
+                            {
+                                "cluster_name": "string"
+                            }
+                        ]
+                    }
+                ],
+                "value": {
+                    "kubernetes": {
+                        "cluster_name": "dogfood"
+                    }
+                }
+            }
         }
     },
     "resource_changes": [
+        {
+            "address": "kubernetes_deployment.api_server",
+            "mode": "managed",
+            "type": "kubernetes_deployment",
+            "name": "api_server",
+            "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+            "change": {
+                "actions": [
+                    "update"
+                ],
+                "before": {
+                    "id": "default/api-server",
+                    "metadata": [
+                        {
+                            "annotations": {},
+                            "generate_name": "",
+                            "generation": 18,
+                            "labels": {},
+                            "name": "api-server",
+                            "namespace": "default",
+                            "resource_version": "16505436",
+                            "uid": "cd11a255-2964-434a-b366-063ea673bbd2"
+                        }
+                    ],
+                    "spec": [
+                        {
+                            "min_ready_seconds": 0,
+                            "paused": false,
+                            "progress_deadline_seconds": 600,
+                            "replicas": "1",
+                            "revision_history_limit": 10,
+                            "selector": [
+                                {
+                                    "match_expressions": [],
+                                    "match_labels": {
+                                        "app": "api-server"
+                                    }
+                                }
+                            ],
+                            "strategy": [
+                                {
+                                    "rolling_update": [
+                                        {
+                                            "max_surge": "25%",
+                                            "max_unavailable": "25%"
+                                        }
+                                    ],
+                                    "type": "RollingUpdate"
+                                }
+                            ],
+                            "template": [
+                                {
+                                    "metadata": [
+                                        {
+                                            "annotations": {},
+                                            "generate_name": "",
+                                            "generation": 0,
+                                            "labels": {
+                                                "app": "api-server"
+                                            },
+                                            "name": "",
+                                            "namespace": "",
+                                            "resource_version": "",
+                                            "uid": ""
+                                        }
+                                    ],
+                                    "spec": [
+                                        {
+                                            "active_deadline_seconds": 0,
+                                            "affinity": [],
+                                            "automount_service_account_token": true,
+                                            "container": [
+                                                {
+                                                    "args": [],
+                                                    "command": [],
+                                                    "env": [
+                                                    ],
+                                                    "env_from": [],
+                                                    "image": "ghcr.io/overmindtech/api-server@sha256:41be6bab8dc65bf19fe3771fa9cf54e51621d93161056db8091ca2ff905be24a",
+                                                    "image_pull_policy": "IfNotPresent",
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "name": "api-server",
+                                                    "port": [
+                                                        {
+                                                            "container_port": 8080,
+                                                            "host_ip": "",
+                                                            "host_port": 0,
+                                                            "name": "",
+                                                            "protocol": "TCP"
+                                                        }
+                                                    ],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {
+                                                                "memory": "2Gi"
+                                                            },
+                                                            "requests": {
+                                                                "cpu": "250m",
+                                                                "memory": "200Mi"
+                                                            }
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "stdin": false,
+                                                    "stdin_once": false,
+                                                    "termination_message_path": "/dev/termination-log",
+                                                    "termination_message_policy": "File",
+                                                    "tty": false,
+                                                    "volume_mount": [
+                                                        {
+                                                            "mount_path": "/nats-nkeys",
+                                                            "mount_propagation": "None",
+                                                            "name": "nats-nkeys",
+                                                            "read_only": false,
+                                                            "sub_path": ""
+                                                        }
+                                                    ],
+                                                    "working_dir": ""
+                                                }
+                                            ],
+                                            "dns_config": [],
+                                            "dns_policy": "ClusterFirst",
+                                            "enable_service_links": true,
+                                            "host_aliases": [],
+                                            "host_ipc": false,
+                                            "host_network": false,
+                                            "host_pid": false,
+                                            "hostname": "",
+                                            "image_pull_secrets": [
+                                                {
+                                                    "name": "srcman-registry-credentials"
+                                                }
+                                            ],
+                                            "init_container": [
+                                                {
+                                                    "args": [],
+                                                    "command": [
+                                                        "/bin/mkdir",
+                                                        "-p",
+                                                        "/nats-nkeys/nsc"
+                                                    ],
+                                                    "env": [],
+                                                    "env_from": [],
+                                                    "image": "alpine:latest",
+                                                    "image_pull_policy": "Always",
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "name": "create-folder",
+                                                    "port": [],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {},
+                                                            "requests": {}
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "stdin": false,
+                                                    "stdin_once": false,
+                                                    "termination_message_path": "/dev/termination-log",
+                                                    "termination_message_policy": "File",
+                                                    "tty": false,
+                                                    "volume_mount": [
+                                                        {
+                                                            "mount_path": "/nats-nkeys",
+                                                            "mount_propagation": "None",
+                                                            "name": "nats-nkeys",
+                                                            "read_only": false,
+                                                            "sub_path": ""
+                                                        }
+                                                    ],
+                                                    "working_dir": ""
+                                                },
+                                                {
+                                                    "args": [
+                                                        "init",
+                                                        "--nsc-location",
+                                                        "/nats-nkeys/nsc",
+                                                        "--nsc-operator",
+                                                        "dogfood",
+                                                        "--revlink-account",
+                                                        "revlink"
+                                                    ],
+                                                    "command": [],
+                                                    "env": [],
+                                                    "env_from": [],
+                                                    "image": "ghcr.io/overmindtech/api-server@sha256:41be6bab8dc65bf19fe3771fa9cf54e51621d93161056db8091ca2ff905be24a",
+                                                    "image_pull_policy": "IfNotPresent",
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "name": "generate-nkeys",
+                                                    "port": [],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {},
+                                                            "requests": {}
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "stdin": false,
+                                                    "stdin_once": false,
+                                                    "termination_message_path": "/dev/termination-log",
+                                                    "termination_message_policy": "File",
+                                                    "tty": false,
+                                                    "volume_mount": [
+                                                        {
+                                                            "mount_path": "/nats-nkeys",
+                                                            "mount_propagation": "None",
+                                                            "name": "nats-nkeys",
+                                                            "read_only": false,
+                                                            "sub_path": ""
+                                                        }
+                                                    ],
+                                                    "working_dir": ""
+                                                }
+                                            ],
+                                            "node_name": "",
+                                            "node_selector": {},
+                                            "priority_class_name": "",
+                                            "readiness_gate": [],
+                                            "restart_policy": "Always",
+                                            "runtime_class_name": "",
+                                            "scheduler_name": "default-scheduler",
+                                            "security_context": [],
+                                            "service_account_name": "api-server-service-account",
+                                            "share_process_namespace": false,
+                                            "subdomain": "",
+                                            "termination_grace_period_seconds": 30,
+                                            "toleration": [],
+                                            "topology_spread_constraint": [],
+                                            "volume": [
+                                                {
+                                                    "aws_elastic_block_store": [],
+                                                    "azure_disk": [],
+                                                    "azure_file": [],
+                                                    "ceph_fs": [],
+                                                    "cinder": [],
+                                                    "config_map": [],
+                                                    "csi": [],
+                                                    "downward_api": [],
+                                                    "empty_dir": [],
+                                                    "fc": [],
+                                                    "flex_volume": [],
+                                                    "flocker": [],
+                                                    "gce_persistent_disk": [],
+                                                    "git_repo": [],
+                                                    "glusterfs": [],
+                                                    "host_path": [],
+                                                    "iscsi": [],
+                                                    "local": [],
+                                                    "name": "nats-nkeys",
+                                                    "nfs": [],
+                                                    "persistent_volume_claim": [
+                                                        {
+                                                            "claim_name": "nats-nkeys",
+                                                            "read_only": false
+                                                        }
+                                                    ],
+                                                    "photon_persistent_disk": [],
+                                                    "projected": [],
+                                                    "quobyte": [],
+                                                    "rbd": [],
+                                                    "secret": [],
+                                                    "vsphere_volume": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "timeouts": {
+                        "create": "2m",
+                        "delete": "2m",
+                        "update": "2m"
+                    },
+                    "wait_for_rollout": true
+                },
+                "after": {
+                    "id": "default/api-server",
+                    "metadata": [
+                        {
+                            "annotations": {},
+                            "generate_name": "",
+                            "generation": 18,
+                            "labels": {},
+                            "name": "api-server",
+                            "namespace": "default",
+                            "resource_version": "16505436",
+                            "uid": "cd11a255-2964-434a-b366-063ea673bbd2"
+                        }
+                    ],
+                    "spec": [
+                        {
+                            "min_ready_seconds": 0,
+                            "paused": false,
+                            "progress_deadline_seconds": 600,
+                            "replicas": "1",
+                            "revision_history_limit": 10,
+                            "selector": [
+                                {
+                                    "match_expressions": [],
+                                    "match_labels": {
+                                        "app": "api-server"
+                                    }
+                                }
+                            ],
+                            "strategy": [
+                                {
+                                    "rolling_update": [
+                                        {
+                                            "max_surge": "25%",
+                                            "max_unavailable": "25%"
+                                        }
+                                    ],
+                                    "type": "RollingUpdate"
+                                }
+                            ],
+                            "template": [
+                                {
+                                    "metadata": [
+                                        {
+                                            "annotations": {},
+                                            "generate_name": "",
+                                            "generation": 0,
+                                            "labels": {
+                                                "app": "api-server"
+                                            },
+                                            "name": "",
+                                            "namespace": "",
+                                            "resource_version": "",
+                                            "uid": ""
+                                        }
+                                    ],
+                                    "spec": [
+                                        {
+                                            "active_deadline_seconds": 0,
+                                            "affinity": [],
+                                            "automount_service_account_token": true,
+                                            "container": [
+                                                {
+                                                    "args": [],
+                                                    "command": [],
+                                                    "env": [
+                                                    ],
+                                                    "env_from": [],
+                                                    "image": "ghcr.io/overmindtech/api-server@sha256:d10d15d0bce640a7e4e505b57652d7a7e46f8092a3dbd64408de4368cda40270",
+                                                    "image_pull_policy": "IfNotPresent",
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "name": "api-server",
+                                                    "port": [
+                                                        {
+                                                            "container_port": 8080,
+                                                            "host_ip": "",
+                                                            "host_port": 0,
+                                                            "name": "",
+                                                            "protocol": "TCP"
+                                                        }
+                                                    ],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {
+                                                                "memory": "2Gi"
+                                                            },
+                                                            "requests": {
+                                                                "cpu": "250m",
+                                                                "memory": "200Mi"
+                                                            }
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "stdin": false,
+                                                    "stdin_once": false,
+                                                    "termination_message_path": "/dev/termination-log",
+                                                    "termination_message_policy": "File",
+                                                    "tty": false,
+                                                    "volume_mount": [
+                                                        {
+                                                            "mount_path": "/nats-nkeys",
+                                                            "mount_propagation": "None",
+                                                            "name": "nats-nkeys",
+                                                            "read_only": false,
+                                                            "sub_path": ""
+                                                        }
+                                                    ],
+                                                    "working_dir": ""
+                                                }
+                                            ],
+                                            "dns_config": [],
+                                            "dns_policy": "ClusterFirst",
+                                            "enable_service_links": true,
+                                            "host_aliases": [],
+                                            "host_ipc": false,
+                                            "host_network": false,
+                                            "host_pid": false,
+                                            "hostname": "",
+                                            "image_pull_secrets": [
+                                                {
+                                                    "name": "srcman-registry-credentials"
+                                                }
+                                            ],
+                                            "init_container": [
+                                                {
+                                                    "args": [],
+                                                    "command": [
+                                                        "/bin/mkdir",
+                                                        "-p",
+                                                        "/nats-nkeys/nsc"
+                                                    ],
+                                                    "env": [],
+                                                    "env_from": [],
+                                                    "image": "alpine:latest",
+                                                    "image_pull_policy": "Always",
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "name": "create-folder",
+                                                    "port": [],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {},
+                                                            "requests": {}
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "stdin": false,
+                                                    "stdin_once": false,
+                                                    "termination_message_path": "/dev/termination-log",
+                                                    "termination_message_policy": "File",
+                                                    "tty": false,
+                                                    "volume_mount": [
+                                                        {
+                                                            "mount_path": "/nats-nkeys",
+                                                            "mount_propagation": "None",
+                                                            "name": "nats-nkeys",
+                                                            "read_only": false,
+                                                            "sub_path": ""
+                                                        }
+                                                    ],
+                                                    "working_dir": ""
+                                                },
+                                                {
+                                                    "args": [
+                                                        "init",
+                                                        "--nsc-location",
+                                                        "/nats-nkeys/nsc",
+                                                        "--nsc-operator",
+                                                        "dogfood",
+                                                        "--revlink-account",
+                                                        "revlink"
+                                                    ],
+                                                    "command": [],
+                                                    "env": [],
+                                                    "env_from": [],
+                                                    "image": "ghcr.io/overmindtech/api-server@sha256:d10d15d0bce640a7e4e505b57652d7a7e46f8092a3dbd64408de4368cda40270",
+                                                    "image_pull_policy": "IfNotPresent",
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "name": "generate-nkeys",
+                                                    "port": [],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {},
+                                                            "requests": {}
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "stdin": false,
+                                                    "stdin_once": false,
+                                                    "termination_message_path": "/dev/termination-log",
+                                                    "termination_message_policy": "File",
+                                                    "tty": false,
+                                                    "volume_mount": [
+                                                        {
+                                                            "mount_path": "/nats-nkeys",
+                                                            "mount_propagation": "None",
+                                                            "name": "nats-nkeys",
+                                                            "read_only": false,
+                                                            "sub_path": ""
+                                                        }
+                                                    ],
+                                                    "working_dir": ""
+                                                }
+                                            ],
+                                            "node_name": "",
+                                            "node_selector": {},
+                                            "priority_class_name": "",
+                                            "readiness_gate": [],
+                                            "restart_policy": "Always",
+                                            "runtime_class_name": "",
+                                            "scheduler_name": "default-scheduler",
+                                            "security_context": [],
+                                            "service_account_name": "api-server-service-account",
+                                            "share_process_namespace": false,
+                                            "subdomain": "",
+                                            "termination_grace_period_seconds": 30,
+                                            "toleration": [],
+                                            "topology_spread_constraint": [],
+                                            "volume": [
+                                                {
+                                                    "aws_elastic_block_store": [],
+                                                    "azure_disk": [],
+                                                    "azure_file": [],
+                                                    "ceph_fs": [],
+                                                    "cinder": [],
+                                                    "config_map": [],
+                                                    "csi": [],
+                                                    "downward_api": [],
+                                                    "empty_dir": [],
+                                                    "fc": [],
+                                                    "flex_volume": [],
+                                                    "flocker": [],
+                                                    "gce_persistent_disk": [],
+                                                    "git_repo": [],
+                                                    "glusterfs": [],
+                                                    "host_path": [],
+                                                    "iscsi": [],
+                                                    "local": [],
+                                                    "name": "nats-nkeys",
+                                                    "nfs": [],
+                                                    "persistent_volume_claim": [
+                                                        {
+                                                            "claim_name": "nats-nkeys",
+                                                            "read_only": false
+                                                        }
+                                                    ],
+                                                    "photon_persistent_disk": [],
+                                                    "projected": [],
+                                                    "quobyte": [],
+                                                    "rbd": [],
+                                                    "secret": [],
+                                                    "vsphere_volume": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "timeouts": {
+                        "create": "2m",
+                        "delete": "2m",
+                        "update": "2m"
+                    },
+                    "wait_for_rollout": true
+                },
+                "after_unknown": {},
+                "before_sensitive": {
+                    "metadata": [
+                        {
+                            "annotations": {},
+                            "labels": {}
+                        }
+                    ],
+                    "spec": [
+                        {
+                            "selector": [
+                                {
+                                    "match_expressions": [],
+                                    "match_labels": {}
+                                }
+                            ],
+                            "strategy": [
+                                {
+                                    "rolling_update": [
+                                        {}
+                                    ]
+                                }
+                            ],
+                            "template": [
+                                {
+                                    "metadata": [
+                                        {
+                                            "annotations": {},
+                                            "labels": {}
+                                        }
+                                    ],
+                                    "spec": [
+                                        {
+                                            "affinity": [],
+                                            "container": [
+                                                {
+                                                    "args": [],
+                                                    "command": [],
+                                                    "env": [
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value": true,
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value": true,
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value": true,
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": [
+                                                                {
+                                                                    "config_map_key_ref": [],
+                                                                    "field_ref": [],
+                                                                    "resource_field_ref": [],
+                                                                    "secret_key_ref": [
+                                                                        {}
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "value_from": [
+                                                                {
+                                                                    "config_map_key_ref": [],
+                                                                    "field_ref": [],
+                                                                    "resource_field_ref": [],
+                                                                    "secret_key_ref": [
+                                                                        {}
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        }
+                                                    ],
+                                                    "env_from": [],
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "port": [
+                                                        {}
+                                                    ],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {},
+                                                            "requests": {}
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "volume_mount": [
+                                                        {}
+                                                    ]
+                                                }
+                                            ],
+                                            "dns_config": [],
+                                            "host_aliases": [],
+                                            "image_pull_secrets": [
+                                                {}
+                                            ],
+                                            "init_container": [
+                                                {
+                                                    "args": [],
+                                                    "command": [
+                                                        false,
+                                                        false,
+                                                        false
+                                                    ],
+                                                    "env": [],
+                                                    "env_from": [],
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "port": [],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {},
+                                                            "requests": {}
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "volume_mount": [
+                                                        {}
+                                                    ]
+                                                },
+                                                {
+                                                    "args": [
+                                                        false,
+                                                        false,
+                                                        false,
+                                                        false,
+                                                        false,
+                                                        false,
+                                                        false
+                                                    ],
+                                                    "command": [],
+                                                    "env": [],
+                                                    "env_from": [],
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "port": [],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {},
+                                                            "requests": {}
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "volume_mount": [
+                                                        {}
+                                                    ]
+                                                }
+                                            ],
+                                            "node_selector": {},
+                                            "readiness_gate": [],
+                                            "security_context": [],
+                                            "toleration": [],
+                                            "topology_spread_constraint": [],
+                                            "volume": [
+                                                {
+                                                    "aws_elastic_block_store": [],
+                                                    "azure_disk": [],
+                                                    "azure_file": [],
+                                                    "ceph_fs": [],
+                                                    "cinder": [],
+                                                    "config_map": [],
+                                                    "csi": [],
+                                                    "downward_api": [],
+                                                    "empty_dir": [],
+                                                    "fc": [],
+                                                    "flex_volume": [],
+                                                    "flocker": [],
+                                                    "gce_persistent_disk": [],
+                                                    "git_repo": [],
+                                                    "glusterfs": [],
+                                                    "host_path": [],
+                                                    "iscsi": [],
+                                                    "local": [],
+                                                    "nfs": [],
+                                                    "persistent_volume_claim": [
+                                                        {}
+                                                    ],
+                                                    "photon_persistent_disk": [],
+                                                    "projected": [],
+                                                    "quobyte": [],
+                                                    "rbd": [],
+                                                    "secret": [],
+                                                    "vsphere_volume": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "timeouts": {}
+                },
+                "after_sensitive": {
+                    "metadata": [
+                        {
+                            "annotations": {},
+                            "labels": {}
+                        }
+                    ],
+                    "spec": [
+                        {
+                            "selector": [
+                                {
+                                    "match_expressions": [],
+                                    "match_labels": {}
+                                }
+                            ],
+                            "strategy": [
+                                {
+                                    "rolling_update": [
+                                        {}
+                                    ]
+                                }
+                            ],
+                            "template": [
+                                {
+                                    "metadata": [
+                                        {
+                                            "annotations": {},
+                                            "labels": {}
+                                        }
+                                    ],
+                                    "spec": [
+                                        {
+                                            "affinity": [],
+                                            "container": [
+                                                {
+                                                    "args": [],
+                                                    "command": [],
+                                                    "env": [
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value": true,
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value": true,
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value": true,
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        },
+                                                        {
+                                                            "value_from": [
+                                                                {
+                                                                    "config_map_key_ref": [],
+                                                                    "field_ref": [],
+                                                                    "resource_field_ref": [],
+                                                                    "secret_key_ref": [
+                                                                        {}
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "value_from": [
+                                                                {
+                                                                    "config_map_key_ref": [],
+                                                                    "field_ref": [],
+                                                                    "resource_field_ref": [],
+                                                                    "secret_key_ref": [
+                                                                        {}
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "value_from": []
+                                                        }
+                                                    ],
+                                                    "env_from": [],
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "port": [
+                                                        {}
+                                                    ],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {},
+                                                            "requests": {}
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "volume_mount": [
+                                                        {}
+                                                    ]
+                                                }
+                                            ],
+                                            "dns_config": [],
+                                            "host_aliases": [],
+                                            "image_pull_secrets": [
+                                                {}
+                                            ],
+                                            "init_container": [
+                                                {
+                                                    "args": [],
+                                                    "command": [
+                                                        false,
+                                                        false,
+                                                        false
+                                                    ],
+                                                    "env": [],
+                                                    "env_from": [],
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "port": [],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {},
+                                                            "requests": {}
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "volume_mount": [
+                                                        {}
+                                                    ]
+                                                },
+                                                {
+                                                    "args": [
+                                                        false,
+                                                        false,
+                                                        false,
+                                                        false,
+                                                        false,
+                                                        false,
+                                                        false
+                                                    ],
+                                                    "command": [],
+                                                    "env": [],
+                                                    "env_from": [],
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "port": [],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {},
+                                                            "requests": {}
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "volume_mount": [
+                                                        {}
+                                                    ]
+                                                }
+                                            ],
+                                            "node_selector": {},
+                                            "readiness_gate": [],
+                                            "security_context": [],
+                                            "toleration": [],
+                                            "topology_spread_constraint": [],
+                                            "volume": [
+                                                {
+                                                    "aws_elastic_block_store": [],
+                                                    "azure_disk": [],
+                                                    "azure_file": [],
+                                                    "ceph_fs": [],
+                                                    "cinder": [],
+                                                    "config_map": [],
+                                                    "csi": [],
+                                                    "downward_api": [],
+                                                    "empty_dir": [],
+                                                    "fc": [],
+                                                    "flex_volume": [],
+                                                    "flocker": [],
+                                                    "gce_persistent_disk": [],
+                                                    "git_repo": [],
+                                                    "glusterfs": [],
+                                                    "host_path": [],
+                                                    "iscsi": [],
+                                                    "local": [],
+                                                    "nfs": [],
+                                                    "persistent_volume_claim": [
+                                                        {}
+                                                    ],
+                                                    "photon_persistent_disk": [],
+                                                    "projected": [],
+                                                    "quobyte": [],
+                                                    "rbd": [],
+                                                    "secret": [],
+                                                    "vsphere_volume": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "timeouts": {}
+                }
+            }
+        },
         {
             "address": "aws_iam_policy.auth0_ses_send_emails",
             "mode": "managed",
@@ -1863,7 +3495,7 @@
                     "name_prefix": "AmazonEKS_EFS_CSI_Policy-",
                     "path": "/",
                     "policy": "{\"Statement\":[{\"Action\":[\"elasticfilesystem:DescribeMountTargets\",\"elasticfilesystem:DescribeFileSystems\",\"elasticfilesystem:DescribeAccessPoints\",\"ec2:DescribeAvailabilityZones\"],\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:CreateAccessPoint\",\"Condition\":{\"StringLike\":{\"aws:RequestTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:TagResource\",\"Condition\":{\"StringLike\":{\"aws:RequestTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:DeleteAccessPoint\",\"Condition\":{\"StringEquals\":{\"aws:ResourceTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"}],\"Version\":\"2012-10-17\"}",
-                    "policy_id": "ANPA5X4M7MOYJS4FPQGBX",
+                    "policy_id": "foobar",
                     "tags": {},
                     "tags_all": {}
                 },
@@ -1875,7 +3507,7 @@
                     "name_prefix": "AmazonEKS_EFS_CSI_Policy-",
                     "path": "/",
                     "policy": "{\"Statement\":[{\"Action\":[\"elasticfilesystem:DescribeMountTargets\",\"elasticfilesystem:DescribeFileSystems\",\"elasticfilesystem:DescribeAccessPoints\",\"ec2:DescribeAvailabilityZones\"],\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:CreateAccessPoint\",\"Condition\":{\"StringLike\":{\"aws:RequestTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:TagResource\",\"Condition\":{\"StringLike\":{\"aws:RequestTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"},{\"Action\":\"elasticfilesystem:DeleteAccessPoint\",\"Condition\":{\"StringEquals\":{\"aws:ResourceTag/efs.csi.aws.com/cluster\":\"true\"}},\"Effect\":\"Allow\",\"Resource\":\"*\",\"Sid\":\"\"}],\"Version\":\"2012-10-17\"}",
-                    "policy_id": "ANPA5X4M7MOYJS4FPQGBX",
+                    "policy_id": "foobar",
                     "tags": {},
                     "tags_all": {}
                 },
@@ -1909,8 +3541,8 @@
                     "name": "test-cluster-ClusterEncryption2023061613390591120000000e",
                     "name_prefix": "test-cluster-ClusterEncryption",
                     "path": "/",
-                    "policy": "{\"Statement\":[{\"Action\":[\"kms:Encrypt\",\"kms:Decrypt\",\"kms:ListGrants\",\"kms:DescribeKey\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:kms:eu-west-2:944651592624:key/e10b7c35-f5ec-48ce-8699-81497e5c2f57\"}],\"Version\":\"2012-10-17\"}",
-                    "policy_id": "ANPA5X4M7MOYA4TZO6GN3",
+                    "policy": "{\"Statement\":[{\"Action\":[\"kms:Encrypt\",\"kms:Decrypt\",\"kms:ListGrants\",\"kms:DescribeKey\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:kms:eu-west-2:12345678901:key/1234567\"}],\"Version\":\"2012-10-17\"}",
+                    "policy_id": "foobar",
                     "tags": {},
                     "tags_all": {}
                 },
@@ -1921,8 +3553,8 @@
                     "name": "test-cluster-ClusterEncryption2023061613390591120000000e",
                     "name_prefix": "test-cluster-ClusterEncryption",
                     "path": "/",
-                    "policy": "{\"Statement\":[{\"Action\":[\"kms:Encrypt\",\"kms:Decrypt\",\"kms:ListGrants\",\"kms:DescribeKey\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:kms:eu-west-2:944651592624:key/e10b7c35-f5ec-48ce-8699-81497e5c2f57\"}],\"Version\":\"2012-10-17\"}",
-                    "policy_id": "ANPA5X4M7MOYA4TZO6GN3",
+                    "policy": "{\"Statement\":[{\"Action\":[\"kms:Encrypt\",\"kms:Decrypt\",\"kms:ListGrants\",\"kms:DescribeKey\"],\"Effect\":\"Allow\",\"Resource\":\"arn:aws:kms:eu-west-2:12345678901:key/1234567\"}],\"Version\":\"2012-10-17\"}",
+                    "policy_id": "foobar",
                     "tags": {},
                     "tags_all": {}
                 },
@@ -3011,5 +4643,1329 @@
             }
         }
     ],
+    "configuration": {
+        "root_module": {
+            "resources": [
+                {
+                    "address": "kubernetes_deployment.api_server",
+                    "mode": "managed",
+                    "type": "kubernetes_deployment",
+                    "name": "api_server",
+                    "provider_config_key": "kubernetes",
+                    "expressions": {
+                        "metadata": [
+                            {
+                                "name": {
+                                    "constant_value": "api-server"
+                                }
+                            }
+                        ],
+                        "spec": [
+                            {
+                                "replicas": {
+                                    "constant_value": 1
+                                },
+                                "selector": [
+                                    {
+                                        "match_labels": {
+                                            "constant_value": {
+                                                "app": "api-server"
+                                            }
+                                        }
+                                    }
+                                ],
+                                "template": [
+                                    {
+                                        "metadata": [
+                                            {
+                                                "labels": {
+                                                    "constant_value": {
+                                                        "app": "api-server"
+                                                    }
+                                                }
+                                            }
+                                        ],
+                                        "spec": [
+                                            {
+                                                "container": [
+                                                    {
+                                                        "env": [
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "LOG"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "local.default_log_level"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "NSC_LOCATION"
+                                                                },
+                                                                "value": {
+                                                                    "constant_value": "/nats-nkeys/nsc"
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "NSC_OPERATOR"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "var.terraform_env_name"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "NATS_URL"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "kubernetes_service.nats.metadata[0].name",
+                                                                        "kubernetes_service.nats.metadata[0]",
+                                                                        "kubernetes_service.nats.metadata",
+                                                                        "kubernetes_service.nats"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "AUTH0_AUDIENCE"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "auth0_resource_server.api_server.identifier",
+                                                                        "auth0_resource_server.api_server"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "AUTH0_DOMAIN"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "var.auth0_domain"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "AUTH_COOKIE_NAME"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "local.session_name"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "CORS_ALLOW_ORIGINS"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "local.cors_origin"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "REVLINK_ACCOUNT"
+                                                                },
+                                                                "value": {
+                                                                    "constant_value": "revlink"
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "API_KEY_CLIENT_ID"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "auth0_client.api_keys.client_id",
+                                                                        "auth0_client.api_keys"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "API_KEY_CLIENT_SECRET"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "auth0_client.api_keys.client_secret",
+                                                                        "auth0_client.api_keys"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "GATEWAY_URL"
+                                                                },
+                                                                "value": {
+                                                                    "constant_value": "http://gateway:8080/api/gateway"
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "BOOKMARKS_BASE_URL"
+                                                                },
+                                                                "value": {
+                                                                    "constant_value": "http://gateway:8080/"
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "SNAPSHOTS_BASE_URL"
+                                                                },
+                                                                "value": {
+                                                                    "constant_value": "http://gateway:8080/"
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "SOURCE_MANAGER"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "var.terraform_env_name"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "HONEYCOMB_API_KEY"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "var.honeycomb_api_key"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "SENTRY_DSN"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "var.backend_sentry_dsn"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "RUN_MODE"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "var.run_mode"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "PGHOST"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "local.overmind_db_endpoint"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "PGPORT"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "local.overmind_db_port"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "PGUSER"
+                                                                },
+                                                                "value_from": [
+                                                                    {
+                                                                        "secret_key_ref": [
+                                                                            {
+                                                                                "key": {
+                                                                                    "constant_value": "username"
+                                                                                },
+                                                                                "name": {
+                                                                                    "constant_value": "apiserverdb-root-creds"
+                                                                                }
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "PGPASSWORD"
+                                                                },
+                                                                "value_from": [
+                                                                    {
+                                                                        "secret_key_ref": [
+                                                                            {
+                                                                                "key": {
+                                                                                    "constant_value": "password"
+                                                                                },
+                                                                                "name": {
+                                                                                    "constant_value": "apiserverdb-root-creds"
+                                                                                }
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "name": {
+                                                                    "constant_value": "PGDBNAME"
+                                                                },
+                                                                "value": {
+                                                                    "references": [
+                                                                        "local.apiserverdb_name"
+                                                                    ]
+                                                                }
+                                                            }
+                                                        ],
+                                                        "image": {
+                                                            "references": [
+                                                                "local.api_server_imageref"
+                                                            ]
+                                                        },
+                                                        "image_pull_policy": {
+                                                            "references": [
+                                                                "local.api_server_image_pull_policy"
+                                                            ]
+                                                        },
+                                                        "name": {
+                                                            "constant_value": "api-server"
+                                                        },
+                                                        "port": [
+                                                            {
+                                                                "container_port": {
+                                                                    "constant_value": 8080
+                                                                }
+                                                            }
+                                                        ],
+                                                        "resources": [
+                                                            {
+                                                                "limits": {
+                                                                    "constant_value": {
+                                                                        "memory": "2Gi"
+                                                                    }
+                                                                },
+                                                                "requests": {
+                                                                    "constant_value": {
+                                                                        "cpu": "250m",
+                                                                        "memory": "200Mi"
+                                                                    }
+                                                                }
+                                                            }
+                                                        ],
+                                                        "volume_mount": [
+                                                            {
+                                                                "mount_path": {
+                                                                    "constant_value": "/nats-nkeys"
+                                                                },
+                                                                "name": {
+                                                                    "constant_value": "nats-nkeys"
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                ],
+                                                "image_pull_secrets": [
+                                                    {
+                                                        "name": {
+                                                            "constant_value": "srcman-registry-credentials"
+                                                        }
+                                                    }
+                                                ],
+                                                "init_container": [
+                                                    {
+                                                        "command": {
+                                                            "constant_value": [
+                                                                "/bin/mkdir",
+                                                                "-p",
+                                                                "/nats-nkeys/nsc"
+                                                            ]
+                                                        },
+                                                        "image": {
+                                                            "constant_value": "alpine:latest"
+                                                        },
+                                                        "name": {
+                                                            "constant_value": "create-folder"
+                                                        },
+                                                        "volume_mount": [
+                                                            {
+                                                                "mount_path": {
+                                                                    "constant_value": "/nats-nkeys"
+                                                                },
+                                                                "name": {
+                                                                    "constant_value": "nats-nkeys"
+                                                                }
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "args": {
+                                                            "references": [
+                                                                "var.terraform_env_name"
+                                                            ]
+                                                        },
+                                                        "image": {
+                                                            "references": [
+                                                                "local.api_server_imageref"
+                                                            ]
+                                                        },
+                                                        "image_pull_policy": {
+                                                            "references": [
+                                                                "local.api_server_image_pull_policy"
+                                                            ]
+                                                        },
+                                                        "name": {
+                                                            "constant_value": "generate-nkeys"
+                                                        },
+                                                        "volume_mount": [
+                                                            {
+                                                                "mount_path": {
+                                                                    "constant_value": "/nats-nkeys"
+                                                                },
+                                                                "name": {
+                                                                    "constant_value": "nats-nkeys"
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                ],
+                                                "service_account_name": {
+                                                    "constant_value": "api-server-service-account"
+                                                },
+                                                "volume": [
+                                                    {
+                                                        "name": {
+                                                            "constant_value": "nats-nkeys"
+                                                        },
+                                                        "persistent_volume_claim": [
+                                                            {
+                                                                "claim_name": {
+                                                                    "constant_value": "nats-nkeys"
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "timeouts": {
+                            "create": {
+                                "constant_value": "2m"
+                            },
+                            "delete": {
+                                "constant_value": "2m"
+                            },
+                            "update": {
+                                "constant_value": "2m"
+                            }
+                        }
+                    },
+                    "schema_version": 1,
+                    "depends_on": [
+                        "module.eks",
+                        "module.api_server_efs",
+                        "postgresql_database.apiserverdb",
+                        "postgresql_role.apiserverdb_role"
+                    ]
+                }
+            ],
+            "module_calls": {
+                "eks_elb_controller": {
+                    "source": "DNXLabs/eks-lb-controller/aws",
+                    "expressions": {
+                        "cluster_identity_oidc_issuer": {
+                            "references": [
+                                "module.eks.cluster_oidc_issuer_url",
+                                "module.eks"
+                            ]
+                        },
+                        "cluster_identity_oidc_issuer_arn": {
+                            "references": [
+                                "module.eks.oidc_provider_arn",
+                                "module.eks"
+                            ]
+                        },
+                        "cluster_name": {
+                            "references": [
+                                "module.eks.cluster_name",
+                                "module.eks"
+                            ]
+                        }
+                    },
+                    "module": {
+                        "resources": [
+                            {
+                                "address": "aws_iam_policy.lb_controller",
+                                "mode": "managed",
+                                "type": "aws_iam_policy",
+                                "name": "lb_controller",
+                                "provider_config_key": "aws",
+                                "expressions": {
+                                    "description": {
+                                        "constant_value": "Policy for alb-ingress service"
+                                    },
+                                    "name": {
+                                        "references": [
+                                            "var.cluster_name"
+                                        ]
+                                    },
+                                    "path": {
+                                        "constant_value": "/"
+                                    },
+                                    "policy": {
+                                        "references": [
+                                            "data.aws_iam_policy_document.lb_controller[0].json",
+                                            "data.aws_iam_policy_document.lb_controller[0]",
+                                            "data.aws_iam_policy_document.lb_controller"
+                                        ]
+                                    }
+                                },
+                                "schema_version": 0,
+                                "count_expression": {
+                                    "references": [
+                                        "var.enabled"
+                                    ]
+                                },
+                                "depends_on": [
+                                    "var.mod_dependency"
+                                ]
+                            },
+                            {
+                                "address": "aws_iam_role.lb_controller",
+                                "mode": "managed",
+                                "type": "aws_iam_role",
+                                "name": "lb_controller",
+                                "provider_config_key": "aws",
+                                "expressions": {
+                                    "assume_role_policy": {
+                                        "references": [
+                                            "data.aws_iam_policy_document.lb_controller_assume[0].json",
+                                            "data.aws_iam_policy_document.lb_controller_assume[0]",
+                                            "data.aws_iam_policy_document.lb_controller_assume"
+                                        ]
+                                    },
+                                    "name": {
+                                        "references": [
+                                            "var.cluster_name"
+                                        ]
+                                    }
+                                },
+                                "schema_version": 0,
+                                "count_expression": {
+                                    "references": [
+                                        "var.enabled"
+                                    ]
+                                }
+                            },
+                            {
+                                "address": "aws_iam_role_policy_attachment.lb_controller",
+                                "mode": "managed",
+                                "type": "aws_iam_role_policy_attachment",
+                                "name": "lb_controller",
+                                "provider_config_key": "aws",
+                                "expressions": {
+                                    "policy_arn": {
+                                        "references": [
+                                            "aws_iam_policy.lb_controller[0].arn",
+                                            "aws_iam_policy.lb_controller[0]",
+                                            "aws_iam_policy.lb_controller"
+                                        ]
+                                    },
+                                    "role": {
+                                        "references": [
+                                            "aws_iam_role.lb_controller[0].name",
+                                            "aws_iam_role.lb_controller[0]",
+                                            "aws_iam_role.lb_controller"
+                                        ]
+                                    }
+                                },
+                                "schema_version": 0,
+                                "count_expression": {
+                                    "references": [
+                                        "var.enabled"
+                                    ]
+                                }
+                            },
+                            {
+                                "address": "helm_release.lb_controller",
+                                "mode": "managed",
+                                "type": "helm_release",
+                                "name": "lb_controller",
+                                "provider_config_key": "helm",
+                                "expressions": {
+                                    "chart": {
+                                        "references": [
+                                            "var.helm_chart_release_name"
+                                        ]
+                                    },
+                                    "name": {
+                                        "references": [
+                                            "var.helm_chart_name"
+                                        ]
+                                    },
+                                    "namespace": {
+                                        "references": [
+                                            "var.namespace"
+                                        ]
+                                    },
+                                    "repository": {
+                                        "references": [
+                                            "var.helm_chart_repo"
+                                        ]
+                                    },
+                                    "set": [
+                                        {
+                                            "name": {
+                                                "constant_value": "clusterName"
+                                            },
+                                            "value": {
+                                                "references": [
+                                                    "var.cluster_name"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "name": {
+                                                "constant_value": "rbac.create"
+                                            },
+                                            "value": {
+                                                "constant_value": "true"
+                                            }
+                                        },
+                                        {
+                                            "name": {
+                                                "constant_value": "serviceAccount.create"
+                                            },
+                                            "value": {
+                                                "constant_value": "true"
+                                            }
+                                        },
+                                        {
+                                            "name": {
+                                                "constant_value": "serviceAccount.name"
+                                            },
+                                            "value": {
+                                                "references": [
+                                                    "var.service_account_name"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "name": {
+                                                "constant_value": "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+                                            },
+                                            "value": {
+                                                "references": [
+                                                    "aws_iam_role.lb_controller[0].arn",
+                                                    "aws_iam_role.lb_controller[0]",
+                                                    "aws_iam_role.lb_controller"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "values": {
+                                        "references": [
+                                            "var.settings"
+                                        ]
+                                    },
+                                    "version": {
+                                        "references": [
+                                            "var.helm_chart_version"
+                                        ]
+                                    }
+                                },
+                                "schema_version": 1,
+                                "count_expression": {
+                                    "references": [
+                                        "var.enabled"
+                                    ]
+                                },
+                                "depends_on": [
+                                    "var.mod_dependency",
+                                    "kubernetes_namespace.lb_controller"
+                                ]
+                            },
+                            {
+                                "address": "kubectl_manifest.cluster_role",
+                                "mode": "managed",
+                                "type": "kubectl_manifest",
+                                "name": "cluster_role",
+                                "provider_config_key": "kubectl",
+                                "expressions": {
+                                    "yaml_body": {
+                                        "references": [
+                                            "path.module",
+                                            "each.value.name",
+                                            "each.value",
+                                            "each.value.namespace",
+                                            "each.value",
+                                            "each.value.secrets",
+                                            "each.value"
+                                        ]
+                                    }
+                                },
+                                "schema_version": 1,
+                                "for_each_expression": {
+                                    "references": [
+                                        "var.roles"
+                                    ]
+                                }
+                            },
+                            {
+                                "address": "kubectl_manifest.cluster_role_binding",
+                                "mode": "managed",
+                                "type": "kubectl_manifest",
+                                "name": "cluster_role_binding",
+                                "provider_config_key": "kubectl",
+                                "expressions": {
+                                    "yaml_body": {
+                                        "references": [
+                                            "path.module",
+                                            "each.value.name",
+                                            "each.value",
+                                            "each.value.namespace",
+                                            "each.value",
+                                            "each.value.secrets",
+                                            "each.value"
+                                        ]
+                                    }
+                                },
+                                "schema_version": 1,
+                                "for_each_expression": {
+                                    "references": [
+                                        "var.roles"
+                                    ]
+                                },
+                                "depends_on": [
+                                    "kubectl_manifest.cluster_role"
+                                ]
+                            },
+                            {
+                                "address": "kubernetes_namespace.lb_controller",
+                                "mode": "managed",
+                                "type": "kubernetes_namespace",
+                                "name": "lb_controller",
+                                "provider_config_key": "kubernetes",
+                                "expressions": {
+                                    "metadata": [
+                                        {
+                                            "name": {
+                                                "references": [
+                                                    "var.namespace"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                "schema_version": 0,
+                                "count_expression": {
+                                    "references": [
+                                        "var.enabled",
+                                        "var.create_namespace",
+                                        "var.namespace"
+                                    ]
+                                },
+                                "depends_on": [
+                                    "var.mod_dependency"
+                                ]
+                            },
+                            {
+                                "address": "data.aws_iam_policy_document.lb_controller",
+                                "mode": "data",
+                                "type": "aws_iam_policy_document",
+                                "name": "lb_controller",
+                                "provider_config_key": "aws",
+                                "expressions": {
+                                    "statement": [
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "iam:CreateServiceLinkedRole"
+                                                ]
+                                            },
+                                            "condition": [
+                                                {
+                                                    "test": {
+                                                        "constant_value": "StringEquals"
+                                                    },
+                                                    "values": {
+                                                        "constant_value": [
+                                                            "elasticloadbalancing.amazonaws.com"
+                                                        ]
+                                                    },
+                                                    "variable": {
+                                                        "constant_value": "iam:AWSServiceName"
+                                                    }
+                                                }
+                                            ],
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "constant_value": [
+                                                    "*"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "ec2:DescribeAccountAttributes",
+                                                    "ec2:DescribeAddresses",
+                                                    "ec2:DescribeAvailabilityZones",
+                                                    "ec2:DescribeInternetGateways",
+                                                    "ec2:DescribeVpcs",
+                                                    "ec2:DescribeVpcPeeringConnections",
+                                                    "ec2:DescribeSubnets",
+                                                    "ec2:DescribeSecurityGroups",
+                                                    "ec2:DescribeInstances",
+                                                    "ec2:DescribeNetworkInterfaces",
+                                                    "ec2:DescribeTags",
+                                                    "ec2:GetCoipPoolUsage",
+                                                    "ec2:DescribeCoipPools",
+                                                    "elasticloadbalancing:DescribeLoadBalancers",
+                                                    "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                                                    "elasticloadbalancing:DescribeListeners",
+                                                    "elasticloadbalancing:DescribeListenerCertificates",
+                                                    "elasticloadbalancing:DescribeSSLPolicies",
+                                                    "elasticloadbalancing:DescribeRules",
+                                                    "elasticloadbalancing:DescribeTargetGroups",
+                                                    "elasticloadbalancing:DescribeTargetGroupAttributes",
+                                                    "elasticloadbalancing:DescribeTargetHealth",
+                                                    "elasticloadbalancing:DescribeTags"
+                                                ]
+                                            },
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "constant_value": [
+                                                    "*"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "cognito-idp:DescribeUserPoolClient",
+                                                    "acm:ListCertificates",
+                                                    "acm:DescribeCertificate",
+                                                    "iam:ListServerCertificates",
+                                                    "iam:GetServerCertificate",
+                                                    "waf-regional:GetWebACL",
+                                                    "waf-regional:GetWebACLForResource",
+                                                    "waf-regional:AssociateWebACL",
+                                                    "waf-regional:DisassociateWebACL",
+                                                    "wafv2:GetWebACL",
+                                                    "wafv2:GetWebACLForResource",
+                                                    "wafv2:AssociateWebACL",
+                                                    "wafv2:DisassociateWebACL",
+                                                    "shield:GetSubscriptionState",
+                                                    "shield:DescribeProtection",
+                                                    "shield:CreateProtection",
+                                                    "shield:DeleteProtection"
+                                                ]
+                                            },
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "constant_value": [
+                                                    "*"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "ec2:AuthorizeSecurityGroupIngress",
+                                                    "ec2:RevokeSecurityGroupIngress"
+                                                ]
+                                            },
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "constant_value": [
+                                                    "*"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "ec2:CreateSecurityGroup"
+                                                ]
+                                            },
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "constant_value": [
+                                                    "*"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "ec2:CreateTags"
+                                                ]
+                                            },
+                                            "condition": [
+                                                {
+                                                    "test": {
+                                                        "constant_value": "StringEquals"
+                                                    },
+                                                    "values": {
+                                                        "constant_value": [
+                                                            "CreateSecurityGroup"
+                                                        ]
+                                                    },
+                                                    "variable": {
+                                                        "constant_value": "ec2:CreateAction"
+                                                    }
+                                                },
+                                                {
+                                                    "test": {
+                                                        "constant_value": "Null"
+                                                    },
+                                                    "values": {
+                                                        "constant_value": [
+                                                            "false"
+                                                        ]
+                                                    },
+                                                    "variable": {
+                                                        "constant_value": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                                    }
+                                                }
+                                            ],
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "references": [
+                                                    "var.arn_format"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "ec2:CreateTags",
+                                                    "ec2:DeleteTags"
+                                                ]
+                                            },
+                                            "condition": [
+                                                {
+                                                    "test": {
+                                                        "constant_value": "Null"
+                                                    },
+                                                    "values": {
+                                                        "constant_value": [
+                                                            "true"
+                                                        ]
+                                                    },
+                                                    "variable": {
+                                                        "constant_value": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                                    }
+                                                },
+                                                {
+                                                    "test": {
+                                                        "constant_value": "Null"
+                                                    },
+                                                    "values": {
+                                                        "constant_value": [
+                                                            "false"
+                                                        ]
+                                                    },
+                                                    "variable": {
+                                                        "constant_value": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                                    }
+                                                }
+                                            ],
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "references": [
+                                                    "var.arn_format"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "ec2:AuthorizeSecurityGroupIngress",
+                                                    "ec2:RevokeSecurityGroupIngress",
+                                                    "ec2:DeleteSecurityGroup"
+                                                ]
+                                            },
+                                            "condition": [
+                                                {
+                                                    "test": {
+                                                        "constant_value": "Null"
+                                                    },
+                                                    "values": {
+                                                        "constant_value": [
+                                                            "false"
+                                                        ]
+                                                    },
+                                                    "variable": {
+                                                        "constant_value": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                                    }
+                                                }
+                                            ],
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "constant_value": [
+                                                    "*"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "elasticloadbalancing:CreateLoadBalancer",
+                                                    "elasticloadbalancing:CreateTargetGroup"
+                                                ]
+                                            },
+                                            "condition": [
+                                                {
+                                                    "test": {
+                                                        "constant_value": "Null"
+                                                    },
+                                                    "values": {
+                                                        "constant_value": [
+                                                            "false"
+                                                        ]
+                                                    },
+                                                    "variable": {
+                                                        "constant_value": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                                    }
+                                                }
+                                            ],
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "constant_value": [
+                                                    "*"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "elasticloadbalancing:CreateListener",
+                                                    "elasticloadbalancing:DeleteListener",
+                                                    "elasticloadbalancing:CreateRule",
+                                                    "elasticloadbalancing:DeleteRule"
+                                                ]
+                                            },
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "constant_value": [
+                                                    "*"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "elasticloadbalancing:AddTags",
+                                                    "elasticloadbalancing:RemoveTags"
+                                                ]
+                                            },
+                                            "condition": [
+                                                {
+                                                    "test": {
+                                                        "constant_value": "Null"
+                                                    },
+                                                    "values": {
+                                                        "constant_value": [
+                                                            "true"
+                                                        ]
+                                                    },
+                                                    "variable": {
+                                                        "constant_value": "aws:RequestTag/elbv2.k8s.aws/cluster"
+                                                    }
+                                                },
+                                                {
+                                                    "test": {
+                                                        "constant_value": "Null"
+                                                    },
+                                                    "values": {
+                                                        "constant_value": [
+                                                            "false"
+                                                        ]
+                                                    },
+                                                    "variable": {
+                                                        "constant_value": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                                    }
+                                                }
+                                            ],
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "references": [
+                                                    "var.arn_format",
+                                                    "var.arn_format",
+                                                    "var.arn_format"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "elasticloadbalancing:AddTags",
+                                                    "elasticloadbalancing:RemoveTags"
+                                                ]
+                                            },
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "references": [
+                                                    "var.arn_format",
+                                                    "var.arn_format",
+                                                    "var.arn_format",
+                                                    "var.arn_format"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                                                    "elasticloadbalancing:SetIpAddressType",
+                                                    "elasticloadbalancing:SetSecurityGroups",
+                                                    "elasticloadbalancing:SetSubnets",
+                                                    "elasticloadbalancing:DeleteLoadBalancer",
+                                                    "elasticloadbalancing:ModifyTargetGroup",
+                                                    "elasticloadbalancing:ModifyTargetGroupAttributes",
+                                                    "elasticloadbalancing:DeleteTargetGroup"
+                                                ]
+                                            },
+                                            "condition": [
+                                                {
+                                                    "test": {
+                                                        "constant_value": "Null"
+                                                    },
+                                                    "values": {
+                                                        "constant_value": [
+                                                            "false"
+                                                        ]
+                                                    },
+                                                    "variable": {
+                                                        "constant_value": "aws:ResourceTag/elbv2.k8s.aws/cluster"
+                                                    }
+                                                }
+                                            ],
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "constant_value": [
+                                                    "*"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "elasticloadbalancing:RegisterTargets",
+                                                    "elasticloadbalancing:DeregisterTargets"
+                                                ]
+                                            },
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "references": [
+                                                    "var.arn_format"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "elasticloadbalancing:SetWebAcl",
+                                                    "elasticloadbalancing:ModifyListener",
+                                                    "elasticloadbalancing:AddListenerCertificates",
+                                                    "elasticloadbalancing:RemoveListenerCertificates",
+                                                    "elasticloadbalancing:ModifyRule"
+                                                ]
+                                            },
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "resources": {
+                                                "constant_value": [
+                                                    "*"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                },
+                                "schema_version": 0,
+                                "count_expression": {
+                                    "references": [
+                                        "var.enabled"
+                                    ]
+                                }
+                            },
+                            {
+                                "address": "data.aws_iam_policy_document.lb_controller_assume",
+                                "mode": "data",
+                                "type": "aws_iam_policy_document",
+                                "name": "lb_controller_assume",
+                                "provider_config_key": "aws",
+                                "expressions": {
+                                    "statement": [
+                                        {
+                                            "actions": {
+                                                "constant_value": [
+                                                    "sts:AssumeRoleWithWebIdentity"
+                                                ]
+                                            },
+                                            "condition": [
+                                                {
+                                                    "test": {
+                                                        "constant_value": "StringEquals"
+                                                    },
+                                                    "values": {
+                                                        "references": [
+                                                            "var.namespace",
+                                                            "var.service_account_name"
+                                                        ]
+                                                    },
+                                                    "variable": {
+                                                        "references": [
+                                                            "var.cluster_identity_oidc_issuer"
+                                                        ]
+                                                    }
+                                                }
+                                            ],
+                                            "effect": {
+                                                "constant_value": "Allow"
+                                            },
+                                            "principals": [
+                                                {
+                                                    "identifiers": {
+                                                        "references": [
+                                                            "var.cluster_identity_oidc_issuer_arn"
+                                                        ]
+                                                    },
+                                                    "type": {
+                                                        "constant_value": "Federated"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "schema_version": 0,
+                                "count_expression": {
+                                    "references": [
+                                        "var.enabled"
+                                    ]
+                                }
+                            }
+                        ],
+                        "variables": {
+                            "arn_format": {
+                                "default": "aws",
+                                "description": "ARNs identifier, usefull for GovCloud begin with `aws-us-gov-<region>`."
+                            },
+                            "cluster_identity_oidc_issuer": {
+                                "description": "The OIDC Identity issuer for the cluster."
+                            },
+                            "cluster_identity_oidc_issuer_arn": {
+                                "description": "The OIDC Identity issuer ARN for the cluster that can be used to associate IAM roles with a service account."
+                            },
+                            "cluster_name": {
+                                "description": "The name of the cluster."
+                            },
+                            "create_namespace": {
+                                "default": true,
+                                "description": "Whether to create Kubernetes namespace with name defined by `namespace`."
+                            },
+                            "enabled": {
+                                "default": true,
+                                "description": "Variable indicating whether deployment is enabled."
+                            },
+                            "helm_chart_name": {
+                                "default": "aws-load-balancer-controller",
+                                "description": "AWS Load Balancer Controller Helm chart name."
+                            },
+                            "helm_chart_release_name": {
+                                "default": "aws-load-balancer-controller",
+                                "description": "AWS Load Balancer Controller Helm chart release name."
+                            },
+                            "helm_chart_repo": {
+                                "default": "https://aws.github.io/eks-charts",
+                                "description": "AWS Load Balancer Controller Helm repository name."
+                            },
+                            "helm_chart_version": {
+                                "default": "1.4.4",
+                                "description": "AWS Load Balancer Controller Helm chart version."
+                            },
+                            "mod_dependency": {
+                                "default": null,
+                                "description": "Dependence variable binds all AWS resources allocated by this module, dependent modules reference this variable."
+                            },
+                            "namespace": {
+                                "default": "kube-system",
+                                "description": "AWS Load Balancer Controller Helm chart namespace which the service will be created."
+                            },
+                            "roles": {
+                                "default": [],
+                                "description": "RBAC roles that give secret access in other namespaces to the lb controller"
+                            },
+                            "service_account_name": {
+                                "default": "aws-alb-ingress-controller",
+                                "description": "The kubernetes service account name."
+                            },
+                            "settings": {
+                                "default": {},
+                                "description": "Additional settings which will be passed to the Helm chart values, see https://github.com/aws/eks-charts/tree/master/stable/aws-load-balancer-controller#configuration."
+                            }
+                        }
+                    },
+                    "version_constraint": "0.7.0",
+                    "depends_on": [
+                        "module.eks"
+                    ]
+                }
+            }
+        }
+    },
     "timestamp": "2023-07-17T15:48:38Z"
 }

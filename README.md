@@ -44,3 +44,26 @@ terraform show -json ./tfplan > ./tfplan.json
 ovm-cli submit-plan --title "example change" --plan-json ./tfplan.json
 ```
 
+## Terraform ➡ Overmind Mapping
+
+In order to calculate the blast radius from a Terraform plan, we use mappings provided by the sources to map a Terraform resource change to an Overmind item. In many cases this is simple, however in some instances, the plan doesn't have enough information for us to determine which resource the change is referring to. A good example is a Terraform environment that manages 2x Kubernetes deployments in 2x clusters which both have the same name.
+
+By default we'll add both deployments to the blast radius since we can't tell them apart. However to improve the results, you can add the `overmind_mappings` output to your plan:
+
+```hcl
+output "overmind_mappings" {
+  value = {
+    # The key here should be the name of the provider. Resources that use this
+    # provider will be mapped to a cluster with the below name. If you had
+    # another provider with an alias such as "prod" the name would be
+    # "kubernetes.prod"
+    kubernetes = {
+      cluster_name = var.terraform_env_name
+    }
+  }
+}
+```
+
+Valid mapping values are:
+
+* `cluster_name`: The name of the cluster that was provided to the kubernetes source using the `source.clusterName` option
