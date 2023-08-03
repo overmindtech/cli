@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -181,6 +182,43 @@ func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, 
 		return context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken), nil
 	}
 	return ctx, fmt.Errorf("no --api-key configured and target URL (%v) is insecure", parsed)
+}
+
+func getChangeUuid() (uuid.UUID, error) {
+	var changeUuid uuid.UUID
+	var err error
+
+	if viper.GetString("uuid") != "" {
+		changeUuid, err = uuid.Parse(viper.GetString("uuid"))
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("invalid --uuid value '%v', error: %v", viper.GetString("uuid"), err)
+		}
+	}
+
+	if viper.GetString("change") != "" {
+		changeUrl, err := url.ParseRequestURI(viper.GetString("change"))
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("invalid --change value '%v', error: %v", viper.GetString("change"), err)
+		}
+		changeUuid, err = uuid.Parse(path.Base(changeUrl.Path))
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("invalid --change value '%v', couldn't parse: %v", viper.GetString("change"), err)
+		}
+	}
+
+	if changeUuid == uuid.Nil {
+		return uuid.Nil, errors.New("no change specified; use one of --uuid or --change")
+	}
+
+	return changeUuid, nil
+}
+
+func withChangeUuid(cmd *cobra.Command) {
+
+	cmd.PersistentFlags().String("change", "", "The frontend URL of the change to get")
+	cmd.PersistentFlags().String("uuid", "", "The UUID of the change that should be displayed.")
+	cmd.MarkFlagsMutuallyExclusive("change", "uuid")
+
 }
 
 func init() {

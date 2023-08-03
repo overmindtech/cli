@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/url"
 	"os"
 	"os/signal"
-	"path"
 	"syscall"
 	"time"
 
@@ -50,33 +48,13 @@ func GetChange(signals chan os.Signal, ready chan bool) int {
 		return 1
 	}
 
-	var changeUuid uuid.UUID
-	if viper.GetString("uuid") != "" {
-		changeUuid, err = uuid.Parse(viper.GetString("uuid"))
-		if err != nil {
-			log.Errorf("invalid --uuid value '%v', error: %v", viper.GetString("uuid"), err)
-			return 1
-		}
-	}
-
-	if viper.GetString("change") != "" {
-		changeUrl, err := url.ParseRequestURI(viper.GetString("change"))
-		if err != nil {
-			log.Errorf("invalid --change value '%v', error: %v", viper.GetString("change"), err)
-			return 1
-		}
-		changeUuid, err = uuid.Parse(path.Base(changeUrl.Path))
-		if err != nil {
-			log.Errorf("invalid --change value '%v', couldn't parse: %v", viper.GetString("change"), err)
-			return 1
-		}
-	}
-
-	if changeUuid == uuid.Nil {
-		log.Error("no change specified; use one of --uuid or --change")
+	changeUuid, err := getChangeUuid()
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"url": viper.GetString("url"),
+		}).Error("failed to identify change")
 		return 1
 	}
-
 	ctx := context.Background()
 	ctx, span := tracing.Tracer().Start(ctx, "CLI GetChange", trace.WithAttributes(
 		attribute.String("om.config", fmt.Sprintf("%v", viper.AllSettings())),
@@ -149,9 +127,7 @@ func GetChange(signals chan os.Signal, ready chan bool) int {
 func init() {
 	rootCmd.AddCommand(getChangeCmd)
 
-	getChangeCmd.PersistentFlags().String("change", "", "The frontend URL of the change to get")
-	getChangeCmd.PersistentFlags().String("uuid", "", "The UUID of the change that should be displayed.")
-	getChangeCmd.MarkFlagsMutuallyExclusive("change", "uuid")
+	withChangeUuid(getChangeCmd)
 
 	getChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 	getChangeCmd.PersistentFlags().String("format", "json", "How to render the change. Possible values: json, markdown")
