@@ -184,7 +184,8 @@ func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, 
 	return ctx, fmt.Errorf("no --api-key configured and target URL (%v) is insecure", parsed)
 }
 
-func getChangeUuid() (uuid.UUID, error) {
+// getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a state with the specified status and having --ticket-link
+func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus) (uuid.UUID, error) {
 	var changeUuid uuid.UUID
 	var err error
 
@@ -206,19 +207,42 @@ func getChangeUuid() (uuid.UUID, error) {
 		}
 	}
 
-	if changeUuid == uuid.Nil {
-		return uuid.Nil, errors.New("no change specified; use one of --uuid or --change")
+	if viper.GetString("ticket-link") != "" {
+		client := AuthenticatedChangesClient(ctx)
+
+		var maybeChangeUuid *uuid.UUID
+		changesList, err := client.ListChangesByStatus(ctx, &connect.Request[sdp.ListChangesByStatusRequest]{
+			Msg: &sdp.ListChangesByStatusRequest{
+				Status: expectedStatus,
+			},
+		})
+		if err != nil {
+			return uuid.Nil, errors.New("failed to searching for existing changes")
+		}
+
+		for _, c := range changesList.Msg.Changes {
+			if c.Properties.TicketLink == viper.GetString("ticket-link") {
+				maybeChangeUuid = c.Metadata.GetUUIDParsed()
+				if maybeChangeUuid != nil {
+					changeUuid = *maybeChangeUuid
+					break
+				}
+			}
+		}
 	}
+
+	// if changeUuid == uuid.Nil {
+	// 	return uuid.Nil, errors.New("no change specified; use one of --change, --ticket-link or --uuid")
+	// }
 
 	return changeUuid, nil
 }
 
-func withChangeUuid(cmd *cobra.Command) {
-
+func withChangeUuidFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().String("change", "", "The frontend URL of the change to get")
+	cmd.PersistentFlags().String("ticket-link", "", "Link to the ticket for this change.")
 	cmd.PersistentFlags().String("uuid", "", "The UUID of the change that should be displayed.")
-	cmd.MarkFlagsMutuallyExclusive("change", "uuid")
-
+	cmd.MarkFlagsMutuallyExclusive("change", "ticket-link", "uuid")
 }
 
 func init() {

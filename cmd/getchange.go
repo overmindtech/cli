@@ -48,14 +48,6 @@ func GetChange(signals chan os.Signal, ready chan bool) int {
 		return 1
 	}
 
-	changeUuid, err := getChangeUuid()
-	if err != nil {
-		log.WithError(err).WithFields(log.Fields{
-			"url": viper.GetString("url"),
-		}).Error("failed to identify change")
-		return 1
-	}
-
 	ctx := context.Background()
 	ctx, span := tracing.Tracer().Start(ctx, "CLI GetChange", trace.WithAttributes(
 		attribute.String("om.config", fmt.Sprintf("%v", viper.AllSettings())),
@@ -64,15 +56,24 @@ func GetChange(signals chan os.Signal, ready chan bool) int {
 
 	ctx, err = ensureToken(ctx, signals)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
+		log.WithContext(ctx).WithFields(log.Fields{
 			"url": viper.GetString("url"),
-		}).Error("failed to authenticate")
+		}).WithError(err).Error("failed to authenticate")
 		return 1
 	}
 
 	// apply a timeout to the main body of processing
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
+
+	lf := log.Fields{}
+	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus(sdp.ChangeStatus_value[viper.GetString("status")]))
+	if err != nil {
+		log.WithError(err).WithFields(lf).Error("failed to identify change")
+		return 1
+	}
+
+	lf["uuid"] = changeUuid.String()
 
 	client := AuthenticatedChangesClient(ctx)
 	response, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
@@ -128,7 +129,8 @@ func GetChange(signals chan os.Signal, ready chan bool) int {
 func init() {
 	rootCmd.AddCommand(getChangeCmd)
 
-	withChangeUuid(getChangeCmd)
+	withChangeUuidFlags(getChangeCmd)
+	getChangeCmd.PersistentFlags().String("status", "", "The expected status of the change. Use this with --ticket-link. Allowed values: CHANGE_STATUS_UNSPECIFIED, CHANGE_STATUS_DEFINING, CHANGE_STATUS_HAPPENING, CHANGE_STATUS_PROCESSING, CHANGE_STATUS_DONE")
 
 	getChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 	getChangeCmd.PersistentFlags().String("format", "json", "How to render the change. Possible values: json, markdown")
