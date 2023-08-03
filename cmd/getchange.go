@@ -55,6 +55,7 @@ func GetChange(signals chan os.Signal, ready chan bool) int {
 		}).Error("failed to identify change")
 		return 1
 	}
+
 	ctx := context.Background()
 	ctx, span := tracing.Tracer().Start(ctx, "CLI GetChange", trace.WithAttributes(
 		attribute.String("om.config", fmt.Sprintf("%v", viper.AllSettings())),

@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/bufbuild/connect-go"
-	"github.com/google/uuid"
 	"github.com/overmindtech/ovm-cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
@@ -47,9 +46,11 @@ func EndChange(signals chan os.Signal, ready chan bool) int {
 		return 1
 	}
 
-	snapshotUuid, err := uuid.Parse(viper.GetString("uuid"))
+	changeUuid, err := getChangeUuid()
 	if err != nil {
-		log.Errorf("invalid --uuid value '%v', error: %v", viper.GetString("uuid"), err)
+		log.WithError(err).WithFields(log.Fields{
+			"url": viper.GetString("url"),
+		}).Error("failed to identify change")
 		return 1
 	}
 
@@ -60,7 +61,7 @@ func EndChange(signals chan os.Signal, ready chan bool) int {
 	defer span.End()
 
 	lf := log.Fields{
-		"uuid": snapshotUuid.String(),
+		"uuid": changeUuid.String(),
 	}
 
 	ctx, err = ensureToken(ctx, signals)
@@ -77,7 +78,7 @@ func EndChange(signals chan os.Signal, ready chan bool) int {
 	client := AuthenticatedChangesClient(ctx)
 	stream, err := client.EndChange(ctx, &connect.Request[sdp.EndChangeRequest]{
 		Msg: &sdp.EndChangeRequest{
-			ChangeUUID: snapshotUuid[:],
+			ChangeUUID: changeUuid[:],
 		},
 	})
 	if err != nil {
@@ -100,9 +101,9 @@ func EndChange(signals chan os.Signal, ready chan bool) int {
 func init() {
 	rootCmd.AddCommand(endChangeCmd)
 
-	endChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
+	withChangeUuid(endChangeCmd)
 
-	endChangeCmd.PersistentFlags().String("uuid", "", "The UUID of the snapshot that should be displayed.")
+	endChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 
 	endChangeCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
 }
