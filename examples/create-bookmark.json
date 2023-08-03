@@ -1,0 +1,11 @@
+{
+    "name": "Changing items for 'CN=GTS Root R1,O=Google Trust Services'",
+    "description": "This bookmark contains the items that are changing as part of the 'CN=GTS Root R1,O=Google Trust Services' change. Generated using UpdateChangingItems",
+    "queries": [
+        {
+            "type": "certificate",
+            "query": "CN=GTS Root R1,O=Google Trust Services",
+            "scope": "global"
+        }
+    ]
+}

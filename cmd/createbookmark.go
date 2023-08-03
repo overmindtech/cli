@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,42 +21,47 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// getBookmarkCmd represents the get-bookmark command
-var getBookmarkCmd = &cobra.Command{
-	Use:   "get-bookmark --uuid ID",
-	Short: "Displays the contents of a bookmark.",
+// createBookmarkCmd represents the get-bookmark command
+var createBookmarkCmd = &cobra.Command{
+	Use:   "create-bookmark [--file FILE]",
+	Short: "Creates a bookmark from JSON.",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
 		err := viper.BindPFlags(cmd.Flags())
 		if err != nil {
-			log.WithError(err).Fatal("could not bind `get-bookmark` flags")
+			log.WithError(err).Fatal("could not bind `create-bookmark` flags")
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-		exitcode := GetBookmark(sigs, nil)
+		exitcode := CreateBookmark(sigs, nil)
 		tracing.ShutdownTracer()
 		os.Exit(exitcode)
 	},
 }
 
-func GetBookmark(signals chan os.Signal, ready chan bool) int {
+func CreateBookmark(signals chan os.Signal, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
 		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
 		return 1
 	}
 
-	bookmarkUuid, err := uuid.Parse(viper.GetString("uuid"))
-	if err != nil {
-		log.Errorf("invalid --uuid value '%v', error: %v", viper.GetString("uuid"), err)
-		return 1
+	in := os.Stdin
+	if viper.GetString("file") != "" {
+		in, err = os.Open(viper.GetString("file"))
+		if err != nil {
+			log.WithError(err).WithFields(log.Fields{
+				"file": viper.GetString("file"),
+			}).Error("failed to open input")
+			return 1
+		}
 	}
 
 	ctx := context.Background()
-	ctx, span := tracing.Tracer().Start(ctx, "CLI GetBookmark", trace.WithAttributes(
+	ctx, span := tracing.Tracer().Start(ctx, "CLI CreateBookmark", trace.WithAttributes(
 		attribute.String("om.config", fmt.Sprintf("%v", viper.AllSettings())),
 	))
 	defer span.End()
@@ -72,10 +78,21 @@ func GetBookmark(signals chan os.Signal, ready chan bool) int {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	contents, err := io.ReadAll(in)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("failed to read file")
+		return 1
+	}
+	msg := sdp.BookmarkProperties{}
+	err = json.Unmarshal(contents, &msg)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("failed to parse input")
+		return 1
+	}
 	client := AuthenticatedBookmarkClient(ctx)
-	response, err := client.GetBookmark(ctx, &connect.Request[sdp.GetBookmarkRequest]{
-		Msg: &sdp.GetBookmarkRequest{
-			UUID: bookmarkUuid[:],
+	response, err := client.CreateBookmark(ctx, &connect.Request[sdp.CreateBookmarkRequest]{
+		Msg: &sdp.CreateBookmarkRequest{
+			Properties: &msg,
 		},
 	})
 	if err != nil {
@@ -89,16 +106,16 @@ func GetBookmark(signals chan os.Signal, ready chan bool) int {
 		"bookmark-created":     response.Msg.Bookmark.Metadata.Created,
 		"bookmark-name":        response.Msg.Bookmark.Properties.Name,
 		"bookmark-description": response.Msg.Bookmark.Properties.Description,
-	}).Info("found bookmark")
+	}).Info("created bookmark")
 	for _, q := range response.Msg.Bookmark.Properties.Queries {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"bookmark-query": q,
-		}).Info("found bookmark query")
+		}).Info("created bookmark query")
 	}
 	for _, i := range response.Msg.Bookmark.Properties.ExcludedItems {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"bookmark-excluded-item": i,
-		}).Info("found bookmark excluded item")
+		}).Info("created bookmark excluded item")
 	}
 
 	b, _ := json.MarshalIndent(response.Msg.Bookmark.Properties, "", "  ")
@@ -108,11 +125,11 @@ func GetBookmark(signals chan os.Signal, ready chan bool) int {
 }
 
 func init() {
-	rootCmd.AddCommand(getBookmarkCmd)
+	rootCmd.AddCommand(createBookmarkCmd)
 
-	getBookmarkCmd.PersistentFlags().String("bookmark-url", "", "The bookmark service API endpoint (defaults to --url)")
+	createBookmarkCmd.PersistentFlags().String("bookmark-url", "", "The bookmark service API endpoint (defaults to --url)")
 
-	getBookmarkCmd.PersistentFlags().String("uuid", "", "The UUID of the bookmark that should be displayed.")
+	createBookmarkCmd.PersistentFlags().String("file", "", "JSON formatted file to read bookmark. (defaults to stdin)")
 
-	getBookmarkCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
+	createBookmarkCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
 }
