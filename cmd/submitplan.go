@@ -221,29 +221,13 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 	}
 
 	client := AuthenticatedChangesClient(ctx)
-
-	var changeUUID *uuid.UUID
-
-	changesList, err := client.ListChangesByStatus(ctx, &connect.Request[sdp.ListChangesByStatusRequest]{
-		Msg: &sdp.ListChangesByStatusRequest{
-			Status: sdp.ChangeStatus_CHANGE_STATUS_DEFINING,
-		},
-	})
+	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus_CHANGE_STATUS_DEFINING)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to searching for existing changes")
 		return 1
 	}
 
-	for _, c := range changesList.Msg.Changes {
-		if c.Properties.TicketLink == viper.GetString("ticket-link") {
-			changeUUID = c.Metadata.GetUUIDParsed()
-			if changeUUID != nil {
-				break
-			}
-		}
-	}
-
-	if changeUUID == nil {
+	if changeUuid == uuid.Nil {
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 			Msg: &sdp.CreateChangeRequest{
 				Properties: &sdp.ChangeProperties{
@@ -260,14 +244,16 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 			return 1
 		}
 
-		changeUUID = createResponse.Msg.Change.Metadata.GetUUIDParsed()
-		if changeUUID == nil {
+		maybeChangeUuid := createResponse.Msg.Change.Metadata.GetUUIDParsed()
+		if maybeChangeUuid == nil {
 			log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read change id")
 			return 1
 		}
+
+		changeUuid = *maybeChangeUuid
 	}
 
-	lf["change"] = changeUUID
+	lf["change"] = changeUuid
 	log.WithContext(ctx).WithFields(lf).Info("created a new change")
 
 	receivedItems := []*sdp.Reference{}
@@ -449,7 +435,7 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 	}
 	resultStream, err := client.UpdateChangingItems(ctx, &connect.Request[sdp.UpdateChangingItemsRequest]{
 		Msg: &sdp.UpdateChangingItemsRequest{
-			ChangeUUID:    (*changeUUID)[:],
+			ChangeUUID:    changeUuid[:],
 			ChangingItems: receivedItems,
 		},
 	})
@@ -478,13 +464,13 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 		}
 	}
 
-	changeUrl := fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUUID)
+	changeUrl := fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid)
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("change ready")
 	fmt.Println(changeUrl)
 
 	fetchResponse, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
 		Msg: &sdp.GetChangeRequest{
-			UUID: (*changeUUID)[:],
+			UUID: changeUuid[:],
 		},
 	})
 	if err != nil {

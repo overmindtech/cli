@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -181,6 +182,67 @@ func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, 
 		return context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken), nil
 	}
 	return ctx, fmt.Errorf("no --api-key configured and target URL (%v) is insecure", parsed)
+}
+
+// getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a state with the specified status and having --ticket-link
+func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus) (uuid.UUID, error) {
+	var changeUuid uuid.UUID
+	var err error
+
+	if viper.GetString("uuid") != "" {
+		changeUuid, err = uuid.Parse(viper.GetString("uuid"))
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("invalid --uuid value '%v', error: %v", viper.GetString("uuid"), err)
+		}
+	}
+
+	if viper.GetString("change") != "" {
+		changeUrl, err := url.ParseRequestURI(viper.GetString("change"))
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("invalid --change value '%v', error: %v", viper.GetString("change"), err)
+		}
+		changeUuid, err = uuid.Parse(path.Base(changeUrl.Path))
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("invalid --change value '%v', couldn't parse: %v", viper.GetString("change"), err)
+		}
+	}
+
+	if viper.GetString("ticket-link") != "" {
+		client := AuthenticatedChangesClient(ctx)
+
+		var maybeChangeUuid *uuid.UUID
+		changesList, err := client.ListChangesByStatus(ctx, &connect.Request[sdp.ListChangesByStatusRequest]{
+			Msg: &sdp.ListChangesByStatusRequest{
+				Status: expectedStatus,
+			},
+		})
+		if err != nil {
+			return uuid.Nil, errors.New("failed to searching for existing changes")
+		}
+
+		for _, c := range changesList.Msg.Changes {
+			if c.Properties.TicketLink == viper.GetString("ticket-link") {
+				maybeChangeUuid = c.Metadata.GetUUIDParsed()
+				if maybeChangeUuid != nil {
+					changeUuid = *maybeChangeUuid
+					break
+				}
+			}
+		}
+	}
+
+	// if changeUuid == uuid.Nil {
+	// 	return uuid.Nil, errors.New("no change specified; use one of --change, --ticket-link or --uuid")
+	// }
+
+	return changeUuid, nil
+}
+
+func withChangeUuidFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().String("change", "", "The frontend URL of the change to get")
+	cmd.PersistentFlags().String("ticket-link", "", "Link to the ticket for this change.")
+	cmd.PersistentFlags().String("uuid", "", "The UUID of the change that should be displayed.")
+	cmd.MarkFlagsMutuallyExclusive("change", "ticket-link", "uuid")
 }
 
 func init() {
