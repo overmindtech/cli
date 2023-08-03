@@ -237,7 +237,13 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 		return 1
 	}
 
-	lf["change"] = createResponse.Msg.Change.Metadata.GetUUIDParsed()
+	changeUUID := createResponse.Msg.Change.Metadata.GetUUIDParsed()
+	if changeUUID == nil {
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read change id")
+		return 1
+	}
+
+	lf["change"] = changeUUID
 	log.WithContext(ctx).WithFields(lf).Info("created a new change")
 
 	receivedItems := []*sdp.Reference{}
@@ -419,7 +425,7 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 	}
 	resultStream, err := client.UpdateChangingItems(ctx, &connect.Request[sdp.UpdateChangingItemsRequest]{
 		Msg: &sdp.UpdateChangingItemsRequest{
-			ChangeUUID:    createResponse.Msg.Change.Metadata.UUID,
+			ChangeUUID:    (*changeUUID)[:],
 			ChangingItems: receivedItems,
 		},
 	})
@@ -448,13 +454,13 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 		}
 	}
 
-	changeUrl := fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), createResponse.Msg.Change.Metadata.GetUUIDParsed())
+	changeUrl := fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUUID)
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("change ready")
 	fmt.Println(changeUrl)
 
 	fetchResponse, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
 		Msg: &sdp.GetChangeRequest{
-			UUID: createResponse.Msg.Change.Metadata.UUID,
+			UUID: (*changeUUID)[:],
 		},
 	})
 	if err != nil {
