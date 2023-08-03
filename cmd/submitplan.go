@@ -221,26 +221,50 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 	}
 
 	client := AuthenticatedChangesClient(ctx)
-	createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
-		Msg: &sdp.CreateChangeRequest{
-			Properties: &sdp.ChangeProperties{
-				Title:       viper.GetString("title"),
-				Description: viper.GetString("description"),
-				TicketLink:  viper.GetString("ticket-link"),
-				Owner:       viper.GetString("owner"),
-				// CcEmails:                  viper.GetString("cc-emails"),
-			},
+
+	var changeUUID *uuid.UUID
+
+	changesList, err := client.ListChangesByStatus(ctx, &connect.Request[sdp.ListChangesByStatusRequest]{
+		Msg: &sdp.ListChangesByStatusRequest{
+			Status: sdp.ChangeStatus_CHANGE_STATUS_DEFINING,
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to create change")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to searching for existing changes")
 		return 1
 	}
 
-	changeUUID := createResponse.Msg.Change.Metadata.GetUUIDParsed()
+	for _, c := range changesList.Msg.Changes {
+		if c.Properties.TicketLink == viper.GetString("ticket-link") {
+			changeUUID = c.Metadata.GetUUIDParsed()
+			if changeUUID != nil {
+				break
+			}
+		}
+	}
+
 	if changeUUID == nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read change id")
-		return 1
+		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
+			Msg: &sdp.CreateChangeRequest{
+				Properties: &sdp.ChangeProperties{
+					Title:       viper.GetString("title"),
+					Description: viper.GetString("description"),
+					TicketLink:  viper.GetString("ticket-link"),
+					Owner:       viper.GetString("owner"),
+					// CcEmails:                  viper.GetString("cc-emails"),
+				},
+			},
+		})
+		if err != nil {
+			log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to create change")
+			return 1
+		}
+
+		changeUUID = createResponse.Msg.Change.Metadata.GetUUIDParsed()
+		if changeUUID == nil {
+			log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read change id")
+			return 1
+		}
 	}
 
 	lf["change"] = changeUUID
