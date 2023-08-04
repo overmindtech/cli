@@ -24,6 +24,7 @@ jobs:
 
       - name: Go Test
         run: |
+          go run main.go --version
           go test -v -timeout 5m ./...
 
   golangci:
