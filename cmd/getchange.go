@@ -102,19 +102,19 @@ func GetChange(signals chan os.Signal, ready chan bool) int {
 		changeUrl := fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid.String())
 		if response.Msg.Change.Metadata.NumAffectedApps != 0 || response.Msg.Change.Metadata.NumAffectedItems != 0 {
 			// we have affected stuff
-			fmt.Printf(`## Blast Radius  &nbsp; ·  &nbsp; [View in Overmind](%v) <img align="center" width="16" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/chainLink.png" alt="chain link icon" />
+			fmt.Printf(`## Blast Radius  &nbsp; ·  &nbsp; [View in Overmind](%v) <img width="16" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/chainLink.png" alt="chain link icon" />
 
 > **Warning**
 > Overmind identified potentially affected apps and items as a result of this pull request.
 
 <br>
 
-| <img align="center" width="16" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/blastRadiusItems.png" alt="icon for blast radius items" /> &nbsp;Affected items |
-| ------------- |
+| <img width="16" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/blastRadiusItems.png" alt="icon for blast radius items" />&nbsp;Affected items |
+| -------------- |
 | [%v items](%v) |
 `, changeUrl, response.Msg.Change.Metadata.NumAffectedItems, changeUrl)
 		} else {
-			fmt.Printf(`## Blast Radius  &nbsp; ·  &nbsp; [View in Overmind](%v) <img align="center" width="16" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/chainLink.png" alt="chain link icon" />
+			fmt.Printf(`## Blast Radius  &nbsp; ·  &nbsp; [View in Overmind](%v) <img width="16" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/chainLink.png" alt="chain link icon" />
 
 > **✅ Checks complete**
 > Overmind didn't identify any potentially affected apps and items as a result of this pull request.
