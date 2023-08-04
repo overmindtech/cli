@@ -277,12 +277,20 @@ func init() {
 	// Run this before we do anything to set up the loglevel
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		// Read env vars
-		logLevel = viper.GetString("log")
-		lvl, err := log.ParseLevel(logLevel)
-		if err != nil {
-			log.WithFields(log.Fields{"level": logLevel, "err": err}).Errorf("couldn't parse `log` config, defaulting to `info`")
+		var lvl log.Level
+
+		if logLevel != "" {
+			lvl, err = log.ParseLevel(logLevel)
+			if err != nil {
+				log.WithFields(log.Fields{"level": logLevel, "err": err}).Errorf("couldn't parse `log` config, defaulting to `info`")
+				lvl = log.InfoLevel
+			}
+		} else {
 			lvl = log.InfoLevel
 		}
+
+		fmt.Printf("LOGLEVEL: %v", logLevel)
+
 		log.SetLevel(lvl)
 		log.WithField("level", lvl).Infof("set log level from config")
 
