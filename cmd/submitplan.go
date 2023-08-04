@@ -251,10 +251,12 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 		}
 
 		changeUuid = *maybeChangeUuid
+		lf["change"] = changeUuid
+		log.WithContext(ctx).WithFields(lf).Info("created a new change")
+	} else {
+		lf["change"] = changeUuid
+		log.WithContext(ctx).WithFields(lf).Info("re-using change")
 	}
-
-	lf["change"] = changeUuid
-	log.WithContext(ctx).WithFields(lf).Info("created a new change")
 
 	receivedItems := []*sdp.Reference{}
 
