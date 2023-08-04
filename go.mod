@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/bufbuild/connect-go v1.10.0
-	github.com/getsentry/sentry-go v0.22.0
+	github.com/getsentry/sentry-go v0.23.0
 	github.com/google/uuid v1.3.0
 	github.com/overmindtech/sdp-go v0.43.0
 	github.com/sirupsen/logrus v1.9.3
