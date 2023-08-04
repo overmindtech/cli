@@ -160,14 +160,23 @@ func changingItemQueriesFromPlan(ctx context.Context, planJSON []byte, lf log.Fi
 			}
 
 			u := uuid.New()
-			changing_items = append(changing_items, &sdp.Query{
+			newQuery := sdp.Query{
 				Type:               mapData.Type,
 				Method:             mapData.Method,
 				Query:              query.(string),
 				Scope:              scope,
 				RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
 				UUID:               u[:],
-			})
+			}
+
+			changing_items = append(changing_items, &newQuery)
+
+			log.WithContext(ctx).WithFields(log.Fields{
+				"scope":  newQuery.Scope,
+				"type":   newQuery.Type,
+				"query":  newQuery.Query,
+				"method": newQuery.Method.String(),
+			}).Debug("mapped terraform to query")
 		}
 	}
 
