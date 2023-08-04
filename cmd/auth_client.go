@@ -21,7 +21,7 @@ func AuthenticatedApiKeyClient(ctx context.Context) sdpconnect.ApiKeyServiceClie
 		url = viper.GetString("url")
 		viper.Set("api-key-url", url)
 	}
-	log.WithContext(ctx).WithField("api-key-url", url).Debug("Connecting to overmind apikeys API")
+	log.WithContext(ctx).WithField("api-key-url", url).Debug("Connecting to overmind apikeys API (pre-authenticated)")
 	return sdpconnect.NewApiKeyServiceClient(httpClient, url)
 }
 
@@ -33,7 +33,7 @@ func UnauthenticatedApiKeyClient(ctx context.Context) sdpconnect.ApiKeyServiceCl
 		url = viper.GetString("url")
 		viper.Set("api-key-url", url)
 	}
-	log.WithContext(ctx).WithField("api-key-url", url).Debug("Connecting to overmind apikeys API (unauthenticated)")
+	log.WithContext(ctx).WithField("api-key-url", url).Debug("Connecting to overmind apikeys API")
 	return sdpconnect.NewApiKeyServiceClient(otelhttp.DefaultClient, url)
 }
 
