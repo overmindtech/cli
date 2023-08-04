@@ -192,9 +192,7 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 		viper.Set("gateway-url", gatewayUrl)
 	}
 
-	lf := log.Fields{
-		"gateway_url": gatewayUrl,
-	}
+	lf := log.Fields{}
 
 	ctx, err = ensureToken(ctx, signals)
 	if err != nil {
