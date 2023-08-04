@@ -93,6 +93,14 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_default_route_table": {
+		{
+			Type:       "ec2-route-table",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "default_route_table_id",
+			Scope:      "*",
+		},
+	},
 	"aws_dynamodb_table": {
 		{
 			Type:       "dynamodb-table",
@@ -178,6 +186,22 @@ var AwssourceData = map[string][]TfMapData{
 			Type:       "efs-replication-configuration",
 			Method:     sdp.QueryMethod_GET,
 			QueryField: "source_file_system_id",
+			Scope:      "*",
+		},
+	},
+	"aws_eip": {
+		{
+			Type:       "ec2-address",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "public_ip",
+			Scope:      "*",
+		},
+	},
+	"aws_eip_association": {
+		{
+			Type:       "ec2-address",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "public_ip",
 			Scope:      "*",
 		},
 	},
@@ -413,6 +437,14 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_route": {
+		{
+			Type:       "ec2-route-table",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "route_table_id",
+			Scope:      "*",
+		},
+	},
 	"aws_route53_health_check": {
 		{
 			Type:       "route53-health-check",
@@ -434,6 +466,22 @@ var AwssourceData = map[string][]TfMapData{
 			Type:       "route53-resource-record-set",
 			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
+	"aws_route53_zone": {
+		{
+			Type:       "route53-hosted-zone",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "zone_id",
+			Scope:      "*",
+		},
+	},
+	"aws_route53_zone_association": {
+		{
+			Type:       "route53-hosted-zone",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "zone_id",
 			Scope:      "*",
 		},
 	},
