@@ -288,9 +288,6 @@ func init() {
 		} else {
 			lvl = log.InfoLevel
 		}
-
-		fmt.Printf("LOGLEVEL: %v", logLevel)
-
 		log.SetLevel(lvl)
 		log.WithField("level", lvl).Infof("set log level from config")
 
