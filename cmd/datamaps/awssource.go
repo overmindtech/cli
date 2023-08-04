@@ -667,6 +667,30 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_vpc_peering_connection": {
+		{
+			Type:       "ec2-vpc-peering-connection",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_vpc_peering_connection_accepter": {
+		{
+			Type:       "ec2-vpc-peering-connection",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_vpc_peering_connection_options": {
+		{
+			Type:       "ec2-vpc-peering-connection",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "vpc_peering_connection_id",
+			Scope:      "*",
+		},
+	},
 	"egress_only_internet_gateway": {
 		{
 			Type:       "ec2-egress-only-internet-gateway",
