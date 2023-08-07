@@ -185,7 +185,7 @@ func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, 
 }
 
 // getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a state with the specified status and having --ticket-link
-func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus) (uuid.UUID, error) {
+func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus, errNotFound bool) (uuid.UUID, error) {
 	var changeUuid uuid.UUID
 	var err error
 
@@ -231,9 +231,9 @@ func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus) (uuid.U
 		}
 	}
 
-	// if changeUuid == uuid.Nil {
-	// 	return uuid.Nil, errors.New("no change specified; use one of --change, --ticket-link or --uuid")
-	// }
+	if errNotFound && changeUuid == uuid.Nil {
+		return uuid.Nil, errors.New("no change specified; use one of --change, --ticket-link or --uuid")
+	}
 
 	return changeUuid, nil
 }

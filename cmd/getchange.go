@@ -67,7 +67,7 @@ func GetChange(signals chan os.Signal, ready chan bool) int {
 	defer cancel()
 
 	lf := log.Fields{}
-	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus(sdp.ChangeStatus_value[viper.GetString("status")]))
+	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus(sdp.ChangeStatus_value[viper.GetString("status")]), true)
 	if err != nil {
 		log.WithError(err).WithFields(lf).Error("failed to identify change")
 		return 1

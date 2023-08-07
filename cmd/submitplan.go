@@ -228,7 +228,7 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 	}
 
 	client := AuthenticatedChangesClient(ctx)
-	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus_CHANGE_STATUS_DEFINING)
+	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, false)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to searching for existing changes")
 		return 1

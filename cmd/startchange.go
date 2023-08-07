@@ -65,7 +65,7 @@ func StartChange(signals chan os.Signal, ready chan bool) int {
 	defer cancel()
 
 	lf := log.Fields{}
-	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus_CHANGE_STATUS_DEFINING)
+	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, true)
 	if err != nil {
 		log.WithError(err).WithFields(lf).Error("failed to identify change")
 		return 1
@@ -93,6 +93,11 @@ func StartChange(signals chan os.Signal, ready chan bool) int {
 			"edges": msg.NumEdges,
 		}).Info("progress")
 	}
+	if stream.Err() != nil {
+		log.WithContext(ctx).WithFields(lf).WithError(stream.Err()).Error("failed to process start change")
+		return 1
+	}
+
 	log.WithContext(ctx).WithFields(lf).Info("started change")
 	return 0
 }

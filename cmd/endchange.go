@@ -65,7 +65,7 @@ func EndChange(signals chan os.Signal, ready chan bool) int {
 	defer cancel()
 
 	lf := log.Fields{}
-	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus_CHANGE_STATUS_HAPPENING)
+	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus_CHANGE_STATUS_HAPPENING, true)
 	if err != nil {
 		log.WithError(err).WithFields(lf).Error("failed to identify change")
 		return 1
@@ -81,7 +81,7 @@ func EndChange(signals chan os.Signal, ready chan bool) int {
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to start change")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to end change")
 		return 1
 	}
 	log.WithContext(ctx).WithFields(lf).Info("processing")
@@ -93,7 +93,12 @@ func EndChange(signals chan os.Signal, ready chan bool) int {
 			"edges": msg.NumEdges,
 		}).Info("progress")
 	}
-	log.WithContext(ctx).WithFields(lf).Info("started change")
+	if stream.Err() != nil {
+		log.WithContext(ctx).WithFields(lf).WithError(stream.Err()).Error("failed to process end change")
+		return 1
+	}
+
+	log.WithContext(ctx).WithFields(lf).Info("finished change")
 	return 0
 }
 
