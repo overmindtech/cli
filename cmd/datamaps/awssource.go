@@ -117,6 +117,14 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_ec2_capacity_reservation": {
+		{
+			Type:       "ec2-capacity-reservation",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
 	"aws_ecs_capacity_provider": {
 		{
 			Type:       "ecs-capacity-provider",
@@ -253,6 +261,14 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_iam_instance_profile": {
+		{
+			Type:       "iam-instance-profile",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
 	"aws_iam_policy": {
 		{
 			Type:       "iam-policy",
@@ -294,6 +310,12 @@ var AwssourceData = map[string][]TfMapData{
 		},
 	},
 	"aws_instance": {
+		{
+			Type:       "ec2-iam-instance-profile-association",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "iam_instance_profile",
+			Scope:      "*",
+		},
 		{
 			Type:       "ec2-instance",
 			Method:     sdp.QueryMethod_GET,
