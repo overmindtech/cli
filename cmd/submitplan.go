@@ -81,7 +81,18 @@ func changingItemQueriesFromPlan(ctx context.Context, planJSON []byte, lf log.Fi
 
 		var currentResource *Resource
 		for _, mapData := range mappings {
-			currentResource = plan.PlannedValues.RootModule.DigResource(resourceChange.Address)
+			// Look for the resource in the prior values first, since this is
+			// the *previous* state we're like to be able to find it in the
+			// actual infra
+			if plan.PriorState.Values != nil {
+				currentResource = plan.PriorState.Values.RootModule.DigResource(resourceChange.Address)
+			}
+
+			// If we didn't find it, look in the planned values
+			if currentResource == nil {
+				currentResource = plan.PlannedValues.RootModule.DigResource(resourceChange.Address)
+			}
+
 			if currentResource == nil {
 				log.WithContext(ctx).
 					WithFields(lf).
@@ -106,21 +117,13 @@ func changingItemQueriesFromPlan(ctx context.Context, planJSON []byte, lf log.Fi
 			dataMap["values"] = currentResource.AttributeValues
 
 			if overmindMappings, ok := plan.PlannedValues.Outputs["overmind_mappings"]; ok {
-				// TODO: Check for provider mappings
-				//
-				// This will need to follow the logic form the readme. We now have
-				// the entire plan parsed in a typesafe manner so it shouldn't be
-				// terribly hard. We just need to map from the changing resource to
-				// the provider, which probably should be its own function. Once we
-				// have that we can check the outputs for mappings
-
 				configResource := plan.Config.RootModule.DigResource(resourceChange.Address)
 
 				if configResource == nil {
 					log.WithContext(ctx).
 						WithFields(lf).
 						WithField("terraform-address", resourceChange.Address).
-						Warn("skipping resource without config")
+						Debug("skipping provider mapping for resource without config")
 				} else {
 					// Look up the provider config key in the mappings
 					mappings := make(map[string]map[string]string)
@@ -141,7 +144,7 @@ func changingItemQueriesFromPlan(ctx context.Context, planJSON []byte, lf log.Fi
 								WithFields(lf).
 								WithField("terraform-address", resourceChange.Address).
 								WithField("provider-config-key", configResource.ProviderConfigKey).
-								Debug("found provider mappings")
+								Info("found provider mappings")
 
 							// We have mappings for this provider, so set them
 							// in the `provider_mapping` value
