@@ -90,6 +90,7 @@ func GetChange(signals chan os.Signal, ready chan bool) int {
 	log.WithContext(ctx).WithFields(log.Fields{
 		"change-uuid":        uuid.UUID(response.Msg.Change.Metadata.UUID),
 		"change-created":     response.Msg.Change.Metadata.CreatedAt.AsTime(),
+		"change-status":      response.Msg.Change.Metadata.Status.String(),
 		"change-name":        response.Msg.Change.Properties.Title,
 		"change-description": response.Msg.Change.Properties.Description,
 	}).Info("found change")
