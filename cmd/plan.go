@@ -27,7 +27,7 @@ type Plan struct {
 	ResourceDrift      []ResourceChange  `json:"resource_drift,omitempty"`
 	ResourceChanges    []ResourceChange  `json:"resource_changes,omitempty"`
 	OutputChanges      map[string]Change `json:"output_changes,omitempty"`
-	PriorState         json.RawMessage   `json:"prior_state,omitempty"`
+	PriorState         State             `json:"prior_state,omitempty"`
 	Config             config            `json:"configuration,omitempty"`
 	RelevantAttributes []ResourceAttr    `json:"relevant_attributes,omitempty"`
 	Checks             json.RawMessage   `json:"checks,omitempty"`
@@ -608,4 +608,13 @@ type Importing struct {
 type ResourceAttr struct {
 	Resource string          `json:"resource"`
 	Attr     json.RawMessage `json:"attribute"`
+}
+
+// State is the top-level representation of the json format of a terraform
+// state.
+type State struct {
+	FormatVersion    string          `json:"format_version,omitempty"`
+	TerraformVersion string          `json:"terraform_version,omitempty"`
+	Values           *StateValues    `json:"values,omitempty"`
+	Checks           json.RawMessage `json:"checks,omitempty"`
 }

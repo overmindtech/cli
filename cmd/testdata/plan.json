@@ -2358,6 +2358,381 @@
     },
     "resource_changes": [
         {
+            "address": "kubernetes_deployment.nats_box",
+            "mode": "managed",
+            "type": "kubernetes_deployment",
+            "name": "nats_box",
+            "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+            "change": {
+                "actions": [
+                    "delete"
+                ],
+                "before": {
+                    "id": "default/nats-box",
+                    "metadata": [
+                        {
+                            "annotations": {},
+                            "generate_name": "",
+                            "generation": 9,
+                            "labels": {
+                                "app": "nats-box"
+                            },
+                            "name": "nats-box",
+                            "namespace": "default",
+                            "resource_version": "20425079",
+                            "uid": "25e4fce6-06a8-435b-90f3-ad0c1d8b52f1"
+                        }
+                    ],
+                    "spec": [
+                        {
+                            "min_ready_seconds": 0,
+                            "paused": false,
+                            "progress_deadline_seconds": 600,
+                            "replicas": "0",
+                            "revision_history_limit": 10,
+                            "selector": [
+                                {
+                                    "match_expressions": [],
+                                    "match_labels": {
+                                        "app": "nats-box"
+                                    }
+                                }
+                            ],
+                            "strategy": [
+                                {
+                                    "rolling_update": [
+                                        {
+                                            "max_surge": "25%",
+                                            "max_unavailable": "25%"
+                                        }
+                                    ],
+                                    "type": "RollingUpdate"
+                                }
+                            ],
+                            "template": [
+                                {
+                                    "metadata": [
+                                        {
+                                            "annotations": {},
+                                            "generate_name": "",
+                                            "generation": 0,
+                                            "labels": {
+                                                "app": "nats-box"
+                                            },
+                                            "name": "",
+                                            "namespace": "",
+                                            "resource_version": "",
+                                            "uid": ""
+                                        }
+                                    ],
+                                    "spec": [
+                                        {
+                                            "active_deadline_seconds": 0,
+                                            "affinity": [],
+                                            "automount_service_account_token": true,
+                                            "container": [
+                                                {
+                                                    "args": [],
+                                                    "command": [
+                                                        "tail",
+                                                        "-f",
+                                                        "/dev/null"
+                                                    ],
+                                                    "env": [],
+                                                    "env_from": [],
+                                                    "image": "natsio/nats-box:latest",
+                                                    "image_pull_policy": "Always",
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "name": "nats",
+                                                    "port": [],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {},
+                                                            "requests": {}
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "stdin": false,
+                                                    "stdin_once": false,
+                                                    "termination_message_path": "/dev/termination-log",
+                                                    "termination_message_policy": "File",
+                                                    "tty": false,
+                                                    "volume_mount": [
+                                                        {
+                                                            "mount_path": "/etc/nats",
+                                                            "mount_propagation": "None",
+                                                            "name": "nats-config",
+                                                            "read_only": false,
+                                                            "sub_path": ""
+                                                        },
+                                                        {
+                                                            "mount_path": "/etc/nats-nkeys",
+                                                            "mount_propagation": "None",
+                                                            "name": "nats-nkeys",
+                                                            "read_only": false,
+                                                            "sub_path": ""
+                                                        }
+                                                    ],
+                                                    "working_dir": ""
+                                                }
+                                            ],
+                                            "dns_config": [],
+                                            "dns_policy": "ClusterFirst",
+                                            "enable_service_links": true,
+                                            "host_aliases": [],
+                                            "host_ipc": false,
+                                            "host_network": false,
+                                            "host_pid": false,
+                                            "hostname": "",
+                                            "image_pull_secrets": [],
+                                            "init_container": [],
+                                            "node_name": "",
+                                            "node_selector": {},
+                                            "priority_class_name": "",
+                                            "readiness_gate": [],
+                                            "restart_policy": "Always",
+                                            "runtime_class_name": "",
+                                            "scheduler_name": "default-scheduler",
+                                            "security_context": [],
+                                            "service_account_name": "",
+                                            "share_process_namespace": false,
+                                            "subdomain": "",
+                                            "termination_grace_period_seconds": 30,
+                                            "toleration": [],
+                                            "topology_spread_constraint": [],
+                                            "volume": [
+                                                {
+                                                    "aws_elastic_block_store": [],
+                                                    "azure_disk": [],
+                                                    "azure_file": [],
+                                                    "ceph_fs": [],
+                                                    "cinder": [],
+                                                    "config_map": [],
+                                                    "csi": [],
+                                                    "downward_api": [],
+                                                    "empty_dir": [],
+                                                    "fc": [],
+                                                    "flex_volume": [],
+                                                    "flocker": [],
+                                                    "gce_persistent_disk": [],
+                                                    "git_repo": [],
+                                                    "glusterfs": [],
+                                                    "host_path": [],
+                                                    "iscsi": [],
+                                                    "local": [],
+                                                    "name": "nats-nkeys",
+                                                    "nfs": [],
+                                                    "persistent_volume_claim": [
+                                                        {
+                                                            "claim_name": "nats-nkeys",
+                                                            "read_only": false
+                                                        }
+                                                    ],
+                                                    "photon_persistent_disk": [],
+                                                    "projected": [],
+                                                    "quobyte": [],
+                                                    "rbd": [],
+                                                    "secret": [],
+                                                    "vsphere_volume": []
+                                                },
+                                                {
+                                                    "aws_elastic_block_store": [],
+                                                    "azure_disk": [],
+                                                    "azure_file": [],
+                                                    "ceph_fs": [],
+                                                    "cinder": [],
+                                                    "config_map": [],
+                                                    "csi": [],
+                                                    "downward_api": [],
+                                                    "empty_dir": [],
+                                                    "fc": [],
+                                                    "flex_volume": [],
+                                                    "flocker": [],
+                                                    "gce_persistent_disk": [],
+                                                    "git_repo": [],
+                                                    "glusterfs": [],
+                                                    "host_path": [],
+                                                    "iscsi": [],
+                                                    "local": [],
+                                                    "name": "nats-config",
+                                                    "nfs": [],
+                                                    "persistent_volume_claim": [
+                                                        {
+                                                            "claim_name": "nats-config",
+                                                            "read_only": false
+                                                        }
+                                                    ],
+                                                    "photon_persistent_disk": [],
+                                                    "projected": [],
+                                                    "quobyte": [],
+                                                    "rbd": [],
+                                                    "secret": [],
+                                                    "vsphere_volume": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "timeouts": {
+                        "create": "2m",
+                        "delete": "2m",
+                        "update": "2m"
+                    },
+                    "wait_for_rollout": true
+                },
+                "after": null,
+                "after_unknown": {},
+                "before_sensitive": {
+                    "metadata": [
+                        {
+                            "annotations": {},
+                            "labels": {}
+                        }
+                    ],
+                    "spec": [
+                        {
+                            "selector": [
+                                {
+                                    "match_expressions": [],
+                                    "match_labels": {}
+                                }
+                            ],
+                            "strategy": [
+                                {
+                                    "rolling_update": [
+                                        {}
+                                    ]
+                                }
+                            ],
+                            "template": [
+                                {
+                                    "metadata": [
+                                        {
+                                            "annotations": {},
+                                            "labels": {}
+                                        }
+                                    ],
+                                    "spec": [
+                                        {
+                                            "affinity": [],
+                                            "container": [
+                                                {
+                                                    "args": [],
+                                                    "command": [
+                                                        false,
+                                                        false,
+                                                        false
+                                                    ],
+                                                    "env": [],
+                                                    "env_from": [],
+                                                    "lifecycle": [],
+                                                    "liveness_probe": [],
+                                                    "port": [],
+                                                    "readiness_probe": [],
+                                                    "resources": [
+                                                        {
+                                                            "limits": {},
+                                                            "requests": {}
+                                                        }
+                                                    ],
+                                                    "security_context": [],
+                                                    "startup_probe": [],
+                                                    "volume_mount": [
+                                                        {},
+                                                        {}
+                                                    ]
+                                                }
+                                            ],
+                                            "dns_config": [],
+                                            "host_aliases": [],
+                                            "image_pull_secrets": [],
+                                            "init_container": [],
+                                            "node_selector": {},
+                                            "readiness_gate": [],
+                                            "security_context": [],
+                                            "toleration": [],
+                                            "topology_spread_constraint": [],
+                                            "volume": [
+                                                {
+                                                    "aws_elastic_block_store": [],
+                                                    "azure_disk": [],
+                                                    "azure_file": [],
+                                                    "ceph_fs": [],
+                                                    "cinder": [],
+                                                    "config_map": [],
+                                                    "csi": [],
+                                                    "downward_api": [],
+                                                    "empty_dir": [],
+                                                    "fc": [],
+                                                    "flex_volume": [],
+                                                    "flocker": [],
+                                                    "gce_persistent_disk": [],
+                                                    "git_repo": [],
+                                                    "glusterfs": [],
+                                                    "host_path": [],
+                                                    "iscsi": [],
+                                                    "local": [],
+                                                    "nfs": [],
+                                                    "persistent_volume_claim": [
+                                                        {}
+                                                    ],
+                                                    "photon_persistent_disk": [],
+                                                    "projected": [],
+                                                    "quobyte": [],
+                                                    "rbd": [],
+                                                    "secret": [],
+                                                    "vsphere_volume": []
+                                                },
+                                                {
+                                                    "aws_elastic_block_store": [],
+                                                    "azure_disk": [],
+                                                    "azure_file": [],
+                                                    "ceph_fs": [],
+                                                    "cinder": [],
+                                                    "config_map": [],
+                                                    "csi": [],
+                                                    "downward_api": [],
+                                                    "empty_dir": [],
+                                                    "fc": [],
+                                                    "flex_volume": [],
+                                                    "flocker": [],
+                                                    "gce_persistent_disk": [],
+                                                    "git_repo": [],
+                                                    "glusterfs": [],
+                                                    "host_path": [],
+                                                    "iscsi": [],
+                                                    "local": [],
+                                                    "nfs": [],
+                                                    "persistent_volume_claim": [
+                                                        {}
+                                                    ],
+                                                    "photon_persistent_disk": [],
+                                                    "projected": [],
+                                                    "quobyte": [],
+                                                    "rbd": [],
+                                                    "secret": [],
+                                                    "vsphere_volume": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
+                    "timeouts": {}
+                },
+                "after_sensitive": false
+            },
+            "action_reason": "delete_because_no_resource_config"
+        },
+        {
             "address": "kubernetes_deployment.api_server",
             "mode": "managed",
             "type": "kubernetes_deployment",
@@ -5964,6 +6339,462 @@
                         "module.eks"
                     ]
                 }
+            }
+        }
+    },
+    "prior_state": {
+        "values": {
+            "root_module": {
+                "resources": [
+                    {
+                        "address": "kubernetes_deployment.nats_box",
+                        "mode": "managed",
+                        "type": "kubernetes_deployment",
+                        "name": "nats_box",
+                        "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+                        "schema_version": 1,
+                        "values": {
+                            "id": "default/nats-box",
+                            "metadata": [
+                                {
+                                    "annotations": {},
+                                    "generate_name": "",
+                                    "generation": 9,
+                                    "labels": {
+                                        "app": "nats-box"
+                                    },
+                                    "name": "nats-box",
+                                    "namespace": "default",
+                                    "resource_version": "20425079",
+                                    "uid": "25e4fce6-06a8-435b-90f3-ad0c1d8b52f1"
+                                }
+                            ],
+                            "spec": [
+                                {
+                                    "min_ready_seconds": 0,
+                                    "paused": false,
+                                    "progress_deadline_seconds": 600,
+                                    "replicas": "0",
+                                    "revision_history_limit": 10,
+                                    "selector": [
+                                        {
+                                            "match_expressions": [],
+                                            "match_labels": {
+                                                "app": "nats-box"
+                                            }
+                                        }
+                                    ],
+                                    "strategy": [
+                                        {
+                                            "rolling_update": [
+                                                {
+                                                    "max_surge": "25%",
+                                                    "max_unavailable": "25%"
+                                                }
+                                            ],
+                                            "type": "RollingUpdate"
+                                        }
+                                    ],
+                                    "template": [
+                                        {
+                                            "metadata": [
+                                                {
+                                                    "annotations": {},
+                                                    "generate_name": "",
+                                                    "generation": 0,
+                                                    "labels": {
+                                                        "app": "nats-box"
+                                                    },
+                                                    "name": "",
+                                                    "namespace": "",
+                                                    "resource_version": "",
+                                                    "uid": ""
+                                                }
+                                            ],
+                                            "spec": [
+                                                {
+                                                    "active_deadline_seconds": 0,
+                                                    "affinity": [],
+                                                    "automount_service_account_token": true,
+                                                    "container": [
+                                                        {
+                                                            "args": [],
+                                                            "command": [
+                                                                "tail",
+                                                                "-f",
+                                                                "/dev/null"
+                                                            ],
+                                                            "env": [],
+                                                            "env_from": [],
+                                                            "image": "natsio/nats-box:latest",
+                                                            "image_pull_policy": "Always",
+                                                            "lifecycle": [],
+                                                            "liveness_probe": [],
+                                                            "name": "nats",
+                                                            "port": [],
+                                                            "readiness_probe": [],
+                                                            "resources": [
+                                                                {
+                                                                    "limits": {},
+                                                                    "requests": {}
+                                                                }
+                                                            ],
+                                                            "security_context": [],
+                                                            "startup_probe": [],
+                                                            "stdin": false,
+                                                            "stdin_once": false,
+                                                            "termination_message_path": "/dev/termination-log",
+                                                            "termination_message_policy": "File",
+                                                            "tty": false,
+                                                            "volume_mount": [
+                                                                {
+                                                                    "mount_path": "/etc/nats",
+                                                                    "mount_propagation": "None",
+                                                                    "name": "nats-config",
+                                                                    "read_only": false,
+                                                                    "sub_path": ""
+                                                                },
+                                                                {
+                                                                    "mount_path": "/etc/nats-nkeys",
+                                                                    "mount_propagation": "None",
+                                                                    "name": "nats-nkeys",
+                                                                    "read_only": false,
+                                                                    "sub_path": ""
+                                                                }
+                                                            ],
+                                                            "working_dir": ""
+                                                        }
+                                                    ],
+                                                    "dns_config": [],
+                                                    "dns_policy": "ClusterFirst",
+                                                    "enable_service_links": true,
+                                                    "host_aliases": [],
+                                                    "host_ipc": false,
+                                                    "host_network": false,
+                                                    "host_pid": false,
+                                                    "hostname": "",
+                                                    "image_pull_secrets": [],
+                                                    "init_container": [],
+                                                    "node_name": "",
+                                                    "node_selector": {},
+                                                    "priority_class_name": "",
+                                                    "readiness_gate": [],
+                                                    "restart_policy": "Always",
+                                                    "runtime_class_name": "",
+                                                    "scheduler_name": "default-scheduler",
+                                                    "security_context": [],
+                                                    "service_account_name": "",
+                                                    "share_process_namespace": false,
+                                                    "subdomain": "",
+                                                    "termination_grace_period_seconds": 30,
+                                                    "toleration": [],
+                                                    "topology_spread_constraint": [],
+                                                    "volume": [
+                                                        {
+                                                            "aws_elastic_block_store": [],
+                                                            "azure_disk": [],
+                                                            "azure_file": [],
+                                                            "ceph_fs": [],
+                                                            "cinder": [],
+                                                            "config_map": [],
+                                                            "csi": [],
+                                                            "downward_api": [],
+                                                            "empty_dir": [],
+                                                            "fc": [],
+                                                            "flex_volume": [],
+                                                            "flocker": [],
+                                                            "gce_persistent_disk": [],
+                                                            "git_repo": [],
+                                                            "glusterfs": [],
+                                                            "host_path": [],
+                                                            "iscsi": [],
+                                                            "local": [],
+                                                            "name": "nats-nkeys",
+                                                            "nfs": [],
+                                                            "persistent_volume_claim": [
+                                                                {
+                                                                    "claim_name": "nats-nkeys",
+                                                                    "read_only": false
+                                                                }
+                                                            ],
+                                                            "photon_persistent_disk": [],
+                                                            "projected": [],
+                                                            "quobyte": [],
+                                                            "rbd": [],
+                                                            "secret": [],
+                                                            "vsphere_volume": []
+                                                        },
+                                                        {
+                                                            "aws_elastic_block_store": [],
+                                                            "azure_disk": [],
+                                                            "azure_file": [],
+                                                            "ceph_fs": [],
+                                                            "cinder": [],
+                                                            "config_map": [],
+                                                            "csi": [],
+                                                            "downward_api": [],
+                                                            "empty_dir": [],
+                                                            "fc": [],
+                                                            "flex_volume": [],
+                                                            "flocker": [],
+                                                            "gce_persistent_disk": [],
+                                                            "git_repo": [],
+                                                            "glusterfs": [],
+                                                            "host_path": [],
+                                                            "iscsi": [],
+                                                            "local": [],
+                                                            "name": "nats-config",
+                                                            "nfs": [],
+                                                            "persistent_volume_claim": [
+                                                                {
+                                                                    "claim_name": "nats-config",
+                                                                    "read_only": false
+                                                                }
+                                                            ],
+                                                            "photon_persistent_disk": [],
+                                                            "projected": [],
+                                                            "quobyte": [],
+                                                            "rbd": [],
+                                                            "secret": [],
+                                                            "vsphere_volume": []
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "timeouts": {
+                                "create": "2m",
+                                "delete": "2m",
+                                "update": "2m"
+                            },
+                            "wait_for_rollout": true
+                        },
+                        "sensitive_values": {
+                            "metadata": [
+                                {
+                                    "annotations": {},
+                                    "labels": {}
+                                }
+                            ],
+                            "spec": [
+                                {
+                                    "selector": [
+                                        {
+                                            "match_expressions": [],
+                                            "match_labels": {}
+                                        }
+                                    ],
+                                    "strategy": [
+                                        {
+                                            "rolling_update": [
+                                                {}
+                                            ]
+                                        }
+                                    ],
+                                    "template": [
+                                        {
+                                            "metadata": [
+                                                {
+                                                    "annotations": {},
+                                                    "labels": {}
+                                                }
+                                            ],
+                                            "spec": [
+                                                {
+                                                    "affinity": [],
+                                                    "container": [
+                                                        {
+                                                            "args": [],
+                                                            "command": [
+                                                                false,
+                                                                false,
+                                                                false
+                                                            ],
+                                                            "env": [],
+                                                            "env_from": [],
+                                                            "lifecycle": [],
+                                                            "liveness_probe": [],
+                                                            "port": [],
+                                                            "readiness_probe": [],
+                                                            "resources": [
+                                                                {
+                                                                    "limits": {},
+                                                                    "requests": {}
+                                                                }
+                                                            ],
+                                                            "security_context": [],
+                                                            "startup_probe": [],
+                                                            "volume_mount": [
+                                                                {},
+                                                                {}
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "dns_config": [],
+                                                    "host_aliases": [],
+                                                    "image_pull_secrets": [],
+                                                    "init_container": [],
+                                                    "node_selector": {},
+                                                    "readiness_gate": [],
+                                                    "security_context": [],
+                                                    "toleration": [],
+                                                    "topology_spread_constraint": [],
+                                                    "volume": [
+                                                        {
+                                                            "aws_elastic_block_store": [],
+                                                            "azure_disk": [],
+                                                            "azure_file": [],
+                                                            "ceph_fs": [],
+                                                            "cinder": [],
+                                                            "config_map": [],
+                                                            "csi": [],
+                                                            "downward_api": [],
+                                                            "empty_dir": [],
+                                                            "fc": [],
+                                                            "flex_volume": [],
+                                                            "flocker": [],
+                                                            "gce_persistent_disk": [],
+                                                            "git_repo": [],
+                                                            "glusterfs": [],
+                                                            "host_path": [],
+                                                            "iscsi": [],
+                                                            "local": [],
+                                                            "nfs": [],
+                                                            "persistent_volume_claim": [
+                                                                {}
+                                                            ],
+                                                            "photon_persistent_disk": [],
+                                                            "projected": [],
+                                                            "quobyte": [],
+                                                            "rbd": [],
+                                                            "secret": [],
+                                                            "vsphere_volume": []
+                                                        },
+                                                        {
+                                                            "aws_elastic_block_store": [],
+                                                            "azure_disk": [],
+                                                            "azure_file": [],
+                                                            "ceph_fs": [],
+                                                            "cinder": [],
+                                                            "config_map": [],
+                                                            "csi": [],
+                                                            "downward_api": [],
+                                                            "empty_dir": [],
+                                                            "fc": [],
+                                                            "flex_volume": [],
+                                                            "flocker": [],
+                                                            "gce_persistent_disk": [],
+                                                            "git_repo": [],
+                                                            "glusterfs": [],
+                                                            "host_path": [],
+                                                            "iscsi": [],
+                                                            "local": [],
+                                                            "nfs": [],
+                                                            "persistent_volume_claim": [
+                                                                {}
+                                                            ],
+                                                            "photon_persistent_disk": [],
+                                                            "projected": [],
+                                                            "quobyte": [],
+                                                            "rbd": [],
+                                                            "secret": [],
+                                                            "vsphere_volume": []
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ],
+                            "timeouts": {}
+                        },
+                        "depends_on": [
+                            "aws_iam_openid_connect_provider.github",
+                            "aws_iam_role.buildkit_connect",
+                            "data.aws_availability_zones.available",
+                            "data.aws_caller_identity.current",
+                            "data.aws_eks_cluster_auth.eks",
+                            "data.aws_iam_roles.sso_admins",
+                            "data.aws_iam_roles.sso_powerusers",
+                            "data.aws_iam_session_context.current",
+                            "data.aws_subnets.main_vpc_by_az",
+                            "module.eks.aws_cloudwatch_log_group.this",
+                            "module.eks.aws_ec2_tag.cluster_primary_security_group",
+                            "module.eks.aws_eks_addon.before_compute",
+                            "module.eks.aws_eks_addon.this",
+                            "module.eks.aws_eks_cluster.this",
+                            "module.eks.aws_eks_identity_provider_config.this",
+                            "module.eks.aws_iam_openid_connect_provider.oidc_provider",
+                            "module.eks.aws_iam_policy.cluster_encryption",
+                            "module.eks.aws_iam_policy.cni_ipv6_policy",
+                            "module.eks.aws_iam_role.this",
+                            "module.eks.aws_iam_role_policy_attachment.additional",
+                            "module.eks.aws_iam_role_policy_attachment.cluster_encryption",
+                            "module.eks.aws_iam_role_policy_attachment.this",
+                            "module.eks.aws_security_group.cluster",
+                            "module.eks.aws_security_group.node",
+                            "module.eks.aws_security_group_rule.cluster",
+                            "module.eks.aws_security_group_rule.node",
+                            "module.eks.data.aws_caller_identity.current",
+                            "module.eks.data.aws_eks_addon_version.this",
+                            "module.eks.data.aws_iam_policy_document.assume_role_policy",
+                            "module.eks.data.aws_iam_policy_document.cni_ipv6_policy",
+                            "module.eks.data.aws_iam_session_context.current",
+                            "module.eks.data.aws_partition.current",
+                            "module.eks.data.tls_certificate.this",
+                            "module.eks.kubernetes_config_map.aws_auth",
+                            "module.eks.kubernetes_config_map_v1_data.aws_auth",
+                            "module.eks.module.eks_managed_node_group.aws_autoscaling_schedule.this",
+                            "module.eks.module.eks_managed_node_group.aws_eks_node_group.this",
+                            "module.eks.module.eks_managed_node_group.aws_iam_role.this",
+                            "module.eks.module.eks_managed_node_group.aws_iam_role_policy_attachment.additional",
+                            "module.eks.module.eks_managed_node_group.aws_iam_role_policy_attachment.this",
+                            "module.eks.module.eks_managed_node_group.aws_launch_template.this",
+                            "module.eks.module.eks_managed_node_group.data.aws_caller_identity.current",
+                            "module.eks.module.eks_managed_node_group.data.aws_iam_policy_document.assume_role_policy",
+                            "module.eks.module.eks_managed_node_group.data.aws_partition.current",
+                            "module.eks.module.eks_managed_node_group.module.user_data.data.cloudinit_config.linux_eks_managed_node_group",
+                            "module.eks.module.fargate_profile.aws_eks_fargate_profile.this",
+                            "module.eks.module.fargate_profile.aws_iam_role.this",
+                            "module.eks.module.fargate_profile.aws_iam_role_policy_attachment.additional",
+                            "module.eks.module.fargate_profile.aws_iam_role_policy_attachment.this",
+                            "module.eks.module.fargate_profile.data.aws_caller_identity.current",
+                            "module.eks.module.fargate_profile.data.aws_iam_policy_document.assume_role_policy",
+                            "module.eks.module.fargate_profile.data.aws_partition.current",
+                            "module.eks.module.kms.aws_kms_alias.this",
+                            "module.eks.module.kms.aws_kms_external_key.this",
+                            "module.eks.module.kms.aws_kms_grant.this",
+                            "module.eks.module.kms.aws_kms_key.this",
+                            "module.eks.module.kms.data.aws_caller_identity.current",
+                            "module.eks.module.kms.data.aws_iam_policy_document.this",
+                            "module.eks.module.kms.data.aws_partition.current",
+                            "module.eks.module.self_managed_node_group.aws_autoscaling_group.this",
+                            "module.eks.module.self_managed_node_group.aws_autoscaling_schedule.this",
+                            "module.eks.module.self_managed_node_group.aws_iam_instance_profile.this",
+                            "module.eks.module.self_managed_node_group.aws_iam_role.this",
+                            "module.eks.module.self_managed_node_group.aws_iam_role_policy_attachment.additional",
+                            "module.eks.module.self_managed_node_group.aws_iam_role_policy_attachment.this",
+                            "module.eks.module.self_managed_node_group.aws_launch_template.this",
+                            "module.eks.module.self_managed_node_group.data.aws_ami.eks_default",
+                            "module.eks.module.self_managed_node_group.data.aws_caller_identity.current",
+                            "module.eks.module.self_managed_node_group.data.aws_iam_policy_document.assume_role_policy",
+                            "module.eks.module.self_managed_node_group.data.aws_partition.current",
+                            "module.eks.module.self_managed_node_group.module.user_data.data.cloudinit_config.linux_eks_managed_node_group",
+                            "module.eks.time_sleep.this",
+                            "module.iam_eks_role.aws_iam_role.this",
+                            "module.iam_eks_role.data.aws_caller_identity.current",
+                            "module.iam_eks_role.data.aws_iam_policy_document.this",
+                            "module.iam_eks_role.data.aws_partition.current",
+                            "module.vpc.aws_subnet.private",
+                            "module.vpc.aws_vpc.this",
+                            "module.vpc.aws_vpc_ipv4_cidr_block_association.this"
+                        ]
+                    }
+                ]
             }
         }
     },
