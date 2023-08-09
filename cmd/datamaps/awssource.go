@@ -45,6 +45,78 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_cloudfront_Streamingdistribution": {
+		{
+			Type:       "cloudfront-streaming-distribution",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
+	"aws_cloudfront_cache_policy": {
+		{
+			Type:       "cloudfront-cache-policy",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_cloudfront_distribution": {
+		{
+			Type:       "cloudfront-distribution",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
+	"aws_cloudfront_function": {
+		{
+			Type:       "cloudfront-function",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "name",
+			Scope:      "*",
+		},
+	},
+	"aws_cloudfront_key_group": {
+		{
+			Type:       "cloudfront-key-group",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_cloudfront_origin_access_control": {
+		{
+			Type:       "cloudfront-origin-access-control",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_cloudfront_origin_request_policy": {
+		{
+			Type:       "cloudfront-origin-request-policy",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_cloudfront_realtime_log_config": {
+		{
+			Type:       "cloudfront-realtime-log-config",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
+	"aws_cloudfront_response_headers_policy": {
+		{
+			Type:       "cloudfront-response-headers-policy",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
 	"aws_cloudwatch_metric_alarm": {
 		{
 			Type:       "cloudwatch-alarm",
