@@ -57,7 +57,7 @@ func Execute() {
 }
 
 // ensureToken
-func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, error) {
+func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.Signal) (context.Context, error) {
 	// get a token from the api key if present
 	if viper.GetString("api-key") != "" {
 		log.WithContext(ctx).Debug("using provided token for authentication")
@@ -97,7 +97,7 @@ func ensureToken(ctx context.Context, signals chan os.Signal) (context.Context, 
 		// Authenticate using the oauth resource owner password flow
 		config := oauth2.Config{
 			ClientID: viper.GetString("auth0-client-id"),
-			Scopes:   []string{"openid", "profile", "email", "gateway:stream", "request:send", "reverselink:request", "account:read", "source:read", "source:write", "api:read", "api:write", "gateway:objects"},
+			Scopes:   requiredScopes,
 			Endpoint: oauth2.Endpoint{
 				AuthURL:  fmt.Sprintf("https://%v/authorize", viper.GetString("auth0-domain")),
 				TokenURL: fmt.Sprintf("https://%v/oauth/token", viper.GetString("auth0-domain")),
