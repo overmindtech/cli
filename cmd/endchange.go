@@ -52,7 +52,7 @@ func EndChange(signals chan os.Signal, ready chan bool) int {
 	))
 	defer span.End()
 
-	ctx, err = ensureToken(ctx, signals)
+	ctx, err = ensureToken(ctx, []string{"changes:write"}, signals)
 	if err != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"url": viper.GetString("url"),

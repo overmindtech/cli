@@ -74,7 +74,7 @@ func Request(signals chan os.Signal, ready chan bool) int {
 
 	lf := log.Fields{}
 
-	ctx, err = ensureToken(ctx, signals)
+	ctx, err = ensureToken(ctx, []string{"explore:read"}, signals)
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithField("api-key-url", viper.GetString("api-key-url")).WithError(err).Error("failed to authenticate")
 		return 1

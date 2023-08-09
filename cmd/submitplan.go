@@ -206,7 +206,7 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 
 	lf := log.Fields{}
 
-	ctx, err = ensureToken(ctx, signals)
+	ctx, err = ensureToken(ctx, []string{"changes:write"}, signals)
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithField("api-key-url", viper.GetString("api-key-url")).WithError(err).Error("failed to authenticate")
 		return 1
@@ -459,11 +459,6 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 	last_log := time.Now()
 	first_log := true
 	for resultStream.Receive() {
-		if resultStream.Err() != nil {
-			log.WithContext(ctx).WithFields(lf).WithError(err).Error("error streaming results")
-			return 1
-		}
-
 		msg := resultStream.Msg()
 
 		// log the first message and at most every 250ms during discovery
@@ -474,6 +469,10 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 			last_log = time.Now()
 			first_log = false
 		}
+	}
+	if resultStream.Err() != nil {
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("error streaming results")
+		return 1
 	}
 
 	changeUrl := fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid)
