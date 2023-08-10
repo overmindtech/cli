@@ -471,7 +471,7 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 		}
 	}
 	if resultStream.Err() != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("error streaming results")
+		log.WithContext(ctx).WithFields(lf).WithError(resultStream.Err()).Error("error streaming results")
 		return 1
 	}
 
