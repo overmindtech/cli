@@ -276,6 +276,8 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 		}
 
 		log.WithContext(ctx).WithFields(lf).WithField("item_count", len(queries)).Info("identifying items")
+		// nhooyr.io/websocket reads the body internally
+		// nolint: bodyclose
 		c, _, err := websocket.Dial(ctx, viper.GetString("gateway-url"), options)
 		if err != nil {
 			log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
@@ -399,6 +401,8 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 					statusFields["query"] = queryUuid
 
 					switch status.Status {
+					case sdp.QueryStatus_UNSPECIFIED:
+						statusFields["unexpected_status"] = true
 					case sdp.QueryStatus_STARTED:
 						activeQueries[*queryUuid] = true
 					case sdp.QueryStatus_FINISHED:

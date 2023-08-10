@@ -147,6 +147,7 @@ func InitTracer(opts ...otlptracehttp.Option) error {
 	return nil
 }
 
+// nolint: contextcheck
 func ShutdownTracer() {
 	// Flush buffered events before the program terminates.
 	defer sentry.Flush(5 * time.Second)
