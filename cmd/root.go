@@ -152,7 +152,7 @@ func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.S
 
 		// Start the webserver
 		log.WithContext(ctx).Trace("Starting webserver to listen for callback, press Ctrl+C to cancel")
-		srv := &http.Server{Addr: ":7837"}
+		srv := &http.Server{Addr: ":7837", ReadHeaderTimeout: 30 * time.Second}
 		http.HandleFunc("/oauth/callback", handler)
 
 		go func() {
