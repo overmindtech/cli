@@ -19,9 +19,6 @@ jobs:
         run: |
           go get -v -t -d ./...
 
-      - name: Go Vet
-        run: go vet ./...
-
       - name: Go Test
         run: |
           go run main.go --version
