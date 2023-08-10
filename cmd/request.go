@@ -88,8 +88,7 @@ func Request(signals chan os.Signal, ready chan bool) int {
 		HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
 	}
 
-	// nhooyr.io/websocket reads the body internally
-	// nolint: bodyclose
+	// nolint: bodyclose // nhooyr.io/websocket reads the body internally
 	c, _, err := websocket.Dial(ctx, gatewayUrl, options)
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
