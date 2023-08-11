@@ -118,8 +118,12 @@ func CreateBookmark(signals chan os.Signal, ready chan bool) int {
 		}).Info("created bookmark excluded item")
 	}
 
-	b, _ := json.MarshalIndent(response.Msg.Bookmark.Properties, "", "  ")
-	log.Info(string(b))
+	b, err := json.MarshalIndent(response.Msg.Bookmark.Properties, "", "  ")
+	if err != nil {
+		log.Infof("Error rendering bookmark: %v", err)
+	} else {
+		log.Info(string(b))
+	}
 
 	return 0
 }

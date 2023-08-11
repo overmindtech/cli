@@ -97,8 +97,13 @@ func GetChange(signals chan os.Signal, ready chan bool) int {
 
 	switch viper.GetString("format") {
 	case "json":
-		b, _ := json.MarshalIndent(response.Msg.Change, "", "  ")
-		fmt.Println(string(b))
+		b, err := json.MarshalIndent(response.Msg.Change, "", "  ")
+		if err != nil {
+			log.Errorf("Error rendering bookmark: %v", err)
+			return 1
+		} else {
+			fmt.Println(string(b))
+		}
 	case "markdown":
 		changeUrl := fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid.String())
 		if response.Msg.Change.Metadata.NumAffectedApps != 0 || response.Msg.Change.Metadata.NumAffectedItems != 0 {

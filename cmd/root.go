@@ -152,7 +152,7 @@ func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.S
 
 		// Start the webserver
 		log.WithContext(ctx).Trace("Starting webserver to listen for callback, press Ctrl+C to cancel")
-		srv := &http.Server{Addr: ":7837"}
+		srv := &http.Server{Addr: ":7837", ReadHeaderTimeout: 30 * time.Second}
 		http.HandleFunc("/oauth/callback", handler)
 
 		go func() {
@@ -192,18 +192,18 @@ func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus, errNotF
 	if viper.GetString("uuid") != "" {
 		changeUuid, err = uuid.Parse(viper.GetString("uuid"))
 		if err != nil {
-			return uuid.Nil, fmt.Errorf("invalid --uuid value '%v', error: %v", viper.GetString("uuid"), err)
+			return uuid.Nil, fmt.Errorf("invalid --uuid value '%v', error: %w", viper.GetString("uuid"), err)
 		}
 	}
 
 	if viper.GetString("change") != "" {
 		changeUrl, err := url.ParseRequestURI(viper.GetString("change"))
 		if err != nil {
-			return uuid.Nil, fmt.Errorf("invalid --change value '%v', error: %v", viper.GetString("change"), err)
+			return uuid.Nil, fmt.Errorf("invalid --change value '%v', error: %w", viper.GetString("change"), err)
 		}
 		changeUuid, err = uuid.Parse(path.Base(changeUrl.Path))
 		if err != nil {
-			return uuid.Nil, fmt.Errorf("invalid --change value '%v', couldn't parse: %v", viper.GetString("change"), err)
+			return uuid.Nil, fmt.Errorf("invalid --change value '%v', couldn't parse: %w", viper.GetString("change"), err)
 		}
 	}
 
