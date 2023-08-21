@@ -86,26 +86,16 @@ func GetBookmark(signals chan os.Signal, ready chan bool) int {
 	}
 	log.WithContext(ctx).WithFields(log.Fields{
 		"bookmark-uuid":        uuid.UUID(response.Msg.Bookmark.Metadata.UUID),
-		"bookmark-created":     response.Msg.Bookmark.Metadata.Created,
+		"bookmark-created":     response.Msg.Bookmark.Metadata.Created.AsTime(),
 		"bookmark-name":        response.Msg.Bookmark.Properties.Name,
 		"bookmark-description": response.Msg.Bookmark.Properties.Description,
 	}).Info("found bookmark")
-	for _, q := range response.Msg.Bookmark.Properties.Queries {
-		log.WithContext(ctx).WithFields(log.Fields{
-			"bookmark-query": q,
-		}).Info("found bookmark query")
-	}
-	for _, i := range response.Msg.Bookmark.Properties.ExcludedItems {
-		log.WithContext(ctx).WithFields(log.Fields{
-			"bookmark-excluded-item": i,
-		}).Info("found bookmark excluded item")
-	}
 
-	b, err := json.MarshalIndent(response.Msg.Bookmark.Properties, "", "  ")
+	b, err := json.MarshalIndent(response.Msg.Bookmark.ToMap(), "", "  ")
 	if err != nil {
 		log.Infof("Error rendering bookmark: %v", err)
 	} else {
-		log.Info(string(b))
+		fmt.Println(string(b))
 	}
 
 	return 0
