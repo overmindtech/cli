@@ -91,6 +91,7 @@ func Request(signals chan os.Signal, ready chan bool) int {
 	// nolint: bodyclose // nhooyr.io/websocket reads the body internally
 	c, _, err := websocket.Dial(ctx, gatewayUrl, options)
 	if err != nil {
+		lf["gateway-url"] = gatewayUrl
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
 		return 1
 	}
@@ -342,8 +343,9 @@ func createInitialRequest() (*sdp.GatewayRequest, error) {
 		msgID := uuid.New()
 		req.RequestType = &sdp.GatewayRequest_LoadBookmark{
 			LoadBookmark: &sdp.LoadBookmark{
-				UUID:  bookmarkUUID[:],
-				MsgID: msgID[:],
+				UUID:        bookmarkUUID[:],
+				MsgID:       msgID[:],
+				IgnoreCache: viper.GetBool("ignore-cache"),
 			},
 		}
 	case "load-snapshot":
@@ -374,6 +376,7 @@ func init() {
 	requestCmd.PersistentFlags().String("query-type", "*", "The type to query")
 	requestCmd.PersistentFlags().String("query", "", "The actual query to send")
 	requestCmd.PersistentFlags().String("query-scope", "*", "The scope to query")
+	requestCmd.PersistentFlags().Bool("ignore-cache", false, "Set to true to ignore all caches in overmind.")
 
 	requestCmd.PersistentFlags().String("bookmark-uuid", "", "The UUID of the bookmark to load")
 	requestCmd.PersistentFlags().String("snapshot-uuid", "", "The UUID of the snapshot to load")
