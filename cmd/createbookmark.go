@@ -122,7 +122,7 @@ func CreateBookmark(signals chan os.Signal, ready chan bool) int {
 	if err != nil {
 		log.Infof("Error rendering bookmark: %v", err)
 	} else {
-		log.Info(string(b))
+		fmt.Println(string(b))
 	}
 
 	return 0
