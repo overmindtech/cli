@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
@@ -84,8 +85,8 @@ func GetSnapshot(signals chan os.Signal, ready chan bool) int {
 		return 1
 	}
 	log.WithContext(ctx).WithFields(log.Fields{
-		"snapshot-uuid":        response.Msg.Snapshot.Metadata.UUID,
-		"snapshot-created":     response.Msg.Snapshot.Metadata.Created,
+		"snapshot-uuid":        uuid.UUID(response.Msg.Snapshot.Metadata.UUID),
+		"snapshot-created":     response.Msg.Snapshot.Metadata.Created.AsTime(),
 		"snapshot-name":        response.Msg.Snapshot.Properties.Name,
 		"snapshot-description": response.Msg.Snapshot.Properties.Description,
 	}).Info("found snapshot")
@@ -104,6 +105,14 @@ func GetSnapshot(signals chan os.Signal, ready chan bool) int {
 			"snapshot-item": i,
 		}).Info("found snapshot item")
 	}
+
+	b, err := json.MarshalIndent(response.Msg.Snapshot.ToMap(), "", "  ")
+	if err != nil {
+		log.Infof("Error rendering snapshot: %v", err)
+	} else {
+		fmt.Println(string(b))
+	}
+
 	return 0
 }
 

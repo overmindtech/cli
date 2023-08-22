@@ -291,6 +291,22 @@ responses:
 	return 0
 }
 
+func methodFromString(method string) (sdp.QueryMethod, error) {
+	var result sdp.QueryMethod
+
+	switch method {
+	case "get":
+		result = sdp.QueryMethod_GET
+	case "list":
+		result = sdp.QueryMethod_LIST
+	case "search":
+		result = sdp.QueryMethod_SEARCH
+	default:
+		return 0, fmt.Errorf("query method '%v' not supported", method)
+	}
+	return result, nil
+}
+
 func createInitialRequest() (*sdp.GatewayRequest, error) {
 	req := &sdp.GatewayRequest{
 		MinStatusInterval: minStatusInterval,
@@ -299,17 +315,9 @@ func createInitialRequest() (*sdp.GatewayRequest, error) {
 
 	switch viper.GetString("request-type") {
 	case "query":
-		var method sdp.QueryMethod
-
-		switch viper.GetString("query-method") {
-		case "get":
-			method = sdp.QueryMethod_GET
-		case "list":
-			method = sdp.QueryMethod_LIST
-		case "search":
-			method = sdp.QueryMethod_SEARCH
-		default:
-			return nil, fmt.Errorf("query method %v not supported", viper.GetString("query-method"))
+		method, err := methodFromString(viper.GetString("query-method"))
+		if err != nil {
+			return nil, err
 		}
 
 		req.RequestType = &sdp.GatewayRequest_Query{

@@ -259,7 +259,7 @@ func init() {
 	rootCmd.PersistentFlags().String("api-key", "", "The API key to use for authentication, also read from OVM_API_KEY environment variable")
 	err := viper.BindEnv("api-key", "OVM_API_KEY", "API_KEY")
 	if err != nil {
-		log.WithError(err).Fatal("could not bind token")
+		log.WithError(err).Fatal("could not bind api key to env")
 	}
 	rootCmd.PersistentFlags().String("api-key-url", "", "The overmind API Keys endpoint (defaults to --url)")
 	rootCmd.PersistentFlags().String("auth0-client-id", "j3LylZtIosVPZtouKI8WuVHmE6Lluva1", "OAuth Client ID to use when connecting with auth")
