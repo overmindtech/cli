@@ -6,12 +6,16 @@ runs:
   steps:
     - name: Set up Go
       uses: actions/setup-go@v4
+      with:
+        go-version: 1.x
+        check-latest: true
 
     - name: Checkout
       uses: actions/checkout@v3
       with:
         repository: overmindtech/aws-source
         path: ./aws-source
+
     - name: Checkout
       uses: actions/checkout@v3
       with:
