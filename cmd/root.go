@@ -266,13 +266,14 @@ func init() {
 	rootCmd.PersistentFlags().String("auth0-domain", "om-prod.eu.auth0.com", "Auth0 domain to connect to")
 
 	// tracing
-	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb")
-	rootCmd.PersistentFlags().String("sentry-dsn", "", "If specified, configures sentry libraries to capture errors")
+	rootCmd.PersistentFlags().Bool("otel", false, "If specified, configures opentelemetry and - optionally, see --sentry-dsn - sentry using their default environment configs.")
+	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb. This requires --otel to be set.")
+	rootCmd.PersistentFlags().String("sentry-dsn", "", "If specified, configures sentry libraries to capture errors. This requires --otel to be set.")
 	rootCmd.PersistentFlags().String("run-mode", "release", "Set the run mode for this service, 'release', 'debug' or 'test'. Defaults to 'release'.")
-	rootCmd.PersistentFlags().Bool("json-log", false, "Set to true to emit logs as json for easier parsing")
+	rootCmd.PersistentFlags().Bool("json-log", false, "Set to true to emit logs as json for easier parsing.")
 
 	// debugging
-	rootCmd.PersistentFlags().Bool("stdout-trace-dump", false, "Dump all otel traces to stdout for debugging")
+	rootCmd.PersistentFlags().Bool("stdout-trace-dump", false, "Dump all otel traces to stdout for debugging. This requires --otel to be set.")
 
 	// Run this before we do anything to set up the loglevel
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {

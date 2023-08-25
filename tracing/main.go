@@ -86,7 +86,7 @@ func tracingResource() *resource.Resource {
 var tp *sdktrace.TracerProvider
 
 func InitTracerWithHoneycomb(key string, opts ...otlptracehttp.Option) error {
-	if key != "" {
+	if key != "" && viper.GetBool("otel") {
 		opts = append(opts,
 			otlptracehttp.WithEndpoint("api.honeycomb.io"),
 			otlptracehttp.WithHeaders(map[string]string{"x-honeycomb-team": key}),
@@ -96,30 +96,32 @@ func InitTracerWithHoneycomb(key string, opts ...otlptracehttp.Option) error {
 }
 
 func InitTracer(opts ...otlptracehttp.Option) error {
-	if sentry_dsn := viper.GetString("sentry-dsn"); sentry_dsn != "" {
-		var environment string
-		if viper.GetString("run-mode") == "release" {
-			environment = "prod"
-		} else {
-			environment = "dev"
+	if viper.GetBool("otel") {
+		if sentry_dsn := viper.GetString("sentry-dsn"); sentry_dsn != "" {
+			var environment string
+			if viper.GetString("run-mode") == "release" {
+				environment = "prod"
+			} else {
+				environment = "dev"
+			}
+			err := sentry.Init(sentry.ClientOptions{
+				Dsn:              sentry_dsn,
+				AttachStacktrace: true,
+				EnableTracing:    false,
+				Environment:      environment,
+				// Set TracesSampleRate to 1.0 to capture 100%
+				// of transactions for performance monitoring.
+				// We recommend adjusting this value in production,
+				TracesSampleRate: 1.0,
+			})
+			if err != nil {
+				log.Errorf("sentry.Init: %s", err)
+			}
+			// setup recovery for an unexpected panic in this function
+			defer sentry.Flush(2 * time.Second)
+			defer sentry.Recover()
+			log.Info("sentry configured")
 		}
-		err := sentry.Init(sentry.ClientOptions{
-			Dsn:              sentry_dsn,
-			AttachStacktrace: true,
-			EnableTracing:    false,
-			Environment:      environment,
-			// Set TracesSampleRate to 1.0 to capture 100%
-			// of transactions for performance monitoring.
-			// We recommend adjusting this value in production,
-			TracesSampleRate: 1.0,
-		})
-		if err != nil {
-			log.Errorf("sentry.Init: %s", err)
-		}
-		// setup recovery for an unexpected panic in this function
-		defer sentry.Flush(2 * time.Second)
-		defer sentry.Recover()
-		log.Info("sentry configured")
 	}
 
 	client := otlptracehttp.NewClient(opts...)
@@ -129,21 +131,28 @@ func InitTracer(opts ...otlptracehttp.Option) error {
 	}
 	log.Infof("otlptracehttp client configured itself: %v", client)
 
-	tracerOpts := []sdktrace.TracerProviderOption{
-		sdktrace.WithBatcher(otlpExp, sdktrace.WithMaxQueueSize(50000)),
-		sdktrace.WithResource(tracingResource()),
-		sdktrace.WithSampler(sdktrace.ParentBased(NewUserAgentSampler("ELB-HealthChecker/2.0", 200))),
-	}
-	if viper.GetBool("stdout-trace-dump") {
-		stdoutExp, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
-		if err != nil {
-			return err
+	tracerOpts := []sdktrace.TracerProviderOption{}
+
+	if viper.GetBool("otel") {
+		tracerOpts = []sdktrace.TracerProviderOption{
+			sdktrace.WithBatcher(otlpExp, sdktrace.WithMaxQueueSize(50000)),
+			sdktrace.WithResource(tracingResource()),
+			sdktrace.WithSampler(sdktrace.ParentBased(NewUserAgentSampler("ELB-HealthChecker/2.0", 200))),
 		}
-		tracerOpts = append(tracerOpts, sdktrace.WithBatcher(stdoutExp))
+
+		if viper.GetBool("stdout-trace-dump") {
+			stdoutExp, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
+			if err != nil {
+				return err
+			}
+			tracerOpts = append(tracerOpts, sdktrace.WithBatcher(stdoutExp))
+		}
 	}
 	tp = sdktrace.NewTracerProvider(tracerOpts...)
 	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+	if viper.GetBool("otel") {
+		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+	}
 	return nil
 }
 
