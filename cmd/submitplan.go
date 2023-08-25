@@ -6,7 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
+	"os/user"
+	"strings"
 	"syscall"
 	"time"
 
@@ -209,6 +212,36 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 	return changing_items, nil
 }
 
+func changeTitle(arg string) string {
+	if arg != "" {
+		// easy, return the user's choice
+		return arg
+	}
+
+	describeBytes, err := exec.Command("git", "describe", "--long").Output()
+	describe := strings.TrimSpace(string(describeBytes))
+	if err != nil {
+		log.WithError(err).Trace("failed to run 'git describe' for default title")
+		describe, err = os.Getwd()
+		if err != nil {
+			log.WithError(err).Trace("failed to get current directory for default title")
+			describe = "unknown"
+		}
+	}
+
+	u, err := user.Current()
+	var username string
+	if err != nil {
+		log.WithError(err).Trace("failed to get current user for default title")
+		username = "unknown"
+	}
+	username = u.Username
+
+	result := fmt.Sprintf("Deployment from %v by %v", describe, username)
+	log.WithField("generated-title", result).Infof("using default title")
+	return result
+}
+
 func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
@@ -260,10 +293,11 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 	}
 
 	if changeUuid == uuid.Nil {
+		title := changeTitle(viper.GetString("title"))
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 			Msg: &sdp.CreateChangeRequest{
 				Properties: &sdp.ChangeProperties{
-					Title:       viper.GetString("title"),
+					Title:       title,
 					Description: viper.GetString("description"),
 					TicketLink:  viper.GetString("ticket-link"),
 					Owner:       viper.GetString("owner"),
@@ -551,7 +585,7 @@ func init() {
 	submitPlanCmd.PersistentFlags().String("plan-json", "./tfplan.json", "Parse changing items from this terraform plan JSON file. Generate this using 'terraform show -json PLAN_FILE'")
 	must(submitPlanCmd.PersistentFlags().MarkHidden("plan-json")) // better suited by using `args`
 
-	submitPlanCmd.PersistentFlags().String("title", "", "Short title for this change.")
+	submitPlanCmd.PersistentFlags().String("title", "", "Short title for this change. If this is not specified, ovm-cli will try to come up with one for you.")
 	submitPlanCmd.PersistentFlags().String("description", "", "Quick description of the change.")
 	submitPlanCmd.PersistentFlags().String("ticket-link", "*", "Link to the ticket for this change.")
 	submitPlanCmd.PersistentFlags().String("owner", "", "The owner of this change.")

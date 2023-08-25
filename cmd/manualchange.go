@@ -84,10 +84,11 @@ func ManualChange(signals chan os.Signal, ready chan bool) int {
 	}
 
 	if changeUuid == uuid.Nil {
+		title := changeTitle(viper.GetString("title"))
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 			Msg: &sdp.CreateChangeRequest{
 				Properties: &sdp.ChangeProperties{
-					Title:       viper.GetString("title"),
+					Title:       title,
 					Description: viper.GetString("description"),
 					TicketLink:  viper.GetString("ticket-link"),
 					Owner:       viper.GetString("owner"),
