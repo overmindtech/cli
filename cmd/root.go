@@ -316,3 +316,11 @@ func initConfig() {
 	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv() // read in environment variables that match
 }
+
+// must panics if the passed in error is not nil
+// use this for init-time error checking of viper/cobra stuff that sometimes errors if the flag does not exist
+func must(err error) {
+	if err != nil {
+		panic(fmt.Errorf("error initialising: %w", err))
+	}
+}

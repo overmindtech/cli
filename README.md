@@ -41,7 +41,7 @@ Upload a terraform plan to overmind for Blast Radius Analysis:
 
 ```
 terraform show -json ./tfplan > ./tfplan.json
-ovm-cli submit-plan --title "example change" --plan-json ./tfplan.json
+ovm-cli submit-plan --title "example change" ./tfplan1.json ./tfplan2.json ./tfplan3.json
 ```
 
 ## Terraform ➡ Overmind Mapping

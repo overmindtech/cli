@@ -28,8 +28,20 @@ import (
 
 // submitPlanCmd represents the submit-plan command
 var submitPlanCmd = &cobra.Command{
-	Use:   "submit-plan [--title TITLE] [--description DESCRIPTION] [--ticket-link URL] [--plan-json FILE]",
+	Use:   "submit-plan [--title TITLE] [--description DESCRIPTION] [--ticket-link URL] FILE [FILE ...]",
 	Short: "Creates a new Change from a given terraform plan file",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return errors.New("no plan files specified")
+		}
+		for _, f := range args {
+			_, err := os.Stat(f)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	},
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
 		err := viper.BindPFlags(cmd.Flags())
@@ -42,7 +54,10 @@ var submitPlanCmd = &cobra.Command{
 
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-		exitcode := SubmitPlan(sigs, nil)
+		if viper.GetString("plan-json") != "" {
+			args = append(args, viper.GetString("plan-json"))
+		}
+		exitcode := SubmitPlan(sigs, args, nil)
 		tracing.ShutdownTracer()
 		os.Exit(exitcode)
 	},
@@ -54,14 +69,22 @@ type TfData struct {
 	Values  map[string]any
 }
 
-func changingItemQueriesFromPlan(ctx context.Context, planJSON []byte, lf log.Fields) ([]*sdp.Query, error) {
-	var plan Plan
-	err := json.Unmarshal(planJSON, &plan)
+func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fields) ([]*sdp.Query, error) {
+	var changing_items []*sdp.Query
+
+	// read results from `terraform show -json ${tfplan file}`
+	planJSON, err := os.ReadFile(fileName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse %v: %w", viper.GetString("plan-json"), err)
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read terraform file")
+		return changing_items, err
 	}
 
-	var changing_items []*sdp.Query
+	var plan Plan
+	err = json.Unmarshal(planJSON, &plan)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse %v: %w", fileName, err)
+	}
+
 	// for all managed resources:
 	for _, resourceChange := range plan.ResourceChanges {
 		if len(resourceChange.Change.Actions) == 0 || resourceChange.Change.Actions[0] == "no-op" {
@@ -186,7 +209,7 @@ func changingItemQueriesFromPlan(ctx context.Context, planJSON []byte, lf log.Fi
 	return changing_items, nil
 }
 
-func SubmitPlan(signals chan os.Signal, ready chan bool) int {
+func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
 		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
@@ -216,19 +239,18 @@ func SubmitPlan(signals chan os.Signal, ready chan bool) int {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	// read results from `terraform show -json ${tfplan file}`
-	contents, err := os.ReadFile(viper.GetString("plan-json"))
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read terraform file")
-		return 1
+	queries := []*sdp.Query{}
+	for _, f := range files {
+		lf["file"] = f
+		log.WithContext(ctx).WithFields(lf).Info("resolving items from terraform plan")
+		q, err := changingItemQueriesFromPlan(ctx, f, lf)
+		if err != nil {
+			log.WithContext(ctx).WithError(err).WithFields(lf).Error("parse terraform plan")
+			return 1
+		}
+		queries = append(queries, q...)
 	}
-
-	log.WithContext(ctx).WithFields(lf).Info("resolving items from terraform plan")
-	queries, err := changingItemQueriesFromPlan(ctx, contents, lf)
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("parse terraform plan")
-		return 1
-	}
+	delete(lf, "file")
 
 	client := AuthenticatedChangesClient(ctx)
 	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, false)
@@ -527,6 +549,7 @@ func init() {
 	submitPlanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
 
 	submitPlanCmd.PersistentFlags().String("plan-json", "./tfplan.json", "Parse changing items from this terraform plan JSON file. Generate this using 'terraform show -json PLAN_FILE'")
+	must(submitPlanCmd.PersistentFlags().MarkHidden("plan-json")) // better suited by using `args`
 
 	submitPlanCmd.PersistentFlags().String("title", "", "Short title for this change.")
 	submitPlanCmd.PersistentFlags().String("description", "", "Quick description of the change.")

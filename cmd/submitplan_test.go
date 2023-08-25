@@ -2,21 +2,13 @@ package cmd
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/sirupsen/logrus"
 )
 
 func TestChangingItemQueriesFromPlan(t *testing.T) {
-	testFile := "testdata/plan.json"
-	planJSON, err := os.ReadFile(testFile)
-
-	if err != nil {
-		t.Errorf("Error reading %v: %v", testFile, err)
-	}
-
-	queries, err := changingItemQueriesFromPlan(context.Background(), planJSON, logrus.Fields{})
+	queries, err := changingItemQueriesFromPlan(context.Background(), "testdata/plan.json", logrus.Fields{})
 
 	if err != nil {
 		t.Error(err)
