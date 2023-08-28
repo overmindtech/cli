@@ -6,10 +6,12 @@ require (
 	github.com/bufbuild/connect-go v1.10.0
 	github.com/getsentry/sentry-go v0.23.0
 	github.com/google/uuid v1.3.1
-	github.com/overmindtech/sdp-go v0.45.0
+	github.com/mattn/go-isatty v0.0.19
+	github.com/overmindtech/sdp-go v0.46.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
+	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.2.2
 	github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b
 	go.opentelemetry.io/contrib/detectors/aws/ec2 v1.17.0
@@ -40,7 +42,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nats-io/nats-server/v2 v2.9.20 // indirect
 	github.com/nats-io/nats.go v1.28.0 // indirect
@@ -54,7 +55,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
-	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31 // indirect
 	github.com/uptrace/opentelemetry-go-extra/otelutil v0.2.2 // indirect
 	github.com/xiam/to v0.0.0-20191116183551-8328998fc0ed // indirect
 	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.16.0 // indirect

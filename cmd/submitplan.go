@@ -314,11 +314,11 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 
 	// Log the types
 	for typ, mappings := range mappedPlan.SupportedChanges {
-		log.WithContext(ctx).Infof(Green.Color("    ✓ %v (%v)"), typ, len(mappings))
+		log.WithContext(ctx).Infof(Green.Color("  ✓ %v (%v)"), typ, len(mappings))
 	}
 
 	for typ, mappings := range mappedPlan.UnsupportedChanges {
-		log.WithContext(ctx).Infof(Yellow.Color("    ✗ %v (%v)"), typ, len(mappings))
+		log.WithContext(ctx).Infof(Yellow.Color("  ✗ %v (%v)"), typ, len(mappings))
 	}
 
 	return mappedPlan, nil
@@ -627,7 +627,7 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 		// nicer and do things like tell you why it failed, but for now this
 		// will have to do
 		for tfType, mappings := range planMappings.SupportedChanges {
-			log.WithContext(ctx).Infof("    %v", tfType)
+			log.WithContext(ctx).Infof("  %v", tfType)
 
 			for _, mapping := range mappings {
 				queryUUID := mapping.OvermindQuery.ParseUuid()
@@ -642,9 +642,9 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 				}
 
 				if found {
-					log.WithContext(ctx).Infof(Green.Color("        ✓ %v (found)"), mapping.TerraformResource.Name)
+					log.WithContext(ctx).Infof(Green.Color("    ✓ %v (found)"), mapping.TerraformResource.Name)
 				} else {
-					log.WithContext(ctx).Infof(Red.Color("        ✗ %v (not found)"), mapping.TerraformResource.Name)
+					log.WithContext(ctx).Infof(Red.Color("    ✗ %v (not found)"), mapping.TerraformResource.Name)
 
 					relatedErrors, found := queryErrors[queryUUID]
 
@@ -654,7 +654,7 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 								"type":      err.ErrorType,
 								"source":    err.SourceName,
 								"responder": err.ResponderName,
-							}).Errorf("            %v", err.ErrorString)
+							}).Errorf("      %v", err.ErrorString)
 						}
 					}
 				}
