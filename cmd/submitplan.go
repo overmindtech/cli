@@ -69,14 +69,79 @@ type TfData struct {
 	Values  map[string]any
 }
 
-func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fields) ([]*sdp.Query, error) {
-	var changing_items []*sdp.Query
+type MappedPlan struct {
+	// Map of unsupported types and their changes
+	UnsupportedChanges map[string][]ResourceChange
+
+	// Map of supported types and their mapped queries
+	SupportedChanges map[string][]TerraformToOvermindMapping
+}
+
+func (m MappedPlan) NumUnsupportedChanges() int {
+	var num int
+
+	for _, v := range m.UnsupportedChanges {
+		num += len(v)
+	}
+
+	return num
+}
+
+func (m MappedPlan) NumSupportedChanges() int {
+	var num int
+
+	for _, v := range m.SupportedChanges {
+		num += len(v)
+	}
+
+	return num
+}
+
+func (m MappedPlan) Queries() []*sdp.Query {
+	queries := make([]*sdp.Query, 0)
+
+	for _, mappings := range m.SupportedChanges {
+		for _, mapping := range mappings {
+			queries = append(queries, mapping.OvermindQuery)
+		}
+	}
+
+	return queries
+}
+
+func NewMappedPlan() *MappedPlan {
+	return &MappedPlan{
+		UnsupportedChanges: make(map[string][]ResourceChange),
+		SupportedChanges:   make(map[string][]TerraformToOvermindMapping),
+	}
+}
+
+// Merges another mapped plan into this one
+func (m *MappedPlan) Merge(other *MappedPlan) {
+	for k, v := range other.UnsupportedChanges {
+		m.UnsupportedChanges[k] = append(m.UnsupportedChanges[k], v...)
+	}
+
+	for k, v := range other.SupportedChanges {
+		m.SupportedChanges[k] = append(m.SupportedChanges[k], v...)
+	}
+}
+
+type TerraformToOvermindMapping struct {
+	TerraformResource *Resource
+	OvermindQuery     *sdp.Query
+}
+
+func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fields) (*MappedPlan, error) {
+	mappedPlan := NewMappedPlan()
+
+	var overmindMappings []TerraformToOvermindMapping
 
 	// read results from `terraform show -json ${tfplan file}`
 	planJSON, err := os.ReadFile(fileName)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read terraform file")
-		return changing_items, err
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to read terraform plan")
+		return nil, err
 	}
 
 	var plan Plan
@@ -85,6 +150,9 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 		return nil, fmt.Errorf("failed to parse %v: %w", fileName, err)
 	}
 
+	// Track how many valid resource changes there are in the plan
+	numPlanResourceChanges := 0
+
 	// for all managed resources:
 	for _, resourceChange := range plan.ResourceChanges {
 		if len(resourceChange.Change.Actions) == 0 || resourceChange.Change.Actions[0] == "no-op" {
@@ -92,18 +160,21 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 			continue
 		}
 
+		numPlanResourceChanges++
+
 		awsMappings := datamaps.AwssourceData[resourceChange.Type]
 		k8sMappings := datamaps.K8ssourceData[resourceChange.Type]
 
 		mappings := append(awsMappings, k8sMappings...)
 
 		if len(mappings) == 0 {
-			log.WithContext(ctx).WithFields(lf).WithField("terraform-address", resourceChange.Address).Warn("skipping unmapped resource")
+			log.WithContext(ctx).WithFields(lf).WithField("terraform-address", resourceChange.Address).Debug("Skipping unmapped resource")
 			continue
 		}
 
-		var currentResource *Resource
 		for _, mapData := range mappings {
+			var currentResource *Resource
+
 			// Look for the resource in the prior values first, since this is
 			// the *previous* state we're like to be able to find it in the
 			// actual infra
@@ -120,7 +191,7 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 				log.WithContext(ctx).
 					WithFields(lf).
 					WithField("terraform-address", resourceChange.Address).
-					WithField("terraform-query-field", mapData.QueryField).Warn("skipping resource without values")
+					WithField("terraform-query-field", mapData.QueryField).Warn("Skipping resource without values")
 				continue
 			}
 
@@ -129,7 +200,7 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 				log.WithContext(ctx).
 					WithFields(lf).
 					WithField("terraform-address", resourceChange.Address).
-					WithField("terraform-query-field", mapData.QueryField).Warn("skipping resource without query field")
+					WithField("terraform-query-field", mapData.QueryField).Warn("Skipping resource without query field")
 				continue
 			}
 
@@ -146,7 +217,7 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 					log.WithContext(ctx).
 						WithFields(lf).
 						WithField("terraform-address", resourceChange.Address).
-						Debug("skipping provider mapping for resource without config")
+						Debug("Skipping provider mapping for resource without config")
 				} else {
 					// Look up the provider config key in the mappings
 					mappings := make(map[string]map[string]string)
@@ -158,7 +229,7 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 							WithFields(lf).
 							WithField("terraform-address", resourceChange.Address).
 							WithError(err).
-							Error("failed to parse overmind_mappings output")
+							Error("Failed to parse overmind_mappings output")
 					} else {
 						currentProviderMappings, ok := mappings[configResource.ProviderConfigKey]
 
@@ -167,7 +238,7 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 								WithFields(lf).
 								WithField("terraform-address", resourceChange.Address).
 								WithField("provider-config-key", configResource.ProviderConfigKey).
-								Info("found provider mappings")
+								Debug("Found provider mappings")
 
 							// We have mappings for this provider, so set them
 							// in the `provider_mapping` value
@@ -181,7 +252,7 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 			scope, err := InterpolateScope(mapData.Scope, dataMap)
 
 			if err != nil {
-				log.WithContext(ctx).WithError(err).Infof("could not find scope mapping variables %v, adding them will result in better results. Error: ", mapData.Scope)
+				log.WithContext(ctx).WithError(err).Debugf("Could not find scope mapping variables %v, adding them will result in better results. Error: ", mapData.Scope)
 				scope = "*"
 			}
 
@@ -195,18 +266,62 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 				UUID:               u[:],
 			}
 
-			changing_items = append(changing_items, &newQuery)
+			overmindMappings = append(overmindMappings, TerraformToOvermindMapping{
+				TerraformResource: currentResource,
+				OvermindQuery:     &newQuery,
+			})
 
 			log.WithContext(ctx).WithFields(log.Fields{
 				"scope":  newQuery.Scope,
 				"type":   newQuery.Type,
 				"query":  newQuery.Query,
 				"method": newQuery.Method.String(),
-			}).Debug("mapped terraform to query")
+			}).Debug("Mapped terraform to query")
 		}
 	}
 
-	return changing_items, nil
+	// Group plan changes by type, we will later delete the types that were
+	// mapped successfully
+	for _, resourceChange := range plan.ResourceChanges {
+		mappedPlan.UnsupportedChanges[resourceChange.Type] = append(mappedPlan.UnsupportedChanges[resourceChange.Type], resourceChange)
+	}
+
+	// Group mapped items by type
+	for _, mapping := range overmindMappings {
+		mappedPlan.SupportedChanges[mapping.TerraformResource.Type] = append(mappedPlan.SupportedChanges[mapping.TerraformResource.Type], mapping)
+		// Delete supported type from unsupported map
+		delete(mappedPlan.UnsupportedChanges, mapping.TerraformResource.Type)
+	}
+
+	resourceWord := "resource"
+	if len(overmindMappings) > 1 {
+		resourceWord = "resources"
+	}
+
+	supported := ""
+
+	if mappedPlan.NumSupportedChanges() > 0 {
+		supported = Green.Color(fmt.Sprintf("%v supported", mappedPlan.NumSupportedChanges()))
+	}
+
+	unsupported := ""
+
+	if mappedPlan.NumUnsupportedChanges() > 0 {
+		unsupported = Yellow.Color(fmt.Sprintf("%v unsupported", mappedPlan.NumUnsupportedChanges()))
+	}
+
+	log.WithContext(ctx).Infof("Plan (%v) contained %v changing %v: %v %v", fileName, numPlanResourceChanges, resourceWord, supported, unsupported)
+
+	// Log the types
+	for typ, mappings := range mappedPlan.SupportedChanges {
+		log.WithContext(ctx).Infof(Green.Color("    ✓ %v (%v)"), typ, len(mappings))
+	}
+
+	for typ, mappings := range mappedPlan.UnsupportedChanges {
+		log.WithContext(ctx).Infof(Yellow.Color("    ✗ %v (%v)"), typ, len(mappings))
+	}
+
+	return mappedPlan, nil
 }
 
 func changeTitle(arg string) string {
@@ -235,7 +350,7 @@ func changeTitle(arg string) string {
 	username = u.Username
 
 	result := fmt.Sprintf("Deployment from %v by %v", describe, username)
-	log.WithField("generated-title", result).Infof("using default title")
+	log.WithField("generated-title", result).Debug("Using default title")
 	return result
 }
 
@@ -269,23 +384,30 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	queries := []*sdp.Query{}
+	fileWord := "file"
+	if len(files) > 1 {
+		fileWord = "files"
+	}
+
+	log.WithContext(ctx).Infof("Reading %v plan %v", len(files), fileWord)
+
+	planMappings := NewMappedPlan()
+
 	for _, f := range files {
 		lf["file"] = f
-		log.WithContext(ctx).WithFields(lf).Info("resolving items from terraform plan")
-		q, err := changingItemQueriesFromPlan(ctx, f, lf)
+		mappings, err := changingItemQueriesFromPlan(ctx, f, lf)
 		if err != nil {
-			log.WithContext(ctx).WithError(err).WithFields(lf).Error("parse terraform plan")
+			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Error parsing terraform plan")
 			return 1
 		}
-		queries = append(queries, q...)
+		planMappings.Merge(mappings)
 	}
 	delete(lf, "file")
 
 	client := AuthenticatedChangesClient(ctx)
 	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, false)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to searching for existing changes")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed searching for existing changes")
 		return 1
 	}
 
@@ -303,32 +425,31 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 			},
 		})
 		if err != nil {
-			log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to create change")
+			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to create change")
 			return 1
 		}
 
 		maybeChangeUuid := createResponse.Msg.Change.Metadata.GetUUIDParsed()
 		if maybeChangeUuid == nil {
-			log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read change id")
+			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to read change id")
 			return 1
 		}
 
 		changeUuid = *maybeChangeUuid
 		lf["change"] = changeUuid
-		log.WithContext(ctx).WithFields(lf).Info("created a new change")
+		log.WithContext(ctx).WithFields(lf).Info("Created a new change")
 	} else {
 		lf["change"] = changeUuid
-		log.WithContext(ctx).WithFields(lf).Info("re-using change")
+		log.WithContext(ctx).WithFields(lf).Info("Re-using change")
 	}
 
 	receivedItems := []*sdp.Reference{}
 
-	if len(queries) > 0 {
+	if len(planMappings.Queries()) > 0 {
 		options := &websocket.DialOptions{
 			HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
 		}
 
-		log.WithContext(ctx).WithFields(lf).WithField("item_count", len(queries)).Info("identifying items")
 		// nolint: bodyclose // nhooyr.io/websocket reads the body internally
 		c, _, err := websocket.Dial(ctx, viper.GetString("gateway-url"), options)
 		if err != nil {
@@ -342,7 +463,7 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 
 		queriesSentChan := make(chan struct{})
 		go func() {
-			for _, q := range queries {
+			for _, q := range planMappings.Queries() {
 				req := sdp.GatewayRequest{
 					MinStatusInterval: minStatusInterval,
 					RequestType: &sdp.GatewayRequest_Query{
@@ -431,13 +552,13 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 						allDone := allDone(ctx, activeQueries, lf)
 						statusFields["allDone"] = allDone
 						if allDone && queriesSent {
-							log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders and queries done")
+							log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("All responders and queries done")
 							break responses
 						} else {
-							log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders done, with unfinished queries")
+							log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("All responders done, with unfinished queries")
 						}
 					} else {
-						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("still waiting for responders")
+						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debug("Still waiting for responders")
 					}
 
 				case *sdp.GatewayResponse_QueryStatus:
@@ -447,7 +568,7 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 					}
 					queryUuid := status.GetUUIDParsed()
 					if queryUuid == nil {
-						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("Received QueryStatus with nil UUID")
+						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debug("Received QueryStatus with nil UUID")
 						continue responses
 					}
 					statusFields["query"] = queryUuid
@@ -467,24 +588,24 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 						statusFields["unexpected_status"] = true
 					}
 
-					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("query status update")
+					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debug("Query status update")
 
 				case *sdp.GatewayResponse_NewItem:
 					item := resp.GetNewItem()
-					log.WithContext(ctx).WithFields(lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
+					log.WithContext(ctx).WithFields(lf).WithField("item", item.GloballyUniqueName()).Debug("New item")
 
 					receivedItems = append(receivedItems, item.Reference())
 
 				case *sdp.GatewayResponse_NewEdge:
-					log.WithContext(ctx).WithFields(lf).Debug("ignored edge")
+					log.WithContext(ctx).WithFields(lf).Debug("Ignored edge")
 
 				case *sdp.GatewayResponse_QueryError:
 					err := resp.GetQueryError()
-					log.WithContext(ctx).WithFields(lf).WithError(err).Errorf("Error from %v(%v)", err.ResponderName, err.SourceName)
+					log.WithContext(ctx).WithFields(lf).WithError(err).Debugf("Error from %v(%v)", err.ResponderName, err.SourceName)
 
 				case *sdp.GatewayResponse_Error:
 					err := resp.GetError()
-					log.WithContext(ctx).WithFields(lf).WithField(log.ErrorKey, err).Errorf("generic error")
+					log.WithContext(ctx).WithFields(lf).WithField(log.ErrorKey, err).Debug("Generic error")
 
 				default:
 					j := protojson.Format(resp)
@@ -493,13 +614,28 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 			}
 		}
 	} else {
-		log.WithContext(ctx).WithFields(lf).Info("no item queries mapped, skipping changing items")
+		log.WithContext(ctx).WithFields(lf).Info("No item queries mapped, skipping changing items")
+	}
+
+	// Print a summary of the results so far
+	log.WithContext(ctx).Infof("Finding expected changes in Overmind")
+
+	for tfType, mappings := range planMappings.SupportedChanges {
+		log.WithContext(ctx).Infof("    %v", tfType)
+
+		for _, mapping := range mappings {
+			// queryUUID := mapping.OvermindQuery.ParseUuid()
+
+			// TODO: Check the actual status each QUERY
+
+			log.WithContext(ctx).Infof(Green.Color("        %v (TODO)"), mapping.TerraformResource.Name)
+		}
 	}
 
 	if len(receivedItems) > 0 {
-		log.WithContext(ctx).WithFields(lf).WithField("received_items", len(receivedItems)).Info("updating changing items on the change record")
+		log.WithContext(ctx).WithFields(lf).WithField("received_items", len(receivedItems)).Info("Updating changing items on the change record")
 	} else {
-		log.WithContext(ctx).WithFields(lf).WithField("received_items", len(receivedItems)).Info("updating change record with no items")
+		log.WithContext(ctx).WithFields(lf).WithField("received_items", len(receivedItems)).Info("Updating change record with no items")
 	}
 	resultStream, err := client.UpdateChangingItems(ctx, &connect.Request[sdp.UpdateChangingItemsRequest]{
 		Msg: &sdp.UpdateChangingItemsRequest{
@@ -508,7 +644,7 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to update changing items")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to update changing items")
 		return 1
 	}
 
@@ -521,18 +657,18 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 		// to avoid spanning the cli output
 		time_since_last_log := time.Since(last_log)
 		if first_log || msg.State != sdp.CalculateBlastRadiusResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
-			log.WithContext(ctx).WithFields(lf).WithField("msg", msg).Info("status update")
+			log.WithContext(ctx).WithFields(lf).WithField("msg", msg).Info("Status update")
 			last_log = time.Now()
 			first_log = false
 		}
 	}
 	if resultStream.Err() != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(resultStream.Err()).Error("error streaming results")
+		log.WithContext(ctx).WithFields(lf).WithError(resultStream.Err()).Error("Error streaming results")
 		return 1
 	}
 
 	changeUrl := fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid)
-	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("change ready")
+	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("Change ready")
 	fmt.Println(changeUrl)
 
 	fetchResponse, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
@@ -541,21 +677,21 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to get updated change")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to get updated change")
 		return 1
 	}
 
 	for _, a := range fetchResponse.Msg.Change.Properties.AffectedAppsUUID {
 		appUuid, err := uuid.FromBytes(a)
 		if err != nil {
-			log.WithContext(ctx).WithFields(lf).WithError(err).WithField("app", a).Error("received invalid app uuid")
+			log.WithContext(ctx).WithFields(lf).WithError(err).WithField("app", a).Error("Received invalid app uuid")
 			continue
 		}
 		log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
 			"change-url": changeUrl,
 			"app":        appUuid,
 			"app-url":    fmt.Sprintf("%v/apps/%v", viper.GetString("frontend"), appUuid),
-		}).Info("affected app")
+		}).Info("Affected app")
 	}
 
 	return 0
@@ -565,7 +701,7 @@ func allDone(ctx context.Context, activeQueries map[uuid.UUID]bool, lf log.Field
 	allDone := true
 	for q := range activeQueries {
 		if activeQueries[q] {
-			log.WithContext(ctx).WithFields(lf).WithField("query", q).Debugf("query still active")
+			log.WithContext(ctx).WithFields(lf).WithField("query", q).Debugf("Query still active")
 			allDone = false
 			break
 		}

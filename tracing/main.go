@@ -129,7 +129,6 @@ func InitTracer(opts ...otlptracehttp.Option) error {
 	if err != nil {
 		return fmt.Errorf("creating OTLP trace exporter: %w", err)
 	}
-	log.Infof("otlptracehttp client configured itself: %v", client)
 
 	tracerOpts := []sdktrace.TracerProviderOption{}
 
