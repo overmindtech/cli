@@ -506,7 +506,7 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 						log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
 							"code":   e.Code.String(),
 							"reason": e.Reason,
-						}).Info("Websocket closing")
+						}).Debug("Websocket closing")
 						return
 					}
 					log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to read response")
