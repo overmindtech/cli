@@ -150,9 +150,6 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 		return nil, fmt.Errorf("failed to parse %v: %w", fileName, err)
 	}
 
-	// Track how many valid resource changes there are in the plan
-	numPlanResourceChanges := 0
-
 	// for all managed resources:
 	for _, resourceChange := range plan.ResourceChanges {
 		if len(resourceChange.Change.Actions) == 0 || resourceChange.Change.Actions[0] == "no-op" {
@@ -160,7 +157,9 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 			continue
 		}
 
-		numPlanResourceChanges++
+		// Track this change in the unsupported changes map. It will be moved to
+		// supported later if we find a mapping
+		mappedPlan.UnsupportedChanges[resourceChange.Type] = append(mappedPlan.UnsupportedChanges[resourceChange.Type], resourceChange)
 
 		awsMappings := datamaps.AwssourceData[resourceChange.Type]
 		k8sMappings := datamaps.K8ssourceData[resourceChange.Type]
@@ -280,12 +279,6 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 		}
 	}
 
-	// Group plan changes by type, we will later delete the types that were
-	// mapped successfully
-	for _, resourceChange := range plan.ResourceChanges {
-		mappedPlan.UnsupportedChanges[resourceChange.Type] = append(mappedPlan.UnsupportedChanges[resourceChange.Type], resourceChange)
-	}
-
 	// Group mapped items by type
 	for _, mapping := range overmindMappings {
 		mappedPlan.SupportedChanges[mapping.TerraformResource.Type] = append(mappedPlan.SupportedChanges[mapping.TerraformResource.Type], mapping)
@@ -310,7 +303,9 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 		unsupported = Yellow.Color(fmt.Sprintf("%v unsupported", mappedPlan.NumUnsupportedChanges()))
 	}
 
-	log.WithContext(ctx).Infof("Plan (%v) contained %v changing %v: %v %v", fileName, numPlanResourceChanges, resourceWord, supported, unsupported)
+	totalChanges := mappedPlan.NumSupportedChanges() + mappedPlan.NumUnsupportedChanges()
+
+	log.WithContext(ctx).Infof("Plan (%v) contained %v changing %v: %v %v", fileName, totalChanges, resourceWord, supported, unsupported)
 
 	// Log the types
 	for typ, mappings := range mappedPlan.SupportedChanges {
