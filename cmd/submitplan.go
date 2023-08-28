@@ -57,9 +57,6 @@ var submitPlanCmd = &cobra.Command{
 
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-		if viper.GetString("plan-json") != "" {
-			args = append(args, viper.GetString("plan-json"))
-		}
 		exitcode := SubmitPlan(sigs, args, nil)
 		tracing.ShutdownTracer()
 		os.Exit(exitcode)
@@ -581,9 +578,6 @@ func init() {
 
 	submitPlanCmd.PersistentFlags().String("changes-url", "", "The changes service API endpoint (defaults to --url)")
 	submitPlanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
-
-	submitPlanCmd.PersistentFlags().String("plan-json", "./tfplan.json", "Parse changing items from this terraform plan JSON file. Generate this using 'terraform show -json PLAN_FILE'")
-	must(submitPlanCmd.PersistentFlags().MarkHidden("plan-json")) // better suited by using `args`
 
 	submitPlanCmd.PersistentFlags().String("title", "", "Short title for this change. If this is not specified, ovm-cli will try to come up with one for you.")
 	submitPlanCmd.PersistentFlags().String("description", "", "Quick description of the change.")
