@@ -443,12 +443,14 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 		log.WithContext(ctx).WithFields(lf).Info("Re-using change")
 	}
 
-	receivedItems := []*sdp.Reference{}
+	receivedItems := make([]*sdp.Item, 0)
 
 	if len(planMappings.Queries()) > 0 {
 		options := &websocket.DialOptions{
 			HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
 		}
+
+		log.WithContext(ctx).Infof("Finding expected changes in Overmind")
 
 		// nolint: bodyclose // nhooyr.io/websocket reads the body internally
 		c, _, err := websocket.Dial(ctx, viper.GetString("gateway-url"), options)
@@ -594,7 +596,7 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 					item := resp.GetNewItem()
 					log.WithContext(ctx).WithFields(lf).WithField("item", item.GloballyUniqueName()).Debug("New item")
 
-					receivedItems = append(receivedItems, item.Reference())
+					receivedItems = append(receivedItems, item)
 
 				case *sdp.GatewayResponse_NewEdge:
 					log.WithContext(ctx).WithFields(lf).Debug("Ignored edge")
@@ -613,23 +615,34 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 				}
 			}
 		}
+
+		// Print a summary of the results so far. I would like for this to be
+		// nicer and do things like tell you why it failed, but for now this
+		// will have to do
+		for tfType, mappings := range planMappings.SupportedChanges {
+			log.WithContext(ctx).Infof("    %v", tfType)
+
+			for _, mapping := range mappings {
+				queryUUID := mapping.OvermindQuery.ParseUuid()
+
+				// Check for items matching this query UUID
+				found := false
+
+				for _, item := range receivedItems {
+					if item.Metadata.SourceQuery.ParseUuid() == queryUUID {
+						found = true
+					}
+				}
+
+				if found {
+					log.WithContext(ctx).Infof(Green.Color("        ✓ %v (found)"), mapping.TerraformResource.Name)
+				} else {
+					log.WithContext(ctx).Infof(Red.Color("        ✗ %v (not found)"), mapping.TerraformResource.Name)
+				}
+			}
+		}
 	} else {
 		log.WithContext(ctx).WithFields(lf).Info("No item queries mapped, skipping changing items")
-	}
-
-	// Print a summary of the results so far
-	log.WithContext(ctx).Infof("Finding expected changes in Overmind")
-
-	for tfType, mappings := range planMappings.SupportedChanges {
-		log.WithContext(ctx).Infof("    %v", tfType)
-
-		for _, mapping := range mappings {
-			// queryUUID := mapping.OvermindQuery.ParseUuid()
-
-			// TODO: Check the actual status each QUERY
-
-			log.WithContext(ctx).Infof(Green.Color("        %v (TODO)"), mapping.TerraformResource.Name)
-		}
 	}
 
 	if len(receivedItems) > 0 {
@@ -637,10 +650,17 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 	} else {
 		log.WithContext(ctx).WithFields(lf).WithField("received_items", len(receivedItems)).Info("Updating change record with no items")
 	}
+
+	changingItemRefs := make([]*sdp.Reference, len(receivedItems))
+
+	for i, item := range receivedItems {
+		changingItemRefs[i] = item.Reference()
+	}
+
 	resultStream, err := client.UpdateChangingItems(ctx, &connect.Request[sdp.UpdateChangingItemsRequest]{
 		Msg: &sdp.UpdateChangingItemsRequest{
 			ChangeUUID:    changeUuid[:],
-			ChangingItems: receivedItems,
+			ChangingItems: changingItemRefs,
 		},
 	})
 	if err != nil {
