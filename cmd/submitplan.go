@@ -518,6 +518,7 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 		}()
 
 		activeQueries := make(map[uuid.UUID]bool)
+		queryErrors := make(map[uuid.UUID][]*sdp.QueryError)
 		queriesSent := false
 
 		// Read the responses
@@ -603,6 +604,12 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 
 				case *sdp.GatewayResponse_QueryError:
 					err := resp.GetQueryError()
+					uuid := err.GetUUIDParsed()
+
+					if uuid != nil {
+						queryErrors[*uuid] = append(queryErrors[*uuid], err)
+					}
+
 					log.WithContext(ctx).WithFields(lf).WithError(err).Debugf("Error from %v(%v)", err.ResponderName, err.SourceName)
 
 				case *sdp.GatewayResponse_Error:
@@ -638,6 +645,18 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 					log.WithContext(ctx).Infof(Green.Color("        ✓ %v (found)"), mapping.TerraformResource.Name)
 				} else {
 					log.WithContext(ctx).Infof(Red.Color("        ✗ %v (not found)"), mapping.TerraformResource.Name)
+
+					relatedErrors, found := queryErrors[queryUUID]
+
+					if found {
+						for _, err := range relatedErrors {
+							log.WithContext(ctx).WithFields(log.Fields{
+								"type":      err.ErrorType,
+								"source":    err.SourceName,
+								"responder": err.ResponderName,
+							}).Errorf("            %v", err.ErrorString)
+						}
+					}
 				}
 			}
 		}
