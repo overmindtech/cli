@@ -550,7 +550,7 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 						allDone := allDone(ctx, activeQueries, lf)
 						statusFields["allDone"] = allDone
 						if allDone && queriesSent {
-							log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("All responders and queries done")
+							log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("All queries complete")
 							break responses
 						} else {
 							log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("All responders done, with unfinished queries")
@@ -650,6 +650,20 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 								"source":    err.SourceName,
 								"responder": err.ResponderName,
 							}).Errorf("      %v", err.ErrorString)
+						}
+					} else {
+						log.Error("      Could not find any errors for this query, printing all errors")
+						for _, errors := range queryErrors {
+							for _, err := range errors {
+								log.WithContext(ctx).WithFields(log.Fields{
+									"type":      err.ErrorType,
+									"source":    err.SourceName,
+									"responder": err.ResponderName,
+									"uuid":      err.GetUUIDParsed().String(),
+									"itemType":  err.ItemType,
+									"scope":     err.Scope,
+								}).Errorf("      %v", err.ErrorString)
+							}
 						}
 					}
 				}
