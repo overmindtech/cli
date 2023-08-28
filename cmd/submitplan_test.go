@@ -8,51 +8,65 @@ import (
 )
 
 func TestChangingItemQueriesFromPlan(t *testing.T) {
-	queries, err := changingItemQueriesFromPlan(context.Background(), "testdata/plan.json", logrus.Fields{})
+	mappedPlan, err := changingItemQueriesFromPlan(context.Background(), "testdata/plan.json", logrus.Fields{})
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	if len(queries) != 3 {
-		t.Errorf("Expected 3 queries, got %v", len(queries))
+	deployments, exists := mappedPlan.SupportedChanges["kubernetes_deployment"]
+
+	if !exists {
+		t.Errorf("Expected kubernetes_deployment to be in supported changes")
 	}
 
-	if queries[0].Type != "Deployment" {
-		t.Errorf("Expected query type to be Deployment, got %v", queries[0].Type)
+	if len(deployments) != 2 {
+		t.Errorf("Expected 2 deployments, got %v", len(deployments))
 	}
 
-	if queries[0].Query != "nats-box" {
-		t.Errorf("Expected query to be nats-box, got %v", queries[0].Query)
+	if deployments[0].OvermindQuery.Type != "Deployment" {
+		t.Errorf("Expected query type to be Deployment, got %v", deployments[0].OvermindQuery.Type)
 	}
 
-	// Since this resource is being deleted it doesn't have any config so we
-	// can't determine the scope from mappings
-	if queries[0].Scope != "*" {
-		t.Errorf("Expected query scope to be *, got %v", queries[0].Scope)
+	if deployments[0].OvermindQuery.Query != "nats-box" {
+		t.Errorf("Expected query to be nats-box, got %v", deployments[0].OvermindQuery.Query)
 	}
 
-	if queries[1].Type != "Deployment" {
-		t.Errorf("Expected query type to be Deployment, got %v", queries[1].Type)
+	if deployments[0].OvermindQuery.Scope != "*" {
+		t.Errorf("Expected query scope to be *, got %v", deployments[0].OvermindQuery.Scope)
 	}
 
-	if queries[1].Query != "api-server" {
-		t.Errorf("Expected query to be api-server, got %v", queries[1].Query)
+	if deployments[1].OvermindQuery.Type != "Deployment" {
+		t.Errorf("Expected query type to be Deployment, got %v", deployments[1].OvermindQuery.Type)
 	}
 
-	if queries[1].Scope != "dogfood.default" {
-		t.Errorf("Expected query scope to be dogfood.default, got %v", queries[1].Scope)
+	if deployments[1].OvermindQuery.Query != "api-server" {
+		t.Errorf("Expected query to be api-server, got %v", deployments[1].OvermindQuery.Query)
 	}
 
-	if queries[2].Type != "iam-policy" {
-		t.Errorf("Expected query type to be iam-policy, got %v", queries[2].Type)
+	if deployments[1].OvermindQuery.Scope != "dogfood.default" {
+		t.Errorf("Expected query scope to be dogfood.default, got %v", deployments[1].OvermindQuery.Scope)
 	}
 
-	if queries[2].Query != "arn:aws:iam::123456789012:policy/test-alb-ingress" {
-		t.Errorf("Expected query to be arn:aws:iam::123456789012:policy/test-alb-ingress, got %v", queries[2].Query)
+	iamPolicies, exists := mappedPlan.SupportedChanges["aws_iam_policy"]
+
+	if !exists {
+		t.Errorf("Expected aws_iam_policy to be in supported changes")
 	}
 
-	if queries[2].Scope != "*" {
-		t.Errorf("Expected query scope to be *, got %v", queries[2].Scope)
+	if len(iamPolicies) != 1 {
+		t.Errorf("Expected 1 iam policy, got %v", len(iamPolicies))
+	}
+
+	if iamPolicies[0].OvermindQuery.Type != "iam-policy" {
+		t.Errorf("Expected query type to be iam-policy, got %v", iamPolicies[0].OvermindQuery.Type)
+	}
+
+	if iamPolicies[0].OvermindQuery.Query != "arn:aws:iam::123456789012:policy/test-alb-ingress" {
+		t.Errorf("Expected query to be arn:aws:iam::123456789012:policy/test-alb-ingress, got %v", iamPolicies[0].OvermindQuery.Query)
+	}
+
+	if iamPolicies[0].OvermindQuery.Scope != "*" {
+		t.Errorf("Expected query scope to be *, got %v", iamPolicies[0].OvermindQuery.Scope)
 	}
 }

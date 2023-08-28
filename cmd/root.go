@@ -134,7 +134,7 @@ func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.S
 				log.WithContext(ctx).Error(err)
 				return
 			}
-			log.WithContext(ctx).Debug("Got token 1!")
+			log.WithContext(ctx).Debug("Got token")
 
 			tokenChan <- tok
 
@@ -148,7 +148,7 @@ func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.S
 
 		u := config.AuthCodeURL(oAuthStateString, oauth2.AccessTypeOnline, audienceOption)
 
-		log.WithContext(ctx).Infof("Log in here: %v", u)
+		log.WithContext(ctx).Infof("Follow this link to authenticate: %v", Underline.TextStyle(u))
 
 		// Start the webserver
 		log.WithContext(ctx).Trace("Starting webserver to listen for callback, press Ctrl+C to cancel")
@@ -166,7 +166,7 @@ func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.S
 		var token *oauth2.Token
 		select {
 		case token = <-tokenChan:
-			log.WithContext(ctx).Debug("Got token 2!")
+			// Keep working
 		case <-signals:
 			log.WithContext(ctx).Debug("Received interrupt, exiting")
 			return ctx, errors.New("cancelled")
@@ -175,8 +175,10 @@ func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.S
 		// Stop the server
 		err = srv.Shutdown(ctx)
 		if err != nil {
-			log.WithContext(ctx).WithError(err).Info("failed to shutdown auth callback server, but continuing anyways")
+			log.WithContext(ctx).WithError(err).Warn("failed to shutdown auth callback server, but continuing anyway")
 		}
+
+		log.WithContext(ctx).Info("Authenticated successfully ✅")
 
 		// Set the token
 		return context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken), nil
@@ -277,6 +279,10 @@ func init() {
 
 	// Run this before we do anything to set up the loglevel
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		formatter := new(log.TextFormatter)
+		formatter.DisableTimestamp = true
+		log.SetFormatter(formatter)
+
 		// Read env vars
 		var lvl log.Level
 
@@ -290,7 +296,6 @@ func init() {
 			lvl = log.InfoLevel
 		}
 		log.SetLevel(lvl)
-		log.WithField("level", lvl).Infof("set log level from config")
 
 		if viper.GetBool("json-log") {
 			log.SetFormatter(&log.JSONFormatter{})
@@ -316,12 +321,4 @@ func initConfig() {
 
 	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv() // read in environment variables that match
-}
-
-// must panics if the passed in error is not nil
-// use this for init-time error checking of viper/cobra stuff that sometimes errors if the flag does not exist
-func must(err error) {
-	if err != nil {
-		panic(fmt.Errorf("error initialising: %w", err))
-	}
 }
