@@ -652,19 +652,12 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 							}).Errorf("      %v", err.ErrorString)
 						}
 					} else {
-						log.Error("      Could not find any errors for this query, printing all errors")
-						for _, errors := range queryErrors {
-							for _, err := range errors {
-								log.WithContext(ctx).WithFields(log.Fields{
-									"type":      err.ErrorType,
-									"source":    err.SourceName,
-									"responder": err.ResponderName,
-									"uuid":      err.GetUUIDParsed().String(),
-									"itemType":  err.ItemType,
-									"scope":     err.Scope,
-								}).Errorf("      %v", err.ErrorString)
-							}
-						}
+						log.WithFields(log.Fields{
+							"type":   mapping.OvermindQuery.Type,
+							"scope":  mapping.OvermindQuery.Scope,
+							"query":  mapping.OvermindQuery.Query,
+							"method": mapping.OvermindQuery.Method.String(),
+						}).Error("      No responses received")
 					}
 				}
 			}
