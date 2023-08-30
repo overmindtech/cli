@@ -383,12 +383,6 @@ var AwssourceData = map[string][]TfMapData{
 	},
 	"aws_instance": {
 		{
-			Type:       "ec2-iam-instance-profile-association",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "iam_instance_profile",
-			Scope:      "*",
-		},
-		{
 			Type:       "ec2-instance",
 			Method:     sdp.QueryMethod_GET,
 			QueryField: "id",
@@ -790,6 +784,12 @@ var AwssourceData = map[string][]TfMapData{
 			Type:       "ec2-security-group-rule",
 			Method:     sdp.QueryMethod_GET,
 			QueryField: "id",
+			Scope:      "*",
+		},
+		{
+			Type:       "ec2-security-group-rule",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "security_group_rule_id",
 			Scope:      "*",
 		},
 	},
