@@ -3,12 +3,14 @@ package cmd
 import (
 	"context"
 	_ "embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -79,6 +81,35 @@ func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.S
 			return ctx, errors.New("--api-key does not match pattern 'ovm_api_*'")
 		}
 		return context.WithValue(ctx, sdp.UserTokenContextKey{}, apiKey), nil
+	}
+
+	// Check for a locally saved token in ~/.overmind
+	if home, err := os.UserHomeDir(); err == nil {
+		// Read in the token JSON file
+		path := filepath.Join(home, ".overmind", "token.json")
+
+		token := new(oauth2.Token)
+
+		if _, err := os.Stat(path); !os.IsNotExist(err) {
+			// Read the file
+			file, err := os.Open(path)
+			if err != nil {
+				log.WithContext(ctx).WithError(err).Errorf("Failed to open token file at %v", path)
+				return ctx, fmt.Errorf("error opening token file at %v: %w", path, err)
+			}
+
+			// Decode the file
+			err = json.NewDecoder(file).Decode(token)
+			if err != nil {
+				log.WithContext(ctx).WithError(err).Errorf("Failed to decode token file at %v", path)
+				return ctx, fmt.Errorf("error decoding token file at %v: %w", path, err)
+			}
+		}
+
+		// Check to see if the token is still valid
+		if token.Valid() {
+			return context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken), nil
+		}
 	}
 
 	// Check to see if the URL is secure
@@ -179,6 +210,28 @@ func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.S
 		}
 
 		log.WithContext(ctx).Info("Authenticated successfully ✅")
+
+		// Save the token locally
+		if home, err := os.UserHomeDir(); err == nil {
+			// Create the directory if it doesn't exist
+			err = os.MkdirAll(filepath.Join(home, ".overmind"), 0700)
+			if err != nil {
+				log.WithContext(ctx).WithError(err).Error("Failed to create ~/.overmind directory")
+			}
+
+			// Write the token to a file
+			path := filepath.Join(home, ".overmind", "token.json")
+			file, err := os.Create(path)
+			if err != nil {
+				log.WithContext(ctx).WithError(err).Errorf("Failed to create token file at %v", path)
+			}
+
+			// Encode the token
+			err = json.NewEncoder(file).Encode(token)
+			if err != nil {
+				log.WithContext(ctx).WithError(err).Errorf("Failed to encode token file at %v", path)
+			}
+		}
 
 		// Set the token
 		return context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken), nil
