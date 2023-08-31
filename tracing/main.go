@@ -24,7 +24,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-//go:generate sh -c "echo -n $(git describe --long) > commit.txt"
+//go:generate sh -c "echo -n $(git describe --tags --long) > commit.txt"
 //go:embed commit.txt
 var instrumentationVersion string
 

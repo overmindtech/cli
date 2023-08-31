@@ -30,7 +30,7 @@ var logLevel string
 
 var minStatusInterval = durationpb.New(250 * time.Millisecond)
 
-//go:generate sh -c "echo -n $(git describe --long) > commit.txt"
+//go:generate sh -c "echo -n $(git describe --tags --long) > commit.txt"
 //go:embed commit.txt
 var cliVersion string
 
