@@ -259,7 +259,7 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 			newQuery := sdp.Query{
 				Type:               mapData.Type,
 				Method:             mapData.Method,
-				Query:              query.(string),
+				Query:              fmt.Sprintf("%v", query),
 				Scope:              scope,
 				RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
 				UUID:               u[:],
