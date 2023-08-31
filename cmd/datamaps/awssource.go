@@ -5,22 +5,6 @@ package datamaps
 import "github.com/overmindtech/sdp-go"
 
 var AwssourceData = map[string][]TfMapData{
-	"${aws_ecs_service": {
-		{
-			Type:       "ecs-service",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "cluster}/${aws_ecs_service.name}",
-			Scope:      "*",
-		},
-	},
-	"${aws_ecs_task_definition": {
-		{
-			Type:       "ecs-task-definition",
-			Method:     sdp.QueryMethod_GET,
-			QueryField: "family}:${aws_ecs_task_definition.revision}",
-			Scope:      "*",
-		},
-	},
 	"aws_alb_listener": {
 		{
 			Type:       "elbv2-listener",
@@ -226,6 +210,22 @@ var AwssourceData = map[string][]TfMapData{
 			Type:       "ecs-cluster",
 			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
+	"aws_ecs_service": {
+		{
+			Type:       "ecs-service",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "cluster_name",
+			Scope:      "*",
+		},
+	},
+	"aws_ecs_task_definition": {
+		{
+			Type:       "ecs-task-definition",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "family",
 			Scope:      "*",
 		},
 	},
