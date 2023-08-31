@@ -783,13 +783,13 @@ var AwssourceData = map[string][]TfMapData{
 		{
 			Type:       "ec2-security-group-rule",
 			Method:     sdp.QueryMethod_GET,
-			QueryField: "id",
+			QueryField: "security_group_rule_id",
 			Scope:      "*",
 		},
 		{
-			Type:       "ec2-security-group-rule",
+			Type:       "ec2-security-group",
 			Method:     sdp.QueryMethod_GET,
-			QueryField: "security_group_rule_id",
+			QueryField: "security_group_id",
 			Scope:      "*",
 		},
 	},
