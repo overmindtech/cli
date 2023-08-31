@@ -641,6 +641,13 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 				} else {
 					log.WithContext(ctx).Infof(Red.Color("    ✗ %v (not found)"), mapping.TerraformResource.Name)
 
+					log.WithFields(log.Fields{
+						"type":   mapping.OvermindQuery.Type,
+						"scope":  mapping.OvermindQuery.Scope,
+						"query":  mapping.OvermindQuery.Query,
+						"method": mapping.OvermindQuery.Method.String(),
+					}).Error("      No responses received")
+
 					relatedErrors, found := queryErrors[queryUUID]
 
 					if found {
@@ -651,13 +658,6 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 								"responder": err.ResponderName,
 							}).Errorf("      %v", err.ErrorString)
 						}
-					} else {
-						log.WithFields(log.Fields{
-							"type":   mapping.OvermindQuery.Type,
-							"scope":  mapping.OvermindQuery.Scope,
-							"query":  mapping.OvermindQuery.Query,
-							"method": mapping.OvermindQuery.Method.String(),
-						}).Error("      No responses received")
 					}
 				}
 			}
