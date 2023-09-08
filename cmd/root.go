@@ -300,7 +300,7 @@ func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus, errNotF
 		}
 	}
 
-	if changeUuid == uuid.Nil {
+	if errNotFound && changeUuid == uuid.Nil {
 		return uuid.Nil, fmt.Errorf("no change found with ticket link %v", ticketLink)
 	}
 
