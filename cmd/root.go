@@ -244,50 +244,64 @@ func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus, errNotF
 	var changeUuid uuid.UUID
 	var err error
 
-	if viper.GetString("uuid") != "" {
-		changeUuid, err = uuid.Parse(viper.GetString("uuid"))
-		if err != nil {
-			return uuid.Nil, fmt.Errorf("invalid --uuid value '%v', error: %w", viper.GetString("uuid"), err)
-		}
+	uuidString := viper.GetString("uuid")
+	changeUrlString := viper.GetString("change")
+	ticketLink := viper.GetString("ticket-link")
+
+	// If no arguments are specified then return an error
+	if uuidString == "" && changeUrlString == "" && ticketLink == "" {
+		return uuid.Nil, errors.New("no change specified; use one of --change, --ticket-link or --uuid")
 	}
 
-	if viper.GetString("change") != "" {
-		changeUrl, err := url.ParseRequestURI(viper.GetString("change"))
+	// Check UUID first if more than one is set
+	if uuidString != "" {
+		changeUuid, err = uuid.Parse(uuidString)
 		if err != nil {
-			return uuid.Nil, fmt.Errorf("invalid --change value '%v', error: %w", viper.GetString("change"), err)
+			return uuid.Nil, fmt.Errorf("invalid --uuid value '%v', error: %w", uuidString, err)
+		}
+
+		return changeUuid, nil
+	}
+
+	// Then check for a change URL
+	if changeUrlString != "" {
+		changeUrl, err := url.ParseRequestURI(changeUrlString)
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("invalid --change value '%v', error: %w", changeUrlString, err)
 		}
 		changeUuid, err = uuid.Parse(path.Base(changeUrl.Path))
 		if err != nil {
-			return uuid.Nil, fmt.Errorf("invalid --change value '%v', couldn't parse: %w", viper.GetString("change"), err)
+			return uuid.Nil, fmt.Errorf("invalid --change value '%v', couldn't parse: %w", changeUrlString, err)
 		}
+
+		return changeUuid, nil
 	}
 
-	if viper.GetString("ticket-link") != "" {
-		client := AuthenticatedChangesClient(ctx)
+	// Finally look through all open changes to find one with a matching ticket link
+	client := AuthenticatedChangesClient(ctx)
 
-		var maybeChangeUuid *uuid.UUID
-		changesList, err := client.ListChangesByStatus(ctx, &connect.Request[sdp.ListChangesByStatusRequest]{
-			Msg: &sdp.ListChangesByStatusRequest{
-				Status: expectedStatus,
-			},
-		})
-		if err != nil {
-			return uuid.Nil, errors.New("failed to searching for existing changes")
-		}
+	var maybeChangeUuid *uuid.UUID
+	changesList, err := client.ListChangesByStatus(ctx, &connect.Request[sdp.ListChangesByStatusRequest]{
+		Msg: &sdp.ListChangesByStatusRequest{
+			Status: expectedStatus,
+		},
+	})
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("failed to searching for existing changes: %w", err)
+	}
 
-		for _, c := range changesList.Msg.Changes {
-			if c.Properties.TicketLink == viper.GetString("ticket-link") {
-				maybeChangeUuid = c.Metadata.GetUUIDParsed()
-				if maybeChangeUuid != nil {
-					changeUuid = *maybeChangeUuid
-					break
-				}
+	for _, c := range changesList.Msg.Changes {
+		if c.Properties.TicketLink == ticketLink {
+			maybeChangeUuid = c.Metadata.GetUUIDParsed()
+			if maybeChangeUuid != nil {
+				changeUuid = *maybeChangeUuid
+				break
 			}
 		}
 	}
 
 	if errNotFound && changeUuid == uuid.Nil {
-		return uuid.Nil, errors.New("no change specified; use one of --change, --ticket-link or --uuid")
+		return uuid.Nil, fmt.Errorf("no change found with ticket link %v", ticketLink)
 	}
 
 	return changeUuid, nil
