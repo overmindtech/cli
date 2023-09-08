@@ -11,13 +11,13 @@ runs:
         check-latest: true
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: overmindtech/aws-source
         path: ./aws-source
 
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: overmindtech/k8s-source
         path: ./k8s-source
