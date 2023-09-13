@@ -25,6 +25,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wspb"
 )
@@ -263,6 +264,7 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 				Scope:              scope,
 				RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
 				UUID:               u[:],
+				Deadline:           timestamppb.New(time.Now().Add(60 * time.Second)),
 			}
 
 			overmindMappings = append(overmindMappings, TerraformToOvermindMapping{
