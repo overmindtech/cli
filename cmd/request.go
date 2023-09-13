@@ -20,7 +20,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wspb"
 )
@@ -323,12 +323,12 @@ func createInitialRequest() (*sdp.GatewayRequest, error) {
 
 		req.RequestType = &sdp.GatewayRequest_Query{
 			Query: &sdp.Query{
-				Method:  method,
-				Type:    viper.GetString("query-type"),
-				Query:   viper.GetString("query"),
-				Scope:   viper.GetString("query-scope"),
-				Timeout: durationpb.New(10 * time.Hour),
-				UUID:    u[:],
+				Method:   method,
+				Type:     viper.GetString("query-type"),
+				Query:    viper.GetString("query"),
+				Scope:    viper.GetString("query-scope"),
+				Deadline: timestamppb.New(time.Now().Add(10 * time.Hour)),
+				UUID:     u[:],
 				RecursionBehaviour: &sdp.Query_RecursionBehaviour{
 					LinkDepth:                  viper.GetUint32("link-depth"),
 					FollowOnlyBlastPropagation: viper.GetBool("blast-radius"),
