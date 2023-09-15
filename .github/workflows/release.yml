@@ -27,7 +27,7 @@ jobs:
       - run: go run main.go --version
 
       - name: Run GoReleaser (publish)
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v5
         if: ${{ github.event_name != 'pull_request' }}
         with:
           version: latest
@@ -36,7 +36,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run GoReleaser (dry run)
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v5
         if: ${{ github.event_name == 'pull_request' }}
         with:
           version: latest
