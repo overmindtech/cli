@@ -147,6 +147,8 @@ func Request(signals chan os.Signal, ready chan bool) int {
 
 	activeQueries := make(map[uuid.UUID]bool)
 
+	var numItems, numEdges int
+
 	// Read the responses
 responses:
 	for {
@@ -164,10 +166,12 @@ responses:
 			case *sdp.GatewayResponse_Status:
 				status := resp.GetStatus()
 				statusFields := log.Fields{
-					"summary":                  status.Summary,
-					"responders":               status.Summary.Responders,
-					"queriesSent":              queriesSent,
-					"post_processing_complete": status.PostProcessingComplete,
+					"summary":                status.Summary,
+					"responders":             status.Summary.Responders,
+					"queriesSent":            queriesSent,
+					"postProcessingComplete": status.PostProcessingComplete,
+					"itemsReceived":          numItems,
+					"edgesReceived":          numEdges,
 				}
 
 				if status.Done() {
@@ -217,10 +221,12 @@ responses:
 
 			case *sdp.GatewayResponse_NewItem:
 				item := resp.GetNewItem()
+				numItems += 1
 				log.WithContext(ctx).WithFields(lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
 
 			case *sdp.GatewayResponse_NewEdge:
 				edge := resp.GetNewEdge()
+				numEdges += 1
 				log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
 					"from": edge.From.GloballyUniqueName(),
 					"to":   edge.To.GloballyUniqueName(),
