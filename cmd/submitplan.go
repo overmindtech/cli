@@ -710,7 +710,7 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 		return 1
 	}
 
-	changeUrl := fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid)
+	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", viper.GetString("frontend"), changeUuid)
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("Change ready")
 	fmt.Println(changeUrl)
 
