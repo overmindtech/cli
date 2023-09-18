@@ -24,7 +24,7 @@ import (
 	"nhooyr.io/websocket/wspb"
 )
 
-// manualChangeCmd represents the submit-plan command
+// manualChangeCmd is the equivalent to submit-plan for manual changes
 var manualChangeCmd = &cobra.Command{
 	Use:   "manual-change [--title TITLE] [--description DESCRIPTION] [--ticket-link URL] --query-scope SCOPE --query-type TYPE --query QUERY",
 	Short: "Creates a new Change from a given query",
@@ -338,7 +338,7 @@ responses:
 		return 1
 	}
 
-	changeUrl := fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid)
+	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", viper.GetString("frontend"), changeUuid)
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("change ready")
 	fmt.Println(changeUrl)
 
