@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/google/uuid"
 	"github.com/overmindtech/ovm-cli/tracing"
 	"github.com/overmindtech/sdp-go"
@@ -83,6 +84,18 @@ func Request(signals chan os.Signal, ready chan bool) int {
 	// apply a timeout to the main body of processing
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
+
+	mgmtClient := AuthenticatedManagementClient(ctx)
+	log.WithContext(ctx).WithFields(lf).Info("Waking up sources")
+	_, err = mgmtClient.KeepaliveSources(ctx, &connect.Request[sdp.KeepaliveSourcesRequest]{
+		Msg: &sdp.KeepaliveSourcesRequest{
+			WaitForHealthy: true,
+		},
+	})
+	if err != nil {
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to wake up sources")
+		return 1
+	}
 
 	options := &websocket.DialOptions{
 		HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),

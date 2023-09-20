@@ -443,6 +443,18 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 	receivedItems := make([]*sdp.Item, 0)
 
 	if len(planMappings.Queries()) > 0 {
+		mgmtClient := AuthenticatedManagementClient(ctx)
+		log.WithContext(ctx).WithFields(lf).Info("Waking up sources")
+		_, err = mgmtClient.KeepaliveSources(ctx, &connect.Request[sdp.KeepaliveSourcesRequest]{
+			Msg: &sdp.KeepaliveSourcesRequest{
+				WaitForHealthy: true,
+			},
+		})
+		if err != nil {
+			log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to wake up sources")
+			return 1
+		}
+
 		options := &websocket.DialOptions{
 			HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
 		}
@@ -756,6 +768,7 @@ func init() {
 	rootCmd.AddCommand(submitPlanCmd)
 
 	submitPlanCmd.PersistentFlags().String("changes-url", "", "The changes service API endpoint (defaults to --url)")
+	submitPlanCmd.PersistentFlags().String("management-url", "", "The management service API endpoint (defaults to --url)")
 	submitPlanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
 
 	submitPlanCmd.PersistentFlags().String("title", "", "Short title for this change. If this is not specified, ovm-cli will try to come up with one for you.")

@@ -123,6 +123,17 @@ func ManualChange(signals chan os.Signal, ready chan bool) int {
 		return 1
 	}
 
+	mgmtClient := AuthenticatedManagementClient(ctx)
+	log.WithContext(ctx).WithFields(lf).Info("Waking up sources")
+	_, err = mgmtClient.KeepaliveSources(ctx, &connect.Request[sdp.KeepaliveSourcesRequest]{
+		Msg: &sdp.KeepaliveSourcesRequest{
+			WaitForHealthy: true,
+		},
+	})
+	if err != nil {
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to wake up sources")
+		return 1
+	}
 	u := uuid.New()
 
 	queries := []*sdp.Query{
@@ -372,6 +383,7 @@ func init() {
 	rootCmd.AddCommand(manualChangeCmd)
 
 	manualChangeCmd.PersistentFlags().String("changes-url", "", "The changes service API endpoint (defaults to --url)")
+	manualChangeCmd.PersistentFlags().String("management-url", "", "The management service API endpoint (defaults to --url)")
 	manualChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
 
 	manualChangeCmd.PersistentFlags().String("title", "", "Short title for this change.")
