@@ -269,9 +269,13 @@ func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus, errNotF
 		if err != nil {
 			return uuid.Nil, fmt.Errorf("invalid --change value '%v', error: %w", changeUrlString, err)
 		}
-		changeUuid, err = uuid.Parse(path.Base(changeUrl.Path))
+		pathParts := strings.Split(path.Clean(changeUrl.Path), "/")
+		if len(pathParts) < 2 {
+			return uuid.Nil, fmt.Errorf("invalid --change value '%v', not long enough: %w", changeUrlString, err)
+		}
+		changeUuid, err = uuid.Parse(pathParts[1])
 		if err != nil {
-			return uuid.Nil, fmt.Errorf("invalid --change value '%v', couldn't parse: %w", changeUrlString, err)
+			return uuid.Nil, fmt.Errorf("invalid --change value '%v', couldn't parse UUID: %w", changeUrlString, err)
 		}
 
 		return changeUuid, nil
