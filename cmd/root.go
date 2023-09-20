@@ -265,20 +265,7 @@ func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus, errNotF
 
 	// Then check for a change URL
 	if changeUrlString != "" {
-		changeUrl, err := url.ParseRequestURI(changeUrlString)
-		if err != nil {
-			return uuid.Nil, fmt.Errorf("invalid --change value '%v', error: %w", changeUrlString, err)
-		}
-		pathParts := strings.Split(path.Clean(changeUrl.Path), "/")
-		if len(pathParts) < 2 {
-			return uuid.Nil, fmt.Errorf("invalid --change value '%v', not long enough: %w", changeUrlString, err)
-		}
-		changeUuid, err = uuid.Parse(pathParts[1])
-		if err != nil {
-			return uuid.Nil, fmt.Errorf("invalid --change value '%v', couldn't parse UUID: %w", changeUrlString, err)
-		}
-
-		return changeUuid, nil
+		return parseChangeUrl(changeUrlString)
 	}
 
 	// Finally look through all open changes to find one with a matching ticket link
@@ -308,6 +295,22 @@ func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus, errNotF
 		return uuid.Nil, fmt.Errorf("no change found with ticket link %v", ticketLink)
 	}
 
+	return changeUuid, nil
+}
+
+func parseChangeUrl(changeUrlString string) (uuid.UUID, error) {
+	changeUrl, err := url.ParseRequestURI(changeUrlString)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("invalid --change value '%v', error: %w", changeUrlString, err)
+	}
+	pathParts := strings.Split(path.Clean(changeUrl.Path), "/")
+	if len(pathParts) < 2 {
+		return uuid.Nil, fmt.Errorf("invalid --change value '%v', not long enough: %w", changeUrlString, err)
+	}
+	changeUuid, err := uuid.Parse(pathParts[2])
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("invalid --change value '%v', couldn't parse UUID: %w", changeUrlString, err)
+	}
 	return changeUuid, nil
 }
 
