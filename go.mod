@@ -7,7 +7,7 @@ require (
 	github.com/getsentry/sentry-go v0.23.0
 	github.com/google/uuid v1.3.1
 	github.com/mattn/go-isatty v0.0.19
-	github.com/overmindtech/sdp-go v0.49.0
+	github.com/overmindtech/sdp-go v0.49.3
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
@@ -44,7 +44,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nats-io/nats-server/v2 v2.9.22 // indirect
-	github.com/nats-io/nats.go v1.28.0 // indirect
+	github.com/nats-io/nats.go v1.29.0 // indirect
 	github.com/nats-io/nkeys v0.4.4 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect

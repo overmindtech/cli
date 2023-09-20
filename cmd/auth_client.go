@@ -63,6 +63,19 @@ func AuthenticatedChangesClient(ctx context.Context) sdpconnect.ChangesServiceCl
 	return sdpconnect.NewChangesServiceClient(httpClient, url)
 }
 
+// AuthenticatedManagementClient Returns a bookmark client that uses the auth
+// embedded in the context and otel instrumentation
+func AuthenticatedManagementClient(ctx context.Context) sdpconnect.ManagementServiceClient {
+	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	url := viper.GetString("management-url")
+	if url == "" {
+		url = viper.GetString("url")
+		viper.Set("management-url", url)
+	}
+	log.WithContext(ctx).WithField("management-url", url).Debug("Connecting to overmind management API")
+	return sdpconnect.NewManagementServiceClient(httpClient, url)
+}
+
 // AuthenticatedSnapshotsClient Returns a Snapshots client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedSnapshotsClient(ctx context.Context) sdpconnect.SnapshotsServiceClient {

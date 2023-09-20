@@ -72,7 +72,7 @@ func tracingResource() *resource.Resource {
 		resource.WithSchemaURL(semconv.SchemaURL),
 		// Add your own custom attributes to identify your application
 		resource.WithAttributes(
-			semconv.ServiceNameKey.String("gateway"),
+			semconv.ServiceNameKey.String("ovm-cli"),
 			semconv.ServiceVersionKey.String("0.0.1"),
 		),
 	)
