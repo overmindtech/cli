@@ -141,5 +141,5 @@ func init() {
 	getChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 	getChangeCmd.PersistentFlags().String("format", "json", "How to render the change. Possible values: json, markdown")
 
-	getChangeCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
+	getChangeCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
 }

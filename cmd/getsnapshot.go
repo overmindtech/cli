@@ -124,5 +124,5 @@ func init() {
 
 	getSnapshotCmd.PersistentFlags().String("uuid", "", "The UUID of the snapshot that should be displayed.")
 
-	getSnapshotCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
+	getSnapshotCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
 }

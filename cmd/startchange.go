@@ -52,7 +52,7 @@ func StartChange(signals chan os.Signal, ready chan bool) int {
 	))
 	defer span.End()
 
-	ctx, err = ensureToken(ctx, []string{"changes:write"},signals)
+	ctx, err = ensureToken(ctx, []string{"changes:write"}, signals)
 	if err != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"url": viper.GetString("url"),
@@ -109,5 +109,5 @@ func init() {
 
 	startChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 
-	startChangeCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
+	startChangeCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
 }
