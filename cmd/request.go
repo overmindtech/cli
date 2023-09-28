@@ -404,7 +404,7 @@ func init() {
 	requestCmd.PersistentFlags().String("snapshot-name", "CLI", "The snapshot name of the query results")
 	requestCmd.PersistentFlags().String("snapshot-description", "none", "The snapshot description of the query results")
 
-	requestCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
+	requestCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
 	requestCmd.PersistentFlags().Uint32("link-depth", 0, "How deeply to link")
 	requestCmd.PersistentFlags().Bool("blast-radius", false, "Whether to query using blast radius, note that if using this option, link-depth should be set to > 0")
 }

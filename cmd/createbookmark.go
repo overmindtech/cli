@@ -135,5 +135,5 @@ func init() {
 
 	createBookmarkCmd.PersistentFlags().String("file", "", "JSON formatted file to read bookmark. (defaults to stdin)")
 
-	createBookmarkCmd.PersistentFlags().String("timeout", "1m", "How long to wait for responses")
+	createBookmarkCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
 }
