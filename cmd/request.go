@@ -352,6 +352,7 @@ func createInitialRequest() (*sdp.GatewayRequest, error) {
 					LinkDepth:                  viper.GetUint32("link-depth"),
 					FollowOnlyBlastPropagation: viper.GetBool("blast-radius"),
 				},
+				IgnoreCache: viper.GetBool("ignore-cache"),
 			},
 		}
 	case "load-bookmark":

@@ -138,11 +138,12 @@ func ManualChange(signals chan os.Signal, ready chan bool) int {
 
 	queries := []*sdp.Query{
 		{
-			UUID:   u[:],
-			Method: method,
-			Scope:  viper.GetString("query-scope"),
-			Type:   viper.GetString("query-type"),
-			Query:  viper.GetString("query"),
+			UUID:        u[:],
+			Method:      method,
+			Scope:       viper.GetString("query-scope"),
+			Type:        viper.GetString("query-type"),
+			Query:       viper.GetString("query"),
+			IgnoreCache: true,
 		},
 	}
 	options := &websocket.DialOptions{
