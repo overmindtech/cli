@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/bufbuild/connect-go v1.10.0
-	github.com/getsentry/sentry-go v0.24.1
+	github.com/getsentry/sentry-go v0.25.0
 	github.com/google/uuid v1.3.1
 	github.com/mattn/go-isatty v0.0.19
 	github.com/overmindtech/sdp-go v0.49.6
