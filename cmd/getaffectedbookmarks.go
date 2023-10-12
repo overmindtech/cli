@@ -34,13 +34,25 @@ var getAffectedBookmarksCmd = &cobra.Command{
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-		exitcode := GetAffectedBookmarks(sigs, nil)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		// Create a goroutine to watch for cancellation signals
+		go func() {
+			select {
+			case <-sigs:
+				cancel()
+			case <-ctx.Done():
+			}
+		}()
+
+		exitcode := GetAffectedBookmarks(ctx, nil)
 		tracing.ShutdownTracer()
 		os.Exit(exitcode)
 	},
 }
 
-func GetAffectedBookmarks(signals chan os.Signal, ready chan bool) int {
+func GetAffectedBookmarks(ctx context.Context, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
 		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
@@ -64,13 +76,12 @@ func GetAffectedBookmarks(signals chan os.Signal, ready chan bool) int {
 		bookmarkUuids = append(bookmarkUuids, bookmarkUuid[:])
 	}
 
-	ctx := context.Background()
 	ctx, span := tracing.Tracer().Start(ctx, "CLI GetAffectedBookmarks", trace.WithAttributes(
 		attribute.String("om.config", fmt.Sprintf("%v", viper.AllSettings())),
 	))
 	defer span.End()
 
-	ctx, err = ensureToken(ctx, []string{"changes:read"}, signals)
+	ctx, err = ensureToken(ctx, []string{"changes:read"})
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
 			"url": viper.GetString("url"),

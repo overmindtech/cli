@@ -58,7 +58,19 @@ var submitPlanCmd = &cobra.Command{
 
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-		exitcode := SubmitPlan(sigs, args, nil)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		// Create a goroutine to watch for cancellation signals
+		go func() {
+			select {
+			case <-sigs:
+				cancel()
+			case <-ctx.Done():
+			}
+		}()
+
+		exitcode := SubmitPlan(ctx, args, nil)
 		tracing.ShutdownTracer()
 		os.Exit(exitcode)
 	},
@@ -351,13 +363,12 @@ func changeTitle(arg string) string {
 	return result
 }
 
-func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
+func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
 		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
 		return 1
 	}
-	ctx := context.Background()
 	ctx, span := tracing.Tracer().Start(ctx, "CLI SubmitPlan", trace.WithAttributes(
 		attribute.String("om.config", fmt.Sprintf("%v", viper.AllSettings())),
 	))
@@ -371,7 +382,7 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 
 	lf := log.Fields{}
 
-	ctx, err = ensureToken(ctx, []string{"changes:write"}, signals)
+	ctx, err = ensureToken(ctx, []string{"changes:write"})
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithField("api-key-url", viper.GetString("api-key-url")).WithError(err).Error("failed to authenticate")
 		return 1
@@ -536,10 +547,6 @@ func SubmitPlan(signals chan os.Signal, files []string, ready chan bool) int {
 			select {
 			case <-queriesSentChan:
 				queriesSent = true
-
-			case <-signals:
-				log.WithContext(ctx).WithFields(lf).Info("Received interrupt, exiting")
-				return 1
 
 			case <-ctx.Done():
 				log.WithContext(ctx).WithFields(lf).Info("Context cancelled, exiting")

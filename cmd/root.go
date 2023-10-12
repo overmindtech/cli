@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	_ "embed"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -58,8 +59,78 @@ func Execute() {
 	}
 }
 
+// reads the locally cached token if it exists and is valid returns the token,
+// its scopes, and an error if any. The scopes are returned even if they are
+// insufficient to allow cached tokens to be added to rather than constantly
+// replaced
+func readLocalToken(homeDir string, expectedScopes []string) (string, []string, error) {
+	// Read in the token JSON file
+	path := filepath.Join(homeDir, ".overmind", "token.json")
+
+	token := new(oauth2.Token)
+
+	// Check that the file exists
+	if _, err := os.Stat(path); err != nil {
+		return "", nil, err
+	}
+
+	// Read the file
+	file, err := os.Open(path)
+	if err != nil {
+		return "", nil, fmt.Errorf("error opening token file at %v: %w", path, err)
+	}
+
+	// Decode the file
+	err = json.NewDecoder(file).Decode(token)
+	if err != nil {
+		return "", nil, fmt.Errorf("error decoding token file at %v: %w", path, err)
+	}
+
+	// Check to see if the token is still valid
+	if !token.Valid() {
+		return "", nil, errors.New("token is no longer valid")
+	}
+
+	// We aren't interested in checking the signature of the token since
+	// the server will do that. All we need to do is make sure it
+	// contains the right scopes. Therefore we just parse the payload
+	// directly
+	sections := strings.Split(token.AccessToken, ".")
+
+	if len(sections) != 3 {
+		return "", nil, errors.New("token is not a JWT")
+	}
+
+	// Decode the payload
+	decodedPayload, err := base64.RawURLEncoding.DecodeString(sections[1])
+
+	if err != nil {
+		return "", nil, fmt.Errorf("error decoding token payload: %w", err)
+	}
+
+	// Parse the payload
+	claims := new(sdp.CustomClaims)
+
+	err = json.Unmarshal(decodedPayload, claims)
+
+	if err != nil {
+		return "", nil, fmt.Errorf("error parsing token payload: %w", err)
+	}
+
+	currentScopes := strings.Split(claims.Scope, " ")
+
+	// Check that the token has the right scopes
+	for _, scope := range expectedScopes {
+		if !claims.HasScope(scope) {
+			return "", currentScopes, fmt.Errorf("token does not have required scope '%v'", scope)
+		}
+	}
+
+	return token.AccessToken, currentScopes, nil
+}
+
 // ensureToken
-func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.Signal) (context.Context, error) {
+func ensureToken(ctx context.Context, requiredScopes []string) (context.Context, error) {
 	// get a token from the api key if present
 	if viper.GetString("api-key") != "" {
 		log.WithContext(ctx).Debug("using provided token for authentication")
@@ -83,32 +154,18 @@ func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.S
 		return context.WithValue(ctx, sdp.UserTokenContextKey{}, apiKey), nil
 	}
 
+	var localScopes []string
+
 	// Check for a locally saved token in ~/.overmind
 	if home, err := os.UserHomeDir(); err == nil {
-		// Read in the token JSON file
-		path := filepath.Join(home, ".overmind", "token.json")
+		var localToken string
 
-		token := new(oauth2.Token)
+		localToken, localScopes, err = readLocalToken(home, requiredScopes)
 
-		if _, err := os.Stat(path); !os.IsNotExist(err) {
-			// Read the file
-			file, err := os.Open(path)
-			if err != nil {
-				log.WithContext(ctx).WithError(err).Errorf("Failed to open token file at %v", path)
-				return ctx, fmt.Errorf("error opening token file at %v: %w", path, err)
-			}
-
-			// Decode the file
-			err = json.NewDecoder(file).Decode(token)
-			if err != nil {
-				log.WithContext(ctx).WithError(err).Errorf("Failed to decode token file at %v", path)
-				return ctx, fmt.Errorf("error decoding token file at %v: %w", path, err)
-			}
-		}
-
-		// Check to see if the token is still valid
-		if token.Valid() {
-			return context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken), nil
+		if err != nil {
+			log.WithContext(ctx).Debugf("Error reading local token, ignoring: %v", err)
+		} else {
+			return context.WithValue(ctx, sdp.UserTokenContextKey{}, localToken), nil
 		}
 	}
 
@@ -125,10 +182,15 @@ func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.S
 	}
 
 	if parsed.Scheme == "wss" || parsed.Scheme == "https" || parsed.Hostname() == "localhost" {
+		// If we need to get a new token, request the required scopes on top of
+		// whatever ones the current local, valid token has so that we don't
+		// keep replacing it
+		requestScopes := append(requiredScopes, localScopes...)
+
 		// Authenticate using the oauth resource owner password flow
 		config := oauth2.Config{
 			ClientID: viper.GetString("auth0-client-id"),
-			Scopes:   requiredScopes,
+			Scopes:   requestScopes,
 			Endpoint: oauth2.Endpoint{
 				AuthURL:  fmt.Sprintf("https://%v/authorize", viper.GetString("auth0-domain")),
 				TokenURL: fmt.Sprintf("https://%v/oauth/token", viper.GetString("auth0-domain")),
@@ -198,9 +260,8 @@ func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.S
 		select {
 		case token = <-tokenChan:
 			// Keep working
-		case <-signals:
-			log.WithContext(ctx).Debug("Received interrupt, exiting")
-			return ctx, errors.New("cancelled")
+		case <-ctx.Done():
+			return ctx, ctx.Err()
 		}
 
 		// Stop the server

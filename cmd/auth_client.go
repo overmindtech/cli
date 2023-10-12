@@ -89,6 +89,19 @@ func AuthenticatedSnapshotsClient(ctx context.Context) sdpconnect.SnapshotsServi
 	return sdpconnect.NewSnapshotsServiceClient(httpClient, url)
 }
 
+// AuthenticatedInviteClient Returns a Invite client that uses the auth
+// embedded in the context and otel instrumentation
+func AuthenticatedInviteClient(ctx context.Context) sdpconnect.InviteServiceClient {
+	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	url := viper.GetString("invite-url")
+	if url == "" {
+		url = viper.GetString("url")
+		viper.Set("invite-url", url)
+	}
+	log.WithContext(ctx).WithField("invite-url", url).Debug("Connecting to overmind invite API")
+	return sdpconnect.NewInviteServiceClient(httpClient, url)
+}
+
 // AuthenticatedClient is a http.Client that will automatically add the required
 // Authorization header to the request, which is taken from the context that it
 // is created with. We also always set the X-overmind-interactive header to
