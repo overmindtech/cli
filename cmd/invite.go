@@ -18,25 +18,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// inviteCmd represents the invites command
-var inviteCmd = &cobra.Command{
-	Use:   "invite",
-	Short: "Manage invites for your Overmind account",
-	Long: `This command allows you to manage invitations within your Overmind account. When
-a user is invited, they will receive an email with a link they can use to sign
-up. Once they sign up, they will be added to your account and will have access
-to the same data that you do in Overmind`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			cmd.Help() // nolint:errcheck // don't care
-			os.Exit(0)
-		}
-	},
-}
-
 // listCmd represents the list command
 var listCmd = &cobra.Command{
-	Use:   "list",
+	Use:   "list-invites",
 	Short: "List all invites",
 	Run: func(cmd *cobra.Command, args []string) {
 		sigs := make(chan os.Signal, 1)
@@ -63,7 +47,7 @@ var listCmd = &cobra.Command{
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
-	Use:   "create",
+	Use:   "create-invite",
 	Short: "Create a new invite",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Bind flags to viper
@@ -96,7 +80,7 @@ var createCmd = &cobra.Command{
 
 // revokeCmd represents the revoke command
 var revokeCmd = &cobra.Command{
-	Use:   "revoke",
+	Use:   "revoke-invites",
 	Short: "Revoke an existing invite",
 	Run: func(cmd *cobra.Command, args []string) {
 		// Bind flags to viper
@@ -251,25 +235,16 @@ func InvitesList(ctx context.Context) int {
 
 func init() {
 	// list sub-command
-	inviteCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(listCmd)
+	listCmd.PersistentFlags().String("invite-url", "", "A custom URL for the invites API (optional)")
 
 	// create sub-command
-	inviteCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(createCmd)
+	createCmd.PersistentFlags().String("invite-url", "", "A custom URL for the invites API (optional)")
 	createCmd.PersistentFlags().StringSlice("emails", []string{}, "A list of emails to invite")
 
 	// revoke sub-command
-	inviteCmd.AddCommand(revokeCmd)
+	rootCmd.AddCommand(revokeCmd)
+	revokeCmd.PersistentFlags().String("invite-url", "", "A custom URL for the invites API (optional)")
 	revokeCmd.PersistentFlags().String("email", "", "The email address to revoke")
-
-	rootCmd.AddCommand(inviteCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	inviteCmd.PersistentFlags().String("invite-url", "", "A custom URL for the invites API (optional)")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// inviteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
