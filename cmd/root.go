@@ -59,7 +59,7 @@ func Execute() {
 }
 
 // ensureToken
-func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.Signal) (context.Context, error) {
+func ensureToken(ctx context.Context, requiredScopes []string) (context.Context, error) {
 	// get a token from the api key if present
 	if viper.GetString("api-key") != "" {
 		log.WithContext(ctx).Debug("using provided token for authentication")
@@ -198,9 +198,8 @@ func ensureToken(ctx context.Context, requiredScopes []string, signals chan os.S
 		select {
 		case token = <-tokenChan:
 			// Keep working
-		case <-signals:
-			log.WithContext(ctx).Debug("Received interrupt, exiting")
-			return ctx, errors.New("cancelled")
+		case <-ctx.Done():
+			return ctx, ctx.Err()
 		}
 
 		// Stop the server
