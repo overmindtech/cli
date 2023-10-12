@@ -28,7 +28,7 @@ up. Once they sign up, they will be added to your account and will have access
 to the same data that you do in Overmind`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			cmd.Help()
+			cmd.Help() // nolint:errcheck // don't care
 			os.Exit(0)
 		}
 	},
