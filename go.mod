@@ -6,6 +6,7 @@ require (
 	github.com/bufbuild/connect-go v1.10.0
 	github.com/getsentry/sentry-go v0.24.1
 	github.com/google/uuid v1.3.1
+	github.com/jedib0t/go-pretty/v6 v6.4.8
 	github.com/mattn/go-isatty v0.0.19
 	github.com/overmindtech/sdp-go v0.50.0
 	github.com/sirupsen/logrus v1.9.3
@@ -42,6 +43,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
+	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/nats-io/nats-server/v2 v2.10.1 // indirect
 	github.com/nats-io/nats.go v1.30.2 // indirect
@@ -49,6 +51,7 @@ require (
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
