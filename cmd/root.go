@@ -59,6 +59,38 @@ func Execute() {
 	}
 }
 
+// extracts custom claims from a JWT token. Note that this does not verify the
+// signature of the token, it just extracts the claims from the payload
+func extractClaims(token string) (*sdp.CustomClaims, error) {
+	// We aren't interested in checking the signature of the token since
+	// the server will do that. All we need to do is make sure it
+	// contains the right scopes. Therefore we just parse the payload
+	// directly
+	sections := strings.Split(token, ".")
+
+	if len(sections) != 3 {
+		return nil, errors.New("token is not a JWT")
+	}
+
+	// Decode the payload
+	decodedPayload, err := base64.RawURLEncoding.DecodeString(sections[1])
+
+	if err != nil {
+		return nil, fmt.Errorf("error decoding token payload: %w", err)
+	}
+
+	// Parse the payload
+	claims := new(sdp.CustomClaims)
+
+	err = json.Unmarshal(decodedPayload, claims)
+
+	if err != nil {
+		return nil, fmt.Errorf("error parsing token payload: %w", err)
+	}
+
+	return claims, nil
+}
+
 // reads the locally cached token if it exists and is valid returns the token,
 // its scopes, and an error if any. The scopes are returned even if they are
 // insufficient to allow cached tokens to be added to rather than constantly
@@ -91,30 +123,14 @@ func readLocalToken(homeDir string, expectedScopes []string) (string, []string, 
 		return "", nil, errors.New("token is no longer valid")
 	}
 
-	// We aren't interested in checking the signature of the token since
-	// the server will do that. All we need to do is make sure it
-	// contains the right scopes. Therefore we just parse the payload
-	// directly
-	sections := strings.Split(token.AccessToken, ".")
-
-	if len(sections) != 3 {
-		return "", nil, errors.New("token is not a JWT")
-	}
-
-	// Decode the payload
-	decodedPayload, err := base64.RawURLEncoding.DecodeString(sections[1])
+	claims, err := extractClaims(token.AccessToken)
 
 	if err != nil {
-		return "", nil, fmt.Errorf("error decoding token payload: %w", err)
+		return "", nil, fmt.Errorf("error extracting claims from token: %w", err)
 	}
 
-	// Parse the payload
-	claims := new(sdp.CustomClaims)
-
-	err = json.Unmarshal(decodedPayload, claims)
-
-	if err != nil {
-		return "", nil, fmt.Errorf("error parsing token payload: %w", err)
+	if claims.Scope == "" {
+		return "", nil, errors.New("token does not have any scopes")
 	}
 
 	currentScopes := strings.Split(claims.Scope, " ")
@@ -273,6 +289,20 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 		err = srv.Shutdown(ctx)
 		if err != nil {
 			log.WithContext(ctx).WithError(err).Warn("failed to shutdown auth callback server, but continuing anyway")
+		}
+
+		// Check that we actually got the claims we asked for. If you don't have
+		// permission auth0 will just not assign those scopes rather than fail
+		claims, err := extractClaims(token.AccessToken)
+
+		if err != nil {
+			return ctx, fmt.Errorf("error extracting claims from token: %w", err)
+		}
+
+		for _, scope := range requiredScopes {
+			if !claims.HasScope(scope) {
+				return ctx, fmt.Errorf("authenticated successfully, but you don't have the required permission: '%v'", scope)
+			}
 		}
 
 		log.WithContext(ctx).Info("Authenticated successfully ✅")

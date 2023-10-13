@@ -1,6 +1,8 @@
 package cmd
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestParseChangeUrl(t *testing.T) {
 	tests := []struct {
