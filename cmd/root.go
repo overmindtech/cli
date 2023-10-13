@@ -239,6 +239,7 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 
 			if state != oAuthStateString {
 				log.WithContext(ctx).Errorf("Invalid state, expected %v, got %v", oAuthStateString, state)
+				return
 			}
 
 			// Exchange will do the handshake to retrieve the initial access token.
