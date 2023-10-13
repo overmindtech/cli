@@ -110,7 +110,7 @@ func GetChange(ctx context.Context, ready chan bool) int {
 	case "json":
 		b, err := json.MarshalIndent(response.Msg.Change.ToMap(), "", "  ")
 		if err != nil {
-			log.Errorf("Error rendering bookmark: %v", err)
+			log.Errorf("Error rendering change: %v", err)
 			return 1
 		}
 

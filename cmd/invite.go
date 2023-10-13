@@ -116,7 +116,7 @@ func InvitesRevoke(ctx context.Context) int {
 	email := viper.GetString("email")
 
 	if email == "" {
-		log.Error("You must specify an email address to revoke using --email")
+		log.WithContext(ctx).Error("You must specify an email address to revoke using --email")
 		return 1
 	}
 
@@ -127,9 +127,8 @@ func InvitesRevoke(ctx context.Context) int {
 
 	// Authenticate
 	ctx, err = ensureToken(ctx, []string{"account:write"})
-
 	if err != nil {
-		log.Error(err)
+		log.WithContext(ctx).WithError(err).Error("failed to ensure token")
 		return 1
 	}
 
@@ -141,13 +140,12 @@ func InvitesRevoke(ctx context.Context) int {
 			Email: email,
 		},
 	})
-
 	if err != nil {
-		log.Error(err)
+		log.WithContext(ctx).WithError(err).Error("failed to revoke invite")
 		return 1
 	}
 
-	log.WithFields(log.Fields{"email": email}).Info("Invite revoked successfully")
+	log.WithContext(ctx).WithFields(log.Fields{"email": email}).Info("Invite revoked successfully")
 
 	return 0
 }
@@ -156,9 +154,8 @@ func InvitesCreate(ctx context.Context) int {
 	var err error
 
 	emails := viper.GetStringSlice("emails")
-
 	if len(emails) == 0 {
-		log.Error("You must specify at least one email address to invite using --emails")
+		log.WithContext(ctx).Error("You must specify at least one email address to invite using --emails")
 		return 1
 	}
 
@@ -169,9 +166,8 @@ func InvitesCreate(ctx context.Context) int {
 
 	// Authenticate
 	ctx, err = ensureToken(ctx, []string{"account:write"})
-
 	if err != nil {
-		log.Error(err)
+		log.WithContext(ctx).WithError(err).Error("failed to ensure token")
 		return 1
 	}
 
@@ -183,13 +179,12 @@ func InvitesCreate(ctx context.Context) int {
 			Emails: emails,
 		},
 	})
-
 	if err != nil {
-		log.Error(err)
+		log.WithContext(ctx).WithError(err).Error("failed to create invite")
 		return 1
 	}
 
-	log.WithFields(log.Fields{"emails": emails}).Info("Invites created successfully")
+	log.WithContext(ctx).WithFields(log.Fields{"emails": emails}).Info("Invites created successfully")
 
 	return 0
 }
@@ -204,9 +199,8 @@ func InvitesList(ctx context.Context) int {
 
 	// Authenticate
 	ctx, err = ensureToken(ctx, []string{"account:read"})
-
 	if err != nil {
-		log.Error(err)
+		log.WithError(err).Error("failed to ensure token")
 		return 1
 	}
 
@@ -214,9 +208,8 @@ func InvitesList(ctx context.Context) int {
 
 	// List all invites
 	resp, err := client.ListInvites(ctx, &connect.Request[sdp.ListInvitesRequest]{})
-
 	if err != nil {
-		log.Error(err)
+		log.WithContext(ctx).WithError(err).Error("failed to list invites")
 		return 1
 	}
 
