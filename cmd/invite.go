@@ -22,6 +22,13 @@ import (
 var listCmd = &cobra.Command{
 	Use:   "list-invites",
 	Short: "List all invites",
+	PreRun: func(cmd *cobra.Command, args []string) {
+		// Bind these to viper
+		err := viper.BindPFlags(cmd.Flags())
+		if err != nil {
+			log.WithError(err).Fatal("could not bind `list-invites` flags")
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		sigs := make(chan os.Signal, 1)
 
@@ -49,13 +56,14 @@ var listCmd = &cobra.Command{
 var createCmd = &cobra.Command{
 	Use:   "create-invite",
 	Short: "Create a new invite",
-	Run: func(cmd *cobra.Command, args []string) {
-		// Bind flags to viper
+	PreRun: func(cmd *cobra.Command, args []string) {
+		// Bind these to viper
 		err := viper.BindPFlags(cmd.Flags())
 		if err != nil {
-			log.WithError(err).Fatal("could not bind flags")
+			log.WithError(err).Fatal("could not bind `create-invite` flags")
 		}
-
+	},
+	Run: func(cmd *cobra.Command, args []string) {
 		sigs := make(chan os.Signal, 1)
 
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -82,13 +90,14 @@ var createCmd = &cobra.Command{
 var revokeCmd = &cobra.Command{
 	Use:   "revoke-invites",
 	Short: "Revoke an existing invite",
-	Run: func(cmd *cobra.Command, args []string) {
-		// Bind flags to viper
+	PreRun: func(cmd *cobra.Command, args []string) {
+		// Bind these to viper
 		err := viper.BindPFlags(cmd.Flags())
 		if err != nil {
-			log.WithError(err).Fatal("could not bind flags")
+			log.WithError(err).Fatal("could not bind `revoke-invites` flags")
 		}
-
+	},
+	Run: func(cmd *cobra.Command, args []string) {
 		sigs := make(chan os.Signal, 1)
 
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
