@@ -206,7 +206,12 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 		handler := func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 
-			queryParts, _ := url.ParseQuery(r.URL.RawQuery)
+			queryParts, err := url.ParseQuery(r.URL.RawQuery)
+			if err != nil {
+				log.WithContext(ctx).WithError(err).WithFields(log.Fields{
+					"url": r.URL,
+				}).Error("Failed to parse url")
+			}
 
 			// Use the authorization code that is pushed to the redirect
 			// URL.
