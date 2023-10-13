@@ -239,6 +239,7 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 
 			if state != oAuthStateString {
 				log.WithContext(ctx).Errorf("Invalid state, expected %v, got %v", oAuthStateString, state)
+				return
 			}
 
 			// Exchange will do the handshake to retrieve the initial access token.
@@ -327,6 +328,8 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 			if err != nil {
 				log.WithContext(ctx).WithError(err).Errorf("Failed to encode token file at %v", path)
 			}
+
+			log.WithContext(ctx).Debugf("Saved token to %v", path)
 		}
 
 		// Set the token
