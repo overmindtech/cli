@@ -328,6 +328,8 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 			if err != nil {
 				log.WithContext(ctx).WithError(err).Errorf("Failed to encode token file at %v", path)
 			}
+
+			log.WithContext(ctx).Debugf("Saved token to %v", path)
 		}
 
 		// Set the token
