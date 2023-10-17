@@ -186,15 +186,11 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 	}
 
 	// Check to see if the URL is secure
-	gatewayUrl := viper.GetString("gateway-url")
-	if gatewayUrl == "" {
-		gatewayUrl = fmt.Sprintf("%v/api/gateway", viper.GetString("url"))
-		viper.Set("gateway-url", gatewayUrl)
-	}
-	parsed, err := url.Parse(gatewayUrl)
+	appurl := viper.GetString("url")
+	parsed, err := url.Parse(appurl)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).Error("Failed to parse --url")
-		return ctx, fmt.Errorf("error parsing --gateway-url: %w", err)
+		return ctx, fmt.Errorf("error parsing --url: %w", err)
 	}
 
 	if parsed.Scheme == "wss" || parsed.Scheme == "https" || parsed.Hostname() == "localhost" {
@@ -262,7 +258,6 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 		audienceOption := oauth2.SetAuthURLParam("audience", "https://api.overmind.tech")
 
 		u := config.AuthCodeURL(oAuthStateString, oauth2.AccessTypeOnline, audienceOption)
-
 		log.WithContext(ctx).Infof("Follow this link to authenticate: %v", Underline.TextStyle(u))
 
 		// Start the webserver
