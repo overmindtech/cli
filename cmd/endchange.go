@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/overmindtech/ovm-cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
