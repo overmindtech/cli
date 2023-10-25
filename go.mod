@@ -3,12 +3,12 @@ module github.com/overmindtech/ovm-cli
 go 1.21
 
 require (
-	github.com/bufbuild/connect-go v1.10.0
+	connectrpc.com/connect v1.12.0
 	github.com/getsentry/sentry-go v0.25.0
 	github.com/google/uuid v1.3.1
 	github.com/jedib0t/go-pretty/v6 v6.4.8
 	github.com/mattn/go-isatty v0.0.20
-	github.com/overmindtech/sdp-go v0.51.0
+	github.com/overmindtech/sdp-go v0.53.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.17.0
@@ -45,8 +45,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/nats-io/nats-server/v2 v2.10.2 // indirect
-	github.com/nats-io/nats.go v1.30.2 // indirect
+	github.com/nats-io/nats.go v1.31.0 // indirect
 	github.com/nats-io/nkeys v0.4.5 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect

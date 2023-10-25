@@ -13,7 +13,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	"github.com/overmindtech/ovm-cli/cmd/datamaps"
 	"github.com/overmindtech/ovm-cli/tracing"

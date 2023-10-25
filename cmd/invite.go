@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/overmindtech/ovm-cli/tracing"
 	"github.com/overmindtech/sdp-go"
