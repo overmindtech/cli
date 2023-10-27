@@ -25,7 +25,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.19.0
 	golang.org/x/oauth2 v0.13.0
 	google.golang.org/protobuf v1.31.0
-	nhooyr.io/websocket v1.8.7
+	nhooyr.io/websocket v1.8.10
 )
 
 require (
