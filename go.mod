@@ -5,7 +5,7 @@ go 1.21
 require (
 	connectrpc.com/connect v1.12.0
 	github.com/getsentry/sentry-go v0.25.0
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.4.0
 	github.com/jedib0t/go-pretty/v6 v6.4.8
 	github.com/mattn/go-isatty v0.0.20
 	github.com/overmindtech/sdp-go v0.53.0
