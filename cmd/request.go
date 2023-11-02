@@ -57,6 +57,68 @@ var requestCmd = &cobra.Command{
 	},
 }
 
+// requestHandler is a simple implementation of GatewayMessageHandler that
+// implements the required logging for the `request` command.
+type requestHandler struct {
+	lf log.Fields
+
+	queriesStarted int
+	numItems       int
+	numEdges       int
+
+	sdpws.NoopGatewayMessageHandler
+}
+
+// assert that requestHandler implements GatewayMessageHandler
+var _ sdpws.GatewayMessageHandler = (*requestHandler)(nil)
+
+func (l *requestHandler) NewItem(ctx context.Context, item *sdp.Item) {
+	l.numItems += 1
+	log.WithContext(ctx).WithFields(l.lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
+}
+
+func (l *requestHandler) NewEdge(ctx context.Context, edge *sdp.Edge) {
+	l.numEdges += 1
+	log.WithContext(ctx).WithFields(l.lf).WithFields(log.Fields{
+		"from": edge.From.GloballyUniqueName(),
+		"to":   edge.To.GloballyUniqueName(),
+	}).Info("new edge")
+}
+
+func (l *requestHandler) Error(ctx context.Context, errorMessage string) {
+	log.WithContext(ctx).WithFields(l.lf).Errorf("generic error: %v", errorMessage)
+}
+
+func (l *requestHandler) QueryError(ctx context.Context, err *sdp.QueryError) {
+	log.WithContext(ctx).WithFields(l.lf).Errorf("Error from %v(%v): %v", err.ResponderName, err.SourceName, err)
+}
+
+func (l *requestHandler) QueryStatus(ctx context.Context, status *sdp.QueryStatus) {
+	statusFields := log.Fields{
+		"status": status.Status.String(),
+	}
+	queryUuid := status.GetUUIDParsed()
+	if queryUuid == nil {
+		log.WithContext(ctx).WithFields(l.lf).WithFields(statusFields).Debugf("Received QueryStatus with nil UUID")
+		return
+	}
+	statusFields["query"] = queryUuid
+
+	if status.Status == sdp.QueryStatus_STARTED {
+		l.queriesStarted += 1
+	}
+
+	// nolint:exhaustive // we _want_ to log all other status fields as unexpected
+	switch status.Status {
+	case sdp.QueryStatus_STARTED, sdp.QueryStatus_FINISHED, sdp.QueryStatus_ERRORED, sdp.QueryStatus_CANCELLED:
+		// do nothing
+	default:
+		statusFields["unexpected_status"] = true
+	}
+
+	log.WithContext(ctx).WithFields(l.lf).WithFields(statusFields).Debugf("query status update")
+}
+
 func Request(ctx context.Context, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
@@ -107,7 +169,7 @@ func Request(ctx context.Context, ready chan bool) int {
 
 	c, err := sdpws.Dial(ctx, gatewayUrl,
 		NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
-		&sdpws.LoggingGatewayMessageHandler{Level: log.InfoLevel},
+		&requestHandler{lf: lf},
 	)
 	if err != nil {
 		lf["gateway-url"] = gatewayUrl
@@ -119,7 +181,7 @@ func Request(ctx context.Context, ready chan bool) int {
 	// Log the request in JSON
 	b, err := json.MarshalIndent(req, "", "  ")
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to marshal request")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to marshal request for logging")
 		return 1
 	}
 
@@ -136,39 +198,10 @@ func Request(ctx context.Context, ready chan bool) int {
 	}
 	log.WithContext(ctx).WithFields(lf).WithError(err).Info("received items")
 
-	c.Wait(ctx, uuid.UUIDs{uuid.UUID(q.UUID)})
-
-	// 	queriesSent := true
-
-	// 	responses := make(chan *sdp.GatewayResponse)
-
-	// 	// Start a goroutine that reads responses
-	// 	go func() {
-	// 		for {
-	// 			res := new(sdp.GatewayResponse)
-
-	// 			err = wspb.Read(ctx, c, res)
-
-	// 			if err != nil {
-	// 				var e websocket.CloseError
-	// 				if errors.As(err, &e) {
-	// 					log.WithContext(ctx).WithFields(log.Fields{
-	// 						"code":   e.Code.String(),
-	// 						"reason": e.Reason,
-	// 					}).Info("Websocket closing")
-	// 					return
-	// 				}
-	// 				log.WithContext(ctx).WithFields(log.Fields{
-	// 					"error": err,
-	// 				}).Error("Failed to read response")
-	// 				return
-	// 			}
-
-	// 			responses <- res
-	// 		}
-	// 	}()
-
-	// 	activeQueries := make(map[uuid.UUID]bool)
+	err = c.Wait(ctx, uuid.UUIDs{uuid.UUID(q.UUID)})
+	if err != nil {
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("queries failed")
+	}
 
 	// 	var numItems, numEdges int
 
