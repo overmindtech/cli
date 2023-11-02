@@ -24,12 +24,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	"golang.org/x/oauth2"
-	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 var logLevel string
-
-var minStatusInterval = durationpb.New(250 * time.Millisecond)
 
 //go:generate sh -c "echo -n $(git describe --tags --long) > commit.txt"
 //go:embed commit.txt

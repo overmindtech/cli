@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -14,16 +13,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/overmindtech/ovm-cli/tracing"
 	"github.com/overmindtech/sdp-go"
+	"github.com/overmindtech/sdp-go/sdpws"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"nhooyr.io/websocket"
-	"nhooyr.io/websocket/wspb"
 )
 
 // requestCmd represents the start command
@@ -60,6 +57,68 @@ var requestCmd = &cobra.Command{
 	},
 }
 
+// requestHandler is a simple implementation of GatewayMessageHandler that
+// implements the required logging for the `request` command.
+type requestHandler struct {
+	lf log.Fields
+
+	queriesStarted int
+	numItems       int
+	numEdges       int
+
+	sdpws.NoopGatewayMessageHandler
+}
+
+// assert that requestHandler implements GatewayMessageHandler
+var _ sdpws.GatewayMessageHandler = (*requestHandler)(nil)
+
+func (l *requestHandler) NewItem(ctx context.Context, item *sdp.Item) {
+	l.numItems += 1
+	log.WithContext(ctx).WithFields(l.lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
+}
+
+func (l *requestHandler) NewEdge(ctx context.Context, edge *sdp.Edge) {
+	l.numEdges += 1
+	log.WithContext(ctx).WithFields(l.lf).WithFields(log.Fields{
+		"from": edge.From.GloballyUniqueName(),
+		"to":   edge.To.GloballyUniqueName(),
+	}).Info("new edge")
+}
+
+func (l *requestHandler) Error(ctx context.Context, errorMessage string) {
+	log.WithContext(ctx).WithFields(l.lf).Errorf("generic error: %v", errorMessage)
+}
+
+func (l *requestHandler) QueryError(ctx context.Context, err *sdp.QueryError) {
+	log.WithContext(ctx).WithFields(l.lf).Errorf("Error from %v(%v): %v", err.ResponderName, err.SourceName, err)
+}
+
+func (l *requestHandler) QueryStatus(ctx context.Context, status *sdp.QueryStatus) {
+	statusFields := log.Fields{
+		"status": status.Status.String(),
+	}
+	queryUuid := status.GetUUIDParsed()
+	if queryUuid == nil {
+		log.WithContext(ctx).WithFields(l.lf).WithFields(statusFields).Debugf("Received QueryStatus with nil UUID")
+		return
+	}
+	statusFields["query"] = queryUuid
+
+	if status.Status == sdp.QueryStatus_STARTED {
+		l.queriesStarted += 1
+	}
+
+	// nolint:exhaustive // we _want_ to log all other status fields as unexpected
+	switch status.Status {
+	case sdp.QueryStatus_STARTED, sdp.QueryStatus_FINISHED, sdp.QueryStatus_ERRORED, sdp.QueryStatus_CANCELLED:
+		// do nothing
+	default:
+		statusFields["unexpected_status"] = true
+	}
+
+	log.WithContext(ctx).WithFields(l.lf).WithFields(statusFields).Debugf("query status update")
+}
+
 func Request(ctx context.Context, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
@@ -70,13 +129,6 @@ func Request(ctx context.Context, ready chan bool) int {
 		attribute.String("om.config", fmt.Sprintf("%v", viper.AllSettings())),
 	))
 	defer span.End()
-
-	// Construct the request
-	req, err := createInitialRequest()
-	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("Failed to create initial request")
-		return 1
-	}
 
 	gatewayUrl := viper.GetString("gateway-url")
 	if gatewayUrl == "" {
@@ -108,210 +160,61 @@ func Request(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 
-	options := &websocket.DialOptions{
-		HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
-	}
-
-	// nolint: bodyclose // nhooyr.io/websocket reads the body internally
-	c, _, err := websocket.Dial(ctx, gatewayUrl, options)
+	handler := &requestHandler{lf: lf}
+	c, err := sdpws.Dial(ctx, gatewayUrl,
+		NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
+		handler,
+	)
 	if err != nil {
 		lf["gateway-url"] = gatewayUrl
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
 		return 1
 	}
-	defer c.Close(websocket.StatusGoingAway, "")
+	defer c.Close(ctx)
 
-	// the default, 32kB is too small for cert bundles and rds-db-cluster-parameter-groups
-	c.SetReadLimit(2 * 1024 * 1024)
+	q, err := createQuery()
+	if err != nil {
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to create query")
+		return 1
+	}
+	err = c.SendQuery(ctx, q)
+	if err != nil {
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to execute query")
+		return 1
+	}
+	log.WithContext(ctx).WithFields(lf).WithError(err).Info("received items")
 
 	// Log the request in JSON
-	b, err := json.MarshalIndent(req, "", "  ")
+	b, err := json.MarshalIndent(q, "", "  ")
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to marshal request")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to marshal query for logging")
 		return 1
 	}
+	log.WithContext(ctx).WithFields(lf).Infof("Query:\n%v", string(b))
 
-	log.WithContext(ctx).WithFields(lf).Infof("Request:\n%v", string(b))
-
-	err = wspb.Write(ctx, c, req)
+	err = c.Wait(ctx, uuid.UUIDs{uuid.UUID(q.UUID)})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to send request")
-		return 1
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("queries failed")
 	}
 
-	queriesSent := true
-
-	responses := make(chan *sdp.GatewayResponse)
-
-	// Start a goroutine that reads responses
-	go func() {
-		for {
-			res := new(sdp.GatewayResponse)
-
-			err = wspb.Read(ctx, c, res)
-
-			if err != nil {
-				var e websocket.CloseError
-				if errors.As(err, &e) {
-					log.WithContext(ctx).WithFields(log.Fields{
-						"code":   e.Code.String(),
-						"reason": e.Reason,
-					}).Info("Websocket closing")
-					return
-				}
-				log.WithContext(ctx).WithFields(log.Fields{
-					"error": err,
-				}).Error("Failed to read response")
-				return
-			}
-
-			responses <- res
-		}
-	}()
-
-	activeQueries := make(map[uuid.UUID]bool)
-
-	var numItems, numEdges int
-
-	// Read the responses
-responses:
-	for {
-		select {
-		case <-ctx.Done():
-			log.WithContext(ctx).WithFields(lf).Info("Context cancelled, exiting")
-			return 1
-
-		case resp := <-responses:
-			switch resp.ResponseType.(type) {
-			case *sdp.GatewayResponse_Status:
-				status := resp.GetStatus()
-				statusFields := log.Fields{
-					"summary":                status.Summary,
-					"responders":             status.Summary.Responders,
-					"queriesSent":            queriesSent,
-					"postProcessingComplete": status.PostProcessingComplete,
-					"itemsReceived":          numItems,
-					"edgesReceived":          numEdges,
-				}
-
-				if status.Done() {
-					// fall through from all "final" query states, check if there's still queries in progress;
-					// only break from the loop if all queries have already been sent
-					// TODO: see above, still needs DefaultStartTimeout implemented to account for slow sources
-					allDone := allDone(ctx, activeQueries, lf)
-					statusFields["allDone"] = allDone
-					if allDone && queriesSent {
-						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders and queries done")
-						break responses
-					} else {
-						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders done, with unfinished queries")
-					}
-				} else {
-					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("still waiting for responders")
-				}
-
-			case *sdp.GatewayResponse_QueryStatus:
-				status := resp.GetQueryStatus()
-				statusFields := log.Fields{
-					"status": status.Status.String(),
-				}
-				queryUuid := status.GetUUIDParsed()
-				if queryUuid == nil {
-					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("Received QueryStatus with nil UUID")
-					continue responses
-				}
-				statusFields["query"] = queryUuid
-
-				switch status.Status {
-				case sdp.QueryStatus_UNSPECIFIED:
-					statusFields["unexpected_status"] = true
-				case sdp.QueryStatus_STARTED:
-					activeQueries[*queryUuid] = true
-				case sdp.QueryStatus_FINISHED:
-					activeQueries[*queryUuid] = false
-				case sdp.QueryStatus_ERRORED:
-					activeQueries[*queryUuid] = false
-				case sdp.QueryStatus_CANCELLED:
-					activeQueries[*queryUuid] = false
-				default:
-					statusFields["unexpected_status"] = true
-				}
-
-				log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("query status update")
-
-			case *sdp.GatewayResponse_NewItem:
-				item := resp.GetNewItem()
-				numItems += 1
-				log.WithContext(ctx).WithFields(lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
-
-			case *sdp.GatewayResponse_NewEdge:
-				edge := resp.GetNewEdge()
-				numEdges += 1
-				log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
-					"from": edge.From.GloballyUniqueName(),
-					"to":   edge.To.GloballyUniqueName(),
-				}).Info("new edge")
-
-			case *sdp.GatewayResponse_QueryError:
-				err := resp.GetQueryError()
-				log.WithContext(ctx).WithFields(lf).Errorf("Error from %v(%v): %v", err.ResponderName, err.SourceName, err)
-
-			case *sdp.GatewayResponse_Error:
-				err := resp.GetError()
-				log.WithContext(ctx).WithFields(lf).Errorf("generic error: %v", err)
-
-			default:
-				j := protojson.Format(resp)
-				log.WithContext(ctx).WithFields(lf).Infof("Unknown %T Response:\n%v", resp.ResponseType, j)
-			}
-		}
-	}
+	log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
+		"queriesStarted": handler.queriesStarted,
+		"itemsReceived":  handler.numItems,
+		"edgesReceived":  handler.numEdges,
+	}).Info("all queries done")
 
 	if viper.GetBool("snapshot-after") {
 		log.WithContext(ctx).Info("Starting snapshot")
-		msgId := uuid.New()
-		snapReq := &sdp.GatewayRequest{
-			MinStatusInterval: minStatusInterval,
-			RequestType: &sdp.GatewayRequest_StoreSnapshot{
-				StoreSnapshot: &sdp.StoreSnapshot{
-					Name:        viper.GetString("snapshot-name"),
-					Description: viper.GetString("snapshot-description"),
-					MsgID:       msgId[:],
-				},
-			},
-		}
-		err = wspb.Write(ctx, c, snapReq)
+		snId, err := c.StoreSnapshot(ctx, viper.GetString("snapshot-name"), viper.GetString("snapshot-description"))
 		if err != nil {
-			log.WithContext(ctx).WithFields(log.Fields{
-				"error": err,
-			}).Error("Failed to send snapshot request")
+			log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to send snapshot request")
 			return 1
 		}
 
-		for {
-			select {
-			case <-ctx.Done():
-				log.WithContext(ctx).Info("Context cancelled, exiting")
-				return 1
-			case resp := <-responses:
-				switch resp.ResponseType.(type) {
-				case *sdp.GatewayResponse_SnapshotStoreResult:
-					result := resp.GetSnapshotStoreResult()
-					if result.Success {
-						log.WithContext(ctx).Infof("Snapshot stored successfully: %v", uuid.UUID(result.SnapshotID))
-						return 0
-					}
-
-					log.WithContext(ctx).Errorf("Snapshot store failed: %v", result.ErrorMessage)
-					return 1
-				default:
-					j := protojson.Format(resp)
-
-					log.WithContext(ctx).Infof("Unknown %T Response:\n%v", resp.ResponseType, j)
-				}
-			}
-		}
+		log.WithContext(ctx).WithFields(lf).Infof("Snapshot stored successfully: %v", snId)
+		return 0
 	}
+
 	return 0
 }
 
@@ -331,64 +234,26 @@ func methodFromString(method string) (sdp.QueryMethod, error) {
 	return result, nil
 }
 
-func createInitialRequest() (*sdp.GatewayRequest, error) {
-	req := &sdp.GatewayRequest{
-		MinStatusInterval: minStatusInterval,
-	}
+func createQuery() (*sdp.Query, error) {
 	u := uuid.New()
-
-	switch viper.GetString("request-type") {
-	case "query":
-		method, err := methodFromString(viper.GetString("query-method"))
-		if err != nil {
-			return nil, err
-		}
-
-		req.RequestType = &sdp.GatewayRequest_Query{
-			Query: &sdp.Query{
-				Method:   method,
-				Type:     viper.GetString("query-type"),
-				Query:    viper.GetString("query"),
-				Scope:    viper.GetString("query-scope"),
-				Deadline: timestamppb.New(time.Now().Add(10 * time.Hour)),
-				UUID:     u[:],
-				RecursionBehaviour: &sdp.Query_RecursionBehaviour{
-					LinkDepth:                  viper.GetUint32("link-depth"),
-					FollowOnlyBlastPropagation: viper.GetBool("blast-radius"),
-				},
-				IgnoreCache: viper.GetBool("ignore-cache"),
-			},
-		}
-	case "load-bookmark":
-		bookmarkUUID, err := uuid.Parse(viper.GetString("bookmark-uuid"))
-		if err != nil {
-			return nil, err
-		}
-		msgID := uuid.New()
-		req.RequestType = &sdp.GatewayRequest_LoadBookmark{
-			LoadBookmark: &sdp.LoadBookmark{
-				UUID:        bookmarkUUID[:],
-				MsgID:       msgID[:],
-				IgnoreCache: viper.GetBool("ignore-cache"),
-			},
-		}
-	case "load-snapshot":
-		snapshotUUID, err := uuid.Parse(viper.GetString("snapshot-uuid"))
-		if err != nil {
-			return nil, err
-		}
-		msgID := uuid.New()
-		req.RequestType = &sdp.GatewayRequest_LoadSnapshot{
-			LoadSnapshot: &sdp.LoadSnapshot{
-				UUID:  snapshotUUID[:],
-				MsgID: msgID[:],
-			},
-		}
-	default:
-		return nil, fmt.Errorf("request type %v not supported", viper.GetString("request-type"))
+	method, err := methodFromString(viper.GetString("query-method"))
+	if err != nil {
+		return nil, err
 	}
 
-	return req, nil
+	return &sdp.Query{
+		Method:   method,
+		Type:     viper.GetString("query-type"),
+		Query:    viper.GetString("query"),
+		Scope:    viper.GetString("query-scope"),
+		Deadline: timestamppb.New(time.Now().Add(10 * time.Hour)),
+		UUID:     u[:],
+		RecursionBehaviour: &sdp.Query_RecursionBehaviour{
+			LinkDepth:                  viper.GetUint32("link-depth"),
+			FollowOnlyBlastPropagation: viper.GetBool("blast-radius"),
+		},
+		IgnoreCache: viper.GetBool("ignore-cache"),
+	}, nil
 }
 
 func init() {

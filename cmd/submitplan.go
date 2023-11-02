@@ -18,16 +18,15 @@ import (
 	"github.com/overmindtech/ovm-cli/cmd/datamaps"
 	"github.com/overmindtech/ovm-cli/tracing"
 	"github.com/overmindtech/sdp-go"
+	"github.com/overmindtech/sdp-go/sdpws"
 	log "github.com/sirupsen/logrus"
+	"github.com/sourcegraph/conc/iter"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"nhooyr.io/websocket"
-	"nhooyr.io/websocket/wspb"
 )
 
 // submitPlanCmd represents the submit-plan command
@@ -451,9 +450,9 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		log.WithContext(ctx).WithFields(lf).Info("Re-using change")
 	}
 
+	queries := planMappings.Queries()
 	receivedItems := make([]*sdp.Item, 0)
-
-	if len(planMappings.Queries()) > 0 {
+	if len(queries) > 0 {
 		mgmtClient := AuthenticatedManagementClient(ctx)
 		log.WithContext(ctx).WithFields(lf).Info("Waking up sources")
 		_, err = mgmtClient.KeepaliveSources(ctx, &connect.Request[sdp.KeepaliveSourcesRequest]{
@@ -466,177 +465,23 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 			return 1
 		}
 
-		options := &websocket.DialOptions{
-			HTTPClient: NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
-		}
-
-		log.WithContext(ctx).Infof("Finding expected changes in Overmind")
-
-		// nolint: bodyclose // nhooyr.io/websocket reads the body internally
-		c, _, err := websocket.Dial(ctx, viper.GetString("gateway-url"), options)
+		ws, err := sdpws.Dial(ctx, gatewayUrl, otelhttp.DefaultClient, nil)
 		if err != nil {
-			log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
+			log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to gateway")
 			return 1
 		}
-		defer c.Close(websocket.StatusGoingAway, "")
 
-		// the default, 32kB is too small for cert bundles and rds-db-cluster-parameter-groups
-		c.SetReadLimit(2 * 1024 * 1024)
+		results, err := iter.MapErr(queries, func(q **sdp.Query) ([]*sdp.Item, error) {
+			return ws.Query(ctx, *q)
+		})
 
-		queriesSentChan := make(chan struct{})
-		go func() {
-			for _, q := range planMappings.Queries() {
-				req := sdp.GatewayRequest{
-					MinStatusInterval: minStatusInterval,
-					RequestType: &sdp.GatewayRequest_Query{
-						Query: q,
-					},
-				}
-				err = wspb.Write(ctx, c, &req)
+		if err != nil {
+			log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to query items")
+			return 1
+		}
 
-				if err == nil {
-					log.WithContext(ctx).WithFields(log.Fields{
-						"scope":  q.Scope,
-						"type":   q.Type,
-						"query":  q.Query,
-						"method": q.Method.String(),
-						"uuid":   q.ParseUuid().String(),
-					}).Trace("Started query")
-				}
-				if err != nil {
-					log.WithContext(ctx).WithFields(lf).WithError(err).WithField("req", &req).Error("Failed to send request")
-					continue
-				}
-			}
-			queriesSentChan <- struct{}{}
-		}()
-
-		responses := make(chan *sdp.GatewayResponse)
-
-		// Start a goroutine that reads responses
-		go func() {
-			for {
-				res := new(sdp.GatewayResponse)
-
-				err = wspb.Read(ctx, c, res)
-
-				if err != nil {
-					var e websocket.CloseError
-					if errors.As(err, &e) {
-						log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
-							"code":   e.Code.String(),
-							"reason": e.Reason,
-						}).Debug("Websocket closing")
-						return
-					}
-					log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to read response")
-					return
-				}
-
-				responses <- res
-			}
-		}()
-
-		activeQueries := make(map[uuid.UUID]bool)
-		queryErrors := make(map[uuid.UUID][]*sdp.QueryError)
-		queriesSent := false
-
-		// Read the responses
-	responses:
-		for {
-			select {
-			case <-queriesSentChan:
-				queriesSent = true
-
-			case <-ctx.Done():
-				log.WithContext(ctx).WithFields(lf).Info("Context cancelled, exiting")
-				return 1
-
-			case resp := <-responses:
-				switch resp.ResponseType.(type) {
-
-				case *sdp.GatewayResponse_Status:
-					status := resp.GetStatus()
-					statusFields := log.Fields{
-						"summary":                  status.Summary,
-						"responders":               status.Summary.Responders,
-						"queriesSent":              queriesSent,
-						"post_processing_complete": status.PostProcessingComplete,
-					}
-
-					if status.Done() {
-						// fall through from all "final" query states, check if there's still queries in progress;
-						// only break from the loop if all queries have already been sent
-						// TODO: see above, still needs DefaultStartTimeout implemented to account for slow sources
-						allDone := allDone(ctx, activeQueries, lf)
-						statusFields["allDone"] = allDone
-						if allDone && queriesSent {
-							log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("All queries complete")
-							break responses
-						} else {
-							log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("All responders done, with unfinished queries")
-						}
-					} else {
-						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debug("Still waiting for responders")
-					}
-
-				case *sdp.GatewayResponse_QueryStatus:
-					status := resp.GetQueryStatus()
-					statusFields := log.Fields{
-						"status": status.Status.String(),
-					}
-					queryUuid := status.GetUUIDParsed()
-					if queryUuid == nil {
-						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debug("Received QueryStatus with nil UUID")
-						continue responses
-					}
-					statusFields["query"] = queryUuid
-
-					switch status.Status {
-					case sdp.QueryStatus_UNSPECIFIED:
-						statusFields["unexpected_status"] = true
-					case sdp.QueryStatus_STARTED:
-						activeQueries[*queryUuid] = true
-					case sdp.QueryStatus_FINISHED:
-						activeQueries[*queryUuid] = false
-					case sdp.QueryStatus_ERRORED:
-						activeQueries[*queryUuid] = false
-					case sdp.QueryStatus_CANCELLED:
-						activeQueries[*queryUuid] = false
-					default:
-						statusFields["unexpected_status"] = true
-					}
-
-					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debug("Query status update")
-
-				case *sdp.GatewayResponse_NewItem:
-					item := resp.GetNewItem()
-					log.WithContext(ctx).WithFields(lf).WithField("item", item.GloballyUniqueName()).Debug("New item")
-
-					receivedItems = append(receivedItems, item)
-
-				case *sdp.GatewayResponse_NewEdge:
-					log.WithContext(ctx).WithFields(lf).Debug("Ignored edge")
-
-				case *sdp.GatewayResponse_QueryError:
-					err := resp.GetQueryError()
-					uuid := err.GetUUIDParsed()
-
-					if uuid != nil {
-						queryErrors[*uuid] = append(queryErrors[*uuid], err)
-					}
-
-					log.WithContext(ctx).WithFields(lf).WithError(err).Debugf("Error from %v(%v)", err.ResponderName, err.SourceName)
-
-				case *sdp.GatewayResponse_Error:
-					err := resp.GetError()
-					log.WithContext(ctx).WithFields(lf).WithField(log.ErrorKey, err).Debug("Generic error")
-
-				default:
-					j := protojson.Format(resp)
-					log.WithContext(ctx).WithFields(lf).Infof("Unknown %T Response:\n%v", resp.ResponseType, j)
-				}
-			}
+		for _, items := range results {
+			receivedItems = append(receivedItems, items...)
 		}
 
 		// Print a summary of the results so far. I would like for this to be
@@ -668,18 +513,6 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 						"query":  mapping.OvermindQuery.Query,
 						"method": mapping.OvermindQuery.Method.String(),
 					}).Error("      No responses received")
-
-					relatedErrors, found := queryErrors[queryUUID]
-
-					if found {
-						for _, err := range relatedErrors {
-							log.WithContext(ctx).WithFields(log.Fields{
-								"type":      err.ErrorType,
-								"source":    err.SourceName,
-								"responder": err.ResponderName,
-							}).Errorf("      %v", err.ErrorString)
-						}
-					}
 				}
 			}
 		}
@@ -757,18 +590,6 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 	}
 
 	return 0
-}
-
-func allDone(ctx context.Context, activeQueries map[uuid.UUID]bool, lf log.Fields) bool {
-	allDone := true
-	for q := range activeQueries {
-		if activeQueries[q] {
-			log.WithContext(ctx).WithFields(lf).WithField("query", q).Debugf("Query still active")
-			allDone = false
-			break
-		}
-	}
-	return allDone
 }
 
 func init() {
