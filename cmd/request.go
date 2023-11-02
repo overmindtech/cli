@@ -160,9 +160,10 @@ func Request(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 
+	handler := &requestHandler{lf: lf}
 	c, err := sdpws.Dial(ctx, gatewayUrl,
 		NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
-		&requestHandler{lf: lf},
+		handler,
 	)
 	if err != nil {
 		lf["gateway-url"] = gatewayUrl
@@ -196,6 +197,12 @@ func Request(ctx context.Context, ready chan bool) int {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("queries failed")
 	}
 
+	log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
+		"queriesStarted": handler.queriesStarted,
+		"itemsReceived":  handler.numItems,
+		"edgesReceived":  handler.numEdges,
+	}).Info("all queries done")
+
 	if viper.GetBool("snapshot-after") {
 		log.WithContext(ctx).Info("Starting snapshot")
 		snId, err := c.StoreSnapshot(ctx, viper.GetString("snapshot-name"), viper.GetString("snapshot-description"))
@@ -207,6 +214,7 @@ func Request(ctx context.Context, ready chan bool) int {
 		log.WithContext(ctx).WithFields(lf).Infof("Snapshot stored successfully: %v", snId)
 		return 0
 	}
+
 	return 0
 }
 
