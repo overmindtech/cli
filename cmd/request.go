@@ -203,147 +203,17 @@ func Request(ctx context.Context, ready chan bool) int {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("queries failed")
 	}
 
-	// 	var numItems, numEdges int
+	if viper.GetBool("snapshot-after") {
+		log.WithContext(ctx).Info("Starting snapshot")
+		snId, err := c.StoreSnapshot(ctx, viper.GetString("snapshot-name"), viper.GetString("snapshot-description"))
+		if err != nil {
+			log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to send snapshot request")
+			return 1
+		}
 
-	// 	// Read the responses
-	// responses:
-	// 	for {
-	// 		select {
-	// 		case <-ctx.Done():
-	// 			log.WithContext(ctx).WithFields(lf).Info("Context cancelled, exiting")
-	// 			return 1
-
-	// 		case resp := <-responses:
-	// 			switch resp.ResponseType.(type) {
-	// 			case *sdp.GatewayResponse_Status:
-	// 				status := resp.GetStatus()
-	// 				statusFields := log.Fields{
-	// 					"summary":                status.Summary,
-	// 					"responders":             status.Summary.Responders,
-	// 					"queriesSent":            queriesSent,
-	// 					"postProcessingComplete": status.PostProcessingComplete,
-	// 					"itemsReceived":          numItems,
-	// 					"edgesReceived":          numEdges,
-	// 				}
-
-	// 				if status.Done() {
-	// 					// fall through from all "final" query states, check if there's still queries in progress;
-	// 					// only break from the loop if all queries have already been sent
-	// 					// TODO: see above, still needs DefaultStartTimeout implemented to account for slow sources
-	// 					allDone := allDone(ctx, activeQueries, lf)
-	// 					statusFields["allDone"] = allDone
-	// 					if allDone && queriesSent {
-	// 						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders and queries done")
-	// 						break responses
-	// 					} else {
-	// 						log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("all responders done, with unfinished queries")
-	// 					}
-	// 				} else {
-	// 					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Info("still waiting for responders")
-	// 				}
-
-	// 			case *sdp.GatewayResponse_QueryStatus:
-	// 				status := resp.GetQueryStatus()
-	// 				statusFields := log.Fields{
-	// 					"status": status.Status.String(),
-	// 				}
-	// 				queryUuid := status.GetUUIDParsed()
-	// 				if queryUuid == nil {
-	// 					log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("Received QueryStatus with nil UUID")
-	// 					continue responses
-	// 				}
-	// 				statusFields["query"] = queryUuid
-
-	// 				switch status.Status {
-	// 				case sdp.QueryStatus_UNSPECIFIED:
-	// 					statusFields["unexpected_status"] = true
-	// 				case sdp.QueryStatus_STARTED:
-	// 					activeQueries[*queryUuid] = true
-	// 				case sdp.QueryStatus_FINISHED:
-	// 					activeQueries[*queryUuid] = false
-	// 				case sdp.QueryStatus_ERRORED:
-	// 					activeQueries[*queryUuid] = false
-	// 				case sdp.QueryStatus_CANCELLED:
-	// 					activeQueries[*queryUuid] = false
-	// 				default:
-	// 					statusFields["unexpected_status"] = true
-	// 				}
-
-	// 				log.WithContext(ctx).WithFields(lf).WithFields(statusFields).Debugf("query status update")
-
-	// 			case *sdp.GatewayResponse_NewItem:
-	// 				item := resp.GetNewItem()
-	// 				numItems += 1
-	// 				log.WithContext(ctx).WithFields(lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
-
-	// 			case *sdp.GatewayResponse_NewEdge:
-	// 				edge := resp.GetNewEdge()
-	// 				numEdges += 1
-	// 				log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
-	// 					"from": edge.From.GloballyUniqueName(),
-	// 					"to":   edge.To.GloballyUniqueName(),
-	// 				}).Info("new edge")
-
-	// 			case *sdp.GatewayResponse_QueryError:
-	// 				err := resp.GetQueryError()
-	// 				log.WithContext(ctx).WithFields(lf).Errorf("Error from %v(%v): %v", err.ResponderName, err.SourceName, err)
-
-	// 			case *sdp.GatewayResponse_Error:
-	// 				err := resp.GetError()
-	// 				log.WithContext(ctx).WithFields(lf).Errorf("generic error: %v", err)
-
-	// 			default:
-	// 				j := protojson.Format(resp)
-	// 				log.WithContext(ctx).WithFields(lf).Infof("Unknown %T Response:\n%v", resp.ResponseType, j)
-	// 			}
-	// 		}
-	// 	}
-
-	// 	if viper.GetBool("snapshot-after") {
-	// 		log.WithContext(ctx).Info("Starting snapshot")
-	// 		msgId := uuid.New()
-	// 		snapReq := &sdp.GatewayRequest{
-	// 			MinStatusInterval: minStatusInterval,
-	// 			RequestType: &sdp.GatewayRequest_StoreSnapshot{
-	// 				StoreSnapshot: &sdp.StoreSnapshot{
-	// 					Name:        viper.GetString("snapshot-name"),
-	// 					Description: viper.GetString("snapshot-description"),
-	// 					MsgID:       msgId[:],
-	// 				},
-	// 			},
-	// 		}
-	// 		err = wspb.Write(ctx, c, snapReq)
-	// 		if err != nil {
-	// 			log.WithContext(ctx).WithFields(log.Fields{
-	// 				"error": err,
-	// 			}).Error("Failed to send snapshot request")
-	// 			return 1
-	// 		}
-
-	// 		for {
-	// 			select {
-	// 			case <-ctx.Done():
-	// 				log.WithContext(ctx).Info("Context cancelled, exiting")
-	// 				return 1
-	// 			case resp := <-responses:
-	// 				switch resp.ResponseType.(type) {
-	// 				case *sdp.GatewayResponse_SnapshotStoreResult:
-	// 					result := resp.GetSnapshotStoreResult()
-	// 					if result.Success {
-	// 						log.WithContext(ctx).Infof("Snapshot stored successfully: %v", uuid.UUID(result.SnapshotID))
-	// 						return 0
-	// 					}
-
-	// 					log.WithContext(ctx).Errorf("Snapshot store failed: %v", result.ErrorMessage)
-	// 					return 1
-	// 				default:
-	// 					j := protojson.Format(resp)
-
-	// 					log.WithContext(ctx).Infof("Unknown %T Response:\n%v", resp.ResponseType, j)
-	// 				}
-	// 			}
-	// 		}
-	// 	}
+		log.WithContext(ctx).WithFields(lf).Infof("Snapshot stored successfully: %v", snId)
+		return 0
+	}
 	return 0
 }
 
