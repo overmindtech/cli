@@ -130,13 +130,6 @@ func Request(ctx context.Context, ready chan bool) int {
 	))
 	defer span.End()
 
-	// Construct the request
-	req, err := createInitialRequest()
-	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("Failed to create initial request")
-		return 1
-	}
-
 	gatewayUrl := viper.GetString("gateway-url")
 	if gatewayUrl == "" {
 		gatewayUrl = fmt.Sprintf("%v/api/gateway", viper.GetString("url"))
@@ -178,14 +171,6 @@ func Request(ctx context.Context, ready chan bool) int {
 	}
 	defer c.Close(ctx)
 
-	// Log the request in JSON
-	b, err := json.MarshalIndent(req, "", "  ")
-	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to marshal request for logging")
-		return 1
-	}
-
-	log.WithContext(ctx).WithFields(lf).Infof("Request:\n%v", string(b))
 	q, err := createQuery()
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to create query")
@@ -197,6 +182,14 @@ func Request(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 	log.WithContext(ctx).WithFields(lf).WithError(err).Info("received items")
+
+	// Log the request in JSON
+	b, err := json.MarshalIndent(q, "", "  ")
+	if err != nil {
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to marshal query for logging")
+		return 1
+	}
+	log.WithContext(ctx).WithFields(lf).Infof("Query:\n%v", string(b))
 
 	err = c.Wait(ctx, uuid.UUIDs{uuid.UUID(q.UUID)})
 	if err != nil {
@@ -253,53 +246,6 @@ func createQuery() (*sdp.Query, error) {
 		},
 		IgnoreCache: viper.GetBool("ignore-cache"),
 	}, nil
-}
-
-func createInitialRequest() (*sdp.GatewayRequest, error) {
-	req := &sdp.GatewayRequest{
-		MinStatusInterval: minStatusInterval,
-	}
-
-	switch viper.GetString("request-type") {
-	case "query":
-		q, err := createQuery()
-		if err != nil {
-			return nil, err
-		}
-
-		req.RequestType = &sdp.GatewayRequest_Query{
-			Query: q,
-		}
-	case "load-bookmark":
-		bookmarkUUID, err := uuid.Parse(viper.GetString("bookmark-uuid"))
-		if err != nil {
-			return nil, err
-		}
-		msgID := uuid.New()
-		req.RequestType = &sdp.GatewayRequest_LoadBookmark{
-			LoadBookmark: &sdp.LoadBookmark{
-				UUID:        bookmarkUUID[:],
-				MsgID:       msgID[:],
-				IgnoreCache: viper.GetBool("ignore-cache"),
-			},
-		}
-	case "load-snapshot":
-		snapshotUUID, err := uuid.Parse(viper.GetString("snapshot-uuid"))
-		if err != nil {
-			return nil, err
-		}
-		msgID := uuid.New()
-		req.RequestType = &sdp.GatewayRequest_LoadSnapshot{
-			LoadSnapshot: &sdp.LoadSnapshot{
-				UUID:  snapshotUUID[:],
-				MsgID: msgID[:],
-			},
-		}
-	default:
-		return nil, fmt.Errorf("request type %v not supported", viper.GetString("request-type"))
-	}
-
-	return req, nil
 }
 
 func init() {
