@@ -221,7 +221,7 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 			// Populate resource values
 			dataMap["values"] = currentResource.AttributeValues
 
-			if overmindMappings, ok := plan.PlannedValues.Outputs["overmind_mappings"]; ok {
+			if overmindMappingsOutput, ok := plan.PlannedValues.Outputs["overmind_mappings"]; ok {
 				configResource := plan.Config.RootModule.DigResource(resourceChange.Address)
 
 				if configResource == nil {
@@ -233,7 +233,7 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 					// Look up the provider config key in the mappings
 					mappings := make(map[string]map[string]string)
 
-					err = json.Unmarshal(overmindMappings.Value, &mappings)
+					err = json.Unmarshal(overmindMappingsOutput.Value, &mappings)
 
 					if err != nil {
 						log.WithContext(ctx).
