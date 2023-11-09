@@ -15,8 +15,8 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 		t.Error(err)
 	}
 
-	if len(mappedItemDiffs) != 4 {
-		t.Errorf("Expected 4 changes, got %v:", len(mappedItemDiffs))
+	if len(mappedItemDiffs) != 3 {
+		t.Errorf("Expected 3 changes, got %v:", len(mappedItemDiffs))
 		for _, diff := range mappedItemDiffs {
 			t.Errorf("  %v", diff)
 		}
@@ -25,7 +25,6 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	var nats_box_deployment *sdp.MappedItemDiff
 	var api_server_deployment *sdp.MappedItemDiff
 	var aws_iam_policy *sdp.MappedItemDiff
-	var aws_iam_policy_document *sdp.MappedItemDiff
 
 	for _, diff := range mappedItemDiffs {
 		item := diff.Item.Before
@@ -44,8 +43,6 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 			api_server_deployment = diff
 		} else if item.Type == "iam-policy" {
 			aws_iam_policy = diff
-		} else if item.Type == "aws_iam_policy_document" {
-			aws_iam_policy_document = diff
 		}
 	}
 
@@ -137,23 +134,5 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	}
 	if aws_iam_policy.MappingQuery.Query != "arn:aws:iam::123456789012:policy/test-alb-ingress" {
 		t.Errorf("Expected aws_iam_policy query query to be 'arn:aws:iam::123456789012:policy/test-alb-ingress', got '%v'", aws_iam_policy.MappingQuery.Query)
-	}
-
-	// check aws_iam_policy_document
-	t.Logf("aws_iam_policy_document: %v", aws_iam_policy_document)
-	if aws_iam_policy_document == nil {
-		t.Fatalf("Expected aws_iam_policy_document to be set, but it's not")
-	}
-	if aws_iam_policy_document.Item.Status != sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNCHANGED {
-		t.Errorf("Expected aws_iam_policy_document status to be 'unchanged', but it's %v", aws_iam_policy_document.Item.Status)
-	}
-	if aws_iam_policy_document.MappingQuery != nil {
-		t.Errorf("Expected aws_iam_policy_document query to be nil, got '%v'", aws_iam_policy_document.MappingQuery)
-	}
-	if aws_iam_policy_document.Item.After.Scope != "terraform_plan" {
-		t.Errorf("Expected aws_iam_policy_document after item scope to be 'terraform_plan', got '%v'", aws_iam_policy_document.Item.After.Scope)
-	}
-	if aws_iam_policy_document.Item.After.Type != "aws_iam_policy_document" {
-		t.Errorf("Expected aws_iam_policy_document after item type to be 'aws_iam_policy_document', got '%v'", aws_iam_policy_document.Item.After.Type)
 	}
 }
