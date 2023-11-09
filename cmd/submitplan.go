@@ -9,21 +9,20 @@ import (
 	"os/exec"
 	"os/signal"
 	"os/user"
+	"slices"
 	"strings"
 	"syscall"
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/overmindtech/ovm-cli/cmd/datamaps"
 	"github.com/overmindtech/ovm-cli/tracing"
 	"github.com/overmindtech/sdp-go"
-	"github.com/overmindtech/sdp-go/sdpws"
 	log "github.com/sirupsen/logrus"
-	"github.com/sourcegraph/conc/iter"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -81,74 +80,175 @@ type TfData struct {
 	Values  map[string]any
 }
 
-type MappedPlan struct {
-	// Map of unsupported types and their changes
-	UnsupportedChanges map[string][]ResourceChange
-
-	// Map of supported types and their mapped queries
-	SupportedChanges map[string][]TerraformToOvermindMapping
+// maskAllData masks every entry in attributes as redacted
+func maskAllData(attributes map[string]interface{}) map[string]interface{} {
+	for k, v := range attributes {
+		if mv, ok := v.(map[string]interface{}); ok {
+			attributes[k] = maskAllData(mv)
+		} else {
+			attributes[k] = "REDACTED"
+		}
+	}
+	return attributes
 }
 
-func (m MappedPlan) NumUnsupportedChanges() int {
-	var num int
+// maskSensitiveData masks every entry in attributes that is set to true in sensitive. returns the redacted attributes
+func maskSensitiveData(attributes, sensitive map[string]interface{}) map[string]interface{} {
+	for k, s := range sensitive {
+		log.Debugf("checking %v", k)
+		if mv, ok := s.(map[string]interface{}); ok {
+			if sub, ok := attributes[k].(map[string]interface{}); ok {
+				attributes[k] = maskSensitiveData(sub, mv)
+			}
+		} else {
+			attributes[k] = "REDACTED"
+		}
+	}
+	return attributes
+}
 
-	for _, v := range m.UnsupportedChanges {
-		num += len(v)
+func itemAttributesFromResourceChangeData(attributesMsg, sensitiveMsg json.RawMessage) (*sdp.ItemAttributes, error) {
+	var attributes map[string]interface{}
+	err := json.Unmarshal(attributesMsg, &attributes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse attributes: %w", err)
 	}
 
-	return num
-}
-
-func (m MappedPlan) NumSupportedChanges() int {
-	var num int
-
-	for _, v := range m.SupportedChanges {
-		num += len(v)
+	// sensitiveMsg can be a bool or a map[string]interface{}
+	var isSensitive bool
+	err = json.Unmarshal(sensitiveMsg, &isSensitive)
+	if err == nil && isSensitive {
+		attributes = maskAllData(attributes)
+	} else if err != nil {
+		// only try parsing as map if parsing as bool failed
+		var sensitive map[string]interface{}
+		err = json.Unmarshal(sensitiveMsg, &sensitive)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse sensitive: %w", err)
+		}
+		attributes = maskSensitiveData(attributes, sensitive)
 	}
 
-	return num
+	return sdp.ToAttributesSorted(attributes)
 }
 
-func (m MappedPlan) Queries() []*sdp.Query {
-	queries := make([]*sdp.Query, 0)
+func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, error) {
+	status := sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNSPECIFIED
 
-	for _, mappings := range m.SupportedChanges {
-		for _, mapping := range mappings {
-			queries = append(queries, mapping.OvermindQuery)
+	if slices.Equal(resourceChange.Change.Actions, []string{"no-op"}) || slices.Equal(resourceChange.Change.Actions, []string{"read"}) {
+		status = sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNCHANGED
+	} else if slices.Equal(resourceChange.Change.Actions, []string{"create"}) {
+		status = sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED
+	} else if slices.Equal(resourceChange.Change.Actions, []string{"update"}) {
+		status = sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED
+	} else if slices.Equal(resourceChange.Change.Actions, []string{"delete", "create"}) {
+		status = sdp.ItemDiffStatus_ITEM_DIFF_STATUS_REPLACED
+	} else if slices.Equal(resourceChange.Change.Actions, []string{"create", "delete"}) {
+		status = sdp.ItemDiffStatus_ITEM_DIFF_STATUS_REPLACED
+	} else if slices.Equal(resourceChange.Change.Actions, []string{"delete"}) {
+		status = sdp.ItemDiffStatus_ITEM_DIFF_STATUS_DELETED
+	}
+
+	beforeAttributes, err := itemAttributesFromResourceChangeData(resourceChange.Change.Before, resourceChange.Change.BeforeSensitive)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse before attributes: %w", err)
+	}
+	afterAttributes, err := itemAttributesFromResourceChangeData(resourceChange.Change.After, resourceChange.Change.AfterSensitive)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse after attributes: %w", err)
+	}
+
+	result := &sdp.ItemDiff{
+		// Item: filled in by item mapping in UpdatePlannedChanges
+		Status: status,
+	}
+
+	if beforeAttributes != nil {
+		result.Before = &sdp.Item{ // DODO: check for empty before/after attributes and set to nil
+			Type:            resourceChange.Type,
+			UniqueAttribute: "terraform_address",
+			Attributes:      beforeAttributes,
+			Scope:           "terraform_plan",
+		}
+
+		err = result.Before.Attributes.Set("terraform_address", resourceChange.Address)
+		if err != nil {
+			// since Address is a string, this should never happen
+			sentry.CaptureException(fmt.Errorf("failed to set terraform_address of type %T (%v) on before attributes: %w", resourceChange.Address, resourceChange.Address, err))
 		}
 	}
 
-	return queries
-}
+	if afterAttributes != nil {
+		result.After = &sdp.Item{
+			Type:            resourceChange.Type,
+			UniqueAttribute: "terraform_address",
+			Attributes:      afterAttributes,
+			Scope:           "terraform_plan",
+		}
 
-func NewMappedPlan() *MappedPlan {
-	return &MappedPlan{
-		UnsupportedChanges: make(map[string][]ResourceChange),
-		SupportedChanges:   make(map[string][]TerraformToOvermindMapping),
+		err = result.After.Attributes.Set("terraform_address", resourceChange.Address)
+		if err != nil {
+			// since Address is a string, this should never happen
+			sentry.CaptureException(fmt.Errorf("failed to set terraform_address of type %T (%v) on after attributes: %w", resourceChange.Address, resourceChange.Address, err))
+		}
 	}
+
+	return result, nil
 }
 
-// Merges another mapped plan into this one
-func (m *MappedPlan) Merge(other *MappedPlan) {
-	for k, v := range other.UnsupportedChanges {
-		m.UnsupportedChanges[k] = append(m.UnsupportedChanges[k], v...)
+type plannedChangeGroups struct {
+	supported   map[string][]*sdp.MappedItemDiff
+	unsupported map[string][]*sdp.MappedItemDiff
+}
+
+func (g *plannedChangeGroups) NumUnsupportedChanges() int {
+	num := 0
+
+	for _, v := range g.unsupported {
+		num += len(v)
 	}
 
-	for k, v := range other.SupportedChanges {
-		m.SupportedChanges[k] = append(m.SupportedChanges[k], v...)
+	return num
+}
+
+func (g *plannedChangeGroups) NumSupportedChanges() int {
+	num := 0
+
+	for _, v := range g.supported {
+		num += len(v)
 	}
+
+	return num
 }
 
-type TerraformToOvermindMapping struct {
-	TerraformResource *Resource
-	OvermindQuery     *sdp.Query
+func (g *plannedChangeGroups) MappedItemDiffs() []*sdp.MappedItemDiff {
+	mappedItemDiffs := make([]*sdp.MappedItemDiff, 0)
+
+	for _, v := range g.supported {
+		mappedItemDiffs = append(mappedItemDiffs, v...)
+	}
+
+	for _, v := range g.unsupported {
+		mappedItemDiffs = append(mappedItemDiffs, v...)
+	}
+
+	return mappedItemDiffs
 }
 
-func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fields) (*MappedPlan, error) {
-	mappedPlan := NewMappedPlan()
+// Add the specified item to the approapriate type group in the supported or unsupported section, based of whether it has a mapping query
+func (g *plannedChangeGroups) Add(typ string, item *sdp.MappedItemDiff) {
+	groups := g.supported
+	if item.MappingQuery == nil {
+		groups = g.unsupported
+	}
+	list, ok := groups[typ]
+	if !ok {
+		list = make([]*sdp.MappedItemDiff, 0)
+	}
+	groups[typ] = append(list, item)
+}
 
-	var overmindMappings []TerraformToOvermindMapping
-
+func mappedItemDiffsFromPlan(ctx context.Context, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, error) {
 	// read results from `terraform show -json ${tfplan file}`
 	planJSON, err := os.ReadFile(fileName)
 	if err != nil {
@@ -159,19 +259,25 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 	var plan Plan
 	err = json.Unmarshal(planJSON, &plan)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse %v: %w", fileName, err)
+		return nil, fmt.Errorf("failed to parse '%v': %w", fileName, err)
+	}
+
+	plannedChangeGroups := plannedChangeGroups{
+		supported:   map[string][]*sdp.MappedItemDiff{},
+		unsupported: map[string][]*sdp.MappedItemDiff{},
 	}
 
 	// for all managed resources:
 	for _, resourceChange := range plan.ResourceChanges {
-		if len(resourceChange.Change.Actions) == 0 || resourceChange.Change.Actions[0] == "no-op" {
-			// skip resources with no changes
+		if len(resourceChange.Change.Actions) == 0 || resourceChange.Change.Actions[0] == "no-op" || resourceChange.Mode == "data" {
+			// skip resources with no changes and data updates
 			continue
 		}
 
-		// Track this change in the unsupported changes map. It will be moved to
-		// supported later if we find a mapping
-		mappedPlan.UnsupportedChanges[resourceChange.Type] = append(mappedPlan.UnsupportedChanges[resourceChange.Type], resourceChange)
+		itemDiff, err := itemDiffFromResourceChange(resourceChange)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create item diff for resource change: %w", err)
+		}
 
 		awsMappings := datamaps.AwssourceData[resourceChange.Type]
 		k8sMappings := datamaps.K8ssourceData[resourceChange.Type]
@@ -180,6 +286,10 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 
 		if len(mappings) == 0 {
 			log.WithContext(ctx).WithFields(lf).WithField("terraform-address", resourceChange.Address).Debug("Skipping unmapped resource")
+			plannedChangeGroups.Add(resourceChange.Type, &sdp.MappedItemDiff{
+				Item:         itemDiff,
+				MappingQuery: nil, // unmapped item has no mapping query
+			})
 			continue
 		}
 
@@ -268,7 +378,7 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 			}
 
 			u := uuid.New()
-			newQuery := sdp.Query{
+			newQuery := &sdp.Query{
 				Type:               mapData.Type,
 				Method:             mapData.Method,
 				Query:              fmt.Sprintf("%v", query),
@@ -278,9 +388,25 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 				Deadline:           timestamppb.New(time.Now().Add(60 * time.Second)),
 			}
 
-			overmindMappings = append(overmindMappings, TerraformToOvermindMapping{
-				TerraformResource: currentResource,
-				OvermindQuery:     &newQuery,
+			// cleanup item metadata from mapping query
+			if itemDiff.Before != nil {
+				itemDiff.Before.Type = newQuery.Type
+				if newQuery.Scope != "*" {
+					itemDiff.Before.Scope = newQuery.Scope
+				}
+			}
+
+			// cleanup item metadata from mapping query
+			if itemDiff.After != nil {
+				itemDiff.After.Type = newQuery.Type
+				if newQuery.Scope != "*" {
+					itemDiff.After.Scope = newQuery.Scope
+				}
+			}
+
+			plannedChangeGroups.Add(resourceChange.Type, &sdp.MappedItemDiff{
+				Item:         itemDiff,
+				MappingQuery: newQuery,
 			})
 
 			log.WithContext(ctx).WithFields(log.Fields{
@@ -288,48 +414,42 @@ func changingItemQueriesFromPlan(ctx context.Context, fileName string, lf log.Fi
 				"type":   newQuery.Type,
 				"query":  newQuery.Query,
 				"method": newQuery.Method.String(),
-			}).Debug("Mapped terraform to query")
+			}).Debug("Mapped resource to query")
 		}
 	}
 
-	// Group mapped items by type
-	for _, mapping := range overmindMappings {
-		mappedPlan.SupportedChanges[mapping.TerraformResource.Type] = append(mappedPlan.SupportedChanges[mapping.TerraformResource.Type], mapping)
-		// Delete supported type from unsupported map
-		delete(mappedPlan.UnsupportedChanges, mapping.TerraformResource.Type)
-	}
-
-	resourceWord := "resource"
-	if len(overmindMappings) > 1 {
-		resourceWord = "resources"
-	}
-
 	supported := ""
-
-	if mappedPlan.NumSupportedChanges() > 0 {
-		supported = Green.Color(fmt.Sprintf("%v supported", mappedPlan.NumSupportedChanges()))
+	numSupported := plannedChangeGroups.NumSupportedChanges()
+	if numSupported > 0 {
+		supported = Green.Color(fmt.Sprintf("%v supported", numSupported))
 	}
 
 	unsupported := ""
-
-	if mappedPlan.NumUnsupportedChanges() > 0 {
-		unsupported = Yellow.Color(fmt.Sprintf("%v unsupported", mappedPlan.NumUnsupportedChanges()))
+	numUnsupported := plannedChangeGroups.NumUnsupportedChanges()
+	if numUnsupported > 0 {
+		unsupported = Yellow.Color(fmt.Sprintf("%v unsupported", numUnsupported))
 	}
 
-	totalChanges := mappedPlan.NumSupportedChanges() + mappedPlan.NumUnsupportedChanges()
+	numTotalChanges := numSupported + numUnsupported
 
-	log.WithContext(ctx).Infof("Plan (%v) contained %v changing %v: %v %v", fileName, totalChanges, resourceWord, supported, unsupported)
+	switch numTotalChanges {
+	case 0:
+		log.WithContext(ctx).Infof("Plan (%v) contained no changing resources.", fileName)
+	case 1:
+		log.WithContext(ctx).Infof("Plan (%v) contained one changing resource: %v %v", fileName, supported, unsupported)
+	default:
+		log.WithContext(ctx).Infof("Plan (%v) contained %v changing resources: %v %v", fileName, numTotalChanges, supported, unsupported)
+	}
 
 	// Log the types
-	for typ, mappings := range mappedPlan.SupportedChanges {
-		log.WithContext(ctx).Infof(Green.Color("  ✓ %v (%v)"), typ, len(mappings))
+	for typ, plannedChanges := range plannedChangeGroups.supported {
+		log.WithContext(ctx).Infof(Green.Color("  ✓ %v (%v)"), typ, len(plannedChanges))
+	}
+	for typ, plannedChanges := range plannedChangeGroups.unsupported {
+		log.WithContext(ctx).Infof(Yellow.Color("  ✗ %v (%v)"), typ, len(plannedChanges))
 	}
 
-	for typ, mappings := range mappedPlan.UnsupportedChanges {
-		log.WithContext(ctx).Infof(Yellow.Color("  ✗ %v (%v)"), typ, len(mappings))
-	}
-
-	return mappedPlan, nil
+	return plannedChangeGroups.MappedItemDiffs(), nil
 }
 
 func changeTitle(arg string) string {
@@ -398,16 +518,16 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 
 	log.WithContext(ctx).Infof("Reading %v plan %v", len(files), fileWord)
 
-	planMappings := NewMappedPlan()
+	plannedChanges := make([]*sdp.MappedItemDiff, 0)
 
 	for _, f := range files {
 		lf["file"] = f
-		mappings, err := changingItemQueriesFromPlan(ctx, f, lf)
+		mappedItemDiffs, err := mappedItemDiffsFromPlan(ctx, f, lf)
 		if err != nil {
 			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Error parsing terraform plan")
 			return 1
 		}
-		planMappings.Merge(mappings)
+		plannedChanges = append(plannedChanges, mappedItemDiffs...)
 	}
 	delete(lf, "file")
 
@@ -450,96 +570,14 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		log.WithContext(ctx).WithFields(lf).Info("Re-using change")
 	}
 
-	queries := planMappings.Queries()
-	receivedItems := make([]*sdp.Item, 0)
-	if len(queries) > 0 {
-		mgmtClient := AuthenticatedManagementClient(ctx)
-		log.WithContext(ctx).WithFields(lf).Info("Waking up sources")
-		_, err = mgmtClient.KeepaliveSources(ctx, &connect.Request[sdp.KeepaliveSourcesRequest]{
-			Msg: &sdp.KeepaliveSourcesRequest{
-				WaitForHealthy: true,
-			},
-		})
-		if err != nil {
-			log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to wake up sources")
-			return 1
-		}
-
-		ws, err := sdpws.Dial(ctx, gatewayUrl, otelhttp.DefaultClient, nil)
-		if err != nil {
-			log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to gateway")
-			return 1
-		}
-
-		results, err := iter.MapErr(queries, func(q **sdp.Query) ([]*sdp.Item, error) {
-			return ws.Query(ctx, *q)
-		})
-
-		if err != nil {
-			log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to query items")
-			return 1
-		}
-
-		for _, items := range results {
-			receivedItems = append(receivedItems, items...)
-		}
-
-		// Print a summary of the results so far. I would like for this to be
-		// nicer and do things like tell you why it failed, but for now this
-		// will have to do
-		for tfType, mappings := range planMappings.SupportedChanges {
-			log.WithContext(ctx).Infof("  %v", tfType)
-
-			for _, mapping := range mappings {
-				queryUUID := mapping.OvermindQuery.ParseUuid()
-
-				// Check for items matching this query UUID
-				found := false
-
-				for _, item := range receivedItems {
-					if item.Metadata.SourceQuery.ParseUuid() == queryUUID {
-						found = true
-					}
-				}
-
-				if found {
-					log.WithContext(ctx).Infof(Green.Color("    ✓ %v (found)"), mapping.TerraformResource.Name)
-				} else {
-					log.WithContext(ctx).Infof(Red.Color("    ✗ %v (not found)"), mapping.TerraformResource.Name)
-
-					log.WithFields(log.Fields{
-						"type":   mapping.OvermindQuery.Type,
-						"scope":  mapping.OvermindQuery.Scope,
-						"query":  mapping.OvermindQuery.Query,
-						"method": mapping.OvermindQuery.Method.String(),
-					}).Error("      No responses received")
-				}
-			}
-		}
-	} else {
-		log.WithContext(ctx).WithFields(lf).Info("No item queries mapped, skipping changing items")
-	}
-
-	if len(receivedItems) > 0 {
-		log.WithContext(ctx).WithFields(lf).WithField("received_items", len(receivedItems)).Info("Updating changing items on the change record")
-	} else {
-		log.WithContext(ctx).WithFields(lf).WithField("received_items", len(receivedItems)).Info("Updating change record with no items")
-	}
-
-	changingItemRefs := make([]*sdp.Reference, len(receivedItems))
-
-	for i, item := range receivedItems {
-		changingItemRefs[i] = item.Reference()
-	}
-
-	resultStream, err := client.UpdateChangingItems(ctx, &connect.Request[sdp.UpdateChangingItemsRequest]{
-		Msg: &sdp.UpdateChangingItemsRequest{
+	resultStream, err := client.UpdatePlannedChanges(ctx, &connect.Request[sdp.UpdatePlannedChangesRequest]{
+		Msg: &sdp.UpdatePlannedChangesRequest{
 			ChangeUUID:    changeUuid[:],
-			ChangingItems: changingItemRefs,
+			ChangingItems: plannedChanges,
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to update changing items")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to update planned changes")
 		return 1
 	}
 
