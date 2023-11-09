@@ -501,6 +501,30 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_networkfirewall_firewall": {
+		{
+			Type:       "network-firewall-firewall",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "name",
+			Scope:      "*",
+		},
+	},
+	"aws_networkfirewall_firewall_policy": {
+		{
+			Type:       "network-firewall-firewall-policy",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "name",
+			Scope:      "*",
+		},
+	},
+	"aws_networkfirewall_rule_group": {
+		{
+			Type:       "network-firewall-rule-group",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "name",
+			Scope:      "*",
+		},
+	},
 	"aws_placement_group": {
 		{
 			Type:       "ec2-placement-group",
