@@ -6,6 +6,7 @@ import (
 
 	"github.com/overmindtech/sdp-go"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMappedItemDiffsFromPlan(t *testing.T) {
@@ -135,4 +136,108 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	if aws_iam_policy.MappingQuery.Query != "arn:aws:iam::123456789012:policy/test-alb-ingress" {
 		t.Errorf("Expected aws_iam_policy query query to be 'arn:aws:iam::123456789012:policy/test-alb-ingress', got '%v'", aws_iam_policy.MappingQuery.Query)
 	}
+}
+
+// note that these tests need to allocate the input map for every test as
+// maskSensitiveData mutates its inputs
+func TestMaskSensitiveData(t *testing.T) {
+	t.Parallel()
+
+	t.Run("empty", func(t *testing.T) {
+		t.Parallel()
+		got := maskSensitiveData(map[string]any{}, map[string]any{})
+		require.Equal(t, got, map[string]any{})
+	})
+
+	t.Run("easy", func(t *testing.T) {
+		t.Parallel()
+		require.Equal(t,
+			map[string]any{
+				"foo": "bar",
+			},
+			maskSensitiveData(
+				map[string]any{
+					"foo": "bar",
+				},
+				map[string]any{}))
+
+		require.Equal(t,
+			map[string]any{
+				"foo": "REDACTED",
+			},
+			maskSensitiveData(
+				map[string]any{
+					"foo": "bar",
+				},
+				map[string]any{"foo": true}))
+
+	})
+
+	t.Run("deep", func(t *testing.T) {
+		t.Parallel()
+		require.Equal(t,
+			map[string]any{
+				"foo": map[string]any{"key": "bar"},
+			},
+			maskSensitiveData(
+				map[string]any{
+					"foo": map[string]any{"key": "bar"},
+				},
+				map[string]any{}))
+
+		require.Equal(t,
+			map[string]any{
+				"foo": "REDACTED",
+			},
+			maskSensitiveData(
+				map[string]any{
+					"foo": map[string]any{"key": "bar"},
+				},
+				map[string]any{"foo": true}))
+
+		require.Equal(t,
+			map[string]any{
+				"foo": map[string]any{"key": "REDACTED"},
+			},
+			maskSensitiveData(
+				map[string]any{
+					"foo": map[string]any{"key": "bar"},
+				},
+				map[string]any{"foo": map[string]any{"key": true}}))
+
+	})
+
+	t.Run("arrays", func(t *testing.T) {
+		t.Parallel()
+		require.Equal(t,
+			map[string]any{
+				"foo": []any{"one", "two"},
+			},
+			maskSensitiveData(
+				map[string]any{
+					"foo": []any{"one", "two"},
+				},
+				map[string]any{}))
+
+		require.Equal(t,
+			map[string]any{
+				"foo": "REDACTED",
+			},
+			maskSensitiveData(
+				map[string]any{
+					"foo": []any{"one", "two"},
+				},
+				map[string]any{"foo": true}))
+
+		require.Equal(t,
+			map[string]any{
+				"foo": []any{"one", "REDACTED"},
+			},
+			maskSensitiveData(
+				map[string]any{
+					"foo": []any{"one", "two"},
+				},
+				map[string]any{"foo": []any{false, true}}))
+
+	})
 }
