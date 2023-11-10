@@ -11,7 +11,7 @@ require (
 	github.com/overmindtech/sdp-go v0.56.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sourcegraph/conc v0.3.0
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.17.0
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.2.3
