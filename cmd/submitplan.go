@@ -93,30 +93,31 @@ func maskAllData(attributes map[string]any) map[string]any {
 }
 
 // maskSensitiveData masks every entry in attributes that is set to true in sensitive. returns the redacted attributes
-func maskSensitiveData(attributes, sensitive map[string]any) map[string]any {
-	for k, s := range sensitive {
-		log.Debugf("checking %v: %v", k, s)
-		if mv, ok := s.(map[string]any); ok {
-			if sub, ok := attributes[k].(map[string]any); ok {
-				attributes[k] = maskSensitiveData(sub, mv)
+func maskSensitiveData(attributes, sensitive any) any {
+	if sensitive == true {
+		return "REDACTED"
+	} else if sensitiveMap, ok := sensitive.(map[string]any); ok {
+		if attributesMap, ok := attributes.(map[string]any); ok {
+			result := map[string]any{}
+			for k, v := range attributesMap {
+				result[k] = maskSensitiveData(v, sensitiveMap[k])
 			}
-		} else if arr, ok := s.([]any); ok {
-			if sub, ok := attributes[k].([]any); ok {
-				if len(arr) != len(sub) {
-					attributes[k] = "REDACTED (len mismatch)"
-					continue
-				}
-				for i, v := range arr {
-					if v == true {
-						sub[i] = "REDACTED"
-					}
-				}
-				attributes[k] = sub
-			}
+			return result
 		} else {
-			if _, ok := attributes[k]; ok {
-				attributes[k] = "REDACTED"
+			return "REDACTED (type mismatch)"
+		}
+	} else if sensitiveArr, ok := sensitive.([]any); ok {
+		if attributesArr, ok := attributes.([]any); ok {
+			if len(sensitiveArr) != len(attributesArr) {
+				return "REDACTED (len mismatch)"
 			}
+			result := make([]any, len(attributesArr))
+			for i, v := range attributesArr {
+				result[i] = maskSensitiveData(v, sensitiveArr[i])
+			}
+			return result
+		} else {
+			return "REDACTED (type mismatch)"
 		}
 	}
 	return attributes
@@ -141,7 +142,7 @@ func itemAttributesFromResourceChangeData(attributesMsg, sensitiveMsg json.RawMe
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse sensitive: %w", err)
 		}
-		attributes = maskSensitiveData(attributes, sensitive)
+		attributes = maskSensitiveData(attributes, sensitive).(map[string]any)
 	}
 
 	return sdp.ToAttributesSorted(attributes)

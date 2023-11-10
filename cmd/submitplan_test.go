@@ -138,8 +138,8 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	}
 }
 
-// note that these tests need to allocate the input map for every test as
-// maskSensitiveData mutates its inputs
+// note that these tests need to allocate the input map for every test to avoid
+// false positives from maskSensitiveData mutating the data
 func TestMaskSensitiveData(t *testing.T) {
 	t.Parallel()
 
