@@ -81,9 +81,9 @@ type TfData struct {
 }
 
 // maskAllData masks every entry in attributes as redacted
-func maskAllData(attributes map[string]interface{}) map[string]interface{} {
+func maskAllData(attributes map[string]any) map[string]any {
 	for k, v := range attributes {
-		if mv, ok := v.(map[string]interface{}); ok {
+		if mv, ok := v.(map[string]any); ok {
 			attributes[k] = maskAllData(mv)
 		} else {
 			attributes[k] = "REDACTED"
@@ -93,35 +93,50 @@ func maskAllData(attributes map[string]interface{}) map[string]interface{} {
 }
 
 // maskSensitiveData masks every entry in attributes that is set to true in sensitive. returns the redacted attributes
-func maskSensitiveData(attributes, sensitive map[string]interface{}) map[string]interface{} {
+func maskSensitiveData(attributes, sensitive map[string]any) map[string]any {
 	for k, s := range sensitive {
-		log.Debugf("checking %v", k)
-		if mv, ok := s.(map[string]interface{}); ok {
-			if sub, ok := attributes[k].(map[string]interface{}); ok {
+		log.Debugf("checking %v: %v", k, s)
+		if mv, ok := s.(map[string]any); ok {
+			if sub, ok := attributes[k].(map[string]any); ok {
 				attributes[k] = maskSensitiveData(sub, mv)
 			}
+		} else if arr, ok := s.([]any); ok {
+			if sub, ok := attributes[k].([]any); ok {
+				if len(arr) != len(sub) {
+					attributes[k] = "REDACTED (len mismatch)"
+					continue
+				}
+				for i, v := range arr {
+					if v == true {
+						sub[i] = "REDACTED"
+					}
+				}
+				attributes[k] = sub
+			}
 		} else {
-			attributes[k] = "REDACTED"
+			if _, ok := attributes[k]; ok {
+				attributes[k] = "REDACTED"
+			}
 		}
 	}
 	return attributes
 }
 
 func itemAttributesFromResourceChangeData(attributesMsg, sensitiveMsg json.RawMessage) (*sdp.ItemAttributes, error) {
-	var attributes map[string]interface{}
+	var attributes map[string]any
 	err := json.Unmarshal(attributesMsg, &attributes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse attributes: %w", err)
 	}
 
-	// sensitiveMsg can be a bool or a map[string]interface{}
+	// sensitiveMsg can be a bool or a map[string]any
 	var isSensitive bool
 	err = json.Unmarshal(sensitiveMsg, &isSensitive)
 	if err == nil && isSensitive {
 		attributes = maskAllData(attributes)
 	} else if err != nil {
 		// only try parsing as map if parsing as bool failed
-		var sensitive map[string]interface{}
+		var sensitive map[string]any
 		err = json.Unmarshal(sensitiveMsg, &sensitive)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse sensitive: %w", err)
@@ -164,7 +179,7 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 	}
 
 	if beforeAttributes != nil {
-		result.Before = &sdp.Item{ // DODO: check for empty before/after attributes and set to nil
+		result.Before = &sdp.Item{
 			Type:            resourceChange.Type,
 			UniqueAttribute: "terraform_address",
 			Attributes:      beforeAttributes,
@@ -326,7 +341,7 @@ func mappedItemDiffsFromPlan(ctx context.Context, fileName string, lf log.Fields
 			}
 
 			// Create the map that variables will pull data from
-			dataMap := make(map[string]interface{})
+			dataMap := make(map[string]any)
 
 			// Populate resource values
 			dataMap["values"] = currentResource.AttributeValues
