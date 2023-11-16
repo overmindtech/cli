@@ -2,15 +2,20 @@ package cmd
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
+	"text/template"
 	"time"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
+	"github.com/hexops/gotextdiff"
+	"github.com/hexops/gotextdiff/myers"
+	diffspan "github.com/hexops/gotextdiff/span"
 	"github.com/overmindtech/ovm-cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
@@ -18,7 +23,11 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"gopkg.in/yaml.v3"
 )
+
+//go:embed comment.md
+var commentTemplate string
 
 // getChangeCmd represents the get-change command
 var getChangeCmd = &cobra.Command{
@@ -87,7 +96,7 @@ func GetChange(ctx context.Context, ready chan bool) int {
 	lf["uuid"] = changeUuid.String()
 
 	client := AuthenticatedChangesClient(ctx)
-	response, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
+	changeRes, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
 		Msg: &sdp.GetChangeRequest{
 			UUID: changeUuid[:],
 		},
@@ -99,44 +108,187 @@ func GetChange(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 	log.WithContext(ctx).WithFields(log.Fields{
-		"change-uuid":        uuid.UUID(response.Msg.Change.Metadata.UUID),
-		"change-created":     response.Msg.Change.Metadata.CreatedAt.AsTime(),
-		"change-status":      response.Msg.Change.Metadata.Status.String(),
-		"change-name":        response.Msg.Change.Properties.Title,
-		"change-description": response.Msg.Change.Properties.Description,
+		"change-uuid":        uuid.UUID(changeRes.Msg.Change.Metadata.UUID),
+		"change-created":     changeRes.Msg.Change.Metadata.CreatedAt.AsTime(),
+		"change-status":      changeRes.Msg.Change.Metadata.Status.String(),
+		"change-name":        changeRes.Msg.Change.Properties.Title,
+		"change-description": changeRes.Msg.Change.Properties.Description,
 	}).Info("found change")
+
+	// diffRes, err := client.GetDiff(ctx, &connect.Request[sdp.GetDiffRequest]{
+	// 	Msg: &sdp.GetDiffRequest{
+	// 		ChangeUUID: changeUuid[:],
+	// 	},
+	// })
+	// if err != nil {
+	// 	log.WithContext(ctx).WithError(err).WithFields(log.Fields{
+	// 		"change-url": viper.GetString("change-url"),
+	// 	}).Error("failed to get change diff")
+	// 	return 1
+	// }
+	// log.WithContext(ctx).WithFields(log.Fields{
+	// 	"change-uuid": uuid.UUID(changeRes.Msg.Change.Metadata.UUID),
+	// }).Info("loaded change diff")
 
 	switch viper.GetString("format") {
 	case "json":
-		b, err := json.MarshalIndent(response.Msg.Change.ToMap(), "", "  ")
+		b, err := json.MarshalIndent(changeRes.Msg.Change.ToMap(), "", "  ")
 		if err != nil {
-			log.Errorf("Error rendering change: %v", err)
+			log.WithContext(ctx).WithField("input", fmt.Sprintf("%#v", changeRes.Msg.Change.ToMap())).WithError(err).Error("Error rendering change")
 			return 1
 		}
 
 		fmt.Println(string(b))
 	case "markdown":
-		changeUrl := fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid.String())
-		if response.Msg.Change.Metadata.NumAffectedApps != 0 || response.Msg.Change.Metadata.NumAffectedItems != 0 {
-			// we have affected stuff
-			fmt.Printf(`## Blast Radius  &nbsp; ·  &nbsp; [View in Overmind](%v) <img width="16" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/chainLink.png" alt="chain link icon" />
+		type TemplateItem struct {
+			StatusAlt  string
+			StatusIcon string
+			Type       string
+			Title      string
+			Diff       string
+		}
+		type TemplateRisk struct {
+			SeverityAlt  string
+			SeverityIcon string
+			SeverityText string
+			Title        string
+			Description  string
+		}
+		type TemplateData struct {
+			ChangeUrl       string
+			ExpectedChanges []TemplateItem
+			UnmappedChanges []TemplateItem
+			BlastItems      int
+			BlastEdges      int
+			Risks           []TemplateRisk
+		}
+		status := map[sdp.ItemDiffStatus]TemplateItem{
+			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNSPECIFIED: {
+				StatusAlt:  "unspecified",
+				StatusIcon: "",
+			},
+			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNCHANGED: {
+				StatusAlt:  "unchanged",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/item.png",
+			},
+			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED: {
+				StatusAlt:  "created",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/created.png",
+			},
+			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED: {
+				StatusAlt:  "updated",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/changed.png",
+			},
+			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_DELETED: {
+				StatusAlt:  "deleted",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/deleted.png",
+			},
+			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_REPLACED: {
+				StatusAlt:  "replaced",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/replaced.png",
+			},
+		}
 
-> **Warning**
-> Overmind identified potentially affected apps and items as a result of this pull request.
+		severity := map[sdp.Risk_Severity]TemplateRisk{
+			sdp.Risk_SEVERITY_UNSPECIFIED: {
+				SeverityAlt:  "unspecified",
+				SeverityIcon: "",
+				SeverityText: "unspecified",
+			},
+			sdp.Risk_SEVERITY_LOW: {
+				SeverityAlt:  "low",
+				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/low.png",
+				SeverityText: "Low",
+			},
+			sdp.Risk_SEVERITY_MEDIUM: {
+				SeverityAlt:  "medium",
+				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/medium.png",
+				SeverityText: "Medium",
+			},
+			sdp.Risk_SEVERITY_HIGH: {
+				SeverityAlt:  "high",
+				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/high.png",
+				SeverityText: "High",
+			},
+		}
+		data := TemplateData{
+			ChangeUrl:       fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid.String()),
+			ExpectedChanges: []TemplateItem{},
+			UnmappedChanges: []TemplateItem{},
+			BlastItems:      75,
+			BlastEdges:      97,
+			Risks:           []TemplateRisk{},
+		}
 
-<br>
+		for _, item := range changeRes.Msg.Change.Properties.PlannedChanges {
+			var before, after string
+			if item.Before != nil {
+				bb, err := yaml.Marshal(item.Before.Attributes.AttrStruct.AsMap())
+				if err != nil {
+					log.WithContext(ctx).WithError(err).Error("error marshalling 'before' attributes")
+					before = ""
+				} else {
+					before = string(bb)
+				}
+			}
+			if item.After != nil {
+				ab, err := yaml.Marshal(item.After.Attributes.AttrStruct.AsMap())
+				if err != nil {
+					log.WithContext(ctx).WithError(err).Error("error marshalling 'after' attributes")
+					after = ""
+				} else {
+					after = string(ab)
+				}
+			}
+			edits := myers.ComputeEdits(diffspan.URIFromPath("current"), before, after)
+			diff := fmt.Sprint(gotextdiff.ToUnified("current", "planned", before, edits))
 
-| <img width="16" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/blastRadiusItems.png" alt="icon for blast radius items" />&nbsp;Affected items |
-| -------------- |
-| [%v items](%v) |
-`, changeUrl, response.Msg.Change.Metadata.NumAffectedItems, changeUrl)
-		} else {
-			fmt.Printf(`## Blast Radius  &nbsp; ·  &nbsp; [View in Overmind](%v) <img width="16" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/chainLink.png" alt="chain link icon" />
+			if item.Item != nil {
+				data.ExpectedChanges = append(data.ExpectedChanges, TemplateItem{
+					StatusAlt:  status[item.Status].StatusAlt,
+					StatusIcon: status[item.Status].StatusIcon,
+					Type:       item.Item.Type,
+					Title:      item.Item.UniqueAttributeValue,
+					Diff:       diff,
+				})
+			} else {
+				var typ, title string
+				if item.After != nil {
+					typ = item.After.Type
+					title = item.After.UniqueAttributeValue()
+				} else if item.Before != nil {
+					typ = item.Before.Type
+					title = item.Before.UniqueAttributeValue()
+				}
+				data.UnmappedChanges = append(data.ExpectedChanges, TemplateItem{
+					StatusAlt:  status[item.Status].StatusAlt,
+					StatusIcon: status[item.Status].StatusIcon,
+					Type:       typ,
+					Title:      title,
+					Diff:       diff,
+				})
+			}
+		}
 
-> **✅ Checks complete**
-> Overmind didn't identify any potentially affected apps and items as a result of this pull request.
+		for _, risk := range changeRes.Msg.Change.Metadata.Risks {
+			data.Risks = append(data.Risks, TemplateRisk{
+				SeverityAlt:  severity[risk.Severity].SeverityAlt,
+				SeverityIcon: severity[risk.Severity].SeverityIcon,
+				SeverityText: severity[risk.Severity].SeverityText,
+				Title:        risk.Title,
+				Description:  risk.Description,
+			})
+		}
 
-`, changeUrl)
+		tmpl, err := template.New("comment").Parse(commentTemplate)
+		if err != nil {
+			log.WithContext(ctx).WithError(err).Error("error parsing comment template")
+			return 1
+		}
+		err = tmpl.Execute(os.Stdout, data)
+		if err != nil {
+			log.WithContext(ctx).WithField("input", fmt.Sprintf("%#v", data)).WithError(err).Error("error rendering comment")
+			return 1
 		}
 	}
 

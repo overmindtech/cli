@@ -6,6 +6,7 @@ require (
 	connectrpc.com/connect v1.12.0
 	github.com/getsentry/sentry-go v0.25.0
 	github.com/google/uuid v1.4.0
+	github.com/hexops/gotextdiff v1.0.3
 	github.com/jedib0t/go-pretty/v6 v6.4.9
 	github.com/mattn/go-isatty v0.0.20
 	github.com/overmindtech/sdp-go v0.57.0
@@ -26,6 +27,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.19.0
 	golang.org/x/oauth2 v0.14.0
 	google.golang.org/protobuf v1.31.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -76,6 +78,5 @@ require (
 	google.golang.org/grpc v1.58.3 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.10 // indirect
 )
