@@ -13,6 +13,9 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
+	"github.com/hexops/gotextdiff"
+	"github.com/hexops/gotextdiff/myers"
+	diffspan "github.com/hexops/gotextdiff/span"
 	"github.com/overmindtech/ovm-cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
@@ -20,6 +23,7 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"gopkg.in/yaml.v3"
 )
 
 //go:embed comment.md
@@ -158,59 +162,91 @@ func GetChange(ctx context.Context, ready chan bool) int {
 			BlastEdges      int
 			Risks           []TemplateRisk
 		}
-		data := TemplateData{
-			ChangeUrl: fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid.String()),
-			ExpectedChanges: []TemplateItem{
-				{
-					StatusAlt:  "updated",
-					StatusIcon: "https://github.com/overmindtech/ovm-cli/assets/8799341/db3e59a9-a560-4ea9-b38b-854d88ab2cd6",
-					Type:       "Deployment",
-					Title:      "api-server",
-					Diff:       "  Once again a diff here",
-				},
+		status := map[sdp.ItemDiffStatus]TemplateItem{
+			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNSPECIFIED: {
+				StatusAlt:  "unspecified",
+				StatusIcon: "",
 			},
-			UnmappedChanges: []TemplateItem{
-				{
-					StatusAlt:  "created",
-					StatusIcon: "https://github.com/overmindtech/ovm-cli/assets/8799341/2fc6cb63-9ee1-4e15-91ea-b234a92edddb",
-					Type:       "auth0_action",
-					Title:      "add_to_crm",
-					Diff:       "  This should be diff with everything",
-				}, {
-					StatusAlt:  "updated",
-					StatusIcon: "https://github.com/overmindtech/ovm-cli/assets/8799341/db3e59a9-a560-4ea9-b38b-854d88ab2cd6",
-					Type:       "auth0_action",
-					Title:      "create_account",
-					Diff: `  code: |
-  const { createPromiseClient } = require( "@connectrpc/connect")
-  const { createConnectTransport } = require( "@connectrpc/connect-node")
-- const { Auth0Support,Auth0CreateUserRequest } = require('@overmindtech/sdp-js')
-+ const { Auth0Support} = require('@overmindtech/sdp-js')
-  const ClientOAuth2 = require('client-oauth2')
-  const transport = createConnectTransport({
-  ---
-  api.accessToken.setCustomClaim('https://api.overmind.tech/account-name', event.user.app_metadata.account_name)
-  // wake up all sources
-- const res = await client.keepaliveSources(
-+ await client.keepaliveSources(
-  {
-    account: event.user.app_metadata.account_name,
-  },
-`,
-				},
+			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNCHANGED: {
+				StatusAlt:  "unchanged",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/item.png",
 			},
-			BlastItems: 75,
-			BlastEdges: 97,
-			Risks: []TemplateRisk{
-				{
-					SeverityAlt:  "high",
-					SeverityIcon: "https://github.com/overmindtech/ovm-cli/assets/8799341/76a34fd0-7699-4636-9a4c-3cdabdf7783e",
-					SeverityText: "high",
-					Title:        "Impact on Target Groups",
-					Description:  `The various target groups including \"944651592624.eu-west-2.elbv2-target-group.k8s-default-nats-4650f3a363\", \"944651592624.eu-west-2.elbv2-target-group.k8s-default-smartloo-fd2416d9f8\", etc., that work alongside the load balancer for traffic routing may be indirectly affected if the security group change causes networking issues. This is especially important if these target groups rely on different ports other than 8080 for health checks or for directing incoming requests to backend services.`,
-				},
+			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED: {
+				StatusAlt:  "created",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/created.png",
+			},
+			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED: {
+				StatusAlt:  "updated",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/changed.png",
+			},
+			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_DELETED: {
+				StatusAlt:  "deleted",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/deleted.png",
+			},
+			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_REPLACED: {
+				StatusAlt:  "replaced",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/replaced.png",
 			},
 		}
+		data := TemplateData{
+			ChangeUrl:       fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid.String()),
+			ExpectedChanges: []TemplateItem{},
+			UnmappedChanges: []TemplateItem{},
+			BlastItems:      75,
+			BlastEdges:      97,
+			Risks:           []TemplateRisk{},
+		}
+
+		for _, item := range changeRes.Msg.Change.Properties.PlannedChanges {
+			var before, after string
+			if item.Before != nil {
+				bb, err := yaml.Marshal(item.Before.Attributes.AttrStruct.AsMap())
+				if err != nil {
+					log.WithContext(ctx).WithError(err).Error("error marshalling 'before' attributes")
+					before = ""
+				} else {
+					before = string(bb)
+				}
+			}
+			if item.After != nil {
+				ab, err := yaml.Marshal(item.After.Attributes.AttrStruct.AsMap())
+				if err != nil {
+					log.WithContext(ctx).WithError(err).Error("error marshalling 'after' attributes")
+					after = ""
+				} else {
+					after = string(ab)
+				}
+			}
+			edits := myers.ComputeEdits(diffspan.URIFromPath("current"), before, after)
+			diff := fmt.Sprint(gotextdiff.ToUnified("current", "planned", before, edits))
+
+			if item.Item != nil {
+				data.ExpectedChanges = append(data.ExpectedChanges, TemplateItem{
+					StatusAlt:  status[item.Status].StatusAlt,
+					StatusIcon: status[item.Status].StatusIcon,
+					Type:       item.Item.Type,
+					Title:      item.Item.UniqueAttributeValue,
+					Diff:       diff,
+				})
+			} else {
+				var typ, title string
+				if item.After != nil {
+					typ = item.After.Type
+					title = item.After.UniqueAttributeValue()
+				} else if item.Before != nil {
+					typ = item.Before.Type
+					title = item.Before.UniqueAttributeValue()
+				}
+				data.UnmappedChanges = append(data.ExpectedChanges, TemplateItem{
+					StatusAlt:  status[item.Status].StatusAlt,
+					StatusIcon: status[item.Status].StatusIcon,
+					Type:       typ,
+					Title:      title,
+					Diff:       diff,
+				})
+			}
+		}
+
 		tmpl, err := template.New("comment").Parse(commentTemplate)
 		if err != nil {
 			log.WithContext(ctx).WithError(err).Error("error parsing comment template")
