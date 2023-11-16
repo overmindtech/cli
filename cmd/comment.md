@@ -4,9 +4,13 @@
 <details>
 <summary><img width="14" alt="{{ .StatusAlt }}" src="{{ .StatusIcon }}"> {{ .Type }} › {{ .Title }}</summary>
 
+{{if .Diff }}
 ```diff
 {{ .Diff }}
 ```
+{{else}}
+(no changed attributes)
+{{end}}
 </details>
 {{else}}
 No expected changes found.
@@ -23,12 +27,16 @@ No expected changes found.
 <details>
 <summary><img width="14" alt="{{ .StatusAlt }}" src="{{ .StatusIcon }}"> {{ .Type }} › {{ .Title }}</summary>
 
+{{if .Diff }}
 ```diff
 {{ .Diff }}
 ```
+{{else}}
+(no changed attributes)
+{{end}}
 </details>
 {{else}}
-No expected changes found.
+No unmapped changes found.
 {{end}}
 
 
