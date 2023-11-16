@@ -188,6 +188,29 @@ func GetChange(ctx context.Context, ready chan bool) int {
 				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/replaced.png",
 			},
 		}
+
+		severity := map[sdp.Risk_Severity]TemplateRisk{
+			sdp.Risk_SEVERITY_UNSPECIFIED: {
+				SeverityAlt:  "unspecified",
+				SeverityIcon: "",
+				SeverityText: "unspecified",
+			},
+			sdp.Risk_SEVERITY_LOW: {
+				SeverityAlt:  "low",
+				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/low.png",
+				SeverityText: "Low",
+			},
+			sdp.Risk_SEVERITY_MEDIUM: {
+				SeverityAlt:  "medium",
+				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/medium.png",
+				SeverityText: "Medium",
+			},
+			sdp.Risk_SEVERITY_HIGH: {
+				SeverityAlt:  "high",
+				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/high.png",
+				SeverityText: "High",
+			},
+		}
 		data := TemplateData{
 			ChangeUrl:       fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid.String()),
 			ExpectedChanges: []TemplateItem{},
@@ -245,6 +268,16 @@ func GetChange(ctx context.Context, ready chan bool) int {
 					Diff:       diff,
 				})
 			}
+		}
+
+		for _, risk := range changeRes.Msg.Change.Metadata.Risks {
+			data.Risks = append(data.Risks, TemplateRisk{
+				SeverityAlt:  severity[risk.Severity].SeverityAlt,
+				SeverityIcon: severity[risk.Severity].SeverityIcon,
+				SeverityText: severity[risk.Severity].SeverityText,
+				Title:        risk.Title,
+				Description:  risk.Description,
+			})
 		}
 
 		tmpl, err := template.New("comment").Parse(commentTemplate)
