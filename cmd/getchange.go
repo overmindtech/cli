@@ -260,7 +260,7 @@ func GetChange(ctx context.Context, ready chan bool) int {
 					typ = item.Before.Type
 					title = item.Before.UniqueAttributeValue()
 				}
-				data.UnmappedChanges = append(data.ExpectedChanges, TemplateItem{
+				data.UnmappedChanges = append(data.UnmappedChanges, TemplateItem{
 					StatusAlt:  status[item.Status].StatusAlt,
 					StatusIcon: status[item.Status].StatusIcon,
 					Type:       typ,
