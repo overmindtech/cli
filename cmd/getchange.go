@@ -215,8 +215,8 @@ func GetChange(ctx context.Context, ready chan bool) int {
 			ChangeUrl:       fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid.String()),
 			ExpectedChanges: []TemplateItem{},
 			UnmappedChanges: []TemplateItem{},
-			BlastItems:      75,
-			BlastEdges:      97,
+			BlastItems:      int(changeRes.Msg.Change.Metadata.NumAffectedItems),
+			BlastEdges:      int(changeRes.Msg.Change.Metadata.NumAffectedEdges),
 			Risks:           []TemplateRisk{},
 		}
 
