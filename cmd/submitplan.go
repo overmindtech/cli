@@ -498,6 +498,20 @@ func changeTitle(arg string) string {
 	return result
 }
 
+func tryLoadText(ctx context.Context, fileName string) string {
+	if fileName == "" {
+		return ""
+	}
+
+	bytes, err := os.ReadFile(fileName)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithField("file", fileName).Warn("Failed to read file")
+		return ""
+	}
+
+	return strings.TrimSpace(string(bytes))
+}
+
 func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
@@ -554,8 +568,12 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		return 1
 	}
 
+	title := changeTitle(viper.GetString("title"))
+	tfPlanOutput := tryLoadText(ctx, viper.GetString("terraform-plan-output"))
+	codeChangessOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
+
 	if changeUuid == uuid.Nil {
-		title := changeTitle(viper.GetString("title"))
+		log.WithContext(ctx).WithFields(lf).Debug("Creating a new change")
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 			Msg: &sdp.CreateChangeRequest{
 				Properties: &sdp.ChangeProperties{
@@ -564,6 +582,8 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 					TicketLink:  viper.GetString("ticket-link"),
 					Owner:       viper.GetString("owner"),
 					// CcEmails:                  viper.GetString("cc-emails"),
+					RawPlan:     tfPlanOutput,
+					CodeChanges: codeChangessOutput,
 				},
 			},
 		})
@@ -583,6 +603,27 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		log.WithContext(ctx).WithFields(lf).Info("Created a new change")
 	} else {
 		lf["change"] = changeUuid
+		log.WithContext(ctx).WithFields(lf).Debug("Updating an existing change")
+
+		_, err := client.UpdateChange(ctx, &connect.Request[sdp.UpdateChangeRequest]{
+			Msg: &sdp.UpdateChangeRequest{
+				UUID: changeUuid[:],
+				Properties: &sdp.ChangeProperties{
+					Title:       title,
+					Description: viper.GetString("description"),
+					TicketLink:  viper.GetString("ticket-link"),
+					Owner:       viper.GetString("owner"),
+					// CcEmails:                  viper.GetString("cc-emails"),
+					RawPlan:     tfPlanOutput,
+					CodeChanges: codeChangessOutput,
+				},
+			},
+		})
+		if err != nil {
+			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to update change")
+			return 1
+		}
+
 		log.WithContext(ctx).WithFields(lf).Info("Re-using change")
 	}
 
@@ -658,6 +699,9 @@ func init() {
 	submitPlanCmd.PersistentFlags().String("ticket-link", "*", "Link to the ticket for this change.")
 	submitPlanCmd.PersistentFlags().String("owner", "", "The owner of this change.")
 	// submitPlanCmd.PersistentFlags().String("cc-emails", "", "A comma-separated list of emails to keep updated with the status of this change.")
+
+	submitPlanCmd.PersistentFlags().String("terraform-plan-output", "", "Filename of cached terraform plan output for this change.")
+	submitPlanCmd.PersistentFlags().String("code-changes-diff", "", "Fileame of the code diff of this change.")
 
 	submitPlanCmd.PersistentFlags().String("timeout", "3m", "How long to wait for responses")
 }
