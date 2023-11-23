@@ -45,7 +45,7 @@ No unmapped changes found.
 
 | <img width="16" alt="mapped" src="https://github.com/overmindtech/ovm-cli/assets/8799341/311e1bb0-e3da-4499-8db3-b97ec7674484"> Items | <img width="16" alt="edge" src="https://github.com/overmindtech/ovm-cli/assets/8799341/437dcecd-117d-474d-a6fd-1aa241fb0fd0"> Edges |
 |---|---|
-| 75 | 97
+| {{ .BlastItems }} | {{ .BlastEdges }}
 
 [Open in Overmind]({{ .ChangeUrl }})
 
