@@ -169,23 +169,23 @@ func GetChange(ctx context.Context, ready chan bool) int {
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNCHANGED: {
 				StatusAlt:  "unchanged",
-				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/item.png",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/item.svg",
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED: {
 				StatusAlt:  "created",
-				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/created.png",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/created.svg",
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED: {
 				StatusAlt:  "updated",
-				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/changed.png",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/changed.svg",
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_DELETED: {
 				StatusAlt:  "deleted",
-				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/deleted.png",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/deleted.svg",
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_REPLACED: {
 				StatusAlt:  "replaced",
-				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/replaced.png",
+				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/replaced.svg",
 			},
 		}
 
@@ -197,17 +197,17 @@ func GetChange(ctx context.Context, ready chan bool) int {
 			},
 			sdp.Risk_SEVERITY_LOW: {
 				SeverityAlt:  "low",
-				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/low.png",
+				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/low.svg",
 				SeverityText: "Low",
 			},
 			sdp.Risk_SEVERITY_MEDIUM: {
 				SeverityAlt:  "medium",
-				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/medium.png",
+				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/medium.svg",
 				SeverityText: "Medium",
 			},
 			sdp.Risk_SEVERITY_HIGH: {
 				SeverityAlt:  "high",
-				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/ac4feb1b9dd73b5c42c5a515d12517b551d2886b/assets/high.png",
+				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/high.svg",
 				SeverityText: "High",
 			},
 		}
