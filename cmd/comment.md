@@ -1,4 +1,4 @@
-# <img width="24" alt="mapped" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/item.svg"> Expected Changes
+# <img width="24" alt="mapped" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7ebassets/item.svg"> Expected Changes
 
 {{range .ExpectedChanges }}
 
@@ -20,7 +20,7 @@
 No expected changes found.
 {{end}}
 
-## <img width="20" alt="unmapped" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/unmapped.svg"> Unmapped Changes
+## <img width="20" alt="unmapped" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7ebassets/unmapped.svg"> Unmapped Changes
 
 > [!NOTE]
 > These changes couldn't be mapped to a real cloud resource and therefore won't be included in the blast radius calculation.
@@ -47,15 +47,15 @@ No unmapped changes found.
 
 # Blast Radius
 
-| <img width="16" alt="items" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/item.svg"> Items | <img width="16" alt="edges" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/edge.svg"> Edges |
-| -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| {{ .BlastItems }}                                                                                                    | {{ .BlastEdges }}                                                                                                    |
+| <img width="16" alt="items" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7ebassets/item.svg"> Items | <img width="16" alt="edges" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7ebassets/edge.svg"> Edges |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| {{ .BlastItems }}                                                                                                                                       | {{ .BlastEdges }}                                                                                                                                       |
 
 [Open in Overmind]({{ .ChangeUrl }})
 
 {{if .Risks }}
 
-# <img width="24" alt="warning" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/main/assets/risks.svg"> Risks
+# <img width="24" alt="warning" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7ebassets/risks.svg"> Risks
 
 {{range .Risks }}
 
