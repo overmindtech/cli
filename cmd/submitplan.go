@@ -179,12 +179,23 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 		Status: status,
 	}
 
+	// shorten the address by removing the type prefix if and only if it is the
+	// first part. Longer terraform addresses created in modules will not be
+	// shortened to avoid confusion.
+	trimmedAddress, _ := strings.CutPrefix(resourceChange.Address, fmt.Sprintf("%v.", resourceChange.Type))
+
 	if beforeAttributes != nil {
 		result.Before = &sdp.Item{
 			Type:            resourceChange.Type,
-			UniqueAttribute: "terraform_address",
+			UniqueAttribute: "terraform_name",
 			Attributes:      beforeAttributes,
 			Scope:           "terraform_plan",
+		}
+
+		err = result.Before.Attributes.Set("terraform_name", trimmedAddress)
+		if err != nil {
+			// since Address is a string, this should never happen
+			sentry.CaptureException(fmt.Errorf("failed to set terraform_name '%v' on before attributes: %w", trimmedAddress, err))
 		}
 
 		err = result.Before.Attributes.Set("terraform_address", resourceChange.Address)
@@ -197,9 +208,15 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 	if afterAttributes != nil {
 		result.After = &sdp.Item{
 			Type:            resourceChange.Type,
-			UniqueAttribute: "terraform_address",
+			UniqueAttribute: "terraform_name",
 			Attributes:      afterAttributes,
 			Scope:           "terraform_plan",
+		}
+
+		err = result.After.Attributes.Set("terraform_name", trimmedAddress)
+		if err != nil {
+			// since Address is a string, this should never happen
+			sentry.CaptureException(fmt.Errorf("failed to set terraform_name '%v' on after attributes: %w", trimmedAddress, err))
 		}
 
 		err = result.After.Attributes.Set("terraform_address", resourceChange.Address)
