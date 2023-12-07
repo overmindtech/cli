@@ -536,7 +536,7 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		return 1
 	}
 	ctx, span := tracing.Tracer().Start(ctx, "CLI SubmitPlan", trace.WithAttributes(
-		attribute.String("om.config", fmt.Sprintf("%v", viper.AllSettings())),
+		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
 	))
 	defer span.End()
 

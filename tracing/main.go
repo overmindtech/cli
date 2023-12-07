@@ -254,8 +254,8 @@ func handleError(ctx *context.Context, loc string, err interface{}, stack string
 	if ctx != nil {
 		log.WithContext(*ctx).WithFields(log.Fields{"loc": loc, "stack": stack}).Error(msg)
 		span := trace.SpanFromContext(*ctx)
-		span.SetAttributes(attribute.String("om.panic.loc", loc))
-		span.SetAttributes(attribute.String("om.panic.stack", stack))
+		span.SetAttributes(attribute.String("ovm.panic.loc", loc))
+		span.SetAttributes(attribute.String("ovm.panic.stack", stack))
 	} else {
 		log.WithFields(log.Fields{"loc": loc, "stack": stack}).Error(msg)
 	}

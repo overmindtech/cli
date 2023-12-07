@@ -62,7 +62,7 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 	ctx, span := tracing.Tracer().Start(ctx, "CLI ManualChange", trace.WithAttributes(
-		attribute.String("om.config", fmt.Sprintf("%v", viper.AllSettings())),
+		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
 	))
 	defer span.End()
 
