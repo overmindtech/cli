@@ -9,7 +9,7 @@ require (
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/jedib0t/go-pretty/v6 v6.4.9
 	github.com/mattn/go-isatty v0.0.20
-	github.com/overmindtech/sdp-go v0.58.2
+	github.com/overmindtech/sdp-go v0.58.4
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.17.0
