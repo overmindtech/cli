@@ -62,6 +62,13 @@ var getChangeCmd = &cobra.Command{
 	},
 }
 
+// Commit ID, tag or branch name of the version of the assets that should be
+// used in the comment. If the assets are updated, this should also be updated
+// to reflect th latest version
+//
+// This allows us to update the assets without fear of breaking older comments
+const assetVersion = "17c7fd2c365d4f4cdd8e414ca5148f825fa4febd"
+
 func GetChange(ctx context.Context, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
@@ -161,6 +168,8 @@ func GetChange(ctx context.Context, ready chan bool) int {
 			BlastItems      int
 			BlastEdges      int
 			Risks           []TemplateRisk
+			// Path to the assets folder on github
+			AssetPath string
 		}
 		status := map[sdp.ItemDiffStatus]TemplateItem{
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNSPECIFIED: {
@@ -169,23 +178,23 @@ func GetChange(ctx context.Context, ready chan bool) int {
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNCHANGED: {
 				StatusAlt:  "unchanged",
-				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7eb/assets/item.svg",
+				StatusIcon: "item.svg",
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED: {
 				StatusAlt:  "created",
-				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7eb/assets/created.svg",
+				StatusIcon: "created.svg",
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED: {
 				StatusAlt:  "updated",
-				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7eb/assets/changed.svg",
+				StatusIcon: "changed.svg",
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_DELETED: {
 				StatusAlt:  "deleted",
-				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7eb/assets/deleted.svg",
+				StatusIcon: "deleted.svg",
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_REPLACED: {
 				StatusAlt:  "replaced",
-				StatusIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7eb/assets/replaced.svg",
+				StatusIcon: "replaced.svg",
 			},
 		}
 
@@ -197,17 +206,17 @@ func GetChange(ctx context.Context, ready chan bool) int {
 			},
 			sdp.Risk_SEVERITY_LOW: {
 				SeverityAlt:  "low",
-				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7eb/assets/low.svg",
+				SeverityIcon: "low.svg",
 				SeverityText: "Low",
 			},
 			sdp.Risk_SEVERITY_MEDIUM: {
 				SeverityAlt:  "medium",
-				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7eb/assets/medium.svg",
+				SeverityIcon: "medium.svg",
 				SeverityText: "Medium",
 			},
 			sdp.Risk_SEVERITY_HIGH: {
 				SeverityAlt:  "high",
-				SeverityIcon: "https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7eb/assets/high.svg",
+				SeverityIcon: "high.svg",
 				SeverityText: "High",
 			},
 		}
@@ -218,6 +227,7 @@ func GetChange(ctx context.Context, ready chan bool) int {
 			BlastItems:      int(changeRes.Msg.Change.Metadata.NumAffectedItems),
 			BlastEdges:      int(changeRes.Msg.Change.Metadata.NumAffectedEdges),
 			Risks:           []TemplateRisk{},
+			AssetPath:       fmt.Sprintf("https://raw.githubusercontent.com/overmindtech/ovm-cli/%v/assets", assetVersion),
 		}
 
 		for _, item := range changeRes.Msg.Change.Properties.PlannedChanges {

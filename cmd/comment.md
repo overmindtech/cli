@@ -1,8 +1,9 @@
-# <img width="24" alt="mapped" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7ebassets/item.svg"> Expected Changes
+{{ $top := . -}}
+# <img width="24" alt="mapped" src="{{ .AssetPath }}/item.svg"> Expected Changes
 
 {{ range .ExpectedChanges -}}
 <details>
-<summary><img width="14" alt="{{ .StatusAlt }}" src="{{ .StatusIcon }}"> {{ .Type }} › {{ .Title }}</summary>
+<summary><img width="14" alt="{{ .StatusAlt }}" src="{{ $top.AssetPath }}/{{ .StatusIcon }}"> {{ .Type }} › {{ .Title }}</summary>
 
 {{ if .Diff -}}
 ```diff
@@ -19,7 +20,7 @@ No expected changes found.
 {{ end -}}
 
 {{ if .UnmappedChanges -}}
-## <img width="20" alt="unmapped" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7ebassets/unmapped.svg"> Unmapped Changes
+## <img width="20" alt="unmapped" src="{{ .AssetPath }}//unmapped.svg"> Unmapped Changes
 
 > [!NOTE]
 > These changes couldn't be mapped to a real cloud resource and therefore won't be included in the blast radius calculation.
@@ -27,7 +28,7 @@ No expected changes found.
 {{ range .UnmappedChanges -}}
 
 <details>
-<summary><img width="14" alt="{{ .StatusAlt }}" src="{{ .StatusIcon }}"> {{ .Type }} › {{ .Title }}</summary>
+<summary><img width="14" alt="{{ .StatusAlt }}" src="{{ $top.AssetPath }}/{{ .StatusIcon }}"> {{ .Type }} › {{ .Title }}</summary>
 
 {{ if .Diff -}}
 
@@ -45,7 +46,7 @@ No expected changes found.
 
 # Blast Radius
 
-| <img width="16" alt="items" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7ebassets/item.svg"> Items | <img width="16" alt="edges" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7ebassets/edge.svg"> Edges |
+| <img width="16" alt="items" src="{{ .AssetPath }}/item.svg"> Items | <img width="16" alt="edges" src="{{ .AssetPath }}/edge.svg"> Edges |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | {{ .BlastItems }}                                                                                                                                       | {{ .BlastEdges }}                                                                                                                                       |
 
@@ -53,10 +54,10 @@ No expected changes found.
 
 {{ if .Risks }}
 
-# <img width="24" alt="warning" src="https://raw.githubusercontent.com/overmindtech/ovm-cli/31cf83925e9db51a1b9296389615dadd66cdb7ebassets/risks.svg"> Risks
+# <img width="24" alt="warning" src="{{ .AssetPath }}/risks.svg"> Risks
 
 {{ range .Risks }}
-## <img width="18" alt="{{ .SeverityAlt }}" src="{{ .SeverityIcon }}"> {{ .Title }} [{{ .SeverityText }}]
+## <img width="18" alt="{{ .SeverityAlt }}" src="{{ $top.AssetPath }}/{{ .SeverityIcon }}"> {{ .Title }} [{{ .SeverityText }}]
 
 {{ .Description }}
 {{ end }}
