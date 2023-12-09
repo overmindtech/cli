@@ -41,8 +41,8 @@ No expected changes found.
 {{ end -}}
 
 </details>
-{{ end -}}
-{{ end -}}
+{{ end }}
+{{ end }}
 
 # Blast Radius
 
