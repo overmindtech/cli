@@ -17,10 +17,10 @@
 </details>
 {{ else -}}
 No expected changes found.
-{{ end -}}
+{{ end }}
 
 {{ if .UnmappedChanges -}}
-## <img width="20" alt="unmapped" src="{{ .AssetPath }}//unmapped.svg"> Unmapped Changes
+## <img width="20" alt="unmapped" src="{{ .AssetPath }}/unmapped.svg"> Unmapped Changes
 
 > [!NOTE]
 > These changes couldn't be mapped to a real cloud resource and therefore won't be included in the blast radius calculation.
@@ -53,7 +53,6 @@ No expected changes found.
 [Open in Overmind]({{ .ChangeUrl }})
 
 {{ if .Risks }}
-
 # <img width="24" alt="warning" src="{{ .AssetPath }}/risks.svg"> Risks
 
 {{ range .Risks }}
