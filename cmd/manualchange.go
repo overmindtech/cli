@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -204,7 +205,8 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 
-	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", viper.GetString("frontend"), changeUuid)
+	frontend, _ := strings.CutSuffix(viper.GetString("frontend"), "/")
+	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", frontend, changeUuid)
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("change ready")
 	fmt.Println(changeUrl)
 
@@ -227,7 +229,7 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 		log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
 			"change-url": changeUrl,
 			"app":        appUuid,
-			"app-url":    fmt.Sprintf("%v/apps/%v", viper.GetString("frontend"), appUuid),
+			"app-url":    fmt.Sprintf("%v/apps/%v", frontend, appUuid),
 		}).Info("affected app")
 	}
 

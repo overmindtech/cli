@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"text/template"
 	"time"
@@ -220,8 +221,9 @@ func GetChange(ctx context.Context, ready chan bool) int {
 				SeverityText: "High",
 			},
 		}
+		frontend, _ := strings.CutSuffix(viper.GetString("frontend"), "/")
 		data := TemplateData{
-			ChangeUrl:       fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid.String()),
+			ChangeUrl:       fmt.Sprintf("%v/changes/%v", frontend, changeUuid.String()),
 			ExpectedChanges: []TemplateItem{},
 			UnmappedChanges: []TemplateItem{},
 			BlastItems:      int(changeRes.Msg.Change.Metadata.NumAffectedItems),
