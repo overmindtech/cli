@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"text/template"
 	"time"
@@ -77,7 +78,7 @@ func GetChange(ctx context.Context, ready chan bool) int {
 	}
 
 	ctx, span := tracing.Tracer().Start(ctx, "CLI GetChange", trace.WithAttributes(
-		attribute.String("om.config", fmt.Sprintf("%v", viper.AllSettings())),
+		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
 	))
 	defer span.End()
 
@@ -220,8 +221,9 @@ func GetChange(ctx context.Context, ready chan bool) int {
 				SeverityText: "High",
 			},
 		}
+		frontend, _ := strings.CutSuffix(viper.GetString("frontend"), "/")
 		data := TemplateData{
-			ChangeUrl:       fmt.Sprintf("%v/changes/%v", viper.GetString("frontend"), changeUuid.String()),
+			ChangeUrl:       fmt.Sprintf("%v/changes/%v", frontend, changeUuid.String()),
 			ExpectedChanges: []TemplateItem{},
 			UnmappedChanges: []TemplateItem{},
 			BlastItems:      int(changeRes.Msg.Change.Metadata.NumAffectedItems),

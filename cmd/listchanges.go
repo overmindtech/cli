@@ -62,7 +62,7 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 	}
 
 	ctx, span := tracing.Tracer().Start(ctx, "CLI ListChanges", trace.WithAttributes(
-		attribute.String("om.config", fmt.Sprintf("%v", viper.AllSettings())),
+		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
 	))
 	defer span.End()
 

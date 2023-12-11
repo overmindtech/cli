@@ -536,7 +536,7 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		return 1
 	}
 	ctx, span := tracing.Tracer().Start(ctx, "CLI SubmitPlan", trace.WithAttributes(
-		attribute.String("om.config", fmt.Sprintf("%v", viper.AllSettings())),
+		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
 	))
 	defer span.End()
 
@@ -674,7 +674,8 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		return 1
 	}
 
-	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", viper.GetString("frontend"), changeUuid)
+	frontend, _ := strings.CutSuffix(viper.GetString("frontend"), "/")
+	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", frontend, changeUuid)
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("Change ready")
 	fmt.Println(changeUrl)
 
@@ -697,7 +698,7 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
 			"change-url": changeUrl,
 			"app":        appUuid,
-			"app-url":    fmt.Sprintf("%v/apps/%v", viper.GetString("frontend"), appUuid),
+			"app-url":    fmt.Sprintf("%v/apps/%v", frontend, appUuid),
 		}).Info("Affected app")
 	}
 
