@@ -41,7 +41,7 @@ Flags:
       --url string                 The overmind API endpoint (default "https://api.prod.overmind.tech")
   -v, --version                    version for ovm-cli
 
-Use "ovm-cli [command] --help" for more information about a command.```
+Use "ovm-cli [command] --help" for more information about a command.
 ```
 
 ## Examples
