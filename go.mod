@@ -5,7 +5,7 @@ go 1.21.5
 require (
 	connectrpc.com/connect v1.13.0
 	github.com/getsentry/sentry-go v0.25.0
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.5.0
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/jedib0t/go-pretty/v6 v6.4.9
 	github.com/mattn/go-isatty v0.0.20
