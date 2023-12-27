@@ -130,18 +130,6 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 
-	mgmtClient := AuthenticatedManagementClient(ctx)
-	log.WithContext(ctx).WithFields(lf).Info("Waking up sources")
-	_, err = mgmtClient.KeepaliveSources(ctx, &connect.Request[sdp.KeepaliveSourcesRequest]{
-		Msg: &sdp.KeepaliveSourcesRequest{
-			WaitForHealthy: true,
-		},
-	})
-	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to wake up sources")
-		return 1
-	}
-
 	ws, err := sdpws.Dial(ctx, gatewayUrl, otelhttp.DefaultClient, nil)
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to gateway")

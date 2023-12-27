@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	"github.com/overmindtech/ovm-cli/tracing"
 	"github.com/overmindtech/sdp-go"
@@ -147,18 +146,6 @@ func Request(ctx context.Context, ready chan bool) int {
 	// apply a timeout to the main body of processing
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-
-	mgmtClient := AuthenticatedManagementClient(ctx)
-	log.WithContext(ctx).WithFields(lf).Info("Waking up sources")
-	_, err = mgmtClient.KeepaliveSources(ctx, &connect.Request[sdp.KeepaliveSourcesRequest]{
-		Msg: &sdp.KeepaliveSourcesRequest{
-			WaitForHealthy: true,
-		},
-	})
-	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to wake up sources")
-		return 1
-	}
 
 	handler := &requestHandler{lf: lf}
 	c, err := sdpws.Dial(ctx, gatewayUrl,
