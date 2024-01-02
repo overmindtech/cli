@@ -65,18 +65,20 @@ type requestHandler struct {
 	numItems       int
 	numEdges       int
 
-	sdpws.NoopGatewayMessageHandler
+	sdpws.LoggingGatewayMessageHandler
 }
 
 // assert that requestHandler implements GatewayMessageHandler
 var _ sdpws.GatewayMessageHandler = (*requestHandler)(nil)
 
 func (l *requestHandler) NewItem(ctx context.Context, item *sdp.Item) {
+	l.LoggingGatewayMessageHandler.NewItem(ctx, item)
 	l.numItems += 1
 	log.WithContext(ctx).WithFields(l.lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
 }
 
 func (l *requestHandler) NewEdge(ctx context.Context, edge *sdp.Edge) {
+	l.LoggingGatewayMessageHandler.NewEdge(ctx, edge)
 	l.numEdges += 1
 	log.WithContext(ctx).WithFields(l.lf).WithFields(log.Fields{
 		"from": edge.From.GloballyUniqueName(),
@@ -93,6 +95,7 @@ func (l *requestHandler) QueryError(ctx context.Context, err *sdp.QueryError) {
 }
 
 func (l *requestHandler) QueryStatus(ctx context.Context, status *sdp.QueryStatus) {
+	l.LoggingGatewayMessageHandler.QueryStatus(ctx, status)
 	statusFields := log.Fields{
 		"status": status.Status.String(),
 	}
@@ -147,7 +150,10 @@ func Request(ctx context.Context, ready chan bool) int {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	handler := &requestHandler{lf: lf}
+	handler := &requestHandler{
+		lf:                           lf,
+		LoggingGatewayMessageHandler: sdpws.LoggingGatewayMessageHandler{Level: log.TraceLevel},
+	}
 	c, err := sdpws.Dial(ctx, gatewayUrl,
 		NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
 		handler,
