@@ -173,6 +173,14 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_dx_connection": {
+		{
+			Type:       "directconnect-connection",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
 	"aws_dynamodb_table": {
 		{
 			Type:       "dynamodb-table",
