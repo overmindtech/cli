@@ -62,8 +62,9 @@ type requestHandler struct {
 	lf log.Fields
 
 	queriesStarted int
-	numItems       int
-	numEdges       int
+
+	items []*sdp.Item
+	edges []*sdp.Edge
 
 	sdpws.LoggingGatewayMessageHandler
 }
@@ -73,13 +74,13 @@ var _ sdpws.GatewayMessageHandler = (*requestHandler)(nil)
 
 func (l *requestHandler) NewItem(ctx context.Context, item *sdp.Item) {
 	l.LoggingGatewayMessageHandler.NewItem(ctx, item)
-	l.numItems += 1
+	l.items = append(l.items, item)
 	log.WithContext(ctx).WithFields(l.lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
 }
 
 func (l *requestHandler) NewEdge(ctx context.Context, edge *sdp.Edge) {
 	l.LoggingGatewayMessageHandler.NewEdge(ctx, edge)
-	l.numEdges += 1
+	l.edges = append(l.edges, edge)
 	log.WithContext(ctx).WithFields(l.lf).WithFields(log.Fields{
 		"from": edge.From.GloballyUniqueName(),
 		"to":   edge.To.GloballyUniqueName(),
@@ -153,6 +154,8 @@ func Request(ctx context.Context, ready chan bool) int {
 	handler := &requestHandler{
 		lf:                           lf,
 		LoggingGatewayMessageHandler: sdpws.LoggingGatewayMessageHandler{Level: log.TraceLevel},
+		items:                        []*sdp.Item{},
+		edges:                        []*sdp.Edge{},
 	}
 	c, err := sdpws.DialBatch(ctx, gatewayUrl,
 		NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
@@ -192,9 +195,32 @@ func Request(ctx context.Context, ready chan bool) int {
 
 	log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
 		"queriesStarted": handler.queriesStarted,
-		"itemsReceived":  handler.numItems,
-		"edgesReceived":  handler.numEdges,
+		"itemsReceived":  len(handler.items),
+		"edgesReceived":  len(handler.edges),
 	}).Info("all queries done")
+
+	dumpFileName := viper.GetString("dump-json")
+	if dumpFileName != "" {
+		f, err := os.Create(dumpFileName)
+		if err != nil {
+			log.WithContext(ctx).WithFields(lf).WithField("file", dumpFileName).WithError(err).Error("Failed to open file for dumping")
+			return 1
+		}
+		defer f.Close()
+		type dump struct {
+			Items []*sdp.Item `json:"items"`
+			Edges []*sdp.Edge `json:"edges"`
+		}
+		err = json.NewEncoder(f).Encode(dump{
+			Items: handler.items,
+			Edges: handler.edges,
+		})
+		if err != nil {
+			log.WithContext(ctx).WithFields(lf).WithField("file", dumpFileName).WithError(err).Error("Failed to dump to file")
+			return 1
+		}
+		log.WithContext(ctx).WithFields(lf).WithField("file", dumpFileName).Info("dumped to file")
+	}
 
 	if viper.GetBool("snapshot-after") {
 		log.WithContext(ctx).Info("Starting snapshot")
@@ -253,6 +279,7 @@ func init() {
 	rootCmd.AddCommand(requestCmd)
 
 	requestCmd.PersistentFlags().String("request-type", "query", "The type of request to send (query, load-bookmark, load-snapshot)")
+	requestCmd.PersistentFlags().String("dump-json", "", "Dump the request to the given file as JSON")
 
 	requestCmd.PersistentFlags().String("query-method", "get", "The method to use (get, list, search)")
 	requestCmd.PersistentFlags().String("query-type", "*", "The type to query")
