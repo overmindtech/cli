@@ -62,22 +62,25 @@ type requestHandler struct {
 	lf log.Fields
 
 	queriesStarted int
-	numItems       int
-	numEdges       int
 
-	sdpws.NoopGatewayMessageHandler
+	items []*sdp.Item
+	edges []*sdp.Edge
+
+	sdpws.LoggingGatewayMessageHandler
 }
 
 // assert that requestHandler implements GatewayMessageHandler
 var _ sdpws.GatewayMessageHandler = (*requestHandler)(nil)
 
 func (l *requestHandler) NewItem(ctx context.Context, item *sdp.Item) {
-	l.numItems += 1
+	l.LoggingGatewayMessageHandler.NewItem(ctx, item)
+	l.items = append(l.items, item)
 	log.WithContext(ctx).WithFields(l.lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
 }
 
 func (l *requestHandler) NewEdge(ctx context.Context, edge *sdp.Edge) {
-	l.numEdges += 1
+	l.LoggingGatewayMessageHandler.NewEdge(ctx, edge)
+	l.edges = append(l.edges, edge)
 	log.WithContext(ctx).WithFields(l.lf).WithFields(log.Fields{
 		"from": edge.From.GloballyUniqueName(),
 		"to":   edge.To.GloballyUniqueName(),
@@ -89,10 +92,11 @@ func (l *requestHandler) Error(ctx context.Context, errorMessage string) {
 }
 
 func (l *requestHandler) QueryError(ctx context.Context, err *sdp.QueryError) {
-	log.WithContext(ctx).WithFields(l.lf).Errorf("Error from %v(%v): %v", err.ResponderName, err.SourceName, err)
+	log.WithContext(ctx).WithFields(l.lf).Errorf("Error for %v from %v(%v): %v", uuid.Must(uuid.FromBytes(err.UUID)), err.ResponderName, err.SourceName, err)
 }
 
 func (l *requestHandler) QueryStatus(ctx context.Context, status *sdp.QueryStatus) {
+	l.LoggingGatewayMessageHandler.QueryStatus(ctx, status)
 	statusFields := log.Fields{
 		"status": status.Status.String(),
 	}
@@ -147,8 +151,13 @@ func Request(ctx context.Context, ready chan bool) int {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	handler := &requestHandler{lf: lf}
-	c, err := sdpws.Dial(ctx, gatewayUrl,
+	handler := &requestHandler{
+		lf:                           lf,
+		LoggingGatewayMessageHandler: sdpws.LoggingGatewayMessageHandler{Level: log.TraceLevel},
+		items:                        []*sdp.Item{},
+		edges:                        []*sdp.Edge{},
+	}
+	c, err := sdpws.DialBatch(ctx, gatewayUrl,
 		NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
 		handler,
 	)
@@ -177,7 +186,7 @@ func Request(ctx context.Context, ready chan bool) int {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to marshal query for logging")
 		return 1
 	}
-	log.WithContext(ctx).WithFields(lf).Infof("Query:\n%v", string(b))
+	log.WithContext(ctx).WithFields(lf).WithField("uuid", uuid.UUID(q.UUID)).Infof("Query:\n%v", string(b))
 
 	err = c.Wait(ctx, uuid.UUIDs{uuid.UUID(q.UUID)})
 	if err != nil {
@@ -186,9 +195,32 @@ func Request(ctx context.Context, ready chan bool) int {
 
 	log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
 		"queriesStarted": handler.queriesStarted,
-		"itemsReceived":  handler.numItems,
-		"edgesReceived":  handler.numEdges,
+		"itemsReceived":  len(handler.items),
+		"edgesReceived":  len(handler.edges),
 	}).Info("all queries done")
+
+	dumpFileName := viper.GetString("dump-json")
+	if dumpFileName != "" {
+		f, err := os.Create(dumpFileName)
+		if err != nil {
+			log.WithContext(ctx).WithFields(lf).WithField("file", dumpFileName).WithError(err).Error("Failed to open file for dumping")
+			return 1
+		}
+		defer f.Close()
+		type dump struct {
+			Items []*sdp.Item `json:"items"`
+			Edges []*sdp.Edge `json:"edges"`
+		}
+		err = json.NewEncoder(f).Encode(dump{
+			Items: handler.items,
+			Edges: handler.edges,
+		})
+		if err != nil {
+			log.WithContext(ctx).WithFields(lf).WithField("file", dumpFileName).WithError(err).Error("Failed to dump to file")
+			return 1
+		}
+		log.WithContext(ctx).WithFields(lf).WithField("file", dumpFileName).Info("dumped to file")
+	}
 
 	if viper.GetBool("snapshot-after") {
 		log.WithContext(ctx).Info("Starting snapshot")
@@ -247,6 +279,7 @@ func init() {
 	rootCmd.AddCommand(requestCmd)
 
 	requestCmd.PersistentFlags().String("request-type", "query", "The type of request to send (query, load-bookmark, load-snapshot)")
+	requestCmd.PersistentFlags().String("dump-json", "", "Dump the request to the given file as JSON")
 
 	requestCmd.PersistentFlags().String("query-method", "get", "The method to use (get, list, search)")
 	requestCmd.PersistentFlags().String("query-type", "*", "The type to query")
