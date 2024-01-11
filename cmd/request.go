@@ -91,7 +91,7 @@ func (l *requestHandler) Error(ctx context.Context, errorMessage string) {
 }
 
 func (l *requestHandler) QueryError(ctx context.Context, err *sdp.QueryError) {
-	log.WithContext(ctx).WithFields(l.lf).Errorf("Error from %v(%v): %v", err.ResponderName, err.SourceName, err)
+	log.WithContext(ctx).WithFields(l.lf).Errorf("Error for %v from %v(%v): %v", uuid.Must(uuid.FromBytes(err.UUID)), err.ResponderName, err.SourceName, err)
 }
 
 func (l *requestHandler) QueryStatus(ctx context.Context, status *sdp.QueryStatus) {
@@ -183,7 +183,7 @@ func Request(ctx context.Context, ready chan bool) int {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to marshal query for logging")
 		return 1
 	}
-	log.WithContext(ctx).WithFields(lf).Infof("Query:\n%v", string(b))
+	log.WithContext(ctx).WithFields(lf).WithField("uuid", uuid.UUID(q.UUID)).Infof("Query:\n%v", string(b))
 
 	err = c.Wait(ctx, uuid.UUIDs{uuid.UUID(q.UUID)})
 	if err != nil {
