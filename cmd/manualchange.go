@@ -130,7 +130,7 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 
-	ws, err := sdpws.Dial(ctx, gatewayUrl, otelhttp.DefaultClient, nil)
+	ws, err := sdpws.DialBatch(ctx, gatewayUrl, otelhttp.DefaultClient, nil)
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to gateway")
 		return 1

@@ -154,7 +154,7 @@ func Request(ctx context.Context, ready chan bool) int {
 		lf:                           lf,
 		LoggingGatewayMessageHandler: sdpws.LoggingGatewayMessageHandler{Level: log.TraceLevel},
 	}
-	c, err := sdpws.Dial(ctx, gatewayUrl,
+	c, err := sdpws.DialBatch(ctx, gatewayUrl,
 		NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
 		handler,
 	)
