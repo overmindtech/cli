@@ -7,7 +7,7 @@ require (
 	github.com/getsentry/sentry-go v0.25.0
 	github.com/google/uuid v1.5.0
 	github.com/hexops/gotextdiff v1.0.3
-	github.com/jedib0t/go-pretty/v6 v6.5.0
+	github.com/jedib0t/go-pretty/v6 v6.5.2
 	github.com/mattn/go-isatty v0.0.20
 	github.com/overmindtech/sdp-go v0.61.4
 	github.com/sirupsen/logrus v1.9.3
@@ -70,7 +70,7 @@ require (
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sync v0.5.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17 // indirect
