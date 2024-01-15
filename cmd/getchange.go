@@ -104,39 +104,43 @@ func GetChange(ctx context.Context, ready chan bool) int {
 	lf["uuid"] = changeUuid.String()
 
 	client := AuthenticatedChangesClient(ctx)
-	changeRes, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
-		Msg: &sdp.GetChangeRequest{
-			UUID: changeUuid[:],
-		},
-	})
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"change-url": viper.GetString("change-url"),
-		}).Error("failed to get change")
-		return 1
-	}
-	log.WithContext(ctx).WithFields(log.Fields{
-		"change-uuid":        uuid.UUID(changeRes.Msg.Change.Metadata.UUID),
-		"change-created":     changeRes.Msg.Change.Metadata.CreatedAt.AsTime(),
-		"change-status":      changeRes.Msg.Change.Metadata.Status.String(),
-		"change-name":        changeRes.Msg.Change.Properties.Title,
-		"change-description": changeRes.Msg.Change.Properties.Description,
-	}).Info("found change")
+	var changeRes *connect.Response[sdp.GetChangeResponse]
+fetch:
+	for {
+		// use the variable to avoid shadowing
+		var err error
+		changeRes, err = client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
+			Msg: &sdp.GetChangeRequest{
+				UUID: changeUuid[:],
+			},
+		})
+		if err != nil {
+			log.WithContext(ctx).WithError(err).WithFields(log.Fields{
+				"change-url": viper.GetString("change-url"),
+			}).Error("failed to get change")
+			return 1
+		}
+		log.WithContext(ctx).WithFields(log.Fields{
+			"change-uuid":        uuid.UUID(changeRes.Msg.Change.Metadata.UUID),
+			"change-created":     changeRes.Msg.Change.Metadata.CreatedAt.AsTime(),
+			"change-status":      changeRes.Msg.Change.Metadata.Status.String(),
+			"change-name":        changeRes.Msg.Change.Properties.Title,
+			"change-description": changeRes.Msg.Change.Properties.Description,
+		}).Info("found change")
 
-	// diffRes, err := client.GetDiff(ctx, &connect.Request[sdp.GetDiffRequest]{
-	// 	Msg: &sdp.GetDiffRequest{
-	// 		ChangeUUID: changeUuid[:],
-	// 	},
-	// })
-	// if err != nil {
-	// 	log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-	// 		"change-url": viper.GetString("change-url"),
-	// 	}).Error("failed to get change diff")
-	// 	return 1
-	// }
-	// log.WithContext(ctx).WithFields(log.Fields{
-	// 	"change-uuid": uuid.UUID(changeRes.Msg.Change.Metadata.UUID),
-	// }).Info("loaded change diff")
+		if changeRes.Msg.Change.Metadata.RiskCalculationStatus.Status == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
+			log.WithContext(ctx).WithField("status", changeRes.Msg.Change.Metadata.RiskCalculationStatus.Status.String()).Info("waiting for risk calculation")
+			time.Sleep(10 * time.Second)
+			// retry
+		} else {
+			// it's done (or errored)
+			break fetch
+		}
+		if ctx.Err() != nil {
+			log.WithContext(ctx).WithError(ctx.Err()).Error("context cancelled")
+			return 1
+		}
+	}
 
 	switch viper.GetString("format") {
 	case "json":
