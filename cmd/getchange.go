@@ -128,13 +128,12 @@ fetch:
 			"change-description": changeRes.Msg.Change.Properties.Description,
 		}).Info("found change")
 
-		switch changeRes.Msg.Change.Metadata.RiskCalculationStatus.Status {
-		case sdp.RiskCalculationStatus_STATUS_INPROGRESS:
+		if changeRes.Msg.Change.Metadata.RiskCalculationStatus.Status == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
 			log.WithContext(ctx).WithField("status", changeRes.Msg.Change.Metadata.RiskCalculationStatus.Status.String()).Info("waiting for risk calculation")
 			time.Sleep(10 * time.Second)
 			// retry
-		default:
-			// it's done
+		} else {
+			// it's done (or errored)
 			break fetch
 		}
 		if ctx.Err() != nil {
