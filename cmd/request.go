@@ -63,8 +63,9 @@ type requestHandler struct {
 
 	queriesStarted int
 
-	items []*sdp.Item
-	edges []*sdp.Edge
+	items  []*sdp.Item
+	edges  []*sdp.Edge
+	msgLog []*sdp.GatewayResponse
 
 	sdpws.LoggingGatewayMessageHandler
 }
@@ -75,12 +76,18 @@ var _ sdpws.GatewayMessageHandler = (*requestHandler)(nil)
 func (l *requestHandler) NewItem(ctx context.Context, item *sdp.Item) {
 	l.LoggingGatewayMessageHandler.NewItem(ctx, item)
 	l.items = append(l.items, item)
+	l.msgLog = append(l.msgLog, &sdp.GatewayResponse{
+		ResponseType: &sdp.GatewayResponse_NewItem{NewItem: item},
+	})
 	log.WithContext(ctx).WithFields(l.lf).WithField("item", item.GloballyUniqueName()).Infof("new item")
 }
 
 func (l *requestHandler) NewEdge(ctx context.Context, edge *sdp.Edge) {
 	l.LoggingGatewayMessageHandler.NewEdge(ctx, edge)
 	l.edges = append(l.edges, edge)
+	l.msgLog = append(l.msgLog, &sdp.GatewayResponse{
+		ResponseType: &sdp.GatewayResponse_NewEdge{NewEdge: edge},
+	})
 	log.WithContext(ctx).WithFields(l.lf).WithFields(log.Fields{
 		"from": edge.From.GloballyUniqueName(),
 		"to":   edge.To.GloballyUniqueName(),
@@ -156,6 +163,7 @@ func Request(ctx context.Context, ready chan bool) int {
 		LoggingGatewayMessageHandler: sdpws.LoggingGatewayMessageHandler{Level: log.TraceLevel},
 		items:                        []*sdp.Item{},
 		edges:                        []*sdp.Edge{},
+		msgLog:                       []*sdp.GatewayResponse{},
 	}
 	c, err := sdpws.DialBatch(ctx, gatewayUrl,
 		NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
@@ -208,12 +216,10 @@ func Request(ctx context.Context, ready chan bool) int {
 		}
 		defer f.Close()
 		type dump struct {
-			Items []*sdp.Item `json:"items"`
-			Edges []*sdp.Edge `json:"edges"`
+			Msgs []*sdp.GatewayResponse `json:"msgs"`
 		}
 		err = json.NewEncoder(f).Encode(dump{
-			Items: handler.items,
-			Edges: handler.edges,
+			Msgs: handler.msgLog,
 		})
 		if err != nil {
 			log.WithContext(ctx).WithFields(lf).WithField("file", dumpFileName).WithError(err).Error("Failed to dump to file")
