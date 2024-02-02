@@ -181,6 +181,54 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_dx_gateway": {
+		{
+			Type:       "directconnect-direct-connect-gateway",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_dx_gateway_association": {
+		{
+			Type:       "directconnect-direct-connect-gateway-association",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_dx_gateway_association_proposal": {
+		{
+			Type:       "directconnect-direct-connect-gateway-association-proposal",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_dx_private_virtual_interface": {
+		{
+			Type:       "directconnect-virtual-interface",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_dx_public_virtual_interface": {
+		{
+			Type:       "directconnect-virtual-interface",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_dx_transit_virtual_interface": {
+		{
+			Type:       "directconnect-virtual-interface",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
 	"aws_dynamodb_table": {
 		{
 			Type:       "dynamodb-table",
