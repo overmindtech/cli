@@ -1,0 +1,11 @@
+{
+    "format_version": "1.0",
+    "terraform_version": "1.5.7",
+    "values": {
+        "outputs": {},
+        "root_module": {
+            "resources": [],
+            "child_modules": []
+        }
+    }
+}

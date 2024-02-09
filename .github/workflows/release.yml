@@ -12,9 +12,6 @@ jobs:
       contents: write
       packages: write
 
-    env:
-      GOEXPERIMENT: loopvar
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
