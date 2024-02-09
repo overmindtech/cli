@@ -281,12 +281,36 @@ func (g *plannedChangeGroups) Add(typ string, item *sdp.MappedItemDiff) {
 	groups[typ] = append(list, item)
 }
 
+// Checks if the supplied JSON bytes are a state file. It's a common  mistake to
+// pass a state file to Overmind rather than a plan file since the commands to
+// create them are similar
+func isStateFile(bytes []byte) bool {
+	fields := make(map[string]interface{})
+
+	err := json.Unmarshal(bytes, &fields)
+
+	if err != nil {
+		return false
+	}
+
+	if _, exists := fields["values"]; exists {
+		return true
+	}
+
+	return false
+}
+
 func mappedItemDiffsFromPlan(ctx context.Context, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, error) {
 	// read results from `terraform show -json ${tfplan file}`
 	planJSON, err := os.ReadFile(fileName)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to read terraform plan")
 		return nil, err
+	}
+
+	// Check that we haven't been passed a state file
+	if isStateFile(planJSON) {
+		return nil, fmt.Errorf("'%v' appears to be a state file, not a plan file", fileName)
 	}
 
 	var plan Plan

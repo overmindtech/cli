@@ -9,6 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestWithStateFile(t *testing.T) {
+	_, err := mappedItemDiffsFromPlan(context.Background(), "testdata/state.json", logrus.Fields{})
+
+	if err == nil {
+		t.Error("Expected error when running with state file, got none")
+	}
+}
+
 func TestMappedItemDiffsFromPlan(t *testing.T) {
 	mappedItemDiffs, err := mappedItemDiffsFromPlan(context.Background(), "testdata/plan.json", logrus.Fields{})
 
