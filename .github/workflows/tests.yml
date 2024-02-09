@@ -6,7 +6,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CGO_ENABLED: 0
-      GOEXPERIMENT: loopvar
 
     steps:
       - name: Checkout
@@ -29,8 +28,6 @@ jobs:
   golangci:
     name: lint
     runs-on: ubuntu-latest
-    env:
-      GOEXPERIMENT: loopvar
 
     steps:
       - name: Checkout
