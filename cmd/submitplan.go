@@ -192,13 +192,13 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 			Scope:           "terraform_plan",
 		}
 
-		err = result.GetBefore().GetAttributes().Set("terraform_name",trimmedAddress))
+		err = result.GetBefore().GetAttributes().Set("terraform_name", trimmedAddress)
 		if err != nil {
 			// since Address is a string, this should never happen
 			sentry.CaptureException(fmt.Errorf("failed to set terraform_name '%v' on before attributes: %w", trimmedAddress, err))
 		}
 
-		err = result.GetBefore().GetAttributes().Set("terraform_address",resourceChange.Address))
+		err = result.GetBefore().GetAttributes().Set("terraform_address", resourceChange.Address)
 		if err != nil {
 			// since Address is a string, this should never happen
 			sentry.CaptureException(fmt.Errorf("failed to set terraform_address of type %T (%v) on before attributes: %w", resourceChange.Address, resourceChange.Address, err))
@@ -213,13 +213,13 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 			Scope:           "terraform_plan",
 		}
 
-		err = result.GetAfter().GetAttributes().Set("terraform_name",trimmedAddress))
+		err = result.GetAfter().GetAttributes().Set("terraform_name", trimmedAddress)
 		if err != nil {
 			// since Address is a string, this should never happen
 			sentry.CaptureException(fmt.Errorf("failed to set terraform_name '%v' on after attributes: %w", trimmedAddress, err))
 		}
 
-		err = result.GetAfter().GetAttributes().Set("terraform_address",resourceChange.Address))
+		err = result.GetAfter().GetAttributes().Set("terraform_address", resourceChange.Address)
 		if err != nil {
 			// since Address is a string, this should never happen
 			sentry.CaptureException(fmt.Errorf("failed to set terraform_address of type %T (%v) on after attributes: %w", resourceChange.Address, resourceChange.Address, err))
