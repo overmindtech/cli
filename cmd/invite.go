@@ -226,8 +226,8 @@ func InvitesList(ctx context.Context) int {
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Email", "Status"})
 
-	for _, invite := range resp.Msg.Invites {
-		t.AppendRow(table.Row{invite.Email, invite.Status.String()})
+	for _, invite := range resp.Msg.GetInvites() {
+		t.AppendRow(table.Row{invite.GetEmail(), invite.GetStatus().String()})
 	}
 
 	t.Render()

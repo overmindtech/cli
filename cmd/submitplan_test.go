@@ -36,9 +36,9 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	var aws_iam_policy *sdp.MappedItemDiff
 
 	for _, diff := range mappedItemDiffs {
-		item := diff.Item.Before
-		if item == nil && diff.Item.After != nil {
-			item = diff.Item.After
+		item := diff.GetItem().GetBefore()
+		if item == nil && diff.GetItem().GetAfter() != nil {
+			item = diff.GetItem().GetAfter()
 		}
 		if item == nil {
 			t.Errorf("Expected any of before/after items to be set, but there's nothing: %v", diff)
@@ -46,11 +46,11 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 		}
 
 		// t.Logf("item: %v", item.Attributes.AttrStruct.Fields["terraform_address"].GetStringValue())
-		if item.Attributes.AttrStruct.Fields["terraform_address"].GetStringValue() == "kubernetes_deployment.nats_box" {
+		if item.GetAttributes().GetAttrStruct().GetFields()["terraform_address"].GetStringValue() == "kubernetes_deployment.nats_box" {
 			nats_box_deployment = diff
-		} else if item.Attributes.AttrStruct.Fields["terraform_address"].GetStringValue() == "kubernetes_deployment.api_server" {
+		} else if item.GetAttributes().GetAttrStruct().GetFields()["terraform_address"].GetStringValue() == "kubernetes_deployment.api_server" {
 			api_server_deployment = diff
-		} else if item.Type == "iam-policy" {
+		} else if item.GetType() == "iam-policy" {
 			aws_iam_policy = diff
 		}
 	}
@@ -60,29 +60,29 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	if nats_box_deployment == nil {
 		t.Fatalf("Expected nats_box_deployment to be set, but it's not")
 	}
-	if nats_box_deployment.Item.Status != sdp.ItemDiffStatus_ITEM_DIFF_STATUS_DELETED {
-		t.Errorf("Expected nats_box_deployment status to be 'deleted', but it's '%v'", nats_box_deployment.Item.Status)
+	if nats_box_deployment.GetItem().GetStatus() != sdp.ItemDiffStatus_ITEM_DIFF_STATUS_DELETED {
+		t.Errorf("Expected nats_box_deployment status to be 'deleted', but it's '%v'", nats_box_deployment.GetItem().GetStatus())
 	}
-	if nats_box_deployment.MappingQuery.Type != "Deployment" {
-		t.Errorf("Expected nats_box_deployment query type to be 'Deployment', got '%v'", nats_box_deployment.MappingQuery.Type)
+	if nats_box_deployment.GetMappingQuery().GetType() != "Deployment" {
+		t.Errorf("Expected nats_box_deployment query type to be 'Deployment', got '%v'", nats_box_deployment.GetMappingQuery().GetType())
 	}
-	if nats_box_deployment.MappingQuery.Query != "nats-box" {
-		t.Errorf("Expected nats_box_deployment query to be 'nats-box', got '%v'", nats_box_deployment.MappingQuery.Query)
+	if nats_box_deployment.GetMappingQuery().GetQuery() != "nats-box" {
+		t.Errorf("Expected nats_box_deployment query to be 'nats-box', got '%v'", nats_box_deployment.GetMappingQuery().GetQuery())
 	}
-	if nats_box_deployment.MappingQuery.Scope != "*" {
-		t.Errorf("Expected nats_box_deployment query scope to be '*', got '%v'", nats_box_deployment.MappingQuery.Scope)
+	if nats_box_deployment.GetMappingQuery().GetScope() != "*" {
+		t.Errorf("Expected nats_box_deployment query scope to be '*', got '%v'", nats_box_deployment.GetMappingQuery().GetScope())
 	}
-	if nats_box_deployment.Item.Before.Scope != "terraform_plan" {
-		t.Errorf("Expected nats_box_deployment before item scope to be 'terraform_plan', got '%v'", nats_box_deployment.Item.Before.Scope)
+	if nats_box_deployment.GetItem().GetBefore().GetScope() != "terraform_plan" {
+		t.Errorf("Expected nats_box_deployment before item scope to be 'terraform_plan', got '%v'", nats_box_deployment.GetItem().GetBefore().GetScope())
 	}
-	if nats_box_deployment.MappingQuery.Type != "Deployment" {
-		t.Errorf("Expected nats_box_deployment query type to be 'Deployment', got '%v'", nats_box_deployment.MappingQuery.Type)
+	if nats_box_deployment.GetMappingQuery().GetType() != "Deployment" {
+		t.Errorf("Expected nats_box_deployment query type to be 'Deployment', got '%v'", nats_box_deployment.GetMappingQuery().GetType())
 	}
-	if nats_box_deployment.Item.Before.Type != "Deployment" {
-		t.Errorf("Expected nats_box_deployment before item type to be 'Deployment', got '%v'", nats_box_deployment.Item.Before.Type)
+	if nats_box_deployment.GetItem().GetBefore().GetType() != "Deployment" {
+		t.Errorf("Expected nats_box_deployment before item type to be 'Deployment', got '%v'", nats_box_deployment.GetItem().GetBefore().GetType())
 	}
-	if nats_box_deployment.MappingQuery.Query != "nats-box" {
-		t.Errorf("Expected nats_box_deployment query query to be 'nats-box', got '%v'", nats_box_deployment.MappingQuery.Query)
+	if nats_box_deployment.GetMappingQuery().GetQuery() != "nats-box" {
+		t.Errorf("Expected nats_box_deployment query query to be 'nats-box', got '%v'", nats_box_deployment.GetMappingQuery().GetQuery())
 	}
 
 	// check api_server_deployment
@@ -90,29 +90,29 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	if api_server_deployment == nil {
 		t.Fatalf("Expected api_server_deployment to be set, but it's not")
 	}
-	if api_server_deployment.Item.Status != sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED {
-		t.Errorf("Expected api_server_deployment status to be 'updated', but it's '%v'", api_server_deployment.Item.Status)
+	if api_server_deployment.GetItem().GetStatus() != sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED {
+		t.Errorf("Expected api_server_deployment status to be 'updated', but it's '%v'", api_server_deployment.GetItem().GetStatus())
 	}
-	if api_server_deployment.MappingQuery.Type != "Deployment" {
-		t.Errorf("Expected api_server_deployment query type to be 'Deployment', got '%v'", api_server_deployment.MappingQuery.Type)
+	if api_server_deployment.GetMappingQuery().GetType() != "Deployment" {
+		t.Errorf("Expected api_server_deployment query type to be 'Deployment', got '%v'", api_server_deployment.GetMappingQuery().GetType())
 	}
-	if api_server_deployment.MappingQuery.Query != "api-server" {
-		t.Errorf("Expected api_server_deployment query to be 'api-server', got '%v'", api_server_deployment.MappingQuery.Query)
+	if api_server_deployment.GetMappingQuery().GetQuery() != "api-server" {
+		t.Errorf("Expected api_server_deployment query to be 'api-server', got '%v'", api_server_deployment.GetMappingQuery().GetQuery())
 	}
-	if api_server_deployment.MappingQuery.Scope != "dogfood.default" {
-		t.Errorf("Expected api_server_deployment query scope to be 'dogfood.default', got '%v'", api_server_deployment.MappingQuery.Scope)
+	if api_server_deployment.GetMappingQuery().GetScope() != "dogfood.default" {
+		t.Errorf("Expected api_server_deployment query scope to be 'dogfood.default', got '%v'", api_server_deployment.GetMappingQuery().GetScope())
 	}
-	if api_server_deployment.Item.Before.Scope != "dogfood.default" {
-		t.Errorf("Expected api_server_deployment before item scope to be 'dogfood.default', got '%v'", api_server_deployment.Item.Before.Scope)
+	if api_server_deployment.GetItem().GetBefore().GetScope() != "dogfood.default" {
+		t.Errorf("Expected api_server_deployment before item scope to be 'dogfood.default', got '%v'", api_server_deployment.GetItem().GetBefore().GetScope())
 	}
-	if api_server_deployment.MappingQuery.Type != "Deployment" {
-		t.Errorf("Expected api_server_deployment query type to be 'Deployment', got '%v'", api_server_deployment.MappingQuery.Type)
+	if api_server_deployment.GetMappingQuery().GetType() != "Deployment" {
+		t.Errorf("Expected api_server_deployment query type to be 'Deployment', got '%v'", api_server_deployment.GetMappingQuery().GetType())
 	}
-	if api_server_deployment.Item.Before.Type != "Deployment" {
-		t.Errorf("Expected api_server_deployment before item type to be 'Deployment', got '%v'", api_server_deployment.Item.Before.Type)
+	if api_server_deployment.GetItem().GetBefore().GetType() != "Deployment" {
+		t.Errorf("Expected api_server_deployment before item type to be 'Deployment', got '%v'", api_server_deployment.GetItem().GetBefore().GetType())
 	}
-	if api_server_deployment.MappingQuery.Query != "api-server" {
-		t.Errorf("Expected api_server_deployment query query to be 'api-server', got '%v'", api_server_deployment.MappingQuery.Query)
+	if api_server_deployment.GetMappingQuery().GetQuery() != "api-server" {
+		t.Errorf("Expected api_server_deployment query query to be 'api-server', got '%v'", api_server_deployment.GetMappingQuery().GetQuery())
 	}
 
 	// check aws_iam_policy
@@ -120,29 +120,29 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	if aws_iam_policy == nil {
 		t.Fatalf("Expected aws_iam_policy to be set, but it's not")
 	}
-	if aws_iam_policy.Item.Status != sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED {
-		t.Errorf("Expected aws_iam_policy status to be 'updated', but it's %v", aws_iam_policy.Item.Status)
+	if aws_iam_policy.GetItem().GetStatus() != sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED {
+		t.Errorf("Expected aws_iam_policy status to be 'updated', but it's %v", aws_iam_policy.GetItem().GetStatus())
 	}
-	if aws_iam_policy.MappingQuery.Type != "iam-policy" {
-		t.Errorf("Expected aws_iam_policy query type to be 'iam-policy', got '%v'", aws_iam_policy.MappingQuery.Type)
+	if aws_iam_policy.GetMappingQuery().GetType() != "iam-policy" {
+		t.Errorf("Expected aws_iam_policy query type to be 'iam-policy', got '%v'", aws_iam_policy.GetMappingQuery().GetType())
 	}
-	if aws_iam_policy.MappingQuery.Query != "arn:aws:iam::123456789012:policy/test-alb-ingress" {
-		t.Errorf("Expected aws_iam_policy query to be 'arn:aws:iam::123456789012:policy/test-alb-ingress', got '%v'", aws_iam_policy.MappingQuery.Query)
+	if aws_iam_policy.GetMappingQuery().GetQuery() != "arn:aws:iam::123456789012:policy/test-alb-ingress" {
+		t.Errorf("Expected aws_iam_policy query to be 'arn:aws:iam::123456789012:policy/test-alb-ingress', got '%v'", aws_iam_policy.GetMappingQuery().GetQuery())
 	}
-	if aws_iam_policy.MappingQuery.Scope != "*" {
-		t.Errorf("Expected aws_iam_policy query scope to be '*', got '%v'", aws_iam_policy.MappingQuery.Scope)
+	if aws_iam_policy.GetMappingQuery().GetScope() != "*" {
+		t.Errorf("Expected aws_iam_policy query scope to be '*', got '%v'", aws_iam_policy.GetMappingQuery().GetScope())
 	}
-	if aws_iam_policy.Item.Before.Scope != "terraform_plan" {
-		t.Errorf("Expected aws_iam_policy before item scope to be 'terraform_plan', got '%v'", aws_iam_policy.Item.Before.Scope)
+	if aws_iam_policy.GetItem().GetBefore().GetScope() != "terraform_plan" {
+		t.Errorf("Expected aws_iam_policy before item scope to be 'terraform_plan', got '%v'", aws_iam_policy.GetItem().GetBefore().GetScope())
 	}
-	if aws_iam_policy.MappingQuery.Type != "iam-policy" {
-		t.Errorf("Expected aws_iam_policy query type to be 'iam-policy', got '%v'", aws_iam_policy.MappingQuery.Type)
+	if aws_iam_policy.GetMappingQuery().GetType() != "iam-policy" {
+		t.Errorf("Expected aws_iam_policy query type to be 'iam-policy', got '%v'", aws_iam_policy.GetMappingQuery().GetType())
 	}
-	if aws_iam_policy.Item.Before.Type != "iam-policy" {
-		t.Errorf("Expected aws_iam_policy before item type to be 'iam-policy', got '%v'", aws_iam_policy.Item.Before.Type)
+	if aws_iam_policy.GetItem().GetBefore().GetType() != "iam-policy" {
+		t.Errorf("Expected aws_iam_policy before item type to be 'iam-policy', got '%v'", aws_iam_policy.GetItem().GetBefore().GetType())
 	}
-	if aws_iam_policy.MappingQuery.Query != "arn:aws:iam::123456789012:policy/test-alb-ingress" {
-		t.Errorf("Expected aws_iam_policy query query to be 'arn:aws:iam::123456789012:policy/test-alb-ingress', got '%v'", aws_iam_policy.MappingQuery.Query)
+	if aws_iam_policy.GetMappingQuery().GetQuery() != "arn:aws:iam::123456789012:policy/test-alb-ingress" {
+		t.Errorf("Expected aws_iam_policy query query to be 'arn:aws:iam::123456789012:policy/test-alb-ingress', got '%v'", aws_iam_policy.GetMappingQuery().GetQuery())
 	}
 }
 
@@ -154,7 +154,7 @@ func TestMaskSensitiveData(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
 		t.Parallel()
 		got := maskSensitiveData(map[string]any{}, map[string]any{})
-		require.Equal(t, got, map[string]any{})
+		require.Equal(t, map[string]any{}, got)
 	})
 
 	t.Run("easy", func(t *testing.T) {

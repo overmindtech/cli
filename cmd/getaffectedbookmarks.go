@@ -106,7 +106,7 @@ func GetAffectedBookmarks(ctx context.Context, ready chan bool) int {
 		}).Error("failed to get affected bookmarks")
 		return 1
 	}
-	for _, u := range response.Msg.BookmarkUUIDs {
+	for _, u := range response.Msg.GetBookmarkUUIDs() {
 		bookmarkUuid := uuid.UUID(u)
 		log.WithContext(ctx).WithFields(log.Fields{
 			"uuid": bookmarkUuid,

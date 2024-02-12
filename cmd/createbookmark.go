@@ -113,23 +113,23 @@ func CreateBookmark(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 	log.WithContext(ctx).WithFields(log.Fields{
-		"bookmark-uuid":        uuid.UUID(response.Msg.Bookmark.Metadata.UUID),
-		"bookmark-created":     response.Msg.Bookmark.Metadata.Created,
-		"bookmark-name":        response.Msg.Bookmark.Properties.Name,
-		"bookmark-description": response.Msg.Bookmark.Properties.Description,
+		"bookmark-uuid":        uuid.UUID(response.Msg.GetBookmark().GetMetadata().GetUUID()),
+		"bookmark-created":     response.Msg.GetBookmark().GetMetadata().GetCreated(),
+		"bookmark-name":        response.Msg.GetBookmark().GetProperties().GetName(),
+		"bookmark-description": response.Msg.GetBookmark().GetProperties().GetDescription(),
 	}).Info("created bookmark")
-	for _, q := range response.Msg.Bookmark.Properties.Queries {
+	for _, q := range response.Msg.GetBookmark().GetProperties().GetQueries() {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"bookmark-query": q,
 		}).Info("created bookmark query")
 	}
-	for _, i := range response.Msg.Bookmark.Properties.ExcludedItems {
+	for _, i := range response.Msg.GetBookmark().GetProperties().GetExcludedItems() {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"bookmark-excluded-item": i,
 		}).Info("created bookmark excluded item")
 	}
 
-	b, err := json.MarshalIndent(response.Msg.Bookmark.Properties, "", "  ")
+	b, err := json.MarshalIndent(response.Msg.GetBookmark().GetProperties(), "", "  ")
 	if err != nil {
 		log.Infof("Error rendering bookmark: %v", err)
 	} else {

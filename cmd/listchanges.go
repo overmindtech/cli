@@ -89,14 +89,14 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 		log.WithContext(ctx).WithError(err).Error("failed to list changes")
 		return 1
 	}
-	for _, change := range response.Msg.Changes {
-		changeUuid := uuid.UUID(change.Metadata.UUID)
+	for _, change := range response.Msg.GetChanges() {
+		changeUuid := uuid.UUID(change.GetMetadata().GetUUID())
 		log.WithContext(ctx).WithFields(log.Fields{
 			"change-uuid":        changeUuid,
-			"change-created":     change.Metadata.CreatedAt.AsTime(),
-			"change-status":      change.Metadata.Status.String(),
-			"change-name":        change.Properties.Title,
-			"change-description": change.Properties.Description,
+			"change-created":     change.GetMetadata().GetCreatedAt().AsTime(),
+			"change-status":      change.GetMetadata().GetStatus().String(),
+			"change-name":        change.GetProperties().GetTitle(),
+			"change-description": change.GetProperties().GetDescription(),
 		}).Info("found change")
 
 		b, err := json.MarshalIndent(change.ToMap(), "", "  ")
@@ -111,7 +111,7 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 		}
 
 		if viper.GetBool("fetch-data") {
-			ciUuid := uuid.UUID(change.Properties.ChangingItemsBookmarkUUID)
+			ciUuid := uuid.UUID(change.GetProperties().GetChangingItemsBookmarkUUID())
 			if ciUuid != uuid.Nil {
 				changingItems, err := bookmarks.GetBookmark(ctx, &connect.Request[sdp.GetBookmarkRequest]{
 					Msg: &sdp.GetBookmarkRequest{
@@ -128,7 +128,7 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 						return 1
 					}
 
-					b, err := json.MarshalIndent(changingItems.Msg.Bookmark.ToMap(), "", "  ")
+					b, err := json.MarshalIndent(changingItems.Msg.GetBookmark().ToMap(), "", "  ")
 					if err != nil {
 						log.WithContext(ctx).WithFields(log.Fields{
 							"change-uuid":         changeUuid,
@@ -144,7 +144,7 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 				}
 			}
 
-			brUuid := uuid.UUID(change.Properties.BlastRadiusSnapshotUUID)
+			brUuid := uuid.UUID(change.GetProperties().GetBlastRadiusSnapshotUUID())
 			if brUuid != uuid.Nil {
 				brSnap, err := snapshots.GetSnapshot(ctx, &connect.Request[sdp.GetSnapshotRequest]{
 					Msg: &sdp.GetSnapshotRequest{
@@ -161,7 +161,7 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 						return 1
 					}
 
-					b, err := json.MarshalIndent(brSnap.Msg.Snapshot.ToMap(), "", "  ")
+					b, err := json.MarshalIndent(brSnap.Msg.GetSnapshot().ToMap(), "", "  ")
 					if err != nil {
 						log.WithContext(ctx).WithFields(log.Fields{
 							"change-uuid":       changeUuid,
@@ -177,7 +177,7 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 				}
 			}
 
-			sbsUuid := uuid.UUID(change.Properties.SystemBeforeSnapshotUUID)
+			sbsUuid := uuid.UUID(change.GetProperties().GetSystemBeforeSnapshotUUID())
 			if sbsUuid != uuid.Nil {
 				brSnap, err := snapshots.GetSnapshot(ctx, &connect.Request[sdp.GetSnapshotRequest]{
 					Msg: &sdp.GetSnapshotRequest{
@@ -194,7 +194,7 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 						return 1
 					}
 
-					b, err := json.MarshalIndent(brSnap.Msg.Snapshot.ToMap(), "", "  ")
+					b, err := json.MarshalIndent(brSnap.Msg.GetSnapshot().ToMap(), "", "  ")
 					if err != nil {
 						log.WithContext(ctx).WithFields(log.Fields{
 							"change-uuid":        changeUuid,
@@ -210,7 +210,7 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 				}
 			}
 
-			sasUuid := uuid.UUID(change.Properties.SystemAfterSnapshotUUID)
+			sasUuid := uuid.UUID(change.GetProperties().GetSystemAfterSnapshotUUID())
 			if sasUuid != uuid.Nil {
 				brSnap, err := snapshots.GetSnapshot(ctx, &connect.Request[sdp.GetSnapshotRequest]{
 					Msg: &sdp.GetSnapshotRequest{
@@ -227,7 +227,7 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 						return 1
 					}
 
-					b, err := json.MarshalIndent(brSnap.Msg.Snapshot.ToMap(), "", "  ")
+					b, err := json.MarshalIndent(brSnap.Msg.GetSnapshot().ToMap(), "", "  ")
 					if err != nil {
 						log.WithContext(ctx).WithFields(log.Fields{
 							"change-uuid":       changeUuid,

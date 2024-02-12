@@ -110,7 +110,7 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 			return 1
 		}
 
-		maybeChangeUuid := createResponse.Msg.Change.Metadata.GetUUIDParsed()
+		maybeChangeUuid := createResponse.Msg.GetChange().GetMetadata().GetUUIDParsed()
 		if maybeChangeUuid == nil {
 			log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read change id")
 			return 1
@@ -182,7 +182,7 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 		// log the first message and at most every 250ms during discovery
 		// to avoid spanning the cli output
 		time_since_last_log := time.Since(last_log)
-		if first_log || msg.State != sdp.CalculateBlastRadiusResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
+		if first_log || msg.GetState() != sdp.CalculateBlastRadiusResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
 			log.WithContext(ctx).WithFields(lf).WithField("msg", msg).Info("status update")
 			last_log = time.Now()
 			first_log = false
@@ -208,7 +208,7 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 
-	for _, a := range fetchResponse.Msg.Change.Properties.AffectedAppsUUID {
+	for _, a := range fetchResponse.Msg.GetChange().GetProperties().GetAffectedAppsUUID() {
 		appUuid, err := uuid.FromBytes(a)
 		if err != nil {
 			log.WithContext(ctx).WithFields(lf).WithError(err).WithField("app", a).Error("received invalid app uuid")
