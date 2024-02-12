@@ -121,15 +121,15 @@ fetch:
 			return 1
 		}
 		log.WithContext(ctx).WithFields(log.Fields{
-			"change-uuid":        uuid.UUID(changeRes.Msg.Change.Metadata.UUID),
-			"change-created":     changeRes.Msg.Change.Metadata.CreatedAt.AsTime(),
-			"change-status":      changeRes.Msg.Change.Metadata.Status.String(),
-			"change-name":        changeRes.Msg.Change.Properties.Title,
-			"change-description": changeRes.Msg.Change.Properties.Description,
+			"change-uuid":        uuid.UUID(changeRes.Msg.GetChange().GetMetadata().GetUUID()),
+			"change-created":     changeRes.Msg.GetChange().GetMetadata().GetCreatedAt().AsTime(),
+			"change-status":      changeRes.Msg.GetChange().GetMetadata().GetStatus().String(),
+			"change-name":        changeRes.Msg.GetChange().GetProperties().GetTitle(),
+			"change-description": changeRes.Msg.GetChange().GetProperties().GetDescription(),
 		}).Info("found change")
 
-		if changeRes.Msg.Change.Metadata.RiskCalculationStatus.Status == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
-			log.WithContext(ctx).WithField("status", changeRes.Msg.Change.Metadata.RiskCalculationStatus.Status.String()).Info("waiting for risk calculation")
+		if changeRes.Msg.GetChange().GetMetadata().GetRiskCalculationStatus().GetStatus() == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
+			log.WithContext(ctx).WithField("status", changeRes.Msg.GetChange().GetMetadata().GetRiskCalculationStatus().GetStatus().String()).Info("waiting for risk calculation")
 			time.Sleep(10 * time.Second)
 			// retry
 		} else {
@@ -144,9 +144,9 @@ fetch:
 
 	switch viper.GetString("format") {
 	case "json":
-		b, err := json.MarshalIndent(changeRes.Msg.Change.ToMap(), "", "  ")
+		b, err := json.MarshalIndent(changeRes.Msg.GetChange().ToMap(), "", "  ")
 		if err != nil {
-			log.WithContext(ctx).WithField("input", fmt.Sprintf("%#v", changeRes.Msg.Change.ToMap())).WithError(err).Error("Error rendering change")
+			log.WithContext(ctx).WithField("input", fmt.Sprintf("%#v", changeRes.Msg.GetChange().ToMap())).WithError(err).Error("Error rendering change")
 			return 1
 		}
 
@@ -230,16 +230,16 @@ fetch:
 			ChangeUrl:       fmt.Sprintf("%v/changes/%v", frontend, changeUuid.String()),
 			ExpectedChanges: []TemplateItem{},
 			UnmappedChanges: []TemplateItem{},
-			BlastItems:      int(changeRes.Msg.Change.Metadata.NumAffectedItems),
-			BlastEdges:      int(changeRes.Msg.Change.Metadata.NumAffectedEdges),
+			BlastItems:      int(changeRes.Msg.GetChange().GetMetadata().GetNumAffectedItems()),
+			BlastEdges:      int(changeRes.Msg.GetChange().GetMetadata().GetNumAffectedEdges()),
 			Risks:           []TemplateRisk{},
 			AssetPath:       fmt.Sprintf("https://raw.githubusercontent.com/overmindtech/ovm-cli/%v/assets", assetVersion),
 		}
 
-		for _, item := range changeRes.Msg.Change.Properties.PlannedChanges {
+		for _, item := range changeRes.Msg.GetChange().GetProperties().GetPlannedChanges() {
 			var before, after string
-			if item.Before != nil {
-				bb, err := yaml.Marshal(item.Before.Attributes.AttrStruct.AsMap())
+			if item.GetBefore() != nil {
+				bb, err := yaml.Marshal(item.GetBefore().GetAttributes().GetAttrStruct().AsMap())
 				if err != nil {
 					log.WithContext(ctx).WithError(err).Error("error marshalling 'before' attributes")
 					before = ""
@@ -247,8 +247,8 @@ fetch:
 					before = string(bb)
 				}
 			}
-			if item.After != nil {
-				ab, err := yaml.Marshal(item.After.Attributes.AttrStruct.AsMap())
+			if item.GetAfter() != nil {
+				ab, err := yaml.Marshal(item.GetAfter().GetAttributes().GetAttrStruct().AsMap())
 				if err != nil {
 					log.WithContext(ctx).WithError(err).Error("error marshalling 'after' attributes")
 					after = ""
@@ -259,26 +259,26 @@ fetch:
 			edits := myers.ComputeEdits(diffspan.URIFromPath("current"), before, after)
 			diff := fmt.Sprint(gotextdiff.ToUnified("current", "planned", before, edits))
 
-			if item.Item != nil {
+			if item.GetItem() != nil {
 				data.ExpectedChanges = append(data.ExpectedChanges, TemplateItem{
-					StatusAlt:  status[item.Status].StatusAlt,
-					StatusIcon: status[item.Status].StatusIcon,
-					Type:       item.Item.Type,
-					Title:      item.Item.UniqueAttributeValue,
+					StatusAlt:  status[item.GetStatus()].StatusAlt,
+					StatusIcon: status[item.GetStatus()].StatusIcon,
+					Type:       item.GetItem().GetType(),
+					Title:      item.GetItem().GetUniqueAttributeValue(),
 					Diff:       diff,
 				})
 			} else {
 				var typ, title string
-				if item.After != nil {
-					typ = item.After.Type
-					title = item.After.UniqueAttributeValue()
-				} else if item.Before != nil {
-					typ = item.Before.Type
-					title = item.Before.UniqueAttributeValue()
+				if item.GetAfter() != nil {
+					typ = item.GetAfter().GetType()
+					title = item.GetAfter().UniqueAttributeValue()
+				} else if item.GetBefore() != nil {
+					typ = item.GetBefore().GetType()
+					title = item.GetBefore().UniqueAttributeValue()
 				}
 				data.UnmappedChanges = append(data.UnmappedChanges, TemplateItem{
-					StatusAlt:  status[item.Status].StatusAlt,
-					StatusIcon: status[item.Status].StatusIcon,
+					StatusAlt:  status[item.GetStatus()].StatusAlt,
+					StatusIcon: status[item.GetStatus()].StatusIcon,
 					Type:       typ,
 					Title:      title,
 					Diff:       diff,
@@ -286,13 +286,13 @@ fetch:
 			}
 		}
 
-		for _, risk := range changeRes.Msg.Change.Metadata.Risks {
+		for _, risk := range changeRes.Msg.GetChange().GetMetadata().GetRisks() {
 			data.Risks = append(data.Risks, TemplateRisk{
-				SeverityAlt:  severity[risk.Severity].SeverityAlt,
-				SeverityIcon: severity[risk.Severity].SeverityIcon,
-				SeverityText: severity[risk.Severity].SeverityText,
-				Title:        risk.Title,
-				Description:  risk.Description,
+				SeverityAlt:  severity[risk.GetSeverity()].SeverityAlt,
+				SeverityIcon: severity[risk.GetSeverity()].SeverityIcon,
+				SeverityText: severity[risk.GetSeverity()].SeverityText,
+				Title:        risk.GetTitle(),
+				Description:  risk.GetDescription(),
 			})
 		}
 

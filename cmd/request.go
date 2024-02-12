@@ -89,8 +89,8 @@ func (l *requestHandler) NewEdge(ctx context.Context, edge *sdp.Edge) {
 		ResponseType: &sdp.GatewayResponse_NewEdge{NewEdge: edge},
 	})
 	log.WithContext(ctx).WithFields(l.lf).WithFields(log.Fields{
-		"from": edge.From.GloballyUniqueName(),
-		"to":   edge.To.GloballyUniqueName(),
+		"from": edge.GetFrom().GloballyUniqueName(),
+		"to":   edge.GetTo().GloballyUniqueName(),
 	}).Info("new edge")
 }
 
@@ -99,13 +99,13 @@ func (l *requestHandler) Error(ctx context.Context, errorMessage string) {
 }
 
 func (l *requestHandler) QueryError(ctx context.Context, err *sdp.QueryError) {
-	log.WithContext(ctx).WithFields(l.lf).Errorf("Error for %v from %v(%v): %v", uuid.Must(uuid.FromBytes(err.UUID)), err.ResponderName, err.SourceName, err)
+	log.WithContext(ctx).WithFields(l.lf).Errorf("Error for %v from %v(%v): %v", uuid.Must(uuid.FromBytes(err.GetUUID())), err.GetResponderName(), err.GetSourceName(), err)
 }
 
 func (l *requestHandler) QueryStatus(ctx context.Context, status *sdp.QueryStatus) {
 	l.LoggingGatewayMessageHandler.QueryStatus(ctx, status)
 	statusFields := log.Fields{
-		"status": status.Status.String(),
+		"status": status.GetStatus().String(),
 	}
 	queryUuid := status.GetUUIDParsed()
 	if queryUuid == nil {
@@ -114,12 +114,12 @@ func (l *requestHandler) QueryStatus(ctx context.Context, status *sdp.QueryStatu
 	}
 	statusFields["query"] = queryUuid
 
-	if status.Status == sdp.QueryStatus_STARTED {
+	if status.GetStatus() == sdp.QueryStatus_STARTED {
 		l.queriesStarted += 1
 	}
 
 	// nolint:exhaustive // we _want_ to log all other status fields as unexpected
-	switch status.Status {
+	switch status.GetStatus() {
 	case sdp.QueryStatus_STARTED, sdp.QueryStatus_FINISHED, sdp.QueryStatus_ERRORED, sdp.QueryStatus_CANCELLED:
 		// do nothing
 	default:
@@ -194,9 +194,9 @@ func Request(ctx context.Context, ready chan bool) int {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to marshal query for logging")
 		return 1
 	}
-	log.WithContext(ctx).WithFields(lf).WithField("uuid", uuid.UUID(q.UUID)).Infof("Query:\n%v", string(b))
+	log.WithContext(ctx).WithFields(lf).WithField("uuid", uuid.UUID(q.GetUUID())).Infof("Query:\n%v", string(b))
 
-	err = c.Wait(ctx, uuid.UUIDs{uuid.UUID(q.UUID)})
+	err = c.Wait(ctx, uuid.UUIDs{uuid.UUID(q.GetUUID())})
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("queries failed")
 	}

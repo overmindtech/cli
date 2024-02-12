@@ -160,7 +160,7 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 				return ctx, fmt.Errorf("error authenticating the API token: %w", err)
 			}
 			log.WithContext(ctx).Debug("successfully authenticated")
-			apiKey = resp.Msg.AccessToken
+			apiKey = resp.Msg.GetAccessToken()
 		} else {
 			return ctx, errors.New("--api-key does not match pattern 'ovm_api_*'")
 		}
@@ -372,9 +372,9 @@ func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus, errNotF
 		return uuid.Nil, fmt.Errorf("failed to searching for existing changes: %w", err)
 	}
 
-	for _, c := range changesList.Msg.Changes {
-		if c.Properties.TicketLink == ticketLink {
-			maybeChangeUuid = c.Metadata.GetUUIDParsed()
+	for _, c := range changesList.Msg.GetChanges() {
+		if c.GetProperties().GetTicketLink() == ticketLink {
+			maybeChangeUuid = c.GetMetadata().GetUUIDParsed()
 			if maybeChangeUuid != nil {
 				changeUuid = *maybeChangeUuid
 				break

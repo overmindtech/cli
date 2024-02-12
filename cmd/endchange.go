@@ -99,9 +99,9 @@ func EndChange(ctx context.Context, ready chan bool) int {
 	for stream.Receive() {
 		msg := stream.Msg()
 		log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
-			"state": msg.State,
-			"items": msg.NumItems,
-			"edges": msg.NumEdges,
+			"state": msg.GetState(),
+			"items": msg.GetNumItems(),
+			"edges": msg.GetNumEdges(),
 		}).Info("progress")
 	}
 	if stream.Err() != nil {

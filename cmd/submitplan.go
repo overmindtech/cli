@@ -192,13 +192,13 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 			Scope:           "terraform_plan",
 		}
 
-		err = result.Before.Attributes.Set("terraform_name", trimmedAddress)
+		err = result.GetBefore().GetAttributes().Set("terraform_name",trimmedAddress))
 		if err != nil {
 			// since Address is a string, this should never happen
 			sentry.CaptureException(fmt.Errorf("failed to set terraform_name '%v' on before attributes: %w", trimmedAddress, err))
 		}
 
-		err = result.Before.Attributes.Set("terraform_address", resourceChange.Address)
+		err = result.GetBefore().GetAttributes().Set("terraform_address",resourceChange.Address))
 		if err != nil {
 			// since Address is a string, this should never happen
 			sentry.CaptureException(fmt.Errorf("failed to set terraform_address of type %T (%v) on before attributes: %w", resourceChange.Address, resourceChange.Address, err))
@@ -213,13 +213,13 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 			Scope:           "terraform_plan",
 		}
 
-		err = result.After.Attributes.Set("terraform_name", trimmedAddress)
+		err = result.GetAfter().GetAttributes().Set("terraform_name",trimmedAddress))
 		if err != nil {
 			// since Address is a string, this should never happen
 			sentry.CaptureException(fmt.Errorf("failed to set terraform_name '%v' on after attributes: %w", trimmedAddress, err))
 		}
 
-		err = result.After.Attributes.Set("terraform_address", resourceChange.Address)
+		err = result.GetAfter().GetAttributes().Set("terraform_address",resourceChange.Address))
 		if err != nil {
 			// since Address is a string, this should never happen
 			sentry.CaptureException(fmt.Errorf("failed to set terraform_address of type %T (%v) on after attributes: %w", resourceChange.Address, resourceChange.Address, err))
@@ -271,7 +271,7 @@ func (g *plannedChangeGroups) MappedItemDiffs() []*sdp.MappedItemDiff {
 // Add the specified item to the approapriate type group in the supported or unsupported section, based of whether it has a mapping query
 func (g *plannedChangeGroups) Add(typ string, item *sdp.MappedItemDiff) {
 	groups := g.supported
-	if item.MappingQuery == nil {
+	if item.GetMappingQuery() == nil {
 		groups = g.unsupported
 	}
 	list, ok := groups[typ]
@@ -446,18 +446,18 @@ func mappedItemDiffsFromPlan(ctx context.Context, fileName string, lf log.Fields
 			}
 
 			// cleanup item metadata from mapping query
-			if itemDiff.Before != nil {
-				itemDiff.Before.Type = newQuery.Type
-				if newQuery.Scope != "*" {
-					itemDiff.Before.Scope = newQuery.Scope
+			if itemDiff.GetBefore() != nil {
+				itemDiff.Before.Type = newQuery.GetType()
+				if newQuery.GetScope() != "*" {
+					itemDiff.Before.Scope = newQuery.GetScope()
 				}
 			}
 
 			// cleanup item metadata from mapping query
-			if itemDiff.After != nil {
-				itemDiff.After.Type = newQuery.Type
-				if newQuery.Scope != "*" {
-					itemDiff.After.Scope = newQuery.Scope
+			if itemDiff.GetAfter() != nil {
+				itemDiff.After.Type = newQuery.GetType()
+				if newQuery.GetScope() != "*" {
+					itemDiff.After.Scope = newQuery.GetScope()
 				}
 			}
 
@@ -467,10 +467,10 @@ func mappedItemDiffsFromPlan(ctx context.Context, fileName string, lf log.Fields
 			})
 
 			log.WithContext(ctx).WithFields(log.Fields{
-				"scope":  newQuery.Scope,
-				"type":   newQuery.Type,
-				"query":  newQuery.Query,
-				"method": newQuery.Method.String(),
+				"scope":  newQuery.GetScope(),
+				"type":   newQuery.GetType(),
+				"query":  newQuery.GetQuery(),
+				"method": newQuery.GetMethod().String(),
 			}).Debug("Mapped resource to query")
 		}
 	}
@@ -633,7 +633,7 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 			return 1
 		}
 
-		maybeChangeUuid := createResponse.Msg.Change.Metadata.GetUUIDParsed()
+		maybeChangeUuid := createResponse.Msg.GetChange().GetMetadata().GetUUIDParsed()
 		if maybeChangeUuid == nil {
 			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to read change id")
 			return 1
@@ -687,7 +687,7 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		// log the first message and at most every 250ms during discovery
 		// to avoid spanning the cli output
 		time_since_last_log := time.Since(last_log)
-		if first_log || msg.State != sdp.CalculateBlastRadiusResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
+		if first_log || msg.GetState() != sdp.CalculateBlastRadiusResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
 			log.WithContext(ctx).WithFields(lf).WithField("msg", msg).Info("Status update")
 			last_log = time.Now()
 			first_log = false
@@ -713,7 +713,7 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		return 1
 	}
 
-	for _, a := range fetchResponse.Msg.Change.Properties.AffectedAppsUUID {
+	for _, a := range fetchResponse.Msg.GetChange().GetProperties().GetAffectedAppsUUID() {
 		appUuid, err := uuid.FromBytes(a)
 		if err != nil {
 			log.WithContext(ctx).WithFields(lf).WithError(err).WithField("app", a).Error("Received invalid app uuid")

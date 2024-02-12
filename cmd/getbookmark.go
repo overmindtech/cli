@@ -96,13 +96,13 @@ func GetBookmark(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 	log.WithContext(ctx).WithFields(log.Fields{
-		"bookmark-uuid":        uuid.UUID(response.Msg.Bookmark.Metadata.UUID),
-		"bookmark-created":     response.Msg.Bookmark.Metadata.Created.AsTime(),
-		"bookmark-name":        response.Msg.Bookmark.Properties.Name,
-		"bookmark-description": response.Msg.Bookmark.Properties.Description,
+		"bookmark-uuid":        uuid.UUID(response.Msg.GetBookmark().GetMetadata().GetUUID()),
+		"bookmark-created":     response.Msg.GetBookmark().GetMetadata().GetCreated().AsTime(),
+		"bookmark-name":        response.Msg.GetBookmark().GetProperties().GetName(),
+		"bookmark-description": response.Msg.GetBookmark().GetProperties().GetDescription(),
 	}).Info("found bookmark")
 
-	b, err := json.MarshalIndent(response.Msg.Bookmark.ToMap(), "", "  ")
+	b, err := json.MarshalIndent(response.Msg.GetBookmark().ToMap(), "", "  ")
 	if err != nil {
 		log.Infof("Error rendering bookmark: %v", err)
 	} else {

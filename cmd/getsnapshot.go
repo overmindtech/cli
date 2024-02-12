@@ -96,28 +96,28 @@ func GetSnapshot(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 	log.WithContext(ctx).WithFields(log.Fields{
-		"snapshot-uuid":        uuid.UUID(response.Msg.Snapshot.Metadata.UUID),
-		"snapshot-created":     response.Msg.Snapshot.Metadata.Created.AsTime(),
-		"snapshot-name":        response.Msg.Snapshot.Properties.Name,
-		"snapshot-description": response.Msg.Snapshot.Properties.Description,
+		"snapshot-uuid":        uuid.UUID(response.Msg.GetSnapshot().GetMetadata().GetUUID()),
+		"snapshot-created":     response.Msg.GetSnapshot().GetMetadata().GetCreated().AsTime(),
+		"snapshot-name":        response.Msg.GetSnapshot().GetProperties().GetName(),
+		"snapshot-description": response.Msg.GetSnapshot().GetProperties().GetDescription(),
 	}).Info("found snapshot")
-	for _, q := range response.Msg.Snapshot.Properties.Queries {
+	for _, q := range response.Msg.GetSnapshot().GetProperties().GetQueries() {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"snapshot-query": q,
 		}).Info("found snapshot query")
 	}
-	for _, i := range response.Msg.Snapshot.Properties.ExcludedItems {
+	for _, i := range response.Msg.GetSnapshot().GetProperties().GetExcludedItems() {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"snapshot-excluded-item": i,
 		}).Info("found snapshot excluded item")
 	}
-	for _, i := range response.Msg.Snapshot.Properties.Items {
+	for _, i := range response.Msg.GetSnapshot().GetProperties().GetItems() {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"snapshot-item": i,
 		}).Info("found snapshot item")
 	}
 
-	b, err := json.MarshalIndent(response.Msg.Snapshot.ToMap(), "", "  ")
+	b, err := json.MarshalIndent(response.Msg.GetSnapshot().ToMap(), "", "  ")
 	if err != nil {
 		log.Infof("Error rendering snapshot: %v", err)
 	} else {
