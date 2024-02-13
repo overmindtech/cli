@@ -1,6 +1,6 @@
 package main
 
-import "github.com/overmindtech/ovm-cli/cmd"
+import "github.com/overmindtech/cli/cmd"
 
 func main() {
 	cmd.Execute()

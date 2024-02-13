@@ -11,7 +11,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"github.com/overmindtech/ovm-cli/tracing"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -128,7 +128,7 @@ func GetSnapshot(ctx context.Context, ready chan bool) int {
 }
 
 func init() {
-	rootCmd.AddCommand(getSnapshotCmd)
+	snapshotsCmd.AddCommand(getSnapshotCmd)
 
 	getSnapshotCmd.PersistentFlags().String("snapshot-url", "", "The snapshot service API endpoint (defaults to --url)")
 	getSnapshotCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")

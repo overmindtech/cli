@@ -17,7 +17,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"github.com/overmindtech/ovm-cli/tracing"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -34,9 +34,9 @@ var cliVersion string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "ovm-cli",
-	Short:   "A CLI to interact with the overmind API",
-	Long:    `The ovm-cli allows direct access to the overmind API`,
+	Use:     "overmind",
+	Short:   "The Overmind CLI",
+	Long:    `Calculate the blast radius of your changes, track risks, and make changes with confidence`,
 	Version: cliVersion,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
@@ -415,6 +415,14 @@ func withChangeUuidFlags(cmd *cobra.Command) {
 func init() {
 	cobra.OnInitialize(initConfig)
 
+	// TODO: I'm leaving this for now but I want to go over these and remove a
+	// bunch of them, but I want to get options before I do. The things I'm
+	// considering are:
+	//
+	// * Move some into a helper like `withChangeUuidFlags` such as log level
+	// * For things that are only used internally, move to only using env vars i.e. honeycomb, sentry, client_id
+	// * Completely remove things that aren't used such as stdout trace dump
+
 	// General Config
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
 
@@ -441,6 +449,16 @@ func init() {
 
 	// debugging
 	rootCmd.PersistentFlags().Bool("stdout-trace-dump", false, "Dump all otel traces to stdout for debugging. This requires --otel to be set.")
+
+	// Create groups
+	rootCmd.AddGroup(&cobra.Group{
+		ID:    "iac",
+		Title: "Infrastructure as Code:",
+	})
+	rootCmd.AddGroup(&cobra.Group{
+		ID:    "api",
+		Title: "Overmind API:",
+	})
 
 	// Run this before we do anything to set up the loglevel
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {

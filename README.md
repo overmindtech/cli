@@ -1,4 +1,4 @@
-# ovm-cli
+# Overmind CLI
 
 CLI to interact with the overmind API
 

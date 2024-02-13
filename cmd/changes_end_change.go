@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"github.com/overmindtech/ovm-cli/tracing"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -18,15 +18,15 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// startChangeCmd represents the start-change command
-var startChangeCmd = &cobra.Command{
-	Use:   "start-change --uuid ID",
-	Short: "Starts the specified change. Call this just before you're about to start the change. This will store a snapshot of the current system state for later reference.",
+// endChangeCmd represents the end-change command
+var endChangeCmd = &cobra.Command{
+	Use:   "end-change --uuid ID",
+	Short: "Finishes the specified change. Call this just after you finished the change. This will store a snapshot of the current system state for later reference.",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
 		err := viper.BindPFlags(cmd.Flags())
 		if err != nil {
-			log.WithError(err).Fatal("could not bind `start-change` flags")
+			log.WithError(err).Fatal("could not bind `end-change` flags")
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -45,20 +45,20 @@ var startChangeCmd = &cobra.Command{
 			}
 		}()
 
-		exitcode := StartChange(ctx, nil)
+		exitcode := EndChange(ctx, nil)
 		tracing.ShutdownTracer()
 		os.Exit(exitcode)
 	},
 }
 
-func StartChange(ctx context.Context, ready chan bool) int {
+func EndChange(ctx context.Context, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
 		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
 		return 1
 	}
 
-	ctx, span := tracing.Tracer().Start(ctx, "CLI StartChange", trace.WithAttributes(
+	ctx, span := tracing.Tracer().Start(ctx, "CLI EndChange", trace.WithAttributes(
 		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
 	))
 	defer span.End()
@@ -76,7 +76,7 @@ func StartChange(ctx context.Context, ready chan bool) int {
 	defer cancel()
 
 	lf := log.Fields{}
-	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, true)
+	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus_CHANGE_STATUS_HAPPENING, true)
 	if err != nil {
 		log.WithError(err).WithFields(lf).Error("failed to identify change")
 		return 1
@@ -86,13 +86,13 @@ func StartChange(ctx context.Context, ready chan bool) int {
 
 	// snapClient := AuthenticatedSnapshotsClient(ctx)
 	client := AuthenticatedChangesClient(ctx)
-	stream, err := client.StartChange(ctx, &connect.Request[sdp.StartChangeRequest]{
-		Msg: &sdp.StartChangeRequest{
+	stream, err := client.EndChange(ctx, &connect.Request[sdp.EndChangeRequest]{
+		Msg: &sdp.EndChangeRequest{
 			ChangeUUID: changeUuid[:],
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to start change")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to end change")
 		return 1
 	}
 	log.WithContext(ctx).WithFields(lf).Info("processing")
@@ -105,20 +105,20 @@ func StartChange(ctx context.Context, ready chan bool) int {
 		}).Info("progress")
 	}
 	if stream.Err() != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(stream.Err()).Error("failed to process start change")
+		log.WithContext(ctx).WithFields(lf).WithError(stream.Err()).Error("failed to process end change")
 		return 1
 	}
 
-	log.WithContext(ctx).WithFields(lf).Info("started change")
+	log.WithContext(ctx).WithFields(lf).Info("finished change")
 	return 0
 }
 
 func init() {
-	rootCmd.AddCommand(startChangeCmd)
+	changesCmd.AddCommand(endChangeCmd)
 
-	withChangeUuidFlags(startChangeCmd)
+	withChangeUuidFlags(endChangeCmd)
 
-	startChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
+	endChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 
-	startChangeCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
+	endChangeCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
 }

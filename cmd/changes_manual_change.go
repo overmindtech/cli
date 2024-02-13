@@ -11,7 +11,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"github.com/overmindtech/ovm-cli/tracing"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/sdpws"
 	log "github.com/sirupsen/logrus"
@@ -225,7 +225,7 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 }
 
 func init() {
-	rootCmd.AddCommand(manualChangeCmd)
+	changesCmd.AddCommand(manualChangeCmd)
 
 	manualChangeCmd.PersistentFlags().String("changes-url", "", "The changes service API endpoint (defaults to --url)")
 	manualChangeCmd.PersistentFlags().String("management-url", "", "The management service API endpoint (defaults to --url)")

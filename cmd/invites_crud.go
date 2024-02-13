@@ -9,7 +9,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/overmindtech/ovm-cli/tracing"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -237,16 +237,16 @@ func InvitesList(ctx context.Context) int {
 
 func init() {
 	// list sub-command
-	rootCmd.AddCommand(listCmd)
+	invitesCmd.AddCommand(listCmd)
 	listCmd.PersistentFlags().String("invite-url", "", "A custom URL for the invites API (optional)")
 
 	// create sub-command
-	rootCmd.AddCommand(createCmd)
+	invitesCmd.AddCommand(createCmd)
 	createCmd.PersistentFlags().String("invite-url", "", "A custom URL for the invites API (optional)")
 	createCmd.PersistentFlags().StringSlice("emails", []string{}, "A list of emails to invite")
 
 	// revoke sub-command
-	rootCmd.AddCommand(revokeCmd)
+	invitesCmd.AddCommand(revokeCmd)
 	revokeCmd.PersistentFlags().String("invite-url", "", "A custom URL for the invites API (optional)")
 	revokeCmd.PersistentFlags().String("email", "", "The email address to revoke")
 }

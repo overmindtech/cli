@@ -17,7 +17,7 @@ import (
 	"github.com/hexops/gotextdiff"
 	"github.com/hexops/gotextdiff/myers"
 	diffspan "github.com/hexops/gotextdiff/span"
-	"github.com/overmindtech/ovm-cli/tracing"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -245,7 +245,7 @@ fetch:
 			BlastItems:      int(changeRes.Msg.GetChange().GetMetadata().GetNumAffectedItems()),
 			BlastEdges:      int(changeRes.Msg.GetChange().GetMetadata().GetNumAffectedEdges()),
 			Risks:           []TemplateRisk{},
-			AssetPath:       fmt.Sprintf("https://raw.githubusercontent.com/overmindtech/ovm-cli/%v/assets", assetVersion),
+			AssetPath:       fmt.Sprintf("https://raw.githubusercontent.com/overmindtech/cli/%v/assets", assetVersion),
 		}
 
 		for _, item := range changeRes.Msg.GetChange().GetProperties().GetPlannedChanges() {
@@ -324,7 +324,7 @@ fetch:
 }
 
 func init() {
-	rootCmd.AddCommand(getChangeCmd)
+	changesCmd.AddCommand(getChangeCmd)
 
 	withChangeUuidFlags(getChangeCmd)
 	getChangeCmd.PersistentFlags().String("status", "", "The expected status of the change. Use this with --ticket-link. Allowed values: CHANGE_STATUS_UNSPECIFIED, CHANGE_STATUS_DEFINING, CHANGE_STATUS_HAPPENING, CHANGE_STATUS_PROCESSING, CHANGE_STATUS_DONE")

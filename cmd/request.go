@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/overmindtech/ovm-cli/tracing"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/sdpws"
 	log "github.com/sirupsen/logrus"
@@ -24,8 +24,9 @@ import (
 
 // requestCmd represents the start command
 var requestCmd = &cobra.Command{
-	Use:   "request",
-	Short: "Runs a request against the overmind API",
+	Use:     "request",
+	GroupID: "api",
+	Short:   "Runs a request against the overmind API",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
 		err := viper.BindPFlags(cmd.Flags())

@@ -1,4 +1,4 @@
-module github.com/overmindtech/ovm-cli
+module github.com/overmindtech/cli
 
 go 1.22.0
 
