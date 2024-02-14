@@ -422,7 +422,7 @@ func addChangeUuidFlags(cmd *cobra.Command) {
 
 // Adds common flags to API commands e.g. timeout
 func addAPIFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
+	cmd.PersistentFlags().String("timeout", "10m", "How long to wait for responses")
 	cmd.PersistentFlags().String("url", "https://api.prod.overmind.tech", "The overmind API endpoint")
 }
 
