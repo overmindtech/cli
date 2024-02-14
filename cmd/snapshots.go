@@ -13,7 +13,7 @@ var snapshotsCmd = &cobra.Command{
 however you can use these commands to interact directly with the API if
 required.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 }
 

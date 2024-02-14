@@ -443,7 +443,10 @@ func init() {
 	// Mark this as hidden. This means that it will still be parsed of supplied,
 	// and we will still look for it in the environment, but it won't be shown
 	// in the help
-	rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key")
+	err = rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key")
+	if err != nil {
+		log.WithError(err).Fatal("could not mark `honeycomb-api-key` flag as hidden")
+	}
 
 	// Create groups
 	rootCmd.AddGroup(&cobra.Group{

@@ -11,7 +11,7 @@ var terraformCmd = &cobra.Command{
 	Short:   "Run Terrafrom with Overmind's change tracking - COMING SOON",
 	Long:    `COMING SOON`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 }
 

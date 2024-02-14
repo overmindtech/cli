@@ -13,7 +13,7 @@ var changesCmd = &cobra.Command{
 easier to use our IaC wrappers such as 'overmind terraform plan' rather than
 using these commands directly, but they are provided for flexibility.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 }
 

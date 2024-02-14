@@ -11,7 +11,7 @@ var invitesCmd = &cobra.Command{
 	Short:   "Manage invites for your team to Overmind",
 	Long:    `Create and revoke Overmind invitations`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 }
 

@@ -15,7 +15,7 @@ var bookmarksCmd = &cobra.Command{
 	Long: `A bookmark in Overmind is a set of queries that are stored together and can be
 executed as a single block.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		cmd.Help()
+		_ = cmd.Help()
 	},
 }
 
