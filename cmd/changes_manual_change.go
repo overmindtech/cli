@@ -11,7 +11,8 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"github.com/overmindtech/ovm-cli/tracing"
+	"github.com/overmindtech/cli/internal"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/sdpws"
 	log "github.com/sirupsen/logrus"
@@ -67,17 +68,11 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 	))
 	defer span.End()
 
-	gatewayUrl := viper.GetString("gateway-url")
-	if gatewayUrl == "" {
-		gatewayUrl = fmt.Sprintf("%v/api/gateway", viper.GetString("url"))
-		viper.Set("gateway-url", gatewayUrl)
-	}
-
 	lf := log.Fields{}
 
 	ctx, err = ensureToken(ctx, []string{"changes:write"})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithField("api-key-url", viper.GetString("api-key-url")).WithError(err).Error("failed to authenticate")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1
 	}
 
@@ -130,7 +125,7 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 
-	ws, err := sdpws.DialBatch(ctx, gatewayUrl, otelhttp.DefaultClient, nil)
+	ws, err := sdpws.DialBatch(ctx, internal.GatewayURL(viper.GetString("url")), otelhttp.DefaultClient, nil)
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to gateway")
 		return 1
@@ -225,10 +220,8 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 }
 
 func init() {
-	rootCmd.AddCommand(manualChangeCmd)
+	changesCmd.AddCommand(manualChangeCmd)
 
-	manualChangeCmd.PersistentFlags().String("changes-url", "", "The changes service API endpoint (defaults to --url)")
-	manualChangeCmd.PersistentFlags().String("management-url", "", "The management service API endpoint (defaults to --url)")
 	manualChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
 
 	manualChangeCmd.PersistentFlags().String("title", "", "Short title for this change.")
@@ -241,6 +234,4 @@ func init() {
 	manualChangeCmd.PersistentFlags().String("query-scope", "*", "The scope to query")
 	manualChangeCmd.PersistentFlags().String("query-type", "*", "The type to query")
 	manualChangeCmd.PersistentFlags().String("query", "", "The actual query to send")
-
-	manualChangeCmd.PersistentFlags().String("timeout", "3m", "How long to wait for responses")
 }

@@ -17,8 +17,8 @@ import (
 	"connectrpc.com/connect"
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
-	"github.com/overmindtech/ovm-cli/cmd/datamaps"
-	"github.com/overmindtech/ovm-cli/tracing"
+	"github.com/overmindtech/cli/cmd/datamaps"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -564,17 +564,11 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 	))
 	defer span.End()
 
-	gatewayUrl := viper.GetString("gateway-url")
-	if gatewayUrl == "" {
-		gatewayUrl = fmt.Sprintf("%v/api/gateway", viper.GetString("url"))
-		viper.Set("gateway-url", gatewayUrl)
-	}
-
 	lf := log.Fields{}
 
 	ctx, err = ensureToken(ctx, []string{"changes:write"})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithField("api-key-url", viper.GetString("api-key-url")).WithError(err).Error("failed to authenticate")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1
 	}
 
@@ -730,13 +724,11 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 }
 
 func init() {
-	rootCmd.AddCommand(submitPlanCmd)
+	changesCmd.AddCommand(submitPlanCmd)
 
-	submitPlanCmd.PersistentFlags().String("changes-url", "", "The changes service API endpoint (defaults to --url)")
-	submitPlanCmd.PersistentFlags().String("management-url", "", "The management service API endpoint (defaults to --url)")
 	submitPlanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
 
-	submitPlanCmd.PersistentFlags().String("title", "", "Short title for this change. If this is not specified, ovm-cli will try to come up with one for you.")
+	submitPlanCmd.PersistentFlags().String("title", "", "Short title for this change. If this is not specified, overmind will try to come up with one for you.")
 	submitPlanCmd.PersistentFlags().String("description", "", "Quick description of the change.")
 	submitPlanCmd.PersistentFlags().String("ticket-link", "*", "Link to the ticket for this change.")
 	submitPlanCmd.PersistentFlags().String("owner", "", "The owner of this change.")
@@ -744,6 +736,4 @@ func init() {
 
 	submitPlanCmd.PersistentFlags().String("terraform-plan-output", "", "Filename of cached terraform plan output for this change.")
 	submitPlanCmd.PersistentFlags().String("code-changes-diff", "", "Fileame of the code diff of this change.")
-
-	submitPlanCmd.PersistentFlags().String("timeout", "3m", "How long to wait for responses")
 }

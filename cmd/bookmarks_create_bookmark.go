@@ -12,7 +12,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"github.com/overmindtech/ovm-cli/tracing"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -108,7 +108,7 @@ func CreateBookmark(ctx context.Context, ready chan bool) int {
 	})
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"bookmark-url": viper.GetString("bookmark-url"),
+			"url": viper.GetString("url"),
 		}).Error("failed to get bookmark")
 		return 1
 	}
@@ -140,11 +140,7 @@ func CreateBookmark(ctx context.Context, ready chan bool) int {
 }
 
 func init() {
-	rootCmd.AddCommand(createBookmarkCmd)
-
-	createBookmarkCmd.PersistentFlags().String("bookmark-url", "", "The bookmark service API endpoint (defaults to --url)")
+	bookmarksCmd.AddCommand(createBookmarkCmd)
 
 	createBookmarkCmd.PersistentFlags().String("file", "", "JSON formatted file to read bookmark. (defaults to stdin)")
-
-	createBookmarkCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
 }

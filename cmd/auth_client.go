@@ -16,24 +16,16 @@ import (
 // embedded in the context and otel instrumentation
 func AuthenticatedApiKeyClient(ctx context.Context) sdpconnect.ApiKeyServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("api-key-url")
-	if url == "" {
-		url = viper.GetString("url")
-		viper.Set("api-key-url", url)
-	}
-	log.WithContext(ctx).WithField("api-key-url", url).Debug("Connecting to overmind apikeys API (pre-authenticated)")
+	url := viper.GetString("url")
+	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind apikeys API (pre-authenticated)")
 	return sdpconnect.NewApiKeyServiceClient(httpClient, url)
 }
 
 // UnauthenticatedApiKeyClient Returns an apikey client with otel instrumentation
 // but no authentication. Can only be used for ExchangeKeyForToken
 func UnauthenticatedApiKeyClient(ctx context.Context) sdpconnect.ApiKeyServiceClient {
-	url := viper.GetString("api-key-url")
-	if url == "" {
-		url = viper.GetString("url")
-		viper.Set("api-key-url", url)
-	}
-	log.WithContext(ctx).WithField("api-key-url", url).Debug("Connecting to overmind apikeys API")
+	url := viper.GetString("url")
+	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind apikeys API")
 	return sdpconnect.NewApiKeyServiceClient(otelhttp.DefaultClient, url)
 }
 
@@ -41,12 +33,8 @@ func UnauthenticatedApiKeyClient(ctx context.Context) sdpconnect.ApiKeyServiceCl
 // embedded in the context and otel instrumentation
 func AuthenticatedBookmarkClient(ctx context.Context) sdpconnect.BookmarksServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("bookmark-url")
-	if url == "" {
-		url = viper.GetString("url")
-		viper.Set("bookmark-url", url)
-	}
-	log.WithContext(ctx).WithField("bookmark-url", url).Debug("Connecting to overmind bookmark API")
+	url := viper.GetString("url")
+	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind bookmark API")
 	return sdpconnect.NewBookmarksServiceClient(httpClient, url)
 }
 
@@ -54,12 +42,8 @@ func AuthenticatedBookmarkClient(ctx context.Context) sdpconnect.BookmarksServic
 // embedded in the context and otel instrumentation
 func AuthenticatedChangesClient(ctx context.Context) sdpconnect.ChangesServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("changes-url")
-	if url == "" {
-		url = viper.GetString("url")
-		viper.Set("changes-url", url)
-	}
-	log.WithContext(ctx).WithField("changes-url", url).Debug("Connecting to overmind changes API")
+	url := viper.GetString("url")
+	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind changes API")
 	return sdpconnect.NewChangesServiceClient(httpClient, url)
 }
 
@@ -67,12 +51,8 @@ func AuthenticatedChangesClient(ctx context.Context) sdpconnect.ChangesServiceCl
 // embedded in the context and otel instrumentation
 func AuthenticatedManagementClient(ctx context.Context) sdpconnect.ManagementServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("management-url")
-	if url == "" {
-		url = viper.GetString("url")
-		viper.Set("management-url", url)
-	}
-	log.WithContext(ctx).WithField("management-url", url).Debug("Connecting to overmind management API")
+	url := viper.GetString("url")
+	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind management API")
 	return sdpconnect.NewManagementServiceClient(httpClient, url)
 }
 
@@ -80,12 +60,8 @@ func AuthenticatedManagementClient(ctx context.Context) sdpconnect.ManagementSer
 // embedded in the context and otel instrumentation
 func AuthenticatedSnapshotsClient(ctx context.Context) sdpconnect.SnapshotsServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("snapshot-url")
-	if url == "" {
-		url = viper.GetString("url")
-		viper.Set("snapshot-url", url)
-	}
-	log.WithContext(ctx).WithField("snapshot-url", url).Debug("Connecting to overmind snapshot API")
+	url := viper.GetString("url")
+	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind snapshot API")
 	return sdpconnect.NewSnapshotsServiceClient(httpClient, url)
 }
 
@@ -93,12 +69,8 @@ func AuthenticatedSnapshotsClient(ctx context.Context) sdpconnect.SnapshotsServi
 // embedded in the context and otel instrumentation
 func AuthenticatedInviteClient(ctx context.Context) sdpconnect.InviteServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("invite-url")
-	if url == "" {
-		url = viper.GetString("url")
-		viper.Set("invite-url", url)
-	}
-	log.WithContext(ctx).WithField("invite-url", url).Debug("Connecting to overmind invite API")
+	url := viper.GetString("url")
+	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind invite API")
 	return sdpconnect.NewInviteServiceClient(httpClient, url)
 }
 

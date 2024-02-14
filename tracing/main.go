@@ -28,7 +28,7 @@ import (
 //go:embed commit.txt
 var instrumentationVersion string
 
-const instrumentationName = "github.com/overmindtech/ovm-cli"
+const instrumentationName = "github.com/overmindtech/cli"
 
 var tracer = otel.GetTracerProvider().Tracer(
 	instrumentationName,
@@ -70,7 +70,7 @@ func tracingResource() *resource.Resource {
 		resource.WithSchemaURL(semconv.SchemaURL),
 		// Add your own custom attributes to identify your application
 		resource.WithAttributes(
-			semconv.ServiceNameKey.String("ovm-cli"),
+			semconv.ServiceNameKey.String("overmind-cli"),
 			semconv.ServiceVersionKey.String("0.0.1"),
 		),
 	)

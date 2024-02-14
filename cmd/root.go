@@ -17,7 +17,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"github.com/overmindtech/ovm-cli/tracing"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -25,6 +25,9 @@ import (
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	"golang.org/x/oauth2"
 )
+
+const Auth0ClientId = "j3LylZtIosVPZtouKI8WuVHmE6Lluva1"
+const Auth0Domain = "om-prod.eu.auth0.com"
 
 var logLevel string
 
@@ -34,9 +37,14 @@ var cliVersion string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "ovm-cli",
-	Short:   "A CLI to interact with the overmind API",
-	Long:    `The ovm-cli allows direct access to the overmind API`,
+	Use:   "overmind",
+	Short: "The Overmind CLI",
+	Long: `Calculate the blast radius of your changes, track risks, and make changes with
+confidence.
+
+This CLI will prompt you for authentication using Overmind's OAuth service,
+however it can also be configured to use an API key by setting the OVM_API_KEY
+environment variable.`,
 	Version: cliVersion,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
@@ -162,7 +170,7 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 			log.WithContext(ctx).Debug("successfully authenticated")
 			apiKey = resp.Msg.GetAccessToken()
 		} else {
-			return ctx, errors.New("--api-key does not match pattern 'ovm_api_*'")
+			return ctx, errors.New("OVM_API_KEY does not match pattern 'ovm_api_*'")
 		}
 		return context.WithValue(ctx, sdp.UserTokenContextKey{}, apiKey), nil
 	}
@@ -198,11 +206,11 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 
 		// Authenticate using the oauth resource owner password flow
 		config := oauth2.Config{
-			ClientID: viper.GetString("auth0-client-id"),
+			ClientID: Auth0ClientId,
 			Scopes:   requestScopes,
 			Endpoint: oauth2.Endpoint{
-				AuthURL:  fmt.Sprintf("https://%v/authorize", viper.GetString("auth0-domain")),
-				TokenURL: fmt.Sprintf("https://%v/oauth/token", viper.GetString("auth0-domain")),
+				AuthURL:  fmt.Sprintf("https://%v/authorize", Auth0Domain),
+				TokenURL: fmt.Sprintf("https://%v/oauth/token", Auth0Domain),
 			},
 			RedirectURL: "http://127.0.0.1:7837/oauth/callback",
 		}
@@ -327,7 +335,7 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 		// Set the token
 		return context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken), nil
 	}
-	return ctx, fmt.Errorf("no --api-key configured and target URL (%v) is insecure", parsed)
+	return ctx, fmt.Errorf("no OVM_API_KEY configured and target URL (%v) is insecure", parsed)
 }
 
 // getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a state with the specified status and having --ticket-link
@@ -405,11 +413,17 @@ func parseChangeUrl(changeUrlString string) (uuid.UUID, error) {
 	return changeUuid, nil
 }
 
-func withChangeUuidFlags(cmd *cobra.Command) {
+func addChangeUuidFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().String("change", "", "The frontend URL of the change to get")
 	cmd.PersistentFlags().String("ticket-link", "", "Link to the ticket for this change.")
 	cmd.PersistentFlags().String("uuid", "", "The UUID of the change that should be displayed.")
 	cmd.MarkFlagsMutuallyExclusive("change", "ticket-link", "uuid")
+}
+
+// Adds common flags to API commands e.g. timeout
+func addAPIFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
+	cmd.PersistentFlags().String("url", "https://api.prod.overmind.tech", "The overmind API endpoint")
 }
 
 func init() {
@@ -418,29 +432,31 @@ func init() {
 	// General Config
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
 
-	// api endpoint
-	rootCmd.PersistentFlags().String("url", "https://api.prod.overmind.tech", "The overmind API endpoint")
-	rootCmd.PersistentFlags().String("gateway-url", "", "The overmind Gateway endpoint (defaults to /api/gateway on --url)")
-
-	// authorization
-	rootCmd.PersistentFlags().String("api-key", "", "The API key to use for authentication, also read from OVM_API_KEY environment variable")
+	// Support API Keys in the environment
 	err := viper.BindEnv("api-key", "OVM_API_KEY", "API_KEY")
 	if err != nil {
 		log.WithError(err).Fatal("could not bind api key to env")
 	}
-	rootCmd.PersistentFlags().String("api-key-url", "", "The overmind API Keys endpoint (defaults to --url)")
-	rootCmd.PersistentFlags().String("auth0-client-id", "j3LylZtIosVPZtouKI8WuVHmE6Lluva1", "OAuth Client ID to use when connecting with auth")
-	rootCmd.PersistentFlags().String("auth0-domain", "om-prod.eu.auth0.com", "Auth0 domain to connect to")
 
 	// tracing
-	rootCmd.PersistentFlags().Bool("otel", false, "If specified, configures opentelemetry and - optionally, see --sentry-dsn - sentry using their default environment configs.")
 	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb. This requires --otel to be set.")
-	rootCmd.PersistentFlags().String("sentry-dsn", "", "If specified, configures sentry libraries to capture errors. This requires --otel to be set.")
-	rootCmd.PersistentFlags().String("run-mode", "release", "Set the run mode for this service, 'release', 'debug' or 'test'. Defaults to 'release'.")
-	rootCmd.PersistentFlags().Bool("json-log", false, "Set to true to emit logs as json for easier parsing.")
+	// Mark this as hidden. This means that it will still be parsed of supplied,
+	// and we will still look for it in the environment, but it won't be shown
+	// in the help
+	err = rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key")
+	if err != nil {
+		log.WithError(err).Fatal("could not mark `honeycomb-api-key` flag as hidden")
+	}
 
-	// debugging
-	rootCmd.PersistentFlags().Bool("stdout-trace-dump", false, "Dump all otel traces to stdout for debugging. This requires --otel to be set.")
+	// Create groups
+	rootCmd.AddGroup(&cobra.Group{
+		ID:    "iac",
+		Title: "Infrastructure as Code:",
+	})
+	rootCmd.AddGroup(&cobra.Group{
+		ID:    "api",
+		Title: "Overmind API:",
+	})
 
 	// Run this before we do anything to set up the loglevel
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
@@ -462,21 +478,20 @@ func init() {
 		}
 		log.SetLevel(lvl)
 
-		if viper.GetBool("json-log") {
-			log.SetFormatter(&log.JSONFormatter{})
-		}
+		if honeycombApiKey := viper.GetString("honeycomb-api-key"); honeycombApiKey != "" {
+			if err := tracing.InitTracerWithHoneycomb(honeycombApiKey); err != nil {
+				log.Fatal(err)
+			}
 
-		if err := tracing.InitTracerWithHoneycomb(viper.GetString("honeycomb-api-key")); err != nil {
-			log.Fatal(err)
-		}
+			log.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
+				log.AllLevels[:log.GetLevel()+1]...,
+			)))
 
-		log.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
-			log.AllLevels[:log.GetLevel()+1]...,
-		)))
-	}
-	// shut down tracing at the end of the process
-	rootCmd.PersistentPostRun = func(cmd *cobra.Command, args []string) {
-		tracing.ShutdownTracer()
+			// shut down tracing at the end of the process
+			rootCmd.PersistentPostRun = func(cmd *cobra.Command, args []string) {
+				tracing.ShutdownTracer()
+			}
+		}
 	}
 }
 
