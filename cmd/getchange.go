@@ -104,32 +104,25 @@ func GetChange(ctx context.Context, ready chan bool) int {
 	lf["uuid"] = changeUuid.String()
 
 	client := AuthenticatedChangesClient(ctx)
-	var changeRes *connect.Response[sdp.GetChangeResponse]
+	var riskRes *connect.Response[sdp.GetChangeRisksResponse]
 fetch:
 	for {
 		// use the variable to avoid shadowing
 		var err error
-		changeRes, err = client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
-			Msg: &sdp.GetChangeRequest{
+		riskRes, err := client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
+			Msg: &sdp.GetChangeRisksRequest{
 				UUID: changeUuid[:],
 			},
 		})
 		if err != nil {
 			log.WithContext(ctx).WithError(err).WithFields(log.Fields{
 				"change-url": viper.GetString("change-url"),
-			}).Error("failed to get change")
+			}).Error("failed to get change risks")
 			return 1
 		}
-		log.WithContext(ctx).WithFields(log.Fields{
-			"change-uuid":        uuid.UUID(changeRes.Msg.GetChange().GetMetadata().GetUUID()),
-			"change-created":     changeRes.Msg.GetChange().GetMetadata().GetCreatedAt().AsTime(),
-			"change-status":      changeRes.Msg.GetChange().GetMetadata().GetStatus().String(),
-			"change-name":        changeRes.Msg.GetChange().GetProperties().GetTitle(),
-			"change-description": changeRes.Msg.GetChange().GetProperties().GetDescription(),
-		}).Info("found change")
 
-		if changeRes.Msg.GetChange().GetMetadata().GetRiskCalculationStatus().GetStatus() == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
-			log.WithContext(ctx).WithField("status", changeRes.Msg.GetChange().GetMetadata().GetRiskCalculationStatus().GetStatus().String()).Info("waiting for risk calculation")
+		if riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus() == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
+			log.WithContext(ctx).WithField("status", riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus().String()).Info("waiting for risk calculation")
 			time.Sleep(10 * time.Second)
 			// retry
 		} else {
@@ -141,6 +134,25 @@ fetch:
 			return 1
 		}
 	}
+
+	changeRes, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
+		Msg: &sdp.GetChangeRequest{
+			UUID: changeUuid[:],
+		},
+	})
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
+			"change-url": viper.GetString("change-url"),
+		}).Error("failed to get change")
+		return 1
+	}
+	log.WithContext(ctx).WithFields(log.Fields{
+		"change-uuid":        uuid.UUID(changeRes.Msg.GetChange().GetMetadata().GetUUID()),
+		"change-created":     changeRes.Msg.GetChange().GetMetadata().GetCreatedAt().AsTime(),
+		"change-status":      changeRes.Msg.GetChange().GetMetadata().GetStatus().String(),
+		"change-name":        changeRes.Msg.GetChange().GetProperties().GetTitle(),
+		"change-description": changeRes.Msg.GetChange().GetProperties().GetDescription(),
+	}).Info("found change")
 
 	switch viper.GetString("format") {
 	case "json":
@@ -286,7 +298,7 @@ fetch:
 			}
 		}
 
-		for _, risk := range changeRes.Msg.GetChange().GetMetadata().GetRisks() {
+		for _, risk := range riskRes.Msg.GetChangeRiskMetadata().GetRisks() {
 			data.Risks = append(data.Risks, TemplateRisk{
 				SeverityAlt:  severity[risk.GetSeverity()].SeverityAlt,
 				SeverityIcon: severity[risk.GetSeverity()].SeverityIcon,

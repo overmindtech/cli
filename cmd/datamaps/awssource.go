@@ -205,6 +205,30 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_dx_hosted_connection": {
+		{
+			Type:       "directconnect-hosted-connection",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_dx_lag": {
+		{
+			Type:       "directconnect-lag",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_dx_location": {
+		{
+			Type:       "directconnect-location",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "location_code",
+			Scope:      "*",
+		},
+	},
 	"aws_dx_private_virtual_interface": {
 		{
 			Type:       "directconnect-virtual-interface",
@@ -218,6 +242,14 @@ var AwssourceData = map[string][]TfMapData{
 			Type:       "directconnect-virtual-interface",
 			Method:     sdp.QueryMethod_GET,
 			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_dx_router_configuration": {
+		{
+			Type:       "directconnect-router-configuration",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "virtual_interface_id",
 			Scope:      "*",
 		},
 	},
