@@ -319,7 +319,7 @@ func mappedItemDiffsFromPlan(ctx context.Context, fileName string, lf log.Fields
 		return nil, fmt.Errorf("failed to parse '%v': %w", fileName, err)
 	}
 
-	plannedChangeGroups := plannedChangeGroups{
+	plannedChangeGroupsVar := plannedChangeGroups{
 		supported:   map[string][]*sdp.MappedItemDiff{},
 		unsupported: map[string][]*sdp.MappedItemDiff{},
 	}
@@ -343,7 +343,7 @@ func mappedItemDiffsFromPlan(ctx context.Context, fileName string, lf log.Fields
 
 		if len(mappings) == 0 {
 			log.WithContext(ctx).WithFields(lf).WithField("terraform-address", resourceChange.Address).Debug("Skipping unmapped resource")
-			plannedChangeGroups.Add(resourceChange.Type, &sdp.MappedItemDiff{
+			plannedChangeGroupsVar.Add(resourceChange.Type, &sdp.MappedItemDiff{
 				Item:         itemDiff,
 				MappingQuery: nil, // unmapped item has no mapping query
 			})
@@ -461,7 +461,7 @@ func mappedItemDiffsFromPlan(ctx context.Context, fileName string, lf log.Fields
 				}
 			}
 
-			plannedChangeGroups.Add(resourceChange.Type, &sdp.MappedItemDiff{
+			plannedChangeGroupsVar.Add(resourceChange.Type, &sdp.MappedItemDiff{
 				Item:         itemDiff,
 				MappingQuery: newQuery,
 			})
@@ -476,13 +476,13 @@ func mappedItemDiffsFromPlan(ctx context.Context, fileName string, lf log.Fields
 	}
 
 	supported := ""
-	numSupported := plannedChangeGroups.NumSupportedChanges()
+	numSupported := plannedChangeGroupsVar.NumSupportedChanges()
 	if numSupported > 0 {
 		supported = Green.Color(fmt.Sprintf("%v supported", numSupported))
 	}
 
 	unsupported := ""
-	numUnsupported := plannedChangeGroups.NumUnsupportedChanges()
+	numUnsupported := plannedChangeGroupsVar.NumUnsupportedChanges()
 	if numUnsupported > 0 {
 		unsupported = Yellow.Color(fmt.Sprintf("%v unsupported", numUnsupported))
 	}
@@ -499,14 +499,14 @@ func mappedItemDiffsFromPlan(ctx context.Context, fileName string, lf log.Fields
 	}
 
 	// Log the types
-	for typ, plannedChanges := range plannedChangeGroups.supported {
+	for typ, plannedChanges := range plannedChangeGroupsVar.supported {
 		log.WithContext(ctx).Infof(Green.Color("  ✓ %v (%v)"), typ, len(plannedChanges))
 	}
-	for typ, plannedChanges := range plannedChangeGroups.unsupported {
+	for typ, plannedChanges := range plannedChangeGroupsVar.unsupported {
 		log.WithContext(ctx).Infof(Yellow.Color("  ✗ %v (%v)"), typ, len(plannedChanges))
 	}
 
-	return plannedChangeGroups.MappedItemDiffs(), nil
+	return plannedChangeGroupsVar.MappedItemDiffs(), nil
 }
 
 func changeTitle(arg string) string {
