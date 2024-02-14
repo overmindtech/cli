@@ -222,8 +222,6 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 func init() {
 	changesCmd.AddCommand(manualChangeCmd)
 
-	manualChangeCmd.PersistentFlags().String("changes-url", "", "The changes service API endpoint (defaults to --url)")
-	manualChangeCmd.PersistentFlags().String("management-url", "", "The management service API endpoint (defaults to --url)")
 	manualChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
 
 	manualChangeCmd.PersistentFlags().String("title", "", "Short title for this change.")
@@ -236,6 +234,4 @@ func init() {
 	manualChangeCmd.PersistentFlags().String("query-scope", "*", "The scope to query")
 	manualChangeCmd.PersistentFlags().String("query-type", "*", "The type to query")
 	manualChangeCmd.PersistentFlags().String("query", "", "The actual query to send")
-
-	manualChangeCmd.PersistentFlags().String("timeout", "3m", "How long to wait for responses")
 }

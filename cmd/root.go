@@ -413,11 +413,16 @@ func parseChangeUrl(changeUrlString string) (uuid.UUID, error) {
 	return changeUuid, nil
 }
 
-func withChangeUuidFlags(cmd *cobra.Command) {
+func addChangeUuidFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().String("change", "", "The frontend URL of the change to get")
 	cmd.PersistentFlags().String("ticket-link", "", "Link to the ticket for this change.")
 	cmd.PersistentFlags().String("uuid", "", "The UUID of the change that should be displayed.")
 	cmd.MarkFlagsMutuallyExclusive("change", "ticket-link", "uuid")
+}
+
+// Adds common flags to API commands e.g. timeout
+func addAPIFlags(cnd *cobra.Command) {
+	createBookmarkCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
 }
 
 func init() {
@@ -425,8 +430,6 @@ func init() {
 
 	// General Config
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
-
-	// api endpoint
 	rootCmd.PersistentFlags().String("url", "https://api.prod.overmind.tech", "The overmind API endpoint")
 
 	// Support API Keys in the environment
@@ -440,7 +443,7 @@ func init() {
 	// Mark this as hidden. This means that it will still be parsed of supplied,
 	// and we will still look for it in the environment, but it won't be shown
 	// in the help
-	rootCmd.Flags().MarkHidden("honeycomb-api-key")
+	rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key")
 
 	// Create groups
 	rootCmd.AddGroup(&cobra.Group{

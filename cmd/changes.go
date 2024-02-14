@@ -20,6 +20,8 @@ using these commands directly, but they are provided for flexibility.`,
 func init() {
 	rootCmd.AddCommand(changesCmd)
 
+	addAPIFlags(changesCmd)
+
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

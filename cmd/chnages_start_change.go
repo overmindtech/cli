@@ -116,9 +116,5 @@ func StartChange(ctx context.Context, ready chan bool) int {
 func init() {
 	changesCmd.AddCommand(startChangeCmd)
 
-	withChangeUuidFlags(startChangeCmd)
-
-	startChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
-
-	startChangeCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
+	addChangeUuidFlags(startChangeCmd)
 }

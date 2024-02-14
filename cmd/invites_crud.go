@@ -238,15 +238,12 @@ func InvitesList(ctx context.Context) int {
 func init() {
 	// list sub-command
 	invitesCmd.AddCommand(listCmd)
-	listCmd.PersistentFlags().String("invite-url", "", "A custom URL for the invites API (optional)")
 
 	// create sub-command
 	invitesCmd.AddCommand(createCmd)
-	createCmd.PersistentFlags().String("invite-url", "", "A custom URL for the invites API (optional)")
 	createCmd.PersistentFlags().StringSlice("emails", []string{}, "A list of emails to invite")
 
 	// revoke sub-command
 	invitesCmd.AddCommand(revokeCmd)
-	revokeCmd.PersistentFlags().String("invite-url", "", "A custom URL for the invites API (optional)")
 	revokeCmd.PersistentFlags().String("email", "", "The email address to revoke")
 }

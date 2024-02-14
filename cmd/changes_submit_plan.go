@@ -726,8 +726,6 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 func init() {
 	changesCmd.AddCommand(submitPlanCmd)
 
-	submitPlanCmd.PersistentFlags().String("changes-url", "", "The changes service API endpoint (defaults to --url)")
-	submitPlanCmd.PersistentFlags().String("management-url", "", "The management service API endpoint (defaults to --url)")
 	submitPlanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
 
 	submitPlanCmd.PersistentFlags().String("title", "", "Short title for this change. If this is not specified, overmind will try to come up with one for you.")
@@ -738,6 +736,4 @@ func init() {
 
 	submitPlanCmd.PersistentFlags().String("terraform-plan-output", "", "Filename of cached terraform plan output for this change.")
 	submitPlanCmd.PersistentFlags().String("code-changes-diff", "", "Fileame of the code diff of this change.")
-
-	submitPlanCmd.PersistentFlags().String("timeout", "3m", "How long to wait for responses")
 }

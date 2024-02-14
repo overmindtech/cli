@@ -22,6 +22,8 @@ executed as a single block.`,
 func init() {
 	rootCmd.AddCommand(bookmarksCmd)
 
+	addAPIFlags(bookmarksCmd)
+
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

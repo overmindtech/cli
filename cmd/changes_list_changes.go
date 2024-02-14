@@ -289,10 +289,7 @@ func printJson(ctx context.Context, b []byte, prefix, id string) error {
 func init() {
 	changesCmd.AddCommand(listChangesCmd)
 
-	listChangesCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 	listChangesCmd.PersistentFlags().String("format", "files", "How to render the change. Possible values: files, json")
 	listChangesCmd.PersistentFlags().String("dir", "./output", "A directory name to use for rendering changes when using the 'files' format")
 	listChangesCmd.PersistentFlags().Bool("fetch-data", false, "also fetch the blast radius and system state snapshots for each change")
-
-	listChangesCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
 }

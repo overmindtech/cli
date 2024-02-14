@@ -326,11 +326,9 @@ fetch:
 func init() {
 	changesCmd.AddCommand(getChangeCmd)
 
-	withChangeUuidFlags(getChangeCmd)
+	addChangeUuidFlags(getChangeCmd)
 	getChangeCmd.PersistentFlags().String("status", "", "The expected status of the change. Use this with --ticket-link. Allowed values: CHANGE_STATUS_UNSPECIFIED, CHANGE_STATUS_DEFINING, CHANGE_STATUS_HAPPENING, CHANGE_STATUS_PROCESSING, CHANGE_STATUS_DONE")
 
 	getChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 	getChangeCmd.PersistentFlags().String("format", "json", "How to render the change. Possible values: json, markdown")
-
-	getChangeCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
 }

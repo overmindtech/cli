@@ -102,7 +102,7 @@ func GetAffectedBookmarks(ctx context.Context, ready chan bool) int {
 	})
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"bookmark-url": viper.GetString("bookmark-url"),
+			"url": viper.GetString("url"),
 		}).Error("failed to get affected bookmarks")
 		return 1
 	}
@@ -118,11 +118,6 @@ func GetAffectedBookmarks(ctx context.Context, ready chan bool) int {
 func init() {
 	bookmarksCmd.AddCommand(getAffectedBookmarksCmd)
 
-	getAffectedBookmarksCmd.PersistentFlags().String("bookmark-url", "", "The bookmark service API endpoint (defaults to --url)")
-	getAffectedBookmarksCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
-
 	getAffectedBookmarksCmd.PersistentFlags().String("snapshot-uuid", "", "The UUID of the snapshot that should be checked.")
 	getAffectedBookmarksCmd.PersistentFlags().String("bookmark-uuids", "", "A comma separated list of UUIDs of the potentially affected bookmarks.")
-
-	getAffectedBookmarksCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
 }
