@@ -18,9 +18,6 @@ var terraformCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(terraformCmd)
 
-	// Hide this flag from the Terraform help as we don't want it to be messy
-	rootCmd.PersistentFlags().MarkHidden("url")
-
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

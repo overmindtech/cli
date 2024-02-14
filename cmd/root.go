@@ -421,8 +421,9 @@ func addChangeUuidFlags(cmd *cobra.Command) {
 }
 
 // Adds common flags to API commands e.g. timeout
-func addAPIFlags(cnd *cobra.Command) {
-	createBookmarkCmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
+func addAPIFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().String("timeout", "5m", "How long to wait for responses")
+	cmd.PersistentFlags().String("url", "https://api.prod.overmind.tech", "The overmind API endpoint")
 }
 
 func init() {
@@ -430,7 +431,6 @@ func init() {
 
 	// General Config
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
-	rootCmd.PersistentFlags().String("url", "https://api.prod.overmind.tech", "The overmind API endpoint")
 
 	// Support API Keys in the environment
 	err := viper.BindEnv("api-key", "OVM_API_KEY", "API_KEY")
