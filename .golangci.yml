@@ -1,3 +1,8 @@
 linters:
   presets:
     - bugs
+linters-settings:
+  govet:
+    # Report about shadowed variables.
+    # Default: false
+    check-shadowing: true
