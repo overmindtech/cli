@@ -441,14 +441,11 @@ func init() {
 	rootCmd.PersistentFlags().String("auth0-domain", "om-prod.eu.auth0.com", "Auth0 domain to connect to")
 
 	// tracing
-	rootCmd.PersistentFlags().Bool("otel", false, "If specified, configures opentelemetry and - optionally, see --sentry-dsn - sentry using their default environment configs.")
 	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb. This requires --otel to be set.")
-	rootCmd.PersistentFlags().String("sentry-dsn", "", "If specified, configures sentry libraries to capture errors. This requires --otel to be set.")
-	rootCmd.PersistentFlags().String("run-mode", "release", "Set the run mode for this service, 'release', 'debug' or 'test'. Defaults to 'release'.")
-	rootCmd.PersistentFlags().Bool("json-log", false, "Set to true to emit logs as json for easier parsing.")
-
-	// debugging
-	rootCmd.PersistentFlags().Bool("stdout-trace-dump", false, "Dump all otel traces to stdout for debugging. This requires --otel to be set.")
+	// Mark this as hidden. This means that it will still be parsed of supplied,
+	// and we will still look for it in the environment, but it won't be shown
+	// in the help
+	rootCmd.Flags().MarkHidden("honeycomb-api-key")
 
 	// Create groups
 	rootCmd.AddGroup(&cobra.Group{
@@ -480,21 +477,20 @@ func init() {
 		}
 		log.SetLevel(lvl)
 
-		if viper.GetBool("json-log") {
-			log.SetFormatter(&log.JSONFormatter{})
-		}
+		if honeycombApiKey := viper.GetString("honeycomb-api-key"); honeycombApiKey != "" {
+			if err := tracing.InitTracerWithHoneycomb(honeycombApiKey); err != nil {
+				log.Fatal(err)
+			}
 
-		if err := tracing.InitTracerWithHoneycomb(viper.GetString("honeycomb-api-key")); err != nil {
-			log.Fatal(err)
-		}
+			log.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
+				log.AllLevels[:log.GetLevel()+1]...,
+			)))
 
-		log.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
-			log.AllLevels[:log.GetLevel()+1]...,
-		)))
-	}
-	// shut down tracing at the end of the process
-	rootCmd.PersistentPostRun = func(cmd *cobra.Command, args []string) {
-		tracing.ShutdownTracer()
+			// shut down tracing at the end of the process
+			rootCmd.PersistentPostRun = func(cmd *cobra.Command, args []string) {
+				tracing.ShutdownTracer()
+			}
+		}
 	}
 }
 
