@@ -564,17 +564,11 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 	))
 	defer span.End()
 
-	gatewayUrl := viper.GetString("gateway-url")
-	if gatewayUrl == "" {
-		gatewayUrl = fmt.Sprintf("%v/api/gateway", viper.GetString("url"))
-		viper.Set("gateway-url", gatewayUrl)
-	}
-
 	lf := log.Fields{}
 
 	ctx, err = ensureToken(ctx, []string{"changes:write"})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithField("api-key-url", viper.GetString("api-key-url")).WithError(err).Error("failed to authenticate")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1
 	}
 

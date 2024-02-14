@@ -26,6 +26,9 @@ import (
 	"golang.org/x/oauth2"
 )
 
+const Auth0ClientId = "j3LylZtIosVPZtouKI8WuVHmE6Lluva1"
+const Auth0Domain = "om-prod.eu.auth0.com"
+
 var logLevel string
 
 //go:generate sh -c "echo -n $(git describe --tags --long) > commit.txt"
@@ -34,9 +37,14 @@ var cliVersion string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:     "overmind",
-	Short:   "The Overmind CLI",
-	Long:    `Calculate the blast radius of your changes, track risks, and make changes with confidence`,
+	Use:   "overmind",
+	Short: "The Overmind CLI",
+	Long: `Calculate the blast radius of your changes, track risks, and make changes with
+confidence.
+
+This CLI will prompt you for authentication using Overmind's OAuth service,
+however it can also be configured to use an API key by setting the OVM_API_KEY
+environment variable.`,
 	Version: cliVersion,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
@@ -162,7 +170,7 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 			log.WithContext(ctx).Debug("successfully authenticated")
 			apiKey = resp.Msg.GetAccessToken()
 		} else {
-			return ctx, errors.New("--api-key does not match pattern 'ovm_api_*'")
+			return ctx, errors.New("OVM_API_KEY does not match pattern 'ovm_api_*'")
 		}
 		return context.WithValue(ctx, sdp.UserTokenContextKey{}, apiKey), nil
 	}
@@ -198,11 +206,11 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 
 		// Authenticate using the oauth resource owner password flow
 		config := oauth2.Config{
-			ClientID: viper.GetString("auth0-client-id"),
+			ClientID: Auth0ClientId,
 			Scopes:   requestScopes,
 			Endpoint: oauth2.Endpoint{
-				AuthURL:  fmt.Sprintf("https://%v/authorize", viper.GetString("auth0-domain")),
-				TokenURL: fmt.Sprintf("https://%v/oauth/token", viper.GetString("auth0-domain")),
+				AuthURL:  fmt.Sprintf("https://%v/authorize", Auth0Domain),
+				TokenURL: fmt.Sprintf("https://%v/oauth/token", Auth0Domain),
 			},
 			RedirectURL: "http://127.0.0.1:7837/oauth/callback",
 		}
@@ -327,7 +335,7 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 		// Set the token
 		return context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken), nil
 	}
-	return ctx, fmt.Errorf("no --api-key configured and target URL (%v) is insecure", parsed)
+	return ctx, fmt.Errorf("no OVM_API_KEY configured and target URL (%v) is insecure", parsed)
 }
 
 // getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a state with the specified status and having --ticket-link
@@ -415,30 +423,17 @@ func withChangeUuidFlags(cmd *cobra.Command) {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// TODO: I'm leaving this for now but I want to go over these and remove a
-	// bunch of them, but I want to get options before I do. The things I'm
-	// considering are:
-	//
-	// * Move some into a helper like `withChangeUuidFlags` such as log level
-	// * For things that are only used internally, move to only using env vars i.e. honeycomb, sentry, client_id
-	// * Completely remove things that aren't used such as stdout trace dump
-
 	// General Config
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
 
 	// api endpoint
 	rootCmd.PersistentFlags().String("url", "https://api.prod.overmind.tech", "The overmind API endpoint")
-	rootCmd.PersistentFlags().String("gateway-url", "", "The overmind Gateway endpoint (defaults to /api/gateway on --url)")
 
-	// authorization
-	rootCmd.PersistentFlags().String("api-key", "", "The API key to use for authentication, also read from OVM_API_KEY environment variable")
+	// Support API Keys in the environment
 	err := viper.BindEnv("api-key", "OVM_API_KEY", "API_KEY")
 	if err != nil {
 		log.WithError(err).Fatal("could not bind api key to env")
 	}
-	rootCmd.PersistentFlags().String("api-key-url", "", "The overmind API Keys endpoint (defaults to --url)")
-	rootCmd.PersistentFlags().String("auth0-client-id", "j3LylZtIosVPZtouKI8WuVHmE6Lluva1", "OAuth Client ID to use when connecting with auth")
-	rootCmd.PersistentFlags().String("auth0-domain", "om-prod.eu.auth0.com", "Auth0 domain to connect to")
 
 	// tracing
 	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb. This requires --otel to be set.")

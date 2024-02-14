@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/overmindtech/cli/internal"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/sdpws"
@@ -141,17 +142,11 @@ func Request(ctx context.Context, ready chan bool) int {
 	))
 	defer span.End()
 
-	gatewayUrl := viper.GetString("gateway-url")
-	if gatewayUrl == "" {
-		gatewayUrl = fmt.Sprintf("%v/api/gateway", viper.GetString("url"))
-		viper.Set("gateway-url", gatewayUrl)
-	}
-
 	lf := log.Fields{}
 
 	ctx, err = ensureToken(ctx, []string{"explore:read"})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithField("api-key-url", viper.GetString("api-key-url")).WithError(err).Error("failed to authenticate")
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1
 	}
 
@@ -166,6 +161,7 @@ func Request(ctx context.Context, ready chan bool) int {
 		edges:                        []*sdp.Edge{},
 		msgLog:                       []*sdp.GatewayResponse{},
 	}
+	gatewayUrl := internal.GatewayURL(viper.GetString("url"))
 	c, err := sdpws.DialBatch(ctx, gatewayUrl,
 		NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
 		handler,
