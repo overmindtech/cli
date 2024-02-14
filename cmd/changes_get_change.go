@@ -109,7 +109,7 @@ fetch:
 	for {
 		// use the variable to avoid shadowing
 		var err error
-		riskRes, err := client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
+		riskRes, err = client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
 			Msg: &sdp.GetChangeRisksRequest{
 				UUID: changeUuid[:],
 			},
