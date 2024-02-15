@@ -409,7 +409,13 @@ func mappedItemDiffsFromPlan(ctx context.Context, fileName string, lf log.Fields
 							WithError(err).
 							Error("Failed to parse overmind_mappings output")
 					} else {
-						currentProviderMappings, ok := mappings[configResource.ProviderConfigKey]
+						// We need to split out the module section of the name
+						// here. If the resource isn't in a module, the
+						// ProviderConfigKey will be something like
+						// "kubernetes", however if it's in a module it's be
+						// something like "module.something:kubernetes"
+						providerName := extractProviderNameFromConfigKey(configResource.ProviderConfigKey)
+						currentProviderMappings, ok := mappings[providerName]
 
 						if ok {
 							log.WithContext(ctx).
@@ -507,6 +513,16 @@ func mappedItemDiffsFromPlan(ctx context.Context, fileName string, lf log.Fields
 	}
 
 	return plannedChangeGroupsVar.MappedItemDiffs(), nil
+}
+
+// Returns the name of the provider from the config key. If the resource isn't
+// in a module, the ProviderConfigKey will be something like "kubernetes",
+// however if it's in a module it's be something like
+// "module.something:kubernetes". In both scenarios we want to return
+// "kubernetes"
+func extractProviderNameFromConfigKey(providerConfigKey string) string {
+	sections := strings.Split(providerConfigKey, ":")
+	return sections[len(sections)-1]
 }
 
 func changeTitle(arg string) string {
