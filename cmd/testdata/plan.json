@@ -1319,6 +1319,43 @@
                 {
                     "resources": [
                         {
+                            "address": "module.core.kubernetes_secret.apiserver-secrets",
+                            "mode": "managed",
+                            "type": "kubernetes_secret",
+                            "name": "apiserver-secrets",
+                            "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+                            "schema_version": 0,
+                            "values": {
+                                "binary_data": null,
+                                "id": "default/apiserver-secrets",
+                                "immutable": false,
+                                "metadata": [
+                                    {
+                                        "annotations": {},
+                                        "generate_name": "",
+                                        "generation": 0,
+                                        "labels": {},
+                                        "name": "apiserver-secrets",
+                                        "namespace": "default",
+                                        "resource_version": "67487020",
+                                        "uid": "7a9fce0b-b6a2-4464-8f3a-33a93c2fdeb9"
+                                    }
+                                ],
+                                "timeouts": null,
+                                "type": "Opaque",
+                                "wait_for_service_account_token": true
+                            },
+                            "sensitive_values": {
+                                "data": {},
+                                "metadata": [
+                                    {
+                                        "annotations": {},
+                                        "labels": {}
+                                    }
+                                ]
+                            }
+                        },
+                        {
                             "address": "module.efs_csi_irsa_role.aws_iam_policy.efs_csi[0]",
                             "mode": "managed",
                             "type": "aws_iam_policy",
@@ -2357,6 +2394,90 @@
         }
     },
     "resource_changes": [
+        {
+            "address": "module.core.kubernetes_secret.apiserver-secrets",
+            "module_address": "module.core",
+            "mode": "managed",
+            "type": "kubernetes_secret",
+            "name": "apiserver-secrets",
+            "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+            "change": {
+                "actions": [
+                    "update"
+                ],
+                "before": {
+                    "binary_data": null,
+                    "data": {
+                    },
+                    "id": "default/apiserver-secrets",
+                    "immutable": false,
+                    "metadata": [
+                        {
+                            "annotations": {},
+                            "generate_name": "",
+                            "generation": 0,
+                            "labels": {},
+                            "name": "apiserver-secrets",
+                            "namespace": "default",
+                            "resource_version": "67487020",
+                            "uid": "FOO"
+                        }
+                    ],
+                    "timeouts": null,
+                    "type": "Opaque",
+                    "wait_for_service_account_token": true
+                },
+                "after": {
+                    "binary_data": null,
+                    "id": "default/apiserver-secrets",
+                    "immutable": false,
+                    "metadata": [
+                        {
+                            "annotations": {},
+                            "generate_name": "",
+                            "generation": 0,
+                            "labels": {},
+                            "name": "apiserver-secrets",
+                            "namespace": "default",
+                            "resource_version": "67487020",
+                            "uid": "FOO"
+                        }
+                    ],
+                    "timeouts": null,
+                    "type": "Opaque",
+                    "wait_for_service_account_token": true
+                },
+                "after_unknown": {
+                    "data": true,
+                    "metadata": [
+                        {
+                            "annotations": {},
+                            "labels": {}
+                        }
+                    ]
+                },
+                "before_sensitive": {
+                    "binary_data": true,
+                    "data": true,
+                    "metadata": [
+                        {
+                            "annotations": {},
+                            "labels": {}
+                        }
+                    ]
+                },
+                "after_sensitive": {
+                    "binary_data": true,
+                    "data": true,
+                    "metadata": [
+                        {
+                            "annotations": {},
+                            "labels": {}
+                        }
+                    ]
+                }
+            }
+        },
         {
             "address": "kubernetes_deployment.nats_box",
             "mode": "managed",
@@ -5466,6 +5587,271 @@
                 }
             ],
             "module_calls": {
+                "core": {
+                    "source": "./modules/ovm-core",
+                    "expressions": {
+                        "additional_ingress_rules": {
+                            "references": [
+                                "local.smartlook_relay_dns"
+                            ]
+                        },
+                        "api_keys_client_id": {
+                            "references": [
+                                "auth0_client.api_keys.id",
+                                "auth0_client.api_keys"
+                            ]
+                        },
+                        "api_keys_client_secret": {
+                            "references": [
+                                "data.auth0_client.api_keys.client_secret",
+                                "data.auth0_client.api_keys"
+                            ]
+                        },
+                        "api_server_audience": {
+                            "references": [
+                                "auth0_resource_server.api_server.identifier",
+                                "auth0_resource_server.api_server"
+                            ]
+                        },
+                        "api_server_client_id": {
+                            "references": [
+                                "auth0_client.api_server.id",
+                                "auth0_client.api_server"
+                            ]
+                        },
+                        "api_server_client_secret": {
+                            "references": [
+                                "data.auth0_client.api_server.client_secret",
+                                "data.auth0_client.api_server"
+                            ]
+                        },
+                        "api_server_image_pull_policy": {
+                            "references": [
+                                "local.api_server_image_pull_policy"
+                            ]
+                        },
+                        "api_server_imageref": {
+                            "references": [
+                                "local.api_server_imageref"
+                            ]
+                        },
+                        "auth0_domain": {
+                            "references": [
+                                "var.auth0_domain"
+                            ]
+                        },
+                        "aws_auth_roles": {
+                            "references": [
+                                "local.aws_auth_roles"
+                            ]
+                        },
+                        "backend_sentry_dsn": {
+                            "references": [
+                                "var.backend_sentry_dsn"
+                            ]
+                        },
+                        "cors_origin": {
+                            "references": [
+                                "var.terraform_env_name"
+                            ]
+                        },
+                        "eks_arm_instance_types": {
+                            "references": [
+                                "var.terraform_env_name"
+                            ]
+                        },
+                        "eks_x86_instance_types": {
+                            "references": [
+                                "var.terraform_env_name"
+                            ]
+                        },
+                        "env_name": {
+                            "references": [
+                                "var.terraform_env_name"
+                            ]
+                        },
+                        "gateway_audience": {
+                            "references": [
+                                "auth0_resource_server.gateway.identifier",
+                                "auth0_resource_server.gateway"
+                            ]
+                        },
+                        "gateway_client_id": {
+                            "references": [
+                                "auth0_client.gateway.id",
+                                "auth0_client.gateway"
+                            ]
+                        },
+                        "gateway_client_secret": {
+                            "references": [
+                                "data.auth0_client.gateway.client_secret",
+                                "data.auth0_client.gateway"
+                            ]
+                        },
+                        "gateway_image_pull_policy": {
+                            "references": [
+                                "local.gateway_image_pull_policy"
+                            ]
+                        },
+                        "gateway_imageref": {
+                            "references": [
+                                "local.gateway_imageref"
+                            ]
+                        },
+                        "honeycomb_api_key": {
+                            "references": [
+                                "var.honeycomb_api_key"
+                            ]
+                        },
+                        "hubspot_private_app_token": {
+                            "references": [
+                                "var.hubspot_private_app_token"
+                            ]
+                        },
+                        "ingress_certificate_arn": {
+                            "references": [
+                                "module.acm.acm_certificate_arn",
+                                "module.acm"
+                            ]
+                        },
+                        "is_prod": {
+                            "references": [
+                                "var.terraform_env_name"
+                            ]
+                        },
+                        "kms_key_administrators": {
+                            "references": [
+                                "local.sso_admin_role_arn",
+                                "local.sso_poweruser_role_arn",
+                                "local.terraform_deployer_arn"
+                            ]
+                        },
+                        "namespace": {
+                            "constant_value": "default"
+                        },
+                        "nats_data_storage_class_name": {
+                            "references": [
+                                "local.nats_data_storage_class_name"
+                            ]
+                        },
+                        "nats_operator_jwt": {
+                            "references": [
+                                "var.nats_operator_jwt"
+                            ]
+                        },
+                        "nats_sys_account_id": {
+                            "references": [
+                                "var.nats_sys_account_id"
+                            ]
+                        },
+                        "nats_sys_account_jwt": {
+                            "references": [
+                                "var.nats_sys_account_jwt"
+                            ]
+                        },
+                        "openai_api_key": {
+                            "references": [
+                                "var.openai_api_key"
+                            ]
+                        },
+                        "region": {
+                            "constant_value": "eu-west-2"
+                        },
+                        "revlink_client_id": {
+                            "references": [
+                                "auth0_client.revlink.id",
+                                "auth0_client.revlink"
+                            ]
+                        },
+                        "revlink_client_secret": {
+                            "references": [
+                                "data.auth0_client.revlink.client_secret",
+                                "data.auth0_client.revlink"
+                            ]
+                        },
+                        "revlink_image_pull_policy": {
+                            "references": [
+                                "local.revlink_image_pull_policy"
+                            ]
+                        },
+                        "revlink_imageref": {
+                            "references": [
+                                "local.revlink_imageref"
+                            ]
+                        },
+                        "send_email_iam_policy_arn": {
+                            "references": [
+                                "aws_iam_policy.api_server_ses_send_emails.arn",
+                                "aws_iam_policy.api_server_ses_send_emails"
+                            ]
+                        },
+                        "session_name": {
+                            "references": [
+                                "local.session_name"
+                            ]
+                        },
+                        "srcman_admin_github_token": {
+                            "references": [
+                                "var.admin_github_token"
+                            ]
+                        },
+                        "srcman_github_release": {
+                            "constant_value": "latest"
+                        },
+                        "srcman_github_token": {
+                            "references": [
+                                "var.srcman_github_token"
+                            ]
+                        },
+                        "srcman_github_username": {
+                            "references": [
+                                "var.srcman_github_username"
+                            ]
+                        },
+                        "zone_name": {
+                            "references": [
+                                "var.zone_name"
+                            ]
+                        }
+                    },
+                    "module": {
+                        "resources": [
+                            {
+                                "address": "kubernetes_secret.apiserver-secrets",
+                                "mode": "managed",
+                                "type": "kubernetes_secret",
+                                "name": "apiserver-secrets",
+                                "provider_config_key": "module.core:kubernetes",
+                                "expressions": {
+                                    "data": {
+                                        "references": [
+                                            "var.api_keys_client_secret",
+                                            "var.api_server_client_secret",
+                                            "var.hubspot_private_app_token",
+                                            "var.openai_api_key"
+                                        ]
+                                    },
+                                    "metadata": [
+                                        {
+                                            "name": {
+                                                "constant_value": "apiserver-secrets"
+                                            },
+                                            "namespace": {
+                                                "references": [
+                                                    "var.namespace"
+                                                ]
+                                            }
+                                        }
+                                    ],
+                                    "type": {
+                                        "constant_value": "Opaque"
+                                    }
+                                },
+                                "schema_version": 0
+                            }
+                        ]
+                    }
+                },
                 "eks_elb_controller": {
                     "source": "DNXLabs/eks-lb-controller/aws",
                     "expressions": {

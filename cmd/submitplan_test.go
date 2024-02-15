@@ -24,8 +24,8 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 		t.Error(err)
 	}
 
-	if len(mappedItemDiffs) != 3 {
-		t.Errorf("Expected 3 changes, got %v:", len(mappedItemDiffs))
+	if len(mappedItemDiffs) != 4 {
+		t.Errorf("Expected 4 changes, got %v:", len(mappedItemDiffs))
 		for _, diff := range mappedItemDiffs {
 			t.Errorf("  %v", diff)
 		}
@@ -34,6 +34,7 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	var nats_box_deployment *sdp.MappedItemDiff
 	var api_server_deployment *sdp.MappedItemDiff
 	var aws_iam_policy *sdp.MappedItemDiff
+	var secret *sdp.MappedItemDiff
 
 	for _, diff := range mappedItemDiffs {
 		item := diff.GetItem().GetBefore()
@@ -52,6 +53,8 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 			api_server_deployment = diff
 		} else if item.GetType() == "iam-policy" {
 			aws_iam_policy = diff
+		} else if item.GetType() == "Secret" {
+			secret = diff
 		}
 	}
 
@@ -143,6 +146,15 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	}
 	if aws_iam_policy.GetMappingQuery().GetQuery() != "arn:aws:iam::123456789012:policy/test-alb-ingress" {
 		t.Errorf("Expected aws_iam_policy query query to be 'arn:aws:iam::123456789012:policy/test-alb-ingress', got '%v'", aws_iam_policy.GetMappingQuery().GetQuery())
+	}
+
+	// check secret
+	t.Logf("secret: %v", secret)
+	if secret == nil {
+		t.Fatalf("Expected secret to be set, but it's not")
+	}
+	if secret.GetMappingQuery().GetScope() != "dogfood.default" {
+		t.Errorf("Expected secret query scope to be 'dogfood.default', got '%v'", secret.GetMappingQuery().GetScope())
 	}
 }
 
@@ -248,4 +260,29 @@ func TestMaskSensitiveData(t *testing.T) {
 				map[string]any{"foo": []any{false, true}}))
 
 	})
+}
+
+func TestExtractProviderNameFromConfigKey(t *testing.T) {
+	tests := []struct {
+		ConfigKey string
+		Expected  string
+	}{
+		{
+			ConfigKey: "kubernetes",
+			Expected:  "kubernetes",
+		},
+		{
+			ConfigKey: "module.core:kubernetes",
+			Expected:  "kubernetes",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.ConfigKey, func(t *testing.T) {
+			actual := extractProviderNameFromConfigKey(test.ConfigKey)
+			if actual != test.Expected {
+				t.Errorf("Expected %v, got %v", test.Expected, actual)
+			}
+		})
+	}
 }
