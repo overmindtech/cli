@@ -153,8 +153,8 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	if secret == nil {
 		t.Fatalf("Expected secret to be set, but it's not")
 	}
-	if secret.MappingQuery.GetScope() != "dogfood.default" {
-		t.Errorf("Expected secret query scope to be 'dogfood.default', got '%v'", secret.MappingQuery.GetScope())
+	if secret.GetMappingQuery().GetScope() != "dogfood.default" {
+		t.Errorf("Expected secret query scope to be 'dogfood.default', got '%v'", secret.GetMappingQuery().GetScope())
 	}
 }
 
