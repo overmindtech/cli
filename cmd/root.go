@@ -370,20 +370,17 @@ func init() {
 		log.WithError(err).Fatal("could not bind api key to env")
 	}
 
+	// internal configs
 	rootCmd.PersistentFlags().String("cli-auth0-client-id", "QMfjMww3x4QTpeXiuRtMV3JIQkx6mZa4", "OAuth Client ID to use when connecting with auth0")
-	rootCmd.PersistentFlags().MarkHidden("cli-auth0-client-id")
 	rootCmd.PersistentFlags().String("cli-auth0-domain", "om-prod.eu.auth0.com", "Auth0 domain to connect to")
-	rootCmd.PersistentFlags().MarkHidden("cli-auth0-domain")
-
-	// tracing
 	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb. This requires --otel to be set.")
-	// Mark this as hidden. This means that it will still be parsed of supplied,
+
+	// Mark these as hidden. This means that it will still be parsed of supplied,
 	// and we will still look for it in the environment, but it won't be shown
 	// in the help
-	err = rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key")
-	if err != nil {
-		log.WithError(err).Fatal("could not mark `honeycomb-api-key` flag as hidden")
-	}
+	must(rootCmd.PersistentFlags().MarkHidden("cli-auth0-client-id"))
+	must(rootCmd.PersistentFlags().MarkHidden("cli-auth0-domain"))
+	must(rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key"))
 
 	// Create groups
 	rootCmd.AddGroup(&cobra.Group{
@@ -438,4 +435,12 @@ func initConfig() {
 
 	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv() // read in environment variables that match
+}
+
+// must panics if the passed in error is not nil
+// use this for init-time error checking of viper/cobra stuff that sometimes errors if the flag does not exist
+func must(err error) {
+	if err != nil {
+		panic(fmt.Errorf("error initialising: %w", err))
+	}
 }
