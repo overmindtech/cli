@@ -7,7 +7,7 @@ on:
       - 'v*'
 jobs:
   goreleaser:
-    runs-on: ubuntu-latest-8cpu
+    runs-on: depot-ubuntu-22.04-8
     permissions:
       contents: write
       packages: write
