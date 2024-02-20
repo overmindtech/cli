@@ -15,14 +15,19 @@ import (
 	"strings"
 
 	"connectrpc.com/connect"
+	"github.com/charmbracelet/glamour"
+	"github.com/charmbracelet/huh/spinner"
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
+	"github.com/pkg/browser"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 )
 
@@ -313,15 +318,51 @@ func getOauthToken(ctx context.Context, requiredScopes []string) (string, error)
 		return "", fmt.Errorf("error getting device code: %w", err)
 	}
 
-	fmt.Printf("Go to %v and verify this code: %v\n", deviceCode.VerificationURIComplete, deviceCode.UserCode)
+	r := NewTermRenderer()
+	prompt := `# Authenticate with a browser
 
-	token, err := config.DeviceAccessToken(ctx, deviceCode)
+Attempting to automatically open the SSO authorization page in your default browser.
+If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
+
+	%v
+
+Then enter the code:
+
+	%v
+`
+	prompt = fmt.Sprintf(prompt, deviceCode.VerificationURI, deviceCode.UserCode)
+	out, err := glamour.Render(prompt, "dark")
 	if err != nil {
-		fmt.Printf(": %v\n", err)
-		return "", fmt.Errorf("Error exchanging Device Code for for access token: %w", err)
+		panic(err)
+	}
+	fmt.Print(out)
+
+	err = browser.OpenURL(deviceCode.VerificationURIComplete)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("failed to execute local browser")
 	}
 
-	log.WithContext(ctx).Info("Authenticated successfully ✅")
+	var token *oauth2.Token
+	_ = spinner.New().Title("Waiting for confirmation...").Action(func() {
+		token, err = config.DeviceAccessToken(ctx, deviceCode)
+		if err != nil {
+			log.WithContext(ctx).WithError(err).Errorf("Error exchanging Device Code for for access token")
+			err = fmt.Errorf("Error exchanging Device Code for for access token: %w", err)
+			return
+		}
+	}).Run()
+	if err != nil {
+		return "", err
+	}
+
+	out, err = r.Render("✅ Authenticated successfully")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(out)
+
+	span := trace.SpanFromContext(ctx)
+	span.SetAttributes(attribute.Bool("ovm.cli.authenticated", true))
 
 	// Save the token locally
 	if home, err := os.UserHomeDir(); err == nil {
