@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/charmbracelet/glamour"
 )
+
+var accessibleMode bool = os.Getenv("ACCESSIBLE") != ""
 
 // NewTermRenderer returns a glamour.TermRenderer with overmind defaults or panics
 func NewTermRenderer() *glamour.TermRenderer {

@@ -5,6 +5,7 @@ go 1.22.0
 require (
 	connectrpc.com/connect v1.15.0
 	github.com/charmbracelet/glamour v0.6.0
+	github.com/charmbracelet/huh v0.3.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20240209193029-45947515c4cf
 	github.com/getsentry/sentry-go v0.27.0
 	github.com/google/uuid v1.6.0
@@ -35,10 +36,12 @@ require (
 
 require (
 	github.com/alecthomas/chroma v0.10.0 // indirect
+	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/auth0/go-jwt-middleware/v2 v2.2.1 // indirect
 	github.com/aws/aws-sdk-go v1.50.15 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/catppuccin/go v0.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/charmbracelet/bubbles v0.17.2-0.20240108170749-ec883029c8e6 // indirect
 	github.com/charmbracelet/bubbletea v0.25.0 // indirect
