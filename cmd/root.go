@@ -284,7 +284,6 @@ func getOauthToken(ctx context.Context, requiredScopes []string) (string, error)
 }
 
 // ensureToken
-// TODO: This needs to complain if the permissions aren't right when using an API key
 func ensureToken(ctx context.Context, requiredScopes []string) (context.Context, error) {
 	var accessToken string
 	var err error
