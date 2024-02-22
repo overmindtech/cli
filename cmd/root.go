@@ -295,6 +295,10 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 		accessToken, err = getOauthToken(ctx, requiredScopes)
 	}
 
+	if err != nil {
+		return ctx, fmt.Errorf("error getting token: %w", err)
+	}
+
 	// Check that we actually got the claims we asked for. If you don't have
 	// permission auth0 will just not assign those scopes rather than fail
 	claims, err := extractClaims(accessToken)
