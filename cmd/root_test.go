@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"testing"
+
+	"github.com/overmindtech/sdp-go"
 )
 
 func TestParseChangeUrl(t *testing.T) {
@@ -22,5 +24,47 @@ func TestParseChangeUrl(t *testing.T) {
 		if u.String() != tc.want {
 			t.Fatalf("expected: %v, got: %v", tc.want, u)
 		}
+	}
+}
+
+func TestHasScopesFlexible(t *testing.T) {
+	claims := &sdp.CustomClaims{
+		Scope:       "changes:read users:write",
+		AccountName: "test",
+	}
+
+	tests := []struct {
+		Name           string
+		RequiredScopes []string
+		ShouldPass     bool
+	}{
+		{
+			Name:           "Same scope",
+			RequiredScopes: []string{"changes:read"},
+			ShouldPass:     true,
+		},
+		{
+			Name:           "Multiple scopes",
+			RequiredScopes: []string{"changes:read", "users:write"},
+			ShouldPass:     true,
+		},
+		{
+			Name:           "Missing scope",
+			RequiredScopes: []string{"changes:read", "users:write", "colours:create"},
+			ShouldPass:     false,
+		},
+		{
+			Name:           "Write instead of read",
+			RequiredScopes: []string{"users:read"},
+			ShouldPass:     true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.Name, func(t *testing.T) {
+			if pass, _ := HasScopesFlexible(claims, tc.RequiredScopes); pass != tc.ShouldPass {
+				t.Fatalf("expected: %v, got: %v", tc.ShouldPass, !tc.ShouldPass)
+			}
+		})
 	}
 }
