@@ -146,7 +146,7 @@ func readLocalToken(homeDir string, expectedScopes []string) (string, []string, 
 	return token.AccessToken, currentScopes, nil
 }
 
-// Checkw whether or not a token has all of the required scopes. Returns a
+// Check whether or not a token has all of the required scopes. Returns a
 // boolean and an error which will be populated if we couldn't read the token
 func tokenHasAllScopes(token string, requiredScopes []string) (bool, error) {
 	claims, err := extractClaims(token)
