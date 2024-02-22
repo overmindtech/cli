@@ -309,7 +309,22 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 
 	for _, scope := range requiredScopes {
 		if !claims.HasScope(scope) {
-			return ctx, fmt.Errorf("authenticated successfully, but you don't have the required permission: '%v'", scope)
+			// If they don't have the *exact* scope, check to see if they have
+			// write access to the same service
+			sections := strings.Split(scope, ":")
+			var hasWriteInstead bool
+
+			if len(sections) == 2 {
+				service, action := sections[0], sections[1]
+
+				if action == "read" {
+					hasWriteInstead = claims.HasScope(fmt.Sprintf("%v:write", service))
+				}
+			}
+
+			if !hasWriteInstead {
+				return ctx, fmt.Errorf("authenticated successfully, but you don't have the required permission: '%v'", scope)
+			}
 		}
 	}
 
