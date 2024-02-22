@@ -146,12 +146,33 @@ func readLocalToken(homeDir string, expectedScopes []string) (string, []string, 
 	return token.AccessToken, currentScopes, nil
 }
 
+// Checkw whether or not a token has all of the required scopes. Returns a
+// boolean and an error which will be populated if we couldn't read the token
+func tokenHasAllScopes(token string, requiredScopes []string) (bool, error) {
+	claims, err := extractClaims(token)
+
+	if err != nil {
+		return false, fmt.Errorf("error extracting claims from token: %w", err)
+	}
+
+	// Check that the token has the right scopes
+	for _, scope := range requiredScopes {
+		if !claims.HasScope(scope) {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
 // ensureToken
+// TODO: This needs to complain if the permissions aren't right when using an API key
 func ensureToken(ctx context.Context, requiredScopes []string) (context.Context, error) {
 	// get a token from the api key if present
 	if viper.GetString("api-key") != "" {
 		log.WithContext(ctx).Debug("using provided token for authentication")
 		apiKey := viper.GetString("api-key")
+		var accessToken string
 		if strings.HasPrefix(apiKey, "ovm_api_") {
 			// exchange api token for JWT
 			client := UnauthenticatedApiKeyClient(ctx)
@@ -164,11 +185,22 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 				return ctx, fmt.Errorf("error authenticating the API token: %w", err)
 			}
 			log.WithContext(ctx).Debug("successfully authenticated")
-			apiKey = resp.Msg.GetAccessToken()
+			accessToken = resp.Msg.GetAccessToken()
 		} else {
 			return ctx, errors.New("OVM_API_KEY does not match pattern 'ovm_api_*'")
 		}
-		return context.WithValue(ctx, sdp.UserTokenContextKey{}, apiKey), nil
+
+		// Validate that the API_KEY has the required scopes
+		ok, err := tokenHasAllScopes(accessToken, requiredScopes)
+
+		if err != nil {
+			return ctx, fmt.Errorf("error checking token scopes in API KEY token: %w", err)
+		} else if !ok {
+			return ctx, fmt.Errorf("authenticated successfully, but your API key doesn't have the required permissions: %v", requiredScopes)
+		} else {
+			// In this case the token is good
+			return context.WithValue(ctx, sdp.UserTokenContextKey{}, accessToken), nil
+		}
 	}
 
 	var localScopes []string
@@ -302,16 +334,16 @@ func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus, errNotF
 	// Finally look through all open changes to find one with a matching ticket link
 	client := AuthenticatedChangesClient(ctx)
 
-	var maybeChangeUuid *uuid.UUID
 	changesList, err := client.ListChangesByStatus(ctx, &connect.Request[sdp.ListChangesByStatusRequest]{
 		Msg: &sdp.ListChangesByStatusRequest{
 			Status: expectedStatus,
 		},
 	})
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("failed to searching for existing changes: %w", err)
+		return uuid.Nil, fmt.Errorf("failed to search for existing changes: %w", err)
 	}
 
+	var maybeChangeUuid *uuid.UUID
 	for _, c := range changesList.Msg.GetChanges() {
 		if c.GetProperties().GetTicketLink() == ticketLink {
 			maybeChangeUuid = c.GetMetadata().GetUUIDParsed()
