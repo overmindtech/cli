@@ -307,6 +307,26 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 		return ctx, fmt.Errorf("error extracting claims from token: %w", err)
 	}
 
+	ok, missing := HasScopesFlexible(claims, requiredScopes)
+
+	if !ok {
+		return ctx, fmt.Errorf("authenticated successfully, but you don't have the required permission: '%v'", missing)
+	}
+
+	// Add the token to the context
+	return context.WithValue(ctx, sdp.UserTokenContextKey{}, accessToken), nil
+}
+
+// Returns whether a set of claims has all of the required scopes. It also
+// accounts for when a user has write access but required read access, they
+// aren't the same but the user will have access anyway so this will pass
+//
+// Returns a bool and the missing permission as a string of any
+func HasScopesFlexible(claims *sdp.CustomClaims, requiredScopes []string) (bool, string) {
+	if claims == nil {
+		return false, ""
+	}
+
 	for _, scope := range requiredScopes {
 		if !claims.HasScope(scope) {
 			// If they don't have the *exact* scope, check to see if they have
@@ -323,13 +343,12 @@ func ensureToken(ctx context.Context, requiredScopes []string) (context.Context,
 			}
 
 			if !hasWriteInstead {
-				return ctx, fmt.Errorf("authenticated successfully, but you don't have the required permission: '%v'", scope)
+				return false, scope
 			}
 		}
 	}
 
-	// Add the token to the context
-	return context.WithValue(ctx, sdp.UserTokenContextKey{}, accessToken), nil
+	return true, ""
 }
 
 // getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a state with the specified status and having --ticket-link
