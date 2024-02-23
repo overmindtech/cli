@@ -9,12 +9,15 @@ import (
 	"time"
 
 	"github.com/charmbracelet/huh"
+	awssource "github.com/overmindtech/aws-source/cmd"
 	"github.com/overmindtech/cli/tracing"
+	"github.com/overmindtech/sdp-go/auth"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/oauth2"
 )
 
 // terraformPlanCmd represents the `terraform plan` command
@@ -62,9 +65,22 @@ func TerraformPlan(ctx context.Context, files []string, ready chan bool) int {
 	))
 	defer span.End()
 
-	lf := log.Fields{}
+	hostname, err := os.Hostname()
+	if err != nil {
+		log.WithError(err).Fatal("Could not determine hostname for use in NATS connection name")
+	}
 
-	ctx, _, err = ensureToken(ctx, oi, []string{"changes:write"})
+	lf := log.Fields{
+		"app": viper.GetString("app"),
+	}
+
+	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
+		return 1
+	}
+
+	ctx, token, err := ensureToken(ctx, oi, []string{"changes:write"})
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1
@@ -112,6 +128,10 @@ func TerraformPlan(ctx context.Context, files []string, ready chan bool) int {
 		return 1
 	}
 
+	awsAuthConfig := awssource.AwsAuthConfig{
+		Regions: []string{"eu-west-1"},
+	}
+
 	switch aws_config {
 	case "profile_input":
 		aws_profile_input := huh.NewInput().
@@ -131,19 +151,64 @@ func TerraformPlan(ctx context.Context, files []string, ready chan bool) int {
 		}
 		// reset the environment to the requested value
 		os.Setenv("AWS_PROFILE", aws_profile)
+		awsAuthConfig.Strategy = "sso-profile"
+		awsAuthConfig.Profile = aws_profile
 	case "aws_profile":
 		// can continue with the existing config
+		awsAuthConfig.Strategy = "sso-profile"
+		awsAuthConfig.Profile = aws_profile
 	case "defaults":
 		// just continue
+		awsAuthConfig.Strategy = "defaults"
 	case "managed":
 		// TODO: not implemented yet
 	}
 
+	natsNamePrefix := "overmind-cli"
+
+	openapiUrl := *oi.ApiUrl
+	openapiUrl.Path = "/api"
+	tokenClient := auth.NewOAuthTokenClientWithContext(
+		ctx,
+		openapiUrl.String(),
+		"",
+		oauth2.StaticTokenSource(token),
+	)
+
+	natsOptions := auth.NATSOptions{
+		NumRetries:        3,
+		RetryDelay:        1 * time.Second,
+		Servers:           []string{oi.NatsUrl.String()},
+		ConnectionName:    fmt.Sprintf("%v.%v", natsNamePrefix, hostname),
+		ConnectionTimeout: (10 * time.Second), // TODO: Make configurable
+		MaxReconnects:     -1,
+		ReconnectWait:     1 * time.Second,
+		ReconnectJitter:   1 * time.Second,
+		TokenClient:       tokenClient,
+	}
+
+	e, err := awssource.InitializeAwsSourceEngine(natsOptions, awsAuthConfig, 2_000)
+	if err != nil {
+		log.WithError(err).Error("failed to initialize AWS source engine")
+		return 1
+	}
+
+	// todo: pass in context with timeout to abort timely and allow Ctrl-C to work
+	err = e.Start()
+	if err != nil {
+		log.WithError(err).Error("failed to start AWS source engine")
+		return 1
+	}
+
+	time.Sleep(5 * time.Second)
+
 	prompt := `# Doing something
+
+NATS connection: %v
 
 This will be doing something: %vAWS_PROFILE=%v terraform plan -out overmind_plan.out%v
 `
-	out, err := r.Render(fmt.Sprintf(prompt, "`", aws_profile, "`"))
+	out, err := r.Render(fmt.Sprintf(prompt, e.IsNATSConnected(), "`", aws_profile, "`"))
 	if err != nil {
 		panic(err)
 	}
