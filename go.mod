@@ -3,7 +3,7 @@ module github.com/overmindtech/cli
 go 1.22.0
 
 require (
-	connectrpc.com/connect v1.14.0
+	connectrpc.com/connect v1.15.0
 	github.com/getsentry/sentry-go v0.27.0
 	github.com/google/uuid v1.6.0
 	github.com/hexops/gotextdiff v1.0.3
