@@ -122,8 +122,25 @@ fetch:
 		}
 
 		if riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus() == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
-			log.WithContext(ctx).WithField("status", riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus().String()).Info("waiting for risk calculation")
-			time.Sleep(10 * time.Second)
+			// Extract the currently running milestone if you can
+			milestones := riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetProgressMilestones()
+			var currentMilestone string
+			for _, milestone := range milestones {
+				if milestone == nil {
+					continue
+				}
+
+				if milestone.Status == sdp.RiskCalculationStatus_ProgressMilestone_STATUS_INPROGRESS {
+					currentMilestone = milestone.GetDescription()
+				}
+			}
+
+			log.WithContext(ctx).WithFields(log.Fields{
+				"status":    riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus().String(),
+				"milestone": currentMilestone,
+			}).Info("Waiting for risk calculation")
+
+			time.Sleep(3 * time.Second)
 			// retry
 		} else {
 			// it's done (or errored)
