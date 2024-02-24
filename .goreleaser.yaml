@@ -7,13 +7,28 @@ before:
     # you may remove this if you don't need go generate
     - go generate ./...
 builds:
-  - env:
+  - binary: overmind
+    id: overmind
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
       - windows
+  - binary: overmind
+    id: overmind-macos
+    env:
+      - CGO_ENABLED=0
+    goos:
       - darwin
-    binary: overmind
+
+signs:
+  - signature: "${artifact}.dmg"
+    ids:
+    - overmind-macos # here we filter the macos only build id
+    cmd: gon
+    args:
+      - gon.json
+    artifacts: all
 
 archives:
   - format: tar.gz

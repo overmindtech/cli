@@ -1,0 +1,14 @@
+{
+    "source" : ["./overmind"],
+    "bundle_id" : "tech.overmind.cli",
+    "apple_id": {
+        "username" : "dylanratcliffe@outlook.com"
+    },
+    "sign" :{
+        "application_identity" : "TODO: Get this from our cert once generated"
+    },
+    "dmg" :{
+        "output_path":  "overmind-cli.dmg",
+        "volume_name":  "Overmind CLI"
+    }
+}
