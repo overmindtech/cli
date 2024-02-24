@@ -905,6 +905,14 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_sqs_queue": {
+		{
+			Type:       "sqs-queue",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
 	"aws_subnet": {
 		{
 			Type:       "ec2-subnet",
