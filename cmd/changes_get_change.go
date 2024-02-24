@@ -130,7 +130,7 @@ fetch:
 					continue
 				}
 
-				if milestone.Status == sdp.RiskCalculationStatus_ProgressMilestone_STATUS_INPROGRESS {
+				if milestone.GetStatus() == sdp.RiskCalculationStatus_ProgressMilestone_STATUS_INPROGRESS {
 					currentMilestone = milestone.GetDescription()
 				}
 			}
