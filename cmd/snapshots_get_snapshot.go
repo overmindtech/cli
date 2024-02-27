@@ -71,11 +71,19 @@ func GetSnapshot(ctx context.Context, ready chan bool) int {
 	))
 	defer span.End()
 
-	ctx, err = ensureToken(ctx, []string{"changes:read"})
+	lf := log.Fields{
+		"app": viper.GetString("app"),
+	}
+
+	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"url": viper.GetString("url"),
-		}).Error("failed to authenticate")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
+		return 1
+	}
+
+	ctx, err = ensureToken(ctx, oi, []string{"changes:read"})
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to authenticate")
 		return 1
 	}
 
@@ -83,16 +91,14 @@ func GetSnapshot(ctx context.Context, ready chan bool) int {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	client := AuthenticatedSnapshotsClient(ctx)
+	client := AuthenticatedSnapshotsClient(ctx, oi)
 	response, err := client.GetSnapshot(ctx, &connect.Request[sdp.GetSnapshotRequest]{
 		Msg: &sdp.GetSnapshotRequest{
 			UUID: snapshotUuid[:],
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"url": viper.GetString("url"),
-		}).Error("failed to get snapshot")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get snapshot")
 		return 1
 	}
 	log.WithContext(ctx).WithFields(log.Fields{

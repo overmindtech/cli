@@ -580,9 +580,16 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 	))
 	defer span.End()
 
-	lf := log.Fields{}
+	lf := log.Fields{
+		"app": viper.GetString("app"),
+	}
 
-	ctx, err = ensureToken(ctx, []string{"changes:write"})
+	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
+		return 1
+	}
+	ctx, err = ensureToken(ctx, oi, []string{"changes:write"})
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1
@@ -612,8 +619,8 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 	}
 	delete(lf, "file")
 
-	client := AuthenticatedChangesClient(ctx)
-	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, false)
+	client := AuthenticatedChangesClient(ctx, oi)
+	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, false)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed searching for existing changes")
 		return 1

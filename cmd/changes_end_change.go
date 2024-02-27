@@ -63,11 +63,19 @@ func EndChange(ctx context.Context, ready chan bool) int {
 	))
 	defer span.End()
 
-	ctx, err = ensureToken(ctx, []string{"changes:write"})
+	lf := log.Fields{
+		"app": viper.GetString("app"),
+	}
+
+	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
 	if err != nil {
-		log.WithContext(ctx).WithFields(log.Fields{
-			"url": viper.GetString("url"),
-		}).WithError(err).Error("failed to authenticate")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
+		return 1
+	}
+
+	ctx, err = ensureToken(ctx, oi, []string{"changes:write"})
+	if err != nil {
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1
 	}
 
@@ -75,8 +83,7 @@ func EndChange(ctx context.Context, ready chan bool) int {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	lf := log.Fields{}
-	changeUuid, err := getChangeUuid(ctx, sdp.ChangeStatus_CHANGE_STATUS_HAPPENING, true)
+	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_HAPPENING, true)
 	if err != nil {
 		log.WithError(err).WithFields(lf).Error("failed to identify change")
 		return 1
@@ -85,7 +92,7 @@ func EndChange(ctx context.Context, ready chan bool) int {
 	lf["uuid"] = changeUuid.String()
 
 	// snapClient := AuthenticatedSnapshotsClient(ctx)
-	client := AuthenticatedChangesClient(ctx)
+	client := AuthenticatedChangesClient(ctx, oi)
 	stream, err := client.EndChange(ctx, &connect.Request[sdp.EndChangeRequest]{
 		Msg: &sdp.EndChangeRequest{
 			ChangeUUID: changeUuid[:],

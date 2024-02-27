@@ -134,14 +134,24 @@ func InvitesRevoke(ctx context.Context) int {
 	))
 	defer span.End()
 
-	// Authenticate
-	ctx, err = ensureToken(ctx, []string{"account:write"})
+	lf := log.Fields{
+		"app": viper.GetString("app"),
+	}
+
+	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
 	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("failed to ensure token")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
 		return 1
 	}
 
-	client := AuthenticatedInviteClient(ctx)
+	// Authenticate
+	ctx, err = ensureToken(ctx, oi, []string{"account:write"})
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to ensure token")
+		return 1
+	}
+
+	client := AuthenticatedInviteClient(ctx, oi)
 
 	// Create the invite
 	_, err = client.RevokeInvite(ctx, &connect.Request[sdp.RevokeInviteRequest]{
@@ -173,14 +183,24 @@ func InvitesCreate(ctx context.Context) int {
 	))
 	defer span.End()
 
-	// Authenticate
-	ctx, err = ensureToken(ctx, []string{"account:write"})
+	lf := log.Fields{
+		"app": viper.GetString("app"),
+	}
+
+	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
 	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("failed to ensure token")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
 		return 1
 	}
 
-	client := AuthenticatedInviteClient(ctx)
+	// Authenticate
+	ctx, err = ensureToken(ctx, oi, []string{"account:write"})
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to ensure token")
+		return 1
+	}
+
+	client := AuthenticatedInviteClient(ctx, oi)
 
 	// Create the invite
 	_, err = client.CreateInvite(ctx, &connect.Request[sdp.CreateInviteRequest]{
@@ -206,14 +226,24 @@ func InvitesList(ctx context.Context) int {
 	))
 	defer span.End()
 
+	lf := log.Fields{
+		"app": viper.GetString("app"),
+	}
+
+	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
+		return 1
+	}
+
 	// Authenticate
-	ctx, err = ensureToken(ctx, []string{"account:read"})
+	ctx, err = ensureToken(ctx, oi, []string{"account:read"})
 	if err != nil {
 		log.WithError(err).Error("failed to ensure token")
 		return 1
 	}
 
-	client := AuthenticatedInviteClient(ctx)
+	client := AuthenticatedInviteClient(ctx, oi)
 
 	// List all invites
 	resp, err := client.ListInvites(ctx, &connect.Request[sdp.ListInvitesRequest]{})

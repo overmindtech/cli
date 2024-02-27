@@ -66,11 +66,19 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 	))
 	defer span.End()
 
-	ctx, err = ensureToken(ctx, []string{"changes:read"})
+	lf := log.Fields{
+		"app": viper.GetString("app"),
+	}
+
+	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
 	if err != nil {
-		log.WithContext(ctx).WithFields(log.Fields{
-			"url": viper.GetString("url"),
-		}).WithError(err).Error("failed to authenticate")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
+		return 1
+	}
+
+	ctx, err = ensureToken(ctx, oi, []string{"changes:read"})
+	if err != nil {
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1
 	}
 
@@ -78,15 +86,15 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	snapshots := AuthenticatedSnapshotsClient(ctx)
-	bookmarks := AuthenticatedBookmarkClient(ctx)
-	changes := AuthenticatedChangesClient(ctx)
+	snapshots := AuthenticatedSnapshotsClient(ctx, oi)
+	bookmarks := AuthenticatedBookmarkClient(ctx, oi)
+	changes := AuthenticatedChangesClient(ctx, oi)
 
 	response, err := changes.ListChanges(ctx, &connect.Request[sdp.ListChangesRequest]{
 		Msg: &sdp.ListChangesRequest{},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("failed to list changes")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to list changes")
 		return 1
 	}
 	for _, change := range response.Msg.GetChanges() {
