@@ -459,9 +459,9 @@ func init() {
 	// Mark these as hidden. This means that it will still be parsed of supplied,
 	// and we will still look for it in the environment, but it won't be shown
 	// in the help
-	must(rootCmd.PersistentFlags().MarkHidden("cli-auth0-client-id"))
-	must(rootCmd.PersistentFlags().MarkHidden("cli-auth0-domain"))
-	must(rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key"))
+	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("cli-auth0-client-id"))
+	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("cli-auth0-domain"))
+	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key"))
 
 	// Create groups
 	rootCmd.AddGroup(&cobra.Group{
@@ -516,12 +516,4 @@ func initConfig() {
 
 	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv() // read in environment variables that match
-}
-
-// must panics if the passed in error is not nil
-// use this for init-time error checking of viper/cobra stuff that sometimes errors if the flag does not exist
-func must(err error) {
-	if err != nil {
-		panic(fmt.Errorf("error initialising: %w", err))
-	}
 }
