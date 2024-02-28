@@ -5,8 +5,6 @@ on:
   push:
     tags:
       - 'v*'
-    branches:
-      - "mac-packaging"
 jobs:
   goreleaser:
     runs-on: macos-latest
@@ -23,20 +21,6 @@ jobs:
       - name: Install Gon using homebrew
         run: brew install Bearer/tap/gon
 
-      - name: Go Init
-        uses: ./.github/actions/go_init
-
-      - run: go run main.go --version
-
-      # - name: Run GoReleaser (publish)
-      #   uses: goreleaser/goreleaser-action@v5
-      #   if: ${{ github.event_name != 'pull_request' }}
-      #   with:
-      #     version: latest
-      #     args: release --clean
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Import Code-Signing Certificates
         uses: Apple-Actions/import-codesign-certs@v1
         with:
@@ -45,9 +29,23 @@ jobs:
           # The password used to import the PKCS12 file.
           p12-password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
 
+      - name: Go Init
+        uses: ./.github/actions/go_init
+
+      - run: go run main.go --version
+
+      - name: Run GoReleaser (publish)
+        uses: goreleaser/goreleaser-action@v5
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run GoReleaser (dry run)
         uses: goreleaser/goreleaser-action@v5
-        # if: ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           version: latest
           args: release --clean --snapshot --skip=publish
@@ -55,10 +53,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AC_PASSWORD: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
 
-      # - name: Upload assets
-      #   uses: actions/upload-artifact@v4
-      #   # only upload artifacts on pull requests
-      #   if: ${{ github.event_name == 'pull_request' }}
-      #   with:
-      #     name: test-release
-      #     path: dist/*
+      - name: Upload assets
+        uses: actions/upload-artifact@v4
+        # only upload artifacts on pull requests
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          name: test-release
+          path: dist/*
