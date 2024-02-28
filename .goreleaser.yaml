@@ -23,7 +23,7 @@ builds:
 
 signs:
   - id: amd64
-    signature: "${artifact}.dmg" 
+    signature: "overmind-cli-amd64.dmg" 
     ids:
       - overmind-macos # here we filter the macos only build id
     cmd: ./gon
@@ -31,7 +31,7 @@ signs:
       - gon-amd64.json
     artifacts: all
   - id: arm64
-    signature: "${artifact}.dmg"
+    signature: "overmind-cli-arm64.dmg"
     ids:
       - overmind-macos # here we filter the macos only build id
     cmd: ./gon
