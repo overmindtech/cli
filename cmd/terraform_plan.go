@@ -12,6 +12,7 @@ import (
 	awssource "github.com/overmindtech/aws-source/cmd"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go/auth"
+	stdlibsource "github.com/overmindtech/stdlib-source/cmd"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -187,28 +188,42 @@ func TerraformPlan(ctx context.Context, files []string, ready chan bool) int {
 		TokenClient:       tokenClient,
 	}
 
-	e, err := awssource.InitializeAwsSourceEngine(natsOptions, awsAuthConfig, 2_000)
+	awsEngine, err := awssource.InitializeAwsSourceEngine(natsOptions, awsAuthConfig, 2_000)
 	if err != nil {
 		log.WithError(err).Error("failed to initialize AWS source engine")
 		return 1
 	}
 
 	// todo: pass in context with timeout to abort timely and allow Ctrl-C to work
-	err = e.Start()
+	err = awsEngine.Start()
 	if err != nil {
 		log.WithError(err).Error("failed to start AWS source engine")
 		return 1
 	}
 
-	time.Sleep(5 * time.Second)
+	stdlibEngine, err := stdlibsource.InitializeStdlibSourceEngine(natsOptions, 2_000, true)
+	if err != nil {
+		log.WithError(err).Error("failed to initialize stdlib source engine")
+		return 1
+	}
+
+	// todo: pass in context with timeout to abort timely and allow Ctrl-C to work
+	err = stdlibEngine.Start()
+	if err != nil {
+		log.WithError(err).Error("failed to start stdlib source engine")
+		return 1
+	}
 
 	prompt := `# Doing something
 
 NATS connection: %v
 
+* AWS Source: running
+* stdlib Source: running
+
 This will be doing something: %vAWS_PROFILE=%v terraform plan -out overmind_plan.out%v
 `
-	out, err := r.Render(fmt.Sprintf(prompt, e.IsNATSConnected(), "`", aws_profile, "`"))
+	out, err := r.Render(fmt.Sprintf(prompt, awsEngine.IsNATSConnected(), "`", aws_profile, "`"))
 	if err != nil {
 		panic(err)
 	}
