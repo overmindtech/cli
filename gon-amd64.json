@@ -7,5 +7,9 @@
     },
     "sign": {
         "application_identity": "CE61C10EED69BFB4B25EB349AD15B29D75A809B9"
+    },
+    "dmg" :{
+        "output_path":  "dist/overmind-cli-amd64.dmg",
+        "volume_name":  "Overmind"
     }
 }
