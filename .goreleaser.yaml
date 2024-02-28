@@ -7,13 +7,37 @@ before:
     # you may remove this if you don't need go generate
     - go generate ./...
 builds:
-  - env:
+  - binary: overmind
+    id: overmind
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
       - windows
+  - binary: overmind
+    id: overmind-macos
+    env:
+      - CGO_ENABLED=0
+    goos:
       - darwin
-    binary: overmind
+
+signs:
+  - id: amd64
+    signature: "${artifact}" 
+    ids:
+      - overmind-macos # here we filter the macos only build id
+    cmd: gon
+    args:
+      - gon-amd64.json
+    artifacts: all
+  - id: arm64
+    signature: "${artifact}"
+    ids:
+      - overmind-macos # here we filter the macos only build id
+    cmd: gon
+    args:
+      - gon-arm64.json
+    artifacts: all
 
 archives:
   - format: tar.gz
@@ -34,16 +58,38 @@ archives:
     files:
       - LICENSE
       - README.md
+
 checksum:
   name_template: "checksums.txt"
+
 snapshot:
   name_template: "{{ incpatch .Version }}-next"
+
 changelog:
   sort: asc
   filters:
     exclude:
       - "^docs:"
       - "^test:"
+
+# https://goreleaser.com/customization/homebrew/
+brews:
+  - name: cli
+    url_template: "https://github.com/overmindtech/cli/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    commit_author:
+      name: Go Release Bot
+      email: bot@overmind.tech
+    homepage: "https://overmind.tech/"
+    description: "Use Overmind to calculate the risks for infrastructure changes"
+    license: "MIT"
+    skip_upload: auto
+    folder: Formula
+    repository:
+      owner: overmindtech
+      name: cli
+      token: "{{ .Env.GITHUB_TOKEN }}"
+
+
 # The lines beneath this are called `modelines`. See `:help modeline`
 # Feel free to remove those if you don't want/use them.
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
