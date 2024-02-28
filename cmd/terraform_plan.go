@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -55,7 +57,7 @@ var terraformPlanCmd = &cobra.Command{
 	},
 }
 
-func TerraformPlan(ctx context.Context, files []string, ready chan bool) int {
+func TerraformPlan(ctx context.Context, args []string, ready chan bool) int {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
 		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
@@ -151,7 +153,6 @@ func TerraformPlan(ctx context.Context, files []string, ready chan bool) int {
 			return 1
 		}
 		// reset the environment to the requested value
-		os.Setenv("AWS_PROFILE", aws_profile)
 		awsAuthConfig.Strategy = "sso-profile"
 		awsAuthConfig.Profile = aws_profile
 	case "aws_profile":
@@ -220,20 +221,41 @@ func TerraformPlan(ctx context.Context, files []string, ready chan bool) int {
 		_ = stdlibEngine.Stop()
 	}()
 
-	prompt := `# Doing something
+	args = append([]string{"plan"}, args...)
+	// -out needs to go last to override whatever the user specified on the command line
+	args = append(args, "-out", "overmind.plan")
 
-NATS connection: %v
-
+	prompt := `
 * AWS Source: running
 * stdlib Source: running
 
-This will be doing something: %vAWS_PROFILE=%v terraform plan -out overmind_plan.out%v
+# Planning Changes
+
+Running ` + "`" + `terraform %v` + "`" + `
 `
-	out, err := r.Render(fmt.Sprintf(prompt, awsEngine.IsNATSConnected(), "`", aws_profile, "`"))
+
+	out, err := r.Render(fmt.Sprintf(prompt, strings.Join(args, " ")))
 	if err != nil {
 		panic(err)
 	}
 	fmt.Print(out)
+
+	// TODO: remove this debugging aid
+	err = os.Chdir("/workspace/deploy")
+	if err != nil {
+		panic(err)
+	}
+
+	tfPlanCmd := exec.CommandContext(ctx, "terraform", args...)
+	tfPlanCmd.Stderr = os.Stderr
+	tfPlanCmd.Stdout = os.Stdout
+	tfPlanCmd.Stdin = os.Stdin
+
+	err = tfPlanCmd.Run()
+	if err != nil {
+		log.WithError(err).Error("failed to run terraform plan")
+		return 1
+	}
 
 	return 0
 }
