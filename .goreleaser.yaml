@@ -21,23 +21,23 @@ builds:
     goos:
       - darwin
 
-# signs:
-#   - id: amd64
-#     signature: "${artifact}.dmg" 
-#     ids:
-#       - overmind-macos # here we filter the macos only build id
-#     cmd: gon
-#     args:
-#       - gon-amd64.json
-#     artifacts: all
-#   - id: arm64
-#     signature: "${artifact}.dmg"
-#     ids:
-#       - overmind-macos # here we filter the macos only build id
-#     cmd: gon
-#     args:
-#       - gon-arm64.json
-#     artifacts: all
+signs:
+  - id: amd64
+    signature: "${artifact}" 
+    ids:
+      - overmind-macos # here we filter the macos only build id
+    cmd: gon
+    args:
+      - gon-amd64.json
+    artifacts: all
+  - id: arm64
+    signature: "${artifact}"
+    ids:
+      - overmind-macos # here we filter the macos only build id
+    cmd: gon
+    args:
+      - gon-arm64.json
+    artifacts: all
 
 archives:
   - format: tar.gz
@@ -71,11 +71,6 @@ changelog:
     exclude:
       - "^docs:"
       - "^test:"
-
-release:
-  extra_files:
-    - glob: ./dist/overmind-cli-*.dmg
-    - glob: ./dist/overmind-cli-*.zip
 
 # https://goreleaser.com/customization/homebrew/
 brews:

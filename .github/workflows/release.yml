@@ -50,7 +50,7 @@ jobs:
         # if: ${{ github.event_name == 'pull_request' }}
         with:
           version: latest
-          args: release --clean --snapshot --skip-publish
+          args: release --clean --snapshot --skip=publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AC_PASSWORD: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
