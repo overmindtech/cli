@@ -200,6 +200,9 @@ func TerraformPlan(ctx context.Context, files []string, ready chan bool) int {
 		log.WithError(err).Error("failed to start AWS source engine")
 		return 1
 	}
+	defer func() {
+		_ = awsEngine.Stop()
+	}()
 
 	stdlibEngine, err := stdlibsource.InitializeStdlibSourceEngine(natsOptions, 2_000, true)
 	if err != nil {
@@ -213,6 +216,9 @@ func TerraformPlan(ctx context.Context, files []string, ready chan bool) int {
 		log.WithError(err).Error("failed to start stdlib source engine")
 		return 1
 	}
+	defer func() {
+		_ = stdlibEngine.Stop()
+	}()
 
 	prompt := `# Doing something
 
