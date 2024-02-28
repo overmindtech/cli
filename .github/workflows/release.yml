@@ -51,7 +51,7 @@ jobs:
           args: release --clean --snapshot --skip=publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AC_PASSWORD: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
+          AC_PASSWORD: ${{ secrets.APPLE_AC_PASSWORD }}
 
       - name: Upload assets
         uses: actions/upload-artifact@v4
