@@ -36,6 +36,7 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AC_PASSWORD: ${{ secrets.APPLE_AC_PASSWORD }}
 
       - name: Run GoReleaser (dry run)
         uses: goreleaser/goreleaser-action@v5
