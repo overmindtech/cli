@@ -145,7 +145,7 @@ func InvitesRevoke(ctx context.Context) int {
 	}
 
 	// Authenticate
-	ctx, err = ensureToken(ctx, oi, []string{"account:write"})
+	ctx, _, err = ensureToken(ctx, oi, []string{"account:write"})
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to ensure token")
 		return 1
@@ -194,7 +194,7 @@ func InvitesCreate(ctx context.Context) int {
 	}
 
 	// Authenticate
-	ctx, err = ensureToken(ctx, oi, []string{"account:write"})
+	ctx, _, err = ensureToken(ctx, oi, []string{"account:write"})
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to ensure token")
 		return 1
@@ -237,7 +237,7 @@ func InvitesList(ctx context.Context) int {
 	}
 
 	// Authenticate
-	ctx, err = ensureToken(ctx, oi, []string{"account:read"})
+	ctx, _, err = ensureToken(ctx, oi, []string{"account:read"})
 	if err != nil {
 		log.WithError(err).Error("failed to ensure token")
 		return 1

@@ -92,7 +92,7 @@ func GetChange(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 
-	ctx, err = ensureToken(ctx, oi, []string{"changes:read"})
+	ctx, _, err = ensureToken(ctx, oi, []string{"changes:read"})
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1

@@ -589,7 +589,7 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
 		return 1
 	}
-	ctx, err = ensureToken(ctx, oi, []string{"changes:write"})
+	ctx, _, err = ensureToken(ctx, oi, []string{"changes:write"})
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1

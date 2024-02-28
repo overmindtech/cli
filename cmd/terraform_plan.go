@@ -64,7 +64,7 @@ func TerraformPlan(ctx context.Context, files []string, ready chan bool) int {
 
 	lf := log.Fields{}
 
-	ctx, err = ensureToken(ctx, []string{"changes:write"})
+	ctx, _, err = ensureToken(ctx, oi, []string{"changes:write"})
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1
