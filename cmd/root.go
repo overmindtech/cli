@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
@@ -21,6 +22,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/oauth2"
 )
 
@@ -29,6 +31,71 @@ var logLevel string
 //go:generate sh -c "echo -n $(git describe --tags --long) > commit.txt"
 //go:embed commit.txt
 var cliVersion string
+
+type OvermindInstance struct {
+	FrontendUrl *url.URL
+	ApiUrl      *url.URL
+	NatsUrl     *url.URL
+}
+
+// GatewayUrl returns the URL for the gateway for this instance.
+func (oi OvermindInstance) GatewayUrl() string {
+	return fmt.Sprintf("%v/api/gateway", oi.ApiUrl.String())
+}
+
+type instanceData struct {
+	Api  string `json:"api_url"`
+	Nats string `json:"nats_url"`
+}
+
+// NewOvermindInstance creates a new OvermindInstance from the given app URL
+// with all URLs filled in, or an error. This makes a request to the frontend to
+// lookup Api and Nats URLs.
+func NewOvermindInstance(ctx context.Context, app string) (OvermindInstance, error) {
+	var instance OvermindInstance
+	var err error
+
+	instance.FrontendUrl, err = url.Parse(app)
+	if err != nil {
+		return instance, fmt.Errorf("invalid --app value '%v', error: %w", app, err)
+	}
+
+	// Get the instance data
+	instanceDataUrl := fmt.Sprintf("%v/api/public/instance-data", instance.FrontendUrl)
+	req, err := http.NewRequest("GET", instanceDataUrl, nil)
+	if err != nil {
+		log.WithError(err).Fatal("could not initialize instance-data fetch")
+	}
+
+	req = req.WithContext(ctx)
+	log.WithField("instanceDataUrl", instanceDataUrl).Debug("Fetching instance-data")
+	res, err := otelhttp.DefaultClient.Do(req)
+	if err != nil {
+		log.WithError(err).Fatal("could not fetch instance-data")
+	}
+
+	if res.StatusCode != 200 {
+		log.WithField("status-code", res.StatusCode).Fatal("instance-data fetch returned non-200 status")
+	}
+
+	defer res.Body.Close()
+	data := instanceData{}
+	err = json.NewDecoder(res.Body).Decode(&data)
+	if err != nil {
+		log.WithError(err).Fatal("could not parse instance-data")
+	}
+
+	instance.ApiUrl, err = url.Parse(data.Api)
+	if err != nil {
+		return instance, fmt.Errorf("invalid api_url value '%v' in instance-data, error: %w", data.Api, err)
+	}
+	instance.NatsUrl, err = url.Parse(data.Nats)
+	if err != nil {
+		return instance, fmt.Errorf("invalid nats_url value '%v' in instance-data, error: %w", data.Nats, err)
+	}
+
+	return instance, nil
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -166,14 +233,14 @@ func tokenHasAllScopes(token string, requiredScopes []string) (bool, error) {
 }
 
 // Gets a token using an API key
-func getAPIKeyToken(ctx context.Context, apiKey string) (string, error) {
+func getAPIKeyToken(ctx context.Context, oi OvermindInstance, apiKey string) (string, error) {
 	log.WithContext(ctx).Debug("using provided token for authentication")
 
 	var accessToken string
 
 	if strings.HasPrefix(apiKey, "ovm_api_") {
 		// exchange api token for JWT
-		client := UnauthenticatedApiKeyClient(ctx)
+		client := UnauthenticatedApiKeyClient(ctx, oi)
 		resp, err := client.ExchangeKeyForToken(ctx, &connect.Request[sdp.ExchangeKeyForTokenRequest]{
 			Msg: &sdp.ExchangeKeyForTokenRequest{
 				ApiKey: apiKey,
@@ -215,11 +282,11 @@ func getOauthToken(ctx context.Context, requiredScopes []string) (string, error)
 	// keep replacing it
 
 	// Check to see if the URL is secure
-	appurl := viper.GetString("url")
+	appurl := viper.GetString("app")
 	parsed, err := url.Parse(appurl)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("Failed to parse --url")
-		return "", fmt.Errorf("error parsing --url: %w", err)
+		log.WithContext(ctx).WithError(err).Error("Failed to parse --app")
+		return "", fmt.Errorf("error parsing --app: %w", err)
 	}
 
 	if !(parsed.Scheme == "wss" || parsed.Scheme == "https" || parsed.Hostname() == "localhost") {
@@ -284,13 +351,13 @@ func getOauthToken(ctx context.Context, requiredScopes []string) (string, error)
 }
 
 // ensureToken
-func ensureToken(ctx context.Context, requiredScopes []string) (context.Context, error) {
+func ensureToken(ctx context.Context, oi OvermindInstance, requiredScopes []string) (context.Context, error) {
 	var accessToken string
 	var err error
 
 	// get a token from the api key if present
 	if apiKey := viper.GetString("api-key"); apiKey != "" {
-		accessToken, err = getAPIKeyToken(ctx, apiKey)
+		accessToken, err = getAPIKeyToken(ctx, oi, apiKey)
 	} else {
 		accessToken, err = getOauthToken(ctx, requiredScopes)
 	}
@@ -352,7 +419,7 @@ func HasScopesFlexible(claims *sdp.CustomClaims, requiredScopes []string) (bool,
 }
 
 // getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a state with the specified status and having --ticket-link
-func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus, errNotFound bool) (uuid.UUID, error) {
+func getChangeUuid(ctx context.Context, oi OvermindInstance, expectedStatus sdp.ChangeStatus, errNotFound bool) (uuid.UUID, error) {
 	var changeUuid uuid.UUID
 	var err error
 
@@ -381,7 +448,7 @@ func getChangeUuid(ctx context.Context, expectedStatus sdp.ChangeStatus, errNotF
 	}
 
 	// Finally look through all open changes to find one with a matching ticket link
-	client := AuthenticatedChangesClient(ctx)
+	client := AuthenticatedChangesClient(ctx, oi)
 
 	changesList, err := client.ListChangesByStatus(ctx, &connect.Request[sdp.ListChangesByStatusRequest]{
 		Msg: &sdp.ListChangesByStatusRequest{
@@ -436,7 +503,7 @@ func addChangeUuidFlags(cmd *cobra.Command) {
 // Adds common flags to API commands e.g. timeout
 func addAPIFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().String("timeout", "10m", "How long to wait for responses")
-	cmd.PersistentFlags().String("url", "https://api.prod.overmind.tech", "The overmind API endpoint")
+	cmd.PersistentFlags().String("app", "https://app.overmind.tech", "The overmind instance to connect to.")
 }
 
 func init() {
@@ -459,9 +526,9 @@ func init() {
 	// Mark these as hidden. This means that it will still be parsed of supplied,
 	// and we will still look for it in the environment, but it won't be shown
 	// in the help
-	must(rootCmd.PersistentFlags().MarkHidden("cli-auth0-client-id"))
-	must(rootCmd.PersistentFlags().MarkHidden("cli-auth0-domain"))
-	must(rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key"))
+	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("cli-auth0-client-id"))
+	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("cli-auth0-domain"))
+	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key"))
 
 	// Create groups
 	rootCmd.AddGroup(&cobra.Group{
@@ -516,12 +583,4 @@ func initConfig() {
 
 	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv() // read in environment variables that match
-}
-
-// must panics if the passed in error is not nil
-// use this for init-time error checking of viper/cobra stuff that sometimes errors if the flag does not exist
-func must(err error) {
-	if err != nil {
-		panic(fmt.Errorf("error initialising: %w", err))
-	}
 }

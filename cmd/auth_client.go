@@ -8,70 +8,62 @@ import (
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/sdpconnect"
 	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // AuthenticatedApiKeyClient Returns an apikey client that uses the auth
 // embedded in the context and otel instrumentation
-func AuthenticatedApiKeyClient(ctx context.Context) sdpconnect.ApiKeyServiceClient {
+func AuthenticatedApiKeyClient(ctx context.Context, oi OvermindInstance) sdpconnect.ApiKeyServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("url")
-	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind apikeys API (pre-authenticated)")
-	return sdpconnect.NewApiKeyServiceClient(httpClient, url)
+	log.WithContext(ctx).WithField("apiUrl", oi.ApiUrl).Debug("Connecting to overmind apikeys API (pre-authenticated)")
+	return sdpconnect.NewApiKeyServiceClient(httpClient, oi.ApiUrl.String())
 }
 
 // UnauthenticatedApiKeyClient Returns an apikey client with otel instrumentation
 // but no authentication. Can only be used for ExchangeKeyForToken
-func UnauthenticatedApiKeyClient(ctx context.Context) sdpconnect.ApiKeyServiceClient {
-	url := viper.GetString("url")
-	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind apikeys API")
-	return sdpconnect.NewApiKeyServiceClient(otelhttp.DefaultClient, url)
+func UnauthenticatedApiKeyClient(ctx context.Context, oi OvermindInstance) sdpconnect.ApiKeyServiceClient {
+	log.WithContext(ctx).WithField("apiUrl", oi.ApiUrl).Debug("Connecting to overmind apikeys API")
+	return sdpconnect.NewApiKeyServiceClient(otelhttp.DefaultClient, oi.ApiUrl.String())
 }
 
 // AuthenticatedBookmarkClient Returns a bookmark client that uses the auth
 // embedded in the context and otel instrumentation
-func AuthenticatedBookmarkClient(ctx context.Context) sdpconnect.BookmarksServiceClient {
+func AuthenticatedBookmarkClient(ctx context.Context, oi OvermindInstance) sdpconnect.BookmarksServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("url")
-	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind bookmark API")
-	return sdpconnect.NewBookmarksServiceClient(httpClient, url)
+	log.WithContext(ctx).WithField("apiUrl", oi.ApiUrl).Debug("Connecting to overmind bookmark API")
+	return sdpconnect.NewBookmarksServiceClient(httpClient, oi.ApiUrl.String())
 }
 
 // AuthenticatedChangesClient Returns a bookmark client that uses the auth
 // embedded in the context and otel instrumentation
-func AuthenticatedChangesClient(ctx context.Context) sdpconnect.ChangesServiceClient {
+func AuthenticatedChangesClient(ctx context.Context, oi OvermindInstance) sdpconnect.ChangesServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("url")
-	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind changes API")
-	return sdpconnect.NewChangesServiceClient(httpClient, url)
+	log.WithContext(ctx).WithField("apiUrl", oi.ApiUrl).Debug("Connecting to overmind changes API")
+	return sdpconnect.NewChangesServiceClient(httpClient, oi.ApiUrl.String())
 }
 
 // AuthenticatedManagementClient Returns a bookmark client that uses the auth
 // embedded in the context and otel instrumentation
-func AuthenticatedManagementClient(ctx context.Context) sdpconnect.ManagementServiceClient {
+func AuthenticatedManagementClient(ctx context.Context, oi OvermindInstance) sdpconnect.ManagementServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("url")
-	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind management API")
-	return sdpconnect.NewManagementServiceClient(httpClient, url)
+	log.WithContext(ctx).WithField("apiUrl", oi.ApiUrl).Debug("Connecting to overmind management API")
+	return sdpconnect.NewManagementServiceClient(httpClient, oi.ApiUrl.String())
 }
 
 // AuthenticatedSnapshotsClient Returns a Snapshots client that uses the auth
 // embedded in the context and otel instrumentation
-func AuthenticatedSnapshotsClient(ctx context.Context) sdpconnect.SnapshotsServiceClient {
+func AuthenticatedSnapshotsClient(ctx context.Context, oi OvermindInstance) sdpconnect.SnapshotsServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("url")
-	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind snapshot API")
-	return sdpconnect.NewSnapshotsServiceClient(httpClient, url)
+	log.WithContext(ctx).WithField("apiUrl", oi.ApiUrl).Debug("Connecting to overmind snapshot API")
+	return sdpconnect.NewSnapshotsServiceClient(httpClient, oi.ApiUrl.String())
 }
 
 // AuthenticatedInviteClient Returns a Invite client that uses the auth
 // embedded in the context and otel instrumentation
-func AuthenticatedInviteClient(ctx context.Context) sdpconnect.InviteServiceClient {
+func AuthenticatedInviteClient(ctx context.Context, oi OvermindInstance) sdpconnect.InviteServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	url := viper.GetString("url")
-	log.WithContext(ctx).WithField("url", url).Debug("Connecting to overmind invite API")
-	return sdpconnect.NewInviteServiceClient(httpClient, url)
+	log.WithContext(ctx).WithField("apiUrl", oi.ApiUrl).Debug("Connecting to overmind invite API")
+	return sdpconnect.NewInviteServiceClient(httpClient, oi.ApiUrl.String())
 }
 
 // AuthenticatedClient is a http.Client that will automatically add the required

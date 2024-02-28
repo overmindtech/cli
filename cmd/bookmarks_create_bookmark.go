@@ -77,11 +77,19 @@ func CreateBookmark(ctx context.Context, ready chan bool) int {
 	))
 	defer span.End()
 
-	ctx, err = ensureToken(ctx, []string{"changes:write"})
+	lf := log.Fields{
+		"app": viper.GetString("app"),
+	}
+
+	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"url": viper.GetString("url"),
-		}).Error("failed to authenticate")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
+		return 1
+	}
+
+	ctx, err = ensureToken(ctx, oi, []string{"changes:write"})
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to authenticate")
 		return 1
 	}
 
@@ -100,16 +108,14 @@ func CreateBookmark(ctx context.Context, ready chan bool) int {
 		log.WithContext(ctx).WithError(err).Error("failed to parse input")
 		return 1
 	}
-	client := AuthenticatedBookmarkClient(ctx)
+	client := AuthenticatedBookmarkClient(ctx, oi)
 	response, err := client.CreateBookmark(ctx, &connect.Request[sdp.CreateBookmarkRequest]{
 		Msg: &sdp.CreateBookmarkRequest{
 			Properties: &msg,
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"url": viper.GetString("url"),
-		}).Error("failed to get bookmark")
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get bookmark")
 		return 1
 	}
 	log.WithContext(ctx).WithFields(log.Fields{

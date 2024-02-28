@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/overmindtech/cli/internal"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/sdpws"
@@ -142,9 +141,16 @@ func Request(ctx context.Context, ready chan bool) int {
 	))
 	defer span.End()
 
-	lf := log.Fields{}
+	lf := log.Fields{
+		"app": viper.GetString("app"),
+	}
 
-	ctx, err = ensureToken(ctx, []string{"explore:read"})
+	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
+		return 1
+	}
+	ctx, err = ensureToken(ctx, oi, []string{"explore:read"})
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1
@@ -161,13 +167,13 @@ func Request(ctx context.Context, ready chan bool) int {
 		edges:                        []*sdp.Edge{},
 		msgLog:                       []*sdp.GatewayResponse{},
 	}
-	gatewayUrl := internal.GatewayURL(viper.GetString("url"))
+	gatewayUrl := oi.GatewayUrl()
+	lf["gateway-url"] = gatewayUrl
 	c, err := sdpws.DialBatch(ctx, gatewayUrl,
 		NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
 		handler,
 	)
 	if err != nil {
-		lf["gateway-url"] = gatewayUrl
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
 		return 1
 	}
