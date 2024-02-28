@@ -7,7 +7,7 @@ on:
       - 'v*'
 jobs:
   goreleaser:
-    runs-on: macos-latest
+    runs-on: apple-certs
     permissions:
       contents: write
       packages: write
@@ -18,16 +18,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Gon using homebrew
-        run: brew install Bearer/tap/gon
-
-      - name: Import Code-Signing Certificates
-        uses: Apple-Actions/import-codesign-certs@v1
-        with:
-          # The certificates in a PKCS12 file encoded as a base64 string
-          p12-file-base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
-          # The password used to import the PKCS12 file.
-          p12-password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
+      - name: Install Gon from fork
+        run: |
+          curl -o gon -L https://github.com/dylanratcliffe/gon/releases/download/apple-silicon-fix/gon
+          chmod +x gon 
 
       - name: Go Init
         uses: ./.github/actions/go_init
@@ -51,7 +45,7 @@ jobs:
           args: release --clean --snapshot --skip=publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AC_PASSWORD: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
+          AC_PASSWORD: ${{ secrets.APPLE_AC_PASSWORD }}
 
       - name: Upload assets
         uses: actions/upload-artifact@v4
