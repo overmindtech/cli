@@ -18,8 +18,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Gon using homebrew
-        run: brew install Bearer/tap/gon
+      - name: Install Gon from fork
+        run: |
+          curl -o gon -L https://github.com/dylanratcliffe/gon/releases/download/apple-silicon-fix/gon
+          chmod +x gon 
 
       - name: Go Init
         uses: ./.github/actions/go_init
