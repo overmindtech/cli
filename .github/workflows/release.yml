@@ -5,6 +5,8 @@ on:
   push:
     tags:
       - 'v*'
+    branches:
+      - "mac-packaging"
 jobs:
   goreleaser:
     runs-on: macos-latest
@@ -23,28 +25,28 @@ jobs:
 
       - run: go run main.go --version
 
-      - name: Run GoReleaser (publish)
-        uses: goreleaser/goreleaser-action@v5
-        if: ${{ github.event_name != 'pull_request' }}
-        with:
-          version: latest
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Run GoReleaser (publish)
+      #   uses: goreleaser/goreleaser-action@v5
+      #   if: ${{ github.event_name != 'pull_request' }}
+      #   with:
+      #     version: latest
+      #     args: release --clean
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run GoReleaser (dry run)
         uses: goreleaser/goreleaser-action@v5
-        if: ${{ github.event_name == 'pull_request' }}
+        # if: ${{ github.event_name == 'pull_request' }}
         with:
           version: latest
           args: release --clean --snapshot --skip-publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload assets
-        uses: actions/upload-artifact@v4
-        # only upload artifacts on pull requests
-        if: ${{ github.event_name == 'pull_request' }}
-        with:
-          name: test-release
-          path: dist/*
+      # - name: Upload assets
+      #   uses: actions/upload-artifact@v4
+      #   # only upload artifacts on pull requests
+      #   if: ${{ github.event_name == 'pull_request' }}
+      #   with:
+      #     name: test-release
+      #     path: dist/*
