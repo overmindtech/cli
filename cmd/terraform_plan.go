@@ -102,15 +102,34 @@ func CmdWrapper(handler OvermindCommandHandler, requiredScopes []string) func(cm
 	}
 }
 
-func TerraformPlan(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error {
-	span := trace.SpanFromContext(ctx)
-
+func InitializeSources(ctx context.Context, oi OvermindInstance, token *oauth2.Token) (func(), error) {
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "localhost"
 	}
 
-	r := NewTermRenderer()
+	natsNamePrefix := "overmind-cli"
+
+	openapiUrl := *oi.ApiUrl
+	openapiUrl.Path = "/api"
+	tokenClient := auth.NewOAuthTokenClientWithContext(
+		ctx,
+		openapiUrl.String(),
+		"",
+		oauth2.StaticTokenSource(token),
+	)
+
+	natsOptions := auth.NATSOptions{
+		NumRetries:        3,
+		RetryDelay:        1 * time.Second,
+		Servers:           []string{oi.NatsUrl.String()},
+		ConnectionName:    fmt.Sprintf("%v.%v", natsNamePrefix, hostname),
+		ConnectionTimeout: (10 * time.Second), // TODO: Make configurable
+		MaxReconnects:     -1,
+		ReconnectWait:     1 * time.Second,
+		ReconnectJitter:   1 * time.Second,
+		TokenClient:       tokenClient,
+	}
 
 	// TODO: store this in the api-server and skip questioning the user after the first time
 	aws_config := "aborted"
@@ -145,10 +164,11 @@ func TerraformPlan(ctx context.Context, args []string, oi OvermindInstance, toke
 		fmt.Println(aws_config_select.View())
 	}
 	if err != nil {
-		return err
+		return func() {}, err
 	}
 
 	awsAuthConfig := awssource.AwsAuthConfig{
+		// TODO: query regions
 		Regions: []string{"eu-west-1"},
 	}
 
@@ -166,7 +186,7 @@ func TerraformPlan(ctx context.Context, args []string, oi OvermindInstance, toke
 			fmt.Println(aws_profile_input.View())
 		}
 		if err != nil {
-			return err
+			return func() {}, err
 		}
 		// reset the environment to the requested value
 		awsAuthConfig.Strategy = "sso-profile"
@@ -182,56 +202,46 @@ func TerraformPlan(ctx context.Context, args []string, oi OvermindInstance, toke
 		// TODO: not implemented yet
 	}
 
-	natsNamePrefix := "overmind-cli"
-
-	openapiUrl := *oi.ApiUrl
-	openapiUrl.Path = "/api"
-	tokenClient := auth.NewOAuthTokenClientWithContext(
-		ctx,
-		openapiUrl.String(),
-		"",
-		oauth2.StaticTokenSource(token),
-	)
-
-	natsOptions := auth.NATSOptions{
-		NumRetries:        3,
-		RetryDelay:        1 * time.Second,
-		Servers:           []string{oi.NatsUrl.String()},
-		ConnectionName:    fmt.Sprintf("%v.%v", natsNamePrefix, hostname),
-		ConnectionTimeout: (10 * time.Second), // TODO: Make configurable
-		MaxReconnects:     -1,
-		ReconnectWait:     1 * time.Second,
-		ReconnectJitter:   1 * time.Second,
-		TokenClient:       tokenClient,
-	}
-
 	awsEngine, err := awssource.InitializeAwsSourceEngine(natsOptions, awsAuthConfig, 2_000)
 	if err != nil {
-		return fmt.Errorf("failed to initialize AWS source engine: %w", err)
+		return func() {}, fmt.Errorf("failed to initialize AWS source engine: %w", err)
 	}
 
 	// todo: pass in context with timeout to abort timely and allow Ctrl-C to work
 	err = awsEngine.Start()
 	if err != nil {
-		return fmt.Errorf("failed to start AWS source engine: %w", err)
+		return func() {}, fmt.Errorf("failed to start AWS source engine: %w", err)
 	}
-	defer func() {
-		_ = awsEngine.Stop()
-	}()
 
 	stdlibEngine, err := stdlibsource.InitializeStdlibSourceEngine(natsOptions, 2_000, true)
 	if err != nil {
-		return fmt.Errorf("failed to initialize stdlib source engine: %w", err)
+		return func() {
+			_ = awsEngine.Stop()
+		}, fmt.Errorf("failed to initialize stdlib source engine: %w", err)
 	}
 
 	// todo: pass in context with timeout to abort timely and allow Ctrl-C to work
 	err = stdlibEngine.Start()
 	if err != nil {
-		return fmt.Errorf("failed to start stdlib source engine: %w", err)
+		return func() {
+			_ = awsEngine.Stop()
+		}, fmt.Errorf("failed to start stdlib source engine: %w", err)
 	}
-	defer func() {
+
+	return func() {
+		_ = awsEngine.Stop()
 		_ = stdlibEngine.Stop()
-	}()
+	}, nil
+}
+
+func TerraformPlan(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error {
+	span := trace.SpanFromContext(ctx)
+
+	cancel, err := InitializeSources(ctx, oi, token)
+	defer cancel()
+	if err != nil {
+		return err
+	}
 
 	args = append([]string{"plan"}, args...)
 	// -out needs to go last to override whatever the user specified on the command line
@@ -246,6 +256,7 @@ func TerraformPlan(ctx context.Context, args []string, oi OvermindInstance, toke
 Running ` + "`" + `terraform %v` + "`" + `
 `
 
+	r := NewTermRenderer()
 	out, err := r.Render(fmt.Sprintf(prompt, strings.Join(args, " ")))
 	if err != nil {
 		panic(err)
