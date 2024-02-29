@@ -41,7 +41,13 @@ var terraformPlanCmd = &cobra.Command{
 			log.WithError(err).Fatal("could not bind `terraform plan` flags")
 		}
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: CmdWrapper(TerraformPlan, []string{"changes:write", "request:receive"}),
+}
+
+type OvermindCommandHandler func(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error
+
+func CmdWrapper(handler OvermindCommandHandler, requiredScopes []string) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
 		sigs := make(chan os.Signal, 1)
 
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -58,47 +64,52 @@ var terraformPlanCmd = &cobra.Command{
 			}
 		}()
 
-		exitcode := TerraformPlan(ctx, args, nil)
-		tracing.ShutdownTracer()
-		os.Exit(exitcode)
-	},
+		ctx, span := tracing.Tracer().Start(ctx, fmt.Sprintf("CLI %v", cmd.CommandPath()), trace.WithAttributes(
+			attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
+		))
+		defer span.End()
+
+		// wrap the rest of the function in a closure to allow for cleaner error handling and deferring.
+		err := func() error {
+			timeout, err := time.ParseDuration(viper.GetString("timeout"))
+			if err != nil {
+				return fmt.Errorf("invalid --timeout value '%v', error: %w", viper.GetString("timeout"), err)
+			}
+
+			oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+			if err != nil {
+				return fmt.Errorf("failed to get instance data from app: %w", err)
+			}
+
+			ctx, token, err := ensureToken(ctx, oi, requiredScopes)
+			if err != nil {
+				return fmt.Errorf("failed to authenticate: %w", err)
+			}
+
+			// apply a timeout to the main body of processing
+			_, cancel := context.WithTimeout(ctx, timeout)
+			defer cancel()
+
+			return handler(ctx, args, oi, token)
+		}()
+		if err != nil {
+			log.WithContext(ctx).WithError(err).Error("Error running command")
+			// don't forget that os.Exit() does not wait for telemetry to be flushed
+			span.End()
+			tracing.ShutdownTracer()
+			os.Exit(1)
+		}
+	}
 }
 
-func TerraformPlan(ctx context.Context, args []string, ready chan bool) int {
-	timeout, err := time.ParseDuration(viper.GetString("timeout"))
-	if err != nil {
-		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
-		return 1
-	}
-	ctx, span := tracing.Tracer().Start(ctx, "CLI TerraformPlan", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
-	))
-	defer span.End()
+func TerraformPlan(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error {
+	span := trace.SpanFromContext(ctx)
 
 	hostname, err := os.Hostname()
 	if err != nil {
-		log.WithError(err).Fatal("Could not determine hostname for use in NATS connection name")
+		hostname = "localhost"
 	}
 
-	lf := log.Fields{
-		"app": viper.GetString("app"),
-	}
-
-	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
-		return 1
-	}
-
-	ctx, token, err := ensureToken(ctx, oi, []string{"changes:write", "request:receive"})
-	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
-		return 1
-	}
-
-	// apply a timeout to the main body of processing
-	_, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 	r := NewTermRenderer()
 
 	// TODO: store this in the api-server and skip questioning the user after the first time
@@ -134,8 +145,7 @@ func TerraformPlan(ctx context.Context, args []string, ready chan bool) int {
 		fmt.Println(aws_config_select.View())
 	}
 	if err != nil {
-		fmt.Printf("Aborting: %v\n", err)
-		return 1
+		return err
 	}
 
 	awsAuthConfig := awssource.AwsAuthConfig{
@@ -156,8 +166,7 @@ func TerraformPlan(ctx context.Context, args []string, ready chan bool) int {
 			fmt.Println(aws_profile_input.View())
 		}
 		if err != nil {
-			fmt.Printf("Aborting: %v\n", err)
-			return 1
+			return err
 		}
 		// reset the environment to the requested value
 		awsAuthConfig.Strategy = "sso-profile"
@@ -198,15 +207,13 @@ func TerraformPlan(ctx context.Context, args []string, ready chan bool) int {
 
 	awsEngine, err := awssource.InitializeAwsSourceEngine(natsOptions, awsAuthConfig, 2_000)
 	if err != nil {
-		log.WithError(err).Error("failed to initialize AWS source engine")
-		return 1
+		return fmt.Errorf("failed to initialize AWS source engine: %w", err)
 	}
 
 	// todo: pass in context with timeout to abort timely and allow Ctrl-C to work
 	err = awsEngine.Start()
 	if err != nil {
-		log.WithError(err).Error("failed to start AWS source engine")
-		return 1
+		return fmt.Errorf("failed to start AWS source engine: %w", err)
 	}
 	defer func() {
 		_ = awsEngine.Stop()
@@ -214,15 +221,13 @@ func TerraformPlan(ctx context.Context, args []string, ready chan bool) int {
 
 	stdlibEngine, err := stdlibsource.InitializeStdlibSourceEngine(natsOptions, 2_000, true)
 	if err != nil {
-		log.WithError(err).Error("failed to initialize stdlib source engine")
-		return 1
+		return fmt.Errorf("failed to initialize stdlib source engine: %w", err)
 	}
 
 	// todo: pass in context with timeout to abort timely and allow Ctrl-C to work
 	err = stdlibEngine.Start()
 	if err != nil {
-		log.WithError(err).Error("failed to start stdlib source engine")
-		return 1
+		return fmt.Errorf("failed to start stdlib source engine: %w", err)
 	}
 	defer func() {
 		_ = stdlibEngine.Stop()
@@ -260,8 +265,7 @@ Running ` + "`" + `terraform %v` + "`" + `
 
 	err = tfPlanCmd.Run()
 	if err != nil {
-		log.WithError(err).Error("failed to run terraform plan")
-		return 1
+		return fmt.Errorf("failed to run terraform plan: %w", err)
 	}
 
 	tfPlanJsonCmd := exec.CommandContext(ctx, "terraform", "show", "-json", "overmind.plan")
@@ -269,14 +273,12 @@ Running ` + "`" + `terraform %v` + "`" + `
 
 	planJson, err := tfPlanJsonCmd.Output()
 	if err != nil {
-		log.WithError(err).Error("failed to convert terraform plan to JSON")
-		return 1
+		return fmt.Errorf("failed to convert terraform plan to JSON: %w", err)
 	}
 
-	plannedChanges, err := mappedItemDiffsFromPlan(ctx, planJson, "overmind.plan", lf)
+	plannedChanges, err := mappedItemDiffsFromPlan(ctx, planJson, "overmind.plan", log.Fields{})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("Error parsing terraform plan")
-		return 1
+		return fmt.Errorf("failed to parse terraform plan: %w", err)
 	}
 
 	ticketLink := viper.GetString("ticket-link")
@@ -288,8 +290,7 @@ Running ` + "`" + `terraform %v` + "`" + `
 	client := AuthenticatedChangesClient(ctx, oi)
 	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, false)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed searching for existing changes")
-		return 1
+		return fmt.Errorf("failed searching for existing changes: %w", err)
 	}
 
 	title := changeTitle(viper.GetString("title"))
@@ -297,7 +298,7 @@ Running ` + "`" + `terraform %v` + "`" + `
 	codeChangesOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
 
 	if changeUuid == uuid.Nil {
-		log.WithContext(ctx).WithFields(lf).Debug("Creating a new change")
+		log.Debug("Creating a new change")
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 			Msg: &sdp.CreateChangeRequest{
 				Properties: &sdp.ChangeProperties{
@@ -312,22 +313,25 @@ Running ` + "`" + `terraform %v` + "`" + `
 			},
 		})
 		if err != nil {
-			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to create change")
-			return 1
+			return fmt.Errorf("failed to create change: %w", err)
 		}
 
 		maybeChangeUuid := createResponse.Msg.GetChange().GetMetadata().GetUUIDParsed()
 		if maybeChangeUuid == nil {
-			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to read change id")
-			return 1
+			return fmt.Errorf("failed to read change id: %w", err)
 		}
 
 		changeUuid = *maybeChangeUuid
-		lf["change"] = changeUuid
-		log.WithContext(ctx).WithFields(lf).Info("Created a new change")
+		span.SetAttributes(
+			attribute.String("ovm.change.uuid", changeUuid.String()),
+			attribute.Bool("ovm.change.new", true),
+		)
 	} else {
-		lf["change"] = changeUuid
-		log.WithContext(ctx).WithFields(lf).Debug("Updating an existing change")
+		log.WithField("change", changeUuid).Debug("Updating an existing change")
+		span.SetAttributes(
+			attribute.String("ovm.change.uuid", changeUuid.String()),
+			attribute.Bool("ovm.change.new", false),
+		)
 
 		_, err := client.UpdateChange(ctx, &connect.Request[sdp.UpdateChangeRequest]{
 			Msg: &sdp.UpdateChangeRequest{
@@ -344,12 +348,11 @@ Running ` + "`" + `terraform %v` + "`" + `
 			},
 		})
 		if err != nil {
-			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to update change")
-			return 1
+			return fmt.Errorf("failed to update change: %w", err)
 		}
-
-		log.WithContext(ctx).WithFields(lf).Info("Re-using change")
 	}
+
+	log.WithField("change", changeUuid).Debug("Uploading planned changes")
 
 	resultStream, err := client.UpdatePlannedChanges(ctx, &connect.Request[sdp.UpdatePlannedChangesRequest]{
 		Msg: &sdp.UpdatePlannedChangesRequest{
@@ -358,8 +361,7 @@ Running ` + "`" + `terraform %v` + "`" + `
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to update planned changes")
-		return 1
+		return fmt.Errorf("failed to update planned changes: %w", err)
 	}
 
 	last_log := time.Now()
@@ -371,47 +373,20 @@ Running ` + "`" + `terraform %v` + "`" + `
 		// to avoid spanning the cli output
 		time_since_last_log := time.Since(last_log)
 		if first_log || msg.GetState() != sdp.CalculateBlastRadiusResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
-			log.WithContext(ctx).WithFields(lf).WithField("msg", msg).Info("Status update")
+			log.WithField("msg", msg).Info("Status update")
 			last_log = time.Now()
 			first_log = false
 		}
 	}
 	if resultStream.Err() != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(resultStream.Err()).Error("Error streaming results")
-		return 1
+		return fmt.Errorf("error streaming results: %w", resultStream.Err())
 	}
 
 	changeUrl := *oi.FrontendUrl
 	changeUrl.Path = fmt.Sprintf("%v/changes/%v/blast-radius", changeUrl.Path, changeUuid)
-	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl.String()).Info("Change ready")
+	log.WithField("change-url", changeUrl.String()).Info("Change ready")
 	fmt.Println(changeUrl.String())
-
-	fetchResponse, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
-		Msg: &sdp.GetChangeRequest{
-			UUID: changeUuid[:],
-		},
-	})
-	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to get updated change")
-		return 1
-	}
-
-	for _, a := range fetchResponse.Msg.GetChange().GetProperties().GetAffectedAppsUUID() {
-		appUuid, err := uuid.FromBytes(a)
-		if err != nil {
-			log.WithContext(ctx).WithFields(lf).WithError(err).WithField("app", a).Error("Received invalid app uuid")
-			continue
-		}
-		appUrl := *oi.FrontendUrl
-		appUrl.Path = fmt.Sprintf("%v/apps/%v", appUrl.Path, appUuid)
-		log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
-			"change-url": changeUrl,
-			"app":        appUuid,
-			"app-url":    appUrl.String(),
-		}).Info("Affected app")
-	}
-
-	return 0
+	return nil
 }
 
 func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, error) {
