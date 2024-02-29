@@ -72,24 +72,10 @@ changelog:
       - "^docs:"
       - "^test:"
 
-# https://goreleaser.com/customization/homebrew/
-brews:
-  - name: cli
-    url_template: "https://github.com/overmindtech/cli/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-    commit_author:
-      name: Go Release Bot
-      email: bot@overmind.tech
-    homepage: "https://overmind.tech/"
-    description: "Use Overmind to calculate the risks for infrastructure changes"
-    license: "MIT"
-    skip_upload: auto
-    folder: Formula
-    repository:
-      owner: overmindtech
-      name: cli
-      token: "{{ .Env.GITHUB_TOKEN }}"
-
-
+release:
+  extra_files:
+    - glob: dist/overmind-cli-amd64.zip
+    - glob: dist/overmind-cli-arm64.zip
 # The lines beneath this are called `modelines`. See `:help modeline`
 # Feel free to remove those if you don't want/use them.
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
