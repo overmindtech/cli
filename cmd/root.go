@@ -462,13 +462,12 @@ func HasScopesFlexible(claims *sdp.CustomClaims, requiredScopes []string) (bool,
 }
 
 // getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a state with the specified status and having --ticket-link
-func getChangeUuid(ctx context.Context, oi OvermindInstance, expectedStatus sdp.ChangeStatus, errNotFound bool) (uuid.UUID, error) {
+func getChangeUuid(ctx context.Context, oi OvermindInstance, expectedStatus sdp.ChangeStatus, ticketLink string, errNotFound bool) (uuid.UUID, error) {
 	var changeUuid uuid.UUID
 	var err error
 
 	uuidString := viper.GetString("uuid")
 	changeUrlString := viper.GetString("change")
-	ticketLink := viper.GetString("ticket-link")
 
 	// If no arguments are specified then return an error
 	if uuidString == "" && changeUrlString == "" && ticketLink == "" {

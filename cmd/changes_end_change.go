@@ -83,7 +83,7 @@ func EndChange(ctx context.Context, ready chan bool) int {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_HAPPENING, true)
+	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_HAPPENING, viper.GetString("ticket-link"), true)
 	if err != nil {
 		log.WithError(err).WithFields(lf).Error("failed to identify change")
 		return 1
