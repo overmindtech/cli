@@ -32,8 +32,8 @@ import (
 
 // terraformPlanCmd represents the `terraform plan` command
 var terraformPlanCmd = &cobra.Command{
-	Use:   "plan [terraform options...]",
-	Short: "Creates a new Change from a given terraform plan file",
+	Use:   "plan [overmind options...] -- [terraform options...]",
+	Short: "Runs `terraform plan` and sends the results to Overmind to calculate a blast radius and risks.",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		// Bind these to viper
 		err := viper.BindPFlags(cmd.Flags())
