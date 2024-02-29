@@ -252,12 +252,6 @@ Running ` + "`" + `terraform %v` + "`" + `
 	}
 	fmt.Print(out)
 
-	// TODO: remove this debugging aid
-	err = os.Chdir("/workspace/deploy")
-	if err != nil {
-		panic(err)
-	}
-
 	tfPlanCmd := exec.CommandContext(ctx, "terraform", args...)
 	tfPlanCmd.Stderr = os.Stderr
 	tfPlanCmd.Stdout = os.Stdout
