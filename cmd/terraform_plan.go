@@ -288,10 +288,12 @@ Running ` + "`" + `terraform %v` + "`" + `
 
 	ticketLink := viper.GetString("ticket-link")
 	if ticketLink == "" {
-		h := sha256.New()
-		h.Write(planJson)
-		ticketLink = fmt.Sprintf("tfplan://{SHA256}%x", h.Sum(nil))
+		ticketLink, err = getTicketLinkFromPlan()
+		if err != nil {
+			return err
+		}
 	}
+
 	client := AuthenticatedChangesClient(ctx, oi)
 	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, false)
 	if err != nil {
@@ -392,6 +394,17 @@ Running ` + "`" + `terraform %v` + "`" + `
 	log.WithField("change-url", changeUrl.String()).Info("Change ready")
 	fmt.Println(changeUrl.String())
 	return nil
+}
+
+// getTicketLinkFromPlan reads the plan file to create a unique hash to identify this change
+func getTicketLinkFromPlan() (string, error) {
+	plan, err := os.ReadFile("overmind.plan")
+	if err != nil {
+		return "", fmt.Errorf("failed to read overmind.plan file: %w", err)
+	}
+	h := sha256.New()
+	h.Write(plan)
+	return fmt.Sprintf("tfplan://{SHA256}%x", h.Sum(nil)), nil
 }
 
 func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, error) {
