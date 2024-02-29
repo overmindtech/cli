@@ -381,10 +381,10 @@ Running ` + "`" + `terraform %v` + "`" + `
 		return 1
 	}
 
-	frontend, _ := strings.CutSuffix(viper.GetString("frontend"), "/")
-	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", frontend, changeUuid)
-	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("Change ready")
-	fmt.Println(changeUrl)
+	changeUrl := *oi.FrontendUrl
+	changeUrl.Path = fmt.Sprintf("%v/changes/%v/blast-radius", changeUrl.Path, changeUuid)
+	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl.String()).Info("Change ready")
+	fmt.Println(changeUrl.String())
 
 	fetchResponse, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
 		Msg: &sdp.GetChangeRequest{
@@ -402,10 +402,12 @@ Running ` + "`" + `terraform %v` + "`" + `
 			log.WithContext(ctx).WithFields(lf).WithError(err).WithField("app", a).Error("Received invalid app uuid")
 			continue
 		}
+		appUrl := *oi.FrontendUrl
+		appUrl.Path = fmt.Sprintf("%v/apps/%v", appUrl.Path, appUuid)
 		log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
 			"change-url": changeUrl,
 			"app":        appUuid,
-			"app-url":    fmt.Sprintf("%v/apps/%v", frontend, appUuid),
+			"app-url":    appUrl.String(),
 		}).Info("Affected app")
 	}
 
