@@ -11,5 +11,8 @@
     "dmg" :{
         "output_path":  "dist/overmind-cli-amd64.dmg",
         "volume_name":  "Overmind"
+    },
+    "zip" :{
+        "output_path":  "dist/overmind-cli-amd64.zip"
     }
 }

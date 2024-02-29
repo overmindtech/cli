@@ -6,8 +6,36 @@ on:
     tags:
       - 'v*'
 jobs:
-  goreleaser:
+  dry-run:
+    runs-on: depot-ubuntu-22.04-8
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Go Init
+        uses: ./.github/actions/go_init
+
+      - run: go run main.go --version
+
+      - name: Run GoReleaser (dry run)
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          version: latest
+          args: release --clean --snapshot --skip publish,sign
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Actually release the binaries including signing them
+  release:
     runs-on: apple-certs
+    if: ${{ github.event_name != 'pull_request' }}
     permissions:
       contents: write
       packages: write
@@ -30,20 +58,9 @@ jobs:
 
       - name: Run GoReleaser (publish)
         uses: goreleaser/goreleaser-action@v5
-        if: ${{ github.event_name != 'pull_request' }}
         with:
           version: latest
           args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AC_PASSWORD: ${{ secrets.APPLE_AC_PASSWORD }}
-
-      - name: Run GoReleaser (dry run)
-        uses: goreleaser/goreleaser-action@v5
-        if: ${{ github.event_name == 'pull_request' }}
-        with:
-          version: latest
-          args: release --clean --snapshot --skip=publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AC_PASSWORD: ${{ secrets.APPLE_AC_PASSWORD }}
