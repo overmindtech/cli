@@ -613,6 +613,22 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_networkmanager_global_network": {
+		{
+			Type:       "networkmanager-global-network",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
+	"aws_networkmanager_vpc_attachment": {
+		{
+			Type:       "networkmanager-vpc-attachment",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
 	"aws_placement_group": {
 		{
 			Type:       "ec2-placement-group",
