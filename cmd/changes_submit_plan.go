@@ -628,7 +628,7 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 
 	title := changeTitle(viper.GetString("title"))
 	tfPlanOutput := tryLoadText(ctx, viper.GetString("terraform-plan-output"))
-	codeChangessOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
+	codeChangesOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
 
 	if changeUuid == uuid.Nil {
 		log.WithContext(ctx).WithFields(lf).Debug("Creating a new change")
@@ -641,7 +641,7 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 					Owner:       viper.GetString("owner"),
 					// CcEmails:                  viper.GetString("cc-emails"),
 					RawPlan:     tfPlanOutput,
-					CodeChanges: codeChangessOutput,
+					CodeChanges: codeChangesOutput,
 				},
 			},
 		})
@@ -673,7 +673,7 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 					Owner:       viper.GetString("owner"),
 					// CcEmails:                  viper.GetString("cc-emails"),
 					RawPlan:     tfPlanOutput,
-					CodeChanges: codeChangessOutput,
+					CodeChanges: codeChangesOutput,
 				},
 			},
 		})
