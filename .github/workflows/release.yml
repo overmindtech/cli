@@ -53,3 +53,15 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: dist/signed-binaries/*
           file_glob: true
+
+      - name: Update Homebrew formula
+        uses: dawidd6/action-homebrew-bump-formula@v3
+        with:
+          # Required, custom personal GitHub access token with only the 'public_repo' scope enabled
+          token: ${{secrets.CUSTOM_PERSONAL_ACCESS_TOKEN}}
+          # Bump all outdated formulae in this tap
+          tap: overmindtech/homebrew-overmind
+          # Bump only these formulae if outdated
+          formula: overmind-cli
+          # Need to set this input if want to use `brew livecheck`
+          livecheck: true
