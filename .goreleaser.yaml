@@ -72,10 +72,6 @@ changelog:
       - "^docs:"
       - "^test:"
 
-release:
-  extra_files:
-    - glob: dist/overmind-cli-amd64.zip
-    - glob: dist/overmind-cli-arm64.zip
 # The lines beneath this are called `modelines`. See `:help modeline`
 # Feel free to remove those if you don't want/use them.
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
