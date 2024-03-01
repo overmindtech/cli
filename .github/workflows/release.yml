@@ -54,6 +54,11 @@ jobs:
           file: dist/signed-binaries/*
           file_glob: true
 
+  bump-formula:
+    # Depend on the release job
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
       - name: Update Homebrew formula
         uses: dawidd6/action-homebrew-bump-formula@v3
         with:
