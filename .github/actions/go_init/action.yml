@@ -1,6 +1,10 @@
 name: Go Init
 description: Initializes go and runs go generate
-
+inputs:
+  cache:  # id of input
+    description: 'Whether to cache go code'
+    required: false
+    default: "true"
 runs:
   using: "composite"
   steps:
@@ -9,6 +13,7 @@ runs:
       with:
         go-version: 1.x
         check-latest: true
+        cache: ${{ inputs.cache }}
 
     - name: Checkout
       uses: actions/checkout@v4
