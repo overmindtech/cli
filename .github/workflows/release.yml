@@ -40,20 +40,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AC_PASSWORD: ${{ secrets.APPLE_AC_PASSWORD }}
       
-      # Run build/extract-bin-from-dmg.sh to extract the binary from the DMG
-      - name: Extract binaries from DMG
-        run: |
-          ./build/extract-bin-from-dmg.sh overmind-cli-amd64
-          ./build/extract-bin-from-dmg.sh overmind-cli-arm64
-
-      # Add the raw signed binaries to the existing release
-      - name: Upload raw signed Mac binaries (amd64 and arm64)
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/signed-binaries/*
-          file_glob: true
-
   bump-formula:
     # Depend on the release job
     needs: release
