@@ -73,7 +73,7 @@ func StartChange(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 
-	ctx, err = ensureToken(ctx, oi, []string{"changes:write"})
+	ctx, _, err = ensureToken(ctx, oi, []string{"changes:write"})
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1
@@ -83,7 +83,7 @@ func StartChange(ctx context.Context, ready chan bool) int {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, true)
+	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING,viper.GetString("ticket-link"), true)
 	if err != nil {
 		log.WithError(err).WithFields(lf).Error("failed to identify change")
 		return 1

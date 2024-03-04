@@ -28,6 +28,8 @@ Flags:
 Use "overmind [command] --help" for more information about a command.
 ```
 
+Set the environment variable `ACCESSIBLE` to `'true'` to enable screenreader mode.
+
 ## Examples
 
 Upload a terraform plan to overmind for Blast Radius Analysis:

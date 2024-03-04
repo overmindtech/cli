@@ -91,7 +91,7 @@ func GetAffectedBookmarks(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 
-	ctx, err = ensureToken(ctx, oi, []string{"changes:read"})
+	ctx, _, err = ensureToken(ctx, oi, []string{"changes:read"})
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to authenticate")
 		return 1
