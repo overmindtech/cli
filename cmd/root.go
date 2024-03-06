@@ -41,6 +41,7 @@ type OvermindInstance struct {
 	FrontendUrl *url.URL
 	ApiUrl      *url.URL
 	NatsUrl     *url.URL
+	Audience    string
 }
 
 // GatewayUrl returns the URL for the gateway for this instance.
@@ -51,6 +52,7 @@ func (oi OvermindInstance) GatewayUrl() string {
 type instanceData struct {
 	Api  string `json:"api_url"`
 	Nats string `json:"nats_url"`
+	Aud  string `json:"audience"`
 }
 
 // NewOvermindInstance creates a new OvermindInstance from the given app URL
@@ -98,6 +100,8 @@ func NewOvermindInstance(ctx context.Context, app string) (OvermindInstance, err
 	if err != nil {
 		return instance, fmt.Errorf("invalid nats_url value '%v' in instance-data, error: %w", data.Nats, err)
 	}
+
+	instance.Audience = data.Aud
 
 	return instance, nil
 }
@@ -268,7 +272,7 @@ func getAPIKeyToken(ctx context.Context, oi OvermindInstance, apiKey string) (*o
 
 // Gets a token from Oauth with the required scopes. This method will also cache
 // that token locally for use later, and will use the cached token if possible
-func getOauthToken(ctx context.Context, requiredScopes []string) (*oauth2.Token, error) {
+func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []string) (*oauth2.Token, error) {
 	var localScopes []string
 
 	// Check for a locally saved token in ~/.overmind
@@ -316,7 +320,7 @@ func getOauthToken(ctx context.Context, requiredScopes []string) (*oauth2.Token,
 		Scopes: requestScopes,
 	}
 
-	deviceCode, err := config.DeviceAuth(ctx, oauth2.SetAuthURLParam("audience", "https://api.overmind.tech"))
+	deviceCode, err := config.DeviceAuth(ctx, oauth2.SetAuthURLParam("audience", oi.Audience))
 	if err != nil {
 		return nil, fmt.Errorf("error getting device code: %w", err)
 	}
@@ -403,7 +407,7 @@ func ensureToken(ctx context.Context, oi OvermindInstance, requiredScopes []stri
 	if apiKey := viper.GetString("api-key"); apiKey != "" {
 		token, err = getAPIKeyToken(ctx, oi, apiKey)
 	} else {
-		token, err = getOauthToken(ctx, requiredScopes)
+		token, err = getOauthToken(ctx, oi, requiredScopes)
 	}
 	if err != nil {
 		return ctx, nil, fmt.Errorf("error getting token: %w", err)
