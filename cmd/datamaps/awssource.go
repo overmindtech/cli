@@ -921,6 +921,14 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_sns_platform_application": {
+		{
+			Type:       "sns-platform-application",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
 	"aws_sns_topic": {
 		{
 			Type:       "sns-topic",
