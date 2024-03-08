@@ -937,6 +937,14 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_sns_topic_data_protection_policy": {
+		{
+			Type:       "sns-data-protection-policy",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
 	"aws_sns_topic_subscription": {
 		{
 			Type:       "sns-subscription",
