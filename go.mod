@@ -12,9 +12,9 @@ require (
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/jedib0t/go-pretty/v6 v6.5.5
 	github.com/mattn/go-isatty v0.0.20
-	github.com/overmindtech/aws-source v0.0.0-20240308122135-7006351dbd8e
-	github.com/overmindtech/sdp-go v0.67.1
-	github.com/overmindtech/stdlib-source v0.0.0-20240308122156-eadaf7c05086
+	github.com/overmindtech/aws-source v0.0.0-20240315003043-1f49d0371aa1
+	github.com/overmindtech/sdp-go v0.68.0
+	github.com/overmindtech/stdlib-source v0.0.0-20240315014705-416a41dc9c78
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
@@ -59,12 +59,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.36.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.24.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.30.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.150.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.150.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.28.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eks v1.41.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.24.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.31.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.5 // indirect
@@ -72,11 +72,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.53.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.38.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.38.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.25.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.75.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.75.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.40.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.51.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.52.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.31.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.20.2 // indirect
