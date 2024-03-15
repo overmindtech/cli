@@ -10,7 +10,7 @@ require (
 	github.com/getsentry/sentry-go v0.27.0
 	github.com/google/uuid v1.6.0
 	github.com/hexops/gotextdiff v1.0.3
-	github.com/jedib0t/go-pretty/v6 v6.5.4
+	github.com/jedib0t/go-pretty/v6 v6.5.5
 	github.com/mattn/go-isatty v0.0.20
 	github.com/overmindtech/aws-source v0.0.0-20240308122135-7006351dbd8e
 	github.com/overmindtech/sdp-go v0.67.1
