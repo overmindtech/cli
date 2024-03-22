@@ -20,7 +20,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
-	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
+	github.com/ttacon/chalk v0.1
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.2.4
 	github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b
 	go.opentelemetry.io/contrib/detectors/aws/ec2 v1.24.0
