@@ -21,7 +21,7 @@ require (
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
-	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.2.3
+	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.2.4
 	github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b
 	go.opentelemetry.io/contrib/detectors/aws/ec2 v1.24.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0
@@ -138,7 +138,7 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/uptrace/opentelemetry-go-extra/otelutil v0.2.3 // indirect
+	github.com/uptrace/opentelemetry-go-extra/otelutil v0.2.4 // indirect
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	github.com/xiam/to v0.0.0-20200126224905-d60d31e03561 // indirect
 	github.com/yuin/goldmark v1.5.2 // indirect

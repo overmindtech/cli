@@ -310,8 +310,12 @@ github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31 h1:OXcKh35JaYsGMRzpvF
 github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31/go.mod h1:onvgF043R+lC5RZ8IT9rBXDaEDnpnw/Cl+HFiw+v/7Q=
 github.com/uptrace/opentelemetry-go-extra/otellogrus v0.2.3 h1:m5eNyOhch/7tyK6aN6eRRpNoD1vM8PNh64dA05X22Js=
 github.com/uptrace/opentelemetry-go-extra/otellogrus v0.2.3/go.mod h1:APPUXm9BbpH7NFkfpbw04raZSitzl19/3NOCu0rbI4E=
+github.com/uptrace/opentelemetry-go-extra/otellogrus v0.2.4 h1:3Ok5iuhXYDM2cfs9/a5GPsWma58uo8FJhjWndQtmt/A=
+github.com/uptrace/opentelemetry-go-extra/otellogrus v0.2.4/go.mod h1:EiUD7/t6Vre9nayvP5IVdOqbLMabf/c4k8H2j1yHhdg=
 github.com/uptrace/opentelemetry-go-extra/otelutil v0.2.3 h1:LyGS9cIZV0YVhE81zwfMhIE2l2flcj3wn5IoK4VkbWA=
 github.com/uptrace/opentelemetry-go-extra/otelutil v0.2.3/go.mod h1:RvCYhPchLhvQ9l9C9goblbgO7BaKt597kBMf5mgKyo0=
+github.com/uptrace/opentelemetry-go-extra/otelutil v0.2.4 h1:A6+6ZGgLRoUTD+Jkw/Ph0g8HKiHUsiGlbngcSqBaHsw=
+github.com/uptrace/opentelemetry-go-extra/otelutil v0.2.4/go.mod h1:gNYQe4RRVyszriFOhuMpwpAu4kdoFlZgcsw6dcIDFWg=
 github.com/xhit/go-str2duration/v2 v2.1.0 h1:lxklc02Drh6ynqX+DdPyp5pCKLUQpRT8bp8Ydu2Bstc=
 github.com/xhit/go-str2duration/v2 v2.1.0/go.mod h1:ohY8p+0f07DiV6Em5LKB0s2YpLtXVyJfNt1+BlmyAsU=
 github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b h1:ajy6PPLDeQaf7xf4P/4Ie/wsUTEqjy3Irl+xFelmjk0=
