@@ -12,7 +12,7 @@ require (
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/jedib0t/go-pretty/v6 v6.5.5
 	github.com/mattn/go-isatty v0.0.20
-	github.com/overmindtech/aws-source v0.0.0-20240322011123-1c8327ea17da
+	github.com/overmindtech/aws-source v0.0.0-20240322103731-eb65fbbb97ae
 	github.com/overmindtech/sdp-go v0.68.0
 	github.com/overmindtech/stdlib-source v0.0.0-20240315014705-416a41dc9c78
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
