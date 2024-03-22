@@ -3,7 +3,7 @@ module github.com/overmindtech/cli
 go 1.22.1
 
 require (
-	connectrpc.com/connect v1.15.0
+	connectrpc.com/connect v1.16.0
 	github.com/charmbracelet/glamour v0.6.0
 	github.com/charmbracelet/huh v0.3.0
 	github.com/charmbracelet/huh/spinner v0.0.0-20240209193029-45947515c4cf
