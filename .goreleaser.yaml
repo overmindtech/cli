@@ -59,6 +59,30 @@ archives:
       - LICENSE
       - README.md
 
+nfpms:
+  - id: nfpm
+    package_name: overmind-cli
+    file_name_template: "{{ .ConventionalFileName }}"
+
+    # Build IDs for the builds you want to create NFPM packages for.
+    # Defaults empty, which means no filtering.
+    builds:
+      - overmind
+    vendor: Overmind
+    homepage: https://overmind.tech/
+    maintainer: Overmind <engineering@overmind.tech>
+    description: |-
+      Predict what will happen for any given change
+    license: Apache 2.0
+    formats:
+      - apk
+      - deb
+      - rpm
+      - archlinux
+    bindir: /usr/bin
+    section: default
+    priority: extra
+
 checksum:
   name_template: "checksums.txt"
 
