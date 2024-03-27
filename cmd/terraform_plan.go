@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -45,6 +47,11 @@ var terraformPlanCmd = &cobra.Command{
 }
 
 type OvermindCommandHandler func(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error
+
+type terraformStoredConfig struct {
+	Config  string `json:"aws-config"`
+	Profile string `json:"aws-profile"`
+}
 
 func CmdWrapper(handler OvermindCommandHandler, requiredScopes []string) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
@@ -92,7 +99,48 @@ func CmdWrapper(handler OvermindCommandHandler, requiredScopes []string) func(cm
 			_, cancel := context.WithTimeout(ctx, timeout)
 			defer cancel()
 
-			return handler(ctx, args, oi, token)
+			configClient := AuthenticatedConfigClient(ctx, oi)
+			cfgValue, err := configClient.GetConfig(ctx, &connect.Request[sdp.GetConfigRequest]{
+				Msg: &sdp.GetConfigRequest{
+					Key: fmt.Sprintf("cli %v", cmd.CommandPath()),
+				},
+			})
+			if err != nil {
+				var cErr *connect.Error
+				if !errors.As(err, &cErr) || cErr.Code() != connect.CodeNotFound {
+					return fmt.Errorf("failed to get stored config: %w", err)
+				}
+			}
+			if cfgValue != nil {
+				viper.SetConfigType("json")
+				err = viper.MergeConfig(bytes.NewBuffer([]byte(cfgValue.Msg.GetValue())))
+				if err != nil {
+					return fmt.Errorf("failed to merge stored config: %w", err)
+				}
+			}
+			err = handler(ctx, args, oi, token)
+			if err != nil {
+				return err
+			}
+
+			jsonBuf, err := json.Marshal(terraformStoredConfig{
+				Config:  viper.GetString("aws-config"),
+				Profile: viper.GetString("aws-profile"),
+			})
+			if err != nil {
+				return fmt.Errorf("failed to marshal config: %w", err)
+			}
+			_, err = configClient.SetConfig(ctx, &connect.Request[sdp.SetConfigRequest]{
+				Msg: &sdp.SetConfigRequest{
+					Key:   fmt.Sprintf("cli %v", cmd.CommandPath()),
+					Value: string(jsonBuf),
+				},
+			})
+			if err != nil {
+				return fmt.Errorf("failed to marshal config: %w", err)
+			}
+
+			return nil
 		}()
 		if err != nil {
 			log.WithContext(ctx).WithError(err).Error("Error running command")
