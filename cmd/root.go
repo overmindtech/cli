@@ -49,10 +49,14 @@ func (oi OvermindInstance) GatewayUrl() string {
 	return fmt.Sprintf("%v/api/gateway", oi.ApiUrl.String())
 }
 
+func (oi OvermindInstance) String() string {
+	return fmt.Sprintf("Frontend: %v, API: %v, Nats: %v, Audience: %v", oi.FrontendUrl, oi.ApiUrl, oi.NatsUrl, oi.Audience)
+}
+
 type instanceData struct {
 	Api  string `json:"api_url"`
 	Nats string `json:"nats_url"`
-	Aud  string `json:"audience"`
+	Aud  string `json:"aud"`
 }
 
 // NewOvermindInstance creates a new OvermindInstance from the given app URL
@@ -320,7 +324,10 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 		Scopes: requestScopes,
 	}
 
-	deviceCode, err := config.DeviceAuth(ctx, oauth2.SetAuthURLParam("audience", oi.Audience))
+	deviceCode, err := config.DeviceAuth(ctx,
+		oauth2.SetAuthURLParam("audience", oi.Audience),
+		oauth2.AccessTypeOffline,
+	)
 	if err != nil {
 		return nil, fmt.Errorf("error getting device code: %w", err)
 	}
