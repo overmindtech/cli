@@ -128,4 +128,5 @@ func init() {
 
 	addAPIFlags(terraformApplyCmd)
 	addChangeUuidFlags(terraformApplyCmd)
+	addTerraformBaseFlags(terraformApplyCmd)
 }

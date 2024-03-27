@@ -134,62 +134,71 @@ func InitializeSources(ctx context.Context, oi OvermindInstance, token *oauth2.T
 	}
 
 	// TODO: store this in the api-server and skip questioning the user after the first time
-	aws_config := "aborted"
-	options := []huh.Option[string]{}
-	aws_profile := os.Getenv("AWS_PROFILE")
-	if aws_profile != "" {
-		options = append(options,
-			huh.NewOption(fmt.Sprintf("Use $AWS_PROFILE (currently: '%v')", aws_profile), "aws_profile"),
-			huh.NewOption("Use a different profile", "profile_input"),
-		)
-	} else {
-		options = append(options,
-			huh.NewOption("Use the default settings", "defaults"),
-			huh.NewOption("Use an AWS SSO profile", "profile_input"),
-		)
-	}
-	// TODO: what URL needs to get opened here?
-	// TODO: how to wait for a source to be configured?
-	// options = append(options,
-	// 	huh.NewOption("Run managed source (opens browser)", "managed"),
-	// )
-	aws_config_select := huh.NewSelect[string]().
-		Title("Choose how to access your AWS account (read-only):").
-		Options(options...).
-		Value(&aws_config).
-		WithAccessible(accessibleMode)
-	err = aws_config_select.Run()
-	// annoyingly, huh doesn't leave the form on screen - except in
-	// accessible mode, so this prints it again so the scrollback looks
-	// sensible
-	if !accessibleMode {
-		fmt.Println(aws_config_select.View())
-	}
-	if err != nil {
-		return func() {}, err
+	aws_config := viper.GetString("aws-config")
+	aws_profile := viper.GetString("aws-profile")
+	if aws_config == "" {
+		aws_config = "aborted"
+		options := []huh.Option[string]{}
+		if aws_profile == "" {
+			aws_profile = os.Getenv("AWS_PROFILE")
+		}
+		if aws_profile != "" {
+			options = append(options,
+				huh.NewOption(fmt.Sprintf("Use $AWS_PROFILE (currently: '%v')", aws_profile), "aws_profile"),
+				huh.NewOption("Use a different profile", "profile_input"),
+			)
+		} else {
+			options = append(options,
+				huh.NewOption("Use the default settings", "defaults"),
+				huh.NewOption("Use an AWS auth profile", "profile_input"),
+			)
+		}
+		// TODO: what URL needs to get opened here?
+		// TODO: how to wait for a source to be configured?
+		// options = append(options,
+		// 	huh.NewOption("Run managed source (opens browser)", "managed"),
+		// )
+		aws_config_select := huh.NewSelect[string]().
+			Title("Choose how to access your AWS account (read-only):").
+			Options(options...).
+			Value(&aws_config).
+			WithAccessible(accessibleMode)
+		err = aws_config_select.Run()
+		// annoyingly, huh doesn't leave the form on screen - except in
+		// accessible mode, so this prints it again so the scrollback looks
+		// sensible
+		if !accessibleMode {
+			fmt.Println(aws_config_select.View())
+		}
+		if err != nil {
+			return func() {}, err
+		}
 	}
 
 	awsAuthConfig := awssource.AwsAuthConfig{
-		// TODO: query regions
+		// TODO: ask user to select regions
 		Regions: []string{"eu-west-1"},
 	}
 
 	switch aws_config {
 	case "profile_input":
-		aws_profile_input := huh.NewInput().
-			Title("Input the name of the AWS profile to use:").
-			Value(&aws_profile).
-			WithAccessible(accessibleMode)
-		err = aws_profile_input.Run()
-		// annoyingly, huh doesn't leave the form on screen - except in
-		// accessible mode, so this prints it again so the scrollback looks
-		// sensible
-		if !accessibleMode {
-			fmt.Println(aws_profile_input.View())
+		if aws_profile == "" {
+			aws_profile_input := huh.NewInput().
+				Title("Input the name of the AWS profile to use:").
+				Value(&aws_profile).
+				WithAccessible(accessibleMode)
+			err = aws_profile_input.Run()
+			// annoyingly, huh doesn't leave the form on screen - except in
+			// accessible mode, so this prints it again so the scrollback looks
+			// sensible
+			if !accessibleMode {
+				fmt.Println(aws_profile_input.View())
+			}
+			if err != nil {
+				return func() {}, err
+			}
 		}
-		if err != nil {
-			return func() {}, err
-		}
+
 		// reset the environment to the requested value
 		awsAuthConfig.Strategy = "sso-profile"
 		awsAuthConfig.Profile = aws_profile
@@ -617,9 +626,15 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 	return plannedChangeGroupsVar.MappedItemDiffs(), nil
 }
 
+func addTerraformBaseFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().String("aws-config", "", "The chosen AWS config method, best set through the initial wizard when running the CLI. Options: 'profile_input', 'aws_profile', 'defaults', 'managed'.")
+	cmd.PersistentFlags().String("aws-profile", "", "Set this to the name of the AWS profile to use.")
+}
+
 func init() {
 	terraformCmd.AddCommand(terraformPlanCmd)
 
 	addAPIFlags(terraformPlanCmd)
 	addChangeUuidFlags(terraformPlanCmd)
+	addTerraformBaseFlags(terraformPlanCmd)
 }
