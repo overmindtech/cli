@@ -218,7 +218,7 @@ func (h *UserAgentSampler) Description() string {
 
 // LogRecoverToReturn Recovers from a panic, logs and forwards it sentry and otel, then returns
 // Does nothing when there is no panic.
-func LogRecoverToReturn(ctx *context.Context, loc string) {
+func LogRecoverToReturn(ctx context.Context, loc string) {
 	err := recover()
 	if err == nil {
 		return
@@ -230,7 +230,7 @@ func LogRecoverToReturn(ctx *context.Context, loc string) {
 
 // LogRecoverToExit Recovers from a panic, logs and forwards it sentry and otel, then exits
 // Does nothing when there is no panic.
-func LogRecoverToExit(ctx *context.Context, loc string) {
+func LogRecoverToExit(ctx context.Context, loc string) {
 	err := recover()
 	if err == nil {
 		return
@@ -245,7 +245,7 @@ func LogRecoverToExit(ctx *context.Context, loc string) {
 	os.Exit(1)
 }
 
-func handleError(ctx *context.Context, loc string, err interface{}, stack string) {
+func handleError(ctx context.Context, loc string, err interface{}, stack string) {
 	msg := fmt.Sprintf("unhandled panic in %v, exiting: %v", loc, err)
 
 	hub := sentry.CurrentHub()
@@ -254,8 +254,8 @@ func handleError(ctx *context.Context, loc string, err interface{}, stack string
 	}
 
 	if ctx != nil {
-		log.WithContext(*ctx).WithFields(log.Fields{"loc": loc, "stack": stack}).Error(msg)
-		span := trace.SpanFromContext(*ctx)
+		log.WithContext(ctx).WithFields(log.Fields{"loc": loc, "stack": stack}).Error(msg)
+		span := trace.SpanFromContext(ctx)
 		span.SetAttributes(attribute.String("ovm.panic.loc", loc))
 		span.SetAttributes(attribute.String("ovm.panic.stack", stack))
 	} else {
