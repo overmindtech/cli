@@ -64,10 +64,12 @@ func CmdWrapper(handler OvermindCommandHandler, requiredScopes []string) func(cm
 			}
 		}()
 
-		ctx, span := tracing.Tracer().Start(ctx, fmt.Sprintf("CLI %v", cmd.CommandPath()), trace.WithAttributes(
+		cmdName := fmt.Sprintf("CLI %v", cmd.CommandPath())
+		ctx, span := tracing.Tracer().Start(ctx, cmdName, trace.WithAttributes(
 			attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
 		))
 		defer span.End()
+		defer tracing.LogRecoverToExit(ctx, cmdName)
 
 		// wrap the rest of the function in a closure to allow for cleaner error handling and deferring.
 		err := func() error {
