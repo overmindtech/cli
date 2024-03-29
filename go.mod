@@ -12,9 +12,9 @@ require (
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/jedib0t/go-pretty/v6 v6.5.6
 	github.com/mattn/go-isatty v0.0.20
-	github.com/overmindtech/aws-source v0.0.0-20240322103731-eb65fbbb97ae
-	github.com/overmindtech/sdp-go v0.68.0
-	github.com/overmindtech/stdlib-source v0.0.0-20240315014705-416a41dc9c78
+	github.com/overmindtech/aws-source v0.0.0-20240329013203-8e02171c6d61
+	github.com/overmindtech/sdp-go v0.68.1
+	github.com/overmindtech/stdlib-source v0.0.0-20240329012243-8b74081e00ba
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
@@ -60,10 +60,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.36.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.24.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.152.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.155.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.28.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/eks v1.41.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/eks v1.42.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.24.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.31.3 // indirect
@@ -121,7 +121,7 @@ require (
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/nats-io/jwt/v2 v2.5.5 // indirect
-	github.com/nats-io/nats.go v1.33.1 // indirect
+	github.com/nats-io/nats.go v1.34.0 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
