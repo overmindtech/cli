@@ -20,7 +20,7 @@ import (
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/auth"
-	stdlibsource "github.com/overmindtech/stdlib-source/cmd"
+	stdlibsource "github.com/overmindtech/stdlib-source/sources"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -215,7 +215,7 @@ func InitializeSources(ctx context.Context, oi OvermindInstance, token *oauth2.T
 		return func() {}, fmt.Errorf("failed to start AWS source engine: %w", err)
 	}
 
-	stdlibEngine, err := stdlibsource.InitializeStdlibSourceEngine(natsOptions, 2_000, true)
+	stdlibEngine, err := stdlibsource.InitializeEngine(natsOptions, 2_000, true)
 	if err != nil {
 		return func() {
 			_ = awsEngine.Stop()

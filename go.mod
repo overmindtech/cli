@@ -14,7 +14,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/overmindtech/aws-source v0.0.0-20240329013203-8e02171c6d61
 	github.com/overmindtech/sdp-go v0.68.1
-	github.com/overmindtech/stdlib-source v0.0.0-20240329012243-8b74081e00ba
+	github.com/overmindtech/stdlib-source v0.0.0-20240329122950-2e598b0bb347
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
@@ -39,7 +39,6 @@ require (
 require (
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/MrAlias/otel-schema-utils v0.2.1-alpha // indirect
-	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/alecthomas/chroma/v2 v2.8.0 // indirect
 	github.com/alecthomas/kingpin/v2 v2.3.2 // indirect
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
