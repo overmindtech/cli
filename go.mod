@@ -14,7 +14,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/overmindtech/aws-source v0.0.0-20240329013203-8e02171c6d61
 	github.com/overmindtech/sdp-go v0.68.1
-	github.com/overmindtech/stdlib-source v0.0.0-20240329122950-2e598b0bb347
+	github.com/overmindtech/stdlib-source 8b74081e00ba
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
