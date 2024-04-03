@@ -28,3 +28,4 @@ output
 .DS_Store
 .terraform
 overmind.plan
+/tmp/
