@@ -15,8 +15,7 @@ import (
 	"strings"
 
 	"connectrpc.com/connect"
-	"github.com/charmbracelet/glamour"
-	"github.com/charmbracelet/huh/spinner"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
@@ -274,6 +273,135 @@ func getAPIKeyToken(ctx context.Context, oi OvermindInstance, apiKey string) (*o
 	return token, nil
 }
 
+type statusMsg int
+
+const (
+	PromptUser             statusMsg = 0
+	WaitingForConfirmation statusMsg = 1
+	Authenticated          statusMsg = 2
+	ErrorAuthenticating    statusMsg = 3
+)
+
+type authenticateModel struct {
+	status     statusMsg
+	err        error
+	deviceCode *oauth2.DeviceAuthResponse
+	config     oauth2.Config
+	ctx        context.Context
+	token      *oauth2.Token
+}
+
+func (m authenticateModel) Init() tea.Cmd {
+	return openBrowser(m.deviceCode.VerificationURI)
+}
+
+func (m authenticateModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+
+	case tea.KeyMsg:
+		switch msg.String() {
+		default:
+			{
+				if m.status == Authenticated {
+					return m, tea.Quit
+				}
+			}
+		case "ctrl+c", "q":
+			return m, tea.Quit
+		}
+
+	case *oauth2.Token:
+		{
+			m.status = Authenticated
+			m.token = msg
+			return m, nil
+		}
+
+	case statusMsg:
+		switch msg {
+		case PromptUser:
+			return m, openBrowser(m.deviceCode.VerificationURI)
+		case WaitingForConfirmation:
+			m.status = WaitingForConfirmation
+			return m, awaitToken(m.config, m.ctx, m.deviceCode)
+		case Authenticated:
+		case ErrorAuthenticating: {
+			return m, nil
+		}
+	}
+
+	case browserOpenErrorMsg:
+		m.status = WaitingForConfirmation
+		return m, awaitToken(m.config, m.ctx, m.deviceCode)
+
+	case failedToAuthenticateErrorMsg:
+		m.err = msg.err
+		m.status = ErrorAuthenticating
+		return m, tea.Quit
+
+	case errMsg:
+		m.err = msg.err
+		return m, tea.Quit
+	}
+
+	return m, nil
+}
+
+func (m authenticateModel) View() string {
+	var output string
+	beginAuthMessage := `# Authenticate with a browser
+
+Attempting to automatically open the SSO authorization page in your default browser.
+If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
+
+	%v
+	
+Then enter the code:
+
+	%v
+`
+	prompt := fmt.Sprintf(beginAuthMessage, m.deviceCode.VerificationURI, m.deviceCode.UserCode)
+	output += markdownToString(prompt)
+	switch m.status {
+	case PromptUser:
+		// nothing here as PromptUser is the default
+	case WaitingForConfirmation:
+		sp := createSpinner()
+		output += sp.View() + " Waiting for confirmation..."
+	case Authenticated:
+		output = "✅ Authenticated successfully. Press any key to continue."
+	case ErrorAuthenticating:
+		output = "⛔️ Unable to authenticate. Try again."
+	}
+
+	return containerStyle.Render(output)
+}
+
+type errMsg struct{ err error }
+type browserOpenErrorMsg struct{ err error }
+type failedToAuthenticateErrorMsg struct{ err error }
+
+func openBrowser(url string) tea.Cmd {
+	return func() tea.Msg {
+		err := browser.OpenURL(url)
+		if err != nil {
+			return browserOpenErrorMsg{err}
+		}
+		return WaitingForConfirmation
+	}
+}
+
+func awaitToken(config oauth2.Config, ctx context.Context, deviceCode *oauth2.DeviceAuthResponse) tea.Cmd {
+	return func() tea.Msg {
+		token, err := config.DeviceAccessToken(ctx, deviceCode)
+		if err != nil {
+			return failedToAuthenticateErrorMsg{err}
+		}
+
+		return token
+	}
+}
+
 // Gets a token from Oauth with the required scopes. This method will also cache
 // that token locally for use later, and will use the cached token if possible
 func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []string) (*oauth2.Token, error) {
@@ -332,48 +460,20 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 		return nil, fmt.Errorf("error getting device code: %w", err)
 	}
 
-	r := NewTermRenderer()
-	prompt := `# Authenticate with a browser
+	m := authenticateModel{status: PromptUser, deviceCode: deviceCode, config: config, ctx: ctx}
+	authenticateProgram := tea.NewProgram(m)
 
-Attempting to automatically open the SSO authorization page in your default browser.
-If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
-
-	%v
-
-Then enter the code:
-
-	%v
-`
-	prompt = fmt.Sprintf(prompt, deviceCode.VerificationURI, deviceCode.UserCode)
-	out, err := glamour.Render(prompt, "dark")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Print(out)
-
-	err = browser.OpenURL(deviceCode.VerificationURIComplete)
-	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("failed to execute local browser")
-	}
-
-	var token *oauth2.Token
-	_ = spinner.New().Title("Waiting for confirmation...").Action(func() {
-		token, err = config.DeviceAccessToken(ctx, deviceCode)
-		if err != nil {
-			log.WithContext(ctx).WithError(err).Errorf("Error exchanging Device Code for for access token")
-			err = fmt.Errorf("Error exchanging Device Code for for access token: %w", err)
-			return
+	if result, err := authenticateProgram.Run(); err != nil {
+		fmt.Println("Error running program:", err)
+		os.Exit(1)
+	} else {
+		updatedModel, ok := result.(authenticateModel)
+		if !ok {
+			fmt.Println("Error running program: result is not authenticateModel")
+			os.Exit(1)
 		}
-	}).Run()
-	if err != nil {
-		return nil, err
+		m = updatedModel
 	}
-
-	out, err = r.Render("✅ Authenticated successfully")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(out)
 
 	span := trace.SpanFromContext(ctx)
 	span.SetAttributes(attribute.Bool("ovm.cli.authenticated", true))
@@ -394,7 +494,7 @@ Then enter the code:
 		}
 
 		// Encode the token
-		err = json.NewEncoder(file).Encode(token)
+		err = json.NewEncoder(file).Encode(m.token)
 		if err != nil {
 			log.WithContext(ctx).WithError(err).Errorf("Failed to encode token file at %v", path)
 		}
@@ -402,7 +502,7 @@ Then enter the code:
 		log.WithContext(ctx).Debugf("Saved token to %v", path)
 	}
 
-	return token, nil
+	return m.token, nil
 }
 
 // ensureToken
