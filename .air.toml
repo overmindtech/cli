@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
 args_bin = []
 bin = "./tmp/main"
-cmd = "go generate ./... && go build -o ./tmp/main main.go"
+cmd = "go generate ./... && go build -gcflags='all=-N -l' -o ./tmp/main main.go"
 delay = 1000
 exclude_dir = ["assets", "build", "tmp", "vendor", "test", "testdata"]
 exclude_file = ["server/admin/assets/dist.css"]
@@ -19,7 +19,7 @@ exclude_regex = [
 exclude_unchanged = false
 follow_symlink = false
 # contrary to other repos, this does wait for the debugger to attach, as cli processes are very shortlived
-full_bin = "dlv exec --accept-multiclient --log --headless --listen :9087 --api-version 2 ./tmp/main --"
+full_bin = "dlv exec --accept-multiclient --headless --listen :9087 --api-version 2 ./tmp/main --"
 include_dir = []
 include_ext = ["go", "tpl", "tmpl", "templ", "html", "sql", "css", "md"]
 include_file = ["sqlc.yaml"]
