@@ -6,7 +6,7 @@ require (
 	connectrpc.com/connect v1.16.0
 	github.com/charmbracelet/glamour v0.7.0
 	github.com/charmbracelet/huh v0.3.0
-	github.com/charmbracelet/huh/spinner v0.0.0-20240209193029-45947515c4cf
+	github.com/charmbracelet/huh/spinner v0.3.0
 	github.com/getsentry/sentry-go v0.27.0
 	github.com/google/uuid v1.6.0
 	github.com/hexops/gotextdiff v1.0.3
