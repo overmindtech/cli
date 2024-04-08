@@ -505,19 +505,20 @@ func ensureToken(ctx context.Context, oi OvermindInstance, requiredScopes []stri
 
 	// Check that we actually got the claims we asked for. If you don't have
 	// permission auth0 will just not assign those scopes rather than fail
-	claims, err := extractClaims(token.AccessToken)
+	ok, missing, err := HasScopesFlexible(token, requiredScopes)
 	if err != nil {
-		return ctx, nil, fmt.Errorf("error extracting claims from token: %w", err)
+		return ctx, nil, fmt.Errorf("error checking token scopes: %w", err)
 	}
-
-	ok, missing := HasScopesFlexible(claims, requiredScopes)
 	if !ok {
 		return ctx, nil, fmt.Errorf("authenticated successfully, but you don't have the required permission: '%v'", missing)
 	}
 
-	// Add the token to the context
+	// store the token for later use by sdp-go's auth client. Note that this
+	// loses access to the RefreshToken and could be done better by using an
+	// oauth2.TokenSource, but this would require more work on updating sdp-go
+	// that is currently not scheduled
 	ctx = context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken)
-	ctx = context.WithValue(ctx, sdp.AccountNameContextKey{}, claims.AccountName)
+
 	return ctx, token, nil
 }
 
@@ -525,10 +526,15 @@ func ensureToken(ctx context.Context, oi OvermindInstance, requiredScopes []stri
 // accounts for when a user has write access but required read access, they
 // aren't the same but the user will have access anyway so this will pass
 //
-// Returns a bool and the missing permission as a string of any
-func HasScopesFlexible(claims *sdp.CustomClaims, requiredScopes []string) (bool, string) {
-	if claims == nil {
-		return false, ""
+// Returns true if the token has the required scopes. Otherwise, false and the missing permission for displaying or logging
+func HasScopesFlexible(token *oauth2.Token, requiredScopes []string) (bool, string, error) {
+	if token == nil {
+		return false, "", errors.New("HasScopesFlexible: token is nil")
+	}
+
+	claims, err := extractClaims(token.AccessToken)
+	if err != nil {
+		return false, "", fmt.Errorf("error extracting claims from token: %w", err)
 	}
 
 	for _, scope := range requiredScopes {
@@ -547,12 +553,12 @@ func HasScopesFlexible(claims *sdp.CustomClaims, requiredScopes []string) (bool,
 			}
 
 			if !hasWriteInstead {
-				return false, scope
+				return false, scope, nil
 			}
 		}
 	}
 
-	return true, ""
+	return true, "", nil
 }
 
 // getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a state with the specified status and having --ticket-link
