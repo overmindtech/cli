@@ -174,7 +174,7 @@ func extractClaims(token string) (*sdp.CustomClaims, error) {
 // its scopes, and an error if any. The scopes are returned even if they are
 // insufficient to allow cached tokens to be added to rather than constantly
 // replaced
-func readLocalToken(homeDir string, expectedScopes []string) (*oauth2.Token, []string, error) {
+func readLocalToken(homeDir string, requiredScopes []string) (*oauth2.Token, []string, error) {
 	// Read in the token JSON file
 	path := filepath.Join(homeDir, ".overmind", "token.json")
 
@@ -203,22 +203,22 @@ func readLocalToken(homeDir string, expectedScopes []string) (*oauth2.Token, []s
 	}
 
 	claims, err := extractClaims(token.AccessToken)
-
 	if err != nil {
 		return nil, nil, fmt.Errorf("error extracting claims from token: %w", err)
 	}
-
 	if claims.Scope == "" {
 		return nil, nil, errors.New("token does not have any scopes")
 	}
 
 	currentScopes := strings.Split(claims.Scope, " ")
 
-	// Check that the token has the right scopes
-	for _, scope := range expectedScopes {
-		if !claims.HasScope(scope) {
-			return nil, currentScopes, fmt.Errorf("token does not have required scope '%v'", scope)
-		}
+	// Check that we actually got the claims we asked for.
+	ok, missing, err := HasScopesFlexible(token, requiredScopes)
+	if err != nil {
+		return nil, currentScopes, fmt.Errorf("error checking token scopes: %w", err)
+	}
+	if !ok {
+		return nil, currentScopes, fmt.Errorf("local token is missing this permission: '%v'", missing)
 	}
 
 	log.Debugf("Using local token from %v", path)
@@ -499,7 +499,9 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 	return m.token, nil
 }
 
-// ensureToken
+// ensureToken gets a token from the environment or from the user, and returns a
+// context holding the token tthat can be used by sdp-go's helper functions to
+// authenticate against the API
 func ensureToken(ctx context.Context, oi OvermindInstance, requiredScopes []string) (context.Context, *oauth2.Token, error) {
 	var token *oauth2.Token
 	var err error
