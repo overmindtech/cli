@@ -43,7 +43,7 @@ var terraformPlanCmd = &cobra.Command{
 			log.WithError(err).Fatal("could not bind `terraform plan` flags")
 		}
 	},
-	Run: CmdWrapper(TerraformPlan, []string{"changes:write", "request:receive"}),
+	Run: CmdWrapper(TerraformPlan, []string{"changes:write", "config:write", "request:receive"}),
 }
 
 type OvermindCommandHandler func(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error
