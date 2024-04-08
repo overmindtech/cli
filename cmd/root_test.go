@@ -1,9 +1,13 @@
 package cmd
 
 import (
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/overmindtech/sdp-go"
+	"golang.org/x/oauth2"
 )
 
 func TestParseChangeUrl(t *testing.T) {
@@ -31,6 +35,17 @@ func TestHasScopesFlexible(t *testing.T) {
 	claims := &sdp.CustomClaims{
 		Scope:       "changes:read users:write",
 		AccountName: "test",
+	}
+	claimBytes, err := json.Marshal(claims)
+	if err != nil {
+		t.Fatalf("unexpected fail marshalling claims: %v", err)
+	}
+
+	fakeAccessToken := fmt.Sprintf(".%v.", base64.RawURLEncoding.EncodeToString(claimBytes))
+	token := &oauth2.Token{
+		AccessToken:  fakeAccessToken,
+		TokenType:    "",
+		RefreshToken: "",
 	}
 
 	tests := []struct {
@@ -62,7 +77,7 @@ func TestHasScopesFlexible(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.Name, func(t *testing.T) {
-			if pass, _ := HasScopesFlexible(claims, tc.RequiredScopes); pass != tc.ShouldPass {
+			if pass, _, _ := HasScopesFlexible(token, tc.RequiredScopes); pass != tc.ShouldPass {
 				t.Fatalf("expected: %v, got: %v", tc.ShouldPass, !tc.ShouldPass)
 			}
 		})

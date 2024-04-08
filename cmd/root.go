@@ -174,7 +174,7 @@ func extractClaims(token string) (*sdp.CustomClaims, error) {
 // its scopes, and an error if any. The scopes are returned even if they are
 // insufficient to allow cached tokens to be added to rather than constantly
 // replaced
-func readLocalToken(homeDir string, expectedScopes []string) (*oauth2.Token, []string, error) {
+func readLocalToken(homeDir string, requiredScopes []string) (*oauth2.Token, []string, error) {
 	// Read in the token JSON file
 	path := filepath.Join(homeDir, ".overmind", "token.json")
 
@@ -203,71 +203,63 @@ func readLocalToken(homeDir string, expectedScopes []string) (*oauth2.Token, []s
 	}
 
 	claims, err := extractClaims(token.AccessToken)
-
 	if err != nil {
 		return nil, nil, fmt.Errorf("error extracting claims from token: %w", err)
 	}
-
 	if claims.Scope == "" {
 		return nil, nil, errors.New("token does not have any scopes")
 	}
 
 	currentScopes := strings.Split(claims.Scope, " ")
 
-	// Check that the token has the right scopes
-	for _, scope := range expectedScopes {
-		if !claims.HasScope(scope) {
-			return nil, currentScopes, fmt.Errorf("token does not have required scope '%v'", scope)
-		}
+	// Check that we actually got the claims we asked for.
+	ok, missing, err := HasScopesFlexible(token, requiredScopes)
+	if err != nil {
+		return nil, currentScopes, fmt.Errorf("error checking token scopes: %w", err)
+	}
+	if !ok {
+		return nil, currentScopes, fmt.Errorf("local token is missing this permission: '%v'", missing)
 	}
 
 	log.Debugf("Using local token from %v", path)
 	return token, currentScopes, nil
 }
 
-// Check whether or not a token has all of the required scopes. Returns a
-// boolean and an error which will be populated if we couldn't read the token
-func tokenHasAllScopes(token string, requiredScopes []string) (bool, error) {
-	claims, err := extractClaims(token)
-
-	if err != nil {
-		return false, fmt.Errorf("error extracting claims from token: %w", err)
-	}
-
-	// Check that the token has the right scopes
-	for _, scope := range requiredScopes {
-		if !claims.HasScope(scope) {
-			return false, nil
-		}
-	}
-
-	return true, nil
-}
-
 // Gets a token using an API key
-func getAPIKeyToken(ctx context.Context, oi OvermindInstance, apiKey string) (*oauth2.Token, error) {
+func getAPIKeyToken(ctx context.Context, oi OvermindInstance, apiKey string, requiredScopes []string) (*oauth2.Token, error) {
 	log.WithContext(ctx).Debug("using provided token for authentication")
 
 	var token *oauth2.Token
 
-	if strings.HasPrefix(apiKey, "ovm_api_") {
-		// exchange api token for JWT
-		client := UnauthenticatedApiKeyClient(ctx, oi)
-		resp, err := client.ExchangeKeyForToken(ctx, &connect.Request[sdp.ExchangeKeyForTokenRequest]{
-			Msg: &sdp.ExchangeKeyForTokenRequest{
-				ApiKey: apiKey,
-			},
-		})
-		if err != nil {
-			return nil, fmt.Errorf("error authenticating the API token: %w", err)
-		}
-		log.WithContext(ctx).Debug("successfully authenticated")
-		token = &oauth2.Token{
-			AccessToken: resp.Msg.GetAccessToken(),
-			TokenType:   "Bearer",
-		}
-	} else {
+	if !strings.HasPrefix(apiKey, "ovm_api_") {
 		return nil, errors.New("OVM_API_KEY does not match pattern 'ovm_api_*'")
+	}
+
+	// exchange api token for JWT
+	client := UnauthenticatedApiKeyClient(ctx, oi)
+	resp, err := client.ExchangeKeyForToken(ctx, &connect.Request[sdp.ExchangeKeyForTokenRequest]{
+		Msg: &sdp.ExchangeKeyForTokenRequest{
+			ApiKey: apiKey,
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error authenticating the API token: %w", err)
+	}
+	log.WithContext(ctx).Debug("successfully got a token from the API key")
+
+	token = &oauth2.Token{
+		AccessToken: resp.Msg.GetAccessToken(),
+		TokenType:   "Bearer",
+	}
+
+	// Check that we actually got the claims we asked for. If you don't have
+	// permission auth0 will just not assign those scopes rather than fail
+	ok, missing, err := HasScopesFlexible(token, requiredScopes)
+	if err != nil {
+		return nil, fmt.Errorf("error checking token scopes: %w", err)
+	}
+	if !ok {
+		return nil, fmt.Errorf("authenticated successfully, but your API key is missing this permission: '%v'", missing)
 	}
 
 	return token, nil
@@ -507,14 +499,16 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 	return m.token, nil
 }
 
-// ensureToken
+// ensureToken gets a token from the environment or from the user, and returns a
+// context holding the token tthat can be used by sdp-go's helper functions to
+// authenticate against the API
 func ensureToken(ctx context.Context, oi OvermindInstance, requiredScopes []string) (context.Context, *oauth2.Token, error) {
 	var token *oauth2.Token
 	var err error
 
 	// get a token from the api key if present
 	if apiKey := viper.GetString("api-key"); apiKey != "" {
-		token, err = getAPIKeyToken(ctx, oi, apiKey)
+		token, err = getAPIKeyToken(ctx, oi, apiKey, requiredScopes)
 	} else {
 		token, err = getOauthToken(ctx, oi, requiredScopes)
 	}
@@ -524,19 +518,20 @@ func ensureToken(ctx context.Context, oi OvermindInstance, requiredScopes []stri
 
 	// Check that we actually got the claims we asked for. If you don't have
 	// permission auth0 will just not assign those scopes rather than fail
-	claims, err := extractClaims(token.AccessToken)
+	ok, missing, err := HasScopesFlexible(token, requiredScopes)
 	if err != nil {
-		return ctx, nil, fmt.Errorf("error extracting claims from token: %w", err)
+		return ctx, nil, fmt.Errorf("error checking token scopes: %w", err)
 	}
-
-	ok, missing := HasScopesFlexible(claims, requiredScopes)
 	if !ok {
 		return ctx, nil, fmt.Errorf("authenticated successfully, but you don't have the required permission: '%v'", missing)
 	}
 
-	// Add the token to the context
+	// store the token for later use by sdp-go's auth client. Note that this
+	// loses access to the RefreshToken and could be done better by using an
+	// oauth2.TokenSource, but this would require more work on updating sdp-go
+	// that is currently not scheduled
 	ctx = context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken)
-	ctx = context.WithValue(ctx, sdp.AccountNameContextKey{}, claims.AccountName)
+
 	return ctx, token, nil
 }
 
@@ -544,10 +539,15 @@ func ensureToken(ctx context.Context, oi OvermindInstance, requiredScopes []stri
 // accounts for when a user has write access but required read access, they
 // aren't the same but the user will have access anyway so this will pass
 //
-// Returns a bool and the missing permission as a string of any
-func HasScopesFlexible(claims *sdp.CustomClaims, requiredScopes []string) (bool, string) {
-	if claims == nil {
-		return false, ""
+// Returns true if the token has the required scopes. Otherwise, false and the missing permission for displaying or logging
+func HasScopesFlexible(token *oauth2.Token, requiredScopes []string) (bool, string, error) {
+	if token == nil {
+		return false, "", errors.New("HasScopesFlexible: token is nil")
+	}
+
+	claims, err := extractClaims(token.AccessToken)
+	if err != nil {
+		return false, "", fmt.Errorf("error extracting claims from token: %w", err)
 	}
 
 	for _, scope := range requiredScopes {
@@ -566,12 +566,12 @@ func HasScopesFlexible(claims *sdp.CustomClaims, requiredScopes []string) (bool,
 			}
 
 			if !hasWriteInstead {
-				return false, scope
+				return false, scope, nil
 			}
 		}
 	}
 
-	return true, ""
+	return true, "", nil
 }
 
 // getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a state with the specified status and having --ticket-link
