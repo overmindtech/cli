@@ -231,24 +231,24 @@ func getAPIKeyToken(ctx context.Context, oi OvermindInstance, apiKey string) (*o
 
 	var token *oauth2.Token
 
-	if strings.HasPrefix(apiKey, "ovm_api_") {
-		// exchange api token for JWT
-		client := UnauthenticatedApiKeyClient(ctx, oi)
-		resp, err := client.ExchangeKeyForToken(ctx, &connect.Request[sdp.ExchangeKeyForTokenRequest]{
-			Msg: &sdp.ExchangeKeyForTokenRequest{
-				ApiKey: apiKey,
-			},
-		})
-		if err != nil {
-			return nil, fmt.Errorf("error authenticating the API token: %w", err)
-		}
-		log.WithContext(ctx).Debug("successfully authenticated")
-		token = &oauth2.Token{
-			AccessToken: resp.Msg.GetAccessToken(),
-			TokenType:   "Bearer",
-		}
-	} else {
+	if !strings.HasPrefix(apiKey, "ovm_api_") {
 		return nil, errors.New("OVM_API_KEY does not match pattern 'ovm_api_*'")
+	}
+
+	// exchange api token for JWT
+	client := UnauthenticatedApiKeyClient(ctx, oi)
+	resp, err := client.ExchangeKeyForToken(ctx, &connect.Request[sdp.ExchangeKeyForTokenRequest]{
+		Msg: &sdp.ExchangeKeyForTokenRequest{
+			ApiKey: apiKey,
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error authenticating the API token: %w", err)
+	}
+	log.WithContext(ctx).Debug("successfully authenticated")
+	token = &oauth2.Token{
+		AccessToken: resp.Msg.GetAccessToken(),
+		TokenType:   "Bearer",
 	}
 
 	return token, nil
