@@ -226,7 +226,7 @@ func readLocalToken(homeDir string, expectedScopes []string) (*oauth2.Token, []s
 }
 
 // Gets a token using an API key
-func getAPIKeyToken(ctx context.Context, oi OvermindInstance, apiKey string) (*oauth2.Token, error) {
+func getAPIKeyToken(ctx context.Context, oi OvermindInstance, apiKey string, requiredScopes []string) (*oauth2.Token, error) {
 	log.WithContext(ctx).Debug("using provided token for authentication")
 
 	var token *oauth2.Token
@@ -245,10 +245,21 @@ func getAPIKeyToken(ctx context.Context, oi OvermindInstance, apiKey string) (*o
 	if err != nil {
 		return nil, fmt.Errorf("error authenticating the API token: %w", err)
 	}
-	log.WithContext(ctx).Debug("successfully authenticated")
+	log.WithContext(ctx).Debug("successfully got a token from the API key")
+
 	token = &oauth2.Token{
 		AccessToken: resp.Msg.GetAccessToken(),
 		TokenType:   "Bearer",
+	}
+
+	// Check that we actually got the claims we asked for. If you don't have
+	// permission auth0 will just not assign those scopes rather than fail
+	ok, missing, err := HasScopesFlexible(token, requiredScopes)
+	if err != nil {
+		return nil, fmt.Errorf("error checking token scopes: %w", err)
+	}
+	if !ok {
+		return nil, fmt.Errorf("authenticated successfully, but your API key is missing this permission: '%v'", missing)
 	}
 
 	return token, nil
@@ -495,7 +506,7 @@ func ensureToken(ctx context.Context, oi OvermindInstance, requiredScopes []stri
 
 	// get a token from the api key if present
 	if apiKey := viper.GetString("api-key"); apiKey != "" {
-		token, err = getAPIKeyToken(ctx, oi, apiKey)
+		token, err = getAPIKeyToken(ctx, oi, apiKey, requiredScopes)
 	} else {
 		token, err = getOauthToken(ctx, oi, requiredScopes)
 	}
