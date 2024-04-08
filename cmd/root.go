@@ -225,25 +225,6 @@ func readLocalToken(homeDir string, expectedScopes []string) (*oauth2.Token, []s
 	return token, currentScopes, nil
 }
 
-// Check whether or not a token has all of the required scopes. Returns a
-// boolean and an error which will be populated if we couldn't read the token
-func tokenHasAllScopes(token string, requiredScopes []string) (bool, error) {
-	claims, err := extractClaims(token)
-
-	if err != nil {
-		return false, fmt.Errorf("error extracting claims from token: %w", err)
-	}
-
-	// Check that the token has the right scopes
-	for _, scope := range requiredScopes {
-		if !claims.HasScope(scope) {
-			return false, nil
-		}
-	}
-
-	return true, nil
-}
-
 // Gets a token using an API key
 func getAPIKeyToken(ctx context.Context, oi OvermindInstance, apiKey string) (*oauth2.Token, error) {
 	log.WithContext(ctx).Debug("using provided token for authentication")
