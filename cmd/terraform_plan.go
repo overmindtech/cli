@@ -7,14 +7,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
-	"os/signal"
 	"strings"
-	"syscall"
 	"time"
 
 	"connectrpc.com/connect"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
 	"github.com/google/uuid"
 	awssource "github.com/overmindtech/aws-source/cmd"
@@ -43,7 +43,7 @@ var terraformPlanCmd = &cobra.Command{
 			log.WithError(err).Fatal("could not bind `terraform plan` flags")
 		}
 	},
-	Run: CmdWrapper(TerraformPlan, []string{"changes:write", "config:write", "request:receive"}),
+	Run: CmdWrapper(TerraformPlan, "plan", []string{"changes:write", "config:write", "request:receive"}),
 }
 
 type OvermindCommandHandler func(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error
@@ -53,23 +53,27 @@ type terraformStoredConfig struct {
 	Profile string `json:"aws-profile"`
 }
 
-func CmdWrapper(handler OvermindCommandHandler, requiredScopes []string) func(cmd *cobra.Command, args []string) {
+// viperGetApp fetches and validates the configured app url
+func viperGetApp(ctx context.Context) (string, error) {
+	app := viper.GetString("app")
+
+	// Check to see if the URL is secure
+	parsed, err := url.Parse(app)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("Failed to parse --app")
+		return "", fmt.Errorf("error parsing --app: %w", err)
+	}
+
+	if !(parsed.Scheme == "wss" || parsed.Scheme == "https" || parsed.Hostname() == "localhost") {
+		return "", fmt.Errorf("target URL (%v) is insecure", parsed)
+	}
+	return app, nil
+}
+
+func CmdWrapper(handler OvermindCommandHandler, action string, requiredScopes []string) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
-		sigs := make(chan os.Signal, 1)
-
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-
-		// Create a goroutine to watch for cancellation signals
-		go func() {
-			select {
-			case <-sigs:
-				cancel()
-			case <-ctx.Done():
-			}
-		}()
 
 		cmdName := fmt.Sprintf("CLI %v", cmd.CommandPath())
 		ctx, span := tracing.Tracer().Start(ctx, cmdName, trace.WithAttributes(
@@ -85,21 +89,37 @@ func CmdWrapper(handler OvermindCommandHandler, requiredScopes []string) func(cm
 				return fmt.Errorf("invalid --timeout value '%v', error: %w", viper.GetString("timeout"), err)
 			}
 
-			oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+			app, err := viperGetApp(ctx)
 			if err != nil {
-				return fmt.Errorf("failed to get instance data from app: %w", err)
+				return err
 			}
 
-			ctx, token, err := ensureToken(ctx, oi, requiredScopes)
+			// tf := NewTfModel(ctx, action)
+
+			p := tea.NewProgram(tfModel{
+				action:  action,
+				ctx:     ctx,
+				cancel:  cancel,
+				timeout: timeout,
+				app:     app,
+				apiKey:  viper.GetString("api-key"),
+				tasks:   map[string]tea.Model{},
+			})
+			m, err := p.Run()
 			if err != nil {
-				return fmt.Errorf("failed to authenticate: %w", err)
+				return fmt.Errorf("could not start program: %w", err)
+			}
+
+			results, ok := m.(tfModel)
+			if !ok {
+				return fmt.Errorf("unexpected model type: %T", m)
 			}
 
 			// apply a timeout to the main body of processing
 			_, cancel := context.WithTimeout(ctx, timeout)
 			defer cancel()
 
-			configClient := AuthenticatedConfigClient(ctx, oi)
+			configClient := AuthenticatedConfigClient(ctx, results.oi)
 			cfgValue, err := configClient.GetConfig(ctx, &connect.Request[sdp.GetConfigRequest]{
 				Msg: &sdp.GetConfigRequest{
 					Key: fmt.Sprintf("cli %v", cmd.CommandPath()),
@@ -118,7 +138,7 @@ func CmdWrapper(handler OvermindCommandHandler, requiredScopes []string) func(cm
 					return fmt.Errorf("failed to merge stored config: %w", err)
 				}
 			}
-			err = handler(ctx, args, oi, token)
+			// err = handler(ctx, args, results.oi, results.token)
 			if err != nil {
 				return err
 			}
@@ -181,7 +201,7 @@ func InitializeSources(ctx context.Context, oi OvermindInstance, token *oauth2.T
 		TokenClient:       tokenClient,
 	}
 
-	// TODO: store this in the api-server and skip questioning the user after the first time
+	// These values can come from a local config or be initialized from the ConfigService elsewhere
 	aws_config := viper.GetString("aws-config")
 	aws_profile := viper.GetString("aws-profile")
 	if aws_config == "" {

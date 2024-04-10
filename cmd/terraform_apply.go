@@ -26,7 +26,7 @@ var terraformApplyCmd = &cobra.Command{
 			log.WithError(err).Fatal("could not bind `terraform apply` flags")
 		}
 	},
-	Run: CmdWrapper(TerraformApply, []string{"changes:write", "config:write", "request:receive"}),
+	Run: CmdWrapper(TerraformApply, "apply", []string{"changes:write", "config:write", "request:receive"}),
 }
 
 func TerraformApply(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error {
