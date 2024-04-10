@@ -114,7 +114,19 @@ func (m tfModel) tokenChecks(token *oauth2.Token) (tfModel, tea.Cmd) {
 
 	// apply the configured timeout to all future operations
 	m.ctx, m.cancel = context.WithTimeout(m.ctx, m.timeout)
-	return m, nil
+
+	// daisy chain the next step. This is a bit of a hack, but it's the easiest
+	// for now, and we still need a good idea for a better way. Especially as
+	// some of the models require access to viper (for GetConfig/SetConfig) or
+	// contortions to store that data somewhere else.
+	return m, func() tea.Msg {
+		return loadSourcesConfigMsg{
+			ctx:    m.ctx,
+			oi:     m.oi,
+			action: m.action,
+			token:  token,
+		}
+	}
 }
 
 func (m tfModel) View() string {

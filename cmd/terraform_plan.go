@@ -15,7 +15,6 @@ import (
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/huh"
 	"github.com/google/uuid"
 	awssource "github.com/overmindtech/aws-source/cmd"
 	"github.com/overmindtech/cli/cmd/datamaps"
@@ -172,7 +171,7 @@ func CmdWrapper(handler OvermindCommandHandler, action string, requiredScopes []
 	}
 }
 
-func InitializeSources(ctx context.Context, oi OvermindInstance, token *oauth2.Token) (func(), error) {
+func InitializeSources(ctx context.Context, oi OvermindInstance, aws_config, aws_profile string, token *oauth2.Token) (func(), error) {
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "localhost"
@@ -201,81 +200,16 @@ func InitializeSources(ctx context.Context, oi OvermindInstance, token *oauth2.T
 		TokenClient:       tokenClient,
 	}
 
-	// These values can come from a local config or be initialized from the ConfigService elsewhere
-	aws_config := viper.GetString("aws-config")
-	aws_profile := viper.GetString("aws-profile")
-	if aws_config == "" {
-		aws_config = "aborted"
-		options := []huh.Option[string]{}
-		if aws_profile == "" {
-			aws_profile = os.Getenv("AWS_PROFILE")
-		}
-		if aws_profile != "" {
-			options = append(options,
-				huh.NewOption(fmt.Sprintf("Use $AWS_PROFILE (currently: '%v')", aws_profile), "aws_profile"),
-				huh.NewOption("Use a different profile", "profile_input"),
-			)
-		} else {
-			options = append(options,
-				huh.NewOption("Use the default settings", "defaults"),
-				huh.NewOption("Use an AWS auth profile", "profile_input"),
-			)
-		}
-		// TODO: what URL needs to get opened here?
-		// TODO: how to wait for a source to be configured?
-		// options = append(options,
-		// 	huh.NewOption("Run managed source (opens browser)", "managed"),
-		// )
-		aws_config_select := huh.NewSelect[string]().
-			Title("Choose how to access your AWS account (read-only):").
-			Options(options...).
-			Value(&aws_config).
-			WithAccessible(accessibleMode)
-		err = aws_config_select.Run()
-		// annoyingly, huh doesn't leave the form on screen - except in
-		// accessible mode, so this prints it again so the scrollback looks
-		// sensible
-		if !accessibleMode {
-			fmt.Println(aws_config_select.View())
-		}
-		if err != nil {
-			return func() {}, err
-		}
-	}
-
 	awsAuthConfig := awssource.AwsAuthConfig{
 		// TODO: ask user to select regions
 		Regions: []string{"eu-west-1"},
 	}
 
 	switch aws_config {
-	case "profile_input":
-		if aws_profile == "" {
-			aws_profile_input := huh.NewInput().
-				Title("Input the name of the AWS profile to use:").
-				Value(&aws_profile).
-				WithAccessible(accessibleMode)
-			err = aws_profile_input.Run()
-			// annoyingly, huh doesn't leave the form on screen - except in
-			// accessible mode, so this prints it again so the scrollback looks
-			// sensible
-			if !accessibleMode {
-				fmt.Println(aws_profile_input.View())
-			}
-			if err != nil {
-				return func() {}, err
-			}
-		}
-
-		// reset the environment to the requested value
-		awsAuthConfig.Strategy = "sso-profile"
-		awsAuthConfig.Profile = aws_profile
-	case "aws_profile":
-		// can continue with the existing config
+	case "profile_input", "aws_profile":
 		awsAuthConfig.Strategy = "sso-profile"
 		awsAuthConfig.Profile = aws_profile
 	case "defaults":
-		// just continue
 		awsAuthConfig.Strategy = "defaults"
 	case "managed":
 		// TODO: not implemented yet
@@ -316,7 +250,7 @@ func InitializeSources(ctx context.Context, oi OvermindInstance, token *oauth2.T
 func TerraformPlan(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error {
 	span := trace.SpanFromContext(ctx)
 
-	cancel, err := InitializeSources(ctx, oi, token)
+	cancel, err := InitializeSources(ctx, oi, viper.GetString("aws-config"), viper.GetString("aws-profile"), token)
 	defer cancel()
 	if err != nil {
 		return err

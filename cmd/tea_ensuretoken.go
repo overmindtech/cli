@@ -150,7 +150,7 @@ func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m ensureTokenModel) View() string {
 	view := m.taskModel.View()
 	if len(m.errors) > 0 {
-		view = fmt.Sprintf("%v\n%v\n", view, strings.Join(m.errors, "\n"))
+		view += fmt.Sprintf("\n%v\n", strings.Join(m.errors, "\n"))
 	}
 	if m.deviceMessage != "" {
 		view += fmt.Sprintf("\n%v\n", m.deviceMessage)

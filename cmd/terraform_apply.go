@@ -30,7 +30,7 @@ var terraformApplyCmd = &cobra.Command{
 }
 
 func TerraformApply(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error {
-	cancel, err := InitializeSources(ctx, oi, token)
+	cancel, err := InitializeSources(ctx, oi, viper.GetString("aws-config"), viper.GetString("aws-profile"), token)
 	defer cancel()
 	if err != nil {
 		return err
