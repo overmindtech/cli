@@ -79,13 +79,12 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.status = taskStatusRunning
 		cmds = append(cmds, m.loadSourcesConfigCmd)
 		cmds = append(cmds, m.spinner.Tick)
-		m.errors = append(m.errors, "loadSourcesConfigMsg seen")
 	case askForAwsConfigMsg:
 		// load the config that was injected above. If it's not there, prompt the user.
 		aws_config := viper.GetString("aws-config")
 		aws_profile := viper.GetString("aws-profile")
 
-		if aws_config == "" {
+		if aws_config == "" || viper.GetBool("reset-stored-config") {
 			aws_config = "aborted"
 			options := []huh.Option[string]{}
 			aws_profile_env := os.Getenv("AWS_PROFILE")
@@ -142,14 +141,12 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				cmds = append(cmds, m.startSourcesCmd(aws_config, aws_profile))
 			}
 		}
-		m.errors = append(m.errors, "askForAwsConfigMsg seen")
 	case configStoredMsg:
 		m.configStored = true
-		m.errors = append(m.errors, "configStoredMsg seen")
 	case sourcesInitialisedMsg:
 		m.awsSourceRunning = true
 		m.stdlibSourceRunning = true
-		m.errors = append(m.errors, "sourcesInitialisedMsg seen")
+		m.status = taskStatusDone
 	case otherError:
 		if msg.id == m.spinner.ID() {
 			m.errors = append(m.errors, fmt.Sprintf("Note: %v", msg.err))

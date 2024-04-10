@@ -16,7 +16,7 @@ import (
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
-	awssource "github.com/overmindtech/aws-source/cmd"
+	"github.com/overmindtech/aws-source/proc"
 	"github.com/overmindtech/cli/cmd/datamaps"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
@@ -71,6 +71,10 @@ func viperGetApp(ctx context.Context) (string, error) {
 
 func CmdWrapper(handler OvermindCommandHandler, action string, requiredScopes []string) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
+		// avoid log messages from sources and others to interrupt bubbletea rendering
+		viper.Set("log", "error")
+
+		// set up a context for the command
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 
@@ -200,7 +204,7 @@ func InitializeSources(ctx context.Context, oi OvermindInstance, aws_config, aws
 		TokenClient:       tokenClient,
 	}
 
-	awsAuthConfig := awssource.AwsAuthConfig{
+	awsAuthConfig := proc.AwsAuthConfig{
 		// TODO: ask user to select regions
 		Regions: []string{"eu-west-1"},
 	}
@@ -215,7 +219,7 @@ func InitializeSources(ctx context.Context, oi OvermindInstance, aws_config, aws
 		// TODO: not implemented yet
 	}
 
-	awsEngine, err := awssource.InitializeAwsSourceEngine(natsOptions, awsAuthConfig, 2_000)
+	awsEngine, err := proc.InitializeAwsSourceEngine(natsOptions, awsAuthConfig, 2_000)
 	if err != nil {
 		return func() {}, fmt.Errorf("failed to initialize AWS source engine: %w", err)
 	}
@@ -629,6 +633,7 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 }
 
 func addTerraformBaseFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().Bool("reset-stored-config", false, "Set this to reset the sources config stored in Overmind and input fresh values.")
 	cmd.PersistentFlags().String("aws-config", "", "The chosen AWS config method, best set through the initial wizard when running the CLI. Options: 'profile_input', 'aws_profile', 'defaults', 'managed'.")
 	cmd.PersistentFlags().String("aws-profile", "", "Set this to the name of the AWS profile to use.")
 }
