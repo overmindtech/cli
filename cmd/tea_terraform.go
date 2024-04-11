@@ -12,7 +12,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type tfModel struct {
+type cmdModel struct {
 	action string // "plan" or "apply"
 
 	// Context and cancel function from the CmdWrapper. Since bubbletea provides
@@ -33,17 +33,7 @@ type tfModel struct {
 	fatalError string // this will get set if there's a fatalError coming through that doesn't have a task ID set
 }
 
-func NewTfModel(ctx context.Context, action string) tea.Model {
-	return tfModel{
-		action: action,
-
-		ctx: ctx,
-
-		tasks: make(map[string]tea.Model),
-	}
-}
-
-func (m tfModel) Init() tea.Cmd {
+func (m cmdModel) Init() tea.Cmd {
 	// use the main cli context to not take this time from the main timeout
 	m.tasks["00_oi"] = NewInstanceLoaderModel(m.ctx, m.app)
 	m.tasks["01_token"] = NewEnsureTokenModel(m.ctx, m.app, m.apiKey, m.requiredScopes)
@@ -56,7 +46,7 @@ func (m tfModel) Init() tea.Cmd {
 	)
 }
 
-func (m tfModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	batch := []tea.Cmd{}
 
 	// pass all messages to all tasks
@@ -88,12 +78,14 @@ func (m tfModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.tokenChecks(msg.token)
 	case tokenStoredMsg:
 		return m.tokenChecks(msg.token)
+	case sourcesInitialisedMsg:
+		// TODO: what's next
 	}
 
 	return m, tea.Batch(batch...)
 }
 
-func (m tfModel) tokenChecks(token *oauth2.Token) (tfModel, tea.Cmd) {
+func (m cmdModel) tokenChecks(token *oauth2.Token) (cmdModel, tea.Cmd) {
 	// Check that we actually got the claims we asked for. If you don't have
 	// permission auth0 will just not assign those scopes rather than fail
 	ok, missing, err := HasScopesFlexible(token, m.requiredScopes)
@@ -129,7 +121,7 @@ func (m tfModel) tokenChecks(token *oauth2.Token) (tfModel, tea.Cmd) {
 	}
 }
 
-func (m tfModel) View() string {
+func (m cmdModel) View() string {
 	tasks := make([]string, 0, len(m.tasks))
 	keys := make([]string, 0, len(m.tasks))
 	for k := range m.tasks {

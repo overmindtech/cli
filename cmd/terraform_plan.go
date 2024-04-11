@@ -97,9 +97,7 @@ func CmdWrapper(handler OvermindCommandHandler, action string, requiredScopes []
 				return err
 			}
 
-			// tf := NewTfModel(ctx, action)
-
-			p := tea.NewProgram(tfModel{
+			p := tea.NewProgram(cmdModel{
 				action:  action,
 				ctx:     ctx,
 				cancel:  cancel,
