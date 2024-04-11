@@ -111,14 +111,15 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func([]stri
 			}
 
 			p := tea.NewProgram(cmdModel{
-				action:  action,
-				ctx:     ctx,
-				cancel:  cancel,
-				timeout: timeout,
-				app:     app,
-				apiKey:  viper.GetString("api-key"),
-				tasks:   map[string]tea.Model{},
-				cmd:     commandModel(args),
+				action:         action,
+				ctx:            ctx,
+				cancel:         cancel,
+				timeout:        timeout,
+				app:            app,
+				requiredScopes: requiredScopes,
+				apiKey:         viper.GetString("api-key"),
+				tasks:          map[string]tea.Model{},
+				cmd:            commandModel(args),
 			})
 			_, err = p.Run()
 			if err != nil {
