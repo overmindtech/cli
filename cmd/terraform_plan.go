@@ -304,6 +304,7 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.waitForProcessingActivity
 	case processingFinishedActivityMsg:
 		m.progress = append(m.progress, msg.text)
+		return m, tea.Quit
 	}
 
 	return m, nil
