@@ -85,9 +85,7 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.oi = msg.instance
 		// skip irrelevant status messages
 		// delete(m.tasks, "00_oi")
-	case tokenReceivedMsg:
-		return m.tokenChecks(msg.token)
-	case tokenStoredMsg:
+	case tokenAvailableMsg:
 		return m.tokenChecks(msg.token)
 	}
 

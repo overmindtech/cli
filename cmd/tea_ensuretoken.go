@@ -38,11 +38,14 @@ type tokenStoredMsg struct {
 	tokenReceivedMsg
 	file string
 }
+type tokenAvailableMsg struct {
+	token *oauth2.Token
+}
 
 // this tea.Model uses the apiKey to request a fresh auth0 token from the
 // api-server. If no apiKey is available it either loads the auth0 token from a
 // config file, or drives an interactive device authorization flow to get a new
-// token. Results are delivered as either a tokenLoadedMsg or a fatalError.
+// token. Results are delivered as either a tokenAvailableMsg or a fatalError.
 type ensureTokenModel struct {
 	taskModel
 
@@ -121,14 +124,18 @@ func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		`
 		m.deviceMessage = markdownToString(fmt.Sprintf(beginAuthMessage, msg.deviceCode.VerificationURI, msg.deviceCode.UserCode))
 		return m, m.awaitTokenCmd
+	case tokenLoadedMsg:
+		m.status = taskStatusDone
+		m.title = "Using stored token"
+		return m, m.tokenAvailable(msg.token)
 	case tokenReceivedMsg:
 		m.status = taskStatusDone
 		m.title = "Authentication successful, using API key"
-		return m, nil
+		return m, m.tokenAvailable(msg.token)
 	case tokenStoredMsg:
 		m.status = taskStatusDone
 		m.title = fmt.Sprintf("Authentication successful, token stored locally (%v)", msg.file)
-		return m, nil
+		return m, m.tokenAvailable(msg.token)
 	case otherError:
 		if msg.id == m.spinner.ID() {
 			m.errors = append(m.errors, fmt.Sprintf("Note: %v", msg.err))
@@ -287,6 +294,12 @@ func (m ensureTokenModel) getAPIKeyTokenCmd() tea.Msg {
 	}
 
 	return tokenReceivedMsg{token}
+}
+
+func (m ensureTokenModel) tokenAvailable(token *oauth2.Token) tea.Cmd {
+	return func() tea.Msg {
+		return tokenAvailableMsg{token}
+	}
 }
 
 /////////////////////////////
