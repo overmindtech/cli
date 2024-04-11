@@ -277,8 +277,14 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// defer the actual command to give the view a chance to show the header
 		return m, func() tea.Msg { return triggerTfPlanMsg{} }
 	case triggerTfPlanMsg:
+		c := exec.CommandContext(m.ctx, "terraform", m.args...) // nolint:gosec // this is a user-provided command, let them do their thing
+
+		// inject the profile, if configured
+		if aws_profile := viper.GetString("aws-profile"); aws_profile != "" {
+			c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
+		}
 		return m, tea.ExecProcess(
-			exec.CommandContext(m.ctx, "terraform", m.args...), // nolint:gosec // this is a user-provided command, let them do their thing
+			c,
 			func(err error) tea.Msg {
 				if err != nil {
 					return fatalError{err: fmt.Errorf("failed to run terraform plan: %w", err)}
