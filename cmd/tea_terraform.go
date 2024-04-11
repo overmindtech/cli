@@ -31,6 +31,9 @@ type cmdModel struct {
 	// UI state
 	tasks      map[string]tea.Model
 	fatalError string // this will get set if there's a fatalError coming through that doesn't have a task ID set
+
+	// business logic. This model will implement the actual CLI functionality requested.
+	cmd tea.Model
 }
 
 func (m cmdModel) Init() tea.Cmd {
@@ -43,11 +46,19 @@ func (m cmdModel) Init() tea.Cmd {
 		waitForCancellation(m.ctx, m.cancel),
 		m.tasks["00_oi"].Init(),
 		m.tasks["01_token"].Init(),
+		m.cmd.Init(),
 	)
 }
 
 func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	batch := []tea.Cmd{}
+
+	// update the main command
+	var cmd tea.Cmd
+	m.cmd, cmd = m.cmd.Update(msg)
+	if cmd != nil {
+		batch = append(batch, cmd)
+	}
 
 	// pass all messages to all tasks
 	for k, t := range m.tasks {
@@ -78,8 +89,6 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.tokenChecks(msg.token)
 	case tokenStoredMsg:
 		return m.tokenChecks(msg.token)
-	case sourcesInitialisedMsg:
-		// TODO: what's next
 	}
 
 	return m, tea.Batch(batch...)
@@ -131,6 +140,7 @@ func (m cmdModel) View() string {
 	for _, k := range keys {
 		tasks = append(tasks, m.tasks[k].View())
 	}
+	tasks = append(tasks, m.cmd.View())
 	if m.fatalError != "" {
 		tasks = append(tasks, fmt.Sprintf("Fatal Error: %v", m.fatalError))
 	}

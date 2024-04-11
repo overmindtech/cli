@@ -7,7 +7,7 @@ args_bin = []
 bin = "./tmp/overmind"
 # build with additional flags for debugging
 # cmd = "go generate ./... && go build -gcflags='all=-N -l' -o ./tmp/overmind main.go"
-cmd = "go generate ./... && go build -o ./tmp/overmind main.go"
+cmd = "go generate ./... && cp $(which terraform) main.tf ./tmp/ && go build -o ./tmp/overmind main.go"
 delay = 1000
 exclude_dir = ["assets", "build", "tmp", "vendor", "test", "testdata"]
 exclude_file = ["server/admin/assets/dist.css"]
@@ -23,7 +23,7 @@ follow_symlink = false
 # contrary to other repos, this does wait for the debugger to attach, as cli processes are very shortlived
 # full_bin = "dlv exec --accept-multiclient --continue --headless --listen :9087 --api-version 2 ./tmp/overmind -- terraform plan"
 # full_bin = "dlv exec --accept-multiclient --headless --listen :9087 --api-version 2 --tty /dev/pts/3 ./tmp/overmind -- terraform plan"
-full_bin = "docker run --rm -e AWS_PROFILE=sso-david -e OVM_API_KEY -e APP -e RESET_STORED_CONFIG=true -v $PWD:/vhs -v ~/.aws:/root/.aws ghcr.io/charmbracelet/vhs /vhs/demos/plan.tape && code demos/plan.gif"
+full_bin = "docker run --rm -e AWS_PROFILE=sso-david -e OVM_API_KEY -e APP -e RESET_STORED_CONFIG=true -e TEABUG=true -e LOG=trace -v $PWD:/vhs -v ~/.aws:/root/.aws ghcr.io/charmbracelet/vhs /vhs/demos/plan.tape && code demos/plan.gif"
 include_dir = []
 include_ext = ["go", "tpl", "tmpl", "templ", "html", "sql", "css", "md", "tape"]
 include_file = ["sqlc.yaml"]

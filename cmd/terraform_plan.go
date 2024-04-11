@@ -1,11 +1,9 @@
 package cmd
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -42,7 +40,7 @@ var terraformPlanCmd = &cobra.Command{
 			log.WithError(err).Fatal("could not bind `terraform plan` flags")
 		}
 	},
-	Run: CmdWrapper(TerraformPlan, "plan", []string{"changes:write", "config:write", "request:receive"}),
+	Run: CmdWrapper("plan", []string{"changes:write", "config:write", "request:receive"}, NewTfPlanModel),
 }
 
 type OvermindCommandHandler func(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error
@@ -69,7 +67,7 @@ func viperGetApp(ctx context.Context) (string, error) {
 	return app, nil
 }
 
-func CmdWrapper(handler OvermindCommandHandler, action string, requiredScopes []string) func(cmd *cobra.Command, args []string) {
+func CmdWrapper(action string, requiredScopes []string, commandModel func([]string) tea.Model) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		// avoid log messages from sources and others to interrupt bubbletea rendering
 		viper.Set("log", "error")
@@ -84,6 +82,16 @@ func CmdWrapper(handler OvermindCommandHandler, action string, requiredScopes []
 		))
 		defer span.End()
 		defer tracing.LogRecoverToExit(ctx, cmdName)
+
+		if len(os.Getenv("TEABUG")) > 0 {
+			f, err := tea.LogToFile("teabug.log", "debug")
+			if err != nil {
+				fmt.Println("fatal:", err)
+				os.Exit(1)
+			}
+			defer f.Close()
+			log.SetOutput(f)
+		}
 
 		// wrap the rest of the function in a closure to allow for cleaner error handling and deferring.
 		err := func() error {
@@ -105,61 +113,15 @@ func CmdWrapper(handler OvermindCommandHandler, action string, requiredScopes []
 				app:     app,
 				apiKey:  viper.GetString("api-key"),
 				tasks:   map[string]tea.Model{},
+				cmd:     commandModel(args),
 			})
-			m, err := p.Run()
+			_, err = p.Run()
 			if err != nil {
 				return fmt.Errorf("could not start program: %w", err)
 			}
 
-			results, ok := m.(tfModel)
-			if !ok {
-				return fmt.Errorf("unexpected model type: %T", m)
-			}
-
-			// apply a timeout to the main body of processing
-			_, cancel := context.WithTimeout(ctx, timeout)
-			defer cancel()
-
-			configClient := AuthenticatedConfigClient(ctx, results.oi)
-			cfgValue, err := configClient.GetConfig(ctx, &connect.Request[sdp.GetConfigRequest]{
-				Msg: &sdp.GetConfigRequest{
-					Key: fmt.Sprintf("cli %v", cmd.CommandPath()),
-				},
-			})
-			if err != nil {
-				var cErr *connect.Error
-				if !errors.As(err, &cErr) || cErr.Code() != connect.CodeNotFound {
-					return fmt.Errorf("failed to get stored config: %w", err)
-				}
-			}
-			if cfgValue != nil {
-				viper.SetConfigType("json")
-				err = viper.MergeConfig(bytes.NewBuffer([]byte(cfgValue.Msg.GetValue())))
-				if err != nil {
-					return fmt.Errorf("failed to merge stored config: %w", err)
-				}
-			}
-			// err = handler(ctx, args, results.oi, results.token)
-			if err != nil {
-				return err
-			}
-
-			jsonBuf, err := json.Marshal(terraformStoredConfig{
-				Config:  viper.GetString("aws-config"),
-				Profile: viper.GetString("aws-profile"),
-			})
-			if err != nil {
-				return fmt.Errorf("failed to marshal config: %w", err)
-			}
-			_, err = configClient.SetConfig(ctx, &connect.Request[sdp.SetConfigRequest]{
-				Msg: &sdp.SetConfigRequest{
-					Key:   fmt.Sprintf("cli %v", cmd.CommandPath()),
-					Value: string(jsonBuf),
-				},
-			})
-			if err != nil {
-				return fmt.Errorf("failed to marshal config: %w", err)
-			}
+			// avoid overwriting the last view
+			fmt.Println()
 
 			return nil
 		}()
@@ -249,57 +211,129 @@ func InitializeSources(ctx context.Context, oi OvermindInstance, aws_config, aws
 	}, nil
 }
 
-func TerraformPlan(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error {
-	span := trace.SpanFromContext(ctx)
+type tfPlanModel struct {
+	ctx context.Context // note that this ctx is not initialized on NewTfPlanModel to instead get a modified context through the loadSourcesConfigMsg that has a timeout and cancelFunction configured
+	oi  OvermindInstance
 
-	cancel, err := InitializeSources(ctx, oi, viper.GetString("aws-config"), viper.GetString("aws-profile"), token)
-	defer cancel()
-	if err != nil {
-		return err
-	}
+	args             []string
+	planHeader       string
+	processingHeader string
 
+	runTfPlan      bool
+	tfPlanFinished bool
+	processing     chan tea.Msg
+	progress       []string
+}
+
+type triggerTfPlanMsg struct{}
+type tfPlanFinishedMsg struct{}
+type processingActivityMsg struct{ text string }
+type processingFinishedActivityMsg struct{ text string }
+
+func NewTfPlanModel(args []string) tea.Model {
 	args = append([]string{"plan"}, args...)
 	// -out needs to go last to override whatever the user specified on the command line
 	args = append(args, "-out", "overmind.plan")
 
-	prompt := `
-* AWS Source: running
-* stdlib Source: running
+	planHeader := `# Planning Changes
 
-# Planning Changes
+	Running ` + "`" + `terraform %v` + "`" + `
+	`
+	planHeader = fmt.Sprintf(planHeader, strings.Join(args, " "))
 
-Running ` + "`" + `terraform %v` + "`" + `
-`
+	processingHeader := `# Planning Changes
 
-	r := NewTermRenderer()
-	out, err := r.Render(fmt.Sprintf(prompt, strings.Join(args, " ")))
-	if err != nil {
-		panic(err)
+	Processing plan from ` + "`" + `terraform %v` + "`" + `
+	`
+	processingHeader = fmt.Sprintf(planHeader, strings.Join(args, " "))
+
+	return tfPlanModel{
+		args:             args,
+		planHeader:       planHeader,
+		processingHeader: processingHeader,
+
+		processing: make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
+		progress:   []string{},
 	}
-	fmt.Print(out)
+}
 
-	tfPlanCmd := exec.CommandContext(ctx, "terraform", args...)
-	tfPlanCmd.Stderr = os.Stderr
-	tfPlanCmd.Stdout = os.Stdout
-	tfPlanCmd.Stdin = os.Stdin
+func (m tfPlanModel) Init() tea.Cmd {
+	return nil
+}
 
-	err = tfPlanCmd.Run()
-	if err != nil {
-		return fmt.Errorf("failed to run terraform plan: %w", err)
+func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case loadSourcesConfigMsg:
+		m.ctx = msg.ctx
+		m.oi = msg.oi
+
+	case sourcesInitialisedMsg:
+		m.runTfPlan = true
+		// defer the actual command to give the view a chance to show the header
+		return m, func() tea.Msg { return triggerTfPlanMsg{} }
+	case triggerTfPlanMsg:
+		return m, tea.ExecProcess(
+			exec.CommandContext(m.ctx, "terraform", m.args...), // nolint:gosec // this is a user-provided command, let them do their thing
+			func(err error) tea.Msg {
+				if err != nil {
+					return fatalError{err: fmt.Errorf("failed to run terraform plan: %w", err)}
+				}
+
+				return tfPlanFinishedMsg{}
+			})
+	case tfPlanFinishedMsg:
+		m.tfPlanFinished = true
+		return m, tea.Batch(
+			m.processPlanCmd,
+			m.waitForProcessingActivity,
+		)
+	case processingActivityMsg:
+		m.progress = append(m.progress, msg.text)
+		return m, m.waitForProcessingActivity
+	case processingFinishedActivityMsg:
+		m.progress = append(m.progress, msg.text)
 	}
+
+	return m, nil
+}
+
+func (m tfPlanModel) View() string {
+	bits := []string{}
+
+	if m.runTfPlan {
+		bits = append(bits, m.planHeader)
+	}
+	if m.tfPlanFinished {
+		bits = append(bits, m.processingHeader)
+	}
+	bits = append(bits, m.progress...)
+
+	return strings.Join(bits, "\n")
+}
+
+// A command that waits for the activity on a channel.
+func (m tfPlanModel) waitForProcessingActivity() tea.Msg {
+	return <-m.processing
+}
+
+func (m tfPlanModel) processPlanCmd() tea.Msg {
+	ctx := m.ctx
+	span := trace.SpanFromContext(ctx)
 
 	tfPlanJsonCmd := exec.CommandContext(ctx, "terraform", "show", "-json", "overmind.plan")
-	tfPlanJsonCmd.Stderr = os.Stderr
+	tfPlanJsonCmd.Stderr = os.Stderr // TODO: capture and output this through the View() instead
 
 	planJson, err := tfPlanJsonCmd.Output()
 	if err != nil {
-		return fmt.Errorf("failed to convert terraform plan to JSON: %w", err)
+		return fatalError{err: fmt.Errorf("failed to convert terraform plan to JSON: %w", err)}
 	}
 
 	plannedChanges, err := mappedItemDiffsFromPlan(ctx, planJson, "overmind.plan", log.Fields{})
 	if err != nil {
-		return fmt.Errorf("failed to parse terraform plan: %w", err)
+		return fatalError{err: fmt.Errorf("failed to parse terraform plan: %w", err)}
 	}
+
+	m.processing <- processingActivityMsg{"converted terraform plan to JSON"}
 
 	ticketLink := viper.GetString("ticket-link")
 	if ticketLink == "" {
@@ -309,10 +343,10 @@ Running ` + "`" + `terraform %v` + "`" + `
 		}
 	}
 
-	client := AuthenticatedChangesClient(ctx, oi)
-	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, false)
+	client := AuthenticatedChangesClient(ctx, m.oi)
+	changeUuid, err := getChangeUuid(ctx, m.oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, false)
 	if err != nil {
-		return fmt.Errorf("failed searching for existing changes: %w", err)
+		return fatalError{err: fmt.Errorf("failed searching for existing changes: %w", err)}
 	}
 
 	title := changeTitle(viper.GetString("title"))
@@ -320,6 +354,7 @@ Running ` + "`" + `terraform %v` + "`" + `
 	codeChangesOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
 
 	if changeUuid == uuid.Nil {
+		m.processing <- processingActivityMsg{"Creating a new change"}
 		log.Debug("Creating a new change")
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 			Msg: &sdp.CreateChangeRequest{
@@ -335,12 +370,12 @@ Running ` + "`" + `terraform %v` + "`" + `
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("failed to create change: %w", err)
+			return fatalError{err: fmt.Errorf("failed to create a new change: %w", err)}
 		}
 
 		maybeChangeUuid := createResponse.Msg.GetChange().GetMetadata().GetUUIDParsed()
 		if maybeChangeUuid == nil {
-			return fmt.Errorf("failed to read change id: %w", err)
+			return fatalError{err: fmt.Errorf("failed to read change id: %w", err)}
 		}
 
 		changeUuid = *maybeChangeUuid
@@ -349,6 +384,7 @@ Running ` + "`" + `terraform %v` + "`" + `
 			attribute.Bool("ovm.change.new", true),
 		)
 	} else {
+		m.processing <- processingActivityMsg{"Updating an existing change"}
 		log.WithField("change", changeUuid).Debug("Updating an existing change")
 		span.SetAttributes(
 			attribute.String("ovm.change.uuid", changeUuid.String()),
@@ -370,10 +406,11 @@ Running ` + "`" + `terraform %v` + "`" + `
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("failed to update change: %w", err)
+			return fatalError{err: fmt.Errorf("failed to update change: %w", err)}
 		}
 	}
 
+	m.processing <- processingActivityMsg{"Uploading planned changes"}
 	log.WithField("change", changeUuid).Debug("Uploading planned changes")
 
 	resultStream, err := client.UpdatePlannedChanges(ctx, &connect.Request[sdp.UpdatePlannedChangesRequest]{
@@ -383,7 +420,7 @@ Running ` + "`" + `terraform %v` + "`" + `
 		},
 	})
 	if err != nil {
-		return fmt.Errorf("failed to update planned changes: %w", err)
+		return fatalError{err: fmt.Errorf("failed to update planned changes: %w", err)}
 	}
 
 	last_log := time.Now()
@@ -399,16 +436,17 @@ Running ` + "`" + `terraform %v` + "`" + `
 			last_log = time.Now()
 			first_log = false
 		}
+		m.processing <- processingActivityMsg{fmt.Sprintf("Status update: %v", msg)}
 	}
 	if resultStream.Err() != nil {
-		return fmt.Errorf("error streaming results: %w", resultStream.Err())
+		return fatalError{err: fmt.Errorf("error streaming results: %w", err)}
 	}
 
-	changeUrl := *oi.FrontendUrl
+	changeUrl := *m.oi.FrontendUrl
 	changeUrl.Path = fmt.Sprintf("%v/changes/%v/blast-radius", changeUrl.Path, changeUuid)
 	log.WithField("change-url", changeUrl.String()).Info("Change ready")
 	fmt.Println(changeUrl.String())
-	return nil
+	return processingFinishedActivityMsg{"Done"}
 }
 
 // getTicketLinkFromPlan reads the plan file to create a unique hash to identify this change

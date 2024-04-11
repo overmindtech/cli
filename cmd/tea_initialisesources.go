@@ -18,7 +18,7 @@ import (
 )
 
 type loadSourcesConfigMsg struct {
-	ctx    context.Context //note that this ctx is not initialized on NewGetConfigModel to instead get a modified context through the startGetConfigMsg that has a timeout and cancelFunction configured
+	ctx    context.Context
 	oi     OvermindInstance
 	action string
 	token  *oauth2.Token
@@ -36,7 +36,7 @@ type sourcesInitialisedMsg struct{}
 type initialiseSourcesModel struct {
 	taskModel
 
-	ctx    context.Context
+	ctx    context.Context // note that this ctx is not initialized on NewGetConfigModel to instead get a modified context through the loadSourcesConfigMsg that has a timeout and cancelFunction configured
 	oi     OvermindInstance
 	action string
 	token  *oauth2.Token
@@ -307,6 +307,8 @@ func (m initialiseSourcesModel) storeConfigCmd(aws_config, aws_profile string) t
 }
 func (m initialiseSourcesModel) startSourcesCmd(aws_config, aws_profile string) tea.Cmd {
 	return func() tea.Msg {
+		// ignore returned context. Cancellation of sources is handled by the process exiting for now.
+		// should sources require more teardown, we'll have to figure something out.
 		_, err := InitializeSources(m.ctx, m.oi, aws_config, aws_profile, m.token)
 		if err != nil {
 			return fatalError{id: m.spinner.ID(), err: fmt.Errorf("failed to initialise sources: %w", err)}

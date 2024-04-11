@@ -20,7 +20,7 @@ Sleep 1
 Enter
 Type "sso-dogfood"
 Enter
-Sleep 5
+Sleep 20
 
 # Ctrl+c
 # Sleep 10
