@@ -355,7 +355,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	// General Config
-	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "error", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
+	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
 	cobra.CheckErr(viper.BindEnv("log", "OVERMIND_LOG", "LOG")) // fallback to global config
 
 	// Support API Keys in the environment
@@ -398,8 +398,8 @@ func init() {
 		if logLevel != "" {
 			lvl, err = log.ParseLevel(logLevel)
 			if err != nil {
-				log.WithFields(log.Fields{"level": logLevel, "err": err}).Errorf("couldn't parse `log` config, defaulting to `error`")
-				lvl = log.ErrorLevel
+				log.WithFields(log.Fields{"level": logLevel, "err": err}).Errorf("couldn't parse `log` config, defaulting to `info`")
+				lvl = log.InfoLevel
 			}
 		} else {
 			lvl = log.ErrorLevel

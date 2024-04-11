@@ -83,6 +83,9 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func([]stri
 		defer span.End()
 		defer tracing.LogRecoverToExit(ctx, cmdName)
 
+		// ensure that only error messages are printed to the console,
+		// disrupting bubbletea rendering (and potentially getting overwritten).
+		// Otherwise, when TEABUG is set, log to a file.
 		if len(os.Getenv("TEABUG")) > 0 {
 			f, err := tea.LogToFile("teabug.log", "debug")
 			if err != nil {
@@ -91,6 +94,8 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func([]stri
 			}
 			defer f.Close()
 			log.SetOutput(f)
+		} else {
+			log.SetLevel(log.ErrorLevel)
 		}
 
 		// wrap the rest of the function in a closure to allow for cleaner error handling and deferring.
