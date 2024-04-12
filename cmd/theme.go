@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 )
 
 type LogoPalette struct {
@@ -117,8 +118,13 @@ var deletedLineStyle = lipgloss.NewStyle().Background(lipgloss.Color(ColorPalett
 var containerStyle = lipgloss.NewStyle().PaddingLeft(2).PaddingTop(2)
 
 func markdownToString(markdown string) string {
+	themePath := "./overmind-theme.json"
+	hasDarkBackground := termenv.HasDarkBackground()
+	if hasDarkBackground {
+		themePath = "./overmind-theme-dark.json"
+	}
 	r, _ := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
+		glamour.WithStylesFromJSONFile(themePath),
 	)
 	out, _ := r.Render(markdown)
 	return out
