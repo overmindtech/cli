@@ -311,10 +311,10 @@ func (m tfPlanModel) View() string {
 	bits := []string{}
 
 	if m.runTfPlan {
-		bits = append(bits, m.planHeader)
+		bits = append(bits, markdownToString(m.planHeader))
 	}
 	if m.tfPlanFinished {
-		bits = append(bits, m.processingHeader)
+		bits = append(bits, markdownToString(m.processingHeader))
 	}
 	bits = append(bits, m.progress...)
 

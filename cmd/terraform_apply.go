@@ -175,7 +175,7 @@ func (m tfApplyModel) View() string {
 			strings.Join(m.progress, "\n") + "\n"
 	}
 
-	return m.applyHeader
+	return markdownToString(m.applyHeader)
 }
 
 func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
