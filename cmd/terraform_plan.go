@@ -69,9 +69,6 @@ func viperGetApp(ctx context.Context) (string, error) {
 
 func CmdWrapper(action string, requiredScopes []string, commandModel func([]string) tea.Model) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
-		// avoid log messages from sources and others to interrupt bubbletea rendering
-		viper.Set("log", "error")
-
 		// set up a context for the command
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -95,6 +92,8 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func([]stri
 			defer f.Close()
 			log.SetOutput(f)
 		} else {
+			// avoid log messages from sources and others to interrupt bubbletea rendering
+			viper.Set("log", "error")
 			log.SetLevel(log.ErrorLevel)
 		}
 
@@ -243,15 +242,13 @@ func NewTfPlanModel(args []string) tea.Model {
 
 	planHeader := `# Planning Changes
 
-	Running ` + "`" + `terraform %v` + "`" + `
-	`
+Running ` + "`" + `terraform %v` + "`\n"
 	planHeader = fmt.Sprintf(planHeader, strings.Join(args, " "))
 
 	processingHeader := `# Planning Changes
 
-	Processing plan from ` + "`" + `terraform %v` + "`" + `
-	`
-	processingHeader = fmt.Sprintf(planHeader, strings.Join(args, " "))
+Processing plan from ` + "`" + `terraform %v` + "`\n"
+	processingHeader = fmt.Sprintf(processingHeader, strings.Join(args, " "))
 
 	return tfPlanModel{
 		args:             args,
@@ -324,7 +321,7 @@ func (m tfPlanModel) View() string {
 	return strings.Join(bits, "\n")
 }
 
-// A command that waits for the activity on a channel.
+// A command that waits for the activity on the processing channel.
 func (m tfPlanModel) waitForProcessingActivity() tea.Msg {
 	return <-m.processing
 }
