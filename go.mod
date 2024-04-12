@@ -12,7 +12,7 @@ require (
 	github.com/getsentry/sentry-go v0.27.0
 	github.com/google/uuid v1.6.0
 	github.com/hexops/gotextdiff v1.0.3
-	github.com/jedib0t/go-pretty/v6 v6.5.6
+	github.com/jedib0t/go-pretty/v6 v6.5.8
 	github.com/mattn/go-isatty v0.0.20
 	github.com/overmindtech/aws-source v0.0.0-20240405002202-e9246468a057
 	github.com/overmindtech/sdp-go v0.69.0
