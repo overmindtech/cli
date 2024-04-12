@@ -26,8 +26,12 @@ github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 h1:x6xsQXGSmW6frevw
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2/go.mod h1:lPprDr1e6cJdyYeGXnRaJoP4Md+cDBvi2eOj00BlGmg=
 github.com/aws/aws-sdk-go-v2/config v1.27.10 h1:PS+65jThT0T/snC5WjyfHHyUgG+eBoupSDV+f838cro=
 github.com/aws/aws-sdk-go-v2/config v1.27.10/go.mod h1:BePM7Vo4OBpHreKRUMuDXX+/+JWP38FLkzl5m27/Jjs=
+github.com/aws/aws-sdk-go-v2/config v1.27.11 h1:f47rANd2LQEYHda2ddSCKYId18/8BhSRM4BULGmfgNA=
+github.com/aws/aws-sdk-go-v2/config v1.27.11/go.mod h1:SMsV78RIOYdve1vf36z8LmnszlRWkwMQtomCAI0/mIE=
 github.com/aws/aws-sdk-go-v2/credentials v1.17.10 h1:qDZ3EA2lv1KangvQB6y258OssCHD0xvaGiEDkG4X/10=
 github.com/aws/aws-sdk-go-v2/credentials v1.17.10/go.mod h1:6t3sucOaYDwDssHQa0ojH1RpmVmF5/jArkye1b2FKMI=
+github.com/aws/aws-sdk-go-v2/credentials v1.17.11 h1:YuIB1dJNf1Re822rriUOTxopaHHvIq0l/pX3fwO+Tzs=
+github.com/aws/aws-sdk-go-v2/credentials v1.17.11/go.mod h1:AQtFPsDH9bI2O+71anW6EKL+NcD7LG3dpKGMV4SShgo=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.1 h1:FVJ0r5XTHSmIHJV6KuDmdYhEpvlHpiSd38RQWhut5J4=
 github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.1/go.mod h1:zusuAeqezXzAB24LGuzuekqMAEgWkVYukBec3kr3jUg=
 github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.5 h1:aw39xVGeRWlWx9EzGVnhOR4yOjQDHPQ6o6NmBlscyQg=
@@ -42,8 +46,12 @@ github.com/aws/aws-sdk-go-v2/service/autoscaling v1.40.5 h1:vhdJymxlWS2qftzLiuCj
 github.com/aws/aws-sdk-go-v2/service/autoscaling v1.40.5/go.mod h1:ZErgk/bPaaZIpj+lUWGlwI1A0UFhSIscgnCPzTLnb2s=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.35.4 h1:a4gfRHHCzvV0jEjOUdZOK0oJ4H21x5WT+E4ucWk4jeM=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.35.4/go.mod h1:Pphkts8iBnexoEpcMti5fUvN3/yoGRLtl2heOeppF70=
+github.com/aws/aws-sdk-go-v2/service/cloudfront v1.36.0 h1:KbT1H0KXc26/M6km03gBWz5v1M5aOq4Cwo+aXJ2BpfM=
+github.com/aws/aws-sdk-go-v2/service/cloudfront v1.36.0/go.mod h1:Pphkts8iBnexoEpcMti5fUvN3/yoGRLtl2heOeppF70=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.37.0 h1:sGGUnU/pUSzjrcCvQgN2pEc3aTQILyK2rRsWVY5CSt0=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.37.0/go.mod h1:U12sr6Lt14X96f16t+rR52+2BdqtydwN7DjEEHRMjO0=
+github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.38.0 h1:vAfGwYFCcPDS9Bg7ckfMBer6olJLOHsOAVoKWpPIirs=
+github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.38.0/go.mod h1:U12sr6Lt14X96f16t+rR52+2BdqtydwN7DjEEHRMjO0=
 github.com/aws/aws-sdk-go-v2/service/directconnect v1.24.4 h1:9g0G4b/HG8Yw9YQQMUotq2QjvOYxX8kHxnAO6Yq7FuI=
 github.com/aws/aws-sdk-go-v2/service/directconnect v1.24.4/go.mod h1:+Y1uRuhFUQpU4/cV2zgdkk6SlE/oiZEDRP8ilynvDZk=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.1 h1:dZXY07Dm59TxAjJcUfNMJHLDI/gLMxTRZefn2jFAVsw=
@@ -62,6 +70,8 @@ github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.5 h1:/x2u/TOx+
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.5/go.mod h1:e1McVqsud0JOERidvppLEHnuCdh/X6MRyL5L0LseAUk=
 github.com/aws/aws-sdk-go-v2/service/iam v1.31.4 h1:eVm30ZIDv//r6Aogat9I88b5YX1xASSLcEDqHYRPVl0=
 github.com/aws/aws-sdk-go-v2/service/iam v1.31.4/go.mod h1:aXWImQV0uTW35LM0A/T4wEg6R1/ReXUu4SM6/lUHYK0=
+github.com/aws/aws-sdk-go-v2/service/iam v1.32.0 h1:ZNlfPdw849gBo/lvLFbEEvpTJMij0LXqiNWZ+lIamlU=
+github.com/aws/aws-sdk-go-v2/service/iam v1.32.0/go.mod h1:aXWImQV0uTW35LM0A/T4wEg6R1/ReXUu4SM6/lUHYK0=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2 h1:Ji0DY1xUsUr3I8cHps0G+XM3WWU16lP6yG8qu1GAZAs=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2/go.mod h1:5CsjAbs3NlGQyZNFACh+zztPDI7fU6eW9QsxjfnuBKg=
 github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.7 h1:ZMeFZ5yk+Ek+jNr1+uwCd2tG89t6oTS5yVWpa6yy2es=
@@ -80,6 +90,8 @@ github.com/aws/aws-sdk-go-v2/service/networkmanager v1.25.4 h1:5zZGVozt8lCpnekoL
 github.com/aws/aws-sdk-go-v2/service/networkmanager v1.25.4/go.mod h1:Rftyeew4I3rCNOtfoZchQIMUAuv2nFCp9vn7jY+A+Yc=
 github.com/aws/aws-sdk-go-v2/service/rds v1.76.1 h1:6NeDO4UyHun2N5Lmkv2yW1sNblRLRjq3j6Azv7kUyuM=
 github.com/aws/aws-sdk-go-v2/service/rds v1.76.1/go.mod h1:Rw15qGaGWu3jO0dOz7JyvdOEjgae//YrJxVWLYGynvg=
+github.com/aws/aws-sdk-go-v2/service/rds v1.77.1 h1:RatrfyDgfeXDmYw1gq5IR5tXXf1C9/enPtXWXn5kufE=
+github.com/aws/aws-sdk-go-v2/service/rds v1.77.1/go.mod h1:Rw15qGaGWu3jO0dOz7JyvdOEjgae//YrJxVWLYGynvg=
 github.com/aws/aws-sdk-go-v2/service/route53 v1.40.4 h1:ZZKiHm4cN8IDDZ2kh8DTk+YnYBjVsiFdwf5FwVs//IQ=
 github.com/aws/aws-sdk-go-v2/service/route53 v1.40.4/go.mod h1:RTfjFUctf+Zyq8e4rgLXmz43+0kIoIXbENvrFtilumI=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1 h1:6cnno47Me9bRykw9AEv9zkXE+5or7jz8TsskTTccbgc=
@@ -90,6 +102,8 @@ github.com/aws/aws-sdk-go-v2/service/sqs v1.31.4 h1:mE2ysZMEeQ3ulHWs4mmc4fZEhOfe
 github.com/aws/aws-sdk-go-v2/service/sqs v1.31.4/go.mod h1:lCN2yKnj+Sp9F6UzpoPPTir+tSaC9Jwf6LcmTqnXFZw=
 github.com/aws/aws-sdk-go-v2/service/sso v1.20.4 h1:WzFol5Cd+yDxPAdnzTA5LmpHYSWinhmSj4rQChV0ee8=
 github.com/aws/aws-sdk-go-v2/service/sso v1.20.4/go.mod h1:qGzynb/msuZIE8I75DVRCUXw3o3ZyBmUvMwQ2t/BrGM=
+github.com/aws/aws-sdk-go-v2/service/sso v1.20.5 h1:vN8hEbpRnL7+Hopy9dzmRle1xmDc7o8tmY0klsr175w=
+github.com/aws/aws-sdk-go-v2/service/sso v1.20.5/go.mod h1:qGzynb/msuZIE8I75DVRCUXw3o3ZyBmUvMwQ2t/BrGM=
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.4 h1:Jux+gDDyi1Lruk+KHF91tK2KCuY61kzoCpvtvJJBtOE=
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.4/go.mod h1:mUYPBhaF2lGiukDEjJX2BLRRKTmoUSitGDUgM4tRxak=
 github.com/aws/aws-sdk-go-v2/service/sts v1.28.6 h1:cwIxeBttqPN3qkaAjcEcsh8NYr8n2HZPkcKgPAi1phU=
@@ -228,6 +242,8 @@ github.com/openrdap/rdap v0.9.2-0.20240219192926-2210b535d40b h1:sM/kMuT+cm9hsSa
 github.com/openrdap/rdap v0.9.2-0.20240219192926-2210b535d40b/go.mod h1:391Ww1JbjG4FHOlvQqCd6n25CCCPE64JzC5cCYPxhyM=
 github.com/overmindtech/aws-source v0.0.0-20240405002202-e9246468a057 h1:sOdf1e8jjXrfsCv78Gp6WGhUi/+ecD3oWRpF5Ww1/vY=
 github.com/overmindtech/aws-source v0.0.0-20240405002202-e9246468a057/go.mod h1:e9b7hqxI384St9vvcOKEgTTr/bH6JzLj/gBPv4iaTPs=
+github.com/overmindtech/aws-source v0.0.0-20240412000958-78195fccc484 h1:v6xk5AxXjnAi4PEmt1Ys0gGvSnOR4IA/FRpi8BKs9AM=
+github.com/overmindtech/aws-source v0.0.0-20240412000958-78195fccc484/go.mod h1:yhBaNYnqejV1nrMKuAeUiHfP7KSdPr1JEgVPYGcaWcI=
 github.com/overmindtech/discovery v0.26.6 h1:6bM1FVA7wrSqaPQrSQsGyhcAWtWLnvxpg9N2FDF9KLg=
 github.com/overmindtech/discovery v0.26.6/go.mod h1:69l113ABqPejHVXsPl3OL2am2Je+PhgSjyJwFJzE3Fw=
 github.com/overmindtech/sdp-go v0.69.0 h1:Bvp3n7E6HtOQcj0CG+atFjUG3EyCuc0glfQvkqsVgwo=
