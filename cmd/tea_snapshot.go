@@ -13,16 +13,6 @@ type snapshotModel struct {
 	edges uint32
 }
 
-// utility interface to remove the need for a type assertion
-type connectResultStream interface {
-	// Receive advances the stream to the next message, which will then be
-	// available through the Msg method. It returns false when the stream stops,
-	// either by reaching the end or by encountering an unexpected error. After
-	// Receive returns false, the Err method will return any unexpected error
-	// encountered.
-	Receive() bool
-}
-
 type startSnapshotMsg struct {
 	newState string
 }
