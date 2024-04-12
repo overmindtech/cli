@@ -91,6 +91,8 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func([]stri
 			}
 			defer f.Close()
 			log.SetOutput(f)
+			viper.Set("log", "trace")
+			log.SetLevel(log.TraceLevel)
 		} else {
 			// avoid log messages from sources and others to interrupt bubbletea rendering
 			viper.Set("log", "error")
@@ -126,7 +128,11 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func([]stri
 			}
 
 			// avoid overwriting the last view
-			fmt.Println()
+			// fmt.Println("1")
+			// fmt.Println("2")
+			// fmt.Println("3")
+			// fmt.Println("4")
+			// fmt.Println("5")
 
 			return nil
 		}()
@@ -224,16 +230,20 @@ type tfPlanModel struct {
 	planHeader       string
 	processingHeader string
 
-	runTfPlan      bool
-	tfPlanFinished bool
-	processing     chan tea.Msg
-	progress       []string
+	runTfPlan       bool
+	tfPlanFinished  bool
+	processing      chan tea.Msg
+	processingModel snapshotModel
+	progress        []string
+	changeUrl       string
 }
 
 type triggerTfPlanMsg struct{}
 type tfPlanFinishedMsg struct{}
 type processingActivityMsg struct{ text string }
+type changeUpdatedMsg struct{ url string }
 type processingFinishedActivityMsg struct{ text string }
+type delayQuitMsg struct{}
 
 func NewTfPlanModel(args []string) tea.Model {
 	args = append([]string{"plan"}, args...)
@@ -245,7 +255,7 @@ func NewTfPlanModel(args []string) tea.Model {
 Running ` + "`" + `terraform %v` + "`\n"
 	planHeader = fmt.Sprintf(planHeader, strings.Join(args, " "))
 
-	processingHeader := `# Planning Changes
+	processingHeader := `# Processing Planned Changes
 
 Processing plan from ` + "`" + `terraform %v` + "`\n"
 	processingHeader = fmt.Sprintf(processingHeader, strings.Join(args, " "))
@@ -255,8 +265,9 @@ Processing plan from ` + "`" + `terraform %v` + "`\n"
 		planHeader:       planHeader,
 		processingHeader: processingHeader,
 
-		processing: make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
-		progress:   []string{},
+		processing:      make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
+		processingModel: snapshotModel{title: "Calculating Blast Radius", state: "pending"},
+		progress:        []string{},
 	}
 }
 
@@ -292,6 +303,12 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			})
 	case tfPlanFinishedMsg:
 		m.tfPlanFinished = true
+		// TODO: make this hack less ugly
+		lines := strings.Split(m.View(), "\n")
+		for range lines {
+			// scroll up to avoid overwriting the output from terraform
+			fmt.Println()
+		}
 		return m, tea.Batch(
 			m.processPlanCmd,
 			m.waitForProcessingActivity,
@@ -301,7 +318,26 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.waitForProcessingActivity
 	case processingFinishedActivityMsg:
 		m.progress = append(m.progress, msg.text)
+		return m, m.waitForProcessingActivity
+	case changeUpdatedMsg:
+		m.changeUrl = msg.url
+		return m, m.waitForProcessingActivity
+
+	case startSnapshotMsg:
+		mdl, cmd := m.processingModel.Update(msg)
+		m.processingModel = mdl.(snapshotModel)
+		return m, tea.Batch(m.waitForProcessingActivity, cmd)
+	case progressSnapshotMsg:
+		mdl, cmd := m.processingModel.Update(msg)
+		m.processingModel = mdl.(snapshotModel)
+		return m, tea.Batch(m.waitForProcessingActivity, cmd)
+	case finishSnapshotMsg:
+		mdl, cmd := m.processingModel.Update(msg)
+		m.processingModel = mdl.(snapshotModel)
+		return m, tea.Sequence(cmd, func() tea.Msg { return delayQuitMsg{} })
+	case delayQuitMsg:
 		return m, tea.Quit
+
 	}
 
 	return m, nil
@@ -310,25 +346,35 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m tfPlanModel) View() string {
 	bits := []string{}
 
-	if m.runTfPlan {
+	if m.runTfPlan && !m.tfPlanFinished {
 		bits = append(bits, markdownToString(m.planHeader))
-	}
-	if m.tfPlanFinished {
+	} else if m.tfPlanFinished {
 		bits = append(bits, markdownToString(m.processingHeader))
+		bits = append(bits, m.processingModel.View())
 	}
-	bits = append(bits, m.progress...)
 
-	return strings.Join(bits, "\n")
+	// bits = append(bits, m.progress...)
+
+	if m.changeUrl != "" {
+		bits = append(bits, markdownToString(fmt.Sprintf("Change ready: [%v](%v)", m.changeUrl, m.changeUrl)))
+	}
+	return strings.Join(bits, "\n") + "\n"
 }
 
 // A command that waits for the activity on the processing channel.
 func (m tfPlanModel) waitForProcessingActivity() tea.Msg {
-	return <-m.processing
+	// TODO: remove debugging aids
+	time.Sleep(500 * time.Millisecond)
+	msg := <-m.processing
+	log.Debugf("received %+v", msg)
+	return msg
 }
 
 func (m tfPlanModel) processPlanCmd() tea.Msg {
 	ctx := m.ctx
 	span := trace.SpanFromContext(ctx)
+
+	m.processing <- startSnapshotMsg{newState: "converting terraform plan to JSON"}
 
 	tfPlanJsonCmd := exec.CommandContext(ctx, "terraform", "show", "-json", "overmind.plan")
 	tfPlanJsonCmd.Stderr = os.Stderr // TODO: capture and output this through the View() instead
@@ -344,6 +390,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	}
 
 	m.processing <- processingActivityMsg{"converted terraform plan to JSON"}
+	m.processing <- progressSnapshotMsg{newState: "converted terraform plan to JSON"}
 
 	ticketLink := viper.GetString("ticket-link")
 	if ticketLink == "" {
@@ -365,6 +412,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 
 	if changeUuid == uuid.Nil {
 		m.processing <- processingActivityMsg{"Creating a new change"}
+		m.processing <- progressSnapshotMsg{newState: "creating a new change"}
 		log.Debug("Creating a new change")
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 			Msg: &sdp.CreateChangeRequest{
@@ -395,6 +443,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 		)
 	} else {
 		m.processing <- processingActivityMsg{"Updating an existing change"}
+		m.processing <- progressSnapshotMsg{newState: "updating an existing change"}
 		log.WithField("change", changeUuid).Debug("Updating an existing change")
 		span.SetAttributes(
 			attribute.String("ovm.change.uuid", changeUuid.String()),
@@ -422,6 +471,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 
 	m.processing <- processingActivityMsg{"Uploading planned changes"}
 	log.WithField("change", changeUuid).Debug("Uploading planned changes")
+	m.processing <- progressSnapshotMsg{newState: "uploading planned changes"}
 
 	resultStream, err := client.UpdatePlannedChanges(ctx, &connect.Request[sdp.UpdatePlannedChangesRequest]{
 		Msg: &sdp.UpdatePlannedChangesRequest{
@@ -435,18 +485,37 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 
 	last_log := time.Now()
 	first_log := true
+	var msg *sdp.CalculateBlastRadiusResponse
 	for resultStream.Receive() {
-		msg := resultStream.Msg()
+		msg = resultStream.Msg()
 
 		// log the first message and at most every 250ms during discovery
 		// to avoid spanning the cli output
 		time_since_last_log := time.Since(last_log)
 		if first_log || msg.GetState() != sdp.CalculateBlastRadiusResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
-			log.WithField("msg", msg).Info("Status update")
+			log.WithField("msg", msg).Trace("Status update")
 			last_log = time.Now()
 			first_log = false
 		}
 		m.processing <- processingActivityMsg{fmt.Sprintf("Status update: %v", msg)}
+		stateLabel := "unknown"
+		switch msg.GetState() {
+		case sdp.CalculateBlastRadiusResponse_STATE_UNSPECIFIED:
+			stateLabel = "unknown"
+		case sdp.CalculateBlastRadiusResponse_STATE_DISCOVERING:
+			stateLabel = "discovering blast radius"
+		case sdp.CalculateBlastRadiusResponse_STATE_FINDING_APPS:
+			stateLabel = "finding apps"
+		case sdp.CalculateBlastRadiusResponse_STATE_SAVING:
+			stateLabel = "saving blast radius"
+		case sdp.CalculateBlastRadiusResponse_STATE_DONE:
+			stateLabel = "done"
+		}
+		m.processing <- progressSnapshotMsg{
+			newState: stateLabel,
+			items:    msg.GetNumItems(),
+			edges:    msg.GetNumEdges(),
+		}
 	}
 	if resultStream.Err() != nil {
 		return fatalError{err: fmt.Errorf("error streaming results: %w", err)}
@@ -455,8 +524,16 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	changeUrl := *m.oi.FrontendUrl
 	changeUrl.Path = fmt.Sprintf("%v/changes/%v/blast-radius", changeUrl.Path, changeUuid)
 	log.WithField("change-url", changeUrl.String()).Info("Change ready")
-	fmt.Println(changeUrl.String())
-	return processingFinishedActivityMsg{"Done"}
+
+	// fmt.Println(changeUrl.String())
+
+	m.processing <- changeUpdatedMsg{url: changeUrl.String()}
+	m.processing <- processingFinishedActivityMsg{"Done"}
+	return finishSnapshotMsg{
+		newState: "calculated blast radius",
+		items:    msg.GetNumItems(),
+		edges:    msg.GetNumEdges(),
+	}
 }
 
 // getTicketLinkFromPlan reads the plan file to create a unique hash to identify this change
