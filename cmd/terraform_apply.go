@@ -102,6 +102,7 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case sourcesInitialisedMsg:
 		m.isStarting = true
 		return m, tea.Batch(
+			m.startingChangeSnapshot.Init(),
 			m.startStartChangeCmd(),
 			m.waitForStartingActivity,
 		)
@@ -159,6 +160,7 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tfApplyFinishedMsg:
 		m.isEnding = true
 		return m, tea.Batch(
+			m.endingChangeSnapshot.Init(),
 			m.startEndChangeCmd(),
 			m.waitForEndingActivity,
 		)
