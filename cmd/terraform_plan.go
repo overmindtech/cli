@@ -236,6 +236,8 @@ type tfPlanModel struct {
 	processingModel snapshotModel
 	progress        []string
 	changeUrl       string
+
+	fatalError string
 }
 
 type triggerTfPlanMsg struct{}
@@ -303,12 +305,7 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			})
 	case tfPlanFinishedMsg:
 		m.tfPlanFinished = true
-		// TODO: make this hack less ugly
-		lines := strings.Split(m.View(), "\n")
-		for range lines {
-			// scroll up to avoid overwriting the output from terraform
-			fmt.Println()
-		}
+
 		return m, tea.Batch(
 			m.processPlanCmd,
 			m.waitForProcessingActivity,
@@ -338,6 +335,9 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case delayQuitMsg:
 		return m, tea.Quit
 
+	case fatalError:
+		m.fatalError = msg.err.Error()
+		return m, tea.Quit
 	}
 
 	return m, nil
@@ -358,6 +358,11 @@ func (m tfPlanModel) View() string {
 	if m.changeUrl != "" {
 		bits = append(bits, markdownToString(fmt.Sprintf("Change ready: [%v](%v)", m.changeUrl, m.changeUrl)))
 	}
+
+	if m.fatalError != "" {
+		bits = append(bits, deletedLineStyle.Render(fmt.Sprintf("Error: %v", m.fatalError)))
+	}
+
 	return strings.Join(bits, "\n") + "\n"
 }
 

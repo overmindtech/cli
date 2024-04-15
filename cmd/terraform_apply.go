@@ -158,13 +158,6 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			})
 	case tfApplyFinishedMsg:
 		m.isEnding = true
-		// TODO: make this hack less ugly
-		lines := strings.Split(m.View(), "\n")
-		for range lines {
-			// scroll up to avoid overwriting the output from terraform
-			fmt.Println()
-		}
-
 		return m, tea.Batch(
 			m.endingChangeSnapshot.Init(),
 			m.startEndChangeCmd(),
