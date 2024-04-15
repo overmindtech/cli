@@ -14,9 +14,9 @@ require (
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/jedib0t/go-pretty/v6 v6.5.8
 	github.com/mattn/go-isatty v0.0.20
-	github.com/overmindtech/aws-source v0.0.0-20240405002202-e9246468a057
+	github.com/overmindtech/aws-source v0.0.0-20240412103019-c6e4434059b9
 	github.com/overmindtech/sdp-go v0.69.0
-	github.com/overmindtech/stdlib-source v0.0.0-20240405003059-bb202167dc25
+	github.com/overmindtech/stdlib-source v0.0.0-20240412101627-9214757e2dfb
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
@@ -39,8 +39,6 @@ require (
 )
 
 require (
-	github.com/Masterminds/semver/v3 v3.2.1 // indirect
-	github.com/MrAlias/otel-schema-utils v0.2.1-alpha // indirect
 	github.com/alecthomas/chroma/v2 v2.8.0 // indirect
 	github.com/alecthomas/kingpin/v2 v2.3.2 // indirect
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
@@ -49,16 +47,16 @@ require (
 	github.com/aws/aws-sdk-go v1.51.11 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.27.10 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.10 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.27.11 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.11 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.5 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.5 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.40.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.35.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.37.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.36.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.38.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.24.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.156.0 // indirect
@@ -67,7 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/eks v1.42.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.24.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iam v1.31.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iam v1.32.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.6 // indirect
@@ -76,12 +74,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.38.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.25.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.76.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.77.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.40.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.29.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.31.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.20.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.20.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.6 // indirect
 	github.com/aws/smithy-go v1.20.2 // indirect
@@ -97,7 +95,6 @@ require (
 	github.com/go-jose/go-jose/v4 v4.0.1 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.19.0 // indirect
@@ -142,7 +139,6 @@ require (
 	github.com/yuin/goldmark v1.5.4 // indirect
 	github.com/yuin/goldmark-emoji v1.0.2 // indirect
 	go.opentelemetry.io/otel/metric v1.25.0 // indirect
-	go.opentelemetry.io/otel/schema v0.0.7 // indirect
 	go.opentelemetry.io/proto/otlp v1.1.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
