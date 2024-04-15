@@ -13,11 +13,16 @@ terraform {
 
 provider "aws" {}
 
+variable "bucket_postfix" {
+  type        = string
+  description = "The prefix to apply to the bucket name."
+}
+
 module "bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "~> 4.0"
 
-  bucket_prefix = "cli-test"
+  bucket_prefix = "cli-test${var.bucket_postfix}"
 
   control_object_ownership = true
   object_ownership         = "BucketOwnerEnforced"
