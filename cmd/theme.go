@@ -1,8 +1,12 @@
 package cmd
 
 import (
+	_ "embed"
+	"fmt"
+
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/termenv"
 )
 
 type LogoPalette struct {
@@ -116,10 +120,28 @@ var addedLineStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPalette.
 var deletedLineStyle = lipgloss.NewStyle().Background(lipgloss.Color(ColorPalette.Light.BgDanger)).Foreground(lipgloss.Color(ColorPalette.Light.LabelControl))
 var containerStyle = lipgloss.NewStyle().PaddingLeft(2).PaddingTop(2)
 
+//go:embed overmind-theme.json
+var overmindTheme []byte
+
+//go:embed overmind-theme-dark.json
+var overmindThemeDark []byte
+
 func markdownToString(markdown string) string {
-	r, _ := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
+	themeToUse := overmindTheme
+	hasDarkBackground := termenv.HasDarkBackground()
+	if hasDarkBackground {
+		themeToUse = overmindThemeDark
+	}
+
+	r, err := glamour.NewTermRenderer(
+		glamour.WithStylesFromJSONBytes(themeToUse),
 	)
-	out, _ := r.Render(markdown)
+	if err != nil {
+		panic(fmt.Errorf("failed to initialize terminal renderer: %w", err))
+	}
+	out, err := r.Render(markdown)
+	if err != nil {
+		panic(fmt.Errorf("failed to render markdown: %w", err))
+	}
 	return out
 }
