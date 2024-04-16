@@ -121,19 +121,20 @@ var deletedLineStyle = lipgloss.NewStyle().Background(lipgloss.Color(ColorPalett
 var containerStyle = lipgloss.NewStyle().PaddingLeft(2).PaddingTop(2)
 
 //go:embed overmind-theme.json
-var overmindTheme string
+var overmindTheme []byte
 
 //go:embed overmind-theme-dark.json
-var overmindThemeDark string
+var overmindThemeDark []byte
 
 func markdownToString(markdown string) string {
-	themePath := overmindTheme
+	themeToUse := overmindTheme
 	hasDarkBackground := termenv.HasDarkBackground()
 	if hasDarkBackground {
-		themePath = overmindThemeDark
+		themeToUse = overmindThemeDark
 	}
+
 	r, err := glamour.NewTermRenderer(
-		glamour.WithStylesFromJSONFile(themePath),
+		glamour.WithStylesFromJSONBytes(themeToUse),
 	)
 	if err != nil {
 		panic(fmt.Errorf("failed to initialize terminal renderer: %w", err))

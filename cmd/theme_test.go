@@ -5,9 +5,9 @@ import (
 )
 
 func TestMarkdownToString(t *testing.T) {
-	// TODO: change this test data to use something that actually gets rendered to ANSI sequences and capture the correct output.
-	markdown := "This is a test markdown"
-	expectedOutput := "This is a test markdown"
+	markdown := `# some random markdown`
+	expectedOutput := "\n\x1b[38;2;255;255;255;48;2;121;112;235;1m\x1b[0m\x1b[38;2;255;255;255;48;2;121;112;235;1m\x1b[0m  \x1b[38;2;255;255;255;48;2;121;112;235;1m   \x1b[0m\x1b[38;2;255;255;255;48;2;121;112;235;1msome random\x1b[0m\x1b[38;2;255;255;255;48;2;121;112;235;1m markdown\x1b[0m\x1b[38;2;255;255;255;48;2;121;112;235;1m   \x1b[0m\x1b[38;2;186;186;186m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[0m\n\x1b[0m\n"
+
 	got := markdownToString(markdown)
 	if got != expectedOutput {
 		t.Errorf("Expected %q, but got %q", expectedOutput, got)
