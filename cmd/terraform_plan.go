@@ -184,7 +184,7 @@ func InitializeSources(ctx context.Context, oi OvermindInstance, aws_config, aws
 		// TODO: not implemented yet
 	}
 
-	awsEngine, err := proc.InitializeAwsSourceEngine(natsOptions, awsAuthConfig, 2_000)
+	awsEngine, err := proc.InitializeAwsSourceEngine(ctx, natsOptions, awsAuthConfig, 2_000)
 	if err != nil {
 		return func() {}, fmt.Errorf("failed to initialize AWS source engine: %w", err)
 	}
