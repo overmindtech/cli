@@ -3,7 +3,7 @@ module github.com/overmindtech/cli
 go 1.22.2
 
 require (
-	connectrpc.com/connect v1.16.0
+	connectrpc.com/connect v1.16.1
 	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/charmbracelet/glamour v0.7.0
@@ -14,6 +14,7 @@ require (
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/jedib0t/go-pretty/v6 v6.5.8
 	github.com/mattn/go-isatty v0.0.20
+	github.com/muesli/termenv v0.15.2
 	github.com/overmindtech/aws-source v0.0.0-20240412103019-c6e4434059b9
 	github.com/overmindtech/sdp-go v0.69.0
 	github.com/overmindtech/stdlib-source v0.0.0-20240412101627-9214757e2dfb
@@ -114,7 +115,6 @@ require (
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
-	github.com/muesli/termenv v0.15.2 // indirect
 	github.com/nats-io/jwt/v2 v2.5.5 // indirect
 	github.com/nats-io/nats.go v1.34.0 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
