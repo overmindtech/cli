@@ -7,7 +7,7 @@ on:
 jobs:
   # Actually release the binaries including signing them
   release:
-    runs-on: apple-certs
+    runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' }}
     permissions:
       contents: write
@@ -19,10 +19,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Gon from fork
-        run: |
-          curl -o gon -L https://github.com/dylanratcliffe/gon/releases/download/apple-silicon-fix/gon
-          chmod +x gon 
+      # - name: Install Gon from fork
+      #   run: |
+      #     curl -o gon -L https://github.com/dylanratcliffe/gon/releases/download/apple-silicon-fix/gon
+      #     chmod +x gon 
 
       - name: Go Init
         uses: ./.github/actions/go_init
@@ -35,15 +35,14 @@ jobs:
         uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
-          args: release --clean
+          args: release --clean --skip sign
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AC_PASSWORD: ${{ secrets.APPLE_AC_PASSWORD }}
       
   bump-formula:
-    # Depend on the release job
-    needs: release
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
     steps:
       - name: Update Homebrew formula
         uses: dawidd6/action-homebrew-bump-formula@v3
