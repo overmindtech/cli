@@ -613,11 +613,97 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_networkmanager_connect_peer": {
+		{
+			Type:       "networkmanager-connect-peer",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_networkmanager_connection": {
+		{
+			Type:       "networkmanager-connection",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
+	"aws_networkmanager_core_network": {
+		{
+			Type:       "networkmanager-connect-attachment",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+		{
+			Type:       "networkmanager-core-network",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_networkmanager_core_network_policy": {
+		{
+			Type:       "networkmanager-core-network-policy",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "core_network_id",
+			Scope:      "*",
+		},
+	},
+	"aws_networkmanager_device": {
+		{
+			Type:       "networkmanager-device",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
 	"aws_networkmanager_global_network": {
 		{
 			Type:       "networkmanager-global-network",
 			Method:     sdp.QueryMethod_SEARCH,
 			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
+	"aws_networkmanager_link": {
+		{
+			Type:       "networkmanager-link",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
+	"aws_networkmanager_site": {
+		{
+			Type:       "networkmanager-site",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
+	"aws_networkmanager_site_to_site_vpn_attachment": {
+		{
+			Type:       "networkmanager-site-to-site-vpn-attachment",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_networkmanager_transit_gateway_peering": {
+		{
+			Type:       "networkmanager-transit-gateway-peering",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_networkmanager_transit_gateway_route_table_attachment": {
+		{
+			Type:       "networkmanager-transit-gateway-route-table-attachment",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
 			Scope:      "*",
 		},
 	},
