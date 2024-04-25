@@ -19,11 +19,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # - name: Install Gon from fork
-      #   run: |
-      #     curl -o gon -L https://github.com/dylanratcliffe/gon/releases/download/apple-silicon-fix/gon
-      #     chmod +x gon 
-
       - name: Go Init
         uses: ./.github/actions/go_init
         with:
@@ -35,10 +30,9 @@ jobs:
         uses: goreleaser/goreleaser-action@v5
         with:
           version: latest
-          args: release --clean --skip sign
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AC_PASSWORD: ${{ secrets.APPLE_AC_PASSWORD }}
       
   bump-formula:
     runs-on: ubuntu-latest

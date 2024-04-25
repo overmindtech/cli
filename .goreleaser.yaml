@@ -21,23 +21,26 @@ builds:
     goos:
       - darwin
 
-signs:
-  - id: amd64
-    signature: "overmind-cli-amd64.dmg" 
-    ids:
-      - overmind-macos # here we filter the macos only build id
-    cmd: ./gon
-    args:
-      - gon-amd64.json
-    artifacts: all
-  - id: arm64
-    signature: "overmind-cli-arm64.dmg"
-    ids:
-      - overmind-macos # here we filter the macos only build id
-    cmd: ./gon
-    args:
-      - gon-arm64.json
-    artifacts: all
+# For now we are going to disable signing MacOS packages. This works on Dylan's
+# person laptop, but we haven't worked out a way to get this set up in a github
+# action yet.
+# signs:
+#   - id: amd64
+#     signature: "overmind-cli-amd64.dmg" 
+#     ids:
+#       - overmind-macos # here we filter the macos only build id
+#     cmd: ./gon
+#     args:
+#       - gon-amd64.json
+#     artifacts: all
+#   - id: arm64
+#     signature: "overmind-cli-arm64.dmg"
+#     ids:
+#       - overmind-macos # here we filter the macos only build id
+#     cmd: ./gon
+#     args:
+#       - gon-arm64.json
+#     artifacts: all
 
 archives:
   - format: tar.gz
