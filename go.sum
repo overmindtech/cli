@@ -240,6 +240,8 @@ github.com/overmindtech/sdp-go v0.69.0 h1:Bvp3n7E6HtOQcj0CG+atFjUG3EyCuc0glfQvkq
 github.com/overmindtech/sdp-go v0.69.0/go.mod h1:Kx73sbtgQoUQl2rgFE9RZDh8MR0O3GEVS61YVaFKKj4=
 github.com/overmindtech/sdp-go v0.71.1 h1:8c9IofcVHFmecWeOWmm2GJ8KLfugbc+enJnLcpUGzBc=
 github.com/overmindtech/sdp-go v0.71.1/go.mod h1:wlktpRz0BMJsDyBjA1YbFeswFetMQ8+clQJG6slXMG8=
+github.com/overmindtech/sdp-go v0.71.2 h1:Ti+gZ6DxjfKGpPzBuhB1WOblUkgaRE+tZsXyTyHkswA=
+github.com/overmindtech/sdp-go v0.71.2/go.mod h1:nx8W04vfLATrU6tDT6kD0MsXJmjEDC3XvAvknaoKS/s=
 github.com/overmindtech/sdpcache v1.6.4 h1:MJoYBDqDE3s8FrRzZ0RPgFiH39HWI/Mv2ImH1NdLT8k=
 github.com/overmindtech/sdpcache v1.6.4/go.mod h1:/F9XStVdntRJEQjlZ86BPuB1Y7VPo1PFcsCNiU1IoGE=
 github.com/overmindtech/stdlib-source v0.0.0-20240412101627-9214757e2dfb h1:B33ZtnodmdRFab88hEOAPDX7f9vmIQhzgvH8dyIgnVw=
