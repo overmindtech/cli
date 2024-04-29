@@ -16,7 +16,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/muesli/termenv v0.15.2
 	github.com/overmindtech/aws-source v0.0.0-20240429135035-161e29c4c9ed
-	github.com/overmindtech/sdp-go v0.71.1
+	github.com/overmindtech/sdp-go v0.71.2
 	github.com/overmindtech/stdlib-source v0.0.0-20240429134842-595a3f8ea15e
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
