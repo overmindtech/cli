@@ -234,6 +234,8 @@ github.com/overmindtech/aws-source v0.0.0-20240416190407-3f66f163d3e9 h1:UlZO30D
 github.com/overmindtech/aws-source v0.0.0-20240416190407-3f66f163d3e9/go.mod h1:OOl6R+CPOALCRlq6OglHDsHotMOAkBvkSCu8XfF2NEA=
 github.com/overmindtech/aws-source v0.0.0-20240429135035-161e29c4c9ed h1:8uwevuWC2Xsio2rMIAOTGgCGgqpz7Gjj3rsJX/BTRlA=
 github.com/overmindtech/aws-source v0.0.0-20240429135035-161e29c4c9ed/go.mod h1:qUB+4Ni8XOcayvk398sD0w2g4IcBjUJwYUn0l6ffp0U=
+github.com/overmindtech/aws-source v0.0.0-20240430161315-0952104b9459 h1:yRiXdeHAVulzk80SAO0QZLayNBrUUF9SrDQJjj7MTyQ=
+github.com/overmindtech/aws-source v0.0.0-20240430161315-0952104b9459/go.mod h1:tAmT7zfksnUNd4r5GC399gSVoEoAdc+EkCBLeY1NMcg=
 github.com/overmindtech/discovery v0.27.0 h1:pti9Tk3gwFxt7S6P+dBTKD0v29BjgQhnbZObSyrJMmg=
 github.com/overmindtech/discovery v0.27.0/go.mod h1:h7NMn39kUNPu9TyE/qVZ7tYIdOJ3/v4jGeuxl/Wz3Hw=
 github.com/overmindtech/sdp-go v0.69.0 h1:Bvp3n7E6HtOQcj0CG+atFjUG3EyCuc0glfQvkqsVgwo=
@@ -242,12 +244,16 @@ github.com/overmindtech/sdp-go v0.71.1 h1:8c9IofcVHFmecWeOWmm2GJ8KLfugbc+enJnLcp
 github.com/overmindtech/sdp-go v0.71.1/go.mod h1:wlktpRz0BMJsDyBjA1YbFeswFetMQ8+clQJG6slXMG8=
 github.com/overmindtech/sdp-go v0.71.2 h1:Ti+gZ6DxjfKGpPzBuhB1WOblUkgaRE+tZsXyTyHkswA=
 github.com/overmindtech/sdp-go v0.71.2/go.mod h1:nx8W04vfLATrU6tDT6kD0MsXJmjEDC3XvAvknaoKS/s=
+github.com/overmindtech/sdp-go v0.72.0 h1:GYw+fDv4NKpCodiPpg6EgBd4xlDTqaaFeonApy+0xBI=
+github.com/overmindtech/sdp-go v0.72.0/go.mod h1:nx8W04vfLATrU6tDT6kD0MsXJmjEDC3XvAvknaoKS/s=
 github.com/overmindtech/sdpcache v1.6.4 h1:MJoYBDqDE3s8FrRzZ0RPgFiH39HWI/Mv2ImH1NdLT8k=
 github.com/overmindtech/sdpcache v1.6.4/go.mod h1:/F9XStVdntRJEQjlZ86BPuB1Y7VPo1PFcsCNiU1IoGE=
 github.com/overmindtech/stdlib-source v0.0.0-20240412101627-9214757e2dfb h1:B33ZtnodmdRFab88hEOAPDX7f9vmIQhzgvH8dyIgnVw=
 github.com/overmindtech/stdlib-source v0.0.0-20240412101627-9214757e2dfb/go.mod h1:KZLQVMl9bEf9HLOHjlUjTSSltpR4I3FWSXvFQz10FHc=
 github.com/overmindtech/stdlib-source v0.0.0-20240429134842-595a3f8ea15e h1:x3F3tu59MJYhx53J138Dkc/nDRdP1ldbX07RuOU516M=
 github.com/overmindtech/stdlib-source v0.0.0-20240429134842-595a3f8ea15e/go.mod h1:H9FtN7/Bcj0lHXK94SeLgUdB0mrGCvstlTqGodXX3/w=
+github.com/overmindtech/stdlib-source v0.0.0-20240430153940-2a33d6d547b1 h1:3wrJ9aLEznANnH4du4R84IsBnPBuQCCDnFdYxT5qatM=
+github.com/overmindtech/stdlib-source v0.0.0-20240430153940-2a33d6d547b1/go.mod h1:Sb0Fn8EYXx5i/b1wuqau8OKtURUwLXNcMyXLBa3J9tg=
 github.com/pelletier/go-toml/v2 v2.1.0 h1:FnwAJ4oYMvbT/34k9zzHuZNrhlz48GB3/s6at6/MHO4=
 github.com/pelletier/go-toml/v2 v2.1.0/go.mod h1:tJU2Z3ZkXwnxa4DPO899bsyIoywizdUvyaeZurnPPDc=
 github.com/pingcap/errors v0.11.4 h1:lFuQV/oaUMGcD2tqt+01ROSmJs75VG1ToEOkZIZ4nE4=
