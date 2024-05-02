@@ -48,12 +48,24 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 
 		// t.Logf("item: %v", item.Attributes.AttrStruct.Fields["terraform_address"].GetStringValue())
 		if item.GetAttributes().GetAttrStruct().GetFields()["terraform_address"].GetStringValue() == "kubernetes_deployment.nats_box" {
+			if nats_box_deployment != nil {
+				t.Errorf("Found multiple nats_box_deployment: %v, %v", nats_box_deployment, diff)
+			}
 			nats_box_deployment = diff
 		} else if item.GetAttributes().GetAttrStruct().GetFields()["terraform_address"].GetStringValue() == "kubernetes_deployment.api_server" {
+			if api_server_deployment != nil {
+				t.Errorf("Found multiple api_server_deployment: %v, %v", api_server_deployment, diff)
+			}
 			api_server_deployment = diff
 		} else if item.GetType() == "iam-policy" {
+			if aws_iam_policy != nil {
+				t.Errorf("Found multiple aws_iam_policy: %v, %v", aws_iam_policy, diff)
+			}
 			aws_iam_policy = diff
 		} else if item.GetType() == "Secret" {
+			if secret != nil {
+				t.Errorf("Found multiple secrets: %v, %v", secret, diff)
+			}
 			secret = diff
 		}
 	}
