@@ -80,7 +80,7 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case fatalError:
-		log.WithError(msg.err).Debug("cmdModel: fatalError received")
+		log.WithError(msg.err).WithField("msg.id", msg.id).Debug("cmdModel: fatalError received")
 		if msg.id == 0 {
 			m.fatalError = msg.err.Error()
 		}
@@ -175,7 +175,7 @@ func (m cmdModel) View() string {
 	}
 	tasks = append(tasks, m.cmd.View())
 	if m.fatalError != "" {
-		tasks = append(tasks, fmt.Sprintf("Fatal Error: %v", m.fatalError))
+		tasks = append(tasks, markdownToString(fmt.Sprintf("> Fatal Error: %v\n", m.fatalError)))
 	}
 	return strings.Join(tasks, "\n")
 }
