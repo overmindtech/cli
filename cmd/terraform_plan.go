@@ -359,7 +359,7 @@ func (m tfPlanModel) View() string {
 	// bits = append(bits, m.progress...)
 
 	if m.changeUrl != "" {
-		bits = append(bits, markdownToString(fmt.Sprintf("Change ready: [%v](%v)", m.changeUrl, m.changeUrl)))
+		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
 	}
 
 	if m.fatalError != "" {
