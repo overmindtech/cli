@@ -159,7 +159,7 @@ func (m ensureTokenModel) View() string {
 	if len(m.errors) > 0 {
 		view += fmt.Sprintf("\n%v\n", strings.Join(m.errors, "\n"))
 	}
-	if m.deviceMessage != "" {
+	if m.deviceMessage != "" && !(m.status == taskStatusDone || m.status == taskStatusError) {
 		view += fmt.Sprintf("\n%v\n", m.deviceMessage)
 	}
 	return view
