@@ -47,6 +47,7 @@ func (m cmdModel) Init() tea.Cmd {
 		waitForCancellation(m.ctx, m.cancel),
 		m.tasks["00_oi"].Init(),
 		m.tasks["01_token"].Init(),
+		m.tasks["02_config"].Init(),
 		m.cmd.Init(),
 	)
 }

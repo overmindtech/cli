@@ -221,7 +221,9 @@ type tfPlanModel struct {
 	oi  OvermindInstance
 
 	args             []string
+	planTask         taskModel
 	planHeader       string
+	processingTask   taskModel
 	processingHeader string
 
 	runTfPlan       bool
@@ -246,19 +248,17 @@ func NewTfPlanModel(args []string) tea.Model {
 	// -out needs to go last to override whatever the user specified on the command line
 	args = append(args, "-out", "overmind.plan")
 
-	planHeader := `# Planning Changes
-
-Running ` + "`" + `terraform %v` + "`\n"
+	planHeader := `Running ` + "`" + `terraform %v` + "`\n"
 	planHeader = fmt.Sprintf(planHeader, strings.Join(args, " "))
 
-	processingHeader := `# Processing Planned Changes
-
-Processing plan from ` + "`" + `terraform %v` + "`\n"
+	processingHeader := `Processing plan from ` + "`" + `terraform %v` + "`\n"
 	processingHeader = fmt.Sprintf(processingHeader, strings.Join(args, " "))
 
 	return tfPlanModel{
 		args:             args,
+		planTask:         NewTaskModel("Planning Changes"),
 		planHeader:       planHeader,
+		processingTask:   NewTaskModel("Processing Planned Changes"),
 		processingHeader: processingHeader,
 
 		processing:      make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
@@ -268,7 +268,10 @@ Processing plan from ` + "`" + `terraform %v` + "`\n"
 }
 
 func (m tfPlanModel) Init() tea.Cmd {
-	return nil
+	return tea.Batch(
+		m.planTask.Init(),
+		m.processingTask.Init(),
+	)
 }
 
 func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -281,6 +284,7 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case sourcesInitialisedMsg:
 		m.runTfPlan = true
+		m.planTask.status = taskStatusRunning
 		// defer the actual command to give the view a chance to show the header
 		return m, func() tea.Msg { return triggerTfPlanMsg{} }
 	case triggerTfPlanMsg:
@@ -303,7 +307,9 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			})
 	case tfPlanFinishedMsg:
 		m.tfPlanFinished = true
+		m.planTask.status = taskStatusDone
 
+		m.processingTask.status = taskStatusRunning
 		m.processingModel.state = "executed terraform plan"
 
 		return m, tea.Batch(
@@ -316,6 +322,7 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.waitForProcessingActivity
 	case processingFinishedActivityMsg:
 		m.processingModel.state = "finished"
+		m.processingTask.status = taskStatusDone
 		m.progress = append(m.progress, msg.text)
 		return m, m.waitForProcessingActivity
 	case changeUpdatedMsg:
@@ -341,22 +348,31 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case fatalError:
 		m.fatalError = msg.err.Error()
 		return m, tea.Quit
+	default:
+		var planCmd, processingCmd tea.Cmd
+		m.planTask, planCmd = m.planTask.Update(msg)
+		m.processingTask, processingCmd = m.processingTask.Update(msg)
+		return m, tea.Batch(planCmd, processingCmd)
 	}
 
 	return m, nil
 }
 
 func (m tfPlanModel) View() string {
-	bits := []string{}
+	bits := []string{
+		m.planTask.View(),
+	}
 
 	if m.runTfPlan && !m.tfPlanFinished {
 		bits = append(bits, markdownToString(m.planHeader))
-	} else if m.tfPlanFinished {
+	}
+
+	bits = append(bits, m.processingTask.View())
+
+	if m.tfPlanFinished {
 		bits = append(bits, markdownToString(m.processingHeader))
 		bits = append(bits, m.processingModel.View())
 	}
-
-	// bits = append(bits, m.progress...)
 
 	if m.changeUrl != "" {
 		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
