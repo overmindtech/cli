@@ -368,8 +368,6 @@ func (m tfPlanModel) View() string {
 
 // A command that waits for the activity on the processing channel.
 func (m tfPlanModel) waitForProcessingActivity() tea.Msg {
-	// TODO: remove debugging aids
-	time.Sleep(500 * time.Millisecond)
 	msg := <-m.processing
 	log.Debugf("received %+v", msg)
 	return msg
