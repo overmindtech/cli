@@ -89,7 +89,8 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func([]stri
 				fmt.Println("fatal:", err)
 				os.Exit(1)
 			}
-			defer f.Close()
+			// leave the log file open until the very last moment, so we capture everything
+			// defer f.Close()
 			log.SetOutput(f)
 			viper.Set("log", "trace")
 			log.SetLevel(log.TraceLevel)
@@ -126,13 +127,6 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func([]stri
 			if err != nil {
 				return fmt.Errorf("could not start program: %w", err)
 			}
-
-			// avoid overwriting the last view
-			// fmt.Println("1")
-			// fmt.Println("2")
-			// fmt.Println("3")
-			// fmt.Println("4")
-			// fmt.Println("5")
 
 			return nil
 		}()
