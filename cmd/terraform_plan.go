@@ -278,6 +278,8 @@ func (m tfPlanModel) Init() tea.Cmd {
 }
 
 func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	log.Debugf("tfPlanModel: Update %T received %+v", msg, msg)
+
 	switch msg := msg.(type) {
 	case loadSourcesConfigMsg:
 		m.ctx = msg.ctx
@@ -294,6 +296,8 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if aws_profile := viper.GetString("aws-profile"); aws_profile != "" {
 			c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
 		}
+
+		m.processingModel.state = "executing terraform plan"
 		return m, tea.ExecProcess(
 			c,
 			func(err error) tea.Msg {
@@ -306,18 +310,23 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tfPlanFinishedMsg:
 		m.tfPlanFinished = true
 
+		m.processingModel.state = "executed terraform plan"
+
 		return m, tea.Batch(
 			m.processPlanCmd,
 			m.waitForProcessingActivity,
 		)
 	case processingActivityMsg:
+		m.processingModel.state = "processing"
 		m.progress = append(m.progress, msg.text)
 		return m, m.waitForProcessingActivity
 	case processingFinishedActivityMsg:
+		m.processingModel.state = "finished"
 		m.progress = append(m.progress, msg.text)
 		return m, m.waitForProcessingActivity
 	case changeUpdatedMsg:
 		m.changeUrl = msg.url
+		m.processingModel.state = "Change updated"
 		return m, m.waitForProcessingActivity
 
 	case startSnapshotMsg:
@@ -369,7 +378,7 @@ func (m tfPlanModel) View() string {
 // A command that waits for the activity on the processing channel.
 func (m tfPlanModel) waitForProcessingActivity() tea.Msg {
 	msg := <-m.processing
-	log.Debugf("received %+v", msg)
+	log.Debugf("waitForProcessingActivity received %T: %+v", msg, msg)
 	return msg
 }
 
@@ -384,11 +393,13 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 
 	planJson, err := tfPlanJsonCmd.Output()
 	if err != nil {
+		close(m.processing)
 		return fatalError{err: fmt.Errorf("failed to convert terraform plan to JSON: %w", err)}
 	}
 
 	plannedChanges, err := mappedItemDiffsFromPlan(ctx, planJson, "overmind.plan", log.Fields{})
 	if err != nil {
+		close(m.processing)
 		return fatalError{err: fmt.Errorf("failed to parse terraform plan: %w", err)}
 	}
 
@@ -399,6 +410,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	if ticketLink == "" {
 		ticketLink, err = getTicketLinkFromPlan()
 		if err != nil {
+			close(m.processing)
 			return err
 		}
 	}
@@ -406,6 +418,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	client := AuthenticatedChangesClient(ctx, m.oi)
 	changeUuid, err := getChangeUuid(ctx, m.oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, false)
 	if err != nil {
+		close(m.processing)
 		return fatalError{err: fmt.Errorf("failed searching for existing changes: %w", err)}
 	}
 
@@ -431,11 +444,13 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 			},
 		})
 		if err != nil {
+			close(m.processing)
 			return fatalError{err: fmt.Errorf("failed to create a new change: %w", err)}
 		}
 
 		maybeChangeUuid := createResponse.Msg.GetChange().GetMetadata().GetUUIDParsed()
 		if maybeChangeUuid == nil {
+			close(m.processing)
 			return fatalError{err: fmt.Errorf("failed to read change id: %w", err)}
 		}
 
@@ -468,6 +483,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 			},
 		})
 		if err != nil {
+			close(m.processing)
 			return fatalError{err: fmt.Errorf("failed to update change: %w", err)}
 		}
 	}
@@ -483,6 +499,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 		},
 	})
 	if err != nil {
+		close(m.processing)
 		return fatalError{err: fmt.Errorf("failed to update planned changes: %w", err)}
 	}
 
@@ -521,6 +538,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 		}
 	}
 	if resultStream.Err() != nil {
+		close(m.processing)
 		return fatalError{err: fmt.Errorf("error streaming results: %w", err)}
 	}
 

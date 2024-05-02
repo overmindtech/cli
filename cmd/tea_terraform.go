@@ -9,6 +9,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/overmindtech/sdp-go"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
@@ -51,6 +52,8 @@ func (m cmdModel) Init() tea.Cmd {
 }
 
 func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	log.Debugf("cmdModel: Update %T received %+v", msg, msg)
+
 	batch := []tea.Cmd{}
 
 	// update the main command
