@@ -80,11 +80,15 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case fatalError:
+		log.WithError(msg.err).Debug("cmdModel: fatalError received")
 		if msg.id == 0 {
 			m.fatalError = msg.err.Error()
 		}
 		skipView(m.View())
-		return m, tea.Quit
+		return m, tea.Sequence(
+			tea.Batch(batch...),
+			tea.Quit,
+		)
 
 	case instanceLoadedMsg:
 		m.oi = msg.instance
@@ -92,7 +96,9 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// delete(m.tasks, "00_oi")
 
 	case tokenAvailableMsg:
-		return m.tokenChecks(msg.token)
+		tm, cmd := m.tokenChecks(msg.token)
+		batch = append(batch, cmd)
+		return tm, tea.Batch(batch...)
 
 	case tfPlanFinishedMsg, tfApplyFinishedMsg:
 		// bump screen after terraform ran
