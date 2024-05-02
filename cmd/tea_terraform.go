@@ -95,8 +95,8 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.tokenChecks(msg.token)
 
 	case tfPlanFinishedMsg, tfApplyFinishedMsg:
+		// bump screen after terraform ran
 		skipView(m.View())
-		return m, nil
 	}
 
 	return m, tea.Batch(batch...)
