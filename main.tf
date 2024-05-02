@@ -16,6 +16,7 @@ provider "aws" {}
 variable "bucket_postfix" {
   type        = string
   description = "The prefix to apply to the bucket name."
+  default     = "test"
 }
 
 module "bucket" {
