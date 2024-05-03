@@ -50,10 +50,14 @@ github.com/aws/aws-sdk-go-v2/service/directconnect v1.24.4 h1:9g0G4b/HG8Yw9YQQMU
 github.com/aws/aws-sdk-go-v2/service/directconnect v1.24.4/go.mod h1:+Y1uRuhFUQpU4/cV2zgdkk6SlE/oiZEDRP8ilynvDZk=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.1 h1:dZXY07Dm59TxAjJcUfNMJHLDI/gLMxTRZefn2jFAVsw=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.1/go.mod h1:lVLqEtX+ezgtfalyJs7Peb0uv9dEpAQP5yuq2O26R44=
+github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.0 h1:tGV+9T7NwSJNky5tGLh6/i7CoIkd9fPiGWDn9u4PWgI=
+github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.0/go.mod h1:lVLqEtX+ezgtfalyJs7Peb0uv9dEpAQP5yuq2O26R44=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.156.0 h1:TFK9GeUINErClL2+A+GLYhjiChVdaXCgIUiCsS/UQrE=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.156.0/go.mod h1:xejKuuRDjz6z5OqyeLsz01MlOqqW7CqpAB4PabNvpu8=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.159.0 h1:DmmVmiLPlcntOcjWMRwDPMNx/wi2kAVrf2ZmSN5gkAg=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.159.0/go.mod h1:xejKuuRDjz6z5OqyeLsz01MlOqqW7CqpAB4PabNvpu8=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.160.0 h1:ooy0OFbrdSwgk32OFGPnvBwry5ySYCKkgTEbQ2hejs8=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.160.0/go.mod h1:xejKuuRDjz6z5OqyeLsz01MlOqqW7CqpAB4PabNvpu8=
 github.com/aws/aws-sdk-go-v2/service/ecs v1.41.7 h1:aFdgmJ8G385PVC9mp8b9roGGHU/XbrKEQTbzl6V0GbE=
 github.com/aws/aws-sdk-go-v2/service/ecs v1.41.7/go.mod h1:rcFIIrVk3NGCT3BV84HQM3ut+Dr1PO71UvvT8GeLAv4=
 github.com/aws/aws-sdk-go-v2/service/efs v1.28.4 h1:5ZlmTA4xcIScsJs3vQBSISgrB5xX9J9AkgNbMaWYAPY=
@@ -86,6 +90,8 @@ github.com/aws/aws-sdk-go-v2/service/rds v1.77.1 h1:RatrfyDgfeXDmYw1gq5IR5tXXf1C
 github.com/aws/aws-sdk-go-v2/service/rds v1.77.1/go.mod h1:Rw15qGaGWu3jO0dOz7JyvdOEjgae//YrJxVWLYGynvg=
 github.com/aws/aws-sdk-go-v2/service/rds v1.77.3 h1:c5TjKZ2vPbvH4kMxT/vJGEQI2p96n+613qodYUggL4E=
 github.com/aws/aws-sdk-go-v2/service/rds v1.77.3/go.mod h1:Rw15qGaGWu3jO0dOz7JyvdOEjgae//YrJxVWLYGynvg=
+github.com/aws/aws-sdk-go-v2/service/rds v1.78.0 h1:EfurrcA19HaB9gZYd157DiozoPfkX2CH5/QnDZqNFrY=
+github.com/aws/aws-sdk-go-v2/service/rds v1.78.0/go.mod h1:Rw15qGaGWu3jO0dOz7JyvdOEjgae//YrJxVWLYGynvg=
 github.com/aws/aws-sdk-go-v2/service/route53 v1.40.4 h1:ZZKiHm4cN8IDDZ2kh8DTk+YnYBjVsiFdwf5FwVs//IQ=
 github.com/aws/aws-sdk-go-v2/service/route53 v1.40.4/go.mod h1:RTfjFUctf+Zyq8e4rgLXmz43+0kIoIXbENvrFtilumI=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1 h1:6cnno47Me9bRykw9AEv9zkXE+5or7jz8TsskTTccbgc=
@@ -244,6 +250,8 @@ github.com/overmindtech/aws-source v0.0.0-20240501191839-8dc61db6add3 h1:iIyC+62
 github.com/overmindtech/aws-source v0.0.0-20240501191839-8dc61db6add3/go.mod h1:tAmT7zfksnUNd4r5GC399gSVoEoAdc+EkCBLeY1NMcg=
 github.com/overmindtech/aws-source v0.0.0-20240502130643-1e118524b47d h1:HUWN0hI09+N0PMWK+rm4lFX8iL67wDVLqj35lSY8+T0=
 github.com/overmindtech/aws-source v0.0.0-20240502130643-1e118524b47d/go.mod h1:tAmT7zfksnUNd4r5GC399gSVoEoAdc+EkCBLeY1NMcg=
+github.com/overmindtech/aws-source v0.0.0-20240503030541-3fa3dd9db52c h1:awc+V9cd/ZW0J52ZOTN4a8wPolNag3GmRa+Zit+jm1A=
+github.com/overmindtech/aws-source v0.0.0-20240503030541-3fa3dd9db52c/go.mod h1:DyZi+71M9FwCJ0ah2/9j8SsxH+QTPx0cpeVQhnA6o9E=
 github.com/overmindtech/discovery v0.27.0 h1:pti9Tk3gwFxt7S6P+dBTKD0v29BjgQhnbZObSyrJMmg=
 github.com/overmindtech/discovery v0.27.0/go.mod h1:h7NMn39kUNPu9TyE/qVZ7tYIdOJ3/v4jGeuxl/Wz3Hw=
 github.com/overmindtech/sdp-go v0.69.0 h1:Bvp3n7E6HtOQcj0CG+atFjUG3EyCuc0glfQvkqsVgwo=
@@ -264,6 +272,8 @@ github.com/overmindtech/stdlib-source v0.0.0-20240430153940-2a33d6d547b1 h1:3wrJ
 github.com/overmindtech/stdlib-source v0.0.0-20240430153940-2a33d6d547b1/go.mod h1:Sb0Fn8EYXx5i/b1wuqau8OKtURUwLXNcMyXLBa3J9tg=
 github.com/overmindtech/stdlib-source v0.0.0-20240501191254-8901c0f781e8 h1:FreJkPgTt+tdPcQO+A1yQM1LTrJzRrZ3Y3fysqMf4eU=
 github.com/overmindtech/stdlib-source v0.0.0-20240501191254-8901c0f781e8/go.mod h1:Sb0Fn8EYXx5i/b1wuqau8OKtURUwLXNcMyXLBa3J9tg=
+github.com/overmindtech/stdlib-source v0.0.0-20240503003758-0551036a0980 h1:Tiiam77M6fzgtL/P4uLsNgHmOJqjCwmSZ8lQ5BRq8IE=
+github.com/overmindtech/stdlib-source v0.0.0-20240503003758-0551036a0980/go.mod h1:YPd4L/nKXR4IYJzCAGnk5VIsWc/buQJFAqrGKbUHBOk=
 github.com/pelletier/go-toml/v2 v2.1.0 h1:FnwAJ4oYMvbT/34k9zzHuZNrhlz48GB3/s6at6/MHO4=
 github.com/pelletier/go-toml/v2 v2.1.0/go.mod h1:tJU2Z3ZkXwnxa4DPO899bsyIoywizdUvyaeZurnPPDc=
 github.com/pingcap/errors v0.11.4 h1:lFuQV/oaUMGcD2tqt+01ROSmJs75VG1ToEOkZIZ4nE4=

@@ -15,9 +15,9 @@ require (
 	github.com/jedib0t/go-pretty/v6 v6.5.8
 	github.com/mattn/go-isatty v0.0.20
 	github.com/muesli/termenv v0.15.2
-	github.com/overmindtech/aws-source v0.0.0-20240502130643-1e118524b47d
+	github.com/overmindtech/aws-source v0.0.0-20240503030541-3fa3dd9db52c
 	github.com/overmindtech/sdp-go v0.72.0
-	github.com/overmindtech/stdlib-source v0.0.0-20240501191254-8901c0f781e8
+	github.com/overmindtech/stdlib-source v0.0.0-20240503003758-0551036a0980
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
@@ -59,8 +59,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.36.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.38.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.24.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.159.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.160.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.28.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eks v1.42.1 // indirect
@@ -75,7 +75,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.38.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.25.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.77.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.78.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.40.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.29.4 // indirect
