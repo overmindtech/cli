@@ -9,6 +9,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/overmindtech/sdp-go"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 )
 
@@ -46,11 +47,14 @@ func (m cmdModel) Init() tea.Cmd {
 		waitForCancellation(m.ctx, m.cancel),
 		m.tasks["00_oi"].Init(),
 		m.tasks["01_token"].Init(),
+		m.tasks["02_config"].Init(),
 		m.cmd.Init(),
 	)
 }
 
 func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	log.Debugf("cmdModel: Update %T received %+v", msg, msg)
+
 	batch := []tea.Cmd{}
 
 	// update the main command
@@ -75,21 +79,53 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.String() == "ctrl+c" {
 			return m, tea.Quit
 		}
+
 	case fatalError:
+		log.WithError(msg.err).WithField("msg.id", msg.id).Debug("cmdModel: fatalError received")
 		if msg.id == 0 {
 			m.fatalError = msg.err.Error()
 		}
-		return m, tea.Quit
-		// return m, nil
+		skipView(m.View())
+		return m, tea.Sequence(
+			tea.Batch(batch...),
+			tea.Quit,
+		)
+
 	case instanceLoadedMsg:
 		m.oi = msg.instance
 		// skip irrelevant status messages
 		// delete(m.tasks, "00_oi")
+
 	case tokenAvailableMsg:
-		return m.tokenChecks(msg.token)
+		tm, cmd := m.tokenChecks(msg.token)
+		batch = append(batch, cmd)
+		return tm, tea.Batch(batch...)
+
+	case tfPlanFinishedMsg, tfApplyFinishedMsg:
+		// bump screen after terraform ran
+		skipView(m.View())
 	}
 
 	return m, tea.Batch(batch...)
+}
+
+// skipView scrolls the terminal contents up after ExecCommand() to avoid
+// overwriting the output from terraform when rendering the next View(). this
+// has to be used here in the cmdModel to catch the entire View() output.
+//
+// NOTE: this is quite brittle and _requires_ that the View() after terraform
+// returned is at least  many lines as the view before ExecCommand(), otherwise
+// the difference will get eaten by bubbletea on re-rendering.
+//
+// TODO: make this hack less ugly
+func skipView(view string) {
+	lines := strings.Split(view, "\n")
+	for range lines {
+		fmt.Println()
+	}
+
+	// log.Debugf("printed %v lines:", len(lines))
+	// log.Debug(lines)
 }
 
 func (m cmdModel) tokenChecks(token *oauth2.Token) (cmdModel, tea.Cmd) {
@@ -140,7 +176,7 @@ func (m cmdModel) View() string {
 	}
 	tasks = append(tasks, m.cmd.View())
 	if m.fatalError != "" {
-		tasks = append(tasks, fmt.Sprintf("Fatal Error: %v", m.fatalError))
+		tasks = append(tasks, markdownToString(fmt.Sprintf("> Fatal Error: %v\n", m.fatalError)))
 	}
 	return strings.Join(tasks, "\n")
 }

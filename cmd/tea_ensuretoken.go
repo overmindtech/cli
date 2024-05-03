@@ -95,15 +95,15 @@ func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.title = "Manual device authorization."
 		beginAuthMessage := `# Authenticate with a browser
 
-		Attempting to automatically open the SSO authorization page in your default browser.
-		If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
+Attempting to automatically open the SSO authorization page in your default browser.
+If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
 
-			%v
+%v
 
-		Then enter the code:
+Then enter the code:
 
-			%v
-		`
+	%v
+`
 		m.deviceMessage = markdownToString(fmt.Sprintf(beginAuthMessage, msg.deviceCode.VerificationURI, msg.deviceCode.UserCode))
 		return m, m.awaitTokenCmd
 	case waitingForAuthorizationMsg:
@@ -113,15 +113,15 @@ func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.title = "Waiting for device authorization, check your browser."
 		beginAuthMessage := `# Authenticate with a browser
 
-		Attempting to automatically open the SSO authorization page in your default browser.
-		If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
+Attempting to automatically open the SSO authorization page in your default browser.
+If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
 
-			%v
+%v
 
-		Then enter the code:
+Then enter the code:
 
-			%v
-		`
+	%v
+`
 		m.deviceMessage = markdownToString(fmt.Sprintf(beginAuthMessage, msg.deviceCode.VerificationURI, msg.deviceCode.UserCode))
 		return m, m.awaitTokenCmd
 	case tokenLoadedMsg:
@@ -159,7 +159,7 @@ func (m ensureTokenModel) View() string {
 	if len(m.errors) > 0 {
 		view += fmt.Sprintf("\n%v\n", strings.Join(m.errors, "\n"))
 	}
-	if m.deviceMessage != "" {
+	if m.deviceMessage != "" && !(m.status == taskStatusDone || m.status == taskStatusError) {
 		view += fmt.Sprintf("\n%v\n", m.deviceMessage)
 	}
 	return view

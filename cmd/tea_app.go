@@ -9,6 +9,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 // waitForCancellation returns a tea.Cmd that will wait for SIGINT and SIGTERM and run the provided cancel on receipt.
@@ -55,9 +56,12 @@ type taskModel struct {
 
 func NewTaskModel(title string) taskModel {
 	return taskModel{
-		status:  taskStatusPending,
-		title:   title,
-		spinner: spinner.New(spinner.WithSpinner(spinner.Dot)),
+		status: taskStatusPending,
+		title:  title,
+		spinner: spinner.New(
+			spinner.WithSpinner(spinner.Pulse),
+			spinner.WithStyle(lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPalette.Light.BgMain))),
+		),
 	}
 }
 

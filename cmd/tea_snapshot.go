@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	log "github.com/sirupsen/logrus"
 )
 
 type snapshotModel struct {
@@ -11,16 +12,6 @@ type snapshotModel struct {
 	state string
 	items uint32
 	edges uint32
-}
-
-// utility interface to remove the need for a type assertion
-type connectResultStream interface {
-	// Receive advances the stream to the next message, which will then be
-	// available through the Msg method. It returns false when the stream stops,
-	// either by reaching the end or by encountering an unexpected error. After
-	// Receive returns false, the Err method will return any unexpected error
-	// encountered.
-	Receive() bool
 }
 
 type startSnapshotMsg struct {
@@ -54,11 +45,24 @@ func (m snapshotModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.items = msg.items
 		m.edges = msg.edges
 	}
+	log.Debugf("updated %+v => %v", msg, m)
 	return m, nil
 }
 
 func (m snapshotModel) View() string {
 	// TODO: add spinner and/or progressbar; complication: we do not have a
 	// expected number of items/edges to count towards for the progressbar
-	return fmt.Sprintf("%s: %d items, %d edges", m.state, m.items, m.edges)
+	if m.items == 0 && m.edges == 0 {
+		return fmt.Sprintf("%s - %s", m.title, m.state)
+	} else if m.items == 1 && m.edges == 0 {
+		return fmt.Sprintf("%s - %s: 1 item", m.title, m.state)
+	} else if m.items == 1 && m.edges == 1 {
+		return fmt.Sprintf("%s - %s: 1 item, 1 edge", m.title, m.state)
+	} else if m.items > 1 && m.edges == 0 {
+		return fmt.Sprintf("%s - %s: %d items", m.title, m.state, m.items)
+	} else if m.items > 1 && m.edges == 1 {
+		return fmt.Sprintf("%s - %s: %d items, 1 edge", m.title, m.state, m.items)
+	} else {
+		return fmt.Sprintf("%s - %s: %d items, %d edges", m.title, m.state, m.items, m.edges)
+	}
 }

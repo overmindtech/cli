@@ -56,15 +56,14 @@ type runTfApplyMsg struct{}
 type tfApplyFinishedMsg struct{}
 
 func NewTfApplyModel(args []string) tea.Model {
-	// TODO: this is the real command
-	// args = append([]string{"apply"}, args...)
-	// // plan file needs to go last
-	// args = append(args, "overmind.plan")
+	args = append([]string{"apply"}, args...)
+	// plan file needs to go last
+	args = append(args, "overmind.plan")
 
-	// TODO: remove this test setup
-	args = append([]string{"plan"}, args...)
-	// -out needs to go last to override whatever the user specified on the command line
-	args = append(args, "-out", "overmind.plan")
+	// // TODO: remove this test setup
+	// args = append([]string{"plan"}, args...)
+	// // -out needs to go last to override whatever the user specified on the command line
+	// args = append(args, "-out", "overmind.plan")
 
 	applyHeader := `# Applying Changes
 
@@ -73,7 +72,7 @@ Running ` + "`" + `terraform %v` + "`\n"
 
 	processingHeader := `# Applying Changes
 
-Processing plan from ` + "`" + `terraform %v` + "`\n"
+Applying changes with ` + "`" + `terraform %v` + "`\n"
 	processingHeader = fmt.Sprintf(processingHeader, strings.Join(args, " "))
 
 	return tfApplyModel{
@@ -102,6 +101,7 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case sourcesInitialisedMsg:
 		m.isStarting = true
 		return m, tea.Batch(
+			m.startingChangeSnapshot.Init(),
 			m.startStartChangeCmd(),
 			m.waitForStartingActivity,
 		)
@@ -159,6 +159,7 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tfApplyFinishedMsg:
 		m.isEnding = true
 		return m, tea.Batch(
+			m.endingChangeSnapshot.Init(),
 			m.startEndChangeCmd(),
 			m.waitForEndingActivity,
 		)
@@ -169,13 +170,13 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m tfApplyModel) View() string {
 	if m.isStarting || m.runTfApply || m.isEnding {
-		return m.processingHeader +
+		return markdownToString(m.processingHeader) + "\n" +
 			m.startingChangeSnapshot.View() + "\n" +
 			m.endingChangeSnapshot.View() + "\n" +
 			strings.Join(m.progress, "\n") + "\n"
 	}
 
-	return m.applyHeader
+	return markdownToString(m.applyHeader) + "\n"
 }
 
 func (m tfApplyModel) startStartChangeCmd() tea.Cmd {

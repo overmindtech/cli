@@ -70,34 +70,38 @@ func NewOvermindInstance(ctx context.Context, app string) (OvermindInstance, err
 	instanceDataUrl := fmt.Sprintf("%v/api/public/instance-data", instance.FrontendUrl)
 	req, err := http.NewRequest("GET", instanceDataUrl, nil)
 	if err != nil {
-		log.WithError(err).Fatal("could not initialize instance-data fetch")
+		log.WithContext(ctx).WithError(err).Error("could not initialize instance-data fetch")
+		return OvermindInstance{}, fmt.Errorf("could not initialize instance-data fetch: %w", err)
 	}
 
 	req = req.WithContext(ctx)
 	log.WithField("instanceDataUrl", instanceDataUrl).Debug("Fetching instance-data")
 	res, err := otelhttp.DefaultClient.Do(req)
 	if err != nil {
-		log.WithError(err).Fatal("could not fetch instance-data")
+		log.WithContext(ctx).WithError(err).Error("could not fetch instance-data")
+		return OvermindInstance{}, fmt.Errorf("could not fetch instance-data: %w", err)
 	}
 
 	if res.StatusCode != 200 {
-		log.WithField("status-code", res.StatusCode).Fatal("instance-data fetch returned non-200 status")
+		log.WithContext(ctx).WithField("status-code", res.StatusCode).Error("instance-data fetch returned non-200 status")
+		return OvermindInstance{}, fmt.Errorf("instance-data fetch returned non-200 status: %v", res.StatusCode)
 	}
 
 	defer res.Body.Close()
 	data := instanceData{}
 	err = json.NewDecoder(res.Body).Decode(&data)
 	if err != nil {
-		log.WithError(err).Fatal("could not parse instance-data")
+		log.WithContext(ctx).WithError(err).Error("could not parse instance-data")
+		return OvermindInstance{}, fmt.Errorf("could not parse instance-data: %w", err)
 	}
 
 	instance.ApiUrl, err = url.Parse(data.Api)
 	if err != nil {
-		return instance, fmt.Errorf("invalid api_url value '%v' in instance-data, error: %w", data.Api, err)
+		return OvermindInstance{}, fmt.Errorf("invalid api_url value '%v' in instance-data, error: %w", data.Api, err)
 	}
 	instance.NatsUrl, err = url.Parse(data.Nats)
 	if err != nil {
-		return instance, fmt.Errorf("invalid nats_url value '%v' in instance-data, error: %w", data.Nats, err)
+		return OvermindInstance{}, fmt.Errorf("invalid nats_url value '%v' in instance-data, error: %w", data.Nats, err)
 	}
 
 	instance.Audience = data.Aud
@@ -217,7 +221,7 @@ func (m authenticateModel) View() string {
 Attempting to automatically open the SSO authorization page in your default browser.
 If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
 
-	%v
+%v
 
 Then enter the code:
 
