@@ -15,9 +15,9 @@ require (
 	github.com/jedib0t/go-pretty/v6 v6.5.8
 	github.com/mattn/go-isatty v0.0.20
 	github.com/muesli/termenv v0.15.2
-	github.com/overmindtech/aws-source v0.0.0-20240503163311-8aa534dcedaf
+	github.com/overmindtech/aws-source v0.0.0-20240508085257-231b53ce8183
 	github.com/overmindtech/sdp-go v0.73.0
-	github.com/overmindtech/stdlib-source v0.0.0-20240503161949-5174af9973ae
+	github.com/overmindtech/stdlib-source v0.0.0-20240508084908-a929a97f2f4e
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
