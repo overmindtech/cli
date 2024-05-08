@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/ansi"
 )
 
 // waitForCancellation returns a tea.Cmd that will wait for SIGINT and SIGTERM and run the provided cancel on receipt.
@@ -59,7 +60,7 @@ func NewTaskModel(title string) taskModel {
 		status: taskStatusPending,
 		title:  title,
 		spinner: spinner.New(
-			spinner.WithSpinner(spinner.Pulse),
+			spinner.WithSpinner(spinner.Moon),
 			spinner.WithStyle(lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPalette.Light.BgMain))),
 		),
 	}
@@ -94,6 +95,13 @@ func (m taskModel) View() string {
 	case taskStatusPending:
 		return fmt.Sprintf("⏳ %v", m.title)
 	case taskStatusRunning:
+		v := m.spinner.View()
+		switch ansi.PrintableRuneWidth(v) {
+		case 0:
+			v = "  "
+		case 1:
+			v += " "
+		}
 		return fmt.Sprintf("%v %v", m.spinner.View(), m.title)
 	case taskStatusDone:
 		return fmt.Sprintf("✅ %v", m.title)

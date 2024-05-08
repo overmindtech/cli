@@ -14,6 +14,7 @@ require (
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/jedib0t/go-pretty/v6 v6.5.8
 	github.com/mattn/go-isatty v0.0.20
+	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6
 	github.com/muesli/termenv v0.15.2
 	github.com/overmindtech/aws-source v0.0.0-20240508085257-231b53ce8183
 	github.com/overmindtech/sdp-go v0.73.0
@@ -112,7 +113,6 @@ require (
 	github.com/miekg/dns v1.1.59 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/nats-io/jwt/v2 v2.5.6 // indirect
