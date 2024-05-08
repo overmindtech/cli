@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
@@ -230,9 +231,57 @@ func (m ensureTokenModel) oauthTokenCmd() tea.Msg {
 }
 
 func (m ensureTokenModel) awaitTokenCmd() tea.Msg {
-	token, err := m.config.DeviceAccessToken(m.ctx, m.deviceCode)
-	if err != nil {
-		return fatalError{id: m.spinner.ID(), err: fmt.Errorf("error authorizing token: %w", err)}
+	ctx := m.ctx
+	if m.deviceCode == nil {
+		return fatalError{id: m.spinner.ID(), err: errors.New("device code is nil")}
+	}
+
+	// if there is an actual expiry, limit the entire process to that time
+	if !m.deviceCode.Expiry.IsZero() {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithDeadline(ctx, m.deviceCode.Expiry)
+		defer cancel()
+	}
+
+	// while the RFC requires the oauth2 library to use 5 as the default,
+	// Auth0 should be able to handle more. Hence we re-implement the
+	m.deviceCode.Interval = 1
+
+	var token *oauth2.Token
+	var err error
+	for {
+		// reset the deviceCode's expiry to at most 1.5 seconds
+		m.deviceCode.Expiry = time.Now().Add(1500 * time.Millisecond)
+
+		token, err = m.config.DeviceAccessToken(ctx, m.deviceCode)
+		if err == nil {
+			// we got a token, continue below. kthxbye
+			break
+		}
+
+		if errors.Is(err, context.DeadlineExceeded) {
+			// the context has expired, we need to retry
+			continue
+		}
+
+		// re-implement DeviceAccessToken's logic, but faster
+		e, ok := err.(*oauth2.RetrieveError) // nolint:errorlint // we depend on DeviceAccessToken() returning an non-wrapped error
+		if !ok {
+			return fatalError{id: m.spinner.ID(), err: fmt.Errorf("error authorizing token: %w", err)}
+		}
+		switch e.ErrorCode {
+		case "slow_down":
+			// // https://datatracker.ietf.org/doc/html/rfc8628#section-3.5
+			// // "the interval MUST be increased by 5 seconds for this and all subsequent requests"
+			// interval += 5
+			// ticker.Reset(time.Duration(interval) * time.Second)
+		case "authorization_pending":
+			// retry
+		case "expired_token":
+		default:
+			return fatalError{id: m.spinner.ID(), err: fmt.Errorf("error authorizing token (%v): %w", e.ErrorCode, err)}
+		}
+
 	}
 
 	span := trace.SpanFromContext(m.ctx)
@@ -263,7 +312,7 @@ func (m ensureTokenModel) awaitTokenCmd() tea.Msg {
 		return otherError{id: m.spinner.ID(), err: fmt.Errorf("failed to encode token file at %v: %w", path, err)}
 	}
 
-	log.WithContext(m.ctx).Debugf("Saved token to %v", path)
+	log.WithContext(ctx).Debugf("Saved token to %v", path)
 	return tokenStoredMsg{tokenReceivedMsg: tokenReceivedMsg{token}, file: path}
 }
 
