@@ -95,8 +95,9 @@ func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.title = "Manual device authorization."
 		beginAuthMessage := `# Authenticate with a browser
 
-Attempting to automatically open the SSO authorization page in your default browser.
-If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
+Automatically opening the SSO authorization page in your default browser failed: %v
+
+Please open the following URL in your browser to authenticate:
 
 %v
 
@@ -104,7 +105,7 @@ Then enter the code:
 
 	%v
 `
-		m.deviceMessage = markdownToString(fmt.Sprintf(beginAuthMessage, msg.deviceCode.VerificationURI, msg.deviceCode.UserCode))
+		m.deviceMessage = markdownToString(fmt.Sprintf(beginAuthMessage, msg.err, msg.deviceCode.VerificationURI, msg.deviceCode.UserCode))
 		return m, m.awaitTokenCmd
 	case waitingForAuthorizationMsg:
 		m.config = msg.config
