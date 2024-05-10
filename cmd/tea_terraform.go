@@ -32,6 +32,7 @@ type cmdModel struct {
 	// UI state
 	tasks               map[string]tea.Model
 	terraformHasStarted bool   // remember whether terraform already has started. this is important to do the correct workarounds on errors. See also `skipView()`
+	fatalErrorSeen      bool   // remember whether a fatalError has been seen to avoid showing pending tasks
 	fatalError          string // this will get set if there's a fatalError coming through that doesn't have a task ID set
 
 	// business logic. This model will implement the actual CLI functionality requested.
@@ -83,12 +84,21 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case fatalError:
 		log.WithError(msg.err).WithField("msg.id", msg.id).Debug("cmdModel: fatalError received")
-		if msg.id == 0 {
-			m.fatalError = msg.err.Error()
-		}
+
+		// skipView based on the previous view. While this is not perfect, it's
+		// the best we can currently do without taking complete control of
+		// terraform command i/o
 		if m.terraformHasStarted {
 			skipView(m.View())
 		}
+
+		m.fatalErrorSeen = true
+
+		// record the fatal error here if it was not from a specific taskModel
+		if msg.id == 0 {
+			m.fatalError = msg.err.Error()
+		}
+
 		return m, tea.Sequence(
 			tea.Batch(batch...),
 			tea.Quit,
@@ -178,6 +188,16 @@ func (m cmdModel) View() string {
 	}
 	sort.Strings(keys)
 	for _, k := range keys {
+		// when we're quitting due to a fatal error, don't show pending tasks as
+		// they are not relevant anymore
+		if m.fatalErrorSeen {
+			t, ok := m.tasks[k].(WithTaskModel)
+			if ok {
+				if t.TaskModel().status == taskStatusPending {
+					continue
+				}
+			}
+		}
 		tasks = append(tasks, m.tasks[k].View())
 	}
 	tasks = append(tasks, m.cmd.View())
