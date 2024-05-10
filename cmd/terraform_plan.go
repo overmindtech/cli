@@ -580,6 +580,25 @@ func getTicketLinkFromPlan() (string, error) {
 	return fmt.Sprintf("tfplan://{SHA256}%x", h.Sum(nil)), nil
 }
 
+func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, error) {
+	// read results from `terraform show -json ${tfplan file}`
+	planJSON, err := os.ReadFile(fileName)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to read terraform plan")
+		return nil, err
+	}
+
+	return mappedItemDiffsFromPlan(ctx, planJSON, fileName, lf)
+}
+
+// mappedItemDiffsFromPlan takes a plan JSON, file name, and log fields as input
+// and returns a slice of mapped item differences and an error. It parses the
+// plan JSON, extracts resource changes, and creates mapped item differences for
+// each resource change. It also generates mapping queries based on the resource
+// type and current resource values. The function categorizes the mapped item
+// differences into supported and unsupported changes. Finally, it logs the
+// number of supported and unsupported changes and returns the mapped item
+// differences.
 func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, error) {
 	// Check that we haven't been passed a state file
 	if isStateFile(planJson) {
@@ -609,9 +628,10 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 			return nil, fmt.Errorf("failed to create item diff for resource change: %w", err)
 		}
 
+		// Load mappings for this type. These mappings tell us how to create an
+		// SDP query that will return this resource
 		awsMappings := datamaps.AwssourceData[resourceChange.Type]
 		k8sMappings := datamaps.K8ssourceData[resourceChange.Type]
-
 		mappings := append(awsMappings, k8sMappings...)
 
 		if len(mappings) == 0 {
@@ -652,6 +672,10 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 					WithFields(lf).
 					WithField("terraform-address", resourceChange.Address).
 					WithField("terraform-query-field", mapData.QueryField).Warn("Skipping resource without query field")
+				plannedChangeGroupsVar.Add(resourceChange.Type, &sdp.MappedItemDiff{
+					Item:         itemDiff,
+					MappingQuery: nil, // unmapped item has no mapping query
+				})
 				continue
 			}
 
