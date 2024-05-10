@@ -78,12 +78,10 @@ func NewOvermindInstance(ctx context.Context, app string) (OvermindInstance, err
 	log.WithField("instanceDataUrl", instanceDataUrl).Debug("Fetching instance-data")
 	res, err := otelhttp.DefaultClient.Do(req)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("could not fetch instance-data")
 		return OvermindInstance{}, fmt.Errorf("could not fetch instance-data: %w", err)
 	}
 
 	if res.StatusCode != 200 {
-		log.WithContext(ctx).WithField("status-code", res.StatusCode).Error("instance-data fetch returned non-200 status")
 		return OvermindInstance{}, fmt.Errorf("instance-data fetch returned non-200 status: %v", res.StatusCode)
 	}
 
@@ -91,7 +89,6 @@ func NewOvermindInstance(ctx context.Context, app string) (OvermindInstance, err
 	data := instanceData{}
 	err = json.NewDecoder(res.Body).Decode(&data)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("could not parse instance-data")
 		return OvermindInstance{}, fmt.Errorf("could not parse instance-data: %w", err)
 	}
 
