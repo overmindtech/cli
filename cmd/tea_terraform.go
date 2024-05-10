@@ -43,13 +43,17 @@ func (m cmdModel) Init() tea.Cmd {
 	// use the main cli context to not take this time from the main timeout
 	m.tasks["00_oi"] = NewInstanceLoaderModel(m.ctx, m.app)
 	m.tasks["01_token"] = NewEnsureTokenModel(m.ctx, m.app, m.apiKey, m.requiredScopes)
-	m.tasks["02_config"] = NewInitialiseSourcesModel() // wait for taking a ctx until timeout and token are attached
+
+	// these wait for taking a ctx until timeout and token are attached
+	m.tasks["02_config"] = NewInitialiseSourcesModel()
+	m.tasks["03_revlink"] = NewRevlinkWarmupModel()
 
 	return tea.Batch(
 		waitForCancellation(m.ctx, m.cancel),
 		m.tasks["00_oi"].Init(),
 		m.tasks["01_token"].Init(),
 		m.tasks["02_config"].Init(),
+		m.tasks["03_revlink"].Init(),
 		m.cmd.Init(),
 	)
 }
