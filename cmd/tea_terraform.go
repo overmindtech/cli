@@ -30,8 +30,9 @@ type cmdModel struct {
 	requiredScopes []string
 
 	// UI state
-	tasks      map[string]tea.Model
-	fatalError string // this will get set if there's a fatalError coming through that doesn't have a task ID set
+	tasks               map[string]tea.Model
+	terraformHasStarted bool   // remember whether terraform already has started. this is important to do the correct workarounds on errors. See also `skipView()`
+	fatalError          string // this will get set if there's a fatalError coming through that doesn't have a task ID set
 
 	// business logic. This model will implement the actual CLI functionality requested.
 	cmd tea.Model
@@ -85,7 +86,9 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.id == 0 {
 			m.fatalError = msg.err.Error()
 		}
-		skipView(m.View())
+		if m.terraformHasStarted {
+			skipView(m.View())
+		}
 		return m, tea.Sequence(
 			tea.Batch(batch...),
 			tea.Quit,
@@ -100,6 +103,9 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		tm, cmd := m.tokenChecks(msg.token)
 		batch = append(batch, cmd)
 		return tm, tea.Batch(batch...)
+
+	case triggerTfPlanMsg, runTfApplyMsg:
+		m.terraformHasStarted = true
 
 	case tfPlanFinishedMsg, tfApplyFinishedMsg:
 		// bump screen after terraform ran
