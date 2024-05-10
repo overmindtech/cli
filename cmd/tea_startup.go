@@ -27,6 +27,10 @@ func NewInstanceLoaderModel(ctx context.Context, app string) tea.Model {
 	return result
 }
 
+func (m instanceLoaderModel) TaskModel() taskModel {
+	return m.taskModel
+}
+
 func (m instanceLoaderModel) Init() tea.Cmd {
 	return tea.Batch(
 		m.taskModel.Init(),

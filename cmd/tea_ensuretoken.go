@@ -76,6 +76,10 @@ func NewEnsureTokenModel(ctx context.Context, app string, apiKey string, require
 	}
 }
 
+func (m ensureTokenModel) TaskModel() taskModel {
+	return m.taskModel
+}
+
 func (m ensureTokenModel) Init() tea.Cmd {
 	return m.taskModel.Init()
 }

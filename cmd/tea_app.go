@@ -55,6 +55,13 @@ type taskModel struct {
 	spinner spinner.Model
 }
 
+type WithTaskModel interface {
+	TaskModel() taskModel
+}
+
+// assert that taskModel implements WithTaskModel
+var _ WithTaskModel = (*taskModel)(nil)
+
 func NewTaskModel(title string) taskModel {
 	return taskModel{
 		status: taskStatusPending,
@@ -71,6 +78,10 @@ func (m taskModel) Init() tea.Cmd {
 		return m.spinner.Tick
 	}
 	return nil
+}
+
+func (m taskModel) TaskModel() taskModel {
+	return m
 }
 
 func (m taskModel) Update(msg tea.Msg) (taskModel, tea.Cmd) {

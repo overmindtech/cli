@@ -62,6 +62,10 @@ func NewInitialiseSourcesModel() tea.Model {
 	}
 }
 
+func (m initialiseSourcesModel) TaskModel() taskModel {
+	return m.taskModel
+}
+
 func (m initialiseSourcesModel) Init() tea.Cmd {
 	return m.taskModel.Init()
 }
