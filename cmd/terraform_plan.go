@@ -378,9 +378,11 @@ func (m tfPlanModel) View() string {
 		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
 	}
 
-	if m.fatalError != "" {
-		bits = append(bits, deletedLineStyle.Render(fmt.Sprintf("Error: %v", m.fatalError)))
-	}
+	// This doesn't do line-wrapping for long errors and is duplicated by the
+	// fatalError view on cmdModel
+	// if m.fatalError != "" {
+	// 	bits = append(bits, deletedLineStyle.Render(fmt.Sprintf("Error: %v", m.fatalError)))
+	// }
 
 	return strings.Join(bits, "\n") + "\n"
 }
