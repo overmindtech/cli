@@ -158,7 +158,7 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case fatalError:
 		if msg.id == m.spinner.ID() {
 			m.status = taskStatusError
-			m.title = fmt.Sprintf("Error while configuring AWS Access: %v", msg.err)
+			m.title = markdownToString(fmt.Sprintf("> error while configuring AWS access: %v", msg.err))
 		}
 	default:
 		var taskCmd tea.Cmd

@@ -150,7 +150,7 @@ Then enter the code:
 	case fatalError:
 		if msg.id == m.spinner.ID() {
 			m.status = taskStatusError
-			m.title = fmt.Sprintf("Ensuring Token Error: %v", msg.err)
+			m.title = markdownToString(fmt.Sprintf("Ensuring Token Error: %v", msg.err))
 		}
 		return m, nil
 	default:
