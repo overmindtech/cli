@@ -226,6 +226,8 @@ type tfPlanModel struct {
 	processingTask   taskModel
 	processingHeader string
 
+	revlinkWarmupFinished bool
+
 	runTfPlan       bool
 	tfPlanFinished  bool
 	processing      chan tea.Msg
@@ -238,6 +240,7 @@ type tfPlanModel struct {
 
 type triggerTfPlanMsg struct{}
 type tfPlanFinishedMsg struct{}
+type triggerPlanProcessingMsg struct{}
 type processingActivityMsg struct{ text string }
 type changeUpdatedMsg struct{ url string }
 type processingFinishedActivityMsg struct{ text string }
@@ -282,7 +285,7 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.ctx = msg.ctx
 		m.oi = msg.oi
 
-	case revlinkWarmupFinishedMsg:
+	case sourcesInitialisedMsg:
 		m.runTfPlan = true
 		m.planTask.status = taskStatusRunning
 		// defer the actual command to give the view a chance to show the header
@@ -305,10 +308,21 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				return tfPlanFinishedMsg{}
 			})
+
+	case revlinkWarmupFinishedMsg:
+		m.revlinkWarmupFinished = true
+		if m.tfPlanFinished {
+			return m, func() tea.Msg { return triggerPlanProcessingMsg{} }
+		}
 	case tfPlanFinishedMsg:
 		m.tfPlanFinished = true
 		m.planTask.status = taskStatusDone
 
+		if m.revlinkWarmupFinished {
+			return m, func() tea.Msg { return triggerPlanProcessingMsg{} }
+		}
+
+	case triggerPlanProcessingMsg:
 		m.processingTask.status = taskStatusRunning
 		m.processingModel.state = "executed terraform plan"
 
