@@ -40,7 +40,7 @@ var terraformPlanCmd = &cobra.Command{
 			log.WithError(err).Fatal("could not bind `terraform plan` flags")
 		}
 	},
-	Run: CmdWrapper("plan", []string{"changes:write", "config:write", "request:receive"}, NewTfPlanModel),
+	Run: CmdWrapper("plan", []string{"explore:read", "changes:write", "config:write", "request:receive"}, NewTfPlanModel),
 }
 
 type OvermindCommandHandler func(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error
@@ -282,7 +282,7 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.ctx = msg.ctx
 		m.oi = msg.oi
 
-	case sourcesInitialisedMsg:
+	case revlinkWarmupFinishedMsg:
 		m.runTfPlan = true
 		m.planTask.status = taskStatusRunning
 		// defer the actual command to give the view a chance to show the header
