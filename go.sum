@@ -278,6 +278,8 @@ github.com/overmindtech/aws-source v0.0.0-20240508085257-231b53ce8183 h1:hiHkQLQ
 github.com/overmindtech/aws-source v0.0.0-20240508085257-231b53ce8183/go.mod h1:mhuyd9sRBae4Y/URsrIUGZr6t9P6Ee8mHpCgoCMLUiw=
 github.com/overmindtech/aws-source v0.0.0-20240510013645-b63e26d012a4 h1:kWYnDGGP0h1YHSWbBziUSRyqv4L/0CTatX7rf7yIwPM=
 github.com/overmindtech/aws-source v0.0.0-20240510013645-b63e26d012a4/go.mod h1:KTybB+WptAz0qgBm6sqJQ1ZF0N4dC0SpumN+pC2/DiA=
+github.com/overmindtech/aws-source v0.0.0-20240513194501-329e2bbe8512 h1:F9RZUKB9HzVvnsLmfsuwct9avmjQAN40TIubLkAY3zE=
+github.com/overmindtech/aws-source v0.0.0-20240513194501-329e2bbe8512/go.mod h1:qMjzsKVD2x+H0zbT/2Rp9g3AaFO3texPkQR9fjPVxhk=
 github.com/overmindtech/discovery v0.27.0 h1:pti9Tk3gwFxt7S6P+dBTKD0v29BjgQhnbZObSyrJMmg=
 github.com/overmindtech/discovery v0.27.0/go.mod h1:h7NMn39kUNPu9TyE/qVZ7tYIdOJ3/v4jGeuxl/Wz3Hw=
 github.com/overmindtech/sdp-go v0.73.0 h1:zo+lpPsWn3znM9BT8jA5IUrbCD39otGNUxK7sFVS3dQ=
