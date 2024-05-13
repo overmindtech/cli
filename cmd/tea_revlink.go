@@ -25,7 +25,7 @@ type revlinkWarmupModel struct {
 
 func NewRevlinkWarmupModel() tea.Model {
 	return revlinkWarmupModel{
-		taskModel: NewTaskModel("Discover and link all available resources"),
+		taskModel: NewTaskModel("Discover and link all resources"),
 		status:    make(chan *sdp.RevlinkWarmupResponse),
 		currentStatus: &sdp.RevlinkWarmupResponse{
 			Status: "pending",
@@ -81,7 +81,13 @@ func (m revlinkWarmupModel) View() string {
 	view := m.taskModel.View()
 	switch m.taskModel.status { //nolint:exhaustive // we only care about running and done
 	case taskStatusRunning, taskStatusDone:
-		view += fmt.Sprintf(": %v (%v items, %v edges)", m.currentStatus.GetStatus(), m.currentStatus.GetItems(), m.currentStatus.GetEdges())
+		items := m.currentStatus.GetItems()
+		edges := m.currentStatus.GetEdges()
+		if items+edges > 0 {
+			view += fmt.Sprintf(": %v (%v items, %v edges)", m.currentStatus.GetStatus(), items, edges)
+		} else {
+			view += fmt.Sprintf(": %v", m.currentStatus.GetStatus())
+		}
 	}
 
 	return view
