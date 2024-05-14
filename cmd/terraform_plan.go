@@ -671,7 +671,7 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 				log.WithContext(ctx).
 					WithFields(lf).
 					WithField("terraform-address", resourceChange.Address).
-					WithField("terraform-query-field", mapData.QueryField).Warn("Skipping resource without query field")
+					WithField("terraform-query-field", mapData.QueryField).Warn("Adding unmapped resource")
 				plannedChangeGroupsVar.Add(resourceChange.Type, &sdp.MappedItemDiff{
 					Item:         itemDiff,
 					MappingQuery: nil, // unmapped item has no mapping query
