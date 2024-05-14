@@ -241,14 +241,15 @@ type tfPlanModel struct {
 
 	revlinkWarmupFinished bool
 
-	runTfPlan       bool
-	tfPlanFinished  bool
-	processing      chan tea.Msg
-	processingModel snapshotModel
-	progress        []string
-	changeUrl       string
-	riskMilestones  []*sdp.RiskCalculationStatus_ProgressMilestone
-	risks           []*sdp.Risk
+	runTfPlan          bool
+	tfPlanFinished     bool
+	processing         chan tea.Msg
+	processingModel    snapshotModel
+	progress           []string
+	changeUrl          string
+	riskMilestones     []*sdp.RiskCalculationStatus_ProgressMilestone
+	riskMilestoneTasks []taskModel
+	risks              []*sdp.Risk
 
 	fatalError string
 }
@@ -276,7 +277,7 @@ func NewTfPlanModel(args []string) tea.Model {
 	planHeader := `Running ` + "`" + `terraform %v` + "`\n"
 	planHeader = fmt.Sprintf(planHeader, strings.Join(args, " "))
 
-	processingHeader := `Processing plan from ` + "`" + `terraform %v` + "`\n"
+	processingHeader := `   Processing plan from ` + "`" + `terraform %v` + "`\n"
 	processingHeader = fmt.Sprintf(processingHeader, strings.Join(args, " "))
 
 	return tfPlanModel{
@@ -302,6 +303,8 @@ func (m tfPlanModel) Init() tea.Cmd {
 func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	log.Debugf("tfPlanModel: Update %T received %+v", msg, msg)
 
+	cmds := []tea.Cmd{}
+
 	switch msg := msg.(type) {
 	case loadSourcesConfigMsg:
 		m.ctx = msg.ctx
@@ -311,7 +314,8 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.runTfPlan = true
 		m.planTask.status = taskStatusRunning
 		// defer the actual command to give the view a chance to show the header
-		return m, func() tea.Msg { return triggerTfPlanMsg{} }
+		cmds = append(cmds, func() tea.Msg { return triggerTfPlanMsg{} })
+
 	case triggerTfPlanMsg:
 		c := exec.CommandContext(m.ctx, "terraform", m.args...) // nolint:gosec // this is a user-provided command, let them do their thing
 
@@ -321,7 +325,7 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.processingModel.state = "executing terraform plan"
-		return m, tea.ExecProcess(
+		cmds = append(cmds, tea.ExecProcess(
 			c,
 			func(err error) tea.Msg {
 				if err != nil {
@@ -329,26 +333,26 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 				return tfPlanFinishedMsg{}
-			})
+			}))
 
 	case revlinkWarmupFinishedMsg:
 		m.revlinkWarmupFinished = true
 		if m.tfPlanFinished {
-			return m, func() tea.Msg { return triggerPlanProcessingMsg{} }
+			cmds = append(cmds, func() tea.Msg { return triggerPlanProcessingMsg{} })
 		}
 	case tfPlanFinishedMsg:
 		m.tfPlanFinished = true
 		m.planTask.status = taskStatusDone
 
 		if m.revlinkWarmupFinished {
-			return m, func() tea.Msg { return triggerPlanProcessingMsg{} }
+			cmds = append(cmds, func() tea.Msg { return triggerPlanProcessingMsg{} })
 		}
 
 	case triggerPlanProcessingMsg:
 		m.processingTask.status = taskStatusRunning
 		m.processingModel.state = "executed terraform plan"
 
-		return m, tea.Batch(
+		cmds = append(cmds,
 			m.processPlanCmd,
 			m.processingTask.spinner.Tick,
 			m.waitForProcessingActivity,
@@ -356,45 +360,75 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case processingActivityMsg:
 		m.processingModel.state = "processing"
 		m.progress = append(m.progress, msg.text)
-		return m, m.waitForProcessingActivity
+		cmds = append(cmds, m.waitForProcessingActivity)
 	case processingFinishedActivityMsg:
 		m.processingModel.state = "finished"
 		m.processingTask.status = taskStatusDone
 		m.progress = append(m.progress, msg.text)
-		return m, m.waitForProcessingActivity
+		cmds = append(cmds, m.waitForProcessingActivity)
 	case changeUpdatedMsg:
 		m.changeUrl = msg.url
 		m.riskMilestones = msg.riskMilestones
+		if len(m.riskMilestoneTasks) != len(msg.riskMilestones) {
+			m.riskMilestoneTasks = []taskModel{}
+			for _, ms := range msg.riskMilestones {
+				tm := NewTaskModel(ms.GetDescription())
+				m.riskMilestoneTasks = append(m.riskMilestoneTasks, tm)
+				cmds = append(cmds, tm.spinner.Tick)
+			}
+		}
+		for i, ms := range msg.riskMilestones {
+			m.riskMilestoneTasks[i].title = ms.GetDescription()
+			switch ms.GetStatus() {
+			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_PENDING:
+				m.riskMilestoneTasks[i].status = taskStatusPending
+			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_ERROR:
+				m.riskMilestoneTasks[i].status = taskStatusError
+			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_DONE:
+				m.riskMilestoneTasks[i].status = taskStatusDone
+			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_INPROGRESS:
+				m.riskMilestoneTasks[i].status = taskStatusRunning
+			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_SKIPPED:
+				m.riskMilestoneTasks[i].status = taskStatusSkipped
+			}
+		}
 		m.risks = msg.risks
 		m.processingModel.state = "Change updated"
-		return m, m.waitForProcessingActivity
+		cmds = append(cmds, m.waitForProcessingActivity)
 
 	case startSnapshotMsg:
 		mdl, cmd := m.processingModel.Update(msg)
 		m.processingModel = mdl.(snapshotModel)
-		return m, tea.Batch(m.waitForProcessingActivity, cmd)
+		cmds = append(cmds, m.waitForProcessingActivity, cmd)
 	case progressSnapshotMsg:
 		mdl, cmd := m.processingModel.Update(msg)
 		m.processingModel = mdl.(snapshotModel)
-		return m, tea.Batch(m.waitForProcessingActivity, cmd)
+		cmds = append(cmds, m.waitForProcessingActivity, cmd)
 	case finishSnapshotMsg:
 		mdl, cmd := m.processingModel.Update(msg)
 		m.processingModel = mdl.(snapshotModel)
-		return m, tea.Sequence(cmd, func() tea.Msg { return delayQuitMsg{} })
+		cmds = append(cmds, tea.Sequence(cmd, func() tea.Msg { return delayQuitMsg{} }))
 	case delayQuitMsg:
-		return m, tea.Quit
+		cmds = append(cmds, tea.Quit)
 
 	case fatalError:
 		m.fatalError = msg.err.Error()
-		return m, tea.Quit
+		cmds = append(cmds, tea.Quit)
 	default:
-		var planCmd, processingCmd tea.Cmd
-		m.planTask, planCmd = m.planTask.Update(msg)
-		m.processingTask, processingCmd = m.processingTask.Update(msg)
-		return m, tea.Batch(planCmd, processingCmd)
+		var cmd tea.Cmd
+		m.planTask, cmd = m.planTask.Update(msg)
+		cmds = append(cmds, cmd)
+
+		m.processingTask, cmd = m.processingTask.Update(msg)
+		cmds = append(cmds, cmd)
+
+		for i, ms := range m.riskMilestoneTasks {
+			m.riskMilestoneTasks[i], cmd = ms.Update(msg)
+			cmds = append(cmds, cmd)
+		}
 	}
 
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 func (m tfPlanModel) View() string {
@@ -409,15 +443,15 @@ func (m tfPlanModel) View() string {
 	bits = append(bits, m.processingTask.View())
 
 	if m.tfPlanFinished {
-		bits = append(bits, markdownToString(m.processingHeader))
-		bits = append(bits, m.processingModel.View())
+		bits = append(bits, m.processingHeader)
+		bits = append(bits, fmt.Sprintf("   %v", m.processingModel.View()))
 	}
 
 	if m.changeUrl != "" && len(m.risks) == 0 {
-		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph at:\n%v\n\n", m.changeUrl))
-		for _, milestone := range m.riskMilestones {
-			bits = append(bits, fmt.Sprintf("%v: %v\n", milestone.GetStatus(), milestone.GetDescription()))
+		for _, t := range m.riskMilestoneTasks {
+			bits = append(bits, fmt.Sprintf("   %v", t.View()))
 		}
+		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph at:\n%v\n\n", m.changeUrl))
 	}
 
 	return strings.Join(bits, "\n") + "\n"
@@ -427,7 +461,6 @@ func (m tfPlanModel) FinalReport() string {
 	bits := []string{}
 	if m.changeUrl != "" {
 		if len(m.risks) > 0 {
-			bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
 			for _, r := range m.risks {
 				severity := ""
 				switch r.GetSeverity() {
@@ -445,6 +478,7 @@ func (m tfPlanModel) FinalReport() string {
 					styleH1().Render(fmt.Sprintf("  %v  ", r.GetTitle())),
 					wordwrap.String(r.GetDescription(), 80))))
 			}
+			bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
 		}
 	}
 	return strings.Join(bits, "\n") + "\n"
