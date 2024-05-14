@@ -68,6 +68,10 @@ func viperGetApp(ctx context.Context) (string, error) {
 	return app, nil
 }
 
+type FinalReportingModel interface {
+	FinalReport() string
+}
+
 func CmdWrapper(action string, requiredScopes []string, commandModel func([]string) tea.Model) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		// set up a context for the command
@@ -124,9 +128,17 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func([]stri
 				tasks:          map[string]tea.Model{},
 				cmd:            commandModel(args),
 			})
-			_, err = p.Run()
+			result, err := p.Run()
 			if err != nil {
 				return fmt.Errorf("could not start program: %w", err)
+			}
+
+			cmd, ok := result.(cmdModel)
+			if ok {
+				frm, ok := cmd.cmd.(FinalReportingModel)
+				if ok {
+					fmt.Println(frm.FinalReport())
+				}
 			}
 
 			return nil
@@ -240,6 +252,9 @@ type tfPlanModel struct {
 
 	fatalError string
 }
+
+// assert interface
+var _ FinalReportingModel = (*tfPlanModel)(nil)
 
 type triggerTfPlanMsg struct{}
 type tfPlanFinishedMsg struct{}
@@ -398,6 +413,18 @@ func (m tfPlanModel) View() string {
 		bits = append(bits, m.processingModel.View())
 	}
 
+	if m.changeUrl != "" && len(m.risks) == 0 {
+		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph at:\n%v\n\n", m.changeUrl))
+		for _, milestone := range m.riskMilestones {
+			bits = append(bits, fmt.Sprintf("%v: %v\n", milestone.GetStatus(), milestone.GetDescription()))
+		}
+	}
+
+	return strings.Join(bits, "\n") + "\n"
+}
+
+func (m tfPlanModel) FinalReport() string {
+	bits := []string{}
 	if m.changeUrl != "" {
 		if len(m.risks) > 0 {
 			bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
@@ -417,22 +444,9 @@ func (m tfPlanModel) View() string {
 					severity,
 					styleH1().Render(fmt.Sprintf("  %v  ", r.GetTitle())),
 					wordwrap.String(r.GetDescription(), 80))))
-				// bits = append(bits, markdownToString(fmt.Sprintf("# %v   \t%v\n\n%v\n\n", r.GetTitle(), severity, r.GetDescription())))
-			}
-		} else {
-			bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph at:\n%v\n\n", m.changeUrl))
-			for _, milestone := range m.riskMilestones {
-				bits = append(bits, fmt.Sprintf("%v: %v\n", milestone.GetStatus(), milestone.GetDescription()))
 			}
 		}
 	}
-
-	// This doesn't do line-wrapping for long errors and is duplicated by the
-	// fatalError view on cmdModel
-	// if m.fatalError != "" {
-	// 	bits = append(bits, deletedLineStyle.Render(fmt.Sprintf("Error: %v", m.fatalError)))
-	// }
-
 	return strings.Join(bits, "\n") + "\n"
 }
 
