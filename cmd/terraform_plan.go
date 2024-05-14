@@ -14,6 +14,7 @@ import (
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
+	"github.com/muesli/reflow/wordwrap"
 	"github.com/overmindtech/aws-source/proc"
 	"github.com/overmindtech/cli/cmd/datamaps"
 	"github.com/overmindtech/cli/tracing"
@@ -234,6 +235,8 @@ type tfPlanModel struct {
 	processingModel snapshotModel
 	progress        []string
 	changeUrl       string
+	riskMilestones  []*sdp.RiskCalculationStatus_ProgressMilestone
+	risks           []*sdp.Risk
 
 	fatalError string
 }
@@ -242,7 +245,11 @@ type triggerTfPlanMsg struct{}
 type tfPlanFinishedMsg struct{}
 type triggerPlanProcessingMsg struct{}
 type processingActivityMsg struct{ text string }
-type changeUpdatedMsg struct{ url string }
+type changeUpdatedMsg struct {
+	url            string
+	riskMilestones []*sdp.RiskCalculationStatus_ProgressMilestone
+	risks          []*sdp.Risk
+}
 type processingFinishedActivityMsg struct{ text string }
 type delayQuitMsg struct{}
 
@@ -328,6 +335,7 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		return m, tea.Batch(
 			m.processPlanCmd,
+			m.processingTask.spinner.Tick,
 			m.waitForProcessingActivity,
 		)
 	case processingActivityMsg:
@@ -341,6 +349,8 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.waitForProcessingActivity
 	case changeUpdatedMsg:
 		m.changeUrl = msg.url
+		m.riskMilestones = msg.riskMilestones
+		m.risks = msg.risks
 		m.processingModel.state = "Change updated"
 		return m, m.waitForProcessingActivity
 
@@ -389,7 +399,32 @@ func (m tfPlanModel) View() string {
 	}
 
 	if m.changeUrl != "" {
-		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
+		if len(m.risks) > 0 {
+			bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
+			for _, r := range m.risks {
+				severity := ""
+				switch r.GetSeverity() {
+				case sdp.Risk_SEVERITY_HIGH:
+					severity = styleBgDanger().Render("  High 🔥  ")
+				case sdp.Risk_SEVERITY_MEDIUM:
+					severity = styleBgWarning().Render("  Medium ❗  ")
+				case sdp.Risk_SEVERITY_LOW:
+					severity = styleLabelTitle().Render("  Low ℹ️  ")
+				case sdp.Risk_SEVERITY_UNSPECIFIED:
+					// do nothing
+				}
+				bits = append(bits, (fmt.Sprintf("%v %v\n\n%v\n\n",
+					severity,
+					styleH1().Render(fmt.Sprintf("  %v  ", r.GetTitle())),
+					wordwrap.String(r.GetDescription(), 80))))
+				// bits = append(bits, markdownToString(fmt.Sprintf("# %v   \t%v\n\n%v\n\n", r.GetTitle(), severity, r.GetDescription())))
+			}
+		} else {
+			bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph at:\n%v\n\n", m.changeUrl))
+			for _, milestone := range m.riskMilestones {
+				bits = append(bits, fmt.Sprintf("%v: %v\n", milestone.GetStatus(), milestone.GetDescription()))
+			}
+		}
 	}
 
 	// This doesn't do line-wrapping for long errors and is duplicated by the
@@ -572,12 +607,44 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	changeUrl.Path = fmt.Sprintf("%v/changes/%v/blast-radius", changeUrl.Path, changeUuid)
 	log.WithField("change-url", changeUrl.String()).Info("Change ready")
 
-	// fmt.Println(changeUrl.String())
-
 	m.processing <- changeUpdatedMsg{url: changeUrl.String()}
+
+	// wait for risk calculation to happen
+	m.processing <- processingActivityMsg{"Calculating risks"}
+	for {
+		riskRes, err := client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
+			Msg: &sdp.GetChangeRisksRequest{
+				UUID: changeUuid[:],
+			},
+		})
+		if err != nil {
+			close(m.processing)
+			return fatalError{err: fmt.Errorf("processPlanCmd: failed to get change risks: %w", err)}
+		}
+
+		m.processing <- changeUpdatedMsg{
+			url:            changeUrl.String(),
+			riskMilestones: riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetProgressMilestones(),
+			risks:          riskRes.Msg.GetChangeRiskMetadata().GetRisks(),
+		}
+
+		if riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus() == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
+			time.Sleep(time.Second)
+			// retry
+		} else {
+			// it's done (or errored)
+			break
+		}
+
+		if ctx.Err() != nil {
+			return fatalError{err: fmt.Errorf("processPlanCmd: context cancelled: %w", ctx.Err())}
+		}
+
+	}
+
 	m.processing <- processingFinishedActivityMsg{"Done"}
 	return finishSnapshotMsg{
-		newState: "calculated blast radius",
+		newState: "calculated blast radius and risks",
 		items:    msg.GetNumItems(),
 		edges:    msg.GetNumEdges(),
 	}
