@@ -74,8 +74,7 @@
                                                     {
                                                         "args": [],
                                                         "command": [],
-                                                        "env": [
-                                                        ],
+                                                        "env": [],
                                                         "env_from": [],
                                                         "image": "ghcr.io/overmindtech/api-server@sha256:d10d15d0bce640a7e4e505b57652d7a7e46f8092a3dbd64408de4368cda40270",
                                                         "image_pull_policy": "IfNotPresent",
@@ -638,7 +637,6 @@
                         "tags_all": {}
                     }
                 },
-
                 {
                     "address": "module.eks_elb_controller.data.aws_iam_policy_document.lb_controller[0]",
                     "mode": "data",
@@ -2395,6 +2393,58 @@
     },
     "resource_changes": [
         {
+            "address": "module.infra.aws_route53_record.frontend_on_vercel[0]",
+            "module_address": "module.infra",
+            "mode": "managed",
+            "type": "aws_route53_record",
+            "name": "frontend_on_vercel",
+            "index": 0,
+            "provider_name": "registry.terraform.io/hashicorp/aws",
+            "change": {
+                "actions": [
+                    "delete"
+                ],
+                "before": {
+                    "alias": [],
+                    "allow_overwrite": null,
+                    "cidr_routing_policy": [],
+                    "failover_routing_policy": [],
+                    "fqdn": "app.overmind.tech",
+                    "geolocation_routing_policy": [],
+                    "geoproximity_routing_policy": [],
+                    "health_check_id": "",
+                    "id": "BLAH_app.overmind.tech_A",
+                    "latency_routing_policy": [],
+                    "multivalue_answer_routing_policy": false,
+                    "name": "app.overmind.tech",
+                    "records": [
+                        "76.76.21.21"
+                    ],
+                    "set_identifier": "",
+                    "ttl": 300,
+                    "type": "A",
+                    "weighted_routing_policy": [],
+                    "zone_id": "BLAH"
+                },
+                "after": null,
+                "after_unknown": {},
+                "before_sensitive": {
+                    "alias": [],
+                    "cidr_routing_policy": [],
+                    "failover_routing_policy": [],
+                    "geolocation_routing_policy": [],
+                    "geoproximity_routing_policy": [],
+                    "latency_routing_policy": [],
+                    "records": [
+                        false
+                    ],
+                    "weighted_routing_policy": []
+                },
+                "after_sensitive": false
+            },
+            "action_reason": "delete_because_count_index"
+        },
+        {
             "address": "module.core.kubernetes_secret.apiserver-secrets",
             "module_address": "module.core",
             "mode": "managed",
@@ -2407,8 +2457,7 @@
                 ],
                 "before": {
                     "binary_data": null,
-                    "data": {
-                    },
+                    "data": {},
                     "id": "default/apiserver-secrets",
                     "immutable": false,
                     "metadata": [
@@ -2928,8 +2977,7 @@
                                                 {
                                                     "args": [],
                                                     "command": [],
-                                                    "env": [
-                                                    ],
+                                                    "env": [],
                                                     "env_from": [],
                                                     "image": "ghcr.io/overmindtech/api-server@sha256:41be6bab8dc65bf19fe3771fa9cf54e51621d93161056db8091ca2ff905be24a",
                                                     "image_pull_policy": "IfNotPresent",
@@ -3203,8 +3251,7 @@
                                                 {
                                                     "args": [],
                                                     "command": [],
-                                                    "env": [
-                                                    ],
+                                                    "env": [],
                                                     "env_from": [],
                                                     "image": "ghcr.io/overmindtech/api-server@sha256:d10d15d0bce640a7e4e505b57652d7a7e46f8092a3dbd64408de4368cda40270",
                                                     "image_pull_policy": "IfNotPresent",
@@ -6732,6 +6779,52 @@
         "values": {
             "root_module": {
                 "resources": [
+                    {
+                        "address": "module.infra.aws_route53_record.frontend_on_vercel[0]",
+                        "mode": "managed",
+                        "type": "aws_route53_record",
+                        "name": "frontend_on_vercel",
+                        "index": 0,
+                        "provider_name": "registry.terraform.io/hashicorp/aws",
+                        "schema_version": 2,
+                        "values": {
+                            "alias": [],
+                            "allow_overwrite": null,
+                            "cidr_routing_policy": [],
+                            "failover_routing_policy": [],
+                            "fqdn": "app.overmind.tech",
+                            "geolocation_routing_policy": [],
+                            "geoproximity_routing_policy": [],
+                            "health_check_id": "",
+                            "id": "BLAH_app.overmind.tech_A",
+                            "latency_routing_policy": [],
+                            "multivalue_answer_routing_policy": false,
+                            "name": "app.overmind.tech",
+                            "records": [
+                                "1.1.1.1"
+                            ],
+                            "set_identifier": "",
+                            "ttl": 300,
+                            "type": "A",
+                            "weighted_routing_policy": [],
+                            "zone_id": "BLAH"
+                        },
+                        "sensitive_values": {
+                            "alias": [],
+                            "cidr_routing_policy": [],
+                            "failover_routing_policy": [],
+                            "geolocation_routing_policy": [],
+                            "geoproximity_routing_policy": [],
+                            "latency_routing_policy": [],
+                            "records": [
+                                false
+                            ],
+                            "weighted_routing_policy": []
+                        },
+                        "depends_on": [
+                            "module.infra.aws_route53_zone.zone"
+                        ]
+                    },
                     {
                         "address": "kubernetes_deployment.nats_box",
                         "mode": "managed",

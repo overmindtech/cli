@@ -146,6 +146,9 @@ func itemAttributesFromResourceChangeData(attributesMsg, sensitiveMsg json.RawMe
 	return sdp.ToAttributesSorted(attributes)
 }
 
+// Converts a ResourceChange form a terraform plan to an ItemDiff in SDP format.
+// These items will use the scope `terraform_plan` since we haven't mapped them
+// to an actual item in the infrastructure yet
 func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, error) {
 	status := sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNSPECIFIED
 
@@ -296,17 +299,6 @@ func isStateFile(bytes []byte) bool {
 	}
 
 	return false
-}
-
-func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, error) {
-	// read results from `terraform show -json ${tfplan file}`
-	planJSON, err := os.ReadFile(fileName)
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to read terraform plan")
-		return nil, err
-	}
-
-	return mappedItemDiffsFromPlan(ctx, planJSON, fileName, lf)
 }
 
 // Returns the name of the provider from the config key. If the resource isn't

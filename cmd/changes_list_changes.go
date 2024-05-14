@@ -256,7 +256,7 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 	return 0
 }
 
-func printJson(ctx context.Context, b []byte, prefix, id string) error {
+func printJson(_ context.Context, b []byte, prefix, id string) error {
 	switch viper.GetString("format") {
 	case "json":
 		fmt.Println(string(b))
