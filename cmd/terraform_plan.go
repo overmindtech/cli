@@ -420,13 +420,13 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	planJson, err := tfPlanJsonCmd.Output()
 	if err != nil {
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("failed to convert terraform plan to JSON: %w", err)}
+		return fatalError{err: fmt.Errorf("processPlanCmd: failed to convert terraform plan to JSON: %w", err)}
 	}
 
 	plannedChanges, err := mappedItemDiffsFromPlan(ctx, planJson, "overmind.plan", log.Fields{})
 	if err != nil {
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("failed to parse terraform plan: %w", err)}
+		return fatalError{err: fmt.Errorf("processPlanCmd: failed to parse terraform plan: %w", err)}
 	}
 
 	m.processing <- processingActivityMsg{"converted terraform plan to JSON"}
@@ -445,7 +445,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	changeUuid, err := getChangeUuid(ctx, m.oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, false)
 	if err != nil {
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("failed searching for existing changes: %w", err)}
+		return fatalError{err: fmt.Errorf("processPlanCmd: failed searching for existing changes: %w", err)}
 	}
 
 	title := changeTitle(viper.GetString("title"))
@@ -471,13 +471,13 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 		})
 		if err != nil {
 			close(m.processing)
-			return fatalError{err: fmt.Errorf("failed to create a new change: %w", err)}
+			return fatalError{err: fmt.Errorf("processPlanCmd: failed to create a new change: %w", err)}
 		}
 
 		maybeChangeUuid := createResponse.Msg.GetChange().GetMetadata().GetUUIDParsed()
 		if maybeChangeUuid == nil {
 			close(m.processing)
-			return fatalError{err: fmt.Errorf("failed to read change id: %w", err)}
+			return fatalError{err: fmt.Errorf("processPlanCmd: failed to read change id: %w", err)}
 		}
 
 		changeUuid = *maybeChangeUuid
@@ -510,7 +510,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 		})
 		if err != nil {
 			close(m.processing)
-			return fatalError{err: fmt.Errorf("failed to update change: %w", err)}
+			return fatalError{err: fmt.Errorf("processPlanCmd: failed to update change: %w", err)}
 		}
 	}
 
@@ -526,7 +526,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	})
 	if err != nil {
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("failed to update planned changes: %w", err)}
+		return fatalError{err: fmt.Errorf("processPlanCmd: failed to update planned changes: %w", err)}
 	}
 
 	last_log := time.Now()
@@ -565,7 +565,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	}
 	if resultStream.Err() != nil {
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("error streaming results: %w", err)}
+		return fatalError{err: fmt.Errorf("processPlanCmd: error streaming results: %w", err)}
 	}
 
 	changeUrl := *m.oi.FrontendUrl
