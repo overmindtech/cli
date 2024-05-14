@@ -5,6 +5,11 @@ Set Margin 20
 Set MarginFill "#7a70eb" # use Dark.BgMain
 Set BorderRadius 10
 
+Set Width 1200
+Set Height 900
+
+Set FontSize 15
+
 Hide
 Type "cd tmp"
 Enter
@@ -25,6 +30,7 @@ Enter
 Type "sso-dogfood"
 Sleep 1
 Enter
+Sleep 60
 Sleep 20
 
 # Ctrl+c

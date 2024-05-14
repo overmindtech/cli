@@ -126,10 +126,34 @@ var overmindTheme []byte
 //go:embed overmind-theme-dark.json
 var overmindThemeDark []byte
 
+func currentPalette() Palette {
+	if termenv.HasDarkBackground() {
+		return ColorPalette.Dark
+	}
+	return ColorPalette.Light
+}
+
+func styleBgDanger() lipgloss.Style {
+	return lipgloss.NewStyle().Background(lipgloss.Color(currentPalette().BgDanger))
+}
+func styleBgWarning() lipgloss.Style {
+	return lipgloss.NewStyle().Background(lipgloss.Color(currentPalette().BgWarning))
+}
+func styleLabelTitle() lipgloss.Style {
+	return lipgloss.NewStyle().Background(lipgloss.Color(currentPalette().LabelTitle))
+}
+
+func styleH1() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#ffffff")).
+		Background(lipgloss.Color(currentPalette().BgMain)).
+		Bold(true).
+		MarginLeft(2)
+}
+
 func markdownToString(markdown string) string {
 	themeToUse := overmindTheme
-	hasDarkBackground := termenv.HasDarkBackground()
-	if hasDarkBackground {
+	if termenv.HasDarkBackground() {
 		themeToUse = overmindThemeDark
 	}
 

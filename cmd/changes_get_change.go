@@ -114,7 +114,7 @@ func GetChange(ctx context.Context, ready chan bool) int {
 	var riskRes *connect.Response[sdp.GetChangeRisksResponse]
 fetch:
 	for {
-		// use the variable to avoid shadowing
+		// use err variable to avoid shadowing riskRes outside the loop
 		var err error
 		riskRes, err = client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
 			Msg: &sdp.GetChangeRisksRequest{

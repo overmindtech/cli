@@ -14,6 +14,7 @@ import (
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
+	"github.com/muesli/reflow/wordwrap"
 	"github.com/overmindtech/aws-source/proc"
 	"github.com/overmindtech/cli/cmd/datamaps"
 	"github.com/overmindtech/cli/tracing"
@@ -40,7 +41,7 @@ var terraformPlanCmd = &cobra.Command{
 			log.WithError(err).Fatal("could not bind `terraform plan` flags")
 		}
 	},
-	Run: CmdWrapper("plan", []string{"changes:write", "config:write", "request:receive"}, NewTfPlanModel),
+	Run: CmdWrapper("plan", []string{"explore:read", "changes:write", "config:write", "request:receive"}, NewTfPlanModel),
 }
 
 type OvermindCommandHandler func(ctx context.Context, args []string, oi OvermindInstance, token *oauth2.Token) error
@@ -65,6 +66,10 @@ func viperGetApp(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("target URL (%v) is insecure", parsed)
 	}
 	return app, nil
+}
+
+type FinalReportingModel interface {
+	FinalReport() string
 }
 
 func CmdWrapper(action string, requiredScopes []string, commandModel func([]string) tea.Model) func(cmd *cobra.Command, args []string) {
@@ -123,9 +128,17 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func([]stri
 				tasks:          map[string]tea.Model{},
 				cmd:            commandModel(args),
 			})
-			_, err = p.Run()
+			result, err := p.Run()
 			if err != nil {
 				return fmt.Errorf("could not start program: %w", err)
+			}
+
+			cmd, ok := result.(cmdModel)
+			if ok {
+				frm, ok := cmd.cmd.(FinalReportingModel)
+				if ok {
+					fmt.Println(frm.FinalReport())
+				}
 			}
 
 			return nil
@@ -226,20 +239,33 @@ type tfPlanModel struct {
 	processingTask   taskModel
 	processingHeader string
 
-	runTfPlan       bool
-	tfPlanFinished  bool
-	processing      chan tea.Msg
-	processingModel snapshotModel
-	progress        []string
-	changeUrl       string
+	revlinkWarmupFinished bool
+
+	runTfPlan          bool
+	tfPlanFinished     bool
+	processing         chan tea.Msg
+	processingModel    snapshotModel
+	progress           []string
+	changeUrl          string
+	riskMilestones     []*sdp.RiskCalculationStatus_ProgressMilestone
+	riskMilestoneTasks []taskModel
+	risks              []*sdp.Risk
 
 	fatalError string
 }
 
+// assert interface
+var _ FinalReportingModel = (*tfPlanModel)(nil)
+
 type triggerTfPlanMsg struct{}
 type tfPlanFinishedMsg struct{}
+type triggerPlanProcessingMsg struct{}
 type processingActivityMsg struct{ text string }
-type changeUpdatedMsg struct{ url string }
+type changeUpdatedMsg struct {
+	url            string
+	riskMilestones []*sdp.RiskCalculationStatus_ProgressMilestone
+	risks          []*sdp.Risk
+}
 type processingFinishedActivityMsg struct{ text string }
 type delayQuitMsg struct{}
 
@@ -251,7 +277,7 @@ func NewTfPlanModel(args []string) tea.Model {
 	planHeader := `Running ` + "`" + `terraform %v` + "`\n"
 	planHeader = fmt.Sprintf(planHeader, strings.Join(args, " "))
 
-	processingHeader := `Processing plan from ` + "`" + `terraform %v` + "`\n"
+	processingHeader := `   Processing plan from ` + "`" + `terraform %v` + "`\n"
 	processingHeader = fmt.Sprintf(processingHeader, strings.Join(args, " "))
 
 	return tfPlanModel{
@@ -277,6 +303,8 @@ func (m tfPlanModel) Init() tea.Cmd {
 func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	log.Debugf("tfPlanModel: Update %T received %+v", msg, msg)
 
+	cmds := []tea.Cmd{}
+
 	switch msg := msg.(type) {
 	case loadSourcesConfigMsg:
 		m.ctx = msg.ctx
@@ -286,7 +314,8 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.runTfPlan = true
 		m.planTask.status = taskStatusRunning
 		// defer the actual command to give the view a chance to show the header
-		return m, func() tea.Msg { return triggerTfPlanMsg{} }
+		cmds = append(cmds, func() tea.Msg { return triggerTfPlanMsg{} })
+
 	case triggerTfPlanMsg:
 		c := exec.CommandContext(m.ctx, "terraform", m.args...) // nolint:gosec // this is a user-provided command, let them do their thing
 
@@ -296,7 +325,7 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.processingModel.state = "executing terraform plan"
-		return m, tea.ExecProcess(
+		cmds = append(cmds, tea.ExecProcess(
 			c,
 			func(err error) tea.Msg {
 				if err != nil {
@@ -304,58 +333,102 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 
 				return tfPlanFinishedMsg{}
-			})
+			}))
+
+	case revlinkWarmupFinishedMsg:
+		m.revlinkWarmupFinished = true
+		if m.tfPlanFinished {
+			cmds = append(cmds, func() tea.Msg { return triggerPlanProcessingMsg{} })
+		}
 	case tfPlanFinishedMsg:
 		m.tfPlanFinished = true
 		m.planTask.status = taskStatusDone
 
+		if m.revlinkWarmupFinished {
+			cmds = append(cmds, func() tea.Msg { return triggerPlanProcessingMsg{} })
+		}
+
+	case triggerPlanProcessingMsg:
 		m.processingTask.status = taskStatusRunning
 		m.processingModel.state = "executed terraform plan"
 
-		return m, tea.Batch(
+		cmds = append(cmds,
 			m.processPlanCmd,
+			m.processingTask.spinner.Tick,
 			m.waitForProcessingActivity,
 		)
 	case processingActivityMsg:
 		m.processingModel.state = "processing"
 		m.progress = append(m.progress, msg.text)
-		return m, m.waitForProcessingActivity
+		cmds = append(cmds, m.waitForProcessingActivity)
 	case processingFinishedActivityMsg:
 		m.processingModel.state = "finished"
 		m.processingTask.status = taskStatusDone
 		m.progress = append(m.progress, msg.text)
-		return m, m.waitForProcessingActivity
+		cmds = append(cmds, m.waitForProcessingActivity)
 	case changeUpdatedMsg:
 		m.changeUrl = msg.url
+		m.riskMilestones = msg.riskMilestones
+		if len(m.riskMilestoneTasks) != len(msg.riskMilestones) {
+			m.riskMilestoneTasks = []taskModel{}
+			for _, ms := range msg.riskMilestones {
+				tm := NewTaskModel(ms.GetDescription())
+				m.riskMilestoneTasks = append(m.riskMilestoneTasks, tm)
+				cmds = append(cmds, tm.spinner.Tick)
+			}
+		}
+		for i, ms := range msg.riskMilestones {
+			m.riskMilestoneTasks[i].title = ms.GetDescription()
+			switch ms.GetStatus() {
+			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_PENDING:
+				m.riskMilestoneTasks[i].status = taskStatusPending
+			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_ERROR:
+				m.riskMilestoneTasks[i].status = taskStatusError
+			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_DONE:
+				m.riskMilestoneTasks[i].status = taskStatusDone
+			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_INPROGRESS:
+				m.riskMilestoneTasks[i].status = taskStatusRunning
+			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_SKIPPED:
+				m.riskMilestoneTasks[i].status = taskStatusSkipped
+			}
+		}
+		m.risks = msg.risks
 		m.processingModel.state = "Change updated"
-		return m, m.waitForProcessingActivity
+		cmds = append(cmds, m.waitForProcessingActivity)
 
 	case startSnapshotMsg:
 		mdl, cmd := m.processingModel.Update(msg)
 		m.processingModel = mdl.(snapshotModel)
-		return m, tea.Batch(m.waitForProcessingActivity, cmd)
+		cmds = append(cmds, m.waitForProcessingActivity, cmd)
 	case progressSnapshotMsg:
 		mdl, cmd := m.processingModel.Update(msg)
 		m.processingModel = mdl.(snapshotModel)
-		return m, tea.Batch(m.waitForProcessingActivity, cmd)
+		cmds = append(cmds, m.waitForProcessingActivity, cmd)
 	case finishSnapshotMsg:
 		mdl, cmd := m.processingModel.Update(msg)
 		m.processingModel = mdl.(snapshotModel)
-		return m, tea.Sequence(cmd, func() tea.Msg { return delayQuitMsg{} })
+		cmds = append(cmds, tea.Sequence(cmd, func() tea.Msg { return delayQuitMsg{} }))
 	case delayQuitMsg:
-		return m, tea.Quit
+		cmds = append(cmds, tea.Quit)
 
 	case fatalError:
 		m.fatalError = msg.err.Error()
-		return m, tea.Quit
+		cmds = append(cmds, tea.Quit)
 	default:
-		var planCmd, processingCmd tea.Cmd
-		m.planTask, planCmd = m.planTask.Update(msg)
-		m.processingTask, processingCmd = m.processingTask.Update(msg)
-		return m, tea.Batch(planCmd, processingCmd)
+		var cmd tea.Cmd
+		m.planTask, cmd = m.planTask.Update(msg)
+		cmds = append(cmds, cmd)
+
+		m.processingTask, cmd = m.processingTask.Update(msg)
+		cmds = append(cmds, cmd)
+
+		for i, ms := range m.riskMilestoneTasks {
+			m.riskMilestoneTasks[i], cmd = ms.Update(msg)
+			cmds = append(cmds, cmd)
+		}
 	}
 
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 func (m tfPlanModel) View() string {
@@ -370,20 +443,44 @@ func (m tfPlanModel) View() string {
 	bits = append(bits, m.processingTask.View())
 
 	if m.tfPlanFinished {
-		bits = append(bits, markdownToString(m.processingHeader))
-		bits = append(bits, m.processingModel.View())
+		bits = append(bits, m.processingHeader)
+		bits = append(bits, fmt.Sprintf("   %v", m.processingModel.View()))
 	}
 
+	if m.changeUrl != "" && len(m.risks) == 0 {
+		for _, t := range m.riskMilestoneTasks {
+			bits = append(bits, fmt.Sprintf("   %v", t.View()))
+		}
+		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph at:\n%v\n\n", m.changeUrl))
+	}
+
+	return strings.Join(bits, "\n") + "\n"
+}
+
+func (m tfPlanModel) FinalReport() string {
+	bits := []string{}
 	if m.changeUrl != "" {
-		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
+		if len(m.risks) > 0 {
+			for _, r := range m.risks {
+				severity := ""
+				switch r.GetSeverity() {
+				case sdp.Risk_SEVERITY_HIGH:
+					severity = styleBgDanger().Render("  High 🔥  ")
+				case sdp.Risk_SEVERITY_MEDIUM:
+					severity = styleBgWarning().Render("  Medium ❗  ")
+				case sdp.Risk_SEVERITY_LOW:
+					severity = styleLabelTitle().Render("  Low ℹ️  ")
+				case sdp.Risk_SEVERITY_UNSPECIFIED:
+					// do nothing
+				}
+				bits = append(bits, (fmt.Sprintf("%v %v\n\n%v\n\n",
+					severity,
+					styleH1().Render(fmt.Sprintf("  %v  ", r.GetTitle())),
+					wordwrap.String(r.GetDescription(), 80))))
+			}
+			bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
+		}
 	}
-
-	// This doesn't do line-wrapping for long errors and is duplicated by the
-	// fatalError view on cmdModel
-	// if m.fatalError != "" {
-	// 	bits = append(bits, deletedLineStyle.Render(fmt.Sprintf("Error: %v", m.fatalError)))
-	// }
-
 	return strings.Join(bits, "\n") + "\n"
 }
 
@@ -406,13 +503,13 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	planJson, err := tfPlanJsonCmd.Output()
 	if err != nil {
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("failed to convert terraform plan to JSON: %w", err)}
+		return fatalError{err: fmt.Errorf("processPlanCmd: failed to convert terraform plan to JSON: %w", err)}
 	}
 
 	plannedChanges, err := mappedItemDiffsFromPlan(ctx, planJson, "overmind.plan", log.Fields{})
 	if err != nil {
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("failed to parse terraform plan: %w", err)}
+		return fatalError{err: fmt.Errorf("processPlanCmd: failed to parse terraform plan: %w", err)}
 	}
 
 	m.processing <- processingActivityMsg{"converted terraform plan to JSON"}
@@ -431,7 +528,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	changeUuid, err := getChangeUuid(ctx, m.oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, false)
 	if err != nil {
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("failed searching for existing changes: %w", err)}
+		return fatalError{err: fmt.Errorf("processPlanCmd: failed searching for existing changes: %w", err)}
 	}
 
 	title := changeTitle(viper.GetString("title"))
@@ -457,13 +554,13 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 		})
 		if err != nil {
 			close(m.processing)
-			return fatalError{err: fmt.Errorf("failed to create a new change: %w", err)}
+			return fatalError{err: fmt.Errorf("processPlanCmd: failed to create a new change: %w", err)}
 		}
 
 		maybeChangeUuid := createResponse.Msg.GetChange().GetMetadata().GetUUIDParsed()
 		if maybeChangeUuid == nil {
 			close(m.processing)
-			return fatalError{err: fmt.Errorf("failed to read change id: %w", err)}
+			return fatalError{err: fmt.Errorf("processPlanCmd: failed to read change id: %w", err)}
 		}
 
 		changeUuid = *maybeChangeUuid
@@ -496,7 +593,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 		})
 		if err != nil {
 			close(m.processing)
-			return fatalError{err: fmt.Errorf("failed to update change: %w", err)}
+			return fatalError{err: fmt.Errorf("processPlanCmd: failed to update change: %w", err)}
 		}
 	}
 
@@ -512,7 +609,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	})
 	if err != nil {
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("failed to update planned changes: %w", err)}
+		return fatalError{err: fmt.Errorf("processPlanCmd: failed to update planned changes: %w", err)}
 	}
 
 	last_log := time.Now()
@@ -551,19 +648,51 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	}
 	if resultStream.Err() != nil {
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("error streaming results: %w", err)}
+		return fatalError{err: fmt.Errorf("processPlanCmd: error streaming results: %w", err)}
 	}
 
 	changeUrl := *m.oi.FrontendUrl
 	changeUrl.Path = fmt.Sprintf("%v/changes/%v/blast-radius", changeUrl.Path, changeUuid)
 	log.WithField("change-url", changeUrl.String()).Info("Change ready")
 
-	// fmt.Println(changeUrl.String())
-
 	m.processing <- changeUpdatedMsg{url: changeUrl.String()}
+
+	// wait for risk calculation to happen
+	m.processing <- processingActivityMsg{"Calculating risks"}
+	for {
+		riskRes, err := client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
+			Msg: &sdp.GetChangeRisksRequest{
+				UUID: changeUuid[:],
+			},
+		})
+		if err != nil {
+			close(m.processing)
+			return fatalError{err: fmt.Errorf("processPlanCmd: failed to get change risks: %w", err)}
+		}
+
+		m.processing <- changeUpdatedMsg{
+			url:            changeUrl.String(),
+			riskMilestones: riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetProgressMilestones(),
+			risks:          riskRes.Msg.GetChangeRiskMetadata().GetRisks(),
+		}
+
+		if riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus() == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
+			time.Sleep(time.Second)
+			// retry
+		} else {
+			// it's done (or errored)
+			break
+		}
+
+		if ctx.Err() != nil {
+			return fatalError{err: fmt.Errorf("processPlanCmd: context cancelled: %w", ctx.Err())}
+		}
+
+	}
+
 	m.processing <- processingFinishedActivityMsg{"Done"}
 	return finishSnapshotMsg{
-		newState: "calculated blast radius",
+		newState: "calculated blast radius and risks",
 		items:    msg.GetNumItems(),
 		edges:    msg.GetNumEdges(),
 	}

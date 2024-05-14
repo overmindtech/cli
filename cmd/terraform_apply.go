@@ -26,7 +26,7 @@ var terraformApplyCmd = &cobra.Command{
 			log.WithError(err).Fatal("could not bind `terraform apply` flags")
 		}
 	},
-	Run: CmdWrapper("apply", []string{"changes:write", "config:write", "request:receive"}, NewTfApplyModel),
+	Run: CmdWrapper("apply", []string{"explore:read", "changes:write", "config:write", "request:receive"}, NewTfApplyModel),
 }
 
 type tfApplyModel struct {
@@ -98,7 +98,7 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.ctx = msg.ctx
 		m.oi = msg.oi
 
-	case sourcesInitialisedMsg:
+	case revlinkWarmupFinishedMsg:
 		m.isStarting = true
 		return m, tea.Batch(
 			m.startingChangeSnapshot.Init(),

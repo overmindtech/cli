@@ -47,6 +47,7 @@ const (
 	taskStatusRunning taskStatus = 1
 	taskStatusDone    taskStatus = 2
 	taskStatusError   taskStatus = 3
+	taskStatusSkipped taskStatus = 4
 )
 
 type taskModel struct {
@@ -118,6 +119,8 @@ func (m taskModel) View() string {
 		return fmt.Sprintf("✅ %v", m.title)
 	case taskStatusError:
 		return fmt.Sprintf("⛔️ %v", m.title)
+	case taskStatusSkipped:
+		return fmt.Sprintf("-- %v", m.title)
 	default:
 		return fmt.Sprintf("❓ %v", m.title)
 	}
