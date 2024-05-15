@@ -244,10 +244,10 @@ func (m initialiseSourcesModel) View() string {
 	if len(m.errors) > 0 {
 		view += fmt.Sprintf("\n%v\n", strings.Join(m.errors, "\n"))
 	}
-	if m.awsConfigForm != nil {
+	if m.awsConfigForm != nil && !m.awsConfigFormDone {
 		view += fmt.Sprintf("\n%v", m.awsConfigForm.View())
 	}
-	if m.profileInputForm != nil {
+	if m.profileInputForm != nil && !m.profileInputFormDone {
 		view += fmt.Sprintf("\n%v", m.profileInputForm.View())
 	}
 	if m.awsSourceRunning {

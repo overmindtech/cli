@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -68,7 +69,10 @@ func NewTaskModel(title string) taskModel {
 		status: taskStatusPending,
 		title:  title,
 		spinner: spinner.New(
-			spinner.WithSpinner(spinner.Moon),
+			spinner.WithSpinner(spinner.Spinner{
+				Frames: []string{"∙∙∙∙∙∙∙", "●∙∙∙∙∙∙", "∙●∙∙∙∙∙", "∙∙●∙∙∙∙", "∙∙∙●∙∙∙", "∙∙∙∙●∙∙", "∙∙∙∙∙●∙", "∙∙∙∙∙∙●"},
+				FPS:    time.Second / 7, //nolint:gomnd
+			}),
 			spinner.WithStyle(lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPalette.Light.BgMain))),
 		),
 	}
@@ -103,25 +107,25 @@ func (m taskModel) Update(msg tea.Msg) (taskModel, tea.Cmd) {
 }
 
 func (m taskModel) View() string {
+	label := ""
 	switch m.status {
 	case taskStatusPending:
-		return fmt.Sprintf("⏳ %v", m.title)
+		label = m.spinner.Style.Render("pending:")
 	case taskStatusRunning:
-		v := m.spinner.View()
-		switch ansi.PrintableRuneWidth(v) {
-		case 0:
-			v = "  "
-		case 1:
-			v += " "
+		label = m.spinner.View()
+		// all other lables are 7 cells wide
+		for ansi.PrintableRuneWidth(label) <= 7 {
+			label += " "
 		}
-		return fmt.Sprintf("%v %v", m.spinner.View(), m.title)
 	case taskStatusDone:
-		return fmt.Sprintf("✅ %v", m.title)
+		label = m.spinner.Style.Render("done:   ")
 	case taskStatusError:
-		return fmt.Sprintf("⛔️ %v", m.title)
+		label = m.spinner.Style.Render("errored:")
 	case taskStatusSkipped:
-		return fmt.Sprintf("-- %v", m.title)
+		label = m.spinner.Style.Render("skipped:")
 	default:
-		return fmt.Sprintf("❓ %v", m.title)
+		label = m.spinner.Style.Render("unknown:")
 	}
+
+	return fmt.Sprintf("%v %v", label, m.title)
 }

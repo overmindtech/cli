@@ -437,15 +437,19 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m tfPlanModel) View() string {
-	bits := []string{
-		m.planTask.View(),
+	bits := []string{}
+
+	if m.planTask.status != taskStatusPending {
+		bits = append(bits, m.planTask.View())
 	}
 
 	if m.runTfPlan && !m.tfPlanFinished {
 		bits = append(bits, markdownToString(m.planHeader))
 	}
 
-	bits = append(bits, m.processingTask.View())
+	if m.processingTask.status != taskStatusPending {
+		bits = append(bits, m.processingTask.View())
+	}
 
 	if m.tfPlanFinished {
 		bits = append(bits, m.processingHeader)
