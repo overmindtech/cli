@@ -3,8 +3,10 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/url"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/spf13/viper"
 )
 
 type instanceLoadedMsg struct {
@@ -57,6 +59,24 @@ func (m instanceLoaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func newOvermindInstanceCmd(ctx context.Context, app string) tea.Cmd {
+	if viper.GetString("ovm-test-fake") != "" {
+		mustParse := func(u string) *url.URL {
+			result, err := url.Parse(u)
+			if err != nil {
+				panic(err)
+			}
+			return result
+		}
+
+		return func() tea.Msg {
+			return instanceLoadedMsg{instance: OvermindInstance{
+				FrontendUrl: mustParse("http://localhost:3000"),
+				ApiUrl:      mustParse("https://api.example.com"),
+				NatsUrl:     mustParse("https://nats.example.com"),
+				Audience:    "https://aud.example.com",
+			}}
+		}
+	}
 	return func() tea.Msg {
 		instance, err := NewOvermindInstance(ctx, app)
 		if err != nil {

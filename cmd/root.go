@@ -369,6 +369,7 @@ func init() {
 	rootCmd.PersistentFlags().String("cli-auth0-client-id", "QMfjMww3x4QTpeXiuRtMV3JIQkx6mZa4", "OAuth Client ID to use when connecting with auth0")
 	rootCmd.PersistentFlags().String("cli-auth0-domain", "om-prod.eu.auth0.com", "Auth0 domain to connect to")
 	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb. This requires --otel to be set.")
+	rootCmd.PersistentFlags().String("ovm-test-fake", "", "If non-empty, instructs some commands to only use fake data for fast development iteration.")
 
 	// Mark these as hidden. This means that it will still be parsed of supplied,
 	// and we will still look for it in the environment, but it won't be shown
@@ -376,6 +377,7 @@ func init() {
 	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("cli-auth0-client-id"))
 	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("cli-auth0-domain"))
 	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key"))
+	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("ovm-test-fake"))
 
 	// Create groups
 	rootCmd.AddGroup(&cobra.Group{
