@@ -175,6 +175,19 @@ func (m ensureTokenModel) View() string {
 // context holding the token that can be used by sdp-go's helper functions to
 // authenticate against the API
 func (m ensureTokenModel) ensureTokenCmd(ctx context.Context) tea.Cmd {
+	if viper.GetString("ovm-test-fake") != "" {
+		return func() tea.Msg {
+			return displayAuthorizationInstructionsMsg{
+				deviceCode: &oauth2.DeviceAuthResponse{
+					DeviceCode:              "test-device-code",
+					VerificationURI:         "https://example.com/verify",
+					VerificationURIComplete: "https://example.com/verify-complete",
+				},
+				err: errors.New("test error"),
+			}
+		}
+	}
+
 	if m.apiKey == "" {
 		log.WithContext(ctx).Debug("getting token from Oauth")
 		return m.oauthTokenCmd
@@ -238,6 +251,18 @@ func (m ensureTokenModel) awaitTokenCmd() tea.Msg {
 	ctx := m.ctx
 	if m.deviceCode == nil {
 		return fatalError{id: m.spinner.ID(), err: errors.New("device code is nil")}
+	}
+
+	if viper.GetString("ovm-test-fake") != "" {
+		time.Sleep(500 * time.Millisecond)
+		token := oauth2.Token{
+			AccessToken:  "fake access token",
+			TokenType:    "fake",
+			RefreshToken: "fake refresh token",
+			Expiry:       time.Now().Add(1 * time.Hour),
+		}
+		path := "fake token file path"
+		return tokenStoredMsg{tokenReceivedMsg: tokenReceivedMsg{&token}, file: path}
 	}
 
 	// if there is an actual expiry, limit the entire process to that time

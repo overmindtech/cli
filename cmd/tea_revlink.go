@@ -3,11 +3,13 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 type revlinkWarmupFinishedMsg struct{}
@@ -102,6 +104,18 @@ func (m revlinkWarmupModel) waitForStatusActivity() tea.Msg {
 
 func (m revlinkWarmupModel) revlinkWarmupCmd() tea.Msg {
 	ctx := m.ctx
+
+	if viper.GetString("ovm-test-fake") != "" {
+		for i := 0; i < 10; i++ {
+			m.status <- &sdp.RevlinkWarmupResponse{
+				Status: "running (test mode)",
+				Items:  int32(i * 10),
+				Edges:  int32(i*10) + 1,
+			}
+			time.Sleep(250 * time.Millisecond)
+		}
+		return revlinkWarmupFinishedMsg{}
+	}
 
 	client := AuthenticatedManagementClient(ctx, m.oi)
 

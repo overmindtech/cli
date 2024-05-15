@@ -325,6 +325,11 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.processingModel.state = "executing terraform plan"
+
+		if viper.GetString("ovm-test-fake") != "" {
+			c = exec.CommandContext(m.ctx, "bash", "-c", "for i in $(seq 100); do echo fake terraform plan progress line $i of 100; done; sleep 1")
+		}
+
 		cmds = append(cmds, tea.ExecProcess(
 			c,
 			func(err error) tea.Msg {
@@ -496,6 +501,100 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 	span := trace.SpanFromContext(ctx)
 
 	m.processing <- startSnapshotMsg{newState: "converting terraform plan to JSON"}
+
+	if viper.GetString("ovm-test-fake") != "" {
+		m.processing <- processingActivityMsg{"Fake processing json plan"}
+		time.Sleep(250 * time.Millisecond)
+		m.processing <- processingActivityMsg{"Fake creating a new change"}
+		time.Sleep(250 * time.Millisecond)
+		m.processing <- progressSnapshotMsg{newState: "fake processing"}
+		time.Sleep(250 * time.Millisecond)
+		m.processing <- changeUpdatedMsg{url: "https://example.com"}
+		time.Sleep(250 * time.Millisecond)
+
+		m.processing <- processingActivityMsg{"Fake CalculateBlastRadiusResponse Status update: progress"}
+		time.Sleep(250 * time.Millisecond)
+
+		m.processing <- progressSnapshotMsg{
+			newState: "discovering blast radius",
+			items:    10,
+			edges:    21,
+		}
+		time.Sleep(250 * time.Millisecond)
+
+		m.processing <- changeUpdatedMsg{url: "https://example.com/changes/abc"}
+		m.processing <- processingActivityMsg{"Calculating risks"}
+		time.Sleep(250 * time.Millisecond)
+
+		m.processing <- changeUpdatedMsg{
+			url: "https://example.com/changes/abc",
+			riskMilestones: []*sdp.RiskCalculationStatus_ProgressMilestone{
+				{
+					Description: "fake done milestone",
+					Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_DONE,
+				},
+				{
+					Description: "fake inprogress milestone",
+					Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_INPROGRESS,
+				},
+				{
+					Description: "fake pending milestone",
+					Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_PENDING,
+				},
+			},
+			risks: []*sdp.Risk{},
+		}
+		time.Sleep(500 * time.Millisecond)
+
+		high := uuid.New()
+		medium := uuid.New()
+		low := uuid.New()
+		m.processing <- changeUpdatedMsg{
+			url: "https://example.com/changes/abc",
+			riskMilestones: []*sdp.RiskCalculationStatus_ProgressMilestone{
+				{
+					Description: "fake done milestone - done",
+					Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_DONE,
+				},
+				{
+					Description: "fake inprogress milestone - done",
+					Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_DONE,
+				},
+				{
+					Description: "fake pending milestone - done",
+					Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_DONE,
+				},
+			},
+			risks: []*sdp.Risk{
+				{
+					UUID:         high[:],
+					Title:        "fake high risk titled risk",
+					Severity:     sdp.Risk_SEVERITY_HIGH,
+					Description:  TEST_RISK,
+					RelatedItems: []*sdp.Reference{},
+				},
+				{
+					UUID:         medium[:],
+					Title:        "fake medium risk titled risk",
+					Severity:     sdp.Risk_SEVERITY_MEDIUM,
+					Description:  TEST_RISK,
+					RelatedItems: []*sdp.Reference{},
+				},
+				{
+					UUID:         low[:],
+					Title:        "fake low risk titled risk",
+					Severity:     sdp.Risk_SEVERITY_LOW,
+					Description:  TEST_RISK,
+					RelatedItems: []*sdp.Reference{},
+				},
+			},
+		}
+		time.Sleep(250 * time.Millisecond)
+
+		m.processing <- processingFinishedActivityMsg{"Fake done"}
+		time.Sleep(250 * time.Millisecond)
+		return finishSnapshotMsg{newState: "fake done"}
+	}
 
 	tfPlanJsonCmd := exec.CommandContext(ctx, "terraform", "show", "-json", "overmind.plan")
 	tfPlanJsonCmd.Stderr = os.Stderr // TODO: capture and output this through the View() instead
@@ -954,3 +1053,7 @@ func init() {
 	addChangeUuidFlags(terraformPlanCmd)
 	addTerraformBaseFlags(terraformPlanCmd)
 }
+
+const TEST_RISK = `In publishing and graphic design, Lorem ipsum (/ˌlɔː.rəm ˈɪp.səm/) is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before the final copy is available. It is also used to temporarily replace text in a process called greeking, which allows designers to consider the form of a webpage or publication, without the meaning of the text influencing the design.
+
+Lorem ipsum is typically a corrupted version of De finibus bonorum et malorum, a 1st-century BC text by the Roman statesman and philosopher Cicero, with words altered, added, and removed to make it nonsensical and improper Latin. The first two words themselves are a truncation of dolorem ipsum ("pain itself").`
