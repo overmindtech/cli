@@ -216,6 +216,7 @@ func (m cmdModel) tokenChecks(token *oauth2.Token) (cmdModel, tea.Cmd) {
 
 func (m cmdModel) View() string {
 	// show tasks in key order, skipping pending tasks to keep the ui uncluttered
+	allDone := true
 	tasks := make([]string, 0, len(m.tasks))
 	keys := make([]string, 0, len(m.tasks))
 	for k := range m.tasks {
@@ -225,11 +226,19 @@ func (m cmdModel) View() string {
 	for _, k := range keys {
 		t, ok := m.tasks[k].(WithTaskModel)
 		if ok {
+			if t.TaskModel().status != taskStatusDone {
+				allDone = false
+			}
 			if t.TaskModel().status == taskStatusPending {
 				continue
 			}
+
 		}
 		tasks = append(tasks, m.tasks[k].View())
+	}
+	if allDone {
+		// no need to show setup tasks after they're all done
+		tasks = []string{}
 	}
 	tasks = append(tasks, m.cmd.View())
 	if m.fatalError != "" {
