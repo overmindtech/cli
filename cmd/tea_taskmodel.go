@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -68,7 +69,10 @@ func NewTaskModel(title string) taskModel {
 		status: taskStatusPending,
 		title:  title,
 		spinner: spinner.New(
-			spinner.WithSpinner(spinner.Points),
+			spinner.WithSpinner(spinner.Spinner{
+				Frames: []string{"∙∙∙∙∙∙∙", "●∙∙∙∙∙∙", "∙●∙∙∙∙∙", "∙∙●∙∙∙∙", "∙∙∙●∙∙∙", "∙∙∙∙●∙∙", "∙∙∙∙∙●∙", "∙∙∙∙∙∙●"},
+				FPS:    time.Second / 7, //nolint:gomnd
+			}),
 			spinner.WithStyle(lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPalette.Light.BgMain))),
 		),
 	}
