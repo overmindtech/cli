@@ -222,6 +222,8 @@ github.com/overmindtech/aws-source v0.0.0-20240515111420-5f7d32c3a219 h1:u9lCTmw
 github.com/overmindtech/aws-source v0.0.0-20240515111420-5f7d32c3a219/go.mod h1:8pmJ3TIXSikRUycml/QC5AdbRR6LRTAhyYmoP9OY0+U=
 github.com/overmindtech/aws-source v0.0.0-20240516092210-0b3404340572 h1:q1Rm9QMhGSPrAG2yufjT8xZ8esZamdKu4tTMEHECiV4=
 github.com/overmindtech/aws-source v0.0.0-20240516092210-0b3404340572/go.mod h1:0fwXdBag3QGO4YXpu4GxP9Pe3MOmTfsAQS38ZV68Ck8=
+github.com/overmindtech/aws-source v0.0.0-20240516123942-1153978667fe h1:XmMjdEQ4iOYiuby77Wm8XnqIyJUUxnrbeZve7pRHZZg=
+github.com/overmindtech/aws-source v0.0.0-20240516123942-1153978667fe/go.mod h1:0fwXdBag3QGO4YXpu4GxP9Pe3MOmTfsAQS38ZV68Ck8=
 github.com/overmindtech/discovery v0.27.2 h1:P+V3FW7VDkPwiTpJz41DMleBFozuQOmKSDRgFiLXudg=
 github.com/overmindtech/discovery v0.27.2/go.mod h1:DWVo69qHlSn2pKVuu6PqIaTihws+ZpD6mJFhu+lKgd4=
 github.com/overmindtech/discovery v0.27.3 h1:H6nAM5w10BlQNol3Ne3nuei0NAfitfQXj5lMIiquPjI=
@@ -234,6 +236,8 @@ github.com/overmindtech/stdlib-source v0.0.0-20240513141503-d0fff350aed9 h1:vkkt
 github.com/overmindtech/stdlib-source v0.0.0-20240513141503-d0fff350aed9/go.mod h1:ISI0nyZszu0idu4hL7Bg+XAjBXwjPBAS/8YEHuGOqCs=
 github.com/overmindtech/stdlib-source v0.0.0-20240515161104-d83e7b81f914 h1:v0NzpecViAI2xSUDLY9byc+YeXCZEWU3AijRmh5vmy0=
 github.com/overmindtech/stdlib-source v0.0.0-20240515161104-d83e7b81f914/go.mod h1:htr9yKXNJbdSP+KCfdeajbr29b7Xt4HxyvreOPFwxn8=
+github.com/overmindtech/stdlib-source v0.0.0-20240516185240-177c6cf4cf74 h1:gcc7HxythMVIAY3u3QCrBwP61ksmob3XS4e9XR3Cg1E=
+github.com/overmindtech/stdlib-source v0.0.0-20240516185240-177c6cf4cf74/go.mod h1:5j0kRiSZ9iCdSaBSYWPhxvD6ADxAICoaaSRsImt6k2Y=
 github.com/pelletier/go-toml/v2 v2.1.0 h1:FnwAJ4oYMvbT/34k9zzHuZNrhlz48GB3/s6at6/MHO4=
 github.com/pelletier/go-toml/v2 v2.1.0/go.mod h1:tJU2Z3ZkXwnxa4DPO899bsyIoywizdUvyaeZurnPPDc=
 github.com/pingcap/errors v0.11.4 h1:lFuQV/oaUMGcD2tqt+01ROSmJs75VG1ToEOkZIZ4nE4=
