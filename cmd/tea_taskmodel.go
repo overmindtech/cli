@@ -6,12 +6,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/muesli/ansi"
 )
 
 // waitForCancellation returns a tea.Cmd that will wait for SIGINT and SIGTERM and run the provided cancel on receipt.
@@ -69,11 +67,8 @@ func NewTaskModel(title string) taskModel {
 		status: taskStatusPending,
 		title:  title,
 		spinner: spinner.New(
-			spinner.WithSpinner(spinner.Spinner{
-				Frames: []string{"∙∙∙∙∙∙∙", "●∙∙∙∙∙∙", "∙●∙∙∙∙∙", "∙∙●∙∙∙∙", "∙∙∙●∙∙∙", "∙∙∙∙●∙∙", "∙∙∙∙∙●∙", "∙∙∙∙∙∙●"},
-				FPS:    time.Second / 7, //nolint:gomnd
-			}),
-			spinner.WithStyle(lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPalette.Light.BgMain))),
+			spinner.WithSpinner(DotsSpinner),
+			spinner.WithStyle(lipgloss.NewStyle().Foreground(ColorPalette.BgMain)),
 		),
 	}
 }
@@ -110,21 +105,21 @@ func (m taskModel) View() string {
 	label := ""
 	switch m.status {
 	case taskStatusPending:
-		label = m.spinner.Style.Render("pending:")
+		label = lipgloss.NewStyle().Foreground(ColorPalette.LabelFaint).Render("+")
 	case taskStatusRunning:
 		label = m.spinner.View()
 		// all other lables are 7 cells wide
-		for ansi.PrintableRuneWidth(label) <= 7 {
-			label += " "
-		}
+		// for ansi.PrintableRuneWidth(label) <= 7 {
+		// 	label += " "
+		// }
 	case taskStatusDone:
-		label = m.spinner.Style.Render("done:   ")
+		label = lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")
 	case taskStatusError:
-		label = m.spinner.Style.Render("errored:")
+		label = lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("x")
 	case taskStatusSkipped:
-		label = m.spinner.Style.Render("skipped:")
+		label = lipgloss.NewStyle().Foreground(ColorPalette.LabelFaint).Render("-")
 	default:
-		label = m.spinner.Style.Render("unknown:")
+		label = lipgloss.NewStyle().Render("?")
 	}
 
 	return fmt.Sprintf("%v %v", label, m.title)

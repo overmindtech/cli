@@ -55,7 +55,7 @@ func (m cmdModel) Init() tea.Cmd {
 			m.tasks["01_token"].Init(),
 			// m.tasks["02_config"].Init(),
 			func() tea.Msg {
-				time.Sleep(time.Second)
+				time.Sleep(3 * time.Second)
 				return sourcesInitialisedMsg{}
 			},
 			m.tasks["03_revlink"].Init(),
@@ -232,7 +232,6 @@ func (m cmdModel) View() string {
 			if t.TaskModel().status == taskStatusPending {
 				continue
 			}
-
 		}
 		tasks = append(tasks, m.tasks[k].View())
 	}

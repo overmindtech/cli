@@ -13,8 +13,8 @@ import (
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
-	"github.com/muesli/reflow/wordwrap"
 	"github.com/overmindtech/aws-source/proc"
 	"github.com/overmindtech/cli/cmd/datamaps"
 	"github.com/overmindtech/cli/tracing"
@@ -474,18 +474,22 @@ func (m tfPlanModel) FinalReport() string {
 				severity := ""
 				switch r.GetSeverity() {
 				case sdp.Risk_SEVERITY_HIGH:
-					severity = styleBgDanger().Render("  High 🔥  ")
+					severity = lipgloss.NewStyle().Background(ColorPalette.BgDanger).Render("  High 🔥  ")
 				case sdp.Risk_SEVERITY_MEDIUM:
-					severity = styleBgWarning().Render("  Medium ❗  ")
+					severity = lipgloss.NewStyle().Background(ColorPalette.BgWarning).Render("  Medium ❗  ")
 				case sdp.Risk_SEVERITY_LOW:
-					severity = styleLabelTitle().Render("  Low ℹ️  ")
+					severity = lipgloss.NewStyle().Background(ColorPalette.LabelTitle).Render("  Low ℹ️  ")
 				case sdp.Risk_SEVERITY_UNSPECIFIED:
 					// do nothing
 				}
+				// TODO: Set this up so that we have a max width based on the
+				// width of the terminal. Ideally the risks would have a max
+				// width of ~160 characters, but if the terminal is smaller than
+				// that, we should wrap the text to the terminal width.
 				bits = append(bits, (fmt.Sprintf("%v %v\n\n%v\n\n",
 					severity,
 					styleH1().Render(fmt.Sprintf("  %v  ", r.GetTitle())),
-					wordwrap.String(r.GetDescription(), 80))))
+					r.GetDescription())))
 			}
 			bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
 		}
@@ -508,27 +512,47 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 
 	if viper.GetString("ovm-test-fake") != "" {
 		m.processing <- processingActivityMsg{"Fake processing json plan"}
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(time.Second)
 		m.processing <- processingActivityMsg{"Fake creating a new change"}
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(time.Second)
 		m.processing <- progressSnapshotMsg{newState: "fake processing"}
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(time.Second)
 		m.processing <- changeUpdatedMsg{url: "https://example.com"}
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(time.Second)
 
 		m.processing <- processingActivityMsg{"Fake CalculateBlastRadiusResponse Status update: progress"}
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(time.Second)
 
 		m.processing <- progressSnapshotMsg{
 			newState: "discovering blast radius",
 			items:    10,
 			edges:    21,
 		}
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(time.Second)
 
 		m.processing <- changeUpdatedMsg{url: "https://example.com/changes/abc"}
 		m.processing <- processingActivityMsg{"Calculating risks"}
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(time.Second)
+
+		m.processing <- changeUpdatedMsg{
+			url: "https://example.com/changes/abc",
+			riskMilestones: []*sdp.RiskCalculationStatus_ProgressMilestone{
+				{
+					Description: "fake done milestone",
+					Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_INPROGRESS,
+				},
+				{
+					Description: "fake inprogress milestone",
+					Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_PENDING,
+				},
+				{
+					Description: "fake pending milestone",
+					Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_PENDING,
+				},
+			},
+			risks: []*sdp.Risk{},
+		}
+		time.Sleep(1500 * time.Millisecond)
 
 		m.processing <- changeUpdatedMsg{
 			url: "https://example.com/changes/abc",
@@ -548,7 +572,27 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 			},
 			risks: []*sdp.Risk{},
 		}
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(1500 * time.Millisecond)
+
+		m.processing <- changeUpdatedMsg{
+			url: "https://example.com/changes/abc",
+			riskMilestones: []*sdp.RiskCalculationStatus_ProgressMilestone{
+				{
+					Description: "fake done milestone",
+					Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_DONE,
+				},
+				{
+					Description: "fake inprogress milestone",
+					Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_DONE,
+				},
+				{
+					Description: "fake pending milestone",
+					Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_INPROGRESS,
+				},
+			},
+			risks: []*sdp.Risk{},
+		}
+		time.Sleep(1500 * time.Millisecond)
 
 		high := uuid.New()
 		medium := uuid.New()
@@ -593,10 +637,10 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 				},
 			},
 		}
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(time.Second)
 
 		m.processing <- processingFinishedActivityMsg{"Fake done"}
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(time.Second)
 		return finishSnapshotMsg{newState: "fake done"}
 	}
 
