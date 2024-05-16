@@ -14,6 +14,7 @@ import (
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
@@ -233,9 +234,9 @@ Then enter the code:
 		// sp := createSpinner()
 		// output += sp.View() + " Waiting for confirmation..."
 	case Authenticated:
-		output = "✅ Authenticated successfully. Press any key to continue."
+		output = lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎") + " Authenticated successfully. Press any key to continue."
 	case ErrorAuthenticating:
-		output = "⛔️ Unable to authenticate. Try again."
+		output = lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("x") + " Unable to authenticate. Try again."
 	}
 
 	return containerStyle.Render(output)
