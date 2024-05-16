@@ -17,7 +17,7 @@ require (
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.2
-	github.com/overmindtech/aws-source v0.0.0-20240515111420-5f7d32c3a219
+	github.com/overmindtech/aws-source v0.0.0-20240516092210-0b3404340572
 	github.com/overmindtech/sdp-go v0.73.1
 	github.com/overmindtech/stdlib-source v0.0.0-20240515161104-d83e7b81f914
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -121,7 +121,7 @@ require (
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/openrdap/rdap v0.9.2-0.20240219192926-2210b535d40b // indirect
-	github.com/overmindtech/discovery v0.27.2 // indirect
+	github.com/overmindtech/discovery v0.27.3 // indirect
 	github.com/overmindtech/sdpcache v1.6.4 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
