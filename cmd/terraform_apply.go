@@ -81,9 +81,9 @@ Applying changes with ` + "`" + `terraform %v` + "`\n"
 		processingHeader: processingHeader,
 
 		startingChange:         make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
-		startingChangeSnapshot: snapshotModel{title: "Starting Change", state: "pending"},
+		startingChangeSnapshot: NewSnapShotModel("Starting Change"),
 		endingChange:           make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
-		endingChangeSnapshot:   snapshotModel{title: "Ending Change", state: "pending"},
+		endingChangeSnapshot:   NewSnapShotModel("Ending Change"),
 		progress:               []string{},
 	}
 }

@@ -108,10 +108,6 @@ func (m taskModel) View() string {
 		label = lipgloss.NewStyle().Foreground(ColorPalette.LabelFaint).Render("+")
 	case taskStatusRunning:
 		label = m.spinner.View()
-		// all other lables are 7 cells wide
-		// for ansi.PrintableRuneWidth(label) <= 7 {
-		// 	label += " "
-		// }
 	case taskStatusDone:
 		label = lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")
 	case taskStatusError:
