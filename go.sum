@@ -220,8 +220,12 @@ github.com/openrdap/rdap v0.9.2-0.20240219192926-2210b535d40b h1:sM/kMuT+cm9hsSa
 github.com/openrdap/rdap v0.9.2-0.20240219192926-2210b535d40b/go.mod h1:391Ww1JbjG4FHOlvQqCd6n25CCCPE64JzC5cCYPxhyM=
 github.com/overmindtech/aws-source v0.0.0-20240515111420-5f7d32c3a219 h1:u9lCTmwm28odAPCdpOulFGcT/b8AVCDPK13IjxBOirE=
 github.com/overmindtech/aws-source v0.0.0-20240515111420-5f7d32c3a219/go.mod h1:8pmJ3TIXSikRUycml/QC5AdbRR6LRTAhyYmoP9OY0+U=
+github.com/overmindtech/aws-source v0.0.0-20240516092210-0b3404340572 h1:q1Rm9QMhGSPrAG2yufjT8xZ8esZamdKu4tTMEHECiV4=
+github.com/overmindtech/aws-source v0.0.0-20240516092210-0b3404340572/go.mod h1:0fwXdBag3QGO4YXpu4GxP9Pe3MOmTfsAQS38ZV68Ck8=
 github.com/overmindtech/discovery v0.27.2 h1:P+V3FW7VDkPwiTpJz41DMleBFozuQOmKSDRgFiLXudg=
 github.com/overmindtech/discovery v0.27.2/go.mod h1:DWVo69qHlSn2pKVuu6PqIaTihws+ZpD6mJFhu+lKgd4=
+github.com/overmindtech/discovery v0.27.3 h1:H6nAM5w10BlQNol3Ne3nuei0NAfitfQXj5lMIiquPjI=
+github.com/overmindtech/discovery v0.27.3/go.mod h1:DWVo69qHlSn2pKVuu6PqIaTihws+ZpD6mJFhu+lKgd4=
 github.com/overmindtech/sdp-go v0.73.1 h1:aEP/kj8sfoeH0eR0FTeRwzpb4RFTXCDnMZKbziOG5Is=
 github.com/overmindtech/sdp-go v0.73.1/go.mod h1:RVk/Bhezpi89QqTWOvRyF5mVDOqVrm3sgXM1EEY/Ejg=
 github.com/overmindtech/sdpcache v1.6.4 h1:MJoYBDqDE3s8FrRzZ0RPgFiH39HWI/Mv2ImH1NdLT8k=
