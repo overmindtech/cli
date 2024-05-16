@@ -106,7 +106,7 @@ func (m revlinkWarmupModel) revlinkWarmupCmd() tea.Msg {
 	ctx := m.ctx
 
 	if viper.GetString("ovm-test-fake") != "" {
-		for i := 0; i < 10; i++ {
+		for i := 0; i < 20; i++ {
 			m.status <- &sdp.RevlinkWarmupResponse{
 				Status: "running (test mode)",
 				Items:  int32(i * 10),
