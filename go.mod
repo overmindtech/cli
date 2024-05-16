@@ -17,9 +17,9 @@ require (
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.2
-	github.com/overmindtech/aws-source v0.0.0-20240516092210-0b3404340572
+	github.com/overmindtech/aws-source v0.0.0-20240516123942-1153978667fe
 	github.com/overmindtech/sdp-go v0.73.1
-	github.com/overmindtech/stdlib-source v0.0.0-20240515161104-d83e7b81f914
+	github.com/overmindtech/stdlib-source v0.0.0-20240516185240-177c6cf4cf74
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
