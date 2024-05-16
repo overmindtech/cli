@@ -328,7 +328,16 @@ func styleH1() lipgloss.Style {
 		Foreground(lipgloss.Color("#ffffff")).
 		Background(ColorPalette.BgMain).
 		Bold(true).
-		MarginLeft(2)
+		PaddingLeft(2).
+		PaddingRight(2)
+}
+
+func styleH2() lipgloss.Style {
+	return lipgloss.NewStyle().
+		Foreground(ColorPalette.BgMain).
+		Bold(true).
+		PaddingLeft(2).
+		PaddingRight(2)
 }
 
 func markdownToString(markdown string) string {
