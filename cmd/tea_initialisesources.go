@@ -12,6 +12,7 @@ import (
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/overmindtech/sdp-go"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
@@ -251,10 +252,10 @@ func (m initialiseSourcesModel) View() string {
 		view += fmt.Sprintf("\n%v", m.profileInputForm.View())
 	}
 	if m.awsSourceRunning {
-		view += "\n✅ AWS Source: running"
+		view += fmt.Sprintf("\n  %v AWS Source: running", lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"))
 	}
 	if m.stdlibSourceRunning {
-		view += "\n✅ stdlib Source: running"
+		view += fmt.Sprintf("\n  %v stdlib Source: running", lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"))
 	}
 	return view
 }

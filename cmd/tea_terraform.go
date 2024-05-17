@@ -82,22 +82,6 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	batch := []tea.Cmd{}
 
-	// update the main command
-	var cmd tea.Cmd
-	m.cmd, cmd = m.cmd.Update(msg)
-	if cmd != nil {
-		batch = append(batch, cmd)
-	}
-
-	// pass all messages to all tasks
-	for k, t := range m.tasks {
-		tm, cmd := t.Update(msg)
-		m.tasks[k] = tm
-		if cmd != nil {
-			batch = append(batch, cmd)
-		}
-	}
-
 	// special case the messages that need to be handled at this level
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -143,6 +127,22 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tfPlanFinishedMsg, tfApplyFinishedMsg:
 		// bump screen after terraform ran
 		skipView(m.View())
+	}
+
+	// update the main command
+	var cmd tea.Cmd
+	m.cmd, cmd = m.cmd.Update(msg)
+	if cmd != nil {
+		batch = append(batch, cmd)
+	}
+
+	// pass all messages to all tasks
+	for k, t := range m.tasks {
+		tm, cmd := t.Update(msg)
+		m.tasks[k] = tm
+		if cmd != nil {
+			batch = append(batch, cmd)
+		}
 	}
 
 	return m, tea.Batch(batch...)

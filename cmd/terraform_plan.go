@@ -233,20 +233,20 @@ type tfPlanModel struct {
 	ctx context.Context // note that this ctx is not initialized on NewTfPlanModel to instead get a modified context through the loadSourcesConfigMsg that has a timeout and cancelFunction configured
 	oi  OvermindInstance
 
-	args             []string
-	planTask         taskModel
-	planHeader       string
-	processingTask   taskModel
-	processingHeader string
+	args       []string
+	planTask   taskModel
+	planHeader string
 
 	revlinkWarmupFinished bool
 
-	runTfPlan          bool
-	tfPlanFinished     bool
-	processing         chan tea.Msg
-	processingModel    snapshotModel
-	progress           []string
-	changeUrl          string
+	runTfPlan        bool
+	tfPlanFinished   bool
+	processing       chan tea.Msg
+	blastRadiusModel snapshotModel
+	progress         []string
+	changeUrl        string
+
+	riskTask           taskModel
 	riskMilestones     []*sdp.RiskCalculationStatus_ProgressMilestone
 	riskMilestoneTasks []taskModel
 	risks              []*sdp.Risk
@@ -277,26 +277,24 @@ func NewTfPlanModel(args []string) tea.Model {
 	planHeader := `Running ` + "`" + `terraform %v` + "`\n"
 	planHeader = fmt.Sprintf(planHeader, strings.Join(args, " "))
 
-	processingHeader := `   Processing plan from ` + "`" + `terraform %v` + "`\n"
-	processingHeader = fmt.Sprintf(processingHeader, strings.Join(args, " "))
-
 	return tfPlanModel{
-		args:             args,
-		planTask:         NewTaskModel("Planning Changes"),
-		planHeader:       planHeader,
-		processingTask:   NewTaskModel("Processing Planned Changes"),
-		processingHeader: processingHeader,
+		args:       args,
+		planTask:   NewTaskModel("Planning Changes"),
+		planHeader: planHeader,
 
-		processing:      make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
-		processingModel: snapshotModel{title: "Calculating Blast Radius", state: "pending"},
-		progress:        []string{},
+		processing:       make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
+		blastRadiusModel: NewSnapShotModel("Calculating Blast Radius"),
+		progress:         []string{},
+
+		riskTask: NewTaskModel("Calculating Risks"),
 	}
 }
 
 func (m tfPlanModel) Init() tea.Cmd {
 	return tea.Batch(
 		m.planTask.Init(),
-		m.processingTask.Init(),
+		m.blastRadiusModel.Init(),
+		m.riskTask.Init(),
 	)
 }
 
@@ -324,7 +322,7 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
 		}
 
-		m.processingModel.state = "executing terraform plan"
+		m.blastRadiusModel.state = "executing terraform plan"
 
 		if viper.GetString("ovm-test-fake") != "" {
 			c = exec.CommandContext(m.ctx, "bash", "-c", "for i in $(seq 100); do echo fake terraform plan progress line $i of 100; done; sleep 1")
@@ -354,21 +352,22 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case triggerPlanProcessingMsg:
-		m.processingTask.status = taskStatusRunning
-		m.processingModel.state = "executed terraform plan"
+		m.blastRadiusModel.status = taskStatusRunning
+		m.blastRadiusModel.state = "executed terraform plan"
 
 		cmds = append(cmds,
 			m.processPlanCmd,
-			m.processingTask.spinner.Tick,
+			m.blastRadiusModel.spinner.Tick,
 			m.waitForProcessingActivity,
 		)
 	case processingActivityMsg:
-		m.processingModel.state = "processing"
+		m.blastRadiusModel.state = "processing"
 		m.progress = append(m.progress, msg.text)
 		cmds = append(cmds, m.waitForProcessingActivity)
 	case processingFinishedActivityMsg:
-		m.processingModel.state = "finished"
-		m.processingTask.status = taskStatusDone
+		m.blastRadiusModel.status = taskStatusDone
+		m.blastRadiusModel.state = "finished"
+		m.riskTask.status = taskStatusDone
 		m.progress = append(m.progress, msg.text)
 		cmds = append(cmds, m.waitForProcessingActivity)
 	case changeUpdatedMsg:
@@ -379,7 +378,7 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			for _, ms := range msg.riskMilestones {
 				tm := NewTaskModel(ms.GetDescription())
 				m.riskMilestoneTasks = append(m.riskMilestoneTasks, tm)
-				cmds = append(cmds, tm.spinner.Tick)
+				cmds = append(cmds, tm.Init())
 			}
 		}
 		for i, ms := range msg.riskMilestones {
@@ -393,25 +392,46 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.riskMilestoneTasks[i].status = taskStatusDone
 			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_INPROGRESS:
 				m.riskMilestoneTasks[i].status = taskStatusRunning
+				cmds = append(cmds, m.riskMilestoneTasks[i].spinner.Tick)
 			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_SKIPPED:
 				m.riskMilestoneTasks[i].status = taskStatusSkipped
 			}
 		}
 		m.risks = msg.risks
-		m.processingModel.state = "Change updated"
+
+		if len(m.riskMilestones) > 0 {
+			m.riskTask.status = taskStatusRunning
+			cmds = append(cmds, m.riskTask.spinner.Tick)
+		} else if len(m.risks) > 0 {
+			m.riskTask.status = taskStatusDone
+		} else {
+			var allSkipped = true
+			for _, ms := range m.riskMilestoneTasks {
+				if ms.status != taskStatusSkipped {
+					allSkipped = false
+					break
+				}
+			}
+			if allSkipped {
+				m.riskTask.status = taskStatusSkipped
+			}
+		}
+
+		m.blastRadiusModel.status = taskStatusDone
+		m.blastRadiusModel.state = "Change updated"
 		cmds = append(cmds, m.waitForProcessingActivity)
 
 	case startSnapshotMsg:
-		mdl, cmd := m.processingModel.Update(msg)
-		m.processingModel = mdl.(snapshotModel)
+		var cmd tea.Cmd
+		m.blastRadiusModel, cmd = m.blastRadiusModel.Update(msg)
 		cmds = append(cmds, m.waitForProcessingActivity, cmd)
 	case progressSnapshotMsg:
-		mdl, cmd := m.processingModel.Update(msg)
-		m.processingModel = mdl.(snapshotModel)
+		var cmd tea.Cmd
+		m.blastRadiusModel, cmd = m.blastRadiusModel.Update(msg)
 		cmds = append(cmds, m.waitForProcessingActivity, cmd)
 	case finishSnapshotMsg:
-		mdl, cmd := m.processingModel.Update(msg)
-		m.processingModel = mdl.(snapshotModel)
+		var cmd tea.Cmd
+		m.blastRadiusModel, cmd = m.blastRadiusModel.Update(msg)
 		cmds = append(cmds, tea.Sequence(cmd, func() tea.Msg { return delayQuitMsg{} }))
 	case delayQuitMsg:
 		cmds = append(cmds, tea.Quit)
@@ -424,7 +444,10 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.planTask, cmd = m.planTask.Update(msg)
 		cmds = append(cmds, cmd)
 
-		m.processingTask, cmd = m.processingTask.Update(msg)
+		m.blastRadiusModel, cmd = m.blastRadiusModel.Update(msg)
+		cmds = append(cmds, cmd)
+
+		m.riskTask, cmd = m.riskTask.Update(msg)
 		cmds = append(cmds, cmd)
 
 		for i, ms := range m.riskMilestoneTasks {
@@ -447,16 +470,15 @@ func (m tfPlanModel) View() string {
 		bits = append(bits, markdownToString(m.planHeader))
 	}
 
-	if m.processingTask.status != taskStatusPending {
-		bits = append(bits, m.processingTask.View())
+	if m.blastRadiusModel.status != taskStatusPending {
+		bits = append(bits, m.blastRadiusModel.View())
 	}
 
-	if m.tfPlanFinished {
-		bits = append(bits, m.processingHeader)
-		bits = append(bits, fmt.Sprintf("   %v", m.processingModel.View()))
+	if m.riskTask.status != taskStatusPending {
+		bits = append(bits, m.riskTask.View())
 	}
 
-	if m.changeUrl != "" && len(m.risks) == 0 {
+	if m.changeUrl != "" {
 		for _, t := range m.riskMilestoneTasks {
 			bits = append(bits, fmt.Sprintf("   %v", t.View()))
 		}
@@ -517,7 +539,7 @@ func (m tfPlanModel) processPlanCmd() tea.Msg {
 		time.Sleep(time.Second)
 		m.processing <- progressSnapshotMsg{newState: "fake processing"}
 		time.Sleep(time.Second)
-		m.processing <- changeUpdatedMsg{url: "https://example.com"}
+		m.processing <- changeUpdatedMsg{url: "https://example.com/changes/abc"}
 		time.Sleep(time.Second)
 
 		m.processing <- processingActivityMsg{"Fake CalculateBlastRadiusResponse Status update: progress"}
