@@ -15,16 +15,19 @@ type runPlanModel struct {
 	oi    OvermindInstance
 	width int
 
-	args []string
+	args     []string
+	planFile string
 
 	taskModel
 }
 type runPlanNowMsg struct{}
 type runPlanFinishedMsg struct{}
 
-func NewRunPlanModel(args []string) runPlanModel {
+func NewRunPlanModel(args []string, planFile string) runPlanModel {
 	return runPlanModel{
-		args:      args,
+		args:     args,
+		planFile: planFile,
+
 		taskModel: NewTaskModel("Planning Changes"),
 	}
 }

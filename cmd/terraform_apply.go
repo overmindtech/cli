@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -36,6 +37,9 @@ type tfApplyModel struct {
 	args             []string
 	applyHeader      string
 	processingHeader string
+	needPlan         bool
+	planFile         string
+	needApproval     bool
 
 	changeUuid             uuid.UUID
 	isStarting             bool
@@ -56,14 +60,40 @@ type runTfApplyMsg struct{}
 type tfApplyFinishedMsg struct{}
 
 func NewTfApplyModel(args []string) tea.Model {
-	args = append([]string{"apply"}, args...)
-	// plan file needs to go last
-	args = append(args, "overmind.plan")
+	hasPlanSet := false
+	autoapprove := false
+	planFile := "overmind.plan"
+	if len(args) >= 1 {
+		f, err := os.Stat(args[len(args)-1])
+		if err == nil && !f.IsDir() {
+			// the last argument is a file, check that the previous arg is not
+			// one that would eat this as argument
+			hasPlanSet = true
+			if len(args) >= 2 {
+				prev := args[len(args)-2]
+				for _, a := range []string{"-backup", "--backup", "-state", "--state", "-state-out", "--state-out"} {
+					if prev == a || strings.HasPrefix(prev, a+"=") {
+						hasPlanSet = false
+						break
+					}
+				}
+			}
+		}
+		if hasPlanSet {
+			planFile = args[len(args)-1]
+		}
+	}
 
-	// // TODO: remove this test setup
-	// args = append([]string{"plan"}, args...)
-	// // -out needs to go last to override whatever the user specified on the command line
-	// args = append(args, "-out", "overmind.plan")
+	for _, a := range args {
+		if a == "-auto-approve" || a == "-auto-approve=true" || a == "-auto-approve=TRUE" || a == "--auto-approve" || a == "--auto-approve=true" || a == "--auto-approve=TRUE" {
+			autoapprove = true
+		}
+		if a == "-auto-approve=false" || a == "-auto-approve=FALSE" || a == "--auto-approve=false" || a == "--auto-approve=FALSE" {
+			autoapprove = false
+		}
+	}
+
+	args = append([]string{"apply"}, args...)
 
 	applyHeader := `# Applying Changes
 
@@ -79,6 +109,9 @@ Applying changes with ` + "`" + `terraform %v` + "`\n"
 		args:             args,
 		applyHeader:      applyHeader,
 		processingHeader: processingHeader,
+		needPlan:         !hasPlanSet,
+		planFile:         planFile,
+		needApproval:     !autoapprove,
 
 		startingChange:         make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
 		startingChangeSnapshot: NewSnapShotModel("Starting Change"),
@@ -93,6 +126,8 @@ func (m tfApplyModel) Init() tea.Cmd {
 }
 
 func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	log.Debugf("tfApplyModel: Update %T received %+v", msg, msg)
+
 	switch msg := msg.(type) {
 	case loadSourcesConfigMsg:
 		m.ctx = msg.ctx
@@ -187,7 +222,7 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 		var err error
 		ticketLink := viper.GetString("ticket-link")
 		if ticketLink == "" {
-			ticketLink, err = getTicketLinkFromPlan()
+			ticketLink, err = getTicketLinkFromPlan(m.planFile)
 			if err != nil {
 				return fatalError{err: err}
 			}

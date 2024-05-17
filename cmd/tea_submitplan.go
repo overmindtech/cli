@@ -24,6 +24,8 @@ type submitPlanModel struct {
 	ctx context.Context // note that this ctx is not initialized on NewTfPlanModel to instead get a modified context through the loadSourcesConfigMsg that has a timeout and cancelFunction configured
 	oi  OvermindInstance
 
+	planFile string
+
 	processing chan tea.Msg
 	progress   []string
 	changeUrl  string
@@ -50,8 +52,10 @@ type changeUpdatedMsg struct {
 	risks          []*sdp.Risk
 }
 
-func NewSubmitPlanModel() submitPlanModel {
+func NewSubmitPlanModel(planFile string) submitPlanModel {
 	return submitPlanModel{
+		planFile: planFile,
+
 		processing: make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
 		progress:   []string{},
 
@@ -363,7 +367,8 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		return nil
 	}
 
-	tfPlanJsonCmd := exec.CommandContext(ctx, "terraform", "show", "-json", "overmind.plan")
+	tfPlanJsonCmd := exec.CommandContext(ctx, "terraform", "show", "-json", m.planFile) // nolint:gosec // this is the file `terraform plan` already wrote to, so it's safe enough
+
 	tfPlanJsonCmd.Stderr = os.Stderr // TODO: capture and output this through the View() instead
 
 	planJson, err := tfPlanJsonCmd.Output()
@@ -372,7 +377,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		return fatalError{err: fmt.Errorf("processPlanCmd: failed to convert terraform plan to JSON: %w", err)}
 	}
 
-	plannedChanges, err := mappedItemDiffsFromPlan(ctx, planJson, "overmind.plan", log.Fields{})
+	plannedChanges, err := mappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
 	if err != nil {
 		close(m.processing)
 		return fatalError{err: fmt.Errorf("processPlanCmd: failed to parse terraform plan: %w", err)}
@@ -383,7 +388,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 
 	ticketLink := viper.GetString("ticket-link")
 	if ticketLink == "" {
-		ticketLink, err = getTicketLinkFromPlan()
+		ticketLink, err = getTicketLinkFromPlan(m.planFile)
 		if err != nil {
 			close(m.processing)
 			return err

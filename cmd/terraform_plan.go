@@ -39,6 +39,7 @@ type tfPlanModel struct {
 
 	args        []string
 	runPlanTask runPlanModel
+	planFile    string
 
 	runPlanFinished       bool
 	revlinkWarmupFinished bool
@@ -53,14 +54,43 @@ type tfPlanModel struct {
 var _ FinalReportingModel = (*tfPlanModel)(nil)
 
 func NewTfPlanModel(args []string) tea.Model {
+	hasPlanOutSet := false
+	planFile := "overmind.plan"
+	for i, a := range args {
+		if a == "-out" || a == "--out=true" {
+			hasPlanOutSet = true
+			planFile = args[i+1]
+		}
+		if strings.HasPrefix(a, "-out=") {
+			hasPlanOutSet = true
+			planFile, _ = strings.CutPrefix(a, "-out=")
+		}
+		if strings.HasPrefix(a, "--out=") {
+			hasPlanOutSet = true
+			planFile, _ = strings.CutPrefix(a, "--out=")
+		}
+	}
+
 	args = append([]string{"plan"}, args...)
-	// -out needs to go last to override whatever the user specified on the command line
-	args = append(args, "-out", "overmind.plan")
+	if !hasPlanOutSet {
+		// if the user has not set a plan, we need to set a temporary file to
+		// capture the output for the blast radius and risks calculation
+
+		f, err := os.CreateTemp("", "overmind-plan")
+		if err != nil {
+			log.WithError(err).Fatal("failed to create temporary plan file")
+		}
+
+		planFile = f.Name()
+		args = append(args, "-out", planFile)
+		// TODO: remember whether we used a temporary plan file and remove it when done
+	}
 
 	return tfPlanModel{
 		args:           args,
-		runPlanTask:    NewRunPlanModel(args),
-		submitPlanTask: NewSubmitPlanModel(),
+		runPlanTask:    NewRunPlanModel(args, planFile),
+		submitPlanTask: NewSubmitPlanModel(planFile),
+		planFile:       planFile,
 	}
 }
 
@@ -131,10 +161,10 @@ func (m tfPlanModel) FinalReport() string {
 }
 
 // getTicketLinkFromPlan reads the plan file to create a unique hash to identify this change
-func getTicketLinkFromPlan() (string, error) {
-	plan, err := os.ReadFile("overmind.plan")
+func getTicketLinkFromPlan(planFile string) (string, error) {
+	plan, err := os.ReadFile(planFile)
 	if err != nil {
-		return "", fmt.Errorf("failed to read overmind.plan file: %w", err)
+		return "", fmt.Errorf("failed to read plan file (%v): %w", planFile, err)
 	}
 	h := sha256.New()
 	h.Write(plan)
