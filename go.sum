@@ -296,6 +296,8 @@ github.com/overmindtech/aws-source v0.0.0-20240516123942-1153978667fe h1:XmMjdEQ
 github.com/overmindtech/aws-source v0.0.0-20240516123942-1153978667fe/go.mod h1:0fwXdBag3QGO4YXpu4GxP9Pe3MOmTfsAQS38ZV68Ck8=
 github.com/overmindtech/aws-source v0.0.0-20240517041735-50e0fc3d7e85 h1:8nxIZt6U3ccvaoTka7t1PR5yLUA+rCJlfo7kWTi4+Sc=
 github.com/overmindtech/aws-source v0.0.0-20240517041735-50e0fc3d7e85/go.mod h1:3PqUpGKiMeCJrcurD8jA8bXeiErP4IpTqpLweThCptk=
+github.com/overmindtech/aws-source v0.0.0-20240517084436-071c31fb0632 h1:J+nEMEsJWXXycVjS7ocrZx6JCq8Y/EtdlSML0SgE9VE=
+github.com/overmindtech/aws-source v0.0.0-20240517084436-071c31fb0632/go.mod h1:3PqUpGKiMeCJrcurD8jA8bXeiErP4IpTqpLweThCptk=
 github.com/overmindtech/discovery v0.27.2 h1:P+V3FW7VDkPwiTpJz41DMleBFozuQOmKSDRgFiLXudg=
 github.com/overmindtech/discovery v0.27.2/go.mod h1:DWVo69qHlSn2pKVuu6PqIaTihws+ZpD6mJFhu+lKgd4=
 github.com/overmindtech/discovery v0.27.3 h1:H6nAM5w10BlQNol3Ne3nuei0NAfitfQXj5lMIiquPjI=
