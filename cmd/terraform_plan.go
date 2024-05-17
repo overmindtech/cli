@@ -15,6 +15,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
+	"github.com/muesli/reflow/wordwrap"
 	"github.com/overmindtech/aws-source/proc"
 	"github.com/overmindtech/cli/cmd/datamaps"
 	"github.com/overmindtech/cli/tracing"
@@ -247,11 +248,14 @@ type tfPlanModel struct {
 	changeUrl        string
 
 	riskTask           taskModel
+	blastRadiusItems   uint32
+	blastRadiusEdges   uint32
 	riskMilestones     []*sdp.RiskCalculationStatus_ProgressMilestone
 	riskMilestoneTasks []taskModel
 	risks              []*sdp.Risk
 
 	fatalError string
+	width      int
 }
 
 // assert interface
@@ -304,6 +308,9 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds := []tea.Cmd{}
 
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+
 	case loadSourcesConfigMsg:
 		m.ctx = msg.ctx
 		m.oi = msg.oi
@@ -426,6 +433,9 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.blastRadiusModel, cmd = m.blastRadiusModel.Update(msg)
 		cmds = append(cmds, m.waitForProcessingActivity, cmd)
 	case progressSnapshotMsg:
+		m.blastRadiusItems = msg.items
+		m.blastRadiusEdges = msg.edges
+
 		var cmd tea.Cmd
 		m.blastRadiusModel, cmd = m.blastRadiusModel.Update(msg)
 		cmds = append(cmds, m.waitForProcessingActivity, cmd)
@@ -490,31 +500,33 @@ func (m tfPlanModel) View() string {
 
 func (m tfPlanModel) FinalReport() string {
 	bits := []string{}
-	if m.changeUrl != "" {
-		if len(m.risks) > 0 {
-			for _, r := range m.risks {
-				severity := ""
-				switch r.GetSeverity() {
-				case sdp.Risk_SEVERITY_HIGH:
-					severity = lipgloss.NewStyle().Background(ColorPalette.BgDanger).Render("  High 🔥  ")
-				case sdp.Risk_SEVERITY_MEDIUM:
-					severity = lipgloss.NewStyle().Background(ColorPalette.BgWarning).Render("  Medium ❗  ")
-				case sdp.Risk_SEVERITY_LOW:
-					severity = lipgloss.NewStyle().Background(ColorPalette.LabelTitle).Render("  Low ℹ️  ")
-				case sdp.Risk_SEVERITY_UNSPECIFIED:
-					// do nothing
-				}
-				// TODO: Set this up so that we have a max width based on the
-				// width of the terminal. Ideally the risks would have a max
-				// width of ~160 characters, but if the terminal is smaller than
-				// that, we should wrap the text to the terminal width.
-				bits = append(bits, (fmt.Sprintf("%v %v\n\n%v\n\n",
-					severity,
-					styleH1().Render(fmt.Sprintf("  %v  ", r.GetTitle())),
-					r.GetDescription())))
+	if m.blastRadiusItems > 0 {
+		bits = append(bits, "")
+		bits = append(bits, styleH1().Render("Blast Radius"))
+		bits = append(bits, fmt.Sprintf("\nItems: %v\nEdges: %v\n", m.blastRadiusItems, m.blastRadiusEdges))
+	}
+	if m.changeUrl != "" && len(m.risks) > 0 {
+		bits = append(bits, "")
+		bits = append(bits, styleH1().Render("Potential Risks"))
+		bits = append(bits, "")
+		for _, r := range m.risks {
+			severity := ""
+			switch r.GetSeverity() {
+			case sdp.Risk_SEVERITY_HIGH:
+				severity = lipgloss.NewStyle().Background(ColorPalette.BgDanger).Render("  High 🔥  ")
+			case sdp.Risk_SEVERITY_MEDIUM:
+				severity = lipgloss.NewStyle().Background(ColorPalette.BgWarning).Render("  Medium ❗  ")
+			case sdp.Risk_SEVERITY_LOW:
+				severity = lipgloss.NewStyle().Background(ColorPalette.LabelTitle).Render("  Low ℹ️  ")
+			case sdp.Risk_SEVERITY_UNSPECIFIED:
+				// do nothing
 			}
-			bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
+			bits = append(bits, (fmt.Sprintf("%v %v\n\n%v\n\n",
+				severity,
+				styleH2().Render(r.GetTitle()),
+				wordwrap.String(r.GetDescription(), min(160, m.width-4)))))
 		}
+		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
 	}
 	return strings.Join(bits, "\n") + "\n"
 }
