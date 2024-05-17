@@ -3,7 +3,7 @@ module github.com/overmindtech/cli
 go 1.22.3
 
 require (
-	connectrpc.com/connect v1.16.1
+	connectrpc.com/connect v1.16.2
 	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.26.2
 	github.com/charmbracelet/glamour v0.7.0
