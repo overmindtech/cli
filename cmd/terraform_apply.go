@@ -126,7 +126,15 @@ func (m tfApplyModel) Init() tea.Cmd {
 }
 
 func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	log.Debugf("tfApplyModel: Update %T received %+v", msg, msg)
+	cmds := []tea.Cmd{}
+
+	mdl, cmd := m.startingChangeSnapshot.Update(msg)
+	cmds = append(cmds, cmd)
+	m.startingChangeSnapshot = mdl
+
+	mdl, cmd = m.endingChangeSnapshot.Update(msg)
+	cmds = append(cmds, cmd)
+	m.endingChangeSnapshot = mdl
 
 	switch msg := msg.(type) {
 	case loadSourcesConfigMsg:
@@ -135,7 +143,7 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case revlinkWarmupFinishedMsg:
 		m.isStarting = true
-		return m, tea.Batch(
+		cmds = append(cmds,
 			m.startingChangeSnapshot.Init(),
 			m.startStartChangeCmd(),
 			m.waitForStartingActivity,
@@ -143,36 +151,22 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case changeIdentifiedMsg:
 		m.changeUuid = msg.uuid
-		return m, nil
 
-	case startSnapshotMsg:
+	case startSnapshotMsg, progressSnapshotMsg:
 		if m.isStarting {
-			m.startingChangeSnapshot.Update(msg)
-			return m, m.waitForStartingActivity
+			cmds = append(cmds, m.waitForStartingActivity)
 		} else if m.isEnding {
-			m.endingChangeSnapshot.Update(msg)
-			return m, m.waitForEndingActivity
-		}
-
-	case progressSnapshotMsg:
-		if m.isStarting {
-			m.startingChangeSnapshot.Update(msg)
-			return m, m.waitForStartingActivity
-		} else if m.isEnding {
-			m.endingChangeSnapshot.Update(msg)
-			return m, m.waitForEndingActivity
+			cmds = append(cmds, m.waitForEndingActivity)
 		}
 
 	case finishSnapshotMsg:
 		if m.isStarting {
-			m.startingChangeSnapshot.Update(msg)
 			m.isStarting = false
 			// defer the actual command to give the view a chance to show the header
 			m.runTfApply = true
-			return m, func() tea.Msg { return runTfApplyMsg{} }
+			cmds = append(cmds, func() tea.Msg { return runTfApplyMsg{} })
 		} else if m.isEnding {
-			m.endingChangeSnapshot.Update(msg)
-			return m, tea.Quit
+			cmds = append(cmds, func() tea.Msg { return delayQuitMsg{} })
 		}
 
 	case runTfApplyMsg:
@@ -193,14 +187,14 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			})
 	case tfApplyFinishedMsg:
 		m.isEnding = true
-		return m, tea.Batch(
+		cmds = append(cmds,
 			m.endingChangeSnapshot.Init(),
 			m.startEndChangeCmd(),
 			m.waitForEndingActivity,
 		)
 	}
 
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 func (m tfApplyModel) View() string {
@@ -234,7 +228,7 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 		}
 
 		m.startingChange <- changeIdentifiedMsg{uuid: changeUuid}
-		m.startingChange <- startSnapshotMsg{newState: "starting"}
+		m.startingChange <- m.startingChangeSnapshot.StartMsg("starting")
 
 		client := AuthenticatedChangesClient(ctx, oi)
 		startStream, err := client.StartChange(ctx, &connect.Request[sdp.StartChangeRequest]{
@@ -254,21 +248,13 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 				"items": msg.GetNumItems(),
 				"edges": msg.GetNumEdges(),
 			}).Trace("progress")
-			m.startingChange <- progressSnapshotMsg{
-				newState: msg.GetState().String(),
-				items:    msg.GetNumItems(),
-				edges:    msg.GetNumEdges(),
-			}
+			m.startingChange <- m.startingChangeSnapshot.ProgressMsg(msg.GetState().String(), msg.GetNumItems(), msg.GetNumEdges())
 		}
 		if startStream.Err() != nil {
 			return fatalError{err: fmt.Errorf("failed to process start change: %w", startStream.Err())}
 		}
 
-		return finishSnapshotMsg{
-			newState: msg.GetState().String(),
-			items:    msg.GetNumItems(),
-			edges:    msg.GetNumEdges(),
-		}
+		return m.startingChangeSnapshot.FinishMsg(msg.GetState().String(), msg.GetNumItems(), msg.GetNumEdges())
 	}
 }
 
@@ -283,7 +269,7 @@ func (m tfApplyModel) startEndChangeCmd() tea.Cmd {
 	changeUuid := m.changeUuid
 
 	return func() tea.Msg {
-		m.endingChange <- startSnapshotMsg{newState: "starting"}
+		m.endingChange <- m.endingChangeSnapshot.StartMsg("ending")
 
 		client := AuthenticatedChangesClient(ctx, oi)
 		endStream, err := client.EndChange(ctx, &connect.Request[sdp.EndChangeRequest]{
@@ -303,21 +289,13 @@ func (m tfApplyModel) startEndChangeCmd() tea.Cmd {
 				"items": msg.GetNumItems(),
 				"edges": msg.GetNumEdges(),
 			}).Trace("progress")
-			m.endingChange <- progressSnapshotMsg{
-				newState: msg.GetState().String(),
-				items:    msg.GetNumItems(),
-				edges:    msg.GetNumEdges(),
-			}
+			m.endingChange <- m.endingChangeSnapshot.ProgressMsg(msg.GetState().String(), msg.GetNumItems(), msg.GetNumEdges())
 		}
 		if endStream.Err() != nil {
 			return fatalError{err: fmt.Errorf("failed to process end change: %w", endStream.Err())}
 		}
 
-		return finishSnapshotMsg{
-			newState: msg.GetState().String(),
-			items:    msg.GetNumItems(),
-			edges:    msg.GetNumEdges(),
-		}
+		return m.endingChangeSnapshot.FinishMsg(msg.GetState().String(), msg.GetNumItems(), msg.GetNumEdges())
 	}
 }
 

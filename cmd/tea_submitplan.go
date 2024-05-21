@@ -154,36 +154,32 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, m.waitForSubmitPlanActivity)
 
 	case startSnapshotMsg:
-		var cmd tea.Cmd
-		m.blastRadiusTask, cmd = m.blastRadiusTask.Update(msg)
-		cmds = append(cmds, m.waitForSubmitPlanActivity, cmd)
+		cmds = append(cmds, m.waitForSubmitPlanActivity)
 	case progressSnapshotMsg:
 		m.blastRadiusItems = msg.items
 		m.blastRadiusEdges = msg.edges
-
-		var cmd tea.Cmd
-		m.blastRadiusTask, cmd = m.blastRadiusTask.Update(msg)
-		cmds = append(cmds, m.waitForSubmitPlanActivity, cmd)
+		cmds = append(cmds, m.waitForSubmitPlanActivity)
 	case finishSnapshotMsg:
-		var cmd tea.Cmd
-		m.blastRadiusTask, cmd = m.blastRadiusTask.Update(msg)
-		cmds = append(cmds, cmd)
+		m.blastRadiusItems = msg.items
+		m.blastRadiusEdges = msg.edges
+
 	default:
 		// propagate commands to components
 		var cmd tea.Cmd
-
-		m.blastRadiusTask, cmd = m.blastRadiusTask.Update(msg)
-		cmds = append(cmds, cmd)
-
-		m.riskTask, cmd = m.riskTask.Update(msg)
-		cmds = append(cmds, cmd)
 
 		for i, ms := range m.riskMilestoneTasks {
 			m.riskMilestoneTasks[i], cmd = ms.Update(msg)
 			cmds = append(cmds, cmd)
 		}
-
 	}
+
+	var cmd tea.Cmd
+	m.blastRadiusTask, cmd = m.blastRadiusTask.Update(msg)
+	cmds = append(cmds, cmd)
+
+	m.riskTask, cmd = m.riskTask.Update(msg)
+	cmds = append(cmds, cmd)
+
 	return m, tea.Batch(cmds...)
 }
 
@@ -230,14 +226,14 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	ctx := m.ctx
 	span := trace.SpanFromContext(ctx)
 
-	m.processing <- startSnapshotMsg{newState: "converting terraform plan to JSON"}
+	m.processing <- m.blastRadiusTask.StartMsg("converting terraform plan to JSON")
 
 	if viper.GetString("ovm-test-fake") != "" {
 		m.processing <- submitPlanUpdateMsg{"Fake processing json plan"}
 		time.Sleep(time.Second)
 		m.processing <- submitPlanUpdateMsg{"Fake creating a new change"}
 		time.Sleep(time.Second)
-		m.processing <- progressSnapshotMsg{newState: "fake processing"}
+		m.processing <- m.blastRadiusTask.ProgressMsg("fake processing", 1, 2)
 		time.Sleep(time.Second)
 		m.processing <- changeUpdatedMsg{url: "https://example.com/changes/abc"}
 		time.Sleep(time.Second)
@@ -245,11 +241,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		m.processing <- submitPlanUpdateMsg{"Fake CalculateBlastRadiusResponse Status update: progress"}
 		time.Sleep(time.Second)
 
-		m.processing <- progressSnapshotMsg{
-			newState: "discovering blast radius",
-			items:    10,
-			edges:    21,
-		}
+		m.processing <- m.blastRadiusTask.ProgressMsg("discovering blast radius", 10, 21)
 		time.Sleep(time.Second)
 
 		m.processing <- changeUpdatedMsg{url: "https://example.com/changes/abc"}
@@ -363,7 +355,8 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 
 		m.processing <- submitPlanFinishedMsg{"Fake done"}
 		time.Sleep(time.Second)
-		m.processing <- finishSnapshotMsg{newState: "fake done"}
+		m.processing <- m.blastRadiusTask.FinishMsg("fake done", 100, 200)
+		time.Sleep(time.Second)
 		return nil
 	}
 
@@ -384,7 +377,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	}
 
 	m.processing <- submitPlanUpdateMsg{"converted terraform plan to JSON"}
-	m.processing <- progressSnapshotMsg{newState: "converted terraform plan to JSON"}
+	m.processing <- m.blastRadiusTask.ProgressMsg("converted terraform plan to JSON", 0, 0)
 
 	ticketLink := viper.GetString("ticket-link")
 	if ticketLink == "" {
@@ -408,7 +401,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 
 	if changeUuid == uuid.Nil {
 		m.processing <- submitPlanUpdateMsg{"Creating a new change"}
-		m.processing <- progressSnapshotMsg{newState: "creating a new change"}
+		m.processing <- m.blastRadiusTask.ProgressMsg("creating a new change", 0, 0)
 		log.Debug("Creating a new change")
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 			Msg: &sdp.CreateChangeRequest{
@@ -441,7 +434,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		)
 	} else {
 		m.processing <- submitPlanUpdateMsg{"Updating an existing change"}
-		m.processing <- progressSnapshotMsg{newState: "updating an existing change"}
+		m.processing <- m.blastRadiusTask.ProgressMsg("updating an existing change", 0, 0)
 		log.WithField("change", changeUuid).Debug("Updating an existing change")
 		span.SetAttributes(
 			attribute.String("ovm.change.uuid", changeUuid.String()),
@@ -470,7 +463,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 
 	m.processing <- submitPlanUpdateMsg{"Uploading planned changes"}
 	log.WithField("change", changeUuid).Debug("Uploading planned changes")
-	m.processing <- progressSnapshotMsg{newState: "uploading planned changes"}
+	m.processing <- m.blastRadiusTask.ProgressMsg("uploading planned changes", 0, 0)
 
 	resultStream, err := client.UpdatePlannedChanges(ctx, &connect.Request[sdp.UpdatePlannedChangesRequest]{
 		Msg: &sdp.UpdatePlannedChangesRequest{
@@ -511,11 +504,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		case sdp.CalculateBlastRadiusResponse_STATE_DONE:
 			stateLabel = "done"
 		}
-		m.processing <- progressSnapshotMsg{
-			newState: stateLabel,
-			items:    msg.GetNumItems(),
-			edges:    msg.GetNumEdges(),
-		}
+		m.processing <- m.blastRadiusTask.ProgressMsg(stateLabel, msg.GetNumItems(), msg.GetNumEdges())
 	}
 	if resultStream.Err() != nil {
 		close(m.processing)
@@ -562,11 +551,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	}
 
 	m.processing <- submitPlanFinishedMsg{"Done"}
-	m.processing <- finishSnapshotMsg{
-		newState: "calculated blast radius and risks",
-		items:    msg.GetNumItems(),
-		edges:    msg.GetNumEdges(),
-	}
+	m.processing <- m.blastRadiusTask.FinishMsg("calculated blast radius and risks", msg.GetNumItems(), msg.GetNumEdges())
 
 	return nil
 }
