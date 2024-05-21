@@ -28,4 +28,6 @@ output
 .DS_Store
 .terraform
 overmind.plan
+terraform.tfstate
+terraform.tfstate.backup
 /tmp/
