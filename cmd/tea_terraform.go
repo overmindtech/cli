@@ -40,6 +40,8 @@ type cmdModel struct {
 	cmd tea.Model
 }
 
+type delayQuitMsg struct{}
+
 func (m cmdModel) Init() tea.Cmd {
 	// use the main cli context to not take this time from the main timeout
 	m.tasks["00_oi"] = NewInstanceLoaderModel(m.ctx, m.app)
@@ -127,6 +129,10 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case runPlanFinishedMsg, tfApplyFinishedMsg:
 		// bump screen after terraform ran
 		skipView(m.View())
+
+	case delayQuitMsg:
+		batch = append(batch, tea.Quit)
+
 	}
 
 	// update the main command

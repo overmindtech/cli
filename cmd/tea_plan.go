@@ -98,6 +98,8 @@ func (m runPlanModel) View() string {
 		bits = append(bits, markdownToString(planHeader))
 	case taskStatusDone:
 		bits = append(bits, m.taskModel.View())
+	case taskStatusError, taskStatusSkipped:
+		// handled by caller
 	}
 
 	if len(bits) > 0 {
