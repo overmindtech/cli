@@ -121,10 +121,10 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		batch = append(batch, cmd)
 		return tm, tea.Batch(batch...)
 
-	case triggerTfPlanMsg, runTfApplyMsg:
+	case runPlanNowMsg, runTfApplyMsg:
 		m.terraformHasStarted = true
 
-	case tfPlanFinishedMsg, tfApplyFinishedMsg:
+	case runPlanFinishedMsg, tfApplyFinishedMsg:
 		// bump screen after terraform ran
 		skipView(m.View())
 	}

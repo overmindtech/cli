@@ -43,14 +43,12 @@ type tfPlanModel struct {
 	ctx context.Context // note that this ctx is not initialized on NewTfPlanModel to instead get a modified context through the loadSourcesConfigMsg that has a timeout and cancelFunction configured
 	oi  OvermindInstance
 
-	args       []string
-	planTask   taskModel
-	planHeader string
+	args        []string
+	runPlanTask runPlanModel
 
+	runPlanFinished       bool
 	revlinkWarmupFinished bool
 
-	runTfPlan        bool
-	tfPlanFinished   bool
 	processing       chan tea.Msg
 	blastRadiusModel snapshotModel
 	progress         []string
@@ -70,8 +68,6 @@ type tfPlanModel struct {
 // assert interface
 var _ FinalReportingModel = (*tfPlanModel)(nil)
 
-type triggerTfPlanMsg struct{}
-type tfPlanFinishedMsg struct{}
 type triggerPlanProcessingMsg struct{}
 type processingActivityMsg struct{ text string }
 type changeUpdatedMsg struct {
@@ -87,13 +83,9 @@ func NewTfPlanModel(args []string) tea.Model {
 	// -out needs to go last to override whatever the user specified on the command line
 	args = append(args, "-out", "overmind.plan")
 
-	planHeader := `Running ` + "`" + `terraform %v` + "`\n"
-	planHeader = fmt.Sprintf(planHeader, strings.Join(args, " "))
-
 	return tfPlanModel{
-		args:       args,
-		planTask:   NewTaskModel("Planning Changes"),
-		planHeader: planHeader,
+		args:        args,
+		runPlanTask: NewRunPlanModel(args),
 
 		processing:       make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
 		blastRadiusModel: NewSnapShotModel("Calculating Blast Radius"),
@@ -105,7 +97,7 @@ func NewTfPlanModel(args []string) tea.Model {
 
 func (m tfPlanModel) Init() tea.Cmd {
 	return tea.Batch(
-		m.planTask.Init(),
+		m.runPlanTask.Init(),
 		m.blastRadiusModel.Init(),
 		m.riskTask.Init(),
 	)
@@ -124,45 +116,13 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.ctx = msg.ctx
 		m.oi = msg.oi
 
-	case sourcesInitialisedMsg:
-		m.runTfPlan = true
-		m.planTask.status = taskStatusRunning
-		// defer the actual command to give the view a chance to show the header
-		cmds = append(cmds, func() tea.Msg { return triggerTfPlanMsg{} })
-
-	case triggerTfPlanMsg:
-		c := exec.CommandContext(m.ctx, "terraform", m.args...) // nolint:gosec // this is a user-provided command, let them do their thing
-
-		// inject the profile, if configured
-		if aws_profile := viper.GetString("aws-profile"); aws_profile != "" {
-			c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
-		}
-
-		m.blastRadiusModel.state = "executing terraform plan"
-
-		if viper.GetString("ovm-test-fake") != "" {
-			c = exec.CommandContext(m.ctx, "bash", "-c", "for i in $(seq 100); do echo fake terraform plan progress line $i of 100; done; sleep 1")
-		}
-
-		cmds = append(cmds, tea.ExecProcess(
-			c,
-			func(err error) tea.Msg {
-				if err != nil {
-					return fatalError{err: fmt.Errorf("failed to run terraform plan: %w", err)}
-				}
-
-				return tfPlanFinishedMsg{}
-			}))
-
 	case revlinkWarmupFinishedMsg:
 		m.revlinkWarmupFinished = true
-		if m.tfPlanFinished {
+		if m.runPlanFinished {
 			cmds = append(cmds, func() tea.Msg { return triggerPlanProcessingMsg{} })
 		}
-	case tfPlanFinishedMsg:
-		m.tfPlanFinished = true
-		m.planTask.status = taskStatusDone
-
+	case runPlanFinishedMsg:
+		m.runPlanFinished = true
 		if m.revlinkWarmupFinished {
 			cmds = append(cmds, func() tea.Msg { return triggerPlanProcessingMsg{} })
 		}
@@ -259,9 +219,8 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.fatalError = msg.err.Error()
 		cmds = append(cmds, tea.Quit)
 	default:
+		// propagate commands to components
 		var cmd tea.Cmd
-		m.planTask, cmd = m.planTask.Update(msg)
-		cmds = append(cmds, cmd)
 
 		m.blastRadiusModel, cmd = m.blastRadiusModel.Update(msg)
 		cmds = append(cmds, cmd)
@@ -275,18 +234,18 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
+	rpm, cmd := m.runPlanTask.Update(msg)
+	m.runPlanTask = rpm.(runPlanModel)
+	cmds = append(cmds, cmd)
+
 	return m, tea.Batch(cmds...)
 }
 
 func (m tfPlanModel) View() string {
 	bits := []string{}
 
-	if m.planTask.status != taskStatusPending {
-		bits = append(bits, m.planTask.View())
-	}
-
-	if m.runTfPlan && !m.tfPlanFinished {
-		bits = append(bits, markdownToString(m.planHeader))
+	if m.runPlanTask.status != taskStatusPending {
+		bits = append(bits, m.runPlanTask.View())
 	}
 
 	if m.blastRadiusModel.status != taskStatusPending {
