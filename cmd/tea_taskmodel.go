@@ -74,10 +74,6 @@ func (m taskModel) TaskModel() taskModel {
 
 func (m taskModel) Update(msg tea.Msg) (taskModel, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		if msg.String() == "q" {
-			return m, tea.Quit
-		}
 	default:
 		if m.status == taskStatusRunning {
 			var cmd tea.Cmd
