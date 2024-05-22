@@ -50,6 +50,16 @@ type WithTaskModel interface {
 // assert that taskModel implements WithTaskModel
 var _ WithTaskModel = (*taskModel)(nil)
 
+type updateTaskTitleMsg struct {
+	id    int
+	title string
+}
+
+type updateTaskStatusMsg struct {
+	id     int
+	status taskStatus
+}
+
 func NewTaskModel(title string) taskModel {
 	return taskModel{
 		status: taskStatusPending,
@@ -74,6 +84,14 @@ func (m taskModel) TaskModel() taskModel {
 
 func (m taskModel) Update(msg tea.Msg) (taskModel, tea.Cmd) {
 	switch msg := msg.(type) {
+	case updateTaskTitleMsg:
+		if m.spinner.ID() == msg.id {
+			m.title = msg.title
+		}
+	case updateTaskStatusMsg:
+		if m.spinner.ID() == msg.id {
+			m.status = msg.status
+		}
 	default:
 		if m.status == taskStatusRunning {
 			var cmd tea.Cmd
@@ -103,4 +121,18 @@ func (m taskModel) View() string {
 	}
 
 	return fmt.Sprintf("%v %v", label, m.title)
+}
+
+func (m taskModel) UpdateTitleMsg(newTitle string) tea.Msg {
+	return updateTaskTitleMsg{
+		id:    m.spinner.ID(),
+		title: newTitle,
+	}
+}
+
+func (m taskModel) UpdateStatusMsg(newStatus taskStatus) tea.Msg {
+	return updateTaskStatusMsg{
+		id:     m.spinner.ID(),
+		status: newStatus,
+	}
 }

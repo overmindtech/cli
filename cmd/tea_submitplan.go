@@ -26,13 +26,19 @@ type submitPlanModel struct {
 
 	planFile string
 
-	processing chan tea.Msg
+	// this channel transports updates from the submitPlan processing. The
+	// submitPlanUpdateMsg is a wrapper around the actual tea.Msg to make it
+	// simpler to pump the waitForSubmitPlanActivity command
+	processing chan submitPlanUpdateMsg
 	progress   []string
 	changeUrl  string
 
-	blastRadiusTask  snapshotModel
-	blastRadiusItems uint32
-	blastRadiusEdges uint32
+	removingSecretsTask taskModel
+
+	blastRadiusTask           snapshotModel
+	blastRadiusItems          uint32
+	blastRadiusEdges          uint32
+	blastRadiusMilestoneTasks []taskModel
 
 	riskTask           taskModel
 	riskMilestones     []*sdp.RiskCalculationStatus_ProgressMilestone
@@ -43,7 +49,7 @@ type submitPlanModel struct {
 }
 type submitPlanNowMsg struct{}
 
-type submitPlanUpdateMsg struct{ text string }
+type submitPlanUpdateMsg struct{ wrapped tea.Msg }
 type submitPlanFinishedMsg struct{ text string }
 
 type changeUpdatedMsg struct {
@@ -56,8 +62,10 @@ func NewSubmitPlanModel(planFile string) submitPlanModel {
 	return submitPlanModel{
 		planFile: planFile,
 
-		processing: make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
+		processing: make(chan submitPlanUpdateMsg, 10), // provide a small buffer for sending updates, so we don't block the processing
 		progress:   []string{},
+
+		removingSecretsTask: NewTaskModel("Removing secrets"),
 
 		blastRadiusTask: NewSnapShotModel("Calculating Blast Radius"),
 		riskTask:        NewTaskModel("Calculating Risks"),
@@ -88,20 +96,22 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		cmds = append(cmds,
 			m.submitPlanCmd,
+			m.removingSecretsTask.spinner.Tick,
 			m.blastRadiusTask.spinner.Tick,
 			m.waitForSubmitPlanActivity,
 		)
 
 	case submitPlanUpdateMsg:
-		m.blastRadiusTask.state = "processing"
-		m.progress = append(m.progress, msg.text)
-		cmds = append(cmds, m.waitForSubmitPlanActivity)
+		// ensure that the wrapped message is submitted before we wait for the
+		// next update. This is still not perfect, but there's currently no
+		// better idea on the table.
+		cmds = append(cmds, tea.Sequence(func() tea.Msg { return msg.wrapped }, m.waitForSubmitPlanActivity))
+
 	case submitPlanFinishedMsg:
 		m.blastRadiusTask.status = taskStatusDone
 		m.blastRadiusTask.state = "finished"
 		m.riskTask.status = taskStatusDone
 		m.progress = append(m.progress, msg.text)
-		cmds = append(cmds, m.waitForSubmitPlanActivity)
 	case changeUpdatedMsg:
 		m.changeUrl = msg.url
 		m.riskMilestones = msg.riskMilestones
@@ -151,14 +161,13 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.blastRadiusTask.status = taskStatusDone
 		m.blastRadiusTask.state = "Change updated"
-		cmds = append(cmds, m.waitForSubmitPlanActivity)
 
 	case startSnapshotMsg:
-		cmds = append(cmds, m.waitForSubmitPlanActivity)
+		// noop
+
 	case progressSnapshotMsg:
 		m.blastRadiusItems = msg.items
 		m.blastRadiusEdges = msg.edges
-		cmds = append(cmds, m.waitForSubmitPlanActivity)
 	case finishSnapshotMsg:
 		m.blastRadiusItems = msg.items
 		m.blastRadiusEdges = msg.edges
@@ -174,6 +183,9 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	var cmd tea.Cmd
+	m.removingSecretsTask, cmd = m.removingSecretsTask.Update(msg)
+	cmds = append(cmds, cmd)
+
 	m.blastRadiusTask, cmd = m.blastRadiusTask.Update(msg)
 	cmds = append(cmds, cmd)
 
@@ -186,23 +198,26 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m submitPlanModel) View() string {
 	bits := []string{}
 
+	if m.removingSecretsTask.status != taskStatusPending {
+		bits = append(bits, m.removingSecretsTask.View())
+	}
+
 	if m.blastRadiusTask.status != taskStatusPending {
 		bits = append(bits, m.blastRadiusTask.View())
+		for _, t := range m.blastRadiusMilestoneTasks {
+			bits = append(bits, fmt.Sprintf("   %v", t.View()))
+		}
 	}
 
 	if m.riskTask.status != taskStatusPending {
 		bits = append(bits, m.riskTask.View())
-	}
-
-	if m.changeUrl != "" {
 		for _, t := range m.riskMilestoneTasks {
 			bits = append(bits, fmt.Sprintf("   %v", t.View()))
 		}
-		if len(m.risks) == 0 {
-			bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph at:\n%v\n\n", m.changeUrl))
-		} else {
-			bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
-		}
+	}
+
+	if m.changeUrl != "" {
+		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
 	}
 
 	return strings.Join(bits, "\n") + "\n"
@@ -217,38 +232,37 @@ func (m submitPlanModel) Status() taskStatus {
 
 // A command that waits for the activity on the processing channel.
 func (m submitPlanModel) waitForSubmitPlanActivity() tea.Msg {
-	msg := <-m.processing
-	log.Debugf("waitForSubmitPlanActivity received %T: %+v", msg, msg)
-	return msg
+	return <-m.processing
 }
 
 func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	ctx := m.ctx
 	span := trace.SpanFromContext(ctx)
 
-	m.processing <- m.blastRadiusTask.StartMsg("converting terraform plan to JSON")
+	m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusRunning)}
 
 	if viper.GetString("ovm-test-fake") != "" {
-		m.processing <- submitPlanUpdateMsg{"Fake processing json plan"}
+		time.Sleep(time.Second)
+		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusDone)}
 		time.Sleep(time.Second)
 		m.processing <- submitPlanUpdateMsg{"Fake creating a new change"}
 		time.Sleep(time.Second)
-		m.processing <- m.blastRadiusTask.ProgressMsg("fake processing", 1, 2)
+		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.ProgressMsg("fake processing", 1, 2)}
 		time.Sleep(time.Second)
-		m.processing <- changeUpdatedMsg{url: "https://example.com/changes/abc"}
+		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{url: "https://example.com/changes/abc"}}
 		time.Sleep(time.Second)
 
 		m.processing <- submitPlanUpdateMsg{"Fake CalculateBlastRadiusResponse Status update: progress"}
 		time.Sleep(time.Second)
 
-		m.processing <- m.blastRadiusTask.ProgressMsg("discovering blast radius", 10, 21)
+		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.ProgressMsg("discovering blast radius", 10, 21)}
 		time.Sleep(time.Second)
 
-		m.processing <- changeUpdatedMsg{url: "https://example.com/changes/abc"}
+		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{url: "https://example.com/changes/abc"}}
 		m.processing <- submitPlanUpdateMsg{"Calculating risks"}
 		time.Sleep(time.Second)
 
-		m.processing <- changeUpdatedMsg{
+		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{
 			url: "https://example.com/changes/abc",
 			riskMilestones: []*sdp.RiskCalculationStatus_ProgressMilestone{
 				{
@@ -265,10 +279,10 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 				},
 			},
 			risks: []*sdp.Risk{},
-		}
+		}}
 		time.Sleep(1500 * time.Millisecond)
 
-		m.processing <- changeUpdatedMsg{
+		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{
 			url: "https://example.com/changes/abc",
 			riskMilestones: []*sdp.RiskCalculationStatus_ProgressMilestone{
 				{
@@ -285,10 +299,10 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 				},
 			},
 			risks: []*sdp.Risk{},
-		}
+		}}
 		time.Sleep(1500 * time.Millisecond)
 
-		m.processing <- changeUpdatedMsg{
+		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{
 			url: "https://example.com/changes/abc",
 			riskMilestones: []*sdp.RiskCalculationStatus_ProgressMilestone{
 				{
@@ -305,13 +319,13 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 				},
 			},
 			risks: []*sdp.Risk{},
-		}
+		}}
 		time.Sleep(1500 * time.Millisecond)
 
 		high := uuid.New()
 		medium := uuid.New()
 		low := uuid.New()
-		m.processing <- changeUpdatedMsg{
+		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{
 			url: "https://example.com/changes/abc",
 			riskMilestones: []*sdp.RiskCalculationStatus_ProgressMilestone{
 				{
@@ -350,12 +364,12 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 					RelatedItems: []*sdp.Reference{},
 				},
 			},
-		}
+		}}
 		time.Sleep(time.Second)
 
-		m.processing <- submitPlanFinishedMsg{"Fake done"}
+		m.processing <- submitPlanUpdateMsg{submitPlanFinishedMsg{"Fake done"}}
 		time.Sleep(time.Second)
-		m.processing <- m.blastRadiusTask.FinishMsg("fake done", 100, 200)
+		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.FinishMsg("fake done", 100, 200)}
 		time.Sleep(time.Second)
 		return nil
 	}
@@ -366,18 +380,22 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 
 	planJson, err := tfPlanJsonCmd.Output()
 	if err != nil {
+		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusError)}
 		close(m.processing)
 		return fatalError{err: fmt.Errorf("processPlanCmd: failed to convert terraform plan to JSON: %w", err)}
 	}
 
 	plannedChanges, err := mappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
 	if err != nil {
+		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusError)}
 		close(m.processing)
 		return fatalError{err: fmt.Errorf("processPlanCmd: failed to parse terraform plan: %w", err)}
 	}
 
-	m.processing <- submitPlanUpdateMsg{"converted terraform plan to JSON"}
-	m.processing <- m.blastRadiusTask.ProgressMsg("converted terraform plan to JSON", 0, 0)
+	// TODO: count secrets in the plan to provide better feedback to user
+	// m.processing <- m.removingSecretsTask.UpdateTitleMsg("Removing secrets (14 secrets)")
+	m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusDone)}
+	m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.ProgressMsg("converted terraform plan to JSON", 0, 0)}
 
 	ticketLink := viper.GetString("ticket-link")
 	if ticketLink == "" {
@@ -401,7 +419,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 
 	if changeUuid == uuid.Nil {
 		m.processing <- submitPlanUpdateMsg{"Creating a new change"}
-		m.processing <- m.blastRadiusTask.ProgressMsg("creating a new change", 0, 0)
+		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.ProgressMsg("creating a new change", 0, 0)}
 		log.Debug("Creating a new change")
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 			Msg: &sdp.CreateChangeRequest{
@@ -434,7 +452,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		)
 	} else {
 		m.processing <- submitPlanUpdateMsg{"Updating an existing change"}
-		m.processing <- m.blastRadiusTask.ProgressMsg("updating an existing change", 0, 0)
+		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.ProgressMsg("updating an existing change", 0, 0)}
 		log.WithField("change", changeUuid).Debug("Updating an existing change")
 		span.SetAttributes(
 			attribute.String("ovm.change.uuid", changeUuid.String()),
@@ -463,7 +481,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 
 	m.processing <- submitPlanUpdateMsg{"Uploading planned changes"}
 	log.WithField("change", changeUuid).Debug("Uploading planned changes")
-	m.processing <- m.blastRadiusTask.ProgressMsg("uploading planned changes", 0, 0)
+	m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.ProgressMsg("uploading planned changes", 0, 0)}
 
 	resultStream, err := client.UpdatePlannedChanges(ctx, &connect.Request[sdp.UpdatePlannedChangesRequest]{
 		Msg: &sdp.UpdatePlannedChangesRequest{
@@ -504,7 +522,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		case sdp.CalculateBlastRadiusResponse_STATE_DONE:
 			stateLabel = "done"
 		}
-		m.processing <- m.blastRadiusTask.ProgressMsg(stateLabel, msg.GetNumItems(), msg.GetNumEdges())
+		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.ProgressMsg(stateLabel, msg.GetNumItems(), msg.GetNumEdges())}
 	}
 	if resultStream.Err() != nil {
 		close(m.processing)
@@ -515,7 +533,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	changeUrl.Path = fmt.Sprintf("%v/changes/%v/blast-radius", changeUrl.Path, changeUuid)
 	log.WithField("change-url", changeUrl.String()).Info("Change ready")
 
-	m.processing <- changeUpdatedMsg{url: changeUrl.String()}
+	m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{url: changeUrl.String()}}
 
 	// wait for risk calculation to happen
 	m.processing <- submitPlanUpdateMsg{"Calculating risks"}
@@ -530,11 +548,11 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 			return fatalError{err: fmt.Errorf("processPlanCmd: failed to get change risks: %w", err)}
 		}
 
-		m.processing <- changeUpdatedMsg{
+		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{
 			url:            changeUrl.String(),
 			riskMilestones: riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetProgressMilestones(),
 			risks:          riskRes.Msg.GetChangeRiskMetadata().GetRisks(),
-		}
+		}}
 
 		if riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus() == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
 			time.Sleep(time.Second)
@@ -550,8 +568,8 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 
 	}
 
-	m.processing <- submitPlanFinishedMsg{"Done"}
-	m.processing <- m.blastRadiusTask.FinishMsg("calculated blast radius and risks", msg.GetNumItems(), msg.GetNumEdges())
+	m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.FinishMsg("calculated blast radius and risks", msg.GetNumItems(), msg.GetNumEdges())}
+	m.processing <- submitPlanUpdateMsg{submitPlanFinishedMsg{"Done"}}
 
 	return nil
 }
