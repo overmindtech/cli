@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 	"time"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/exp/maps"
 )
 
 type submitPlanModel struct {
@@ -33,7 +35,9 @@ type submitPlanModel struct {
 	progress   []string
 	changeUrl  string
 
-	removingSecretsTask taskModel
+	removingSecretsTask    taskModel
+	resourceExtractionTask taskModel
+	mappedItemDiffs        mappedItemDiffsMsg
 
 	blastRadiusTask           snapshotModel
 	blastRadiusItems          uint32
@@ -65,7 +69,8 @@ func NewSubmitPlanModel(planFile string) submitPlanModel {
 		processing: make(chan submitPlanUpdateMsg, 10), // provide a small buffer for sending updates, so we don't block the processing
 		progress:   []string{},
 
-		removingSecretsTask: NewTaskModel("Removing secrets"),
+		removingSecretsTask:    NewTaskModel("Removing secrets"),
+		resourceExtractionTask: NewTaskModel("Extracting resources"),
 
 		blastRadiusTask: NewSnapShotModel("Calculating Blast Radius"),
 		riskTask:        NewTaskModel("Calculating Risks"),
@@ -97,6 +102,7 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds,
 			m.submitPlanCmd,
 			m.removingSecretsTask.spinner.Tick,
+			m.resourceExtractionTask.spinner.Tick,
 			m.blastRadiusTask.spinner.Tick,
 			m.waitForSubmitPlanActivity,
 		)
@@ -106,6 +112,9 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// next update. This is still not perfect, but there's currently no
 		// better idea on the table.
 		cmds = append(cmds, tea.Sequence(func() tea.Msg { return msg.wrapped }, m.waitForSubmitPlanActivity))
+
+	case mappedItemDiffsMsg:
+		m.mappedItemDiffs = msg
 
 	case submitPlanFinishedMsg:
 		m.blastRadiusTask.status = taskStatusDone
@@ -186,6 +195,9 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.removingSecretsTask, cmd = m.removingSecretsTask.Update(msg)
 	cmds = append(cmds, cmd)
 
+	m.resourceExtractionTask, cmd = m.resourceExtractionTask.Update(msg)
+	cmds = append(cmds, cmd)
+
 	m.blastRadiusTask, cmd = m.blastRadiusTask.Update(msg)
 	cmds = append(cmds, cmd)
 
@@ -200,6 +212,25 @@ func (m submitPlanModel) View() string {
 
 	if m.removingSecretsTask.status != taskStatusPending {
 		bits = append(bits, m.removingSecretsTask.View())
+	}
+
+	if m.resourceExtractionTask.status != taskStatusPending {
+		bits = append(bits, m.resourceExtractionTask.View())
+		if m.mappedItemDiffs.numTotalChanges > 0 {
+			greenTick := lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "#00ff00", Dark: "#00ff00"}).Render("✓")
+			supportedTypes := maps.Keys(m.mappedItemDiffs.supported)
+			slices.Sort[[]string](supportedTypes)
+			for _, typ := range supportedTypes {
+				bits = append(bits, fmt.Sprintf("  %v %v (%v)", greenTick, typ, len(m.mappedItemDiffs.supported[typ])))
+			}
+
+			yellowCross := lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "#ffff00", Dark: "#ffff00"}).Render("✗")
+			unsupportedTypes := maps.Keys(m.mappedItemDiffs.unsupported)
+			slices.Sort[[]string](unsupportedTypes)
+			for _, typ := range unsupportedTypes {
+				bits = append(bits, fmt.Sprintf("  %v %v (%v)", yellowCross, typ, len(m.mappedItemDiffs.unsupported[typ])))
+			}
+		}
 	}
 
 	if m.blastRadiusTask.status != taskStatusPending {
@@ -239,14 +270,60 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	ctx := m.ctx
 	span := trace.SpanFromContext(ctx)
 
-	m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusRunning)}
-
 	if viper.GetString("ovm-test-fake") != "" {
+		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusRunning)}
 		time.Sleep(time.Second)
 		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusDone)}
 		time.Sleep(time.Second)
-		m.processing <- submitPlanUpdateMsg{"Fake creating a new change"}
+		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusRunning)}
 		time.Sleep(time.Second)
+
+		diffMsg := mappedItemDiffsMsg{
+			numTotalChanges: 13,
+			numSupported:    4,
+			numUnsupported:  9,
+			supported: map[string][]*sdp.MappedItemDiff{
+				"kubernetes_deployment": {
+					{},
+					{},
+				},
+				"kubernetes_secret": {
+					{},
+					{},
+				},
+			},
+			unsupported: map[string][]*sdp.MappedItemDiff{
+				"helm_release": {
+					{},
+				},
+				"kubectl_manifest": {
+					{},
+				},
+				"aws_guardduty_detector_feature": {
+					{},
+				},
+				"github_actions_environment_secret": {
+					{},
+					{},
+					{},
+				},
+				"auth0_client": {
+					{},
+					{},
+					{},
+				},
+			},
+		}
+		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateTitleMsg(
+			fmt.Sprintf("Extracting %v changing resources: %v supported %v unsupported",
+				diffMsg.numTotalChanges,
+				diffMsg.numSupported,
+				diffMsg.numUnsupported,
+			))}
+		m.processing <- submitPlanUpdateMsg{diffMsg}
+		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusDone)}
+
+		// TODO
 		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.ProgressMsg("fake processing", 1, 2)}
 		time.Sleep(time.Second)
 		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{url: "https://example.com/changes/abc"}}
@@ -374,6 +451,10 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		return nil
 	}
 
+	///////////////////////////////////////////////////////////////////
+	// Convert provided plan into JSON for easier parsing
+	///////////////////////////////////////////////////////////////////
+	m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusRunning)}
 	tfPlanJsonCmd := exec.CommandContext(ctx, "terraform", "show", "-json", m.planFile) // nolint:gosec // this is the file `terraform plan` already wrote to, so it's safe enough
 
 	tfPlanJsonCmd.Stderr = os.Stderr // TODO: capture and output this through the View() instead
@@ -385,18 +466,33 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		return fatalError{err: fmt.Errorf("processPlanCmd: failed to convert terraform plan to JSON: %w", err)}
 	}
 
-	plannedChanges, err := mappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
+	// TODO: count secrets in the plan to provide better feedback to user
+	// m.processing <- m.removingSecretsTask.UpdateTitleMsg("Removing secrets (14 secrets)")
+	m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusDone)}
+
+	///////////////////////////////////////////////////////////////////
+	// Extract changes from the plan and created mapped item diffs
+	///////////////////////////////////////////////////////////////////
+	m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusRunning)}
+	plannedChanges, diffMsg, err := mappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
 	if err != nil {
-		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusError)}
+		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusError)}
 		close(m.processing)
 		return fatalError{err: fmt.Errorf("processPlanCmd: failed to parse terraform plan: %w", err)}
 	}
 
-	// TODO: count secrets in the plan to provide better feedback to user
-	// m.processing <- m.removingSecretsTask.UpdateTitleMsg("Removing secrets (14 secrets)")
-	m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusDone)}
-	m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.ProgressMsg("converted terraform plan to JSON", 0, 0)}
+	m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateTitleMsg(
+		fmt.Sprintf("Extracting %v changing resources: %v supported %v unsupported",
+			diffMsg.numTotalChanges,
+			diffMsg.numSupported,
+			diffMsg.numUnsupported,
+		))}
+	m.processing <- submitPlanUpdateMsg{diffMsg}
+	m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusDone)}
 
+	///////////////////////////////////////////////////////////////////
+	// try to link up the plan with a Change and start submitting to the API
+	///////////////////////////////////////////////////////////////////
 	ticketLink := viper.GetString("ticket-link")
 	if ticketLink == "" {
 		ticketLink, err = getTicketLinkFromPlan(m.planFile)

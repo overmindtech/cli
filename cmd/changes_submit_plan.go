@@ -396,7 +396,7 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 
 	for _, f := range files {
 		lf["file"] = f
-		mappedItemDiffs, err := mappedItemDiffsFromPlanFile(ctx, f, lf)
+		mappedItemDiffs, _, err := mappedItemDiffsFromPlanFile(ctx, f, lf)
 		if err != nil {
 			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Error parsing terraform plan")
 			return 1

@@ -52,6 +52,16 @@ type tfPlanModel struct {
 // assert interface
 var _ FinalReportingModel = (*tfPlanModel)(nil)
 
+type mappedItemDiffsMsg struct {
+	filename        string
+	numSupported    int
+	numUnsupported  int
+	numTotalChanges int
+
+	supported   map[string][]*sdp.MappedItemDiff
+	unsupported map[string][]*sdp.MappedItemDiff
+}
+
 func NewTfPlanModel(args []string) tea.Model {
 	hasPlanOutSet := false
 	planFile := "overmind.plan"
@@ -166,12 +176,12 @@ func getTicketLinkFromPlan(planFile string) (string, error) {
 	return fmt.Sprintf("tfplan://{SHA256}%x", h.Sum(nil)), nil
 }
 
-func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, error) {
+func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, mappedItemDiffsMsg, error) {
 	// read results from `terraform show -json ${tfplan file}`
 	planJSON, err := os.ReadFile(fileName)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to read terraform plan")
-		return nil, err
+		return nil, mappedItemDiffsMsg{}, err
 	}
 
 	return mappedItemDiffsFromPlan(ctx, planJSON, fileName, lf)
@@ -185,16 +195,16 @@ func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fi
 // differences into supported and unsupported changes. Finally, it logs the
 // number of supported and unsupported changes and returns the mapped item
 // differences.
-func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, error) {
+func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, mappedItemDiffsMsg, error) {
 	// Check that we haven't been passed a state file
 	if isStateFile(planJson) {
-		return nil, fmt.Errorf("'%v' appears to be a state file, not a plan file", fileName)
+		return nil, mappedItemDiffsMsg{}, fmt.Errorf("'%v' appears to be a state file, not a plan file", fileName)
 	}
 
 	var plan Plan
 	err := json.Unmarshal(planJson, &plan)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse '%v': %w", fileName, err)
+		return nil, mappedItemDiffsMsg{}, fmt.Errorf("failed to parse '%v': %w", fileName, err)
 	}
 
 	plannedChangeGroupsVar := plannedChangeGroups{
@@ -211,7 +221,7 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 
 		itemDiff, err := itemDiffFromResourceChange(resourceChange)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create item diff for resource change: %w", err)
+			return nil, mappedItemDiffsMsg{}, fmt.Errorf("failed to create item diff for resource change: %w", err)
 		}
 
 		// Load mappings for this type. These mappings tell us how to create an
@@ -395,7 +405,14 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 		log.WithContext(ctx).Infof(Yellow.Color("  ✗ %v (%v)"), typ, len(plannedChanges))
 	}
 
-	return plannedChangeGroupsVar.MappedItemDiffs(), nil
+	return plannedChangeGroupsVar.MappedItemDiffs(), mappedItemDiffsMsg{
+		filename:        fileName,
+		numSupported:    numSupported,
+		numUnsupported:  numUnsupported,
+		numTotalChanges: numTotalChanges,
+		supported:       plannedChangeGroupsVar.supported,
+		unsupported:     plannedChangeGroupsVar.unsupported,
+	}, nil
 }
 
 func addTerraformBaseFlags(cmd *cobra.Command) {
