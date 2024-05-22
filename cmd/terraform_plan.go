@@ -46,8 +46,7 @@ type tfPlanModel struct {
 
 	submitPlanTask submitPlanModel
 
-	fatalError string
-	width      int
+	width int
 }
 
 // assert interface
@@ -125,10 +124,6 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case submitPlanFinishedMsg:
 		cmds = append(cmds, func() tea.Msg { return delayQuitMsg{} })
-
-	case fatalError:
-		m.fatalError = msg.err.Error()
-		cmds = append(cmds, tea.Quit)
 	}
 
 	rpm, cmd := m.runPlanTask.Update(msg)
