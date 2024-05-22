@@ -265,7 +265,7 @@ func (m initialiseSourcesModel) loadSourcesConfigCmd() tea.Msg {
 	configClient := AuthenticatedConfigClient(ctx, m.oi)
 	cfgValue, err := configClient.GetConfig(ctx, &connect.Request[sdp.GetConfigRequest]{
 		Msg: &sdp.GetConfigRequest{
-			Key: fmt.Sprintf("cli %v", m.action),
+			Key: "cli terraform",
 		},
 	})
 	if err != nil {
@@ -299,7 +299,7 @@ func (m initialiseSourcesModel) storeConfigCmd(aws_config, aws_profile string) t
 		}
 		_, err = configClient.SetConfig(ctx, &connect.Request[sdp.SetConfigRequest]{
 			Msg: &sdp.SetConfigRequest{
-				Key:   fmt.Sprintf("cli %v", m.action),
+				Key:   "cli terraform",
 				Value: string(jsonBuf),
 			},
 		})
