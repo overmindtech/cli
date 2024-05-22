@@ -217,14 +217,14 @@ func (m submitPlanModel) View() string {
 	if m.resourceExtractionTask.status != taskStatusPending {
 		bits = append(bits, m.resourceExtractionTask.View())
 		if m.mappedItemDiffs.numTotalChanges > 0 {
-			greenTick := lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "#00ff00", Dark: "#00ff00"}).Render("✓")
+			greenTick := lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✓")
 			supportedTypes := maps.Keys(m.mappedItemDiffs.supported)
 			slices.Sort[[]string](supportedTypes)
 			for _, typ := range supportedTypes {
 				bits = append(bits, fmt.Sprintf("  %v %v (%v)", greenTick, typ, len(m.mappedItemDiffs.supported[typ])))
 			}
 
-			yellowCross := lipgloss.NewStyle().Foreground(lipgloss.AdaptiveColor{Light: "#ffff00", Dark: "#ffff00"}).Render("✗")
+			yellowCross := lipgloss.NewStyle().Foreground(ColorPalette.BgWarning).Render("✗")
 			unsupportedTypes := maps.Keys(m.mappedItemDiffs.unsupported)
 			slices.Sort[[]string](unsupportedTypes)
 			for _, typ := range unsupportedTypes {
