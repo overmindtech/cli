@@ -147,9 +147,9 @@ Applying changes with ` + "`" + `terraform %v` + "`\n"
 		needApproval:     !autoapprove,
 
 		startingChange:         make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
-		startingChangeSnapshot: NewSnapShotModel("Starting Change"),
+		startingChangeSnapshot: NewSnapShotModel("Starting Change", "indexing resources"),
 		endingChange:           make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
-		endingChangeSnapshot:   NewSnapShotModel("Ending Change"),
+		endingChangeSnapshot:   NewSnapShotModel("Ending Change", "indexing resources"),
 		progress:               []string{},
 	}
 }
@@ -218,26 +218,26 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, m.waitForStartingActivity)
 
 	case startSnapshotMsg:
-		if msg.id == m.startingChangeSnapshot.spinner.ID() {
+		if msg.id == m.startingChangeSnapshot.ID() {
 			cmds = append(cmds, m.waitForStartingActivity)
-		} else if msg.id == m.endingChangeSnapshot.spinner.ID() {
+		} else if msg.id == m.endingChangeSnapshot.ID() {
 			cmds = append(cmds, m.waitForEndingActivity)
 		}
 
 	case progressSnapshotMsg:
-		if msg.id == m.startingChangeSnapshot.spinner.ID() {
+		if msg.id == m.startingChangeSnapshot.ID() {
 			cmds = append(cmds, m.waitForStartingActivity)
-		} else if msg.id == m.endingChangeSnapshot.spinner.ID() {
+		} else if msg.id == m.endingChangeSnapshot.ID() {
 			cmds = append(cmds, m.waitForEndingActivity)
 		}
 
 	case finishSnapshotMsg:
-		if msg.id == m.startingChangeSnapshot.spinner.ID() {
+		if msg.id == m.startingChangeSnapshot.ID() {
 			m.isStarting = false
 			// defer the actual command to give the view a chance to show the header
 			m.runTfApply = true
 			cmds = append(cmds, func() tea.Msg { return runTfApplyMsg{} })
-		} else if msg.id == m.endingChangeSnapshot.spinner.ID() {
+		} else if msg.id == m.endingChangeSnapshot.ID() {
 			cmds = append(cmds, func() tea.Msg { return delayQuitMsg{} })
 		}
 
@@ -307,11 +307,11 @@ func (m tfApplyModel) View() string {
 	if m.isStarting || m.runTfApply || m.isEnding {
 		bits = append(bits, markdownToString(m.processingHeader))
 
-		if m.startingChangeSnapshot.status != taskStatusPending {
+		if m.startingChangeSnapshot.overall.status != taskStatusPending {
 			bits = append(bits, m.startingChangeSnapshot.View())
 		}
 
-		if m.endingChangeSnapshot.status != taskStatusPending {
+		if m.endingChangeSnapshot.overall.status != taskStatusPending {
 			bits = append(bits, m.endingChangeSnapshot.View())
 		}
 
@@ -341,7 +341,7 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 		}
 
 		m.startingChange <- changeIdentifiedMsg{uuid: changeUuid}
-		m.startingChange <- m.startingChangeSnapshot.StartMsg("starting")
+		m.startingChange <- m.startingChangeSnapshot.StartMsg()
 
 		client := AuthenticatedChangesClient(ctx, oi)
 		startStream, err := client.StartChange(ctx, &connect.Request[sdp.StartChangeRequest]{
@@ -367,7 +367,7 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 			return fatalError{err: fmt.Errorf("failed to process start change: %w", startStream.Err())}
 		}
 
-		return m.startingChangeSnapshot.FinishMsg(msg.GetState().String(), msg.GetNumItems(), msg.GetNumEdges())
+		return m.startingChangeSnapshot.FinishMsg()
 	}
 }
 
@@ -382,7 +382,7 @@ func (m tfApplyModel) startEndChangeCmd() tea.Cmd {
 	changeUuid := m.changeUuid
 
 	return func() tea.Msg {
-		m.endingChange <- m.endingChangeSnapshot.StartMsg("ending")
+		m.endingChange <- m.endingChangeSnapshot.StartMsg()
 
 		client := AuthenticatedChangesClient(ctx, oi)
 		endStream, err := client.EndChange(ctx, &connect.Request[sdp.EndChangeRequest]{
@@ -408,7 +408,7 @@ func (m tfApplyModel) startEndChangeCmd() tea.Cmd {
 			return fatalError{err: fmt.Errorf("failed to process end change: %w", endStream.Err())}
 		}
 
-		return m.endingChangeSnapshot.FinishMsg(msg.GetState().String(), msg.GetNumItems(), msg.GetNumEdges())
+		return m.endingChangeSnapshot.FinishMsg()
 	}
 }
 

@@ -2,20 +2,23 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type snapshotModel struct {
-	taskModel
+	overall     taskModel
+	discovering taskModel
+	saving      taskModel
+
 	state string
 	items uint32
 	edges uint32
 }
 
 type startSnapshotMsg struct {
-	id       int
-	newState string
+	id int
 }
 type progressSnapshotMsg struct {
 	id       int
@@ -23,22 +26,27 @@ type progressSnapshotMsg struct {
 	items    uint32
 	edges    uint32
 }
+type savingSnapshotMsg struct {
+	id int
+}
 type finishSnapshotMsg struct {
-	id       int
-	newState string
-	items    uint32
-	edges    uint32
+	id int
 }
 
-func NewSnapShotModel(title string) snapshotModel {
+func NewSnapShotModel(header, title string) snapshotModel {
 	return snapshotModel{
-		taskModel: NewTaskModel(title),
-		state:     "pending",
+		overall:     NewTaskModel(header),
+		discovering: NewTaskModel(title),
+		saving:      NewTaskModel("Saving"),
 	}
 }
 
 func (m snapshotModel) Init() tea.Cmd {
-	return m.taskModel.Init()
+	return tea.Batch(
+		m.overall.Init(),
+		m.discovering.Init(),
+		m.saving.Init(),
+	)
 }
 
 func (m snapshotModel) Update(msg tea.Msg) (snapshotModel, tea.Cmd) {
@@ -46,30 +54,45 @@ func (m snapshotModel) Update(msg tea.Msg) (snapshotModel, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case startSnapshotMsg:
-		if m.spinner.ID() != msg.id {
+		if m.overall.spinner.ID() != msg.id {
 			return m, nil
 		}
-		m.state = msg.newState
-		m.taskModel.status = taskStatusRunning
-		cmds = append(cmds, m.spinner.Tick)
+		m.overall.status = taskStatusRunning
+		cmds = append(cmds, m.overall.spinner.Tick)
 	case progressSnapshotMsg:
-		if m.spinner.ID() != msg.id {
+		if m.overall.spinner.ID() != msg.id {
 			return m, nil
 		}
 		m.state = msg.newState
 		m.items = msg.items
 		m.edges = msg.edges
+
+		m.discovering.status = taskStatusRunning
+		cmds = append(cmds, m.discovering.spinner.Tick)
+	case savingSnapshotMsg:
+		if m.overall.spinner.ID() != msg.id {
+			return m, nil
+		}
+
+		m.discovering.status = taskStatusDone
+
+		m.saving.status = taskStatusRunning
+		cmds = append(cmds, m.saving.spinner.Tick)
+
 	case finishSnapshotMsg:
-		if m.spinner.ID() != msg.id {
+		if m.overall.spinner.ID() != msg.id {
 			return m, nil
 		}
-		m.state = msg.newState
-		m.items = msg.items
-		m.edges = msg.edges
-		m.taskModel.status = taskStatusDone
+		m.overall.status = taskStatusDone
+		m.discovering.status = taskStatusDone
+		m.saving.status = taskStatusDone
 	default:
 		var cmd tea.Cmd
-		m.taskModel, cmd = m.taskModel.Update(msg)
+		m.overall, cmd = m.overall.Update(msg)
+		cmds = append(cmds, cmd)
+		m.discovering, cmd = m.discovering.Update(msg)
+		cmds = append(cmds, cmd)
+		m.saving, cmd = m.saving.Update(msg)
 		cmds = append(cmds, cmd)
 	}
 
@@ -79,42 +102,67 @@ func (m snapshotModel) Update(msg tea.Msg) (snapshotModel, tea.Cmd) {
 func (m snapshotModel) View() string {
 	// TODO: add progressbar; complication: we do not have a expected number of
 	// items/edges to count towards for the progressbar
-	if m.items == 0 && m.edges == 0 {
-		return fmt.Sprintf("%v - %v", m.taskModel.View(), m.state)
-	} else if m.items == 1 && m.edges == 0 {
-		return fmt.Sprintf("%v - %v: 1 item", m.taskModel.View(), m.state)
-	} else if m.items == 1 && m.edges == 1 {
-		return fmt.Sprintf("%v - %v: 1 item, 1 edge", m.taskModel.View(), m.state)
-	} else if m.items > 1 && m.edges == 0 {
-		return fmt.Sprintf("%v - %v: %d items", m.taskModel.View(), m.state, m.items)
-	} else if m.items > 1 && m.edges == 1 {
-		return fmt.Sprintf("%v - %v: %d items, 1 edge", m.taskModel.View(), m.state, m.items)
+	bits := []string{}
+	bits = append(bits, m.overall.View())
+
+	itemStr := ""
+	if m.items == 0 {
+		itemStr = "0 items"
+	} else if m.items == 1 {
+		itemStr = "1 item"
 	} else {
-		return fmt.Sprintf("%v - %v: %d items, %d edges", m.taskModel.View(), m.state, m.items, m.edges)
+		itemStr = fmt.Sprintf("%d items", m.items)
+	}
+
+	edgeStr := ""
+	if m.edges == 0 {
+		edgeStr = "0 edges"
+	} else if m.edges == 1 {
+		edgeStr = "1 edge"
+	} else {
+		edgeStr = fmt.Sprintf("%d edges", m.edges)
+	}
+
+	detailStr := m.state
+	if itemStr != "" || edgeStr != "" {
+		detailStr = fmt.Sprintf("%s (%s, %s)", m.state, itemStr, edgeStr)
+	}
+
+	bits = append(bits, fmt.Sprintf("  %v - %v", m.discovering.View(), detailStr))
+	bits = append(bits, fmt.Sprintf("  %v", m.saving.View()))
+	return strings.Join(bits, "\n")
+}
+
+func (m snapshotModel) ID() int {
+	return m.overall.spinner.ID()
+}
+
+func (m snapshotModel) StartMsg() tea.Msg {
+	return startSnapshotMsg{
+		id: m.overall.spinner.ID(),
 	}
 }
 
-func (m snapshotModel) StartMsg(newState string) tea.Msg {
-	return startSnapshotMsg{
-		id:       m.spinner.ID(),
-		newState: newState,
-	}
+func (m snapshotModel) UpdateStatusMsg(newStatus taskStatus) tea.Msg {
+	return m.overall.UpdateStatusMsg(newStatus)
 }
 
 func (m snapshotModel) ProgressMsg(newState string, items, edges uint32) tea.Msg {
 	return progressSnapshotMsg{
-		id:       m.spinner.ID(),
+		id:       m.overall.spinner.ID(),
 		newState: newState,
 		items:    items,
 		edges:    edges,
 	}
 }
+func (m snapshotModel) SavingMsg() tea.Msg {
+	return savingSnapshotMsg{
+		id: m.overall.spinner.ID(),
+	}
+}
 
-func (m snapshotModel) FinishMsg(newState string, items, edges uint32) tea.Msg {
+func (m snapshotModel) FinishMsg() tea.Msg {
 	return finishSnapshotMsg{
-		id:       m.spinner.ID(),
-		newState: newState,
-		items:    items,
-		edges:    edges,
+		id: m.overall.spinner.ID(),
 	}
 }
