@@ -27,18 +27,6 @@ func waitForCancellation(ctx context.Context, cancel context.CancelFunc) tea.Cmd
 	}
 }
 
-// fatalError is a wrapper for errors that should abort the running tea.Program.
-type fatalError struct {
-	id  int
-	err error
-}
-
-// otherError is a wrapper for errors that should NOT abort the running tea.Program.
-type otherError struct {
-	id  int
-	err error
-}
-
 type taskStatus int
 
 const (

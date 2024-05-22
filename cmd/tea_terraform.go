@@ -42,6 +42,18 @@ type cmdModel struct {
 
 type delayQuitMsg struct{}
 
+// fatalError is a wrapper for errors that should abort the running tea.Program.
+type fatalError struct {
+	id  int
+	err error
+}
+
+// otherError is a wrapper for errors that should NOT abort the running tea.Program.
+type otherError struct {
+	id  int
+	err error
+}
+
 func (m cmdModel) Init() tea.Cmd {
 	// use the main cli context to not take this time from the main timeout
 	m.tasks["00_oi"] = NewInstanceLoaderModel(m.ctx, m.app)
