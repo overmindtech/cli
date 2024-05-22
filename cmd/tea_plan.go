@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/attribute"
@@ -103,9 +104,11 @@ func (m runPlanModel) View() string {
 
 	switch m.taskModel.status {
 	case taskStatusPending, taskStatusRunning:
-		planHeader := `Running ` + "`" + `terraform %v` + "`\n"
-		planHeader = fmt.Sprintf(planHeader, strings.Join(m.args, " "))
-		bits = append(bits, markdownToString(planHeader))
+		bits = append(bits,
+			fmt.Sprintf("%v Running 'terraform %v'",
+				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
+				strings.Join(m.args, " "),
+			))
 	case taskStatusDone:
 		bits = append(bits, m.taskModel.View())
 	case taskStatusError, taskStatusSkipped:
