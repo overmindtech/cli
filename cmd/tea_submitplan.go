@@ -217,7 +217,7 @@ func (m submitPlanModel) View() string {
 	if m.resourceExtractionTask.status != taskStatusPending {
 		bits = append(bits, m.resourceExtractionTask.View())
 		if m.mappedItemDiffs.numTotalChanges > 0 {
-			greenTick := lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✓")
+			greenTick := lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")
 			supportedTypes := maps.Keys(m.mappedItemDiffs.supported)
 			slices.Sort[[]string](supportedTypes)
 			for _, typ := range supportedTypes {

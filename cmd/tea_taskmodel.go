@@ -113,7 +113,7 @@ func (m taskModel) View() string {
 	case taskStatusDone:
 		label = lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")
 	case taskStatusError:
-		label = lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("x")
+		label = lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("✗")
 	case taskStatusSkipped:
 		label = lipgloss.NewStyle().Foreground(ColorPalette.LabelFaint).Render("-")
 	default:

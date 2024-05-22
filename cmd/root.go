@@ -236,7 +236,7 @@ Then enter the code:
 	case Authenticated:
 		output = lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎") + " Authenticated successfully. Press any key to continue."
 	case ErrorAuthenticating:
-		output = lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("x") + " Unable to authenticate. Try again."
+		output = lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("✗") + " Unable to authenticate. Try again."
 	}
 
 	return containerStyle.Render(output)
