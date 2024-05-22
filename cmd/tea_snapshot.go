@@ -42,12 +42,16 @@ func (m snapshotModel) Init() tea.Cmd {
 }
 
 func (m snapshotModel) Update(msg tea.Msg) (snapshotModel, tea.Cmd) {
+	cmds := []tea.Cmd{}
+
 	switch msg := msg.(type) {
 	case startSnapshotMsg:
 		if m.spinner.ID() != msg.id {
 			return m, nil
 		}
 		m.state = msg.newState
+		m.taskModel.status = taskStatusRunning
+		cmds = append(cmds, m.spinner.Tick)
 	case progressSnapshotMsg:
 		if m.spinner.ID() != msg.id {
 			return m, nil
@@ -62,17 +66,19 @@ func (m snapshotModel) Update(msg tea.Msg) (snapshotModel, tea.Cmd) {
 		m.state = msg.newState
 		m.items = msg.items
 		m.edges = msg.edges
+		m.taskModel.status = taskStatusDone
 	default:
 		var cmd tea.Cmd
 		m.taskModel, cmd = m.taskModel.Update(msg)
-		return m, cmd
+		cmds = append(cmds, cmd)
 	}
-	return m, nil
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m snapshotModel) View() string {
-	// TODO: add spinner and/or progressbar; complication: we do not have a
-	// expected number of items/edges to count towards for the progressbar
+	// TODO: add progressbar; complication: we do not have a expected number of
+	// items/edges to count towards for the progressbar
 	if m.items == 0 && m.edges == 0 {
 		return fmt.Sprintf("%v - %v", m.taskModel.View(), m.state)
 	} else if m.items == 1 && m.edges == 0 {

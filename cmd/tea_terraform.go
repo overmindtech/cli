@@ -80,7 +80,7 @@ func (m cmdModel) Init() tea.Cmd {
 }
 
 func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	log.Debugf("cmdModel: Update %T received %+v", msg, msg)
+	log.Debugf("cmdModel: Update %T received %#v", msg, msg)
 
 	batch := []tea.Cmd{}
 

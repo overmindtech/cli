@@ -38,8 +38,8 @@ type tfPlanModel struct {
 	oi  OvermindInstance
 
 	args        []string
-	runPlanTask runPlanModel
 	planFile    string
+	runPlanTask runPlanModel
 
 	runPlanFinished       bool
 	revlinkWarmupFinished bool
