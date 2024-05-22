@@ -249,10 +249,10 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
 		}
 
-		_, span := tracing.Tracer().Start(m.ctx, "terraform apply", trace.WithAttributes(
+		_, span := tracing.Tracer().Start(m.ctx, "terraform apply", trace.WithAttributes( // nolint:spancheck // will be ended in the tea.ExecProcess cleanup func
 			attribute.String("command", strings.Join(m.args, " ")),
 		))
-		return m, tea.ExecProcess(
+		return m, tea.ExecProcess( // nolint:spancheck // will be ended in the tea.ExecProcess cleanup func
 			c,
 			func(err error) tea.Msg {
 				defer span.End()
