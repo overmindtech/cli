@@ -111,10 +111,8 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.fatalErrorSeen = true
 
-		// record the fatal error here if it was not from a specific taskModel
-		if msg.id == 0 {
-			m.fatalError = msg.err.Error()
-		}
+		// record the fatal error here, to repeat it at the end of the process
+		m.fatalError = msg.err.Error()
 
 		return m, tea.Sequence(
 			tea.Batch(batch...),
