@@ -75,6 +75,9 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func(args [
 			// leave the log file open until the very last moment, so we capture everything
 			// defer f.Close()
 			log.SetOutput(f)
+			formatter := new(log.TextFormatter)
+			formatter.DisableTimestamp = false
+			log.SetFormatter(formatter)
 			viper.Set("log", "trace")
 			log.SetLevel(log.TraceLevel)
 		} else {
