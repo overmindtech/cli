@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/attribute"
@@ -21,6 +22,7 @@ type runPlanModel struct {
 	args     []string
 	planFile string
 
+	revlinkTask revlinkWarmupModel
 	taskModel
 }
 type runPlanNowMsg struct{}
@@ -31,12 +33,16 @@ func NewRunPlanModel(args []string, planFile string) runPlanModel {
 		args:     args,
 		planFile: planFile,
 
-		taskModel: NewTaskModel("Planning Changes"),
+		revlinkTask: NewRevlinkWarmupModel(),
+		taskModel:   NewTaskModel("Planning Changes"),
 	}
 }
 
 func (m runPlanModel) Init() tea.Cmd {
-	return nil
+	return tea.Batch(
+		m.revlinkTask.Init(),
+		m.taskModel.Init(),
+	)
 }
 
 func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -93,8 +99,12 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// propagate commands to components
 		// m.taskModel, cmd = m.taskModel.Update(msg)
 		// cmds = append(cmds, cmd)
-
 	}
+
+	var cmd tea.Cmd
+	m.revlinkTask, cmd = m.revlinkTask.Update(msg)
+	cmds = append(cmds, cmd)
+
 	return m, tea.Batch(cmds...)
 }
 
@@ -103,11 +113,14 @@ func (m runPlanModel) View() string {
 
 	switch m.taskModel.status {
 	case taskStatusPending, taskStatusRunning:
-		planHeader := `Running ` + "`" + `terraform %v` + "`\n"
-		planHeader = fmt.Sprintf(planHeader, strings.Join(m.args, " "))
-		bits = append(bits, markdownToString(planHeader))
+		bits = append(bits,
+			fmt.Sprintf("%v Running 'terraform %v'",
+				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
+				strings.Join(m.args, " "),
+			))
 	case taskStatusDone:
 		bits = append(bits, m.taskModel.View())
+		bits = append(bits, m.revlinkTask.View())
 	case taskStatusError, taskStatusSkipped:
 		// handled by caller
 	}

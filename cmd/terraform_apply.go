@@ -9,6 +9,7 @@ import (
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
@@ -48,8 +49,7 @@ type tfApplyModel struct {
 
 	submitPlanTask submitPlanModel
 
-	processingHeader string
-	needApproval     bool
+	needApproval bool
 
 	changeUuid             uuid.UUID
 	isStarting             bool
@@ -128,11 +128,6 @@ func NewTfApplyModel(args []string) tea.Model {
 
 	args = append([]string{"apply"}, args...)
 
-	processingHeader := `# Applying Changes
-
-Applying changes with ` + "`" + `terraform %v` + "`\n"
-	processingHeader = fmt.Sprintf(processingHeader, strings.Join(args, " "))
-
 	return tfApplyModel{
 		args: args,
 
@@ -143,8 +138,7 @@ Applying changes with ` + "`" + `terraform %v` + "`\n"
 
 		submitPlanTask: NewSubmitPlanModel(planFile),
 
-		processingHeader: processingHeader,
-		needApproval:     !autoapprove,
+		needApproval: !autoapprove,
 
 		startingChange:         make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
 		startingChangeSnapshot: NewSnapShotModel("Starting Change", "indexing resources"),
@@ -305,7 +299,11 @@ func (m tfApplyModel) View() string {
 	}
 
 	if m.isStarting || m.runTfApply || m.isEnding {
-		bits = append(bits, markdownToString(m.processingHeader))
+		bits = append(bits,
+			fmt.Sprintf("%v Running 'terraform %v'",
+				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
+				strings.Join(m.args, " "),
+			))
 
 		if m.startingChangeSnapshot.overall.status != taskStatusPending {
 			bits = append(bits, m.startingChangeSnapshot.View())

@@ -62,7 +62,6 @@ func (m cmdModel) Init() tea.Cmd {
 	if viper.GetString("ovm-test-fake") != "" {
 		// don't init sources on test-fake runs
 		// m.tasks["02_config"] = NewInitialiseSourcesModel()
-		m.tasks["03_revlink"] = NewRevlinkWarmupModel()
 		return tea.Batch(
 			waitForCancellation(m.ctx, m.cancel),
 			m.tasks["00_oi"].Init(),
@@ -72,21 +71,18 @@ func (m cmdModel) Init() tea.Cmd {
 				time.Sleep(3 * time.Second)
 				return sourcesInitialisedMsg{}
 			},
-			m.tasks["03_revlink"].Init(),
 			m.cmd.Init(),
 		)
 	}
 
 	// these wait for taking a ctx until timeout and token are attached
 	m.tasks["02_config"] = NewInitialiseSourcesModel()
-	m.tasks["03_revlink"] = NewRevlinkWarmupModel()
 
 	return tea.Batch(
 		waitForCancellation(m.ctx, m.cancel),
 		m.tasks["00_oi"].Init(),
 		m.tasks["01_token"].Init(),
 		m.tasks["02_config"].Init(),
-		m.tasks["03_revlink"].Init(),
 		m.cmd.Init(),
 	)
 }
