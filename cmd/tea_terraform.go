@@ -114,10 +114,7 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// record the fatal error here, to repeat it at the end of the process
 		m.fatalError = msg.err.Error()
 
-		return m, tea.Sequence(
-			tea.Batch(cmds...),
-			tea.Quit,
-		)
+		cmds = append(cmds, func() tea.Msg { return delayQuitMsg{} })
 
 	case instanceLoadedMsg:
 		m.oi = msg.instance
@@ -125,9 +122,9 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// delete(m.tasks, "00_oi")
 
 	case tokenAvailableMsg:
-		tm, cmd := m.tokenChecks(msg.token)
+		var cmd tea.Cmd
+		m, cmd = m.tokenChecks(msg.token)
 		cmds = append(cmds, cmd)
-		return tm, tea.Batch(cmds...)
 
 	case runPlanNowMsg, runTfApplyMsg:
 		m.terraformHasStarted = true

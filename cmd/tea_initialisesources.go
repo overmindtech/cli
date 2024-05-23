@@ -156,16 +156,11 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.id == m.spinner.ID() {
 			m.errors = append(m.errors, fmt.Sprintf("Note: %v", msg.err))
 		}
-	case fatalError:
-		if msg.id == m.spinner.ID() {
-			m.status = taskStatusError
-			m.title = markdownToString(fmt.Sprintf("> error while configuring AWS access: %v", msg.err))
-		}
-	default:
-		var taskCmd tea.Cmd
-		m.taskModel, taskCmd = m.taskModel.Update(msg)
-		cmds = append(cmds, taskCmd)
 	}
+
+	var taskCmd tea.Cmd
+	m.taskModel, taskCmd = m.taskModel.Update(msg)
+	cmds = append(cmds, taskCmd)
 
 	// process the form if it is not yet done
 	if m.awsConfigForm != nil && !m.awsConfigFormDone {
