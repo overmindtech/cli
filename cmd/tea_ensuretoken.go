@@ -96,7 +96,7 @@ func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case displayAuthorizationInstructionsMsg:
 		m.config = msg.config
 		m.deviceCode = msg.deviceCode
-
+		m.status = taskStatusDone // avoid console flickering to allow click to be registered
 		m.title = "Manual device authorization."
 		beginAuthMessage := `# Authenticate with a browser
 
@@ -133,14 +133,17 @@ Then enter the code:
 	case tokenLoadedMsg:
 		m.status = taskStatusDone
 		m.title = "Using stored token"
+		m.deviceMessage = ""
 		return m, m.tokenAvailable(msg.token)
 	case tokenReceivedMsg:
 		m.status = taskStatusDone
 		m.title = "Authentication successful, using API key"
+		m.deviceMessage = ""
 		return m, m.tokenAvailable(msg.token)
 	case tokenStoredMsg:
 		m.status = taskStatusDone
 		m.title = fmt.Sprintf("Authentication successful, token stored locally (%v)", msg.file)
+		m.deviceMessage = ""
 		return m, m.tokenAvailable(msg.token)
 	case otherError:
 		if msg.id == m.spinner.ID() {
@@ -159,7 +162,7 @@ func (m ensureTokenModel) View() string {
 	if len(m.errors) > 0 {
 		view += fmt.Sprintf("\n%v\n", strings.Join(m.errors, "\n"))
 	}
-	if m.deviceMessage != "" && !(m.status == taskStatusDone || m.status == taskStatusError) {
+	if m.deviceMessage != "" {
 		view += fmt.Sprintf("\n%v\n", m.deviceMessage)
 	}
 	return view
