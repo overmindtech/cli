@@ -251,9 +251,9 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		_, span := tracing.Tracer().Start(m.ctx, "terraform apply", trace.WithAttributes( // nolint:spancheck // will be ended in the tea.Exec cleanup func
 			attribute.String("command", strings.Join(m.args, " ")),
 		))
-		return m, tea.Sequence(
+		return m, tea.Sequence( // nolint:spancheck // will be ended in the tea.Exec cleanup func
 			func() tea.Msg { return freezeViewMsg{} },
-			tea.Exec( // nolint:spancheck // will be ended in the tea.Exec cleanup func
+			tea.Exec(
 				m.execCommandFunc(c),
 				func(err error) tea.Msg {
 					defer span.End()
