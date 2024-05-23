@@ -204,7 +204,7 @@ func MarkdownStyle() ansi.StyleConfig {
 			StylePrimitive: ansi.StylePrimitive{
 				Italic: ptrBool(true),
 			},
-			Indent:      ptrUint(2),
+			Indent:      ptrUint(1),
 			IndentToken: ptrString("│ "),
 		},
 		List: ansi.StyleList{

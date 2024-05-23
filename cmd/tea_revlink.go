@@ -66,10 +66,6 @@ func (m revlinkWarmupModel) Update(msg tea.Msg) (revlinkWarmupModel, tea.Cmd) {
 		cmds = append(cmds, m.waitForStatusActivity)
 	case revlinkWarmupFinishedMsg:
 		m.taskModel.status = taskStatusDone
-	case fatalError:
-		if msg.id == m.spinner.ID() {
-			m.taskModel.status = taskStatusError
-		}
 	default:
 		var taskCmd tea.Cmd
 		m.taskModel, taskCmd = m.taskModel.Update(msg)

@@ -22,19 +22,21 @@ type runPlanModel struct {
 	args     []string
 	planFile string
 
-	revlinkTask revlinkWarmupModel
+	execCommandFunc ExecCommandFunc
+	revlinkTask     revlinkWarmupModel
 	taskModel
 }
 type runPlanNowMsg struct{}
 type runPlanFinishedMsg struct{}
 
-func NewRunPlanModel(args []string, planFile string) runPlanModel {
+func NewRunPlanModel(args []string, planFile string, execCommandFunc ExecCommandFunc) runPlanModel {
 	return runPlanModel{
 		args:     args,
 		planFile: planFile,
 
-		revlinkTask: NewRevlinkWarmupModel(),
-		taskModel:   NewTaskModel("Planning Changes"),
+		revlinkTask:     NewRevlinkWarmupModel(),
+		execCommandFunc: execCommandFunc,
+		taskModel:       NewTaskModel("Planning Changes"),
 	}
 }
 
@@ -77,22 +79,26 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			c = exec.CommandContext(m.ctx, "bash", "-c", "for i in $(seq 100); do echo fake terraform plan progress line $i of 100; done; sleep 1")
 		}
 
-		_, span := tracing.Tracer().Start(m.ctx, "terraform plan", trace.WithAttributes(
+		_, span := tracing.Tracer().Start(m.ctx, "terraform plan", trace.WithAttributes( // nolint:spancheck // will be ended in the tea.Exec cleanup func
 			attribute.String("command", strings.Join(m.args, " ")),
 		))
-		cmds = append(cmds, tea.ExecProcess(
-			c,
-			func(err error) tea.Msg {
-				defer span.End()
+		cmds = append(cmds,
+			tea.Sequence(
+				func() tea.Msg { return freezeViewMsg{} },
+				tea.Exec( // nolint:spancheck // will be ended in the tea.Exec cleanup func
+					m.execCommandFunc(c),
+					func(err error) tea.Msg {
+						defer span.End()
 
-				if err != nil {
-					return fatalError{err: fmt.Errorf("failed to run terraform plan: %w", err)}
-				}
-				return runPlanFinishedMsg{}
-			}))
+						if err != nil {
+							return fatalError{err: fmt.Errorf("failed to run terraform plan: %w", err)}
+						}
+						return runPlanFinishedMsg{}
+					})))
 
 	case runPlanFinishedMsg:
 		m.taskModel.status = taskStatusDone
+		cmds = append(cmds, func() tea.Msg { return unfreezeViewMsg{} })
 
 	default:
 		// var cmd tea.Cmd

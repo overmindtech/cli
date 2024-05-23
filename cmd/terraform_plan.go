@@ -62,7 +62,7 @@ type mappedItemDiffsMsg struct {
 	unsupported map[string][]*sdp.MappedItemDiff
 }
 
-func NewTfPlanModel(args []string) tea.Model {
+func NewTfPlanModel(args []string, execCommandFunc ExecCommandFunc) tea.Model {
 	hasPlanOutSet := false
 	planFile := "overmind.plan"
 	for i, a := range args {
@@ -97,7 +97,7 @@ func NewTfPlanModel(args []string) tea.Model {
 
 	return tfPlanModel{
 		args:           args,
-		runPlanTask:    NewRunPlanModel(args, planFile),
+		runPlanTask:    NewRunPlanModel(args, planFile, execCommandFunc),
 		submitPlanTask: NewSubmitPlanModel(planFile),
 		planFile:       planFile,
 	}
@@ -131,6 +131,9 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.revlinkWarmupFinished {
 			cmds = append(cmds, func() tea.Msg { return submitPlanNowMsg{} })
 		}
+
+	case submitPlanNowMsg:
+		cmds = append(cmds, func() tea.Msg { return hideStartupStatusMsg{} })
 
 	case submitPlanFinishedMsg:
 		cmds = append(cmds, func() tea.Msg { return delayQuitMsg{} })
