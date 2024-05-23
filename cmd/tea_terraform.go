@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -230,8 +231,14 @@ func (m cmdModel) View() string {
 
 	bits = append(bits, m.cmd.View())
 	if m.fatalError != "" {
-		bits = append(bits, markdownToString(fmt.Sprintf("> Fatal Error: %v\n", m.fatalError)))
+		md := markdownToString(fmt.Sprintf("> Fatal Error: %v\n", m.fatalError))
+		md, _ = strings.CutPrefix(md, "\n")
+		md, _ = strings.CutSuffix(md, "\n")
+		bits = append(bits, fmt.Sprintf("%v", md))
 	}
+	bits = slices.DeleteFunc(bits, func(s string) bool {
+		return s == "" || s == "\n"
+	})
 	return strings.Join(bits, "\n")
 }
 
