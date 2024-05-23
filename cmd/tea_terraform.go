@@ -90,7 +90,7 @@ func (m cmdModel) Init() tea.Cmd {
 func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	log.Debugf("cmdModel: Update %T received %#v", msg, msg)
 
-	batch := []tea.Cmd{}
+	cmds := []tea.Cmd{}
 
 	// special case the messages that need to be handled at this level
 	switch msg := msg.(type) {
@@ -115,7 +115,7 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.fatalError = msg.err.Error()
 
 		return m, tea.Sequence(
-			tea.Batch(batch...),
+			tea.Batch(cmds...),
 			tea.Quit,
 		)
 
@@ -126,8 +126,8 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tokenAvailableMsg:
 		tm, cmd := m.tokenChecks(msg.token)
-		batch = append(batch, cmd)
-		return tm, tea.Batch(batch...)
+		cmds = append(cmds, cmd)
+		return tm, tea.Batch(cmds...)
 
 	case runPlanNowMsg, runTfApplyMsg:
 		m.terraformHasStarted = true
@@ -137,7 +137,7 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		skipView(m.View())
 
 	case delayQuitMsg:
-		batch = append(batch, tea.Quit)
+		cmds = append(cmds, tea.Quit)
 
 	}
 
@@ -145,7 +145,7 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.cmd, cmd = m.cmd.Update(msg)
 	if cmd != nil {
-		batch = append(batch, cmd)
+		cmds = append(cmds, cmd)
 	}
 
 	// pass all messages to all tasks
@@ -153,11 +153,11 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		tm, cmd := t.Update(msg)
 		m.tasks[k] = tm
 		if cmd != nil {
-			batch = append(batch, cmd)
+			cmds = append(cmds, cmd)
 		}
 	}
 
-	return m, tea.Batch(batch...)
+	return m, tea.Batch(cmds...)
 }
 
 // skipView scrolls the terminal contents up after ExecCommand() to avoid
