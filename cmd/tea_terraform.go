@@ -37,12 +37,16 @@ type cmdModel struct {
 	frozen     bool
 	frozenView string // this gets set if the view is frozen, and will be used to render the last view using the cliExecCommand
 
+	hideStartupStatus bool
+
 	// business logic. This model will implement the actual CLI functionality requested.
 	cmd tea.Model
 }
 
 type freezeViewMsg struct{}
 type unfreezeViewMsg struct{}
+
+type hideStartupStatusMsg struct{}
 
 type delayQuitMsg struct{}
 
@@ -108,6 +112,8 @@ func (m *cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case unfreezeViewMsg:
 		m.frozen = false
 		m.frozenView = ""
+	case hideStartupStatusMsg:
+		m.hideStartupStatus = true
 
 	case fatalError:
 		log.WithError(msg.err).WithField("msg.id", msg.id).Debug("cmdModel: fatalError received")
@@ -202,35 +208,31 @@ func (m cmdModel) View() string {
 	if m.frozen {
 		return ""
 	}
-	// show tasks in key order, skipping pending tasks to keep the ui uncluttered
-	allDone := true
-	tasks := make([]string, 0, len(m.tasks))
-	keys := make([]string, 0, len(m.tasks))
-	for k := range m.tasks {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		t, ok := m.tasks[k].(WithTaskModel)
-		if ok {
-			if t.TaskModel().status != taskStatusDone {
-				allDone = false
-			}
-			if t.TaskModel().status == taskStatusPending {
-				continue
-			}
+	bits := []string{}
+
+	if !m.hideStartupStatus {
+		// show tasks in key order, skipping pending bits to keep the ui uncluttered
+		keys := make([]string, 0, len(m.tasks))
+		for k := range m.tasks {
+			keys = append(keys, k)
 		}
-		tasks = append(tasks, m.tasks[k].View())
+		sort.Strings(keys)
+		for _, k := range keys {
+			t, ok := m.tasks[k].(WithTaskModel)
+			if ok {
+				if t.TaskModel().status == taskStatusPending {
+					continue
+				}
+			}
+			bits = append(bits, m.tasks[k].View())
+		}
 	}
-	if allDone {
-		// no need to show setup tasks after they're all done
-		tasks = []string{}
-	}
-	tasks = append(tasks, m.cmd.View())
+
+	bits = append(bits, m.cmd.View())
 	if m.fatalError != "" {
-		tasks = append(tasks, markdownToString(fmt.Sprintf("> Fatal Error: %v\n", m.fatalError)))
+		bits = append(bits, markdownToString(fmt.Sprintf("> Fatal Error: %v\n", m.fatalError)))
 	}
-	return strings.Join(tasks, "\n")
+	return strings.Join(bits, "\n")
 }
 
 var applyOnlyArgs = []string{

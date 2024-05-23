@@ -198,6 +198,8 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			})
 		}
+	case submitPlanNowMsg:
+		cmds = append(cmds, func() tea.Msg { return hideStartupStatusMsg{} })
 
 	case submitPlanFinishedMsg:
 		cmds = append(cmds, func() tea.Msg { return startStartingSnapshotMsg{} })
@@ -266,6 +268,7 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.isEnding = true
 		cmds = append(cmds,
 			func() tea.Msg { return unfreezeViewMsg{} },
+			func() tea.Msg { return hideStartupStatusMsg{} },
 			m.endingChangeSnapshot.Init(),
 			m.startEndChangeCmd(),
 			m.waitForEndingActivity,
