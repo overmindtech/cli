@@ -92,12 +92,6 @@ func (m taskModel) Update(msg tea.Msg) (taskModel, tea.Cmd) {
 		if m.spinner.ID() == msg.id {
 			m.status = msg.status
 		}
-	case fatalError:
-		if m.spinner.ID() == msg.id {
-			m.status = taskStatusError
-			m.title = fmt.Sprintf("%v: %v", m.title, msg.err)
-			return m, nil
-		}
 	default:
 		if m.status == taskStatusRunning {
 			var cmd tea.Cmd

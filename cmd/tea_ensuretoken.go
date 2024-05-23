@@ -147,12 +147,6 @@ Then enter the code:
 			m.errors = append(m.errors, fmt.Sprintf("Note: %v", msg.err))
 		}
 		return m, nil
-	case fatalError:
-		if msg.id == m.spinner.ID() {
-			m.status = taskStatusError
-			m.title = markdownToString(fmt.Sprintf("Ensuring Token Error: %v", msg.err))
-		}
-		return m, nil
 	default:
 		var taskCmd tea.Cmd
 		m.taskModel, taskCmd = m.taskModel.Update(msg)
