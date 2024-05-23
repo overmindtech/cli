@@ -27,18 +27,6 @@ func waitForCancellation(ctx context.Context, cancel context.CancelFunc) tea.Cmd
 	}
 }
 
-// fatalError is a wrapper for errors that should abort the running tea.Program.
-type fatalError struct {
-	id  int
-	err error
-}
-
-// otherError is a wrapper for errors that should NOT abort the running tea.Program.
-type otherError struct {
-	id  int
-	err error
-}
-
 type taskStatus int
 
 const (
@@ -61,6 +49,16 @@ type WithTaskModel interface {
 
 // assert that taskModel implements WithTaskModel
 var _ WithTaskModel = (*taskModel)(nil)
+
+type updateTaskTitleMsg struct {
+	id    int
+	title string
+}
+
+type updateTaskStatusMsg struct {
+	id     int
+	status taskStatus
+}
 
 func NewTaskModel(title string) taskModel {
 	return taskModel{
@@ -86,9 +84,13 @@ func (m taskModel) TaskModel() taskModel {
 
 func (m taskModel) Update(msg tea.Msg) (taskModel, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		if msg.String() == "q" {
-			return m, tea.Quit
+	case updateTaskTitleMsg:
+		if m.spinner.ID() == msg.id {
+			m.title = msg.title
+		}
+	case updateTaskStatusMsg:
+		if m.spinner.ID() == msg.id {
+			m.status = msg.status
 		}
 	default:
 		if m.status == taskStatusRunning {
@@ -111,7 +113,7 @@ func (m taskModel) View() string {
 	case taskStatusDone:
 		label = lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")
 	case taskStatusError:
-		label = lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("x")
+		label = lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("✗")
 	case taskStatusSkipped:
 		label = lipgloss.NewStyle().Foreground(ColorPalette.LabelFaint).Render("-")
 	default:
@@ -119,4 +121,18 @@ func (m taskModel) View() string {
 	}
 
 	return fmt.Sprintf("%v %v", label, m.title)
+}
+
+func (m taskModel) UpdateTitleMsg(newTitle string) tea.Msg {
+	return updateTaskTitleMsg{
+		id:    m.spinner.ID(),
+		title: newTitle,
+	}
+}
+
+func (m taskModel) UpdateStatusMsg(newStatus taskStatus) tea.Msg {
+	return updateTaskStatusMsg{
+		id:     m.spinner.ID(),
+		status: newStatus,
+	}
 }

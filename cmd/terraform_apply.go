@@ -3,16 +3,20 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/google/uuid"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // terraformApplyCmd represents the `terraform apply` command
@@ -33,9 +37,19 @@ type tfApplyModel struct {
 	ctx context.Context // note that this ctx is not initialized on NewTfPlanModel to instead get a modified context through the loadSourcesConfigMsg that has a timeout and cancelFunction configured
 	oi  OvermindInstance
 
-	args             []string
-	applyHeader      string
+	args []string
+
+	planFile    string
+	needPlan    bool
+	runPlanTask runPlanModel
+
+	runPlanFinished       bool
+	revlinkWarmupFinished bool
+
+	submitPlanTask submitPlanModel
+
 	processingHeader string
+	needApproval     bool
 
 	changeUuid             uuid.UUID
 	isStarting             bool
@@ -46,7 +60,11 @@ type tfApplyModel struct {
 	endingChange           chan tea.Msg
 	endingChangeSnapshot   snapshotModel
 	progress               []string
+
+	width int
 }
+
+type startStartingSnapshotMsg struct{}
 
 type changeIdentifiedMsg struct {
 	uuid uuid.UUID
@@ -56,19 +74,59 @@ type runTfApplyMsg struct{}
 type tfApplyFinishedMsg struct{}
 
 func NewTfApplyModel(args []string) tea.Model {
+	hasPlanSet := false
+	autoapprove := false
+	planFile := "overmind.plan"
+	if len(args) >= 1 {
+		f, err := os.Stat(args[len(args)-1])
+		if err == nil && !f.IsDir() {
+			// the last argument is a file, check that the previous arg is not
+			// one that would eat this as argument
+			hasPlanSet = true
+			if len(args) >= 2 {
+				prev := args[len(args)-2]
+				for _, a := range []string{"-backup", "--backup", "-state", "--state", "-state-out", "--state-out"} {
+					if prev == a || strings.HasPrefix(prev, a+"=") {
+						hasPlanSet = false
+						break
+					}
+				}
+			}
+		}
+		if hasPlanSet {
+			planFile = args[len(args)-1]
+			autoapprove = true
+		}
+	}
+
+	planArgs := append([]string{"plan"}, planArgsFromApplyArgs(args)...)
+
+	if !hasPlanSet {
+		// if the user has not set a plan, we need to set a temporary file to
+		// capture the output for all calculations and to run apply afterwards
+
+		f, err := os.CreateTemp("", "overmind-plan")
+		if err != nil {
+			log.WithError(err).Fatal("failed to create temporary plan file")
+		}
+
+		planFile = f.Name()
+
+		planArgs = append(planArgs, "-out", planFile)
+		args = append(args, planFile)
+
+		// auto
+		for _, a := range args {
+			if a == "-auto-approve" || a == "-auto-approve=true" || a == "-auto-approve=TRUE" || a == "--auto-approve" || a == "--auto-approve=true" || a == "--auto-approve=TRUE" {
+				autoapprove = true
+			}
+			if a == "-auto-approve=false" || a == "-auto-approve=FALSE" || a == "--auto-approve=false" || a == "--auto-approve=FALSE" {
+				autoapprove = false
+			}
+		}
+	}
+
 	args = append([]string{"apply"}, args...)
-	// plan file needs to go last
-	args = append(args, "overmind.plan")
-
-	// // TODO: remove this test setup
-	// args = append([]string{"plan"}, args...)
-	// // -out needs to go last to override whatever the user specified on the command line
-	// args = append(args, "-out", "overmind.plan")
-
-	applyHeader := `# Applying Changes
-
-Running ` + "`" + `terraform %v` + "`\n"
-	applyHeader = fmt.Sprintf(applyHeader, strings.Join(args, " "))
 
 	processingHeader := `# Applying Changes
 
@@ -76,31 +134,80 @@ Applying changes with ` + "`" + `terraform %v` + "`\n"
 	processingHeader = fmt.Sprintf(processingHeader, strings.Join(args, " "))
 
 	return tfApplyModel{
-		args:             args,
-		applyHeader:      applyHeader,
+		args: args,
+
+		planFile:        planFile,
+		needPlan:        !hasPlanSet,
+		runPlanTask:     NewRunPlanModel(planArgs, planFile),
+		runPlanFinished: hasPlanSet,
+
+		submitPlanTask: NewSubmitPlanModel(planFile),
+
 		processingHeader: processingHeader,
+		needApproval:     !autoapprove,
 
 		startingChange:         make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
-		startingChangeSnapshot: NewSnapShotModel("Starting Change"),
+		startingChangeSnapshot: NewSnapShotModel("Starting Change", "indexing resources"),
 		endingChange:           make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
-		endingChangeSnapshot:   NewSnapShotModel("Ending Change"),
+		endingChangeSnapshot:   NewSnapShotModel("Ending Change", "indexing resources"),
 		progress:               []string{},
 	}
 }
 
 func (m tfApplyModel) Init() tea.Cmd {
-	return nil
+	cmds := []tea.Cmd{}
+
+	if m.needPlan {
+		cmds = append(
+			cmds,
+			m.runPlanTask.Init(),
+			m.submitPlanTask.Init(),
+		)
+	}
+
+	return tea.Batch(cmds...)
 }
 
 func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	cmds := []tea.Cmd{}
+
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+
 	case loadSourcesConfigMsg:
 		m.ctx = msg.ctx
 		m.oi = msg.oi
 
 	case revlinkWarmupFinishedMsg:
+		m.revlinkWarmupFinished = true
+		if m.runPlanFinished {
+			cmds = append(cmds, func() tea.Msg {
+				if m.needPlan {
+					return submitPlanNowMsg{}
+				} else {
+					return startStartingSnapshotMsg{}
+				}
+			})
+		}
+	case runPlanFinishedMsg:
+		m.runPlanFinished = true
+		if m.revlinkWarmupFinished {
+			cmds = append(cmds, func() tea.Msg {
+				if m.needPlan {
+					return submitPlanNowMsg{}
+				} else {
+					return startStartingSnapshotMsg{}
+				}
+			})
+		}
+
+	case submitPlanFinishedMsg:
+		cmds = append(cmds, func() tea.Msg { return startStartingSnapshotMsg{} })
+
+	case startStartingSnapshotMsg:
 		m.isStarting = true
-		return m, tea.Batch(
+		cmds = append(cmds,
 			m.startingChangeSnapshot.Init(),
 			m.startStartChangeCmd(),
 			m.waitForStartingActivity,
@@ -108,36 +215,30 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case changeIdentifiedMsg:
 		m.changeUuid = msg.uuid
-		return m, nil
+		cmds = append(cmds, m.waitForStartingActivity)
 
 	case startSnapshotMsg:
-		if m.isStarting {
-			m.startingChangeSnapshot.Update(msg)
-			return m, m.waitForStartingActivity
-		} else if m.isEnding {
-			m.endingChangeSnapshot.Update(msg)
-			return m, m.waitForEndingActivity
+		if msg.id == m.startingChangeSnapshot.ID() {
+			cmds = append(cmds, m.waitForStartingActivity)
+		} else if msg.id == m.endingChangeSnapshot.ID() {
+			cmds = append(cmds, m.waitForEndingActivity)
 		}
 
 	case progressSnapshotMsg:
-		if m.isStarting {
-			m.startingChangeSnapshot.Update(msg)
-			return m, m.waitForStartingActivity
-		} else if m.isEnding {
-			m.endingChangeSnapshot.Update(msg)
-			return m, m.waitForEndingActivity
+		if msg.id == m.startingChangeSnapshot.ID() {
+			cmds = append(cmds, m.waitForStartingActivity)
+		} else if msg.id == m.endingChangeSnapshot.ID() {
+			cmds = append(cmds, m.waitForEndingActivity)
 		}
 
 	case finishSnapshotMsg:
-		if m.isStarting {
-			m.startingChangeSnapshot.Update(msg)
+		if msg.id == m.startingChangeSnapshot.ID() {
 			m.isStarting = false
 			// defer the actual command to give the view a chance to show the header
 			m.runTfApply = true
-			return m, func() tea.Msg { return runTfApplyMsg{} }
-		} else if m.isEnding {
-			m.endingChangeSnapshot.Update(msg)
-			return m, tea.Quit
+			cmds = append(cmds, func() tea.Msg { return runTfApplyMsg{} })
+		} else if msg.id == m.endingChangeSnapshot.ID() {
+			cmds = append(cmds, func() tea.Msg { return delayQuitMsg{} })
 		}
 
 	case runTfApplyMsg:
@@ -147,9 +248,15 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if aws_profile := viper.GetString("aws-profile"); aws_profile != "" {
 			c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
 		}
-		return m, tea.ExecProcess(
+
+		_, span := tracing.Tracer().Start(m.ctx, "terraform apply", trace.WithAttributes( // nolint:spancheck // will be ended in the tea.ExecProcess cleanup func
+			attribute.String("command", strings.Join(m.args, " ")),
+		))
+		return m, tea.ExecProcess( // nolint:spancheck // will be ended in the tea.ExecProcess cleanup func
 			c,
 			func(err error) tea.Msg {
+				defer span.End()
+
 				if err != nil {
 					return fatalError{err: fmt.Errorf("failed to run terraform apply: %w", err)}
 				}
@@ -158,25 +265,60 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			})
 	case tfApplyFinishedMsg:
 		m.isEnding = true
-		return m, tea.Batch(
+		cmds = append(cmds,
 			m.endingChangeSnapshot.Init(),
 			m.startEndChangeCmd(),
 			m.waitForEndingActivity,
 		)
 	}
 
-	return m, nil
+	mdl, cmd := m.startingChangeSnapshot.Update(msg)
+	cmds = append(cmds, cmd)
+	m.startingChangeSnapshot = mdl
+
+	mdl, cmd = m.endingChangeSnapshot.Update(msg)
+	cmds = append(cmds, cmd)
+	m.endingChangeSnapshot = mdl
+
+	if m.needPlan {
+		mdl, cmd := m.runPlanTask.Update(msg)
+		cmds = append(cmds, cmd)
+		m.runPlanTask = mdl.(runPlanModel)
+
+		mdl, cmd = m.submitPlanTask.Update(msg)
+		cmds = append(cmds, cmd)
+		m.submitPlanTask = mdl.(submitPlanModel)
+	}
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m tfApplyModel) View() string {
-	if m.isStarting || m.runTfApply || m.isEnding {
-		return markdownToString(m.processingHeader) + "\n" +
-			m.startingChangeSnapshot.View() + "\n" +
-			m.endingChangeSnapshot.View() + "\n" +
-			strings.Join(m.progress, "\n") + "\n"
+	bits := []string{}
+
+	if m.runPlanTask.status != taskStatusPending {
+		bits = append(bits, m.runPlanTask.View())
 	}
 
-	return markdownToString(m.applyHeader) + "\n"
+	if m.submitPlanTask.Status() != taskStatusPending {
+		bits = append(bits, m.submitPlanTask.View())
+	}
+
+	if m.isStarting || m.runTfApply || m.isEnding {
+		bits = append(bits, markdownToString(m.processingHeader))
+
+		if m.startingChangeSnapshot.overall.status != taskStatusPending {
+			bits = append(bits, m.startingChangeSnapshot.View())
+		}
+
+		if m.endingChangeSnapshot.overall.status != taskStatusPending {
+			bits = append(bits, m.endingChangeSnapshot.View())
+		}
+
+		bits = append(bits, strings.Join(m.progress, "\n"))
+	}
+
+	return strings.Join(bits, "\n") + "\n"
 }
 
 func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
@@ -187,7 +329,7 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 		var err error
 		ticketLink := viper.GetString("ticket-link")
 		if ticketLink == "" {
-			ticketLink, err = getTicketLinkFromPlan()
+			ticketLink, err = getTicketLinkFromPlan(m.planFile)
 			if err != nil {
 				return fatalError{err: err}
 			}
@@ -199,7 +341,7 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 		}
 
 		m.startingChange <- changeIdentifiedMsg{uuid: changeUuid}
-		m.startingChange <- startSnapshotMsg{newState: "starting"}
+		m.startingChange <- m.startingChangeSnapshot.StartMsg()
 
 		client := AuthenticatedChangesClient(ctx, oi)
 		startStream, err := client.StartChange(ctx, &connect.Request[sdp.StartChangeRequest]{
@@ -219,21 +361,13 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 				"items": msg.GetNumItems(),
 				"edges": msg.GetNumEdges(),
 			}).Trace("progress")
-			m.startingChange <- progressSnapshotMsg{
-				newState: msg.GetState().String(),
-				items:    msg.GetNumItems(),
-				edges:    msg.GetNumEdges(),
-			}
+			m.startingChange <- m.startingChangeSnapshot.ProgressMsg(msg.GetState().String(), msg.GetNumItems(), msg.GetNumEdges())
 		}
 		if startStream.Err() != nil {
 			return fatalError{err: fmt.Errorf("failed to process start change: %w", startStream.Err())}
 		}
 
-		return finishSnapshotMsg{
-			newState: msg.GetState().String(),
-			items:    msg.GetNumItems(),
-			edges:    msg.GetNumEdges(),
-		}
+		return m.startingChangeSnapshot.FinishMsg()
 	}
 }
 
@@ -248,7 +382,7 @@ func (m tfApplyModel) startEndChangeCmd() tea.Cmd {
 	changeUuid := m.changeUuid
 
 	return func() tea.Msg {
-		m.endingChange <- startSnapshotMsg{newState: "starting"}
+		m.endingChange <- m.endingChangeSnapshot.StartMsg()
 
 		client := AuthenticatedChangesClient(ctx, oi)
 		endStream, err := client.EndChange(ctx, &connect.Request[sdp.EndChangeRequest]{
@@ -268,21 +402,13 @@ func (m tfApplyModel) startEndChangeCmd() tea.Cmd {
 				"items": msg.GetNumItems(),
 				"edges": msg.GetNumEdges(),
 			}).Trace("progress")
-			m.endingChange <- progressSnapshotMsg{
-				newState: msg.GetState().String(),
-				items:    msg.GetNumItems(),
-				edges:    msg.GetNumEdges(),
-			}
+			m.endingChange <- m.endingChangeSnapshot.ProgressMsg(msg.GetState().String(), msg.GetNumItems(), msg.GetNumEdges())
 		}
 		if endStream.Err() != nil {
 			return fatalError{err: fmt.Errorf("failed to process end change: %w", endStream.Err())}
 		}
 
-		return finishSnapshotMsg{
-			newState: msg.GetState().String(),
-			items:    msg.GetNumItems(),
-			edges:    msg.GetNumEdges(),
-		}
+		return m.endingChangeSnapshot.FinishMsg()
 	}
 }
 

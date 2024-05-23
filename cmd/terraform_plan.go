@@ -38,6 +38,7 @@ type tfPlanModel struct {
 	oi  OvermindInstance
 
 	args        []string
+	planFile    string
 	runPlanTask runPlanModel
 
 	runPlanFinished       bool
@@ -45,22 +46,60 @@ type tfPlanModel struct {
 
 	submitPlanTask submitPlanModel
 
-	fatalError string
-	width      int
+	width int
 }
 
 // assert interface
 var _ FinalReportingModel = (*tfPlanModel)(nil)
 
+type mappedItemDiffsMsg struct {
+	filename        string
+	numSupported    int
+	numUnsupported  int
+	numTotalChanges int
+
+	supported   map[string][]*sdp.MappedItemDiff
+	unsupported map[string][]*sdp.MappedItemDiff
+}
+
 func NewTfPlanModel(args []string) tea.Model {
+	hasPlanOutSet := false
+	planFile := "overmind.plan"
+	for i, a := range args {
+		if a == "-out" || a == "--out=true" {
+			hasPlanOutSet = true
+			planFile = args[i+1]
+		}
+		if strings.HasPrefix(a, "-out=") {
+			hasPlanOutSet = true
+			planFile, _ = strings.CutPrefix(a, "-out=")
+		}
+		if strings.HasPrefix(a, "--out=") {
+			hasPlanOutSet = true
+			planFile, _ = strings.CutPrefix(a, "--out=")
+		}
+	}
+
 	args = append([]string{"plan"}, args...)
-	// -out needs to go last to override whatever the user specified on the command line
-	args = append(args, "-out", "overmind.plan")
+	if !hasPlanOutSet {
+		// if the user has not set a plan, we need to set a temporary file to
+		// capture the output for the blast radius and risks calculation
+
+		f, err := os.CreateTemp("", "overmind-plan")
+		if err != nil {
+			log.WithError(err).Fatal("failed to create temporary plan file")
+		}
+
+		planFile = f.Name()
+		args = append(args, "-out", planFile)
+		// TODO: remember whether we used a temporary plan file and remove it when done
+	}
 
 	return tfPlanModel{
 		args:           args,
-		runPlanTask:    NewRunPlanModel(args),
-		submitPlanTask: NewSubmitPlanModel(),
+		runPlanTask:    NewRunPlanModel(args, planFile),
+		submitPlanTask: NewSubmitPlanModel(planFile),
+		planFile:       planFile,
 	}
 }
 
@@ -95,10 +134,6 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case submitPlanFinishedMsg:
 		cmds = append(cmds, func() tea.Msg { return delayQuitMsg{} })
-
-	case fatalError:
-		m.fatalError = msg.err.Error()
-		cmds = append(cmds, tea.Quit)
 	}
 
 	rpm, cmd := m.runPlanTask.Update(msg)
@@ -131,22 +166,22 @@ func (m tfPlanModel) FinalReport() string {
 }
 
 // getTicketLinkFromPlan reads the plan file to create a unique hash to identify this change
-func getTicketLinkFromPlan() (string, error) {
-	plan, err := os.ReadFile("overmind.plan")
+func getTicketLinkFromPlan(planFile string) (string, error) {
+	plan, err := os.ReadFile(planFile)
 	if err != nil {
-		return "", fmt.Errorf("failed to read overmind.plan file: %w", err)
+		return "", fmt.Errorf("failed to read plan file (%v): %w", planFile, err)
 	}
 	h := sha256.New()
 	h.Write(plan)
 	return fmt.Sprintf("tfplan://{SHA256}%x", h.Sum(nil)), nil
 }
 
-func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, error) {
+func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, mappedItemDiffsMsg, error) {
 	// read results from `terraform show -json ${tfplan file}`
 	planJSON, err := os.ReadFile(fileName)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to read terraform plan")
-		return nil, err
+		return nil, mappedItemDiffsMsg{}, err
 	}
 
 	return mappedItemDiffsFromPlan(ctx, planJSON, fileName, lf)
@@ -160,16 +195,16 @@ func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fi
 // differences into supported and unsupported changes. Finally, it logs the
 // number of supported and unsupported changes and returns the mapped item
 // differences.
-func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, error) {
+func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, mappedItemDiffsMsg, error) {
 	// Check that we haven't been passed a state file
 	if isStateFile(planJson) {
-		return nil, fmt.Errorf("'%v' appears to be a state file, not a plan file", fileName)
+		return nil, mappedItemDiffsMsg{}, fmt.Errorf("'%v' appears to be a state file, not a plan file", fileName)
 	}
 
 	var plan Plan
 	err := json.Unmarshal(planJson, &plan)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse '%v': %w", fileName, err)
+		return nil, mappedItemDiffsMsg{}, fmt.Errorf("failed to parse '%v': %w", fileName, err)
 	}
 
 	plannedChangeGroupsVar := plannedChangeGroups{
@@ -186,7 +221,7 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 
 		itemDiff, err := itemDiffFromResourceChange(resourceChange)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create item diff for resource change: %w", err)
+			return nil, mappedItemDiffsMsg{}, fmt.Errorf("failed to create item diff for resource change: %w", err)
 		}
 
 		// Load mappings for this type. These mappings tell us how to create an
@@ -370,7 +405,14 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 		log.WithContext(ctx).Infof(Yellow.Color("  ✗ %v (%v)"), typ, len(plannedChanges))
 	}
 
-	return plannedChangeGroupsVar.MappedItemDiffs(), nil
+	return plannedChangeGroupsVar.MappedItemDiffs(), mappedItemDiffsMsg{
+		filename:        fileName,
+		numSupported:    numSupported,
+		numUnsupported:  numUnsupported,
+		numTotalChanges: numTotalChanges,
+		supported:       plannedChangeGroupsVar.supported,
+		unsupported:     plannedChangeGroupsVar.unsupported,
+	}, nil
 }
 
 func addTerraformBaseFlags(cmd *cobra.Command) {

@@ -42,6 +42,18 @@ type cmdModel struct {
 
 type delayQuitMsg struct{}
 
+// fatalError is a wrapper for errors that should abort the running tea.Program.
+type fatalError struct {
+	id  int
+	err error
+}
+
+// otherError is a wrapper for errors that should NOT abort the running tea.Program.
+type otherError struct {
+	id  int
+	err error
+}
+
 func (m cmdModel) Init() tea.Cmd {
 	// use the main cli context to not take this time from the main timeout
 	m.tasks["00_oi"] = NewInstanceLoaderModel(m.ctx, m.app)
@@ -80,7 +92,7 @@ func (m cmdModel) Init() tea.Cmd {
 }
 
 func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	log.Debugf("cmdModel: Update %T received %+v", msg, msg)
+	log.Debugf("cmdModel: Update %T received %#v", msg, msg)
 
 	batch := []tea.Cmd{}
 
@@ -250,4 +262,28 @@ func (m cmdModel) View() string {
 		tasks = append(tasks, markdownToString(fmt.Sprintf("> Fatal Error: %v\n", m.fatalError)))
 	}
 	return strings.Join(tasks, "\n")
+}
+
+var applyOnlyArgs = []string{
+	"auto-approve",
+}
+
+// planArgsFromApplyArgs filters out all apply-specific arguments from arguments
+// to `terraform apply`, so that we can run the corresponding `terraform plan`
+// command
+func planArgsFromApplyArgs(args []string) []string {
+	planArgs := []string{}
+append:
+	for _, arg := range args {
+		for _, applyOnlyArg := range applyOnlyArgs {
+			if strings.HasPrefix(arg, "-"+applyOnlyArg) {
+				continue append
+			}
+			if strings.HasPrefix(arg, "--"+applyOnlyArg) {
+				continue append
+			}
+		}
+		planArgs = append(planArgs, arg)
+	}
+	return planArgs
 }
