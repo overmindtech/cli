@@ -61,7 +61,8 @@ type tfApplyModel struct {
 	endingChangeSnapshot   snapshotModel
 	progress               []string
 
-	width int
+	execCommandFunc ExecCommandFunc
+	width           int
 }
 
 type startStartingSnapshotMsg struct{}
@@ -73,7 +74,7 @@ type changeIdentifiedMsg struct {
 type runTfApplyMsg struct{}
 type tfApplyFinishedMsg struct{}
 
-func NewTfApplyModel(args []string) tea.Model {
+func NewTfApplyModel(args []string, execCommandFunc ExecCommandFunc) tea.Model {
 	hasPlanSet := false
 	autoapprove := false
 	planFile := "overmind.plan"
@@ -133,7 +134,7 @@ func NewTfApplyModel(args []string) tea.Model {
 
 		planFile:        planFile,
 		needPlan:        !hasPlanSet,
-		runPlanTask:     NewRunPlanModel(planArgs, planFile),
+		runPlanTask:     NewRunPlanModel(planArgs, planFile, execCommandFunc),
 		runPlanFinished: hasPlanSet,
 
 		submitPlanTask: NewSubmitPlanModel(planFile),
@@ -145,6 +146,8 @@ func NewTfApplyModel(args []string) tea.Model {
 		endingChange:           make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
 		endingChangeSnapshot:   NewSnapShotModel("Ending Change", "indexing resources"),
 		progress:               []string{},
+
+		execCommandFunc: execCommandFunc,
 	}
 }
 
@@ -243,23 +246,26 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
 		}
 
-		_, span := tracing.Tracer().Start(m.ctx, "terraform apply", trace.WithAttributes( // nolint:spancheck // will be ended in the tea.ExecProcess cleanup func
+		_, span := tracing.Tracer().Start(m.ctx, "terraform apply", trace.WithAttributes( // nolint:spancheck // will be ended in the tea.Exec cleanup func
 			attribute.String("command", strings.Join(m.args, " ")),
 		))
-		return m, tea.ExecProcess( // nolint:spancheck // will be ended in the tea.ExecProcess cleanup func
-			c,
-			func(err error) tea.Msg {
-				defer span.End()
+		return m, tea.Sequence(
+			func() tea.Msg { return freezeViewMsg{} },
+			tea.Exec( // nolint:spancheck // will be ended in the tea.Exec cleanup func
+				m.execCommandFunc(c),
+				func(err error) tea.Msg {
+					defer span.End()
 
-				if err != nil {
-					return fatalError{err: fmt.Errorf("failed to run terraform apply: %w", err)}
-				}
+					if err != nil {
+						return fatalError{err: fmt.Errorf("failed to run terraform apply: %w", err)}
+					}
 
-				return tfApplyFinishedMsg{}
-			})
+					return tfApplyFinishedMsg{}
+				}))
 	case tfApplyFinishedMsg:
 		m.isEnding = true
 		cmds = append(cmds,
+			func() tea.Msg { return unfreezeViewMsg{} },
 			m.endingChangeSnapshot.Init(),
 			m.startEndChangeCmd(),
 			m.waitForEndingActivity,

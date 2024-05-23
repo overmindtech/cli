@@ -31,13 +31,18 @@ type cmdModel struct {
 	requiredScopes []string
 
 	// UI state
-	tasks               map[string]tea.Model
-	terraformHasStarted bool   // remember whether terraform already has started. this is important to do the correct workarounds on errors. See also `skipView()`
-	fatalError          string // this will get set if there's a fatalError coming through that doesn't have a task ID set
+	tasks      map[string]tea.Model
+	fatalError string // this will get set if there's a fatalError coming through that doesn't have a task ID set
+
+	frozen     bool
+	frozenView string // this gets set if the view is frozen, and will be used to render the last view using the cliExecCommand
 
 	// business logic. This model will implement the actual CLI functionality requested.
 	cmd tea.Model
 }
+
+type freezeViewMsg struct{}
+type unfreezeViewMsg struct{}
 
 type delayQuitMsg struct{}
 
@@ -53,7 +58,7 @@ type otherError struct {
 	err error
 }
 
-func (m cmdModel) Init() tea.Cmd {
+func (m *cmdModel) Init() tea.Cmd {
 	// use the main cli context to not take this time from the main timeout
 	m.tasks["00_oi"] = NewInstanceLoaderModel(m.ctx, m.app)
 	m.tasks["01_token"] = NewEnsureTokenModel(m.ctx, m.app, m.apiKey, m.requiredScopes)
@@ -86,7 +91,7 @@ func (m cmdModel) Init() tea.Cmd {
 	)
 }
 
-func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	log.Debugf("cmdModel: Update %T received %#v", msg, msg)
 
 	cmds := []tea.Cmd{}
@@ -97,16 +102,15 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.String() == "ctrl+c" {
 			return m, tea.Quit
 		}
+	case freezeViewMsg:
+		m.frozenView = m.View()
+		m.frozen = true
+	case unfreezeViewMsg:
+		m.frozen = false
+		m.frozenView = ""
 
 	case fatalError:
 		log.WithError(msg.err).WithField("msg.id", msg.id).Debug("cmdModel: fatalError received")
-
-		// skipView based on the previous view. While this is not perfect, it's
-		// the best we can currently do without taking complete control of
-		// terraform command i/o
-		if m.terraformHasStarted {
-			skipView(m.View())
-		}
 
 		// record the fatal error here, to repeat it at the end of the process
 		m.fatalError = msg.err.Error()
@@ -120,15 +124,8 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tokenAvailableMsg:
 		var cmd tea.Cmd
-		m, cmd = m.tokenChecks(msg.token)
+		cmd = m.tokenChecks(msg.token)
 		cmds = append(cmds, cmd)
-
-	case runPlanNowMsg, runTfApplyMsg:
-		m.terraformHasStarted = true
-
-	case runPlanFinishedMsg, tfApplyFinishedMsg:
-		// bump screen after terraform ran
-		skipView(m.View())
 
 	case delayQuitMsg:
 		cmds = append(cmds, tea.Quit)
@@ -154,28 +151,9 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-// skipView scrolls the terminal contents up after ExecCommand() to avoid
-// overwriting the output from terraform when rendering the next View(). this
-// has to be used here in the cmdModel to catch the entire View() output.
-//
-// NOTE: this is quite brittle and _requires_ that the View() after terraform
-// returned is at least  many lines as the view before ExecCommand(), otherwise
-// the difference will get eaten by bubbletea on re-rendering.
-//
-// TODO: make this hack less ugly
-func skipView(view string) {
-	lines := strings.Split(view, "\n")
-	for range lines {
-		fmt.Println()
-	}
-
-	// log.Debugf("printed %v lines:", len(lines))
-	// log.Debug(lines)
-}
-
-func (m cmdModel) tokenChecks(token *oauth2.Token) (cmdModel, tea.Cmd) {
+func (m *cmdModel) tokenChecks(token *oauth2.Token) tea.Cmd {
 	if viper.GetString("ovm-test-fake") != "" {
-		return m, func() tea.Msg {
+		return func() tea.Msg {
 			return loadSourcesConfigMsg{
 				ctx:    m.ctx,
 				oi:     m.oi,
@@ -189,10 +167,10 @@ func (m cmdModel) tokenChecks(token *oauth2.Token) (cmdModel, tea.Cmd) {
 	// permission auth0 will just not assign those scopes rather than fail
 	ok, missing, err := HasScopesFlexible(token, m.requiredScopes)
 	if err != nil {
-		return m, func() tea.Msg { return fatalError{err: fmt.Errorf("error checking token scopes: %w", err)} }
+		return func() tea.Msg { return fatalError{err: fmt.Errorf("error checking token scopes: %w", err)} }
 	}
 	if !ok {
-		return m, func() tea.Msg {
+		return func() tea.Msg {
 			return fatalError{err: fmt.Errorf("authenticated successfully, but you don't have the required permission: '%v'", missing)}
 		}
 	}
@@ -210,7 +188,7 @@ func (m cmdModel) tokenChecks(token *oauth2.Token) (cmdModel, tea.Cmd) {
 	// for now, and we still need a good idea for a better way. Especially as
 	// some of the models require access to viper (for GetConfig/SetConfig) or
 	// contortions to store that data somewhere else.
-	return m, func() tea.Msg {
+	return func() tea.Msg {
 		return loadSourcesConfigMsg{
 			ctx:    m.ctx,
 			oi:     m.oi,
@@ -221,6 +199,9 @@ func (m cmdModel) tokenChecks(token *oauth2.Token) (cmdModel, tea.Cmd) {
 }
 
 func (m cmdModel) View() string {
+	if m.frozen {
+		return ""
+	}
 	// show tasks in key order, skipping pending tasks to keep the ui uncluttered
 	allDone := true
 	tasks := make([]string, 0, len(m.tasks))

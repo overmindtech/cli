@@ -50,7 +50,7 @@ type FinalReportingModel interface {
 	FinalReport() string
 }
 
-func CmdWrapper(action string, requiredScopes []string, commandModel func([]string) tea.Model) func(cmd *cobra.Command, args []string) {
+func CmdWrapper(action string, requiredScopes []string, commandModel func(args []string, execCommandFunc ExecCommandFunc) tea.Model) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		// set up a context for the command
 		ctx, cancel := context.WithCancel(context.Background())
@@ -95,7 +95,7 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func([]stri
 				return err
 			}
 
-			p := tea.NewProgram(cmdModel{
+			m := cmdModel{
 				action:         action,
 				ctx:            ctx,
 				cancel:         cancel,
@@ -104,14 +104,15 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func([]stri
 				requiredScopes: requiredScopes,
 				apiKey:         viper.GetString("api-key"),
 				tasks:          map[string]tea.Model{},
-				cmd:            commandModel(args),
-			})
+			}
+			m.cmd = commandModel(args, m.NewExecCommand)
+			p := tea.NewProgram(&m)
 			result, err := p.Run()
 			if err != nil {
 				return fmt.Errorf("could not start program: %w", err)
 			}
 
-			cmd, ok := result.(cmdModel)
+			cmd, ok := result.(*cmdModel)
 			if ok {
 				frm, ok := cmd.cmd.(FinalReportingModel)
 				if ok {
