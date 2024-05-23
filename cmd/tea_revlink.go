@@ -115,13 +115,16 @@ func (m revlinkWarmupModel) revlinkWarmupCmd() tea.Msg {
 	stream, err := client.RevlinkWarmup(ctx, &connect.Request[sdp.RevlinkWarmupRequest]{
 		Msg: &sdp.RevlinkWarmupRequest{},
 	})
-
 	if err != nil {
-		return fatalError{id: m.spinner.ID(), err: fmt.Errorf("error warming up revlink: %w", err)}
+		return fatalError{id: m.spinner.ID(), err: fmt.Errorf("error starting RevlinkWarmup: %w", err)}
 	}
 
 	for stream.Receive() {
 		m.status <- stream.Msg()
+	}
+
+	if stream.Err() != nil {
+		return fatalError{id: m.spinner.ID(), err: fmt.Errorf("error warming up revlink: %w", stream.Err())}
 	}
 
 	return revlinkWarmupFinishedMsg{}
