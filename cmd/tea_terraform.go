@@ -33,7 +33,6 @@ type cmdModel struct {
 	// UI state
 	tasks               map[string]tea.Model
 	terraformHasStarted bool   // remember whether terraform already has started. this is important to do the correct workarounds on errors. See also `skipView()`
-	fatalErrorSeen      bool   // remember whether a fatalError has been seen to avoid showing pending tasks
 	fatalError          string // this will get set if there's a fatalError coming through that doesn't have a task ID set
 
 	// business logic. This model will implement the actual CLI functionality requested.
@@ -108,8 +107,6 @@ func (m cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.terraformHasStarted {
 			skipView(m.View())
 		}
-
-		m.fatalErrorSeen = true
 
 		// record the fatal error here, to repeat it at the end of the process
 		m.fatalError = msg.err.Error()
