@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/overmindtech/sdp-go"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -23,12 +23,15 @@ type revlinkWarmupModel struct {
 
 	status        chan *sdp.RevlinkWarmupResponse
 	currentStatus *sdp.RevlinkWarmupResponse
+
+	watchdogChan   chan struct{}      // a watchdog channel to keep the watchdog running
+	watchdogCancel context.CancelFunc // the cancel function that gets called if the watchdog detects a timeout
 }
 
 func NewRevlinkWarmupModel() revlinkWarmupModel {
 	return revlinkWarmupModel{
 		taskModel: NewTaskModel("Discover and link all resources"),
-		status:    make(chan *sdp.RevlinkWarmupResponse),
+		status:    make(chan *sdp.RevlinkWarmupResponse, 3000),
 		currentStatus: &sdp.RevlinkWarmupResponse{
 			Status: "pending",
 			Items:  0,
@@ -56,16 +59,43 @@ func (m revlinkWarmupModel) Update(msg tea.Msg) (revlinkWarmupModel, tea.Cmd) {
 		m.taskModel.status = taskStatusRunning
 		// start the spinner
 		cmds = append(cmds, m.taskModel.spinner.Tick)
+
+		// setup the watchdog infrastructure
+		ctx, cancel := context.WithCancel(m.ctx)
+		m.watchdogCancel = cancel
+
 		// kick off a revlink warmup
-		cmds = append(cmds, m.revlinkWarmupCmd)
+		cmds = append(cmds, m.revlinkWarmupCmd(ctx))
 		// process status updates
 		cmds = append(cmds, m.waitForStatusActivity)
+
 	case *sdp.RevlinkWarmupResponse:
 		m.currentStatus = msg
+
 		// wait for the next status update
 		cmds = append(cmds, m.waitForStatusActivity)
+
+		// tickle the watchdog when we get a response
+		if m.watchdogChan != nil {
+			go func() {
+				m.watchdogChan <- struct{}{}
+			}()
+		}
+
+	case runPlanFinishedMsg:
+		if m.taskModel.status != taskStatusDone {
+			// start the watchdog once the plan is done
+			m.watchdogChan = make(chan struct{}, 1)
+			cmds = append(cmds, m.watchdogCmd())
+		}
+
 	case revlinkWarmupFinishedMsg:
 		m.taskModel.status = taskStatusDone
+		m.watchdogChan = nil
+		if m.watchdogCancel != nil {
+			m.watchdogCancel()
+			m.watchdogCancel = nil
+		}
 	default:
 		var taskCmd tea.Cmd
 		m.taskModel, taskCmd = m.taskModel.Update(msg)
@@ -93,39 +123,60 @@ func (m revlinkWarmupModel) View() string {
 
 // A command that waits for the activity on the status channel.
 func (m revlinkWarmupModel) waitForStatusActivity() tea.Msg {
-	msg := <-m.status
-	log.Debugf("waitForStatusActivity received %T: %+v", msg, msg)
-	return msg
+	return <-m.status
 }
 
-func (m revlinkWarmupModel) revlinkWarmupCmd() tea.Msg {
-	ctx := m.ctx
-
-	if viper.GetString("ovm-test-fake") != "" {
-		for i := 0; i < 20; i++ {
-			m.status <- &sdp.RevlinkWarmupResponse{
-				Status: "running (test mode)",
-				Items:  int32(i * 10),
-				Edges:  int32(i*10) + 1,
+func (m revlinkWarmupModel) revlinkWarmupCmd(ctx context.Context) tea.Cmd {
+	return func() tea.Msg {
+		if viper.GetString("ovm-test-fake") != "" {
+			for i := 0; i < 20; i++ {
+				m.status <- &sdp.RevlinkWarmupResponse{
+					Status: "running (test mode)",
+					Items:  int32(i * 10),
+					Edges:  int32(i*10) + 1,
+				}
+				time.Sleep(250 * time.Millisecond)
 			}
-			time.Sleep(250 * time.Millisecond)
+			return revlinkWarmupFinishedMsg{}
 		}
+
+		client := AuthenticatedManagementClient(ctx, m.oi)
+
+		stream, err := client.RevlinkWarmup(ctx, &connect.Request[sdp.RevlinkWarmupRequest]{
+			Msg: &sdp.RevlinkWarmupRequest{},
+		})
+		if err != nil {
+			return fatalError{id: m.spinner.ID(), err: fmt.Errorf("error starting RevlinkWarmup: %w", err)}
+		}
+
+		for stream.Receive() {
+			m.status <- stream.Msg()
+		}
+
+		err = stream.Err()
+		if err != nil && !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, context.Canceled) {
+			return fatalError{id: m.spinner.ID(), err: fmt.Errorf("error warming up revlink: %w", stream.Err())}
+		}
+
 		return revlinkWarmupFinishedMsg{}
 	}
+}
 
-	client := AuthenticatedManagementClient(ctx, m.oi)
-
-	stream, err := client.RevlinkWarmup(ctx, &connect.Request[sdp.RevlinkWarmupRequest]{
-		Msg: &sdp.RevlinkWarmupRequest{},
-	})
-
-	if err != nil {
-		return fatalError{id: m.spinner.ID(), err: fmt.Errorf("error warming up revlink: %w", err)}
+func (m revlinkWarmupModel) watchdogCmd() tea.Cmd {
+	return func() tea.Msg {
+		ticker := time.NewTimer(10 * time.Second)
+		for {
+			select {
+			case <-ticker.C:
+				m.watchdogCancel()
+				return nil
+			case <-m.ctx.Done():
+				m.watchdogCancel()
+				return nil
+			case <-m.watchdogChan:
+				// extend the timeout everytime we get a message
+				ticker.Reset(10 * time.Second)
+			}
+		}
 	}
-
-	for stream.Receive() {
-		m.status <- stream.Msg()
-	}
-
-	return revlinkWarmupFinishedMsg{}
 }
