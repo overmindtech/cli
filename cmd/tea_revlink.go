@@ -8,7 +8,6 @@ import (
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/overmindtech/sdp-go"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -93,9 +92,7 @@ func (m revlinkWarmupModel) View() string {
 
 // A command that waits for the activity on the status channel.
 func (m revlinkWarmupModel) waitForStatusActivity() tea.Msg {
-	msg := <-m.status
-	log.Debugf("waitForStatusActivity received %T: %+v", msg, msg)
-	return msg
+	return <-m.status
 }
 
 func (m revlinkWarmupModel) revlinkWarmupCmd() tea.Msg {
