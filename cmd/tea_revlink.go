@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -96,7 +97,8 @@ func (m revlinkWarmupModel) waitForStatusActivity() tea.Msg {
 }
 
 func (m revlinkWarmupModel) revlinkWarmupCmd() tea.Msg {
-	ctx := m.ctx
+	ctx, cancel := context.WithTimeout(m.ctx, 2*time.Minute)
+	defer cancel()
 
 	if viper.GetString("ovm-test-fake") != "" {
 		for i := 0; i < 20; i++ {
@@ -123,7 +125,8 @@ func (m revlinkWarmupModel) revlinkWarmupCmd() tea.Msg {
 		m.status <- stream.Msg()
 	}
 
-	if stream.Err() != nil {
+	err = stream.Err()
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		return fatalError{id: m.spinner.ID(), err: fmt.Errorf("error warming up revlink: %w", stream.Err())}
 	}
 
