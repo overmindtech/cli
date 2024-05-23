@@ -22,6 +22,7 @@ type runPlanModel struct {
 	args     []string
 	planFile string
 
+	revlinkTask revlinkWarmupModel
 	taskModel
 }
 type runPlanNowMsg struct{}
@@ -32,12 +33,16 @@ func NewRunPlanModel(args []string, planFile string) runPlanModel {
 		args:     args,
 		planFile: planFile,
 
-		taskModel: NewTaskModel("Planning Changes"),
+		revlinkTask: NewRevlinkWarmupModel(),
+		taskModel:   NewTaskModel("Planning Changes"),
 	}
 }
 
 func (m runPlanModel) Init() tea.Cmd {
-	return nil
+	return tea.Batch(
+		m.revlinkTask.Init(),
+		m.taskModel.Init(),
+	)
 }
 
 func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -94,8 +99,12 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// propagate commands to components
 		// m.taskModel, cmd = m.taskModel.Update(msg)
 		// cmds = append(cmds, cmd)
-
 	}
+
+	var cmd tea.Cmd
+	m.revlinkTask, cmd = m.revlinkTask.Update(msg)
+	cmds = append(cmds, cmd)
+
 	return m, tea.Batch(cmds...)
 }
 
@@ -111,6 +120,7 @@ func (m runPlanModel) View() string {
 			))
 	case taskStatusDone:
 		bits = append(bits, m.taskModel.View())
+		bits = append(bits, m.revlinkTask.View())
 	case taskStatusError, taskStatusSkipped:
 		// handled by caller
 	}

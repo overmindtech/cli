@@ -25,7 +25,7 @@ type revlinkWarmupModel struct {
 	currentStatus *sdp.RevlinkWarmupResponse
 }
 
-func NewRevlinkWarmupModel() tea.Model {
+func NewRevlinkWarmupModel() revlinkWarmupModel {
 	return revlinkWarmupModel{
 		taskModel: NewTaskModel("Discover and link all resources"),
 		status:    make(chan *sdp.RevlinkWarmupResponse),
@@ -45,7 +45,7 @@ func (m revlinkWarmupModel) Init() tea.Cmd {
 	return m.taskModel.Init()
 }
 
-func (m revlinkWarmupModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m revlinkWarmupModel) Update(msg tea.Msg) (revlinkWarmupModel, tea.Cmd) {
 	cmds := []tea.Cmd{}
 
 	switch msg := msg.(type) {
