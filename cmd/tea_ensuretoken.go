@@ -269,32 +269,41 @@ func (m ensureTokenModel) awaitTokenCmd() tea.Msg {
 		defer cancel()
 	}
 
-	// while the RFC requires the oauth2 library to use 5 as the default,
-	// Auth0 should be able to handle more. Hence we re-implement the
+	// while the RFC requires the oauth2 library to use 5 as the default, Auth0
+	// should be able to handle more. Hence we re-implement the
 	m.deviceCode.Interval = 1
 
 	var token *oauth2.Token
 	var err error
 	for {
+		log.Trace("attempting to get token from auth0")
 		// reset the deviceCode's expiry to at most 1.5 seconds
 		m.deviceCode.Expiry = time.Now().Add(1500 * time.Millisecond)
 
 		token, err = m.config.DeviceAccessToken(ctx, m.deviceCode)
 		if err == nil {
 			// we got a token, continue below. kthxbye
+			log.Trace("we got a token from auth0")
 			break
 		}
 
-		if errors.Is(err, context.DeadlineExceeded) {
+		// See https://github.com/golang/oauth2/issues/635,
+		// https://github.com/golang/oauth2/pull/636,
+		// https://go-review.googlesource.com/c/oauth2/+/476316
+		if errors.Is(err, context.DeadlineExceeded) || strings.HasSuffix(err.Error(), "context deadline exceeded") {
 			// the context has expired, we need to retry
+			log.WithError(err).Trace("context.DeadlineExceeded - waiting for a second")
+			time.Sleep(time.Second)
 			continue
 		}
 
 		// re-implement DeviceAccessToken's logic, but faster
-		e, ok := err.(*oauth2.RetrieveError) // nolint:errorlint // we depend on DeviceAccessToken() returning an non-wrapped error
-		if !ok {
+		e, isRetrieveError := err.(*oauth2.RetrieveError) // nolint:errorlint // we depend on DeviceAccessToken() returning an non-wrapped error
+		if !isRetrieveError {
+			log.WithError(err).Trace("error authorizing token")
 			return fatalError{id: m.spinner.ID(), err: fmt.Errorf("error authorizing token: %w", err)}
 		}
+
 		switch e.ErrorCode {
 		case "slow_down":
 			// // https://datatracker.ietf.org/doc/html/rfc8628#section-3.5
@@ -307,7 +316,6 @@ func (m ensureTokenModel) awaitTokenCmd() tea.Msg {
 		default:
 			return fatalError{id: m.spinner.ID(), err: fmt.Errorf("error authorizing token (%v): %w", e.ErrorCode, err)}
 		}
-
 	}
 
 	span := trace.SpanFromContext(m.ctx)
