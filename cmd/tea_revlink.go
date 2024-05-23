@@ -27,7 +27,7 @@ type revlinkWarmupModel struct {
 func NewRevlinkWarmupModel() revlinkWarmupModel {
 	return revlinkWarmupModel{
 		taskModel: NewTaskModel("Discover and link all resources"),
-		status:    make(chan *sdp.RevlinkWarmupResponse),
+		status:    make(chan *sdp.RevlinkWarmupResponse, 3000),
 		currentStatus: &sdp.RevlinkWarmupResponse{
 			Status: "pending",
 			Items:  0,
