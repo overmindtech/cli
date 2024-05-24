@@ -46,6 +46,7 @@ type submitPlanModel struct {
 	blastRadiusEdges uint32
 
 	riskTask           taskModel
+	risksStarted       time.Time
 	riskMilestones     []*sdp.RiskCalculationStatus_ProgressMilestone
 	riskMilestoneTasks []taskModel
 	risks              []*sdp.Risk
@@ -161,6 +162,10 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if allSkipped {
 				m.riskTask.status = taskStatusSkipped
 			}
+
+			if m.risksStarted == (time.Time{}) {
+				m.risksStarted = time.Now()
+			}
 		} else if len(m.risks) > 0 {
 			m.riskTask.status = taskStatusDone
 		}
@@ -236,7 +241,7 @@ func (m submitPlanModel) View() string {
 		}
 	}
 
-	if m.changeUrl != "" && m.riskTask.status != taskStatusDone {
+	if m.changeUrl != "" && m.riskTask.status != taskStatusDone && time.Since(m.risksStarted) > 1500*time.Millisecond {
 		bits = append(bits, fmt.Sprintf("   │ Check the blast radius graph while you wait:\n   │ %v\n", m.changeUrl))
 	}
 
