@@ -128,12 +128,10 @@ func (m tfPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case runPlanFinishedMsg:
 		m.runPlanFinished = true
+		cmds = append(cmds, func() tea.Msg { return hideStartupStatusMsg{} })
 		if m.revlinkWarmupFinished {
 			cmds = append(cmds, func() tea.Msg { return submitPlanNowMsg{} })
 		}
-
-	case submitPlanNowMsg:
-		cmds = append(cmds, func() tea.Msg { return hideStartupStatusMsg{} })
 
 	case submitPlanFinishedMsg:
 		cmds = append(cmds, func() tea.Msg { return delayQuitMsg{} })

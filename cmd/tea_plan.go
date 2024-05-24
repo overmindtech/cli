@@ -76,7 +76,7 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		if viper.GetString("ovm-test-fake") != "" {
-			c = exec.CommandContext(m.ctx, "bash", "-c", "for i in $(seq 100); do echo fake terraform plan progress line $i of 100; done; sleep 1")
+			c = exec.CommandContext(m.ctx, "bash", "-c", "for i in $(seq 25); do echo fake terraform plan progress line $i of 25; sleep .1; done")
 		}
 
 		_, span := tracing.Tracer().Start(m.ctx, "terraform plan", trace.WithAttributes( // nolint:spancheck // will be ended in the tea.Exec cleanup func

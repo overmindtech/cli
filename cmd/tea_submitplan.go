@@ -46,6 +46,7 @@ type submitPlanModel struct {
 	blastRadiusEdges uint32
 
 	riskTask           taskModel
+	risksStarted       time.Time
 	riskMilestones     []*sdp.RiskCalculationStatus_ProgressMilestone
 	riskMilestoneTasks []taskModel
 	risks              []*sdp.Risk
@@ -67,7 +68,7 @@ func NewSubmitPlanModel(planFile string) submitPlanModel {
 	return submitPlanModel{
 		planFile: planFile,
 
-		processing: make(chan submitPlanUpdateMsg, 10), // provide a small buffer for sending updates, so we don't block the processing
+		processing: make(chan submitPlanUpdateMsg, 1000), // provide a buffer for sending updates, so we don't block the processing
 		progress:   []string{},
 
 		removingSecretsTask:    NewTaskModel("Removing secrets"),
@@ -161,6 +162,10 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if allSkipped {
 				m.riskTask.status = taskStatusSkipped
 			}
+
+			if m.risksStarted == (time.Time{}) {
+				m.risksStarted = time.Now()
+			}
 		} else if len(m.risks) > 0 {
 			m.riskTask.status = taskStatusDone
 		}
@@ -236,18 +241,38 @@ func (m submitPlanModel) View() string {
 		}
 	}
 
-	if m.changeUrl != "" {
-		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
+	if m.changeUrl != "" && m.riskTask.status != taskStatusDone && time.Since(m.risksStarted) > 1500*time.Millisecond {
+		bits = append(bits, fmt.Sprintf("   │ Check the blast radius graph while you wait:\n   │ %v\n", m.changeUrl))
 	}
 
 	return strings.Join(bits, "\n") + "\n"
 }
 
 func (m submitPlanModel) Status() taskStatus {
-	if m.blastRadiusTask.overall.status != taskStatusDone {
+	// return taskStatusPending when the first task is still pending
+	if m.removingSecretsTask.status != taskStatusDone {
+		return m.removingSecretsTask.status
+	}
+
+	if m.removingSecretsTask.status != taskStatusPending && m.resourceExtractionTask.status != taskStatusDone {
+		return m.resourceExtractionTask.status
+	}
+
+	if m.uploadChangesTask.status != taskStatusPending && m.uploadChangesTask.status != taskStatusDone {
+		return m.uploadChangesTask.status
+	}
+
+	if m.blastRadiusTask.overall.status != taskStatusPending && m.blastRadiusTask.overall.status != taskStatusDone {
 		return m.blastRadiusTask.overall.status
 	}
-	return m.riskTask.status
+
+	// return taskStatusDone when the last task is done
+	if m.riskTask.status != taskStatusPending {
+		return m.riskTask.status
+	}
+
+	// return taskStatusRunning when no task has errored or skipped
+	return taskStatusRunning
 }
 
 // A command that waits for the activity on the processing channel.
@@ -263,7 +288,6 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusRunning)}
 		time.Sleep(time.Second)
 		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusDone)}
-		time.Sleep(time.Second)
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusRunning)}
 		time.Sleep(time.Second)
 
@@ -454,6 +478,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 
 	tfPlanJsonCmd.Stderr = os.Stderr // TODO: capture and output this through the View() instead
 
+	log.WithField("args", tfPlanJsonCmd.Args).Debug("converting plan to JSON")
 	planJson, err := tfPlanJsonCmd.Output()
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusError)}
@@ -469,6 +494,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	// Extract changes from the plan and created mapped item diffs
 	///////////////////////////////////////////////////////////////////
 	m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusRunning)}
+	time.Sleep(200 * time.Millisecond) // give the UI a little time to update
 	plannedChanges, diffMsg, err := mappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusError)}
@@ -483,6 +509,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 			diffMsg.numUnsupported,
 		))}
 	m.processing <- submitPlanUpdateMsg{diffMsg}
+	time.Sleep(200 * time.Millisecond) // give the UI a little time to update
 	m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusDone)}
 
 	///////////////////////////////////////////////////////////////////
@@ -574,6 +601,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		}
 	}
 
+	time.Sleep(200 * time.Millisecond) // give the UI a little time to update
 	m.processing <- submitPlanUpdateMsg{m.uploadChangesTask.UpdateStatusMsg(taskStatusDone)}
 
 	///////////////////////////////////////////////////////////////////
