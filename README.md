@@ -1,5 +1,25 @@
 # Overmind CLI
 
+## Installation
+
+### MacOS
+
+To install on Mac with homebrew use:
+
+```
+brew install overmindtech/overmind/overmind-cli
+```
+
+### Linux
+
+Releases are available on the [releases page](https://github.com/overmindtech/cli/releases/latest)
+
+### Windows
+
+Releases are available on the [releases page](https://github.com/overmindtech/cli/releases/latest)
+
+## Details
+
 CLI to interact with the Overmind API
 
 ```
