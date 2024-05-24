@@ -68,7 +68,7 @@ func NewSubmitPlanModel(planFile string) submitPlanModel {
 	return submitPlanModel{
 		planFile: planFile,
 
-		processing: make(chan submitPlanUpdateMsg, 10), // provide a small buffer for sending updates, so we don't block the processing
+		processing: make(chan submitPlanUpdateMsg, 1000), // provide a buffer for sending updates, so we don't block the processing
 		progress:   []string{},
 
 		removingSecretsTask:    NewTaskModel("Removing secrets"),
@@ -478,6 +478,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 
 	tfPlanJsonCmd.Stderr = os.Stderr // TODO: capture and output this through the View() instead
 
+	log.WithField("args", tfPlanJsonCmd.Args).Debug("converting plan to JSON")
 	planJson, err := tfPlanJsonCmd.Output()
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusError)}
