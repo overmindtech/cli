@@ -150,9 +150,7 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if len(m.riskMilestones) > 0 {
 			m.riskTask.status = taskStatusRunning
 			cmds = append(cmds, m.riskTask.spinner.Tick)
-		} else if len(m.risks) > 0 {
-			m.riskTask.status = taskStatusDone
-		} else {
+
 			var allSkipped = true
 			for _, ms := range m.riskMilestoneTasks {
 				if ms.status != taskStatusSkipped {
@@ -163,20 +161,14 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if allSkipped {
 				m.riskTask.status = taskStatusSkipped
 			}
+		} else if len(m.risks) > 0 {
+			m.riskTask.status = taskStatusDone
 		}
 
 	case progressSnapshotMsg:
 		m.blastRadiusItems = msg.items
 		m.blastRadiusEdges = msg.edges
 
-	default:
-		// propagate commands to components
-		var cmd tea.Cmd
-
-		for i, ms := range m.riskMilestoneTasks {
-			m.riskMilestoneTasks[i], cmd = ms.Update(msg)
-			cmds = append(cmds, cmd)
-		}
 	}
 
 	var cmd tea.Cmd
@@ -194,6 +186,11 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.riskTask, cmd = m.riskTask.Update(msg)
 	cmds = append(cmds, cmd)
+
+	for i, ms := range m.riskMilestoneTasks {
+		m.riskMilestoneTasks[i], cmd = ms.Update(msg)
+		cmds = append(cmds, cmd)
+	}
 
 	return m, tea.Batch(cmds...)
 }
@@ -336,10 +333,8 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{url: "https://example.com/changes/abc"}}
 		time.Sleep(time.Second)
 
-		// TODO
-		m.processing <- submitPlanUpdateMsg{"Calculating risks"}
-		time.Sleep(time.Second)
-
+		m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusRunning)}
+		time.Sleep(100 * time.Millisecond)
 		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{
 			url: "https://example.com/changes/abc",
 			riskMilestones: []*sdp.RiskCalculationStatus_ProgressMilestone{
@@ -445,9 +440,8 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		}}
 		time.Sleep(time.Second)
 
+		m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusDone)}
 		m.processing <- submitPlanUpdateMsg{submitPlanFinishedMsg{"Fake done"}}
-		time.Sleep(time.Second)
-		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.FinishMsg()}
 		time.Sleep(time.Second)
 		return nil
 	}
@@ -633,6 +627,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		}
 	}
 	if resultStream.Err() != nil {
+		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.UpdateStatusMsg(taskStatusError)}
 		close(m.processing)
 		return fatalError{err: fmt.Errorf("processPlanCmd: error streaming results: %w", err)}
 	}
@@ -644,8 +639,10 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 
 	m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{url: changeUrl.String()}}
 
+	///////////////////////////////////////////////////////////////////
 	// wait for risk calculation to happen
-	m.processing <- submitPlanUpdateMsg{"Calculating risks"}
+	///////////////////////////////////////////////////////////////////
+	m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusRunning)}
 	for {
 		riskRes, err := client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
 			Msg: &sdp.GetChangeRisksRequest{
@@ -653,6 +650,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 			},
 		})
 		if err != nil {
+			m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusError)}
 			close(m.processing)
 			return fatalError{err: fmt.Errorf("processPlanCmd: failed to get change risks: %w", err)}
 		}
@@ -663,7 +661,8 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 			risks:          riskRes.Msg.GetChangeRiskMetadata().GetRisks(),
 		}}
 
-		if riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus() == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
+		status := riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus()
+		if status == sdp.RiskCalculationStatus_STATUS_UNSPECIFIED || status == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
 			time.Sleep(time.Second)
 			// retry
 		} else {
@@ -672,12 +671,14 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		}
 
 		if ctx.Err() != nil {
+			m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusError)}
+			close(m.processing)
 			return fatalError{err: fmt.Errorf("processPlanCmd: context cancelled: %w", ctx.Err())}
 		}
 
 	}
 
-	m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.FinishMsg()}
+	m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusDone)}
 	m.processing <- submitPlanUpdateMsg{submitPlanFinishedMsg{"Done"}}
 
 	return nil
