@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.26.3
 	github.com/charmbracelet/glamour v0.7.0
 	github.com/charmbracelet/huh v0.3.0
-	github.com/charmbracelet/lipgloss v0.10.0
+	github.com/charmbracelet/lipgloss v0.11.0
 	github.com/getsentry/sentry-go v0.27.0
 	github.com/google/uuid v1.6.0
 	github.com/hexops/gotextdiff v1.0.3
