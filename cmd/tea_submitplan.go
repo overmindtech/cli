@@ -493,6 +493,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	// Extract changes from the plan and created mapped item diffs
 	///////////////////////////////////////////////////////////////////
 	m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusRunning)}
+	time.Sleep(200 * time.Millisecond) // give the UI a little time to update
 	plannedChanges, diffMsg, err := mappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusError)}
@@ -507,6 +508,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 			diffMsg.numUnsupported,
 		))}
 	m.processing <- submitPlanUpdateMsg{diffMsg}
+	time.Sleep(200 * time.Millisecond) // give the UI a little time to update
 	m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusDone)}
 
 	///////////////////////////////////////////////////////////////////
@@ -598,6 +600,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		}
 	}
 
+	time.Sleep(200 * time.Millisecond) // give the UI a little time to update
 	m.processing <- submitPlanUpdateMsg{m.uploadChangesTask.UpdateStatusMsg(taskStatusDone)}
 
 	///////////////////////////////////////////////////////////////////
