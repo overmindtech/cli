@@ -93,11 +93,9 @@ func (m taskModel) Update(msg tea.Msg) (taskModel, tea.Cmd) {
 			m.status = msg.status
 		}
 	default:
-		if m.status == taskStatusRunning {
-			var cmd tea.Cmd
-			m.spinner, cmd = m.spinner.Update(msg)
-			return m, cmd
-		}
+		var cmd tea.Cmd
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
 	}
 
 	return m, nil
