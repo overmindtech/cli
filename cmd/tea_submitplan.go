@@ -661,7 +661,8 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 			risks:          riskRes.Msg.GetChangeRiskMetadata().GetRisks(),
 		}}
 
-		if riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus() == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
+		status := riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus()
+		if status == sdp.RiskCalculationStatus_STATUS_UNSPECIFIED || status == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
 			time.Sleep(time.Second)
 			// retry
 		} else {
