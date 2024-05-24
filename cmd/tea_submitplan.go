@@ -236,8 +236,8 @@ func (m submitPlanModel) View() string {
 		}
 	}
 
-	if m.changeUrl != "" {
-		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
+	if m.changeUrl != "" && m.riskTask.status != taskStatusDone {
+		bits = append(bits, fmt.Sprintf("   │ Check the blast radius graph while you wait:\n   │ %v\n", m.changeUrl))
 	}
 
 	return strings.Join(bits, "\n") + "\n"
