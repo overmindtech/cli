@@ -150,9 +150,7 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if len(m.riskMilestones) > 0 {
 			m.riskTask.status = taskStatusRunning
 			cmds = append(cmds, m.riskTask.spinner.Tick)
-		} else if len(m.risks) > 0 {
-			m.riskTask.status = taskStatusDone
-		} else {
+
 			var allSkipped = true
 			for _, ms := range m.riskMilestoneTasks {
 				if ms.status != taskStatusSkipped {
@@ -163,6 +161,8 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if allSkipped {
 				m.riskTask.status = taskStatusSkipped
 			}
+		} else if len(m.risks) > 0 {
+			m.riskTask.status = taskStatusDone
 		}
 
 	case progressSnapshotMsg:
