@@ -244,10 +244,30 @@ func (m submitPlanModel) View() string {
 }
 
 func (m submitPlanModel) Status() taskStatus {
-	if m.blastRadiusTask.overall.status != taskStatusDone {
+	// return taskStatusPending when the first task is still pending
+	if m.removingSecretsTask.status != taskStatusDone {
+		return m.removingSecretsTask.status
+	}
+
+	if m.removingSecretsTask.status != taskStatusPending && m.resourceExtractionTask.status != taskStatusDone {
+		return m.resourceExtractionTask.status
+	}
+
+	if m.uploadChangesTask.status != taskStatusPending && m.uploadChangesTask.status != taskStatusDone {
+		return m.uploadChangesTask.status
+	}
+
+	if m.blastRadiusTask.overall.status != taskStatusPending && m.blastRadiusTask.overall.status != taskStatusDone {
 		return m.blastRadiusTask.overall.status
 	}
-	return m.riskTask.status
+
+	// return taskStatusDone when the last task is done
+	if m.riskTask.status != taskStatusPending {
+		return m.riskTask.status
+	}
+
+	// return taskStatusRunning when no task has errored or skipped
+	return taskStatusRunning
 }
 
 // A command that waits for the activity on the processing channel.
