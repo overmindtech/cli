@@ -715,29 +715,41 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 func (m submitPlanModel) FinalReport() string {
 	bits := []string{}
 	if m.blastRadiusItems > 0 {
-		bits = append(bits, "")
 		bits = append(bits, styleH1().Render("Blast Radius"))
 		bits = append(bits, fmt.Sprintf("\nItems: %v\nEdges: %v\n", m.blastRadiusItems, m.blastRadiusEdges))
 	}
 	if m.changeUrl != "" && len(m.risks) > 0 {
-		bits = append(bits, "")
 		bits = append(bits, styleH1().Render("Potential Risks"))
 		bits = append(bits, "")
 		for _, r := range m.risks {
 			severity := ""
 			switch r.GetSeverity() {
 			case sdp.Risk_SEVERITY_HIGH:
-				severity = lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("High ‼")
+				severity = lipgloss.NewStyle().
+					Foreground(ColorPalette.BgDanger).
+					Bold(true).
+					PaddingLeft(2).
+					Render("High ‼")
 			case sdp.Risk_SEVERITY_MEDIUM:
-				severity = lipgloss.NewStyle().Foreground(ColorPalette.BgWarning).Render("Medium !")
+				severity = lipgloss.NewStyle().
+					Foreground(ColorPalette.BgWarning).
+					PaddingLeft(2).
+					Render("Medium !")
 			case sdp.Risk_SEVERITY_LOW:
-				severity = lipgloss.NewStyle().Render("Low ⓘ")
+				severity = lipgloss.NewStyle().
+					PaddingLeft(2).
+					Render("Low ⓘ ")
 			case sdp.Risk_SEVERITY_UNSPECIFIED:
 				// do nothing
 			}
+			title := lipgloss.NewStyle().
+				Foreground(ColorPalette.BgMain).
+				Bold(true).
+				Render(r.GetTitle())
+
 			bits = append(bits, (fmt.Sprintf("%v%v\n\n%v\n\n",
+				title,
 				severity,
-				styleH2().Render(r.GetTitle()),
 				wordwrap.String(r.GetDescription(), min(160, m.width-4)))))
 		}
 		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
