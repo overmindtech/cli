@@ -727,15 +727,15 @@ func (m submitPlanModel) FinalReport() string {
 			severity := ""
 			switch r.GetSeverity() {
 			case sdp.Risk_SEVERITY_HIGH:
-				severity = lipgloss.NewStyle().Background(ColorPalette.BgDanger).Render("  High 🔥  ")
+				severity = lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("High ‼")
 			case sdp.Risk_SEVERITY_MEDIUM:
-				severity = lipgloss.NewStyle().Background(ColorPalette.BgWarning).Render("  Medium ❗  ")
+				severity = lipgloss.NewStyle().Foreground(ColorPalette.BgWarning).Render("Medium !")
 			case sdp.Risk_SEVERITY_LOW:
-				severity = lipgloss.NewStyle().Background(ColorPalette.LabelTitle).Render("  Low ℹ️  ")
+				severity = lipgloss.NewStyle().Render("Low ⓘ")
 			case sdp.Risk_SEVERITY_UNSPECIFIED:
 				// do nothing
 			}
-			bits = append(bits, (fmt.Sprintf("%v %v\n\n%v\n\n",
+			bits = append(bits, (fmt.Sprintf("%v%v\n\n%v\n\n",
 				severity,
 				styleH2().Render(r.GetTitle()),
 				wordwrap.String(r.GetDescription(), min(160, m.width-4)))))
