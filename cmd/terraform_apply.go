@@ -444,7 +444,18 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 				"items": msg.GetNumItems(),
 				"edges": msg.GetNumEdges(),
 			}).Trace("progress")
-			m.startingChange <- m.startingChangeSnapshot.ProgressMsg(msg.GetState().String(), msg.GetNumItems(), msg.GetNumEdges())
+			stateLabel := "unknown"
+			switch msg.GetState() {
+			case sdp.StartChangeResponse_STATE_UNSPECIFIED:
+				stateLabel = "unknown"
+			case sdp.StartChangeResponse_STATE_TAKING_SNAPSHOT:
+				stateLabel = "capturing current state"
+			case sdp.StartChangeResponse_STATE_SAVING_SNAPSHOT:
+				stateLabel = "saving state"
+			case sdp.StartChangeResponse_STATE_DONE:
+				stateLabel = "done"
+			}
+			m.startingChange <- m.startingChangeSnapshot.ProgressMsg(stateLabel, msg.GetNumItems(), msg.GetNumEdges())
 		}
 		if startStream.Err() != nil {
 			return fatalError{err: fmt.Errorf("failed to process start change: %w", startStream.Err())}
@@ -485,7 +496,18 @@ func (m tfApplyModel) startEndChangeCmd() tea.Cmd {
 				"items": msg.GetNumItems(),
 				"edges": msg.GetNumEdges(),
 			}).Trace("progress")
-			m.endingChange <- m.endingChangeSnapshot.ProgressMsg(msg.GetState().String(), msg.GetNumItems(), msg.GetNumEdges())
+			stateLabel := "unknown"
+			switch msg.GetState() {
+			case sdp.EndChangeResponse_STATE_UNSPECIFIED:
+				stateLabel = "unknown"
+			case sdp.EndChangeResponse_STATE_TAKING_SNAPSHOT:
+				stateLabel = "capturing current state"
+			case sdp.EndChangeResponse_STATE_SAVING_SNAPSHOT:
+				stateLabel = "saving state"
+			case sdp.EndChangeResponse_STATE_DONE:
+				stateLabel = "done"
+			}
+			m.endingChange <- m.endingChangeSnapshot.ProgressMsg(stateLabel, msg.GetNumItems(), msg.GetNumEdges())
 		}
 		if endStream.Err() != nil {
 			return fatalError{err: fmt.Errorf("failed to process end change: %w", endStream.Err())}
