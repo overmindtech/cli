@@ -50,6 +50,7 @@ type tfApplyModel struct {
 
 	submitPlanTask submitPlanModel
 
+	afterRisks       bool // indicate that risks have been displayed
 	needApproval     bool
 	planApprovalForm *huh.Form // this is set to true when we need to ask for approval, but we haven't yet received the approval
 
@@ -68,6 +69,8 @@ type tfApplyModel struct {
 }
 
 type askForApprovalMsg struct{}
+type showRisksMsg struct{}
+type risksShownMsg struct{}
 type startStartingSnapshotMsg struct{}
 
 type changeIdentifiedMsg struct {
@@ -209,12 +212,29 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, func() tea.Msg { return hideStartupStatusMsg{} })
 
 	case submitPlanFinishedMsg:
-		cmds = append(cmds, func() tea.Msg {
-			if m.needApproval {
-				return askForApprovalMsg{}
-			}
-			return startStartingSnapshotMsg{}
-		})
+		cmds = append(cmds, func() tea.Msg { return showRisksMsg{} })
+
+	case showRisksMsg:
+		cmds = append(cmds,
+			tea.Sequence(
+				func() tea.Msg { return freezeViewMsg{} },
+				tea.Exec(
+					&interstitialCommand{text: fmt.Sprintf("%v\n%v", m.View(), m.submitPlanTask.FinalReport())},
+					func(err error) tea.Msg {
+						if err != nil {
+							return fatalError{err: fmt.Errorf("failed to show risks: %w", err)}
+						}
+						return risksShownMsg{}
+					})))
+
+	case risksShownMsg:
+		m.afterRisks = true
+		cmds = append(cmds, func() tea.Msg { return unfreezeViewMsg{} })
+		if m.needApproval {
+			cmds = append(cmds, func() tea.Msg { return askForApprovalMsg{} })
+		} else {
+			cmds = append(cmds, func() tea.Msg { return startStartingSnapshotMsg{} })
+		}
 
 	case askForApprovalMsg:
 		input := huh.NewInput().
@@ -273,6 +293,10 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		_, span := tracing.Tracer().Start(m.ctx, "terraform apply", trace.WithAttributes( // nolint:spancheck // will be ended in the tea.Exec cleanup func
 			attribute.String("command", strings.Join(m.args, " ")),
 		))
+
+		if viper.GetString("ovm-test-fake") == "dry" {
+			c = exec.CommandContext(m.ctx, "bash", "-c", "for i in $(seq 25); do echo fake terraform apply progress line $i of 25; sleep .1; done")
+		}
 		return m, tea.Sequence( // nolint:spancheck // will be ended in the tea.Exec cleanup func
 			func() tea.Msg { return freezeViewMsg{} },
 			tea.Exec(
@@ -345,12 +369,14 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m tfApplyModel) View() string {
 	bits := []string{}
 
-	if m.runPlanTask.status != taskStatusPending {
-		bits = append(bits, m.runPlanTask.View())
-	}
+	if !m.afterRisks {
+		if m.runPlanTask.status != taskStatusPending {
+			bits = append(bits, m.runPlanTask.View())
+		}
 
-	if m.submitPlanTask.Status() != taskStatusPending {
-		bits = append(bits, m.submitPlanTask.View())
+		if m.submitPlanTask.Status() != taskStatusPending {
+			bits = append(bits, m.submitPlanTask.View())
+		}
 	}
 
 	if m.planApprovalForm != nil {

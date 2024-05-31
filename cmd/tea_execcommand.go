@@ -64,3 +64,24 @@ func (c *cliExecCommandModel) SetStderr(w io.Writer) {
 		c.Stderr = w
 	}
 }
+
+// interstitialCommand is a command that will print a string to stdout after
+// bubbletea has released the terminal.
+type interstitialCommand struct {
+	text   string
+	stdout io.Writer
+}
+
+// assert that interstitialCommand implements tea.ExecCommand
+var _ tea.ExecCommand = (*interstitialCommand)(nil)
+
+func (c *interstitialCommand) Run() error {
+	_, err := fmt.Println(c.text)
+	return err
+}
+
+func (c *interstitialCommand) SetStdin(io.Reader) {}
+func (c *interstitialCommand) SetStdout(stdout io.Writer) {
+	c.stdout = stdout
+}
+func (c *interstitialCommand) SetStderr(io.Writer) {}
