@@ -62,7 +62,6 @@ type tfApplyModel struct {
 	isEnding               bool
 	endingChange           chan tea.Msg
 	endingChangeSnapshot   snapshotModel
-	progress               []string
 
 	execCommandFunc ExecCommandFunc
 	width           int
@@ -151,7 +150,6 @@ func NewTfApplyModel(args []string, execCommandFunc ExecCommandFunc) tea.Model {
 		startingChangeSnapshot: NewSnapShotModel("Starting Change", "indexing resources"),
 		endingChange:           make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
 		endingChangeSnapshot:   NewSnapShotModel("Ending Change", "indexing resources"),
-		progress:               []string{},
 
 		execCommandFunc: execCommandFunc,
 	}
@@ -383,22 +381,22 @@ func (m tfApplyModel) View() string {
 		bits = append(bits, m.planApprovalForm.View())
 	}
 
-	if m.isStarting || m.runTfApply || m.isEnding {
+	if m.isStarting || m.runTfApply {
+
+		if m.startingChangeSnapshot.overall.status != taskStatusPending {
+			bits = append(bits, m.startingChangeSnapshot.View())
+		}
 		bits = append(bits,
 			fmt.Sprintf("%v Running 'terraform %v'",
 				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
 				strings.Join(m.args, " "),
 			))
+	}
 
-		if m.startingChangeSnapshot.overall.status != taskStatusPending {
-			bits = append(bits, m.startingChangeSnapshot.View())
-		}
-
+	if m.isEnding {
 		if m.endingChangeSnapshot.overall.status != taskStatusPending {
 			bits = append(bits, m.endingChangeSnapshot.View())
 		}
-
-		bits = append(bits, strings.Join(m.progress, "\n"))
 	}
 
 	return strings.Join(bits, "\n") + "\n"
