@@ -152,17 +152,7 @@ func NewTfApplyModel(args []string, execCommandFunc ExecCommandFunc) tea.Model {
 }
 
 func (m tfApplyModel) Init() tea.Cmd {
-	cmds := []tea.Cmd{}
-
-	if m.needPlan {
-		cmds = append(
-			cmds,
-			m.runPlanTask.Init(),
-			m.submitPlanTask.Init(),
-		)
-	}
-
-	return tea.Batch(cmds...)
+	return nil
 }
 
 func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -175,6 +165,20 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case loadSourcesConfigMsg:
 		m.ctx = msg.ctx
 		m.oi = msg.oi
+
+	case sourcesInitialisedMsg:
+		if m.needPlan {
+			cmds = append(
+				cmds,
+				m.runPlanTask.Init(),
+				m.submitPlanTask.Init(),
+			)
+		} else {
+			cmds = append(cmds,
+				func() tea.Msg { return revlinkWarmupFinishedMsg{} },
+				func() tea.Msg { return runPlanFinishedMsg{} },
+			)
+		}
 
 	case revlinkWarmupFinishedMsg:
 		m.revlinkWarmupFinished = true

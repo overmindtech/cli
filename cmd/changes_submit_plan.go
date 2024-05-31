@@ -269,7 +269,7 @@ func (g *plannedChangeGroups) MappedItemDiffs() []*sdp.MappedItemDiff {
 	return mappedItemDiffs
 }
 
-// Add the specified item to the approapriate type group in the supported or unsupported section, based of whether it has a mapping query
+// Add the specified item to the appropriate type group in the supported or unsupported section, based of whether it has a mapping query
 func (g *plannedChangeGroups) Add(typ string, item *sdp.MappedItemDiff) {
 	groups := g.supported
 	if item.GetMappingQuery() == nil {
