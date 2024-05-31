@@ -726,24 +726,26 @@ func (m submitPlanModel) FinalReport() string {
 			switch r.GetSeverity() {
 			case sdp.Risk_SEVERITY_HIGH:
 				severity = lipgloss.NewStyle().
-					Foreground(ColorPalette.BgDanger).
+					Background(ColorPalette.BgDanger).
+					Padding(0, 1).
 					Bold(true).
-					PaddingLeft(2).
 					Render("High ‼")
 			case sdp.Risk_SEVERITY_MEDIUM:
 				severity = lipgloss.NewStyle().
-					Foreground(ColorPalette.BgWarning).
-					PaddingLeft(2).
+					Background(ColorPalette.BgWarning).
+					Padding(0, 1).
 					Render("Medium !")
 			case sdp.Risk_SEVERITY_LOW:
 				severity = lipgloss.NewStyle().
-					PaddingLeft(2).
+					Background(ColorPalette.LabelBase).
+					Padding(0, 1).
 					Render("Low ⓘ ")
 			case sdp.Risk_SEVERITY_UNSPECIFIED:
 				// do nothing
 			}
 			title := lipgloss.NewStyle().
 				Foreground(ColorPalette.BgMain).
+				PaddingRight(1).
 				Bold(true).
 				Render(r.GetTitle())
 
