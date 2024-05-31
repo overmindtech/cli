@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
@@ -244,6 +245,18 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		)
 		cmds = append(cmds, input.Focus())
 
+		if viper.GetString("ovm-test-fake") != "" {
+			cmds = append(cmds, tea.Sequence(
+				func() tea.Msg {
+					return tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("yes")}
+				},
+				func() tea.Msg {
+					time.Sleep(time.Second)
+					return tea.KeyMsg{Type: tea.KeyEnter}
+				},
+			))
+		}
+
 	case startStartingSnapshotMsg:
 		m.isStarting = true
 		cmds = append(cmds,
@@ -292,7 +305,7 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			attribute.String("command", strings.Join(m.args, " ")),
 		))
 
-		if viper.GetString("ovm-test-fake") == "dry" {
+		if viper.GetString("ovm-test-fake") != "" {
 			c = exec.CommandContext(m.ctx, "bash", "-c", "for i in $(seq 25); do echo fake terraform apply progress line $i of 25; sleep .1; done")
 		}
 		return m, tea.Sequence( // nolint:spancheck // will be ended in the tea.Exec cleanup func
@@ -309,6 +322,7 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return tfApplyFinishedMsg{}
 				}))
 	case tfApplyFinishedMsg:
+		m.runTfApply = false
 		m.isEnding = true
 		cmds = append(cmds,
 			func() tea.Msg { return unfreezeViewMsg{} },
@@ -381,11 +395,11 @@ func (m tfApplyModel) View() string {
 		bits = append(bits, m.planApprovalForm.View())
 	}
 
-	if m.isStarting || m.runTfApply {
+	if (m.isStarting || m.runTfApply) && m.startingChangeSnapshot.overall.status != taskStatusPending {
+		bits = append(bits, m.startingChangeSnapshot.View())
+	}
 
-		if m.startingChangeSnapshot.overall.status != taskStatusPending {
-			bits = append(bits, m.startingChangeSnapshot.View())
-		}
+	if m.runTfApply {
 		bits = append(bits,
 			fmt.Sprintf("%v Running 'terraform %v'",
 				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
@@ -393,10 +407,13 @@ func (m tfApplyModel) View() string {
 			))
 	}
 
-	if m.isEnding {
-		if m.endingChangeSnapshot.overall.status != taskStatusPending {
-			bits = append(bits, m.endingChangeSnapshot.View())
-		}
+	if m.isEnding && m.endingChangeSnapshot.overall.status != taskStatusPending {
+		bits = append(bits,
+			fmt.Sprintf("%v Ran 'terraform %v'",
+				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
+				strings.Join(m.args, " "),
+			))
+		bits = append(bits, m.endingChangeSnapshot.View())
 	}
 
 	return strings.Join(bits, "\n") + "\n"
@@ -407,6 +424,18 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 	oi := m.oi
 
 	return func() tea.Msg {
+		if viper.GetString("ovm-test-fake") != "" {
+			m.startingChange <- changeIdentifiedMsg{uuid: uuid.New()}
+			m.startingChange <- m.startingChangeSnapshot.StartMsg()
+			time.Sleep(time.Second)
+
+			for i := 0; i < 5; i++ {
+				m.startingChange <- m.startingChangeSnapshot.ProgressMsg(fmt.Sprintf("progress %v", i), uint32(i), uint32(i))
+				time.Sleep(time.Second)
+			}
+			return m.startingChangeSnapshot.FinishMsg()
+		}
+
 		var err error
 		ticketLink := viper.GetString("ticket-link")
 		if ticketLink == "" {
@@ -474,6 +503,17 @@ func (m tfApplyModel) startEndChangeCmd() tea.Cmd {
 	changeUuid := m.changeUuid
 
 	return func() tea.Msg {
+		if viper.GetString("ovm-test-fake") != "" {
+			m.endingChange <- m.endingChangeSnapshot.StartMsg()
+			time.Sleep(time.Second)
+
+			for i := 0; i < 5; i++ {
+				m.endingChange <- m.endingChangeSnapshot.ProgressMsg(fmt.Sprintf("progress %v", i), uint32(i), uint32(i))
+				time.Sleep(time.Second)
+			}
+			return m.endingChangeSnapshot.FinishMsg()
+		}
+
 		m.endingChange <- m.endingChangeSnapshot.StartMsg()
 
 		client := AuthenticatedChangesClient(ctx, oi)
