@@ -9,6 +9,7 @@ import (
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/tracing"
@@ -49,7 +50,8 @@ type tfApplyModel struct {
 
 	submitPlanTask submitPlanModel
 
-	needApproval bool
+	needApproval     bool
+	planApprovalForm *huh.Form // this is set to true when we need to ask for approval, but we haven't yet received the approval
 
 	changeUuid             uuid.UUID
 	isStarting             bool
@@ -65,6 +67,7 @@ type tfApplyModel struct {
 	width           int
 }
 
+type askForApprovalMsg struct{}
 type startStartingSnapshotMsg struct{}
 
 type changeIdentifiedMsg struct {
@@ -206,7 +209,22 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, func() tea.Msg { return hideStartupStatusMsg{} })
 
 	case submitPlanFinishedMsg:
-		cmds = append(cmds, func() tea.Msg { return startStartingSnapshotMsg{} })
+		cmds = append(cmds, func() tea.Msg {
+			if m.needApproval {
+				return askForApprovalMsg{}
+			}
+			return startStartingSnapshotMsg{}
+		})
+
+	case askForApprovalMsg:
+		input := huh.NewInput().
+			Key("approval").
+			Title("Do you want to perform these actions?").
+			Description("Terraform will perform the actions described above.\nOnly 'yes' will be accepted to approve.")
+		m.planApprovalForm = huh.NewForm(
+			huh.NewGroup(input),
+		)
+		cmds = append(cmds, input.Focus())
 
 	case startStartingSnapshotMsg:
 		m.isStarting = true
@@ -297,6 +315,30 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.submitPlanTask = mdl.(submitPlanModel)
 	}
 
+	if m.planApprovalForm != nil {
+		mdl, cmd := m.planApprovalForm.Update(msg)
+		cmds = append(cmds, cmd)
+		m.planApprovalForm = mdl.(*huh.Form)
+
+		switch m.planApprovalForm.State {
+		case huh.StateAborted:
+			// rejected
+			cmds = append(cmds, tea.Quit)
+			m.planApprovalForm = nil
+		case huh.StateNormal:
+			// wait for results
+		case huh.StateCompleted:
+			if m.planApprovalForm.GetString("approval") == "yes" {
+				// approved
+				cmds = append(cmds, func() tea.Msg { return startStartingSnapshotMsg{} })
+			} else {
+				// rejected
+				cmds = append(cmds, tea.Quit)
+			}
+			m.planApprovalForm = nil
+		}
+	}
+
 	return m, tea.Batch(cmds...)
 }
 
@@ -309,6 +351,10 @@ func (m tfApplyModel) View() string {
 
 	if m.submitPlanTask.Status() != taskStatusPending {
 		bits = append(bits, m.submitPlanTask.View())
+	}
+
+	if m.planApprovalForm != nil {
+		bits = append(bits, m.planApprovalForm.View())
 	}
 
 	if m.isStarting || m.runTfApply || m.isEnding {
