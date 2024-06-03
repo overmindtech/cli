@@ -9,7 +9,6 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/glamour/ansi"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/muesli/termenv"
 )
 
 type LogoPalette struct {
@@ -175,7 +174,7 @@ func MarkdownStyle() ansi.StyleConfig {
 	var labelMuted string
 	var labelTitle string
 
-	if termenv.HasDarkBackground() {
+	if lipgloss.HasDarkBackground() {
 		bgBase = ColorPalette.BgBase.Dark
 		bgMain = ColorPalette.BgMain.Dark
 		labelBase = ColorPalette.LabelBase.Dark
