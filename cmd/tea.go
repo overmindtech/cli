@@ -82,8 +82,8 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func(args [
 			log.SetLevel(log.TraceLevel)
 		} else {
 			// avoid log messages from sources and others to interrupt bubbletea rendering
-			viper.Set("log", "error")
-			log.SetLevel(log.ErrorLevel)
+			viper.Set("log", "fatal")
+			log.SetLevel(log.FatalLevel)
 		}
 
 		// wrap the rest of the function in a closure to allow for cleaner error handling and deferring.
