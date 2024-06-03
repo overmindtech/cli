@@ -6,9 +6,11 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/tracing"
@@ -49,7 +51,9 @@ type tfApplyModel struct {
 
 	submitPlanTask submitPlanModel
 
-	needApproval bool
+	afterRisks       bool // indicate that risks have been displayed
+	needApproval     bool
+	planApprovalForm *huh.Form // this is set to true when we need to ask for approval, but we haven't yet received the approval
 
 	changeUuid             uuid.UUID
 	isStarting             bool
@@ -59,12 +63,14 @@ type tfApplyModel struct {
 	isEnding               bool
 	endingChange           chan tea.Msg
 	endingChangeSnapshot   snapshotModel
-	progress               []string
 
 	execCommandFunc ExecCommandFunc
 	width           int
 }
 
+type askForApprovalMsg struct{}
+type showRisksMsg struct{}
+type risksShownMsg struct{}
 type startStartingSnapshotMsg struct{}
 
 type changeIdentifiedMsg struct {
@@ -145,7 +151,6 @@ func NewTfApplyModel(args []string, execCommandFunc ExecCommandFunc) tea.Model {
 		startingChangeSnapshot: NewSnapShotModel("Starting Change", "indexing resources"),
 		endingChange:           make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
 		endingChangeSnapshot:   NewSnapShotModel("Ending Change", "indexing resources"),
-		progress:               []string{},
 
 		execCommandFunc: execCommandFunc,
 	}
@@ -206,7 +211,51 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, func() tea.Msg { return hideStartupStatusMsg{} })
 
 	case submitPlanFinishedMsg:
-		cmds = append(cmds, func() tea.Msg { return startStartingSnapshotMsg{} })
+		cmds = append(cmds, func() tea.Msg { return showRisksMsg{} })
+
+	case showRisksMsg:
+		cmds = append(cmds,
+			tea.Sequence(
+				func() tea.Msg { return freezeViewMsg{} },
+				tea.Exec(
+					&interstitialCommand{text: fmt.Sprintf("%v\n%v", m.View(), m.submitPlanTask.FinalReport())},
+					func(err error) tea.Msg {
+						if err != nil {
+							return fatalError{err: fmt.Errorf("failed to show risks: %w", err)}
+						}
+						return risksShownMsg{}
+					})))
+
+	case risksShownMsg:
+		m.afterRisks = true
+		cmds = append(cmds, func() tea.Msg { return unfreezeViewMsg{} })
+		if m.needApproval {
+			cmds = append(cmds, func() tea.Msg { return askForApprovalMsg{} })
+		} else {
+			cmds = append(cmds, func() tea.Msg { return startStartingSnapshotMsg{} })
+		}
+
+	case askForApprovalMsg:
+		input := huh.NewInput().
+			Key("approval").
+			Title("Do you want to perform these actions?").
+			Description("Terraform will perform the actions described above.\nOnly 'yes' will be accepted to approve.")
+		m.planApprovalForm = huh.NewForm(
+			huh.NewGroup(input),
+		)
+		cmds = append(cmds, input.Focus())
+
+		if viper.GetString("ovm-test-fake") != "" {
+			cmds = append(cmds, tea.Sequence(
+				func() tea.Msg {
+					return tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("yes")}
+				},
+				func() tea.Msg {
+					time.Sleep(time.Second)
+					return tea.KeyMsg{Type: tea.KeyEnter}
+				},
+			))
+		}
 
 	case startStartingSnapshotMsg:
 		m.isStarting = true
@@ -255,6 +304,10 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		_, span := tracing.Tracer().Start(m.ctx, "terraform apply", trace.WithAttributes( // nolint:spancheck // will be ended in the tea.Exec cleanup func
 			attribute.String("command", strings.Join(m.args, " ")),
 		))
+
+		if viper.GetString("ovm-test-fake") != "" {
+			c = exec.CommandContext(m.ctx, "bash", "-c", "for i in $(seq 25); do echo fake terraform apply progress line $i of 25; sleep .1; done")
+		}
 		return m, tea.Sequence( // nolint:spancheck // will be ended in the tea.Exec cleanup func
 			func() tea.Msg { return freezeViewMsg{} },
 			tea.Exec(
@@ -269,6 +322,7 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return tfApplyFinishedMsg{}
 				}))
 	case tfApplyFinishedMsg:
+		m.runTfApply = false
 		m.isEnding = true
 		cmds = append(cmds,
 			func() tea.Msg { return unfreezeViewMsg{} },
@@ -297,36 +351,69 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.submitPlanTask = mdl.(submitPlanModel)
 	}
 
+	if m.planApprovalForm != nil {
+		mdl, cmd := m.planApprovalForm.Update(msg)
+		cmds = append(cmds, cmd)
+		m.planApprovalForm = mdl.(*huh.Form)
+
+		switch m.planApprovalForm.State {
+		case huh.StateAborted:
+			// rejected
+			cmds = append(cmds, tea.Quit)
+			m.planApprovalForm = nil
+		case huh.StateNormal:
+			// wait for results
+		case huh.StateCompleted:
+			if m.planApprovalForm.GetString("approval") == "yes" {
+				// approved
+				cmds = append(cmds, func() tea.Msg { return startStartingSnapshotMsg{} })
+			} else {
+				// rejected
+				cmds = append(cmds, tea.Quit)
+			}
+			m.planApprovalForm = nil
+		}
+	}
+
 	return m, tea.Batch(cmds...)
 }
 
 func (m tfApplyModel) View() string {
 	bits := []string{}
 
-	if m.runPlanTask.status != taskStatusPending {
-		bits = append(bits, m.runPlanTask.View())
+	if !m.afterRisks {
+		if m.runPlanTask.status != taskStatusPending {
+			bits = append(bits, m.runPlanTask.View())
+		}
+
+		if m.submitPlanTask.Status() != taskStatusPending {
+			bits = append(bits, m.submitPlanTask.View())
+		}
 	}
 
-	if m.submitPlanTask.Status() != taskStatusPending {
-		bits = append(bits, m.submitPlanTask.View())
+	if m.planApprovalForm != nil {
+		bits = append(bits, m.planApprovalForm.View())
 	}
 
-	if m.isStarting || m.runTfApply || m.isEnding {
+	if (m.isStarting || m.runTfApply) && m.startingChangeSnapshot.overall.status != taskStatusPending {
+		bits = append(bits, m.startingChangeSnapshot.View())
+	}
+
+	if m.runTfApply {
 		bits = append(bits,
 			fmt.Sprintf("%v Running 'terraform %v'",
 				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
 				strings.Join(m.args, " "),
 			))
+	}
 
-		if m.startingChangeSnapshot.overall.status != taskStatusPending {
-			bits = append(bits, m.startingChangeSnapshot.View())
-		}
-
-		if m.endingChangeSnapshot.overall.status != taskStatusPending {
-			bits = append(bits, m.endingChangeSnapshot.View())
-		}
-
-		bits = append(bits, strings.Join(m.progress, "\n"))
+	if m.isEnding && m.endingChangeSnapshot.overall.status != taskStatusPending {
+		bits = append(bits,
+			fmt.Sprintf("%v Ran 'terraform %v'",
+				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
+				strings.Join(m.args, " "),
+			))
+		bits = append(bits, m.endingChangeSnapshot.View())
 	}
 
 	return strings.Join(bits, "\n") + "\n"
@@ -337,6 +424,18 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 	oi := m.oi
 
 	return func() tea.Msg {
+		if viper.GetString("ovm-test-fake") != "" {
+			m.startingChange <- changeIdentifiedMsg{uuid: uuid.New()}
+			m.startingChange <- m.startingChangeSnapshot.StartMsg()
+			time.Sleep(time.Second)
+
+			for i := 0; i < 5; i++ {
+				m.startingChange <- m.startingChangeSnapshot.ProgressMsg(fmt.Sprintf("progress %v", i), uint32(i), uint32(i))
+				time.Sleep(time.Second)
+			}
+			return m.startingChangeSnapshot.FinishMsg()
+		}
+
 		var err error
 		ticketLink := viper.GetString("ticket-link")
 		if ticketLink == "" {
@@ -372,7 +471,18 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 				"items": msg.GetNumItems(),
 				"edges": msg.GetNumEdges(),
 			}).Trace("progress")
-			m.startingChange <- m.startingChangeSnapshot.ProgressMsg(msg.GetState().String(), msg.GetNumItems(), msg.GetNumEdges())
+			stateLabel := "unknown"
+			switch msg.GetState() {
+			case sdp.StartChangeResponse_STATE_UNSPECIFIED:
+				stateLabel = "unknown"
+			case sdp.StartChangeResponse_STATE_TAKING_SNAPSHOT:
+				stateLabel = "capturing current state"
+			case sdp.StartChangeResponse_STATE_SAVING_SNAPSHOT:
+				stateLabel = "saving state"
+			case sdp.StartChangeResponse_STATE_DONE:
+				stateLabel = "done"
+			}
+			m.startingChange <- m.startingChangeSnapshot.ProgressMsg(stateLabel, msg.GetNumItems(), msg.GetNumEdges())
 		}
 		if startStream.Err() != nil {
 			return fatalError{err: fmt.Errorf("failed to process start change: %w", startStream.Err())}
@@ -393,6 +503,17 @@ func (m tfApplyModel) startEndChangeCmd() tea.Cmd {
 	changeUuid := m.changeUuid
 
 	return func() tea.Msg {
+		if viper.GetString("ovm-test-fake") != "" {
+			m.endingChange <- m.endingChangeSnapshot.StartMsg()
+			time.Sleep(time.Second)
+
+			for i := 0; i < 5; i++ {
+				m.endingChange <- m.endingChangeSnapshot.ProgressMsg(fmt.Sprintf("progress %v", i), uint32(i), uint32(i))
+				time.Sleep(time.Second)
+			}
+			return m.endingChangeSnapshot.FinishMsg()
+		}
+
 		m.endingChange <- m.endingChangeSnapshot.StartMsg()
 
 		client := AuthenticatedChangesClient(ctx, oi)
@@ -413,7 +534,18 @@ func (m tfApplyModel) startEndChangeCmd() tea.Cmd {
 				"items": msg.GetNumItems(),
 				"edges": msg.GetNumEdges(),
 			}).Trace("progress")
-			m.endingChange <- m.endingChangeSnapshot.ProgressMsg(msg.GetState().String(), msg.GetNumItems(), msg.GetNumEdges())
+			stateLabel := "unknown"
+			switch msg.GetState() {
+			case sdp.EndChangeResponse_STATE_UNSPECIFIED:
+				stateLabel = "unknown"
+			case sdp.EndChangeResponse_STATE_TAKING_SNAPSHOT:
+				stateLabel = "capturing current state"
+			case sdp.EndChangeResponse_STATE_SAVING_SNAPSHOT:
+				stateLabel = "saving state"
+			case sdp.EndChangeResponse_STATE_DONE:
+				stateLabel = "done"
+			}
+			m.endingChange <- m.endingChangeSnapshot.ProgressMsg(stateLabel, msg.GetNumItems(), msg.GetNumEdges())
 		}
 		if endStream.Err() != nil {
 			return fatalError{err: fmt.Errorf("failed to process end change: %w", endStream.Err())}

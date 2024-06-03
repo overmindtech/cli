@@ -129,7 +129,6 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				Options(options...)
 			m.awsConfigForm = huh.NewForm(huh.NewGroup(selector))
 			cmds = append(cmds, selector.Focus())
-			selector.Skip()
 		} else {
 			m.awsConfigFormDone = true
 
