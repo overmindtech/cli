@@ -61,6 +61,8 @@ type ensureTokenModel struct {
 	deviceMessage string
 	config        oauth2.Config
 	deviceCode    *oauth2.DeviceAuthResponse
+
+	width int
 }
 
 func NewEnsureTokenModel(ctx context.Context, app string, apiKey string, requiredScopes []string) tea.Model {
@@ -86,6 +88,10 @@ func (m ensureTokenModel) Init() tea.Cmd {
 
 func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
+		return m, nil
+
 	case instanceLoadedMsg:
 		m.oi = msg.instance
 		m.status = taskStatusRunning
@@ -110,7 +116,7 @@ Then enter the code:
 
 	%v
 `
-		m.deviceMessage = markdownToString(fmt.Sprintf(beginAuthMessage, msg.err, msg.deviceCode.VerificationURI, msg.deviceCode.UserCode))
+		m.deviceMessage = markdownToString(m.width, fmt.Sprintf(beginAuthMessage, msg.err, msg.deviceCode.VerificationURI, msg.deviceCode.UserCode))
 		return m, m.awaitTokenCmd
 	case waitingForAuthorizationMsg:
 		m.config = msg.config
@@ -128,7 +134,7 @@ Then enter the code:
 
 	%v
 `
-		m.deviceMessage = markdownToString(fmt.Sprintf(beginAuthMessage, msg.deviceCode.VerificationURI, msg.deviceCode.UserCode))
+		m.deviceMessage = markdownToString(m.width, fmt.Sprintf(beginAuthMessage, msg.deviceCode.VerificationURI, msg.deviceCode.UserCode))
 		return m, m.awaitTokenCmd
 	case tokenLoadedMsg:
 		m.status = taskStatusDone

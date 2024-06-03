@@ -153,6 +153,8 @@ type authenticateModel struct {
 	deviceCode *oauth2.DeviceAuthResponse
 	config     oauth2.Config
 	token      *oauth2.Token
+
+	width int
 }
 
 func (m authenticateModel) Init() tea.Cmd {
@@ -161,6 +163,8 @@ func (m authenticateModel) Init() tea.Cmd {
 
 func (m authenticateModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -226,7 +230,7 @@ Then enter the code:
 	%v
 `
 	prompt := fmt.Sprintf(beginAuthMessage, m.deviceCode.VerificationURI, m.deviceCode.UserCode)
-	output += markdownToString(prompt)
+	output += markdownToString(m.width, prompt)
 	switch m.status {
 	case PromptUser:
 		// nothing here as PromptUser is the default

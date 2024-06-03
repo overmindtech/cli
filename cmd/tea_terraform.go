@@ -42,6 +42,8 @@ type cmdModel struct {
 
 	// business logic. This model will implement the actual CLI functionality requested.
 	cmd tea.Model
+
+	width int
 }
 
 type freezeViewMsg struct{}
@@ -103,6 +105,9 @@ func (m *cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// special case the messages that need to be handled at this level
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
+
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
 			return m, tea.Quit
@@ -231,7 +236,7 @@ func (m cmdModel) View() string {
 
 	bits = append(bits, m.cmd.View())
 	if m.fatalError != "" {
-		md := markdownToString(fmt.Sprintf("> Fatal Error: %v\n", m.fatalError))
+		md := markdownToString(m.width, fmt.Sprintf("> Fatal Error: %v\n", m.fatalError))
 		md, _ = strings.CutPrefix(md, "\n")
 		md, _ = strings.CutSuffix(md, "\n")
 		bits = append(bits, fmt.Sprintf("%v", md))

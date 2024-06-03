@@ -11,6 +11,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// constrain the maximum terminal width to avoid readability issues with too
+// long lines
+const MAX_TERMINAL_WIDTH = 120
+
 type LogoPalette struct {
 	a string
 	b string
@@ -339,10 +343,21 @@ func styleH2() lipgloss.Style {
 		PaddingRight(2)
 }
 
-func markdownToString(markdown string) string {
-	r, err := glamour.NewTermRenderer(
+// markdownToString converts the markdown string to a string containing ANSI
+// formatting sequences with at most maxWidth visible characters per line. Set
+// maxWidth to zero to use the underlying library's default.
+func markdownToString(maxWidth int, markdown string) string {
+	opts := []glamour.TermRendererOption{
 		glamour.WithStyles(MarkdownStyle()),
-	)
+	}
+	if maxWidth > 0 {
+		// reduce maxWidth by 4 to account for padding in the various styles
+		if maxWidth > 4 {
+			maxWidth -= 4
+		}
+		opts = append(opts, glamour.WithWordWrap(maxWidth))
+	}
+	r, err := glamour.NewTermRenderer(opts...)
 	if err != nil {
 		panic(fmt.Errorf("failed to initialize terminal renderer: %w", err))
 	}
