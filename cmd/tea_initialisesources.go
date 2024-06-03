@@ -27,6 +27,7 @@ type loadSourcesConfigMsg struct {
 
 type askForAwsConfigMsg struct{}
 type configStoredMsg struct{}
+type sourceInitialisationFailedMsg struct{ err error }
 type sourcesInitialisedMsg struct{}
 
 // this tea.Model either fetches the AWS auth config from the ConfigService or
@@ -52,14 +53,16 @@ type initialiseSourcesModel struct {
 	awsSourceRunning    bool
 	stdlibSourceRunning bool
 
-	errors []string
+	errorHints []string
+
+	width int
 }
 
 func NewInitialiseSourcesModel() tea.Model {
 	return initialiseSourcesModel{
 		taskModel: NewTaskModel("Configuring AWS Access"),
 
-		errors: []string{},
+		errorHints: []string{},
 	}
 }
 
@@ -75,6 +78,9 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds := []tea.Cmd{}
 
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+
 	case loadSourcesConfigMsg:
 		m.ctx = msg.ctx
 		m.oi = msg.oi
@@ -151,9 +157,32 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.awsSourceRunning = true
 		m.stdlibSourceRunning = true
 		m.status = taskStatusDone
+	case sourceInitialisationFailedMsg:
+		m.status = taskStatusError
+		errorHint := "Error initialising sources"
+		switch viper.GetString("aws-config") {
+		case "defaults":
+			errorHint += " with default settings"
+		case "aws_profile":
+			errorHint += fmt.Sprintf(" with AWS profile from environment '%v'", viper.GetString("aws-profile"))
+		case "profile_input":
+			errorHint += fmt.Sprintf(" with selected AWS profile '%v'", viper.GetString("aws-profile"))
+		}
+		m.errorHints = append(m.errorHints, errorHint)
+		cmds = append(cmds, func() tea.Msg {
+			// create a fatalError for aborting the CLI and common error detail
+			// reporting, but don't pass in the spinner ID, to avoid double
+			// reporting in this model's View
+			return fatalError{err: fmt.Errorf("failed to initialise sources: %w", msg.err)}
+		})
 	case otherError:
 		if msg.id == m.spinner.ID() {
-			m.errors = append(m.errors, fmt.Sprintf("Note: %v", msg.err))
+			m.errorHints = append(m.errorHints, fmt.Sprintf("Note: %v", msg.err))
+		}
+	case fatalError:
+		if msg.id == m.spinner.ID() {
+			m.status = taskStatusError
+			m.errorHints = append(m.errorHints, fmt.Sprintf("Error: %v", msg.err))
 		}
 	}
 
@@ -236,8 +265,8 @@ func (m initialiseSourcesModel) View() string {
 	if m.configStored {
 		view += " (config stored)"
 	}
-	if len(m.errors) > 0 {
-		view += fmt.Sprintf("\n%v\n", strings.Join(m.errors, "\n"))
+	if len(m.errorHints) > 0 {
+		view += fmt.Sprintf("\n  %v\n", strings.Join(m.errorHints, "\n  "))
 	}
 	if m.awsConfigForm != nil && !m.awsConfigFormDone {
 		view += fmt.Sprintf("\n%v", m.awsConfigForm.View())
@@ -304,13 +333,14 @@ func (m initialiseSourcesModel) storeConfigCmd(aws_config, aws_profile string) t
 		return configStoredMsg{}
 	}
 }
+
 func (m initialiseSourcesModel) startSourcesCmd(aws_config, aws_profile string) tea.Cmd {
 	return func() tea.Msg {
 		// ignore returned context. Cancellation of sources is handled by the process exiting for now.
 		// should sources require more teardown, we'll have to figure something out.
 		_, err := InitializeSources(m.ctx, m.oi, aws_config, aws_profile, m.token)
 		if err != nil {
-			return fatalError{id: m.spinner.ID(), err: fmt.Errorf("failed to initialise sources: %w", err)}
+			return sourceInitialisationFailedMsg{err}
 		}
 		return sourcesInitialisedMsg{}
 	}
