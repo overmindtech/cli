@@ -305,16 +305,6 @@ func MarkdownStyle() ansi.StyleConfig {
 	}
 }
 
-var ScrollingDotsSpinner = spinner.Spinner{
-	Frames: []string{"∙∙∙∙∙∙∙", "●∙∙∙∙∙∙", "∙●∙∙∙∙∙", "∙∙●∙∙∙∙", "∙∙∙●∙∙∙", "∙∙∙∙●∙∙", "∙∙∙∙∙●∙", "∙∙∙∙∙∙●"},
-	FPS:    time.Second / 7, //nolint:gomnd
-}
-
-var ScrollingBarSpinner = spinner.Spinner{
-	Frames: []string{"[    ]", "[=   ]", "[==  ]", "[=== ]", "[ ===]", "[  ==]", "[   =]", "[    ]"},
-	FPS:    time.Second / 8, //nolint:gomnd
-}
-
 var DotsSpinner = spinner.Spinner{
 	Frames: []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
 	FPS:    80 * time.Millisecond,
