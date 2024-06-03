@@ -63,7 +63,7 @@ type updateTaskStatusMsg struct {
 	status taskStatus
 }
 
-func NewTaskModel(title string) taskModel {
+func NewTaskModel(title string, width int) taskModel {
 	return taskModel{
 		status: taskStatusPending,
 		title:  title,
@@ -71,6 +71,7 @@ func NewTaskModel(title string) taskModel {
 			spinner.WithSpinner(DotsSpinner),
 			spinner.WithStyle(lipgloss.NewStyle().Foreground(ColorPalette.BgMain)),
 		),
+		width:  width,
 		indent: 2,
 	}
 }

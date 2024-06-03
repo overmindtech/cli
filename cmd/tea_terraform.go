@@ -67,8 +67,8 @@ type otherError struct {
 
 func (m *cmdModel) Init() tea.Cmd {
 	// use the main cli context to not take this time from the main timeout
-	m.tasks["00_oi"] = NewInstanceLoaderModel(m.ctx, m.app)
-	m.tasks["01_token"] = NewEnsureTokenModel(m.ctx, m.app, m.apiKey, m.requiredScopes)
+	m.tasks["00_oi"] = NewInstanceLoaderModel(m.ctx, m.app, m.width)
+	m.tasks["01_token"] = NewEnsureTokenModel(m.ctx, m.app, m.apiKey, m.requiredScopes, m.width)
 
 	if viper.GetString("ovm-test-fake") != "" {
 		// don't init sources on test-fake runs
@@ -87,7 +87,7 @@ func (m *cmdModel) Init() tea.Cmd {
 	}
 
 	// these wait for taking a ctx until timeout and token are attached
-	m.tasks["02_config"] = NewInitialiseSourcesModel()
+	m.tasks["02_config"] = NewInitialiseSourcesModel(m.width)
 
 	return tea.Batch(
 		waitForCancellation(m.ctx, m.cancel),

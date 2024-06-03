@@ -30,14 +30,14 @@ type runPlanModel struct {
 type runPlanNowMsg struct{}
 type runPlanFinishedMsg struct{}
 
-func NewRunPlanModel(args []string, planFile string, execCommandFunc ExecCommandFunc) runPlanModel {
+func NewRunPlanModel(args []string, planFile string, execCommandFunc ExecCommandFunc, width int) runPlanModel {
 	return runPlanModel{
 		args:     args,
 		planFile: planFile,
 
-		revlinkTask:     NewRevlinkWarmupModel(),
+		revlinkTask:     NewRevlinkWarmupModel(width),
 		execCommandFunc: execCommandFunc,
-		taskModel:       NewTaskModel("Planning Changes"),
+		taskModel:       NewTaskModel("Planning Changes", width),
 	}
 }
 

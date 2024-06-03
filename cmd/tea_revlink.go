@@ -28,9 +28,9 @@ type revlinkWarmupModel struct {
 	watchdogCancel context.CancelFunc // the cancel function that gets called if the watchdog detects a timeout
 }
 
-func NewRevlinkWarmupModel() revlinkWarmupModel {
+func NewRevlinkWarmupModel(width int) revlinkWarmupModel {
 	return revlinkWarmupModel{
-		taskModel: NewTaskModel("Discover and link all resources"),
+		taskModel: NewTaskModel("Discover and link all resources", width),
 		status:    make(chan *sdp.RevlinkWarmupResponse, 3000),
 		currentStatus: &sdp.RevlinkWarmupResponse{
 			Status: "pending",

@@ -33,11 +33,11 @@ type finishSnapshotMsg struct {
 	id int
 }
 
-func NewSnapShotModel(header, title string) snapshotModel {
+func NewSnapShotModel(header, title string, width int) snapshotModel {
 	return snapshotModel{
-		overall:     NewTaskModel(header),
-		discovering: NewTaskModel(title),
-		saving:      NewTaskModel("Saving"),
+		overall:     NewTaskModel(header, width),
+		discovering: NewTaskModel(title, width),
+		saving:      NewTaskModel("Saving", width),
 	}
 }
 

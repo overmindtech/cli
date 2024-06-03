@@ -56,9 +56,9 @@ type initialiseSourcesModel struct {
 	width int
 }
 
-func NewInitialiseSourcesModel() tea.Model {
+func NewInitialiseSourcesModel(width int) tea.Model {
 	return initialiseSourcesModel{
-		taskModel: NewTaskModel("Configuring AWS Access"),
+		taskModel: NewTaskModel("Configuring AWS Access", width),
 
 		errorHints: []string{},
 	}

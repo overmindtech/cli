@@ -80,7 +80,7 @@ type changeIdentifiedMsg struct {
 type runTfApplyMsg struct{}
 type tfApplyFinishedMsg struct{}
 
-func NewTfApplyModel(args []string, execCommandFunc ExecCommandFunc) tea.Model {
+func NewTfApplyModel(args []string, execCommandFunc ExecCommandFunc, width int) tea.Model {
 	hasPlanSet := false
 	autoapprove := false
 	planFile := "overmind.plan"
@@ -140,17 +140,17 @@ func NewTfApplyModel(args []string, execCommandFunc ExecCommandFunc) tea.Model {
 
 		planFile:        planFile,
 		needPlan:        !hasPlanSet,
-		runPlanTask:     NewRunPlanModel(planArgs, planFile, execCommandFunc),
+		runPlanTask:     NewRunPlanModel(planArgs, planFile, execCommandFunc, width),
 		runPlanFinished: hasPlanSet,
 
-		submitPlanTask: NewSubmitPlanModel(planFile),
+		submitPlanTask: NewSubmitPlanModel(planFile, width),
 
 		needApproval: !autoapprove,
 
 		startingChange:         make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
-		startingChangeSnapshot: NewSnapShotModel("Starting Change", "indexing resources"),
+		startingChangeSnapshot: NewSnapShotModel("Starting Change", "indexing resources", width),
 		endingChange:           make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
-		endingChangeSnapshot:   NewSnapShotModel("Ending Change", "indexing resources"),
+		endingChangeSnapshot:   NewSnapShotModel("Ending Change", "indexing resources", width),
 
 		execCommandFunc: execCommandFunc,
 	}

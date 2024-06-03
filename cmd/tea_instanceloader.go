@@ -19,9 +19,9 @@ type instanceLoaderModel struct {
 	app string
 }
 
-func NewInstanceLoaderModel(ctx context.Context, app string) tea.Model {
+func NewInstanceLoaderModel(ctx context.Context, app string, width int) tea.Model {
 	result := instanceLoaderModel{
-		taskModel: NewTaskModel("Connecting to Overmind"),
+		taskModel: NewTaskModel("Connecting to Overmind", width),
 		ctx:       ctx,
 		app:       app,
 	}

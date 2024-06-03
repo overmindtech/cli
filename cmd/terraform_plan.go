@@ -62,7 +62,7 @@ type mappedItemDiffsMsg struct {
 	unsupported map[string][]*sdp.MappedItemDiff
 }
 
-func NewTfPlanModel(args []string, execCommandFunc ExecCommandFunc) tea.Model {
+func NewTfPlanModel(args []string, execCommandFunc ExecCommandFunc, width int) tea.Model {
 	hasPlanOutSet := false
 	planFile := "overmind.plan"
 	for i, a := range args {
@@ -97,8 +97,8 @@ func NewTfPlanModel(args []string, execCommandFunc ExecCommandFunc) tea.Model {
 
 	return tfPlanModel{
 		args:           args,
-		runPlanTask:    NewRunPlanModel(args, planFile, execCommandFunc),
-		submitPlanTask: NewSubmitPlanModel(planFile),
+		runPlanTask:    NewRunPlanModel(args, planFile, execCommandFunc, width),
+		submitPlanTask: NewSubmitPlanModel(planFile, width),
 		planFile:       planFile,
 	}
 }

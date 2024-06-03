@@ -66,16 +66,18 @@ type ensureTokenModel struct {
 	width int
 }
 
-func NewEnsureTokenModel(ctx context.Context, app string, apiKey string, requiredScopes []string) tea.Model {
+func NewEnsureTokenModel(ctx context.Context, app string, apiKey string, requiredScopes []string, width int) tea.Model {
 	return ensureTokenModel{
 		ctx:            ctx,
 		app:            app,
 		apiKey:         apiKey,
 		requiredScopes: requiredScopes,
 
-		taskModel: NewTaskModel("Ensuring Token"),
+		taskModel: NewTaskModel("Ensuring Token", width),
 
 		errors: []string{},
+
+		width: width,
 	}
 }
 
