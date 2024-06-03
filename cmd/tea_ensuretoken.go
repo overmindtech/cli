@@ -88,15 +88,16 @@ func (m ensureTokenModel) Init() tea.Cmd {
 }
 
 func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	cmds := []tea.Cmd{}
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
-		return m, nil
 
 	case instanceLoadedMsg:
 		m.oi = msg.instance
 		m.status = taskStatusRunning
-		return m, tea.Batch(
+		cmds = append(cmds,
 			m.ensureTokenCmd(m.ctx),
 			m.spinner.Tick,
 		)
@@ -108,7 +109,7 @@ func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.status = taskStatusDone // avoid console flickering to allow click to be registered
 		m.title = "Manual device authorization."
-		return m, m.awaitTokenCmd
+		cmds = append(cmds, m.awaitTokenCmd)
 	case waitingForAuthorizationMsg:
 		m.deviceMessage = "browser"
 		m.deviceConfig = msg.config
@@ -116,32 +117,33 @@ func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.title = "Waiting for device authorization, check your browser."
 
-		return m, m.awaitTokenCmd
+		cmds = append(cmds, m.awaitTokenCmd)
 	case tokenLoadedMsg:
 		m.status = taskStatusDone
 		m.title = "Using stored token"
 		m.deviceMessage = ""
-		return m, m.tokenAvailable(msg.token)
+		cmds = append(cmds, m.tokenAvailable(msg.token))
 	case tokenReceivedMsg:
 		m.status = taskStatusDone
 		m.title = "Authentication successful, using API key"
 		m.deviceMessage = ""
-		return m, m.tokenAvailable(msg.token)
+		cmds = append(cmds, m.tokenAvailable(msg.token))
 	case tokenStoredMsg:
 		m.status = taskStatusDone
 		m.title = fmt.Sprintf("Authentication successful, token stored locally (%v)", msg.file)
 		m.deviceMessage = ""
-		return m, m.tokenAvailable(msg.token)
+		cmds = append(cmds, m.tokenAvailable(msg.token))
 	case otherError:
 		if msg.id == m.spinner.ID() {
 			m.errors = append(m.errors, fmt.Sprintf("Note: %v", msg.err))
 		}
-		return m, nil
-	default:
-		var taskCmd tea.Cmd
-		m.taskModel, taskCmd = m.taskModel.Update(msg)
-		return m, taskCmd
 	}
+
+	var taskCmd tea.Cmd
+	m.taskModel, taskCmd = m.taskModel.Update(msg)
+	cmds = append(cmds, taskCmd)
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m ensureTokenModel) View() string {

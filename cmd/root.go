@@ -162,6 +162,8 @@ func (m authenticateModel) Init() tea.Cmd {
 }
 
 func (m authenticateModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	cmds := []tea.Cmd{}
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
@@ -179,41 +181,35 @@ func (m authenticateModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case *oauth2.Token:
-		{
-			m.status = Authenticated
-			m.token = msg
-			return m, nil
-		}
+		m.status = Authenticated
+		m.token = msg
 
 	case statusMsg:
 		switch msg {
 		case PromptUser:
-			return m, openBrowserCmd(m.deviceCode.VerificationURI)
+			cmds = append(cmds, openBrowserCmd(m.deviceCode.VerificationURI))
 		case WaitingForConfirmation:
 			m.status = WaitingForConfirmation
-			return m, awaitToken(m.ctx, m.config, m.deviceCode)
+			cmds = append(cmds, awaitToken(m.ctx, m.config, m.deviceCode))
 		case Authenticated:
 		case ErrorAuthenticating:
-			{
-				return m, nil
-			}
 		}
 
 	case displayAuthorizationInstructionsMsg:
 		m.status = WaitingForConfirmation
-		return m, awaitToken(m.ctx, m.config, m.deviceCode)
+		cmds = append(cmds, awaitToken(m.ctx, m.config, m.deviceCode))
 
 	case failedToAuthenticateErrorMsg:
 		m.err = msg.err
 		m.status = ErrorAuthenticating
-		return m, tea.Quit
+		cmds = append(cmds, tea.Quit)
 
 	case errMsg:
 		m.err = msg.err
-		return m, tea.Quit
+		cmds = append(cmds, tea.Quit)
 	}
 
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 func (m authenticateModel) View() string {

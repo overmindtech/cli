@@ -109,16 +109,13 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case runPlanFinishedMsg:
 		m.taskModel.status = taskStatusDone
 		cmds = append(cmds, func() tea.Msg { return unfreezeViewMsg{} })
-
-	default:
-		// var cmd tea.Cmd
-		// propagate commands to components
-		// m.taskModel, cmd = m.taskModel.Update(msg)
-		// cmds = append(cmds, cmd)
 	}
 
 	var cmd tea.Cmd
 	m.revlinkTask, cmd = m.revlinkTask.Update(msg)
+	cmds = append(cmds, cmd)
+
+	m.taskModel, cmd = m.taskModel.Update(msg)
 	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)

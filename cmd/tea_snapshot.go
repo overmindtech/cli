@@ -86,15 +86,18 @@ func (m snapshotModel) Update(msg tea.Msg) (snapshotModel, tea.Cmd) {
 		m.overall.status = taskStatusDone
 		m.discovering.status = taskStatusDone
 		m.saving.status = taskStatusDone
-	default:
-		var cmd tea.Cmd
-		m.overall, cmd = m.overall.Update(msg)
-		cmds = append(cmds, cmd)
-		m.discovering, cmd = m.discovering.Update(msg)
-		cmds = append(cmds, cmd)
-		m.saving, cmd = m.saving.Update(msg)
-		cmds = append(cmds, cmd)
 	}
+
+	var cmd tea.Cmd
+
+	m.overall, cmd = m.overall.Update(msg)
+	cmds = append(cmds, cmd)
+
+	m.discovering, cmd = m.discovering.Update(msg)
+	cmds = append(cmds, cmd)
+
+	m.saving, cmd = m.saving.Update(msg)
+	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
 }
