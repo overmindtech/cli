@@ -16,9 +16,9 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.2
-	github.com/overmindtech/aws-source v0.0.0-20240531073503-112ea8d24315
+	github.com/overmindtech/aws-source v0.0.0-20240531090004-018d70085eae
 	github.com/overmindtech/sdp-go v0.75.3
-	github.com/overmindtech/stdlib-source v0.0.0-20240531072235-c08fbe730b59
+	github.com/overmindtech/stdlib-source v0.0.0-20240531102214-1ad4f0866adc
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
@@ -128,7 +128,7 @@ require (
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/openrdap/rdap v0.9.2-0.20240517203139-eb57b3a8dedd // indirect
-	github.com/overmindtech/discovery v0.27.5 // indirect
+	github.com/overmindtech/discovery v0.27.6 // indirect
 	github.com/overmindtech/sdpcache v1.6.4 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
