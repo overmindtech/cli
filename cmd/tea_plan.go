@@ -71,8 +71,10 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		c := exec.CommandContext(m.ctx, "terraform", m.args...) // nolint:gosec // this is a user-provided command, let them do their thing
 
 		// inject the profile, if configured
-		if aws_profile := viper.GetString("aws-profile"); aws_profile != "" {
-			c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
+		if aws_config := viper.GetString("aws-config"); aws_config == "profile_input" || aws_config == "aws_profile" {
+			if aws_profile := viper.GetString("aws-profile"); aws_profile != "" {
+				c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
+			}
 		}
 
 		if viper.GetString("ovm-test-fake") != "" {
