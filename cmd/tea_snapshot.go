@@ -102,6 +102,11 @@ func (m snapshotModel) Update(msg tea.Msg) (snapshotModel, tea.Cmd) {
 func (m snapshotModel) View() string {
 	// TODO: add progressbar; complication: we do not have a expected number of
 	// items/edges to count towards for the progressbar
+
+	// TODO: improve wrapping behaviour of the components. Currently skipped as
+	// all the taskModel titles are expected to be relatively short and because
+	// of the nesting of the components, the wrapping is more complex than the
+	// current code structure supports
 	bits := []string{}
 	bits = append(bits, m.overall.View())
 

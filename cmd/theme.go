@@ -3,12 +3,14 @@ package cmd
 import (
 	_ "embed"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/glamour/ansi"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/reflow/wordwrap"
 )
 
 // constrain the maximum terminal width to avoid readability issues with too
@@ -356,4 +358,20 @@ func markdownToString(maxWidth int, markdown string) string {
 		panic(fmt.Errorf("failed to render markdown: %w", err))
 	}
 	return out
+}
+
+// wrap ensures that the text is wrapped to the given width and everything but
+// the first line is indented by the requested amount. Consider that the current
+// implementation is very naive and for large indent values, the first line
+// might not be wrapped too early.
+//
+// Indent is ignored when the requested indent is larger than the current width.
+// This is expected to only occur in edge cases, e.g. when the terminal is
+// resiyed to very narrow.
+func wrap(s string, width, indent int) string {
+	if indent > width {
+		indent = 0
+	}
+
+	return strings.ReplaceAll(wordwrap.String(s, width-indent), "\n", "\n"+strings.Repeat(" ", indent))
 }

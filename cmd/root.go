@@ -218,29 +218,27 @@ func (m authenticateModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m authenticateModel) View() string {
 	var output string
-	beginAuthMessage := `# Authenticate with a browser
 
-Attempting to automatically open the SSO authorization page in your default browser.
-If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
-
-%v
-
-Then enter the code:
-
-	%v
-`
-	prompt := fmt.Sprintf(beginAuthMessage, m.deviceCode.VerificationURI, m.deviceCode.UserCode)
-	output += markdownToString(m.width, prompt)
 	switch m.status {
-	case PromptUser:
-		// nothing here as PromptUser is the default
-	case WaitingForConfirmation:
-		// sp := createSpinner()
-		// output += sp.View() + " Waiting for confirmation..."
+	case PromptUser, WaitingForConfirmation:
+		beginAuthMessage := `# Authenticate with a browser
+
+		Attempting to automatically open the SSO authorization page in your default browser.
+		If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
+
+		%v
+
+		Then enter the code:
+
+			%v
+		`
+		prompt := fmt.Sprintf(beginAuthMessage, m.deviceCode.VerificationURI, m.deviceCode.UserCode)
+		output = markdownToString(m.width, prompt)
+
 	case Authenticated:
-		output = lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎") + " Authenticated successfully. Press any key to continue."
+		output = wrap(lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")+" Authenticated successfully. Press any key to continue.", m.width-4, 2)
 	case ErrorAuthenticating:
-		output = lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("✗") + " Unable to authenticate. Try again."
+		output = wrap(lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("✗")+" Unable to authenticate. Please try again.", m.width-4, 2)
 	}
 
 	return containerStyle.Render(output)

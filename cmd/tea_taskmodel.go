@@ -41,6 +41,9 @@ type taskModel struct {
 	status  taskStatus
 	title   string
 	spinner spinner.Model
+
+	width  int
+	indent int
 }
 
 type WithTaskModel interface {
@@ -68,6 +71,7 @@ func NewTaskModel(title string) taskModel {
 			spinner.WithSpinner(DotsSpinner),
 			spinner.WithStyle(lipgloss.NewStyle().Foreground(ColorPalette.BgMain)),
 		),
+		indent: 2,
 	}
 }
 
@@ -84,6 +88,10 @@ func (m taskModel) TaskModel() taskModel {
 
 func (m taskModel) Update(msg tea.Msg) (taskModel, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
+		return m, nil
+
 	case updateTaskTitleMsg:
 		if m.spinner.ID() == msg.id {
 			m.title = msg.title
@@ -118,7 +126,7 @@ func (m taskModel) View() string {
 		label = lipgloss.NewStyle().Render("?")
 	}
 
-	return fmt.Sprintf("%v %v", label, m.title)
+	return wrap(fmt.Sprintf("%v %v", label, m.title), m.width, m.indent)
 }
 
 func (m taskModel) UpdateTitleMsg(newTitle string) tea.Msg {

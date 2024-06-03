@@ -401,18 +401,18 @@ func (m tfApplyModel) View() string {
 
 	if m.runTfApply {
 		bits = append(bits,
-			fmt.Sprintf("%v Running 'terraform %v'",
+			wrap(fmt.Sprintf("%v Running 'terraform %v'",
 				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
 				strings.Join(m.args, " "),
-			))
+			), m.width, 2))
 	}
 
 	if m.isEnding && m.endingChangeSnapshot.overall.status != taskStatusPending {
 		bits = append(bits,
-			fmt.Sprintf("%v Ran 'terraform %v'",
+			wrap(fmt.Sprintf("%v Ran 'terraform %v'",
 				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
 				strings.Join(m.args, " "),
-			))
+			), m.width, 2))
 		bits = append(bits, m.endingChangeSnapshot.View())
 	}
 

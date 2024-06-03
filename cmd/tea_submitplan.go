@@ -126,6 +126,7 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.riskMilestoneTasks = []taskModel{}
 			for _, ms := range msg.riskMilestones {
 				tm := NewTaskModel(ms.GetDescription())
+				tm.indent = 4
 				m.riskMilestoneTasks = append(m.riskMilestoneTasks, tm)
 				cmds = append(cmds, tm.Init())
 			}
@@ -237,7 +238,7 @@ func (m submitPlanModel) View() string {
 	if m.riskTask.status != taskStatusPending {
 		bits = append(bits, m.riskTask.View())
 		for _, t := range m.riskMilestoneTasks {
-			bits = append(bits, fmt.Sprintf("   %v", t.View()))
+			bits = append(bits, fmt.Sprintf("  %v", t.View()))
 		}
 	}
 

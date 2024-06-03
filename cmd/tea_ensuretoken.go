@@ -59,8 +59,9 @@ type ensureTokenModel struct {
 	errors []string
 
 	deviceMessage string
-	config        oauth2.Config
+	deviceConfig  oauth2.Config
 	deviceCode    *oauth2.DeviceAuthResponse
+	deviceError   error
 
 	width int
 }
@@ -100,41 +101,21 @@ func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.spinner.Tick,
 		)
 	case displayAuthorizationInstructionsMsg:
-		m.config = msg.config
+		m.deviceMessage = "manual"
+		m.deviceConfig = msg.config
 		m.deviceCode = msg.deviceCode
+		m.deviceError = msg.err
+
 		m.status = taskStatusDone // avoid console flickering to allow click to be registered
 		m.title = "Manual device authorization."
-		beginAuthMessage := `# Authenticate with a browser
-
-Automatically opening the SSO authorization page in your default browser failed: %v
-
-Please open the following URL in your browser to authenticate:
-
-%v
-
-Then enter the code:
-
-	%v
-`
-		m.deviceMessage = markdownToString(m.width, fmt.Sprintf(beginAuthMessage, msg.err, msg.deviceCode.VerificationURI, msg.deviceCode.UserCode))
 		return m, m.awaitTokenCmd
 	case waitingForAuthorizationMsg:
-		m.config = msg.config
+		m.deviceMessage = "browser"
+		m.deviceConfig = msg.config
 		m.deviceCode = msg.deviceCode
 
 		m.title = "Waiting for device authorization, check your browser."
-		beginAuthMessage := `# Authenticate with a browser
 
-Attempting to automatically open the SSO authorization page in your default browser.
-If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
-
-%v
-
-Then enter the code:
-
-	%v
-`
-		m.deviceMessage = markdownToString(m.width, fmt.Sprintf(beginAuthMessage, msg.deviceCode.VerificationURI, msg.deviceCode.UserCode))
 		return m, m.awaitTokenCmd
 	case tokenLoadedMsg:
 		m.status = taskStatusDone
@@ -164,14 +145,41 @@ Then enter the code:
 }
 
 func (m ensureTokenModel) View() string {
-	view := m.taskModel.View()
-	if len(m.errors) > 0 {
-		view += fmt.Sprintf("\n%v\n", strings.Join(m.errors, "\n"))
+	bits := []string{m.taskModel.View()}
+
+	for _, err := range m.errors {
+		bits = append(bits, wrap(fmt.Sprintf("  %v", err), m.width, 2))
 	}
-	if m.deviceMessage != "" {
-		view += fmt.Sprintf("\n%v\n", m.deviceMessage)
+	switch m.deviceMessage {
+	case "manual":
+		beginAuthMessage := `# Authenticate with a browser
+
+Automatically opening the SSO authorization page in your default browser failed: %v
+
+Please open the following URL in your browser to authenticate:
+
+%v
+
+Then enter the code:
+
+	%v
+`
+		bits = append(bits, markdownToString(m.width, fmt.Sprintf(beginAuthMessage, m.deviceError, m.deviceCode.VerificationURI, m.deviceCode.UserCode)))
+	case "browser":
+		beginAuthMessage := `# Authenticate with a browser
+
+Attempting to automatically open the SSO authorization page in your default browser.
+If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
+
+%v
+
+Then enter the code:
+
+	%v
+`
+		bits = append(bits, markdownToString(m.width, fmt.Sprintf(beginAuthMessage, m.deviceCode.VerificationURI, m.deviceCode.UserCode)))
 	}
-	return view
+	return strings.Join(bits, "\n")
 }
 
 // ensureTokenCmd gets a token from the environment or from the user, and returns a
@@ -286,7 +294,7 @@ func (m ensureTokenModel) awaitTokenCmd() tea.Msg {
 		// reset the deviceCode's expiry to at most 1.5 seconds
 		m.deviceCode.Expiry = time.Now().Add(1500 * time.Millisecond)
 
-		token, err = m.config.DeviceAccessToken(ctx, m.deviceCode)
+		token, err = m.deviceConfig.DeviceAccessToken(ctx, m.deviceCode)
 		if err == nil {
 			// we got a token, continue below. kthxbye
 			log.Trace("we got a token from auth0")

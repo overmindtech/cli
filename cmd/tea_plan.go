@@ -130,10 +130,10 @@ func (m runPlanModel) View() string {
 	switch m.taskModel.status {
 	case taskStatusPending, taskStatusRunning:
 		bits = append(bits,
-			fmt.Sprintf("%v Running 'terraform %v'",
+			wrap(fmt.Sprintf("%v Running 'terraform %v'",
 				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
 				strings.Join(m.args, " "),
-			))
+			), m.width, 2))
 	case taskStatusDone:
 		bits = append(bits, m.taskModel.View())
 		bits = append(bits, m.revlinkTask.View())

@@ -239,7 +239,7 @@ func (m cmdModel) View() string {
 		md := markdownToString(m.width, fmt.Sprintf("> Fatal Error: %v\n", m.fatalError))
 		md, _ = strings.CutPrefix(md, "\n")
 		md, _ = strings.CutSuffix(md, "\n")
-		bits = append(bits, fmt.Sprintf("%v", md))
+		bits = append(bits, md)
 	}
 	bits = slices.DeleteFunc(bits, func(s string) bool {
 		return s == "" || s == "\n"
