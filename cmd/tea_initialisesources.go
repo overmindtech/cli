@@ -48,8 +48,6 @@ type initialiseSourcesModel struct {
 	profileInputForm     *huh.Form // is set if the user needs to be interrogated about their profile_input
 	profileInputFormDone bool      // gets set to true once the form result has been processed
 
-	configStored bool
-
 	awsSourceRunning    bool
 	stdlibSourceRunning bool
 
@@ -58,9 +56,9 @@ type initialiseSourcesModel struct {
 	width int
 }
 
-func NewInitialiseSourcesModel() tea.Model {
+func NewInitialiseSourcesModel(width int) tea.Model {
 	return initialiseSourcesModel{
-		taskModel: NewTaskModel("Configuring AWS Access"),
+		taskModel: NewTaskModel("Configuring AWS Access", width),
 
 		errorHints: []string{},
 	}
@@ -79,7 +77,7 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
+		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
 
 	case loadSourcesConfigMsg:
 		m.ctx = msg.ctx
@@ -152,7 +150,7 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case configStoredMsg:
-		m.configStored = true
+		m.title += " (config stored)"
 	case sourcesInitialisedMsg:
 		m.awsSourceRunning = true
 		m.stdlibSourceRunning = true
@@ -261,26 +259,23 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m initialiseSourcesModel) View() string {
-	view := m.taskModel.View()
-	if m.configStored {
-		view += " (config stored)"
-	}
-	if len(m.errorHints) > 0 {
-		view += fmt.Sprintf("\n  %v\n", strings.Join(m.errorHints, "\n  "))
+	bits := []string{m.taskModel.View()}
+	for _, hint := range m.errorHints {
+		bits = append(bits, wrap(fmt.Sprintf("  %v", hint), m.width, 2))
 	}
 	if m.awsConfigForm != nil && !m.awsConfigFormDone {
-		view += fmt.Sprintf("\n%v", m.awsConfigForm.View())
+		bits = append(bits, m.awsConfigForm.View())
 	}
 	if m.profileInputForm != nil && !m.profileInputFormDone {
-		view += fmt.Sprintf("\n%v", m.profileInputForm.View())
+		bits = append(bits, m.profileInputForm.View())
 	}
 	if m.awsSourceRunning {
-		view += fmt.Sprintf("\n  %v AWS Source: running", lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"))
+		bits = append(bits, wrap(fmt.Sprintf("  %v AWS Source: running", lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")), m.width, 4))
 	}
 	if m.stdlibSourceRunning {
-		view += fmt.Sprintf("\n  %v stdlib Source: running", lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"))
+		bits = append(bits, wrap(fmt.Sprintf("  %v stdlib Source: running", lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")), m.width, 4))
 	}
-	return view
+	return strings.Join(bits, "\n")
 }
 
 func (m initialiseSourcesModel) loadSourcesConfigCmd() tea.Msg {

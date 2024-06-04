@@ -42,6 +42,8 @@ type cmdModel struct {
 
 	// business logic. This model will implement the actual CLI functionality requested.
 	cmd tea.Model
+
+	width int
 }
 
 type freezeViewMsg struct{}
@@ -65,8 +67,8 @@ type otherError struct {
 
 func (m *cmdModel) Init() tea.Cmd {
 	// use the main cli context to not take this time from the main timeout
-	m.tasks["00_oi"] = NewInstanceLoaderModel(m.ctx, m.app)
-	m.tasks["01_token"] = NewEnsureTokenModel(m.ctx, m.app, m.apiKey, m.requiredScopes)
+	m.tasks["00_oi"] = NewInstanceLoaderModel(m.ctx, m.app, m.width)
+	m.tasks["01_token"] = NewEnsureTokenModel(m.ctx, m.app, m.apiKey, m.requiredScopes, m.width)
 
 	if viper.GetString("ovm-test-fake") != "" {
 		// don't init sources on test-fake runs
@@ -85,7 +87,7 @@ func (m *cmdModel) Init() tea.Cmd {
 	}
 
 	// these wait for taking a ctx until timeout and token are attached
-	m.tasks["02_config"] = NewInitialiseSourcesModel()
+	m.tasks["02_config"] = NewInitialiseSourcesModel(m.width)
 
 	return tea.Batch(
 		waitForCancellation(m.ctx, m.cancel),
@@ -103,6 +105,9 @@ func (m *cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// special case the messages that need to be handled at this level
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
+
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
 			return m, tea.Quit
@@ -231,10 +236,10 @@ func (m cmdModel) View() string {
 
 	bits = append(bits, m.cmd.View())
 	if m.fatalError != "" {
-		md := markdownToString(fmt.Sprintf("> Fatal Error: %v\n", m.fatalError))
+		md := markdownToString(m.width, fmt.Sprintf("> Fatal Error: %v\n", m.fatalError))
 		md, _ = strings.CutPrefix(md, "\n")
 		md, _ = strings.CutSuffix(md, "\n")
-		bits = append(bits, fmt.Sprintf("%v", md))
+		bits = append(bits, md)
 	}
 	bits = slices.DeleteFunc(bits, func(s string) bool {
 		return s == "" || s == "\n"

@@ -3,13 +3,19 @@ package cmd
 import (
 	_ "embed"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/glamour/ansi"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/reflow/wordwrap"
 )
+
+// constrain the maximum terminal width to avoid readability issues with too
+// long lines
+const MAX_TERMINAL_WIDTH = 120
 
 type LogoPalette struct {
 	a string
@@ -301,16 +307,6 @@ func MarkdownStyle() ansi.StyleConfig {
 	}
 }
 
-var ScrollingDotsSpinner = spinner.Spinner{
-	Frames: []string{"∙∙∙∙∙∙∙", "●∙∙∙∙∙∙", "∙●∙∙∙∙∙", "∙∙●∙∙∙∙", "∙∙∙●∙∙∙", "∙∙∙∙●∙∙", "∙∙∙∙∙●∙", "∙∙∙∙∙∙●"},
-	FPS:    time.Second / 7, //nolint:gomnd
-}
-
-var ScrollingBarSpinner = spinner.Spinner{
-	Frames: []string{"[    ]", "[=   ]", "[==  ]", "[=== ]", "[ ===]", "[  ==]", "[   =]", "[    ]"},
-	FPS:    time.Second / 8, //nolint:gomnd
-}
-
 var DotsSpinner = spinner.Spinner{
 	Frames: []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
 	FPS:    80 * time.Millisecond,
@@ -339,10 +335,21 @@ func styleH2() lipgloss.Style {
 		PaddingRight(2)
 }
 
-func markdownToString(markdown string) string {
-	r, err := glamour.NewTermRenderer(
+// markdownToString converts the markdown string to a string containing ANSI
+// formatting sequences with at most maxWidth visible characters per line. Set
+// maxWidth to zero to use the underlying library's default.
+func markdownToString(maxWidth int, markdown string) string {
+	opts := []glamour.TermRendererOption{
 		glamour.WithStyles(MarkdownStyle()),
-	)
+	}
+	if maxWidth > 0 {
+		// reduce maxWidth by 4 to account for padding in the various styles
+		if maxWidth > 4 {
+			maxWidth -= 4
+		}
+		opts = append(opts, glamour.WithWordWrap(maxWidth))
+	}
+	r, err := glamour.NewTermRenderer(opts...)
 	if err != nil {
 		panic(fmt.Errorf("failed to initialize terminal renderer: %w", err))
 	}
@@ -351,4 +358,20 @@ func markdownToString(markdown string) string {
 		panic(fmt.Errorf("failed to render markdown: %w", err))
 	}
 	return out
+}
+
+// wrap ensures that the text is wrapped to the given width and everything but
+// the first line is indented by the requested amount. Consider that the current
+// implementation is very naive and for large indent values, the first line
+// might not be wrapped too early.
+//
+// Indent is ignored when the requested indent is larger than the current width.
+// This is expected to only occur in edge cases, e.g. when the terminal is
+// resiyed to very narrow.
+func wrap(s string, width, indent int) string {
+	if indent > width {
+		indent = 0
+	}
+
+	return strings.ReplaceAll(wordwrap.String(s, width-indent), "\n", "\n"+strings.Repeat(" ", indent))
 }

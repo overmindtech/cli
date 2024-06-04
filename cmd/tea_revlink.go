@@ -28,9 +28,9 @@ type revlinkWarmupModel struct {
 	watchdogCancel context.CancelFunc // the cancel function that gets called if the watchdog detects a timeout
 }
 
-func NewRevlinkWarmupModel() revlinkWarmupModel {
+func NewRevlinkWarmupModel(width int) revlinkWarmupModel {
 	return revlinkWarmupModel{
-		taskModel: NewTaskModel("Discover and link all resources"),
+		taskModel: NewTaskModel("Discover and link all resources", width),
 		status:    make(chan *sdp.RevlinkWarmupResponse, 3000),
 		currentStatus: &sdp.RevlinkWarmupResponse{
 			Status: "pending",
@@ -72,6 +72,17 @@ func (m revlinkWarmupModel) Update(msg tea.Msg) (revlinkWarmupModel, tea.Cmd) {
 	case *sdp.RevlinkWarmupResponse:
 		m.currentStatus = msg
 
+		switch m.taskModel.status { //nolint:exhaustive // we only care about running and done
+		case taskStatusRunning, taskStatusDone:
+			items := m.currentStatus.GetItems()
+			edges := m.currentStatus.GetEdges()
+			if items+edges > 0 {
+				m.taskModel.title = fmt.Sprintf("Discover and link all resources: %v (%v items, %v edges)", m.currentStatus.GetStatus(), items, edges)
+			} else {
+				m.taskModel.title = fmt.Sprintf("Discover and link all resources: %v", m.currentStatus.GetStatus())
+			}
+		}
+
 		// wait for the next status update
 		cmds = append(cmds, m.waitForStatusActivity)
 
@@ -106,19 +117,7 @@ func (m revlinkWarmupModel) Update(msg tea.Msg) (revlinkWarmupModel, tea.Cmd) {
 }
 
 func (m revlinkWarmupModel) View() string {
-	view := m.taskModel.View()
-	switch m.taskModel.status { //nolint:exhaustive // we only care about running and done
-	case taskStatusRunning, taskStatusDone:
-		items := m.currentStatus.GetItems()
-		edges := m.currentStatus.GetEdges()
-		if items+edges > 0 {
-			view += fmt.Sprintf(": %v (%v items, %v edges)", m.currentStatus.GetStatus(), items, edges)
-		} else {
-			view += fmt.Sprintf(": %v", m.currentStatus.GetStatus())
-		}
-	}
-
-	return view
+	return m.taskModel.View()
 }
 
 // A command that waits for the activity on the status channel.

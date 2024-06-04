@@ -30,14 +30,14 @@ type runPlanModel struct {
 type runPlanNowMsg struct{}
 type runPlanFinishedMsg struct{}
 
-func NewRunPlanModel(args []string, planFile string, execCommandFunc ExecCommandFunc) runPlanModel {
+func NewRunPlanModel(args []string, planFile string, execCommandFunc ExecCommandFunc, width int) runPlanModel {
 	return runPlanModel{
 		args:     args,
 		planFile: planFile,
 
-		revlinkTask:     NewRevlinkWarmupModel(),
+		revlinkTask:     NewRevlinkWarmupModel(width),
 		execCommandFunc: execCommandFunc,
-		taskModel:       NewTaskModel("Planning Changes"),
+		taskModel:       NewTaskModel("Planning Changes", width),
 	}
 }
 
@@ -53,7 +53,7 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
+		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
 
 	case loadSourcesConfigMsg:
 		m.ctx = msg.ctx
@@ -109,16 +109,13 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case runPlanFinishedMsg:
 		m.taskModel.status = taskStatusDone
 		cmds = append(cmds, func() tea.Msg { return unfreezeViewMsg{} })
-
-	default:
-		// var cmd tea.Cmd
-		// propagate commands to components
-		// m.taskModel, cmd = m.taskModel.Update(msg)
-		// cmds = append(cmds, cmd)
 	}
 
 	var cmd tea.Cmd
 	m.revlinkTask, cmd = m.revlinkTask.Update(msg)
+	cmds = append(cmds, cmd)
+
+	m.taskModel, cmd = m.taskModel.Update(msg)
 	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
@@ -130,10 +127,10 @@ func (m runPlanModel) View() string {
 	switch m.taskModel.status {
 	case taskStatusPending, taskStatusRunning:
 		bits = append(bits,
-			fmt.Sprintf("%v Running 'terraform %v'",
+			wrap(fmt.Sprintf("%v Running 'terraform %v'",
 				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
 				strings.Join(m.args, " "),
-			))
+			), m.width, 2))
 	case taskStatusDone:
 		bits = append(bits, m.taskModel.View())
 		bits = append(bits, m.revlinkTask.View())
