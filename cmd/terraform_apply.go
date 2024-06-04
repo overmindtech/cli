@@ -148,9 +148,9 @@ func NewTfApplyModel(args []string, execCommandFunc ExecCommandFunc, width int) 
 		needApproval: !autoapprove,
 
 		startingChange:         make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
-		startingChangeSnapshot: NewSnapShotModel("Starting Change", "indexing resources", width),
+		startingChangeSnapshot: NewSnapShotModel("Starting Change", "Taking snapshot", width),
 		endingChange:           make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
-		endingChangeSnapshot:   NewSnapShotModel("Ending Change", "indexing resources", width),
+		endingChangeSnapshot:   NewSnapShotModel("Ending Change", "Taking snapshot", width),
 
 		execCommandFunc: execCommandFunc,
 	}
