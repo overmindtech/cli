@@ -70,6 +70,12 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case runPlanNowMsg:
 		c := exec.CommandContext(m.ctx, "terraform", m.args...) // nolint:gosec // this is a user-provided command, let them do their thing
+		// remove go's default process cancel behaviour, so that terraform has a
+		// chance to gracefully shutdown when ^C is pressed. Otherwise the
+		// process would get killed immediately and leave locks lingering behind
+		c.Cancel = func() error {
+			return nil
+		}
 
 		// inject the profile, if configured
 		if aws_config := viper.GetString("aws-config"); aws_config == "profile_input" || aws_config == "aws_profile" {
