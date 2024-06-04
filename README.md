@@ -10,13 +10,18 @@ To install on Mac with homebrew use:
 brew install overmindtech/overmind/overmind-cli
 ```
 
-### Linux
-
-Releases are available on the [releases page](https://github.com/overmindtech/cli/releases/latest)
-
 ### Windows
 
-Releases are available on the [releases page](https://github.com/overmindtech/cli/releases/latest)
+Packages for Windows are available on the [releases page](https://github.com/overmindtech/cli/releases/latest) for manual download and installation. Unpack the ZIP file and put the `overmind.exe` executable in your `PATH`.
+
+### Linux
+
+Packages for Linux are available in native repositories. Please follow the instructions for your distribution:
+* [Alpine](https://cloudsmith.io/~overmind/repos/tools/setup/#formats-alpine)
+* [Debian](https://cloudsmith.io/~overmind/repos/tools/setup/#formats-deb)
+* [RPM](https://cloudsmith.io/~overmind/repos/tools/setup/#formats-rpm)
+
+Packages for Arch are available on the [releases page](https://github.com/overmindtech/cli/releases/latest) for manual download and installation.
 
 ## Details
 

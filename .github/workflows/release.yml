@@ -33,7 +33,25 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+
+      - name: Install cloudsmith CLI
+        run: |
+          pip install --upgrade cloudsmith-cli
+
+      - name: Upload packages to cloudsmith
+        run: |
+          for i in dist/*.apk; do
+            cloudsmith push alpine overmind/tools/alpine/any-version $i
+          done
+          for i in dist/*.deb; do
+            cloudsmith push deb overmind/tools/any-distro/any-version $i
+          done
+          for i in dist/*.rpm; do
+            cloudsmith push rpm overmind/tools/any-distro/any-version $i
+          done
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+
   bump-formula:
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' }}
