@@ -64,8 +64,8 @@ type tfApplyModel struct {
 	endingChange           chan tea.Msg
 	endingChangeSnapshot   snapshotModel
 
-	execCommandFunc ExecCommandFunc
-	width           int
+	parent *cmdModel
+	width  int
 }
 
 type askForApprovalMsg struct{}
@@ -80,7 +80,7 @@ type changeIdentifiedMsg struct {
 type runTfApplyMsg struct{}
 type tfApplyFinishedMsg struct{}
 
-func NewTfApplyModel(args []string, execCommandFunc ExecCommandFunc, width int) tea.Model {
+func NewTfApplyModel(args []string, parent *cmdModel, width int) tea.Model {
 	hasPlanSet := false
 	autoapprove := false
 	planFile := "overmind.plan"
@@ -140,7 +140,7 @@ func NewTfApplyModel(args []string, execCommandFunc ExecCommandFunc, width int) 
 
 		planFile:        planFile,
 		needPlan:        !hasPlanSet,
-		runPlanTask:     NewRunPlanModel(planArgs, planFile, execCommandFunc, width),
+		runPlanTask:     NewRunPlanModel(planArgs, planFile, parent, width),
 		runPlanFinished: hasPlanSet,
 
 		submitPlanTask: NewSubmitPlanModel(planFile, width),
@@ -152,7 +152,7 @@ func NewTfApplyModel(args []string, execCommandFunc ExecCommandFunc, width int) 
 		endingChange:           make(chan tea.Msg, 10), // provide a small buffer for sending updates, so we don't block the processing
 		endingChangeSnapshot:   NewSnapShotModel("Ending Change", "Taking snapshot", width),
 
-		execCommandFunc: execCommandFunc,
+		parent: parent,
 	}
 }
 
@@ -218,7 +218,7 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			tea.Sequence(
 				func() tea.Msg { return freezeViewMsg{} },
 				tea.Exec(
-					&interstitialCommand{text: fmt.Sprintf("%v\n%v", m.View(), m.submitPlanTask.FinalReport())},
+					m.parent.NewInterstitialCommand(fmt.Sprintf("%v\n%v", m.View(), m.submitPlanTask.FinalReport())),
 					func(err error) tea.Msg {
 						if err != nil {
 							return fatalError{err: fmt.Errorf("failed to show risks: %w", err)}
@@ -317,7 +317,7 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Sequence( // nolint:spancheck // will be ended in the tea.Exec cleanup func
 			func() tea.Msg { return freezeViewMsg{} },
 			tea.Exec(
-				m.execCommandFunc(c),
+				m.parent.NewExecCommand(c),
 				func(err error) tea.Msg {
 					defer span.End()
 

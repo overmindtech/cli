@@ -8,18 +8,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type ExecCommandFunc func(cmd *exec.Cmd) tea.ExecCommand
-
 // NewExecCommand returns a new ExecCommand that will print the last view from
 // the parent cmdModel after bubbletea has released the terminal, but before the
 // command is run.
 func (m *cmdModel) NewExecCommand(c *exec.Cmd) tea.ExecCommand {
-	return NewExecCommand(m, c)
-}
-
-func NewExecCommand(parent *cmdModel, c *exec.Cmd) *cliExecCommandModel {
 	return &cliExecCommandModel{
-		parent: parent,
+		parent: m,
 		Cmd:    c,
 	}
 }
@@ -68,6 +62,7 @@ func (c *cliExecCommandModel) SetStderr(w io.Writer) {
 // interstitialCommand is a command that will print a string to stdout after
 // bubbletea has released the terminal.
 type interstitialCommand struct {
+	parent *cmdModel
 	text   string
 	stdout io.Writer
 }
@@ -75,8 +70,19 @@ type interstitialCommand struct {
 // assert that interstitialCommand implements tea.ExecCommand
 var _ tea.ExecCommand = (*interstitialCommand)(nil)
 
+func (m *cmdModel) NewInterstitialCommand(text string) tea.ExecCommand {
+	return &interstitialCommand{
+		parent: m,
+		text:   text,
+	}
+}
+
 func (c *interstitialCommand) Run() error {
-	_, err := fmt.Println(c.text)
+	_, err := c.stdout.Write([]byte(c.parent.frozenView))
+	if err != nil {
+		return fmt.Errorf("failed to write view to stdout: %w", err)
+	}
+	_, err = fmt.Println(c.text)
 	return err
 }
 
