@@ -153,6 +153,8 @@ type authenticateModel struct {
 	deviceCode *oauth2.DeviceAuthResponse
 	config     oauth2.Config
 	token      *oauth2.Token
+
+	width int
 }
 
 func (m authenticateModel) Init() tea.Cmd {
@@ -160,7 +162,11 @@ func (m authenticateModel) Init() tea.Cmd {
 }
 
 func (m authenticateModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	cmds := []tea.Cmd{}
+
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -175,68 +181,60 @@ func (m authenticateModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case *oauth2.Token:
-		{
-			m.status = Authenticated
-			m.token = msg
-			return m, nil
-		}
+		m.status = Authenticated
+		m.token = msg
 
 	case statusMsg:
 		switch msg {
 		case PromptUser:
-			return m, openBrowserCmd(m.deviceCode.VerificationURI)
+			cmds = append(cmds, openBrowserCmd(m.deviceCode.VerificationURI))
 		case WaitingForConfirmation:
 			m.status = WaitingForConfirmation
-			return m, awaitToken(m.ctx, m.config, m.deviceCode)
+			cmds = append(cmds, awaitToken(m.ctx, m.config, m.deviceCode))
 		case Authenticated:
 		case ErrorAuthenticating:
-			{
-				return m, nil
-			}
 		}
 
 	case displayAuthorizationInstructionsMsg:
 		m.status = WaitingForConfirmation
-		return m, awaitToken(m.ctx, m.config, m.deviceCode)
+		cmds = append(cmds, awaitToken(m.ctx, m.config, m.deviceCode))
 
 	case failedToAuthenticateErrorMsg:
 		m.err = msg.err
 		m.status = ErrorAuthenticating
-		return m, tea.Quit
+		cmds = append(cmds, tea.Quit)
 
 	case errMsg:
 		m.err = msg.err
-		return m, tea.Quit
+		cmds = append(cmds, tea.Quit)
 	}
 
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 func (m authenticateModel) View() string {
 	var output string
-	beginAuthMessage := `# Authenticate with a browser
 
-Attempting to automatically open the SSO authorization page in your default browser.
-If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
-
-%v
-
-Then enter the code:
-
-	%v
-`
-	prompt := fmt.Sprintf(beginAuthMessage, m.deviceCode.VerificationURI, m.deviceCode.UserCode)
-	output += markdownToString(prompt)
 	switch m.status {
-	case PromptUser:
-		// nothing here as PromptUser is the default
-	case WaitingForConfirmation:
-		// sp := createSpinner()
-		// output += sp.View() + " Waiting for confirmation..."
+	case PromptUser, WaitingForConfirmation:
+		beginAuthMessage := `# Authenticate with a browser
+
+		Attempting to automatically open the SSO authorization page in your default browser.
+		If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
+
+		%v
+
+		Then enter the code:
+
+			%v
+		`
+		prompt := fmt.Sprintf(beginAuthMessage, m.deviceCode.VerificationURI, m.deviceCode.UserCode)
+		output = markdownToString(m.width, prompt)
+
 	case Authenticated:
-		output = lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎") + " Authenticated successfully. Press any key to continue."
+		output = wrap(lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")+" Authenticated successfully. Press any key to continue.", m.width-4, 2)
 	case ErrorAuthenticating:
-		output = lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("✗") + " Unable to authenticate. Try again."
+		output = wrap(lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("✗")+" Unable to authenticate. Please try again.", m.width-4, 2)
 	}
 
 	return containerStyle.Render(output)

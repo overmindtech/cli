@@ -50,7 +50,7 @@ type FinalReportingModel interface {
 	FinalReport() string
 }
 
-func CmdWrapper(action string, requiredScopes []string, commandModel func(args []string, execCommandFunc ExecCommandFunc) tea.Model) func(cmd *cobra.Command, args []string) {
+func CmdWrapper(action string, requiredScopes []string, commandModel func(args []string, parent *cmdModel, width int) tea.Model) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		// set up a context for the command
 		ctx, cancel := context.WithCancel(context.Background())
@@ -82,8 +82,8 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func(args [
 			log.SetLevel(log.TraceLevel)
 		} else {
 			// avoid log messages from sources and others to interrupt bubbletea rendering
-			viper.Set("log", "error")
-			log.SetLevel(log.ErrorLevel)
+			viper.Set("log", "fatal")
+			log.SetLevel(log.FatalLevel)
 		}
 
 		// wrap the rest of the function in a closure to allow for cleaner error handling and deferring.
@@ -108,7 +108,7 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func(args [
 				apiKey:         viper.GetString("api-key"),
 				tasks:          map[string]tea.Model{},
 			}
-			m.cmd = commandModel(args, m.NewExecCommand)
+			m.cmd = commandModel(args, &m, m.width)
 			p := tea.NewProgram(&m)
 			result, err := p.Run()
 			if err != nil {

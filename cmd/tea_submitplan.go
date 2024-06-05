@@ -64,19 +64,19 @@ type changeUpdatedMsg struct {
 	risks          []*sdp.Risk
 }
 
-func NewSubmitPlanModel(planFile string) submitPlanModel {
+func NewSubmitPlanModel(planFile string, width int) submitPlanModel {
 	return submitPlanModel{
 		planFile: planFile,
 
 		processing: make(chan submitPlanUpdateMsg, 1000), // provide a buffer for sending updates, so we don't block the processing
 		progress:   []string{},
 
-		removingSecretsTask:    NewTaskModel("Removing secrets"),
-		resourceExtractionTask: NewTaskModel("Extracting resources"),
-		uploadChangesTask:      NewTaskModel("Uploading planned changes"),
+		removingSecretsTask:    NewTaskModel("Removing secrets", width),
+		resourceExtractionTask: NewTaskModel("Extracting resources", width),
+		uploadChangesTask:      NewTaskModel("Uploading planned changes", width),
 
-		blastRadiusTask: NewSnapShotModel("Calculating Blast Radius", "Discovering dependencies"),
-		riskTask:        NewTaskModel("Calculating Risks"),
+		blastRadiusTask: NewSnapShotModel("Calculating Blast Radius", "Discovering dependencies", width),
+		riskTask:        NewTaskModel("Calculating Risks", width),
 	}
 }
 
@@ -92,7 +92,7 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
+		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
 
 	case loadSourcesConfigMsg:
 		m.ctx = msg.ctx
@@ -125,7 +125,8 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if len(m.riskMilestoneTasks) != len(msg.riskMilestones) {
 			m.riskMilestoneTasks = []taskModel{}
 			for _, ms := range msg.riskMilestones {
-				tm := NewTaskModel(ms.GetDescription())
+				tm := NewTaskModel(ms.GetDescription(), m.width)
+				tm.indent = 4
 				m.riskMilestoneTasks = append(m.riskMilestoneTasks, tm)
 				cmds = append(cmds, tm.Init())
 			}
@@ -237,7 +238,7 @@ func (m submitPlanModel) View() string {
 	if m.riskTask.status != taskStatusPending {
 		bits = append(bits, m.riskTask.View())
 		for _, t := range m.riskMilestoneTasks {
-			bits = append(bits, fmt.Sprintf("   %v", t.View()))
+			bits = append(bits, fmt.Sprintf("  %v", t.View()))
 		}
 	}
 
@@ -715,29 +716,43 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 func (m submitPlanModel) FinalReport() string {
 	bits := []string{}
 	if m.blastRadiusItems > 0 {
-		bits = append(bits, "")
 		bits = append(bits, styleH1().Render("Blast Radius"))
 		bits = append(bits, fmt.Sprintf("\nItems: %v\nEdges: %v\n", m.blastRadiusItems, m.blastRadiusEdges))
 	}
 	if m.changeUrl != "" && len(m.risks) > 0 {
-		bits = append(bits, "")
 		bits = append(bits, styleH1().Render("Potential Risks"))
 		bits = append(bits, "")
 		for _, r := range m.risks {
 			severity := ""
 			switch r.GetSeverity() {
 			case sdp.Risk_SEVERITY_HIGH:
-				severity = lipgloss.NewStyle().Background(ColorPalette.BgDanger).Render("  High 🔥  ")
+				severity = lipgloss.NewStyle().
+					Background(ColorPalette.BgDanger).
+					Padding(0, 1).
+					Bold(true).
+					Render("High ‼")
 			case sdp.Risk_SEVERITY_MEDIUM:
-				severity = lipgloss.NewStyle().Background(ColorPalette.BgWarning).Render("  Medium ❗  ")
+				severity = lipgloss.NewStyle().
+					Background(ColorPalette.BgWarning).
+					Padding(0, 1).
+					Render("Medium !")
 			case sdp.Risk_SEVERITY_LOW:
-				severity = lipgloss.NewStyle().Background(ColorPalette.LabelTitle).Render("  Low ℹ️  ")
+				severity = lipgloss.NewStyle().
+					Background(ColorPalette.LabelBase).
+					Padding(0, 1).
+					Render("Low ⓘ ")
 			case sdp.Risk_SEVERITY_UNSPECIFIED:
 				// do nothing
 			}
-			bits = append(bits, (fmt.Sprintf("%v %v\n\n%v\n\n",
+			title := lipgloss.NewStyle().
+				Foreground(ColorPalette.BgMain).
+				PaddingRight(1).
+				Bold(true).
+				Render(r.GetTitle())
+
+			bits = append(bits, (fmt.Sprintf("%v%v\n\n%v\n\n",
+				title,
 				severity,
-				styleH2().Render(r.GetTitle()),
 				wordwrap.String(r.GetDescription(), min(160, m.width-4)))))
 		}
 		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))

@@ -59,20 +59,25 @@ type ensureTokenModel struct {
 	errors []string
 
 	deviceMessage string
-	config        oauth2.Config
+	deviceConfig  oauth2.Config
 	deviceCode    *oauth2.DeviceAuthResponse
+	deviceError   error
+
+	width int
 }
 
-func NewEnsureTokenModel(ctx context.Context, app string, apiKey string, requiredScopes []string) tea.Model {
+func NewEnsureTokenModel(ctx context.Context, app string, apiKey string, requiredScopes []string, width int) tea.Model {
 	return ensureTokenModel{
 		ctx:            ctx,
 		app:            app,
 		apiKey:         apiKey,
 		requiredScopes: requiredScopes,
 
-		taskModel: NewTaskModel("Ensuring Token"),
+		taskModel: NewTaskModel("Ensuring Token", width),
 
 		errors: []string{},
+
+		width: width,
 	}
 }
 
@@ -85,19 +90,72 @@ func (m ensureTokenModel) Init() tea.Cmd {
 }
 
 func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	cmds := []tea.Cmd{}
+
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
+
 	case instanceLoadedMsg:
 		m.oi = msg.instance
 		m.status = taskStatusRunning
-		return m, tea.Batch(
+		cmds = append(cmds,
 			m.ensureTokenCmd(m.ctx),
 			m.spinner.Tick,
 		)
 	case displayAuthorizationInstructionsMsg:
-		m.config = msg.config
+		m.deviceMessage = "manual"
+		m.deviceConfig = msg.config
 		m.deviceCode = msg.deviceCode
+		m.deviceError = msg.err
+
 		m.status = taskStatusDone // avoid console flickering to allow click to be registered
 		m.title = "Manual device authorization."
+		cmds = append(cmds, m.awaitTokenCmd)
+	case waitingForAuthorizationMsg:
+		m.deviceMessage = "browser"
+		m.deviceConfig = msg.config
+		m.deviceCode = msg.deviceCode
+
+		m.title = "Waiting for device authorization, check your browser."
+
+		cmds = append(cmds, m.awaitTokenCmd)
+	case tokenLoadedMsg:
+		m.status = taskStatusDone
+		m.title = "Using stored token"
+		m.deviceMessage = ""
+		cmds = append(cmds, m.tokenAvailable(msg.token))
+	case tokenReceivedMsg:
+		m.status = taskStatusDone
+		m.title = "Authentication successful, using API key"
+		m.deviceMessage = ""
+		cmds = append(cmds, m.tokenAvailable(msg.token))
+	case tokenStoredMsg:
+		m.status = taskStatusDone
+		m.title = fmt.Sprintf("Authentication successful, token stored locally (%v)", msg.file)
+		m.deviceMessage = ""
+		cmds = append(cmds, m.tokenAvailable(msg.token))
+	case otherError:
+		if msg.id == m.spinner.ID() {
+			m.errors = append(m.errors, fmt.Sprintf("Note: %v", msg.err))
+		}
+	}
+
+	var taskCmd tea.Cmd
+	m.taskModel, taskCmd = m.taskModel.Update(msg)
+	cmds = append(cmds, taskCmd)
+
+	return m, tea.Batch(cmds...)
+}
+
+func (m ensureTokenModel) View() string {
+	bits := []string{m.taskModel.View()}
+
+	for _, err := range m.errors {
+		bits = append(bits, wrap(fmt.Sprintf("  %v", err), m.width, 2))
+	}
+	switch m.deviceMessage {
+	case "manual":
 		beginAuthMessage := `# Authenticate with a browser
 
 Automatically opening the SSO authorization page in your default browser failed: %v
@@ -110,13 +168,8 @@ Then enter the code:
 
 	%v
 `
-		m.deviceMessage = markdownToString(fmt.Sprintf(beginAuthMessage, msg.err, msg.deviceCode.VerificationURI, msg.deviceCode.UserCode))
-		return m, m.awaitTokenCmd
-	case waitingForAuthorizationMsg:
-		m.config = msg.config
-		m.deviceCode = msg.deviceCode
-
-		m.title = "Waiting for device authorization, check your browser."
+		bits = append(bits, markdownToString(m.width, fmt.Sprintf(beginAuthMessage, m.deviceError, m.deviceCode.VerificationURI, m.deviceCode.UserCode)))
+	case "browser":
 		beginAuthMessage := `# Authenticate with a browser
 
 Attempting to automatically open the SSO authorization page in your default browser.
@@ -128,44 +181,9 @@ Then enter the code:
 
 	%v
 `
-		m.deviceMessage = markdownToString(fmt.Sprintf(beginAuthMessage, msg.deviceCode.VerificationURI, msg.deviceCode.UserCode))
-		return m, m.awaitTokenCmd
-	case tokenLoadedMsg:
-		m.status = taskStatusDone
-		m.title = "Using stored token"
-		m.deviceMessage = ""
-		return m, m.tokenAvailable(msg.token)
-	case tokenReceivedMsg:
-		m.status = taskStatusDone
-		m.title = "Authentication successful, using API key"
-		m.deviceMessage = ""
-		return m, m.tokenAvailable(msg.token)
-	case tokenStoredMsg:
-		m.status = taskStatusDone
-		m.title = fmt.Sprintf("Authentication successful, token stored locally (%v)", msg.file)
-		m.deviceMessage = ""
-		return m, m.tokenAvailable(msg.token)
-	case otherError:
-		if msg.id == m.spinner.ID() {
-			m.errors = append(m.errors, fmt.Sprintf("Note: %v", msg.err))
-		}
-		return m, nil
-	default:
-		var taskCmd tea.Cmd
-		m.taskModel, taskCmd = m.taskModel.Update(msg)
-		return m, taskCmd
+		bits = append(bits, markdownToString(m.width, fmt.Sprintf(beginAuthMessage, m.deviceCode.VerificationURI, m.deviceCode.UserCode)))
 	}
-}
-
-func (m ensureTokenModel) View() string {
-	view := m.taskModel.View()
-	if len(m.errors) > 0 {
-		view += fmt.Sprintf("\n%v\n", strings.Join(m.errors, "\n"))
-	}
-	if m.deviceMessage != "" {
-		view += fmt.Sprintf("\n%v\n", m.deviceMessage)
-	}
-	return view
+	return strings.Join(bits, "\n")
 }
 
 // ensureTokenCmd gets a token from the environment or from the user, and returns a
@@ -280,7 +298,7 @@ func (m ensureTokenModel) awaitTokenCmd() tea.Msg {
 		// reset the deviceCode's expiry to at most 1.5 seconds
 		m.deviceCode.Expiry = time.Now().Add(1500 * time.Millisecond)
 
-		token, err = m.config.DeviceAccessToken(ctx, m.deviceCode)
+		token, err = m.deviceConfig.DeviceAccessToken(ctx, m.deviceCode)
 		if err == nil {
 			// we got a token, continue below. kthxbye
 			log.Trace("we got a token from auth0")

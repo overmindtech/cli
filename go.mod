@@ -5,20 +5,20 @@ go 1.22.3
 require (
 	connectrpc.com/connect v1.16.2
 	github.com/charmbracelet/bubbles v0.18.0
-	github.com/charmbracelet/bubbletea v0.26.3
+	github.com/charmbracelet/bubbletea v0.26.4
 	github.com/charmbracelet/glamour v0.7.0
-	github.com/charmbracelet/huh v0.3.0
+	github.com/charmbracelet/huh v0.4.2
 	github.com/charmbracelet/lipgloss v0.11.0
-	github.com/getsentry/sentry-go v0.27.0
+	github.com/getsentry/sentry-go v0.28.0
 	github.com/google/uuid v1.6.0
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/jedib0t/go-pretty/v6 v6.5.9
 	github.com/mattn/go-isatty v0.0.20
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.2
-	github.com/overmindtech/aws-source v0.0.0-20240524071840-3dc3ae490503
-	github.com/overmindtech/sdp-go v0.73.1
-	github.com/overmindtech/stdlib-source v0.0.0-20240524071854-ddcabf478dd8
+	github.com/overmindtech/aws-source v0.0.0-20240531090004-018d70085eae
+	github.com/overmindtech/sdp-go v0.75.3
+	github.com/overmindtech/stdlib-source v0.0.0-20240531102214-1ad4f0866adc
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
@@ -35,7 +35,7 @@ require (
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.27.0
 	go.opentelemetry.io/otel/sdk v1.27.0
 	go.opentelemetry.io/otel/trace v1.27.0
-	golang.org/x/exp v0.0.0-20240506185415-9bf2ced13842
+	golang.org/x/exp v0.0.0-20240530194437-404ba88c7ed0
 	golang.org/x/oauth2 v0.20.0
 	google.golang.org/protobuf v1.34.1
 	gopkg.in/yaml.v3 v3.0.1
@@ -61,8 +61,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.36.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.38.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.24.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.161.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.32.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.162.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.28.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eks v1.42.5 // indirect
@@ -77,7 +77,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.38.9 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.25.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.79.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.79.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.40.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.54.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.29.8 // indirect
@@ -90,16 +90,18 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/catppuccin/go v0.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/charmbracelet/x/ansi v0.1.1 // indirect
-	github.com/charmbracelet/x/input v0.1.0 // indirect
+	github.com/charmbracelet/x/ansi v0.1.2 // indirect
+	github.com/charmbracelet/x/exp/strings v0.0.0-20240524151031-ff83003bf67a // indirect
+	github.com/charmbracelet/x/input v0.1.1 // indirect
 	github.com/charmbracelet/x/term v0.1.1 // indirect
-	github.com/charmbracelet/x/windows v0.1.0 // indirect
+	github.com/charmbracelet/x/windows v0.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dlclark/regexp2 v1.4.0 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.1 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/btree v1.1.2 // indirect
@@ -109,7 +111,7 @@ require (
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
-	github.com/klauspost/compress v1.17.7 // indirect
+	github.com/klauspost/compress v1.17.8 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
@@ -121,12 +123,12 @@ require (
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/nats-io/jwt/v2 v2.5.7 // indirect
-	github.com/nats-io/nats.go v1.34.1 // indirect
+	github.com/nats-io/nats.go v1.35.0 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/openrdap/rdap v0.9.2-0.20240517203139-eb57b3a8dedd // indirect
-	github.com/overmindtech/discovery v0.27.3 // indirect
+	github.com/overmindtech/discovery v0.27.6 // indirect
 	github.com/overmindtech/sdpcache v1.6.4 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
@@ -153,7 +155,6 @@ require (
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/term v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/tools v0.21.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240520151616-dc85e6b867a5 // indirect

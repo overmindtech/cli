@@ -19,9 +19,9 @@ type instanceLoaderModel struct {
 	app string
 }
 
-func NewInstanceLoaderModel(ctx context.Context, app string) tea.Model {
+func NewInstanceLoaderModel(ctx context.Context, app string, width int) tea.Model {
 	result := instanceLoaderModel{
-		taskModel: NewTaskModel("Connecting to Overmind"),
+		taskModel: NewTaskModel("Connecting to Overmind", width),
 		ctx:       ctx,
 		app:       app,
 	}
@@ -41,21 +41,19 @@ func (m instanceLoaderModel) Init() tea.Cmd {
 }
 
 func (m instanceLoaderModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
+	cmds := []tea.Cmd{}
+
+	switch msg.(type) {
 	case instanceLoadedMsg:
 		m.status = taskStatusDone
 		m.title = "Connected to Overmind"
-		return m, nil
-	default:
-		var cmd tea.Cmd
-		if m.status == taskStatusRunning {
-			m.spinner, cmd = m.spinner.Update(msg)
-			return m, cmd
-		} else {
-			// stop updating the spinner if the task is not running
-			return m, nil
-		}
 	}
+
+	var cmd tea.Cmd
+	m.taskModel, cmd = m.taskModel.Update(msg)
+	cmds = append(cmds, cmd)
+
+	return m, tea.Batch(cmds...)
 }
 
 func newOvermindInstanceCmd(ctx context.Context, app string) tea.Cmd {

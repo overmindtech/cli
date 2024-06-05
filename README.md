@@ -52,7 +52,7 @@ To install on Mac with homebrew use:
 brew install overmindtech/overmind/overmind-cli
 ```
 
-### Linux
+### Windows
 
 #### Debian
 

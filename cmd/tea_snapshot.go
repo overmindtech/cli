@@ -33,11 +33,11 @@ type finishSnapshotMsg struct {
 	id int
 }
 
-func NewSnapShotModel(header, title string) snapshotModel {
+func NewSnapShotModel(header, title string, width int) snapshotModel {
 	return snapshotModel{
-		overall:     NewTaskModel(header),
-		discovering: NewTaskModel(title),
-		saving:      NewTaskModel("Saving"),
+		overall:     NewTaskModel(header, width),
+		discovering: NewTaskModel(title, width),
+		saving:      NewTaskModel("Saving", width),
 	}
 }
 
@@ -86,15 +86,18 @@ func (m snapshotModel) Update(msg tea.Msg) (snapshotModel, tea.Cmd) {
 		m.overall.status = taskStatusDone
 		m.discovering.status = taskStatusDone
 		m.saving.status = taskStatusDone
-	default:
-		var cmd tea.Cmd
-		m.overall, cmd = m.overall.Update(msg)
-		cmds = append(cmds, cmd)
-		m.discovering, cmd = m.discovering.Update(msg)
-		cmds = append(cmds, cmd)
-		m.saving, cmd = m.saving.Update(msg)
-		cmds = append(cmds, cmd)
 	}
+
+	var cmd tea.Cmd
+
+	m.overall, cmd = m.overall.Update(msg)
+	cmds = append(cmds, cmd)
+
+	m.discovering, cmd = m.discovering.Update(msg)
+	cmds = append(cmds, cmd)
+
+	m.saving, cmd = m.saving.Update(msg)
+	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
 }
@@ -102,6 +105,11 @@ func (m snapshotModel) Update(msg tea.Msg) (snapshotModel, tea.Cmd) {
 func (m snapshotModel) View() string {
 	// TODO: add progressbar; complication: we do not have a expected number of
 	// items/edges to count towards for the progressbar
+
+	// TODO: improve wrapping behaviour of the components. Currently skipped as
+	// all the taskModel titles are expected to be relatively short and because
+	// of the nesting of the components, the wrapping is more complex than the
+	// current code structure supports
 	bits := []string{}
 	bits = append(bits, m.overall.View())
 

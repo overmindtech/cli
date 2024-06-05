@@ -27,6 +27,7 @@ type loadSourcesConfigMsg struct {
 
 type askForAwsConfigMsg struct{}
 type configStoredMsg struct{}
+type sourceInitialisationFailedMsg struct{ err error }
 type sourcesInitialisedMsg struct{}
 
 // this tea.Model either fetches the AWS auth config from the ConfigService or
@@ -47,19 +48,19 @@ type initialiseSourcesModel struct {
 	profileInputForm     *huh.Form // is set if the user needs to be interrogated about their profile_input
 	profileInputFormDone bool      // gets set to true once the form result has been processed
 
-	configStored bool
-
 	awsSourceRunning    bool
 	stdlibSourceRunning bool
 
-	errors []string
+	errorHints []string
+
+	width int
 }
 
-func NewInitialiseSourcesModel() tea.Model {
+func NewInitialiseSourcesModel(width int) tea.Model {
 	return initialiseSourcesModel{
-		taskModel: NewTaskModel("Configuring AWS Access"),
+		taskModel: NewTaskModel("Configuring AWS Access", width),
 
-		errors: []string{},
+		errorHints: []string{},
 	}
 }
 
@@ -75,6 +76,9 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds := []tea.Cmd{}
 
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
+
 	case loadSourcesConfigMsg:
 		m.ctx = msg.ctx
 		m.oi = msg.oi
@@ -129,7 +133,6 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				Options(options...)
 			m.awsConfigForm = huh.NewForm(huh.NewGroup(selector))
 			cmds = append(cmds, selector.Focus())
-			selector.Skip()
 		} else {
 			m.awsConfigFormDone = true
 
@@ -147,14 +150,37 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case configStoredMsg:
-		m.configStored = true
+		m.title += " (config stored)"
 	case sourcesInitialisedMsg:
 		m.awsSourceRunning = true
 		m.stdlibSourceRunning = true
 		m.status = taskStatusDone
+	case sourceInitialisationFailedMsg:
+		m.status = taskStatusError
+		errorHint := "Error initialising sources"
+		switch viper.GetString("aws-config") {
+		case "defaults":
+			errorHint += " with default settings"
+		case "aws_profile":
+			errorHint += fmt.Sprintf(" with AWS profile from environment '%v'", viper.GetString("aws-profile"))
+		case "profile_input":
+			errorHint += fmt.Sprintf(" with selected AWS profile '%v'", viper.GetString("aws-profile"))
+		}
+		m.errorHints = append(m.errorHints, errorHint)
+		cmds = append(cmds, func() tea.Msg {
+			// create a fatalError for aborting the CLI and common error detail
+			// reporting, but don't pass in the spinner ID, to avoid double
+			// reporting in this model's View
+			return fatalError{err: fmt.Errorf("failed to initialise sources: %w", msg.err)}
+		})
 	case otherError:
 		if msg.id == m.spinner.ID() {
-			m.errors = append(m.errors, fmt.Sprintf("Note: %v", msg.err))
+			m.errorHints = append(m.errorHints, fmt.Sprintf("Note: %v", msg.err))
+		}
+	case fatalError:
+		if msg.id == m.spinner.ID() {
+			m.status = taskStatusError
+			m.errorHints = append(m.errorHints, fmt.Sprintf("Error: %v", msg.err))
 		}
 	}
 
@@ -233,26 +259,23 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m initialiseSourcesModel) View() string {
-	view := m.taskModel.View()
-	if m.configStored {
-		view += " (config stored)"
-	}
-	if len(m.errors) > 0 {
-		view += fmt.Sprintf("\n%v\n", strings.Join(m.errors, "\n"))
+	bits := []string{m.taskModel.View()}
+	for _, hint := range m.errorHints {
+		bits = append(bits, wrap(fmt.Sprintf("  %v", hint), m.width, 2))
 	}
 	if m.awsConfigForm != nil && !m.awsConfigFormDone {
-		view += fmt.Sprintf("\n%v", m.awsConfigForm.View())
+		bits = append(bits, m.awsConfigForm.View())
 	}
 	if m.profileInputForm != nil && !m.profileInputFormDone {
-		view += fmt.Sprintf("\n%v", m.profileInputForm.View())
+		bits = append(bits, m.profileInputForm.View())
 	}
 	if m.awsSourceRunning {
-		view += fmt.Sprintf("\n  %v AWS Source: running", lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"))
+		bits = append(bits, wrap(fmt.Sprintf("  %v AWS Source: running", lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")), m.width, 4))
 	}
 	if m.stdlibSourceRunning {
-		view += fmt.Sprintf("\n  %v stdlib Source: running", lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"))
+		bits = append(bits, wrap(fmt.Sprintf("  %v stdlib Source: running", lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")), m.width, 4))
 	}
-	return view
+	return strings.Join(bits, "\n")
 }
 
 func (m initialiseSourcesModel) loadSourcesConfigCmd() tea.Msg {
@@ -305,13 +328,14 @@ func (m initialiseSourcesModel) storeConfigCmd(aws_config, aws_profile string) t
 		return configStoredMsg{}
 	}
 }
+
 func (m initialiseSourcesModel) startSourcesCmd(aws_config, aws_profile string) tea.Cmd {
 	return func() tea.Msg {
 		// ignore returned context. Cancellation of sources is handled by the process exiting for now.
 		// should sources require more teardown, we'll have to figure something out.
 		_, err := InitializeSources(m.ctx, m.oi, aws_config, aws_profile, m.token)
 		if err != nil {
-			return fatalError{id: m.spinner.ID(), err: fmt.Errorf("failed to initialise sources: %w", err)}
+			return sourceInitialisationFailedMsg{err}
 		}
 		return sourcesInitialisedMsg{}
 	}

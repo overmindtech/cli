@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -22,21 +23,21 @@ type runPlanModel struct {
 	args     []string
 	planFile string
 
-	execCommandFunc ExecCommandFunc
-	revlinkTask     revlinkWarmupModel
+	parent      *cmdModel
+	revlinkTask revlinkWarmupModel
 	taskModel
 }
 type runPlanNowMsg struct{}
 type runPlanFinishedMsg struct{}
 
-func NewRunPlanModel(args []string, planFile string, execCommandFunc ExecCommandFunc) runPlanModel {
+func NewRunPlanModel(args []string, planFile string, parent *cmdModel, width int) runPlanModel {
 	return runPlanModel{
 		args:     args,
 		planFile: planFile,
 
-		revlinkTask:     NewRevlinkWarmupModel(),
-		execCommandFunc: execCommandFunc,
-		taskModel:       NewTaskModel("Planning Changes"),
+		parent:      parent,
+		revlinkTask: NewRevlinkWarmupModel(width),
+		taskModel:   NewTaskModel("Planning Changes", width),
 	}
 }
 
@@ -52,7 +53,7 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width = msg.Width
+		m.width = min(MAX_TERMINAL_WIDTH, msg.Width)
 
 	case loadSourcesConfigMsg:
 		m.ctx = msg.ctx
@@ -69,10 +70,25 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case runPlanNowMsg:
 		c := exec.CommandContext(m.ctx, "terraform", m.args...) // nolint:gosec // this is a user-provided command, let them do their thing
+		// remove go's default process cancel behaviour, so that terraform has a
+		// chance to gracefully shutdown when ^C is pressed. Otherwise the
+		// process would get killed immediately and leave locks lingering behind
+		c.Cancel = func() error {
+			return nil
+		}
 
 		// inject the profile, if configured
-		if aws_profile := viper.GetString("aws-profile"); aws_profile != "" {
-			c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
+		if aws_config := viper.GetString("aws-config"); aws_config == "profile_input" || aws_config == "aws_profile" {
+			// override the AWS_PROFILE value in the environment with the
+			// provided value from the config; this might be redundant if
+			// viper picked it up from the environment in the first place,
+			// but we wouldn't know that.
+			if aws_profile := viper.GetString("aws-profile"); aws_profile != "" {
+				// copy the current environment, as a non-nil Env value instructs exec.Cmd to not inherit the parent's environment
+				c.Env = os.Environ()
+				// set the AWS_PROFILE value as last entry, which will override any previous value
+				c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
+			}
 		}
 
 		if viper.GetString("ovm-test-fake") != "" {
@@ -86,7 +102,7 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			tea.Sequence(
 				func() tea.Msg { return freezeViewMsg{} },
 				tea.Exec( // nolint:spancheck // will be ended in the tea.Exec cleanup func
-					m.execCommandFunc(c),
+					m.parent.NewExecCommand(c),
 					func(err error) tea.Msg {
 						defer span.End()
 
@@ -99,16 +115,13 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case runPlanFinishedMsg:
 		m.taskModel.status = taskStatusDone
 		cmds = append(cmds, func() tea.Msg { return unfreezeViewMsg{} })
-
-	default:
-		// var cmd tea.Cmd
-		// propagate commands to components
-		// m.taskModel, cmd = m.taskModel.Update(msg)
-		// cmds = append(cmds, cmd)
 	}
 
 	var cmd tea.Cmd
 	m.revlinkTask, cmd = m.revlinkTask.Update(msg)
+	cmds = append(cmds, cmd)
+
+	m.taskModel, cmd = m.taskModel.Update(msg)
 	cmds = append(cmds, cmd)
 
 	return m, tea.Batch(cmds...)
@@ -120,10 +133,10 @@ func (m runPlanModel) View() string {
 	switch m.taskModel.status {
 	case taskStatusPending, taskStatusRunning:
 		bits = append(bits,
-			fmt.Sprintf("%v Running 'terraform %v'",
+			wrap(fmt.Sprintf("%v Running 'terraform %v'",
 				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
 				strings.Join(m.args, " "),
-			))
+			), m.width, 2))
 	case taskStatusDone:
 		bits = append(bits, m.taskModel.View())
 		bits = append(bits, m.revlinkTask.View())
