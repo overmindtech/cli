@@ -158,11 +158,11 @@ Packages for Windows are available on the [releases page](https://github.com/ove
   <tr>
     <td style="width: 50%; vertical-align: top;">
       <img width="100%" src="https://uploads-ssl.webflow.com/6241e92445c21f9c1245a940/66607bb64e562f2d332dad8b_blast_radius.png" /><br/>
-        <b>Blast Radius: </b>Overmind maps out all potential dependencies and interactions within your infra in realtime. Supports over 120 AWS resources and all Kubernetes.
+        <b>🔍 Blast Radius: </b>Overmind maps out all potential dependencies and interactions within your infra in realtime. Supports over 120 AWS resources and all Kubernetes.
     </td>
     <td style="width: 50%; vertical-align: top;">
       <img width="100%" src="https://uploads-ssl.webflow.com/6241e92445c21f9c1245a940/66607454e2bf59158c49565a_health%20check%20risk.png" /><br/>
-      <b>Risks: </b>Discover specific risks that would be invisible otherwise. Risks are delivered directly to the pull request. Make deployment decisions within minutes not hours.
+      <b>🚨 Risks: </b>Discover specific risks that would be invisible otherwise. Risks are delivered directly to the pull request. Make deployment decisions within minutes not hours.
     </td>
   </tr>
 </table>
