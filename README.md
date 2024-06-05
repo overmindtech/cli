@@ -158,7 +158,7 @@ Packages for Windows are available on the [releases page](https://github.com/ove
   <tr>
     <td style="width: 50%; vertical-align: top;">
       <img width="100%" src="https://uploads-ssl.webflow.com/6241e92445c21f9c1245a940/66607bb64e562f2d332dad8b_blast_radius.png" /> </br>
-        <b>Blast Radius: </b>Overmind maps out all potential dependencies and interactions within your infrastructure in realtime. Supports over 100 AWS resources and 300 relationships across AWS Accounts and Kubernetes.</li>
+        <b>Blast Radius: </b>Overmind maps out all potential dependencies and interactions within your infrastructure in realtime. Supports over 100 AWS resources and 300 relationships across AWS Accounts and Kubernetes.
     </td>
     <td style="width: 50%; vertical-align: top;">
       <img width="100%" src="https://uploads-ssl.webflow.com/6241e92445c21f9c1245a940/66607454e2bf59158c49565a_health%20check%20risk.png" /> </br>
