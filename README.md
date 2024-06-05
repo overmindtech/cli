@@ -153,15 +153,15 @@ Packages for Windows are available on the [releases page](https://github.com/ove
 * **📋 Change Management Process:** IaC and automation mean that changes spend substantially more time in review and approval steps than the change itself actually takes.
 * **🔥 Downtime:** Outages are not caused by simple cause-and-effect relationships. More often than not, downtime is a result of dependencies people didn't know existed.
 
-## How We Solve It: Blast Radius & Risks
+## How We Solve It?
 <table>
   <tr>
     <td style="width: 50%; vertical-align: top;">
-      <img width="500px" src="https://uploads-ssl.webflow.com/6241e92445c21f9c1245a940/6582b6a8bffe0e00d24ce2eb_features-blast-radius-image.png" /> </br>
+      <img width="100%" src="https://uploads-ssl.webflow.com/6241e92445c21f9c1245a940/66607bb64e562f2d332dad8b_blast_radius.png" /> </br>
         <b>Blast Radius: </b>Overmind maps out all potential dependencies and interactions within your infrastructure in realtime. Supports over 100 AWS resources and 300 relationships across AWS Accounts and Kubernetes.</li>
     </td>
     <td style="width: 50%; vertical-align: top;">
-      <img width="500px" src="https://uploads-ssl.webflow.com/6241e92445c21f9c1245a940/66607454e2bf59158c49565a_health%20check%20risk.png" /> </br>
+      <img width="100%" src="https://uploads-ssl.webflow.com/6241e92445c21f9c1245a940/66607454e2bf59158c49565a_health%20check%20risk.png" /> </br>
       <b>Risks: </b>Discover specific risks that would be invisible otherwise. Risks are delivered directly to the pull request. Make deployment decisions within minutes not hours.
     </td>
   </tr>
