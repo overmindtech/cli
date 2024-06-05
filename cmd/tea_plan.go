@@ -23,21 +23,21 @@ type runPlanModel struct {
 	args     []string
 	planFile string
 
-	execCommandFunc ExecCommandFunc
-	revlinkTask     revlinkWarmupModel
+	parent      *cmdModel
+	revlinkTask revlinkWarmupModel
 	taskModel
 }
 type runPlanNowMsg struct{}
 type runPlanFinishedMsg struct{}
 
-func NewRunPlanModel(args []string, planFile string, execCommandFunc ExecCommandFunc, width int) runPlanModel {
+func NewRunPlanModel(args []string, planFile string, parent *cmdModel, width int) runPlanModel {
 	return runPlanModel{
 		args:     args,
 		planFile: planFile,
 
-		revlinkTask:     NewRevlinkWarmupModel(width),
-		execCommandFunc: execCommandFunc,
-		taskModel:       NewTaskModel("Planning Changes", width),
+		parent:      parent,
+		revlinkTask: NewRevlinkWarmupModel(width),
+		taskModel:   NewTaskModel("Planning Changes", width),
 	}
 }
 
@@ -102,7 +102,7 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			tea.Sequence(
 				func() tea.Msg { return freezeViewMsg{} },
 				tea.Exec( // nolint:spancheck // will be ended in the tea.Exec cleanup func
-					m.execCommandFunc(c),
+					m.parent.NewExecCommand(c),
 					func(err error) tea.Msg {
 						defer span.End()
 
