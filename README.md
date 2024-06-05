@@ -13,184 +13,180 @@
   <a href="https://vimeo.com/903381683">🎥 Watch a demo</a> | <a href="https://overmind.tech/how-it-work">📖 How it works</a> | <a href="https://app.overmind.tech/api/auth/signup">🚀 Sign up</a> | <a href="https://app.overmind.tech/playground">💻 Playground</a> | <a href="https://www.linkedin.com/company/overmindtech/">🙌 Follow us</a>
 </p>
 
-## What is Overmind CLI?
+# What is Overmind?
+
+Overmind is a powerful tool for real-time impact analysis on Terraform changes. Overmind can **identify the blast radius** and **uncover potential risks** with `overmind terrafrom plan` before they harm your infrastructure, allowing anyone to make changes with confidence. We also track the impacts of the changes you make with `overmind teraform apply`, so that you can be sure that your changes haven't had any unexpected downstream impact.
+
+# Quick Start
+
+Install the Overmind CLI using brew:
+
+```
+brew install overmindtech/overmind/overmind-cli
+```
+
+Run a terraform plan:
+
+```
+overmind terraform plan
+```
 
 ![Running 'overmind terraform plan' and viewing in the app](https://uploads-ssl.webflow.com/6241e92445c21f9c1245a940/666039f90a7a42bebcfaf692_overmind_cli_demo%20(1).gif)
 
-Overmind CLI is a powerful tool for real-time impact analysis on Terraform changes. By leveraging Overmind's capabilities, you can identify and mitigate potential risks before they harm your infrastructure, ultimately giving you the insight of a post-mortem without the associated fallout.
+<details>
+<summary>Install on other platforms</summary>
 
-## Quick Install
+## Prerequisites
 
-#### Prerequisites
 - Terraform environment set up
 - Access to all required credentials
 - Ability to install and run the Overmind CLI
 
-#### Installation
+## Installation
 
-**Mac**
+### MacOS
 
-```bash
+To install on Mac with homebrew use:
+
+```
 brew install overmindtech/overmind/overmind-cli
 ```
 
-**Windows**
+### Linux
 
-1. Download the zip file for your architecture from the [Releases page](<releases-page-url>).
-2. Unpack the zip file.
-3. Copy the `overmind` file to your `$PATH` or use it directly with its full path.
+#### Debian
 
-**Linux**
+Set up the repository automatically:
 
-1. Download the tar.gz file for your architecture from the [Releases page](<releases-page-url>).
-2. Unpack with `tar xvzf FILE.tar.gz`.
-3. Copy the `overmind` file to your `$PATH` or use it directly with its full path.
-
-## Getting Started
-
-To see the impact and potential risks of a Terraform code change you've made locally, run `overmind terraform plan` from the root of your Terraform project. This command will inspect your checkout, run `terraform plan`, discover all your existing cloud resources, and create a report of all items that could be impacted by this change. Overmind will also provide an automated assessment of deployment risks. At no point will credentials or sensitive values be uploaded to Overmind systems.
-
-### Example Session
-```sh
-$ overmind terraform plan
-
-Connected to Ovemrind
-Authentication successful, using API key.
-Configuring AWS Access
-Choose how to access your AWS account (read-only):
-> Use the default settings
-  Use $AWS_PROFILE (currently: dogfood)
-  Use a different profile
-  Select a different AWS auth profile
-  Configure managed source (opens browser)
-### Detect outdated topology cache and populate if necessary
-  AWS Source: running
-  Stdlib Source: running
-Running `terraform plan -out /tmp/overmind-plan3525309685`...
-### Terraform plan output
-Saved the plan to: /tmp/overmind-plan3525309685
-
-To perform exactly these actions, run the following command to apply:
-  terraform apply "/tmp/overmind-plan3525309685"
-✅ Planning Changes
-✅ Discover and link all resources: cache is hot
-✅ Removing secrets
-✅ Extracting 3 changing resources: 3 supported 0 unsupported
-  aws_s3_bucket (1)
-  ...
-✅ Uploading planned changes (new)
-✅ Calculating Blast Radius
-  ✅ Discovering dependencies - done (128 items, 350 edges)
-  ✅ Saving
-✅ Calculating risks
-  ✅ Mappning planned changes to current cloud resources
-  ✅ Processing changes (3 planned changes & 0 mapped resources)
-  ✅ Analyzing blast radius 
-  ✅ Returing enriched risks
-
-Check the blast radius graph while you wait:
-https://app.overmind.tech/changes/02938475092387450928374059
-
-### Potential Risks
-- **Impact on Target Groups (High 🔥)**: Target groups may be indirectly affected if the security group change causes networking issues.
-- **Impact on Load Balancer Traffic (Medium !)**: The restriction of egress traffic to just port 8080 could affect the distribution of traffic to backend services.
-- **Misconfiguration of Egress Rules (Low ⁉)**: The security group change to port 8080 poses a risk of blocking other outbound traffic required by applications.
-
-Check the blast radius graph and risks at:
-https://app.overmind.tech/changes/1290380-28374-23498987
-
+```shell
+curl -1sLf \
+  'https://dl.cloudsmith.io/public/overmind/tools/setup.deb.sh' \
+  | sudo -E bash
 ```
 
-## Applying Changes
+Or set it up manually
 
-When running `overmind terraform apply`, Overmind will replicate the user experience of running `terraform apply`. It will generate a plan file but will not show this to the user. If the user specifies `-file`, Overmind will link the apply to an existing change rather than creating a new one. The yes/no decision will be made after the risks have been calculated.
-
-For users running with `-auto-approve`, Overmind will skip the risk calculation step.
-
-## Managed Sources
-
-Choose how to access your AWS (read-only):
-- Run locally using $AWS_PROFILE (currently: dogfood)
-- Run locally using the dogfood profile
-- Run locally using the prod profile
-> Run managed source (opens browser)
-
-```sh
-Open: <https://app.overmind.tech/config/sources/add?type=aws>
-```
-To continue, select:
-- I have configured a managed source
-- Choose another option
-
-## Details
-
-CLI to interact with the Overmind API
-
-```
-Usage:
-  overmind [command]
-
-Infrastructure as Code:
-  terraform   Run Terrafrom with Overmind's change tracking - COMING SOON
-
-Overmind API:
-  bookmarks   Interact with the bookarks that were created in the Explore view
-  changes     Create, update and delete changes in Overmind
-  invites     Manage invites for your team to Overmind
-  request     Runs a request against the overmind API
-  snapshots   Create, view and delete snapshots if your infrastructure
-
-Additional Commands:
-  completion  Generate the autocompletion script for the specified shell
-  help        Help about any command
-
-Flags:
-  -h, --help         help for overmind
-      --log string   Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace (default "info")
-  -v, --version      version for overmind
-
-Use "overmind [command] --help" for more information about a command.
+```shell
+apt-get install -y debian-keyring  # debian only
+apt-get install -y debian-archive-keyring  # debian only
+apt-get install -y apt-transport-https
+# For Debian Stretch, Ubuntu 16.04 and later
+keyring_location=/usr/share/keyrings/overmind-tools-archive-keyring.gpg
+# For Debian Jessie, Ubuntu 15.10 and earlier
+keyring_location=/etc/apt/trusted.gpg.d/overmind-tools.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/overmind/tools/gpg.BC5CDEFB4E37A1B3.key' |  gpg --dearmor >> ${keyring_location}
+curl -1sLf 'https://dl.cloudsmith.io/public/overmind/tools/config.deb.txt?distro=ubuntu&codename=xenial&component=main' > /etc/apt/sources.list.d/overmind-tools.list
+apt-get update
 ```
 
-Set the environment variable `ACCESSIBLE` to `'true'` to enable screenreader mode.
+Then install the CLI:
 
-## Examples
-
-Upload a terraform plan to overmind for Blast Radius Analysis:
-
-```
-terraform show -json ./tfplan > ./tfplan.json
-overmind changes submit-plan --title "example change" ./tfplan1.json ./tfplan2.json ./tfplan3.json
+```shell
+apt-get install overmind-cli
 ```
 
-## Terraform ➡ Overmind Mapping
+#### RHEL
 
-In order to calculate the blast radius from a Terraform plan, we use mappings provided by the sources to map a Terraform resource change to an Overmind item. In many cases this is simple, however in some instances, the plan doesn't have enough information for us to determine which resource the change is referring to. A good example is a Terraform environment that manages 2x Kubernetes deployments in 2x clusters which both have the same name.
+Set up the repository automatically:
 
-By default we'll add both deployments to the blast radius since we can't tell them apart. However to improve the results, you can add the `overmind_mappings` output to your plan:
-
-```hcl
-output "overmind_mappings" {
-  value = {
-    # The key here should be the name of the provider. Resources that use this
-    # provider will be mapped to a cluster with the below name. If you had
-    # another provider with an alias such as "prod" the name would be
-    # "kubernetes.prod"
-    kubernetes = {
-      cluster_name = var.terraform_env_name
-    }
-  }
-}
+```shell
+curl -1sLf \
+  'https://dl.cloudsmith.io/public/overmind/tools/setup.rpm.sh' \
+  | sudo -E bash
 ```
 
-Valid mapping values are:
+Or set it up manually
 
-* `cluster_name`: The name of the cluster that was provided to the kubernetes source using the `source.clusterName` option
+```shell
+yum install yum-utils pygpgme
+rpm --import 'https://dl.cloudsmith.io/public/overmind/tools/gpg.BC5CDEFB4E37A1B3.key'
+curl -1sLf 'https://dl.cloudsmith.io/public/overmind/tools/config.rpm.txt?distro=amzn&codename=2023' > /tmp/overmind-tools.repo
+yum-config-manager --add-repo '/tmp/overmind-tools.repo'
+yum -q makecache -y --disablerepo='*' --enablerepo='overmind-tools'
+```
+
+Then install the CLI:
+
+```shell
+sudo yum install overmind-cli
+```
+
+#### Alpine
+
+Set up the repository automatically:
+
+```shell
+sudo apk add --no-cache bash
+curl -1sLf \
+  'https://dl.cloudsmith.io/public/overmind/tools/setup.alpine.sh' \
+  | sudo -E bash
+```
+
+Or set it up manually
+
+```shell
+curl -1sLf 'https://dl.cloudsmith.io/public/overmind/tools/rsa.7B6E65C2058FDB78.key' > /etc/apk/keys/tools@overmind-7B6E65C2058FDB78.rsa.pub
+curl -1sLf 'https://dl.cloudsmith.io/public/overmind/tools/config.alpine.txt?distro=alpine&codename=v3.8' >> /etc/apk/repositories
+apk update
+```
+
+Then install the CLI:
+
+```shell
+apk add overmind-cli
+```
+
+#### Arch
+
+Packages for Arch are available on the [releases page](https://github.com/overmindtech/cli/releases/latest) for manual download and installation.
+
+### Windows
+
+Packages for Windows are available on the [releases page](https://github.com/overmindtech/cli/releases/latest) for manual download and installation. Unpack the ZIP file and put the `overmind.exe` executable in your `PATH`.
+
+</details>
+
+## Why Use Overmind?
+
+* **☁️ Cloud Complexity:** Terraform tells you what it's going to change, but not whether this change will break everything. Teams need to understand dependencies to properly understand impact.
+* **👨‍🏫 Onboarding & Productivity:** Due to the reliance on "tribal knowledge", expert staff are stuck doing approvals rather than productive work and newer staff take longer to become productive.
+* **📋 Change Management Process:** IaC and automation mean that changes spend substantially more time in review and approval steps than the change itself actually takes.
+* **🔥 Downtime:** Outages are not caused by simple cause-and-effect relationships. More often than not, downtime is a result of dependencies people didn't know existed.
+
+## How We Solve It: Blast Radius & Risks
+<table>
+  <tr>
+    <td style="width: 50%; vertical-align: top;">
+      <img width="100%" src="https://uploads-ssl.webflow.com/6241e92445c21f9c1245a940/6582b6a8bffe0e00d24ce2eb_features-blast-radius-image.png" />
+        <b>Blast Radius: </b>Overmind maps out all potential dependencies and interactions within your infrastructure in realtime. Supports over 100 AWS resources and 300 relationships across AWS Accounts and Kubernetes.</li>
+    </td>
+    <td style="width: 50%; vertical-align: top;">
+      <img width="100%" src="https://uploads-ssl.webflow.com/6241e92445c21f9c1245a940/66607454e2bf59158c49565a_health%20check%20risk.png" /> 
+      <b>Risks: </b>Discover specific risks that would be invisible otherwise. Risks are delivered directly to the pull request. Make deployment decisions within minutes not hours.
+    </td>
+  </tr>
+</table>
+
+## Advanced Use
+
+### Passing Arguments
+
+Overmind's `overmind terraform plan` and `overmind terraform apply` commands mostly just wrap the `terraform` that you already have installed, adding all of Overmind's features on top. This means that no matter how you're using Terraform today, this will still work with Overmind. For example if you're using a more complex command like:
+
+```shell
+terraform plan -var-file=production.tfvars -parallelism=20 -auto-approve
+```
+
+Then you would add `overmind` to the beginning, and your arguments after a double-dash e.g.
+
+```shell
+overmind terraform plan -- -var-file=production.tfvars -parallelism=20 -auto-approve
+```
 
 ## Join the Community
 
 - Join our [Discord](https://discord.com/invite/5UKsqAkPWG)
-- Contact us via email at [engineering@overmind.tech](mailto:engineering@overmind.tech)
+- Contact us via email at [sales@overmind.tech](mailto:sales@overmind.tech)
 - Follow us on [LinkedIn](https://www.linkedin.com/company/overmindtech/)
 
 ## Additional Resources
@@ -200,13 +196,12 @@ Valid mapping values are:
 - [Getting Started Guide](https://docs.overmind.tech)
 - [Overmind Blog](https://overmind.tech/blog)
 
-## Reporting Bugs, Requesting Features, or Contributing to Overmind
+## Reporting Bugs
 
-- Want to report a bug or request a feature? [Open an issue](<issues-url>)
-- Interested in contributing to Overmind? Check out our [Contribution Guide](<contribution-guide-url>)
+- Want to report a bug or request a feature? [Open an issue](https://github.com/overmindtech/cli/issues/new)
 
 ## License
 
 See the [LICENSE](/LICENSE) file for licensing information.
 
-Overmind is made with ❤️ by OvermindTech
+Overmind is made with ❤️ in 🇺🇸🇬🇧🇦🇹🇫🇷🇷🇴
