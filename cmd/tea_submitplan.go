@@ -496,12 +496,15 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	///////////////////////////////////////////////////////////////////
 	m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusRunning)}
 	time.Sleep(200 * time.Millisecond) // give the UI a little time to update
-	plannedChanges, diffMsg, err := mappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
+	numSecrets, plannedChanges, diffMsg, err := mappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusError)}
 		close(m.processing)
 		return fatalError{err: fmt.Errorf("processPlanCmd: failed to parse terraform plan: %w", err)}
 	}
+	m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateTitleMsg(
+		fmt.Sprintf("Removed %v secrets", numSecrets),
+	)}
 
 	m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateTitleMsg(
 		fmt.Sprintf("Extracting %v changing resources: %v supported %v unsupported",

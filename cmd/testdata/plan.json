@@ -2388,6 +2388,11 @@
                         "cluster_name": "dogfood"
                     }
                 }
+            },
+            "test_secret": {
+                "sensitive": true,
+                "type": "string",
+                "value": "test_secret"
             }
         }
     },
