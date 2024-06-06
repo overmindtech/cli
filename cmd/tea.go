@@ -5,18 +5,22 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/overmindtech/aws-source/proc"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go/auth"
 	stdlibsource "github.com/overmindtech/stdlib-source/sources"
 	log "github.com/sirupsen/logrus"
+	"github.com/sourcegraph/conc"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
@@ -166,7 +170,7 @@ func InitializeSources(ctx context.Context, oi OvermindInstance, aws_config, aws
 
 	awsAuthConfig := proc.AwsAuthConfig{
 		// TODO: ask user to select regions
-		Regions: []string{"eu-west-1"},
+		Regions: []string{},
 	}
 
 	switch aws_config {
@@ -178,6 +182,86 @@ func InitializeSources(ctx context.Context, oi OvermindInstance, aws_config, aws
 	case "managed":
 		// TODO: not implemented yet
 	}
+
+	all_regions := []string{
+		"us-east-2",
+		"us-east-1",
+		"us-west-1",
+		"us-west-2",
+		"af-south-1",
+		"ap-east-1",
+		"ap-south-2",
+		"ap-southeast-3",
+		"ap-southeast-4",
+		"ap-south-1",
+		"ap-northeast-3",
+		"ap-northeast-2",
+		"ap-southeast-1",
+		"ap-southeast-2",
+		"ap-northeast-1",
+		"ca-central-1",
+		"ca-west-1",
+		"eu-central-1",
+		"eu-west-1",
+		"eu-west-2",
+		"eu-south-1",
+		"eu-west-3",
+		"eu-south-2",
+		"eu-north-1",
+		"eu-central-2",
+		"il-central-1",
+		"me-south-1",
+		"me-central-1",
+		"sa-east-1"}
+	working_regions := make(chan string, len(all_regions)) // enough space for all regions
+	region_checkers := conc.NewWaitGroup()
+
+	for _, r := range all_regions {
+		r := r // loopvar saver; TODO: update golangci-lint or vscode validator to understand this is not required anymore
+		configCtx, configCancel := context.WithTimeout(ctx, 10*time.Second)
+		defer configCancel()
+
+		lf := log.Fields{
+			"region":   r,
+			"strategy": awsAuthConfig.Strategy,
+		}
+
+		region_checkers.Go(func() {
+			cfg, err := awsAuthConfig.GetAWSConfig(r)
+			if err != nil {
+				log.WithError(err).WithFields(lf).Debug("skipping region")
+				return
+			}
+
+			// Add OTel instrumentation
+			cfg.HTTPClient = &http.Client{
+				Transport: otelhttp.NewTransport(http.DefaultTransport),
+			}
+
+			// Work out what account we're using. This will be used in item scopes
+			stsClient := sts.NewFromConfig(cfg)
+
+			_, err = stsClient.GetCallerIdentity(configCtx, &sts.GetCallerIdentityInput{})
+			if err != nil {
+
+				if awsAuthConfig.TargetRoleARN != "" {
+					lf["targetRoleARN"] = awsAuthConfig.TargetRoleARN
+					lf["externalID"] = awsAuthConfig.ExternalID
+				}
+				log.WithError(err).WithFields(lf).Debug("skipping region")
+				return
+			}
+			working_regions <- r
+		})
+	}
+
+	region_checkers.Wait()
+	close(working_regions)
+	for r := range working_regions {
+		awsAuthConfig.Regions = append(awsAuthConfig.Regions, r)
+	}
+
+	log.WithField("regions", awsAuthConfig.Regions).Debug("Using regions")
 
 	awsEngine, err := proc.InitializeAwsSourceEngine(ctx, natsOptions, awsAuthConfig, 2_000)
 	if err != nil {
