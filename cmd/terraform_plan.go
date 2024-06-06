@@ -177,12 +177,12 @@ func getTicketLinkFromPlan(planFile string) (string, error) {
 	return fmt.Sprintf("tfplan://{SHA256}%x", h.Sum(nil)), nil
 }
 
-func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, mappedItemDiffsMsg, error) {
+func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fields) (int, []*sdp.MappedItemDiff, mappedItemDiffsMsg, error) {
 	// read results from `terraform show -json ${tfplan file}`
 	planJSON, err := os.ReadFile(fileName)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to read terraform plan")
-		return nil, mappedItemDiffsMsg{}, err
+		return 0, nil, mappedItemDiffsMsg{}, err
 	}
 
 	return mappedItemDiffsFromPlan(ctx, planJSON, fileName, lf)
@@ -196,17 +196,19 @@ func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fi
 // differences into supported and unsupported changes. Finally, it logs the
 // number of supported and unsupported changes and returns the mapped item
 // differences.
-func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, lf log.Fields) ([]*sdp.MappedItemDiff, mappedItemDiffsMsg, error) {
+func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, lf log.Fields) (int, []*sdp.MappedItemDiff, mappedItemDiffsMsg, error) {
 	// Check that we haven't been passed a state file
 	if isStateFile(planJson) {
-		return nil, mappedItemDiffsMsg{}, fmt.Errorf("'%v' appears to be a state file, not a plan file", fileName)
+		return 0, nil, mappedItemDiffsMsg{}, fmt.Errorf("'%v' appears to be a state file, not a plan file", fileName)
 	}
 
 	var plan Plan
 	err := json.Unmarshal(planJson, &plan)
 	if err != nil {
-		return nil, mappedItemDiffsMsg{}, fmt.Errorf("failed to parse '%v': %w", fileName, err)
+		return 0, nil, mappedItemDiffsMsg{}, fmt.Errorf("failed to parse '%v': %w", fileName, err)
 	}
+
+	removedSecrets := countSensitiveValuesInConfig(plan.Config.RootModule) + countSensitiveValuesInState(plan.PlannedValues.RootModule)
 
 	plannedChangeGroupsVar := plannedChangeGroups{
 		supported:   map[string][]*sdp.MappedItemDiff{},
@@ -222,7 +224,7 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 
 		itemDiff, err := itemDiffFromResourceChange(resourceChange)
 		if err != nil {
-			return nil, mappedItemDiffsMsg{}, fmt.Errorf("failed to create item diff for resource change: %w", err)
+			return 0, nil, mappedItemDiffsMsg{}, fmt.Errorf("failed to create item diff for resource change: %w", err)
 		}
 
 		// Load mappings for this type. These mappings tell us how to create an
@@ -406,7 +408,7 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 		log.WithContext(ctx).Infof(Yellow.Color("  ✗ %v (%v)"), typ, len(plannedChanges))
 	}
 
-	return plannedChangeGroupsVar.MappedItemDiffs(), mappedItemDiffsMsg{
+	return removedSecrets, plannedChangeGroupsVar.MappedItemDiffs(), mappedItemDiffsMsg{
 		filename:        fileName,
 		numSupported:    numSupported,
 		numUnsupported:  numUnsupported,
@@ -414,6 +416,85 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 		supported:       plannedChangeGroupsVar.supported,
 		unsupported:     plannedChangeGroupsVar.unsupported,
 	}, nil
+}
+
+func countSensitiveValuesInConfig(m ConfigModule) int {
+	removedSecrets := 0
+	for _, v := range m.Variables {
+		if v.Sensitive {
+			removedSecrets++
+		}
+	}
+	for _, o := range m.Outputs {
+		if o.Sensitive {
+			removedSecrets++
+		}
+	}
+	for _, c := range m.ModuleCalls {
+		removedSecrets += countSensitiveValuesInConfig(c.Module)
+	}
+	return removedSecrets
+}
+
+func countSensitiveValuesInState(m Module) int {
+	removedSecrets := 0
+	for _, r := range m.Resources {
+		removedSecrets += countSensitiveValuesInResource(r)
+	}
+	for _, c := range m.ChildModules {
+		removedSecrets += countSensitiveValuesInState(c)
+	}
+	return removedSecrets
+}
+
+// follow itemAttributesFromResourceChangeData and maskSensitiveData
+// implementation to count sensitive values
+func countSensitiveValuesInResource(r Resource) int {
+	// sensitiveMsg can be a bool or a map[string]any
+	var isSensitive bool
+	err := json.Unmarshal(r.SensitiveValues, &isSensitive)
+	if err == nil && isSensitive {
+		return 1 // one very large secret
+	} else if err != nil {
+		// only try parsing as map if parsing as bool failed
+		var sensitive map[string]any
+		err = json.Unmarshal(r.SensitiveValues, &sensitive)
+		if err != nil {
+			return 0
+		}
+		return countSensitiveAttributes(r.AttributeValues, sensitive)
+	}
+	return 0
+}
+
+func countSensitiveAttributes(attributes, sensitive any) int {
+	if sensitive == true {
+		return 1
+	} else if sensitiveMap, ok := sensitive.(map[string]any); ok {
+		if attributesMap, ok := attributes.(map[string]any); ok {
+			result := 0
+			for k, v := range attributesMap {
+				result += countSensitiveAttributes(v, sensitiveMap[k])
+			}
+			return result
+		} else {
+			return 1
+		}
+	} else if sensitiveArr, ok := sensitive.([]any); ok {
+		if attributesArr, ok := attributes.([]any); ok {
+			if len(sensitiveArr) != len(attributesArr) {
+				return 1
+			}
+			result := 0
+			for i, v := range attributesArr {
+				result += countSensitiveAttributes(v, sensitiveArr[i])
+			}
+			return result
+		} else {
+			return 1
+		}
+	}
+	return 0
 }
 
 func addTerraformBaseFlags(cmd *cobra.Command) {

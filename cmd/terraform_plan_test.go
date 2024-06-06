@@ -9,10 +9,13 @@ import (
 )
 
 func TestMappedItemDiffsFromPlan(t *testing.T) {
-	mappedItemDiffs, _, err := mappedItemDiffsFromPlanFile(context.Background(), "testdata/plan.json", logrus.Fields{})
-
+	numSecrets, mappedItemDiffs, _, err := mappedItemDiffsFromPlanFile(context.Background(), "testdata/plan.json", logrus.Fields{})
 	if err != nil {
 		t.Error(err)
+	}
+
+	if numSecrets != 16 {
+		t.Errorf("Expected 16 secrets, got %v", numSecrets)
 	}
 
 	if len(mappedItemDiffs) != 5 {
