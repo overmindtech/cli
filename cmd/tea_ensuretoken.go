@@ -231,6 +231,10 @@ func (m ensureTokenModel) oauthTokenCmd() tea.Msg {
 		}
 	}
 
+	if m.oi.CLIClientID == "" || m.oi.Auth0Domain == "" {
+		return fatalError{id: m.spinner.ID(), err: errors.New("missing client id or auth0 domain")}
+	}
+
 	// If we need to get a new token, request the required scopes on top of
 	// whatever ones the current local, valid token has so that we don't
 	// keep replacing it
@@ -238,11 +242,11 @@ func (m ensureTokenModel) oauthTokenCmd() tea.Msg {
 
 	// Authenticate using the oauth device authorization flow
 	config := oauth2.Config{
-		ClientID: viper.GetString("cli-auth0-client-id"),
+		ClientID: m.oi.CLIClientID,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:       fmt.Sprintf("https://%v/authorize", viper.GetString("cli-auth0-domain")),
-			TokenURL:      fmt.Sprintf("https://%v/oauth/token", viper.GetString("cli-auth0-domain")),
-			DeviceAuthURL: fmt.Sprintf("https://%v/oauth/device/code", viper.GetString("cli-auth0-domain")),
+			AuthURL:       fmt.Sprintf("https://%v/authorize", m.oi.Auth0Domain),
+			TokenURL:      fmt.Sprintf("https://%v/oauth/token", m.oi.Auth0Domain),
+			DeviceAuthURL: fmt.Sprintf("https://%v/oauth/device/code", m.oi.Auth0Domain),
 		},
 		Scopes: requestScopes,
 	}
@@ -434,11 +438,11 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 
 	// Authenticate using the oauth device authorization flow
 	config := oauth2.Config{
-		ClientID: viper.GetString("cli-auth0-client-id"),
+		ClientID: oi.Audience,
 		Endpoint: oauth2.Endpoint{
-			AuthURL:       fmt.Sprintf("https://%v/authorize", viper.GetString("cli-auth0-domain")),
-			TokenURL:      fmt.Sprintf("https://%v/oauth/token", viper.GetString("cli-auth0-domain")),
-			DeviceAuthURL: fmt.Sprintf("https://%v/oauth/device/code", viper.GetString("cli-auth0-domain")),
+			AuthURL:       fmt.Sprintf("https://%v/authorize", oi.Auth0Domain),
+			TokenURL:      fmt.Sprintf("https://%v/oauth/token", oi.Auth0Domain),
+			DeviceAuthURL: fmt.Sprintf("https://%v/oauth/device/code", oi.Auth0Domain),
 		},
 		Scopes: requestScopes,
 	}

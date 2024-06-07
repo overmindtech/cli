@@ -38,6 +38,8 @@ type OvermindInstance struct {
 	ApiUrl      *url.URL
 	NatsUrl     *url.URL
 	Audience    string
+	Auth0Domain string
+	CLIClientID string
 }
 
 // GatewayUrl returns the URL for the gateway for this instance.
@@ -50,9 +52,11 @@ func (oi OvermindInstance) String() string {
 }
 
 type instanceData struct {
-	Api  string `json:"api_url"`
-	Nats string `json:"nats_url"`
-	Aud  string `json:"aud"`
+	Api         string `json:"api_url"`
+	Nats        string `json:"nats_url"`
+	Aud         string `json:"aud"`
+	Auth0Domain string `json:"auth0_domain"`
+	CLIClientID string `json:"auth0_cli_client_id"`
 }
 
 // NewOvermindInstance creates a new OvermindInstance from the given app URL
@@ -103,6 +107,8 @@ func NewOvermindInstance(ctx context.Context, app string) (OvermindInstance, err
 	}
 
 	instance.Audience = data.Aud
+	instance.CLIClientID = data.CLIClientID
+	instance.Auth0Domain = data.Auth0Domain
 
 	return instance, nil
 }
@@ -365,16 +371,12 @@ func init() {
 	}
 
 	// internal configs
-	rootCmd.PersistentFlags().String("cli-auth0-client-id", "QMfjMww3x4QTpeXiuRtMV3JIQkx6mZa4", "OAuth Client ID to use when connecting with auth0")
-	rootCmd.PersistentFlags().String("cli-auth0-domain", "om-prod.eu.auth0.com", "Auth0 domain to connect to")
 	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb. This requires --otel to be set.")
 	rootCmd.PersistentFlags().String("ovm-test-fake", "", "If non-empty, instructs some commands to only use fake data for fast development iteration.")
 
 	// Mark these as hidden. This means that it will still be parsed of supplied,
 	// and we will still look for it in the environment, but it won't be shown
 	// in the help
-	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("cli-auth0-client-id"))
-	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("cli-auth0-domain"))
 	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key"))
 	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("ovm-test-fake"))
 
