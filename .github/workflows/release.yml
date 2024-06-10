@@ -22,7 +22,7 @@ jobs:
       - name: Go Init
         uses: ./.github/actions/go_init
         with:
-          cache: false
+          cache: true
 
       - run: go run main.go --version
 
