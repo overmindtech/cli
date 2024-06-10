@@ -14,6 +14,7 @@ import (
 	"github.com/charmbracelet/huh"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/overmindtech/sdp-go"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 )
@@ -25,7 +26,12 @@ type loadSourcesConfigMsg struct {
 	token  *oauth2.Token
 }
 
-type askForAwsConfigMsg struct{}
+type askForAwsConfigMsg struct {
+	// an optional message when requesting a new config to explain why a new
+	// config is required. This is used for example when a source does not start
+	// up correctly.
+	retryMsg string
+}
 type configStoredMsg struct{}
 type sourceInitialisationFailedMsg struct{ err error }
 type sourcesInitialisedMsg struct{}
@@ -132,6 +138,10 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				Title("Choose how to access your AWS account (read-only):").
 				Options(options...)
 			m.awsConfigForm = huh.NewForm(huh.NewGroup(selector))
+			m.awsConfigFormDone = false
+			if msg.retryMsg != "" {
+				m.errorHints = append(m.errorHints, msg.retryMsg)
+			}
 			cmds = append(cmds, selector.Focus())
 		} else {
 			m.awsConfigFormDone = true
@@ -150,7 +160,7 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case configStoredMsg:
-		m.title += " (config stored)"
+		m.title = "Configuring AWS Access (config stored)"
 	case sourcesInitialisedMsg:
 		m.awsSourceRunning = true
 		m.stdlibSourceRunning = true
@@ -261,7 +271,7 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m initialiseSourcesModel) View() string {
 	bits := []string{m.taskModel.View()}
 	for _, hint := range m.errorHints {
-		bits = append(bits, wrap(fmt.Sprintf("  %v", hint), m.width, 2))
+		bits = append(bits, wrap(fmt.Sprintf("  %v %v", lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("✗"), hint), m.width, 2))
 	}
 	if m.awsConfigForm != nil && !m.awsConfigFormDone {
 		bits = append(bits, m.awsConfigForm.View())
@@ -335,7 +345,9 @@ func (m initialiseSourcesModel) startSourcesCmd(aws_config, aws_profile string) 
 		// should sources require more teardown, we'll have to figure something out.
 		_, err := InitializeSources(m.ctx, m.oi, aws_config, aws_profile, m.token)
 		if err != nil {
-			return sourceInitialisationFailedMsg{err}
+			log.WithError(err).Error("failed to initialise sources")
+			viper.Set("reset-stored-config", true)
+			return askForAwsConfigMsg{retryMsg: fmt.Sprintf("Error initialising sources: %v", err)}
 		}
 		return sourcesInitialisedMsg{}
 	}

@@ -17,7 +17,7 @@ import (
 	"github.com/overmindtech/sdp-go/auth"
 	stdlibsource "github.com/overmindtech/stdlib-source/sources"
 	log "github.com/sirupsen/logrus"
-	"github.com/sourcegraph/conc"
+	"github.com/sourcegraph/conc/pool"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -213,24 +213,27 @@ func InitializeSources(ctx context.Context, oi OvermindInstance, aws_config, aws
 		"me-south-1",
 		"me-central-1",
 		"sa-east-1"}
-	working_regions := make(chan string, len(all_regions)) // enough space for all regions
-	region_checkers := conc.NewWaitGroup()
+	configCtx, configCancel := context.WithTimeout(ctx, 10*time.Second)
+	defer configCancel()
+
+	region_checkers := pool.
+		NewWithResults[string]().
+		WithContext(configCtx).
+		WithMaxGoroutines(len(all_regions)).
+		WithFirstError()
 
 	for _, r := range all_regions {
 		r := r // loopvar saver; TODO: update golangci-lint or vscode validator to understand this is not required anymore
-		configCtx, configCancel := context.WithTimeout(ctx, 10*time.Second)
-		defer configCancel()
-
 		lf := log.Fields{
 			"region":   r,
 			"strategy": awsAuthConfig.Strategy,
 		}
 
-		region_checkers.Go(func() {
+		region_checkers.Go(func(ctx context.Context) (string, error) {
 			cfg, err := awsAuthConfig.GetAWSConfig(r)
 			if err != nil {
 				log.WithError(err).WithFields(lf).Debug("skipping region")
-				return
+				return "", err
 			}
 
 			// Add OTel instrumentation
@@ -249,18 +252,19 @@ func InitializeSources(ctx context.Context, oi OvermindInstance, aws_config, aws
 					lf["externalID"] = awsAuthConfig.ExternalID
 				}
 				log.WithError(err).WithFields(lf).Debug("skipping region")
-				return
+				return "", err
 			}
-			working_regions <- r
+			return r, nil
 		})
 	}
 
-	region_checkers.Wait()
-	close(working_regions)
-	for r := range working_regions {
-		awsAuthConfig.Regions = append(awsAuthConfig.Regions, r)
+	working_regions, err := region_checkers.Wait()
+	// errors are only relevant if no region remained
+	if len(working_regions) == 0 {
+		return func() {}, fmt.Errorf("no regions available: %w", err)
 	}
 
+	awsAuthConfig.Regions = append(awsAuthConfig.Regions, working_regions...)
 	log.WithField("regions", awsAuthConfig.Regions).Debug("Using regions")
 
 	awsEngine, err := proc.InitializeAwsSourceEngine(ctx, natsOptions, awsAuthConfig, 2_000)
