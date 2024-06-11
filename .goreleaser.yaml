@@ -89,12 +89,12 @@ nfpms:
 
 winget:
   - name: overmind-cli
-    publisher: Overmind Technology Inc
+    publisher: Overmind
     short_description: "Predict what will happen for any given change"
     license: "FSL-1.1-Apache-2.0"
     publisher_url: https://overmind.tech/
     publisher_support_url: "https://github.com/overmindtech/cli/issues/new"
-    package_identifier: Overmind Technology Inc.OvermindCLI
+    package_identifier: Overmind.OvermindCLI
     homepage: "https://overmind.tech/"
     description: "Overmind calculates the impact of Terraform changes in your infrastructure, including the blast radius and likely risks."
     license_url: "https://github.com/overmindtech/cli?tab=License-1-ov-file#readme"
