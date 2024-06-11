@@ -133,7 +133,7 @@ winget:
       # Since: v1.17
       pull_request:
         enabled: true
-        draft: true
+        draft: false
         # Base can also be another repository, in which case the owner and name
         # above will be used as HEAD, allowing cross-repository pull requests.
         #
