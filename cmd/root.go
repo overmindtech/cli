@@ -372,6 +372,7 @@ func init() {
 
 	// internal configs
 	rootCmd.PersistentFlags().String("honeycomb-api-key", "hcaik_01j03qe0exnn2jxpj2vxkqb7yrqtr083kyk9rxxt2wzjamz8be94znqmwa", "If specified, configures opentelemetry libraries to submit traces to honeycomb.")
+	rootCmd.PersistentFlags().String("sentry-dsn", "https://276b6d99c77358d9bf85aafbff81b515@o4504565700886528.ingest.us.sentry.io/4507413529690112", "If specified, configures the sentry libraries to send error reports to the service.")
 	rootCmd.PersistentFlags().String("ovm-test-fake", "", "If non-empty, instructs some commands to only use fake data for fast development iteration.")
 	rootCmd.PersistentFlags().String("run-mode", "release", "Set the run mode for this command, 'release', 'debug' or 'test'. Defaults to 'release'.")
 
@@ -379,6 +380,7 @@ func init() {
 	// and we will still look for it in the environment, but it won't be shown
 	// in the help
 	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key"))
+	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("sentry-dsn"))
 	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("ovm-test-fake"))
 	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("run-mode"))
 
