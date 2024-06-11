@@ -18,8 +18,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // terraformApplyCmd represents the `terraform apply` command
@@ -307,9 +305,7 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
 		}
 
-		_, span := tracing.Tracer().Start(m.ctx, "terraform apply", trace.WithAttributes( // nolint:spancheck // will be ended in the tea.Exec cleanup func
-			attribute.String("command", strings.Join(m.args, " ")),
-		))
+		_, span := tracing.Tracer().Start(m.ctx, "terraform apply") // nolint:spancheck // will be ended in the tea.Exec cleanup func
 
 		if viper.GetString("ovm-test-fake") != "" {
 			c = exec.CommandContext(m.ctx, "bash", "-c", "for i in $(seq 25); do echo fake terraform apply progress line $i of 25; sleep .1; done")

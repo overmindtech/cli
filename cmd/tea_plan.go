@@ -11,8 +11,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 type runPlanModel struct {
@@ -95,9 +93,8 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			c = exec.CommandContext(m.ctx, "bash", "-c", "for i in $(seq 25); do echo fake terraform plan progress line $i of 25; sleep .1; done")
 		}
 
-		_, span := tracing.Tracer().Start(m.ctx, "terraform plan", trace.WithAttributes( // nolint:spancheck // will be ended in the tea.Exec cleanup func
-			attribute.String("command", strings.Join(m.args, " ")),
-		))
+		_, span := tracing.Tracer().Start(m.ctx, "terraform plan") // nolint:spancheck // will be ended in the tea.Exec cleanup func
+
 		cmds = append(cmds,
 			tea.Sequence(
 				func() tea.Msg { return freezeViewMsg{} },
