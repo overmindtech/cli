@@ -33,6 +33,8 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Used to create PRs on the Winget repo
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
 
       - name: Install cloudsmith CLI
         run: |
