@@ -373,12 +373,14 @@ func init() {
 	// internal configs
 	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb. This requires --otel to be set.")
 	rootCmd.PersistentFlags().String("ovm-test-fake", "", "If non-empty, instructs some commands to only use fake data for fast development iteration.")
+	rootCmd.PersistentFlags().String("run-mode", "release", "Set the run mode for this command, 'release', 'debug' or 'test'. Defaults to 'release'.")
 
 	// Mark these as hidden. This means that it will still be parsed of supplied,
 	// and we will still look for it in the environment, but it won't be shown
 	// in the help
 	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key"))
 	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("ovm-test-fake"))
+	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("run-mode"))
 
 	// Create groups
 	rootCmd.AddGroup(&cobra.Group{

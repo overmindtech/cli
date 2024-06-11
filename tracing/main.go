@@ -11,7 +11,6 @@ import (
 	"github.com/getsentry/sentry-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/contrib/detectors/aws/ec2"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -44,21 +43,6 @@ func tracingResource() *resource.Resource {
 	// Identify your application using resource detection
 	detectors := []resource.Detector{}
 
-	// the EC2 detector takes ~10s to time out outside EC2
-	// disable it if we're running from a git checkout
-	_, err := os.Stat(".git")
-	if os.IsNotExist(err) {
-		detectors = append(detectors, ec2.NewResourceDetector())
-	}
-
-	// Needs https://github.com/open-telemetry/opentelemetry-go-contrib/issues/1856 fixed first
-	// // the EKS detector is temperamental and doesn't like running outside of kube
-	// // hence we need to keep it from running when we know there's no kube
-	// if !viper.GetBool("disable-kube") {
-	// 	// Use the AWS resource detector to detect information about the runtime environment
-	// 	detectors = append(detectors, eks.NewResourceDetector())
-	// }
-
 	res, err := resource.New(context.Background(),
 		resource.WithDetectors(detectors...),
 		// Keep the default detectors
@@ -71,7 +55,7 @@ func tracingResource() *resource.Resource {
 		// Add your own custom attributes to identify your application
 		resource.WithAttributes(
 			semconv.ServiceNameKey.String("overmind-cli"),
-			semconv.ServiceVersionKey.String("0.0.1"),
+			semconv.ServiceVersionKey.String(instrumentationVersion),
 		),
 	)
 	if err != nil {
