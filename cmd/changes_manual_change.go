@@ -63,7 +63,7 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 	ctx, span := tracing.Tracer().Start(ctx, "CLI ManualChange", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
+		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
 	))
 	defer span.End()
 
@@ -88,7 +88,7 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 	defer cancel()
 
 	client := AuthenticatedChangesClient(ctx, oi)
-	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, viper.GetString("ticket-link"),false)
+	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, viper.GetString("ticket-link"), false)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to searching for existing changes")
 		return 1

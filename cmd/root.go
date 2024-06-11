@@ -436,3 +436,25 @@ func initConfig() {
 	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv() // read in environment variables that match
 }
+
+func tracedSettings() map[string]any {
+	result := make(map[string]any)
+	result["log"] = viper.GetString("log")
+	if viper.GetString("api-key") != "" {
+		result["api-key"] = "[REDACTED]"
+	}
+	if viper.GetString("honeycomb-api-key") != "" {
+		result["honecomb-api-key"] = "[REDACTED]"
+	}
+	result["ovm-test-fake"] = viper.GetString("ovm-test-fake")
+	result["run-mode"] = viper.GetString("run-mode")
+	result["timeout"] = viper.GetString("timeout")
+	result["app"] = viper.GetString("app")
+	result["change"] = viper.GetString("change")
+	if viper.GetString("ticket-link") != "" {
+		result["ticket-link"] = "[REDACTED]"
+	}
+	result["uuid"] = viper.GetString("uuid")
+
+	return result
+}

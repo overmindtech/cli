@@ -130,7 +130,7 @@ func InvitesRevoke(ctx context.Context) int {
 	}
 
 	ctx, span := tracing.Tracer().Start(ctx, "CLI Revoke Invite", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
+		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
 	))
 	defer span.End()
 
@@ -179,7 +179,7 @@ func InvitesCreate(ctx context.Context) int {
 	}
 
 	ctx, span := tracing.Tracer().Start(ctx, "CLI Create Invite", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
+		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
 	))
 	defer span.End()
 
@@ -222,7 +222,7 @@ func InvitesList(ctx context.Context) int {
 	var err error
 
 	ctx, span := tracing.Tracer().Start(ctx, "CLI List Invites", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
+		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
 	))
 	defer span.End()
 

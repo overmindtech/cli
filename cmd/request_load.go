@@ -62,7 +62,7 @@ func Load(ctx context.Context, ready chan bool) int {
 		return 1
 	}
 	ctx, span := tracing.Tracer().Start(ctx, "CLI Request", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
+		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
 	))
 	defer span.End()
 
