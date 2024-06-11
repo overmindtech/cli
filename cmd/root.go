@@ -371,14 +371,18 @@ func init() {
 	}
 
 	// internal configs
-	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb. This requires --otel to be set.")
+	rootCmd.PersistentFlags().String("honeycomb-api-key", "hcaik_01j03qe0exnn2jxpj2vxkqb7yrqtr083kyk9rxxt2wzjamz8be94znqmwa", "If specified, configures opentelemetry libraries to submit traces to honeycomb.")
+	rootCmd.PersistentFlags().String("sentry-dsn", "https://276b6d99c77358d9bf85aafbff81b515@o4504565700886528.ingest.us.sentry.io/4507413529690112", "If specified, configures the sentry libraries to send error reports to the service.")
 	rootCmd.PersistentFlags().String("ovm-test-fake", "", "If non-empty, instructs some commands to only use fake data for fast development iteration.")
+	rootCmd.PersistentFlags().String("run-mode", "release", "Set the run mode for this command, 'release', 'debug' or 'test'. Defaults to 'release'.")
 
 	// Mark these as hidden. This means that it will still be parsed of supplied,
 	// and we will still look for it in the environment, but it won't be shown
 	// in the help
 	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("honeycomb-api-key"))
+	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("sentry-dsn"))
 	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("ovm-test-fake"))
+	cobra.CheckErr(rootCmd.PersistentFlags().MarkHidden("run-mode"))
 
 	// Create groups
 	rootCmd.AddGroup(&cobra.Group{
@@ -433,4 +437,29 @@ func initConfig() {
 
 	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv() // read in environment variables that match
+}
+
+func tracedSettings() map[string]any {
+	result := make(map[string]any)
+	result["log"] = viper.GetString("log")
+	if viper.GetString("api-key") != "" {
+		result["api-key"] = "[REDACTED]"
+	}
+	if viper.GetString("honeycomb-api-key") != "hcaik_01j03qe0exnn2jxpj2vxkqb7yrqtr083kyk9rxxt2wzjamz8be94znqmwa" {
+		result["honecomb-api-key"] = "[NON-DEFAULT]"
+	}
+	if viper.GetString("sentry-dsn") != "https://276b6d99c77358d9bf85aafbff81b515@o4504565700886528.ingest.us.sentry.io/4507413529690112" {
+		result["honecomb-api-key"] = "[NON-DEFAULT]"
+	}
+	result["ovm-test-fake"] = viper.GetString("ovm-test-fake")
+	result["run-mode"] = viper.GetString("run-mode")
+	result["timeout"] = viper.GetString("timeout")
+	result["app"] = viper.GetString("app")
+	result["change"] = viper.GetString("change")
+	if viper.GetString("ticket-link") != "" {
+		result["ticket-link"] = "[REDACTED]"
+	}
+	result["uuid"] = viper.GetString("uuid")
+
+	return result
 }

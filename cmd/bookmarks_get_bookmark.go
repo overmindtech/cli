@@ -67,7 +67,7 @@ func GetBookmark(ctx context.Context, ready chan bool) int {
 	}
 
 	ctx, span := tracing.Tracer().Start(ctx, "CLI GetBookmark", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
+		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
 	))
 	defer span.End()
 

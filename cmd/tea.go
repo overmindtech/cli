@@ -62,7 +62,7 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func(args [
 
 		cmdName := fmt.Sprintf("CLI %v", cmd.CommandPath())
 		ctx, span := tracing.Tracer().Start(ctx, cmdName, trace.WithAttributes(
-			attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
+			attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
 		))
 		defer span.End()
 		defer tracing.LogRecoverToExit(ctx, cmdName)

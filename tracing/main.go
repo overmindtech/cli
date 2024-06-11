@@ -11,7 +11,6 @@ import (
 	"github.com/getsentry/sentry-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/contrib/detectors/aws/ec2"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -44,21 +43,6 @@ func tracingResource() *resource.Resource {
 	// Identify your application using resource detection
 	detectors := []resource.Detector{}
 
-	// the EC2 detector takes ~10s to time out outside EC2
-	// disable it if we're running from a git checkout
-	_, err := os.Stat(".git")
-	if os.IsNotExist(err) {
-		detectors = append(detectors, ec2.NewResourceDetector())
-	}
-
-	// Needs https://github.com/open-telemetry/opentelemetry-go-contrib/issues/1856 fixed first
-	// // the EKS detector is temperamental and doesn't like running outside of kube
-	// // hence we need to keep it from running when we know there's no kube
-	// if !viper.GetBool("disable-kube") {
-	// 	// Use the AWS resource detector to detect information about the runtime environment
-	// 	detectors = append(detectors, eks.NewResourceDetector())
-	// }
-
 	res, err := resource.New(context.Background(),
 		resource.WithDetectors(detectors...),
 		// Keep the default detectors
@@ -71,7 +55,7 @@ func tracingResource() *resource.Resource {
 		// Add your own custom attributes to identify your application
 		resource.WithAttributes(
 			semconv.ServiceNameKey.String("overmind-cli"),
-			semconv.ServiceVersionKey.String("0.0.1"),
+			semconv.ServiceVersionKey.String(instrumentationVersion),
 		),
 	)
 	if err != nil {
@@ -84,7 +68,7 @@ func tracingResource() *resource.Resource {
 var tp *sdktrace.TracerProvider
 
 func InitTracerWithHoneycomb(key string, opts ...otlptracehttp.Option) error {
-	if key != "" && viper.GetBool("otel") {
+	if key != "" {
 		opts = append(opts,
 			otlptracehttp.WithEndpoint("api.honeycomb.io"),
 			otlptracehttp.WithHeaders(map[string]string{"x-honeycomb-team": key}),
@@ -94,32 +78,30 @@ func InitTracerWithHoneycomb(key string, opts ...otlptracehttp.Option) error {
 }
 
 func InitTracer(opts ...otlptracehttp.Option) error {
-	if viper.GetBool("otel") {
-		if sentry_dsn := viper.GetString("sentry-dsn"); sentry_dsn != "" {
-			var environment string
-			if viper.GetString("run-mode") == "release" {
-				environment = "prod"
-			} else {
-				environment = "dev"
-			}
-			err := sentry.Init(sentry.ClientOptions{
-				Dsn:              sentry_dsn,
-				AttachStacktrace: true,
-				EnableTracing:    false,
-				Environment:      environment,
-				// Set TracesSampleRate to 1.0 to capture 100%
-				// of transactions for performance monitoring.
-				// We recommend adjusting this value in production,
-				TracesSampleRate: 1.0,
-			})
-			if err != nil {
-				log.Errorf("sentry.Init: %s", err)
-			}
-			// setup recovery for an unexpected panic in this function
-			defer sentry.Flush(2 * time.Second)
-			defer sentry.Recover()
-			log.Info("sentry configured")
+	if sentry_dsn := viper.GetString("sentry-dsn"); sentry_dsn != "" {
+		var environment string
+		if viper.GetString("run-mode") == "release" {
+			environment = "prod"
+		} else {
+			environment = "dev"
 		}
+		err := sentry.Init(sentry.ClientOptions{
+			Dsn:              sentry_dsn,
+			AttachStacktrace: true,
+			EnableTracing:    false,
+			Environment:      environment,
+			// Set TracesSampleRate to 1.0 to capture 100%
+			// of transactions for performance monitoring.
+			// We recommend adjusting this value in production,
+			TracesSampleRate: 1.0,
+		})
+		if err != nil {
+			log.Errorf("sentry.Init: %s", err)
+		}
+		// setup recovery for an unexpected panic in this function
+		defer sentry.Flush(2 * time.Second)
+		defer sentry.Recover()
+		log.Info("sentry configured")
 	}
 
 	client := otlptracehttp.NewClient(opts...)
@@ -128,28 +110,22 @@ func InitTracer(opts ...otlptracehttp.Option) error {
 		return fmt.Errorf("creating OTLP trace exporter: %w", err)
 	}
 
-	tracerOpts := []sdktrace.TracerProviderOption{}
+	tracerOpts := []sdktrace.TracerProviderOption{
+		sdktrace.WithBatcher(otlpExp, sdktrace.WithMaxQueueSize(50000)),
+		sdktrace.WithResource(tracingResource()),
+		sdktrace.WithSampler(sdktrace.ParentBased(NewUserAgentSampler("ELB-HealthChecker/2.0", 200))),
+	}
 
-	if viper.GetBool("otel") {
-		tracerOpts = []sdktrace.TracerProviderOption{
-			sdktrace.WithBatcher(otlpExp, sdktrace.WithMaxQueueSize(50000)),
-			sdktrace.WithResource(tracingResource()),
-			sdktrace.WithSampler(sdktrace.ParentBased(NewUserAgentSampler("ELB-HealthChecker/2.0", 200))),
+	if viper.GetBool("stdout-trace-dump") {
+		stdoutExp, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
+		if err != nil {
+			return err
 		}
-
-		if viper.GetBool("stdout-trace-dump") {
-			stdoutExp, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
-			if err != nil {
-				return err
-			}
-			tracerOpts = append(tracerOpts, sdktrace.WithBatcher(stdoutExp))
-		}
+		tracerOpts = append(tracerOpts, sdktrace.WithBatcher(stdoutExp))
 	}
 	tp = sdktrace.NewTracerProvider(tracerOpts...)
 	otel.SetTracerProvider(tp)
-	if viper.GetBool("otel") {
-		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
-	}
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	return nil
 }
 

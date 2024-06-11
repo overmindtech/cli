@@ -78,7 +78,7 @@ func GetChange(ctx context.Context, ready chan bool) int {
 	}
 
 	ctx, span := tracing.Tracer().Start(ctx, "CLI GetChange", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", viper.AllSettings())),
+		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
 	))
 	defer span.End()
 
