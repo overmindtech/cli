@@ -94,7 +94,7 @@ winget:
     license: "FSL-1.1-Apache-2.0"
     publisher_url: https://overmind.tech/
     publisher_support_url: "https://github.com/overmindtech/cli/issues/new"
-    package_identifier: Overmind.OvermindCLI
+    package_identifier: Overmind Technology Inc.OvermindCLI
     homepage: "https://overmind.tech/"
     description: "Overmind calculates the impact of Terraform changes in your infrastructure, including the blast radius and likely risks."
     license_url: "https://github.com/overmindtech/cli?tab=License-1-ov-file#readme"
@@ -120,12 +120,10 @@ winget:
     repository:
       owner: overmindtech
       name: winget-pkgs
-      branch: "overmind-{{ .Version }}"
+      branch: "{{.ProjectName}}-{{.Version}}"
 
       # Optionally a token can be provided, if it differs from the token
       # provided to GoReleaser
-      #
-      # Templates: allowed
       token: "{{ .Env.WINGET_TOKEN }}"
 
       # Sets up pull request creation instead of just pushing to the given branch.
