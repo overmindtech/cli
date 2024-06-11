@@ -27,12 +27,14 @@ jobs:
       - run: go run main.go --version
 
       - name: Run GoReleaser (publish)
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Used to create PRs on the Winget repo
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
 
       - name: Install cloudsmith CLI
         run: |
