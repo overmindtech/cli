@@ -445,8 +445,11 @@ func tracedSettings() map[string]any {
 	if viper.GetString("api-key") != "" {
 		result["api-key"] = "[REDACTED]"
 	}
-	if viper.GetString("honeycomb-api-key") != "" {
-		result["honecomb-api-key"] = "[REDACTED]"
+	if viper.GetString("honeycomb-api-key") != "hcaik_01j03qe0exnn2jxpj2vxkqb7yrqtr083kyk9rxxt2wzjamz8be94znqmwa" {
+		result["honecomb-api-key"] = "[NON-DEFAULT]"
+	}
+	if viper.GetString("sentry-dsn") != "https://276b6d99c77358d9bf85aafbff81b515@o4504565700886528.ingest.us.sentry.io/4507413529690112" {
+		result["honecomb-api-key"] = "[NON-DEFAULT]"
 	}
 	result["ovm-test-fake"] = viper.GetString("ovm-test-fake")
 	result["run-mode"] = viper.GetString("run-mode")
