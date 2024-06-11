@@ -110,9 +110,7 @@ func InitTracer(opts ...otlptracehttp.Option) error {
 		return fmt.Errorf("creating OTLP trace exporter: %w", err)
 	}
 
-	tracerOpts := []sdktrace.TracerProviderOption{}
-
-	tracerOpts = []sdktrace.TracerProviderOption{
+	tracerOpts := []sdktrace.TracerProviderOption{
 		sdktrace.WithBatcher(otlpExp, sdktrace.WithMaxQueueSize(50000)),
 		sdktrace.WithResource(tracingResource()),
 		sdktrace.WithSampler(sdktrace.ParentBased(NewUserAgentSampler("ELB-HealthChecker/2.0", 200))),
