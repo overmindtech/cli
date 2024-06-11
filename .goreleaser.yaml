@@ -88,7 +88,7 @@ nfpms:
     priority: extra
 
 winget:
-  - name: overmind-cli
+  - name: OvermindCLI
     publisher: Overmind
     short_description: "Predict what will happen for any given change"
     license: "FSL-1.1-Apache-2.0"
