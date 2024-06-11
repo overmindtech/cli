@@ -1,5 +1,6 @@
 # This is an example .goreleaser.yml file with some sensible defaults.
 # Make sure to check the documentation at https://goreleaser.com
+version: 2
 before:
   hooks:
     # You may remove this if you don't use go modules.
@@ -119,12 +120,13 @@ winget:
     repository:
       owner: overmindtech
       name: winget-pkgs
+      branch: "overmind-{{ .Version }}"
 
       # Optionally a token can be provided, if it differs from the token
       # provided to GoReleaser
       #
       # Templates: allowed
-      # token: "{{ .Env.GITHUB_PERSONAL_AUTH_TOKEN }}"
+      token: "{{ .Env.WINGET_TOKEN }}"
 
       # Sets up pull request creation instead of just pushing to the given branch.
       # Make sure the 'branch' property is different from base before enabling
@@ -138,10 +140,10 @@ winget:
         # above will be used as HEAD, allowing cross-repository pull requests.
         #
         # Since: v1.19
-        # base:
-        #   owner: goreleaser
-        #   name: my-repo
-        #   branch: main
+        base:
+          owner: microsoft
+          name: winget-pkgs
+          branch: master
 
 checksum:
   name_template: "checksums.txt"
