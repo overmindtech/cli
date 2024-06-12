@@ -29,7 +29,6 @@ require (
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.0
 	github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b
-	go.opentelemetry.io/contrib/detectors/aws/ec2 v1.27.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.52.0
 	go.opentelemetry.io/otel v1.27.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.27.0
@@ -49,7 +48,6 @@ require (
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/auth0/go-jwt-middleware/v2 v2.2.1 // indirect
-	github.com/aws/aws-sdk-go v1.53.6 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.27.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.17 // indirect
