@@ -29,7 +29,7 @@ import (
 
 var logLevel string
 
-//go:generate sh -c "echo -n $(git describe --tags --long) > commit.txt"
+//go:generate sh -c "echo -n $(git describe --tags --always) > commit.txt"
 //go:embed commit.txt
 var cliVersion string
 
