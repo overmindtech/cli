@@ -402,10 +402,10 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 
 	// Log the types
 	for typ, plannedChanges := range plannedChangeGroupsVar.supported {
-		log.WithContext(ctx).Infof(Green.Color("  ✓ %v (%v)"), typ, len(plannedChanges))
+		log.WithContext(ctx).Infof("  %v %v (%v)", RenderOk(), typ, len(plannedChanges))
 	}
 	for typ, plannedChanges := range plannedChangeGroupsVar.unsupported {
-		log.WithContext(ctx).Infof(Yellow.Color("  ✗ %v (%v)"), typ, len(plannedChanges))
+		log.WithContext(ctx).Infof("  %v %v (%v)", RenderErr(), typ, len(plannedChanges))
 	}
 
 	return removedSecrets, plannedChangeGroupsVar.MappedItemDiffs(), mappedItemDiffsMsg{

@@ -11,7 +11,6 @@ import (
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
@@ -404,7 +403,7 @@ func (m tfApplyModel) View() string {
 	if m.runTfApply {
 		bits = append(bits,
 			wrap(fmt.Sprintf("%v Running 'terraform %v'",
-				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
+				RenderOk(),
 				strings.Join(m.args, " "),
 			), m.width, 2))
 	}
@@ -412,7 +411,7 @@ func (m tfApplyModel) View() string {
 	if m.isEnding && m.endingChangeSnapshot.overall.status != taskStatusPending {
 		bits = append(bits,
 			wrap(fmt.Sprintf("%v Ran 'terraform %v'",
-				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
+				RenderOk(),
 				strings.Join(m.args, " "),
 			), m.width, 2))
 		bits = append(bits, m.endingChangeSnapshot.View())

@@ -14,7 +14,6 @@ import (
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
@@ -238,9 +237,9 @@ func (m authenticateModel) View() string {
 		output = markdownToString(m.width, prompt)
 
 	case Authenticated:
-		output = wrap(lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")+" Authenticated successfully. Press any key to continue.", m.width-4, 2)
+		output = wrap(RenderOk()+" Authenticated successfully. Press any key to continue.", m.width-4, 2)
 	case ErrorAuthenticating:
-		output = wrap(lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("✗")+" Unable to authenticate. Please try again.", m.width-4, 2)
+		output = wrap(RenderErr()+" Unable to authenticate. Please try again.", m.width-4, 2)
 	}
 
 	return containerStyle.Render(output)

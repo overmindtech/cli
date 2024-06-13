@@ -375,3 +375,26 @@ func wrap(s string, width, indent int) string {
 
 	return strings.ReplaceAll(wordwrap.String(s, width-indent), "\n", "\n"+strings.Repeat(" ", indent))
 }
+
+func RenderOk() string {
+	checkMark := "✔︎"
+	if IsConhost() {
+		checkMark = "OK"
+	}
+	return lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render(checkMark)
+}
+
+func RenderErr() string {
+	checkMark := "✗"
+	if IsConhost() {
+		checkMark = "ERR"
+	}
+	return lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render(checkMark)
+}
+
+func PlatformSpinner() spinner.Spinner {
+	if IsConhost() {
+		return spinner.Line
+	}
+	return DotsSpinner
+}

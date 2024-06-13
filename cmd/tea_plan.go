@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/spf13/viper"
 )
@@ -131,7 +130,7 @@ func (m runPlanModel) View() string {
 	case taskStatusPending, taskStatusRunning:
 		bits = append(bits,
 			wrap(fmt.Sprintf("%v Running 'terraform %v'",
-				lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎"),
+				RenderOk(),
 				strings.Join(m.args, " "),
 			), m.width, 2))
 	case taskStatusDone:
