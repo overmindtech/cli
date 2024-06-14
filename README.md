@@ -62,7 +62,7 @@ winget install Overmind.OvermindCLI
 
 Or manually download the [latest release](https://github.com/overmindtech/cli/releases/latest), extract `overmind.exe`, and add to your `PATH`
 
-#### Debian
+#### Ubuntu / Debian
 
 Set up the repository automatically:
 
@@ -147,10 +147,6 @@ apk add overmind-cli
 #### Arch
 
 Packages for Arch are available on the [releases page](https://github.com/overmindtech/cli/releases/latest) for manual download and installation.
-
-### Windows
-
-Packages for Windows are available on the [releases page](https://github.com/overmindtech/cli/releases/latest) for manual download and installation. Unpack the ZIP file and put the `overmind.exe` executable in your `PATH`.
 
 </details>
 
