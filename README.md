@@ -54,7 +54,7 @@ brew install overmindtech/overmind/overmind-cli
 
 ### Windows
 
-Install using winget:
+Install using [winget](https://learn.microsoft.com/en-us/windows/package-manager/winget/):
 
 ```shell
 winget install Overmind.OvermindCLI
