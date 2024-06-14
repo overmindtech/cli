@@ -537,7 +537,17 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	}
 
 	title := changeTitle(viper.GetString("title"))
-	tfPlanOutput := tryLoadText(ctx, viper.GetString("terraform-plan-output"))
+	tfPlanTextCmd := exec.CommandContext(ctx, "terraform", "show", m.planFile) // nolint:gosec // this is the file `terraform plan` already wrote to, so it's safe enough
+
+	tfPlanTextCmd.Stderr = os.Stderr // TODO: capture and output this through the View() instead
+
+	log.WithField("args", tfPlanTextCmd.Args).Debug("converting plan to JSON")
+	tfPlanOutput, err := tfPlanTextCmd.Output()
+	if err != nil {
+		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusError)}
+		close(m.processing)
+		return fatalError{err: fmt.Errorf("processPlanCmd: failed to convert terraform plan to JSON: %w", err)}
+	}
 	codeChangesOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
 
 	if changeUuid == uuid.Nil {
@@ -551,7 +561,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 					TicketLink:  ticketLink,
 					Owner:       viper.GetString("owner"),
 					// CcEmails:                  viper.GetString("cc-emails"),
-					RawPlan:     tfPlanOutput,
+					RawPlan:     string(tfPlanOutput),
 					CodeChanges: codeChangesOutput,
 				},
 			},
@@ -591,7 +601,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 					TicketLink:  ticketLink,
 					Owner:       viper.GetString("owner"),
 					// CcEmails:                  viper.GetString("cc-emails"),
-					RawPlan:     tfPlanOutput,
+					RawPlan:     string(tfPlanOutput),
 					CodeChanges: codeChangesOutput,
 				},
 			},
