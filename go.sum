@@ -232,8 +232,8 @@ github.com/olekukonko/tablewriter v0.0.5 h1:P2Ga83D34wi1o9J6Wh1mRuqd4mF/x/lgBS7N
 github.com/olekukonko/tablewriter v0.0.5/go.mod h1:hPp6KlRPjbx+hW8ykQs1w3UBbZlj6HuIJcUGPhkA7kY=
 github.com/openrdap/rdap v0.9.2-0.20240517203139-eb57b3a8dedd h1:UuQycBx6K0lB0/IfHePshOYjlrptkF4FoApFP2Y4s3k=
 github.com/openrdap/rdap v0.9.2-0.20240517203139-eb57b3a8dedd/go.mod h1:391Ww1JbjG4FHOlvQqCd6n25CCCPE64JzC5cCYPxhyM=
-github.com/overmindtech/aws-source v0.0.0-20240614002405-155711d3b9c3 h1:iS136z9vMaDJy6W4IipwIyF8NS2wTBDkXgk7yeQdR78=
-github.com/overmindtech/aws-source v0.0.0-20240614002405-155711d3b9c3/go.mod h1:OuELYR2WDtB8pcCmcPfLXM85t7An15F4C6mKlvdiscU=
+github.com/overmindtech/aws-source v0.0.0-20240614091851-daafc874f077 h1:n6uX0jH8wc/+OrgjTKZ4WzpA/ebB/QSYptbJtVf/uHc=
+github.com/overmindtech/aws-source v0.0.0-20240614091851-daafc874f077/go.mod h1:IYP9VIWUUfZ0r9wtYlNsEglNSFfQ+gK+FwF9tTUGPXo=
 github.com/overmindtech/discovery v0.27.6 h1:p+xMEIST0fk6HfbejXR+Ea59+JA5zjCO4zvRqelRqwE=
 github.com/overmindtech/discovery v0.27.6/go.mod h1:A3wvNM6VTo7qfGExWQ+fgh+NfLh35nuPJ7wF4pLYEQI=
 github.com/overmindtech/sdp-go v0.75.4 h1:sQZVj/kZiu0xwNaBgthMayH9SKFEBHSUsQOqzddhyMU=
