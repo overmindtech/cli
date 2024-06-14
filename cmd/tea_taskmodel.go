@@ -68,7 +68,7 @@ func NewTaskModel(title string, width int) taskModel {
 		status: taskStatusPending,
 		title:  title,
 		spinner: spinner.New(
-			spinner.WithSpinner(DotsSpinner),
+			spinner.WithSpinner(PlatformSpinner()),
 			spinner.WithStyle(lipgloss.NewStyle().Foreground(ColorPalette.BgMain)),
 		),
 		width:  width,
@@ -118,9 +118,9 @@ func (m taskModel) View() string {
 	case taskStatusRunning:
 		label = m.spinner.View()
 	case taskStatusDone:
-		label = lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")
+		label = RenderOk()
 	case taskStatusError:
-		label = lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("✗")
+		label = RenderErr()
 	case taskStatusSkipped:
 		label = lipgloss.NewStyle().Foreground(ColorPalette.LabelFaint).Render("-")
 	default:

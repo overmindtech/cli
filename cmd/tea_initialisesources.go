@@ -12,7 +12,6 @@ import (
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/huh"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -271,7 +270,7 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m initialiseSourcesModel) View() string {
 	bits := []string{m.taskModel.View()}
 	for _, hint := range m.errorHints {
-		bits = append(bits, wrap(fmt.Sprintf("  %v %v", lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render("✗"), hint), m.width, 2))
+		bits = append(bits, wrap(fmt.Sprintf("  %v %v", RenderErr(), hint), m.width, 2))
 	}
 	if m.awsConfigForm != nil && !m.awsConfigFormDone {
 		bits = append(bits, m.awsConfigForm.View())
@@ -280,10 +279,10 @@ func (m initialiseSourcesModel) View() string {
 		bits = append(bits, m.profileInputForm.View())
 	}
 	if m.awsSourceRunning {
-		bits = append(bits, wrap(fmt.Sprintf("  %v AWS Source: running", lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")), m.width, 4))
+		bits = append(bits, wrap(fmt.Sprintf("  %v AWS Source: running", RenderOk()), m.width, 4))
 	}
 	if m.stdlibSourceRunning {
-		bits = append(bits, wrap(fmt.Sprintf("  %v stdlib Source: running", lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render("✔︎")), m.width, 4))
+		bits = append(bits, wrap(fmt.Sprintf("  %v stdlib Source: running", RenderOk()), m.width, 4))
 	}
 	return strings.Join(bits, "\n")
 }
