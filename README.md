@@ -54,6 +54,14 @@ brew install overmindtech/overmind/overmind-cli
 
 ### Windows
 
+Install using winget:
+
+```shell
+winget install Overmind.OvermindCLI
+```
+
+Or manually download the [latest release](https://github.com/overmindtech/cli/releases/latest), extract `overmind.exe`, and add to your `PATH`
+
 #### Debian
 
 Set up the repository automatically:
