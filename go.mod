@@ -10,7 +10,7 @@ require (
 	github.com/charmbracelet/glamour v0.7.0
 	github.com/charmbracelet/huh v0.4.2
 	github.com/charmbracelet/lipgloss v0.11.0
-	github.com/getsentry/sentry-go v0.28.0
+	github.com/getsentry/sentry-go v0.28.1
 	github.com/google/uuid v1.6.0
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/jedib0t/go-pretty/v6 v6.5.9
@@ -27,7 +27,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
-	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.0
+	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.1
 	github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.52.0
 	go.opentelemetry.io/otel v1.27.0
@@ -138,7 +138,7 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/uptrace/opentelemetry-go-extra/otelutil v0.3.0 // indirect
+	github.com/uptrace/opentelemetry-go-extra/otelutil v0.3.1 // indirect
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	github.com/xiam/to v0.0.0-20200126224905-d60d31e03561 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
