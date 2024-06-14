@@ -19,7 +19,7 @@ require (
 	github.com/muesli/termenv v0.15.2
 	github.com/overmindtech/aws-source v0.0.0-20240614091851-daafc874f077
 	github.com/overmindtech/sdp-go v0.75.4
-	github.com/overmindtech/stdlib-source v0.0.0-20240613232303-8d3079c26e28
+	github.com/overmindtech/stdlib-source v0.0.0-20240614091947-b363bd8a33cf
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sourcegraph/conc v0.3.0
