@@ -17,7 +17,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.2
-	github.com/overmindtech/aws-source v0.0.0-20240614002405-155711d3b9c3
+	github.com/overmindtech/aws-source v0.0.0-20240614091851-daafc874f077
 	github.com/overmindtech/sdp-go v0.75.4
 	github.com/overmindtech/stdlib-source v0.0.0-20240613232303-8d3079c26e28
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
