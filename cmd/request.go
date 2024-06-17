@@ -126,19 +126,11 @@ func (l *requestHandler) WaitBookmarkResult(ctx context.Context) (*sdp.BookmarkL
 
 func (l *requestHandler) SnapshotLoadResult(ctx context.Context, result *sdp.SnapshotLoadResult) {
 	log.WithContext(ctx).WithField("result", result).Log(l.Level, "received snapshot load result")
-	if l.snapshotLoadResult == nil {
-		l.snapshotLoadResult = make(chan *sdp.SnapshotLoadResult, 128)
-	}
-
 	l.snapshotLoadResult <- result
 }
 
 func (l *requestHandler) BookmarkLoadResult(ctx context.Context, result *sdp.BookmarkLoadResult) {
 	log.WithContext(ctx).WithField("result", result).Log(l.Level, "received bookmark load result")
-	if l.bookmarkLoadResult == nil {
-		l.bookmarkLoadResult = make(chan *sdp.BookmarkLoadResult, 128)
-	}
-
 	l.bookmarkLoadResult <- result
 }
 

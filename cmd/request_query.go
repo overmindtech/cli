@@ -92,6 +92,8 @@ func Query(ctx context.Context, ready chan bool) int {
 		items:                        []*sdp.Item{},
 		edges:                        []*sdp.Edge{},
 		msgLog:                       []*sdp.GatewayResponse{},
+		bookmarkLoadResult:           make(chan *sdp.BookmarkLoadResult, 128),
+		snapshotLoadResult:           make(chan *sdp.SnapshotLoadResult, 128),
 	}
 	gatewayUrl := oi.GatewayUrl()
 	lf["gateway-url"] = gatewayUrl
