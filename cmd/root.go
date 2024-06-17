@@ -217,22 +217,23 @@ func (m authenticateModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+const beginAuthMessage string = `# Authenticate with a browser
+
+Attempting to automatically open the SSO authorization page in your default browser.
+If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
+
+%v
+
+Then enter the code:
+
+	%v
+`
+
 func (m authenticateModel) View() string {
 	var output string
 
 	switch m.status {
 	case PromptUser, WaitingForConfirmation:
-		beginAuthMessage := `# Authenticate with a browser
-
-		Attempting to automatically open the SSO authorization page in your default browser.
-		If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
-
-		%v
-
-		Then enter the code:
-
-			%v
-		`
 		prompt := fmt.Sprintf(beginAuthMessage, m.deviceCode.VerificationURI, m.deviceCode.UserCode)
 		output = markdownToString(m.width, prompt)
 
