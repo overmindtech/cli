@@ -438,7 +438,7 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 
 	// Authenticate using the oauth device authorization flow
 	config := oauth2.Config{
-		ClientID: oi.Audience,
+		ClientID: oi.CLIClientID,
 		Endpoint: oauth2.Endpoint{
 			AuthURL:       fmt.Sprintf("https://%v/authorize", oi.Auth0Domain),
 			TokenURL:      fmt.Sprintf("https://%v/oauth/token", oi.Auth0Domain),
