@@ -75,7 +75,7 @@ func Load(ctx context.Context, ready chan bool) int {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
 		return 1
 	}
-	ctx, _, err = ensureToken(ctx, oi, []string{"explore:read"})
+	ctx, _, err = ensureToken(ctx, oi, []string{"explore:read", "changes:read"})
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
 		return 1
