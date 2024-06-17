@@ -1,6 +1,6 @@
 module github.com/overmindtech/cli
 
-go 1.22.3
+go 1.22.4
 
 require (
 	connectrpc.com/connect v1.16.2
