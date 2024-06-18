@@ -9,9 +9,12 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 )
 
@@ -123,6 +126,13 @@ func (m *cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case fatalError:
 		log.WithError(msg.err).WithField("msg.id", msg.id).Debug("cmdModel: fatalError received")
+		span := trace.SpanFromContext(m.ctx)
+		span.RecordError(msg.err)
+		span.SetAttributes(
+			attribute.Bool("ovm.cli.fatalError", true),
+			attribute.Int("ovm.cli.fatalError.id", msg.id),
+		)
+		sentry.CaptureException(msg.err)
 
 		// record the fatal error here, to repeat it at the end of the process
 		m.fatalError = msg.err.Error()

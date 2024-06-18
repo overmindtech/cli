@@ -45,10 +45,10 @@ func tracingResource() *resource.Resource {
 
 	res, err := resource.New(context.Background(),
 		resource.WithDetectors(detectors...),
-		// Keep the default detectors
+		// replace the default detectors
 		resource.WithHost(),
 		resource.WithOS(),
-		resource.WithProcess(),
+		// resource.WithProcess(), // don't capture potentially sensitive customer info
 		resource.WithContainer(),
 		resource.WithTelemetrySDK(),
 		resource.WithSchemaURL(semconv.SchemaURL),
