@@ -51,22 +51,36 @@ var submitPlanCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		sigs := make(chan os.Signal, 1)
-
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+		var exitcode int
+		// create a sub-scope to defer the span.End() to a point before shutting down the tracer
+		func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 
-		// Create a goroutine to watch for cancellation signals
-		go func() {
-			select {
-			case <-sigs:
-				cancel()
-			case <-ctx.Done():
+			ctx, span := tracing.Tracer().Start(ctx, "CLI SubmitPlan", trace.WithAttributes(
+				attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
+			))
+			defer span.End()
+
+			// Create a goroutine to watch for cancellation signals
+			go func() {
+				select {
+				case <-sigs:
+					cancel()
+				case <-ctx.Done():
+				}
+			}()
+
+			exitcode = SubmitPlan(ctx, args, nil)
+
+			span.SetAttributes(attribute.Int("ovm.cli.exitcode", exitcode))
+			if exitcode != 0 {
+				span.SetAttributes(attribute.Bool("ovm.cli.fatalError", true))
 			}
 		}()
 
-		exitcode := SubmitPlan(ctx, args, nil)
 		tracing.ShutdownTracer()
 		os.Exit(exitcode)
 	},
@@ -361,10 +375,6 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
 		return 1
 	}
-	ctx, span := tracing.Tracer().Start(ctx, "CLI SubmitPlan", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-	))
-	defer span.End()
 
 	lf := log.Fields{
 		"app": viper.GetString("app"),

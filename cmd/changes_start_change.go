@@ -33,19 +33,34 @@ var startChangeCmd = &cobra.Command{
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+		var exitcode int
+		// create a sub-scope to defer the span.End() to a point before shutting down the tracer
+		func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 
-		// Create a goroutine to watch for cancellation signals
-		go func() {
-			select {
-			case <-sigs:
-				cancel()
-			case <-ctx.Done():
+			ctx, span := tracing.Tracer().Start(ctx, "CLI StartChange", trace.WithAttributes(
+				attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
+			))
+			defer span.End()
+
+			// Create a goroutine to watch for cancellation signals
+			go func() {
+				select {
+				case <-sigs:
+					cancel()
+				case <-ctx.Done():
+				}
+			}()
+
+			exitcode = StartChange(ctx, nil)
+
+			span.SetAttributes(attribute.Int("ovm.cli.exitcode", exitcode))
+			if exitcode != 0 {
+				span.SetAttributes(attribute.Bool("ovm.cli.fatalError", true))
 			}
 		}()
 
-		exitcode := StartChange(ctx, nil)
 		tracing.ShutdownTracer()
 		os.Exit(exitcode)
 	},
@@ -57,11 +72,6 @@ func StartChange(ctx context.Context, ready chan bool) int {
 		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
 		return 1
 	}
-
-	ctx, span := tracing.Tracer().Start(ctx, "CLI StartChange", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-	))
-	defer span.End()
 
 	lf := log.Fields{
 		"app": viper.GetString("app"),
@@ -83,7 +93,7 @@ func StartChange(ctx context.Context, ready chan bool) int {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING,viper.GetString("ticket-link"), true)
+	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, viper.GetString("ticket-link"), true)
 	if err != nil {
 		log.WithError(err).WithFields(lf).Error("failed to identify change")
 		return 1
