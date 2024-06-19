@@ -92,9 +92,11 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func(args [
 
 		// wrap the rest of the function in a closure to allow for cleaner error handling and deferring.
 		err := func() error {
+			ctx := cmd.Context()
+
 			timeout, err := time.ParseDuration(viper.GetString("timeout"))
 			if err != nil {
-				return fmt.Errorf("invalid --timeout value '%v', error: %w", viper.GetString("timeout"), err)
+				return flagError{usage: fmt.Sprintf("invalid --timeout value '%v'\n\n%v", viper.GetString("timeout"), cmd.UsageString())}
 			}
 
 			app, err := viperGetApp(ctx)

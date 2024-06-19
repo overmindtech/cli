@@ -1,154 +1,54 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"connectrpc.com/connect"
 	"github.com/jedib0t/go-pretty/v6/table"
-	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // listCmd represents the list command
 var listCmd = &cobra.Command{
-	Use:   "list-invites",
-	Short: "List all invites",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `list-invites` flags")
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		sigs := make(chan os.Signal, 1)
-
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		// Create a goroutine to watch for cancellation signals
-		go func() {
-			select {
-			case <-sigs:
-				cancel()
-			case <-ctx.Done():
-			}
-		}()
-
-		exitcode := InvitesList(ctx)
-		tracing.ShutdownTracer()
-		os.Exit(exitcode)
-	},
+	Use:    "list-invites",
+	Short:  "List all invites",
+	PreRun: PreRunSetup,
+	RunE:   InvitesList,
 }
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
-	Use:   "create-invite",
-	Short: "Create a new invite",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `create-invite` flags")
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		sigs := make(chan os.Signal, 1)
-
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		// Create a goroutine to watch for cancellation signals
-		go func() {
-			select {
-			case <-sigs:
-				cancel()
-			case <-ctx.Done():
-			}
-		}()
-
-		exitcode := InvitesCreate(ctx)
-		tracing.ShutdownTracer()
-		os.Exit(exitcode)
-	},
+	Use:    "create-invite",
+	Short:  "Create a new invite",
+	PreRun: PreRunSetup,
+	RunE:   InvitesCreate,
 }
 
 // revokeCmd represents the revoke command
 var revokeCmd = &cobra.Command{
-	Use:   "revoke-invites",
-	Short: "Revoke an existing invite",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `revoke-invites` flags")
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		sigs := make(chan os.Signal, 1)
-
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		// Create a goroutine to watch for cancellation signals
-		go func() {
-			select {
-			case <-sigs:
-				cancel()
-			case <-ctx.Done():
-			}
-		}()
-
-		exitcode := InvitesRevoke(ctx)
-		tracing.ShutdownTracer()
-		os.Exit(exitcode)
-	},
+	Use:    "revoke-invites",
+	Short:  "Revoke an existing invite",
+	PreRun: PreRunSetup,
+	RunE:   InvitesRevoke,
 }
 
-func InvitesRevoke(ctx context.Context) int {
+func InvitesRevoke(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
+
 	var err error
 	email := viper.GetString("email")
-
 	if email == "" {
 		log.WithContext(ctx).Error("You must specify an email address to revoke using --email")
-		return 1
+		return flagError{usage: fmt.Sprintf("You must specify an email address to revoke using --email\n\n%v", cmd.UsageString())}
 	}
 
-	ctx, span := tracing.Tracer().Start(ctx, "CLI Revoke Invite", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-	))
-	defer span.End()
-
-	lf := log.Fields{
-		"app": viper.GetString("app"),
-	}
-
-	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+	ctx, oi, _, err := login(ctx, cmd, []string{"account:write"})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
-		return 1
-	}
-
-	// Authenticate
-	ctx, _, err = ensureToken(ctx, oi, []string{"account:write"})
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to ensure token")
-		return 1
+		return err
 	}
 
 	client := AuthenticatedInviteClient(ctx, oi)
@@ -160,44 +60,29 @@ func InvitesRevoke(ctx context.Context) int {
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("failed to revoke invite")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  log.Fields{"email": email},
+			message: "failed to revoke invite",
+		}
 	}
 
 	log.WithContext(ctx).WithFields(log.Fields{"email": email}).Info("Invite revoked successfully")
 
-	return 0
+	return nil
 }
 
-func InvitesCreate(ctx context.Context) int {
-	var err error
+func InvitesCreate(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
 
 	emails := viper.GetStringSlice("emails")
 	if len(emails) == 0 {
-		log.WithContext(ctx).Error("You must specify at least one email address to invite using --emails")
-		return 1
+		return flagError{usage: fmt.Sprintf("You must specify at least one email address to invite using --emails\n\n%v", cmd.UsageString())}
 	}
 
-	ctx, span := tracing.Tracer().Start(ctx, "CLI Create Invite", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-	))
-	defer span.End()
-
-	lf := log.Fields{
-		"app": viper.GetString("app"),
-	}
-
-	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+	ctx, oi, _, err := login(ctx, cmd, []string{"account:write"})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
-		return 1
-	}
-
-	// Authenticate
-	ctx, _, err = ensureToken(ctx, oi, []string{"account:write"})
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to ensure token")
-		return 1
+		return err
 	}
 
 	client := AuthenticatedInviteClient(ctx, oi)
@@ -209,38 +94,24 @@ func InvitesCreate(ctx context.Context) int {
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("failed to create invite")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  log.Fields{"emails": emails},
+			message: "failed to create invite",
+		}
 	}
 
 	log.WithContext(ctx).WithFields(log.Fields{"emails": emails}).Info("Invites created successfully")
 
-	return 0
+	return nil
 }
 
-func InvitesList(ctx context.Context) int {
-	var err error
+func InvitesList(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
 
-	ctx, span := tracing.Tracer().Start(ctx, "CLI List Invites", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-	))
-	defer span.End()
-
-	lf := log.Fields{
-		"app": viper.GetString("app"),
-	}
-
-	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+	ctx, oi, _, err := login(ctx, cmd, []string{"account:read"})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
-		return 1
-	}
-
-	// Authenticate
-	ctx, _, err = ensureToken(ctx, oi, []string{"account:read"})
-	if err != nil {
-		log.WithError(err).Error("failed to ensure token")
-		return 1
+		return err
 	}
 
 	client := AuthenticatedInviteClient(ctx, oi)
@@ -248,8 +119,10 @@ func InvitesList(ctx context.Context) int {
 	// List all invites
 	resp, err := client.ListInvites(ctx, &connect.Request[sdp.ListInvitesRequest]{})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("failed to list invites")
-		return 1
+		return loggedError{
+			err:     err,
+			message: "failed to list invites",
+		}
 	}
 
 	t := table.NewWriter()
@@ -262,7 +135,7 @@ func InvitesList(ctx context.Context) int {
 
 	t.Render()
 
-	return 0
+	return nil
 }
 
 func init() {

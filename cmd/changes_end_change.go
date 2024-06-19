@@ -1,107 +1,39 @@
 package cmd
 
 import (
-	"context"
-	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-
 	"connectrpc.com/connect"
-	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // endChangeCmd represents the end-change command
 var endChangeCmd = &cobra.Command{
-	Use:   "end-change --uuid ID",
-	Short: "Finishes the specified change. Call this just after you finished the change. This will store a snapshot of the current system state for later reference.",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `end-change` flags")
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		var exitcode int
-		// create a sub-scope to defer the span.End() to a point before shutting down the tracer
-		func() {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			ctx, span := tracing.Tracer().Start(ctx, "CLI EndChange", trace.WithAttributes(
-				attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-			))
-			defer span.End()
-
-			// Create a goroutine to watch for cancellation signals
-			go func() {
-				select {
-				case <-sigs:
-					cancel()
-				case <-ctx.Done():
-				}
-			}()
-
-			exitcode = EndChange(ctx, nil)
-
-			span.SetAttributes(attribute.Int("ovm.cli.exitcode", exitcode))
-			if exitcode != 0 {
-				span.SetAttributes(attribute.Bool("ovm.cli.fatalError", true))
-			}
-		}()
-
-		tracing.ShutdownTracer()
-		os.Exit(exitcode)
-	},
+	Use:    "end-change --uuid ID",
+	Short:  "Finishes the specified change. Call this just after you finished the change. This will store a snapshot of the current system state for later reference.",
+	PreRun: PreRunSetup,
+	RunE:   EndChange,
 }
 
-func EndChange(ctx context.Context, ready chan bool) int {
-	timeout, err := time.ParseDuration(viper.GetString("timeout"))
+func EndChange(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
+
+	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"})
 	if err != nil {
-		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
-		return 1
+		return err
 	}
-
-	lf := log.Fields{
-		"app": viper.GetString("app"),
-	}
-
-	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
-		return 1
-	}
-
-	ctx, _, err = ensureToken(ctx, oi, []string{"changes:write"})
-	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
-		return 1
-	}
-
-	// apply a timeout to the main body of processing
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_HAPPENING, viper.GetString("ticket-link"), true)
 	if err != nil {
-		log.WithError(err).WithFields(lf).Error("failed to identify change")
-		return 1
+		return loggedError{
+			err:     err,
+			message: "failed to identify change",
+		}
 	}
 
-	lf["uuid"] = changeUuid.String()
+	lf := log.Fields{"uuid": changeUuid.String()}
 
-	// snapClient := AuthenticatedSnapshotsClient(ctx)
 	client := AuthenticatedChangesClient(ctx, oi)
 	stream, err := client.EndChange(ctx, &connect.Request[sdp.EndChangeRequest]{
 		Msg: &sdp.EndChangeRequest{
@@ -109,8 +41,11 @@ func EndChange(ctx context.Context, ready chan bool) int {
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to end change")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "failed to end change",
+		}
 	}
 	log.WithContext(ctx).WithFields(lf).Info("processing")
 	for stream.Receive() {
@@ -122,12 +57,15 @@ func EndChange(ctx context.Context, ready chan bool) int {
 		}).Info("progress")
 	}
 	if stream.Err() != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(stream.Err()).Error("failed to process end change")
-		return 1
+		return loggedError{
+			err:     stream.Err(),
+			fields:  lf,
+			message: "failed to process end change",
+		}
 	}
 
 	log.WithContext(ctx).WithFields(lf).Info("finished change")
-	return 0
+	return nil
 }
 
 func init() {

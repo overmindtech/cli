@@ -15,22 +15,15 @@ import (
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // terraformPlanCmd represents the `terraform plan` command
 var terraformPlanCmd = &cobra.Command{
-	Use:   "plan [overmind options...] -- [terraform options...]",
-	Short: "Runs `terraform plan` and sends the results to Overmind to calculate a blast radius and risks.",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `terraform plan` flags")
-		}
-	},
-	Run: CmdWrapper("plan", []string{"explore:read", "changes:write", "config:write", "request:receive"}, NewTfPlanModel),
+	Use:    "plan [overmind options...] -- [terraform options...]",
+	Short:  "Runs `terraform plan` and sends the results to Overmind to calculate a blast radius and risks.",
+	PreRun: PreRunSetup,
+	Run:    CmdWrapper("plan", []string{"explore:read", "changes:write", "config:write", "request:receive"}, NewTfPlanModel),
 }
 
 type tfPlanModel struct {

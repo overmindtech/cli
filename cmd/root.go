@@ -9,11 +9,15 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"path"
 	"strings"
+	"syscall"
+	"time"
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
@@ -23,6 +27,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 )
 
@@ -122,21 +128,73 @@ confidence.
 This CLI will prompt you for authentication using Overmind's OAuth service,
 however it can also be configured to use an API key by setting the OVM_API_KEY
 environment variable.`,
-	Version: cliVersion,
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `root` flags")
-		}
-	},
+	Version:       cliVersion,
+	SilenceErrors: true,
+	SilenceUsage:  true,
+	PreRun:        PreRunSetup,
+}
+
+func PreRunSetup(cmd *cobra.Command, args []string) {
+	// Bind these to viper
+	err := viper.BindPFlags(cmd.Flags())
+	if err != nil {
+		log.WithError(err).Fatalf("could not bind `%v` flags", cmd.CommandPath())
+	}
+
+	span := trace.SpanFromContext(cmd.Context())
+	span.SetName(fmt.Sprintf("CLI %v", cmd.CommandPath()))
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
+	// create a sub-scope to run deferred cleanups before shutting down the tracer
+	err := func() error {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		ctx, span := tracing.Tracer().Start(ctx, "CLI unknown", trace.WithAttributes(
+			attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
+		))
+		defer span.End()
+
+		sigs := make(chan os.Signal, 1)
+		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+		// Create a goroutine to watch for cancellation signals
+		go func() {
+			select {
+			case <-sigs:
+				cancel()
+			case <-ctx.Done():
+			}
+		}()
+
+		err := rootCmd.ExecuteContext(ctx)
+		if err != nil {
+			switch err := err.(type) { // nolint:errorlint // the selected error types are all top-level wrappers used by the CLI implementation
+			case flagError:
+				// print errors from viper with usage to stderr
+				fmt.Fprintln(os.Stderr, err)
+			case loggedError:
+				log.WithContext(ctx).WithError(err.err).WithFields(err.fields).Error(err.message)
+			}
+			// if printing the error was not requested by the appropriate
+			// wrapper, only record the data to honeycomb and sentry, the
+			// command already has handled logging
+			span.SetAttributes(attribute.Bool("ovm.cli.fatalError", true))
+			span.RecordError(err)
+			sentry.CaptureException(err)
+		}
+
+		return err
+	}()
+
+	// shutdown and submit any remaining otel data before exiting
+	tracing.ShutdownTracer()
+
+	if err != nil {
+		// If we have an error, exit with a non-zero status. Logging is handled by each command.
 		os.Exit(1)
 	}
 }
@@ -357,8 +415,30 @@ func addAPIFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().String("app", "https://app.overmind.tech", "The overmind instance to connect to.")
 }
 
+type flagError struct {
+	usage string
+}
+
+func (f flagError) Error() string {
+	return f.usage
+}
+
+type loggedError struct {
+	err     error
+	fields  log.Fields
+	message string
+}
+
+func (l loggedError) Error() string {
+	return fmt.Sprintf("%v (%v): %v", l.message, l.fields, l.err)
+}
+
 func init() {
 	cobra.OnInitialize(initConfig)
+
+	rootCmd.SetFlagErrorFunc(func(c *cobra.Command, err error) error {
+		return flagError{fmt.Sprintf("%v\n\n%s", err, c.UsageString())}
+	})
 
 	// General Config
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
@@ -462,4 +542,38 @@ func tracedSettings() map[string]any {
 	result["uuid"] = viper.GetString("uuid")
 
 	return result
+}
+
+func login(ctx context.Context, cmd *cobra.Command, scopes []string) (context.Context, OvermindInstance, *oauth2.Token, error) {
+	timeout, err := time.ParseDuration(viper.GetString("timeout"))
+	if err != nil {
+		return ctx, OvermindInstance{}, nil, flagError{usage: fmt.Sprintf("invalid --timeout value '%v'\n\n%v", viper.GetString("timeout"), cmd.UsageString())}
+	}
+
+	lf := log.Fields{
+		"app": viper.GetString("app"),
+	}
+
+	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+	if err != nil {
+		return ctx, OvermindInstance{}, nil, loggedError{
+			err:     err,
+			fields:  lf,
+			message: "failed to get instance data from app",
+		}
+	}
+
+	ctx, token, err := ensureToken(ctx, oi, []string{"changes:read"})
+	if err != nil {
+		return ctx, OvermindInstance{}, nil, loggedError{
+			err:     err,
+			fields:  lf,
+			message: "failed to authenticate",
+		}
+	}
+
+	// apply a timeout to the main body of processing
+	ctx, _ = context.WithTimeout(ctx, timeout) // nolint:govet // the context will not leak as the command will exit when it is done
+
+	return ctx, oi, token, nil
 }

@@ -3,27 +3,21 @@ package cmd
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
-	"os/signal"
 	"os/user"
 	"slices"
 	"strings"
-	"syscall"
 	"time"
 
 	"connectrpc.com/connect"
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
-	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // submitPlanCmd represents the submit-plan command
@@ -32,7 +26,7 @@ var submitPlanCmd = &cobra.Command{
 	Short: "Creates a new Change from a given terraform plan file",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			return errors.New("no plan files specified")
+			return flagError{fmt.Sprintf("no plan files specified\n\n%v", cmd.UsageString())}
 		}
 		for _, f := range args {
 			_, err := os.Stat(f)
@@ -42,48 +36,8 @@ var submitPlanCmd = &cobra.Command{
 		}
 		return nil
 	},
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `submit-plan` flags")
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		var exitcode int
-		// create a sub-scope to defer the span.End() to a point before shutting down the tracer
-		func() {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			ctx, span := tracing.Tracer().Start(ctx, "CLI SubmitPlan", trace.WithAttributes(
-				attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-			))
-			defer span.End()
-
-			// Create a goroutine to watch for cancellation signals
-			go func() {
-				select {
-				case <-sigs:
-					cancel()
-				case <-ctx.Done():
-				}
-			}()
-
-			exitcode = SubmitPlan(ctx, args, nil)
-
-			span.SetAttributes(attribute.Int("ovm.cli.exitcode", exitcode))
-			if exitcode != 0 {
-				span.SetAttributes(attribute.Bool("ovm.cli.fatalError", true))
-			}
-		}()
-
-		tracing.ShutdownTracer()
-		os.Exit(exitcode)
-	},
+	PreRun: PreRunSetup,
+	RunE:   SubmitPlan,
 }
 
 type TfData struct {
@@ -369,47 +323,33 @@ func tryLoadText(ctx context.Context, fileName string) string {
 	return strings.TrimSpace(string(bytes))
 }
 
-func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
-	timeout, err := time.ParseDuration(viper.GetString("timeout"))
-	if err != nil {
-		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
-		return 1
-	}
+func SubmitPlan(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
 
-	lf := log.Fields{
-		"app": viper.GetString("app"),
-	}
-
-	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
-		return 1
+		return err
 	}
-	ctx, _, err = ensureToken(ctx, oi, []string{"changes:write"})
-	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
-		return 1
-	}
-
-	// apply a timeout to the main body of processing
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	fileWord := "file"
-	if len(files) > 1 {
+	if len(args) > 1 {
 		fileWord = "files"
 	}
 
-	log.WithContext(ctx).Infof("Reading %v plan %v", len(files), fileWord)
+	log.WithContext(ctx).Infof("Reading %v plan %v", len(args), fileWord)
 
 	plannedChanges := make([]*sdp.MappedItemDiff, 0)
 
-	for _, f := range files {
+	lf := log.Fields{}
+	for _, f := range args {
 		lf["file"] = f
 		_, mappedItemDiffs, _, err := mappedItemDiffsFromPlanFile(ctx, f, lf)
 		if err != nil {
-			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Error parsing terraform plan")
-			return 1
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "Error parsing terraform plan",
+			}
 		}
 		plannedChanges = append(plannedChanges, mappedItemDiffs...)
 	}
@@ -418,8 +358,11 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 	client := AuthenticatedChangesClient(ctx, oi)
 	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, viper.GetString("ticket-link"), false)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed searching for existing changes")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "Failed searching for existing changes",
+		}
 	}
 
 	title := changeTitle(viper.GetString("title"))
@@ -442,14 +385,20 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 			},
 		})
 		if err != nil {
-			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to create change")
-			return 1
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "Failed to create change",
+			}
 		}
 
 		maybeChangeUuid := createResponse.Msg.GetChange().GetMetadata().GetUUIDParsed()
 		if maybeChangeUuid == nil {
-			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to read change id")
-			return 1
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "Failed to read change id",
+			}
 		}
 
 		changeUuid = *maybeChangeUuid
@@ -474,8 +423,11 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 			},
 		})
 		if err != nil {
-			log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to update change")
-			return 1
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "Failed to update change",
+			}
 		}
 
 		log.WithContext(ctx).WithFields(lf).Info("Re-using change")
@@ -488,8 +440,11 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to update planned changes")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "Failed to update planned changes",
+		}
 	}
 
 	last_log := time.Now()
@@ -507,8 +462,11 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		}
 	}
 	if resultStream.Err() != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(resultStream.Err()).Error("Error streaming results")
-		return 1
+		return loggedError{
+			err:     resultStream.Err(),
+			fields:  lf,
+			message: "Error streaming results",
+		}
 	}
 
 	frontend, _ := strings.CutSuffix(viper.GetString("frontend"), "/")
@@ -522,8 +480,12 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to get updated change")
-		return 1
+		log.WithContext(ctx).WithFields(lf).WithError(err).Error("")
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "Failed to get updated change",
+		}
 	}
 
 	for _, a := range fetchResponse.Msg.GetChange().GetProperties().GetAffectedAppsUUID() {
@@ -539,7 +501,7 @@ func SubmitPlan(ctx context.Context, files []string, ready chan bool) int {
 		}).Info("Affected app")
 	}
 
-	return 0
+	return nil
 }
 
 func init() {

@@ -1,95 +1,37 @@
 package cmd
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // getSnapshotCmd represents the get-snapshot command
 var getSnapshotCmd = &cobra.Command{
-	Use:   "get-snapshot --uuid ID",
-	Short: "Displays the contents of a snapshot.",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `get-snapshot` flags")
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		// Create a goroutine to watch for cancellation signals
-		go func() {
-			select {
-			case <-sigs:
-				cancel()
-			case <-ctx.Done():
-			}
-		}()
-
-		exitcode := GetSnapshot(ctx, nil)
-		tracing.ShutdownTracer()
-		os.Exit(exitcode)
-	},
+	Use:    "get-snapshot --uuid ID",
+	Short:  "Displays the contents of a snapshot.",
+	PreRun: PreRunSetup,
+	RunE:   GetSnapshot,
 }
 
-func GetSnapshot(ctx context.Context, ready chan bool) int {
-	timeout, err := time.ParseDuration(viper.GetString("timeout"))
-	if err != nil {
-		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
-		return 1
-	}
+func GetSnapshot(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
 
 	snapshotUuid, err := uuid.Parse(viper.GetString("uuid"))
 	if err != nil {
-		log.Errorf("invalid --uuid value '%v', error: %v", viper.GetString("uuid"), err)
-		return 1
+		return flagError{usage: fmt.Sprintf("invalid --uuid value '%v', error: %v\n\n%v", viper.GetString("uuid"), err, cmd.UsageString())}
 	}
 
-	ctx, span := tracing.Tracer().Start(ctx, "CLI GetSnapshot", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-	))
-	defer span.End()
-
-	lf := log.Fields{
-		"app": viper.GetString("app"),
-	}
-
-	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+	ctx, oi, _, err := login(ctx, cmd, []string{"explore:read", "changes:read"})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
-		return 1
+		return err
 	}
-
-	ctx, _, err = ensureToken(ctx, oi, []string{"changes:read"})
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to authenticate")
-		return 1
-	}
-
-	// apply a timeout to the main body of processing
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	client := AuthenticatedSnapshotsClient(ctx, oi)
 	response, err := client.GetSnapshot(ctx, &connect.Request[sdp.GetSnapshotRequest]{
@@ -98,8 +40,10 @@ func GetSnapshot(ctx context.Context, ready chan bool) int {
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get snapshot")
-		return 1
+		return loggedError{
+			err:     err,
+			message: "failed to get snapshot",
+		}
 	}
 	log.WithContext(ctx).WithFields(log.Fields{
 		"snapshot-uuid":        uuid.UUID(response.Msg.GetSnapshot().GetMetadata().GetUUID()),
@@ -130,7 +74,7 @@ func GetSnapshot(ctx context.Context, ready chan bool) int {
 		fmt.Println(string(b))
 	}
 
-	return 0
+	return nil
 }
 
 func init() {

@@ -1,91 +1,38 @@
 package cmd
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/sdpws"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // requestQueryCmd represents the start command
 var requestQueryCmd = &cobra.Command{
-	Use:   "query",
-	Short: "Runs an SDP query against the overmind API",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `request` flags")
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		sigs := make(chan os.Signal, 1)
-
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		// Create a goroutine to watch for cancellation signals
-		go func() {
-			select {
-			case <-sigs:
-				cancel()
-			case <-ctx.Done():
-			}
-		}()
-
-		exitcode := Query(ctx, nil)
-		tracing.ShutdownTracer()
-		os.Exit(exitcode)
-	},
+	Use:    "query",
+	Short:  "Runs an SDP query against the overmind API",
+	PreRun: PreRunSetup,
+	RunE:   RequestQuery,
 }
 
-func Query(ctx context.Context, ready chan bool) int {
-	timeout, err := time.ParseDuration(viper.GetString("timeout"))
+func RequestQuery(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
+
+	ctx, oi, _, err := login(ctx, cmd, []string{"explore:read", "changes:read"})
 	if err != nil {
-		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
-		return 1
-	}
-	ctx, span := tracing.Tracer().Start(ctx, "CLI Request", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-	))
-	defer span.End()
-
-	lf := log.Fields{
-		"app": viper.GetString("app"),
+		return err
 	}
 
-	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
-		return 1
-	}
-	ctx, _, err = ensureToken(ctx, oi, []string{"explore:read"})
-	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
-		return 1
-	}
-
-	// apply a timeout to the main body of processing
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
+	lf := log.Fields{}
 	handler := &requestHandler{
 		lf:                           lf,
 		LoggingGatewayMessageHandler: sdpws.LoggingGatewayMessageHandler{Level: log.TraceLevel},
@@ -103,27 +50,36 @@ func Query(ctx context.Context, ready chan bool) int {
 	)
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to overmind API")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "Failed to connect to overmind API",
+		}
 	}
 	defer c.Close(ctx)
 
 	q, err := createQuery()
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to create query")
-		return 1
+		return flagError{usage: fmt.Sprintf("invalid query: %v\n\n%v", err, cmd.UsageString())}
 	}
 	err = c.SendQuery(ctx, q)
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to execute query")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "Failed to execute query",
+		}
 	}
 	log.WithContext(ctx).WithFields(lf).WithError(err).Info("received items")
 
 	// Log the request in JSON
 	b, err := json.MarshalIndent(q, "", "  ")
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to marshal query for logging")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "Failed to marshal query for logging",
+		}
 	}
 	log.WithContext(ctx).WithFields(lf).WithField("uuid", uuid.UUID(q.GetUUID())).Infof("Query:\n%v", string(b))
 
@@ -142,8 +98,12 @@ func Query(ctx context.Context, ready chan bool) int {
 	if dumpFileName != "" {
 		f, err := os.Create(dumpFileName)
 		if err != nil {
-			log.WithContext(ctx).WithFields(lf).WithField("file", dumpFileName).WithError(err).Error("Failed to open file for dumping")
-			return 1
+			lf["file"] = dumpFileName
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "Failed to open file for dumping",
+			}
 		}
 		defer f.Close()
 		type dump struct {
@@ -153,8 +113,12 @@ func Query(ctx context.Context, ready chan bool) int {
 			Msgs: handler.msgLog,
 		})
 		if err != nil {
-			log.WithContext(ctx).WithFields(lf).WithField("file", dumpFileName).WithError(err).Error("Failed to dump to file")
-			return 1
+			lf["file"] = dumpFileName
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "Failed to dump to file",
+			}
 		}
 		log.WithContext(ctx).WithFields(lf).WithField("file", dumpFileName).Info("dumped to file")
 	}
@@ -163,15 +127,17 @@ func Query(ctx context.Context, ready chan bool) int {
 		log.WithContext(ctx).Info("Starting snapshot")
 		snId, err := c.StoreSnapshot(ctx, viper.GetString("snapshot-name"), viper.GetString("snapshot-description"))
 		if err != nil {
-			log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to send snapshot request")
-			return 1
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "Failed to send snapshot request",
+			}
 		}
 
 		log.WithContext(ctx).WithFields(lf).Infof("Snapshot stored successfully: %v", snId)
-		return 0
 	}
 
-	return 0
+	return nil
 }
 
 func methodFromString(method string) (sdp.QueryMethod, error) {

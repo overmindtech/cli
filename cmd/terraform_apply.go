@@ -23,13 +23,7 @@ import (
 var terraformApplyCmd = &cobra.Command{
 	Use:   "apply [overmind options...] -- [terraform options...]",
 	Short: "Runs `terraform apply` between two full system configuration snapshots for tracking. This will be automatically connected with the Change created by the `plan` command.",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `terraform apply` flags")
-		}
-	},
+	PreRun: PreRunSetup,
 	Run: CmdWrapper("apply", []string{"explore:read", "changes:write", "config:write", "request:receive"}, NewTfApplyModel),
 }
 

@@ -1,97 +1,48 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 	"time"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/sdpws"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // manualChangeCmd is the equivalent to submit-plan for manual changes
 var manualChangeCmd = &cobra.Command{
-	Use:   "manual-change [--title TITLE] [--description DESCRIPTION] [--ticket-link URL] --query-scope SCOPE --query-type TYPE --query QUERY",
-	Short: "Creates a new Change from a given query",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `manual-change` flags")
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		sigs := make(chan os.Signal, 1)
-
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		// Create a goroutine to watch for cancellation signals
-		go func() {
-			select {
-			case <-sigs:
-				cancel()
-			case <-ctx.Done():
-			}
-		}()
-
-		exitcode := ManualChange(ctx, nil)
-		tracing.ShutdownTracer()
-		os.Exit(exitcode)
-	},
+	Use:    "manual-change [--title TITLE] [--description DESCRIPTION] [--ticket-link URL] --query-scope SCOPE --query-type TYPE --query QUERY",
+	Short:  "Creates a new Change from a given query",
+	PreRun: PreRunSetup,
+	RunE:   ManualChange,
 }
 
-func ManualChange(ctx context.Context, ready chan bool) int {
-	timeout, err := time.ParseDuration(viper.GetString("timeout"))
+func ManualChange(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
+
+	method, err := methodFromString(viper.GetString("query-method"))
 	if err != nil {
-		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
-		return 1
-	}
-	ctx, span := tracing.Tracer().Start(ctx, "CLI ManualChange", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-	))
-	defer span.End()
-
-	lf := log.Fields{
-		"app": viper.GetString("app"),
+		return flagError{fmt.Sprintf("can't parse --query-method: %v\n\n%v", err, cmd.UsageString())}
 	}
 
-	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
-		return 1
+		return err
 	}
-
-	ctx, _, err = ensureToken(ctx, oi, []string{"changes:write"})
-	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
-		return 1
-	}
-
-	// apply a timeout to the main body of processing
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	client := AuthenticatedChangesClient(ctx, oi)
 	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, viper.GetString("ticket-link"), false)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to searching for existing changes")
-		return 1
+		return loggedError{
+			err:     err,
+			message: "failed to identify change",
+		}
 	}
 
 	if changeUuid == uuid.Nil {
@@ -108,34 +59,35 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 			},
 		})
 		if err != nil {
-			log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to create change")
-			return 1
+			return loggedError{
+				err:     err,
+				message: "failed to create change",
+			}
 		}
 
 		maybeChangeUuid := createResponse.Msg.GetChange().GetMetadata().GetUUIDParsed()
 		if maybeChangeUuid == nil {
-			log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to read change id")
-			return 1
+			return loggedError{
+				err:     err,
+				message: "failed to read change id",
+			}
 		}
 
 		changeUuid = *maybeChangeUuid
-		lf["change"] = changeUuid
-		log.WithContext(ctx).WithFields(lf).Info("created a new change")
+		log.WithContext(ctx).WithField("change", changeUuid).Info("created a new change")
 	} else {
-		lf["change"] = changeUuid
-		log.WithContext(ctx).WithFields(lf).Info("re-using change")
+		log.WithContext(ctx).WithField("change", changeUuid).Info("re-using change")
 	}
 
-	method, err := methodFromString(viper.GetString("query-method"))
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("can't parse --query-method")
-		return 1
-	}
+	lf := log.Fields{"change": changeUuid}
 
 	ws, err := sdpws.DialBatch(ctx, oi.GatewayUrl(), otelhttp.DefaultClient, nil)
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("Failed to connect to gateway")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "failed to connect to gateway",
+		}
 	}
 
 	u := uuid.New()
@@ -151,8 +103,11 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 	log.WithContext(ctx).WithFields(lf).WithField("item_count", 1).Info("identifying items")
 	receivedItems, err := ws.Query(ctx, q)
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to send query")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "failed to send query",
+		}
 	}
 
 	if len(receivedItems) > 0 {
@@ -172,8 +127,11 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to update changing items")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "failed to update changing items",
+		}
 	}
 
 	last_log := time.Now()
@@ -191,8 +149,11 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 		}
 	}
 	if resultStream.Err() != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(resultStream.Err()).Error("error streaming results")
-		return 1
+		return loggedError{
+			err:     resultStream.Err(),
+			fields:  lf,
+			message: "error streaming results",
+		}
 	}
 
 	frontend, _ := strings.CutSuffix(viper.GetString("frontend"), "/")
@@ -206,8 +167,11 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to get updated change")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "failed to get updated change",
+		}
 	}
 
 	for _, a := range fetchResponse.Msg.GetChange().GetProperties().GetAffectedAppsUUID() {
@@ -223,7 +187,7 @@ func ManualChange(ctx context.Context, ready chan bool) int {
 		}).Info("affected app")
 	}
 
-	return 0
+	return nil
 }
 
 func init() {
