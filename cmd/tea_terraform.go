@@ -10,6 +10,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/getsentry/sentry-go"
+	"github.com/go-jose/go-jose/v4"
+	josejwt "github.com/go-jose/go-jose/v4/jwt"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -211,6 +213,24 @@ func (m *cmdModel) tokenChecks(token *oauth2.Token) tea.Cmd {
 	// some of the models require access to viper (for GetConfig/SetConfig) or
 	// contortions to store that data somewhere else.
 	return func() tea.Msg {
+		tok, err := josejwt.ParseSigned(token.AccessToken, []jose.SignatureAlgorithm{jose.RS256})
+		if err != nil {
+			return fatalError{err: fmt.Errorf("received invalid token: %w", err)}
+		}
+		out := josejwt.Claims{}
+		customClaims := sdp.CustomClaims{}
+		err = tok.UnsafeClaimsWithoutVerification(&out, &customClaims)
+		if err != nil {
+			return fatalError{err: fmt.Errorf("received unparsable token: %w", err)}
+		}
+
+		span := trace.SpanFromContext(m.ctx)
+		span.SetAttributes(
+			attribute.Bool("ovm.cli.authenticated", true),
+			attribute.String("ovm.cli.accountName", customClaims.AccountName),
+			attribute.String("ovm.cli.userId", out.Subject),
+		)
+
 		return loadSourcesConfigMsg{
 			ctx:    m.ctx,
 			oi:     m.oi,
