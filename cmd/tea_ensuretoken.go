@@ -13,6 +13,8 @@ import (
 
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/go-jose/go-jose/v4"
+	josejwt "github.com/go-jose/go-jose/v4/jwt"
 	"github.com/overmindtech/sdp-go"
 	"github.com/pkg/browser"
 	log "github.com/sirupsen/logrus"
@@ -340,9 +342,6 @@ func (m ensureTokenModel) awaitTokenCmd() tea.Msg {
 		}
 	}
 
-	span := trace.SpanFromContext(m.ctx)
-	span.SetAttributes(attribute.Bool("ovm.cli.authenticated", true))
-
 	// Save the token locally
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -470,8 +469,25 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 		os.Exit(1)
 	}
 
+	tok, err := josejwt.ParseSigned(m.token.AccessToken, []jose.SignatureAlgorithm{jose.RS256})
+	if err != nil {
+		fmt.Println("Error running program: received invalid token:", err)
+		os.Exit(1)
+	}
+	out := josejwt.Claims{}
+	customClaims := sdp.CustomClaims{}
+	err = tok.UnsafeClaimsWithoutVerification(&out, &customClaims)
+	if err != nil {
+		fmt.Println("Error running program: received unparsable token:", err)
+		os.Exit(1)
+	}
+
 	span := trace.SpanFromContext(ctx)
-	span.SetAttributes(attribute.Bool("ovm.cli.authenticated", true))
+	span.SetAttributes(
+		attribute.Bool("ovm.cli.authenticated", true),
+		attribute.String("ovm.cli.accountName", customClaims.AccountName),
+		attribute.String("ovm.cli.userId", out.Subject),
+	)
 
 	// Save the token locally
 	if home, err := os.UserHomeDir(); err == nil {
