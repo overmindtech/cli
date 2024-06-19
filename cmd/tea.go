@@ -57,7 +57,7 @@ type FinalReportingModel interface {
 func CmdWrapper(action string, requiredScopes []string, commandModel func(args []string, parent *cmdModel, width int) tea.Model) func(cmd *cobra.Command, args []string) {
 	return func(cmd *cobra.Command, args []string) {
 		// set up a context for the command
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(cmd.Context())
 		defer cancel()
 
 		cmdName := fmt.Sprintf("CLI %v", cmd.CommandPath())
@@ -92,8 +92,6 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func(args [
 
 		// wrap the rest of the function in a closure to allow for cleaner error handling and deferring.
 		err := func() error {
-			ctx := cmd.Context()
-
 			timeout, err := time.ParseDuration(viper.GetString("timeout"))
 			if err != nil {
 				return flagError{usage: fmt.Sprintf("invalid --timeout value '%v'\n\n%v", viper.GetString("timeout"), cmd.UsageString())}
