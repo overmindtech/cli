@@ -1,14 +1,11 @@
 package cmd
 
 import (
-	"context"
 	_ "embed"
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 	"text/template"
 	"time"
 
@@ -17,13 +14,10 @@ import (
 	"github.com/hexops/gotextdiff"
 	"github.com/hexops/gotextdiff/myers"
 	diffspan "github.com/hexops/gotextdiff/span"
-	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 	"gopkg.in/yaml.v3"
 )
 
@@ -32,93 +26,39 @@ var commentTemplate string
 
 // getChangeCmd represents the get-change command
 var getChangeCmd = &cobra.Command{
-	Use:   "get-change {--uuid ID | --change https://app.overmind.tech/changes/c772d072-6b0b-4763-b7c5-ff5069beed4c}",
-	Short: "Displays the contents of a change.",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `get-change` flags")
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		var exitcode int
-		// create a sub-scope to defer the span.End() to a point before shutting down the tracer
-		func() {
-			ctx, cancel := context.WithCancel(context.Background())
-			defer cancel()
-
-			ctx, span := tracing.Tracer().Start(ctx, "CLI GetChange", trace.WithAttributes(
-				attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-			))
-			defer span.End()
-
-			// Create a goroutine to watch for cancellation signals
-			go func() {
-				select {
-				case <-sigs:
-					cancel()
-				case <-ctx.Done():
-				}
-			}()
-
-			exitcode := GetChange(ctx, nil)
-
-			span.SetAttributes(attribute.Int("ovm.cli.exitcode", exitcode))
-			if exitcode != 0 {
-				span.SetAttributes(attribute.Bool("ovm.cli.fatalError", true))
-			}
-		}()
-
-		tracing.ShutdownTracer()
-		os.Exit(exitcode)
-	},
+	Use:    "get-change {--uuid ID | --change https://app.overmind.tech/changes/c772d072-6b0b-4763-b7c5-ff5069beed4c}",
+	Short:  "Displays the contents of a change.",
+	PreRun: PreRunSetup,
+	RunE:   GetChange,
 }
 
 // Commit ID, tag or branch name of the version of the assets that should be
 // used in the comment. If the assets are updated, this should also be updated
-// to reflect th latest version
+// to reflect the latest version
 //
 // This allows us to update the assets without fear of breaking older comments
 const assetVersion = "17c7fd2c365d4f4cdd8e414ca5148f825fa4febd"
 
-func GetChange(ctx context.Context, ready chan bool) int {
-	timeout, err := time.ParseDuration(viper.GetString("timeout"))
+func GetChange(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
+
+	ctx, oi, _, err := login(ctx, cmd, []string{"changes:read"})
 	if err != nil {
-		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
-		return 1
+		return err
 	}
-
-	lf := log.Fields{
-		"app": viper.GetString("app"),
-	}
-
-	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
-		return 1
-	}
-
-	ctx, _, err = ensureToken(ctx, oi, []string{"changes:read"})
-	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
-		return 1
-	}
-
-	// apply a timeout to the main body of processing
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus(sdp.ChangeStatus_value[viper.GetString("status")]), viper.GetString("ticket-link"), true)
 	if err != nil {
-		log.WithError(err).WithFields(lf).Error("failed to identify change")
-		return 1
+		return loggedError{
+			err:     err,
+			message: "failed to identify change",
+		}
 	}
 
-	lf["uuid"] = changeUuid.String()
+	lf := log.Fields{
+		"uuid":       changeUuid.String(),
+		"change-url": viper.GetString("change-url"),
+	}
 
 	client := AuthenticatedChangesClient(ctx, oi)
 	var riskRes *connect.Response[sdp.GetChangeRisksResponse]
@@ -132,10 +72,11 @@ fetch:
 			},
 		})
 		if err != nil {
-			log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-				"change-url": viper.GetString("change-url"),
-			}).Error("failed to get change risks")
-			return 1
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "failed to get change risks",
+			}
 		}
 
 		if riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus() == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
@@ -164,8 +105,11 @@ fetch:
 			break fetch
 		}
 		if ctx.Err() != nil {
-			log.WithContext(ctx).WithError(ctx.Err()).Error("context cancelled")
-			return 1
+			return loggedError{
+				err:     ctx.Err(),
+				fields:  lf,
+				message: "context cancelled",
+			}
 		}
 	}
 
@@ -175,10 +119,11 @@ fetch:
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-			"change-url": viper.GetString("change-url"),
-		}).Error("failed to get change")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "failed to get change",
+		}
 	}
 	log.WithContext(ctx).WithFields(log.Fields{
 		"change-uuid":        uuid.UUID(changeRes.Msg.GetChange().GetMetadata().GetUUID()),
@@ -192,8 +137,12 @@ fetch:
 	case "json":
 		b, err := json.MarshalIndent(changeRes.Msg.GetChange().ToMap(), "", "  ")
 		if err != nil {
-			log.WithContext(ctx).WithField("input", fmt.Sprintf("%#v", changeRes.Msg.GetChange().ToMap())).WithError(err).Error("Error rendering change")
-			return 1
+			lf["input"] = fmt.Sprintf("%#v", changeRes.Msg.GetChange().ToMap())
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "Error rendering change",
+			}
 		}
 
 		fmt.Println(string(b))
@@ -344,17 +293,24 @@ fetch:
 
 		tmpl, err := template.New("comment").Parse(commentTemplate)
 		if err != nil {
-			log.WithContext(ctx).WithError(err).Error("error parsing comment template")
-			return 1
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "error parsing comment template",
+			}
 		}
 		err = tmpl.Execute(os.Stdout, data)
 		if err != nil {
-			log.WithContext(ctx).WithField("input", fmt.Sprintf("%#v", data)).WithError(err).Error("error rendering comment")
-			return 1
+			lf["input"] = fmt.Sprintf("%#v", data)
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "error rendering comment",
+			}
 		}
 	}
 
-	return 0
+	return nil
 }
 
 func init() {

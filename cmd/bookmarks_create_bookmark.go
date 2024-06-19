@@ -1,112 +1,66 @@
 package cmd
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // createBookmarkCmd represents the get-bookmark command
 var createBookmarkCmd = &cobra.Command{
-	Use:   "create-bookmark [--file FILE]",
-	Short: "Creates a bookmark from JSON.",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `create-bookmark` flags")
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		// Create a goroutine to watch for cancellation signals
-		go func() {
-			select {
-			case <-sigs:
-				cancel()
-			case <-ctx.Done():
-			}
-		}()
-
-		exitcode := CreateBookmark(ctx, nil)
-		tracing.ShutdownTracer()
-		os.Exit(exitcode)
-	},
+	Use:    "create-bookmark [--file FILE]",
+	Short:  "Creates a bookmark from JSON.",
+	PreRun: PreRunSetup,
+	RunE:   CreateBookmark,
 }
 
-func CreateBookmark(ctx context.Context, ready chan bool) int {
-	timeout, err := time.ParseDuration(viper.GetString("timeout"))
-	if err != nil {
-		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
-		return 1
-	}
+func CreateBookmark(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
+
+	var err error
 
 	in := os.Stdin
 	if viper.GetString("file") != "" {
 		in, err = os.Open(viper.GetString("file"))
 		if err != nil {
-			log.WithError(err).WithFields(log.Fields{
-				"file": viper.GetString("file"),
-			}).Error("failed to open input")
-			return 1
+			return loggedError{
+				err: err,
+				fields: log.Fields{
+					"file": viper.GetString("file"),
+				},
+				message: "failed to open input",
+			}
 		}
 	}
 
-	ctx, span := tracing.Tracer().Start(ctx, "CLI CreateBookmark", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-	))
-	defer span.End()
-
-	lf := log.Fields{
-		"app": viper.GetString("app"),
-	}
-
-	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
-		return 1
+		return err
 	}
-
-	ctx, _, err = ensureToken(ctx, oi, []string{"changes:write"})
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to authenticate")
-		return 1
-	}
-
-	// apply a timeout to the main body of processing
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	contents, err := io.ReadAll(in)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("failed to read file")
-		return 1
+		return loggedError{
+			err:     err,
+			fields:  log.Fields{"file": viper.GetString("file")},
+			message: "failed to read file",
+		}
 	}
 	msg := sdp.BookmarkProperties{}
 	err = json.Unmarshal(contents, &msg)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("failed to parse input")
-		return 1
+		return loggedError{
+			err:     err,
+			message: "failed to parse input",
+		}
 	}
 	client := AuthenticatedBookmarkClient(ctx, oi)
 	response, err := client.CreateBookmark(ctx, &connect.Request[sdp.CreateBookmarkRequest]{
@@ -115,8 +69,10 @@ func CreateBookmark(ctx context.Context, ready chan bool) int {
 		},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get bookmark")
-		return 1
+		return loggedError{
+			err:     err,
+			message: "failed to get bookmark",
+		}
 	}
 	log.WithContext(ctx).WithFields(log.Fields{
 		"bookmark-uuid":        uuid.UUID(response.Msg.GetBookmark().GetMetadata().GetUUID()),
@@ -142,7 +98,7 @@ func CreateBookmark(ctx context.Context, ready chan bool) int {
 		fmt.Println(string(b))
 	}
 
-	return 0
+	return nil
 }
 
 func init() {

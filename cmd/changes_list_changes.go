@@ -3,88 +3,32 @@ package cmd
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // listChangesCmd represents the get-change command
 var listChangesCmd = &cobra.Command{
-	Use:   "list-changes --dir ./output",
-	Short: "Displays the contents of a change.",
-	PreRun: func(cmd *cobra.Command, args []string) {
-		// Bind these to viper
-		err := viper.BindPFlags(cmd.Flags())
-		if err != nil {
-			log.WithError(err).Fatal("could not bind `get-change` flags")
-		}
-	},
-	Run: func(cmd *cobra.Command, args []string) {
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-
-		// Create a goroutine to watch for cancellation signals
-		go func() {
-			select {
-			case <-sigs:
-				cancel()
-			case <-ctx.Done():
-			}
-		}()
-
-		exitcode := ListChanges(ctx, nil)
-		tracing.ShutdownTracer()
-		os.Exit(exitcode)
-	},
+	Use:    "list-changes --dir ./output",
+	Short:  "Displays the contents of a change.",
+	PreRun: PreRunSetup,
+	RunE:   ListChanges,
 }
 
-func ListChanges(ctx context.Context, ready chan bool) int {
-	timeout, err := time.ParseDuration(viper.GetString("timeout"))
+func ListChanges(cmd *cobra.Command, args []string) error {
+	ctx := cmd.Context()
+
+	ctx, oi, _, err := login(ctx, cmd, []string{"changes:read"})
 	if err != nil {
-		log.Errorf("invalid --timeout value '%v', error: %v", viper.GetString("timeout"), err)
-		return 1
+		return err
 	}
-
-	ctx, span := tracing.Tracer().Start(ctx, "CLI ListChanges", trace.WithAttributes(
-		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-	))
-	defer span.End()
-
-	lf := log.Fields{
-		"app": viper.GetString("app"),
-	}
-
-	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to get instance data from app")
-		return 1
-	}
-
-	ctx, _, err = ensureToken(ctx, oi, []string{"changes:read"})
-	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("failed to authenticate")
-		return 1
-	}
-
-	// apply a timeout to the main body of processing
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	snapshots := AuthenticatedSnapshotsClient(ctx, oi)
 	bookmarks := AuthenticatedBookmarkClient(ctx, oi)
@@ -94,8 +38,10 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 		Msg: &sdp.ListChangesRequest{},
 	})
 	if err != nil {
-		log.WithContext(ctx).WithError(err).WithFields(lf).Error("failed to list changes")
-		return 1
+		return loggedError{
+			err:     err,
+			message: "failed to list changes",
+		}
 	}
 	for _, change := range response.Msg.GetChanges() {
 		changeUuid := uuid.UUID(change.GetMetadata().GetUUID())
@@ -109,13 +55,15 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 
 		b, err := json.MarshalIndent(change.ToMap(), "", "  ")
 		if err != nil {
-			log.WithContext(ctx).Errorf("Error rendering change: %v", err)
-			return 1
+			return loggedError{
+				err:     err,
+				message: "Error rendering change",
+			}
 		}
 
-		err = printJson(ctx, b, "change", changeUuid.String())
+		err = printJson(ctx, b, "change", changeUuid.String(), cmd)
 		if err != nil {
-			return 1
+			return err
 		}
 
 		if viper.GetBool("fetch-data") {
@@ -129,25 +77,31 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 				// continue processing if item not found
 				if connect.CodeOf(err) != connect.CodeNotFound {
 					if err != nil {
-						log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-							"change-uuid":         changeUuid,
-							"changing-items-uuid": ciUuid.String(),
-						}).Error("failed to get ChangingItemsBookmark")
-						return 1
+						return loggedError{
+							err: err,
+							fields: log.Fields{
+								"change-uuid":         changeUuid,
+								"changing-items-uuid": ciUuid.String(),
+							},
+							message: "failed to get ChangingItemsBookmark",
+						}
 					}
 
 					b, err := json.MarshalIndent(changingItems.Msg.GetBookmark().ToMap(), "", "  ")
 					if err != nil {
-						log.WithContext(ctx).WithFields(log.Fields{
-							"change-uuid":         changeUuid,
-							"changing-items-uuid": ciUuid.String(),
-						}).Errorf("Error rendering changing items bookmark: %v", err)
-						return 1
+						return loggedError{
+							err: err,
+							fields: log.Fields{
+								"change-uuid":         changeUuid,
+								"changing-items-uuid": ciUuid.String(),
+							},
+							message: "Error rendering changing items bookmark",
+						}
 					}
 
-					err = printJson(ctx, b, "changing-items", ciUuid.String())
+					err = printJson(ctx, b, "changing-items", ciUuid.String(), cmd)
 					if err != nil {
-						return 1
+						return err
 					}
 				}
 			}
@@ -162,25 +116,31 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 				// continue processing if item not found
 				if connect.CodeOf(err) != connect.CodeNotFound {
 					if err != nil {
-						log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-							"change-uuid":       changeUuid,
-							"blast-radius-uuid": brUuid.String(),
-						}).Error("failed to get BlastRadiusSnapshot")
-						return 1
+						return loggedError{
+							err: err,
+							fields: log.Fields{
+								"change-uuid":       changeUuid,
+								"blast-radius-uuid": brUuid.String(),
+							},
+							message: "failed to get BlastRadiusSnapshot",
+						}
 					}
 
 					b, err := json.MarshalIndent(brSnap.Msg.GetSnapshot().ToMap(), "", "  ")
 					if err != nil {
-						log.WithContext(ctx).WithFields(log.Fields{
-							"change-uuid":       changeUuid,
-							"blast-radius-uuid": brUuid.String(),
-						}).Errorf("Error rendering blast radius snapshot: %v", err)
-						return 1
+						return loggedError{
+							err: err,
+							fields: log.Fields{
+								"change-uuid":       changeUuid,
+								"blast-radius-uuid": brUuid.String(),
+							},
+							message: "Error rendering blast radius snapshot",
+						}
 					}
 
-					err = printJson(ctx, b, "blast-radius", brUuid.String())
+					err = printJson(ctx, b, "blast-radius", brUuid.String(), cmd)
 					if err != nil {
-						return 1
+						return err
 					}
 				}
 			}
@@ -195,25 +155,31 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 				// continue processing if item not found
 				if connect.CodeOf(err) != connect.CodeNotFound {
 					if err != nil {
-						log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-							"change-uuid":        changeUuid,
-							"system-before-uuid": sbsUuid.String(),
-						}).Error("failed to get SystemBeforeSnapshot")
-						return 1
+						return loggedError{
+							err: err,
+							fields: log.Fields{
+								"change-uuid":        changeUuid,
+								"system-before-uuid": sbsUuid.String(),
+							},
+							message: "failed to get SystemBeforeSnapshot",
+						}
 					}
 
 					b, err := json.MarshalIndent(brSnap.Msg.GetSnapshot().ToMap(), "", "  ")
 					if err != nil {
-						log.WithContext(ctx).WithFields(log.Fields{
-							"change-uuid":        changeUuid,
-							"system-before-uuid": sbsUuid.String(),
-						}).Errorf("Error rendering system before snapshot: %v", err)
-						return 1
+						return loggedError{
+							err: err,
+							fields: log.Fields{
+								"change-uuid":        changeUuid,
+								"system-before-uuid": sbsUuid.String(),
+							},
+							message: "Error rendering system before snapshot",
+						}
 					}
 
-					err = printJson(ctx, b, "system-before", sbsUuid.String())
+					err = printJson(ctx, b, "system-before", sbsUuid.String(), cmd)
 					if err != nil {
-						return 1
+						return err
 					}
 				}
 			}
@@ -228,66 +194,78 @@ func ListChanges(ctx context.Context, ready chan bool) int {
 				// continue processing if item not found
 				if connect.CodeOf(err) != connect.CodeNotFound {
 					if err != nil {
-						log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-							"change-uuid":       changeUuid,
-							"system-after-uuid": sasUuid.String(),
-						}).Error("failed to get SystemAfterSnapshot")
-						return 1
+						return loggedError{
+							err: err,
+							fields: log.Fields{
+								"change-uuid":       changeUuid,
+								"system-after-uuid": sasUuid.String(),
+							},
+							message: "failed to get SystemAfterSnapshot",
+						}
 					}
 
 					b, err := json.MarshalIndent(brSnap.Msg.GetSnapshot().ToMap(), "", "  ")
 					if err != nil {
-						log.WithContext(ctx).WithFields(log.Fields{
-							"change-uuid":       changeUuid,
-							"system-after-uuid": sasUuid.String(),
-						}).Errorf("Error rendering system after snapshot: %v", err)
-						return 1
+						return loggedError{
+							err: err,
+							fields: log.Fields{
+								"change-uuid":       changeUuid,
+								"system-after-uuid": sasUuid.String(),
+							},
+							message: "Error rendering system after snapshot",
+						}
 					}
 
-					err = printJson(ctx, b, "system-after", sasUuid.String())
+					err = printJson(ctx, b, "system-after", sasUuid.String(), cmd)
 					if err != nil {
-						return 1
+						return err
 					}
 				}
 			}
 		}
 	}
 
-	return 0
+	return nil
 }
 
-func printJson(_ context.Context, b []byte, prefix, id string) error {
+func printJson(_ context.Context, b []byte, prefix, id string, cmd *cobra.Command) error {
 	switch viper.GetString("format") {
 	case "json":
 		fmt.Println(string(b))
 	case "files":
 		dir := viper.GetString("dir")
 		if dir == "" {
-			return errors.New("need --dir value to write to files")
+			return flagError{fmt.Sprintf("need --dir value to write to files\n\n%v", cmd.UsageString())}
 		}
 
 		// write the change to a file
 		fileName := fmt.Sprintf("%v/%v-%v.json", dir, prefix, id)
 		file, err := os.Create(fileName)
 		if err != nil {
-			log.WithError(err).WithFields(log.Fields{
-				"prefix":      prefix,
-				"id":          id,
-				"output-dir":  dir,
-				"output-file": fileName,
-			}).Error("failed to create file")
-			return err
+			return loggedError{
+				err: err,
+				fields: log.Fields{
+					"prefix":      prefix,
+					"id":          id,
+					"output-dir":  dir,
+					"output-file": fileName,
+				},
+				message: "failed to create file",
+			}
 		}
 
 		_, err = file.Write(b)
 		if err != nil {
-			log.WithError(err).WithFields(log.Fields{
-				"prefix":      prefix,
-				"id":          id,
-				"output-dir":  dir,
-				"output-file": fileName,
-			}).Error("failed to write file")
-			return err
+			return loggedError{
+				err: err,
+				fields: log.Fields{
+					"prefix":      prefix,
+					"id":          id,
+					"output-dir":  dir,
+					"output-file": fileName,
+				},
+				message: "failed to write file",
+			}
 		}
 	}
 
