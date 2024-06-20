@@ -19,7 +19,6 @@ import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/exp/maps"
 )
 
 type submitPlanModel struct {
@@ -37,7 +36,7 @@ type submitPlanModel struct {
 
 	removingSecretsTask    taskModel
 	resourceExtractionTask taskModel
-	mappedItemDiffs        mappedItemDiffsMsg
+	planMappingResult      PlanMappingResult
 
 	uploadChangesTask taskModel
 
@@ -113,8 +112,8 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// better idea on the table.
 		cmds = append(cmds, tea.Sequence(func() tea.Msg { return msg.wrapped }, m.waitForSubmitPlanActivity))
 
-	case mappedItemDiffsMsg:
-		m.mappedItemDiffs = msg
+	case *PlanMappingResult:
+		m.planMappingResult = *msg
 
 	case submitPlanFinishedMsg:
 		m.riskTask.status = taskStatusDone
@@ -210,18 +209,17 @@ func (m submitPlanModel) View() string {
 
 	if m.resourceExtractionTask.status != taskStatusPending {
 		bits = append(bits, m.resourceExtractionTask.View())
-		if m.mappedItemDiffs.numTotalChanges > 0 {
-			supportedTypes := maps.Keys(m.mappedItemDiffs.supported)
-			slices.Sort[[]string](supportedTypes)
-			for _, typ := range supportedTypes {
-				bits = append(bits, fmt.Sprintf("  %v %v (%v)", RenderOk(), typ, len(m.mappedItemDiffs.supported[typ])))
+		for _, mapping := range m.planMappingResult.Results {
+			var icon string
+			switch mapping.Status {
+			case MapStatusSuccess:
+				icon = RenderOk()
+			case MapStatusNotEnoughInfo:
+				icon = RenderUnknown()
+			case MapStatusUnsupported:
+				icon = RenderErr()
 			}
-
-			unsupportedTypes := maps.Keys(m.mappedItemDiffs.unsupported)
-			slices.Sort[[]string](unsupportedTypes)
-			for _, typ := range unsupportedTypes {
-				bits = append(bits, fmt.Sprintf("  %v %v (%v)", RenderErr(), typ, len(m.mappedItemDiffs.unsupported[typ])))
-			}
+			bits = append(bits, fmt.Sprintf("  %v %v (%v)", icon, mapping.TerraformName, mapping.Message))
 		}
 	}
 
@@ -290,49 +288,35 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusRunning)}
 		time.Sleep(time.Second)
 
-		diffMsg := mappedItemDiffsMsg{
-			numTotalChanges: 13,
-			numSupported:    4,
-			numUnsupported:  9,
-			supported: map[string][]*sdp.MappedItemDiff{
-				"kubernetes_deployment": {
-					{},
-					{},
-				},
-				"kubernetes_secret": {
-					{},
-					{},
-				},
-			},
-			unsupported: map[string][]*sdp.MappedItemDiff{
-				"helm_release": {
-					{},
-				},
-				"kubectl_manifest": {
-					{},
-				},
-				"aws_guardduty_detector_feature": {
-					{},
-				},
-				"github_actions_environment_secret": {
-					{},
-					{},
-					{},
-				},
-				"auth0_client": {
-					{},
-					{},
-					{},
-				},
-			},
-		}
+
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateTitleMsg(
-			fmt.Sprintf("Extracting %v changing resources: %v supported %v unsupported",
-				diffMsg.numTotalChanges,
-				diffMsg.numSupported,
-				diffMsg.numUnsupported,
-			))}
-		m.processing <- submitPlanUpdateMsg{diffMsg}
+			"Extracting 13 changing resources: 4 supported 9 unsupported",
+		)}
+		mappingResult := PlanMappingResult{
+			Results: []PlannedChangeMapResult{
+				{
+					TerraformName:  "kubernetes_deployment.nats_box",
+					Status:         MapStatusSuccess,
+					Message:        "mapped",
+					MappedItemDiff: &sdp.MappedItemDiff{},
+				},
+				{
+					TerraformName:  "kubernetes_deployment.api_server",
+					Status:         MapStatusNotEnoughInfo,
+					Message:        "missing arn",
+					MappedItemDiff: &sdp.MappedItemDiff{},
+				},
+				{
+					TerraformName:  "aws_fake_resource",
+					Status:         MapStatusUnsupported,
+					Message:        "unsupported",
+					MappedItemDiff: &sdp.MappedItemDiff{},
+				},
+			},
+			RemovedSecrets: 12,
+		}
+		m.processing <- submitPlanUpdateMsg{&mappingResult}
+
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusDone)}
 		time.Sleep(time.Second)
 
@@ -485,8 +469,6 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		return fatalError{err: fmt.Errorf("processPlanCmd: failed to convert terraform plan to JSON: %w", err)}
 	}
 
-	// TODO: count secrets in the plan to provide better feedback to user
-	// m.processing <- m.removingSecretsTask.UpdateTitleMsg("Removing secrets (14 secrets)")
 	m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusDone)}
 
 	///////////////////////////////////////////////////////////////////
@@ -494,23 +476,31 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	///////////////////////////////////////////////////////////////////
 	m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusRunning)}
 	time.Sleep(200 * time.Millisecond) // give the UI a little time to update
-	numSecrets, plannedChanges, diffMsg, err := mappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
+
+	// Map the terraform changes to Overmind queries
+	mappingResponse, err := mappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusError)}
 		close(m.processing)
 		return fatalError{err: fmt.Errorf("processPlanCmd: failed to parse terraform plan: %w", err)}
 	}
 	m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateTitleMsg(
-		fmt.Sprintf("Removed %v secrets", numSecrets),
+		fmt.Sprintf("Removed %v secrets", mappingResponse.RemovedSecrets),
 	)}
 
 	m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateTitleMsg(
-		fmt.Sprintf("Extracting %v changing resources: %v supported %v unsupported",
-			diffMsg.numTotalChanges,
-			diffMsg.numSupported,
-			diffMsg.numUnsupported,
+		fmt.Sprintf("Extracting %v changing resources: %v supported %v skipped %v unsupported",
+			mappingResponse.NumTotal(),
+			mappingResponse.NumUnsupported(),
+			mappingResponse.NumUnsupported(),
+			mappingResponse.NumUnsupported(),
 		))}
-	m.processing <- submitPlanUpdateMsg{diffMsg}
+
+	// Sort the supported and unsupported changes so that they display nicely
+	slices.SortFunc(mappingResponse.Results, func(a, b PlannedChangeMapResult) int {
+		return int(a.Status) - int(b.Status)
+	})
+	m.processing <- submitPlanUpdateMsg{mappingResponse}
 	time.Sleep(200 * time.Millisecond) // give the UI a little time to update
 	m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusDone)}
 
@@ -625,7 +615,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	resultStream, err := client.UpdatePlannedChanges(ctx, &connect.Request[sdp.UpdatePlannedChangesRequest]{
 		Msg: &sdp.UpdatePlannedChangesRequest{
 			ChangeUUID:    changeUuid[:],
-			ChangingItems: plannedChanges,
+			ChangingItems: mappingResponse.GetItemDiffs(),
 		},
 	})
 	if err != nil {
