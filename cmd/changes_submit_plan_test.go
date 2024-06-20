@@ -9,7 +9,7 @@ import (
 )
 
 func TestWithStateFile(t *testing.T) {
-	_, _, _, err := mappedItemDiffsFromPlanFile(context.Background(), "testdata/state.json", logrus.Fields{})
+	_, err := mappedItemDiffsFromPlanFile(context.Background(), "testdata/state.json", logrus.Fields{})
 
 	if err == nil {
 		t.Error("Expected error when running with state file, got none")

@@ -343,7 +343,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	lf := log.Fields{}
 	for _, f := range args {
 		lf["file"] = f
-		_, mappedItemDiffs, _, err := mappedItemDiffsFromPlanFile(ctx, f, lf)
+		result, err := mappedItemDiffsFromPlanFile(ctx, f, lf)
 		if err != nil {
 			return loggedError{
 				err:     err,
@@ -351,7 +351,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 				message: "Error parsing terraform plan",
 			}
 		}
-		plannedChanges = append(plannedChanges, mappedItemDiffs...)
+		plannedChanges = append(plannedChanges, result.GetItemDiffs()...)
 	}
 	delete(lf, "file")
 

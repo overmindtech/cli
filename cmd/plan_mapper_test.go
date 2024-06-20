@@ -9,18 +9,18 @@ import (
 )
 
 func TestMappedItemDiffsFromPlan(t *testing.T) {
-	numSecrets, mappedItemDiffs, _, err := mappedItemDiffsFromPlanFile(context.Background(), "testdata/plan.json", logrus.Fields{})
+	results, err := mappedItemDiffsFromPlanFile(context.Background(), "testdata/plan.json", logrus.Fields{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	if numSecrets != 16 {
-		t.Errorf("Expected 16 secrets, got %v", numSecrets)
+	if results.RemovedSecrets != 16 {
+		t.Errorf("Expected 16 secrets, got %v", results.RemovedSecrets)
 	}
 
-	if len(mappedItemDiffs) != 5 {
-		t.Errorf("Expected 5 changes, got %v:", len(mappedItemDiffs))
-		for _, diff := range mappedItemDiffs {
+	if len(results.Results) != 5 {
+		t.Errorf("Expected 5 changes, got %v:", len(results.Results))
+		for _, diff := range results.Results {
 			t.Errorf("  %v", diff)
 		}
 	}
@@ -30,37 +30,37 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	var aws_iam_policy *sdp.MappedItemDiff
 	var secret *sdp.MappedItemDiff
 
-	for _, diff := range mappedItemDiffs {
-		item := diff.GetItem().GetBefore()
-		if item == nil && diff.GetItem().GetAfter() != nil {
-			item = diff.GetItem().GetAfter()
+	for _, result := range results.Results {
+		item := result.GetItem().GetBefore()
+		if item == nil && result.GetItem().GetAfter() != nil {
+			item = result.GetItem().GetAfter()
 		}
 		if item == nil {
-			t.Errorf("Expected any of before/after items to be set, but there's nothing: %v", diff)
+			t.Errorf("Expected any of before/after items to be set, but there's nothing: %v", result)
 			continue
 		}
 
 		// t.Logf("item: %v", item.Attributes.AttrStruct.Fields["terraform_address"].GetStringValue())
 		if item.GetAttributes().GetAttrStruct().GetFields()["terraform_address"].GetStringValue() == "kubernetes_deployment.nats_box" {
 			if nats_box_deployment != nil {
-				t.Errorf("Found multiple nats_box_deployment: %v, %v", nats_box_deployment, diff)
+				t.Errorf("Found multiple nats_box_deployment: %v, %v", nats_box_deployment, result)
 			}
-			nats_box_deployment = diff
+			nats_box_deployment = result.MappedItemDiff
 		} else if item.GetAttributes().GetAttrStruct().GetFields()["terraform_address"].GetStringValue() == "kubernetes_deployment.api_server" {
 			if api_server_deployment != nil {
-				t.Errorf("Found multiple api_server_deployment: %v, %v", api_server_deployment, diff)
+				t.Errorf("Found multiple api_server_deployment: %v, %v", api_server_deployment, result)
 			}
-			api_server_deployment = diff
+			api_server_deployment = result.MappedItemDiff
 		} else if item.GetType() == "iam-policy" {
 			if aws_iam_policy != nil {
-				t.Errorf("Found multiple aws_iam_policy: %v, %v", aws_iam_policy, diff)
+				t.Errorf("Found multiple aws_iam_policy: %v, %v", aws_iam_policy, result)
 			}
-			aws_iam_policy = diff
+			aws_iam_policy = result.MappedItemDiff
 		} else if item.GetType() == "Secret" {
 			if secret != nil {
-				t.Errorf("Found multiple secrets: %v, %v", secret, diff)
+				t.Errorf("Found multiple secrets: %v, %v", secret, result)
 			}
-			secret = diff
+			secret = result.MappedItemDiff
 		}
 	}
 

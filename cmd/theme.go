@@ -384,6 +384,14 @@ func RenderOk() string {
 	return lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render(checkMark)
 }
 
+func RenderUnknown() string {
+	checkMark := "?"
+	if IsConhost() {
+		checkMark = "??"
+	}
+	return lipgloss.NewStyle().Foreground(ColorPalette.BgWarning).Render(checkMark)
+}
+
 func RenderErr() string {
 	checkMark := "✗"
 	if IsConhost() {
