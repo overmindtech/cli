@@ -288,49 +288,6 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusRunning)}
 		time.Sleep(time.Second)
 
-		// diffMsg := mappedItemDiffsMsg{
-		// 	numTotalChanges: 13,
-		// 	numSupported:    4,
-		// 	numUnsupported:  9,
-		// 	supported: map[string][]*sdp.MappedItemDiff{
-		// 		"kubernetes_deployment": {
-		// 			{},
-		// 			{},
-		// 		},
-		// 		"kubernetes_secret": {
-		// 			{},
-		// 			{},
-		// 		},
-		// 	},
-		// 	unsupported: map[string][]*sdp.MappedItemDiff{
-		// 		"helm_release": {
-		// 			{},
-		// 		},
-		// 		"kubectl_manifest": {
-		// 			{},
-		// 		},
-		// 		"aws_guardduty_detector_feature": {
-		// 			{},
-		// 		},
-		// 		"github_actions_environment_secret": {
-		// 			{},
-		// 			{},
-		// 			{},
-		// 		},
-		// 		"auth0_client": {
-		// 			{},
-		// 			{},
-		// 			{},
-		// 		},
-		// 	},
-		// }
-		// m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateTitleMsg(
-		// 	fmt.Sprintf("Extracting %v changing resources: %v supported %v unsupported",
-		// 		diffMsg.numTotalChanges,
-		// 		diffMsg.numSupported,
-		// 		diffMsg.numUnsupported,
-		// 	))}
-		// m.processing <- submitPlanUpdateMsg{diffMsg}
 
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateTitleMsg(
 			"Extracting 13 changing resources: 4 supported 9 unsupported",
