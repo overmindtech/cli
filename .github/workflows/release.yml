@@ -69,3 +69,6 @@ jobs:
           formula: overmind-cli
           # Need to set this input if want to use `brew livecheck`
           livecheck: true
+          user_name: CLI Release Bot
+          user_email: engineering@overmind.tech
+      
