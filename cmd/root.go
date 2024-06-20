@@ -32,8 +32,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var logLevel string
-
 //go:generate sh -c "echo -n $(git describe --tags --always) > commit.txt"
 //go:embed commit.txt
 var cliVersion string
@@ -134,29 +132,60 @@ environment variable.`,
 	PreRun:        PreRunSetup,
 }
 
+var cmdSpan trace.Span
+
 func PreRunSetup(cmd *cobra.Command, args []string) {
+	ctx := cmd.Context()
+
 	// Bind these to viper
 	err := viper.BindPFlags(cmd.Flags())
 	if err != nil {
 		log.WithError(err).Fatalf("could not bind `%v` flags", cmd.CommandPath())
 	}
 
-	span := trace.SpanFromContext(cmd.Context())
-	span.SetName(fmt.Sprintf("CLI %v", cmd.CommandPath()))
+	// set up logging
+	logLevel := viper.GetString("log")
+	var lvl log.Level
+	if logLevel != "" {
+		lvl, err = log.ParseLevel(logLevel)
+		if err != nil {
+			log.WithFields(log.Fields{"level": logLevel, "err": err}).Errorf("couldn't parse `log` config, defaulting to `info`")
+			lvl = log.InfoLevel
+		}
+	} else {
+		lvl = log.ErrorLevel
+	}
+	log.SetLevel(lvl)
+
+	// set up tracing
+	if honeycombApiKey := viper.GetString("honeycomb-api-key"); honeycombApiKey != "" {
+		if err := tracing.InitTracerWithHoneycomb(honeycombApiKey); err != nil {
+			log.Fatal(err)
+		}
+
+		log.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
+			log.AllLevels[:log.GetLevel()+1]...,
+		)))
+	}
+
+	// capture span in global variable to allow Execute() below to end it
+	ctx, cmdSpan = tracing.Tracer().Start(ctx, fmt.Sprintf("CLI %v", cmd.CommandPath()), trace.WithAttributes(
+		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
+	))
+	cmd.SetContext(ctx)
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	formatter := new(log.TextFormatter)
+	formatter.DisableTimestamp = true
+	log.SetFormatter(formatter)
+
 	// create a sub-scope to run deferred cleanups before shutting down the tracer
 	err := func() error {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-
-		ctx, span := tracing.Tracer().Start(ctx, "CLI unknown", trace.WithAttributes(
-			attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-		))
-		defer span.End()
 
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
@@ -182,8 +211,8 @@ func Execute() {
 			// if printing the error was not requested by the appropriate
 			// wrapper, only record the data to honeycomb and sentry, the
 			// command already has handled logging
-			span.SetAttributes(attribute.Bool("ovm.cli.fatalError", true))
-			span.RecordError(err)
+			cmdSpan.SetAttributes(attribute.Bool("ovm.cli.fatalError", true))
+			cmdSpan.RecordError(err)
 			sentry.CaptureException(err)
 		}
 
@@ -441,7 +470,7 @@ func init() {
 	})
 
 	// General Config
-	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
+	rootCmd.PersistentFlags().String("log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
 	cobra.CheckErr(viper.BindEnv("log", "OVERMIND_LOG", "LOG")) // fallback to global config
 
 	// Support API Keys in the environment
@@ -473,42 +502,6 @@ func init() {
 		ID:    "api",
 		Title: "Overmind API:",
 	})
-
-	// Run this before we do anything to set up the loglevel
-	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		formatter := new(log.TextFormatter)
-		formatter.DisableTimestamp = true
-		log.SetFormatter(formatter)
-
-		// Read env vars
-		var lvl log.Level
-
-		if logLevel != "" {
-			lvl, err = log.ParseLevel(logLevel)
-			if err != nil {
-				log.WithFields(log.Fields{"level": logLevel, "err": err}).Errorf("couldn't parse `log` config, defaulting to `info`")
-				lvl = log.InfoLevel
-			}
-		} else {
-			lvl = log.ErrorLevel
-		}
-		log.SetLevel(lvl)
-
-		if honeycombApiKey := viper.GetString("honeycomb-api-key"); honeycombApiKey != "" {
-			if err := tracing.InitTracerWithHoneycomb(honeycombApiKey); err != nil {
-				log.Fatal(err)
-			}
-
-			log.AddHook(otellogrus.NewHook(otellogrus.WithLevels(
-				log.AllLevels[:log.GetLevel()+1]...,
-			)))
-
-			// shut down tracing at the end of the process
-			rootCmd.PersistentPostRun = func(cmd *cobra.Command, args []string) {
-				tracing.ShutdownTracer()
-			}
-		}
-	}
 }
 
 // initConfig reads in config file and ENV variables if set.
