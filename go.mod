@@ -24,7 +24,7 @@ require (
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sourcegraph/conc v0.3.0
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
