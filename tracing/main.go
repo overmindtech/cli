@@ -101,7 +101,7 @@ func InitTracer(opts ...otlptracehttp.Option) error {
 		// setup recovery for an unexpected panic in this function
 		defer sentry.Flush(2 * time.Second)
 		defer sentry.Recover()
-		log.Info("sentry configured")
+		log.Debug("sentry configured")
 	}
 
 	client := otlptracehttp.NewClient(opts...)
