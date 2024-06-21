@@ -163,3 +163,35 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 		t.Errorf("Expected secret query scope to be 'dogfood.default', got '%v'", secret.GetMappingQuery().GetScope())
 	}
 }
+
+func TestPlanMappingResultNumFuncs(t *testing.T) {
+	result := PlanMappingResult{
+		Results: []PlannedChangeMapResult{
+			{
+				Status: MapStatusSuccess,
+			},
+			{
+				Status: MapStatusSuccess,
+			},
+			{
+				Status: MapStatusNotEnoughInfo,
+			},
+			{
+				Status: MapStatusUnsupported,
+			},
+		},
+	}
+
+	if result.NumSuccess() != 2 {
+		t.Errorf("Expected 2 success, got %v", result.NumSuccess())
+	}
+
+	if result.NumNotEnoughInfo() != 1 {
+		t.Errorf("Expected 1 not enough info, got %v", result.NumNotEnoughInfo())
+	}
+
+	if result.NumUnsupported() != 1 {
+		t.Errorf("Expected 1 unsupported, got %v", result.NumUnsupported())
+	}
+
+}
