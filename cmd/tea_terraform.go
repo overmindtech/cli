@@ -79,7 +79,6 @@ func (m *cmdModel) Init() tea.Cmd {
 		// don't init sources on test-fake runs
 		// m.tasks["02_config"] = NewInitialiseSourcesModel()
 		return tea.Batch(
-			waitForCancellation(m.ctx, m.cancel),
 			m.tasks["00_oi"].Init(),
 			m.tasks["01_token"].Init(),
 			// m.tasks["02_config"].Init(),
@@ -95,7 +94,6 @@ func (m *cmdModel) Init() tea.Cmd {
 	m.tasks["02_config"] = NewInitialiseSourcesModel(m.width)
 
 	return tea.Batch(
-		waitForCancellation(m.ctx, m.cancel),
 		m.tasks["00_oi"].Init(),
 		m.tasks["01_token"].Init(),
 		m.tasks["02_config"].Init(),

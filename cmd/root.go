@@ -190,10 +190,14 @@ func Execute() {
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-		// Create a goroutine to watch for cancellation signals
+		// Create a goroutine to watch for cancellation signals and aborting the
+		// running command. Note that bubbletea converts ^C to a Quit message,
+		// so we also need to handle that, but we still need to deal with the
+		// regular signals.
 		go func() {
 			select {
 			case <-sigs:
+				log.Info("Received signal, shutting down")
 				cancel()
 			case <-ctx.Done():
 			}
