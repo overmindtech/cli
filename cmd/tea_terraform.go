@@ -105,7 +105,12 @@ func (m *cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	lastMsgType := fmt.Sprintf("%T", msg)
 	if lastMsgType != "spinner.TickMsg" {
 		log.Debugf("cmdModel: Update %v received %#v", lastMsgType, msg)
-		if cmdSpan != nil && !slices.Contains([]string{"tea.KeyMsg", "tea.Quit"}, lastMsgType) {
+		if cmdSpan != nil &&
+			strings.HasPrefix(lastMsgType, "cmd.") &&
+			!slices.Contains(
+				[]string{"cmd.delayQuitMsg", "cmd.fatalError", "cmd.otherError"},
+				lastMsgType,
+			) {
 			cmdSpan.SetAttributes(attribute.String("ovm.cli.lastMsgType", lastMsgType))
 		}
 	}
