@@ -102,7 +102,13 @@ func (m *cmdModel) Init() tea.Cmd {
 }
 
 func (m *cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	log.Debugf("cmdModel: Update %T received %#v", msg, msg)
+	lastMsgType := fmt.Sprintf("%T", msg)
+	if lastMsgType != "spinner.TickMsg" {
+		log.Debugf("cmdModel: Update %v received %#v", lastMsgType, msg)
+		if cmdSpan != nil && !slices.Contains([]string{"tea.KeyMsg", "tea.Quit"}, lastMsgType) {
+			cmdSpan.SetAttributes(attribute.String("ovm.cli.lastMsgType", lastMsgType))
+		}
+	}
 
 	cmds := []tea.Cmd{}
 
@@ -113,6 +119,9 @@ func (m *cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
+			if cmdSpan != nil {
+				cmdSpan.SetAttributes(attribute.Bool("ovm.cli.aborted", true))
+			}
 			return m, tea.Quit
 		}
 	case freezeViewMsg:
