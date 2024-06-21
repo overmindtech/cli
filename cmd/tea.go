@@ -21,8 +21,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 )
 
@@ -61,10 +59,6 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func(args [
 		defer cancel()
 
 		cmdName := fmt.Sprintf("CLI %v", cmd.CommandPath())
-		ctx, span := tracing.Tracer().Start(ctx, cmdName, trace.WithAttributes(
-			attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
-		))
-		defer span.End()
 		defer tracing.LogRecoverToExit(ctx, cmdName)
 
 		// ensure that only error messages are printed to the console,
@@ -132,7 +126,9 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func(args [
 		if err != nil {
 			log.WithContext(ctx).WithError(err).Error("Error running command")
 			// don't forget that os.Exit() does not wait for telemetry to be flushed
-			span.End()
+			if cmdSpan != nil {
+				cmdSpan.End()
+			}
 			tracing.ShutdownTracer()
 			os.Exit(1)
 		}

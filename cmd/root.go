@@ -224,6 +224,9 @@ func Execute() {
 	}()
 
 	// shutdown and submit any remaining otel data before exiting
+	if cmdSpan != nil {
+		cmdSpan.End()
+	}
 	tracing.ShutdownTracer()
 
 	if err != nil {
