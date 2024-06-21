@@ -556,7 +556,7 @@ func login(ctx context.Context, cmd *cobra.Command, scopes []string) (context.Co
 		}
 	}
 
-	ctx, token, err := ensureToken(ctx, oi, []string{"changes:read"})
+	ctx, token, err := ensureToken(ctx, oi, scopes)
 	if err != nil {
 		return ctx, OvermindInstance{}, nil, loggedError{
 			err:     err,
