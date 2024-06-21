@@ -236,12 +236,13 @@ func (m *cmdModel) tokenChecks(token *oauth2.Token) tea.Cmd {
 			return fatalError{err: fmt.Errorf("received unparsable token: %w", err)}
 		}
 
-		span := trace.SpanFromContext(m.ctx)
-		span.SetAttributes(
-			attribute.Bool("ovm.cli.authenticated", true),
-			attribute.String("ovm.cli.accountName", customClaims.AccountName),
-			attribute.String("ovm.cli.userId", out.Subject),
-		)
+		if cmdSpan != nil {
+			cmdSpan.SetAttributes(
+				attribute.Bool("ovm.cli.authenticated", true),
+				attribute.String("ovm.cli.accountName", customClaims.AccountName),
+				attribute.String("ovm.cli.userId", out.Subject),
+			)
+		}
 
 		return loadSourcesConfigMsg{
 			ctx:    m.ctx,
