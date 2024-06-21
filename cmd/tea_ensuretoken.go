@@ -469,6 +469,10 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 		os.Exit(1)
 	}
 
+	if m.token == nil {
+		fmt.Println("Error running program: no token received")
+		os.Exit(1)
+	}
 	tok, err := josejwt.ParseSigned(m.token.AccessToken, []jose.SignatureAlgorithm{jose.RS256})
 	if err != nil {
 		fmt.Println("Error running program: received invalid token:", err)
