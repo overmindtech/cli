@@ -20,7 +20,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 )
 
@@ -486,12 +485,13 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 		os.Exit(1)
 	}
 
-	span := trace.SpanFromContext(ctx)
-	span.SetAttributes(
-		attribute.Bool("ovm.cli.authenticated", true),
-		attribute.String("ovm.cli.accountName", customClaims.AccountName),
-		attribute.String("ovm.cli.userId", out.Subject),
-	)
+	if cmdSpan != nil {
+		cmdSpan.SetAttributes(
+			attribute.Bool("ovm.cli.authenticated", true),
+			attribute.String("ovm.cli.accountName", customClaims.AccountName),
+			attribute.String("ovm.cli.userId", out.Subject),
+		)
+	}
 
 	// Save the token locally
 	if home, err := os.UserHomeDir(); err == nil {
