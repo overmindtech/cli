@@ -1,31 +1,12 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
-
-// waitForCancellation returns a tea.Cmd that will wait for SIGINT and SIGTERM and run the provided cancel on receipt.
-func waitForCancellation(ctx context.Context, cancel context.CancelFunc) tea.Cmd {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-	return func() tea.Msg {
-		select {
-		case <-sigs:
-			cancel()
-		case <-ctx.Done():
-		}
-		return tea.Quit
-	}
-}
 
 type taskStatus int
 
