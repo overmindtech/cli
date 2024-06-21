@@ -198,6 +198,9 @@ func Execute() {
 			select {
 			case <-sigs:
 				log.Info("Received signal, shutting down")
+				if cmdSpan != nil {
+					cmdSpan.SetAttributes(attribute.Bool("ovm.cli.aborted", true))
+				}
 				cancel()
 			case <-ctx.Done():
 			}
