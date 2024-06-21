@@ -288,7 +288,6 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusRunning)}
 		time.Sleep(time.Second)
 
-
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateTitleMsg(
 			"Extracting 13 changing resources: 4 supported 9 unsupported",
 		)}
@@ -491,8 +490,8 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateTitleMsg(
 		fmt.Sprintf("Extracting %v changing resources: %v supported %v skipped %v unsupported",
 			mappingResponse.NumTotal(),
-			mappingResponse.NumUnsupported(),
-			mappingResponse.NumUnsupported(),
+			mappingResponse.NumSuccess(),
+			mappingResponse.NumNotEnoughInfo(),
 			mappingResponse.NumUnsupported(),
 		))}
 
