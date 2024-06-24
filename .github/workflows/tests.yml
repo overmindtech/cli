@@ -3,7 +3,7 @@ on: push
 jobs:
   test:
     name: Run Tests
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     env:
       CGO_ENABLED: 0
 
@@ -27,7 +27,7 @@ jobs:
 
   golangci:
     name: lint
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
 
     steps:
       - name: Checkout
