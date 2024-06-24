@@ -488,7 +488,7 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 			return nil
 		}
 
-		m.endingChange <- m.startingChangeSnapshot.FinishMsg()
+		m.startingChange <- m.startingChangeSnapshot.FinishMsg()
 		return nil
 	}
 }
