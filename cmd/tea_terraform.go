@@ -145,6 +145,7 @@ func (m *cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		span.SetAttributes(
 			attribute.Bool("ovm.cli.fatalError", true),
 			attribute.Int("ovm.cli.fatalError.id", msg.id),
+			attribute.String("ovm.cli.fatalError.msg", msg.err.Error()),
 		)
 		sentry.CaptureException(msg.err)
 
