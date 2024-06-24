@@ -1,0 +1,170 @@
+name: E2E Tests
+on:
+  push:
+    branches:
+      - main
+      - e2e-tests
+
+jobs:
+  actions:
+    runs-on: depot-ubuntu-22.04-4
+    env:
+      CGO_ENABLED: 0
+    permissions:
+      contents: read # required for checkout
+      id-token: write # mint AWS credentials through OIDC
+
+    steps:
+      - name: Cache Terraform Providers
+        id: cache-terraform
+        uses: actions/cache@v3
+        with:
+          path: .terraform
+          key: ${{ runner.os }}-${{ inputs.environment }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+          terraform_wrapper: false
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          audience: sts.amazonaws.com # set default value to work around https://github.com/aws-actions/configure-aws-credentials/issues/271#issuecomment-1401481855
+          aws-region: eu-west-2
+          role-to-assume: arn:aws:iam::211125377101:role/terraform-ci-test
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Go Init
+        uses: ./.github/actions/go_init
+
+      - name: Build the binary
+        run: |
+          set -xe
+          go get -v -t -d ./...
+          go build -o overmind main.go
+
+      - name: Run E2E Tests
+        env:
+          OVM_API_KEY: ${{ secrets.OVM_API_KEY }}
+          HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY }}
+        run: |
+          set -xe
+
+          ./overmind -v
+
+          terraform init
+          terraform plan -out=tfplan
+          terraform show -json tfplan > tfplan.json
+
+          ticket_link='${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+
+          ./overmind changes submit-plan \
+            --title "Test Change for e2e tests" \
+            --description "some description" \
+            --ticket-link "$ticket_link" \
+            tfplan.json \
+            > ./overmindtech-change-url
+
+          ./overmind changes get-change \
+            --change "$(< ./overmindtech-change-url)" \
+            --format markdown \
+            > ./overmindtech-message
+
+          ./overmind changes start-change \
+            --ticket-link "$ticket_link"
+
+          ./overmind changes end-change \
+            --ticket-link "$ticket_link"
+
+          echo "E2E Tests Complete"
+
+  interactive:
+    runs-on: depot-ubuntu-22.04-4
+    env:
+      CGO_ENABLED: 0
+    permissions:
+      contents: read # required for checkout
+      id-token: write # mint AWS credentials through OIDC
+
+    steps:
+      - name: Cache Terraform Providers
+        id: cache-terraform
+        uses: actions/cache@v3
+        with:
+          path: .terraform
+          key: ${{ runner.os }}-${{ inputs.environment }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+          terraform_wrapper: false
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          audience: sts.amazonaws.com # set default value to work around https://github.com/aws-actions/configure-aws-credentials/issues/271#issuecomment-1401481855
+          aws-region: eu-west-2
+          role-to-assume: arn:aws:iam::211125377101:role/terraform-ci-test
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Go Init
+        uses: ./.github/actions/go_init
+
+      - name: Build the binary
+        run: |
+          set -xe
+          go get -v -t -d ./...
+          go build -o overmind main.go
+
+      - name: Run E2E Tests
+        env:
+          OVM_API_KEY: ${{ secrets.OVM_API_KEY }}
+          HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY }}
+          TEABUG: pls
+        run: |
+          set -xe
+
+          go build -o overmind main.go
+
+          ./overmind -v
+
+          terraform init
+
+          cp -a $(which terraform) . # provide a terraform binary to the containers below
+
+          docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -e AWS_REGION -e AWS_SESSION_TOKEN -e HONEYCOMB_API_KEY -e OVM_API_KEY -e TEABUG -v $PWD:/vhs -v ~/.aws:/root/.aws ghcr.io/charmbracelet/vhs /vhs/.github/e2eplan.tape
+          docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -e AWS_REGION -e AWS_SESSION_TOKEN -e HONEYCOMB_API_KEY -e OVM_API_KEY -e TEABUG -v $PWD:/vhs -v ~/.aws:/root/.aws ghcr.io/charmbracelet/vhs /vhs/.github/e2eapply.tape
+
+          sudo chown --recursive $(whoami) .
+
+          terraform apply -destroy -auto-approve
+
+          echo "E2E Tests Complete"
+
+      - name: debug output
+        if: always()
+        run: |
+          cat teabug.log
+
+      - name: Upload plan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan.mp4
+          path: plan.*
+
+      - name: Upload plan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apply.mp4
+          path: apply.*

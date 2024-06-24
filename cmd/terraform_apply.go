@@ -69,7 +69,9 @@ type changeIdentifiedMsg struct {
 }
 
 type runTfApplyMsg struct{}
-type tfApplyFinishedMsg struct{}
+type tfApplyFinishedMsg struct {
+	err error
+}
 
 func NewTfApplyModel(args []string, parent *cmdModel, width int) tea.Model {
 	hasPlanSet := false
@@ -305,20 +307,24 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				defer span.End()
 
 				if err != nil {
-					return fatalError{err: fmt.Errorf("failed to run terraform apply: %w", err)}
+					return tfApplyFinishedMsg{err: fmt.Errorf("failed to run terraform apply: %w", err)}
 				}
 
-				return tfApplyFinishedMsg{}
+				return tfApplyFinishedMsg{err: nil}
 			})
 	case tfApplyFinishedMsg:
 		m.runTfApply = false
-		m.isEnding = true
-		cmds = append(cmds,
-			func() tea.Msg { return hideStartupStatusMsg{} },
-			m.endingChangeSnapshot.Init(),
-			m.startEndChangeCmd(),
-			m.waitForEndingActivity,
-		)
+		cmds = append(cmds, func() tea.Msg { return hideStartupStatusMsg{} })
+		if msg.err != nil {
+			cmds = append(cmds, func() tea.Msg { return fatalError{err: msg.err} })
+		} else {
+			m.isEnding = true
+			cmds = append(cmds,
+				m.endingChangeSnapshot.Init(),
+				m.startEndChangeCmd(),
+				m.waitForEndingActivity,
+			)
+		}
 	}
 
 	mdl, cmd := m.startingChangeSnapshot.Update(msg)
