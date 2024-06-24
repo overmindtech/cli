@@ -239,7 +239,7 @@ func (m submitPlanModel) View() string {
 	}
 
 	if m.changeUrl != "" && m.riskTask.status != taskStatusDone && time.Since(m.risksStarted) > 1500*time.Millisecond {
-		bits = append(bits, fmt.Sprintf("   │ Check the blast radius graph while you wait:\n   │ %v\n", m.changeUrl))
+		bits = append(bits, fmt.Sprintf("  │ Check the blast radius graph while you wait:\n  │ %v\n", m.changeUrl))
 	}
 
 	return strings.Join(bits, "\n") + "\n"
