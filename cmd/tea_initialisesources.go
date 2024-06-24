@@ -92,7 +92,9 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		m.status = taskStatusRunning
 		cmds = append(cmds, m.loadSourcesConfigCmd)
-		cmds = append(cmds, m.spinner.Tick)
+		if os.Getenv("CI") == "" {
+			cmds = append(cmds, m.spinner.Tick)
+		}
 	case askForAwsConfigMsg:
 		// load the config that was injected above. If it's not there, prompt the user.
 		aws_config := viper.GetString("aws-config")

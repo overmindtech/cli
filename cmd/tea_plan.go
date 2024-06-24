@@ -60,7 +60,9 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.taskModel.status = taskStatusRunning
 		// since the taskModel will not be shown while `terraform plan` is running,
 		// there's no need to actually kick off the spinner
-		// cmds = append(cmds, m.taskModel.spinner.Tick)
+		// if os.Getenv("CI") == "" {
+		// 	cmds = append(cmds, m.taskModel.spinner.Tick)
+		// }
 
 		// defer the actual command to give the view a chance to show the header
 		cmds = append(cmds, func() tea.Msg { return runPlanNowMsg{} })

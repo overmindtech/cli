@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
@@ -58,7 +59,7 @@ func NewTaskModel(title string, width int) taskModel {
 }
 
 func (m taskModel) Init() tea.Cmd {
-	if m.status == taskStatusRunning {
+	if m.status == taskStatusRunning && os.Getenv("CI") == "" {
 		return m.spinner.Tick
 	}
 	return nil

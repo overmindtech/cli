@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -58,7 +59,9 @@ func (m snapshotModel) Update(msg tea.Msg) (snapshotModel, tea.Cmd) {
 			return m, nil
 		}
 		m.overall.status = taskStatusRunning
-		cmds = append(cmds, m.overall.spinner.Tick)
+		if os.Getenv("CI") == "" {
+			cmds = append(cmds, m.overall.spinner.Tick)
+		}
 	case progressSnapshotMsg:
 		if m.overall.spinner.ID() != msg.id {
 			return m, nil
@@ -68,7 +71,9 @@ func (m snapshotModel) Update(msg tea.Msg) (snapshotModel, tea.Cmd) {
 		m.edges = msg.edges
 
 		m.discovering.status = taskStatusRunning
-		cmds = append(cmds, m.discovering.spinner.Tick)
+		if os.Getenv("CI") == "" {
+			cmds = append(cmds, m.discovering.spinner.Tick)
+		}
 	case savingSnapshotMsg:
 		if m.overall.spinner.ID() != msg.id {
 			return m, nil
@@ -77,7 +82,9 @@ func (m snapshotModel) Update(msg tea.Msg) (snapshotModel, tea.Cmd) {
 		m.discovering.status = taskStatusDone
 
 		m.saving.status = taskStatusRunning
-		cmds = append(cmds, m.saving.spinner.Tick)
+		if os.Getenv("CI") == "" {
+			cmds = append(cmds, m.saving.spinner.Tick)
+		}
 
 	case finishSnapshotMsg:
 		if m.overall.spinner.ID() != msg.id {
