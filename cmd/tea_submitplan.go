@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -238,7 +239,7 @@ func (m submitPlanModel) View() string {
 		}
 	}
 
-	if m.changeUrl != "" && m.riskTask.status != taskStatusDone && time.Since(m.risksStarted) > 1500*time.Millisecond {
+	if m.changeUrl != "" && m.riskTask.status != taskStatusDone && m.riskTask.status != taskStatusError && time.Since(m.risksStarted) > 1500*time.Millisecond {
 		bits = append(bits, fmt.Sprintf("  │ Check the blast radius graph while you wait:\n  │ %v\n", m.changeUrl))
 	}
 
@@ -275,6 +276,20 @@ func (m submitPlanModel) Status() taskStatus {
 // A command that waits for the activity on the processing channel.
 func (m submitPlanModel) waitForSubmitPlanActivity() tea.Msg {
 	return <-m.processing
+}
+
+func (m submitPlanModel) risksError(msg string, err error) tea.Msg {
+	if m.changeUrl == "" {
+		if err == nil {
+			return fatalError{err: errors.New(msg)}
+		}
+		return fatalError{err: fmt.Errorf("%v: %w", msg, err)}
+	} else {
+		if err == nil {
+			return fatalError{err: fmt.Errorf("%v\nWe'll retry in the background. Find the results online when they're done: %v", msg, m.changeUrl)}
+		}
+		return fatalError{err: fmt.Errorf("%v: %w\nWe'll retry in the background. Find the results online when they're done: %v", msg, err, m.changeUrl)}
+	}
 }
 
 func (m submitPlanModel) submitPlanCmd() tea.Msg {
@@ -336,6 +351,8 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		time.Sleep(time.Second)
 		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.FinishMsg()}
 
+		// update local copy
+		m.changeUrl = "https://example.com/changes/abc"
 		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{url: "https://example.com/changes/abc"}}
 		time.Sleep(time.Second)
 
@@ -401,6 +418,31 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		}}
 		time.Sleep(1500 * time.Millisecond)
 
+		if viper.GetString("ovm-test-fake") == "risks-error" {
+			m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{
+				url: "https://example.com/changes/abc",
+				riskMilestones: []*sdp.RiskCalculationStatus_ProgressMilestone{
+					{
+						Description: "fake done milestone",
+						Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_DONE,
+					},
+					{
+						Description: "fake inprogress milestone",
+						Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_DONE,
+					},
+					{
+						Description: "fake errored milestone",
+						Status:      sdp.RiskCalculationStatus_ProgressMilestone_STATUS_ERROR,
+					},
+				},
+				risks: []*sdp.Risk{},
+			}}
+
+			m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusError)}
+			m.processing <- submitPlanUpdateMsg{m.risksError("initial risk calculation errored", nil)}
+			close(m.processing)
+			return nil
+		}
 		high := uuid.New()
 		medium := uuid.New()
 		low := uuid.New()
@@ -464,7 +506,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	planJson, err := tfPlanJsonCmd.Output()
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusError)}
-		m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to convert terraform plan to JSON: %w", err)}}
+		m.processing <- submitPlanUpdateMsg{m.risksError("failed to convert terraform plan to JSON", err)}
 		close(m.processing)
 		return nil
 	}
@@ -481,7 +523,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	mappingResponse, err := mappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusError)}
-		m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to parse terraform plan: %w", err)}}
+		m.processing <- submitPlanUpdateMsg{m.risksError("failed to parse terraform plan", err)}
 		close(m.processing)
 		return nil
 	}
@@ -514,7 +556,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		ticketLink, err = getTicketLinkFromPlan(m.planFile)
 		if err != nil {
 			m.processing <- submitPlanUpdateMsg{m.uploadChangesTask.UpdateStatusMsg(taskStatusError)}
-			m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to get ticket link from plan: %w", err)}}
+			m.processing <- submitPlanUpdateMsg{m.risksError("failed to get ticket link from plan", err)}
 			close(m.processing)
 			return nil
 		}
@@ -524,7 +566,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	changeUuid, err := getChangeUuid(ctx, m.oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, false)
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.uploadChangesTask.UpdateStatusMsg(taskStatusError)}
-		m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed searching for existing changes: %w", err)}}
+		m.processing <- submitPlanUpdateMsg{m.risksError("failed searching for existing changes", err)}
 		close(m.processing)
 		return nil
 	}
@@ -538,7 +580,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	tfPlanOutput, err := tfPlanTextCmd.Output()
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusError)}
-		m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to convert terraform plan to JSON: %w", err)}}
+		m.processing <- submitPlanUpdateMsg{m.risksError("failed to convert terraform plan to JSON", err)}
 		close(m.processing)
 		return nil
 	}
@@ -562,7 +604,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		})
 		if err != nil {
 			m.processing <- submitPlanUpdateMsg{m.uploadChangesTask.UpdateStatusMsg(taskStatusError)}
-			m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to create a new change: %w", err)}}
+			m.processing <- submitPlanUpdateMsg{m.risksError("failed to create a new change", err)}
 			close(m.processing)
 			return nil
 		}
@@ -570,7 +612,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		maybeChangeUuid := createResponse.Msg.GetChange().GetMetadata().GetUUIDParsed()
 		if maybeChangeUuid == nil {
 			m.processing <- submitPlanUpdateMsg{m.uploadChangesTask.UpdateStatusMsg(taskStatusError)}
-			m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to read change id: %w", err)}}
+			m.processing <- submitPlanUpdateMsg{m.risksError("failed to read change id", err)}
 			close(m.processing)
 			return nil
 		}
@@ -604,7 +646,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		})
 		if err != nil {
 			m.processing <- submitPlanUpdateMsg{m.uploadChangesTask.UpdateStatusMsg(taskStatusError)}
-			m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to update change: %w", err)}}
+			m.processing <- submitPlanUpdateMsg{m.risksError("failed to update change", err)}
 			close(m.processing)
 			return nil
 		}
@@ -627,7 +669,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	})
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.UpdateStatusMsg(taskStatusError)}
-		m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to update planned changes: %w", err)}}
+		m.processing <- submitPlanUpdateMsg{m.risksError("failed to update planned changes", err)}
 		close(m.processing)
 		return nil
 	}
@@ -666,7 +708,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	}
 	if resultStream.Err() != nil {
 		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.UpdateStatusMsg(taskStatusError)}
-		m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: error streaming results: %w", err)}}
+		m.processing <- submitPlanUpdateMsg{m.risksError("error streaming results", err)}
 		close(m.processing)
 		return nil
 	}
@@ -676,12 +718,15 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	changeUrl.Path = fmt.Sprintf("%v/changes/%v/blast-radius", changeUrl.Path, changeUuid)
 	log.WithField("change-url", changeUrl.String()).Info("Change ready")
 
-	m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{url: changeUrl.String()}}
+	// update local copy
+	m.changeUrl = changeUrl.String()
+	m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{url: m.changeUrl}}
 
 	///////////////////////////////////////////////////////////////////
 	// wait for risk calculation to happen
 	///////////////////////////////////////////////////////////////////
 	m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusRunning)}
+	risksErrored := false
 	for {
 		riskRes, err := client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
 			Msg: &sdp.GetChangeRisksRequest{
@@ -690,13 +735,13 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		})
 		if err != nil {
 			m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusError)}
-			m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to get change risks: %w", err)}}
+			m.processing <- submitPlanUpdateMsg{m.risksError("failed to get change risks", err)}
 			close(m.processing)
 			return nil
 		}
 
 		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{
-			url:            changeUrl.String(),
+			url:            m.changeUrl,
 			riskMilestones: riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetProgressMilestones(),
 			risks:          riskRes.Msg.GetChangeRiskMetadata().GetRisks(),
 		}}
@@ -705,19 +750,28 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		if status == sdp.RiskCalculationStatus_STATUS_UNSPECIFIED || status == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
 			time.Sleep(time.Second)
 			// retry
+		} else if status == sdp.RiskCalculationStatus_STATUS_ERROR {
+			risksErrored = true
+			break
 		} else {
-			// it's done (or errored)
+			// it's done
 			break
 		}
 
 		if ctx.Err() != nil {
 			err := ctx.Err()
 			m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusError)}
-			m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: context cancelled: %w", err)}}
+			m.processing <- submitPlanUpdateMsg{m.risksError("context cancelled", err)}
 			close(m.processing)
 			return nil
 		}
+	}
 
+	if risksErrored {
+		m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusError)}
+		m.processing <- submitPlanUpdateMsg{m.risksError("initial risk calculation errored", nil)}
+		close(m.processing)
+		return nil
 	}
 
 	m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusDone)}
