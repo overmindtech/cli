@@ -464,8 +464,9 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	planJson, err := tfPlanJsonCmd.Output()
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusError)}
+		m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to convert terraform plan to JSON: %w", err)}}
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("processPlanCmd: failed to convert terraform plan to JSON: %w", err)}
+		return nil
 	}
 
 	m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusDone)}
@@ -480,8 +481,9 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	mappingResponse, err := mappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusError)}
+		m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to parse terraform plan: %w", err)}}
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("processPlanCmd: failed to parse terraform plan: %w", err)}
+		return nil
 	}
 	m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateTitleMsg(
 		fmt.Sprintf("Removed %v secrets", mappingResponse.RemovedSecrets),
@@ -512,8 +514,9 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		ticketLink, err = getTicketLinkFromPlan(m.planFile)
 		if err != nil {
 			m.processing <- submitPlanUpdateMsg{m.uploadChangesTask.UpdateStatusMsg(taskStatusError)}
+			m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to get ticket link from plan: %w", err)}}
 			close(m.processing)
-			return err
+			return nil
 		}
 	}
 
@@ -521,8 +524,9 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	changeUuid, err := getChangeUuid(ctx, m.oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, false)
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.uploadChangesTask.UpdateStatusMsg(taskStatusError)}
+		m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed searching for existing changes: %w", err)}}
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("processPlanCmd: failed searching for existing changes: %w", err)}
+		return nil
 	}
 
 	title := changeTitle(viper.GetString("title"))
@@ -534,8 +538,9 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	tfPlanOutput, err := tfPlanTextCmd.Output()
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.removingSecretsTask.UpdateStatusMsg(taskStatusError)}
+		m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to convert terraform plan to JSON: %w", err)}}
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("processPlanCmd: failed to convert terraform plan to JSON: %w", err)}
+		return nil
 	}
 	codeChangesOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
 
@@ -557,15 +562,17 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		})
 		if err != nil {
 			m.processing <- submitPlanUpdateMsg{m.uploadChangesTask.UpdateStatusMsg(taskStatusError)}
+			m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to create a new change: %w", err)}}
 			close(m.processing)
-			return fatalError{err: fmt.Errorf("processPlanCmd: failed to create a new change: %w", err)}
+			return nil
 		}
 
 		maybeChangeUuid := createResponse.Msg.GetChange().GetMetadata().GetUUIDParsed()
 		if maybeChangeUuid == nil {
 			m.processing <- submitPlanUpdateMsg{m.uploadChangesTask.UpdateStatusMsg(taskStatusError)}
+			m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to read change id: %w", err)}}
 			close(m.processing)
-			return fatalError{err: fmt.Errorf("processPlanCmd: failed to read change id: %w", err)}
+			return nil
 		}
 
 		changeUuid = *maybeChangeUuid
@@ -597,8 +604,9 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		})
 		if err != nil {
 			m.processing <- submitPlanUpdateMsg{m.uploadChangesTask.UpdateStatusMsg(taskStatusError)}
+			m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to update change: %w", err)}}
 			close(m.processing)
-			return fatalError{err: fmt.Errorf("processPlanCmd: failed to update change: %w", err)}
+			return nil
 		}
 	}
 
@@ -619,8 +627,9 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	})
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.UpdateStatusMsg(taskStatusError)}
+		m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to update planned changes: %w", err)}}
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("processPlanCmd: failed to update planned changes: %w", err)}
+		return nil
 	}
 
 	last_log := time.Now()
@@ -657,8 +666,9 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	}
 	if resultStream.Err() != nil {
 		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.UpdateStatusMsg(taskStatusError)}
+		m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: error streaming results: %w", err)}}
 		close(m.processing)
-		return fatalError{err: fmt.Errorf("processPlanCmd: error streaming results: %w", err)}
+		return nil
 	}
 	m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.FinishMsg()}
 
@@ -680,8 +690,9 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		})
 		if err != nil {
 			m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusError)}
+			m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: failed to get change risks: %w", err)}}
 			close(m.processing)
-			return fatalError{err: fmt.Errorf("processPlanCmd: failed to get change risks: %w", err)}
+			return nil
 		}
 
 		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{
@@ -700,9 +711,11 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		}
 
 		if ctx.Err() != nil {
+			err := ctx.Err()
 			m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusError)}
+			m.processing <- submitPlanUpdateMsg{fatalError{err: fmt.Errorf("processPlanCmd: context cancelled: %w", err)}}
 			close(m.processing)
-			return fatalError{err: fmt.Errorf("processPlanCmd: context cancelled: %w", ctx.Err())}
+			return nil
 		}
 
 	}
