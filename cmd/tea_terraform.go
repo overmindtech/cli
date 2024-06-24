@@ -52,6 +52,10 @@ type cmdModel struct {
 }
 
 type freezeViewMsg struct{}
+type execResultMsg struct {
+	fn  tea.ExecCallback
+	err error
+}
 type unfreezeViewMsg struct{}
 
 type hideStartupStatusMsg struct{}
@@ -132,6 +136,13 @@ func (m *cmdModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case freezeViewMsg:
 		m.frozenView = m.View()
 		m.frozen = true
+	case execResultMsg:
+		// first update the state with the result of the command, only then
+		// unfreeze the view avoid showing the pre-command state
+		cmds = append(cmds, tea.Sequence(
+			func() tea.Msg { return msg.fn(msg.err) },
+			func() tea.Msg { return unfreezeViewMsg{} },
+		))
 	case unfreezeViewMsg:
 		m.frozen = false
 		m.frozenView = ""
@@ -313,4 +324,11 @@ append:
 		planArgs = append(planArgs, arg)
 	}
 	return planArgs
+}
+
+func Exec(c tea.ExecCommand, fn tea.ExecCallback) tea.Cmd {
+	return tea.Sequence(
+		func() tea.Msg { return freezeViewMsg{} },
+		tea.Exec(c, func(err error) tea.Msg { return execResultMsg{fn, err} }),
+	)
 }

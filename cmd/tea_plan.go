@@ -25,7 +25,9 @@ type runPlanModel struct {
 	taskModel
 }
 type runPlanNowMsg struct{}
-type runPlanFinishedMsg struct{}
+type runPlanFinishedMsg struct {
+	err error
+}
 
 func NewRunPlanModel(args []string, planFile string, parent *cmdModel, width int) runPlanModel {
 	return runPlanModel{
@@ -96,23 +98,23 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		_, span := tracing.Tracer().Start(m.ctx, "terraform plan") // nolint:spancheck // will be ended in the tea.Exec cleanup func
 
-		cmds = append(cmds,
-			tea.Sequence(
-				func() tea.Msg { return freezeViewMsg{} },
-				tea.Exec( // nolint:spancheck // will be ended in the tea.Exec cleanup func
-					m.parent.NewExecCommand(c),
-					func(err error) tea.Msg {
-						defer span.End()
+		cmds = append(cmds, Exec(
+			m.parent.NewExecCommand(c),
+			func(err error) tea.Msg {
+				defer span.End()
 
-						if err != nil {
-							return fatalError{err: fmt.Errorf("failed to run terraform plan: %w", err)}
-						}
-						return runPlanFinishedMsg{}
-					})))
+				if err != nil {
+					return runPlanFinishedMsg{err: fmt.Errorf("failed to run terraform plan: %w", err)}
+				}
+				return runPlanFinishedMsg{err: nil}
+			}))
 
 	case runPlanFinishedMsg:
-		m.taskModel.status = taskStatusDone
-		cmds = append(cmds, func() tea.Msg { return unfreezeViewMsg{} })
+		if msg.err != nil {
+			m.taskModel.status = taskStatusError
+		} else {
+			m.taskModel.status = taskStatusDone
+		}
 	}
 
 	var cmd tea.Cmd
@@ -138,7 +140,13 @@ func (m runPlanModel) View() string {
 	case taskStatusDone:
 		bits = append(bits, m.taskModel.View())
 		bits = append(bits, m.revlinkTask.View())
-	case taskStatusError, taskStatusSkipped:
+	case taskStatusError:
+		bits = append(bits,
+			wrap(fmt.Sprintf("%v Running 'terraform %v'",
+				RenderErr(),
+				strings.Join(m.args, " "),
+			), m.width, 2))
+	case taskStatusSkipped:
 		// handled by caller
 	}
 	return strings.Join(bits, "\n")

@@ -205,21 +205,17 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, func() tea.Msg { return showRisksMsg{} })
 
 	case showRisksMsg:
-		cmds = append(cmds,
-			tea.Sequence(
-				func() tea.Msg { return freezeViewMsg{} },
-				tea.Exec(
-					m.parent.NewInterstitialCommand(fmt.Sprintf("%v\n%v", m.View(), m.submitPlanTask.FinalReport())),
-					func(err error) tea.Msg {
-						if err != nil {
-							return fatalError{err: fmt.Errorf("failed to show risks: %w", err)}
-						}
-						return risksShownMsg{}
-					})))
+		cmds = append(cmds, Exec(
+			m.parent.NewInterstitialCommand(fmt.Sprintf("%v\n%v", m.View(), m.submitPlanTask.FinalReport())),
+			func(err error) tea.Msg {
+				if err != nil {
+					return fatalError{err: fmt.Errorf("failed to show risks: %w", err)}
+				}
+				return risksShownMsg{}
+			}))
 
 	case risksShownMsg:
 		m.afterRisks = true
-		cmds = append(cmds, func() tea.Msg { return unfreezeViewMsg{} })
 		if m.needApproval {
 			cmds = append(cmds, func() tea.Msg { return askForApprovalMsg{} })
 		} else {
@@ -303,24 +299,21 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if viper.GetString("ovm-test-fake") != "" {
 			c = exec.CommandContext(m.ctx, "bash", "-c", "for i in $(seq 25); do echo fake terraform apply progress line $i of 25; sleep .1; done")
 		}
-		return m, tea.Sequence( // nolint:spancheck // will be ended in the tea.Exec cleanup func
-			func() tea.Msg { return freezeViewMsg{} },
-			tea.Exec(
-				m.parent.NewExecCommand(c),
-				func(err error) tea.Msg {
-					defer span.End()
+		return m, Exec(
+			m.parent.NewExecCommand(c),
+			func(err error) tea.Msg {
+				defer span.End()
 
-					if err != nil {
-						return fatalError{err: fmt.Errorf("failed to run terraform apply: %w", err)}
-					}
+				if err != nil {
+					return fatalError{err: fmt.Errorf("failed to run terraform apply: %w", err)}
+				}
 
-					return tfApplyFinishedMsg{}
-				}))
+				return tfApplyFinishedMsg{}
+			})
 	case tfApplyFinishedMsg:
 		m.runTfApply = false
 		m.isEnding = true
 		cmds = append(cmds,
-			func() tea.Msg { return unfreezeViewMsg{} },
 			func() tea.Msg { return hideStartupStatusMsg{} },
 			m.endingChangeSnapshot.Init(),
 			m.startEndChangeCmd(),
