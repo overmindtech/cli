@@ -21,10 +21,10 @@ import (
 
 // terraformApplyCmd represents the `terraform apply` command
 var terraformApplyCmd = &cobra.Command{
-	Use:   "apply [overmind options...] -- [terraform options...]",
-	Short: "Runs `terraform apply` between two full system configuration snapshots for tracking. This will be automatically connected with the Change created by the `plan` command.",
+	Use:    "apply [overmind options...] -- [terraform options...]",
+	Short:  "Runs `terraform apply` between two full system configuration snapshots for tracking. This will be automatically connected with the Change created by the `plan` command.",
 	PreRun: PreRunSetup,
-	Run: CmdWrapper("apply", []string{"explore:read", "changes:write", "config:write", "request:receive"}, NewTfApplyModel),
+	Run:    CmdWrapper("apply", []string{"explore:read", "changes:write", "config:write", "request:receive"}, NewTfApplyModel),
 }
 
 type tfApplyModel struct {
@@ -428,7 +428,8 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 				m.startingChange <- m.startingChangeSnapshot.ProgressMsg(fmt.Sprintf("progress %v", i), uint32(i), uint32(i))
 				time.Sleep(time.Second)
 			}
-			return m.startingChangeSnapshot.FinishMsg()
+			m.startingChange <- m.startingChangeSnapshot.FinishMsg()
+			return nil
 		}
 
 		var err error
@@ -436,13 +437,15 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 		if ticketLink == "" {
 			ticketLink, err = getTicketLinkFromPlan(m.planFile)
 			if err != nil {
-				return fatalError{err: err}
+				m.startingChange <- fatalError{err: err}
+				return nil
 			}
 		}
 
 		changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, true)
 		if err != nil {
-			return fatalError{err: fmt.Errorf("failed to identify change: %w", err)}
+			m.startingChange <- fatalError{err: fmt.Errorf("failed to identify change: %w", err)}
+			return nil
 		}
 
 		m.startingChange <- changeIdentifiedMsg{uuid: changeUuid}
@@ -455,7 +458,8 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 			},
 		})
 		if err != nil {
-			return fatalError{err: fmt.Errorf("failed to start change: %w", err)}
+			m.startingChange <- fatalError{err: fmt.Errorf("failed to start change: %w", err)}
+			return nil
 		}
 
 		var msg *sdp.StartChangeResponse
@@ -480,10 +484,12 @@ func (m tfApplyModel) startStartChangeCmd() tea.Cmd {
 			m.startingChange <- m.startingChangeSnapshot.ProgressMsg(stateLabel, msg.GetNumItems(), msg.GetNumEdges())
 		}
 		if startStream.Err() != nil {
-			return fatalError{err: fmt.Errorf("failed to process start change: %w", startStream.Err())}
+			m.startingChange <- fatalError{err: fmt.Errorf("failed to process start change: %w", startStream.Err())}
+			return nil
 		}
 
-		return m.startingChangeSnapshot.FinishMsg()
+		m.endingChange <- m.startingChangeSnapshot.FinishMsg()
+		return nil
 	}
 }
 
@@ -506,7 +512,8 @@ func (m tfApplyModel) startEndChangeCmd() tea.Cmd {
 				m.endingChange <- m.endingChangeSnapshot.ProgressMsg(fmt.Sprintf("progress %v", i), uint32(i), uint32(i))
 				time.Sleep(time.Second)
 			}
-			return m.endingChangeSnapshot.FinishMsg()
+			m.endingChange <- m.endingChangeSnapshot.FinishMsg()
+			return nil
 		}
 
 		m.endingChange <- m.endingChangeSnapshot.StartMsg()
@@ -518,7 +525,8 @@ func (m tfApplyModel) startEndChangeCmd() tea.Cmd {
 			},
 		})
 		if err != nil {
-			return fatalError{err: fmt.Errorf("failed to end change: %w", err)}
+			m.endingChange <- fatalError{err: fmt.Errorf("failed to end change: %w", err)}
+			return nil
 		}
 
 		var msg *sdp.EndChangeResponse
@@ -543,10 +551,12 @@ func (m tfApplyModel) startEndChangeCmd() tea.Cmd {
 			m.endingChange <- m.endingChangeSnapshot.ProgressMsg(stateLabel, msg.GetNumItems(), msg.GetNumEdges())
 		}
 		if endStream.Err() != nil {
-			return fatalError{err: fmt.Errorf("failed to process end change: %w", endStream.Err())}
+			m.endingChange <- fatalError{err: fmt.Errorf("failed to process end change: %w", endStream.Err())}
+			return nil
 		}
 
-		return m.endingChangeSnapshot.FinishMsg()
+		m.endingChange <- m.endingChangeSnapshot.FinishMsg()
+		return nil
 	}
 }
 
