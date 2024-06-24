@@ -218,7 +218,10 @@ func Execute() {
 			// if printing the error was not requested by the appropriate
 			// wrapper, only record the data to honeycomb and sentry, the
 			// command already has handled logging
-			cmdSpan.SetAttributes(attribute.Bool("ovm.cli.fatalError", true))
+			cmdSpan.SetAttributes(
+				attribute.Bool("ovm.cli.fatalError", true),
+				attribute.String("ovm.cli.fatalError.msg", err.Error()),
+			)
 			cmdSpan.RecordError(err)
 			sentry.CaptureException(err)
 		}
