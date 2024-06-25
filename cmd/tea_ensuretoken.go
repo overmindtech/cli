@@ -100,10 +100,10 @@ func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case instanceLoadedMsg:
 		m.oi = msg.instance
 		m.status = taskStatusRunning
-		cmds = append(cmds,
-			m.ensureTokenCmd(m.ctx),
-			m.spinner.Tick,
-		)
+		cmds = append(cmds, m.ensureTokenCmd(m.ctx))
+		if os.Getenv("CI") == "" {
+			cmds = append(cmds, m.spinner.Tick)
+		}
 	case displayAuthorizationInstructionsMsg:
 		m.deviceMessage = "manual"
 		m.deviceConfig = msg.config

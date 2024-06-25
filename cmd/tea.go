@@ -107,7 +107,13 @@ func CmdWrapper(action string, requiredScopes []string, commandModel func(args [
 				tasks:          map[string]tea.Model{},
 			}
 			m.cmd = commandModel(args, &m, m.width)
-			p := tea.NewProgram(&m)
+
+			options := []tea.ProgramOption{}
+			if os.Getenv("CI") != "" {
+				// See https://github.com/charmbracelet/bubbletea/issues/761#issuecomment-1625863769
+				options = append(options, tea.WithInput(nil))
+			}
+			p := tea.NewProgram(&m, options...)
 			result, err := p.Run()
 			if err != nil {
 				return fmt.Errorf("could not start program: %w", err)

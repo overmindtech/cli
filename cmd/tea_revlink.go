@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"connectrpc.com/connect"
@@ -58,7 +59,9 @@ func (m revlinkWarmupModel) Update(msg tea.Msg) (revlinkWarmupModel, tea.Cmd) {
 	case sourcesInitialisedMsg:
 		m.taskModel.status = taskStatusRunning
 		// start the spinner
-		cmds = append(cmds, m.taskModel.spinner.Tick)
+		if os.Getenv("CI") == "" {
+			cmds = append(cmds, m.taskModel.spinner.Tick)
+		}
 
 		// setup the watchdog infrastructure
 		ctx, cancel := context.WithCancel(m.ctx)

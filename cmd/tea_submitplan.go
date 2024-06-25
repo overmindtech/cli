@@ -101,11 +101,16 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case submitPlanNowMsg:
 		cmds = append(cmds,
 			m.submitPlanCmd,
-			m.removingSecretsTask.spinner.Tick,
-			m.resourceExtractionTask.spinner.Tick,
-			m.uploadChangesTask.spinner.Tick,
 			m.waitForSubmitPlanActivity,
 		)
+
+		if os.Getenv("CI") == "" {
+			cmds = append(cmds,
+				m.removingSecretsTask.spinner.Tick,
+				m.resourceExtractionTask.spinner.Tick,
+				m.uploadChangesTask.spinner.Tick,
+			)
+		}
 
 	case submitPlanUpdateMsg:
 		// ensure that the wrapped message is submitted before we wait for the
@@ -142,7 +147,9 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.riskMilestoneTasks[i].status = taskStatusDone
 			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_INPROGRESS:
 				m.riskMilestoneTasks[i].status = taskStatusRunning
-				cmds = append(cmds, m.riskMilestoneTasks[i].spinner.Tick)
+				if os.Getenv("CI") == "" {
+					cmds = append(cmds, m.riskMilestoneTasks[i].spinner.Tick)
+				}
 			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_SKIPPED:
 				m.riskMilestoneTasks[i].status = taskStatusSkipped
 			}
@@ -151,7 +158,9 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		if len(m.riskMilestones) > 0 {
 			m.riskTask.status = taskStatusRunning
-			cmds = append(cmds, m.riskTask.spinner.Tick)
+			if os.Getenv("CI") == "" {
+				cmds = append(cmds, m.riskTask.spinner.Tick)
+			}
 
 			var allSkipped = true
 			for _, ms := range m.riskMilestoneTasks {
