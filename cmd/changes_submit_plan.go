@@ -18,6 +18,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // submitPlanCmd represents the submit-plan command
@@ -143,27 +144,9 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 		return nil, fmt.Errorf("failed to parse after attributes: %w", err)
 	}
 
-	// Delete all of the attributes that are "known after apply" as these are
-	// not "real" changes for our purposes
-	afterUnknown := make(map[string]any)
-	err = json.Unmarshal(resourceChange.Change.AfterUnknown, &afterUnknown)
-	if err == nil {
-		for k, v := range afterUnknown {
-			// This means that the field is known after apply, remove it
-			if v == true {
-				delete(beforeAttributes.GetAttrStruct().GetFields(), k)
-				delete(afterAttributes.GetAttrStruct().GetFields(), k)
-			}
-
-			// TODO: Realistically we should probably be handling nested maps
-			// and slices here, as it's possible for these to exist, however it
-			// will add a fair bit of complexity to the logic and I haven't
-			// actually found a good example of how this would be used. If we
-			// are seeing bugs where some things are being shown as changed when
-			// they shouldn't this will be the reason and we should come back to
-			// this but the logic will go from being trivial to a right pain in
-			// the ass
-		}
+	err = removeKnownAfterApply(beforeAttributes, afterAttributes, resourceChange.Change.AfterUnknown)
+	if err != nil {
+		return nil, fmt.Errorf("failed to remove known after apply fields: %w", err)
 	}
 
 	result := &sdp.ItemDiff{
@@ -219,6 +202,94 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 	}
 
 	return result, nil
+}
+
+// Removes fields from the `before` and `after` attributes that are known after
+// apply. This is because these fields are not "real" changes and we don't want
+// to show them in the UI
+func removeKnownAfterApply(before, after *sdp.ItemAttributes, afterUnknown json.RawMessage) error {
+	var afterUnknownInterface interface{}
+	err := json.Unmarshal(afterUnknown, &afterUnknownInterface)
+	if err != nil {
+		return fmt.Errorf("could not unmarshal `after_unknown` from plan: %w", err)
+	}
+
+	// Convert the parent struct to a value so that we can treat them all the
+	// same when we recurse
+	beforeValue := structpb.Value{
+		Kind: &structpb.Value_StructValue{
+			StructValue: before.GetAttrStruct(),
+		},
+	}
+
+	afterValue := structpb.Value{
+		Kind: &structpb.Value_StructValue{
+			StructValue: after.GetAttrStruct(),
+		},
+	}
+
+	err = removeUnknownFields(&beforeValue, &afterValue, afterUnknownInterface)
+
+	if err != nil {
+		return fmt.Errorf("failed to remove known after apply fields: %w", err)
+	}
+
+	return nil
+}
+
+// Recursively remove fields from the before and after values that are known
+// after apply. This is done by comparing the afterUnknown interface to the
+// before and after values and removing the fields that are true.
+//
+// AfterUnknown is an object value with similar structure to After, but with all
+// unknown leaf values replaced with true, and all known leaf values omitted.
+// This can be combined with After to reconstruct a full value after the action,
+// including values which will only be known after apply.
+func removeUnknownFields(before, after *structpb.Value, afterUnknown interface{}) error {
+	switch afterUnknown.(type) {
+	case map[string]interface{}:
+		for k, v := range afterUnknown.(map[string]interface{}) {
+			if v == true {
+				delete(before.GetStructValue().Fields, k)
+				delete(after.GetStructValue().Fields, k)
+			} else if v == false {
+				// Do nothing
+				continue
+			} else {
+				// Recurse into the nested fields
+				err := removeUnknownFields(before.GetStructValue().Fields[k], after.GetStructValue().Fields[k], v)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	case []interface{}:
+		for i, v := range afterUnknown.([]interface{}) {
+			if v == true {
+				// If this value in a slice is true, remove the corresponding
+				// values from the before and after
+				if before.GetListValue() != nil && len(before.GetListValue().Values) > i {
+					before.GetListValue().Values = append(before.GetListValue().Values[:i], before.GetListValue().Values[i+1:]...)
+				}
+				if after.GetListValue() != nil && len(after.GetListValue().Values) > i {
+					after.GetListValue().Values = append(after.GetListValue().Values[:i], after.GetListValue().Values[i+1:]...)
+				}
+			} else if v == false {
+				// Do nothing
+				continue
+			} else {
+				// Recurse into the nested fields
+				err := removeUnknownFields(before.GetListValue().Values[i], after.GetListValue().Values[i], v)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	default:
+		return nil
+	}
+
+	return nil
 }
 
 type plannedChangeGroups struct {
