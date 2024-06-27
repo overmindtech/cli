@@ -143,6 +143,29 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 		return nil, fmt.Errorf("failed to parse after attributes: %w", err)
 	}
 
+	// Delete all of the attributes that are "known after apply" as these are
+	// not "real" changes for our purposes
+	afterUnknown := make(map[string]any)
+	err = json.Unmarshal(resourceChange.Change.AfterUnknown, &afterUnknown)
+	if err == nil {
+		for k, v := range afterUnknown {
+			// This means that the field is known after apply, remove it
+			if v == true {
+				delete(beforeAttributes.GetAttrStruct().GetFields(), k)
+				delete(afterAttributes.GetAttrStruct().GetFields(), k)
+			}
+
+			// TODO: Realistically we should probably be handling nested maps
+			// and slices here, as it's possible for these to exist, however it
+			// will add a fair bit of complexity to the logic and I haven't
+			// actually found a good example of how this would be used. If we
+			// are seeing bugs where some things are being shown as changed when
+			// they shouldn't this will be the reason and we should come back to
+			// this but the logic will go from being trivial to a right pain in
+			// the ass
+		}
+	}
+
 	result := &sdp.ItemDiff{
 		// Item: filled in by item mapping in UpdatePlannedChanges
 		Status: status,

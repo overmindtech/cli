@@ -162,6 +162,18 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	if secret.GetMappingQuery().GetScope() != "dogfood.default" {
 		t.Errorf("Expected secret query scope to be 'dogfood.default', got '%v'", secret.GetMappingQuery().GetScope())
 	}
+
+	// In a secret the "data" field is known after apply, but we don't *know*
+	// that it's definitely going to change, so this shouldn't be part of the
+	// final diff
+	_, err = secret.GetItem().GetBefore().GetAttributes().Get("data")
+	if err == nil {
+		t.Errorf("Expected secret before to not have 'data' field, but it does")
+	}
+	_, err = secret.GetItem().GetAfter().GetAttributes().Get("data")
+	if err == nil {
+		t.Errorf("Expected secret after to not have 'data' field, but it does")
+	}
 }
 
 func TestPlanMappingResultNumFuncs(t *testing.T) {
