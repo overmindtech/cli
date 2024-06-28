@@ -4,7 +4,7 @@ go 1.22.4
 
 require (
 	connectrpc.com/connect v1.16.2
-	github.com/aws/aws-sdk-go-v2/service/sts v1.29.1
+	github.com/aws/aws-sdk-go-v2/service/sts v1.30.0
 	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.26.6
 	github.com/charmbracelet/glamour v0.7.0
