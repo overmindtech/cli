@@ -250,14 +250,14 @@ func removeUnknownFields(before, after *structpb.Value, afterUnknown interface{}
 	case map[string]interface{}:
 		for k, v := range afterUnknown.(map[string]interface{}) {
 			if v == true {
-				delete(before.GetStructValue().Fields, k)
-				delete(after.GetStructValue().Fields, k)
+				delete(before.GetStructValue().GetFields(), k)
+				delete(after.GetStructValue().GetFields(), k)
 			} else if v == false {
 				// Do nothing
 				continue
 			} else {
 				// Recurse into the nested fields
-				err := removeUnknownFields(before.GetStructValue().Fields[k], after.GetStructValue().Fields[k], v)
+				err := removeUnknownFields(before.GetStructValue().GetFields()[k], after.GetStructValue().GetFields()[k], v)
 				if err != nil {
 					return err
 				}
@@ -268,18 +268,18 @@ func removeUnknownFields(before, after *structpb.Value, afterUnknown interface{}
 			if v == true {
 				// If this value in a slice is true, remove the corresponding
 				// values from the before and after
-				if before.GetListValue() != nil && len(before.GetListValue().Values) > i {
-					before.GetListValue().Values = append(before.GetListValue().Values[:i], before.GetListValue().Values[i+1:]...)
+				if before.GetListValue() != nil && len(before.GetListValue().GetValues()) > i {
+					before.GetListValue().Values = append(before.GetListValue().GetValues()[:i], before.GetListValue().GetValues()[i+1:]...)
 				}
-				if after.GetListValue() != nil && len(after.GetListValue().Values) > i {
-					after.GetListValue().Values = append(after.GetListValue().Values[:i], after.GetListValue().Values[i+1:]...)
+				if after.GetListValue() != nil && len(after.GetListValue().GetValues()) > i {
+					after.GetListValue().Values = append(after.GetListValue().GetValues()[:i], after.GetListValue().GetValues()[i+1:]...)
 				}
 			} else if v == false {
 				// Do nothing
 				continue
 			} else {
 				// Recurse into the nested fields
-				err := removeUnknownFields(before.GetListValue().Values[i], after.GetListValue().Values[i], v)
+				err := removeUnknownFields(before.GetListValue().GetValues()[i], after.GetListValue().GetValues()[i], v)
 				if err != nil {
 					return err
 				}
