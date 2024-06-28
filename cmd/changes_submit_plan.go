@@ -18,6 +18,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // submitPlanCmd represents the submit-plan command
@@ -143,6 +144,11 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 		return nil, fmt.Errorf("failed to parse after attributes: %w", err)
 	}
 
+	err = removeKnownAfterApply(beforeAttributes, afterAttributes, resourceChange.Change.AfterUnknown)
+	if err != nil {
+		return nil, fmt.Errorf("failed to remove known after apply fields: %w", err)
+	}
+
 	result := &sdp.ItemDiff{
 		// Item: filled in by item mapping in UpdatePlannedChanges
 		Status: status,
@@ -196,6 +202,94 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 	}
 
 	return result, nil
+}
+
+// Removes fields from the `before` and `after` attributes that are known after
+// apply. This is because these fields are not "real" changes and we don't want
+// to show them in the UI
+func removeKnownAfterApply(before, after *sdp.ItemAttributes, afterUnknown json.RawMessage) error {
+	var afterUnknownInterface interface{}
+	err := json.Unmarshal(afterUnknown, &afterUnknownInterface)
+	if err != nil {
+		return fmt.Errorf("could not unmarshal `after_unknown` from plan: %w", err)
+	}
+
+	// Convert the parent struct to a value so that we can treat them all the
+	// same when we recurse
+	beforeValue := structpb.Value{
+		Kind: &structpb.Value_StructValue{
+			StructValue: before.GetAttrStruct(),
+		},
+	}
+
+	afterValue := structpb.Value{
+		Kind: &structpb.Value_StructValue{
+			StructValue: after.GetAttrStruct(),
+		},
+	}
+
+	err = removeUnknownFields(&beforeValue, &afterValue, afterUnknownInterface)
+
+	if err != nil {
+		return fmt.Errorf("failed to remove known after apply fields: %w", err)
+	}
+
+	return nil
+}
+
+// Recursively remove fields from the before and after values that are known
+// after apply. This is done by comparing the afterUnknown interface to the
+// before and after values and removing the fields that are true.
+//
+// AfterUnknown is an object value with similar structure to After, but with all
+// unknown leaf values replaced with true, and all known leaf values omitted.
+// This can be combined with After to reconstruct a full value after the action,
+// including values which will only be known after apply.
+func removeUnknownFields(before, after *structpb.Value, afterUnknown interface{}) error {
+	switch afterUnknown.(type) {
+	case map[string]interface{}:
+		for k, v := range afterUnknown.(map[string]interface{}) {
+			if v == true {
+				delete(before.GetStructValue().GetFields(), k)
+				delete(after.GetStructValue().GetFields(), k)
+			} else if v == false {
+				// Do nothing
+				continue
+			} else {
+				// Recurse into the nested fields
+				err := removeUnknownFields(before.GetStructValue().GetFields()[k], after.GetStructValue().GetFields()[k], v)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	case []interface{}:
+		for i, v := range afterUnknown.([]interface{}) {
+			if v == true {
+				// If this value in a slice is true, remove the corresponding
+				// values from the before and after
+				if before.GetListValue() != nil && len(before.GetListValue().GetValues()) > i {
+					before.GetListValue().Values = append(before.GetListValue().GetValues()[:i], before.GetListValue().GetValues()[i+1:]...)
+				}
+				if after.GetListValue() != nil && len(after.GetListValue().GetValues()) > i {
+					after.GetListValue().Values = append(after.GetListValue().GetValues()[:i], after.GetListValue().GetValues()[i+1:]...)
+				}
+			} else if v == false {
+				// Do nothing
+				continue
+			} else {
+				// Recurse into the nested fields
+				err := removeUnknownFields(before.GetListValue().GetValues()[i], after.GetListValue().GetValues()[i], v)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	default:
+		return nil
+	}
+
+	return nil
 }
 
 type plannedChangeGroups struct {

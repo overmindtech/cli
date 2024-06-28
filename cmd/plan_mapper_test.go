@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/overmindtech/sdp-go"
@@ -162,6 +163,18 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	if secret.GetMappingQuery().GetScope() != "dogfood.default" {
 		t.Errorf("Expected secret query scope to be 'dogfood.default', got '%v'", secret.GetMappingQuery().GetScope())
 	}
+
+	// In a secret the "data" field is known after apply, but we don't *know*
+	// that it's definitely going to change, so this shouldn't be part of the
+	// final diff
+	_, err = secret.GetItem().GetBefore().GetAttributes().Get("data")
+	if err == nil {
+		t.Errorf("Expected secret before to not have 'data' field, but it does")
+	}
+	_, err = secret.GetItem().GetAfter().GetAttributes().Get("data")
+	if err == nil {
+		t.Errorf("Expected secret after to not have 'data' field, but it does")
+	}
 }
 
 func TestPlanMappingResultNumFuncs(t *testing.T) {
@@ -192,6 +205,109 @@ func TestPlanMappingResultNumFuncs(t *testing.T) {
 
 	if result.NumUnsupported() != 1 {
 		t.Errorf("Expected 1 unsupported, got %v", result.NumUnsupported())
+	}
+}
+
+func TestRemoveKnownAfterApply(t *testing.T) {
+	before, err := sdp.ToAttributes(map[string]interface{}{
+		"string_value": "foo",
+		"int_value":    42,
+		"bool_value":   true,
+		"float_value":  3.14,
+		"list_value": []interface{}{
+			"foo",
+			"bar",
+		},
+		"map_value": map[string]interface{}{
+			"foo": "bar",
+			"bar": "baz",
+		},
+		"map_value2": map[string]interface{}{
+			"ding": map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	after, err := sdp.ToAttributes(map[string]interface{}{
+		"string_value": "bar", // I want to see a diff here
+		"int_value":    nil,   // These are going to be known after apply
+		"bool_value":   nil,   // These are going to be known after apply
+		"float_value":  3.14,
+		"list_value": []interface{}{
+			"foo",
+			"bar",
+			"baz", // So is this one
+		},
+		"map_value": map[string]interface{}{ // This whole thing will be known after apply
+			"foo": "bar",
+		},
+		"map_value2": map[string]interface{}{
+			"ding": map[string]interface{}{
+				"foo": nil, // This will be known after apply
+			},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	afterUnknown := json.RawMessage(`{
+		"int_value": true,
+		"bool_value": true,
+		"float_value": false,
+		"list_value": [
+			false,
+			false,
+			true
+		],
+		"map_value": true,
+		"map_value2": {
+			"ding": {
+				"foo": true
+			}
+		}
+	}`)
+
+	err = removeKnownAfterApply(before, after, afterUnknown)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := before.Get("int_value"); err == nil {
+		t.Errorf("Expected int_value to be removed from the before, but it's still there")
+	}
+
+	if _, err := before.Get("bool_value"); err == nil {
+		t.Errorf("Expected bool_value to be removed from the before, but it's still there")
+	}
+
+	if _, err := after.Get("int_value"); err == nil {
+		t.Errorf("Expected int_value to be removed from the after, but it's still there")
+	}
+
+	if _, err := after.Get("bool_value"); err == nil {
+		t.Errorf("Expected bool_value to be removed from the after, but it's still there")
+	}
+
+	if list, err := before.Get("list_value"); err != nil {
+		t.Errorf("Expected list_value to be there, but it's not: %v", err)
+	} else {
+
+		if len(list.([]interface{})) != 2 {
+			t.Error("Expected list_value to have 2 elements")
+		}
+	}
+
+	if list, err := after.Get("list_value"); err != nil {
+		t.Errorf("Expected list_value to be there, but it's not: %v", err)
+	} else {
+		if len(list.([]interface{})) != 2 {
+			t.Error("Expected list_value to have 2 elements")
+		}
 	}
 
 }
