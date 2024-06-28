@@ -278,8 +278,24 @@ func removeUnknownFields(before, after *structpb.Value, afterUnknown interface{}
 				// Do nothing
 				continue
 			} else {
-				// Recurse into the nested fields
-				err := removeUnknownFields(before.GetListValue().GetValues()[i], after.GetListValue().GetValues()[i], v)
+				// Make sure that the before and after both actually have a
+				// valid list item at this position, if they don't we can just
+				// pass `nil` to the `removeUnknownFields` function and it'll
+				// handle it
+				beforeListValues := before.GetListValue().GetValues()
+				afterListValues := after.GetListValue().GetValues()
+				var nestedBeforeValue *structpb.Value
+				var nestedAfterValue *structpb.Value
+
+				if len(beforeListValues) > i {
+					nestedBeforeValue = beforeListValues[i]
+				}
+
+				if len(afterListValues) > i {
+					nestedAfterValue = afterListValues[i]
+				}
+
+				err := removeUnknownFields(nestedBeforeValue, nestedAfterValue, v)
 				if err != nil {
 					return err
 				}
