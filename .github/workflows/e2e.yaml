@@ -4,6 +4,9 @@ on:
     branches:
       - main
       - e2e-tests
+  pull_request_target:
+    branches:
+      - main
 
 jobs:
   actions:
