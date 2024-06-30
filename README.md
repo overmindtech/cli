@@ -148,6 +148,8 @@ apk add overmind-cli
 
 Packages for Arch are available on the [releases page](https://github.com/overmindtech/cli/releases/latest) for manual download and installation.
 
+Additionally a community maintained package can be found in the [aur](https://aur.archlinux.org/packages/overmind-cli-bin).
+
 </details>
 
 ## Why Use Overmind?
