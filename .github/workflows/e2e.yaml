@@ -1,9 +1,5 @@
 name: E2E Tests
 on:
-  push:
-    branches:
-      - main
-      - e2e-tests
   pull_request:
     branches:
       - main
@@ -163,11 +159,46 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: plan.mp4
-          path: plan.*
+          path: e2e/plan.*
 
-      - name: Upload plan results
+      - name: Upload apply results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: apply.mp4
-          path: apply.*
+          path: e2e/apply.*
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        id: pnpm-install
+        with:
+          version: 9
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+        continue-on-error: false
+
+      - name: Lost Pixel
+        uses: lost-pixel/lost-pixel@v3.17.0
+        env:
+          LOST_PIXEL_API_KEY: ${{ secrets.LOST_PIXEL_API_KEY }}

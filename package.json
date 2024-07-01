@@ -1,0 +1,18 @@
+{
+  "name": "cli",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lost-pixel": "lost-pixel",
+    "lost-pixel:update": "lost-pixel update"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@9.0.2+sha256.d6fc013639b81658ff175829ebb9435bcb89eff206769e460fd3ae27c2054df6",
+  "dependencies": {
+    "@types/node": "^20.14.9",
+    "lost-pixel": "^3.17.0"
+  }
+}
