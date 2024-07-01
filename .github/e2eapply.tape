@@ -1,4 +1,4 @@
-Output apply.mp4
+Output e2e/apply.mp4
 
 Set Width 1920
 Set Height 1080
@@ -15,4 +15,4 @@ Show
 Type@1ms "overmind terraform apply -- tfplan"
 Enter
 Sleep 60
-Screenshot apply.png
+Screenshot e2e/apply.png
