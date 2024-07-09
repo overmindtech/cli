@@ -164,15 +164,10 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	}
 
 	// In a secret the "data" field is known after apply, but we don't *know*
-	// that it's definitely going to change, so this shouldn't be part of the
-	// final diff
-	_, err = secret.GetItem().GetBefore().GetAttributes().Get("data")
-	if err == nil {
-		t.Errorf("Expected secret before to not have 'data' field, but it does")
-	}
-	_, err = secret.GetItem().GetAfter().GetAttributes().Get("data")
-	if err == nil {
-		t.Errorf("Expected secret after to not have 'data' field, but it does")
+	// that it's definitely going to change, so this should be (known after apply)
+	dataVal, _ := secret.GetItem().GetAfter().GetAttributes().Get("data")
+	if dataVal != KnownAfterApply {
+		t.Errorf("Expected secret data to be known after apply, got '%v'", dataVal)
 	}
 }
 

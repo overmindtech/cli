@@ -236,8 +236,8 @@ github.com/overmindtech/aws-source v0.0.0-20240705081859-20822e068693 h1:sj9r6tc
 github.com/overmindtech/aws-source v0.0.0-20240705081859-20822e068693/go.mod h1:nwmDpkH8uGks1a2zeytcJ33fPbaez+Lcjwq2oMRsKP8=
 github.com/overmindtech/discovery v0.27.6 h1:p+xMEIST0fk6HfbejXR+Ea59+JA5zjCO4zvRqelRqwE=
 github.com/overmindtech/discovery v0.27.6/go.mod h1:A3wvNM6VTo7qfGExWQ+fgh+NfLh35nuPJ7wF4pLYEQI=
-github.com/overmindtech/sdp-go v0.77.0 h1:0GaTm6LKW1fCeyUM0qphj1daMdirkTdyKEwMFsNrd+Y=
-github.com/overmindtech/sdp-go v0.77.0/go.mod h1:X+RPg2bxJfhI674wM4B9AoYzYMO6u7hmSYplA59rKZ4=
+github.com/overmindtech/sdp-go v0.78.0 h1:vhDWFKssBzaHKMu/He44eTEJDGNzivVMFja8r/Kbfzs=
+github.com/overmindtech/sdp-go v0.78.0/go.mod h1:F0jughyQ72jT5NSBLZH+fosT98yci02fsL4KVtL66qw=
 github.com/overmindtech/sdpcache v1.6.4 h1:MJoYBDqDE3s8FrRzZ0RPgFiH39HWI/Mv2ImH1NdLT8k=
 github.com/overmindtech/sdpcache v1.6.4/go.mod h1:/F9XStVdntRJEQjlZ86BPuB1Y7VPo1PFcsCNiU1IoGE=
 github.com/overmindtech/stdlib-source v0.0.0-20240705081932-90a0076c3451 h1:9owcI2o+cIY0WO9W2xXeupv7B0hX3i+T43TAuiVox0I=

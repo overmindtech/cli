@@ -144,7 +144,7 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 		return nil, fmt.Errorf("failed to parse after attributes: %w", err)
 	}
 
-	err = removeKnownAfterApply(beforeAttributes, afterAttributes, resourceChange.Change.AfterUnknown)
+	err = handleKnownAfterApply(beforeAttributes, afterAttributes, resourceChange.Change.AfterUnknown)
 	if err != nil {
 		return nil, fmt.Errorf("failed to remove known after apply fields: %w", err)
 	}
@@ -204,10 +204,9 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 	return result, nil
 }
 
-// Removes fields from the `before` and `after` attributes that are known after
-// apply. This is because these fields are not "real" changes and we don't want
-// to show them in the UI
-func removeKnownAfterApply(before, after *sdp.ItemAttributes, afterUnknown json.RawMessage) error {
+// Finds fields from the `before` and `after` attributes that are known after
+// apply and replaces the "after" value with the string "(known after apply)"
+func handleKnownAfterApply(before, after *sdp.ItemAttributes, afterUnknown json.RawMessage) error {
 	var afterUnknownInterface interface{}
 	err := json.Unmarshal(afterUnknown, &afterUnknownInterface)
 	if err != nil {
@@ -228,7 +227,7 @@ func removeKnownAfterApply(before, after *sdp.ItemAttributes, afterUnknown json.
 		},
 	}
 
-	err = removeUnknownFields(&beforeValue, &afterValue, afterUnknownInterface)
+	err = insertKnownAfterApply(&beforeValue, &afterValue, afterUnknownInterface)
 
 	if err != nil {
 		return fmt.Errorf("failed to remove known after apply fields: %w", err)
@@ -237,27 +236,34 @@ func removeKnownAfterApply(before, after *sdp.ItemAttributes, afterUnknown json.
 	return nil
 }
 
-// Recursively remove fields from the before and after values that are known
-// after apply. This is done by comparing the afterUnknown interface to the
-// before and after values and removing the fields that are true.
-//
-// AfterUnknown is an object value with similar structure to After, but with all
-// unknown leaf values replaced with true, and all known leaf values omitted.
-// This can be combined with After to reconstruct a full value after the action,
-// including values which will only be known after apply.
-func removeUnknownFields(before, after *structpb.Value, afterUnknown interface{}) error {
+const KnownAfterApply = `(known after apply)`
+
+// Inserts the text "(known after apply)" in place of null values in the planned
+// "after" values for fields that are known after apply. By default these are
+// `null` which produces a bad diff, so we replace them with (known after apply)
+// to more accurately mirror what Terraform does in the CLI
+func insertKnownAfterApply(before, after *structpb.Value, afterUnknown interface{}) error {
 	switch afterUnknown.(type) {
 	case map[string]interface{}:
 		for k, v := range afterUnknown.(map[string]interface{}) {
 			if v == true {
-				delete(before.GetStructValue().GetFields(), k)
-				delete(after.GetStructValue().GetFields(), k)
+				if afterFields := after.GetStructValue().GetFields(); afterFields != nil {
+					// Insert this in the after fields even if it doesn't exist.
+					// This is because sometimes you will get a plan that only
+					// has a before value for a know after apply field, so we
+					// want to still make sure it shows up
+					afterFields[k] = &structpb.Value{
+						Kind: &structpb.Value_StringValue{
+							StringValue: KnownAfterApply,
+						},
+					}
+				}
 			} else if v == false {
 				// Do nothing
 				continue
 			} else {
 				// Recurse into the nested fields
-				err := removeUnknownFields(before.GetStructValue().GetFields()[k], after.GetStructValue().GetFields()[k], v)
+				err := insertKnownAfterApply(before.GetStructValue().GetFields()[k], after.GetStructValue().GetFields()[k], v)
 				if err != nil {
 					return err
 				}
@@ -266,13 +272,14 @@ func removeUnknownFields(before, after *structpb.Value, afterUnknown interface{}
 	case []interface{}:
 		for i, v := range afterUnknown.([]interface{}) {
 			if v == true {
-				// If this value in a slice is true, remove the corresponding
-				// values from the before and after
-				if before.GetListValue() != nil && len(before.GetListValue().GetValues()) > i {
-					before.GetListValue().Values = append(before.GetListValue().GetValues()[:i], before.GetListValue().GetValues()[i+1:]...)
-				}
+				// If this value in a slice is true, set the corresponding value
+				// in after to (know after apply)
 				if after.GetListValue() != nil && len(after.GetListValue().GetValues()) > i {
-					after.GetListValue().Values = append(after.GetListValue().GetValues()[:i], after.GetListValue().GetValues()[i+1:]...)
+					after.GetListValue().Values[i] = &structpb.Value{
+						Kind: &structpb.Value_StringValue{
+							StringValue: KnownAfterApply,
+						},
+					}
 				}
 			} else if v == false {
 				// Do nothing
@@ -295,7 +302,7 @@ func removeUnknownFields(before, after *structpb.Value, afterUnknown interface{}
 					nestedAfterValue = afterListValues[i]
 				}
 
-				err := removeUnknownFields(nestedBeforeValue, nestedAfterValue, v)
+				err := insertKnownAfterApply(nestedBeforeValue, nestedAfterValue, v)
 				if err != nil {
 					return err
 				}

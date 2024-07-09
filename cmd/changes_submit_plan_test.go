@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/overmindtech/sdp-go"
@@ -147,12 +148,13 @@ func TestExtractProviderNameFromConfigKey(t *testing.T) {
 	}
 }
 
-func TestRemoveKnownAfterApply(t *testing.T) {
+func TestHandleKnownAfterApply(t *testing.T) {
 	before, err := sdp.ToAttributes(map[string]interface{}{
 		"string_value": "foo",
 		"int_value":    42,
 		"bool_value":   true,
 		"float_value":  3.14,
+		"data":         "secret", // Known after apply but doesn't exist in the "after" map, this happens sometimes
 		"list_value": []interface{}{
 			"foo",
 			"bar",
@@ -210,6 +212,7 @@ func TestRemoveKnownAfterApply(t *testing.T) {
 		"int_value": true,
 		"bool_value": true,
 		"float_value": false,
+		"data": true,
 		"list_value": [
 			false,
 			false,
@@ -233,42 +236,47 @@ func TestRemoveKnownAfterApply(t *testing.T) {
 		]
 	}`)
 
-	err = removeKnownAfterApply(before, after, afterUnknown)
+	err = handleKnownAfterApply(before, after, afterUnknown)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := before.Get("int_value"); err == nil {
-		t.Errorf("Expected int_value to be removed from the before, but it's still there")
+	beforeJSON, err := json.MarshalIndent(before, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	afterJSON, err := json.MarshalIndent(after, "", "  ")
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	if _, err := before.Get("bool_value"); err == nil {
-		t.Errorf("Expected bool_value to be removed from the before, but it's still there")
+	fmt.Println("BEFORE:")
+	fmt.Println(string(beforeJSON))
+	fmt.Println("\n\nAFTER:")
+	fmt.Println(string(afterJSON))
+
+	if val, _ := after.Get("int_value"); val != KnownAfterApply {
+		t.Errorf("expected int_value to be %v, got %v", KnownAfterApply, val)
 	}
 
-	if _, err := after.Get("int_value"); err == nil {
-		t.Errorf("Expected int_value to be removed from the after, but it's still there")
+	if val, _ := after.Get("bool_value"); val != KnownAfterApply {
+		t.Errorf("expected bool_value to be %v, got %v", KnownAfterApply, val)
 	}
 
-	if _, err := after.Get("bool_value"); err == nil {
-		t.Errorf("Expected bool_value to be removed from the after, but it's still there")
+	i, err := after.Get("list_value")
+	if err != nil {
+		t.Error(err)
 	}
 
-	if list, err := before.Get("list_value"); err != nil {
-		t.Errorf("Expected list_value to be there, but it's not: %v", err)
-	} else {
-
-		if len(list.([]interface{})) != 2 {
-			t.Error("Expected list_value to have 2 elements")
+	if list, ok := i.([]interface{}); ok {
+		if list[2] != KnownAfterApply {
+			t.Errorf("expected third string_value to be %v, got %v", KnownAfterApply, list[2])
 		}
-	}
-
-	if list, err := after.Get("list_value"); err != nil {
-		t.Errorf("Expected list_value to be there, but it's not: %v", err)
 	} else {
-		if len(list.([]interface{})) != 2 {
-			t.Error("Expected list_value to have 2 elements")
-		}
+		t.Error("list_value is not a string slice")
 	}
 
+	if val, _ := after.Get("data"); val != KnownAfterApply {
+		t.Errorf("expected data to be %v, got %v", KnownAfterApply, val)
+	}
 }
