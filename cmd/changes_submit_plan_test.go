@@ -44,7 +44,7 @@ func TestMaskSensitiveData(t *testing.T) {
 
 		require.Equal(t,
 			map[string]any{
-				"foo": "REDACTED",
+				"foo": "(sensitive value)",
 			},
 			maskSensitiveData(
 				map[string]any{
@@ -68,7 +68,7 @@ func TestMaskSensitiveData(t *testing.T) {
 
 		require.Equal(t,
 			map[string]any{
-				"foo": "REDACTED",
+				"foo": "(sensitive value)",
 			},
 			maskSensitiveData(
 				map[string]any{
@@ -78,7 +78,7 @@ func TestMaskSensitiveData(t *testing.T) {
 
 		require.Equal(t,
 			map[string]any{
-				"foo": map[string]any{"key": "REDACTED"},
+				"foo": map[string]any{"key": "(sensitive value)"},
 			},
 			maskSensitiveData(
 				map[string]any{
@@ -102,7 +102,7 @@ func TestMaskSensitiveData(t *testing.T) {
 
 		require.Equal(t,
 			map[string]any{
-				"foo": "REDACTED",
+				"foo": "(sensitive value)",
 			},
 			maskSensitiveData(
 				map[string]any{
@@ -112,7 +112,7 @@ func TestMaskSensitiveData(t *testing.T) {
 
 		require.Equal(t,
 			map[string]any{
-				"foo": []any{"one", "REDACTED"},
+				"foo": []any{"one", "(sensitive value)"},
 			},
 			maskSensitiveData(
 				map[string]any{
