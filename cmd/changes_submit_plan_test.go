@@ -267,8 +267,8 @@ func TestHandleKnownAfterApply(t *testing.T) {
 	}
 
 	if list, ok := i.([]interface{}); ok {
-		if list[3] != KnownAfterApply {
-			t.Errorf("expected third string_value to be %v, got %v", KnownAfterApply, list[3])
+		if list[2] != KnownAfterApply {
+			t.Errorf("expected third string_value to be %v, got %v", KnownAfterApply, list[2])
 		}
 	} else {
 		t.Error("list_value is not a string slice")
