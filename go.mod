@@ -18,9 +18,9 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.2
-	github.com/overmindtech/aws-source v0.0.0-20240705081859-20822e068693
+	github.com/overmindtech/aws-source v0.0.0-20240706091504-f22932f5ad3a
 	github.com/overmindtech/sdp-go v0.78.0
-	github.com/overmindtech/stdlib-source v0.0.0-20240705081932-90a0076c3451
+	github.com/overmindtech/stdlib-source v0.0.0-20240709104746-33161549fa69
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sourcegraph/conc v0.3.0
@@ -114,6 +114,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/micahhausler/aws-iam-policy v0.4.2 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.25 // indirect
 	github.com/miekg/dns v1.1.61 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
