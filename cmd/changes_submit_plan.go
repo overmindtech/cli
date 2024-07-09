@@ -53,7 +53,7 @@ func maskAllData(attributes map[string]any) map[string]any {
 		if mv, ok := v.(map[string]any); ok {
 			attributes[k] = maskAllData(mv)
 		} else {
-			attributes[k] = "REDACTED"
+			attributes[k] = "(sensitive value)"
 		}
 	}
 	return attributes
@@ -62,7 +62,7 @@ func maskAllData(attributes map[string]any) map[string]any {
 // maskSensitiveData masks every entry in attributes that is set to true in sensitive. returns the redacted attributes
 func maskSensitiveData(attributes, sensitive any) any {
 	if sensitive == true {
-		return "REDACTED"
+		return "(sensitive value)"
 	} else if sensitiveMap, ok := sensitive.(map[string]any); ok {
 		if attributesMap, ok := attributes.(map[string]any); ok {
 			result := map[string]any{}
@@ -71,12 +71,12 @@ func maskSensitiveData(attributes, sensitive any) any {
 			}
 			return result
 		} else {
-			return "REDACTED (type mismatch)"
+			return "(sensitive value) (type mismatch)"
 		}
 	} else if sensitiveArr, ok := sensitive.([]any); ok {
 		if attributesArr, ok := attributes.([]any); ok {
 			if len(sensitiveArr) != len(attributesArr) {
-				return "REDACTED (len mismatch)"
+				return "(sensitive value) (len mismatch)"
 			}
 			result := make([]any, len(attributesArr))
 			for i, v := range attributesArr {
@@ -84,7 +84,7 @@ func maskSensitiveData(attributes, sensitive any) any {
 			}
 			return result
 		} else {
-			return "REDACTED (type mismatch)"
+			return "(sensitive value) (type mismatch)"
 		}
 	}
 	return attributes
