@@ -175,7 +175,7 @@ func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 				log.WithContext(ctx).
 					WithFields(lf).
 					WithField("terraform-address", resourceChange.Address).
-					WithField("terraform-query-field", mapData.QueryField).Warn("Adding unmapped resource")
+					WithField("terraform-query-field", mapData.QueryField).Debug("Missing mapping field, cannot create Overmind query")
 				results.Results = append(results.Results, PlannedChangeMapResult{
 					TerraformName: resourceChange.Address,
 					Status:        MapStatusNotEnoughInfo,
