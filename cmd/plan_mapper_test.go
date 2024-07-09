@@ -168,7 +168,6 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	dataVal, _ := secret.GetItem().GetAfter().GetAttributes().Get("data")
 	if dataVal != KnownAfterApply {
 		t.Errorf("Expected secret data to be known after apply, got '%v'", dataVal)
-
 	}
 }
 

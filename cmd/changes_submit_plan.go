@@ -248,14 +248,15 @@ func insertKnownAfterApply(before, after *structpb.Value, afterUnknown interface
 		for k, v := range afterUnknown.(map[string]interface{}) {
 			if v == true {
 				if afterFields := after.GetStructValue().GetFields(); afterFields != nil {
-					if _, exists := afterFields[k]; exists {
-						afterFields[k] = &structpb.Value{
-							Kind: &structpb.Value_StringValue{
-								StringValue: KnownAfterApply,
-							},
-						}
+					// Insert this in the after fields even if it doesn't exist.
+					// This is because sometimes you will get a plan that only
+					// has a before value for a know after apply field, so we
+					// want to still make sure it shows up
+					afterFields[k] = &structpb.Value{
+						Kind: &structpb.Value_StringValue{
+							StringValue: KnownAfterApply,
+						},
 					}
-
 				}
 			} else if v == false {
 				// Do nothing

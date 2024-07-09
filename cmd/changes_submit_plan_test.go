@@ -154,6 +154,7 @@ func TestHandleKnownAfterApply(t *testing.T) {
 		"int_value":    42,
 		"bool_value":   true,
 		"float_value":  3.14,
+		"data":         "secret", // Known after apply but doesn't exist in the "after" map, this happens sometimes
 		"list_value": []interface{}{
 			"foo",
 			"bar",
@@ -211,6 +212,7 @@ func TestHandleKnownAfterApply(t *testing.T) {
 		"int_value": true,
 		"bool_value": true,
 		"float_value": false,
+		"data": true,
 		"list_value": [
 			false,
 			false,
@@ -272,5 +274,9 @@ func TestHandleKnownAfterApply(t *testing.T) {
 		}
 	} else {
 		t.Error("list_value is not a string slice")
+	}
+
+	if val, _ := after.Get("data"); val != KnownAfterApply {
+		t.Errorf("expected data to be %v, got %v", KnownAfterApply, val)
 	}
 }
