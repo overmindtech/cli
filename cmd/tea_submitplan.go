@@ -452,9 +452,9 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 			close(m.processing)
 			return nil
 		}
-		high := uuid.New()
-		medium := uuid.New()
-		low := uuid.New()
+		// high := uuid.New()
+		// medium := uuid.New()
+		// low := uuid.New()
 		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{
 			url: "https://example.com/changes/abc",
 			riskMilestones: []*sdp.RiskCalculationStatus_ProgressMilestone{
@@ -472,27 +472,27 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 				},
 			},
 			risks: []*sdp.Risk{
-				{
-					UUID:         high[:],
-					Title:        "fake high risk titled risk",
-					Severity:     sdp.Risk_SEVERITY_HIGH,
-					Description:  TEST_RISK,
-					RelatedItems: []*sdp.Reference{},
-				},
-				{
-					UUID:         medium[:],
-					Title:        "fake medium risk titled risk",
-					Severity:     sdp.Risk_SEVERITY_MEDIUM,
-					Description:  TEST_RISK,
-					RelatedItems: []*sdp.Reference{},
-				},
-				{
-					UUID:         low[:],
-					Title:        "fake low risk titled risk",
-					Severity:     sdp.Risk_SEVERITY_LOW,
-					Description:  TEST_RISK,
-					RelatedItems: []*sdp.Reference{},
-				},
+				// {
+				// 	UUID:         high[:],
+				// 	Title:        "fake high risk titled risk",
+				// 	Severity:     sdp.Risk_SEVERITY_HIGH,
+				// 	Description:  TEST_RISK,
+				// 	RelatedItems: []*sdp.Reference{},
+				// },
+				// {
+				// 	UUID:         medium[:],
+				// 	Title:        "fake medium risk titled risk",
+				// 	Severity:     sdp.Risk_SEVERITY_MEDIUM,
+				// 	Description:  TEST_RISK,
+				// 	RelatedItems: []*sdp.Reference{},
+				// },
+				// {
+				// 	UUID:         low[:],
+				// 	Title:        "fake low risk titled risk",
+				// 	Severity:     sdp.Risk_SEVERITY_LOW,
+				// 	Description:  TEST_RISK,
+				// 	RelatedItems: []*sdp.Reference{},
+				// },
 			},
 		}}
 		time.Sleep(time.Second)
@@ -795,7 +795,13 @@ func (m submitPlanModel) FinalReport() string {
 		bits = append(bits, styleH1().Render("Blast Radius"))
 		bits = append(bits, fmt.Sprintf("\nItems: %v\nEdges: %v\n", m.blastRadiusItems, m.blastRadiusEdges))
 	}
-	if m.changeUrl != "" && len(m.risks) > 0 {
+	if len(m.risks) == 0 {
+		bits = append(bits, styleH1().Render("Potential Risks"))
+		bits = append(bits, "")
+		bits = append(bits, "Overmind has not identified any risks associated with this change.")
+		bits = append(bits, "")
+		bits = append(bits, "This could be due to the change being low risk with no impact on other parts of the system, or involving resources that Overmind currently does not support.")
+	} else if m.changeUrl != "" {
 		bits = append(bits, styleH1().Render("Potential Risks"))
 		bits = append(bits, "")
 		for _, r := range m.risks {
