@@ -452,9 +452,9 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 			close(m.processing)
 			return nil
 		}
-		// high := uuid.New()
-		// medium := uuid.New()
-		// low := uuid.New()
+		high := uuid.New()
+		medium := uuid.New()
+		low := uuid.New()
 		m.processing <- submitPlanUpdateMsg{changeUpdatedMsg{
 			url: "https://example.com/changes/abc",
 			riskMilestones: []*sdp.RiskCalculationStatus_ProgressMilestone{
@@ -472,27 +472,27 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 				},
 			},
 			risks: []*sdp.Risk{
-				// {
-				// 	UUID:         high[:],
-				// 	Title:        "fake high risk titled risk",
-				// 	Severity:     sdp.Risk_SEVERITY_HIGH,
-				// 	Description:  TEST_RISK,
-				// 	RelatedItems: []*sdp.Reference{},
-				// },
-				// {
-				// 	UUID:         medium[:],
-				// 	Title:        "fake medium risk titled risk",
-				// 	Severity:     sdp.Risk_SEVERITY_MEDIUM,
-				// 	Description:  TEST_RISK,
-				// 	RelatedItems: []*sdp.Reference{},
-				// },
-				// {
-				// 	UUID:         low[:],
-				// 	Title:        "fake low risk titled risk",
-				// 	Severity:     sdp.Risk_SEVERITY_LOW,
-				// 	Description:  TEST_RISK,
-				// 	RelatedItems: []*sdp.Reference{},
-				// },
+				{
+					UUID:         high[:],
+					Title:        "fake high risk titled risk",
+					Severity:     sdp.Risk_SEVERITY_HIGH,
+					Description:  TEST_RISK,
+					RelatedItems: []*sdp.Reference{},
+				},
+				{
+					UUID:         medium[:],
+					Title:        "fake medium risk titled risk",
+					Severity:     sdp.Risk_SEVERITY_MEDIUM,
+					Description:  TEST_RISK,
+					RelatedItems: []*sdp.Reference{},
+				},
+				{
+					UUID:         low[:],
+					Title:        "fake low risk titled risk",
+					Severity:     sdp.Risk_SEVERITY_LOW,
+					Description:  TEST_RISK,
+					RelatedItems: []*sdp.Reference{},
+				},
 			},
 		}}
 		time.Sleep(time.Second)
