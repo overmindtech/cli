@@ -550,10 +550,22 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		log.WithContext(ctx).WithFields(lf).Info("Re-using change")
 	}
 
+	// Set up the blast radius preset if specified
+	maxDepth := viper.GetInt32("blast-radius-link-depth")
+	maxItems := viper.GetInt32("blast-radius-max-items")
+	var blastRadiusConfigOverride *sdp.BlastRadiusConfig
+	if maxDepth > 0 || maxItems > 0 {
+		blastRadiusConfigOverride = &sdp.BlastRadiusConfig{
+			MaxItems:  maxItems,
+			LinkDepth: maxDepth,
+		}
+	}
+
 	resultStream, err := client.UpdatePlannedChanges(ctx, &connect.Request[sdp.UpdatePlannedChangesRequest]{
 		Msg: &sdp.UpdatePlannedChangesRequest{
-			ChangeUUID:    changeUuid[:],
-			ChangingItems: plannedChanges,
+			ChangeUUID:                changeUuid[:],
+			ChangingItems:             plannedChanges,
+			BlastRadiusConfigOverride: blastRadiusConfigOverride,
 		},
 	})
 	if err != nil {
@@ -634,4 +646,6 @@ func init() {
 
 	submitPlanCmd.PersistentFlags().String("terraform-plan-output", "", "Filename of cached terraform plan output for this change.")
 	submitPlanCmd.PersistentFlags().String("code-changes-diff", "", "Fileame of the code diff of this change.")
+	submitPlanCmd.PersistentFlags().Int32("blast-radius-link-depth", 0, "Used in combination with '--blast-radius-max-items' to customise how many levels are traversed when calculating the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
+	submitPlanCmd.PersistentFlags().Int32("blast-radius-max-items", 0, "Used in combination with '--blast-radius-link-depth' to customise how many items are included in the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
 }
