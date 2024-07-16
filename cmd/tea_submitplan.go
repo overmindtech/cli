@@ -840,8 +840,8 @@ func (m submitPlanModel) FinalReport() string {
 				severity,
 				wordwrap.String(r.GetDescription(), min(160, m.width-4)))))
 		}
+		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
 	}
-	bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
 
 	return strings.Join(bits, "\n") + "\n"
 }
