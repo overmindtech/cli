@@ -52,12 +52,15 @@ No expected changes found.
 
 [Open in Overmind]({{ .ChangeUrl }})
 
-{{ if .Risks }}
 # <img width="24" alt="warning" src="{{ .AssetPath }}/risks.svg"> Risks
+{{ if not .Risks }}
+Overmind has not identified any risks associated with this change.
 
+This could be due to the change being low risk with no impact on other parts of the system, or involving resources that Overmind currently does not support.
+{{ else -}}
 {{ range .Risks }}
 ## <img width="18" alt="{{ .SeverityAlt }}" src="{{ $top.AssetPath }}/{{ .SeverityIcon }}"> {{ .Title }} [{{ .SeverityText }}]
 
 {{ .Description }}
 {{ end }}
-{{ end }}
+{{ end -}}

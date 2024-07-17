@@ -795,7 +795,13 @@ func (m submitPlanModel) FinalReport() string {
 		bits = append(bits, styleH1().Render("Blast Radius"))
 		bits = append(bits, fmt.Sprintf("\nItems: %v\nEdges: %v\n", m.blastRadiusItems, m.blastRadiusEdges))
 	}
-	if m.changeUrl != "" && len(m.risks) > 0 {
+	if len(m.risks) == 0 {
+		bits = append(bits, styleH1().Render("Potential Risks"))
+		bits = append(bits, "")
+		bits = append(bits, "Overmind has not identified any risks associated with this change.")
+		bits = append(bits, "")
+		bits = append(bits, "This could be due to the change being low risk with no impact on other parts of the system, or involving resources that Overmind currently does not support.")
+	} else if m.changeUrl != "" {
 		bits = append(bits, styleH1().Render("Potential Risks"))
 		bits = append(bits, "")
 		for _, r := range m.risks {
@@ -836,5 +842,6 @@ func (m submitPlanModel) FinalReport() string {
 		}
 		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", m.changeUrl))
 	}
+
 	return strings.Join(bits, "\n") + "\n"
 }
