@@ -1069,6 +1069,14 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_vpc_endpoint": {
+		{
+			Type:       "ec2-vpc-endpoint",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
 	"aws_vpc_peering_connection": {
 		{
 			Type:       "ec2-vpc-peering-connection",
