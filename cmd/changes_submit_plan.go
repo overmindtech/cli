@@ -460,7 +460,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	lf := log.Fields{}
 	for _, f := range args {
 		lf["file"] = f
-		result, err := mappedItemDiffsFromPlanFile(ctx, f, lf)
+		result, err := MappedItemDiffsFromPlanFile(ctx, f, lf)
 		if err != nil {
 			return loggedError{
 				err:     err,

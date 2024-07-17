@@ -79,7 +79,7 @@ func (r *PlanMappingResult) numStatus(status MapStatus) int {
 	return count
 }
 
-func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fields) (*PlanMappingResult, error) {
+func MappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fields) (*PlanMappingResult, error) {
 	// read results from `terraform show -json ${tfplan file}`
 	planJSON, err := os.ReadFile(fileName)
 	if err != nil {
@@ -87,10 +87,10 @@ func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fi
 		return nil, err
 	}
 
-	return mappedItemDiffsFromPlan(ctx, planJSON, fileName, lf)
+	return MappedItemDiffsFromPlan(ctx, planJSON, fileName, lf)
 }
 
-// mappedItemDiffsFromPlan takes a plan JSON, file name, and log fields as input
+// MappedItemDiffsFromPlan takes a plan JSON, file name, and log fields as input
 // and returns the mapping results and an error. It parses the plan JSON,
 // extracts resource changes, and creates mapped item differences for each
 // resource change. It also generates mapping queries based on the resource type
@@ -98,7 +98,7 @@ func mappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fi
 // differences into supported and unsupported changes. Finally, it logs the
 // number of supported and unsupported changes and returns the mapped item
 // differences.
-func mappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, lf log.Fields) (*PlanMappingResult, error) {
+func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, lf log.Fields) (*PlanMappingResult, error) {
 	// Check that we haven't been passed a state file
 	if isStateFile(planJson) {
 		return nil, fmt.Errorf("'%v' appears to be a state file, not a plan file", fileName)

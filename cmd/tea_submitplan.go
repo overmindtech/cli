@@ -529,7 +529,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	time.Sleep(200 * time.Millisecond) // give the UI a little time to update
 
 	// Map the terraform changes to Overmind queries
-	mappingResponse, err := mappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
+	mappingResponse, err := MappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusError)}
 		m.processing <- submitPlanUpdateMsg{m.risksError("failed to parse terraform plan", err)}
