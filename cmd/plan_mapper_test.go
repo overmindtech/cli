@@ -9,7 +9,7 @@ import (
 )
 
 func TestMappedItemDiffsFromPlan(t *testing.T) {
-	results, err := mappedItemDiffsFromPlanFile(context.Background(), "testdata/plan.json", logrus.Fields{})
+	results, err := MappedItemDiffsFromPlanFile(context.Background(), "testdata/plan.json", logrus.Fields{})
 	if err != nil {
 		t.Error(err)
 	}
