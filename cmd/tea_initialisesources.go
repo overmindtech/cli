@@ -156,6 +156,10 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				)
 				cmds = append(cmds, input.Focus())
 			} else {
+				if cmdSpan != nil {
+					cmdSpan.AddEvent("Used stored AWS config")
+				}
+
 				cmds = append(cmds, m.storeConfigCmd(aws_config, aws_profile))
 				cmds = append(cmds, m.startSourcesCmd(aws_config, aws_profile))
 			}
@@ -166,6 +170,10 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.awsSourceRunning = true
 		m.stdlibSourceRunning = true
 		m.status = taskStatusDone
+
+		if cmdSpan != nil {
+			cmdSpan.AddEvent("Sources initialised")
+		}
 	case sourceInitialisationFailedMsg:
 		m.status = taskStatusError
 		errorHint := "Error initialising sources"
@@ -259,6 +267,11 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case huh.StateCompleted:
 			m.profileInputFormDone = true
+
+			if cmdSpan != nil {
+				cmdSpan.AddEvent("User provided AWS config")
+			}
+
 			// store the result
 			viper.Set("aws-profile", m.profileInputForm.GetString("aws-profile"))
 			cmds = append(cmds, m.storeConfigCmd(viper.GetString("aws-config"), viper.GetString("aws-profile")))

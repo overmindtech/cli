@@ -10,6 +10,9 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type runPlanModel struct {
@@ -110,10 +113,27 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}))
 
 	case runPlanFinishedMsg:
+		var attrs []attribute.KeyValue
+		var eventName string
+
 		if msg.err != nil {
 			m.taskModel.status = taskStatusError
+
+			// Tracing info
+			attrs = append(attrs, attribute.String("error", msg.err.Error()))
+			eventName = "Terraform plan failed"
 		} else {
 			m.taskModel.status = taskStatusDone
+
+			// Tracing info
+			eventName = "Terraform plan finished"
+		}
+
+		if cmdSpan != nil {
+			cmdSpan.AddEvent(eventName, trace.WithAttributes(attrs...))
+			if msg.err != nil {
+				cmdSpan.SetStatus(codes.Error, msg.err.Error())
+			}
 		}
 	}
 

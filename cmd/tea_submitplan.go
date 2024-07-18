@@ -723,6 +723,17 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	}
 	m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.FinishMsg()}
 
+	// Add tracing that the blast radius has finished
+	if cmdSpan != nil {
+		cmdSpan.AddEvent("Blast radius calculation finished", trace.WithAttributes(
+			attribute.Int("ovm.blast_radius.items", int(msg.GetNumItems())),
+			attribute.Int("ovm.blast_radius.edges", int(msg.GetNumEdges())),
+			attribute.String("ovm.blast_radius.state", msg.GetState().String()),
+			attribute.StringSlice("ovm.blast_radius.errors", msg.GetErrors()),
+			attribute.String("ovm.change.uuid", changeUuid.String()),
+		))
+	}
+
 	changeUrl := *m.oi.FrontendUrl
 	changeUrl.Path = fmt.Sprintf("%v/changes/%v/blast-radius", changeUrl.Path, changeUuid)
 	log.WithField("change-url", changeUrl.String()).Info("Change ready")
@@ -736,8 +747,9 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	///////////////////////////////////////////////////////////////////
 	m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusRunning)}
 	risksErrored := false
+	var riskRes *connect.Response[sdp.GetChangeRisksResponse]
 	for {
-		riskRes, err := client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
+		riskRes, err = client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
 			Msg: &sdp.GetChangeRisksRequest{
 				UUID: changeUuid[:],
 			},
@@ -781,6 +793,14 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		m.processing <- submitPlanUpdateMsg{m.risksError("initial risk calculation errored", nil)}
 		close(m.processing)
 		return nil
+	}
+
+	// Submit milestone for tracing
+	if cmdSpan != nil {
+		cmdSpan.AddEvent("Risk calculation finished", trace.WithAttributes(
+			attribute.Int("ovm.risks.count", len(riskRes.Msg.GetChangeRiskMetadata().GetRisks())),
+			attribute.String("ovm.change.uuid", changeUuid.String()),
+		))
 	}
 
 	m.processing <- submitPlanUpdateMsg{m.riskTask.UpdateStatusMsg(taskStatusDone)}
