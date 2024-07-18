@@ -28,6 +28,7 @@ import (
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 )
@@ -196,10 +197,14 @@ func Execute() {
 		// regular signals.
 		go func() {
 			select {
-			case <-sigs:
+			case signal := <-sigs:
 				log.Info("Received signal, shutting down")
 				if cmdSpan != nil {
 					cmdSpan.SetAttributes(attribute.Bool("ovm.cli.aborted", true))
+					cmdSpan.AddEvent("CLI Aborted", trace.WithAttributes(
+						attribute.String("ovm.cli.signal", signal.String()),
+					))
+					cmdSpan.SetStatus(codes.Error, "CLI aborted by user")
 				}
 				cancel()
 			case <-ctx.Done():
