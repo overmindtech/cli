@@ -15,7 +15,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
 	"github.com/muesli/reflow/wordwrap"
-	"github.com/overmindtech/cli/datamaps"
+	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -38,7 +38,7 @@ type submitPlanModel struct {
 
 	removingSecretsTask    taskModel
 	resourceExtractionTask taskModel
-	planMappingResult      datamaps.PlanMappingResult
+	planMappingResult      tfutils.PlanMappingResult
 
 	uploadChangesTask taskModel
 
@@ -119,7 +119,7 @@ func (m submitPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// better idea on the table.
 		cmds = append(cmds, tea.Sequence(func() tea.Msg { return msg.wrapped }, m.waitForSubmitPlanActivity))
 
-	case *datamaps.PlanMappingResult:
+	case *tfutils.PlanMappingResult:
 		m.planMappingResult = *msg
 
 	case submitPlanFinishedMsg:
@@ -223,11 +223,11 @@ func (m submitPlanModel) View() string {
 		for _, mapping := range m.planMappingResult.Results {
 			var icon string
 			switch mapping.Status {
-			case datamaps.MapStatusSuccess:
+			case tfutils.MapStatusSuccess:
 				icon = RenderOk()
-			case datamaps.MapStatusNotEnoughInfo:
+			case tfutils.MapStatusNotEnoughInfo:
 				icon = RenderUnknown()
-			case datamaps.MapStatusUnsupported:
+			case tfutils.MapStatusUnsupported:
 				icon = RenderErr()
 			}
 			bits = append(bits, fmt.Sprintf("  %v %v (%v)", icon, mapping.TerraformName, mapping.Message))
@@ -316,23 +316,23 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateTitleMsg(
 			"Extracting 13 changing resources: 4 supported 9 unsupported",
 		)}
-		mappingResult := datamaps.PlanMappingResult{
-			Results: []datamaps.PlannedChangeMapResult{
+		mappingResult := tfutils.PlanMappingResult{
+			Results: []tfutils.PlannedChangeMapResult{
 				{
 					TerraformName:  "kubernetes_deployment.nats_box",
-					Status:         datamaps.MapStatusSuccess,
+					Status:         tfutils.MapStatusSuccess,
 					Message:        "mapped",
 					MappedItemDiff: &sdp.MappedItemDiff{},
 				},
 				{
 					TerraformName:  "kubernetes_deployment.api_server",
-					Status:         datamaps.MapStatusNotEnoughInfo,
+					Status:         tfutils.MapStatusNotEnoughInfo,
 					Message:        "missing arn",
 					MappedItemDiff: &sdp.MappedItemDiff{},
 				},
 				{
 					TerraformName:  "aws_fake_resource",
-					Status:         datamaps.MapStatusUnsupported,
+					Status:         tfutils.MapStatusUnsupported,
 					Message:        "unsupported",
 					MappedItemDiff: &sdp.MappedItemDiff{},
 				},
@@ -530,7 +530,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 	time.Sleep(200 * time.Millisecond) // give the UI a little time to update
 
 	// Map the terraform changes to Overmind queries
-	mappingResponse, err := datamaps.MappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
+	mappingResponse, err := tfutils.MappedItemDiffsFromPlan(ctx, planJson, m.planFile, log.Fields{})
 	if err != nil {
 		m.processing <- submitPlanUpdateMsg{m.resourceExtractionTask.UpdateStatusMsg(taskStatusError)}
 		m.processing <- submitPlanUpdateMsg{m.risksError("failed to parse terraform plan", err)}
@@ -550,7 +550,7 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		))}
 
 	// Sort the supported and unsupported changes so that they display nicely
-	slices.SortFunc(mappingResponse.Results, func(a, b datamaps.PlannedChangeMapResult) int {
+	slices.SortFunc(mappingResponse.Results, func(a, b tfutils.PlannedChangeMapResult) int {
 		return int(a.Status) - int(b.Status)
 	})
 	m.processing <- submitPlanUpdateMsg{mappingResponse}
