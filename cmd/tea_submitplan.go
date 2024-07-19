@@ -13,7 +13,6 @@ import (
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/overmindtech/sdp-go"
@@ -681,9 +680,6 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.UpdateStatusMsg(taskStatusError)}
 		m.processing <- submitPlanUpdateMsg{m.risksError("failed to update planned changes", err)}
 		close(m.processing)
-
-		// TODO: Ask David about the position of these too
-		sentry.CaptureException(err)
 		return nil
 	}
 
@@ -723,9 +719,6 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 		m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.UpdateStatusMsg(taskStatusError)}
 		m.processing <- submitPlanUpdateMsg{m.risksError("error streaming results", err)}
 		close(m.processing)
-
-		// TODO: Ask David about the position of these too
-		sentry.CaptureException(err)
 		return nil
 	}
 	m.processing <- submitPlanUpdateMsg{m.blastRadiusTask.FinishMsg()}
