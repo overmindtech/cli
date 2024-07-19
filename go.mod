@@ -9,7 +9,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.26.6
 	github.com/charmbracelet/glamour v0.7.0
 	github.com/charmbracelet/huh v0.5.1
-	github.com/charmbracelet/lipgloss v0.12.0
+	github.com/charmbracelet/lipgloss v0.12.1
 	github.com/getsentry/sentry-go v0.28.1
 	github.com/go-jose/go-jose/v4 v4.0.3
 	github.com/google/uuid v1.6.0
@@ -89,7 +89,7 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/catppuccin/go v0.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/charmbracelet/x/ansi v0.1.3 // indirect
+	github.com/charmbracelet/x/ansi v0.1.4 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20240617190524-788ec55faed1 // indirect
 	github.com/charmbracelet/x/input v0.1.2 // indirect
 	github.com/charmbracelet/x/term v0.1.1 // indirect
