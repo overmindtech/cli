@@ -18,7 +18,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.2
-	github.com/overmindtech/aws-source v0.0.0-20240718142030-2a06a04edd78
+	github.com/overmindtech/aws-source v0.0.0-20240718232007-6b71c2ec6ebd
 	github.com/overmindtech/sdp-go v0.80.0
 	github.com/overmindtech/stdlib-source v0.0.0-20240718131945-5d4742e6c9cb
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -50,8 +50,8 @@ require (
 	github.com/auth0/go-jwt-middleware/v2 v2.2.1 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.3 // indirect
-	github.com/aws/aws-sdk-go-v2/config v1.27.26 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.26 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.27.27 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.27 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.11 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.15 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.15 // indirect
@@ -60,9 +60,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.43.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.38.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.40.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/directconnect v1.27.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.27.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.170.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.171.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.44.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.31.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eks v1.46.2 // indirect
@@ -75,14 +75,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.15 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.56.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.40.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.40.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.29.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.81.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.81.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.42.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.58.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.31.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.34.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.22.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.22.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.4 // indirect
 	github.com/aws/smithy-go v1.20.3 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
