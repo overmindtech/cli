@@ -2,23 +2,20 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"os/user"
-	"slices"
 	"strings"
 	"time"
 
 	"connectrpc.com/connect"
-	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
+	"github.com/overmindtech/cli/datamaps"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // submitPlanCmd represents the submit-plan command
@@ -45,274 +42,6 @@ type TfData struct {
 	Address string
 	Type    string
 	Values  map[string]any
-}
-
-// maskAllData masks every entry in attributes as redacted
-func maskAllData(attributes map[string]any) map[string]any {
-	for k, v := range attributes {
-		if mv, ok := v.(map[string]any); ok {
-			attributes[k] = maskAllData(mv)
-		} else {
-			attributes[k] = "(sensitive value)"
-		}
-	}
-	return attributes
-}
-
-// maskSensitiveData masks every entry in attributes that is set to true in sensitive. returns the redacted attributes
-func maskSensitiveData(attributes, sensitive any) any {
-	if sensitive == true {
-		return "(sensitive value)"
-	} else if sensitiveMap, ok := sensitive.(map[string]any); ok {
-		if attributesMap, ok := attributes.(map[string]any); ok {
-			result := map[string]any{}
-			for k, v := range attributesMap {
-				result[k] = maskSensitiveData(v, sensitiveMap[k])
-			}
-			return result
-		} else {
-			return "(sensitive value) (type mismatch)"
-		}
-	} else if sensitiveArr, ok := sensitive.([]any); ok {
-		if attributesArr, ok := attributes.([]any); ok {
-			if len(sensitiveArr) != len(attributesArr) {
-				return "(sensitive value) (len mismatch)"
-			}
-			result := make([]any, len(attributesArr))
-			for i, v := range attributesArr {
-				result[i] = maskSensitiveData(v, sensitiveArr[i])
-			}
-			return result
-		} else {
-			return "(sensitive value) (type mismatch)"
-		}
-	}
-	return attributes
-}
-
-func itemAttributesFromResourceChangeData(attributesMsg, sensitiveMsg json.RawMessage) (*sdp.ItemAttributes, error) {
-	var attributes map[string]any
-	err := json.Unmarshal(attributesMsg, &attributes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse attributes: %w", err)
-	}
-
-	// sensitiveMsg can be a bool or a map[string]any
-	var isSensitive bool
-	err = json.Unmarshal(sensitiveMsg, &isSensitive)
-	if err == nil && isSensitive {
-		attributes = maskAllData(attributes)
-	} else if err != nil {
-		// only try parsing as map if parsing as bool failed
-		var sensitive map[string]any
-		err = json.Unmarshal(sensitiveMsg, &sensitive)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse sensitive: %w", err)
-		}
-		attributes = maskSensitiveData(attributes, sensitive).(map[string]any)
-	}
-
-	return sdp.ToAttributesSorted(attributes)
-}
-
-// Converts a ResourceChange form a terraform plan to an ItemDiff in SDP format.
-// These items will use the scope `terraform_plan` since we haven't mapped them
-// to an actual item in the infrastructure yet
-func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, error) {
-	status := sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNSPECIFIED
-
-	if slices.Equal(resourceChange.Change.Actions, []string{"no-op"}) || slices.Equal(resourceChange.Change.Actions, []string{"read"}) {
-		status = sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNCHANGED
-	} else if slices.Equal(resourceChange.Change.Actions, []string{"create"}) {
-		status = sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED
-	} else if slices.Equal(resourceChange.Change.Actions, []string{"update"}) {
-		status = sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED
-	} else if slices.Equal(resourceChange.Change.Actions, []string{"delete", "create"}) {
-		status = sdp.ItemDiffStatus_ITEM_DIFF_STATUS_REPLACED
-	} else if slices.Equal(resourceChange.Change.Actions, []string{"create", "delete"}) {
-		status = sdp.ItemDiffStatus_ITEM_DIFF_STATUS_REPLACED
-	} else if slices.Equal(resourceChange.Change.Actions, []string{"delete"}) {
-		status = sdp.ItemDiffStatus_ITEM_DIFF_STATUS_DELETED
-	}
-
-	beforeAttributes, err := itemAttributesFromResourceChangeData(resourceChange.Change.Before, resourceChange.Change.BeforeSensitive)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse before attributes: %w", err)
-	}
-	afterAttributes, err := itemAttributesFromResourceChangeData(resourceChange.Change.After, resourceChange.Change.AfterSensitive)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse after attributes: %w", err)
-	}
-
-	err = handleKnownAfterApply(beforeAttributes, afterAttributes, resourceChange.Change.AfterUnknown)
-	if err != nil {
-		return nil, fmt.Errorf("failed to remove known after apply fields: %w", err)
-	}
-
-	result := &sdp.ItemDiff{
-		// Item: filled in by item mapping in UpdatePlannedChanges
-		Status: status,
-	}
-
-	// shorten the address by removing the type prefix if and only if it is the
-	// first part. Longer terraform addresses created in modules will not be
-	// shortened to avoid confusion.
-	trimmedAddress, _ := strings.CutPrefix(resourceChange.Address, fmt.Sprintf("%v.", resourceChange.Type))
-
-	if beforeAttributes != nil {
-		result.Before = &sdp.Item{
-			Type:            resourceChange.Type,
-			UniqueAttribute: "terraform_name",
-			Attributes:      beforeAttributes,
-			Scope:           "terraform_plan",
-		}
-
-		err = result.GetBefore().GetAttributes().Set("terraform_name", trimmedAddress)
-		if err != nil {
-			// since Address is a string, this should never happen
-			sentry.CaptureException(fmt.Errorf("failed to set terraform_name '%v' on before attributes: %w", trimmedAddress, err))
-		}
-
-		err = result.GetBefore().GetAttributes().Set("terraform_address", resourceChange.Address)
-		if err != nil {
-			// since Address is a string, this should never happen
-			sentry.CaptureException(fmt.Errorf("failed to set terraform_address of type %T (%v) on before attributes: %w", resourceChange.Address, resourceChange.Address, err))
-		}
-	}
-
-	if afterAttributes != nil {
-		result.After = &sdp.Item{
-			Type:            resourceChange.Type,
-			UniqueAttribute: "terraform_name",
-			Attributes:      afterAttributes,
-			Scope:           "terraform_plan",
-		}
-
-		err = result.GetAfter().GetAttributes().Set("terraform_name", trimmedAddress)
-		if err != nil {
-			// since Address is a string, this should never happen
-			sentry.CaptureException(fmt.Errorf("failed to set terraform_name '%v' on after attributes: %w", trimmedAddress, err))
-		}
-
-		err = result.GetAfter().GetAttributes().Set("terraform_address", resourceChange.Address)
-		if err != nil {
-			// since Address is a string, this should never happen
-			sentry.CaptureException(fmt.Errorf("failed to set terraform_address of type %T (%v) on after attributes: %w", resourceChange.Address, resourceChange.Address, err))
-		}
-	}
-
-	return result, nil
-}
-
-// Finds fields from the `before` and `after` attributes that are known after
-// apply and replaces the "after" value with the string "(known after apply)"
-func handleKnownAfterApply(before, after *sdp.ItemAttributes, afterUnknown json.RawMessage) error {
-	var afterUnknownInterface interface{}
-	err := json.Unmarshal(afterUnknown, &afterUnknownInterface)
-	if err != nil {
-		return fmt.Errorf("could not unmarshal `after_unknown` from plan: %w", err)
-	}
-
-	// Convert the parent struct to a value so that we can treat them all the
-	// same when we recurse
-	beforeValue := structpb.Value{
-		Kind: &structpb.Value_StructValue{
-			StructValue: before.GetAttrStruct(),
-		},
-	}
-
-	afterValue := structpb.Value{
-		Kind: &structpb.Value_StructValue{
-			StructValue: after.GetAttrStruct(),
-		},
-	}
-
-	err = insertKnownAfterApply(&beforeValue, &afterValue, afterUnknownInterface)
-
-	if err != nil {
-		return fmt.Errorf("failed to remove known after apply fields: %w", err)
-	}
-
-	return nil
-}
-
-const KnownAfterApply = `(known after apply)`
-
-// Inserts the text "(known after apply)" in place of null values in the planned
-// "after" values for fields that are known after apply. By default these are
-// `null` which produces a bad diff, so we replace them with (known after apply)
-// to more accurately mirror what Terraform does in the CLI
-func insertKnownAfterApply(before, after *structpb.Value, afterUnknown interface{}) error {
-	switch afterUnknown.(type) {
-	case map[string]interface{}:
-		for k, v := range afterUnknown.(map[string]interface{}) {
-			if v == true {
-				if afterFields := after.GetStructValue().GetFields(); afterFields != nil {
-					// Insert this in the after fields even if it doesn't exist.
-					// This is because sometimes you will get a plan that only
-					// has a before value for a know after apply field, so we
-					// want to still make sure it shows up
-					afterFields[k] = &structpb.Value{
-						Kind: &structpb.Value_StringValue{
-							StringValue: KnownAfterApply,
-						},
-					}
-				}
-			} else if v == false {
-				// Do nothing
-				continue
-			} else {
-				// Recurse into the nested fields
-				err := insertKnownAfterApply(before.GetStructValue().GetFields()[k], after.GetStructValue().GetFields()[k], v)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	case []interface{}:
-		for i, v := range afterUnknown.([]interface{}) {
-			if v == true {
-				// If this value in a slice is true, set the corresponding value
-				// in after to (know after apply)
-				if after.GetListValue() != nil && len(after.GetListValue().GetValues()) > i {
-					after.GetListValue().Values[i] = &structpb.Value{
-						Kind: &structpb.Value_StringValue{
-							StringValue: KnownAfterApply,
-						},
-					}
-				}
-			} else if v == false {
-				// Do nothing
-				continue
-			} else {
-				// Make sure that the before and after both actually have a
-				// valid list item at this position, if they don't we can just
-				// pass `nil` to the `removeUnknownFields` function and it'll
-				// handle it
-				beforeListValues := before.GetListValue().GetValues()
-				afterListValues := after.GetListValue().GetValues()
-				var nestedBeforeValue *structpb.Value
-				var nestedAfterValue *structpb.Value
-
-				if len(beforeListValues) > i {
-					nestedBeforeValue = beforeListValues[i]
-				}
-
-				if len(afterListValues) > i {
-					nestedAfterValue = afterListValues[i]
-				}
-
-				err := insertKnownAfterApply(nestedBeforeValue, nestedAfterValue, v)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	default:
-		return nil
-	}
-
-	return nil
 }
 
 type plannedChangeGroups struct {
@@ -365,35 +94,6 @@ func (g *plannedChangeGroups) Add(typ string, item *sdp.MappedItemDiff) {
 		list = make([]*sdp.MappedItemDiff, 0)
 	}
 	groups[typ] = append(list, item)
-}
-
-// Checks if the supplied JSON bytes are a state file. It's a common  mistake to
-// pass a state file to Overmind rather than a plan file since the commands to
-// create them are similar
-func isStateFile(bytes []byte) bool {
-	fields := make(map[string]interface{})
-
-	err := json.Unmarshal(bytes, &fields)
-
-	if err != nil {
-		return false
-	}
-
-	if _, exists := fields["values"]; exists {
-		return true
-	}
-
-	return false
-}
-
-// Returns the name of the provider from the config key. If the resource isn't
-// in a module, the ProviderConfigKey will be something like "kubernetes",
-// however if it's in a module it's be something like
-// "module.something:kubernetes". In both scenarios we want to return
-// "kubernetes"
-func extractProviderNameFromConfigKey(providerConfigKey string) string {
-	sections := strings.Split(providerConfigKey, ":")
-	return sections[len(sections)-1]
 }
 
 func changeTitle(arg string) string {
@@ -460,7 +160,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	lf := log.Fields{}
 	for _, f := range args {
 		lf["file"] = f
-		result, err := MappedItemDiffsFromPlanFile(ctx, f, lf)
+		result, err := datamaps.MappedItemDiffsFromPlanFile(ctx, f, lf)
 		if err != nil {
 			return loggedError{
 				err:     err,

@@ -4,8 +4,8 @@ import (
 	"github.com/overmindtech/sdp-go"
 )
 
-//go:generate go run ../../extractmaps.go aws-source
-//go:generate go run ../../extractmaps.go k8s-source
+//go:generate go run ../extractmaps.go aws-source
+//go:generate go run ../extractmaps.go k8s-source
 
 type TfMapData struct {
 	// The overmind type name
