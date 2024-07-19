@@ -37,7 +37,7 @@ func main() {
 	args := Args{
 		Source:       os.Args[1],
 		SourceMunged: strings.ReplaceAll(os.Args[1], "-", ""),
-		Data:         dataFromFiles(fmt.Sprintf("../../sources/%v/docs-data", os.Args[1])),
+		Data:         dataFromFiles(fmt.Sprintf("../sources/%v/docs-data", os.Args[1])),
 	}
 
 	funcMap := template.FuncMap{

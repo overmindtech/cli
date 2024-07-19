@@ -1,8 +1,7 @@
-package cmd
+package datamaps
 
 import (
 	"encoding/json"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -129,44 +128,6 @@ func TerraformDig(srcMapPtr interface{}, path string) interface{} {
 }
 
 var escapeRegex = regexp.MustCompile(`\${([\w\.\[\]]*)}`)
-
-// InterpolateScope Will interpolate variables in the scope string. These
-// variables can come from the following places:
-//
-// * `outputs` - These are the outputs from the plan
-// * `values` - These are the values from the resource in question
-//
-// Interpolation is done using the Terraform interpolation syntax:
-// https://www.terraform.io/docs/configuration/interpolation.html
-func InterpolateScope(scope string, data map[string]any) (string, error) {
-	// Find all instances of ${} in the Scope
-	matches := escapeRegex.FindAllStringSubmatch(scope, -1)
-
-	interpolated := scope
-
-	for _, match := range matches {
-		// The first match is the entire string, the second match is the
-		// variable name
-		variableName := match[1]
-
-		value := TerraformDig(&data, variableName)
-
-		if value == nil {
-			return "", fmt.Errorf("variable '%v' not found", variableName)
-		}
-
-		// Convert the value to a string
-		valueString, ok := value.(string)
-
-		if !ok {
-			return "", fmt.Errorf("variable '%v' is not a string", variableName)
-		}
-
-		interpolated = strings.Replace(interpolated, match[0], valueString, 1)
-	}
-
-	return interpolated, nil
-}
 
 // Digs for a config resource in this module or its children
 func (m ConfigModule) DigResource(address string) *ConfigResource {

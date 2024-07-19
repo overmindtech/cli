@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -157,85 +156,6 @@ func getTicketLinkFromPlan(planFile string) (string, error) {
 	h := sha256.New()
 	h.Write(plan)
 	return fmt.Sprintf("tfplan://{SHA256}%x", h.Sum(nil)), nil
-}
-
-func countSensitiveValuesInConfig(m ConfigModule) int {
-	removedSecrets := 0
-	for _, v := range m.Variables {
-		if v.Sensitive {
-			removedSecrets++
-		}
-	}
-	for _, o := range m.Outputs {
-		if o.Sensitive {
-			removedSecrets++
-		}
-	}
-	for _, c := range m.ModuleCalls {
-		removedSecrets += countSensitiveValuesInConfig(c.Module)
-	}
-	return removedSecrets
-}
-
-func countSensitiveValuesInState(m Module) int {
-	removedSecrets := 0
-	for _, r := range m.Resources {
-		removedSecrets += countSensitiveValuesInResource(r)
-	}
-	for _, c := range m.ChildModules {
-		removedSecrets += countSensitiveValuesInState(c)
-	}
-	return removedSecrets
-}
-
-// follow itemAttributesFromResourceChangeData and maskSensitiveData
-// implementation to count sensitive values
-func countSensitiveValuesInResource(r Resource) int {
-	// sensitiveMsg can be a bool or a map[string]any
-	var isSensitive bool
-	err := json.Unmarshal(r.SensitiveValues, &isSensitive)
-	if err == nil && isSensitive {
-		return 1 // one very large secret
-	} else if err != nil {
-		// only try parsing as map if parsing as bool failed
-		var sensitive map[string]any
-		err = json.Unmarshal(r.SensitiveValues, &sensitive)
-		if err != nil {
-			return 0
-		}
-		return countSensitiveAttributes(r.AttributeValues, sensitive)
-	}
-	return 0
-}
-
-func countSensitiveAttributes(attributes, sensitive any) int {
-	if sensitive == true {
-		return 1
-	} else if sensitiveMap, ok := sensitive.(map[string]any); ok {
-		if attributesMap, ok := attributes.(map[string]any); ok {
-			result := 0
-			for k, v := range attributesMap {
-				result += countSensitiveAttributes(v, sensitiveMap[k])
-			}
-			return result
-		} else {
-			return 1
-		}
-	} else if sensitiveArr, ok := sensitive.([]any); ok {
-		if attributesArr, ok := attributes.([]any); ok {
-			if len(sensitiveArr) != len(attributesArr) {
-				return 1
-			}
-			result := 0
-			for i, v := range attributesArr {
-				result += countSensitiveAttributes(v, sensitiveArr[i])
-			}
-			return result
-		} else {
-			return 1
-		}
-	}
-	return 0
 }
 
 func addTerraformBaseFlags(cmd *cobra.Command) {
