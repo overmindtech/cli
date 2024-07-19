@@ -16,7 +16,7 @@ exclude_regex = [
   "_templ\\.go",
   "\\.sql\\.go",
   ".*models/(models|copyfrom|db).go",
-  "datamaps",
+  "tfutils",
 ]
 exclude_unchanged = false
 follow_symlink = false

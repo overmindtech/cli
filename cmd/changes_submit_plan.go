@@ -11,7 +11,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"github.com/overmindtech/cli/datamaps"
+	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -160,7 +160,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	lf := log.Fields{}
 	for _, f := range args {
 		lf["file"] = f
-		result, err := datamaps.MappedItemDiffsFromPlanFile(ctx, f, lf)
+		result, err := tfutils.MappedItemDiffsFromPlanFile(ctx, f, lf)
 		if err != nil {
 			return loggedError{
 				err:     err,

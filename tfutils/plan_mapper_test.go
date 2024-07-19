@@ -1,4 +1,4 @@
-package datamaps
+package tfutils
 
 import (
 	"context"
