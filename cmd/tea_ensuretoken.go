@@ -20,6 +20,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 )
 
@@ -126,16 +127,34 @@ func (m ensureTokenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.title = "Using stored token"
 		m.deviceMessage = ""
 		cmds = append(cmds, m.tokenAvailable(msg.token))
+
+		if cmdSpan != nil {
+			cmdSpan.AddEvent("User Authenticated", trace.WithAttributes(
+				attribute.String("ovm.auth.mechanism", "Token"),
+			))
+		}
 	case tokenReceivedMsg:
 		m.status = taskStatusDone
 		m.title = "Authentication successful, using API key"
 		m.deviceMessage = ""
 		cmds = append(cmds, m.tokenAvailable(msg.token))
+
+		if cmdSpan != nil {
+			cmdSpan.AddEvent("User Authenticated", trace.WithAttributes(
+				attribute.String("ovm.auth.mechanism", "API Key"),
+			))
+		}
 	case tokenStoredMsg:
 		m.status = taskStatusDone
 		m.title = fmt.Sprintf("Authentication successful, token stored locally (%v)", msg.file)
 		m.deviceMessage = ""
 		cmds = append(cmds, m.tokenAvailable(msg.token))
+
+		if cmdSpan != nil {
+			cmdSpan.AddEvent("User Authenticated", trace.WithAttributes(
+				attribute.String("ovm.auth.mechanism", "Browser"),
+			))
+		}
 	case otherError:
 		if msg.id == m.spinner.ID() {
 			m.errors = append(m.errors, fmt.Sprintf("Note: %v", msg.err))

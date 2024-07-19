@@ -11,6 +11,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/overmindtech/sdp-go"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type revlinkWarmupFinishedMsg struct{}
@@ -109,6 +111,20 @@ func (m revlinkWarmupModel) Update(msg tea.Msg) (revlinkWarmupModel, tea.Cmd) {
 		if m.watchdogCancel != nil {
 			m.watchdogCancel()
 			m.watchdogCancel = nil
+		}
+
+		if cmdSpan != nil {
+			var attrs []attribute.KeyValue
+
+			if m.currentStatus != nil {
+				attrs = append(attrs,
+					attribute.String("ovm.cli.revlinkWarmupStatus", m.currentStatus.GetStatus()),
+					attribute.Int("ovm.cli.revlinkWarmupItems", int(m.currentStatus.GetItems())),
+					attribute.Int("ovm.cli.revlinkWarmupEdges", int(m.currentStatus.GetEdges())),
+				)
+			}
+
+			cmdSpan.AddEvent("Revlink warmup finished", trace.WithAttributes(attrs...))
 		}
 	default:
 		var taskCmd tea.Cmd
