@@ -119,8 +119,8 @@ func (m revlinkWarmupModel) Update(msg tea.Msg) (revlinkWarmupModel, tea.Cmd) {
 			if m.currentStatus != nil {
 				attrs = append(attrs,
 					attribute.String("ovm.cli.revlinkWarmupStatus", m.currentStatus.GetStatus()),
-					attribute.Int("ovm.cli.revlinkWarmupItems", int(m.currentStatus.Items)),
-					attribute.Int("ovm.cli.revlinkWarmupEdges", int(m.currentStatus.Edges)),
+					attribute.Int("ovm.cli.revlinkWarmupItems", int(m.currentStatus.GetItems())),
+					attribute.Int("ovm.cli.revlinkWarmupEdges", int(m.currentStatus.GetEdges())),
 				)
 			}
 
