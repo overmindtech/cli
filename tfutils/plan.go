@@ -27,7 +27,7 @@ type Plan struct {
 	ResourceChanges    []ResourceChange  `json:"resource_changes,omitempty"`
 	OutputChanges      map[string]Change `json:"output_changes,omitempty"`
 	PriorState         State             `json:"prior_state,omitempty"`
-	Config             config            `json:"configuration,omitempty"`
+	Config             planConfig        `json:"configuration,omitempty"`
 	RelevantAttributes []ResourceAttr    `json:"relevant_attributes,omitempty"`
 	Checks             json.RawMessage   `json:"checks,omitempty"`
 	Timestamp          string            `json:"timestamp,omitempty"`
@@ -35,7 +35,7 @@ type Plan struct {
 }
 
 // Config represents the complete configuration source
-type config struct {
+type planConfig struct {
 	ProviderConfigs map[string]ProviderConfig `json:"provider_config,omitempty"`
 	RootModule      ConfigModule              `json:"root_module,omitempty"`
 }
