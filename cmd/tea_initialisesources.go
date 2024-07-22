@@ -14,6 +14,8 @@ import (
 	"github.com/overmindtech/sdp-go/auth"
 	stdlibsource "github.com/overmindtech/stdlib-source/sources"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 )
 
@@ -26,7 +28,9 @@ type loadSourcesConfigMsg struct {
 }
 
 type stdlibSourceInitialisedMsg struct{}
-type awsSourceInitialisedMsg struct{}
+type awsSourceInitialisedMsg struct {
+	providers []tfutils.ProviderResult
+}
 
 type sourcesInitialisedMsg struct{}
 type sourceInitialisationFailedMsg struct{ err error }
@@ -46,6 +50,7 @@ type initialiseSourcesModel struct {
 
 	useManagedSources   bool
 	awsSourceRunning    bool
+	awsProviders        []tfutils.ProviderResult
 	stdlibSourceRunning bool
 
 	errorHints []string
@@ -103,8 +108,11 @@ func (m initialiseSourcesModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case awsSourceInitialisedMsg:
 		m.awsSourceRunning = true
+		m.awsProviders = msg.providers
 		if cmdSpan != nil {
-			cmdSpan.AddEvent("aws source initialised")
+			cmdSpan.AddEvent("aws source initialised", trace.WithAttributes(
+				attribute.Int("ovm.aws.providers", len(msg.providers)),
+			))
 		}
 		if m.stdlibSourceRunning {
 			cmds = append(cmds, func() tea.Msg { return sourcesInitialisedMsg{} })
@@ -147,7 +155,17 @@ func (m initialiseSourcesModel) View() string {
 		bits = append(bits, wrap(fmt.Sprintf("  %v Using managed sources", RenderOk()), m.width, 2))
 	} else {
 		if m.awsSourceRunning {
-			bits = append(bits, wrap(fmt.Sprintf("  %v AWS Source: running", RenderOk()), m.width, 4))
+			bits = append(bits, wrap(fmt.Sprintf("  %v AWS Source: running with %v providers", RenderOk(), len(m.awsProviders)), m.width, 4))
+			for _, p := range m.awsProviders {
+				label := p.Provider.Alias
+				if label == "" {
+					label = p.Provider.Name
+				}
+				bits = append(bits, fmt.Sprintf("    %v (from %v)", label, p.FilePath))
+				if p.Provider.Region != "" {
+					bits = append(bits, fmt.Sprintf("      region: %v", p.Provider.Region))
+				}
+			}
 		}
 		if m.stdlibSourceRunning {
 			bits = append(bits, wrap(fmt.Sprintf("  %v stdlib Source: running", RenderOk()), m.width, 4))
@@ -244,6 +262,6 @@ func (m initialiseSourcesModel) startAwsSourceCmd(ctx context.Context, oi Overmi
 		if err != nil {
 			return sourceInitialisationFailedMsg{fmt.Errorf("failed to start AWS source engine: %w", err)}
 		}
-		return awsSourceInitialisedMsg{}
+		return awsSourceInitialisedMsg{providers: providers}
 	}
 }
