@@ -291,11 +291,6 @@ func (m tfApplyModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return nil
 		}
 
-		// inject the profile, if configured
-		if aws_profile := viper.GetString("aws-profile"); aws_profile != "" {
-			c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
-		}
-
 		_, span := tracing.Tracer().Start(m.ctx, "terraform apply") // nolint:spancheck // will be ended in the tea.Exec cleanup func
 
 		if viper.GetString("ovm-test-fake") != "" {

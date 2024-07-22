@@ -811,6 +811,11 @@ func (m submitPlanModel) submitPlanCmd() tea.Msg {
 }
 
 func (m submitPlanModel) FinalReport() string {
+	if m.Status() == taskStatusPending {
+		// hasn't started yet
+		return ""
+	}
+
 	bits := []string{}
 	if m.blastRadiusItems > 0 {
 		bits = append(bits, styleH1().Render("Blast Radius"))

@@ -35,6 +35,7 @@ type cmdModel struct {
 	apiKey         string
 	oi             OvermindInstance // loaded from instanceLoadedMsg
 	requiredScopes []string
+	args           []string
 
 	// UI state
 	tasks      map[string]tea.Model
@@ -207,6 +208,7 @@ func (m *cmdModel) tokenChecks(token *oauth2.Token) tea.Cmd {
 				oi:     m.oi,
 				action: m.action,
 				token:  token,
+				tfArgs: m.args,
 			}
 		}
 	}
@@ -261,6 +263,7 @@ func (m *cmdModel) tokenChecks(token *oauth2.Token) tea.Cmd {
 			oi:     m.oi,
 			action: m.action,
 			token:  token,
+			tfArgs: m.args,
 		}
 	}
 }
