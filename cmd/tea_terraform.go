@@ -291,10 +291,10 @@ func (m cmdModel) View() string {
 
 	bits = append(bits, m.cmd.View())
 	if m.fatalError != "" {
-		md := markdownToString(m.width, fmt.Sprintf("> Fatal Error: %v\n", m.fatalError))
-		md, _ = strings.CutPrefix(md, "\n")
-		md, _ = strings.CutSuffix(md, "\n")
-		bits = append(bits, md)
+		md := markdownToString(m.width, fmt.Sprintf("> Fatal Error: %v", m.fatalError))
+		bits = append(bits, strings.Trim(md, "\n"))
+		md = markdownToString(m.width, "> Get help in our [Discord](https://discord.com/invite/5UKsqAkPWG)")
+		bits = append(bits, strings.Trim(md, "\n"))
 	}
 	bits = slices.DeleteFunc(bits, func(s string) bool {
 		return s == "" || s == "\n"
