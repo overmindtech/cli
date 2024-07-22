@@ -106,10 +106,21 @@ func LoadEvalContext(varsFiles []string, args []string, env []string) (*hcl.Eval
 	return nil, nil
 }
 
+type ProviderResult struct {
+	Provider *AWSProvider
+	Error    error
+	FilePath string
+}
+
 // Parses AWS provider config from all terraform files in the given directory,
 // recursing into subdirectories. Returns a list of AWS providers and a list of
-// files that were parsed.
-func ParseAWSProviders(terraformDir string, evalContext *hcl.EvalContext) ([]AWSProvider, []string, error) {
+// files that were parsed. This will return an error only if there was an error
+// loading the files. ProviderResults will be returned for:
+//
+// * Files that could not be parsed at all (just an error)
+// * Files that contained an AWS provider that we couldn't fully evaluate (with an error)
+// * Files that contained an AWS provider that we could fully evaluate (with no error)
+func ParseAWSProviders(terraformDir string, evalContext *hcl.EvalContext) ([]ProviderResult, error) {
 	files := make([]string, 0)
 
 	// Get all files matching *.tf from everywhere under the directory
@@ -124,11 +135,11 @@ func ParseAWSProviders(terraformDir string, evalContext *hcl.EvalContext) ([]AWS
 	})
 
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	parser := hclparse.NewParser()
-	awsProviders := make([]AWSProvider, 0)
+	results := make([]ProviderResult, 0)
 
 	// TODO: We need to also make sure we have all the variables and inputs set
 	// up so that dynamic values can be used. These could come from -vars-file
@@ -142,29 +153,44 @@ func ParseAWSProviders(terraformDir string, evalContext *hcl.EvalContext) ([]AWS
 	for _, file := range files {
 		b, err := os.ReadFile(file)
 		if err != nil {
-			return nil, files, fmt.Errorf("error reading terraform file: (%v) %w", file, err)
+			results = append(results, ProviderResult{
+				Error:    fmt.Errorf("error reading terraform file: (%v) %w", file, err),
+				FilePath: file,
+			})
+			continue
 		}
 
 		// Parse the HCL file
 		parsedFile, diag := parser.ParseHCL(b, file)
 		if diag.HasErrors() {
-			return nil, files, fmt.Errorf("error parsing terraform file: (%v) %w", file, diag)
+			results = append(results, ProviderResult{
+				Error:    fmt.Errorf("error parsing terraform file: (%v) %w", file, diag),
+				FilePath: file,
+			})
+			continue
 		}
 
 		providerFile := ProviderFile{}
 		diag = gohcl.DecodeBody(parsedFile.Body, evalContext, &providerFile)
 		if diag.HasErrors() {
-			return nil, files, fmt.Errorf("error decoding terraform file: (%v) %w", file, diag)
+			results = append(results, ProviderResult{
+				Error:    fmt.Errorf("error decoding terraform file: (%v) %w", file, diag),
+				FilePath: file,
+			})
+			continue
 		}
 
 		for _, provider := range providerFile.Providers {
 			if provider.Name == "aws" {
-				awsProviders = append(awsProviders, provider)
+				results = append(results, ProviderResult{
+					Provider: &provider, //nolint:all // this is not relevant for go1.22 and later
+					FilePath: file,
+				})
 			}
 		}
 	}
 
-	return awsProviders, files, nil
+	return results, nil
 }
 
 // ConfigFromProvider creates an aws.Config from an AWSProvider that uses the
