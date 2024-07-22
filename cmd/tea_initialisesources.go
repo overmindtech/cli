@@ -210,22 +210,7 @@ func (m initialiseSourcesModel) startStdlibSourceCmd(ctx context.Context, oi Ove
 
 func (m initialiseSourcesModel) startAwsSourceCmd(ctx context.Context, oi OvermindInstance, token *oauth2.Token, tfArgs []string) tea.Cmd {
 	return func() tea.Msg {
-		varFiles := []string{}
-		vars := []string{}
-
-		for _, arg := range tfArgs {
-			if strings.HasPrefix(arg, "-var-file=") {
-				varFiles = append(varFiles, strings.TrimPrefix(arg, "-var-file="))
-			} else if strings.HasPrefix(arg, "-var=") {
-				vars = append(vars, strings.TrimPrefix(arg, "-var="))
-			} else if strings.HasPrefix(arg, "--var-file=") {
-				varFiles = append(varFiles, strings.TrimPrefix(arg, "--var-file="))
-			} else if strings.HasPrefix(arg, "--var=") {
-				vars = append(vars, strings.TrimPrefix(arg, "--var="))
-			}
-		}
-
-		tfEval, err := tfutils.LoadEvalContext(varFiles, vars, os.Environ())
+		tfEval, err := tfutils.LoadEvalContext(tfArgs, os.Environ())
 		if err != nil {
 			return sourceInitialisationFailedMsg{fmt.Errorf("failed to load variables from the environment: %w", err)}
 		}

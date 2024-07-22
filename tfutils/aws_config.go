@@ -19,6 +19,8 @@ import (
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/mitchellh/go-homedir"
+	"github.com/zclconf/go-cty/cty"
+	ctyjson "github.com/zclconf/go-cty/cty/json"
 	"golang.org/x/net/http/httpproxy"
 )
 
@@ -96,14 +98,280 @@ type AssumeRoleWithWebIdentity struct {
 	Remain hcl.Body `hcl:",remain"`
 }
 
-// Loads the eval context from the following locations:
+// Loads the eval context in the same way that Terraform does, this means it
+// supports TF_VAR_* environment variables, terraform.tfvars,
+// terraform.tfvars.json, *.auto.tfvars, and *.auto.tfvars.json files, and -var
+// and -var-file arguments. These are processed in the order that Terraform uses
+// and should result in the same set of variables being loaded.
 //
-//   - `-var-file=FILENAME` files: These should be passed as file paths
-//   - `-var 'NAME=VALUE'` arguments: These should be passed as a list of strings
-//   - Environment Variables: These should be passed as a []strings (from `os.Environ()`),
-//     variables beginning with TF_VAR_ will be used
-func LoadEvalContext(varsFiles []string, args []string, env []string) (*hcl.EvalContext, error) {
-	return nil, nil
+// The args parameter should contain the raw arguments that were passed to
+// terraform. This includes: -var and -var-file arguments, and should be passed
+// as a list of strings.
+//
+// The env parameter should contain the environment variables that were present
+// when Terraform was run. These should be passed as a []strings (from
+// `os.Environ()`), variables beginning with TF_VAR_ will be used.
+func LoadEvalContext(args []string, env []string) (*hcl.EvalContext, error) {
+	// Note that Terraform has a hierarchy of variable sources, which we need
+	// to respect, with later sources taking precedence over earlier ones:
+	//
+	// * Environment variables
+	// * The terraform.tfvars file, if present.
+	// * The terraform.tfvars.json file, if present.
+	// * Any *.auto.tfvars or *.auto.tfvars.json files, processed in lexical
+	//   order of their filenames.
+	// * Any -var and -var-file options on the command line, in the order they
+	//   are provided. (This includes variables set by an HCP Terraform workspace.)
+	evalCtx := hcl.EvalContext{
+		Variables: make(map[string]cty.Value),
+	}
+
+	// Parse environment variables. Note that if a root module variable uses a
+	// type constraint to require a complex value (list, set, map, object, or
+	// tuple), Terraform will instead attempt to parse its value using the same
+	// syntax used within variable definitions files, which requires careful
+	// attention to the string escaping rules in your shell:
+	//
+	// ```shell
+	// export TF_VAR_availability_zone_names='["us-west-1b","us-west-1d"]'
+	// ```
+	//
+	for _, envVar := range env {
+		// If the key starts with TF_VAR_, we need to strip that off, and we
+		// also want to filter on only these variables
+		if strings.HasPrefix(envVar, "TF_VAR_") {
+			err := ParseFlagValue(envVar[7:], &evalCtx)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			continue
+		}
+	}
+
+	// Parse the terraform.tfvars file, if present.
+	if _, err := os.Stat("terraform.tfvars"); err == nil {
+		// Parse the HCL file
+		err = ParseTFVarsFile("terraform.tfvars", &evalCtx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Parse the terraform.tfvars.json file, if present.
+	if _, err := os.Stat("terraform.tfvars.json"); err == nil {
+		// Parse the JSON file
+		err = ParseTFVarsJSONFile("terraform.tfvars.json", &evalCtx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Parse *.auto.tfvars or *.auto.tfvars.json files, processed in lexical
+	// order of their filenames.
+	matches, _ := filepath.Glob("*.auto.tfvars")
+	for _, file := range matches {
+		// Parse the HCL file
+		err := ParseTFVarsFile(file, &evalCtx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	matches, _ = filepath.Glob("*.auto.tfvars.json")
+	for _, file := range matches {
+		// Parse the JSON file
+		err := ParseTFVarsJSONFile(file, &evalCtx)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Parse vars from args, this means the var files and raw vars, in the order
+	// they are provided
+	err := ParseVarsArgs(args, &evalCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &evalCtx, nil
+}
+
+// Parses a given TF Vars file into the given eval context
+func ParseTFVarsFile(file string, dest *hcl.EvalContext) error {
+	// Read the file
+	b, err := os.ReadFile(file)
+	if err != nil {
+		return fmt.Errorf("error reading terraform vars file: %w", err)
+	}
+
+	// Parse the HCL file
+	parser := hclparse.NewParser()
+	parsedFile, diag := parser.ParseHCL(b, file)
+	if diag.HasErrors() {
+		return fmt.Errorf("error parsing terraform vars file: %w", diag)
+	}
+
+	// Decode the body
+	var vars map[string]cty.Value
+	diag = gohcl.DecodeBody(parsedFile.Body, nil, &vars)
+	if diag.HasErrors() {
+		return fmt.Errorf("error decoding terraform vars file: %w", diag)
+	}
+
+	// Merge the vars into the eval context
+	for k, v := range vars {
+		dest.Variables[k] = v
+	}
+
+	return nil
+}
+
+// Parses a given TF Vars JSON file into the given eval context. In this each
+// key becomes a variable as par the Hashicorp docs:
+// https://developer.hashicorp.com/terraform/language/values/variables#variable-definitions-tfvars-files
+func ParseTFVarsJSONFile(file string, dest *hcl.EvalContext) error {
+	// Read the file
+	b, err := os.ReadFile(file)
+	if err != nil {
+		return fmt.Errorf("error reading terraform vars file: %w", err)
+	}
+
+	// Read the type structure form the file
+	ctyType, err := ctyjson.ImpliedType(b)
+	if err != nil {
+		return fmt.Errorf("error unmarshalling terraform vars file: %w", err)
+	}
+
+	// Unmarshal the values
+	ctyValue, err := ctyjson.Unmarshal(b, ctyType)
+	if err != nil {
+		return fmt.Errorf("error unmarshalling terraform vars file: %w", err)
+	}
+
+	// Extract the variables
+	for k, v := range ctyValue.AsValueMap() {
+		dest.Variables[k] = v
+	}
+
+	return nil
+}
+
+// Parses either a `json` or `tfvars` formatted vars file ands adds these
+// variables to the context
+func ParseVarsFile(path string, dest *hcl.EvalContext) error {
+	switch {
+	case strings.HasSuffix(path, ".json"):
+		return ParseTFVarsJSONFile(path, dest)
+	case strings.HasSuffix(path, ".tfvars"):
+		return ParseTFVarsFile(path, dest)
+	default:
+		return fmt.Errorf("unsupported vars file format: %s", path)
+	}
+}
+
+// Parses the os.Args for -var and -var-file arguments and adds them to the eval
+// context.
+func ParseVarsArgs(args []string, dest *hcl.EvalContext) error {
+	// We are going to parse the whole argument as HCL here since you can
+	// include arrays, maps etc.
+	for i, arg := range args {
+		switch {
+		case strings.HasPrefix(arg, "-var="):
+			err := ParseFlagValue(arg[5:], dest)
+			if err != nil {
+				return err
+			}
+		case arg == "-var":
+			// If the flag is just -var, we need to use the next arg as the value
+			// and skip this one
+			if i+1 < len(args) {
+				err := ParseFlagValue(args[i+1], dest)
+				if err != nil {
+					return err
+				}
+			} else {
+				continue
+			}
+		case strings.HasPrefix(arg, "-var-file="):
+			err := ParseVarsFile(arg[10:], dest)
+			if err != nil {
+				return err
+			}
+		case arg == "-var-file":
+			// If the flag is just -var-file, we need to use the next arg as the value
+			// and skip this one
+			if i+1 < len(args) {
+				err := ParseVarsFile(args[i+1], dest)
+				if err != nil {
+					return err
+				}
+			} else {
+				continue
+			}
+		default:
+			continue
+		}
+
+	}
+
+	return nil
+}
+
+// Parses the value of a -var flag. The value should already be extracted here
+// i.e. the text after the = sign, or after the space if the = sign isn't used,
+// so you should be passing in "foo=var" or "[1,2,3]" etc.
+//
+// Terraform allows a user to specify string values without quotes,
+// which isn't valid HCL, but everything else needs to be valid HCL. For
+// example you can set a string like this:
+//
+//	-var="foo=bar"
+//
+// But this isn't valid HCL since the string isn't quoted. However if
+// you want to set a list, map etc, you need to use valid HCL syntax.
+// e.g.
+//
+//	-var="foo=[1,2,3]"
+//
+// In order to handle this we're going to try to parse as HCL, then
+// fall back to basic string parsing if that doesn't work, which seems
+// to be how the Terraform works
+func ParseFlagValue(value string, dest *hcl.EvalContext) error {
+	err := func() error {
+		// Parse argument as HCL
+		parser := hclparse.NewParser()
+		parsedFile, diag := parser.ParseHCL([]byte(value), "")
+		if diag.HasErrors() {
+			return fmt.Errorf("error parsing terraform vars file: %w", diag)
+		}
+
+		// Decode the body
+		var vars map[string]cty.Value
+		diag = gohcl.DecodeBody(parsedFile.Body, nil, &vars)
+		if diag.HasErrors() {
+			return fmt.Errorf("error decoding terraform vars file: %w", diag)
+		}
+
+		// Merge the vars into the eval context
+		for k, v := range vars {
+			dest.Variables[k] = v
+		}
+
+		return nil
+	}()
+
+	if err != nil {
+		// Fall back to string parsing
+		parts := strings.SplitN(value, "=", 2)
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid variable argument: %s", value)
+		}
+
+		dest.Variables[parts[0]] = cty.StringVal(parts[1])
+	}
+
+	return nil
 }
 
 type ProviderResult struct {
@@ -113,41 +381,22 @@ type ProviderResult struct {
 }
 
 // Parses AWS provider config from all terraform files in the given directory,
-// recursing into subdirectories. Returns a list of AWS providers and a list of
-// files that were parsed. This will return an error only if there was an error
-// loading the files. ProviderResults will be returned for:
+// without recursion as we don't yet support providers in submodules. Returns a
+// list of AWS providers and a list of files that were parsed. This will return
+// an error only if there was an error loading the files. ProviderResults will
+// be returned for:
 //
 // * Files that could not be parsed at all (just an error)
 // * Files that contained an AWS provider that we couldn't fully evaluate (with an error)
 // * Files that contained an AWS provider that we could fully evaluate (with no error)
 func ParseAWSProviders(terraformDir string, evalContext *hcl.EvalContext) ([]ProviderResult, error) {
-	files := make([]string, 0)
-
-	// Get all files matching *.tf from everywhere under the directory
-	err := filepath.Walk(terraformDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return fmt.Errorf("error searching for terraform files: %w", err)
-		}
-		if !info.IsDir() && filepath.Ext(info.Name()) == ".tf" {
-			files = append(files, path)
-		}
-		return nil
-	})
-
+	files, err := filepath.Glob(filepath.Join(terraformDir, "*.tf"))
 	if err != nil {
 		return nil, err
 	}
 
 	parser := hclparse.NewParser()
 	results := make([]ProviderResult, 0)
-
-	// TODO: We need to also make sure we have all the variables and inputs set
-	// up so that dynamic values can be used. These could come from -vars-file
-	// or the Environment. It's also possible to have a provider in a module
-	// that sets parameters based on the input variables of the module
-	//
-	// * [ ] Parse tfvars files and arguments
-	// * [ ] Parse environment variables
 
 	// Iterate over the files
 	for _, file := range files {
