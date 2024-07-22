@@ -40,6 +40,7 @@ type ProviderFile struct {
 // https://registry.terraform.io/providers/hashicorp/aws/latest/docs#provider-configuration
 type AWSProvider struct {
 	Name                           string   `hcl:"name,label"`
+	Alias                          string   `hcl:"alias,optional"`
 	AccessKey                      string   `hcl:"access_key,optional"`
 	SecretKey                      string   `hcl:"secret_key,optional"`
 	Token                          string   `hcl:"token,optional"`
