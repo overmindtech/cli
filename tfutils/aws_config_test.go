@@ -6,7 +6,7 @@ import (
 )
 
 func TestParseAWSProviders(t *testing.T) {
-	providers, files, err := ParseAWSProviders("testdata")
+	providers, files, err := ParseAWSProviders("testdata", nil)
 	if err != nil {
 		t.Errorf("Error parsing AWS providers: %v", err)
 	}
@@ -163,7 +163,7 @@ func TestParseAWSProviders(t *testing.T) {
 func TestConfigFromProvider(t *testing.T) {
 	// Make sure the providers we have created can all be turned into configs
 	// without any issues
-	providers, _, err := ParseAWSProviders("testdata/config_from_provider")
+	providers, _, err := ParseAWSProviders("testdata/config_from_provider", nil)
 	if err != nil {
 		t.Fatalf("Error parsing AWS providers: %v", err)
 	}

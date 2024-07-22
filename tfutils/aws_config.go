@@ -96,14 +96,24 @@ type AssumeRoleWithWebIdentity struct {
 	Remain hcl.Body `hcl:",remain"`
 }
 
+// Loads the eval context from the following locations:
+//
+//   - `-var-file=FILENAME` files: These should be passed as file paths
+//   - `-var 'NAME=VALUE'` arguments: These should be passed as a list of strings
+//   - Environment Variables: These should be passed as a []strings (from `os.Environ()`),
+//     variables beginning with TF_VAR_ will be used
+func LoadEvalContext(varsFiles []string, args []string, env []string) (*hcl.EvalContext, error) {
+	return nil, nil
+}
+
 // Parses AWS provider config from all terraform files in the given directory,
 // recursing into subdirectories. Returns a list of AWS providers and a list of
 // files that were parsed.
-func ParseAWSProviders(dir string) ([]AWSProvider, []string, error) {
+func ParseAWSProviders(terraformDir string, evalContext *hcl.EvalContext) ([]AWSProvider, []string, error) {
 	files := make([]string, 0)
 
 	// Get all files matching *.tf from everywhere under the directory
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(terraformDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("error searching for terraform files: %w", err)
 		}
@@ -120,6 +130,14 @@ func ParseAWSProviders(dir string) ([]AWSProvider, []string, error) {
 	parser := hclparse.NewParser()
 	awsProviders := make([]AWSProvider, 0)
 
+	// TODO: We need to also make sure we have all the variables and inputs set
+	// up so that dynamic values can be used. These could come from -vars-file
+	// or the Environment. It's also possible to have a provider in a module
+	// that sets parameters based on the input variables of the module
+	//
+	// * [ ] Parse tfvars files and arguments
+	// * [ ] Parse environment variables
+
 	// Iterate over the files
 	for _, file := range files {
 		b, err := os.ReadFile(file)
@@ -134,7 +152,7 @@ func ParseAWSProviders(dir string) ([]AWSProvider, []string, error) {
 		}
 
 		providerFile := ProviderFile{}
-		diag = gohcl.DecodeBody(parsedFile.Body, &hcl.EvalContext{}, &providerFile)
+		diag = gohcl.DecodeBody(parsedFile.Body, evalContext, &providerFile)
 		if diag.HasErrors() {
 			return nil, files, fmt.Errorf("error decoding terraform file: (%v) %w", file, diag)
 		}
