@@ -277,6 +277,10 @@ func ParseVarsArgs(args []string, dest *hcl.EvalContext) error {
 	// We are going to parse the whole argument as HCL here since you can
 	// include arrays, maps etc.
 	for i, arg := range args {
+		// normalize `--foo` arguments to `-foo`
+		if strings.HasPrefix(arg, "--") {
+			arg = arg[1:]
+		}
 		switch {
 		case strings.HasPrefix(arg, "-var="):
 			err := ParseFlagValue(arg[5:], dest)

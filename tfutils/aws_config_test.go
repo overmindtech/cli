@@ -372,12 +372,13 @@ func TestLoadEvalContext(t *testing.T) {
 	args := []string{
 		"plan",
 		"-var", "image_id=args",
-		"-var", "instance_type=t2.micro",
+		"--var", "instance_type=t2.micro",
 		"-var-file", "testdata/tfvars.json",
 		"-var-file=testdata/test_vars.tfvars",
 	}
 
 	env := []string{
+		"TF_VAR_something=else",
 		"TF_VAR_image_id=environment",
 	}
 
@@ -386,6 +387,14 @@ func TestLoadEvalContext(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	t.Log(evalCtx)
+
+	if evalCtx.Variables["instance_type"].AsString() != "t2.micro" {
+		t.Errorf("Expected instance_type to be t2.micro, got %s", evalCtx.Variables["instance_type"].AsString())
+	}
+	if evalCtx.Variables["something"].AsString() != "else" {
+		t.Errorf("Expected something to be else, got %s", evalCtx.Variables["something"].AsString())
+	}
 	if evalCtx.Variables["image_id"].AsString() != "args" {
 		t.Errorf("Expected image_id to be args, got %s", evalCtx.Variables["image_id"].AsString())
 	}
