@@ -39,64 +39,64 @@ type ProviderFile struct {
 // The fields are based on the AWS provider configuration documentation:
 // https://registry.terraform.io/providers/hashicorp/aws/latest/docs#provider-configuration
 type AWSProvider struct {
-	Name                           string   `hcl:"name,label"`
-	Alias                          string   `hcl:"alias,optional"`
-	AccessKey                      string   `hcl:"access_key,optional"`
-	SecretKey                      string   `hcl:"secret_key,optional"`
-	Token                          string   `hcl:"token,optional"`
-	Region                         string   `hcl:"region,optional"`
-	CustomCABundle                 string   `hcl:"custom_ca_bundle,optional"`
-	EC2MetadataServiceEndpoint     string   `hcl:"ec2_metadata_service_endpoint,optional"`
-	EC2MetadataServiceEndpointMode string   `hcl:"ec2_metadata_service_endpoint_mode,optional"`
-	SkipMetadataAPICheck           bool     `hcl:"skip_metadata_api_check,optional"`
-	HTTPProxy                      string   `hcl:"http_proxy,optional"`
-	HTTPSProxy                     string   `hcl:"https_proxy,optional"`
-	NoProxy                        string   `hcl:"no_proxy,optional"`
-	MaxRetries                     int      `hcl:"max_retries,optional"`
-	Profile                        string   `hcl:"profile,optional"`
-	RetryMode                      string   `hcl:"retry_mode,optional"`
-	SharedConfigFiles              []string `hcl:"shared_config_files,optional"`
-	SharedCredentialsFiles         []string `hcl:"shared_credentials_files,optional"`
-	UseDualStackEndpoint           bool     `hcl:"use_dualstack_endpoint,optional"`
-	UseFIPSEndpoint                bool     `hcl:"use_fips_endpoint,optional"`
+	Name                           string   `hcl:"name,label" yaml:"name,omitempty"`
+	Alias                          string   `hcl:"alias,optional" yaml:"alias,omitempty"`
+	AccessKey                      string   `hcl:"access_key,optional" yaml:"access_key,omitempty"`
+	SecretKey                      string   `hcl:"secret_key,optional" yaml:"secret_key,omitempty"`
+	Token                          string   `hcl:"token,optional" yaml:"token,omitempty"`
+	Region                         string   `hcl:"region,optional" yaml:"region,omitempty"`
+	CustomCABundle                 string   `hcl:"custom_ca_bundle,optional" yaml:"custom_ca_bundle,omitempty"`
+	EC2MetadataServiceEndpoint     string   `hcl:"ec2_metadata_service_endpoint,optional" yaml:"ec2_metadata_service_endpoint,omitempty"`
+	EC2MetadataServiceEndpointMode string   `hcl:"ec2_metadata_service_endpoint_mode,optional" yaml:"ec2_metadata_service_endpoint_mode,omitempty"`
+	SkipMetadataAPICheck           bool     `hcl:"skip_metadata_api_check,optional" yaml:"skip_metadata_api_check,omitempty"`
+	HTTPProxy                      string   `hcl:"http_proxy,optional" yaml:"http_proxy,omitempty"`
+	HTTPSProxy                     string   `hcl:"https_proxy,optional" yaml:"https_proxy,omitempty"`
+	NoProxy                        string   `hcl:"no_proxy,optional" yaml:"no_proxy,omitempty"`
+	MaxRetries                     int      `hcl:"max_retries,optional" yaml:"max_retries,omitempty"`
+	Profile                        string   `hcl:"profile,optional" yaml:"profile,omitempty"`
+	RetryMode                      string   `hcl:"retry_mode,optional" yaml:"retry_mode,omitempty"`
+	SharedConfigFiles              []string `hcl:"shared_config_files,optional" yaml:"shared_config_files,omitempty"`
+	SharedCredentialsFiles         []string `hcl:"shared_credentials_files,optional" yaml:"shared_credentials_files,omitempty"`
+	UseDualStackEndpoint           bool     `hcl:"use_dualstack_endpoint,optional" yaml:"use_dualstack_endpoint,omitempty"`
+	UseFIPSEndpoint                bool     `hcl:"use_fips_endpoint,optional" yaml:"use_fips_endpoint,omitempty"`
 
-	AssumeRole                *AssumeRole                `hcl:"assume_role,block"`
-	AssumeRoleWithWebIdentity *AssumeRoleWithWebIdentity `hcl:"assume_role_with_web_identity,block"`
+	AssumeRole                *AssumeRole                `hcl:"assume_role,block" yaml:"assume_role,omitempty"`
+	AssumeRoleWithWebIdentity *AssumeRoleWithWebIdentity `hcl:"assume_role_with_web_identity,block" yaml:"assume_role_with_web_identity,omitempty"`
 
 	// Throw any additional stuff into here so it doesn't fail
-	Remain hcl.Body `hcl:",remain"`
+	Remain hcl.Body `hcl:",remain" yaml:"-"`
 }
 
 // Fields that are used for assuming a role, see:
 // https://registry.terraform.io/providers/hashicorp/aws/latest/docs#assuming-an-iam-role
 type AssumeRole struct {
-	Duration          string            `hcl:"duration,optional"`
-	ExternalID        string            `hcl:"external_id,optional"`
-	Policy            string            `hcl:"policy,optional"`
-	PolicyARNs        []string          `hcl:"policy_arns,optional"`
-	RoleARN           string            `hcl:"role_arn,optional"`
-	SessionName       string            `hcl:"session_name,optional"`
-	SourceIdentity    string            `hcl:"source_identity,optional"`
-	Tags              map[string]string `hcl:"tags,optional"`
-	TransitiveTagKeys []string          `hcl:"transitive_tag_keys,optional"`
+	Duration          string            `hcl:"duration,optional" yaml:"duration,omitempty"`
+	ExternalID        string            `hcl:"external_id,optional" yaml:"external_id,omitempty"`
+	Policy            string            `hcl:"policy,optional" yaml:"policy,omitempty"`
+	PolicyARNs        []string          `hcl:"policy_arns,optional" yaml:"policy_arns,omitempty"`
+	RoleARN           string            `hcl:"role_arn,optional" yaml:"role_arn,omitempty"`
+	SessionName       string            `hcl:"session_name,optional" yaml:"session_name,omitempty"`
+	SourceIdentity    string            `hcl:"source_identity,optional" yaml:"source_identity,omitempty"`
+	Tags              map[string]string `hcl:"tags,optional" yaml:"tags,omitempty"`
+	TransitiveTagKeys []string          `hcl:"transitive_tag_keys,optional" yaml:"transitive_tag_keys,omitempty"`
 
 	// Throw any additional stuff into here so it doesn't fail
-	Remain hcl.Body `hcl:",remain"`
+	Remain hcl.Body `hcl:",remain" yaml:"-"`
 }
 
 // Fields that are used for assuming a role with web identity, see:
 // https://registry.terraform.io/providers/hashicorp/aws/latest/docs#assuming-an-iam-role-using-a-web-identity
 type AssumeRoleWithWebIdentity struct {
-	Duration             string   `hcl:"duration,optional"`
-	Policy               string   `hcl:"policy,optional"`
-	PolicyARNs           []string `hcl:"policy_arns,optional"`
-	RoleARN              string   `hcl:"role_arn,optional"`
-	SessionName          string   `hcl:"session_name,optional"`
-	WebIdentityToken     string   `hcl:"web_identity_token,optional"`
-	WebIdentityTokenFile string   `hcl:"web_identity_token_file,optional"`
+	Duration             string   `hcl:"duration,optional" yaml:"duration,omitempty"`
+	Policy               string   `hcl:"policy,optional" yaml:"policy,omitempty"`
+	PolicyARNs           []string `hcl:"policy_arns,optional" yaml:"policy_arns,omitempty"`
+	RoleARN              string   `hcl:"role_arn,optional" yaml:"role_arn,omitempty"`
+	SessionName          string   `hcl:"session_name,optional" yaml:"session_name,omitempty"`
+	WebIdentityToken     string   `hcl:"web_identity_token,optional" yaml:"web_identity_token,omitempty"`
+	WebIdentityTokenFile string   `hcl:"web_identity_token_file,optional" yaml:"web_identity_token_file,omitempty"`
 
 	// Throw any additional stuff into here so it doesn't fail
-	Remain hcl.Body `hcl:",remain"`
+	Remain hcl.Body `hcl:",remain" yaml:"-"`
 }
 
 // Loads the eval context in the same way that Terraform does, this means it

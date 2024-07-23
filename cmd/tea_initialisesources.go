@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/overmindtech/aws-source/proc"
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/sdp-go/auth"
@@ -17,6 +18,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
+	"gopkg.in/yaml.v3"
 )
 
 type loadSourcesConfigMsg struct {
@@ -157,14 +159,7 @@ func (m initialiseSourcesModel) View() string {
 		if m.awsSourceRunning {
 			bits = append(bits, wrap(fmt.Sprintf("  %v AWS Source: running with %v providers", RenderOk(), len(m.awsProviders)), m.width, 4))
 			for _, p := range m.awsProviders {
-				label := p.Provider.Alias
-				if label == "" {
-					label = p.Provider.Name
-				}
-				bits = append(bits, fmt.Sprintf("    %v (from %v)", label, p.FilePath))
-				if p.Provider.Region != "" {
-					bits = append(bits, fmt.Sprintf("      region: %v", p.Provider.Region))
-				}
+				bits = append(bits, renderProviderResult(p, 6)...)
 			}
 		}
 		if m.stdlibSourceRunning {
@@ -172,6 +167,64 @@ func (m initialiseSourcesModel) View() string {
 		}
 	}
 	return strings.Join(bits, "\n")
+}
+
+// Prints details of a provider with a given indent
+func renderProviderResult(result tfutils.ProviderResult, indent int) []string {
+	output := make([]string, 0)
+
+	indentString := strings.Repeat(" ", indent)
+
+	style := lipgloss.NewStyle()
+
+	if result.Error != nil {
+		style.Foreground(ColorPalette.BgDanger)
+	}
+
+	var providerName string
+
+	if result.Provider != nil {
+		if result.Provider.Alias != "" {
+			providerName = result.Provider.Alias
+		} else {
+			providerName = result.Provider.Name
+		}
+	} else {
+		providerName = "Unknown"
+	}
+
+	// Print the heading i.e. name (from file.tf)
+	output = append(output, fmt.Sprintf("%v%v (%v)", indentString, style.Render(providerName), result.FilePath))
+
+	// Increase indent since everything should come under this heading
+	indent += 2
+	indentString = strings.Repeat(" ", indent)
+
+	if result.Error == nil {
+		if result.Provider != nil {
+			// Create a local copy of the provider so that we can redact
+			// sensitive information. Note that this won't be a deep copy, but
+			// there isn't anything to redact in the nested structs so this is
+			// okay
+			provider := *result.Provider
+
+			if provider.SecretKey != "" {
+				provider.SecretKey = "REDACTED"
+			}
+
+			out, err := yaml.Marshal(provider)
+			if err != nil {
+				output = append(output, fmt.Sprintf("%vFailed to marshal provider: %v", indentString, err))
+			} else {
+				// Print the provider details with additional indentation
+				output = append(output, fmt.Sprintf("%v%v", indentString, strings.ReplaceAll(string(out), "\n", "\n"+indentString)))
+			}
+		}
+	} else {
+		output = append(output, fmt.Sprintf("%vError: %v", indentString, result.Error))
+	}
+
+	return output
 }
 
 func natsOptions(ctx context.Context, oi OvermindInstance, token *oauth2.Token) auth.NATSOptions {
