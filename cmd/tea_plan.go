@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -79,20 +78,6 @@ func (m runPlanModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// process would get killed immediately and leave locks lingering behind
 		c.Cancel = func() error {
 			return nil
-		}
-
-		// inject the profile, if configured
-		if aws_config := viper.GetString("aws-config"); aws_config == "profile_input" || aws_config == "aws_profile" {
-			// override the AWS_PROFILE value in the environment with the
-			// provided value from the config; this might be redundant if
-			// viper picked it up from the environment in the first place,
-			// but we wouldn't know that.
-			if aws_profile := viper.GetString("aws-profile"); aws_profile != "" {
-				// copy the current environment, as a non-nil Env value instructs exec.Cmd to not inherit the parent's environment
-				c.Env = os.Environ()
-				// set the AWS_PROFILE value as last entry, which will override any previous value
-				c.Env = append(c.Env, fmt.Sprintf("AWS_PROFILE=%v", aws_profile))
-			}
 		}
 
 		if viper.GetString("ovm-test-fake") != "" {

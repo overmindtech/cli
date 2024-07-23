@@ -12,6 +12,10 @@ terraform {
 }
 
 provider "aws" {}
+provider "aws" {
+  alias  = "aliased"
+  region = "us-east-1"
+}
 
 variable "bucket_postfix" {
   type        = string
