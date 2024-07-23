@@ -294,7 +294,10 @@ func (m initialiseSourcesModel) startAwsSourceCmd(ctx context.Context, oi Overmi
 
 		for _, p := range providers {
 			if p.Error != nil {
-				return sourceInitialisationFailedMsg{fmt.Errorf("error when parsing provider: %w", p.Error)}
+				// skip providers that had errors. This allows us to use
+				// providers we _could_ detect, while still failing if there is
+				// a true syntax error and no providers are available at all.
+				continue
 			}
 			c, err := tfutils.ConfigFromProvider(ctx, *p.Provider)
 			if err != nil {

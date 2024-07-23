@@ -495,7 +495,10 @@ func ParseAWSProviders(terraformDir string, evalContext *hcl.EvalContext) ([]Pro
 				Error:    fmt.Errorf("error decoding terraform file: (%v) %w", file, diag),
 				FilePath: file,
 			})
-			continue
+			// continue with using the providers that were parsed. This could be
+			// e.g. providers that are configured using `data` references. If
+			// there is a true syntax error, then no providers will be parsed at
+			// all, and we'll fail later.
 		}
 
 		for _, provider := range providerFile.Providers {
