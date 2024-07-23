@@ -127,6 +127,8 @@ func LoadEvalContext(args []string, env []string) (*hcl.EvalContext, error) {
 		Variables: make(map[string]cty.Value),
 	}
 
+	evalCtx.Variables["var"] = cty.ObjectVal(map[string]cty.Value{})
+
 	// Parse environment variables. Note that if a root module variable uses a
 	// type constraint to require a complex value (list, set, map, object, or
 	// tuple), Terraform will instead attempt to parse its value using the same
@@ -222,10 +224,20 @@ func ParseTFVarsFile(file string, dest *hcl.EvalContext) error {
 
 	// Merge the vars into the eval context
 	for k, v := range vars {
-		dest.Variables[k] = v
+		setVariable(k, v, dest)
 	}
 
 	return nil
+}
+
+// setVariable sets a variable in the given eval context
+func setVariable(key string, value cty.Value, dest *hcl.EvalContext) {
+	variables := dest.Variables["var"].AsValueMap()
+	if variables == nil {
+		variables = map[string]cty.Value{}
+	}
+	variables[key] = value
+	dest.Variables["var"] = cty.ObjectVal(variables)
 }
 
 // Parses a given TF Vars JSON file into the given eval context. In this each
@@ -252,7 +264,7 @@ func ParseTFVarsJSONFile(file string, dest *hcl.EvalContext) error {
 
 	// Extract the variables
 	for k, v := range ctyValue.AsValueMap() {
-		dest.Variables[k] = v
+		setVariable(k, v, dest)
 	}
 
 	return nil
@@ -359,9 +371,14 @@ func ParseFlagValue(value string, dest *hcl.EvalContext) error {
 		}
 
 		// Merge the vars into the eval context
-		for k, v := range vars {
-			dest.Variables[k] = v
+		variables := dest.Variables["var"].AsValueMap()
+		if variables == nil {
+			variables = map[string]cty.Value{}
 		}
+		for k, v := range vars {
+			variables[k] = v
+		}
+		dest.Variables["var"] = cty.ObjectVal(variables)
 
 		return nil
 	}()
@@ -372,8 +389,7 @@ func ParseFlagValue(value string, dest *hcl.EvalContext) error {
 		if len(parts) != 2 {
 			return fmt.Errorf("invalid variable argument: %s", value)
 		}
-
-		dest.Variables[parts[0]] = cty.StringVal(parts[1])
+		setVariable(parts[0], cty.StringVal(parts[1]), dest)
 	}
 
 	return nil

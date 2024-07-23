@@ -389,13 +389,15 @@ func TestLoadEvalContext(t *testing.T) {
 
 	t.Log(evalCtx)
 
-	if evalCtx.Variables["instance_type"].AsString() != "t2.micro" {
-		t.Errorf("Expected instance_type to be t2.micro, got %s", evalCtx.Variables["instance_type"].AsString())
+	variables := evalCtx.Variables["var"].AsValueMap()
+
+	if variables["instance_type"].AsString() != "t2.micro" {
+		t.Errorf("Expected instance_type to be t2.micro, got %s", variables["instance_type"].AsString())
 	}
-	if evalCtx.Variables["something"].AsString() != "else" {
-		t.Errorf("Expected something to be else, got %s", evalCtx.Variables["something"].AsString())
+	if variables["something"].AsString() != "else" {
+		t.Errorf("Expected something to be else, got %s", variables["something"].AsString())
 	}
-	if evalCtx.Variables["image_id"].AsString() != "args" {
-		t.Errorf("Expected image_id to be args, got %s", evalCtx.Variables["image_id"].AsString())
+	if variables["image_id"].AsString() != "args" {
+		t.Errorf("Expected image_id to be args, got %s", variables["image_id"].AsString())
 	}
 }
