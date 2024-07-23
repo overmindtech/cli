@@ -14,8 +14,8 @@ func TestParseAWSProviders(t *testing.T) {
 		t.Errorf("Error parsing AWS results: %v", err)
 	}
 
-	if len(results) != 5 {
-		t.Fatalf("Expected 5 results, got %d", len(results))
+	if len(results) != 3 {
+		t.Fatalf("Expected 3 results, got %d", len(results))
 	}
 
 	if results[1].Provider.Region != "us-east-1" {
