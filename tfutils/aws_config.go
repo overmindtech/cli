@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
+	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 	"github.com/mitchellh/go-homedir"
 	"github.com/zclconf/go-cty/cty"
 	ctyjson "github.com/zclconf/go-cty/cty/json"
@@ -99,6 +100,36 @@ type AssumeRoleWithWebIdentity struct {
 	Remain hcl.Body `hcl:",remain" yaml:"-"`
 }
 
+// restore the default value to a cty value after tfconfig has
+// passed it through JSON to "void the caller needing to deal with
+// cty"
+func ctyFromTfconfig(v interface{}) cty.Value {
+	switch def := v.(type) {
+	case bool:
+		return cty.BoolVal(def)
+	case float64:
+		return cty.NumberFloatVal(def)
+	case int:
+		return cty.NumberIntVal(int64(def))
+	case string:
+		return cty.StringVal(def)
+	case []interface{}:
+		d := make([]cty.Value, 0, len(def))
+		for _, v := range def {
+			d = append(d, ctyFromTfconfig(v))
+		}
+		return cty.ListVal(d)
+	case map[string]interface{}:
+		d := map[string]cty.Value{}
+		for k, v := range def {
+			d[k] = ctyFromTfconfig(v)
+		}
+		return cty.ObjectVal(d)
+	default:
+		return cty.NilVal
+	}
+}
+
 // Loads the eval context in the same way that Terraform does, this means it
 // supports TF_VAR_* environment variables, terraform.tfvars,
 // terraform.tfvars.json, *.auto.tfvars, and *.auto.tfvars.json files, and -var
@@ -127,7 +158,24 @@ func LoadEvalContext(args []string, env []string) (*hcl.EvalContext, error) {
 		Variables: make(map[string]cty.Value),
 	}
 
-	evalCtx.Variables["var"] = cty.ObjectVal(map[string]cty.Value{})
+	// Parse variable declarations from the Terraform configuration. This will
+	// supply any default values from variables that are declared in the root
+	// module.
+	mod, diags := tfconfig.LoadModule(".")
+	if diags.HasErrors() {
+		return nil, fmt.Errorf("error loading terraform module: %w", diags)
+	}
+	if mod.Diagnostics.HasErrors() {
+		return nil, fmt.Errorf("loaded terraform module with errors: %w", mod.Diagnostics)
+	}
+
+	vars := map[string]cty.Value{}
+	for _, v := range mod.Variables {
+		if v.Default != nil {
+			vars[v.Name] = ctyFromTfconfig(v.Default)
+		}
+	}
+	evalCtx.Variables["var"] = cty.ObjectVal(vars)
 
 	// Parse environment variables. Note that if a root module variable uses a
 	// type constraint to require a complex value (list, set, map, object, or
