@@ -30,6 +30,12 @@ resource "aws_instance" "app_server" {
   }
 }
 
+# Example kube provider using data and functions which we don't support reading
+provider "kubernetes" {
+  host  = data.aws_eks_cluster.core_eks.endpoint
+  token = data.aws_eks_cluster_auth.core_eks.token
+}
+
 provider "aws" {
   region = "us-east-1"
 }

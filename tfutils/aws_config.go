@@ -25,6 +25,20 @@ import (
 	"golang.org/x/net/http/httpproxy"
 )
 
+// A minimal struct that will decode the bare minimum to allow us to avoid
+// looking at things we don't want to
+type basicProviderFile struct {
+	Providers []genericProvider `hcl:"provider,block"`
+	Remain    hcl.Body          `hcl:",remain"`
+}
+
+// Bare minimum provider block that allows us to parse the provider name and
+// nothing else, then pass the remaining to a more specific scope
+type genericProvider struct {
+	Name   string   `hcl:"name,label"`
+	Remain hcl.Body `hcl:",remain"`
+}
+
 // This struct allows us to parse any HCL file that contains an AWS provider
 // using the gohcl library.
 type ProviderFile struct {
@@ -488,25 +502,37 @@ func ParseAWSProviders(terraformDir string, evalContext *hcl.EvalContext) ([]Pro
 			continue
 		}
 
-		providerFile := ProviderFile{}
-		diag = gohcl.DecodeBody(parsedFile.Body, evalContext, &providerFile)
+		// First decode really minimally to find just the AWS providers
+		basicFile := basicProviderFile{}
+		diag = gohcl.DecodeBody(parsedFile.Body, evalContext, &basicFile)
 		if diag.HasErrors() {
 			results = append(results, ProviderResult{
 				Error:    fmt.Errorf("error decoding terraform file: (%v) %w", file, diag),
 				FilePath: file,
 			})
-			// continue with using the providers that were parsed. This could be
-			// e.g. providers that are configured using `data` references. If
-			// there is a true syntax error, then no providers will be parsed at
-			// all, and we'll fail later.
+			continue
 		}
 
-		for _, provider := range providerFile.Providers {
-			if provider.Name == "aws" {
-				results = append(results, ProviderResult{
-					Provider: &provider, //nolint:all // this is not relevant for go1.22 and later
-					FilePath: file,
-				})
+		for _, genericProvider := range basicFile.Providers {
+			switch genericProvider.Name {
+			case "aws":
+				awsProvider := AWSProvider{
+					// Since this was already decoded we need to use it here
+					Name: genericProvider.Name,
+				}
+				diag = gohcl.DecodeBody(genericProvider.Remain, evalContext, &awsProvider)
+				if diag.HasErrors() {
+					results = append(results, ProviderResult{
+						Error:    fmt.Errorf("error decoding terraform file: (%v) %w", file, diag),
+						FilePath: file,
+					})
+					continue
+				} else {
+					results = append(results, ProviderResult{
+						Provider: &awsProvider, //nolint:all // this is not relevant for go1.22 and later
+						FilePath: file,
+					})
+				}
 			}
 		}
 	}
