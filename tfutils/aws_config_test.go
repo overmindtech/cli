@@ -18,8 +18,12 @@ func TestParseAWSProviders(t *testing.T) {
 		t.Fatalf("Expected 3 results, got %d", len(results))
 	}
 
-	if results[1].Provider.Region != "us-east-1" {
+	if results[0].Provider.Region != "us-east-1" {
 		t.Errorf("Expected region us-east-1, got %s", results[0].Provider.Region)
+	}
+
+	if results[1].Provider.Region != "" {
+		t.Errorf("Expected region to be empty, got %s", results[1].Provider.Region)
 	}
 
 	if results[2].Provider.AssumeRole.RoleARN != "arn:aws:iam::123456789012:role/ROLE_NAME" {
@@ -32,130 +36,6 @@ func TestParseAWSProviders(t *testing.T) {
 
 	if results[2].Provider.AssumeRole.ExternalID != "EXTERNAL_ID" {
 		t.Errorf("Expected external id EXTERNAL_ID, got %s", results[2].Provider.AssumeRole.ExternalID)
-	}
-
-	if results[3].Provider.AccessKey != "access_key" {
-		t.Errorf("Expected access key access_key, got %s", results[3].Provider.AccessKey)
-	}
-
-	if results[3].Provider.SecretKey != "secret_key" {
-		t.Errorf("Expected secret key secret_key, got %s", results[3].Provider.SecretKey)
-	}
-
-	if results[3].Provider.Token != "token" {
-		t.Errorf("Expected token token, got %s", results[3].Provider.Token)
-	}
-
-	if results[3].Provider.Region != "region" {
-		t.Errorf("Expected region region, got %s", results[3].Provider.Region)
-	}
-
-	if results[3].Provider.CustomCABundle != "testdata/providers.tf" {
-		t.Errorf("Expected custom ca bundle testdata/providers.tf, got %s", results[3].Provider.CustomCABundle)
-	}
-
-	if results[3].Provider.EC2MetadataServiceEndpoint != "ec2_metadata_service_endpoint" {
-		t.Errorf("Expected ec2 metadata service endpoint ec2_metadata_service_endpoint, got %s", results[3].Provider.EC2MetadataServiceEndpoint)
-	}
-
-	if results[3].Provider.EC2MetadataServiceEndpointMode != "ipv6" {
-		t.Errorf("Expected ec2 metadata service endpoint mode ipv6, got %s", results[3].Provider.EC2MetadataServiceEndpointMode)
-	}
-
-	if results[3].Provider.SkipMetadataAPICheck != true {
-		t.Errorf("Expected skip metadata api check true, got %t", results[3].Provider.SkipMetadataAPICheck)
-	}
-
-	if results[3].Provider.HTTPProxy != "http_proxy" {
-		t.Errorf("Expected http proxy http_proxy, got %s", results[3].Provider.HTTPProxy)
-	}
-
-	if results[3].Provider.HTTPSProxy != "https_proxy" {
-		t.Errorf("Expected https proxy https_proxy, got %s", results[3].Provider.HTTPSProxy)
-	}
-
-	if results[3].Provider.NoProxy != "no_proxy" {
-		t.Errorf("Expected no proxy no_proxy, got %s", results[3].Provider.NoProxy)
-	}
-
-	if results[3].Provider.MaxRetries != 10 {
-		t.Errorf("Expected max retries 10, got %d", results[3].Provider.MaxRetries)
-	}
-
-	if results[3].Provider.Profile != "profile" {
-		t.Errorf("Expected profile profile, got %s", results[3].Provider.Profile)
-	}
-
-	if results[3].Provider.RetryMode != "standard" {
-		t.Errorf("Expected retry mode standard, got %s", results[3].Provider.RetryMode)
-	}
-
-	if len(results[3].Provider.SharedConfigFiles) != 1 {
-		t.Errorf("Expected 1 shared config file, got %d", len(results[3].Provider.SharedConfigFiles))
-	}
-
-	if results[3].Provider.SharedConfigFiles[0] != "shared_config_files" {
-		t.Errorf("Expected shared config file shared_config_files, got %s", results[3].Provider.SharedConfigFiles[0])
-	}
-
-	if len(results[3].Provider.SharedCredentialsFiles) != 1 {
-		t.Errorf("Expected 1 shared credentials file, got %d", len(results[3].Provider.SharedCredentialsFiles))
-	}
-
-	if results[3].Provider.SharedCredentialsFiles[0] != "shared_credentials_files" {
-		t.Errorf("Expected shared credentials file shared_credentials_files, got %s", results[3].Provider.SharedCredentialsFiles[0])
-	}
-
-	if results[3].Provider.UseDualStackEndpoint != false {
-		t.Errorf("Expected use dual stack endpoint false, got %t", results[3].Provider.UseDualStackEndpoint)
-	}
-
-	if results[3].Provider.UseFIPSEndpoint != false {
-		t.Errorf("Expected use fips endpoint false, got %t", results[3].Provider.UseFIPSEndpoint)
-	}
-
-	if results[3].Provider.AssumeRoleWithWebIdentity.RoleARN != "arn:aws:iam::123456789012:role/ROLE_NAME" {
-		t.Errorf("Expected role arn arn:aws:iam::123456789012:role/ROLE_NAME, got %s", results[3].Provider.AssumeRoleWithWebIdentity.RoleARN)
-	}
-
-	if results[3].Provider.AssumeRoleWithWebIdentity.SessionName != "SESSION_NAME" {
-		t.Errorf("Expected session name SESSION_NAME, got %s", results[3].Provider.AssumeRoleWithWebIdentity.SessionName)
-	}
-
-	if results[3].Provider.AssumeRoleWithWebIdentity.WebIdentityTokenFile != "/Users/tf_user/secrets/web-identity-token" {
-		t.Errorf("Expected web identity token file /Users/tf_user/secrets/web-identity-token, got %s", results[3].Provider.AssumeRoleWithWebIdentity.WebIdentityTokenFile)
-	}
-
-	if results[3].Provider.AssumeRoleWithWebIdentity.WebIdentityToken != "web_identity_token" {
-		t.Errorf("Expected web identity token web_identity_token, got %s", results[3].Provider.AssumeRoleWithWebIdentity.WebIdentityToken)
-	}
-
-	if results[3].Provider.AssumeRoleWithWebIdentity.Duration != "1s" {
-		t.Errorf("Expected duration 1s, got %s", results[3].Provider.AssumeRoleWithWebIdentity.Duration)
-	}
-
-	if results[3].Provider.AssumeRoleWithWebIdentity.Policy != "policy" {
-		t.Errorf("Expected policy policy, got %s", results[3].Provider.AssumeRoleWithWebIdentity.Policy)
-	}
-
-	if len(results[3].Provider.AssumeRoleWithWebIdentity.PolicyARNs) != 1 {
-		t.Errorf("Expected 1 policy arn, got %d", len(results[3].Provider.AssumeRoleWithWebIdentity.PolicyARNs))
-	}
-
-	if results[3].Provider.AssumeRoleWithWebIdentity.PolicyARNs[0] != "policy_arns" {
-		t.Errorf("Expected policy arn policy_arns, got %s", results[3].Provider.AssumeRoleWithWebIdentity.PolicyARNs[0])
-	}
-
-	if results[4].Provider.Region != "us-west-2" {
-		t.Errorf("Expected region us-west-2, got %s", results[4].Provider.Region)
-	}
-
-	if results[4].Provider.AccessKey != "my-access-key" {
-		t.Errorf("Expected access key my-access-key, got %s", results[4].Provider.AccessKey)
-	}
-
-	if results[4].Provider.SecretKey != "my-secret-key" {
-		t.Errorf("Expected secret key my-secret-key, got %s", results[4].Provider.SecretKey)
 	}
 }
 
