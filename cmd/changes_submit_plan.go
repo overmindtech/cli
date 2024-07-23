@@ -340,7 +340,7 @@ func init() {
 
 	submitPlanCmd.PersistentFlags().String("title", "", "Short title for this change. If this is not specified, overmind will try to come up with one for you.")
 	submitPlanCmd.PersistentFlags().String("description", "", "Quick description of the change.")
-	submitPlanCmd.PersistentFlags().String("ticket-link", "*", "Link to the ticket for this change.")
+	submitPlanCmd.PersistentFlags().String("ticket-link", "*", "Link to the ticket for this change. Usually this would be the link to something like the pull request, since the CLI uses this as a unique identifier for the change, meaning that multiple runs with the same ticket link will update the same change.")
 	submitPlanCmd.PersistentFlags().String("owner", "", "The owner of this change.")
 	// submitPlanCmd.PersistentFlags().String("cc-emails", "", "A comma-separated list of emails to keep updated with the status of this change.")
 
