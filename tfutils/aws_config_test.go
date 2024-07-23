@@ -66,27 +66,33 @@ func TestParseTFVarsFile(t *testing.T) {
 			t.Fatalf("Error parsing TF vars file: %v", err)
 		}
 
-		if evalCtx.Variables["simple_string"].Type() != cty.String {
-			t.Errorf("Expected simple_string to be a string, got %s", evalCtx.Variables["simple_string"].Type())
+		if !evalCtx.Variables["var"].Type().IsObjectType() {
+			t.Errorf("Expected var to be an object, got %s", evalCtx.Variables["var"].Type())
 		}
 
-		if evalCtx.Variables["simple_string"].AsString() != "example_string" {
-			t.Errorf("Expected simple_string to be example_string, got %s", evalCtx.Variables["simple_string"].AsString())
+		variables := evalCtx.Variables["var"].AsValueMap()
+
+		if variables["simple_string"].Type() != cty.String {
+			t.Errorf("Expected simple_string to be a string, got %s", variables["simple_string"].Type())
 		}
 
-		if evalCtx.Variables["example_number"].Type() != cty.Number {
-			t.Errorf("Expected example_number to be a number, got %s", evalCtx.Variables["example_number"].Type())
+		if variables["simple_string"].AsString() != "example_string" {
+			t.Errorf("Expected simple_string to be example_string, got %s", variables["simple_string"].AsString())
 		}
 
-		if evalCtx.Variables["example_number"].AsBigFloat().String() != "42" {
-			t.Errorf("Expected example_number to be 42, got %s", evalCtx.Variables["example_number"].AsBigFloat().String())
+		if variables["example_number"].Type() != cty.Number {
+			t.Errorf("Expected example_number to be a number, got %s", variables["example_number"].Type())
 		}
 
-		if evalCtx.Variables["example_boolean"].Type() != cty.Bool {
-			t.Errorf("Expected example_boolean to be a bool, got %s", evalCtx.Variables["example_boolean"].Type())
+		if variables["example_number"].AsBigFloat().String() != "42" {
+			t.Errorf("Expected example_number to be 42, got %s", variables["example_number"].AsBigFloat().String())
 		}
 
-		if values := evalCtx.Variables["example_list"].AsValueSlice(); len(values) == 3 {
+		if variables["example_boolean"].Type() != cty.Bool {
+			t.Errorf("Expected example_boolean to be a bool, got %s", variables["example_boolean"].Type())
+		}
+
+		if values := variables["example_list"].AsValueSlice(); len(values) == 3 {
 			if values[0].AsString() != "item1" {
 				t.Errorf("Expected first item to be item1, got %s", values[0].AsString())
 			}
@@ -94,7 +100,7 @@ func TestParseTFVarsFile(t *testing.T) {
 			t.Errorf("Expected example_list to have 3 elements, got %d", len(values))
 		}
 
-		if m := evalCtx.Variables["example_map"].AsValueMap(); len(m) == 2 {
+		if m := variables["example_map"].AsValueMap(); len(m) == 2 {
 			if m["key1"].AsString() != "value1" {
 				t.Errorf("Expected key1 to be value1, got %s", m["key1"].AsString())
 			}
@@ -137,15 +143,21 @@ func TestParseTFVarsJSONFile(t *testing.T) {
 			t.Fatalf("Error parsing TF vars file: %v", err)
 		}
 
-		if evalCtx.Variables["string"].Type() != cty.String {
-			t.Errorf("Expected string to be a string, got %s", evalCtx.Variables["string"].Type())
+		if !evalCtx.Variables["var"].Type().IsObjectType() {
+			t.Errorf("Expected var to be an object, got %s", evalCtx.Variables["var"].Type())
 		}
 
-		if evalCtx.Variables["string"].AsString() != "example_string" {
-			t.Errorf("Expected string to be example_string, got %s", evalCtx.Variables["string"].AsString())
+		variables := evalCtx.Variables["var"].AsValueMap()
+
+		if variables["string"].Type() != cty.String {
+			t.Errorf("Expected string to be a string, got %s", variables["string"].Type())
 		}
 
-		if values := evalCtx.Variables["list"].AsValueSlice(); len(values) == 2 {
+		if variables["string"].AsString() != "example_string" {
+			t.Errorf("Expected string to be example_string, got %s", variables["string"].AsString())
+		}
+
+		if values := variables["list"].AsValueSlice(); len(values) == 2 {
 			if values[0].AsString() != "item1" {
 				t.Errorf("Expected first item to be item1, got %s", values[0].AsString())
 			}

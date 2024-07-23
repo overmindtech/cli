@@ -285,21 +285,38 @@ func ParseTFVarsFile(file string, dest *hcl.EvalContext) error {
 	}
 
 	// Merge the vars into the eval context
-	for k, v := range vars {
-		setVariable(k, v, dest)
-	}
-
+	setVariables(dest, vars)
 	return nil
 }
 
 // setVariable sets a variable in the given eval context
-func setVariable(key string, value cty.Value, dest *hcl.EvalContext) {
-	variables := dest.Variables["var"].AsValueMap()
+func setVariable(dest *hcl.EvalContext, key string, value cty.Value) {
+	variablesValue, ok := dest.Variables["var"]
+	if !ok {
+		variablesValue = cty.EmptyObjectVal
+	}
+	variables := variablesValue.AsValueMap()
 	if variables == nil {
 		variables = map[string]cty.Value{}
 	}
 	variables[key] = value
 	dest.Variables["var"] = cty.ObjectVal(variables)
+}
+
+// setVariables sets multiple variables in the given eval context
+func setVariables(dest *hcl.EvalContext, variables map[string]cty.Value) {
+	variablesValue, ok := dest.Variables["var"]
+	if !ok {
+		variablesValue = cty.EmptyObjectVal
+	}
+	variablesDest := variablesValue.AsValueMap()
+	if variablesDest == nil {
+		variablesDest = map[string]cty.Value{}
+	}
+	for k, v := range variables {
+		variablesDest[k] = v
+	}
+	dest.Variables["var"] = cty.ObjectVal(variablesDest)
 }
 
 // Parses a given TF Vars JSON file into the given eval context. In this each
@@ -326,7 +343,7 @@ func ParseTFVarsJSONFile(file string, dest *hcl.EvalContext) error {
 
 	// Extract the variables
 	for k, v := range ctyValue.AsValueMap() {
-		setVariable(k, v, dest)
+		setVariable(dest, k, v)
 	}
 
 	return nil
@@ -433,15 +450,7 @@ func ParseFlagValue(value string, dest *hcl.EvalContext) error {
 		}
 
 		// Merge the vars into the eval context
-		variables := dest.Variables["var"].AsValueMap()
-		if variables == nil {
-			variables = map[string]cty.Value{}
-		}
-		for k, v := range vars {
-			variables[k] = v
-		}
-		dest.Variables["var"] = cty.ObjectVal(variables)
-
+		setVariables(dest, vars)
 		return nil
 	}()
 
@@ -451,7 +460,7 @@ func ParseFlagValue(value string, dest *hcl.EvalContext) error {
 		if len(parts) != 2 {
 			return fmt.Errorf("invalid variable argument: %s", value)
 		}
-		setVariable(parts[0], cty.StringVal(parts[1]), dest)
+		setVariable(dest, parts[0], cty.StringVal(parts[1]))
 	}
 
 	return nil
