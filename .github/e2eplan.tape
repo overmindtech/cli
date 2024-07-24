@@ -1,4 +1,4 @@
-Output plan.mp4
+Output e2e/plan.mp4
 
 Set Width 1920
 Set Height 1080
@@ -17,4 +17,4 @@ Enter
 Sleep 2
 Enter
 Sleep 60
-Screenshot plan.png
+Screenshot e2e/plan.png

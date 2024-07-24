@@ -31,3 +31,4 @@ overmind.plan
 terraform.tfstate
 terraform.tfstate.backup
 /tmp/
+/node_modules
