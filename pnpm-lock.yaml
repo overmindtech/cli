@@ -10,10 +10,10 @@ importers:
     dependencies:
       '@types/node':
         specifier: ^20.14.9
-        version: 20.14.9
+        version: 20.14.12
       lost-pixel:
         specifier: ^3.17.0
-        version: 3.17.0(@types/node@20.14.9)(playwright-core@1.45.0)(typescript@5.5.2)
+        version: 3.17.0(@types/node@20.14.12)(playwright-core@1.45.0)(typescript@5.5.2)
 
 packages:
 
@@ -181,8 +181,8 @@ packages:
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
 
-  '@types/node@20.14.9':
-    resolution: {integrity: sha512-06OCtnTXtWOZBJlRApleWndH4JsRVs1pDCc8dLSQp+7PpUpX3ePdHyeNSFTeSe7FtKyQkrlPvHwJOW3SLd8Oyg==}
+  '@types/node@20.14.12':
+    resolution: {integrity: sha512-r7wNXakLeSsGT0H1AU863vS2wa5wBOK4bWMjZz2wj+8nBx+m5PeIn0k8AloSLpRuiwdRQZwarZqHE4FNArPuJQ==}
 
   '@types/xml2js@0.4.14':
     resolution: {integrity: sha512-4YnrRemBShWRO2QjvUin8ESA41rH+9nQGLUGZV/1IDhi3SL9OhdpNC/MrulTWuptXKwhx/aDxE7toV0f/ypIXQ==}
@@ -692,13 +692,13 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
-  '@types/node@20.14.9':
+  '@types/node@20.14.12':
     dependencies:
       undici-types: 5.26.5
 
   '@types/xml2js@0.4.14':
     dependencies:
-      '@types/node': 20.14.9
+      '@types/node': 20.14.12
 
   acorn-walk@8.3.3:
     dependencies:
@@ -890,7 +890,7 @@ snapshots:
 
   lodash.kebabcase@4.1.1: {}
 
-  lost-pixel@3.17.0(@types/node@20.14.9)(playwright-core@1.45.0)(typescript@5.5.2):
+  lost-pixel@3.17.0(@types/node@20.14.12)(playwright-core@1.45.0)(typescript@5.5.2):
     dependencies:
       '@types/xml2js': 0.4.14
       async: 3.2.5
@@ -910,7 +910,7 @@ snapshots:
       posthog-node: 3.5.0
       serve-handler: 6.1.5
       shelljs: 0.8.5
-      ts-node: 10.9.2(@types/node@20.14.9)(typescript@5.5.2)
+      ts-node: 10.9.2(@types/node@20.14.12)(typescript@5.5.2)
       uuid: 9.0.1
       xml2js: 0.6.2
       yargs: 17.7.2
@@ -1046,14 +1046,14 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  ts-node@10.9.2(@types/node@20.14.9)(typescript@5.5.2):
+  ts-node@10.9.2(@types/node@20.14.12)(typescript@5.5.2):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 20.14.9
+      '@types/node': 20.14.12
       acorn: 8.12.0
       acorn-walk: 8.3.3
       arg: 4.1.3
