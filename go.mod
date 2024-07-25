@@ -11,7 +11,7 @@ require (
 	github.com/charmbracelet/bubbles v0.18.0
 	github.com/charmbracelet/bubbletea v0.26.6
 	github.com/charmbracelet/glamour v0.7.0
-	github.com/charmbracelet/huh v0.5.1
+	github.com/charmbracelet/huh v0.5.2
 	github.com/charmbracelet/lipgloss v0.12.1
 	github.com/getsentry/sentry-go v0.28.1
 	github.com/go-jose/go-jose/v4 v4.0.3
@@ -96,8 +96,8 @@ require (
 	github.com/catppuccin/go v0.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/charmbracelet/x/ansi v0.1.4 // indirect
-	github.com/charmbracelet/x/exp/strings v0.0.0-20240617190524-788ec55faed1 // indirect
-	github.com/charmbracelet/x/input v0.1.2 // indirect
+	github.com/charmbracelet/x/exp/strings v0.0.0-20240722160745-212f7b056ed0 // indirect
+	github.com/charmbracelet/x/input v0.1.3 // indirect
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -120,7 +120,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
-	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/micahhausler/aws-iam-policy v0.4.2 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.25 // indirect
 	github.com/miekg/dns v1.1.61 // indirect
