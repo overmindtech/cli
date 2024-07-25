@@ -25,7 +25,7 @@ require (
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.2
 	github.com/overmindtech/aws-source v0.0.0-20240723090937-e2f9edb690d8
-	github.com/overmindtech/sdp-go v0.80.0
+	github.com/overmindtech/sdp-go v0.80.1
 	github.com/overmindtech/stdlib-source v0.0.0-20240718131945-5d4742e6c9cb
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
