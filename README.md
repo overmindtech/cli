@@ -75,15 +75,21 @@ curl -1sLf \
 Or set it up manually
 
 ```shell
+# NOTE: For Debian Stretch, Ubuntu 16.04 and later
+keyring_location=/usr/share/keyrings/overmind-tools-archive-keyring.gpg
+# NOTE: For Debian Jessie, Ubuntu 15.10 and earlier
+keyring_location=/etc/apt/trusted.gpg.d/overmind-tools.gpg
+
+# Capture the codename
+codename=$(lsb_release -cs)
+
 apt-get install -y debian-keyring  # debian only
 apt-get install -y debian-archive-keyring  # debian only
+
 apt-get install -y apt-transport-https
-# For Debian Stretch, Ubuntu 16.04 and later
-keyring_location=/usr/share/keyrings/overmind-tools-archive-keyring.gpg
-# For Debian Jessie, Ubuntu 15.10 and earlier
-keyring_location=/etc/apt/trusted.gpg.d/overmind-tools.gpg
 curl -1sLf 'https://dl.cloudsmith.io/public/overmind/tools/gpg.BC5CDEFB4E37A1B3.key' |  gpg --dearmor >> ${keyring_location}
-curl -1sLf 'https://dl.cloudsmith.io/public/overmind/tools/config.deb.txt?distro=ubuntu&codename=xenial&component=main' > /etc/apt/sources.list.d/overmind-tools.list
+curl -1sLf 'https://dl.cloudsmith.io/public/overmind/tools/config.deb.txt?distro=ubuntu&$codename=xenial&component=main' > /etc/apt/sources.list.d/overmind-tools.list
+chmod 0644 /etc/apt/sources.list.d/overmind-tools.list
 apt-get update
 ```
 
