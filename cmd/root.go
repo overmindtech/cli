@@ -127,10 +127,9 @@ confidence.
 This CLI will prompt you for authentication using Overmind's OAuth service,
 however it can also be configured to use an API key by setting the OVM_API_KEY
 environment variable.`,
-	Version:       cliVersion,
-	SilenceErrors: true,
-	SilenceUsage:  true,
-	PreRun:        PreRunSetup,
+	Version:      cliVersion,
+	SilenceUsage: true,
+	PreRun:       PreRunSetup,
 }
 
 var cmdSpan trace.Span

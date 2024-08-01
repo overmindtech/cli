@@ -14,10 +14,11 @@ import (
 
 // terraformPlanCmd represents the `terraform plan` command
 var terraformPlanCmd = &cobra.Command{
-	Use:    "plan [overmind options...] -- [terraform options...]",
-	Short:  "Runs `terraform plan` and sends the results to Overmind to calculate a blast radius and risks.",
-	PreRun: PreRunSetup,
-	Run:    CmdWrapper("plan", []string{"explore:read", "changes:write", "config:write", "request:receive"}, NewTfPlanModel),
+	Use:           "plan [overmind options...] -- [terraform options...]",
+	Short:         "Runs `terraform plan` and sends the results to Overmind to calculate a blast radius and risks.",
+	PreRun:        PreRunSetup,
+	SilenceErrors: true,
+	Run:           CmdWrapper("plan", []string{"explore:read", "changes:write", "config:write", "request:receive"}, NewTfPlanModel),
 }
 
 type tfPlanModel struct {
