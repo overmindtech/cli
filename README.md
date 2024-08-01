@@ -90,6 +90,7 @@ apt-get install -y apt-transport-https
 curl -1sLf 'https://dl.cloudsmith.io/public/overmind/tools/gpg.BC5CDEFB4E37A1B3.key' |  gpg --dearmor >> ${keyring_location}
 curl -1sLf 'https://dl.cloudsmith.io/public/overmind/tools/config.deb.txt?distro=ubuntu&$codename=xenial&component=main' > /etc/apt/sources.list.d/overmind-tools.list
 chmod 0644 /etc/apt/sources.list.d/overmind-tools.list
+chmod 0644 /usr/share/keyrings/overmind-tools-archive-keyring.gpg
 apt-get update
 ```
 
