@@ -34,7 +34,7 @@ func AuthenticatedBookmarkClient(ctx context.Context, oi OvermindInstance) sdpco
 	return sdpconnect.NewBookmarksServiceClient(httpClient, oi.ApiUrl.String())
 }
 
-// AuthenticatedChangesClient Returns a bookmark client that uses the auth
+// AuthenticatedChangesClient Returns a changes client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedChangesClient(ctx context.Context, oi OvermindInstance) sdpconnect.ChangesServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
@@ -42,7 +42,7 @@ func AuthenticatedChangesClient(ctx context.Context, oi OvermindInstance) sdpcon
 	return sdpconnect.NewChangesServiceClient(httpClient, oi.ApiUrl.String())
 }
 
-// AuthenticatedConfigurationClient Returns a bookmark client that uses the auth
+// AuthenticatedConfigurationClient  Returns a config client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedConfigurationClient(ctx context.Context, oi OvermindInstance) sdpconnect.ConfigurationServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
@@ -50,7 +50,7 @@ func AuthenticatedConfigurationClient(ctx context.Context, oi OvermindInstance) 
 	return sdpconnect.NewConfigurationServiceClient(httpClient, oi.ApiUrl.String())
 }
 
-// AuthenticatedManagementClient Returns a bookmark client that uses the auth
+// AuthenticatedManagementClient Returns a management client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedManagementClient(ctx context.Context, oi OvermindInstance) sdpconnect.ManagementServiceClient {
 	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)

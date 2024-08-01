@@ -38,6 +38,11 @@ jobs:
       - name: Go Init
         uses: ./.github/actions/go_init
 
+      # get .golangci.yml from github.com/overmindtech/golangci-lint_config
+      - name: Get .golangci.yml from github.com/overmindtech/golangci-lint_configs
+        run: |
+          curl -sfL https://raw.githubusercontent.com/overmindtech/golangci-lint_config/main/.golangci.yml -o .golangci.yml
+
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
