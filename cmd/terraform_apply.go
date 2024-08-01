@@ -21,10 +21,11 @@ import (
 
 // terraformApplyCmd represents the `terraform apply` command
 var terraformApplyCmd = &cobra.Command{
-	Use:    "apply [overmind options...] -- [terraform options...]",
-	Short:  "Runs `terraform apply` between two full system configuration snapshots for tracking. This will be automatically connected with the Change created by the `plan` command.",
-	PreRun: PreRunSetup,
-	Run:    CmdWrapper("apply", []string{"explore:read", "changes:write", "config:write", "request:receive"}, NewTfApplyModel),
+	Use:           "apply [overmind options...] -- [terraform options...]",
+	Short:         "Runs `terraform apply` between two full system configuration snapshots for tracking. This will be automatically connected with the Change created by the `plan` command.",
+	PreRun:        PreRunSetup,
+	SilenceErrors: true,
+	Run:           CmdWrapper("apply", []string{"explore:read", "changes:write", "config:write", "request:receive"}, NewTfApplyModel),
 }
 
 type tfApplyModel struct {

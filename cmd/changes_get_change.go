@@ -64,7 +64,7 @@ func GetChange(cmd *cobra.Command, args []string) error {
 	var riskRes *connect.Response[sdp.GetChangeRisksResponse]
 fetch:
 	for {
-		// use err variable to avoid shadowing riskRes outside the loop
+		// declare err variable to avoid shadowing riskRes outside the loop by using `:=`
 		var err error
 		riskRes, err = client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
 			Msg: &sdp.GetChangeRisksRequest{
