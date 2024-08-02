@@ -14,7 +14,7 @@ require (
 	github.com/charmbracelet/huh v0.5.2
 	github.com/charmbracelet/lipgloss v0.12.1
 	github.com/getsentry/sentry-go v0.28.1
-	github.com/go-jose/go-jose/v4 v4.0.3
+	github.com/go-jose/go-jose/v4 v4.0.4
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/hcl/v2 v2.21.0
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20240701073647-9fc3669f7553
