@@ -13,7 +13,7 @@ importers:
         version: 20.14.13
       lost-pixel:
         specifier: ^3.17.0
-        version: 3.17.0(@types/node@20.14.13)(playwright-core@1.45.3)(typescript@5.5.4)
+        version: 3.18.0(@types/node@20.14.13)(playwright-core@1.45.3)(typescript@5.5.4)
 
 packages:
 
@@ -376,8 +376,8 @@ packages:
   lodash.kebabcase@4.1.1:
     resolution: {integrity: sha512-N8XRTIMMqqDgSy4VLKPnJ/+hpGZN+PHQiJnSenYqPaVV/NCqEogTnAdZLQiGKhxX+JCs8waWq2t1XHWKOmlY8g==}
 
-  lost-pixel@3.17.0:
-    resolution: {integrity: sha512-RJ8XFxnB7VkYun7AaLY784TNPoas4YCwEaiBqUZEwer1irgRYFe4exVITlx5KFLeRncA6bEblrQSjdrdV3xP+g==}
+  lost-pixel@3.18.0:
+    resolution: {integrity: sha512-4n4PgeDpxN0k7UJY1FFGKjhl7c0bb77hGSOJgjkLKXR8F8gLl6leYos1SuWYzB058mcSIKS56/CEdIgyHrJp3g==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
@@ -890,7 +890,7 @@ snapshots:
 
   lodash.kebabcase@4.1.1: {}
 
-  lost-pixel@3.17.0(@types/node@20.14.13)(playwright-core@1.45.3)(typescript@5.5.4):
+  lost-pixel@3.18.0(@types/node@20.14.13)(playwright-core@1.45.3)(typescript@5.5.4):
     dependencies:
       '@types/xml2js': 0.4.14
       async: 3.2.5
