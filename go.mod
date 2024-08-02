@@ -24,7 +24,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.2
-	github.com/overmindtech/aws-source v0.0.0-20240729160650-8023d0990ff8
+	github.com/overmindtech/aws-source v0.0.0-20240802001814-540402a989e4
 	github.com/overmindtech/sdp-go v0.83.0
 	github.com/overmindtech/stdlib-source v0.0.0-20240729160053-d949893621d3
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
@@ -82,7 +82,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.56.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.41.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.29.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.81.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.82.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.42.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.58.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.31.3 // indirect
