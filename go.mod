@@ -17,7 +17,7 @@ require (
 	github.com/go-jose/go-jose/v4 v4.0.4
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/hcl/v2 v2.21.0
-	github.com/hashicorp/terraform-config-inspect v0.0.0-20240701073647-9fc3669f7553
+	github.com/hashicorp/terraform-config-inspect v0.0.0-20240801114854-6714b46f5fe4
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/jedib0t/go-pretty/v6 v6.5.9
 	github.com/mattn/go-isatty v0.0.20
