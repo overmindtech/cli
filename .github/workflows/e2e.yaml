@@ -199,6 +199,6 @@ jobs:
         continue-on-error: false
 
       - name: Lost Pixel
-        uses: lost-pixel/lost-pixel@v3.17.0
+        uses: lost-pixel/lost-pixel@v3.18.0
         env:
           LOST_PIXEL_API_KEY: ${{ secrets.LOST_PIXEL_API_KEY }}
