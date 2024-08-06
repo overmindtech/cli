@@ -135,9 +135,16 @@ fetch:
 
 	switch viper.GetString("format") {
 	case "json":
-		b, err := json.MarshalIndent(changeRes.Msg.GetChange().ToMap(), "", "  ")
+		jsonStruct := struct {
+			Change       *sdp.Change             `json:"change"`
+			RiskMetadata *sdp.ChangeRiskMetadata `json:"risk_metadata"`
+		}{
+			Change:       changeRes.Msg.GetChange(),
+			RiskMetadata: riskRes.Msg.GetChangeRiskMetadata(),
+		}
+		b, err := json.MarshalIndent(jsonStruct, "", "  ")
 		if err != nil {
-			lf["input"] = fmt.Sprintf("%#v", changeRes.Msg.GetChange().ToMap())
+			lf["input"] = fmt.Sprintf("%#v", jsonStruct)
 			return loggedError{
 				err:     err,
 				fields:  lf,
