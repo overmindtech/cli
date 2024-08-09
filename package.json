@@ -10,7 +10,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@9.6.0",
+  "packageManager": "pnpm@9.7.0",
   "dependencies": {
     "@types/node": "^20.14.9",
     "lost-pixel": "^3.17.0"
