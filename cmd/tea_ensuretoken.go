@@ -11,12 +11,15 @@ import (
 	"strings"
 	"time"
 
+	"atomicgo.dev/keyboard"
+	"atomicgo.dev/keyboard/keys"
 	"connectrpc.com/connect"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/go-jose/go-jose/v4"
 	josejwt "github.com/go-jose/go-jose/v4/jwt"
 	"github.com/overmindtech/sdp-go"
 	"github.com/pkg/browser"
+	"github.com/pterm/pterm"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/attribute"
@@ -472,26 +475,46 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 		return nil, fmt.Errorf("error getting device code: %w", err)
 	}
 
-	m := authenticateModel{ctx: ctx, status: PromptUser, deviceCode: deviceCode, config: config}
-	authenticateProgram := tea.NewProgram(m)
+	var token *oauth2.Token
 
-	result, err := authenticateProgram.Run()
+	err = browser.OpenURL(deviceCode.VerificationURI)
 	if err != nil {
-		fmt.Println("Error running program:", err)
+		pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH).Println(RenderErr() + " Unable to open browser: " + err.Error())
+	}
+	pterm.Printf(
+		markdownToString(MAX_TERMINAL_WIDTH, fmt.Sprintf(
+			beginAuthMessage,
+			deviceCode.VerificationURI,
+			deviceCode.UserCode,
+		)))
+
+	token, err = config.DeviceAccessToken(ctx, deviceCode)
+	if err != nil {
+		pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH).Println(RenderErr() + " Unable to authenticate. Please try again.")
+		log.WithContext(ctx).WithError(err).Error("Error getting device code")
+		os.Exit(1)
+	}
+	pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH).Println(RenderOk() + " Authenticated successfully. Press any key to continue.")
+	err = keyboard.Listen(func(keyInfo keys.Key) (stop bool, err error) {
+		key := keyInfo.Code
+		if key == keys.CtrlC {
+			pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH).Println(RenderErr() + " Cancelled")
+			os.Exit(1)
+		}
+		log.WithField("key", key).Debug("Received keyboard input")
+		return true, nil
+	})
+	if err != nil {
+		pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH).Println(RenderErr() + " Error reading keyboard input: " + err.Error())
 		os.Exit(1)
 	}
 
-	m, ok := result.(authenticateModel)
-	if !ok {
-		fmt.Println("Error running program: result is not authenticateModel")
+	if token == nil {
+		pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH).Println(RenderErr() + " Error running program: no token received")
 		os.Exit(1)
 	}
 
-	if m.token == nil {
-		fmt.Println("Error running program: no token received")
-		os.Exit(1)
-	}
-	tok, err := josejwt.ParseSigned(m.token.AccessToken, []jose.SignatureAlgorithm{jose.RS256})
+	tok, err := josejwt.ParseSigned(token.AccessToken, []jose.SignatureAlgorithm{jose.RS256})
 	if err != nil {
 		fmt.Println("Error running program: received invalid token:", err)
 		os.Exit(1)
@@ -528,7 +551,7 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 		}
 
 		// Encode the token
-		err = json.NewEncoder(file).Encode(m.token)
+		err = json.NewEncoder(file).Encode(token)
 		if err != nil {
 			log.WithContext(ctx).WithError(err).Errorf("Failed to encode token file at %v", path)
 		}
@@ -536,11 +559,11 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 		log.WithContext(ctx).Debugf("Saved token to %v", path)
 	}
 
-	return m.token, nil
+	return token, nil
 }
 
 // ensureToken gets a token from the environment or from the user, and returns a
-// context holding the token tthat can be used by sdp-go's helper functions to
+// context holding the token that can be used by sdp-go's helper functions to
 // authenticate against the API
 func ensureToken(ctx context.Context, oi OvermindInstance, requiredScopes []string) (context.Context, *oauth2.Token, error) {
 	var token *oauth2.Token
