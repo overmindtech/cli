@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"text/template"
 	"time"
@@ -41,6 +42,26 @@ const assetVersion = "17c7fd2c365d4f4cdd8e414ca5148f825fa4febd"
 
 func GetChange(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
+
+	riskLevels := []sdp.Risk_Severity{}
+	for _, level := range viper.GetStringSlice("risk-levels") {
+		switch level {
+		case "high":
+			riskLevels = append(riskLevels, sdp.Risk_SEVERITY_HIGH)
+		case "medium":
+			riskLevels = append(riskLevels, sdp.Risk_SEVERITY_MEDIUM)
+		case "low":
+			riskLevels = append(riskLevels, sdp.Risk_SEVERITY_LOW)
+		default:
+			return flagError{fmt.Sprintf("invalid --risk-levels value '%v', allowed values are 'high', 'medium', 'low'", level)}
+		}
+	}
+	slices.Sort(riskLevels)
+	riskLevels = slices.Compact(riskLevels)
+
+	if len(riskLevels) == 0 {
+		riskLevels = []sdp.Risk_Severity{sdp.Risk_SEVERITY_HIGH, sdp.Risk_SEVERITY_MEDIUM, sdp.Risk_SEVERITY_LOW}
+	}
 
 	ctx, oi, _, err := login(ctx, cmd, []string{"changes:read"})
 	if err != nil {
@@ -133,6 +154,19 @@ fetch:
 		"change-description": changeRes.Msg.GetChange().GetProperties().GetDescription(),
 	}).Info("found change")
 
+	// in parsing the risks, we have ensured that there is only unique values in
+	// `riskLevels`, so if there are 3 values, then we don't need to filter
+	if len(riskLevels) != 3 {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"risk-levels": renderRiskFilter(riskLevels),
+		}).Info("filtering risks")
+
+		md := riskRes.Msg.GetChangeRiskMetadata()
+		if md != nil {
+			md.Risks = filterRisks(md.GetRisks(), riskLevels)
+		}
+	}
+
 	switch viper.GetString("format") {
 	case "json":
 		jsonStruct := struct {
@@ -142,6 +176,7 @@ fetch:
 			Change:       changeRes.Msg.GetChange(),
 			RiskMetadata: riskRes.Msg.GetChangeRiskMetadata(),
 		}
+
 		b, err := json.MarshalIndent(jsonStruct, "", "  ")
 		if err != nil {
 			lf["input"] = fmt.Sprintf("%#v", jsonStruct)
@@ -320,6 +355,35 @@ fetch:
 	return nil
 }
 
+func filterRisks(risks []*sdp.Risk, levels []sdp.Risk_Severity) []*sdp.Risk {
+	filteredRisks := make([]*sdp.Risk, 0)
+
+	for _, risk := range risks {
+		if slices.Contains(levels, risk.GetSeverity()) {
+			filteredRisks = append(filteredRisks, risk)
+		}
+	}
+
+	return filteredRisks
+}
+
+func renderRiskFilter(levels []sdp.Risk_Severity) string {
+	result := make([]string, 0, len(levels))
+	for _, level := range levels {
+		switch level {
+		case sdp.Risk_SEVERITY_HIGH:
+			result = append(result, "high")
+		case sdp.Risk_SEVERITY_MEDIUM:
+			result = append(result, "medium")
+		case sdp.Risk_SEVERITY_LOW:
+			result = append(result, "low")
+		case sdp.Risk_SEVERITY_UNSPECIFIED:
+			continue
+		}
+	}
+	return strings.Join(result, ", ")
+}
+
 func init() {
 	changesCmd.AddCommand(getChangeCmd)
 
@@ -328,4 +392,5 @@ func init() {
 
 	getChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
 	getChangeCmd.PersistentFlags().String("format", "json", "How to render the change. Possible values: json, markdown")
+	getChangeCmd.PersistentFlags().StringSlice("risk-levels", []string{"high", "medium", "low"}, "Only show changes with the specified risk levels. Allowed values: high, medium, low")
 }
