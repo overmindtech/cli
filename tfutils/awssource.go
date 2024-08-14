@@ -556,6 +556,12 @@ var AwssourceData = map[string][]TfMapData{
 			QueryField: "arn",
 			Scope:      "*",
 		},
+		{
+			Type:       "elbv2-load-balancer",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "id",
+			Scope:      "*",
+		},
 	},
 	"aws_lb_listener": {
 		{
@@ -786,6 +792,12 @@ var AwssourceData = map[string][]TfMapData{
 			QueryField: "arn",
 			Scope:      "*",
 		},
+		{
+			Type:       "route53-resource-record-set",
+			Method:     sdp.QueryMethod_SEARCH,
+			QueryField: "id",
+			Scope:      "*",
+		},
 	},
 	"aws_route53_zone": {
 		{
@@ -1013,12 +1025,6 @@ var AwssourceData = map[string][]TfMapData{
 		{
 			Type:       "ec2-security-group-rule",
 			Method:     sdp.QueryMethod_GET,
-			QueryField: "id",
-			Scope:      "*",
-		},
-		{
-			Type:       "ec2-security-group-rule",
-			Method:     sdp.QueryMethod_GET,
 			QueryField: "security_group_rule_id",
 			Scope:      "*",
 		},
@@ -1114,6 +1120,22 @@ var AwssourceData = map[string][]TfMapData{
 			Type:       "ec2-vpc-peering-connection",
 			Method:     sdp.QueryMethod_GET,
 			QueryField: "vpc_peering_connection_id",
+			Scope:      "*",
+		},
+	},
+	"aws_vpc_security_group_egress_rule": {
+		{
+			Type:       "ec2-security-group-rule",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "security_group_rule_id",
+			Scope:      "*",
+		},
+	},
+	"aws_vpc_security_group_ingress_rule": {
+		{
+			Type:       "ec2-security-group-rule",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "security_group_rule_id",
 			Scope:      "*",
 		},
 	},
