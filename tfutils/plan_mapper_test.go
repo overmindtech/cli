@@ -54,8 +54,8 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 		t.Errorf("Expected 16 secrets, got %v", results.RemovedSecrets)
 	}
 
-	if len(results.Results) != 5 {
-		t.Errorf("Expected 5 changes, got %v:", len(results.Results))
+	if len(results.Results) != 6 {
+		t.Errorf("Expected 6 changes, got %v:", len(results.Results))
 		for _, diff := range results.Results {
 			t.Errorf("  %v", diff)
 		}
