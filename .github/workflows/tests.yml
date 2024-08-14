@@ -46,6 +46,6 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.56.1
+          version: v1.60.1
           args: --timeout 3m
           skip-pkg-cache: true # golangci-lint-action caching conflicts with the setup-go cache and `go get` above. See https://github.com/golangci/golangci-lint-action/issues/23
