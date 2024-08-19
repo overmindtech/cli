@@ -493,6 +493,14 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_kms_alias": {
+		{
+			Type:       "kms-alias",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "arn",
+			Scope:      "*",
+		},
+	},
 	"aws_kms_custom_key_store": {
 		{
 			Type:       "kms-custom-key-store",
