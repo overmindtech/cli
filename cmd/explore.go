@@ -33,19 +33,15 @@ func Explore(cmd *cobra.Command, args []string) error {
 
 	multi := pterm.DefaultMultiPrinter
 
-	loginSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Connecting to Overmind")
-
 	_, _ = multi.Start()
 	defer func() {
 		_, _ = multi.Stop()
 	}()
 
-	ctx, oi, token, err := login(ctx, cmd, []string{"request:receive"})
+	ctx, oi, token, err := login(ctx, cmd, []string{"request:receive"}, multi.NewWriter())
 	if err != nil {
 		return err
 	}
-
-	loginSpinner.Success("Connected to Overmind")
 
 	stdlibSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting stdlib source engine")
 	awsSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting AWS source engine")

@@ -60,7 +60,7 @@ func init() {
 func CreateTfc(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"config:write", "api_keys:write", "changes:write", "explore:read", "request:send", "reverselink:request"})
+	ctx, oi, _, err := login(ctx, cmd, []string{"config:write", "api_keys:write", "changes:write", "explore:read", "request:send", "reverselink:request"}, nil)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func CreateTfc(cmd *cobra.Command, args []string) error {
 func GetTfc(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"config:read"})
+	ctx, oi, _, err := login(ctx, cmd, []string{"config:read"}, nil)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func GetTfc(cmd *cobra.Command, args []string) error {
 func DeleteTfc(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"config:write", "api_keys:write"})
+	ctx, oi, _, err := login(ctx, cmd, []string{"config:write", "api_keys:write"}, nil)
 	if err != nil {
 		return err
 	}

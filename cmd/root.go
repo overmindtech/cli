@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -22,6 +23,7 @@ import (
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	"github.com/pkg/browser"
+	"github.com/pterm/pterm"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -556,7 +558,7 @@ func tracedSettings() map[string]any {
 	return result
 }
 
-func login(ctx context.Context, cmd *cobra.Command, scopes []string) (context.Context, OvermindInstance, *oauth2.Token, error) {
+func login(ctx context.Context, cmd *cobra.Command, scopes []string, writer io.Writer) (context.Context, OvermindInstance, *oauth2.Token, error) {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
 		return ctx, OvermindInstance{}, nil, flagError{usage: fmt.Sprintf("invalid --timeout value '%v'\n\n%v", viper.GetString("timeout"), cmd.UsageString())}
@@ -566,8 +568,20 @@ func login(ctx context.Context, cmd *cobra.Command, scopes []string) (context.Co
 		"app": viper.GetString("app"),
 	}
 
+	var multi *pterm.MultiPrinter
+	if writer == nil {
+		multi = &pterm.DefaultMultiPrinter
+		_, _ = multi.Start()
+	} else {
+		multi = pterm.DefaultMultiPrinter.WithWriter(writer)
+	}
+
+	connectSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Connecting to Overmind")
+
 	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
 	if err != nil {
+		connectSpinner.Fail("Failed to get instance data from app")
+		_, _ = multi.Stop()
 		return ctx, OvermindInstance{}, nil, loggedError{
 			err:     err,
 			fields:  lf,
@@ -575,8 +589,12 @@ func login(ctx context.Context, cmd *cobra.Command, scopes []string) (context.Co
 		}
 	}
 
+	connectSpinner.Success("Connected to Overmind")
+	_, _ = multi.Stop()
+
 	ctx, token, err := ensureToken(ctx, oi, scopes)
 	if err != nil {
+		connectSpinner.Fail("Failed to authenticate")
 		return ctx, OvermindInstance{}, nil, loggedError{
 			err:     err,
 			fields:  lf,

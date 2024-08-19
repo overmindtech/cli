@@ -477,11 +477,12 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 
 	var token *oauth2.Token
 
+	statusParagraph := pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH)
 	err = browser.OpenURL(deviceCode.VerificationURI)
 	if err != nil {
-		pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH).Println(RenderErr() + " Unable to open browser: " + err.Error())
+		statusParagraph.Println(RenderErr() + " Unable to open browser: " + err.Error())
 	}
-	pterm.Printf(
+	pterm.Print(
 		markdownToString(MAX_TERMINAL_WIDTH, fmt.Sprintf(
 			beginAuthMessage,
 			deviceCode.VerificationURI,
@@ -490,40 +491,40 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 
 	token, err = config.DeviceAccessToken(ctx, deviceCode)
 	if err != nil {
-		pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH).Println(RenderErr() + " Unable to authenticate. Please try again.")
+		statusParagraph.Println(RenderErr() + " Unable to authenticate. Please try again.")
 		log.WithContext(ctx).WithError(err).Error("Error getting device code")
 		os.Exit(1)
 	}
-	pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH).Println(RenderOk() + " Authenticated successfully. Press any key to continue.")
+	pterm.Println(RenderOk() + " Authenticated successfully. Press any key to continue.\n")
 	err = keyboard.Listen(func(keyInfo keys.Key) (stop bool, err error) {
 		key := keyInfo.Code
 		if key == keys.CtrlC {
-			pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH).Println(RenderErr() + " Cancelled")
+			statusParagraph.Println(RenderErr() + " Cancelled")
 			os.Exit(1)
 		}
 		log.WithField("key", key).Debug("Received keyboard input")
 		return true, nil
 	})
 	if err != nil {
-		pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH).Println(RenderErr() + " Error reading keyboard input: " + err.Error())
+		statusParagraph.Println(RenderErr() + " Error reading keyboard input: " + err.Error())
 		os.Exit(1)
 	}
 
 	if token == nil {
-		pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH).Println(RenderErr() + " Error running program: no token received")
+		statusParagraph.Println(RenderErr() + " Error running program: no token received")
 		os.Exit(1)
 	}
 
 	tok, err := josejwt.ParseSigned(token.AccessToken, []jose.SignatureAlgorithm{jose.RS256})
 	if err != nil {
-		fmt.Println("Error running program: received invalid token:", err)
+		statusParagraph.Println("Error running program: received invalid token:", err)
 		os.Exit(1)
 	}
 	out := josejwt.Claims{}
 	customClaims := sdp.CustomClaims{}
 	err = tok.UnsafeClaimsWithoutVerification(&out, &customClaims)
 	if err != nil {
-		fmt.Println("Error running program: received unparsable token:", err)
+		statusParagraph.Println("Error running program: received unparsable token:", err)
 		os.Exit(1)
 	}
 

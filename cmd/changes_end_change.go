@@ -19,7 +19,7 @@ var endChangeCmd = &cobra.Command{
 func EndChange(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"})
+	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"}, nil)
 	if err != nil {
 		return err
 	}

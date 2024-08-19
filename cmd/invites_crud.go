@@ -46,7 +46,7 @@ func InvitesRevoke(cmd *cobra.Command, args []string) error {
 		return flagError{usage: fmt.Sprintf("You must specify an email address to revoke using --email\n\n%v", cmd.UsageString())}
 	}
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"account:write"})
+	ctx, oi, _, err := login(ctx, cmd, []string{"account:write"}, nil)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func InvitesCreate(cmd *cobra.Command, args []string) error {
 		return flagError{usage: fmt.Sprintf("You must specify at least one email address to invite using --emails\n\n%v", cmd.UsageString())}
 	}
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"account:write"})
+	ctx, oi, _, err := login(ctx, cmd, []string{"account:write"}, nil)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func InvitesCreate(cmd *cobra.Command, args []string) error {
 func InvitesList(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"account:read"})
+	ctx, oi, _, err := login(ctx, cmd, []string{"account:read"}, nil)
 	if err != nil {
 		return err
 	}

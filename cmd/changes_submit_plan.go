@@ -145,7 +145,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 
 	app := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"})
+	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"}, nil)
 	if err != nil {
 		return err
 	}
