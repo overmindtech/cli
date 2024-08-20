@@ -109,6 +109,32 @@ func (m snapshotModel) Update(msg tea.Msg) (snapshotModel, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+func snapshotDetail(state string, items, edges uint32) string {
+	itemStr := ""
+	if items == 0 {
+		itemStr = "0 items"
+	} else if items == 1 {
+		itemStr = "1 item"
+	} else {
+		itemStr = fmt.Sprintf("%d items", items)
+	}
+
+	edgeStr := ""
+	if edges == 0 {
+		edgeStr = "0 edges"
+	} else if edges == 1 {
+		edgeStr = "1 edge"
+	} else {
+		edgeStr = fmt.Sprintf("%d edges", edges)
+	}
+
+	detailStr := state
+	if itemStr != "" || edgeStr != "" {
+		detailStr = fmt.Sprintf("%s (%s, %s)", state, itemStr, edgeStr)
+	}
+	return detailStr
+}
+
 func (m snapshotModel) View() string {
 	// TODO: add progressbar; complication: we do not have a expected number of
 	// items/edges to count towards for the progressbar
@@ -120,30 +146,7 @@ func (m snapshotModel) View() string {
 	bits := []string{}
 	bits = append(bits, m.overall.View())
 
-	itemStr := ""
-	if m.items == 0 {
-		itemStr = "0 items"
-	} else if m.items == 1 {
-		itemStr = "1 item"
-	} else {
-		itemStr = fmt.Sprintf("%d items", m.items)
-	}
-
-	edgeStr := ""
-	if m.edges == 0 {
-		edgeStr = "0 edges"
-	} else if m.edges == 1 {
-		edgeStr = "1 edge"
-	} else {
-		edgeStr = fmt.Sprintf("%d edges", m.edges)
-	}
-
-	detailStr := m.state
-	if itemStr != "" || edgeStr != "" {
-		detailStr = fmt.Sprintf("%s (%s, %s)", m.state, itemStr, edgeStr)
-	}
-
-	bits = append(bits, fmt.Sprintf("  %v - %v", m.discovering.View(), detailStr))
+	bits = append(bits, fmt.Sprintf("  %v - %v", m.discovering.View(), snapshotDetail(m.state, m.items, m.edges)))
 	bits = append(bits, fmt.Sprintf("  %v", m.saving.View()))
 	return strings.Join(bits, "\n")
 }
