@@ -24,9 +24,9 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.3-0.20240618155329-98d742f6907a
-	github.com/overmindtech/aws-source v0.0.0-20240816130904-b5688810ffa7
-	github.com/overmindtech/sdp-go v0.89.1
-	github.com/overmindtech/stdlib-source v0.0.0-20240816131009-9cff22ae1d70
+	github.com/overmindtech/aws-source v0.0.0-20240820095149-7f5ecfc98076
+	github.com/overmindtech/sdp-go v0.89.4
+	github.com/overmindtech/stdlib-source v0.0.0-20240819135001-2db2917093b7
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
