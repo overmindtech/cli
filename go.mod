@@ -11,7 +11,7 @@ require (
 	github.com/charmbracelet/bubbles v0.19.0
 	github.com/charmbracelet/bubbletea v0.27.1
 	github.com/charmbracelet/glamour v0.8.0
-	github.com/charmbracelet/huh v0.5.2
+	github.com/charmbracelet/huh v0.5.3
 	github.com/charmbracelet/lipgloss v0.13.0
 	github.com/getsentry/sentry-go v0.28.1
 	github.com/go-jose/go-jose/v4 v4.0.4
@@ -96,11 +96,9 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/catppuccin/go v0.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/charmbracelet/x/ansi v0.1.4 // indirect
+	github.com/charmbracelet/x/ansi v0.2.2 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20240722160745-212f7b056ed0 // indirect
-	github.com/charmbracelet/x/input v0.1.3 // indirect
-	github.com/charmbracelet/x/term v0.1.1 // indirect
-	github.com/charmbracelet/x/windows v0.1.2 // indirect
+	github.com/charmbracelet/x/term v0.2.0 // indirect
 	github.com/coder/websocket v1.8.12 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dlclark/regexp2 v1.11.0 // indirect
@@ -151,7 +149,6 @@ require (
 	github.com/uptrace/opentelemetry-go-extra/otelutil v0.3.1 // indirect
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	github.com/xiam/to v0.0.0-20200126224905-d60d31e03561 // indirect
-	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/yuin/goldmark v1.7.4 // indirect
 	github.com/yuin/goldmark-emoji v1.0.3 // indirect
 	go.opentelemetry.io/otel/log v0.3.0 // indirect
