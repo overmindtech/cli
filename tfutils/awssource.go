@@ -509,9 +509,25 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_kms_grant": {
+		{
+			Type:       "kms-grant",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "grant_id",
+			Scope:      "*",
+		},
+	},
 	"aws_kms_key": {
 		{
 			Type:       "kms-key",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "key_id",
+			Scope:      "*",
+		},
+	},
+	"aws_kms_key_policy": {
+		{
+			Type:       "kms-key-policy",
 			Method:     sdp.QueryMethod_GET,
 			QueryField: "key_id",
 			Scope:      "*",
