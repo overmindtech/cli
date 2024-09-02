@@ -16,10 +16,6 @@ jobs:
       - name: Go Init
         uses: ./.github/actions/go_init
 
-      - name: Get dependencies
-        run: |
-          go get -v -t -d ./...
-
       - name: Go Test
         run: |
           go run main.go --version
@@ -37,6 +33,10 @@ jobs:
 
       - name: Go Init
         uses: ./.github/actions/go_init
+
+      - name: Check go generate output is clean
+        run: |
+          git diff --exit-code
 
       # get .golangci.yml from github.com/overmindtech/golangci-lint_config
       - name: Get .golangci.yml from github.com/overmindtech/golangci-lint_configs

@@ -44,7 +44,6 @@ jobs:
       - name: Build the binary
         run: |
           set -xe
-          go get -v -t -d ./...
           go build -o overmind main.go
 
       - name: Run E2E Tests
@@ -121,7 +120,6 @@ jobs:
       - name: Build the binary
         run: |
           set -xe
-          go get -v -t -d ./...
           go build -o overmind main.go
 
       - name: Run E2E Tests
