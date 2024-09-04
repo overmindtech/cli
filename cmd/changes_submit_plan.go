@@ -143,6 +143,11 @@ func tryLoadText(ctx context.Context, fileName string) string {
 func SubmitPlan(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
+	app, err := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+
 	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"})
 	if err != nil {
 		return err
@@ -298,8 +303,8 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	frontend, _ := strings.CutSuffix(viper.GetString("frontend"), "/")
-	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", frontend, changeUuid)
+	app, _ = strings.CutSuffix(app, "/")
+	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", app, changeUuid)
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("Change ready")
 	fmt.Println(changeUrl)
 
@@ -326,7 +331,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
 			"change-url": changeUrl,
 			"app":        appUuid,
-			"app-url":    fmt.Sprintf("%v/apps/%v", frontend, appUuid),
+			"app-url":    fmt.Sprintf("%v/apps/%v", app, appUuid),
 		}).Info("Affected app")
 	}
 
@@ -336,7 +341,9 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 func init() {
 	changesCmd.AddCommand(submitPlanCmd)
 
-	submitPlanCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
+	addAPIFlags(submitPlanCmd)
+	submitPlanCmd.PersistentFlags().String("frontend", "", "The frontend base URL")
+	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.")
 
 	submitPlanCmd.PersistentFlags().String("title", "", "Short title for this change. If this is not specified, overmind will try to come up with one for you.")
 	submitPlanCmd.PersistentFlags().String("description", "", "Quick description of the change.")
@@ -345,7 +352,7 @@ func init() {
 	// submitPlanCmd.PersistentFlags().String("cc-emails", "", "A comma-separated list of emails to keep updated with the status of this change.")
 
 	submitPlanCmd.PersistentFlags().String("terraform-plan-output", "", "Filename of cached terraform plan output for this change.")
-	submitPlanCmd.PersistentFlags().String("code-changes-diff", "", "Fileame of the code diff of this change.")
+	submitPlanCmd.PersistentFlags().String("code-changes-diff", "", "Filename of the code diff of this change.")
 	submitPlanCmd.PersistentFlags().Int32("blast-radius-link-depth", 0, "Used in combination with '--blast-radius-max-items' to customise how many levels are traversed when calculating the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
 	submitPlanCmd.PersistentFlags().Int32("blast-radius-max-items", 0, "Used in combination with '--blast-radius-link-depth' to customise how many items are included in the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
 }

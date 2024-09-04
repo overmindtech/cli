@@ -589,3 +589,19 @@ func login(ctx context.Context, cmd *cobra.Command, scopes []string) (context.Co
 
 	return ctx, oi, token, nil
 }
+
+func getAppUrl(frontend, app string) (string, error) {
+	if frontend == "" && app == "" {
+		return "", fmt.Errorf("'--app' flag must be set")
+	}
+	if frontend != "" && app != "" {
+		log.WithError(fmt.Errorf("both '--frontend' and '--app' are set, using --frontend %q. Please only Use '--app'", frontend)).Warn("both '--frontend' and '--app' are set")
+		return frontend, nil
+	}
+	// if frontend is set and app is not set, set app to frontend
+	if frontend != "" {
+		return frontend, nil
+	} else {
+		return app, nil
+	}
+}

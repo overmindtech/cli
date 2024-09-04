@@ -43,6 +43,11 @@ const assetVersion = "17c7fd2c365d4f4cdd8e414ca5148f825fa4febd"
 func GetChange(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
+	app, err := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
+	if err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+
 	riskLevels := []sdp.Risk_Severity{}
 	for _, level := range viper.GetStringSlice("risk-levels") {
 		switch level {
@@ -262,9 +267,9 @@ fetch:
 				SeverityText: "High",
 			},
 		}
-		frontend, _ := strings.CutSuffix(viper.GetString("frontend"), "/")
+		app, _ = strings.CutSuffix(app, "/")
 		data := TemplateData{
-			ChangeUrl:       fmt.Sprintf("%v/changes/%v", frontend, changeUuid.String()),
+			ChangeUrl:       fmt.Sprintf("%v/changes/%v", app, changeUuid.String()),
 			ExpectedChanges: []TemplateItem{},
 			UnmappedChanges: []TemplateItem{},
 			BlastItems:      int(changeRes.Msg.GetChange().GetMetadata().GetNumAffectedItems()),
@@ -386,11 +391,13 @@ func renderRiskFilter(levels []sdp.Risk_Severity) string {
 
 func init() {
 	changesCmd.AddCommand(getChangeCmd)
+	addAPIFlags(getChangeCmd)
 
 	addChangeUuidFlags(getChangeCmd)
 	getChangeCmd.PersistentFlags().String("status", "", "The expected status of the change. Use this with --ticket-link. Allowed values: CHANGE_STATUS_UNSPECIFIED, CHANGE_STATUS_DEFINING, CHANGE_STATUS_HAPPENING, CHANGE_STATUS_PROCESSING, CHANGE_STATUS_DONE")
 
-	getChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech/", "The frontend base URL")
+	getChangeCmd.PersistentFlags().String("frontend", "", "The frontend base URL")
+	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.")
 	getChangeCmd.PersistentFlags().String("format", "json", "How to render the change. Possible values: json, markdown")
 	getChangeCmd.PersistentFlags().StringSlice("risk-levels", []string{"high", "medium", "low"}, "Only show changes with the specified risk levels. Allowed values: high, medium, low")
 }
