@@ -26,6 +26,8 @@ var manualChangeCmd = &cobra.Command{
 func ManualChange(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
+	app := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
+
 	method, err := methodFromString(viper.GetString("query-method"))
 	if err != nil {
 		return flagError{fmt.Sprintf("can't parse --query-method: %v\n\n%v", err, cmd.UsageString())}
@@ -156,8 +158,8 @@ func ManualChange(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	frontend, _ := strings.CutSuffix(viper.GetString("frontend"), "/")
-	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", frontend, changeUuid)
+	app, _ = strings.CutSuffix(app, "/")
+	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", app, changeUuid)
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("change ready")
 	fmt.Println(changeUrl)
 
@@ -183,7 +185,7 @@ func ManualChange(cmd *cobra.Command, args []string) error {
 		log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
 			"change-url": changeUrl,
 			"app":        appUuid,
-			"app-url":    fmt.Sprintf("%v/apps/%v", frontend, appUuid),
+			"app-url":    fmt.Sprintf("%v/apps/%v", app, appUuid),
 		}).Info("affected app")
 	}
 
@@ -192,9 +194,9 @@ func ManualChange(cmd *cobra.Command, args []string) error {
 
 func init() {
 	changesCmd.AddCommand(manualChangeCmd)
-
-	manualChangeCmd.PersistentFlags().String("frontend", "https://app.overmind.tech", "The frontend base URL")
-
+	addAPIFlags(manualChangeCmd)
+	manualChangeCmd.PersistentFlags().String("frontend", "", "The frontend base URL")
+	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.") // MarkDeprecated only errors if the flag doesn't exist, we fall back to using app
 	manualChangeCmd.PersistentFlags().String("title", "", "Short title for this change.")
 	manualChangeCmd.PersistentFlags().String("description", "", "Quick description of the change.")
 	manualChangeCmd.PersistentFlags().String("ticket-link", "*", "Link to the ticket for this change.")

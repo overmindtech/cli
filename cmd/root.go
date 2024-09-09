@@ -589,3 +589,16 @@ func login(ctx context.Context, cmd *cobra.Command, scopes []string) (context.Co
 
 	return ctx, oi, token, nil
 }
+
+func getAppUrl(frontend, app string) string {
+	if frontend == "" && app == "" {
+		return "https://app.overmind.tech"
+	}
+	if frontend != "" && app == "" {
+		return frontend
+	}
+	if frontend != "" && app != "" {
+		log.Warnf("Both --frontend and --app are set, but they are different. Using --app: %v", app)
+	}
+	return app
+}
