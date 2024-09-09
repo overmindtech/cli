@@ -43,10 +43,7 @@ const assetVersion = "17c7fd2c365d4f4cdd8e414ca5148f825fa4febd"
 func GetChange(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	app, err := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
+	app := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
 
 	riskLevels := []sdp.Risk_Severity{}
 	for _, level := range viper.GetStringSlice("risk-levels") {
@@ -397,7 +394,7 @@ func init() {
 	getChangeCmd.PersistentFlags().String("status", "", "The expected status of the change. Use this with --ticket-link. Allowed values: CHANGE_STATUS_UNSPECIFIED, CHANGE_STATUS_DEFINING, CHANGE_STATUS_HAPPENING, CHANGE_STATUS_PROCESSING, CHANGE_STATUS_DONE")
 
 	getChangeCmd.PersistentFlags().String("frontend", "", "The frontend base URL")
-	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.")
+	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.") // MarkDeprecated only errors if the flag doesn't exist, we fall back to using app
 	getChangeCmd.PersistentFlags().String("format", "json", "How to render the change. Possible values: json, markdown")
 	getChangeCmd.PersistentFlags().StringSlice("risk-levels", []string{"high", "medium", "low"}, "Only show changes with the specified risk levels. Allowed values: high, medium, low")
 }

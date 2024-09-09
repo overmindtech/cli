@@ -143,10 +143,7 @@ func tryLoadText(ctx context.Context, fileName string) string {
 func SubmitPlan(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	app, err := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
+	app := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
 
 	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"})
 	if err != nil {
@@ -343,8 +340,7 @@ func init() {
 
 	addAPIFlags(submitPlanCmd)
 	submitPlanCmd.PersistentFlags().String("frontend", "", "The frontend base URL")
-	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.")
-
+	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.") // MarkDeprecated only errors if the flag doesn't exist, we fall back to using app
 	submitPlanCmd.PersistentFlags().String("title", "", "Short title for this change. If this is not specified, overmind will try to come up with one for you.")
 	submitPlanCmd.PersistentFlags().String("description", "", "Quick description of the change.")
 	submitPlanCmd.PersistentFlags().String("ticket-link", "*", "Link to the ticket for this change. Usually this would be the link to something like the pull request, since the CLI uses this as a unique identifier for the change, meaning that multiple runs with the same ticket link will update the same change.")

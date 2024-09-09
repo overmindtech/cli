@@ -91,24 +91,19 @@ func Test_getAppUrl(t *testing.T) {
 		app      string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
+		name string
+		args args
+		want string
 	}{
-		{name: "empty", args: args{frontend: "", app: ""}, want: "", wantErr: true},
-		{name: "empty app", args: args{frontend: "https://app.overmind.tech/", app: ""}, want: "https://app.overmind.tech/", wantErr: false},
-		{name: "empty frontend", args: args{frontend: "", app: "https://app.overmind.tech/"}, want: "https://app.overmind.tech/", wantErr: false},
-		{name: "same", args: args{frontend: "https://app.overmind.tech/", app: "https://app.overmind.tech/"}, want: "https://app.overmind.tech/", wantErr: false},
-		{name: "different", args: args{frontend: "https://app.overmind.tech/", app: "https://app.overmind.tech/changes/123"}, want: "https://app.overmind.tech/", wantErr: false},
+		{name: "empty", args: args{frontend: "", app: ""}, want: "https://app.overmind.tech"},
+		{name: "empty app", args: args{frontend: "https://app.overmind.tech", app: ""}, want: "https://app.overmind.tech"},
+		{name: "empty frontend", args: args{frontend: "", app: "https://app.overmind.tech"}, want: "https://app.overmind.tech"},
+		{name: "same", args: args{frontend: "https://app.overmind.tech", app: "https://app.overmind.tech"}, want: "https://app.overmind.tech"},
+		{name: "different", args: args{frontend: "https://app.overmind.tech", app: "https://app.overmind.tech/changes/123"}, want: "https://app.overmind.tech/changes/123"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := getAppUrl(tt.args.frontend, tt.args.app)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getAppUrl() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			got := getAppUrl(tt.args.frontend, tt.args.app)
 			if got != tt.want {
 				t.Errorf("getAppUrl() = %v, want %v", got, tt.want)
 			}

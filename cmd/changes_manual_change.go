@@ -26,10 +26,7 @@ var manualChangeCmd = &cobra.Command{
 func ManualChange(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	app, err := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
+	app := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
 
 	method, err := methodFromString(viper.GetString("query-method"))
 	if err != nil {
@@ -199,7 +196,7 @@ func init() {
 	changesCmd.AddCommand(manualChangeCmd)
 	addAPIFlags(manualChangeCmd)
 	manualChangeCmd.PersistentFlags().String("frontend", "", "The frontend base URL")
-	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.")
+	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.") // MarkDeprecated only errors if the flag doesn't exist, we fall back to using app
 	manualChangeCmd.PersistentFlags().String("title", "", "Short title for this change.")
 	manualChangeCmd.PersistentFlags().String("description", "", "Quick description of the change.")
 	manualChangeCmd.PersistentFlags().String("ticket-link", "*", "Link to the ticket for this change.")
