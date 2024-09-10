@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"crypto/sha256"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,22 +12,18 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/overmindtech/cli/custerm"
 	"github.com/overmindtech/cli/tfutils"
-	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
 	"github.com/pterm/pterm"
 	log "github.com/sirupsen/logrus"
-	"github.com/sourcegraph/conc/pool"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/oauth2"
 )
 
 // terraformPlanCmd represents the `terraform plan` command
@@ -36,34 +31,13 @@ var terraformPlanCmd = &cobra.Command{
 	Use:    "plan [overmind options...] -- [terraform options...]",
 	Short:  "Runs `terraform plan` and sends the results to Overmind to calculate a blast radius and risks.",
 	PreRun: PreRunSetup,
-	RunE: TerraformPlan,
+	RunE:   TerraformPlan,
 }
 
 func TerraformPlan(cmd *cobra.Command, args []string) error {
-	pterm.Success.Prefix.Text = "✔︎"
+	ctx := cmd.Context()
 
-	// ensure that only error messages are printed to the console,
-	// disrupting bubbletea rendering (and potentially getting overwritten).
-	// Otherwise, when TEABUG is set, log to a file.
-	if len(os.Getenv("TEABUG")) > 0 {
-		f, err := tea.LogToFile("teabug.log", "debug")
-		if err != nil {
-			fmt.Println("fatal:", err)
-			os.Exit(1)
-		}
-		// leave the log file open until the very last moment, so we capture everything
-		// defer f.Close()
-		log.SetOutput(f)
-		formatter := new(log.TextFormatter)
-		formatter.DisableTimestamp = false
-		log.SetFormatter(formatter)
-		viper.Set("log", "trace")
-		log.SetLevel(log.TraceLevel)
-	} else {
-		// avoid log messages from sources and others to interrupt bubbletea rendering
-		viper.Set("log", "fatal")
-		log.SetLevel(log.FatalLevel)
-	}
+	PTermSetup()
 
 	hasPlanOutSet := false
 	planFile := "overmind.plan"
@@ -97,114 +71,27 @@ func TerraformPlan(cmd *cobra.Command, args []string) error {
 		// TODO: remember whether we used a temporary plan file and remove it when done
 	}
 
-	ctx := cmd.Context()
-	span := trace.SpanFromContext(ctx)
-
-	ctx, oi, _, cleanup, err := func() (context.Context, OvermindInstance, *oauth2.Token, func(), error) {
-		multi := pterm.DefaultMultiPrinter
-		_, _ = multi.Start()
-		defer func() {
-			_, _ = multi.Stop()
-		}()
-
-		ctx, oi, token, err := login(ctx, cmd, []string{"explore:read", "changes:write", "config:write", "request:receive"}, multi.NewWriter())
-		if err != nil {
-			return ctx, OvermindInstance{}, nil, nil, err
-		}
-
-		cleanup, err := StartLocalSources(ctx, oi, token, args, multi)
-		if err != nil {
-			return ctx, OvermindInstance{}, nil, nil, err
-		}
-
-		return ctx, oi, token, cleanup, nil
-	}()
+	ctx, oi, _, cleanup, err := StartSources(ctx, cmd, args)
 	if err != nil {
 		return err
 	}
 	defer cleanup()
 
+	return TerraformPlanImpl(ctx, cmd, oi, args, planFile)
+}
+
+func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInstance, args []string, planFile string) error {
+	span := trace.SpanFromContext(ctx)
+
 	// this printer will be configured once the terraform plan command has
 	// completed  and the terminal is available again
 	postPlanPrinter := atomic.Pointer[pterm.MultiPrinter]{}
 
-	// start revlink warmup in the background
-	p := pool.New().WithErrors()
-	p.Go(func() error {
-		ctx, span := tracing.Tracer().Start(ctx, "revlink warmup")
-		defer span.End()
+	revlinkPool := RunRevlinkWarmup(ctx, oi, &postPlanPrinter, args)
 
-		client := AuthenticatedManagementClient(ctx, oi)
-		stream, err := client.RevlinkWarmup(ctx, &connect.Request[sdp.RevlinkWarmupRequest]{
-			Msg: &sdp.RevlinkWarmupRequest{},
-		})
-		if err != nil {
-			return fmt.Errorf("error warming up revlink: %w", err)
-		}
-
-		// this will get set once the terminal is available
-		var spinner *pterm.SpinnerPrinter
-		for stream.Receive() {
-			msg := stream.Msg()
-
-			if spinner == nil {
-				multi := postPlanPrinter.Load()
-				if multi != nil {
-					// start the spinner in the background, now that a multi
-					// printer is available
-					spinner, _ = pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Discovering and linking all resources")
-				}
-			}
-
-			// only update the spinner if we have access to the terminal
-			if spinner != nil {
-				items := msg.GetItems()
-				edges := msg.GetEdges()
-				if items+edges > 0 {
-					spinner.UpdateText(fmt.Sprintf("Discovering and linking all resources: %v (%v items, %v edges)", msg.GetStatus(), items, edges))
-				} else {
-					spinner.UpdateText(fmt.Sprintf("Discovering and linking all resources: %v", msg.GetStatus()))
-				}
-			}
-		}
-
-		err = stream.Err()
-		if err != nil && !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, context.Canceled) {
-			if spinner != nil {
-				spinner.Fail(fmt.Sprintf("Error warming up revlink: %v", err))
-			}
-			return fmt.Errorf("error warming up revlink: %w", err)
-		}
-
-		if spinner != nil {
-			spinner.Success("Discovered and linked all resources")
-		}
-
-		return nil
-	})
-
-	err = func() error {
-		c := exec.CommandContext(ctx, "terraform", args...) // nolint:gosec // this is a user-provided command, let them do their thing
-
-		// remove go's default process cancel behaviour, so that terraform has a
-		// chance to gracefully shutdown when ^C is pressed. Otherwise the
-		// process would get killed immediately and leave locks lingering behind
-		c.Cancel = func() error {
-			return nil
-		}
-
-		c.Stdout = os.Stdout
-		c.Stderr = os.Stderr
-
-		_, span := tracing.Tracer().Start(ctx, "terraform plan")
-		defer span.End()
-
-		log.WithField("args", c.Args).Debug("running terraform plan")
-
-		return c.Run()
-	}()
+	err := RunPlan(ctx, args)
 	if err != nil {
-		return fmt.Errorf("failed to run terraform plan: %w", err)
+		return err
 	}
 
 	log.Debug("done running terraform plan")
@@ -290,7 +177,7 @@ func TerraformPlan(cmd *cobra.Command, args []string) error {
 	resourceExtractionSpinner.Success()
 
 	// wait for the revlink warmup to finish before we update the planned changes
-	err = p.Wait()
+	err = revlinkPool.Wait()
 	if err != nil {
 		return fmt.Errorf("error waiting for revlink warmup: %w", err)
 	}
