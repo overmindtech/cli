@@ -21,13 +21,13 @@ Overmind is a powerful tool for real-time impact analysis on Terraform changes. 
 
 Install the Overmind CLI using brew:
 
-```
+```shell
 brew install overmindtech/overmind/overmind-cli
 ```
 
 Run a terraform plan:
 
-```
+```shell
 overmind terraform plan
 ```
 
@@ -48,7 +48,7 @@ overmind terraform plan
 
 To install on Mac with homebrew use:
 
-```
+```shell
 brew install overmindtech/overmind/overmind-cli
 ```
 
@@ -161,12 +161,13 @@ Additionally a community maintained package can be found in the [aur](https://au
 
 ## Why Use Overmind?
 
-* **☁️ Cloud Complexity:** Terraform tells you what it's going to change, but not whether this change will break everything. Teams need to understand dependencies to properly understand impact.
-* **👨‍🏫 Onboarding & Productivity:** Due to the reliance on "tribal knowledge", expert staff are stuck doing approvals rather than productive work and newer staff take longer to become productive.
-* **📋 Change Management Process:** IaC and automation mean that changes spend substantially more time in review and approval steps than the change itself actually takes.
-* **🔥 Downtime:** Outages are not caused by simple cause-and-effect relationships. More often than not, downtime is a result of dependencies people didn't know existed.
+- **☁️ Cloud Complexity:** Terraform tells you what it's going to change, but not whether this change will break everything. Teams need to understand dependencies to properly understand impact.
+- **👨‍🏫 Onboarding & Productivity:** Due to the reliance on "tribal knowledge", expert staff are stuck doing approvals rather than productive work and newer staff take longer to become productive.
+- **📋 Change Management Process:** IaC and automation mean that changes spend substantially more time in review and approval steps than the change itself actually takes.
+- **🔥 Downtime:** Outages are not caused by simple cause-and-effect relationships. More often than not, downtime is a result of dependencies people didn't know existed.
 
 ## How We Solve It?
+
 <table style="width: 100%; table-layout: fixed;">
   <tr>
     <td style="width: 50%; vertical-align: top;">
@@ -212,6 +213,10 @@ overmind terraform plan -- -var-file=production.tfvars -parallelism=20 -auto-app
 ## Reporting Bugs
 
 - Want to report a bug or request a feature? [Open an issue](https://github.com/overmindtech/cli/issues/new)
+
+## Development
+
+Please look in the [CONTRIBUTING.md](https://github.com/overmindtech/cli/blob/main/CONTRIBUTING.md) document.
 
 ## License
 
