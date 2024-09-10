@@ -2,16 +2,20 @@ package cmd
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"sync/atomic"
+	"time"
 
 	"connectrpc.com/connect"
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/sdp-go"
+	"github.com/overmindtech/sdp-go/auth"
 	"github.com/pterm/pterm"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
@@ -27,7 +31,7 @@ func PTermSetup() {
 	// disrupting bubbletea rendering (and potentially getting overwritten).
 	// Otherwise, when TEABUG is set, log to a file.
 	if len(os.Getenv("TEABUG")) > 0 {
-		f, err := tea.LogToFile("teabug.log", "debug")
+		f, err := os.OpenFile("teabug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600) //nolint:gomnd
 		if err != nil {
 			fmt.Println("fatal:", err)
 			os.Exit(1)
@@ -178,4 +182,126 @@ func RunApply(ctx context.Context, args []string) error {
 	}
 
 	return nil
+}
+
+func snapshotDetail(state string, items, edges uint32) string {
+	itemStr := ""
+	if items == 0 {
+		itemStr = "0 items"
+	} else if items == 1 {
+		itemStr = "1 item"
+	} else {
+		itemStr = fmt.Sprintf("%d items", items)
+	}
+
+	edgeStr := ""
+	if edges == 0 {
+		edgeStr = "0 edges"
+	} else if edges == 1 {
+		edgeStr = "1 edge"
+	} else {
+		edgeStr = fmt.Sprintf("%d edges", edges)
+	}
+
+	detailStr := state
+	if itemStr != "" || edgeStr != "" {
+		detailStr = fmt.Sprintf("%s (%s, %s)", state, itemStr, edgeStr)
+	}
+	return detailStr
+}
+
+func natsOptions(ctx context.Context, oi OvermindInstance, token *oauth2.Token) auth.NATSOptions {
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "localhost"
+	}
+
+	natsNamePrefix := "overmind-cli"
+
+	openapiUrl := *oi.ApiUrl
+	openapiUrl.Path = "/api"
+	tokenClient := auth.NewOAuthTokenClientWithContext(
+		ctx,
+		openapiUrl.String(),
+		"",
+		oauth2.StaticTokenSource(token),
+	)
+
+	return auth.NATSOptions{
+		NumRetries:        3,
+		RetryDelay:        1 * time.Second,
+		Servers:           []string{oi.NatsUrl.String()},
+		ConnectionName:    fmt.Sprintf("%v.%v", natsNamePrefix, hostname),
+		ConnectionTimeout: (10 * time.Second), // TODO: Make configurable
+		MaxReconnects:     -1,
+		ReconnectWait:     1 * time.Second,
+		ReconnectJitter:   1 * time.Second,
+		TokenClient:       tokenClient,
+	}
+}
+
+func HasScopesFlexible(token *oauth2.Token, requiredScopes []string) (bool, string, error) {
+	if token == nil {
+		return false, "", errors.New("HasScopesFlexible: token is nil")
+	}
+
+	claims, err := extractClaims(token.AccessToken)
+	if err != nil {
+		return false, "", fmt.Errorf("error extracting claims from token: %w", err)
+	}
+
+	for _, scope := range requiredScopes {
+		if !claims.HasScope(scope) {
+			// If they don't have the *exact* scope, check to see if they have
+			// write access to the same service
+			sections := strings.Split(scope, ":")
+			var hasWriteInstead bool
+
+			if len(sections) == 2 {
+				service, action := sections[0], sections[1]
+
+				if action == "read" {
+					hasWriteInstead = claims.HasScope(fmt.Sprintf("%v:write", service))
+				}
+			}
+
+			if !hasWriteInstead {
+				return false, scope, nil
+			}
+		}
+	}
+
+	return true, "", nil
+}
+
+// extracts custom claims from a JWT token. Note that this does not verify the
+// signature of the token, it just extracts the claims from the payload
+func extractClaims(token string) (*sdp.CustomClaims, error) {
+	// We aren't interested in checking the signature of the token since
+	// the server will do that. All we need to do is make sure it
+	// contains the right scopes. Therefore we just parse the payload
+	// directly
+	sections := strings.Split(token, ".")
+
+	if len(sections) != 3 {
+		return nil, errors.New("token is not a JWT")
+	}
+
+	// Decode the payload
+	decodedPayload, err := base64.RawURLEncoding.DecodeString(sections[1])
+
+	if err != nil {
+		return nil, fmt.Errorf("error decoding token payload: %w", err)
+	}
+
+	// Parse the payload
+	claims := new(sdp.CustomClaims)
+
+	err = json.Unmarshal(decodedPayload, claims)
+
+	if err != nil {
+		return nil, fmt.Errorf("error parsing token payload: %w", err)
+	}
+
+	return claims, nil
 }

@@ -4,9 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"strings"
-	"time"
 
-	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/glamour/ansi"
 	"github.com/charmbracelet/lipgloss"
@@ -307,10 +305,10 @@ func MarkdownStyle() ansi.StyleConfig {
 	}
 }
 
-var DotsSpinner = spinner.Spinner{
-	Frames: []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
-	FPS:    80 * time.Millisecond,
-}
+// var DotsSpinner = spinner.Spinner{
+// 	Frames: []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
+// 	FPS:    80 * time.Millisecond,
+// }
 
 var titleStyle = lipgloss.NewStyle().Foreground(ColorPalette.BgMain).Bold(true)
 var textStyle = lipgloss.NewStyle().Foreground(ColorPalette.LabelBase)
@@ -398,11 +396,4 @@ func RenderErr() string {
 		checkMark = "ERR"
 	}
 	return lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render(checkMark)
-}
-
-func PlatformSpinner() spinner.Spinner {
-	if IsConhost() {
-		return spinner.Line
-	}
-	return DotsSpinner
 }
