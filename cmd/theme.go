@@ -305,11 +305,6 @@ func MarkdownStyle() ansi.StyleConfig {
 	}
 }
 
-// var DotsSpinner = spinner.Spinner{
-// 	Frames: []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
-// 	FPS:    80 * time.Millisecond,
-// }
-
 var titleStyle = lipgloss.NewStyle().Foreground(ColorPalette.BgMain).Bold(true)
 var textStyle = lipgloss.NewStyle().Foreground(ColorPalette.LabelBase)
 var addedLineStyle = lipgloss.NewStyle().Foreground(ColorPalette.LabelControl).Background(ColorPalette.BgSuccess)

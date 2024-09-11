@@ -26,6 +26,10 @@ import (
 
 func PTermSetup() {
 	pterm.Success.Prefix.Text = "✔︎"
+	pterm.Error.Prefix.Text = "✗"
+
+	pterm.DefaultSpinner.Sequence = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+	pterm.DefaultSpinner.Delay = 80 * time.Millisecond
 
 	// ensure that only error messages are printed to the console,
 	// disrupting bubbletea rendering (and potentially getting overwritten).
