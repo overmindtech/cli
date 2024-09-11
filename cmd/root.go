@@ -457,7 +457,7 @@ func login(ctx context.Context, cmd *cobra.Command, scopes []string, writer io.W
 
 	var multi *pterm.MultiPrinter
 	if writer == nil {
-		multi = &pterm.DefaultMultiPrinter
+		multi = pterm.DefaultMultiPrinter.WithWriter(os.Stderr)
 		_, _ = multi.Start()
 	} else {
 		multi = pterm.DefaultMultiPrinter.WithWriter(writer)
