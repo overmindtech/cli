@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/overmindtech/cli/custerm/internal"
-	"github.com/pterm/pterm"
+	"github.com/overmindtech/pterm"
 )
 
 var activeSpinnerPrinters []*SpinnerPrinter

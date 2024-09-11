@@ -24,10 +24,10 @@ require (
 	github.com/muesli/termenv v0.15.3-0.20240912151726-82936c5ea257
 	github.com/overmindtech/aws-source v0.0.0-20240913010148-901dfa33a89c
 	github.com/overmindtech/discovery v0.27.7
+	github.com/overmindtech/pterm v0.0.0-20240911163008-e8e02ddb148c
 	github.com/overmindtech/sdp-go v0.93.1
 	github.com/overmindtech/stdlib-source v0.0.0-20240913002017-521b1b54a766
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/pterm/pterm v0.12.79
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sourcegraph/conc v0.3.0
 	github.com/spf13/cobra v1.8.1

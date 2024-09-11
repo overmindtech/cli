@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/overmindtech/pterm"
 	"github.com/overmindtech/sdp-go"
-	"github.com/pterm/pterm"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

@@ -14,9 +14,9 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/overmindtech/cli/tracing"
+	"github.com/overmindtech/pterm"
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/auth"
-	"github.com/pterm/pterm"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
 	"github.com/spf13/cobra"
