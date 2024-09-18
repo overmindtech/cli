@@ -369,26 +369,41 @@ func wrap(s string, width, indent int) string {
 	return strings.ReplaceAll(wordwrap.String(s, width-indent), "\n", "\n"+strings.Repeat(" ", indent))
 }
 
+func OkSymbol() string {
+	if IsConhost() {
+		return "OK"
+	}
+	return "✔︎"
+}
+
 func RenderOk() string {
-	checkMark := "✔︎"
-	if IsConhost() {
-		checkMark = "OK"
-	}
-	return lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render(checkMark)
+	return lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render(OkSymbol())
 }
 
+func UnknownSymbol() string {
+	if IsConhost() {
+		return "??"
+	}
+	return "?"
+}
 func RenderUnknown() string {
-	checkMark := "?"
-	if IsConhost() {
-		checkMark = "??"
-	}
-	return lipgloss.NewStyle().Foreground(ColorPalette.BgWarning).Render(checkMark)
+	return lipgloss.NewStyle().Foreground(ColorPalette.BgWarning).Render(UnknownSymbol())
 }
 
-func RenderErr() string {
-	checkMark := "✗"
+func ErrSymbol() string {
 	if IsConhost() {
-		checkMark = "ERR"
+		return "ERR"
 	}
-	return lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render(checkMark)
+	return "✗"
+}
+func RenderErr() string {
+	return lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render(ErrSymbol())
+}
+
+func IndentSymbol() string {
+	if IsConhost() {
+		// because conhost symbols are wider, we also indent a space more
+		return "    "
+	}
+	return "   "
 }

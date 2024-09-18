@@ -25,8 +25,9 @@ import (
 )
 
 func PTermSetup() {
-	pterm.Success.Prefix.Text = "✔︎"
-	pterm.Error.Prefix.Text = "✗"
+	pterm.Success.Prefix.Text = OkSymbol()
+	pterm.Warning.Prefix.Text = UnknownSymbol()
+	pterm.Error.Prefix.Text = ErrSymbol()
 
 	pterm.DefaultSpinner.Sequence = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
 	pterm.DefaultSpinner.Delay = 80 * time.Millisecond

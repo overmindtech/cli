@@ -157,16 +157,18 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInsta
 
 	// render the list of supported and unsupported changes for the UI
 	for _, mapping := range mappingResponse.Results {
-		var icon string
+		var printer pterm.PrefixPrinter
 		switch mapping.Status {
 		case tfutils.MapStatusSuccess:
-			icon = RenderOk()
+			printer = pterm.Success
 		case tfutils.MapStatusNotEnoughInfo:
-			icon = RenderUnknown()
+			printer = pterm.Warning
 		case tfutils.MapStatusUnsupported:
-			icon = RenderErr()
+			printer = pterm.Error
 		}
-		_, err = resourceExtractionResults.Write([]byte(fmt.Sprintf("  %v %v (%v)\n", icon, mapping.TerraformName, mapping.Message)))
+
+		line := printer.Sprintf("%v (%v)", mapping.TerraformName, mapping.Message)
+		_, err = resourceExtractionResults.Write([]byte(fmt.Sprintf("   %v\n", line)))
 		if err != nil {
 			return fmt.Errorf("error writing to resource extraction results: %w", err)
 		}
@@ -384,7 +386,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInsta
 			if i <= len(milestoneSpinners) {
 				new := custerm.DefaultSpinner.
 					WithWriter(multi.NewWriter()).
-					WithIndentation("  ").
+					WithIndentation(IndentSymbol()).
 					WithText(ms.GetDescription())
 				milestoneSpinners = append(milestoneSpinners, new)
 			}
