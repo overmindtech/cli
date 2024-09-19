@@ -155,6 +155,8 @@ func RunPlan(ctx context.Context, args []string) error {
 
 	log.WithField("args", c.Args).Debug("running terraform plan")
 
+	pterm.Println("Running terraform plan: " + strings.Join(c.Args, " "))
+
 	err := c.Run()
 	if err != nil {
 		span.RecordError(err)
@@ -181,6 +183,8 @@ func RunApply(ctx context.Context, args []string) error {
 	defer span.End()
 
 	log.WithField("args", c.Args).Debug("running terraform apply")
+
+	pterm.Println("Running terraform apply: " + strings.Join(c.Args, " "))
 
 	err := c.Run()
 	if err != nil {
