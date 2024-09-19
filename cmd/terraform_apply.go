@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"connectrpc.com/connect"
+	"github.com/google/uuid"
 	"github.com/overmindtech/pterm"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
@@ -115,72 +116,86 @@ func TerraformApply(cmd *cobra.Command, args []string) error {
 }
 
 func TerraformApplyImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInstance, args []string, planFile string) error {
-	multi := pterm.DefaultMultiPrinter
-	_, _ = multi.Start()
-	defer func() {
-		_, _ = multi.Stop()
+	client := AuthenticatedChangesClient(ctx, oi)
+
+	changeUuid, err := func() (uuid.UUID, error) {
+		multi := pterm.DefaultMultiPrinter
+		_, _ = multi.Start()
+		defer func() {
+			_, _ = multi.Stop()
+		}()
+
+		var err error
+		ticketLink := viper.GetString("ticket-link")
+		if ticketLink == "" {
+			ticketLink, err = getTicketLinkFromPlan(planFile)
+			if err != nil {
+				return uuid.Nil, err
+			}
+		}
+
+		changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, true)
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("failed to identify change: %w", err)
+		}
+
+		// m.startingChange <- m.startingChangeSnapshot.StartMsg()
+		startingChangeSnapshotSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting Change")
+
+		startStream, err := client.StartChange(ctx, &connect.Request[sdp.StartChangeRequest]{
+			Msg: &sdp.StartChangeRequest{
+				ChangeUUID: changeUuid[:],
+			},
+		})
+		if err != nil {
+			startingChangeSnapshotSpinner.Fail(fmt.Sprintf("Starting Change: %v", err))
+			return uuid.Nil, fmt.Errorf("failed to start change: %w", err)
+		}
+
+		var startMsg *sdp.StartChangeResponse
+		for startStream.Receive() {
+			startMsg = startStream.Msg()
+			log.WithFields(log.Fields{
+				"state": startMsg.GetState(),
+				"items": startMsg.GetNumItems(),
+				"edges": startMsg.GetNumEdges(),
+			}).Trace("progress")
+			stateLabel := "unknown"
+			switch startMsg.GetState() {
+			case sdp.StartChangeResponse_STATE_UNSPECIFIED:
+				stateLabel = "unknown"
+			case sdp.StartChangeResponse_STATE_TAKING_SNAPSHOT:
+				stateLabel = "capturing current state"
+			case sdp.StartChangeResponse_STATE_SAVING_SNAPSHOT:
+				stateLabel = "saving state"
+			case sdp.StartChangeResponse_STATE_DONE:
+				stateLabel = "done"
+			}
+			startingChangeSnapshotSpinner.UpdateText(fmt.Sprintf("Starting Change: %v", snapshotDetail(stateLabel, startMsg.GetNumItems(), startMsg.GetNumEdges())))
+		}
+		if startStream.Err() != nil {
+			startingChangeSnapshotSpinner.Fail(fmt.Sprintf("Starting Change: %v", startStream.Err()))
+			return uuid.Nil, startStream.Err()
+		}
+
+		startingChangeSnapshotSpinner.Success()
+		return changeUuid, nil
 	}()
 
-	var err error
-	ticketLink := viper.GetString("ticket-link")
-	if ticketLink == "" {
-		ticketLink, err = getTicketLinkFromPlan(planFile)
-		if err != nil {
-			return err
-		}
-	}
-
-	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, true)
 	if err != nil {
-		return fmt.Errorf("failed to identify change: %w", err)
+		return err
 	}
-
-	// m.startingChange <- m.startingChangeSnapshot.StartMsg()
-	startingChangeSnapshotSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting Change")
-
-	client := AuthenticatedChangesClient(ctx, oi)
-	startStream, err := client.StartChange(ctx, &connect.Request[sdp.StartChangeRequest]{
-		Msg: &sdp.StartChangeRequest{
-			ChangeUUID: changeUuid[:],
-		},
-	})
-	if err != nil {
-		startingChangeSnapshotSpinner.Fail(fmt.Sprintf("Starting Change: %v", err))
-		return fmt.Errorf("failed to start change: %w", err)
-	}
-
-	var startMsg *sdp.StartChangeResponse
-	for startStream.Receive() {
-		startMsg = startStream.Msg()
-		log.WithFields(log.Fields{
-			"state": startMsg.GetState(),
-			"items": startMsg.GetNumItems(),
-			"edges": startMsg.GetNumEdges(),
-		}).Trace("progress")
-		stateLabel := "unknown"
-		switch startMsg.GetState() {
-		case sdp.StartChangeResponse_STATE_UNSPECIFIED:
-			stateLabel = "unknown"
-		case sdp.StartChangeResponse_STATE_TAKING_SNAPSHOT:
-			stateLabel = "capturing current state"
-		case sdp.StartChangeResponse_STATE_SAVING_SNAPSHOT:
-			stateLabel = "saving state"
-		case sdp.StartChangeResponse_STATE_DONE:
-			stateLabel = "done"
-		}
-		startingChangeSnapshotSpinner.UpdateText(fmt.Sprintf("Starting Change: %v", snapshotDetail(stateLabel, startMsg.GetNumItems(), startMsg.GetNumEdges())))
-	}
-	if startStream.Err() != nil {
-		startingChangeSnapshotSpinner.Fail(fmt.Sprintf("Starting Change: %v", startStream.Err()))
-		return startStream.Err()
-	}
-
-	startingChangeSnapshotSpinner.Success()
 
 	err = RunApply(ctx, args)
 	if err != nil {
 		return err
 	}
+
+	multi := pterm.DefaultMultiPrinter
+	_, _ = multi.Start()
+	defer func() {
+		_, _ = multi.Stop()
+	}()
 
 	endingChangeSnapshotSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Ending Change")
 
