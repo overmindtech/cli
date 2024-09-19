@@ -103,10 +103,12 @@ func TerraformApply(cmd *cobra.Command, args []string) error {
 	}
 
 	if needApproval {
-		result, _ := pterm.DefaultInteractiveTextInput.WithDefaultText("\nDo you want to perform these actions?\n\nTerraform will perform the actions described above.\nOnly 'yes' will be accepted to approve").Show()
-		// move the cursor back to the bottom of the screen
-		fmt.Println()
-		fmt.Println()
+
+		pterm.Println("")
+		pterm.Println("Do you want to perform these actions?")
+		pterm.Println("")
+		pterm.Println("Terraform will perform the actions described above.")
+		result, _ := pterm.DefaultInteractiveTextInput.WithDefaultText("Only 'yes' will be accepted to approve").Show()
 		if result != "yes" {
 			return errors.New("aborted by user")
 		}
