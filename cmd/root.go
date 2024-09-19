@@ -583,7 +583,7 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 			deviceCode.UserCode,
 		)))
 
-	multi := pterm.DefaultMultiPrinter.WithUpdateDelay(80 * time.Millisecond)
+	multi := pterm.DefaultMultiPrinter
 	_, _ = multi.Start()
 
 	authSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Waiting for browser authentication")

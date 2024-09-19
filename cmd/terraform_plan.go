@@ -96,7 +96,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInsta
 	log.Debug("done running terraform plan")
 
 	// start showing revlink warmup status now that the terminal is free
-	multi := pterm.DefaultMultiPrinter.WithUpdateDelay(150 * time.Millisecond)
+	multi := pterm.DefaultMultiPrinter
 	_, _ = multi.Start()
 	defer func() {
 		_, _ = multi.Stop()

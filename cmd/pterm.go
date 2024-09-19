@@ -29,6 +29,8 @@ func PTermSetup() {
 	pterm.Warning.Prefix.Text = UnknownSymbol()
 	pterm.Error.Prefix.Text = ErrSymbol()
 
+	pterm.DefaultMultiPrinter.UpdateDelay = 80 * time.Millisecond
+
 	pterm.DefaultSpinner.Sequence = []string{" ⠋ ", " ⠙ ", " ⠹ ", " ⠸ ", " ⠼ ", " ⠴ ", " ⠦ ", " ⠧ ", " ⠇ ", " ⠏ "}
 	pterm.DefaultSpinner.Delay = 80 * time.Millisecond
 

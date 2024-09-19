@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
 	"connectrpc.com/connect"
 	"github.com/overmindtech/pterm"
@@ -116,7 +115,7 @@ func TerraformApply(cmd *cobra.Command, args []string) error {
 }
 
 func TerraformApplyImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInstance, args []string, planFile string) error {
-	multi := pterm.DefaultMultiPrinter.WithUpdateDelay(150 * time.Millisecond)
+	multi := pterm.DefaultMultiPrinter
 	_, _ = multi.Start()
 	defer func() {
 		_, _ = multi.Stop()
