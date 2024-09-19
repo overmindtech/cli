@@ -17,8 +17,6 @@ import (
 	"syscall"
 	"time"
 
-	"atomicgo.dev/keyboard"
-	"atomicgo.dev/keyboard/keys"
 	"connectrpc.com/connect"
 	"github.com/getsentry/sentry-go"
 	"github.com/go-jose/go-jose/v4"
@@ -585,31 +583,26 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 			deviceCode.UserCode,
 		)))
 
+	multi := pterm.DefaultMultiPrinter.WithUpdateDelay(80 * time.Millisecond)
+	_, _ = multi.Start()
+
+	authSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Waiting for browser authentication")
+
 	token, err = config.DeviceAccessToken(ctx, deviceCode)
 	if err != nil {
-		statusParagraph.Println(RenderErr() + " Unable to authenticate. Please try again.")
+		authSpinner.Fail("Unable to authenticate. Please try again.")
 		log.WithContext(ctx).WithError(err).Error("Error getting device code")
-		os.Exit(1)
-	}
-	pterm.Println(RenderOk() + " Authenticated successfully. Press any key to continue.\n")
-	err = keyboard.Listen(func(keyInfo keys.Key) (stop bool, err error) {
-		key := keyInfo.Code
-		if key == keys.CtrlC {
-			statusParagraph.Println(RenderErr() + " Cancelled")
-			os.Exit(1)
-		}
-		log.WithField("key", key).Debug("Received keyboard input")
-		return true, nil
-	})
-	if err != nil {
-		statusParagraph.Println(RenderErr() + " Error reading keyboard input: " + err.Error())
 		os.Exit(1)
 	}
 
 	if token == nil {
-		statusParagraph.Println(RenderErr() + " Error running program: no token received")
+		authSpinner.Fail("Error running program: no token received")
+		log.WithContext(ctx).Error("Error running program: no token received")
 		os.Exit(1)
 	}
+
+	authSpinner.Success("Authenticated successfully")
+	_, _ = multi.Stop()
 
 	tok, err := josejwt.ParseSigned(token.AccessToken, []jose.SignatureAlgorithm{jose.RS256})
 	if err != nil {

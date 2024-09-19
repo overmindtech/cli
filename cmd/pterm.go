@@ -30,10 +30,10 @@ func PTermSetup() {
 	pterm.Warning.Prefix.Text = UnknownSymbol()
 	pterm.Error.Prefix.Text = ErrSymbol()
 
-	pterm.DefaultSpinner.Sequence = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+	pterm.DefaultSpinner.Sequence = []string{" ⠋ ", " ⠙ ", " ⠹ ", " ⠸ ", " ⠼ ", " ⠴ ", " ⠦ ", " ⠧ ", " ⠇ ", " ⠏ "}
 	pterm.DefaultSpinner.Delay = 80 * time.Millisecond
 
-	custerm.DefaultSpinner.Sequence = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
+	custerm.DefaultSpinner.Sequence = []string{" ⠋ ", " ⠙ ", " ⠹ ", " ⠸ ", " ⠼ ", " ⠴ ", " ⠦ ", " ⠧ ", " ⠇ ", " ⠏ "}
 	custerm.DefaultSpinner.Delay = 80 * time.Millisecond
 
 	// ensure that only error messages are printed to the console,

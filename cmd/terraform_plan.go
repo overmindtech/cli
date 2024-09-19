@@ -356,7 +356,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInsta
 		if !skipChangeMessage.Load() {
 			changeWaitWriter := multi.NewWriter()
 			// only show this if risk calculation hasn't already finished
-			_, err := changeWaitWriter.Write([]byte(fmt.Sprintf("  │ Check the blast radius graph while you wait:\n  │ %v\n", changeUrl.String())))
+			_, err := changeWaitWriter.Write([]byte(fmt.Sprintf(" │  Check the blast radius graph while you wait:\n │  %v\n", changeUrl.String())))
 			if err != nil {
 				log.WithError(err).Error("error writing to change wait writer")
 			}
