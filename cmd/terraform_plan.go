@@ -15,7 +15,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
 	"github.com/muesli/reflow/wordwrap"
-	"github.com/overmindtech/cli/custerm"
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/pterm"
 	"github.com/overmindtech/sdp-go"
@@ -370,7 +369,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInsta
 	riskSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Calculating Risks")
 
 	var riskRes *connect.Response[sdp.GetChangeRisksResponse]
-	milestoneSpinners := []*custerm.SpinnerPrinter{}
+	milestoneSpinners := []*pterm.SpinnerPrinter{}
 	for {
 		riskRes, err = client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
 			Msg: &sdp.GetChangeRisksRequest{
@@ -384,7 +383,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInsta
 
 		for i, ms := range riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetProgressMilestones() {
 			if i <= len(milestoneSpinners) {
-				new := custerm.DefaultSpinner.
+				new := pterm.DefaultSpinner.
 					WithWriter(multi.NewWriter()).
 					WithIndentation(IndentSymbol()).
 					WithText(ms.GetDescription())

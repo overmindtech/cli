@@ -123,7 +123,7 @@ func StartLocalSources(ctx context.Context, oi OvermindInstance, token *oauth2.T
 }
 
 func Explore(cmd *cobra.Command, args []string) error {
-	pterm.Success.Prefix.Text = "✔︎"
+	PTermSetup()
 
 	ctx := cmd.Context()
 

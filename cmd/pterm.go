@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"github.com/overmindtech/cli/custerm"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/pterm"
 	"github.com/overmindtech/sdp-go"
@@ -32,9 +31,6 @@ func PTermSetup() {
 
 	pterm.DefaultSpinner.Sequence = []string{" ⠋ ", " ⠙ ", " ⠹ ", " ⠸ ", " ⠼ ", " ⠴ ", " ⠦ ", " ⠧ ", " ⠇ ", " ⠏ "}
 	pterm.DefaultSpinner.Delay = 80 * time.Millisecond
-
-	custerm.DefaultSpinner.Sequence = []string{" ⠋ ", " ⠙ ", " ⠹ ", " ⠸ ", " ⠼ ", " ⠴ ", " ⠦ ", " ⠧ ", " ⠇ ", " ⠏ "}
-	custerm.DefaultSpinner.Delay = 80 * time.Millisecond
 
 	// ensure that only error messages are printed to the console,
 	// disrupting bubbletea rendering (and potentially getting overwritten).
