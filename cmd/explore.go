@@ -34,7 +34,7 @@ var exploreCmd = &cobra.Command{
 // any query or request during the runtime of the CLI. for proper cleanup,
 // execute the returned function. The method returns once the sources are
 // started. Progress is reported into the provided multi printer.
-func StartLocalSources(ctx context.Context, oi OvermindInstance, token *oauth2.Token, tfArgs []string, multi pterm.MultiPrinter) (func(), error) {
+func StartLocalSources(ctx context.Context, oi OvermindInstance, token *oauth2.Token, tfArgs []string, multi *pterm.MultiPrinter) (func(), error) {
 	var err error
 
 	stdlibSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting stdlib source engine")
@@ -139,7 +139,7 @@ func Explore(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cleanup, err := StartLocalSources(ctx, oi, token, args, multi)
+	cleanup, err := StartLocalSources(ctx, oi, token, args, &multi)
 	if err != nil {
 		return err
 	}

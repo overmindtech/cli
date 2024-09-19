@@ -70,7 +70,7 @@ func StartSources(ctx context.Context, cmd *cobra.Command, args []string) (conte
 		return ctx, OvermindInstance{}, nil, nil, err
 	}
 
-	cleanup, err := StartLocalSources(ctx, oi, token, args, multi)
+	cleanup, err := StartLocalSources(ctx, oi, token, args, &multi)
 	if err != nil {
 		return ctx, OvermindInstance{}, nil, nil, err
 	}

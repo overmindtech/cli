@@ -106,7 +106,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInsta
 	// postPlanPrinter, so that "removing secrets" is shown before the revlink
 	// status updates
 	removingSecretsSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Removing secrets")
-	postPlanPrinter.Store(multi)
+	postPlanPrinter.Store(&multi)
 
 	///////////////////////////////////////////////////////////////////
 	// Convert provided plan into JSON for easier parsing
