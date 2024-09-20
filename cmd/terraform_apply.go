@@ -141,7 +141,6 @@ func TerraformApplyImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInst
 			return uuid.Nil, fmt.Errorf("failed to identify change: %w", err)
 		}
 
-		// m.startingChange <- m.startingChangeSnapshot.StartMsg()
 		startingChangeSnapshotSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting Change")
 
 		startStream, err := client.StartChange(ctx, &connect.Request[sdp.StartChangeRequest]{

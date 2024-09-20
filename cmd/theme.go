@@ -376,18 +376,11 @@ func OkSymbol() string {
 	return "✔︎"
 }
 
-func RenderOk() string {
-	return lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render(OkSymbol())
-}
-
 func UnknownSymbol() string {
 	if IsConhost() {
 		return "??"
 	}
 	return "?"
-}
-func RenderUnknown() string {
-	return lipgloss.NewStyle().Foreground(ColorPalette.BgWarning).Render(UnknownSymbol())
 }
 
 func ErrSymbol() string {
@@ -395,9 +388,6 @@ func ErrSymbol() string {
 		return "ERR"
 	}
 	return "✗"
-}
-func RenderErr() string {
-	return lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render(ErrSymbol())
 }
 
 func IndentSymbol() string {
