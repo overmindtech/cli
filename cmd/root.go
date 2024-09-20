@@ -571,10 +571,9 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 
 	var token *oauth2.Token
 
-	statusParagraph := pterm.DefaultParagraph.WithMaxWidth(MAX_TERMINAL_WIDTH)
 	err = browser.OpenURL(deviceCode.VerificationURI)
 	if err != nil {
-		statusParagraph.Println(RenderErr() + " Unable to open browser: " + err.Error())
+		pterm.Error.Printf("Unable to open browser: %v", err)
 	}
 	pterm.Print(
 		markdownToString(MAX_TERMINAL_WIDTH, fmt.Sprintf(
@@ -606,14 +605,14 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 
 	tok, err := josejwt.ParseSigned(token.AccessToken, []jose.SignatureAlgorithm{jose.RS256})
 	if err != nil {
-		statusParagraph.Println("Error running program: received invalid token:", err)
+		pterm.Error.Printf("Error running program: received invalid token: %v", err)
 		os.Exit(1)
 	}
 	out := josejwt.Claims{}
 	customClaims := sdp.CustomClaims{}
 	err = tok.UnsafeClaimsWithoutVerification(&out, &customClaims)
 	if err != nil {
-		statusParagraph.Println("Error running program: received unparsable token:", err)
+		pterm.Error.Printf("Error running program: received unparsable token: %v", err)
 		os.Exit(1)
 	}
 
