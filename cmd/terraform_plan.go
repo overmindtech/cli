@@ -440,6 +440,8 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInsta
 	}
 
 	risks := riskRes.Msg.GetChangeRiskMetadata().GetRisks()
+	bits = append(bits, "")
+	bits = append(bits, "")
 	if len(risks) == 0 {
 		bits = append(bits, styleH1().Render("Potential Risks"))
 		bits = append(bits, "")
