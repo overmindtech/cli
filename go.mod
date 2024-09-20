@@ -3,7 +3,7 @@ module github.com/overmindtech/cli
 go 1.22.5
 
 require (
-	connectrpc.com/connect v1.16.2
+	connectrpc.com/connect v1.17.0
 	github.com/aws/aws-sdk-go-v2 v1.30.5
 	github.com/aws/aws-sdk-go-v2/config v1.27.35
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.33
