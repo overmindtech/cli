@@ -130,9 +130,6 @@ func Explore(cmd *cobra.Command, args []string) error {
 	multi := pterm.DefaultMultiPrinter
 
 	_, _ = multi.Start()
-	defer func() {
-		_, _ = multi.Stop()
-	}()
 
 	ctx, oi, token, err := login(ctx, cmd, []string{"request:receive"}, multi.NewWriter())
 	if err != nil {
@@ -145,7 +142,12 @@ func Explore(cmd *cobra.Command, args []string) error {
 	}
 	defer cleanup()
 
-	pterm.Fprinto(multi.NewWriter(), pterm.Success.Sprint("Press any key to stop the sources"))
+	_, _ = multi.Stop()
+
+	pterm.Println()
+	pterm.Println(fmt.Sprintf("Explore your infrastructure graph at %v/explore", oi.FrontendUrl))
+	pterm.Println()
+	pterm.Success.Println("Press any key to stop the sources")
 	err = keyboard.Listen(func(keyInfo keys.Key) (stop bool, err error) {
 		return true, nil
 	})
