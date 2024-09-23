@@ -15,35 +15,8 @@ runs:
         check-latest: true
         cache: ${{ inputs.cache }}
 
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        repository: overmindtech/aws-source
-        path: ./aws-source
-
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        repository: overmindtech/k8s-source
-        path: ./k8s-source
-
-    - name: Move sources in place
+    - name: Get deps and refresh generated code
       shell: bash
       run: |
-        rm -rf ../aws-source
-        rm -rf ../k8s-source
-        mv -v aws-source ..
-        mv -v k8s-source ..
-
-    - name: Go Generate
-      shell: bash
-      run: |
+        go get -v -t -d ./...
         go generate ./...
-        if [ -z "$(git status --porcelain)" ]; then
-          echo "No pending changes from 'go generate'"
-        else
-          echo "Pending changes from 'go generate' found, please run 'go generate ./...' and commit the changes"
-          git status
-          exit 1
-        fi
-        cat cmd/commit.txt

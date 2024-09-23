@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -17,7 +18,7 @@ type Args struct {
 }
 
 func main() {
-	fmt.Printf("Running %s go on %s\n", os.Args[0], os.Getenv("GOFILE"))
+	fmt.Printf("Running %s from %s\n", os.Args[0], os.Getenv("GOFILE"))
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -35,9 +36,9 @@ func main() {
 	}
 
 	args := Args{
-		Source:       os.Args[1],
+		Source:       filepath.Base(os.Args[1]),
 		SourceMunged: strings.ReplaceAll(os.Args[1], "-", ""),
-		Data:         dataFromFiles(fmt.Sprintf("../sources/%v/docs-data", os.Args[1])),
+		Data:         dataFromFiles(fmt.Sprintf("%v/docs-data", os.Args[1])),
 	}
 
 	funcMap := template.FuncMap{
