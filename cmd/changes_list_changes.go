@@ -25,7 +25,7 @@ var listChangesCmd = &cobra.Command{
 func ListChanges(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"changes:read"})
+	ctx, oi, _, err := login(ctx, cmd, []string{"changes:read"}, nil)
 	if err != nil {
 		return err
 	}

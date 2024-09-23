@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 )
 
@@ -28,4 +30,28 @@ everything that happened, including any unexpected repercussions.`,
 
 func init() {
 	rootCmd.AddCommand(terraformCmd)
+}
+
+var applyOnlyArgs = []string{
+	"auto-approve",
+}
+
+// planArgsFromApplyArgs filters out all apply-specific arguments from arguments
+// to `terraform apply`, so that we can run the corresponding `terraform plan`
+// command
+func planArgsFromApplyArgs(args []string) []string {
+	planArgs := []string{}
+append:
+	for _, arg := range args {
+		for _, applyOnlyArg := range applyOnlyArgs {
+			if strings.HasPrefix(arg, "-"+applyOnlyArg) {
+				continue append
+			}
+			if strings.HasPrefix(arg, "--"+applyOnlyArg) {
+				continue append
+			}
+		}
+		planArgs = append(planArgs, arg)
+	}
+	return planArgs
 }

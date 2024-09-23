@@ -30,7 +30,7 @@ func GetBookmark(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"changes:read"})
+	ctx, oi, _, err := login(ctx, cmd, []string{"changes:read"}, nil)
 	if err != nil {
 		return err
 	}

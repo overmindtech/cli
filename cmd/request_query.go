@@ -27,7 +27,7 @@ var requestQueryCmd = &cobra.Command{
 func RequestQuery(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"explore:read", "changes:read"})
+	ctx, oi, _, err := login(ctx, cmd, []string{"explore:read", "changes:read"}, nil)
 	if err != nil {
 		return err
 	}

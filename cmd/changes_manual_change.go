@@ -33,7 +33,7 @@ func ManualChange(cmd *cobra.Command, args []string) error {
 		return flagError{fmt.Sprintf("can't parse --query-method: %v\n\n%v", err, cmd.UsageString())}
 	}
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"})
+	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"}, nil)
 	if err != nil {
 		return err
 	}

@@ -4,9 +4,7 @@ import (
 	_ "embed"
 	"fmt"
 	"strings"
-	"time"
 
-	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/glamour/ansi"
 	"github.com/charmbracelet/lipgloss"
@@ -307,11 +305,6 @@ func MarkdownStyle() ansi.StyleConfig {
 	}
 }
 
-var DotsSpinner = spinner.Spinner{
-	Frames: []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
-	FPS:    80 * time.Millisecond,
-}
-
 var titleStyle = lipgloss.NewStyle().Foreground(ColorPalette.BgMain).Bold(true)
 var textStyle = lipgloss.NewStyle().Foreground(ColorPalette.LabelBase)
 var addedLineStyle = lipgloss.NewStyle().Foreground(ColorPalette.LabelControl).Background(ColorPalette.BgSuccess)
@@ -376,33 +369,31 @@ func wrap(s string, width, indent int) string {
 	return strings.ReplaceAll(wordwrap.String(s, width-indent), "\n", "\n"+strings.Repeat(" ", indent))
 }
 
-func RenderOk() string {
-	checkMark := "✔︎"
+func OkSymbol() string {
 	if IsConhost() {
-		checkMark = "OK"
+		return "OK"
 	}
-	return lipgloss.NewStyle().Foreground(ColorPalette.BgSuccess).Render(checkMark)
+	return "✔︎"
 }
 
-func RenderUnknown() string {
-	checkMark := "?"
+func UnknownSymbol() string {
 	if IsConhost() {
-		checkMark = "??"
+		return "??"
 	}
-	return lipgloss.NewStyle().Foreground(ColorPalette.BgWarning).Render(checkMark)
+	return "?"
 }
 
-func RenderErr() string {
-	checkMark := "✗"
+func ErrSymbol() string {
 	if IsConhost() {
-		checkMark = "ERR"
+		return "ERR"
 	}
-	return lipgloss.NewStyle().Foreground(ColorPalette.BgDanger).Render(checkMark)
+	return "✗"
 }
 
-func PlatformSpinner() spinner.Spinner {
+func IndentSymbol() string {
 	if IsConhost() {
-		return spinner.Line
+		// because conhost symbols are wider, we also indent a space more
+		return "    "
 	}
-	return DotsSpinner
+	return "   "
 }

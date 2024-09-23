@@ -65,7 +65,7 @@ func GetChange(cmd *cobra.Command, args []string) error {
 		riskLevels = []sdp.Risk_Severity{sdp.Risk_SEVERITY_HIGH, sdp.Risk_SEVERITY_MEDIUM, sdp.Risk_SEVERITY_LOW}
 	}
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"changes:read"})
+	ctx, oi, _, err := login(ctx, cmd, []string{"changes:read"}, nil)
 	if err != nil {
 		return err
 	}
