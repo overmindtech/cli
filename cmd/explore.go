@@ -56,6 +56,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 		stdlibEngine, err := stdlibsource.InitializeEngine(
 			natsOptions,
 			fmt.Sprintf("stdlib-source-%v", hostname),
+			fmt.Sprintf("cli-%v", cliVersion),
 			uuid.New(),
 			heartbeatOptions,
 			2_000,
@@ -108,6 +109,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 		awsEngine, err := proc.InitializeAwsSourceEngine(
 			ctx,
 			fmt.Sprintf("aws-source-%v", hostname),
+			fmt.Sprintf("cli-%v", cliVersion),
 			uuid.New(),
 			natsOptions,
 			heartbeatOptions,
