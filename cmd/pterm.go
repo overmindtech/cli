@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -14,13 +15,16 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/overmindtech/cli/tracing"
+	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/pterm"
 	"github.com/overmindtech/sdp-go"
 	"github.com/overmindtech/sdp-go/auth"
+	"github.com/overmindtech/sdp-go/sdpconnect"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/oauth2"
 )
 
@@ -58,7 +62,7 @@ func PTermSetup() {
 	}
 }
 
-func StartSources(ctx context.Context, cmd *cobra.Command, args []string) (context.Context, OvermindInstance, *oauth2.Token, func(), error) {
+func StartSources(ctx context.Context, cmd *cobra.Command, args []string) (context.Context, sdp.OvermindInstance, *oauth2.Token, func(), error) {
 	multi := pterm.DefaultMultiPrinter
 	_, _ = multi.Start()
 	defer func() {
@@ -67,19 +71,19 @@ func StartSources(ctx context.Context, cmd *cobra.Command, args []string) (conte
 
 	ctx, oi, token, err := login(ctx, cmd, []string{"explore:read", "changes:write", "config:write", "request:receive"}, multi.NewWriter())
 	if err != nil {
-		return ctx, OvermindInstance{}, nil, nil, err
+		return ctx, sdp.OvermindInstance{}, nil, nil, err
 	}
 
 	cleanup, err := StartLocalSources(ctx, oi, token, args, &multi)
 	if err != nil {
-		return ctx, OvermindInstance{}, nil, nil, err
+		return ctx, sdp.OvermindInstance{}, nil, nil, err
 	}
 
 	return ctx, oi, token, cleanup, nil
 }
 
 // start revlink warmup in the background
-func RunRevlinkWarmup(ctx context.Context, oi OvermindInstance, postPlanPrinter *atomic.Pointer[pterm.MultiPrinter], args []string) *pool.ErrorPool {
+func RunRevlinkWarmup(ctx context.Context, oi sdp.OvermindInstance, postPlanPrinter *atomic.Pointer[pterm.MultiPrinter], args []string) *pool.ErrorPool {
 	p := pool.New().WithErrors()
 	p.Go(func() error {
 		ctx, span := tracing.Tracer().Start(ctx, "revlink warmup")
@@ -221,7 +225,7 @@ func snapshotDetail(state string, items, edges uint32) string {
 	return detailStr
 }
 
-func natsOptions(ctx context.Context, oi OvermindInstance, token *oauth2.Token) auth.NATSOptions {
+func natsOptions(ctx context.Context, oi sdp.OvermindInstance, token *oauth2.Token) auth.NATSOptions {
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "localhost"
@@ -248,6 +252,26 @@ func natsOptions(ctx context.Context, oi OvermindInstance, token *oauth2.Token) 
 		ReconnectWait:     1 * time.Second,
 		ReconnectJitter:   1 * time.Second,
 		TokenClient:       tokenClient,
+	}
+}
+
+func heartbeatOptions(oi sdp.OvermindInstance, token *oauth2.Token) *discovery.HeartbeatOptions {
+	tokenSource := oauth2.StaticTokenSource(token)
+
+	transport := oauth2.Transport{
+		Source: tokenSource,
+		Base:   http.DefaultTransport,
+	}
+	authenticatedClient := http.Client{
+		Transport: otelhttp.NewTransport(&transport),
+	}
+
+	return &discovery.HeartbeatOptions{
+		ManagementClient: sdpconnect.NewManagementServiceClient(
+			&authenticatedClient,
+			oi.ApiUrl.String(),
+		),
+		Frequency: time.Second * 30,
 	}
 }
 
