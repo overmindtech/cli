@@ -36,6 +36,7 @@ runs:
         mv -v k8s-source ..
 
     - name: Install Docgen
+      shell: bash
       run: go install github.com/overmindtech/docgen@latest
 
     - name: Go Generate for sources
