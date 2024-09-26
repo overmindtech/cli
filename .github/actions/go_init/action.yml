@@ -35,6 +35,16 @@ runs:
         mv -v aws-source ..
         mv -v k8s-source ..
 
+    - name: Go Generate for sources
+      shell: bash
+      run: |
+        cd ../aws-source
+        go generate ./...
+        cd -
+        cd ../k8s-source
+        go generate ./...
+        cd -
+
     - name: Go Generate
       shell: bash
       run: |
