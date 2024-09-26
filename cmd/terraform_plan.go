@@ -79,7 +79,7 @@ func TerraformPlan(cmd *cobra.Command, args []string) error {
 	return TerraformPlanImpl(ctx, cmd, oi, args, planFile)
 }
 
-func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInstance, args []string, planFile string) error {
+func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindInstance, args []string, planFile string) error {
 	span := trace.SpanFromContext(ctx)
 
 	// this printer will be configured once the terraform plan command has

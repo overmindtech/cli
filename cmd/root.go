@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -30,7 +29,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -40,86 +38,6 @@ import (
 //go:generate sh -c "echo -n $(git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD) > commit.txt"
 //go:embed commit.txt
 var cliVersion string
-
-type OvermindInstance struct {
-	FrontendUrl *url.URL
-	ApiUrl      *url.URL
-	NatsUrl     *url.URL
-	Audience    string
-	Auth0Domain string
-	CLIClientID string
-}
-
-// GatewayUrl returns the URL for the gateway for this instance.
-func (oi OvermindInstance) GatewayUrl() string {
-	return fmt.Sprintf("%v/api/gateway", oi.ApiUrl.String())
-}
-
-func (oi OvermindInstance) String() string {
-	return fmt.Sprintf("Frontend: %v, API: %v, Nats: %v, Audience: %v", oi.FrontendUrl, oi.ApiUrl, oi.NatsUrl, oi.Audience)
-}
-
-type instanceData struct {
-	Api         string `json:"api_url"`
-	Nats        string `json:"nats_url"`
-	Aud         string `json:"aud"`
-	Auth0Domain string `json:"auth0_domain"`
-	CLIClientID string `json:"auth0_cli_client_id"`
-}
-
-// NewOvermindInstance creates a new OvermindInstance from the given app URL
-// with all URLs filled in, or an error. This makes a request to the frontend to
-// lookup Api and Nats URLs.
-func NewOvermindInstance(ctx context.Context, app string) (OvermindInstance, error) {
-	var instance OvermindInstance
-	var err error
-
-	instance.FrontendUrl, err = url.Parse(app)
-	if err != nil {
-		return instance, fmt.Errorf("invalid --app value '%v', error: %w", app, err)
-	}
-
-	// Get the instance data
-	instanceDataUrl := fmt.Sprintf("%v/api/public/instance-data", instance.FrontendUrl)
-	req, err := http.NewRequest("GET", instanceDataUrl, nil)
-	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("could not initialize instance-data fetch")
-		return OvermindInstance{}, fmt.Errorf("could not initialize instance-data fetch: %w", err)
-	}
-
-	req = req.WithContext(ctx)
-	log.WithField("instanceDataUrl", instanceDataUrl).Debug("Fetching instance-data")
-	res, err := otelhttp.DefaultClient.Do(req)
-	if err != nil {
-		return OvermindInstance{}, fmt.Errorf("could not fetch instance-data: %w", err)
-	}
-
-	if res.StatusCode != 200 {
-		return OvermindInstance{}, fmt.Errorf("instance-data fetch returned non-200 status: %v", res.StatusCode)
-	}
-
-	defer res.Body.Close()
-	data := instanceData{}
-	err = json.NewDecoder(res.Body).Decode(&data)
-	if err != nil {
-		return OvermindInstance{}, fmt.Errorf("could not parse instance-data: %w", err)
-	}
-
-	instance.ApiUrl, err = url.Parse(data.Api)
-	if err != nil {
-		return OvermindInstance{}, fmt.Errorf("invalid api_url value '%v' in instance-data, error: %w", data.Api, err)
-	}
-	instance.NatsUrl, err = url.Parse(data.Nats)
-	if err != nil {
-		return OvermindInstance{}, fmt.Errorf("invalid nats_url value '%v' in instance-data, error: %w", data.Nats, err)
-	}
-
-	instance.Audience = data.Aud
-	instance.CLIClientID = data.CLIClientID
-	instance.Auth0Domain = data.Auth0Domain
-
-	return instance, nil
-}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -264,7 +182,7 @@ Then enter the code:
 `
 
 // getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a state with the specified status and having --ticket-link
-func getChangeUuid(ctx context.Context, oi OvermindInstance, expectedStatus sdp.ChangeStatus, ticketLink string, errNotFound bool) (uuid.UUID, error) {
+func getChangeUuid(ctx context.Context, oi sdp.OvermindInstance, expectedStatus sdp.ChangeStatus, ticketLink string, errNotFound bool) (uuid.UUID, error) {
 	var changeUuid uuid.UUID
 	var err error
 
@@ -443,10 +361,10 @@ func tracedSettings() map[string]any {
 	return result
 }
 
-func login(ctx context.Context, cmd *cobra.Command, scopes []string, writer io.Writer) (context.Context, OvermindInstance, *oauth2.Token, error) {
+func login(ctx context.Context, cmd *cobra.Command, scopes []string, writer io.Writer) (context.Context, sdp.OvermindInstance, *oauth2.Token, error) {
 	timeout, err := time.ParseDuration(viper.GetString("timeout"))
 	if err != nil {
-		return ctx, OvermindInstance{}, nil, flagError{usage: fmt.Sprintf("invalid --timeout value '%v'\n\n%v", viper.GetString("timeout"), cmd.UsageString())}
+		return ctx, sdp.OvermindInstance{}, nil, flagError{usage: fmt.Sprintf("invalid --timeout value '%v'\n\n%v", viper.GetString("timeout"), cmd.UsageString())}
 	}
 
 	lf := log.Fields{
@@ -463,11 +381,11 @@ func login(ctx context.Context, cmd *cobra.Command, scopes []string, writer io.W
 
 	connectSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Connecting to Overmind")
 
-	oi, err := NewOvermindInstance(ctx, viper.GetString("app"))
+	oi, err := sdp.NewOvermindInstance(ctx, viper.GetString("app"))
 	if err != nil {
 		connectSpinner.Fail("Failed to get instance data from app")
 		_, _ = multi.Stop()
-		return ctx, OvermindInstance{}, nil, loggedError{
+		return ctx, sdp.OvermindInstance{}, nil, loggedError{
 			err:     err,
 			fields:  lf,
 			message: "failed to get instance data from app",
@@ -480,7 +398,7 @@ func login(ctx context.Context, cmd *cobra.Command, scopes []string, writer io.W
 	ctx, token, err := ensureToken(ctx, oi, scopes)
 	if err != nil {
 		connectSpinner.Fail("Failed to authenticate")
-		return ctx, OvermindInstance{}, nil, loggedError{
+		return ctx, sdp.OvermindInstance{}, nil, loggedError{
 			err:     err,
 			fields:  lf,
 			message: "failed to authenticate",
@@ -493,7 +411,7 @@ func login(ctx context.Context, cmd *cobra.Command, scopes []string, writer io.W
 	return ctx, oi, token, nil
 }
 
-func ensureToken(ctx context.Context, oi OvermindInstance, requiredScopes []string) (context.Context, *oauth2.Token, error) {
+func ensureToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes []string) (context.Context, *oauth2.Token, error) {
 	var token *oauth2.Token
 	var err error
 
@@ -528,7 +446,7 @@ func ensureToken(ctx context.Context, oi OvermindInstance, requiredScopes []stri
 
 // Gets a token from Oauth with the required scopes. This method will also cache
 // that token locally for use later, and will use the cached token if possible
-func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []string) (*oauth2.Token, error) {
+func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes []string) (*oauth2.Token, error) {
 	var localScopes []string
 
 	// Check for a locally saved token in ~/.overmind
@@ -652,7 +570,7 @@ func getOauthToken(ctx context.Context, oi OvermindInstance, requiredScopes []st
 }
 
 // Gets a token using an API key
-func getAPIKeyToken(ctx context.Context, oi OvermindInstance, apiKey string, requiredScopes []string) (*oauth2.Token, error) {
+func getAPIKeyToken(ctx context.Context, oi sdp.OvermindInstance, apiKey string, requiredScopes []string) (*oauth2.Token, error) {
 	log.WithContext(ctx).Debug("using provided token for authentication")
 
 	var token *oauth2.Token

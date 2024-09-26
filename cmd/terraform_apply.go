@@ -117,7 +117,7 @@ func TerraformApply(cmd *cobra.Command, args []string) error {
 	return TerraformApplyImpl(ctx, cmd, oi, args, planFile)
 }
 
-func TerraformApplyImpl(ctx context.Context, cmd *cobra.Command, oi OvermindInstance, args []string, planFile string) error {
+func TerraformApplyImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindInstance, args []string, planFile string) error {
 	client := AuthenticatedChangesClient(ctx, oi)
 
 	changeUuid, err := func() (uuid.UUID, error) {
