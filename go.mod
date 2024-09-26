@@ -25,7 +25,7 @@ require (
 	github.com/overmindtech/aws-source v0.0.0-20240913010148-901dfa33a89c
 	github.com/overmindtech/discovery v0.27.7
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
-	github.com/overmindtech/sdp-go v0.93.1
+	github.com/overmindtech/sdp-go v0.94.0
 	github.com/overmindtech/stdlib-source v0.0.0-20240913002017-521b1b54a766
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
@@ -126,7 +126,7 @@ require (
 	github.com/miekg/dns v1.1.62 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/nats-io/jwt/v2 v2.6.0 // indirect
+	github.com/nats-io/jwt/v2 v2.7.0 // indirect
 	github.com/nats-io/nats.go v1.37.0 // indirect
 	github.com/nats-io/nkeys v0.4.7 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
