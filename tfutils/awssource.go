@@ -37,6 +37,22 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
+	"aws_api_gateway_resource": {
+		{
+			Type:       "apigateway-resource",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
+	"aws_api_gateway_rest_api": {
+		{
+			Type:       "apigateway-rest-api",
+			Method:     sdp.QueryMethod_GET,
+			QueryField: "id",
+			Scope:      "*",
+		},
+	},
 	"aws_autoscaling_group": {
 		{
 			Type:       "autoscaling-auto-scaling-group",
