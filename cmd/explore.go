@@ -15,6 +15,7 @@ import (
 	"github.com/overmindtech/pterm"
 	"github.com/overmindtech/sdp-go"
 	stdlibsource "github.com/overmindtech/stdlib-source/sources"
+	"github.com/pkg/browser"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
 	"github.com/spf13/cobra"
@@ -170,8 +171,14 @@ func Explore(cmd *cobra.Command, args []string) error {
 
 	_, _ = multi.Stop()
 
+	exploreURL := fmt.Sprintf("%v/explore", oi.FrontendUrl)
+	err = browser.OpenURL(exploreURL)
+	if err != nil {
+		pterm.Error.Printf("Unable to open browser: %v", err)
+	}
+
 	pterm.Println()
-	pterm.Println(fmt.Sprintf("Explore your infrastructure graph at %v/explore", oi.FrontendUrl))
+	pterm.Println(fmt.Sprintf("Explore your infrastructure graph at %s", exploreURL))
 	pterm.Println()
 	pterm.Success.Println("Press Ctrl+C to stop the locally running sources")
 	err = keyboard.Listen(func(keyInfo keys.Key) (stop bool, err error) {
