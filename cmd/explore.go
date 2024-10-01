@@ -8,13 +8,14 @@ import (
 	"atomicgo.dev/keyboard"
 	"atomicgo.dev/keyboard/keys"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/google/uuid"
 	"github.com/overmindtech/aws-source/proc"
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/pterm"
 	"github.com/overmindtech/sdp-go"
-	stdlibsource "github.com/overmindtech/stdlib-source/sources"
+	stdlibSource "github.com/overmindtech/stdlib-source/sources"
 	"github.com/pkg/browser"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
@@ -37,11 +38,17 @@ var exploreCmd = &cobra.Command{
 // any query or request during the runtime of the CLI. for proper cleanup,
 // execute the returned function. The method returns once the sources are
 // started. Progress is reported into the provided multi printer.
-func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oauth2.Token, tfArgs []string, multi *pterm.MultiPrinter) (func(), error) {
+func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oauth2.Token, tfArgs []string, failOverToAws bool) (func(), error) {
 	var err error
 
+	multi := pterm.DefaultMultiPrinter
+	_, _ = multi.Start()
+	defer func() {
+		_, _ = multi.Stop()
+	}()
 	stdlibSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting stdlib source engine")
 	awsSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting AWS source engine")
+	statusArea := pterm.DefaultParagraph.WithWriter(multi.NewWriter())
 
 	natsOptions := natsOptions(ctx, oi, token)
 	heartbeatOptions := heartbeatOptions(oi, token)
@@ -54,7 +61,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 	p := pool.NewWithResults[*discovery.Engine]().WithErrors()
 
 	p.Go(func() (*discovery.Engine, error) {
-		stdlibEngine, err := stdlibsource.InitializeEngine(
+		stdlibEngine, err := stdlibSource.InitializeEngine(
 			natsOptions,
 			fmt.Sprintf("stdlib-source-%v", hostname),
 			fmt.Sprintf("cli-%v", cliVersion),
@@ -67,7 +74,6 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			stdlibSpinner.Fail("Failed to initialize stdlib source engine")
 			return nil, fmt.Errorf("failed to initialize stdlib source engine: %w", err)
 		}
-
 		// todo: pass in context with timeout to abort timely and allow Ctrl-C to work
 		err = stdlibEngine.Start()
 		if err != nil {
@@ -91,7 +97,6 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			return nil, fmt.Errorf("failed to parse providers: %w", err)
 		}
 		configs := []aws.Config{}
-
 		for _, p := range providers {
 			if p.Error != nil {
 				// skip providers that had errors. This allows us to use
@@ -104,9 +109,19 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 				awsSpinner.Fail("Error when converting provider to config")
 				return nil, fmt.Errorf("error when converting provider to config: %w", err)
 			}
+			credentials, _ := c.Credentials.Retrieve(ctx)
+			statusArea.Println(fmt.Sprintf("Using AWS provider in %s with %s.", p.FilePath, credentials.Source))
 			configs = append(configs, c)
 		}
-
+		if len(configs) == 0 && failOverToAws {
+			userConfig, err := config.LoadDefaultConfig(ctx)
+			if err != nil {
+				awsSpinner.Fail("Failed to load default AWS config")
+				return nil, fmt.Errorf("failed to load default AWS config: %w", err)
+			}
+			statusArea.Println("Using default AWS CLI config. No AWS terraform providers found.")
+			configs = append(configs, userConfig)
+		}
 		awsEngine, err := proc.InitializeAwsSourceEngine(
 			ctx,
 			fmt.Sprintf("aws-source-%v", hostname),
@@ -155,27 +170,24 @@ func Explore(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
 	multi := pterm.DefaultMultiPrinter
-
-	_, _ = multi.Start()
-
-	ctx, oi, token, err := login(ctx, cmd, []string{"request:receive"}, multi.NewWriter())
+	_, _ = multi.Start() // multi-printer controls the lifecycle of screen output, it needs to be stopped before printing anything else
+	defer func() {
+		_, _ = multi.Stop()
+	}()
+	ctx, oi, token, err := login(ctx, cmd, []string{"request:receive", "api:read"}, multi.NewWriter())
+	_, _ = multi.Stop()
 	if err != nil {
 		return err
 	}
 
-	cleanup, err := StartLocalSources(ctx, oi, token, args, &multi)
+	cleanup, err := StartLocalSources(ctx, oi, token, args, true)
 	if err != nil {
 		return err
 	}
 	defer cleanup()
 
-	_, _ = multi.Stop()
-
 	exploreURL := fmt.Sprintf("%v/explore", oi.FrontendUrl)
-	err = browser.OpenURL(exploreURL)
-	if err != nil {
-		pterm.Error.Printf("Unable to open browser: %v", err)
-	}
+	_ = browser.OpenURL(exploreURL) // ignore error, we can't do anything about it
 
 	pterm.Println()
 	pterm.Println(fmt.Sprintf("Explore your infrastructure graph at %s", exploreURL))
