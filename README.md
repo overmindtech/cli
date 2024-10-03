@@ -28,7 +28,6 @@ Overmind is a **tribal knowledge database** that empowers your team to manage in
   
     - Tools like Terraform show intended changes but don't reveal underlying dependencies.
     - Difficulty in assessing whether changes will disrupt existing applications.
-    - 
 - **Complex Outage Troubleshooting**
   
     - Pinpointing issues during outages is challenging due to hidden dependencies.
