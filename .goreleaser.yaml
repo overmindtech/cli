@@ -27,7 +27,7 @@ builds:
 # action yet.
 # signs:
 #   - id: amd64
-#     signature: "overmind-cli-amd64.dmg" 
+#     signature: "overmind-cli-amd64.dmg"
 #     ids:
 #       - overmind-macos # here we filter the macos only build id
 #     cmd: ./gon

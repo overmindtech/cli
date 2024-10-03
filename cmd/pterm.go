@@ -69,12 +69,12 @@ func StartSources(ctx context.Context, cmd *cobra.Command, args []string) (conte
 		_, _ = multi.Stop()
 	}()
 
-	ctx, oi, token, err := login(ctx, cmd, []string{"explore:read", "changes:write", "config:write", "request:receive"}, multi.NewWriter())
+	ctx, oi, token, err := login(ctx, cmd, []string{"explore:read", "changes:write", "config:write", "request:receive", "api:read", "sources:read"}, multi.NewWriter())
 	if err != nil {
 		return ctx, sdp.OvermindInstance{}, nil, nil, err
 	}
 
-	cleanup, err := StartLocalSources(ctx, oi, token, args, &multi)
+	cleanup, err := StartLocalSources(ctx, oi, token, args, false)
 	if err != nil {
 		return ctx, sdp.OvermindInstance{}, nil, nil, err
 	}

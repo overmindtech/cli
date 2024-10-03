@@ -329,7 +329,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 		blastRadiusSpinner.UpdateText(fmt.Sprintf("Calculating Blast Radius: %v", snapshotDetail(stateLabel, blastRadiusItems, blastRadiusEdges)))
 	}
 	if resultStream.Err() != nil {
-		blastRadiusSpinner.Fail(fmt.Sprintf("Calculating Blast Radius: error streaming results: %v", err))
+		blastRadiusSpinner.Fail(fmt.Sprintf("Calculating Blast Radius: error streaming results: %v", resultStream.Err()))
 		return nil
 	}
 	blastRadiusSpinner.Success("Calculating Blast Radius: done")

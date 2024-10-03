@@ -489,10 +489,7 @@ func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes 
 
 	var token *oauth2.Token
 
-	err = browser.OpenURL(deviceCode.VerificationURI)
-	if err != nil {
-		pterm.Error.Printf("Unable to open browser: %v", err)
-	}
+	_ = browser.OpenURL(deviceCode.VerificationURI) // nolint:errcheck // we don't care if the browser fails to open
 	pterm.Print(
 		markdownToString(MAX_TERMINAL_WIDTH, fmt.Sprintf(
 			beginAuthMessage,

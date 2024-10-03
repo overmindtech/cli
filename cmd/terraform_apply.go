@@ -31,7 +31,7 @@ func TerraformApply(cmd *cobra.Command, args []string) error {
 	PTermSetup()
 
 	hasPlanSet := false
-	autoapprove := false
+	autoApprove := false
 	planFile := "overmind.plan"
 	if len(args) >= 1 {
 		f, err := os.Stat(args[len(args)-1])
@@ -51,7 +51,7 @@ func TerraformApply(cmd *cobra.Command, args []string) error {
 		}
 		if hasPlanSet {
 			planFile = args[len(args)-1]
-			autoapprove = true
+			autoApprove = true
 		}
 	}
 
@@ -76,10 +76,10 @@ func TerraformApply(cmd *cobra.Command, args []string) error {
 		// therefore we only check for the flag when no plan file is supplied
 		for _, a := range args {
 			if a == "-auto-approve" || a == "-auto-approve=true" || a == "-auto-approve=TRUE" || a == "--auto-approve" || a == "--auto-approve=true" || a == "--auto-approve=TRUE" {
-				autoapprove = true
+				autoApprove = true
 			}
 			if a == "-auto-approve=false" || a == "-auto-approve=FALSE" || a == "--auto-approve=false" || a == "--auto-approve=FALSE" {
-				autoapprove = false
+				autoApprove = false
 			}
 		}
 	}
@@ -87,7 +87,7 @@ func TerraformApply(cmd *cobra.Command, args []string) error {
 	args = append([]string{"apply"}, args...)
 
 	needPlan := !hasPlanSet
-	needApproval := !autoapprove
+	needApproval := !autoApprove
 
 	ctx, oi, _, cleanup, err := StartSources(ctx, cmd, args)
 	if err != nil {
@@ -103,7 +103,6 @@ func TerraformApply(cmd *cobra.Command, args []string) error {
 	}
 
 	if needApproval {
-
 		pterm.Println("")
 		pterm.Println("Do you want to perform these actions?")
 		pterm.Println("")
