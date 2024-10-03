@@ -17,7 +17,7 @@
 
 Overmind is a **tribal knowledge database** that empowers your team to manage infrastructure confidently, even without extensive experience.
 
-### Signs your team needs Overmind:
+### Signs your team needs Overmind
 
 - **Blocked Experts & Slow Onboarding**
   
