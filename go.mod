@@ -6,8 +6,8 @@ require (
 	atomicgo.dev/keyboard v0.2.9
 	connectrpc.com/connect v1.17.0
 	github.com/aws/aws-sdk-go-v2 v1.31.0
-	github.com/aws/aws-sdk-go-v2/config v1.27.38
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.36
+	github.com/aws/aws-sdk-go-v2/config v1.27.40
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.38
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.14
 	github.com/charmbracelet/glamour v0.8.0
 	github.com/charmbracelet/lipgloss v0.13.0
@@ -90,9 +90,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.62.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.31.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.34.9 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.23.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.27.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.31.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.23.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.27.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.31.4 // indirect
 	github.com/aws/smithy-go v1.21.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
