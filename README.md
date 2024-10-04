@@ -179,6 +179,27 @@ Packages for Arch are available on the [releases page](https://github.com/overmi
 
 Additionally a community maintained package can be found in the [aur](https://aur.archlinux.org/packages/overmind-cli-bin).
 
+### ASDF
+
+Overmind can be instaled using [asdf](https://asdf-vm.com/):
+
+```shell
+# Add the plugin
+asdf plugin add overmind-cli https://github.com/overmindtech/asdf-overmind-cli.git
+
+# Show all installable versions
+asdf list-all overmind-cli
+
+# Install specific version
+asdf install overmind-cli latest
+
+# Set a version globally (on your ~/.tool-versions file)
+asdf global overmind-cli latest
+
+# Now overmind-cli commands are available
+overmind --version
+```
+
 </details>
 
 **Discover CLI Commands**
