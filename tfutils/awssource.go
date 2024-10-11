@@ -461,14 +461,6 @@ var AwssourceData = map[string][]TfMapData{
 			Scope:      "*",
 		},
 	},
-	"aws_iam_role_policy_attachment": {
-		{
-			Type:       "iam-policy",
-			Method:     sdp.QueryMethod_SEARCH,
-			QueryField: "policy_arn",
-			Scope:      "*",
-		},
-	},
 	"aws_iam_user": {
 		{
 			Type:       "iam-user",
