@@ -15,7 +15,7 @@ import (
 	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/pterm"
 	"github.com/overmindtech/sdp-go"
-	stdlibSource "github.com/overmindtech/stdlib-source/sources"
+	stdlibSource "github.com/overmindtech/stdlib-source/adapters"
 	"github.com/pkg/browser"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
