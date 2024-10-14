@@ -15,40 +15,6 @@ runs:
         check-latest: true
         cache: ${{ inputs.cache }}
 
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        repository: overmindtech/aws-source
-        path: ./aws-source
-
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        repository: overmindtech/k8s-source
-        path: ./k8s-source
-
-    - name: Move sources in place
-      shell: bash
-      run: |
-        rm -rf ../aws-source
-        rm -rf ../k8s-source
-        mv -v aws-source ..
-        mv -v k8s-source ..
-
-    - name: Install Docgen
-      shell: bash
-      run: go install github.com/overmindtech/docgen@latest
-
-    - name: Go Generate for sources
-      shell: bash
-      run: |
-        cd ../aws-source
-        go generate ./...
-        cd -
-        cd ../k8s-source
-        go generate ./...
-        cd -
-
     - name: Go Generate
       shell: bash
       run: |
