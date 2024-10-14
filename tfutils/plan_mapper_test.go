@@ -54,8 +54,8 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 		t.Errorf("Expected 16 secrets, got %v", results.RemovedSecrets)
 	}
 
-	if len(results.Results) != 6 {
-		t.Errorf("Expected 6 changes, got %v:", len(results.Results))
+	if len(results.Results) != 5 {
+		t.Errorf("Expected 5 changes, got %v:", len(results.Results))
 		for _, diff := range results.Results {
 			t.Errorf("  %v", diff)
 		}
@@ -144,11 +144,11 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	if api_server_deployment.GetMappingQuery().GetQuery() != "api-server" {
 		t.Errorf("Expected api_server_deployment query to be 'api-server', got '%v'", api_server_deployment.GetMappingQuery().GetQuery())
 	}
-	if api_server_deployment.GetMappingQuery().GetScope() != "dogfood.default" {
-		t.Errorf("Expected api_server_deployment query scope to be 'dogfood.default', got '%v'", api_server_deployment.GetMappingQuery().GetScope())
+	if api_server_deployment.GetMappingQuery().GetScope() != "*" {
+		t.Errorf("Expected api_server_deployment query scope to be '*', got '%v'", api_server_deployment.GetMappingQuery().GetScope())
 	}
-	if api_server_deployment.GetItem().GetBefore().GetScope() != "dogfood.default" {
-		t.Errorf("Expected api_server_deployment before item scope to be 'dogfood.default', got '%v'", api_server_deployment.GetItem().GetBefore().GetScope())
+	if api_server_deployment.GetItem().GetBefore().GetScope() != "terraform_plan" {
+		t.Errorf("Expected api_server_deployment before item scope to be 'terraform_plan', got '%v'", api_server_deployment.GetItem().GetBefore().GetScope())
 	}
 	if api_server_deployment.GetMappingQuery().GetType() != "Deployment" {
 		t.Errorf("Expected api_server_deployment query type to be 'Deployment', got '%v'", api_server_deployment.GetMappingQuery().GetType())
@@ -195,8 +195,8 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	if secret == nil {
 		t.Fatalf("Expected secret to be set, but it's not")
 	}
-	if secret.GetMappingQuery().GetScope() != "dogfood.default" {
-		t.Errorf("Expected secret query scope to be 'dogfood.default', got '%v'", secret.GetMappingQuery().GetScope())
+	if secret.GetMappingQuery().GetScope() != "*" {
+		t.Errorf("Expected secret query scope to be '*', got '%v'", secret.GetMappingQuery().GetScope())
 	}
 
 	// In a secret the "data" field is known after apply, but we don't *know*
@@ -204,6 +204,97 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	dataVal, _ := secret.GetItem().GetAfter().GetAttributes().Get("data")
 	if dataVal != KnownAfterApply {
 		t.Errorf("Expected secret data to be known after apply, got '%v'", dataVal)
+	}
+}
+
+func TestMapResourceToQuery(t *testing.T) {
+	type mapTest struct {
+		TestName       string
+		Resource       *Resource
+		Mappings       []TfMapData
+		ExpectedQuery  *sdp.Query
+		ExpectedStatus MapStatus
+	}
+
+	deploymentResource := Resource{
+		Address:       "kubernetes_deployment.nats_box",
+		Mode:          "managed",
+		Type:          "kubernetes_deployment",
+		Name:          "nats_box",
+		ProviderName:  "kubernetes",
+		SchemaVersion: 0,
+		AttributeValues: AttributeValues{
+			"metadata": []any{
+				map[string]any{
+					"namespace": "default",
+					"name":      "nats-box",
+				},
+			},
+		},
+		SensitiveValues: json.RawMessage{},
+	}
+
+	tests := []mapTest{
+		{
+			TestName: "nested k8s deployment",
+			ExpectedQuery: &sdp.Query{
+				Type:  "Deployment",
+				Query: "nats-box",
+			},
+			ExpectedStatus: MapStatusSuccess,
+			Resource:       &deploymentResource,
+			Mappings: []TfMapData{
+				{
+					OvermindType: "Deployment",
+					Method:       sdp.QueryMethod_GET,
+					QueryField:   "metadata[0].name",
+				},
+			},
+		},
+		{
+			TestName:       "with no mappings",
+			Resource:       &deploymentResource,
+			Mappings:       []TfMapData{},
+			ExpectedQuery:  nil,
+			ExpectedStatus: MapStatusUnsupported,
+		},
+		{
+			TestName: "with mappings that don't work",
+			Resource: &deploymentResource,
+			Mappings: []TfMapData{
+				{
+					OvermindType: "Deployment",
+					Method:       sdp.QueryMethod_GET,
+					QueryField:   "metadata[0].foo",
+				},
+			},
+			ExpectedQuery:  nil,
+			ExpectedStatus: MapStatusNotEnoughInfo,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.TestName, func(t *testing.T) {
+			result := mapResourceToQuery(nil, test.Resource, test.Mappings)
+
+			if result.Status != test.ExpectedStatus {
+				t.Errorf("Expected status to be %v, got %v", test.ExpectedStatus, result.Status)
+			}
+
+			if test.ExpectedQuery != nil {
+				if result.MappedItemDiff == nil {
+					t.Errorf("Expected mapped item diff to be set, but it's not")
+				}
+
+				if result.MappedItemDiff.GetMappingQuery().GetType() != test.ExpectedQuery.GetType() {
+					t.Errorf("Expected type to be %v, got %v", test.ExpectedQuery.GetType(), result.MappedItemDiff.GetMappingQuery().GetType())
+				}
+
+				if result.MappedItemDiff.GetMappingQuery().GetQuery() != test.ExpectedQuery.GetQuery() {
+					t.Errorf("Expected query to be %v, got %v", test.ExpectedQuery.GetQuery(), result.MappedItemDiff.GetMappingQuery().GetQuery())
+				}
+			}
+		})
 	}
 }
 

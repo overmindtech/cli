@@ -11,6 +11,8 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
+	awsAdapters "github.com/overmindtech/aws-source/adapters"
+	k8sAdapters "github.com/overmindtech/k8s-source/adapters"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -95,6 +97,17 @@ func MappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fi
 	return MappedItemDiffsFromPlan(ctx, planJSON, fileName, lf)
 }
 
+type TfMapData struct {
+	// The overmind type name
+	OvermindType string
+
+	// The method that the query should use
+	Method sdp.QueryMethod
+
+	// The field within the resource that should be queried for
+	QueryField string
+}
+
 // MappedItemDiffsFromPlan takes a plan JSON, file name, and log fields as input
 // and returns the mapping results and an error. It parses the plan JSON,
 // extracts resource changes, and creates mapped item differences for each
@@ -107,6 +120,35 @@ func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 	// Check that we haven't been passed a state file
 	if isStateFile(planJson) {
 		return nil, fmt.Errorf("'%v' appears to be a state file, not a plan file", fileName)
+	}
+
+	// Load mapping data from the sources and convert into a map so that we can
+	// index by Terraform type
+	adapterMetadata := append(awsAdapters.Metadata.AllAdapterMetadata(), k8sAdapters.Metadata.AllAdapterMetadata()...)
+	// These mappings are from the terraform type, to required mapping data
+	mappings := make(map[string][]TfMapData)
+	for _, metadata := range adapterMetadata {
+		if metadata.GetType() == "" {
+			continue
+		}
+
+		for _, mapping := range metadata.GetTerraformMappings() {
+			// Extract the query field and type from the mapping
+			subs := strings.SplitN(mapping.GetTerraformQueryMap(), ".", 2)
+			if len(subs) != 2 {
+				log.WithContext(ctx).WithFields(lf).WithField("terraform-query-map", mapping.GetTerraformQueryMap()).Warn("Skipping mapping with invalid query map")
+				continue
+			}
+			terraformType := subs[0]
+			queryField := subs[1]
+
+			// Add the mapping details
+			mappings[terraformType] = append(mappings[terraformType], TfMapData{
+				OvermindType: metadata.GetType(),
+				Method:       mapping.GetTerraformMethod(),
+				QueryField:   queryField,
+			})
+		}
 	}
 
 	var plan Plan
@@ -132,13 +174,9 @@ func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 			return nil, fmt.Errorf("failed to create item diff for resource change: %w", err)
 		}
 
-		// Load mappings for this type. These mappings tell us how to create an
-		// SDP query that will return this resource
-		awsMappings := AwssourceData[resourceChange.Type]
-		k8sMappings := K8ssourceData[resourceChange.Type]
-		mappings := append(awsMappings, k8sMappings...)
-
-		if len(mappings) == 0 {
+		// Get the Terraform mappings for this specific type
+		relevantMappings, ok := mappings[resourceChange.Type]
+		if !ok {
 			log.WithContext(ctx).WithFields(lf).WithField("terraform-address", resourceChange.Address).Debug("Skipping unmapped resource")
 			results.Results = append(results.Results, PlannedChangeMapResult{
 				TerraformName: resourceChange.Address,
@@ -152,152 +190,106 @@ func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 			continue
 		}
 
-		for _, mapData := range mappings {
-			var currentResource *Resource
+		var currentResource *Resource
 
-			// Look for the resource in the prior values first, since this is
-			// the *previous* state we're like to be able to find it in the
-			// actual infra
-			if plan.PriorState.Values != nil {
-				currentResource = plan.PriorState.Values.RootModule.DigResource(resourceChange.Address)
-			}
+		// Look for the resource in the prior values first, since this is
+		// the *previous* state we're like to be able to find it in the
+		// actual infra
+		if plan.PriorState.Values != nil {
+			currentResource = plan.PriorState.Values.RootModule.DigResource(resourceChange.Address)
+		}
 
-			// If we didn't find it, look in the planned values
-			if currentResource == nil {
-				currentResource = plan.PlannedValues.RootModule.DigResource(resourceChange.Address)
-			}
+		// If we didn't find it, look in the planned values
+		if currentResource == nil {
+			currentResource = plan.PlannedValues.RootModule.DigResource(resourceChange.Address)
+		}
 
-			if currentResource == nil {
-				log.WithContext(ctx).
-					WithFields(lf).
-					WithField("terraform-address", resourceChange.Address).
-					WithField("terraform-query-field", mapData.QueryField).Warn("Skipping resource without values")
-				continue
-			}
+		if currentResource == nil {
+			log.WithContext(ctx).
+				WithFields(lf).
+				WithField("terraform-address", resourceChange.Address).
+				Warn("Skipping resource without values")
+			continue
+		}
 
-			query, ok := currentResource.AttributeValues.Dig(mapData.QueryField)
-			if !ok {
-				log.WithContext(ctx).
-					WithFields(lf).
-					WithField("terraform-address", resourceChange.Address).
-					WithField("terraform-query-field", mapData.QueryField).Debug("Missing mapping field, cannot create Overmind query")
-				results.Results = append(results.Results, PlannedChangeMapResult{
-					TerraformName: resourceChange.Address,
-					Status:        MapStatusNotEnoughInfo,
-					Message:       fmt.Sprintf("missing %v", mapData.QueryField),
-					MappedItemDiff: &sdp.MappedItemDiff{
-						Item:         itemDiff,
-						MappingQuery: nil, // unmapped item has no mapping query
-					},
-				})
-				continue
-			}
+		results.Results = append(results.Results, mapResourceToQuery(itemDiff, currentResource, relevantMappings))
+	}
 
-			// Create the map that variables will pull data from
-			dataMap := make(map[string]any)
+	return &results, nil
+}
 
-			// Populate resource values
-			dataMap["values"] = currentResource.AttributeValues
+// Maps a resource to an Overmind query, or at least tries to given the provided
+// mappings. If there are multiple valid queries, the first one will be used.
+//
+// In the future we might allow for multiple queries to be returned, this work
+// will be tracked here: https://github.com/overmindtech/sdp/issues/272
+func mapResourceToQuery(itemDiff *sdp.ItemDiff, terraformResource *Resource, mappings []TfMapData) PlannedChangeMapResult {
+	attemptedMappings := make([]string, 0)
 
-			if overmindMappingsOutput, ok := plan.PlannedValues.Outputs["overmind_mappings"]; ok {
-				configResource := plan.Config.RootModule.DigResource(resourceChange.Address)
+	if len(mappings) == 0 {
+		return PlannedChangeMapResult{
+			TerraformName: terraformResource.Address,
+			Status:        MapStatusUnsupported,
+			Message:       "unsupported",
+			MappedItemDiff: &sdp.MappedItemDiff{
+				Item:         itemDiff,
+				MappingQuery: nil, // unmapped item has no mapping query
+			},
+		}
+	}
 
-				if configResource == nil {
-					log.WithContext(ctx).
-						WithFields(lf).
-						WithField("terraform-address", resourceChange.Address).
-						Debug("Skipping provider mapping for resource without config")
-				} else {
-					// Look up the provider config key in the mappings
-					mappings := make(map[string]map[string]string)
-
-					err = json.Unmarshal(overmindMappingsOutput.Value, &mappings)
-
-					if err != nil {
-						log.WithContext(ctx).
-							WithFields(lf).
-							WithField("terraform-address", resourceChange.Address).
-							WithError(err).
-							Error("Failed to parse overmind_mappings output")
-					} else {
-						// We need to split out the module section of the name
-						// here. If the resource isn't in a module, the
-						// ProviderConfigKey will be something like
-						// "kubernetes", however if it's in a module it's be
-						// something like "module.something:kubernetes"
-						providerName := extractProviderNameFromConfigKey(configResource.ProviderConfigKey)
-						currentProviderMappings, ok := mappings[providerName]
-
-						if ok {
-							log.WithContext(ctx).
-								WithFields(lf).
-								WithField("terraform-address", resourceChange.Address).
-								WithField("provider-config-key", configResource.ProviderConfigKey).
-								Debug("Found provider mappings")
-
-							// We have mappings for this provider, so set them
-							// in the `provider_mapping` value
-							dataMap["provider_mapping"] = currentProviderMappings
-						}
-					}
-				}
-			}
-
-			// Interpolate variables in the scope
-			scope, err := InterpolateScope(mapData.Scope, dataMap)
-
-			if err != nil {
-				log.WithContext(ctx).WithError(err).Debugf("Could not find scope mapping variables %v, adding them will result in better results. Error: ", mapData.Scope)
-				scope = "*"
-			}
-
+	for _, mapping := range mappings {
+		// See if the query field exists in the resource. If it doesn't then we
+		// will continue to the next mapping
+		query, ok := terraformResource.AttributeValues.Dig(mapping.QueryField)
+		if ok {
+			// If the query field exists, we will create a query
 			u := uuid.New()
 			newQuery := &sdp.Query{
-				Type:               mapData.Type,
-				Method:             mapData.Method,
+				Type:               mapping.OvermindType,
+				Method:             mapping.Method,
 				Query:              fmt.Sprintf("%v", query),
-				Scope:              scope,
+				Scope:              "*",
 				RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
 				UUID:               u[:],
 				Deadline:           timestamppb.New(time.Now().Add(60 * time.Second)),
 			}
 
-			// cleanup item metadata from mapping query
+			// Set the type of item to the Overmind-supported type rather than
+			// the Terraform one
 			if itemDiff.GetBefore() != nil {
-				itemDiff.Before.Type = newQuery.GetType()
-				if newQuery.GetScope() != "*" {
-					itemDiff.Before.Scope = newQuery.GetScope()
-				}
+				itemDiff.Before.Type = mapping.OvermindType
 			}
-
-			// cleanup item metadata from mapping query
 			if itemDiff.GetAfter() != nil {
-				itemDiff.After.Type = newQuery.GetType()
-				if newQuery.GetScope() != "*" {
-					itemDiff.After.Scope = newQuery.GetScope()
-				}
+				itemDiff.After.Type = mapping.OvermindType
 			}
 
-			results.Results = append(results.Results, PlannedChangeMapResult{
-				TerraformName: resourceChange.Address,
+			return PlannedChangeMapResult{
+				TerraformName: terraformResource.Address,
 				Status:        MapStatusSuccess,
 				Message:       "mapped",
 				MappedItemDiff: &sdp.MappedItemDiff{
 					Item:         itemDiff,
 					MappingQuery: newQuery,
 				},
-			})
-
-			log.WithContext(ctx).WithFields(log.Fields{
-				"scope":  newQuery.GetScope(),
-				"type":   newQuery.GetType(),
-				"query":  newQuery.GetQuery(),
-				"method": newQuery.GetMethod().String(),
-			}).Debug("Mapped resource to query")
+			}
 		}
+
+		// It it wasn't successful, add the mapping to the list of attempted
+		// mappings
+		attemptedMappings = append(attemptedMappings, mapping.QueryField)
 	}
 
-	return &results, nil
+	// If we get to this point, we haven't found a mapping
+	return PlannedChangeMapResult{
+		TerraformName: terraformResource.Address,
+		Status:        MapStatusNotEnoughInfo,
+		Message:       fmt.Sprintf("missing mapping attribute: %v", strings.Join(attemptedMappings, ", ")),
+		MappedItemDiff: &sdp.MappedItemDiff{
+			Item:         itemDiff,
+			MappingQuery: nil, // unmapped item has no mapping query
+		},
+	}
 }
 
 // Checks if the supplied JSON bytes are a state file. It's a common  mistake to
