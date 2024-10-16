@@ -204,6 +204,11 @@ func Explore(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("error reading keyboard input: %w", err)
 	}
 
+	// This spinner will spin forever as the command shuts down as this could
+	// take a couple of seconds and we want the user to know it's doing
+	// something
+	_, _ = pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Shutting down")
+
 	return nil
 }
 
