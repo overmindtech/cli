@@ -15,11 +15,27 @@ import (
 	k8sAdapters "github.com/overmindtech/k8s-source/adapters"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type MapStatus int
+
+func (m MapStatus) String() string {
+	switch m {
+	case MapStatusSuccess:
+		return "success"
+	case MapStatusNotEnoughInfo:
+		return "not enough info"
+	case MapStatusUnsupported:
+		return "unsupported"
+	default:
+		return "unknown"
+	}
+}
 
 const (
 	MapStatusSuccess MapStatus = iota
@@ -117,6 +133,10 @@ type TfMapData struct {
 // number of supported and unsupported changes and returns the mapped item
 // differences.
 func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, lf log.Fields) (*PlanMappingResult, error) {
+	// Create a span for this since we're going to be attaching events to it when things fail to map
+	span := trace.SpanFromContext(ctx)
+	defer span.End()
+
 	// Check that we haven't been passed a state file
 	if isStateFile(planJson) {
 		return nil, fmt.Errorf("'%v' appears to be a state file, not a plan file", fileName)
@@ -213,6 +233,20 @@ func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 		}
 
 		results.Results = append(results.Results, mapResourceToQuery(itemDiff, currentResource, relevantMappings))
+	}
+
+	// Attach failed mappings to the span
+	for _, result := range results.Results {
+		switch result.Status {
+		case MapStatusUnsupported, MapStatusNotEnoughInfo:
+			span.AddEvent("UnmappedResource", trace.WithAttributes(
+				attribute.String("status", result.Status.String()),
+				attribute.String("message", result.Message),
+				attribute.String("terraform-name", result.TerraformName),
+			))
+		case MapStatusSuccess:
+			// Don't include these
+		}
 	}
 
 	return &results, nil
