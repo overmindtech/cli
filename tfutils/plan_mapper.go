@@ -240,9 +240,9 @@ func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 		switch result.Status {
 		case MapStatusUnsupported, MapStatusNotEnoughInfo:
 			span.AddEvent("UnmappedResource", trace.WithAttributes(
-				attribute.String("status", result.Status.String()),
-				attribute.String("message", result.Message),
-				attribute.String("terraform-name", result.TerraformName),
+				attribute.String("ovm.climap.status", result.Status.String()),
+				attribute.String("ovm.climap.message", result.Message),
+				attribute.String("ovm.climap.terraform-name", result.TerraformName),
 			))
 		case MapStatusSuccess:
 			// Don't include these
