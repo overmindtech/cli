@@ -22,7 +22,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.3-0.20240912151726-82936c5ea257
-	github.com/overmindtech/aws-source v0.0.0-20241014172309-7788d00d18d2
+	github.com/overmindtech/aws-source v0.0.0-20241018020913-ddbf16d56ca2
 	github.com/overmindtech/discovery v0.29.2
 	github.com/overmindtech/k8s-source v0.8.1-0.20241014174423-8bea8e5882b9
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
@@ -72,11 +72,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.36.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.182.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.47.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.47.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.33.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eks v1.50.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.39.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.40.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.37.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.4.2 // indirect
@@ -87,9 +87,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.63.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.43.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.31.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.87.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.87.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.45.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.65.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.66.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.33.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.36.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.2 // indirect
