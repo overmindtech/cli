@@ -6,7 +6,7 @@ require (
 	atomicgo.dev/keyboard v0.2.9
 	connectrpc.com/connect v1.17.0
 	github.com/aws/aws-sdk-go-v2 v1.32.2
-	github.com/aws/aws-sdk-go-v2/config v1.27.43
+	github.com/aws/aws-sdk-go-v2/config v1.28.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.41
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.17
 	github.com/charmbracelet/glamour v0.8.0
