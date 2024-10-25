@@ -22,9 +22,9 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.3-0.20240912151726-82936c5ea257
-	github.com/overmindtech/aws-source v0.0.0-20241018075136-192bba553231
+	github.com/overmindtech/aws-source v0.0.0-20241025011151-44d13fa1e1e0
 	github.com/overmindtech/discovery v0.29.2
-	github.com/overmindtech/k8s-source v0.8.1-0.20241014174423-8bea8e5882b9
+	github.com/overmindtech/k8s-source v0.8.1-0.20241025005632-15223645e039
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
 	github.com/overmindtech/sdp-go v0.96.0
 	github.com/overmindtech/stdlib-source v0.0.0-20241018075207-50872fb39aad
@@ -66,15 +66,15 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.21 // indirect
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.27.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.45.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.46.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.40.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.42.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.29.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.36.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.182.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.47.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.186.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.48.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.33.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/eks v1.50.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/eks v1.51.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.40.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.37.2 // indirect
@@ -87,7 +87,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.63.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.43.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.31.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.87.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.88.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.45.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.66.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.33.2 // indirect
@@ -184,9 +184,9 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/api v0.31.1 // indirect
-	k8s.io/apimachinery v0.31.1 // indirect
-	k8s.io/client-go v0.31.1 // indirect
+	k8s.io/api v0.31.2 // indirect
+	k8s.io/apimachinery v0.31.2 // indirect
+	k8s.io/client-go v0.31.2 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20240228011516-70dd3763d340 // indirect
 	k8s.io/utils v0.0.0-20240711033017-18e509b52bc8 // indirect
