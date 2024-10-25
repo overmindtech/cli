@@ -271,7 +271,7 @@ func heartbeatOptions(oi sdp.OvermindInstance, token *oauth2.Token) *discovery.H
 			&authenticatedClient,
 			oi.ApiUrl.String(),
 		),
-		Frequency: time.Second * 30,
+		Frequency: time.Second * 10,
 	}
 }
 
