@@ -61,13 +61,19 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 	p := pool.NewWithResults[*discovery.Engine]().WithErrors()
 
 	p.Go(func() (*discovery.Engine, error) {
+		ec := discovery.EngineConfig{
+			Version:               fmt.Sprintf("cli-%v", cliVersion),
+			EngineType:            "cli-stdlib",
+			SourceName:            fmt.Sprintf("stdlib-source-%v", hostname),
+			SourceUUID:            uuid.New(),
+			App:                   oi.ApiUrl.Host,
+			ApiKey:                token.AccessToken,
+			MaxParallelExecutions: 2_000,
+		}
 		stdlibEngine, err := stdlibSource.InitializeEngine(
+			&ec,
 			natsOptions,
-			fmt.Sprintf("stdlib-source-%v", hostname),
-			fmt.Sprintf("cli-%v", cliVersion),
-			uuid.New(),
 			heartbeatOptions,
-			2_000,
 			true,
 		)
 		if err != nil {
@@ -122,14 +128,20 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			statusArea.Println("Using default AWS CLI config. No AWS terraform providers found.")
 			configs = append(configs, userConfig)
 		}
+		ec := discovery.EngineConfig{
+			EngineType:            "cli-aws",
+			Version:               fmt.Sprintf("cli-%v", cliVersion),
+			SourceName:            fmt.Sprintf("aws-source-%v", hostname),
+			SourceUUID:            uuid.New(),
+			App:                   oi.ApiUrl.Host,
+			ApiKey:                token.AccessToken,
+			MaxParallelExecutions: 2_000,
+		}
 		awsEngine, err := proc.InitializeAwsSourceEngine(
 			ctx,
-			fmt.Sprintf("aws-source-%v", hostname),
-			fmt.Sprintf("cli-%v", cliVersion),
-			uuid.New(),
+			&ec,
 			natsOptions,
 			heartbeatOptions,
-			2_000,
 			1, // Don't retry as we want the user to get notified immediately
 			configs...,
 		)

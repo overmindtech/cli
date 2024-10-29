@@ -32,3 +32,4 @@ terraform.tfstate
 terraform.tfstate.backup
 /tmp/
 /node_modules
+__debug_bin*
