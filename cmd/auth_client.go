@@ -11,14 +11,6 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-// AuthenticatedApiKeyClient Returns an apikey client that uses the auth
-// embedded in the context and otel instrumentation
-func AuthenticatedApiKeyClient(ctx context.Context, oi sdp.OvermindInstance) sdpconnect.ApiKeyServiceClient {
-	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
-	log.WithContext(ctx).WithField("apiUrl", oi.ApiUrl).Debug("Connecting to overmind apikeys API (pre-authenticated)")
-	return sdpconnect.NewApiKeyServiceClient(httpClient, oi.ApiUrl.String())
-}
-
 // UnauthenticatedApiKeyClient Returns an apikey client with otel instrumentation
 // but no authentication. Can only be used for ExchangeKeyForToken
 func UnauthenticatedApiKeyClient(ctx context.Context, oi sdp.OvermindInstance) sdpconnect.ApiKeyServiceClient {

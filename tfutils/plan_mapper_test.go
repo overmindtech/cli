@@ -4,11 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/overmindtech/sdp-go"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
+	"github.com/xiam/dig"
 )
 
 func TestWithStateFile(t *testing.T) {
@@ -333,7 +336,7 @@ func TestInterpolateScope(t *testing.T) {
 	t.Run("with no interpolation", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := InterpolateScope("foo", map[string]any{})
+		result, err := interpolateScope("foo", map[string]any{})
 
 		if err != nil {
 			t.Error(err)
@@ -347,7 +350,7 @@ func TestInterpolateScope(t *testing.T) {
 	t.Run("with a single variable", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := InterpolateScope("${outputs.overmind_kubernetes_cluster_name}", map[string]any{
+		result, err := interpolateScope("${outputs.overmind_kubernetes_cluster_name}", map[string]any{
 			"outputs": map[string]any{
 				"overmind_kubernetes_cluster_name": "foo",
 			},
@@ -365,7 +368,7 @@ func TestInterpolateScope(t *testing.T) {
 	t.Run("with multiple variables", func(t *testing.T) {
 		t.Parallel()
 
-		result, err := InterpolateScope("${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}", map[string]any{
+		result, err := interpolateScope("${outputs.overmind_kubernetes_cluster_name}.${values.metadata.namespace}", map[string]any{
 			"outputs": map[string]any{
 				"overmind_kubernetes_cluster_name": "foo",
 			},
@@ -388,7 +391,7 @@ func TestInterpolateScope(t *testing.T) {
 	t.Run("with a variable that doesn't exist", func(t *testing.T) {
 		t.Parallel()
 
-		_, err := InterpolateScope("${outputs.overmind_kubernetes_cluster_name}", map[string]any{})
+		_, err := interpolateScope("${outputs.overmind_kubernetes_cluster_name}", map[string]any{})
 
 		if err == nil {
 			t.Error("Expected error, got nil")
@@ -630,5 +633,118 @@ func TestHandleKnownAfterApply(t *testing.T) {
 
 	if val, _ := after.Get("data"); val != KnownAfterApply {
 		t.Errorf("expected data to be %v, got %v", KnownAfterApply, val)
+	}
+}
+
+// Returns the name of the provider from the config key. If the resource isn't
+// in a module, the ProviderConfigKey will be something like "kubernetes",
+// however if it's in a module it's be something like
+// "module.something:kubernetes". In both scenarios we want to return
+// "kubernetes"
+func extractProviderNameFromConfigKey(providerConfigKey string) string {
+	sections := strings.Split(providerConfigKey, ":")
+	return sections[len(sections)-1]
+}
+
+// interpolateScope Will interpolate variables in the scope string. These
+// variables can come from the following places:
+//
+// * `outputs` - These are the outputs from the plan
+// * `values` - These are the values from the resource in question
+//
+// Interpolation is done using the Terraform interpolation syntax:
+// https://www.terraform.io/docs/configuration/interpolation.html
+func interpolateScope(scope string, data map[string]any) (string, error) {
+	// Find all instances of ${} in the Scope
+	matches := escapeRegex.FindAllStringSubmatch(scope, -1)
+
+	interpolated := scope
+
+	for _, match := range matches {
+		// The first match is the entire string, the second match is the
+		// variable name
+		variableName := match[1]
+
+		value := terraformDig(&data, variableName)
+
+		if value == nil {
+			return "", fmt.Errorf("variable '%v' not found", variableName)
+		}
+
+		// Convert the value to a string
+		valueString, ok := value.(string)
+
+		if !ok {
+			return "", fmt.Errorf("variable '%v' is not a string", variableName)
+		}
+
+		interpolated = strings.Replace(interpolated, match[0], valueString, 1)
+	}
+
+	return interpolated, nil
+}
+
+// Digs through a map using the same logic that terraform does i.e. foo.bar[0]
+func terraformDig(srcMapPtr interface{}, path string) interface{} {
+	// Split the path on each period
+	parts := strings.Split(path, ".")
+
+	if len(parts) == 0 {
+		return nil
+	}
+
+	// Check for an index in this section
+	indexMatches := indexBrackets.FindStringSubmatch(parts[0])
+
+	var value interface{}
+
+	if len(indexMatches) == 0 {
+		// No index, just get the value
+		value = dig.Interface(srcMapPtr, parts[0])
+	} else {
+		// strip the brackets
+		keyName := indexBrackets.ReplaceAllString(parts[0], "")
+
+		// Get the index
+		index, err := strconv.Atoi(indexMatches[1])
+
+		if err != nil {
+			return nil
+		}
+
+		// Get the value
+		arr, ok := dig.Interface(srcMapPtr, keyName).([]interface{})
+
+		if !ok {
+			return nil
+		}
+
+		// Check if the index is in range
+		if index < 0 || index >= len(arr) {
+			return nil
+		}
+
+		value = arr[index]
+	}
+
+	if len(parts) == 1 {
+		return value
+	} else {
+		// Force it to another map[string]interface{}
+		valueMap := make(map[string]interface{})
+
+		if mapString, ok := value.(map[string]string); ok {
+			for k, v := range mapString {
+				valueMap[k] = v
+			}
+		} else if mapInterface, ok := value.(map[string]interface{}); ok {
+			valueMap = mapInterface
+		} else if mapAttributeValues, ok := value.(AttributeValues); ok {
+			valueMap = mapAttributeValues
+		} else {
+			return nil
+		}
+
+		return terraformDig(&valueMap, strings.Join(parts[1:], "."))
 	}
 }
