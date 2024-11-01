@@ -49,53 +49,6 @@ type plannedChangeGroups struct {
 	unsupported map[string][]*sdp.MappedItemDiff
 }
 
-func (g *plannedChangeGroups) NumUnsupportedChanges() int {
-	num := 0
-
-	for _, v := range g.unsupported {
-		num += len(v)
-	}
-
-	return num
-}
-
-func (g *plannedChangeGroups) NumSupportedChanges() int {
-	num := 0
-
-	for _, v := range g.supported {
-		num += len(v)
-	}
-
-	return num
-}
-
-func (g *plannedChangeGroups) MappedItemDiffs() []*sdp.MappedItemDiff {
-	mappedItemDiffs := make([]*sdp.MappedItemDiff, 0)
-
-	for _, v := range g.supported {
-		mappedItemDiffs = append(mappedItemDiffs, v...)
-	}
-
-	for _, v := range g.unsupported {
-		mappedItemDiffs = append(mappedItemDiffs, v...)
-	}
-
-	return mappedItemDiffs
-}
-
-// Add the specified item to the appropriate type group in the supported or unsupported section, based of whether it has a mapping query
-func (g *plannedChangeGroups) Add(typ string, item *sdp.MappedItemDiff) {
-	groups := g.supported
-	if item.GetMappingQuery() == nil {
-		groups = g.unsupported
-	}
-	list, ok := groups[typ]
-	if !ok {
-		list = make([]*sdp.MappedItemDiff, 0)
-	}
-	groups[typ] = append(list, item)
-}
-
 func changeTitle(arg string) string {
 	if arg != "" {
 		// easy, return the user's choice

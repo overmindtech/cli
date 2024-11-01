@@ -5,8 +5,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/xiam/dig"
 )
 
 // NOTE: These definitions are copied from the
@@ -60,71 +58,6 @@ type ConfigModule struct {
 	Resources   []ConfigResource      `json:"resources,omitempty"`
 	ModuleCalls map[string]moduleCall `json:"module_calls,omitempty"`
 	Variables   variables             `json:"variables,omitempty"`
-}
-
-// Digs through a map using the same logic that terraform does i.e. foo.bar[0]
-func TerraformDig(srcMapPtr interface{}, path string) interface{} {
-	// Split the path on each period
-	parts := strings.Split(path, ".")
-
-	if len(parts) == 0 {
-		return nil
-	}
-
-	// Check for an index in this section
-	indexMatches := indexBrackets.FindStringSubmatch(parts[0])
-
-	var value interface{}
-
-	if len(indexMatches) == 0 {
-		// No index, just get the value
-		value = dig.Interface(srcMapPtr, parts[0])
-	} else {
-		// strip the brackets
-		keyName := indexBrackets.ReplaceAllString(parts[0], "")
-
-		// Get the index
-		index, err := strconv.Atoi(indexMatches[1])
-
-		if err != nil {
-			return nil
-		}
-
-		// Get the value
-		arr, ok := dig.Interface(srcMapPtr, keyName).([]interface{})
-
-		if !ok {
-			return nil
-		}
-
-		// Check if the index is in range
-		if index < 0 || index >= len(arr) {
-			return nil
-		}
-
-		value = arr[index]
-	}
-
-	if len(parts) == 1 {
-		return value
-	} else {
-		// Force it to another map[string]interface{}
-		valueMap := make(map[string]interface{})
-
-		if mapString, ok := value.(map[string]string); ok {
-			for k, v := range mapString {
-				valueMap[k] = v
-			}
-		} else if mapInterface, ok := value.(map[string]interface{}); ok {
-			valueMap = mapInterface
-		} else if mapAttributeValues, ok := value.(AttributeValues); ok {
-			valueMap = mapAttributeValues
-		} else {
-			return nil
-		}
-
-		return TerraformDig(&valueMap, strings.Join(parts[1:], "."))
-	}
 }
 
 var escapeRegex = regexp.MustCompile(`\${([\w\.\[\]]*)}`)

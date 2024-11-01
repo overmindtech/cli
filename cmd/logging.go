@@ -35,25 +35,7 @@ type TextStyle struct {
 	underlying chalk.TextStyle
 }
 
-func (t TextStyle) TextStyle(val string) string {
-	if !tty {
-		// Don't style if we're not in a TTY
-		return val
-	}
-
-	return t.underlying.TextStyle(val)
-}
-
 // A type that wraps chalk.Color but adds detections for if we're in a TTY
 type Color struct {
 	underlying chalk.Color
-}
-
-func (c Color) Color(val string) string {
-	if !tty {
-		// Don't style if we're not in a TTY
-		return val
-	}
-
-	return c.underlying.Color(val)
 }

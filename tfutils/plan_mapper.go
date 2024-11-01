@@ -345,54 +345,6 @@ func isStateFile(bytes []byte) bool {
 	return false
 }
 
-// Returns the name of the provider from the config key. If the resource isn't
-// in a module, the ProviderConfigKey will be something like "kubernetes",
-// however if it's in a module it's be something like
-// "module.something:kubernetes". In both scenarios we want to return
-// "kubernetes"
-func extractProviderNameFromConfigKey(providerConfigKey string) string {
-	sections := strings.Split(providerConfigKey, ":")
-	return sections[len(sections)-1]
-}
-
-// InterpolateScope Will interpolate variables in the scope string. These
-// variables can come from the following places:
-//
-// * `outputs` - These are the outputs from the plan
-// * `values` - These are the values from the resource in question
-//
-// Interpolation is done using the Terraform interpolation syntax:
-// https://www.terraform.io/docs/configuration/interpolation.html
-func InterpolateScope(scope string, data map[string]any) (string, error) {
-	// Find all instances of ${} in the Scope
-	matches := escapeRegex.FindAllStringSubmatch(scope, -1)
-
-	interpolated := scope
-
-	for _, match := range matches {
-		// The first match is the entire string, the second match is the
-		// variable name
-		variableName := match[1]
-
-		value := TerraformDig(&data, variableName)
-
-		if value == nil {
-			return "", fmt.Errorf("variable '%v' not found", variableName)
-		}
-
-		// Convert the value to a string
-		valueString, ok := value.(string)
-
-		if !ok {
-			return "", fmt.Errorf("variable '%v' is not a string", variableName)
-		}
-
-		interpolated = strings.Replace(interpolated, match[0], valueString, 1)
-	}
-
-	return interpolated, nil
-}
-
 func countSensitiveValuesInConfig(m ConfigModule) int {
 	removedSecrets := 0
 	for _, v := range m.Variables {

@@ -38,6 +38,11 @@ jobs:
       - name: Go Init
         uses: ./.github/actions/go_init
 
+      - name: find deadcode
+        run: |
+          go install golang.org/x/tools/cmd/deadcode@latest
+          deadcode . | tee out && [ ! -s out ]
+
       # get .golangci.yml from github.com/overmindtech/golangci-lint_config
       - name: Get .golangci.yml from github.com/overmindtech/golangci-lint_configs
         run: |
