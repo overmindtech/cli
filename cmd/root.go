@@ -502,28 +502,40 @@ func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes 
 			deviceCode.VerificationURI,
 			deviceCode.UserCode,
 		)))
+	// when running this in debug mode spinners don't work well
+	if true {
+		fmt.Println("waiting for browser authentication")
+		token, err = config.DeviceAccessToken(ctx, deviceCode)
+		if err != nil {
+			return nil, fmt.Errorf("error getting device code: %w", err)
+		}
+		if token == nil {
+			return nil, errors.New("error running program: no token received")
+		}
+		fmt.Println("authenticated successfully")
+	} else {
+		multi := pterm.DefaultMultiPrinter
+		_, _ = multi.Start()
 
-	multi := pterm.DefaultMultiPrinter
-	_, _ = multi.Start()
+		authSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Waiting for browser authentication")
 
-	authSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Waiting for browser authentication")
+		token, err = config.DeviceAccessToken(ctx, deviceCode)
+		if err != nil {
+			authSpinner.Fail("Unable to authenticate. Please try again.")
+			log.WithContext(ctx).WithError(err).Error("Error getting device code")
+			os.Exit(1)
+		}
 
-	token, err = config.DeviceAccessToken(ctx, deviceCode)
-	if err != nil {
-		authSpinner.Fail("Unable to authenticate. Please try again.")
-		log.WithContext(ctx).WithError(err).Error("Error getting device code")
-		os.Exit(1)
+		if token == nil {
+			authSpinner.Fail("Error running program: no token received")
+			log.WithContext(ctx).Error("Error running program: no token received")
+			os.Exit(1)
+		}
+
+		authSpinner.Success("Authenticated successfully")
+
+		_, _ = multi.Stop()
 	}
-
-	if token == nil {
-		authSpinner.Fail("Error running program: no token received")
-		log.WithContext(ctx).Error("Error running program: no token received")
-		os.Exit(1)
-	}
-
-	authSpinner.Success("Authenticated successfully")
-	_, _ = multi.Stop()
-
 	tok, err := josejwt.ParseSigned(token.AccessToken, []jose.SignatureAlgorithm{jose.RS256})
 	if err != nil {
 		pterm.Error.Printf("Error running program: received invalid token: %v", err)
