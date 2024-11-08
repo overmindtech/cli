@@ -74,6 +74,10 @@ func StartSources(ctx context.Context, cmd *cobra.Command, args []string) (conte
 		return ctx, sdp.OvermindInstance{}, nil, nil, err
 	}
 
+	// use only-use-managed-sources flag to determine if we should start local sources
+	if viper.GetBool("only-use-managed-sources") {
+		return ctx, oi, token, nil, nil
+	}
 	cleanup, err := StartLocalSources(ctx, oi, token, args, false)
 	if err != nil {
 		return ctx, sdp.OvermindInstance{}, nil, nil, err
