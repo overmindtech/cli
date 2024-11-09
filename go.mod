@@ -22,12 +22,12 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.3-0.20240912151726-82936c5ea257
-	github.com/overmindtech/aws-source v0.0.0-20241108110544-5c15231304c2
+	github.com/overmindtech/aws-source v0.0.0-20241109130458-f9fbed11ec5c
 	github.com/overmindtech/discovery v0.31.0
 	github.com/overmindtech/k8s-source v0.8.1-0.20241108015328-b78c61d825a5
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
-	github.com/overmindtech/sdp-go v0.97.0
-	github.com/overmindtech/stdlib-source v0.0.0-20241108111220-7864b7a3031a
+	github.com/overmindtech/sdp-go v0.98.1
+	github.com/overmindtech/stdlib-source v0.0.0-20241109124437-ac17958b5977
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sourcegraph/conc v0.3.0
