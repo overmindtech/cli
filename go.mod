@@ -18,16 +18,15 @@ require (
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20240801114854-6714b46f5fe4
 	github.com/hexops/gotextdiff v1.0.3
 	github.com/jedib0t/go-pretty/v6 v6.6.1
-	github.com/mattn/go-isatty v0.0.20
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.3-0.20240912151726-82936c5ea257
-	github.com/overmindtech/aws-source v0.0.0-20241111162535-68b22c081204
-	github.com/overmindtech/discovery v0.31.1
-	github.com/overmindtech/k8s-source v0.8.1-0.20241108015328-b78c61d825a5
+	github.com/overmindtech/aws-source v0.0.0-20241112193458-8b4c4e48ea93
+	github.com/overmindtech/discovery v0.31.2
+	github.com/overmindtech/k8s-source v0.8.1-0.20241112191322-b4b0e771f149
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
 	github.com/overmindtech/sdp-go v0.99.0
-	github.com/overmindtech/stdlib-source v0.0.0-20241111180649-9874dae4ac90
+	github.com/overmindtech/stdlib-source v0.0.0-20241112191431-18d7212e9482
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sourcegraph/conc v0.3.0
@@ -133,6 +132,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/micahhausler/aws-iam-policy v0.4.2 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.27 // indirect
