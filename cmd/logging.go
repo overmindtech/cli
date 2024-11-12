@@ -1,18 +1,8 @@
 package cmd
 
 import (
-	"os"
-
-	"github.com/mattn/go-isatty"
 	"github.com/ttacon/chalk"
 )
-
-var tty bool
-
-func init() {
-	// Detect if we're in a TTY or not
-	tty = isatty.IsTerminal(os.Stdout.Fd())
-}
 
 var (
 	// Styles

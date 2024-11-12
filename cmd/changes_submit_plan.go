@@ -44,11 +44,6 @@ type TfData struct {
 	Values  map[string]any
 }
 
-type plannedChangeGroups struct {
-	supported   map[string][]*sdp.MappedItemDiff
-	unsupported map[string][]*sdp.MappedItemDiff
-}
-
 func changeTitle(arg string) string {
 	if arg != "" {
 		// easy, return the user's choice
