@@ -303,12 +303,6 @@ func MarkdownStyle() ansi.StyleConfig {
 	}
 }
 
-var titleStyle = lipgloss.NewStyle().Foreground(ColorPalette.BgMain).Bold(true)
-var textStyle = lipgloss.NewStyle().Foreground(ColorPalette.LabelBase)
-var addedLineStyle = lipgloss.NewStyle().Foreground(ColorPalette.LabelControl).Background(ColorPalette.BgSuccess)
-var deletedLineStyle = lipgloss.NewStyle().Background(ColorPalette.BgDanger).Foreground(ColorPalette.LabelControl)
-var containerStyle = lipgloss.NewStyle().PaddingLeft(2).PaddingTop(2)
-
 func styleH1() lipgloss.Style {
 	return lipgloss.NewStyle().
 		Foreground(lipgloss.Color("#ffffff")).
