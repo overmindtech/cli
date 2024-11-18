@@ -186,7 +186,9 @@ func TerraformApplyImpl(ctx context.Context, cmd *cobra.Command, oi sdp.Overmind
 		return err
 	}
 
-	err = RunApply(ctx, args)
+	// apply the args filtering here, after providers have been configured above
+	// (which might still need --var and --var-file information)
+	err = RunApply(ctx, applyArgsFromApplyArgs(args))
 	if err != nil {
 		return err
 	}
