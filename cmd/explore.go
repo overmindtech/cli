@@ -108,6 +108,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 				// skip providers that had errors. This allows us to use
 				// providers we _could_ detect, while still failing if there is
 				// a true syntax error and no providers are available at all.
+				statusArea.Println(fmt.Sprintf("Skipping AWS provider in %s with %s.", p.FilePath, p.Error.Error()))
 				continue
 			}
 			c, err := tfutils.ConfigFromProvider(ctx, *p.Provider)
