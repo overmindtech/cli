@@ -318,8 +318,8 @@ github.com/overmindtech/aws-source v0.0.0-20241120143122-c75df5e15569 h1:c72j4U7
 github.com/overmindtech/aws-source v0.0.0-20241120143122-c75df5e15569/go.mod h1:jg2sALqqlcVN7BLYpTlAMB5O2GpGrXeJJQgUjGee6wg=
 github.com/overmindtech/discovery v0.31.2 h1:tLR1LxHwbpHSiboZiYA+5loxav9YJj1ZCMWyNrBF4e0=
 github.com/overmindtech/discovery v0.31.2/go.mod h1:9Y97Ynm15PTRSt/lsZQ68JTpgIngupxDDGdHdAFFCxE=
-github.com/overmindtech/k8s-source v0.8.1-0.20241115195736-3f524c8fc060 h1:sEzch5fsu4WkvAiPokR4rS9u+JNDopTx7ghd/8HxQII=
-github.com/overmindtech/k8s-source v0.8.1-0.20241115195736-3f524c8fc060/go.mod h1:yD321xlu0DvbiJoyj1m6Bm0rNoNcuJON2jXaZITH4a4=
+github.com/overmindtech/k8s-source v0.8.1-0.20241120164425-b17d9bda10d7 h1:1kQyw7qOQUT69mQnnyF4bkNqPisn45dauyq/xBcCESM=
+github.com/overmindtech/k8s-source v0.8.1-0.20241120164425-b17d9bda10d7/go.mod h1:dt84UeXTSBSBFoJgwU7oJ1Fe2JUl18nO82MzYWT+8ho=
 github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297 h1:ih4bqBMHTCtg3lMwJszNkMGO9n7Uoe0WX5be1/x+s+g=
 github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297/go.mod h1:bRQZYnvLrW1S5wYT6tbQnun8NpO5X6zP5cY3VKuDc4U=
 github.com/overmindtech/sdp-go v0.101.0 h1:2s5pr/M2sYD6kQci+Gtp58dPvW4nFlwDtLc6tjhiBls=
