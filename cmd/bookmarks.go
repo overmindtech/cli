@@ -11,7 +11,7 @@ import (
 var bookmarksCmd = &cobra.Command{
 	Use:     "bookmarks",
 	GroupID: "api",
-	Short:   "Interact with the bookarks that were created in the Explore view",
+	Short:   "Interact with the bookmarks that were created in the Explore view",
 	Long: `A bookmark in Overmind is a set of queries that are stored together and can be
 executed as a single block.`,
 	Run: func(cmd *cobra.Command, args []string) {
