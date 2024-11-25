@@ -23,7 +23,7 @@ require (
 	github.com/muesli/termenv v0.15.3-0.20240912151726-82936c5ea257
 	github.com/overmindtech/aws-source v0.0.0-20241125154730-989990c8c512
 	github.com/overmindtech/discovery v0.31.3
-	github.com/overmindtech/k8s-source v0.8.1-0.20241122011626-7172ee50d2d8
+	github.com/overmindtech/k8s-source v0.8.1-0.20241125154018-d5f05f4ee274
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
 	github.com/overmindtech/sdp-go v0.101.0
 	github.com/overmindtech/stdlib-source v0.0.0-20241125154206-1dd2f26c684d
