@@ -68,12 +68,12 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			SourceUUID:            uuid.New(),
 			App:                   oi.ApiUrl.Host,
 			ApiKey:                token.AccessToken,
+			NATSOptions:           &natsOptions,
 			MaxParallelExecutions: 2_000,
+			HeartbeatOptions:      heartbeatOptions,
 		}
 		stdlibEngine, err := stdlibSource.InitializeEngine(
 			&ec,
-			natsOptions,
-			heartbeatOptions,
 			true,
 		)
 		if err != nil {
@@ -137,12 +137,12 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			App:                   oi.ApiUrl.Host,
 			ApiKey:                token.AccessToken,
 			MaxParallelExecutions: 2_000,
+			NATSOptions:           &natsOptions,
+			HeartbeatOptions:      heartbeatOptions,
 		}
 		awsEngine, err := proc.InitializeAwsSourceEngine(
 			ctx,
 			&ec,
-			natsOptions,
-			heartbeatOptions,
 			1, // Don't retry as we want the user to get notified immediately
 			configs...,
 		)
