@@ -30,6 +30,8 @@ everything that happened, including any unexpected repercussions.`,
 
 func init() {
 	rootCmd.AddCommand(terraformCmd)
+
+	addChangeCreationFlags(terraformCmd)
 }
 
 var applyOnlyArgs = []string{

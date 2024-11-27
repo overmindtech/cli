@@ -224,6 +224,11 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	if repoUrl == "" {
 		repoUrl, _ = DetectRepoURL(AllDetectors)
 	}
+	tags, err := parseTagsArgument()
+	if err != nil {
+		uploadChangesSpinner.Fail(fmt.Sprintf("Uploading planned changes: failed to parse tags: %v", err))
+		return nil
+	}
 
 	properties := &sdp.ChangeProperties{
 		Title:       title,
@@ -233,6 +238,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 		RawPlan:     string(tfPlanOutput),
 		CodeChanges: codeChangesOutput,
 		Repo:        repoUrl,
+		Tags:        tags,
 	}
 
 	if changeUuid == uuid.Nil {
