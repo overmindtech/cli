@@ -219,20 +219,28 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 
 	codeChangesOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
 
+	// Detect the repository URL if it wasn't provided
+	repoUrl := viper.GetString("repo")
+	if repoUrl == "" {
+		repoUrl, _ = DetectRepoURL(AllDetectors)
+	}
+
+	properties := &sdp.ChangeProperties{
+		Title:       title,
+		Description: viper.GetString("description"),
+		TicketLink:  ticketLink,
+		Owner:       viper.GetString("owner"),
+		RawPlan:     string(tfPlanOutput),
+		CodeChanges: codeChangesOutput,
+		Repo:        repoUrl,
+	}
+
 	if changeUuid == uuid.Nil {
 		uploadChangesSpinner.UpdateText("Uploading planned changes (new)")
 		log.Debug("Creating a new change")
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 			Msg: &sdp.CreateChangeRequest{
-				Properties: &sdp.ChangeProperties{
-					Title:       title,
-					Description: viper.GetString("description"),
-					TicketLink:  ticketLink,
-					Owner:       viper.GetString("owner"),
-					// CcEmails:                  viper.GetString("cc-emails"),
-					RawPlan:     string(tfPlanOutput),
-					CodeChanges: codeChangesOutput,
-				},
+				Properties: properties,
 			},
 		})
 		if err != nil {
@@ -257,16 +265,8 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 
 		_, err := client.UpdateChange(ctx, &connect.Request[sdp.UpdateChangeRequest]{
 			Msg: &sdp.UpdateChangeRequest{
-				UUID: changeUuid[:],
-				Properties: &sdp.ChangeProperties{
-					Title:       title,
-					Description: viper.GetString("description"),
-					TicketLink:  ticketLink,
-					Owner:       viper.GetString("owner"),
-					// CcEmails:                  viper.GetString("cc-emails"),
-					RawPlan:     string(tfPlanOutput),
-					CodeChanges: codeChangesOutput,
-				},
+				UUID:       changeUuid[:],
+				Properties: properties,
 			},
 		})
 		if err != nil {

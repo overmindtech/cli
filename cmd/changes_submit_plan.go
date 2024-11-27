@@ -135,20 +135,30 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	title := changeTitle(viper.GetString("title"))
 	tfPlanOutput := tryLoadText(ctx, viper.GetString("terraform-plan-output"))
 	codeChangesOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
+	// Detect the repository URL if it wasn't provided
+	repoUrl := viper.GetString("repo")
+	if repoUrl == "" {
+		repoUrl, err = DetectRepoURL(AllDetectors)
+		if err != nil {
+			log.WithContext(ctx).WithError(err).WithFields(lf).Debug("Failed to detect repository URL. Use the --repo flag to specify it manually if you require it")
+		}
+	}
+	properties := &sdp.ChangeProperties{
+		Title:       title,
+		Description: viper.GetString("description"),
+		TicketLink:  viper.GetString("ticket-link"),
+		Owner:       viper.GetString("owner"),
+		RawPlan:     tfPlanOutput,
+		CodeChanges: codeChangesOutput,
+		Repo:        repoUrl,
+	}
 
 	if changeUuid == uuid.Nil {
 		log.WithContext(ctx).WithFields(lf).Debug("Creating a new change")
+
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 			Msg: &sdp.CreateChangeRequest{
-				Properties: &sdp.ChangeProperties{
-					Title:       title,
-					Description: viper.GetString("description"),
-					TicketLink:  viper.GetString("ticket-link"),
-					Owner:       viper.GetString("owner"),
-					// CcEmails:                  viper.GetString("cc-emails"),
-					RawPlan:     tfPlanOutput,
-					CodeChanges: codeChangesOutput,
-				},
+				Properties: properties,
 			},
 		})
 		if err != nil {
@@ -177,16 +187,8 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 
 		_, err := client.UpdateChange(ctx, &connect.Request[sdp.UpdateChangeRequest]{
 			Msg: &sdp.UpdateChangeRequest{
-				UUID: changeUuid[:],
-				Properties: &sdp.ChangeProperties{
-					Title:       title,
-					Description: viper.GetString("description"),
-					TicketLink:  viper.GetString("ticket-link"),
-					Owner:       viper.GetString("owner"),
-					// CcEmails:                  viper.GetString("cc-emails"),
-					RawPlan:     tfPlanOutput,
-					CodeChanges: codeChangesOutput,
-				},
+				UUID:       changeUuid[:],
+				Properties: properties,
 			},
 		})
 		if err != nil {
@@ -293,6 +295,7 @@ func init() {
 	submitPlanCmd.PersistentFlags().String("description", "", "Quick description of the change.")
 	submitPlanCmd.PersistentFlags().String("ticket-link", "*", "Link to the ticket for this change. Usually this would be the link to something like the pull request, since the CLI uses this as a unique identifier for the change, meaning that multiple runs with the same ticket link will update the same change.")
 	submitPlanCmd.PersistentFlags().String("owner", "", "The owner of this change.")
+	submitPlanCmd.PersistentFlags().String("repo", "", "The repository URL that this change should be linked to. This will be automatically detected is possible from the Git config or CI environment.")
 	// submitPlanCmd.PersistentFlags().String("cc-emails", "", "A comma-separated list of emails to keep updated with the status of this change.")
 
 	submitPlanCmd.PersistentFlags().String("terraform-plan-output", "", "Filename of cached terraform plan output for this change.")
