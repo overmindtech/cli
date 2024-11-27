@@ -506,16 +506,6 @@ func getTicketLinkFromPlan(planFile string) (string, error) {
 	return fmt.Sprintf("tfplan://{SHA256}%x", h.Sum(nil)), nil
 }
 
-func addTerraformBaseFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().Bool("reset-stored-config", false, "[deprecated: this is now autoconfigured from local terraform files] Set this to reset the sources config stored in Overmind and input fresh values.")
-	cmd.PersistentFlags().String("aws-config", "", "[deprecated: this is now autoconfigured from local terraform files] The chosen AWS config method, best set through the initial wizard when running the CLI. Options: 'profile_input', 'aws_profile', 'defaults', 'managed'.")
-	cmd.PersistentFlags().String("aws-profile", "", "[deprecated: this is now autoconfigured from local terraform files] Set this to the name of the AWS profile to use.")
-	cobra.CheckErr(cmd.PersistentFlags().MarkHidden("reset-stored-config"))
-	cobra.CheckErr(cmd.PersistentFlags().MarkHidden("aws-config"))
-	cobra.CheckErr(cmd.PersistentFlags().MarkHidden("aws-profile"))
-	cmd.PersistentFlags().Bool("only-use-managed-sources", false, "Set this to skip local autoconfiguration and only use the managed sources as configured in Overmind.")
-}
-
 func init() {
 	terraformCmd.AddCommand(terraformPlanCmd)
 
