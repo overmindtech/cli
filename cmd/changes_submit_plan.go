@@ -135,20 +135,39 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	title := changeTitle(viper.GetString("title"))
 	tfPlanOutput := tryLoadText(ctx, viper.GetString("terraform-plan-output"))
 	codeChangesOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
+	// Detect the repository URL if it wasn't provided
+	repoUrl := viper.GetString("repo")
+	if repoUrl == "" {
+		repoUrl, err = DetectRepoURL(AllDetectors)
+		if err != nil {
+			log.WithContext(ctx).WithError(err).WithFields(lf).Debug("Failed to detect repository URL. Use the --repo flag to specify it manually if you require it")
+		}
+	}
+	tags, err := parseTagsArgument()
+	if err != nil {
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "Failed to parse tags",
+		}
+	}
+	properties := &sdp.ChangeProperties{
+		Title:       title,
+		Description: viper.GetString("description"),
+		TicketLink:  viper.GetString("ticket-link"),
+		Owner:       viper.GetString("owner"),
+		RawPlan:     tfPlanOutput,
+		CodeChanges: codeChangesOutput,
+		Repo:        repoUrl,
+		Tags:        tags,
+	}
 
 	if changeUuid == uuid.Nil {
 		log.WithContext(ctx).WithFields(lf).Debug("Creating a new change")
+
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 			Msg: &sdp.CreateChangeRequest{
-				Properties: &sdp.ChangeProperties{
-					Title:       title,
-					Description: viper.GetString("description"),
-					TicketLink:  viper.GetString("ticket-link"),
-					Owner:       viper.GetString("owner"),
-					// CcEmails:                  viper.GetString("cc-emails"),
-					RawPlan:     tfPlanOutput,
-					CodeChanges: codeChangesOutput,
-				},
+				Properties: properties,
 			},
 		})
 		if err != nil {
@@ -177,16 +196,8 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 
 		_, err := client.UpdateChange(ctx, &connect.Request[sdp.UpdateChangeRequest]{
 			Msg: &sdp.UpdateChangeRequest{
-				UUID: changeUuid[:],
-				Properties: &sdp.ChangeProperties{
-					Title:       title,
-					Description: viper.GetString("description"),
-					TicketLink:  viper.GetString("ticket-link"),
-					Owner:       viper.GetString("owner"),
-					// CcEmails:                  viper.GetString("cc-emails"),
-					RawPlan:     tfPlanOutput,
-					CodeChanges: codeChangesOutput,
-				},
+				UUID:       changeUuid[:],
+				Properties: properties,
 			},
 		})
 		if err != nil {
@@ -287,16 +298,11 @@ func init() {
 	changesCmd.AddCommand(submitPlanCmd)
 
 	addAPIFlags(submitPlanCmd)
+	addChangeCreationFlags(submitPlanCmd)
+
 	submitPlanCmd.PersistentFlags().String("frontend", "", "The frontend base URL")
 	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.") // MarkDeprecated only errors if the flag doesn't exist, we fall back to using app
-	submitPlanCmd.PersistentFlags().String("title", "", "Short title for this change. If this is not specified, overmind will try to come up with one for you.")
-	submitPlanCmd.PersistentFlags().String("description", "", "Quick description of the change.")
-	submitPlanCmd.PersistentFlags().String("ticket-link", "*", "Link to the ticket for this change. Usually this would be the link to something like the pull request, since the CLI uses this as a unique identifier for the change, meaning that multiple runs with the same ticket link will update the same change.")
-	submitPlanCmd.PersistentFlags().String("owner", "", "The owner of this change.")
-	// submitPlanCmd.PersistentFlags().String("cc-emails", "", "A comma-separated list of emails to keep updated with the status of this change.")
 
-	submitPlanCmd.PersistentFlags().String("terraform-plan-output", "", "Filename of cached terraform plan output for this change.")
-	submitPlanCmd.PersistentFlags().String("code-changes-diff", "", "Filename of the code diff of this change.")
 	submitPlanCmd.PersistentFlags().Int32("blast-radius-link-depth", 0, "Used in combination with '--blast-radius-max-items' to customise how many levels are traversed when calculating the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
 	submitPlanCmd.PersistentFlags().Int32("blast-radius-max-items", 0, "Used in combination with '--blast-radius-link-depth' to customise how many items are included in the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
 }

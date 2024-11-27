@@ -255,19 +255,6 @@ func parseChangeUrl(changeUrlString string) (uuid.UUID, error) {
 	return changeUuid, nil
 }
 
-func addChangeUuidFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().String("change", "", "The frontend URL of the change to get")
-	cmd.PersistentFlags().String("ticket-link", "", "Link to the ticket for this change.")
-	cmd.PersistentFlags().String("uuid", "", "The UUID of the change that should be displayed.")
-	cmd.MarkFlagsMutuallyExclusive("change", "ticket-link", "uuid")
-}
-
-// Adds common flags to API commands e.g. timeout
-func addAPIFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().String("timeout", "10m", "How long to wait for responses")
-	cmd.PersistentFlags().String("app", "https://app.overmind.tech", "The overmind instance to connect to.")
-}
-
 type flagError struct {
 	usage string
 }

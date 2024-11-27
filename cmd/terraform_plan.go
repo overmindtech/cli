@@ -219,20 +219,34 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 
 	codeChangesOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
 
+	// Detect the repository URL if it wasn't provided
+	repoUrl := viper.GetString("repo")
+	if repoUrl == "" {
+		repoUrl, _ = DetectRepoURL(AllDetectors)
+	}
+	tags, err := parseTagsArgument()
+	if err != nil {
+		uploadChangesSpinner.Fail(fmt.Sprintf("Uploading planned changes: failed to parse tags: %v", err))
+		return nil
+	}
+
+	properties := &sdp.ChangeProperties{
+		Title:       title,
+		Description: viper.GetString("description"),
+		TicketLink:  ticketLink,
+		Owner:       viper.GetString("owner"),
+		RawPlan:     string(tfPlanOutput),
+		CodeChanges: codeChangesOutput,
+		Repo:        repoUrl,
+		Tags:        tags,
+	}
+
 	if changeUuid == uuid.Nil {
 		uploadChangesSpinner.UpdateText("Uploading planned changes (new)")
 		log.Debug("Creating a new change")
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
 			Msg: &sdp.CreateChangeRequest{
-				Properties: &sdp.ChangeProperties{
-					Title:       title,
-					Description: viper.GetString("description"),
-					TicketLink:  ticketLink,
-					Owner:       viper.GetString("owner"),
-					// CcEmails:                  viper.GetString("cc-emails"),
-					RawPlan:     string(tfPlanOutput),
-					CodeChanges: codeChangesOutput,
-				},
+				Properties: properties,
 			},
 		})
 		if err != nil {
@@ -257,16 +271,8 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 
 		_, err := client.UpdateChange(ctx, &connect.Request[sdp.UpdateChangeRequest]{
 			Msg: &sdp.UpdateChangeRequest{
-				UUID: changeUuid[:],
-				Properties: &sdp.ChangeProperties{
-					Title:       title,
-					Description: viper.GetString("description"),
-					TicketLink:  ticketLink,
-					Owner:       viper.GetString("owner"),
-					// CcEmails:                  viper.GetString("cc-emails"),
-					RawPlan:     string(tfPlanOutput),
-					CodeChanges: codeChangesOutput,
-				},
+				UUID:       changeUuid[:],
+				Properties: properties,
 			},
 		})
 		if err != nil {
@@ -504,16 +510,6 @@ func getTicketLinkFromPlan(planFile string) (string, error) {
 	h := sha256.New()
 	h.Write(plan)
 	return fmt.Sprintf("tfplan://{SHA256}%x", h.Sum(nil)), nil
-}
-
-func addTerraformBaseFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().Bool("reset-stored-config", false, "[deprecated: this is now autoconfigured from local terraform files] Set this to reset the sources config stored in Overmind and input fresh values.")
-	cmd.PersistentFlags().String("aws-config", "", "[deprecated: this is now autoconfigured from local terraform files] The chosen AWS config method, best set through the initial wizard when running the CLI. Options: 'profile_input', 'aws_profile', 'defaults', 'managed'.")
-	cmd.PersistentFlags().String("aws-profile", "", "[deprecated: this is now autoconfigured from local terraform files] Set this to the name of the AWS profile to use.")
-	cobra.CheckErr(cmd.PersistentFlags().MarkHidden("reset-stored-config"))
-	cobra.CheckErr(cmd.PersistentFlags().MarkHidden("aws-config"))
-	cobra.CheckErr(cmd.PersistentFlags().MarkHidden("aws-profile"))
-	cmd.PersistentFlags().Bool("only-use-managed-sources", false, "Set this to skip local autoconfiguration and only use the managed sources as configured in Overmind.")
 }
 
 func init() {
