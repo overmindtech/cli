@@ -17,7 +17,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.23.0
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20241107133921-3adb156ecfe2
 	github.com/hexops/gotextdiff v1.0.3
-	github.com/jedib0t/go-pretty/v6 v6.6.2
+	github.com/jedib0t/go-pretty/v6 v6.6.3
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.3-0.20240912151726-82936c5ea257
