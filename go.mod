@@ -25,7 +25,7 @@ require (
 	github.com/overmindtech/discovery v0.31.3
 	github.com/overmindtech/k8s-source v0.8.1-0.20241125154018-d5f05f4ee274
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
-	github.com/overmindtech/sdp-go v0.101.0
+	github.com/overmindtech/sdp-go v0.101.2
 	github.com/overmindtech/stdlib-source v0.0.0-20241125154206-1dd2f26c684d
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
@@ -145,7 +145,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nats-io/jwt/v2 v2.7.2 // indirect
 	github.com/nats-io/nats.go v1.37.0 // indirect
-	github.com/nats-io/nkeys v0.4.7 // indirect
+	github.com/nats-io/nkeys v0.4.8 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/openrdap/rdap v0.9.2-0.20240517203139-eb57b3a8dedd // indirect
 	github.com/overmindtech/sdpcache v1.6.4 // indirect

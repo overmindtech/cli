@@ -304,8 +304,8 @@ github.com/nats-io/nats-server/v2 v2.10.22 h1:Yt63BGu2c3DdMoBZNcR6pjGQwk/asrKU7V
 github.com/nats-io/nats-server/v2 v2.10.22/go.mod h1:X/m1ye9NYansUXYFrbcDwUi/blHkrgHh2rgCJaakonk=
 github.com/nats-io/nats.go v1.37.0 h1:07rauXbVnnJvv1gfIyghFEo6lUcYRY0WXc3x7x0vUxE=
 github.com/nats-io/nats.go v1.37.0/go.mod h1:Ubdu4Nh9exXdSz0RVWRFBbRfrbSxOYd26oF0wkWclB8=
-github.com/nats-io/nkeys v0.4.7 h1:RwNJbbIdYCoClSDNY7QVKZlyb/wfT6ugvFCiKy6vDvI=
-github.com/nats-io/nkeys v0.4.7/go.mod h1:kqXRgRDPlGy7nGaEDMuYzmiJCIAAWDK0IMBtDmGD0nc=
+github.com/nats-io/nkeys v0.4.8 h1:+wee30071y3vCZAYRsnrmIPaOe47A/SkK/UBDPdIV70=
+github.com/nats-io/nkeys v0.4.8/go.mod h1:kqXRgRDPlGy7nGaEDMuYzmiJCIAAWDK0IMBtDmGD0nc=
 github.com/nats-io/nuid v1.0.1 h1:5iA8DT8V7q8WK2EScv2padNa/rTESc1KdnPw4TC2paw=
 github.com/nats-io/nuid v1.0.1/go.mod h1:19wcPz3Ph3q0Jbyiqsd0kePYG7A95tJPxeL+1OSON2c=
 github.com/onsi/ginkgo/v2 v2.19.0 h1:9Cnnf7UHo57Hy3k6/m5k3dRfGTMXGvxhHFvkDTCTpvA=
@@ -322,8 +322,8 @@ github.com/overmindtech/k8s-source v0.8.1-0.20241125154018-d5f05f4ee274 h1:GjLIT
 github.com/overmindtech/k8s-source v0.8.1-0.20241125154018-d5f05f4ee274/go.mod h1:lSm9iZcIrUubk547rjWNmi1V5kwySl/sGort35Q0SME=
 github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297 h1:ih4bqBMHTCtg3lMwJszNkMGO9n7Uoe0WX5be1/x+s+g=
 github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297/go.mod h1:bRQZYnvLrW1S5wYT6tbQnun8NpO5X6zP5cY3VKuDc4U=
-github.com/overmindtech/sdp-go v0.101.0 h1:2s5pr/M2sYD6kQci+Gtp58dPvW4nFlwDtLc6tjhiBls=
-github.com/overmindtech/sdp-go v0.101.0/go.mod h1:k+F4AXyqbME/xLpR4FBet+Vq6uwbpvGp7638qLuX6cs=
+github.com/overmindtech/sdp-go v0.101.2 h1:Z7CewZscF6xqwuAjHV0yr4BJpdzIzbFe6kBA0pyC+g8=
+github.com/overmindtech/sdp-go v0.101.2/go.mod h1:byGP2BXstnX3KeFLNyEbSLE75hv01EZhyU6QiKuiYb8=
 github.com/overmindtech/sdpcache v1.6.4 h1:MJoYBDqDE3s8FrRzZ0RPgFiH39HWI/Mv2ImH1NdLT8k=
 github.com/overmindtech/sdpcache v1.6.4/go.mod h1:/F9XStVdntRJEQjlZ86BPuB1Y7VPo1PFcsCNiU1IoGE=
 github.com/overmindtech/stdlib-source v0.0.0-20241125154206-1dd2f26c684d h1:SRtzAKnHpELU1/6N0t92SgStJBDHyAgwGlpJ7BTo5E0=
