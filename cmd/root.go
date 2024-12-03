@@ -446,7 +446,9 @@ func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes 
 		// Check for a locally saved token in ~/.overmind
 		localToken, localScopes, err = readLocalTokenFile(home, viper.GetString("app"), requiredScopes)
 		if err != nil {
-			log.WithContext(ctx).Debugf("Error reading local token, ignoring: %v", err)
+			if !os.IsNotExist(err) {
+				pterm.Info.Println(fmt.Sprintf("Skipping using local token: %v. Re-authenticating.", err))
+			}
 		} else {
 			// If we already have the right scopes, return the token
 			return localToken, nil
@@ -549,12 +551,10 @@ func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes 
 
 // Gets a token using an API key
 func getAPIKeyToken(ctx context.Context, oi sdp.OvermindInstance, apiKey string, requiredScopes []string) (*oauth2.Token, error) {
-	log.WithContext(ctx).Debug("using provided token for authentication")
-
 	var token *oauth2.Token
-
+	app := viper.GetString("app")
 	if !strings.HasPrefix(apiKey, "ovm_api_") {
-		return nil, errors.New("OVM_API_KEY does not match pattern 'ovm_api_*'")
+		return nil, errors.New("--api-key or OVM_API_KEY or API_KEY does not match pattern 'ovm_api_*'")
 	}
 
 	// exchange api token for JWT
@@ -565,9 +565,8 @@ func getAPIKeyToken(ctx context.Context, oi sdp.OvermindInstance, apiKey string,
 		},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error authenticating the API token: %w", err)
+		return nil, fmt.Errorf("error authenticating the API token for %s: %w", app, err)
 	}
-	log.WithContext(ctx).Debug("successfully got a token from the API key")
 
 	token = &oauth2.Token{
 		AccessToken: resp.Msg.GetAccessToken(),
@@ -578,12 +577,12 @@ func getAPIKeyToken(ctx context.Context, oi sdp.OvermindInstance, apiKey string,
 	// permission auth0 will just not assign those scopes rather than fail
 	ok, missing, err := HasScopesFlexible(token, requiredScopes)
 	if err != nil {
-		return nil, fmt.Errorf("error checking token scopes: %w", err)
+		return nil, fmt.Errorf("error checking token scopes for %s: %w", app, err)
 	}
 	if !ok {
-		return nil, fmt.Errorf("authenticated successfully, but your API key is missing this permission: '%v'", missing)
+		return nil, fmt.Errorf("authenticated successfully against %s, but your API key is missing this permission: '%v'", app, missing)
 	}
-
+	pterm.Info.Println(fmt.Sprintf("Using Overmind API key for %s", app))
 	return token, nil
 }
 
@@ -596,6 +595,7 @@ type TokenEntry struct {
 	AddedDate time.Time     `json:"added_date"`
 }
 
+// readLocalTokenFile is also used in the gateway assistant cli tool. It is copied over, so if you change it here, you should also change it there.
 func readLocalTokenFile(homeDir, app string, requiredScopes []string) (*oauth2.Token, []string, error) {
 	// Read in the token JSON file
 	path := filepath.Join(homeDir, ".overmind", "token.json")
@@ -610,19 +610,19 @@ func readLocalTokenFile(homeDir, app string, requiredScopes []string) (*oauth2.T
 	// Read the file
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error opening token file at %v: %w", path, err)
+		return nil, nil, fmt.Errorf("error opening token file at %q: %w", path, err)
 	}
 	defer file.Close()
 
 	// Decode the file
 	err = json.NewDecoder(file).Decode(tokenFile)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error decoding token file at %v: %w", path, err)
+		return nil, nil, fmt.Errorf("error decoding token file at %q: %w", path, err)
 	}
 
 	authEntry, ok := tokenFile.AuthEntries[app]
 	if !ok {
-		return nil, nil, fmt.Errorf("no token found for app %v", app)
+		return nil, nil, fmt.Errorf("no token found for app %s in %q", app, path)
 	}
 
 	// Check to see if the token is still valid
@@ -632,7 +632,7 @@ func readLocalTokenFile(homeDir, app string, requiredScopes []string) (*oauth2.T
 
 	claims, err := extractClaims(authEntry.Token.AccessToken)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error extracting claims from token: %w", err)
+		return nil, nil, fmt.Errorf("error extracting claims from token: %s in %q: %w", app, path, err)
 	}
 	if claims.Scope == "" {
 		return nil, nil, errors.New("token does not have any scopes")
@@ -643,13 +643,13 @@ func readLocalTokenFile(homeDir, app string, requiredScopes []string) (*oauth2.T
 	// Check that we actually got the claims we asked for.
 	ok, missing, err := HasScopesFlexible(authEntry.Token, requiredScopes)
 	if err != nil {
-		return nil, currentScopes, fmt.Errorf("error checking token scopes: %w", err)
+		return nil, currentScopes, fmt.Errorf("error checking token scopes: %s in %q: %w", app, path, err)
 	}
 	if !ok {
-		return nil, currentScopes, fmt.Errorf("local token is missing this permission: '%v'", missing)
+		return nil, currentScopes, fmt.Errorf("local token is missing this permission: '%v'. %s in %q", missing, app, path)
 	}
 
-	log.Debugf("Using local token from %v for %s", path, app)
+	pterm.Info.Println(fmt.Sprintf("Using local token for %s in %q", app, path))
 	return authEntry.Token, currentScopes, nil
 }
 
@@ -669,7 +669,7 @@ func saveLocalTokenFile(homeDir, app string, token *oauth2.Token) error {
 
 			err = json.NewDecoder(file).Decode(tokenFile)
 			if err != nil {
-				return fmt.Errorf("error decoding token file at %v: %w", path, err)
+				return fmt.Errorf("error decoding token file at %q: %w", path, err)
 			}
 		}
 	} else {
@@ -688,16 +688,16 @@ func saveLocalTokenFile(homeDir, app string, token *oauth2.Token) error {
 	// Write the updated token file
 	file, err := os.Create(path)
 	if err != nil {
-		return fmt.Errorf("error creating token file at %v: %w", path, err)
+		return fmt.Errorf("error creating token file at %q: %w", path, err)
 	}
 	defer file.Close()
 
 	err = json.NewEncoder(file).Encode(tokenFile)
 	if err != nil {
-		return fmt.Errorf("error encoding token file at %v: %w", path, err)
+		return fmt.Errorf("error encoding token file at %q: %w", path, err)
 	}
 
-	log.Debugf("Saved token to %v for %s", path, app)
+	pterm.Info.Println(fmt.Sprintf("Saving token locally for %s at %q", app, path))
 	return nil
 }
 
