@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/overmindtech/sdp-go"
 	"golang.org/x/oauth2"
@@ -108,5 +109,99 @@ func Test_getAppUrl(t *testing.T) {
 				t.Errorf("getAppUrl() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestSaveTokenFile(t *testing.T) {
+	// Setup temporary directory for testing
+	tempDir := t.TempDir()
+	app := "https://localhost.df.overmind-demo.com:3000"
+
+	claims := sdp.CustomClaims{
+		Scope:       "scope1 scope2",
+		AccountName: "test",
+	}
+	jsonClaims, err := json.Marshal(claims)
+	if err != nil {
+		t.Fatalf("unexpected fail marshalling claims: %v", err)
+	}
+	claimsSection := base64.RawURLEncoding.EncodeToString([]byte(jsonClaims))
+	accessToken := fmt.Sprintf("%s.%s.%s", "header", claimsSection, "signature")
+	token := &oauth2.Token{
+		AccessToken: accessToken,
+		Expiry:      time.Now().Add(1 * time.Hour),
+	}
+
+	// Test saving the token file
+	err = saveLocalTokenFile(tempDir, app, token)
+	if err != nil {
+		t.Fatalf("unexpected fail saving token file: %v", err)
+	}
+	// Test reading the token file
+	readAppToken, readClaims, err := readLocalTokenFile(tempDir, app, nil)
+	if err != nil {
+		t.Fatalf("unexpected fail reading token file: %v", err)
+	}
+	if readAppToken.AccessToken != token.AccessToken {
+		t.Fatalf("expected: %v, got: %v", token.AccessToken, readAppToken.AccessToken)
+	}
+	if readClaims[0] != "scope1" {
+		t.Fatalf("expected: %v, got: %v", "scope1", readClaims[0])
+	}
+	if readClaims[1] != "scope2" {
+		t.Fatalf("expected: %v, got: %v", "scope2", readClaims[1])
+	}
+
+	// lets read a token from a non existent app
+	nonExistentToken, _, err := readLocalTokenFile(tempDir, "otherApp", nil)
+	if err == nil {
+		t.Fatalf("expected error, got nil")
+	}
+	if nonExistentToken == readAppToken {
+		t.Fatalf("expected different tokens, got the same")
+	}
+
+	// lets write the token to a different app
+	otherApp := "otherApp"
+	err = saveLocalTokenFile(tempDir, otherApp, token)
+	if err != nil {
+		t.Fatalf("unexpected fail saving token file: %v", err)
+	}
+	readAppToken, _, err = readLocalTokenFile(tempDir, otherApp, nil)
+	if err != nil {
+		t.Fatalf("unexpected fail reading token file: %v", err)
+	}
+	if readAppToken.AccessToken != token.AccessToken {
+		t.Fatalf("expected: %v, got: %v", token.AccessToken, readAppToken.AccessToken)
+	}
+
+	// lets update the first app token
+	claims = sdp.CustomClaims{
+		Scope:       "scope3 scope4",
+		AccountName: "test",
+	}
+	jsonClaims, err = json.Marshal(claims)
+	if err != nil {
+		t.Fatalf("unexpected fail marshalling claims: %v", err)
+	}
+	claimsSection = base64.RawURLEncoding.EncodeToString([]byte(jsonClaims))
+	accessToken = fmt.Sprintf("%s.%s.%s", "header", claimsSection, "signature")
+	newToken := &oauth2.Token{
+		AccessToken: accessToken,
+		Expiry:      time.Now().Add(1 * time.Hour),
+	}
+	err = saveLocalTokenFile(tempDir, app, newToken)
+	if err != nil {
+		t.Fatalf("unexpected fail saving token file: %v", err)
+	}
+	_, lastClaims, err := readLocalTokenFile(tempDir, app, nil)
+	if err != nil {
+		t.Fatalf("unexpected fail reading token file: %v", err)
+	}
+	if lastClaims[0] != "scope3" {
+		t.Fatalf("expected: %v, got: %v", "scope3", lastClaims[0])
+	}
+	if lastClaims[1] != "scope4" {
+		t.Fatalf("expected: %v, got: %v", "scope4", lastClaims[1])
 	}
 }

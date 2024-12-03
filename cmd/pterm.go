@@ -321,23 +321,19 @@ func extractClaims(token string) (*sdp.CustomClaims, error) {
 	// contains the right scopes. Therefore we just parse the payload
 	// directly
 	sections := strings.Split(token, ".")
-
 	if len(sections) != 3 {
 		return nil, errors.New("token is not a JWT")
 	}
 
 	// Decode the payload
 	decodedPayload, err := base64.RawURLEncoding.DecodeString(sections[1])
-
 	if err != nil {
 		return nil, fmt.Errorf("error decoding token payload: %w", err)
 	}
 
 	// Parse the payload
 	claims := new(sdp.CustomClaims)
-
 	err = json.Unmarshal(decodedPayload, claims)
-
 	if err != nil {
 		return nil, fmt.Errorf("error parsing token payload: %w", err)
 	}

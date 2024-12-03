@@ -43,7 +43,7 @@ const assetVersion = "17c7fd2c365d4f4cdd8e414ca5148f825fa4febd"
 func GetChange(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	app := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
+	app := viper.GetString("app")
 
 	riskLevels := []sdp.Risk_Severity{}
 	for _, level := range viper.GetStringSlice("risk-levels") {

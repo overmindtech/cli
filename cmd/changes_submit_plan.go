@@ -91,7 +91,7 @@ func tryLoadText(ctx context.Context, fileName string) string {
 func SubmitPlan(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
 
-	app := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
+	app := viper.GetString("app")
 
 	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"}, nil)
 	if err != nil {
