@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"time"
+
 	"connectrpc.com/connect"
 	"github.com/overmindtech/sdp-go"
 	log "github.com/sirupsen/logrus"
@@ -55,13 +57,18 @@ func StartChange(cmd *cobra.Command, args []string) error {
 		}
 	}
 	log.WithContext(ctx).WithFields(lf).Info("processing")
+	lastLog := time.Now().Add(-1 * time.Minute)
 	for stream.Receive() {
 		msg := stream.Msg()
-		log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
-			"state": msg.GetState(),
-			"items": msg.GetNumItems(),
-			"edges": msg.GetNumEdges(),
-		}).Info("progress")
+		// print progress every 2 seconds
+		if time.Now().After(lastLog.Add(2 * time.Second)) {
+			log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
+				"state": msg.GetState(),
+				"items": msg.GetNumItems(),
+				"edges": msg.GetNumEdges(),
+			}).Info("progress")
+			lastLog = time.Now()
+		}
 	}
 	if stream.Err() != nil {
 		return loggedError{
