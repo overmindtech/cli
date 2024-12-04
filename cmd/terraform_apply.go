@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
@@ -153,13 +154,18 @@ func TerraformApplyImpl(ctx context.Context, cmd *cobra.Command, oi sdp.Overmind
 		}
 
 		var startMsg *sdp.StartChangeResponse
+		lastLog := time.Now().Add(-1 * time.Minute)
 		for startStream.Receive() {
 			startMsg = startStream.Msg()
-			log.WithFields(log.Fields{
-				"state": startMsg.GetState(),
-				"items": startMsg.GetNumItems(),
-				"edges": startMsg.GetNumEdges(),
-			}).Trace("progress")
+			// print progress every 2 seconds
+			if time.Now().After(lastLog.Add(2 * time.Second)) {
+				log.WithFields(log.Fields{
+					"state": startMsg.GetState(),
+					"items": startMsg.GetNumItems(),
+					"edges": startMsg.GetNumEdges(),
+				}).Trace("progress")
+				lastLog = time.Now()
+			}
 			stateLabel := "unknown"
 			switch startMsg.GetState() {
 			case sdp.StartChangeResponse_STATE_UNSPECIFIED:
@@ -212,13 +218,18 @@ func TerraformApplyImpl(ctx context.Context, cmd *cobra.Command, oi sdp.Overmind
 	}
 
 	var endMsg *sdp.EndChangeResponse
+	lastLog := time.Now().Add(-1 * time.Minute)
 	for endStream.Receive() {
 		endMsg = endStream.Msg()
-		log.WithFields(log.Fields{
-			"state": endMsg.GetState(),
-			"items": endMsg.GetNumItems(),
-			"edges": endMsg.GetNumEdges(),
-		}).Trace("progress")
+		// print progress every 2 seconds
+		if time.Now().After(lastLog.Add(2 * time.Second)) {
+			log.WithFields(log.Fields{
+				"state": endMsg.GetState(),
+				"items": endMsg.GetNumItems(),
+				"edges": endMsg.GetNumEdges(),
+			}).Trace("progress")
+			lastLog = time.Now()
+		}
 		stateLabel := "unknown"
 		switch endMsg.GetState() {
 		case sdp.EndChangeResponse_STATE_UNSPECIFIED:
