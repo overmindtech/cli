@@ -69,8 +69,9 @@ jobs:
             tfplan.json \
             > ./overmindtech-change-url
 
-          ./overmind changes get-change \
-            --change "$(< ./overmindtech-change-url)" \
+            # we only want the last line of the previous command
+            ./overmind changes get-change \
+            --change "$(tail -n 1 ./overmindtech-change-url)" \
             --format markdown \
             > ./overmindtech-message
 

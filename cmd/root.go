@@ -89,7 +89,12 @@ func PreRunSetup(cmd *cobra.Command, args []string) {
 			log.AllLevels[:log.GetLevel()+1]...,
 		)))
 	}
-
+	// set up app, it may be ambiguous if frontend is set
+	app := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
+	if app == "" {
+		log.Fatal("no app specified, please use --app or set OVM_APP")
+	}
+	viper.Set("app", app)
 	// capture span in global variable to allow Execute() below to end it
 	ctx, cmdSpan = tracing.Tracer().Start(ctx, fmt.Sprintf("CLI %v", cmd.CommandPath()), trace.WithAttributes(
 		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
@@ -435,15 +440,15 @@ func ensureToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes []
 // that token locally for use later, and will use the cached token if possible
 func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes []string) (*oauth2.Token, error) {
 	var localScopes []string
-
-	// Check for a locally saved token in ~/.overmind
-	if home, err := os.UserHomeDir(); err == nil {
-		var localToken *oauth2.Token
-
-		localToken, localScopes, err = readLocalToken(home, requiredScopes)
-
+	var localToken *oauth2.Token
+	home, err := os.UserHomeDir()
+	if err == nil {
+		// Check for a locally saved token in ~/.overmind
+		localToken, localScopes, err = readLocalTokenFile(home, viper.GetString("app"), requiredScopes)
 		if err != nil {
-			log.WithContext(ctx).Debugf("Error reading local token, ignoring: %v", err)
+			if !os.IsNotExist(err) {
+				pterm.Info.Println(fmt.Sprintf("Skipping using local token: %v. Re-authenticating.", err))
+			}
 		} else {
 			// If we already have the right scopes, return the token
 			return localToken, nil
@@ -532,28 +537,13 @@ func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes 
 		)
 	}
 
-	// Save the token locally
-	if home, err := os.UserHomeDir(); err == nil {
-		// Create the directory if it doesn't exist
-		err = os.MkdirAll(filepath.Join(home, ".overmind"), 0700)
+	// Save the token to the local file, if the home directory is available
+	if home != "" {
+		err = saveLocalTokenFile(home, viper.GetString("app"), token)
 		if err != nil {
-			log.WithContext(ctx).WithError(err).Error("Failed to create ~/.overmind directory")
+			// we don't worry if we cannot save the token, it will just be requested again
+			log.WithContext(ctx).WithError(err).Error("Error saving token")
 		}
-
-		// Write the token to a file
-		path := filepath.Join(home, ".overmind", "token.json")
-		file, err := os.Create(path)
-		if err != nil {
-			log.WithContext(ctx).WithError(err).Errorf("Failed to create token file at %v", path)
-		}
-
-		// Encode the token
-		err = json.NewEncoder(file).Encode(token)
-		if err != nil {
-			log.WithContext(ctx).WithError(err).Errorf("Failed to encode token file at %v", path)
-		}
-
-		log.WithContext(ctx).Debugf("Saved token to %v", path)
 	}
 
 	return token, nil
@@ -561,12 +551,10 @@ func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes 
 
 // Gets a token using an API key
 func getAPIKeyToken(ctx context.Context, oi sdp.OvermindInstance, apiKey string, requiredScopes []string) (*oauth2.Token, error) {
-	log.WithContext(ctx).Debug("using provided token for authentication")
-
 	var token *oauth2.Token
-
+	app := viper.GetString("app")
 	if !strings.HasPrefix(apiKey, "ovm_api_") {
-		return nil, errors.New("OVM_API_KEY does not match pattern 'ovm_api_*'")
+		return nil, errors.New("--api-key or OVM_API_KEY or API_KEY does not match pattern 'ovm_api_*'")
 	}
 
 	// exchange api token for JWT
@@ -577,9 +565,8 @@ func getAPIKeyToken(ctx context.Context, oi sdp.OvermindInstance, apiKey string,
 		},
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error authenticating the API token: %w", err)
+		return nil, fmt.Errorf("error authenticating the API token for %s: %w", app, err)
 	}
-	log.WithContext(ctx).Debug("successfully got a token from the API key")
 
 	token = &oauth2.Token{
 		AccessToken: resp.Msg.GetAccessToken(),
@@ -590,20 +577,30 @@ func getAPIKeyToken(ctx context.Context, oi sdp.OvermindInstance, apiKey string,
 	// permission auth0 will just not assign those scopes rather than fail
 	ok, missing, err := HasScopesFlexible(token, requiredScopes)
 	if err != nil {
-		return nil, fmt.Errorf("error checking token scopes: %w", err)
+		return nil, fmt.Errorf("error checking token scopes for %s: %w", app, err)
 	}
 	if !ok {
-		return nil, fmt.Errorf("authenticated successfully, but your API key is missing this permission: '%v'", missing)
+		return nil, fmt.Errorf("authenticated successfully against %s, but your API key is missing this permission: '%v'", app, missing)
 	}
-
+	pterm.Info.Println(fmt.Sprintf("Using Overmind API key for %s", app))
 	return token, nil
 }
 
-func readLocalToken(homeDir string, requiredScopes []string) (*oauth2.Token, []string, error) {
+type TokenFile struct {
+	AuthEntries map[string]*TokenEntry `json:"auth_entries"`
+}
+
+type TokenEntry struct {
+	Token     *oauth2.Token `json:"token"`
+	AddedDate time.Time     `json:"added_date"`
+}
+
+// readLocalTokenFile is also used in the gateway assistant cli tool. It is copied over, so if you change it here, you should also change it there.
+func readLocalTokenFile(homeDir, app string, requiredScopes []string) (*oauth2.Token, []string, error) {
 	// Read in the token JSON file
 	path := filepath.Join(homeDir, ".overmind", "token.json")
 
-	token := new(oauth2.Token)
+	tokenFile := new(TokenFile)
 
 	// Check that the file exists
 	if _, err := os.Stat(path); err != nil {
@@ -613,23 +610,29 @@ func readLocalToken(homeDir string, requiredScopes []string) (*oauth2.Token, []s
 	// Read the file
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error opening token file at %v: %w", path, err)
+		return nil, nil, fmt.Errorf("error opening token file at %q: %w", path, err)
 	}
+	defer file.Close()
 
 	// Decode the file
-	err = json.NewDecoder(file).Decode(token)
+	err = json.NewDecoder(file).Decode(tokenFile)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error decoding token file at %v: %w", path, err)
+		return nil, nil, fmt.Errorf("error decoding token file at %q: %w", path, err)
+	}
+
+	authEntry, ok := tokenFile.AuthEntries[app]
+	if !ok {
+		return nil, nil, fmt.Errorf("no token found for app %s in %q", app, path)
 	}
 
 	// Check to see if the token is still valid
-	if !token.Valid() {
+	if !authEntry.Token.Valid() {
 		return nil, nil, errors.New("token is no longer valid")
 	}
 
-	claims, err := extractClaims(token.AccessToken)
+	claims, err := extractClaims(authEntry.Token.AccessToken)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error extracting claims from token: %w", err)
+		return nil, nil, fmt.Errorf("error extracting claims from token: %s in %q: %w", app, path, err)
 	}
 	if claims.Scope == "" {
 		return nil, nil, errors.New("token does not have any scopes")
@@ -638,16 +641,64 @@ func readLocalToken(homeDir string, requiredScopes []string) (*oauth2.Token, []s
 	currentScopes := strings.Split(claims.Scope, " ")
 
 	// Check that we actually got the claims we asked for.
-	ok, missing, err := HasScopesFlexible(token, requiredScopes)
+	ok, missing, err := HasScopesFlexible(authEntry.Token, requiredScopes)
 	if err != nil {
-		return nil, currentScopes, fmt.Errorf("error checking token scopes: %w", err)
+		return nil, currentScopes, fmt.Errorf("error checking token scopes: %s in %q: %w", app, path, err)
 	}
 	if !ok {
-		return nil, currentScopes, fmt.Errorf("local token is missing this permission: '%v'", missing)
+		return nil, currentScopes, fmt.Errorf("local token is missing this permission: '%v'. %s in %q", missing, app, path)
 	}
 
-	log.Debugf("Using local token from %v", path)
-	return token, currentScopes, nil
+	pterm.Info.Println(fmt.Sprintf("Using local token for %s in %q", app, path))
+	return authEntry.Token, currentScopes, nil
+}
+
+func saveLocalTokenFile(homeDir, app string, token *oauth2.Token) error {
+	// Read in the existing token file if it exists
+	path := filepath.Join(homeDir, ".overmind", "token.json")
+
+	tokenFile := &TokenFile{
+		AuthEntries: make(map[string]*TokenEntry),
+	}
+
+	if _, err := os.Stat(path); err == nil {
+		file, err := os.Open(path)
+		if err == nil {
+			// file exists, read it
+			defer file.Close()
+
+			err = json.NewDecoder(file).Decode(tokenFile)
+			if err != nil {
+				return fmt.Errorf("error decoding token file at %q: %w", path, err)
+			}
+		}
+	} else {
+		err = os.MkdirAll(filepath.Dir(path), 0755)
+		if err != nil {
+			return fmt.Errorf("unexpected fail creating directories: %w", err)
+		}
+	}
+
+	// Update the token for the given app
+	tokenFile.AuthEntries[app] = &TokenEntry{
+		Token:     token,
+		AddedDate: time.Now(),
+	}
+
+	// Write the updated token file
+	file, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("error creating token file at %q: %w", path, err)
+	}
+	defer file.Close()
+
+	err = json.NewEncoder(file).Encode(tokenFile)
+	if err != nil {
+		return fmt.Errorf("error encoding token file at %q: %w", path, err)
+	}
+
+	pterm.Info.Println(fmt.Sprintf("Saving token locally for %s at %q", app, path))
+	return nil
 }
 
 func getAppUrl(frontend, app string) string {

@@ -25,8 +25,7 @@ var manualChangeCmd = &cobra.Command{
 
 func ManualChange(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
-
-	app := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
+	app := viper.GetString("app")
 
 	method, err := methodFromString(viper.GetString("query-method"))
 	if err != nil {
