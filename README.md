@@ -20,18 +20,18 @@ Overmind is a **tribal knowledge database** that empowers your team to manage in
 ### Signs your team needs Overmind
 
 - **Blocked Experts & Slow Onboarding**
-  
-    - Expert team members spend too much time on approvals, reducing overall productivity.
-    - Newer staff face a steep learning curve, delaying their effectiveness.
-      
+
+  - Expert team members spend too much time on approvals, reducing overall productivity.
+  - Newer staff face a steep learning curve, delaying their effectiveness.
+
 - **Limited Dependency Visibility**
-  
-    - Tools like Terraform show intended changes but don't reveal underlying dependencies.
-    - Difficulty in assessing whether changes will disrupt existing applications.
+
+  - Tools like Terraform show intended changes but don't reveal underlying dependencies.
+  - Difficulty in assessing whether changes will disrupt existing applications.
 - **Complex Outage Troubleshooting**
-  
-    - Pinpointing issues during outages is challenging due to hidden dependencies.
-    - Outages often result from intricate, unforeseen relationships rather than simple cause-and-effect.
+
+  - Pinpointing issues during outages is challenging due to hidden dependencies.
+  - Outages often result from intricate, unforeseen relationships rather than simple cause-and-effect.
 
 # Quick Start
 
@@ -205,11 +205,11 @@ overmind --version
 **Discover CLI Commands**
 
 - `overmind explore`
-    
+
     Overmind Assistant is a chat assistant that has real-time access to all your AWS and K8’s infrastructure. It alleviates the mental exhaustion of manual troubleshooting, simplifies incident resolution by easily accessing historical data, and automates time-consuming tasks such as documentation and Terraform code generation. You can access the assistant by running `overmind explore` .
-    
+
 - `overmind terrafrom plan / apply`
-    
+
     Overmind can identify the blast radius and uncover potential risks with `overmind terrafrom plan` before they harm your infrastructure, allowing anyone to make changes with confidence. It can also track the impact of the changes you make with `overmind teraform apply`, so that you can be sure that your changes haven't had any unexpected downstream impact.
 
 ## How We Solve It?

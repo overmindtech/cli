@@ -40,6 +40,7 @@ func TestParseAWSProviders(t *testing.T) {
 }
 
 func TestConfigFromProvider(t *testing.T) {
+	t.Setenv("AWS_PROFILE", "")
 	// Make sure the providers we have created can all be turned into configs
 	// without any issues
 	results, err := ParseAWSProviders("testdata/config_from_provider", nil)
