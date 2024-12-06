@@ -26,7 +26,7 @@ require (
 	github.com/overmindtech/k8s-source v0.9.1
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
 	github.com/overmindtech/sdp-go v0.102.0
-	github.com/overmindtech/stdlib-source v0.0.0-20241205190930-631b4383c262
+	github.com/overmindtech/stdlib-source v0.0.0-20241206012451-3f481541c556
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sourcegraph/conc v0.3.0
