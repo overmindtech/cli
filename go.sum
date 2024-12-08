@@ -318,8 +318,8 @@ github.com/openrdap/rdap v0.9.2-0.20240517203139-eb57b3a8dedd h1:UuQycBx6K0lB0/I
 github.com/openrdap/rdap v0.9.2-0.20240517203139-eb57b3a8dedd/go.mod h1:391Ww1JbjG4FHOlvQqCd6n25CCCPE64JzC5cCYPxhyM=
 github.com/overmindtech/aws-source v0.0.0-20241207160536-811e31a65559 h1:Wk0cFwY4qTf0SeMGW6MFgpEkhEZ0+6s1ohK45+vzwUw=
 github.com/overmindtech/aws-source v0.0.0-20241207160536-811e31a65559/go.mod h1:AqJ2OHP+lBMn+vA9b3ZL+SJ8ZG7uEpiXhHWEFwjex6I=
-github.com/overmindtech/discovery v0.32.2 h1:e2rU6d2s7zTS31qVI6dTL+/tg2RCg4bgr056mOImP2k=
-github.com/overmindtech/discovery v0.32.2/go.mod h1:/mtLqJh6RKdh+V7RzFGhTOSTZTxfpmciBigvyRUSGOQ=
+github.com/overmindtech/discovery v0.33.0 h1:2IpIFEhpmxqs8gzen4ltxEbWg26dCh6Ey/OKtZjv1WY=
+github.com/overmindtech/discovery v0.33.0/go.mod h1:/mtLqJh6RKdh+V7RzFGhTOSTZTxfpmciBigvyRUSGOQ=
 github.com/overmindtech/k8s-source v0.9.1 h1:CSo1JWJCDjbz8u+FIJawgGy959QnNPJOJv56t9bEQEs=
 github.com/overmindtech/k8s-source v0.9.1/go.mod h1:x7lhfP5sJtIjr7gv+X50m2TaCIt/KIyl9QK4b0xd4Y8=
 github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297 h1:ih4bqBMHTCtg3lMwJszNkMGO9n7Uoe0WX5be1/x+s+g=
