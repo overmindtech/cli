@@ -328,8 +328,8 @@ github.com/overmindtech/sdp-go v0.102.0 h1:fIJo893+nhr5Wn9HmOM6afXUpUTYuQOJMC6O7
 github.com/overmindtech/sdp-go v0.102.0/go.mod h1:byGP2BXstnX3KeFLNyEbSLE75hv01EZhyU6QiKuiYb8=
 github.com/overmindtech/sdpcache v1.6.4 h1:MJoYBDqDE3s8FrRzZ0RPgFiH39HWI/Mv2ImH1NdLT8k=
 github.com/overmindtech/sdpcache v1.6.4/go.mod h1:/F9XStVdntRJEQjlZ86BPuB1Y7VPo1PFcsCNiU1IoGE=
-github.com/overmindtech/stdlib-source v0.0.0-20241209011946-c6037cde7444 h1:2EEEoP2QiBg/invIWgjKbtHxA9eOzyUwYE94KGjSCZs=
-github.com/overmindtech/stdlib-source v0.0.0-20241209011946-c6037cde7444/go.mod h1:bmQrp+FOb/pR/wJ4JTHtg0PzE65VfC2FFKrHfXi2yAA=
+github.com/overmindtech/stdlib-source v0.0.0-20241209044407-a761079b63d8 h1:4q3qtZtE2PgwuWegX4HibTBB2qJW/wUAAriFBWGpqmU=
+github.com/overmindtech/stdlib-source v0.0.0-20241209044407-a761079b63d8/go.mod h1:ydxOqrdfZObLSkvmjBGUcyi5Stvps0bJHAldlT7c6ic=
 github.com/pelletier/go-toml v1.9.5 h1:4yBQzkHv+7BHq2PQUZF3Mx0IYxG7LsP222s7Agd3ve8=
 github.com/pelletier/go-toml v1.9.5/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
 github.com/pelletier/go-toml/v2 v2.2.2 h1:aYUidT7k73Pcl9nb2gScu7NSrKCSHIDE89b3+6Wq+LM=
