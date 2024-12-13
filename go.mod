@@ -21,7 +21,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.3-0.20240912151726-82936c5ea257
-	github.com/overmindtech/aws-source v0.0.0-20241211160500-f3bd7dba88ab
+	github.com/overmindtech/aws-source v0.0.0-20241213220200-c9def9ab0ab3
 	github.com/overmindtech/discovery v0.33.4
 	github.com/overmindtech/k8s-source v0.9.1
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
@@ -71,10 +71,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.43.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.30.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.38.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.195.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.52.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.197.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.52.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.34.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/eks v1.53.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/eks v1.54.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.43.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.38.2 // indirect
@@ -85,8 +85,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kms v1.37.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.69.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.44.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.44.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.92.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.46.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.71.0 // indirect
