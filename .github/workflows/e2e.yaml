@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Cache Terraform Providers
         id: cache-terraform
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .terraform
           key: ${{ runner.os }}-${{ inputs.environment }}-${{ hashFiles('**/.terraform.lock.hcl') }}
@@ -94,7 +94,7 @@ jobs:
     steps:
       - name: Cache Terraform Providers
         id: cache-terraform
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .terraform
           key: ${{ runner.os }}-${{ inputs.environment }}-${{ hashFiles('**/.terraform.lock.hcl') }}
