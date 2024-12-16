@@ -5,6 +5,7 @@ on:
       - main
 
 jobs:
+  # this tests the basic commands without checking the output
   actions:
     runs-on: depot-ubuntu-22.04-4
     env:
@@ -83,6 +84,9 @@ jobs:
 
           echo "E2E Tests Complete"
 
+  # this runs 2 commands that require user input,
+  # the `overmind terraform plan` subcommand has to be run first and succeed before the `overmind terraform apply` subcommand can be run
+  # the lost pixel tapes have built in sleeps to wait for commands to complete
   interactive:
     runs-on: depot-ubuntu-22.04-4
     env:
@@ -140,7 +144,7 @@ jobs:
           terraform init
 
           cp -a $(which terraform) . # provide a terraform binary to the containers below
-
+          # see the workflow file for an explanation of what is happening here
           docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -e AWS_REGION -e AWS_SESSION_TOKEN -e HONEYCOMB_API_KEY -e OVM_API_KEY -e TEABUG -v $PWD:/vhs -v ~/.aws:/root/.aws ghcr.io/charmbracelet/vhs /vhs/.github/e2eplan.tape
           docker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION -e AWS_REGION -e AWS_SESSION_TOKEN -e HONEYCOMB_API_KEY -e OVM_API_KEY -e TEABUG -v $PWD:/vhs -v ~/.aws:/root/.aws ghcr.io/charmbracelet/vhs /vhs/.github/e2eapply.tape
 

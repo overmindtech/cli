@@ -177,10 +177,19 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 
 	resourceExtractionSpinner.Success()
 
-	// wait for the revlink warmup to finish before we update the planned changes
-	err = revlinkPool.Wait()
-	if err != nil {
-		return fmt.Errorf("error waiting for revlink warmup: %w", err)
+	// wait for the revlink warmup for 15 seconds. if it takes longer, we'll just continue
+	waitCh := make(chan error, 1)
+	go func() {
+		waitCh <- revlinkPool.Wait()
+	}()
+
+	select {
+	case err = <-waitCh:
+		if err != nil {
+			return fmt.Errorf("error waiting for revlink warmup: %w", err)
+		}
+	case <-time.After(15 * time.Second):
+		pterm.Info.Print("Done waiting for revlink warmup")
 	}
 
 	///////////////////////////////////////////////////////////////////
