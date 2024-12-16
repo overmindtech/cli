@@ -13,7 +13,7 @@ importers:
         version: 20.17.10
       lost-pixel:
         specifier: ^3.17.0
-        version: 3.22.0(@types/node@20.17.10)(playwright-core@1.49.0)(typescript@5.7.2)
+        version: 3.22.0(@types/node@20.17.10)(playwright-core@1.49.1)(typescript@5.7.2)
 
 packages:
 
@@ -351,8 +351,8 @@ packages:
     resolution: {integrity: sha512-agE4QfB2Lkp9uICn7BAqoscw4SZP9kTE2hxiFI3jBPmXJfdqiahTbUuKGsMoN2GtqL9AxhYioAcVvgsb1HvRbA==}
     engines: {node: '>= 0.10'}
 
-  is-core-module@2.15.1:
-    resolution: {integrity: sha512-z0vtXSwucUJtANQWldhbtbt7BnL0vxiFjIdDLAatwhDYty2bad6s+rijD6Ri4YuYJubLzIJLUidCh09e1djEVQ==}
+  is-core-module@2.16.0:
+    resolution: {integrity: sha512-urTSINYfAYgcbLb0yDQ6egFm6h3Mo1DcF9EkyXSRjjzdHbsulg01qhwWuXdOoUBuTkbQ80KDboXa0vFJ+BDH+g==}
     engines: {node: '>= 0.4'}
 
   is-fullwidth-code-point@3.0.0:
@@ -451,8 +451,8 @@ packages:
     resolution: {integrity: sha512-o8mkY4E/+LNUf6LzX96ht6k6CEDi65k9G2rjMtBe9Oo+VPKSvl+0GKHuH/AlG+GA5LPG/i5hrekkxUc3s2HU+Q==}
     hasBin: true
 
-  playwright-core@1.49.0:
-    resolution: {integrity: sha512-R+3KKTQF3npy5GTiKH/T+kdhoJfJojjHESR1YEWhYuEKRVfVaxH3+4+GvXE5xyCngCxhxnykk0Vlah9v8fs3jA==}
+  playwright-core@1.49.1:
+    resolution: {integrity: sha512-BzmpVcs4kE2CH15rWfzpjzVGhWERJfmnXmniSyKeRZUs9Ws65m+RGIi7mjJK/euCegfn3i7jvqWeWyHe9y3Vgg==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -483,8 +483,8 @@ packages:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
     engines: {node: '>=0.10.0'}
 
-  resolve@1.22.8:
-    resolution: {integrity: sha512-oKWePCxqpd6FlLvGV1VU0x7bkPmmCNolxzjMf4NczoDnQcIWrAF+cPtZn5i6n+RfD2d9i0tzpKnG6Yk168yIyw==}
+  resolve@1.22.9:
+    resolution: {integrity: sha512-QxrmX1DzraFIi9PxdG5VkRfRwIgjwyud+z/iBwfRRrVmHc+P9Q7u2lSSpQ6bjr2gy5lrqIiU9vb6iAeGf2400A==}
     hasBin: true
 
   rusha@0.8.14:
@@ -864,7 +864,7 @@ snapshots:
 
   interpret@1.4.0: {}
 
-  is-core-module@2.15.1:
+  is-core-module@2.16.0:
     dependencies:
       hasown: 2.0.2
 
@@ -886,7 +886,7 @@ snapshots:
 
   lodash.kebabcase@4.1.1: {}
 
-  lost-pixel@3.22.0(@types/node@20.17.10)(playwright-core@1.49.0)(typescript@5.7.2):
+  lost-pixel@3.22.0(@types/node@20.17.10)(playwright-core@1.49.1)(typescript@5.7.2):
     dependencies:
       '@types/xml2js': 0.4.14
       async: 3.2.6
@@ -901,7 +901,7 @@ snapshots:
       lodash.kebabcase: 4.1.1
       odiff-bin: 2.6.1
       pixelmatch: 5.3.0
-      playwright-core: 1.49.0
+      playwright-core: 1.49.1
       pngjs: 7.0.0
       posthog-node: 3.5.0
       serve-handler: 6.1.6
@@ -967,7 +967,7 @@ snapshots:
     dependencies:
       pngjs: 6.0.0
 
-  playwright-core@1.49.0: {}
+  playwright-core@1.49.1: {}
 
   pngjs@6.0.0: {}
 
@@ -986,13 +986,13 @@ snapshots:
 
   rechoir@0.6.2:
     dependencies:
-      resolve: 1.22.8
+      resolve: 1.22.9
 
   require-directory@2.1.1: {}
 
-  resolve@1.22.8:
+  resolve@1.22.9:
     dependencies:
-      is-core-module: 2.15.1
+      is-core-module: 2.16.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
 
