@@ -102,22 +102,22 @@ fetch:
 			}
 		}
 
-		if riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus() == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
+		if riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetStatus() == sdp.ChangeAnalysisStatus_STATUS_INPROGRESS {
 			// Extract the currently running milestone if you can
-			milestones := riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetProgressMilestones()
+			milestones := riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetProgressMilestones()
 			var currentMilestone string
 			for _, milestone := range milestones {
 				if milestone == nil {
 					continue
 				}
 
-				if milestone.GetStatus() == sdp.RiskCalculationStatus_ProgressMilestone_STATUS_INPROGRESS {
+				if milestone.GetStatus() == sdp.ChangeAnalysisStatus_ProgressMilestone_STATUS_INPROGRESS {
 					currentMilestone = milestone.GetDescription()
 				}
 			}
 
 			log.WithContext(ctx).WithFields(log.Fields{
-				"status":    riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus().String(),
+				"status":    riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetStatus().String(),
 				"milestone": currentMilestone,
 			}).Info("Waiting for risk calculation")
 

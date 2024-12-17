@@ -177,10 +177,19 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 
 	resourceExtractionSpinner.Success()
 
-	// wait for the revlink warmup to finish before we update the planned changes
-	err = revlinkPool.Wait()
-	if err != nil {
-		return fmt.Errorf("error waiting for revlink warmup: %w", err)
+	// wait for the revlink warmup for 15 seconds. if it takes longer, we'll just continue
+	waitCh := make(chan error, 1)
+	go func() {
+		waitCh <- revlinkPool.Wait()
+	}()
+
+	select {
+	case err = <-waitCh:
+		if err != nil {
+			return fmt.Errorf("error waiting for revlink warmup: %w", err)
+		}
+	case <-time.After(15 * time.Second):
+		pterm.Info.Print("Done waiting for revlink warmup")
 	}
 
 	///////////////////////////////////////////////////////////////////
@@ -387,7 +396,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 			return nil
 		}
 
-		for i, ms := range riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetProgressMilestones() {
+		for i, ms := range riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetProgressMilestones() {
 			if i <= len(milestoneSpinners) {
 				new := pterm.DefaultSpinner.
 					WithWriter(multi.NewWriter()).
@@ -397,23 +406,23 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 			}
 
 			switch ms.GetStatus() {
-			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_PENDING:
+			case sdp.ChangeAnalysisStatus_ProgressMilestone_STATUS_PENDING:
 				continue
-			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_INPROGRESS:
+			case sdp.ChangeAnalysisStatus_ProgressMilestone_STATUS_INPROGRESS:
 				if !milestoneSpinners[i].IsActive {
 					milestoneSpinners[i], _ = milestoneSpinners[i].Start()
 				}
-			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_ERROR:
+			case sdp.ChangeAnalysisStatus_ProgressMilestone_STATUS_ERROR:
 				milestoneSpinners[i].Fail()
-			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_DONE:
+			case sdp.ChangeAnalysisStatus_ProgressMilestone_STATUS_DONE:
 				milestoneSpinners[i].Success()
-			case sdp.RiskCalculationStatus_ProgressMilestone_STATUS_SKIPPED:
+			case sdp.ChangeAnalysisStatus_ProgressMilestone_STATUS_SKIPPED:
 				milestoneSpinners[i].Warning(fmt.Sprintf("%v: skipped", ms.GetDescription()))
 			}
 		}
 
-		status := riskRes.Msg.GetChangeRiskMetadata().GetRiskCalculationStatus().GetStatus()
-		if status == sdp.RiskCalculationStatus_STATUS_UNSPECIFIED || status == sdp.RiskCalculationStatus_STATUS_INPROGRESS {
+		status := riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetStatus()
+		if status == sdp.ChangeAnalysisStatus_STATUS_UNSPECIFIED || status == sdp.ChangeAnalysisStatus_STATUS_INPROGRESS {
 			if !riskSpinner.IsActive {
 				// restart after a Fail()
 				riskSpinner, _ = riskSpinner.Start("Calculating Risks")
@@ -421,7 +430,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 			// retry
 			time.Sleep(time.Second)
 
-		} else if status == sdp.RiskCalculationStatus_STATUS_ERROR {
+		} else if status == sdp.ChangeAnalysisStatus_STATUS_ERROR {
 			riskSpinner.Fail("Calculating Risks: waiting for a retry")
 		} else {
 			// it's done

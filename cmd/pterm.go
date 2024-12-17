@@ -137,6 +137,10 @@ func RunRevlinkWarmup(ctx context.Context, oi sdp.OvermindInstance, postPlanPrin
 
 		if spinner != nil {
 			spinner.Success("Discovered and linked all resources")
+		} else {
+			// if we didn't have a spinner, print a success message
+			// this can happen if the terminal is not available, or if the revlink warmup is very fast
+			pterm.Success.Println("Discovered and linked all resources")
 		}
 
 		return nil

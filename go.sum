@@ -326,6 +326,12 @@ github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297 h1:ih4bqBMHTCtg
 github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297/go.mod h1:bRQZYnvLrW1S5wYT6tbQnun8NpO5X6zP5cY3VKuDc4U=
 github.com/overmindtech/sdp-go v0.102.4 h1:PENbGxfoOvh7L3yCeOH1bWtFNfCGeYg/22iF0JeYPdw=
 github.com/overmindtech/sdp-go v0.102.4/go.mod h1:Lx2DtTLaroGuVTq5CL1SBT19zzudhLF6jdRkwXDJXRk=
+github.com/overmindtech/sdp-go v0.102.5-0.20241216101827-31ab7b07f9d8 h1:7V7SYUvxFq8IaLXoeX/2j8Q8iwdbCN3dmEwenQlUi7Y=
+github.com/overmindtech/sdp-go v0.102.5-0.20241216101827-31ab7b07f9d8/go.mod h1:Lx2DtTLaroGuVTq5CL1SBT19zzudhLF6jdRkwXDJXRk=
+github.com/overmindtech/sdp-go v0.102.5-0.20241216105318-a0af4432d4b2 h1:dyCFaDLLf+wOCYgirtOepWHspDDzQyWBCddEUyhAEjg=
+github.com/overmindtech/sdp-go v0.102.5-0.20241216105318-a0af4432d4b2/go.mod h1:Lx2DtTLaroGuVTq5CL1SBT19zzudhLF6jdRkwXDJXRk=
+github.com/overmindtech/sdp-go v0.103.0 h1:MVOYYrP7kdma8Zd6Ol1jX9KHnpe8ZJGlLqm224+Nt/4=
+github.com/overmindtech/sdp-go v0.103.0/go.mod h1:Lx2DtTLaroGuVTq5CL1SBT19zzudhLF6jdRkwXDJXRk=
 github.com/overmindtech/sdpcache v1.6.4 h1:MJoYBDqDE3s8FrRzZ0RPgFiH39HWI/Mv2ImH1NdLT8k=
 github.com/overmindtech/sdpcache v1.6.4/go.mod h1:/F9XStVdntRJEQjlZ86BPuB1Y7VPo1PFcsCNiU1IoGE=
 github.com/overmindtech/stdlib-source v0.0.0-20241211162909-1bb8eb048964 h1:StLQfDPOlAHecZtIItkHiYO3ZArKrP1dv3t2Z/n4N1U=
