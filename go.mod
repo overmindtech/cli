@@ -22,7 +22,7 @@ require (
 	github.com/jedib0t/go-pretty/v6 v6.6.4
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
-	github.com/muesli/termenv v0.15.3-0.20240912151726-82936c5ea257
+	github.com/muesli/termenv v0.15.3-0.20241212154518-8c990cd6cf4b
 	github.com/overmindtech/aws-source v0.0.0-20241219080614-ed84af836afd
 	github.com/overmindtech/discovery v0.33.4
 	github.com/overmindtech/k8s-source v0.9.1
