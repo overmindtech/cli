@@ -23,7 +23,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.3-0.20241212154518-8c990cd6cf4b
-	github.com/overmindtech/aws-source v0.0.0-20241220052341-60e08e2488e4
+	github.com/overmindtech/aws-source v0.0.0-20241227001047-0bbc4bcbfd6e
 	github.com/overmindtech/discovery v0.33.4
 	github.com/overmindtech/k8s-source v0.9.1
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
@@ -48,7 +48,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.33.0
 	golang.org/x/net v0.33.0
 	golang.org/x/oauth2 v0.24.0
-	google.golang.org/protobuf v1.36.0
+	google.golang.org/protobuf v1.36.1
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -76,7 +76,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.198.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.53.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/efs v1.34.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/eks v1.54.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/eks v1.56.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.43.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.38.3 // indirect
@@ -87,7 +87,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kms v1.37.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.69.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.44.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.44.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.93.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.46.4 // indirect
