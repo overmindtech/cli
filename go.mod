@@ -23,7 +23,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.3-0.20241212154518-8c990cd6cf4b
-	github.com/overmindtech/aws-source v0.0.0-20241227001047-0bbc4bcbfd6e
+	github.com/overmindtech/aws-source v0.0.0-20250103013056-24958c0941e8
 	github.com/overmindtech/discovery v0.33.4
 	github.com/overmindtech/k8s-source v0.9.1
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
@@ -89,11 +89,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.69.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.44.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.93.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.93.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.46.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.71.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.33.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.37.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.37.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.56.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.24.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.7 // indirect
