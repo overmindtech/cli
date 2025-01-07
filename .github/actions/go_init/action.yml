@@ -26,4 +26,3 @@ runs:
           git status
           exit 1
         fi
-        cat cmd/commit.txt

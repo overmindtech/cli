@@ -1,12 +1,5 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
 # Make sure to check the documentation at https://goreleaser.com
 version: 2
-before:
-  hooks:
-    # You may remove this if you don't use go modules.
-    - go mod tidy
-    # you may remove this if you don't need go generate
-    - go generate ./...
 builds:
   - binary: overmind
     id: overmind
@@ -15,12 +8,17 @@ builds:
     goos:
       - linux
       - windows
+    # Set the version where the binary will look it up (ServiceVersion) without ruining the flags goreleaser is setting
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser -X github.com/overmindtech/cli/tracing.ServiceVersion={{.Version}}
   - binary: overmind
     id: overmind-macos
     env:
       - CGO_ENABLED=0
     goos:
       - darwin
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}} -X main.builtBy=goreleaser -X github.com/overmindtech/cli/tracing.ServiceVersion={{.Version}}
 
 # For now we are going to disable signing MacOS packages. This works on Dylan's
 # person laptop, but we haven't worked out a way to get this set up in a github

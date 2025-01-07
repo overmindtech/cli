@@ -35,10 +35,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-//go:generate sh -c "echo -n $(git describe --tags --exact-match 2>/dev/null || git rev-parse --short HEAD) > commit.txt"
-//go:embed commit.txt
-var cliVersion string
-
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "overmind",
@@ -49,7 +45,7 @@ confidence.
 This CLI will prompt you for authentication using Overmind's OAuth service,
 however it can also be configured to use an API key by setting the OVM_API_KEY
 environment variable.`,
-	Version:      cliVersion,
+	Version:      tracing.ServiceVersion,
 	SilenceUsage: true,
 	PreRun:       PreRunSetup,
 }

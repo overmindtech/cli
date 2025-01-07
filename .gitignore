@@ -22,8 +22,6 @@ gon
 go.work
 
 dist/
-tracing/commit.txt
-cmd/commit.txt
 output
 .DS_Store
 .terraform
