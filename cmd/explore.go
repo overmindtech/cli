@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/overmindtech/aws-source/proc"
 	"github.com/overmindtech/cli/tfutils"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/pterm"
 	"github.com/overmindtech/sdp-go"
@@ -62,7 +63,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 
 	p.Go(func() (*discovery.Engine, error) {
 		ec := discovery.EngineConfig{
-			Version:               fmt.Sprintf("cli-%v", cliVersion),
+			Version:               fmt.Sprintf("cli-%v", tracing.ServiceVersion),
 			EngineType:            "cli-stdlib",
 			SourceName:            fmt.Sprintf("stdlib-source-%v", hostname),
 			SourceUUID:            uuid.New(),
@@ -131,7 +132,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 		}
 		ec := discovery.EngineConfig{
 			EngineType:            "cli-aws",
-			Version:               fmt.Sprintf("cli-%v", cliVersion),
+			Version:               fmt.Sprintf("cli-%v", tracing.ServiceVersion),
 			SourceName:            fmt.Sprintf("aws-source-%v", hostname),
 			SourceUUID:            uuid.New(),
 			App:                   oi.ApiUrl.Host,

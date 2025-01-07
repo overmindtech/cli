@@ -181,7 +181,7 @@ Additionally a community maintained package can be found in the [aur](https://au
 
 ### ASDF
 
-Overmind can be instaled using [asdf](https://asdf-vm.com/):
+Overmind can be installed using [asdf](https://asdf-vm.com/):
 
 ```shell
 # Add the plugin
