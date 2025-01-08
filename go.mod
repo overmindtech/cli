@@ -23,7 +23,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.3-0.20241212154518-8c990cd6cf4b
-	github.com/overmindtech/aws-source v0.0.0-20250106041035-ca4ff630c919
+	github.com/overmindtech/aws-source v0.0.0-20250107151153-a9e9e3f160ea
 	github.com/overmindtech/discovery v0.33.4
 	github.com/overmindtech/k8s-source v0.9.1
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
