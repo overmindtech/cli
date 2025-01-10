@@ -7,10 +7,10 @@ toolchain go1.23.4
 require (
 	atomicgo.dev/keyboard v0.2.9
 	connectrpc.com/connect v1.17.0
-	github.com/aws/aws-sdk-go-v2 v1.32.7
-	github.com/aws/aws-sdk-go-v2/config v1.28.7
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.48
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.22
+	github.com/aws/aws-sdk-go-v2 v1.32.8
+	github.com/aws/aws-sdk-go-v2/config v1.28.9
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.50
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.23
 	github.com/charmbracelet/glamour v0.8.0
 	github.com/charmbracelet/lipgloss v0.13.1
 	github.com/getsentry/sentry-go v0.30.0
@@ -23,7 +23,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/muesli/reflow v0.3.0
 	github.com/muesli/termenv v0.15.3-0.20241212154518-8c990cd6cf4b
-	github.com/overmindtech/aws-source v0.0.0-20250107151153-a9e9e3f160ea
+	github.com/overmindtech/aws-source v0.0.0-20250110021849-bdc621b7ee85
 	github.com/overmindtech/discovery v0.33.4
 	github.com/overmindtech/k8s-source v0.9.1
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
@@ -48,7 +48,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.33.0
 	golang.org/x/net v0.33.0
 	golang.org/x/oauth2 v0.24.0
-	google.golang.org/protobuf v1.36.1
+	google.golang.org/protobuf v1.36.2
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -63,41 +63,41 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/auth0/go-jwt-middleware/v2 v2.2.2 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.7 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.26 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.26 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.27 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.27 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.1 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.26 // indirect
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.28.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.51.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.44.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.43.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/directconnect v1.30.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.38.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.198.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.53.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/efs v1.34.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/eks v1.56.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.43.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/iam v1.38.3 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.27 // indirect
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.28.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.51.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.44.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.43.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.30.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.39.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.198.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.53.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/efs v1.34.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/eks v1.56.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.43.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/iam v1.38.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.4.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.10.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/kms v1.37.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.69.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.44.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rds v1.93.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/route53 v1.46.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.71.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sns v1.33.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.37.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.56.2 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.24.8 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sts v1.33.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.4.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.10.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/kms v1.37.10 // indirect
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.69.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.44.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rds v1.93.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/route53 v1.47.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.72.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sns v1.33.10 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.37.6 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.56.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.24.9 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.33.5 // indirect
 	github.com/aws/smithy-go v1.22.1 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
