@@ -6,7 +6,7 @@ toolchain go1.23.4
 
 require (
 	atomicgo.dev/keyboard v0.2.9
-	connectrpc.com/connect v1.17.0
+	connectrpc.com/connect v1.18.1
 	github.com/aws/aws-sdk-go-v2 v1.32.8
 	github.com/aws/aws-sdk-go-v2/config v1.28.9
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.50
