@@ -324,8 +324,8 @@ github.com/overmindtech/k8s-source v0.9.1 h1:CSo1JWJCDjbz8u+FIJawgGy959QnNPJOJv5
 github.com/overmindtech/k8s-source v0.9.1/go.mod h1:x7lhfP5sJtIjr7gv+X50m2TaCIt/KIyl9QK4b0xd4Y8=
 github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297 h1:ih4bqBMHTCtg3lMwJszNkMGO9n7Uoe0WX5be1/x+s+g=
 github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297/go.mod h1:bRQZYnvLrW1S5wYT6tbQnun8NpO5X6zP5cY3VKuDc4U=
-github.com/overmindtech/sdp-go v0.104.0 h1:lLxkmQP1EczZT51RqBd8DwvMgPJgTRYmKGXWZBi5o5M=
-github.com/overmindtech/sdp-go v0.104.0/go.mod h1:893d1tGkQ985O1m1mvmiyQyVOzSXwW/8a4tpp+N/D1E=
+github.com/overmindtech/sdp-go v0.105.0 h1:pE1F2j9jW0WEa0UPAjjFvvck4zMwStOEL5HTZaIqUqA=
+github.com/overmindtech/sdp-go v0.105.0/go.mod h1:DUaHlIAdHr2JMe7K3od25bsEXkDqpqVStbE8bE0veCY=
 github.com/overmindtech/sdpcache v1.6.4 h1:MJoYBDqDE3s8FrRzZ0RPgFiH39HWI/Mv2ImH1NdLT8k=
 github.com/overmindtech/sdpcache v1.6.4/go.mod h1:/F9XStVdntRJEQjlZ86BPuB1Y7VPo1PFcsCNiU1IoGE=
 github.com/overmindtech/stdlib-source v0.0.0-20250110105857-228b6b73feb3 h1:JJ6+4xuWJjkGFxegjt/S47pWRGb89b98G/+fA6lvHFA=
