@@ -27,8 +27,8 @@ require (
 	github.com/overmindtech/discovery v0.33.4
 	github.com/overmindtech/k8s-source v0.9.1
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
-	github.com/overmindtech/sdp-go v0.105.0
-	github.com/overmindtech/stdlib-source v0.0.0-20250113173948-43a982a089d6
+	github.com/overmindtech/sdp-go v0.106.0
+	github.com/overmindtech/stdlib-source v0.0.0-20250115172833-f70a5dd1a49b
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sourcegraph/conc v0.3.0
