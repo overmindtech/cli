@@ -11,9 +11,9 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
-	awsAdapters "github.com/overmindtech/aws-source/adapters"
-	k8sAdapters "github.com/overmindtech/k8s-source/adapters"
-	"github.com/overmindtech/sdp-go"
+	awsAdapters "github.com/overmindtech/cli/aws-source/adapters"
+	k8sAdapters "github.com/overmindtech/cli/k8s-source/adapters"
+	"github.com/overmindtech/cli/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -256,7 +256,7 @@ func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 // mappings. If there are multiple valid queries, the first one will be used.
 //
 // In the future we might allow for multiple queries to be returned, this work
-// will be tracked here: https://github.com/overmindtech/sdp/issues/272
+// will be tracked here: https://github.com/overmindtech/workspace/sdp/issues/272
 func mapResourceToQuery(itemDiff *sdp.ItemDiff, terraformResource *Resource, mappings []TfMapData) PlannedChangeMapResult {
 	attemptedMappings := make([]string, 0)
 

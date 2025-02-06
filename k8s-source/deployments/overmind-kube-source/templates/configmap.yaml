@@ -1,0 +1,22 @@
+---
+# ConfigMap definition
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "overmind-kube-source.fullname" . }}-config
+data:
+  LOG: {{ .Values.source.log }}
+  MAX_PARALLEL: {{ .Values.source.maxParallel | quote }}
+  SOURCE_NAME: {{ .Chart.Name }}
+  RATE_LIMIT_QPS: {{ .Values.source.rateLimitQPS | quote }}
+  RATE_LIMIT_BURST: {{ .Values.source.rateLimitBurst | quote }}
+{{- if .Values.source.clusterName }}
+  CLUSTER_NAME: {{ .Values.source.clusterName | quote }}
+{{- end }}
+{{- if .Values.source.app }}
+  APP: {{ .Values.source.app | quote }}
+{{- end }}
+{{- if .Values.source.honeycombApiKey }}
+  HONEYCOMB_API_KEY: {{ .Values.source.honeycombApiKey | quote }}
+{{- end }}
+---

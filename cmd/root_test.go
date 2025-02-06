@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/overmindtech/sdp-go"
+	"github.com/overmindtech/cli/sdp-go"
 	"golang.org/x/oauth2"
 )
 

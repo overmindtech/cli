@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/overmindtech/sdp-go"
-	"github.com/overmindtech/sdp-go/sdpconnect"
+	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdp-go/sdpconnect"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )

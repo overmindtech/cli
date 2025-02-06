@@ -5,7 +5,7 @@ import (
 )
 
 func TestTracingResource(t *testing.T) {
-	resource := tracingResource()
+	resource := tracingResource("test-component")
 	if resource == nil {
 		t.Error("Could not initialize tracing resource. Check the log!")
 	}

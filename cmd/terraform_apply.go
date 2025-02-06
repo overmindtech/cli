@@ -11,7 +11,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	"github.com/overmindtech/pterm"
-	"github.com/overmindtech/sdp-go"
+	"github.com/overmindtech/cli/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
