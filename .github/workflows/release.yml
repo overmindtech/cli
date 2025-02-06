@@ -7,7 +7,7 @@ on:
 jobs:
   # Actually release the binaries including signing them
   release:
-    runs-on: depot-ubuntu-22.04-8
+    runs-on: depot-ubuntu-22.04-32
     if: ${{ github.event_name != 'pull_request' }}
     permissions:
       contents: write

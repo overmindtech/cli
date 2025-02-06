@@ -38,7 +38,7 @@ var getChangeCmd = &cobra.Command{
 // to reflect the latest version
 //
 // This allows us to update the assets without fear of breaking older comments
-const assetVersion = "17c7fd2c365d4f4cdd8e414ca5148f825fa4febd"
+const assetVersion = "476f6df5bc783c17b1d0513a43e0a0aa9c075588" // tag from v1.6.1
 
 func GetChange(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
@@ -204,8 +204,10 @@ fetch:
 			SeverityText string
 			Title        string
 			Description  string
+			RiskUrl      string
 		}
 		type TemplateData struct {
+			BlastRadiusUrl  string
 			ChangeUrl       string
 			ExpectedChanges []TemplateItem
 			UnmappedChanges []TemplateItem
@@ -214,6 +216,7 @@ fetch:
 			Risks           []TemplateRisk
 			// Path to the assets folder on github
 			AssetPath string
+			TagsLine  string
 		}
 		status := map[sdp.ItemDiffStatus]TemplateItem{
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNSPECIFIED: {
@@ -267,6 +270,7 @@ fetch:
 		app, _ = strings.CutSuffix(app, "/")
 		data := TemplateData{
 			ChangeUrl:       fmt.Sprintf("%v/changes/%v", app, changeUuid.String()),
+			BlastRadiusUrl:  fmt.Sprintf("%v/changes/%v/blast-radius", app, changeUuid.String()),
 			ExpectedChanges: []TemplateItem{},
 			UnmappedChanges: []TemplateItem{},
 			BlastItems:      int(changeRes.Msg.GetChange().GetMetadata().GetNumAffectedItems()),
@@ -326,14 +330,20 @@ fetch:
 		}
 
 		for _, risk := range riskRes.Msg.GetChangeRiskMetadata().GetRisks() {
+			// parse the risk UUID to a string
+			riskUuid, _ := uuid.FromBytes(risk.GetUUID())
 			data.Risks = append(data.Risks, TemplateRisk{
 				SeverityAlt:  severity[risk.GetSeverity()].SeverityAlt,
 				SeverityIcon: severity[risk.GetSeverity()].SeverityIcon,
 				SeverityText: severity[risk.GetSeverity()].SeverityText,
 				Title:        risk.GetTitle(),
 				Description:  risk.GetDescription(),
+				RiskUrl:      fmt.Sprintf("%v/changes/%v/blast-radius?selectedRisk=%v&activeTab=risks", app, changeUuid.String(), riskUuid.String()),
 			})
 		}
+		// get the tags in
+		data.TagsLine = getTagsLine(changeRes.Msg.GetChange().GetProperties().GetEnrichedTags().GetTagValue())
+		data.TagsLine = strings.TrimSpace(data.TagsLine)
 
 		tmpl, err := template.New("comment").Parse(commentTemplate)
 		if err != nil {
@@ -384,6 +394,32 @@ func renderRiskFilter(levels []sdp.Risk_Severity) string {
 		}
 	}
 	return strings.Join(result, ", ")
+}
+
+func getTagsLine(tags map[string]*sdp.TagValue) string {
+	autoTags := ""
+	userTags := ""
+
+	for key, value := range tags {
+		if value.GetAutoTagValue() != nil {
+			suffix := ""
+			if value.GetAutoTagValue().GetValue() != "" {
+				suffix = fmt.Sprintf("|%s", value.GetAutoTagValue().GetValue())
+			}
+			autoTags += fmt.Sprintf("`✨%s%s` ", key, suffix)
+		} else if value.GetUserTagValue() != nil {
+			suffix := ""
+			if value.GetUserTagValue().GetValue() != "" {
+				suffix = fmt.Sprintf("|%s", value.GetUserTagValue().GetValue())
+			}
+			userTags += fmt.Sprintf("`%s%s` ", key, suffix)
+		} else {
+			// we should never get here, but just in case.
+			// its a tag jim, but not as we know it
+			userTags += fmt.Sprintf("`%s` ", key)
+		}
+	}
+	return autoTags + userTags
 }
 
 func init() {

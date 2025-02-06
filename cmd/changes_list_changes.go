@@ -238,6 +238,18 @@ func printJson(_ context.Context, b []byte, prefix, id string, cmd *cobra.Comman
 			return flagError{fmt.Sprintf("need --dir value to write to files\n\n%v", cmd.UsageString())}
 		}
 
+		// attempt to create the directory
+		err := os.MkdirAll(dir, 0755)
+		if err != nil {
+			return loggedError{
+				err: err,
+				fields: log.Fields{
+					"output-dir": dir,
+				},
+				message: "failed to create output directory",
+			}
+		}
+
 		// write the change to a file
 		fileName := fmt.Sprintf("%v/%v-%v.json", dir, prefix, id)
 		file, err := os.Create(fileName)
