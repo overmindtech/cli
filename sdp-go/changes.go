@@ -354,7 +354,9 @@ func (cp *ChangeProperties) ToMap() map[string]any {
 		"rawPlan":                   cp.GetRawPlan(),
 		"codeChanges":               cp.GetCodeChanges(),
 		"repo":                      cp.GetRepo(),
-		"tags":                      cp.GetTags(),
+		"tags":                      cp.GetEnrichedTags(),
+		"autoTaggingRuleSource":     cp.GetAutoTaggingRuleSource().ToMessage(),
+		"skippedAutoTags":           cp.GetSkippedAutoTags(),
 	}
 }
 
@@ -424,6 +426,19 @@ func (s EndChangeResponse_State) ToMessage() string {
 		return "Snapshot is being saved"
 	case EndChangeResponse_STATE_DONE:
 		return "Everything is complete"
+	default:
+		return "unknown"
+	}
+}
+
+func (s ChangeProperties_AutoTaggingRuleSource) ToMessage() string {
+	switch s {
+	case ChangeProperties_AUTO_TAGGING_RULE_SOURCE_UNSPECIFIED:
+		return "unknown"
+	case ChangeProperties_AUTO_TAGGING_RULE_SOURCE_FILE:
+		return "file"
+	case ChangeProperties_AUTO_TAGGING_RULE_SOURCE_UI:
+		return "ui"
 	default:
 		return "unknown"
 	}

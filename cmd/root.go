@@ -77,7 +77,7 @@ func PreRunSetup(cmd *cobra.Command, args []string) {
 
 	// set up tracing
 	if honeycombApiKey := viper.GetString("honeycomb-api-key"); honeycombApiKey != "" {
-		if err := tracing.InitTracerWithUpstreams("cli", honeycombApiKey, ""); err != nil {
+		if err := tracing.InitTracerWithUpstreams("overmind-cli", honeycombApiKey, ""); err != nil {
 			log.Fatal(err)
 		}
 
@@ -578,7 +578,7 @@ func getAPIKeyToken(ctx context.Context, oi sdp.OvermindInstance, apiKey string,
 	if !ok {
 		return nil, fmt.Errorf("authenticated successfully against %s, but your API key is missing this permission: '%v'", app, missing)
 	}
-	pterm.Info.Println(fmt.Sprintf("Using Overmind API key for %s", app))
+	log.WithField("app", app).Info("Using Overmind API key")
 	return token, nil
 }
 
