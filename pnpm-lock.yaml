@@ -10,10 +10,10 @@ importers:
     dependencies:
       '@types/node':
         specifier: ^20.14.9
-        version: 20.17.16
+        version: 20.17.17
       lost-pixel:
         specifier: ^3.17.0
-        version: 3.22.0(@types/node@20.17.16)(playwright-core@1.50.0)(typescript@5.7.3)
+        version: 3.22.0(@types/node@20.17.17)(playwright-core@1.50.1)(typescript@5.7.3)
 
 packages:
 
@@ -187,8 +187,8 @@ packages:
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
 
-  '@types/node@20.17.16':
-    resolution: {integrity: sha512-vOTpLduLkZXePLxHiHsBLp98mHGnl8RptV4YAO3HfKO5UHjDvySGbxKtpYfy8Sx5+WKcgc45qNreJJRVM3L6mw==}
+  '@types/node@20.17.17':
+    resolution: {integrity: sha512-/WndGO4kIfMicEQLTi/mDANUu/iVUhT7KboZPdEqqHQ4aTS+3qT3U5gIqWDFV+XouorjfgGqvKILJeHhuQgFYg==}
 
   '@types/xml2js@0.4.14':
     resolution: {integrity: sha512-4YnrRemBShWRO2QjvUin8ESA41rH+9nQGLUGZV/1IDhi3SL9OhdpNC/MrulTWuptXKwhx/aDxE7toV0f/ypIXQ==}
@@ -452,8 +452,8 @@ packages:
     resolution: {integrity: sha512-o8mkY4E/+LNUf6LzX96ht6k6CEDi65k9G2rjMtBe9Oo+VPKSvl+0GKHuH/AlG+GA5LPG/i5hrekkxUc3s2HU+Q==}
     hasBin: true
 
-  playwright-core@1.50.0:
-    resolution: {integrity: sha512-CXkSSlr4JaZs2tZHI40DsZUN/NIwgaUPsyLuOAaIZp2CyF2sN5MM5NJsyB188lFSSozFxQ5fPT4qM+f0tH/6wQ==}
+  playwright-core@1.50.1:
+    resolution: {integrity: sha512-ra9fsNWayuYumt+NiM069M6OkcRb1FZSK8bgi66AtpFoWkg2+y0bJSNmkFrWhMbEBbVKC/EruAHH3g0zmtwGmQ==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -693,13 +693,13 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
-  '@types/node@20.17.16':
+  '@types/node@20.17.17':
     dependencies:
       undici-types: 6.19.8
 
   '@types/xml2js@0.4.14':
     dependencies:
-      '@types/node': 20.17.16
+      '@types/node': 20.17.17
 
   acorn-walk@8.3.4:
     dependencies:
@@ -888,7 +888,7 @@ snapshots:
 
   lodash.kebabcase@4.1.1: {}
 
-  lost-pixel@3.22.0(@types/node@20.17.16)(playwright-core@1.50.0)(typescript@5.7.3):
+  lost-pixel@3.22.0(@types/node@20.17.17)(playwright-core@1.50.1)(typescript@5.7.3):
     dependencies:
       '@types/xml2js': 0.4.14
       async: 3.2.6
@@ -903,12 +903,12 @@ snapshots:
       lodash.kebabcase: 4.1.1
       odiff-bin: 2.6.1
       pixelmatch: 5.3.0
-      playwright-core: 1.50.0
+      playwright-core: 1.50.1
       pngjs: 7.0.0
       posthog-node: 3.5.0
       serve-handler: 6.1.6
       shelljs: 0.8.5
-      ts-node: 10.9.2(@types/node@20.17.16)(typescript@5.7.3)
+      ts-node: 10.9.2(@types/node@20.17.17)(typescript@5.7.3)
       xml2js: 0.6.2
       yargs: 17.7.2
       zod: 3.23.8
@@ -969,7 +969,7 @@ snapshots:
     dependencies:
       pngjs: 6.0.0
 
-  playwright-core@1.50.0: {}
+  playwright-core@1.50.1: {}
 
   pngjs@6.0.0: {}
 
@@ -1040,14 +1040,14 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  ts-node@10.9.2(@types/node@20.17.16)(typescript@5.7.3):
+  ts-node@10.9.2(@types/node@20.17.17)(typescript@5.7.3):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.11
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 20.17.16
+      '@types/node': 20.17.17
       acorn: 8.14.0
       acorn-walk: 8.3.4
       arg: 4.1.3

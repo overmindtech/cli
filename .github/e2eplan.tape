@@ -4,6 +4,7 @@ Set Width 1920
 Set Height 1080
 
 Set FontSize 12
+Set CursorBlink false
 
 Hide
 Type "export PATH=$PWD:$PATH"

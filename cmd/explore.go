@@ -10,13 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/google/uuid"
-	"github.com/overmindtech/aws-source/proc"
-	"github.com/overmindtech/cli/tfutils"
-	"github.com/overmindtech/cli/tracing"
-	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/pterm"
-	"github.com/overmindtech/sdp-go"
-	stdlibSource "github.com/overmindtech/stdlib-source/adapters"
+	"github.com/overmindtech/cli/aws-source/proc"
+	"github.com/overmindtech/cli/tfutils"
+	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdp-go"
+	stdlibSource "github.com/overmindtech/cli/stdlib-source/adapters"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/pkg/browser"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
@@ -61,9 +61,9 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 
 	p := pool.NewWithResults[*discovery.Engine]().WithErrors()
 
-	p.Go(func() (*discovery.Engine, error) {
+	p.Go(func() (*discovery.Engine, error) { //nolint:contextcheck // todo: pass in context with timeout to abort timely and allow Ctrl-C to work
 		ec := discovery.EngineConfig{
-			Version:               fmt.Sprintf("cli-%v", tracing.ServiceVersion),
+			Version:               fmt.Sprintf("cli-%v", tracing.Version()),
 			EngineType:            "cli-stdlib",
 			SourceName:            fmt.Sprintf("stdlib-source-%v", hostname),
 			SourceUUID:            uuid.New(),
@@ -132,7 +132,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 		}
 		ec := discovery.EngineConfig{
 			EngineType:            "cli-aws",
-			Version:               fmt.Sprintf("cli-%v", tracing.ServiceVersion),
+			Version:               fmt.Sprintf("cli-%v", tracing.Version()),
 			SourceName:            fmt.Sprintf("aws-source-%v", hostname),
 			SourceUUID:            uuid.New(),
 			App:                   oi.ApiUrl.Host,
@@ -148,12 +148,16 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			configs...,
 		)
 		if err != nil {
-			awsSpinner.Fail("Failed to initialize AWS source engine")
+			if os.Getenv("AWS_PROFILE") == "" {
+				// look for the AWS_PROFILE env var and suggest setting it
+				awsSpinner.Fail("Failed to initialize AWS source engine. Consider setting AWS_PROFILE to use the default AWS CLI profile.")
+			} else {
+				awsSpinner.Fail("Failed to initialize AWS source engine")
+			}
 			return nil, fmt.Errorf("failed to initialize AWS source engine: %w", err)
 		}
 
-		// todo: pass in context with timeout to abort timely and allow Ctrl-C to work
-		err = awsEngine.Start()
+		err = awsEngine.Start() //nolint:contextcheck // todo: pass in context with timeout to abort timely and allow Ctrl-C to work
 		if err != nil {
 			awsSpinner.Fail("Failed to start AWS source engine")
 			return nil, fmt.Errorf("failed to start AWS source engine: %w", err)

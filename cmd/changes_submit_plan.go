@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -12,7 +13,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/tfutils"
-	"github.com/overmindtech/sdp-go"
+	"github.com/overmindtech/cli/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -93,7 +94,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 
 	app := viper.GetString("app")
 
-	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write"}, nil)
+	ctx, oi, _, err := login(ctx, cmd, []string{"changes:write", "sources:read"}, nil)
 	if err != nil {
 		return err
 	}
@@ -222,11 +223,24 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Set up the local auto-tag rules if specified, or found in the default location
+	// order of precedence: flag > default config file
+	autoTagRulesPath := viper.GetString("auto-tag-rules")
+	autoTaggingRulesOverride, err := checkForAndLoadAutoTagRulesFile(ctx, lf, autoTagRulesPath)
+	if err != nil {
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "Failed to load auto-tag rules",
+		}
+	}
+
 	resultStream, err := client.UpdatePlannedChanges(ctx, &connect.Request[sdp.UpdatePlannedChangesRequest]{
 		Msg: &sdp.UpdatePlannedChangesRequest{
 			ChangeUUID:                changeUuid[:],
 			ChangingItems:             plannedChanges,
 			BlastRadiusConfigOverride: blastRadiusConfigOverride,
+			AutoTaggingRulesOverride:  autoTaggingRulesOverride,
 		},
 	})
 	if err != nil {
@@ -294,6 +308,73 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func loadAutoTagRulesFile(autoTagRulesPath string) ([]*sdp.RuleProperties, error) {
+	// check if the file exists
+	_, err := os.Stat(autoTagRulesPath)
+	if err != nil {
+		return nil, fmt.Errorf("Auto-tag rules file %q does not exist: %w", autoTagRulesPath, err)
+	}
+	// read the file
+	autoTagRules, err := os.ReadFile(autoTagRulesPath)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to read auto-tag rules file %q: %w", autoTagRulesPath, err)
+	}
+	autoTaggingRulesOverride, err := sdp.YamlStringToRuleProperties(string(autoTagRules))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to parse auto-tag rules file %q: %w", autoTagRulesPath, err)
+	}
+	if len(autoTaggingRulesOverride) > 10 {
+		return nil, errors.New("Auto-tag rules file contains more than 10 rules")
+	}
+	return autoTaggingRulesOverride, nil
+}
+
+// order of precedence: flag > default config file
+func checkForAndLoadAutoTagRulesFile(ctx context.Context, lf log.Fields, manualPath string) ([]*sdp.RuleProperties, error) {
+	foundPath := ""
+	if manualPath != "" {
+		_, err := os.Stat(manualPath)
+		if err == nil {
+			// we found the file
+			foundPath = manualPath
+		} else {
+			// the specified file does not exist
+			// hard fail
+			lf["autoTagRules"] = manualPath
+			err = fmt.Errorf("Auto-tag rules file does not exist: %w", err)
+			return nil, err
+		}
+	}
+	// lets look for the default files
+	if foundPath == "" {
+		_, err := os.Stat(".overmind/auto-tag-rules.yaml")
+		if err == nil {
+			// we found the file
+			foundPath = ".overmind/auto-tag-rules.yaml"
+		}
+	}
+	if foundPath == "" {
+		_, err := os.Stat(".overmind/auto-tag-rules.yml")
+		if err == nil {
+			// we found the file
+			foundPath = ".overmind/auto-tag-rules.yml"
+		}
+	}
+
+	if foundPath != "" {
+		// we found a file, load it
+		lf["autoTagRules"] = foundPath
+		log.WithContext(ctx).WithFields(lf).Info(fmt.Sprintf("Loading auto-tag rules"))
+		autoTaggingRulesOverride, err := loadAutoTagRulesFile(foundPath)
+		if err != nil {
+			return nil, err
+		}
+		return autoTaggingRulesOverride, nil
+	}
+	// we didn't find any files, thats ok
+	return nil, nil
+}
+
 func init() {
 	changesCmd.AddCommand(submitPlanCmd)
 
@@ -305,4 +386,5 @@ func init() {
 
 	submitPlanCmd.PersistentFlags().Int32("blast-radius-link-depth", 0, "Used in combination with '--blast-radius-max-items' to customise how many levels are traversed when calculating the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
 	submitPlanCmd.PersistentFlags().Int32("blast-radius-max-items", 0, "Used in combination with '--blast-radius-link-depth' to customise how many items are included in the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
+	submitPlanCmd.PersistentFlags().String("auto-tag-rules", "", "The path to the auto-tag rules file. If not provided, it will check the default location which is '.overmind/auto-tag-rules.yaml'. If no rules are found locally, the rules configured through the UI are used.")
 }

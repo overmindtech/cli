@@ -1,0 +1,6 @@
+{
+  "auths": {
+    "ghcr.io": {},
+  },
+  "credsStore": "desktop"
+}

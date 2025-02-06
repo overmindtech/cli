@@ -1,0 +1,90 @@
+# Default values for overmind-kube-source.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/overmindtech/k8s-source
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+clusterRole:
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+  # Annotations to add to the cluster role
+  annotations: {}
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Source config
+source:
+  # The log level for the source (info, debug, trace etc.)
+  log: info
+  # API Key configuration
+  apiKey:
+    # Directly provided value (not recommended for production)
+    value: ""
+    # Reference to existing secret
+    existingSecretName: ""
+  # The URL of the Overmind instance to connect to
+  app: "https://app.overmind.tech"
+  # How many requests to run in parallel
+  maxParallel: 20
+  # The maximum sustained queries per second from this source to the kubernetes API
+  rateLimitQPS: 10
+  # The maximum burst of queries from this source to the kubernetes API
+  rateLimitBurst: 30
+  # The descriptive name of the cluster this source is running on
+  clusterName: ""
+  # An optional Honeycomb API key to send traces and metrics
+  honeycombApiKey: ""

@@ -15,9 +15,9 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/google/uuid"
 	"github.com/muesli/reflow/wordwrap"
-	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/pterm"
-	"github.com/overmindtech/sdp-go"
+	"github.com/overmindtech/cli/tfutils"
+	"github.com/overmindtech/cli/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -112,7 +112,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	// Convert provided plan into JSON for easier parsing
 	///////////////////////////////////////////////////////////////////
 
-	tfPlanJsonCmd := exec.CommandContext(ctx, "terraform", "show", "-json", planFile) // nolint:gosec // this is the file `terraform plan` already wrote to, so it's safe enough
+	tfPlanJsonCmd := exec.CommandContext(ctx, "terraform", "show", "-json", planFile)
 
 	tfPlanJsonCmd.Stderr = multi.NewWriter() // send output through PTerm; is usually empty
 
@@ -215,7 +215,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	}
 
 	title := changeTitle(viper.GetString("title"))
-	tfPlanTextCmd := exec.CommandContext(ctx, "terraform", "show", planFile) // nolint:gosec // this is the file `terraform plan` already wrote to, so it's safe enough
+	tfPlanTextCmd := exec.CommandContext(ctx, "terraform", "show", planFile)
 
 	tfPlanTextCmd.Stderr = multi.NewWriter() // send output through PTerm; is usually empty
 

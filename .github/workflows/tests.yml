@@ -13,39 +13,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Go Init
-        uses: ./.github/actions/go_init
-
-      - name: Get dependencies
-        run: |
-          go get -v -t -d ./...
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.x
+          check-latest: true
+          cache: true
 
       - name: Go Test
         run: |
           go run main.go --version
-          go test -v -timeout 5m ./...
-
-  golangci:
-    name: lint
-    runs-on: depot-ubuntu-22.04-4
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Go Init
-        uses: ./.github/actions/go_init
-
-      # get .golangci.yml from github.com/overmindtech/golangci-lint_config
-      - name: Get .golangci.yml from github.com/overmindtech/golangci-lint_configs
-        run: |
-          curl -sfL https://raw.githubusercontent.com/overmindtech/golangci-lint_config/main/.golangci.yml -o .golangci.yml
-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.60.1
-          args: --timeout 3m
-          skip-pkg-cache: true # golangci-lint-action caching conflicts with the setup-go cache and `go get` above. See https://github.com/golangci/golangci-lint-action/issues/23
+          go test -v -timeout 5m github.com/overmindtech/cli github.com/overmindtech/cli/tfutils

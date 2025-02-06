@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/overmindtech/sdp-go"
+	"github.com/overmindtech/cli/sdp-go"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/xiam/dig"

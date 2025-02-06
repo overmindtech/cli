@@ -538,7 +538,7 @@ func ParseAWSProviders(terraformDir string, evalContext *hcl.EvalContext) ([]Pro
 					continue
 				} else {
 					results = append(results, ProviderResult{
-						Provider: &awsProvider, //nolint:all // this is not relevant for go1.22 and later
+						Provider: &awsProvider, 
 						FilePath: file,
 					})
 				}

@@ -6,6 +6,6 @@ export const config: CustomProjectConfig = {
     },
 
     // Lost Pixel Platform (to use in Platform mode, comment out the OSS mode and uncomment this part )
-    lostPixelProjectId: 'cljcuqix95y2ui10ekiwatpau',
+    lostPixelProjectId: 'cm67zty5r073v6ql0ii68nq5f',
     apiKey: process.env.LOST_PIXEL_API_KEY,
 };
