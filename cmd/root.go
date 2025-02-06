@@ -21,9 +21,9 @@ import (
 	"github.com/go-jose/go-jose/v4"
 	josejwt "github.com/go-jose/go-jose/v4/jwt"
 	"github.com/google/uuid"
-	"github.com/overmindtech/cli/tracing"
 	"github.com/overmindtech/pterm"
-	"github.com/overmindtech/sdp-go"
+	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/tracing"
 	"github.com/pkg/browser"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -45,7 +45,7 @@ confidence.
 This CLI will prompt you for authentication using Overmind's OAuth service,
 however it can also be configured to use an API key by setting the OVM_API_KEY
 environment variable.`,
-	Version:      tracing.ServiceVersion,
+	Version:      tracing.Version(),
 	SilenceUsage: true,
 	PreRun:       PreRunSetup,
 }
@@ -77,7 +77,7 @@ func PreRunSetup(cmd *cobra.Command, args []string) {
 
 	// set up tracing
 	if honeycombApiKey := viper.GetString("honeycomb-api-key"); honeycombApiKey != "" {
-		if err := tracing.InitTracerWithHoneycomb(honeycombApiKey); err != nil {
+		if err := tracing.InitTracerWithUpstreams("cli", honeycombApiKey, ""); err != nil {
 			log.Fatal(err)
 		}
 
@@ -135,7 +135,7 @@ func Execute() {
 
 		err := rootCmd.ExecuteContext(ctx)
 		if err != nil {
-			switch err := err.(type) { // nolint:errorlint // the selected error types are all top-level wrappers used by the CLI implementation
+			switch err := err.(type) { //nolint:errorlint // the selected error types are all top-level wrappers used by the CLI implementation
 			case flagError:
 				// print errors from viper with usage to stderr
 				fmt.Fprintln(os.Stderr, err)
@@ -162,7 +162,7 @@ func Execute() {
 	if cmdSpan != nil {
 		cmdSpan.End()
 	}
-	tracing.ShutdownTracer()
+	tracing.ShutdownTracer(context.Background())
 
 	if err != nil {
 		// If we have an error, exit with a non-zero status. Logging is handled by each command.
@@ -394,7 +394,7 @@ func login(ctx context.Context, cmd *cobra.Command, scopes []string, writer io.W
 	}
 
 	// apply a timeout to the main body of processing
-	ctx, _ = context.WithTimeout(ctx, timeout) // nolint:govet // the context will not leak as the command will exit when it is done
+	ctx, _ = context.WithTimeout(ctx, timeout) //nolint:govet // the context will not leak as the command will exit when it is done
 
 	return ctx, oi, token, nil
 }
@@ -483,7 +483,7 @@ func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes 
 		urlToOpen = deviceCode.VerificationURI
 	}
 
-	_ = browser.OpenURL(urlToOpen) // nolint:errcheck // we don't care if the browser fails to open
+	_ = browser.OpenURL(urlToOpen)
 	pterm.Print(
 		markdownToString(MAX_TERMINAL_WIDTH, fmt.Sprintf(
 			beginAuthMessage,

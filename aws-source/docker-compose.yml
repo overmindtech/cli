@@ -1,0 +1,26 @@
+version: "3"
+services:
+  nats:
+    image: nats
+    command: "-c /etc/nats/nats.conf -DV" #-c /etc/nats/nats.conf --cluster nats://0.0.0.0:6222 --routes=nats://ruser:T0pS3cr3t@nats:6222
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+      - "6222:6222"
+      - "4433:4433"
+    volumes:
+      - ./acceptance/nats-server.conf:/etc/nats/nats.conf
+  # nats-1:
+  #   image: nats
+  #   command: "-c nats-server.conf --routes=nats-route://ruser:T0pS3cr3t@nats:6222 -DV"
+  #link:
+  #  # Will build from a local copy 
+  #  build: ../redacted_link
+  #  environment:
+  #    - REDACTED_NATS_URLS=nats
+  #    - REDACTED_VERBOSITY=debug
+
+networks:
+  default:
+    external:
+      name: nats

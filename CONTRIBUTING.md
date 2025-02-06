@@ -10,7 +10,7 @@ git rebase origin/main
 - Compare the changes from the last release to what is in main. For [example](https://github.com/overmindtech/cli/compare/v1.3.2...main). Following [semver](https://semver.org/) choose your new version. And use it to tag a version, and push it.
 
 ```shell
-git tag v0.0.0
+git tag -s v0.0.0
 git push origin tag v0.0.0
 ```
 

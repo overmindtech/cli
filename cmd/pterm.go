@@ -14,12 +14,12 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"github.com/overmindtech/cli/tracing"
-	"github.com/overmindtech/discovery"
 	"github.com/overmindtech/pterm"
-	"github.com/overmindtech/sdp-go"
-	"github.com/overmindtech/sdp-go/auth"
-	"github.com/overmindtech/sdp-go/sdpconnect"
+	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdp-go/auth"
+	"github.com/overmindtech/cli/sdp-go/sdpconnect"
+	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
 	"github.com/spf13/cobra"
@@ -150,7 +150,7 @@ func RunRevlinkWarmup(ctx context.Context, oi sdp.OvermindInstance, postPlanPrin
 }
 
 func RunPlan(ctx context.Context, args []string) error {
-	c := exec.CommandContext(ctx, "terraform", args...) // nolint:gosec // this is a user-provided command, let them do their thing
+	c := exec.CommandContext(ctx, "terraform", args...)
 
 	// remove go's default process cancel behaviour, so that terraform has a
 	// chance to gracefully shutdown when ^C is pressed. Otherwise the
@@ -179,7 +179,7 @@ func RunPlan(ctx context.Context, args []string) error {
 }
 
 func RunApply(ctx context.Context, args []string) error {
-	c := exec.CommandContext(ctx, "terraform", args...) // nolint:gosec // this is a user-provided command, let them do their thing
+	c := exec.CommandContext(ctx, "terraform", args...)
 
 	// remove go's default process cancel behaviour, so that terraform has a
 	// chance to gracefully shutdown when ^C is pressed. Otherwise the

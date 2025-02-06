@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/overmindtech/sdp-go"
-	"github.com/overmindtech/sdp-go/sdpws"
+	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdp-go/sdpws"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -93,7 +93,7 @@ func (l *requestHandler) QueryStatus(ctx context.Context, status *sdp.QueryStatu
 		l.queriesStarted += 1
 	}
 
-	// nolint:exhaustive // we _want_ to log all other status fields as unexpected
+	//nolint:exhaustive // we _want_ to log all other status fields as unexpected
 	switch status.GetStatus() {
 	case sdp.QueryStatus_STARTED, sdp.QueryStatus_FINISHED, sdp.QueryStatus_ERRORED, sdp.QueryStatus_CANCELLED:
 		// do nothing
