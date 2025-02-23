@@ -99,8 +99,8 @@ type ErrHandler func(err error)
 // NewQueryResultStream creates a new QueryResultStream
 func NewQueryResultStream(itemHandler ItemHandler, errHandler ErrHandler) *QueryResultStream {
 	stream := &QueryResultStream{
-		items:       make(chan *sdp.Item),
-		errs:        make(chan error),
+		items:       make(chan *sdp.Item, 100),
+		errs:        make(chan error, 100),
 		itemHandler: itemHandler,
 		errHandler:  errHandler,
 		open:        true,

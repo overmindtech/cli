@@ -188,7 +188,7 @@ func (e *Engine) connect() error {
 	if e.EngineConfig.NATSOptions != nil {
 		encodedConnection, err := e.EngineConfig.NATSOptions.Connect()
 		if err != nil {
-			return fmt.Errorf("error connecting to NATS: %w", err)
+			return fmt.Errorf("error connecting to NATS '%+v' : %w", e.EngineConfig.NATSOptions.Servers, err)
 		}
 
 		e.natsConnectionMutex.Lock()

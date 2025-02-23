@@ -8,54 +8,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (a *AppMetadata) GetUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(a.GetUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
-func (a *AppProperties) GetBookmarkUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(a.GetBookmarkUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
-func (a *GetAppRequest) GetUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(a.GetUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
-func (a *UpdateAppRequest) GetUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(a.GetUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
-func (a *DeleteAppRequest) GetUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(a.GetUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
-func (a *ListAppChangesRequest) GetUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(a.GetUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
 func (a *ChangeMetadata) GetUUIDParsed() *uuid.UUID {
 	u, err := uuid.FromBytes(a.GetUUID())
 	if err != nil {
@@ -112,30 +64,6 @@ func (a *DeleteChangeRequest) GetUUIDParsed() *uuid.UUID {
 	return &u
 }
 
-func (ob *OnboardingProperties) GetAppUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(ob.GetAppUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
-func (ob *OnboardingProperties) GetAwsSourceUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(ob.GetAwsSourceUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
-func (ob *OnboardingProperties) GetChangeUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(ob.GetChangeUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
 func (x *GetChangeTimelineRequest) GetChangeUUIDParsed() *uuid.UUID {
 	u, err := uuid.FromBytes(x.GetChangeUUID())
 	if err != nil {
@@ -160,31 +88,7 @@ func (x *ListChangingItemsSummaryRequest) GetChangeUUIDParsed() *uuid.UUID {
 	return &u
 }
 
-func (x *GetAffectedAppsRequest) GetChangeUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(x.GetChangeUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
-func (x *UpdateChangingItemsRequest) GetChangeUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(x.GetChangeUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
 func (x *UpdatePlannedChangesRequest) GetChangeUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(x.GetChangeUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
-func (x *CalculateBlastRadiusRequest) GetChangeUUIDParsed() *uuid.UUID {
 	u, err := uuid.FromBytes(x.GetChangeUUID())
 	if err != nil {
 		return nil
@@ -201,14 +105,6 @@ func (x *StartChangeRequest) GetChangeUUIDParsed() *uuid.UUID {
 }
 
 func (x *EndChangeRequest) GetChangeUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(x.GetChangeUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
-func (x *SimulateChangeRequest) GetChangeUUIDParsed() *uuid.UUID {
 	u, err := uuid.FromBytes(x.GetChangeUUID())
 	if err != nil {
 		return nil
@@ -277,7 +173,6 @@ func (cm *ChangeMetadata) ToMap() map[string]any {
 		"updatedAt":           cm.GetUpdatedAt().AsTime(),
 		"status":              cm.GetStatus().String(),
 		"creatorName":         cm.GetCreatorName(),
-		"numAffectedApps":     cm.GetNumAffectedApps(),
 		"numAffectedItems":    cm.GetNumAffectedItems(),
 		"numAffectedEdges":    cm.GetNumAffectedEdges(),
 		"numUnchangedItems":   cm.GetNumUnchangedItems(),
@@ -330,10 +225,6 @@ func (id *ItemDiff) GloballyUniqueName() string {
 }
 
 func (cp *ChangeProperties) ToMap() map[string]any {
-	affectedApps := make([]string, len(cp.GetAffectedAppsUUID()))
-	for i, u := range cp.GetAffectedAppsUUID() {
-		affectedApps[i] = stringFromUuidBytes(u)
-	}
 	plannedChanges := make([]map[string]any, len(cp.GetPlannedChanges()))
 	for i, id := range cp.GetPlannedChanges() {
 		plannedChanges[i] = id.ToMap()
@@ -349,7 +240,6 @@ func (cp *ChangeProperties) ToMap() map[string]any {
 		"blastRadiusSnapshotUUID":   stringFromUuidBytes(cp.GetBlastRadiusSnapshotUUID()),
 		"systemBeforeSnapshotUUID":  stringFromUuidBytes(cp.GetSystemBeforeSnapshotUUID()),
 		"systemAfterSnapshotUUID":   stringFromUuidBytes(cp.GetSystemAfterSnapshotUUID()),
-		"affectedAppsUUID":          cp.GetAffectedAppsUUID(),
 		"plannedChanges":            cp.GetPlannedChanges(),
 		"rawPlan":                   cp.GetRawPlan(),
 		"codeChanges":               cp.GetCodeChanges(),
@@ -384,17 +274,15 @@ func (m *ChangeAnalysisStatus_ProgressMilestone) ToMap() map[string]any {
 	}
 }
 
-func (s CalculateBlastRadiusResponse_State) ToMessage() string {
+func (s UpdatePlannedChangesResponse_State) ToMessage() string {
 	switch s {
-	case CalculateBlastRadiusResponse_STATE_UNSPECIFIED:
+	case UpdatePlannedChangesResponse_STATE_UNSPECIFIED:
 		return "unknown"
-	case CalculateBlastRadiusResponse_STATE_DISCOVERING:
+	case UpdatePlannedChangesResponse_STATE_DISCOVERING:
 		return "The blast radius is being calculated"
-	case CalculateBlastRadiusResponse_STATE_SAVING:
+	case UpdatePlannedChangesResponse_STATE_SAVING:
 		return "The blast radius has been calculated and is being saved"
-	case CalculateBlastRadiusResponse_STATE_FINDING_APPS:
-		return "Determining which apps are within the blast radius"
-	case CalculateBlastRadiusResponse_STATE_DONE:
+	case UpdatePlannedChangesResponse_STATE_DONE:
 		return "The blast radius calculation is complete"
 	default:
 		return "unknown"

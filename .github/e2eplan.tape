@@ -17,5 +17,5 @@ Type@1ms "overmind terraform plan -- -out tfplan"
 Enter
 Sleep 2
 Enter
-Sleep 60
+Sleep 70
 Screenshot e2e/plan.png

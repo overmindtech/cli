@@ -292,6 +292,17 @@ func (qrb *Query_RecursionBehaviour) Copy(dest *Query_RecursionBehaviour) {
 	dest.FollowOnlyBlastPropagation = qrb.GetFollowOnlyBlastPropagation()
 }
 
+// Reference returns an SDP reference equivalent to this Query
+func (q *Query) Reference() *Reference {
+	return &Reference{
+		Scope:   q.GetScope(),
+		Type:    q.GetType(),
+		IsQuery: true,
+		Query:   q.GetQuery(),
+		Method:  q.GetMethod(),
+	}
+}
+
 // Subject returns a NATS subject for all traffic relating to this query
 func (q *Query) Subject() string {
 	return fmt.Sprintf("query.%v", q.ParseUuid())
@@ -347,23 +358,7 @@ func (x *CancelQuery) GetUUIDParsed() *uuid.UUID {
 	return &u
 }
 
-func (x *UndoQuery) GetUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(x.GetUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
 func (x *Expand) GetUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(x.GetUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
-func (x *UndoExpand) GetUUIDParsed() *uuid.UUID {
 	u, err := uuid.FromBytes(x.GetUUID())
 	if err != nil {
 		return nil

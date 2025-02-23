@@ -166,7 +166,7 @@ func InitTracerWithUpstreams(component, honeycombApiKey, sentryDSN string, opts 
 		// setup recovery for an unexpected panic in this function
 		defer sentry.Flush(2 * time.Second)
 		defer sentry.Recover()
-		log.Info("sentry configured")
+		log.Trace("sentry configured")
 	}
 
 	if honeycombApiKey != "" {
@@ -186,7 +186,6 @@ func InitTracer(component string, opts ...otlptracehttp.Option) error {
 	if err != nil {
 		return fmt.Errorf("creating OTLP trace exporter: %w", err)
 	}
-	log.Infof("otlptracehttp client configured itself: %v", client)
 
 	tracerOpts := []sdktrace.TracerProviderOption{
 		sdktrace.WithBatcher(otlpExp),

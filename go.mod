@@ -2,7 +2,7 @@ module github.com/overmindtech/cli
 
 go 1.22.7
 
-toolchain go1.23.5
+toolchain go1.24
 
 require (
 	atomicgo.dev/keyboard v0.2.9

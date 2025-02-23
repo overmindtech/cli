@@ -333,7 +333,6 @@ func isStateFile(bytes []byte) bool {
 	fields := make(map[string]interface{})
 
 	err := json.Unmarshal(bytes, &fields)
-
 	if err != nil {
 		return false
 	}

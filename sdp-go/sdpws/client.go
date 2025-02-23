@@ -129,6 +129,14 @@ func (c *Client) receive(ctx context.Context) {
 
 		typ, r, err := c.conn.Reader(ctx)
 		if err != nil {
+			var ce websocket.CloseError
+			if errors.As(err, &ce) {
+				if ce.Code == websocket.StatusNormalClosure {
+					// tear down the connection without a new error
+					c.abort(ctx, nil)
+					return
+				}
+			}
 			c.abort(ctx, fmt.Errorf("failed to initialise websocket reader: %w", err))
 			return
 		}
@@ -346,6 +354,13 @@ func (c *Client) Wait(ctx context.Context, reqIDs uuid.UUIDs) error {
 
 // abort stores the specified error and closes the connection.
 func (c *Client) abort(ctx context.Context, err error) {
+	c.closedMu.Lock()
+	if c.closed {
+		c.closedMu.Unlock()
+		return
+	}
+	c.closedMu.Unlock()
+
 	log.WithContext(ctx).WithError(err).Error("aborting client")
 	c.errMu.Lock()
 	c.err = errors.Join(c.err, err)
@@ -353,13 +368,17 @@ func (c *Client) abort(ctx context.Context, err error) {
 
 	// call this outside of the lock to avoid deadlock should other parts of the
 	// code try to call abort() when crashing out of a read or write
-	err = c.conn.Close(websocket.StatusNormalClosure, "")
+	err = c.conn.Close(websocket.StatusNormalClosure, "normal closure")
 
 	c.errMu.Lock()
 	c.err = errors.Join(c.err, err)
 	c.errMu.Unlock()
 
 	c.closedMu.Lock()
+	if c.closed {
+		c.closedMu.Unlock()
+		return
+	}
 	c.closed = true
 	c.closedCond.Broadcast()
 	c.closedMu.Unlock()

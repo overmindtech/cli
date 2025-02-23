@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -231,11 +232,13 @@ func (o NATSOptions) Connect() (sdp.EncodedConnection, error) {
 			continue
 		}
 
+		log.WithFields(lf).Info("NATS connected")
 		break
 	}
 
 	if err != nil {
-		return &sdp.EncodedConnectionImpl{}, MaxRetriesError{}
+		err = errors.Join(err, MaxRetriesError{})
+		return &sdp.EncodedConnectionImpl{}, err
 	}
 
 	return &sdp.EncodedConnectionImpl{Conn: nc}, nil

@@ -3,9 +3,9 @@ package adapters
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"testing"
 	"time"
 
@@ -15,10 +15,16 @@ import (
 const TestHTTPTimeout = 3 * time.Second
 
 type TestHTTPServer struct {
-	Server                  *httptest.Server
-	NotFoundPage            string
-	InternalServerErrorPage string
-	RedirectPage            string
+	TLSServer               *httptest.Server
+	HTTPServer              *httptest.Server
+	NotFoundPage            string // A page that returns a 404
+	InternalServerErrorPage string // A page that returns a 500
+	RedirectPage            string // A page that returns a 301
+	SlowPage                string // A page that takes longer than the timeout to respond
+	OKPage                  string // A page that returns a 200
+	OKPageNoTLS             string // A page that returns a 200 without TLS
+	Host                    string
+	Port                    string
 }
 
 func NewTestServer() (*TestHTTPServer, error) {
@@ -45,45 +51,62 @@ func NewTestServer() (*TestHTTPServer, error) {
 		w.WriteHeader(301)
 	}))
 
-	server := httptest.NewServer(sm)
+	sm.Handle("/200", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := w.Write([]byte("ok innit"))
+		if err != nil {
+			return
+		}
+	}))
+
+	sm.Handle("/slow", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(500 * time.Millisecond)
+		_, err := w.Write([]byte("ok innit"))
+		if err != nil {
+			return
+		}
+	}))
+
+	tlsServer := httptest.NewTLSServer(sm)
+	httpServer := httptest.NewServer(sm)
+
+	host, port, err := net.SplitHostPort(tlsServer.Listener.Addr().String())
+	if err != nil {
+		return nil, err
+	}
 
 	return &TestHTTPServer{
-		Server:                  server,
-		NotFoundPage:            fmt.Sprintf("%v/404", server.URL),
-		InternalServerErrorPage: fmt.Sprintf("%v/500", server.URL),
-		RedirectPage:            fmt.Sprintf("%v/301", server.URL),
+		TLSServer:               tlsServer,
+		HTTPServer:              httpServer,
+		NotFoundPage:            fmt.Sprintf("%v/404", tlsServer.URL),
+		InternalServerErrorPage: fmt.Sprintf("%v/500", tlsServer.URL),
+		RedirectPage:            fmt.Sprintf("%v/301", tlsServer.URL),
+		OKPage:                  fmt.Sprintf("%v/200", tlsServer.URL),
+		OKPageNoTLS:             fmt.Sprintf("%v/200", httpServer.URL),
+		SlowPage:                fmt.Sprintf("%v/slow", tlsServer.URL),
+		Host:                    host,
+		Port:                    port,
 	}, nil
+}
+
+func (t *TestHTTPServer) Close() {
+	if t.TLSServer != nil {
+		t.TLSServer.Close()
+	}
+	if t.HTTPServer != nil {
+		t.HTTPServer.Close()
+	}
 }
 
 func TestHTTPGet(t *testing.T) {
 	src := HTTPAdapter{}
+	server, err := NewTestServer()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer server.TLSServer.Close()
 
-	t.Run("With a valid endpoint", func(t *testing.T) {
-		item, err := src.Get(context.Background(), "global", "https://www.google.com", false)
-
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if i, err := item.GetAttributes().Get("tls"); err == nil {
-			if tlsMap, ok := i.(map[string]interface{}); ok {
-				certName := fmt.Sprint(tlsMap["certificate"])
-
-				if matched, _ := regexp.MatchString(`www.google.com \(SHA-256: `, certName); !matched {
-					t.Errorf("expected cert name to match www.google.com (SHA-256: , got: %v", certName)
-				}
-			} else {
-				t.Error("expected tls to be map[string]interface{}")
-			}
-		} else {
-			t.Error("expected item to have tls info")
-		}
-
-		discovery.TestValidateItem(t, item)
-	})
-
-	t.Run("With a specified port", func(t *testing.T) {
-		item, err := src.Get(context.Background(), "global", "https://www.google.com:443", false)
+	t.Run("With a specified port and dns name", func(t *testing.T) {
+		item, err := src.Get(context.Background(), "global", fmt.Sprintf("https://localhost:%v", server.Port), false)
 
 		if err != nil {
 			t.Fatal(err)
@@ -96,8 +119,8 @@ func TestHTTPGet(t *testing.T) {
 			case "dns":
 				dnsFound = true
 
-				if link.GetQuery().GetQuery() != "www.google.com" {
-					t.Errorf("expected dns query to be www.google.com, got %v", link.GetQuery())
+				if link.GetQuery().GetQuery() != "localhost" {
+					t.Errorf("expected dns query to be localhost, got %v", link.GetQuery())
 				}
 			}
 		}
@@ -110,7 +133,7 @@ func TestHTTPGet(t *testing.T) {
 	})
 
 	t.Run("With an IP", func(t *testing.T) {
-		item, err := src.Get(context.Background(), "global", "https://1.1.1.1:443", false)
+		item, err := src.Get(context.Background(), "global", server.OKPage, false)
 
 		if err != nil {
 			t.Fatal(err)
@@ -123,8 +146,8 @@ func TestHTTPGet(t *testing.T) {
 			case "ip":
 				ipFound = true
 
-				if link.GetQuery().GetQuery() != "1.1.1.1" {
-					t.Errorf("expected dns query to be 1.1.1.1, got %v", link.GetQuery())
+				if link.GetQuery().GetQuery() != "127.0.0.1" {
+					t.Errorf("expected dns query to be 127.0.0.1, got %v", link.GetQuery())
 				}
 			}
 		}
@@ -137,15 +160,7 @@ func TestHTTPGet(t *testing.T) {
 	})
 
 	t.Run("With a 404", func(t *testing.T) {
-		s, err := NewTestServer()
-
-		if err != nil {
-			t.Error(err)
-		}
-
-		defer s.Server.Close()
-
-		item, err := src.Get(context.Background(), "global", s.NotFoundPage, false)
+		item, err := src.Get(context.Background(), "global", server.NotFoundPage, false)
 
 		if err != nil {
 			t.Fatal(err)
@@ -169,7 +184,7 @@ func TestHTTPGet(t *testing.T) {
 	t.Run("With a timeout", func(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer cancel()
-		item, err := src.Get(ctx, "global", "http://www.google.com:81/", false)
+		item, err := src.Get(ctx, "global", server.SlowPage, false)
 
 		if err == nil {
 			t.Errorf("Expected timeout but got %v", item.String())
@@ -177,15 +192,7 @@ func TestHTTPGet(t *testing.T) {
 	})
 
 	t.Run("With a 500 error", func(t *testing.T) {
-		s, err := NewTestServer()
-
-		if err != nil {
-			t.Error(err)
-		}
-
-		defer s.Server.Close()
-
-		item, err := src.Get(context.Background(), "global", s.InternalServerErrorPage, false)
+		item, err := src.Get(context.Background(), "global", server.InternalServerErrorPage, false)
 
 		if err != nil {
 			t.Fatal(err)
@@ -207,15 +214,7 @@ func TestHTTPGet(t *testing.T) {
 	})
 
 	t.Run("With a 301 redirect", func(t *testing.T) {
-		s, err := NewTestServer()
-
-		if err != nil {
-			t.Error(err)
-		}
-
-		defer s.Server.Close()
-
-		item, err := src.Get(context.Background(), "global", s.RedirectPage, false)
+		item, err := src.Get(context.Background(), "global", server.RedirectPage, false)
 
 		if err != nil {
 			t.Fatal(err)
@@ -241,7 +240,7 @@ func TestHTTPGet(t *testing.T) {
 	})
 
 	t.Run("With no TLS", func(t *testing.T) {
-		item, err := src.Get(context.Background(), "global", "http://neverssl.com", false)
+		item, err := src.Get(context.Background(), "global", server.OKPageNoTLS, false)
 
 		if err != nil {
 			t.Fatal(err)

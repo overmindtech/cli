@@ -154,6 +154,5 @@ func Unmarshal(ctx context.Context, b []byte, m proto.Message) error {
 //go:generate go run genhandler.go Query
 //go:generate go run genhandler.go QueryResponse
 //go:generate go run genhandler.go CancelQuery
-//go:generate go run genhandler.go UndoQuery
 
 //go:generate go run genhandler.go GatewayResponse

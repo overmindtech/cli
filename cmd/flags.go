@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/overmindtech/cli/sdp-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -31,16 +32,30 @@ func addChangeCreationFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringSlice("tags", []string{}, "Tags to apply to this change, these should be specified in key=value format. Multiple tags can be specified by repeating the flag or using a comma separated list.")
 }
 
-func parseTagsArgument() (map[string]string, error) {
+func parseTagsArgument() (*sdp.EnrichedTags, error) {
 	tags := map[string]string{}
+	// get into key pair
 	for _, tag := range viper.GetStringSlice("tags") {
 		parts := strings.SplitN(tag, "=", 2)
 		if len(parts) != 2 {
-			return tags, fmt.Errorf("invalid tag format: %s", tag)
+			return nil, fmt.Errorf("invalid tag format: %s", tag)
 		}
 		tags[parts[0]] = parts[1]
 	}
-	return tags, nil
+	// put into enriched tags
+	enrichedTags := &sdp.EnrichedTags{
+		TagValue: make(map[string]*sdp.TagValue),
+	}
+	for key, value := range tags {
+		enrichedTags.TagValue[key] = &sdp.TagValue{
+			Value: &sdp.TagValue_UserTagValue{
+				UserTagValue: &sdp.UserTagValue{
+					Value: value,
+				},
+			},
+		}
+	}
+	return enrichedTags, nil
 }
 
 // Adds common flags to API commands e.g. timeout
