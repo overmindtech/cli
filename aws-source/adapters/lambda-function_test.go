@@ -164,7 +164,7 @@ func (t *TestLambdaClient) ListFunctions(context.Context, *lambda.ListFunctionsI
 	}, nil
 }
 
-func (t TestLambdaClient) GetPolicy(ctx context.Context, params *lambda.GetPolicyInput, optFns ...func(*lambda.Options)) (*lambda.GetPolicyOutput, error) {
+func (t *TestLambdaClient) GetPolicy(ctx context.Context, params *lambda.GetPolicyInput, optFns ...func(*lambda.Options)) (*lambda.GetPolicyOutput, error) {
 	return &lambda.GetPolicyOutput{
 		Policy: &testPolicyJSON,
 	}, nil

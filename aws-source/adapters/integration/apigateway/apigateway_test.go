@@ -2,6 +2,7 @@ package apigateway
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
@@ -28,6 +29,8 @@ func APIGateway(t *testing.T) {
 
 	t.Log("Running APIGateway integration test")
 
+	// Resources ------------------------------------------------------------------------------------------------------
+
 	restApiSource := adapters.NewAPIGatewayRestApiAdapter(testClient, accountID, testAWSConfig.Region)
 
 	err = restApiSource.Validate()
@@ -41,6 +44,36 @@ func APIGateway(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway resource adapter: %v", err)
 	}
+
+	methodSource := adapters.NewAPIGatewayMethodAdapter(testClient, accountID, testAWSConfig.Region)
+
+	err = methodSource.Validate()
+	if err != nil {
+		t.Fatalf("failed to validate APIGateway method adapter: %v", err)
+	}
+
+	methodResponseSource := adapters.NewAPIGatewayMethodResponseAdapter(testClient, accountID, testAWSConfig.Region)
+
+	err = methodResponseSource.Validate()
+	if err != nil {
+		t.Fatalf("failed to validate APIGateway method response adapter: %v", err)
+	}
+
+	integrationSource := adapters.NewAPIGatewayIntegrationAdapter(testClient, accountID, testAWSConfig.Region)
+
+	err = integrationSource.Validate()
+	if err != nil {
+		t.Fatalf("failed to validate APIGateway integration adapter: %v", err)
+	}
+
+	apiKeySource := adapters.NewAPIGatewayApiKeyAdapter(testClient, accountID, testAWSConfig.Region)
+
+	err = apiKeySource.Validate()
+	if err != nil {
+		t.Fatalf("failed to validate APIGateway API key adapter: %v", err)
+	}
+
+	// Tests ----------------------------------------------------------------------------------------------------------
 
 	scope := adapterhelpers.FormatScope(accountID, testAWSConfig.Region)
 
@@ -155,4 +188,122 @@ func APIGateway(t *testing.T) {
 	if resourceUniqueAttrFromSearch != resourceUniqueAttrFromGet {
 		t.Fatalf("expected resource ID %s, got %s", resourceUniqueAttrFromSearch, resourceUniqueAttrFromGet)
 	}
+
+	// Get method
+	methodID := fmt.Sprintf("%s/GET", resourceUniqueAttrFromGet) // resourceUniqueAttribute contains the restApiID
+	method, err := methodSource.Get(ctx, scope, methodID, true)
+	if err != nil {
+		t.Fatalf("failed to get APIGateway method: %v", err)
+	}
+
+	uniqueMethodAttr, err := method.GetAttributes().Get(method.GetUniqueAttribute())
+	if err != nil {
+		t.Fatalf("failed to get unique method attribute: %v", err)
+	}
+
+	if uniqueMethodAttr != methodID {
+		t.Fatalf("expected method ID %s, got %s", methodID, uniqueMethodAttr)
+	}
+
+	// Get method response
+	methodResponseID := fmt.Sprintf("%s/200", methodID)
+	methodResponse, err := methodResponseSource.Get(ctx, scope, methodResponseID, true)
+	if err != nil {
+		t.Fatalf("failed to get APIGateway method response: %v", err)
+	}
+
+	uniqueMethodResponseAttr, err := methodResponse.GetAttributes().Get(methodResponse.GetUniqueAttribute())
+	if err != nil {
+		t.Fatalf("failed to get unique method response attribute: %v", err)
+	}
+
+	if uniqueMethodResponseAttr != methodResponseID {
+		t.Fatalf("expected method response ID %s, got %s", methodResponseID, uniqueMethodResponseAttr)
+	}
+
+	// Get integration
+	integrationID := fmt.Sprintf("%s/GET", resourceUniqueAttrFromGet) // resourceUniqueAttribute contains the restApiID
+	itgr, err := integrationSource.Get(ctx, scope, integrationID, true)
+	if err != nil {
+		t.Fatalf("failed to get APIGateway itgr: %v", err)
+	}
+
+	uniqueIntegrationAttr, err := itgr.GetAttributes().Get(itgr.GetUniqueAttribute())
+	if err != nil {
+		t.Fatalf("failed to get unique itgr attribute: %v", err)
+	}
+
+	if uniqueIntegrationAttr != integrationID {
+		t.Fatalf("expected integration ID %s, got %s", integrationID, uniqueIntegrationAttr)
+	}
+
+	// List API keys
+	apiKeys, err := apiKeySource.List(ctx, scope, true)
+	if err != nil {
+		t.Fatalf("failed to list APIGateway API keys: %v", err)
+	}
+
+	if len(apiKeys) == 0 {
+		t.Fatalf("no API keys found")
+	}
+
+	apiKeyUniqueAttribute := apiKeys[0].GetUniqueAttribute()
+
+	apiKeyID, err := integration.GetUniqueAttributeValueByTags(
+		apiKeyUniqueAttribute,
+		apiKeys,
+		integration.ResourceTags(integration.APIGateway, apiKeySrc),
+		true,
+	)
+	if err != nil {
+		t.Fatalf("failed to get API key ID: %v", err)
+	}
+
+	// Get API key
+	apiKey, err := apiKeySource.Get(ctx, scope, apiKeyID, true)
+	if err != nil {
+		t.Fatalf("failed to get APIGateway API key: %v", err)
+	}
+
+	apiKeyIDFromGet, err := integration.GetUniqueAttributeValueByTags(
+		apiKeyUniqueAttribute,
+		[]*sdp.Item{apiKey},
+		integration.ResourceTags(integration.APIGateway, apiKeySrc),
+		true,
+	)
+	if err != nil {
+		t.Fatalf("failed to get API key ID from get: %v", err)
+	}
+
+	if apiKeyID != apiKeyIDFromGet {
+		t.Fatalf("expected API key ID %s, got %s", apiKeyID, apiKeyIDFromGet)
+	}
+
+	// Search API keys
+	apiKeyName := integration.ResourceName(integration.APIGateway, apiKeySrc, integration.TestID())
+	apiKeysFromSearch, err := apiKeySource.Search(ctx, scope, apiKeyName, true)
+	if err != nil {
+		t.Fatalf("failed to search APIGateway API keys: %v", err)
+	}
+
+	if len(apiKeysFromSearch) == 0 {
+		t.Fatalf("no API keys found")
+	}
+
+	apiKeyIDFromSearch, err := integration.GetUniqueAttributeValueBySignificantAttribute(
+		apiKeyUniqueAttribute,
+		"Name",
+		apiKeyName,
+		apiKeysFromSearch,
+		true,
+	)
+	if err != nil {
+		t.Fatalf("failed to get API key ID from search: %v", err)
+	}
+
+	if apiKeyID != apiKeyIDFromSearch {
+		t.Fatalf("expected API key ID %s, got %s", apiKeyID, apiKeyIDFromSearch)
+	}
+
+	t.Log("APIGateway integration test completed")
 }

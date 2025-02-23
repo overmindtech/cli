@@ -35,22 +35,6 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// ChangesServiceListAppsProcedure is the fully-qualified name of the ChangesService's ListApps RPC.
-	ChangesServiceListAppsProcedure = "/changes.ChangesService/ListApps"
-	// ChangesServiceCreateAppProcedure is the fully-qualified name of the ChangesService's CreateApp
-	// RPC.
-	ChangesServiceCreateAppProcedure = "/changes.ChangesService/CreateApp"
-	// ChangesServiceCreateSimpleAppProcedure is the fully-qualified name of the ChangesService's
-	// CreateSimpleApp RPC.
-	ChangesServiceCreateSimpleAppProcedure = "/changes.ChangesService/CreateSimpleApp"
-	// ChangesServiceGetAppProcedure is the fully-qualified name of the ChangesService's GetApp RPC.
-	ChangesServiceGetAppProcedure = "/changes.ChangesService/GetApp"
-	// ChangesServiceUpdateAppProcedure is the fully-qualified name of the ChangesService's UpdateApp
-	// RPC.
-	ChangesServiceUpdateAppProcedure = "/changes.ChangesService/UpdateApp"
-	// ChangesServiceDeleteAppProcedure is the fully-qualified name of the ChangesService's DeleteApp
-	// RPC.
-	ChangesServiceDeleteAppProcedure = "/changes.ChangesService/DeleteApp"
 	// ChangesServiceListChangesProcedure is the fully-qualified name of the ChangesService's
 	// ListChanges RPC.
 	ChangesServiceListChangesProcedure = "/changes.ChangesService/ListChanges"
@@ -84,51 +68,18 @@ const (
 	// ChangesServiceRefreshStateProcedure is the fully-qualified name of the ChangesService's
 	// RefreshState RPC.
 	ChangesServiceRefreshStateProcedure = "/changes.ChangesService/RefreshState"
-	// ChangesServiceCalculateBlastRadiusProcedure is the fully-qualified name of the ChangesService's
-	// CalculateBlastRadius RPC.
-	ChangesServiceCalculateBlastRadiusProcedure = "/changes.ChangesService/CalculateBlastRadius"
 	// ChangesServiceStartChangeProcedure is the fully-qualified name of the ChangesService's
 	// StartChange RPC.
 	ChangesServiceStartChangeProcedure = "/changes.ChangesService/StartChange"
 	// ChangesServiceEndChangeProcedure is the fully-qualified name of the ChangesService's EndChange
 	// RPC.
 	ChangesServiceEndChangeProcedure = "/changes.ChangesService/EndChange"
-	// ChangesServiceSimulateChangeProcedure is the fully-qualified name of the ChangesService's
-	// SimulateChange RPC.
-	ChangesServiceSimulateChangeProcedure = "/changes.ChangesService/SimulateChange"
-	// ChangesServiceGetOnboardingProcedure is the fully-qualified name of the ChangesService's
-	// GetOnboarding RPC.
-	ChangesServiceGetOnboardingProcedure = "/changes.ChangesService/GetOnboarding"
-	// ChangesServiceUpdateOnboardingProcedure is the fully-qualified name of the ChangesService's
-	// UpdateOnboarding RPC.
-	ChangesServiceUpdateOnboardingProcedure = "/changes.ChangesService/UpdateOnboarding"
-	// ChangesServiceListHomeAppsProcedure is the fully-qualified name of the ChangesService's
-	// ListHomeApps RPC.
-	ChangesServiceListHomeAppsProcedure = "/changes.ChangesService/ListHomeApps"
 	// ChangesServiceListHomeChangesProcedure is the fully-qualified name of the ChangesService's
 	// ListHomeChanges RPC.
 	ChangesServiceListHomeChangesProcedure = "/changes.ChangesService/ListHomeChanges"
-	// ChangesServiceGetAppSummaryProcedure is the fully-qualified name of the ChangesService's
-	// GetAppSummary RPC.
-	ChangesServiceGetAppSummaryProcedure = "/changes.ChangesService/GetAppSummary"
-	// ChangesServiceGetAppSummariesProcedure is the fully-qualified name of the ChangesService's
-	// GetAppSummaries RPC.
-	ChangesServiceGetAppSummariesProcedure = "/changes.ChangesService/GetAppSummaries"
-	// ChangesServiceListAppChangesProcedure is the fully-qualified name of the ChangesService's
-	// ListAppChanges RPC.
-	ChangesServiceListAppChangesProcedure = "/changes.ChangesService/ListAppChanges"
-	// ChangesServiceListAppChangesSummaryProcedure is the fully-qualified name of the ChangesService's
-	// ListAppChangesSummary RPC.
-	ChangesServiceListAppChangesSummaryProcedure = "/changes.ChangesService/ListAppChangesSummary"
-	// ChangesServiceUpdateChangingItemsProcedure is the fully-qualified name of the ChangesService's
-	// UpdateChangingItems RPC.
-	ChangesServiceUpdateChangingItemsProcedure = "/changes.ChangesService/UpdateChangingItems"
 	// ChangesServiceUpdatePlannedChangesProcedure is the fully-qualified name of the ChangesService's
 	// UpdatePlannedChanges RPC.
 	ChangesServiceUpdatePlannedChangesProcedure = "/changes.ChangesService/UpdatePlannedChanges"
-	// ChangesServiceGetAffectedAppsProcedure is the fully-qualified name of the ChangesService's
-	// GetAffectedApps RPC.
-	ChangesServiceGetAffectedAppsProcedure = "/changes.ChangesService/GetAffectedApps"
 	// ChangesServiceListChangingItemsSummaryProcedure is the fully-qualified name of the
 	// ChangesService's ListChangingItemsSummary RPC.
 	ChangesServiceListChangingItemsSummaryProcedure = "/changes.ChangesService/ListChangingItemsSummary"
@@ -162,19 +113,6 @@ const (
 
 // ChangesServiceClient is a client for the changes.ChangesService service.
 type ChangesServiceClient interface {
-	// Lists all apps
-	ListApps(context.Context, *connect.Request[sdp_go.ListAppsRequest]) (*connect.Response[sdp_go.ListAppsResponse], error)
-	// Creates a new app
-	CreateApp(context.Context, *connect.Request[sdp_go.CreateAppRequest]) (*connect.Response[sdp_go.CreateAppResponse], error)
-	// Creates an app using just a URL as input. This automatically creates and
-	// sets the bookmark UUID, along with the url for display in the GUI
-	CreateSimpleApp(context.Context, *connect.Request[sdp_go.CreateSimpleAppRequest]) (*connect.Response[sdp_go.CreateSimpleAppResponse], error)
-	// Gets the details of an existing app
-	GetApp(context.Context, *connect.Request[sdp_go.GetAppRequest]) (*connect.Response[sdp_go.GetAppResponse], error)
-	// Updates an existing app
-	UpdateApp(context.Context, *connect.Request[sdp_go.UpdateAppRequest]) (*connect.Response[sdp_go.UpdateAppResponse], error)
-	// Deletes an app
-	DeleteApp(context.Context, *connect.Request[sdp_go.DeleteAppRequest]) (*connect.Response[sdp_go.DeleteAppResponse], error)
 	// Lists all changes
 	ListChanges(context.Context, *connect.Request[sdp_go.ListChangesRequest]) (*connect.Response[sdp_go.ListChangesResponse], error)
 	// list all changes in a specific status
@@ -198,12 +136,6 @@ type ChangesServiceClient interface {
 	// Ask the gateway to refresh all internal caches and status slots
 	// The RPC will return immediately doing all processing in the background
 	RefreshState(context.Context, *connect.Request[sdp_go.RefreshStateRequest]) (*connect.Response[sdp_go.RefreshStateResponse], error)
-	// Calculates the blast radius of a change using the
-	// `changingItemsBookmarkUUID` as the starting point. If the
-	// `changingItemsBookmarkUUID` is blank, this will return an error.
-	// Returns a stream of status updates. The response stream closes when all calculating has been done.
-	// Executing this RPC will move the Change to the `STATUS_DEFINING` state or return an error.
-	CalculateBlastRadius(context.Context, *connect.Request[sdp_go.CalculateBlastRadiusRequest]) (*connect.ServerStreamForClient[sdp_go.CalculateBlastRadiusResponse], error)
 	// Executing this RPC take a snapshot of the current blast radius and store it
 	// in `systemBeforeSnapshotUUID` and then advance the status to
 	// `STATUS_HAPPENING`. It can only be called once per change.
@@ -212,43 +144,15 @@ type ChangesServiceClient interface {
 	// the change diff and stores it as a list of DiffedItems and
 	// advances the change status to `STATUS_DONE`
 	EndChange(context.Context, *connect.Request[sdp_go.EndChangeRequest]) (*connect.ServerStreamForClient[sdp_go.EndChangeResponse], error)
-	// Simulates a change without the user actually having to do anything. The
-	// change specified in the request should be in the `STATUS_DEFINING` state.
-	// It will be moved to the `STATUS_DONE` state after the simulation is
-	// complete.
-	SimulateChange(context.Context, *connect.Request[sdp_go.SimulateChangeRequest]) (*connect.ServerStreamForClient[sdp_go.SimulateChangeResponse], error)
-	GetOnboarding(context.Context, *connect.Request[sdp_go.GetOnboardingRequest]) (*connect.Response[sdp_go.GetOnboardingResponse], error)
-	UpdateOnboarding(context.Context, *connect.Request[sdp_go.UpdateOnboardingRequest]) (*connect.Response[sdp_go.UpdateOnboardingResponse], error)
-	// Lists all apps, designed for use in the apps home page
-	ListHomeApps(context.Context, *connect.Request[sdp_go.ListHomeAppsRequest]) (*connect.Response[sdp_go.ListHomeAppsResponse], error)
 	// Lists all changes, designed for use in the changes home page
 	ListHomeChanges(context.Context, *connect.Request[sdp_go.ListHomeChangesRequest]) (*connect.Response[sdp_go.ListHomeChangesResponse], error)
-	// Gets a summary of an app, used when a user clicks on a given app
-	GetAppSummary(context.Context, *connect.Request[sdp_go.GetAppSummaryRequest]) (*connect.Response[sdp_go.GetAppSummaryResponse], error)
-	// Gets a summaries of a list of apps
-	GetAppSummaries(context.Context, *connect.Request[sdp_go.GetAppSummariesRequest]) (*connect.Response[sdp_go.GetAppSummariesResponse], error)
-	// Lists all changes affecting an app
-	ListAppChanges(context.Context, *connect.Request[sdp_go.ListAppChangesRequest]) (*connect.Response[sdp_go.ListAppChangesResponse], error)
-	// Lists all changes affecting an app, returning only a summary of each change
-	// rather than the full details
-	ListAppChangesSummary(context.Context, *connect.Request[sdp_go.ListAppChangesSummaryRequest]) (*connect.Response[sdp_go.ListAppChangesSummaryResponse], error)
-	// This sets the items that are changing in a given change, and updates the
-	// blast radius. In the backend this will convert the references to GET
-	// requests, save them to a bookmark, and set this as the
-	// changingItemsBookmarkUUID in the change itself before triggering a blast
-	// radius calculation
-	UpdateChangingItems(context.Context, *connect.Request[sdp_go.UpdateChangingItemsRequest]) (*connect.ServerStreamForClient[sdp_go.CalculateBlastRadiusResponse], error)
 	// This sets the item diffs that are changing in a given change, and updates
 	// the blast radius. In the backend this will save the item diffs for later
 	// display and use the item's references to fabricate a bookmark, and set this
 	// as changingItemsBookmarkUUID in the change itself before triggering a blast
 	// radius calculation. Note that not all of the changing items have to exist
 	// in our current sources.
-	UpdatePlannedChanges(context.Context, *connect.Request[sdp_go.UpdatePlannedChangesRequest]) (*connect.ServerStreamForClient[sdp_go.CalculateBlastRadiusResponse], error)
-	// Returns a list of apps that are affected by this change. This is calculated
-	// by looking at the blast radius snapshot and finding all apps that have
-	// items in the snapshot.
-	GetAffectedApps(context.Context, *connect.Request[sdp_go.GetAffectedAppsRequest]) (*connect.Response[sdp_go.GetAffectedAppsResponse], error)
+	UpdatePlannedChanges(context.Context, *connect.Request[sdp_go.UpdatePlannedChangesRequest]) (*connect.ServerStreamForClient[sdp_go.UpdatePlannedChangesResponse], error)
 	// Gets the diff summary for all items that were planned to change as part of
 	// this change. This includes the high level details of the item, and the
 	// status (e.g. changed, deleted) but not the diff itself
@@ -271,42 +175,6 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 	baseURL = strings.TrimRight(baseURL, "/")
 	changesServiceMethods := sdp_go.File_changes_proto.Services().ByName("ChangesService").Methods()
 	return &changesServiceClient{
-		listApps: connect.NewClient[sdp_go.ListAppsRequest, sdp_go.ListAppsResponse](
-			httpClient,
-			baseURL+ChangesServiceListAppsProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("ListApps")),
-			connect.WithClientOptions(opts...),
-		),
-		createApp: connect.NewClient[sdp_go.CreateAppRequest, sdp_go.CreateAppResponse](
-			httpClient,
-			baseURL+ChangesServiceCreateAppProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("CreateApp")),
-			connect.WithClientOptions(opts...),
-		),
-		createSimpleApp: connect.NewClient[sdp_go.CreateSimpleAppRequest, sdp_go.CreateSimpleAppResponse](
-			httpClient,
-			baseURL+ChangesServiceCreateSimpleAppProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("CreateSimpleApp")),
-			connect.WithClientOptions(opts...),
-		),
-		getApp: connect.NewClient[sdp_go.GetAppRequest, sdp_go.GetAppResponse](
-			httpClient,
-			baseURL+ChangesServiceGetAppProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("GetApp")),
-			connect.WithClientOptions(opts...),
-		),
-		updateApp: connect.NewClient[sdp_go.UpdateAppRequest, sdp_go.UpdateAppResponse](
-			httpClient,
-			baseURL+ChangesServiceUpdateAppProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("UpdateApp")),
-			connect.WithClientOptions(opts...),
-		),
-		deleteApp: connect.NewClient[sdp_go.DeleteAppRequest, sdp_go.DeleteAppResponse](
-			httpClient,
-			baseURL+ChangesServiceDeleteAppProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("DeleteApp")),
-			connect.WithClientOptions(opts...),
-		),
 		listChanges: connect.NewClient[sdp_go.ListChangesRequest, sdp_go.ListChangesResponse](
 			httpClient,
 			baseURL+ChangesServiceListChangesProcedure,
@@ -373,12 +241,6 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(changesServiceMethods.ByName("RefreshState")),
 			connect.WithClientOptions(opts...),
 		),
-		calculateBlastRadius: connect.NewClient[sdp_go.CalculateBlastRadiusRequest, sdp_go.CalculateBlastRadiusResponse](
-			httpClient,
-			baseURL+ChangesServiceCalculateBlastRadiusProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("CalculateBlastRadius")),
-			connect.WithClientOptions(opts...),
-		),
 		startChange: connect.NewClient[sdp_go.StartChangeRequest, sdp_go.StartChangeResponse](
 			httpClient,
 			baseURL+ChangesServiceStartChangeProcedure,
@@ -391,76 +253,16 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(changesServiceMethods.ByName("EndChange")),
 			connect.WithClientOptions(opts...),
 		),
-		simulateChange: connect.NewClient[sdp_go.SimulateChangeRequest, sdp_go.SimulateChangeResponse](
-			httpClient,
-			baseURL+ChangesServiceSimulateChangeProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("SimulateChange")),
-			connect.WithClientOptions(opts...),
-		),
-		getOnboarding: connect.NewClient[sdp_go.GetOnboardingRequest, sdp_go.GetOnboardingResponse](
-			httpClient,
-			baseURL+ChangesServiceGetOnboardingProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("GetOnboarding")),
-			connect.WithClientOptions(opts...),
-		),
-		updateOnboarding: connect.NewClient[sdp_go.UpdateOnboardingRequest, sdp_go.UpdateOnboardingResponse](
-			httpClient,
-			baseURL+ChangesServiceUpdateOnboardingProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("UpdateOnboarding")),
-			connect.WithClientOptions(opts...),
-		),
-		listHomeApps: connect.NewClient[sdp_go.ListHomeAppsRequest, sdp_go.ListHomeAppsResponse](
-			httpClient,
-			baseURL+ChangesServiceListHomeAppsProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("ListHomeApps")),
-			connect.WithClientOptions(opts...),
-		),
 		listHomeChanges: connect.NewClient[sdp_go.ListHomeChangesRequest, sdp_go.ListHomeChangesResponse](
 			httpClient,
 			baseURL+ChangesServiceListHomeChangesProcedure,
 			connect.WithSchema(changesServiceMethods.ByName("ListHomeChanges")),
 			connect.WithClientOptions(opts...),
 		),
-		getAppSummary: connect.NewClient[sdp_go.GetAppSummaryRequest, sdp_go.GetAppSummaryResponse](
-			httpClient,
-			baseURL+ChangesServiceGetAppSummaryProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("GetAppSummary")),
-			connect.WithClientOptions(opts...),
-		),
-		getAppSummaries: connect.NewClient[sdp_go.GetAppSummariesRequest, sdp_go.GetAppSummariesResponse](
-			httpClient,
-			baseURL+ChangesServiceGetAppSummariesProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("GetAppSummaries")),
-			connect.WithClientOptions(opts...),
-		),
-		listAppChanges: connect.NewClient[sdp_go.ListAppChangesRequest, sdp_go.ListAppChangesResponse](
-			httpClient,
-			baseURL+ChangesServiceListAppChangesProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("ListAppChanges")),
-			connect.WithClientOptions(opts...),
-		),
-		listAppChangesSummary: connect.NewClient[sdp_go.ListAppChangesSummaryRequest, sdp_go.ListAppChangesSummaryResponse](
-			httpClient,
-			baseURL+ChangesServiceListAppChangesSummaryProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("ListAppChangesSummary")),
-			connect.WithClientOptions(opts...),
-		),
-		updateChangingItems: connect.NewClient[sdp_go.UpdateChangingItemsRequest, sdp_go.CalculateBlastRadiusResponse](
-			httpClient,
-			baseURL+ChangesServiceUpdateChangingItemsProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("UpdateChangingItems")),
-			connect.WithClientOptions(opts...),
-		),
-		updatePlannedChanges: connect.NewClient[sdp_go.UpdatePlannedChangesRequest, sdp_go.CalculateBlastRadiusResponse](
+		updatePlannedChanges: connect.NewClient[sdp_go.UpdatePlannedChangesRequest, sdp_go.UpdatePlannedChangesResponse](
 			httpClient,
 			baseURL+ChangesServiceUpdatePlannedChangesProcedure,
 			connect.WithSchema(changesServiceMethods.ByName("UpdatePlannedChanges")),
-			connect.WithClientOptions(opts...),
-		),
-		getAffectedApps: connect.NewClient[sdp_go.GetAffectedAppsRequest, sdp_go.GetAffectedAppsResponse](
-			httpClient,
-			baseURL+ChangesServiceGetAffectedAppsProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("GetAffectedApps")),
 			connect.WithClientOptions(opts...),
 		),
 		listChangingItemsSummary: connect.NewClient[sdp_go.ListChangingItemsSummaryRequest, sdp_go.ListChangingItemsSummaryResponse](
@@ -486,12 +288,6 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // changesServiceClient implements ChangesServiceClient.
 type changesServiceClient struct {
-	listApps                  *connect.Client[sdp_go.ListAppsRequest, sdp_go.ListAppsResponse]
-	createApp                 *connect.Client[sdp_go.CreateAppRequest, sdp_go.CreateAppResponse]
-	createSimpleApp           *connect.Client[sdp_go.CreateSimpleAppRequest, sdp_go.CreateSimpleAppResponse]
-	getApp                    *connect.Client[sdp_go.GetAppRequest, sdp_go.GetAppResponse]
-	updateApp                 *connect.Client[sdp_go.UpdateAppRequest, sdp_go.UpdateAppResponse]
-	deleteApp                 *connect.Client[sdp_go.DeleteAppRequest, sdp_go.DeleteAppResponse]
 	listChanges               *connect.Client[sdp_go.ListChangesRequest, sdp_go.ListChangesResponse]
 	listChangesByStatus       *connect.Client[sdp_go.ListChangesByStatusRequest, sdp_go.ListChangesByStatusResponse]
 	createChange              *connect.Client[sdp_go.CreateChangeRequest, sdp_go.CreateChangeResponse]
@@ -503,54 +299,13 @@ type changesServiceClient struct {
 	listChangesBySnapshotUUID *connect.Client[sdp_go.ListChangesBySnapshotUUIDRequest, sdp_go.ListChangesBySnapshotUUIDResponse]
 	getChangeTimeline         *connect.Client[sdp_go.GetChangeTimelineRequest, sdp_go.GetChangeTimelineResponse]
 	refreshState              *connect.Client[sdp_go.RefreshStateRequest, sdp_go.RefreshStateResponse]
-	calculateBlastRadius      *connect.Client[sdp_go.CalculateBlastRadiusRequest, sdp_go.CalculateBlastRadiusResponse]
 	startChange               *connect.Client[sdp_go.StartChangeRequest, sdp_go.StartChangeResponse]
 	endChange                 *connect.Client[sdp_go.EndChangeRequest, sdp_go.EndChangeResponse]
-	simulateChange            *connect.Client[sdp_go.SimulateChangeRequest, sdp_go.SimulateChangeResponse]
-	getOnboarding             *connect.Client[sdp_go.GetOnboardingRequest, sdp_go.GetOnboardingResponse]
-	updateOnboarding          *connect.Client[sdp_go.UpdateOnboardingRequest, sdp_go.UpdateOnboardingResponse]
-	listHomeApps              *connect.Client[sdp_go.ListHomeAppsRequest, sdp_go.ListHomeAppsResponse]
 	listHomeChanges           *connect.Client[sdp_go.ListHomeChangesRequest, sdp_go.ListHomeChangesResponse]
-	getAppSummary             *connect.Client[sdp_go.GetAppSummaryRequest, sdp_go.GetAppSummaryResponse]
-	getAppSummaries           *connect.Client[sdp_go.GetAppSummariesRequest, sdp_go.GetAppSummariesResponse]
-	listAppChanges            *connect.Client[sdp_go.ListAppChangesRequest, sdp_go.ListAppChangesResponse]
-	listAppChangesSummary     *connect.Client[sdp_go.ListAppChangesSummaryRequest, sdp_go.ListAppChangesSummaryResponse]
-	updateChangingItems       *connect.Client[sdp_go.UpdateChangingItemsRequest, sdp_go.CalculateBlastRadiusResponse]
-	updatePlannedChanges      *connect.Client[sdp_go.UpdatePlannedChangesRequest, sdp_go.CalculateBlastRadiusResponse]
-	getAffectedApps           *connect.Client[sdp_go.GetAffectedAppsRequest, sdp_go.GetAffectedAppsResponse]
+	updatePlannedChanges      *connect.Client[sdp_go.UpdatePlannedChangesRequest, sdp_go.UpdatePlannedChangesResponse]
 	listChangingItemsSummary  *connect.Client[sdp_go.ListChangingItemsSummaryRequest, sdp_go.ListChangingItemsSummaryResponse]
 	getDiff                   *connect.Client[sdp_go.GetDiffRequest, sdp_go.GetDiffResponse]
 	populateChangeFilters     *connect.Client[sdp_go.PopulateChangeFiltersRequest, sdp_go.PopulateChangeFiltersResponse]
-}
-
-// ListApps calls changes.ChangesService.ListApps.
-func (c *changesServiceClient) ListApps(ctx context.Context, req *connect.Request[sdp_go.ListAppsRequest]) (*connect.Response[sdp_go.ListAppsResponse], error) {
-	return c.listApps.CallUnary(ctx, req)
-}
-
-// CreateApp calls changes.ChangesService.CreateApp.
-func (c *changesServiceClient) CreateApp(ctx context.Context, req *connect.Request[sdp_go.CreateAppRequest]) (*connect.Response[sdp_go.CreateAppResponse], error) {
-	return c.createApp.CallUnary(ctx, req)
-}
-
-// CreateSimpleApp calls changes.ChangesService.CreateSimpleApp.
-func (c *changesServiceClient) CreateSimpleApp(ctx context.Context, req *connect.Request[sdp_go.CreateSimpleAppRequest]) (*connect.Response[sdp_go.CreateSimpleAppResponse], error) {
-	return c.createSimpleApp.CallUnary(ctx, req)
-}
-
-// GetApp calls changes.ChangesService.GetApp.
-func (c *changesServiceClient) GetApp(ctx context.Context, req *connect.Request[sdp_go.GetAppRequest]) (*connect.Response[sdp_go.GetAppResponse], error) {
-	return c.getApp.CallUnary(ctx, req)
-}
-
-// UpdateApp calls changes.ChangesService.UpdateApp.
-func (c *changesServiceClient) UpdateApp(ctx context.Context, req *connect.Request[sdp_go.UpdateAppRequest]) (*connect.Response[sdp_go.UpdateAppResponse], error) {
-	return c.updateApp.CallUnary(ctx, req)
-}
-
-// DeleteApp calls changes.ChangesService.DeleteApp.
-func (c *changesServiceClient) DeleteApp(ctx context.Context, req *connect.Request[sdp_go.DeleteAppRequest]) (*connect.Response[sdp_go.DeleteAppResponse], error) {
-	return c.deleteApp.CallUnary(ctx, req)
 }
 
 // ListChanges calls changes.ChangesService.ListChanges.
@@ -608,11 +363,6 @@ func (c *changesServiceClient) RefreshState(ctx context.Context, req *connect.Re
 	return c.refreshState.CallUnary(ctx, req)
 }
 
-// CalculateBlastRadius calls changes.ChangesService.CalculateBlastRadius.
-func (c *changesServiceClient) CalculateBlastRadius(ctx context.Context, req *connect.Request[sdp_go.CalculateBlastRadiusRequest]) (*connect.ServerStreamForClient[sdp_go.CalculateBlastRadiusResponse], error) {
-	return c.calculateBlastRadius.CallServerStream(ctx, req)
-}
-
 // StartChange calls changes.ChangesService.StartChange.
 func (c *changesServiceClient) StartChange(ctx context.Context, req *connect.Request[sdp_go.StartChangeRequest]) (*connect.ServerStreamForClient[sdp_go.StartChangeResponse], error) {
 	return c.startChange.CallServerStream(ctx, req)
@@ -623,64 +373,14 @@ func (c *changesServiceClient) EndChange(ctx context.Context, req *connect.Reque
 	return c.endChange.CallServerStream(ctx, req)
 }
 
-// SimulateChange calls changes.ChangesService.SimulateChange.
-func (c *changesServiceClient) SimulateChange(ctx context.Context, req *connect.Request[sdp_go.SimulateChangeRequest]) (*connect.ServerStreamForClient[sdp_go.SimulateChangeResponse], error) {
-	return c.simulateChange.CallServerStream(ctx, req)
-}
-
-// GetOnboarding calls changes.ChangesService.GetOnboarding.
-func (c *changesServiceClient) GetOnboarding(ctx context.Context, req *connect.Request[sdp_go.GetOnboardingRequest]) (*connect.Response[sdp_go.GetOnboardingResponse], error) {
-	return c.getOnboarding.CallUnary(ctx, req)
-}
-
-// UpdateOnboarding calls changes.ChangesService.UpdateOnboarding.
-func (c *changesServiceClient) UpdateOnboarding(ctx context.Context, req *connect.Request[sdp_go.UpdateOnboardingRequest]) (*connect.Response[sdp_go.UpdateOnboardingResponse], error) {
-	return c.updateOnboarding.CallUnary(ctx, req)
-}
-
-// ListHomeApps calls changes.ChangesService.ListHomeApps.
-func (c *changesServiceClient) ListHomeApps(ctx context.Context, req *connect.Request[sdp_go.ListHomeAppsRequest]) (*connect.Response[sdp_go.ListHomeAppsResponse], error) {
-	return c.listHomeApps.CallUnary(ctx, req)
-}
-
 // ListHomeChanges calls changes.ChangesService.ListHomeChanges.
 func (c *changesServiceClient) ListHomeChanges(ctx context.Context, req *connect.Request[sdp_go.ListHomeChangesRequest]) (*connect.Response[sdp_go.ListHomeChangesResponse], error) {
 	return c.listHomeChanges.CallUnary(ctx, req)
 }
 
-// GetAppSummary calls changes.ChangesService.GetAppSummary.
-func (c *changesServiceClient) GetAppSummary(ctx context.Context, req *connect.Request[sdp_go.GetAppSummaryRequest]) (*connect.Response[sdp_go.GetAppSummaryResponse], error) {
-	return c.getAppSummary.CallUnary(ctx, req)
-}
-
-// GetAppSummaries calls changes.ChangesService.GetAppSummaries.
-func (c *changesServiceClient) GetAppSummaries(ctx context.Context, req *connect.Request[sdp_go.GetAppSummariesRequest]) (*connect.Response[sdp_go.GetAppSummariesResponse], error) {
-	return c.getAppSummaries.CallUnary(ctx, req)
-}
-
-// ListAppChanges calls changes.ChangesService.ListAppChanges.
-func (c *changesServiceClient) ListAppChanges(ctx context.Context, req *connect.Request[sdp_go.ListAppChangesRequest]) (*connect.Response[sdp_go.ListAppChangesResponse], error) {
-	return c.listAppChanges.CallUnary(ctx, req)
-}
-
-// ListAppChangesSummary calls changes.ChangesService.ListAppChangesSummary.
-func (c *changesServiceClient) ListAppChangesSummary(ctx context.Context, req *connect.Request[sdp_go.ListAppChangesSummaryRequest]) (*connect.Response[sdp_go.ListAppChangesSummaryResponse], error) {
-	return c.listAppChangesSummary.CallUnary(ctx, req)
-}
-
-// UpdateChangingItems calls changes.ChangesService.UpdateChangingItems.
-func (c *changesServiceClient) UpdateChangingItems(ctx context.Context, req *connect.Request[sdp_go.UpdateChangingItemsRequest]) (*connect.ServerStreamForClient[sdp_go.CalculateBlastRadiusResponse], error) {
-	return c.updateChangingItems.CallServerStream(ctx, req)
-}
-
 // UpdatePlannedChanges calls changes.ChangesService.UpdatePlannedChanges.
-func (c *changesServiceClient) UpdatePlannedChanges(ctx context.Context, req *connect.Request[sdp_go.UpdatePlannedChangesRequest]) (*connect.ServerStreamForClient[sdp_go.CalculateBlastRadiusResponse], error) {
+func (c *changesServiceClient) UpdatePlannedChanges(ctx context.Context, req *connect.Request[sdp_go.UpdatePlannedChangesRequest]) (*connect.ServerStreamForClient[sdp_go.UpdatePlannedChangesResponse], error) {
 	return c.updatePlannedChanges.CallServerStream(ctx, req)
-}
-
-// GetAffectedApps calls changes.ChangesService.GetAffectedApps.
-func (c *changesServiceClient) GetAffectedApps(ctx context.Context, req *connect.Request[sdp_go.GetAffectedAppsRequest]) (*connect.Response[sdp_go.GetAffectedAppsResponse], error) {
-	return c.getAffectedApps.CallUnary(ctx, req)
 }
 
 // ListChangingItemsSummary calls changes.ChangesService.ListChangingItemsSummary.
@@ -700,19 +400,6 @@ func (c *changesServiceClient) PopulateChangeFilters(ctx context.Context, req *c
 
 // ChangesServiceHandler is an implementation of the changes.ChangesService service.
 type ChangesServiceHandler interface {
-	// Lists all apps
-	ListApps(context.Context, *connect.Request[sdp_go.ListAppsRequest]) (*connect.Response[sdp_go.ListAppsResponse], error)
-	// Creates a new app
-	CreateApp(context.Context, *connect.Request[sdp_go.CreateAppRequest]) (*connect.Response[sdp_go.CreateAppResponse], error)
-	// Creates an app using just a URL as input. This automatically creates and
-	// sets the bookmark UUID, along with the url for display in the GUI
-	CreateSimpleApp(context.Context, *connect.Request[sdp_go.CreateSimpleAppRequest]) (*connect.Response[sdp_go.CreateSimpleAppResponse], error)
-	// Gets the details of an existing app
-	GetApp(context.Context, *connect.Request[sdp_go.GetAppRequest]) (*connect.Response[sdp_go.GetAppResponse], error)
-	// Updates an existing app
-	UpdateApp(context.Context, *connect.Request[sdp_go.UpdateAppRequest]) (*connect.Response[sdp_go.UpdateAppResponse], error)
-	// Deletes an app
-	DeleteApp(context.Context, *connect.Request[sdp_go.DeleteAppRequest]) (*connect.Response[sdp_go.DeleteAppResponse], error)
 	// Lists all changes
 	ListChanges(context.Context, *connect.Request[sdp_go.ListChangesRequest]) (*connect.Response[sdp_go.ListChangesResponse], error)
 	// list all changes in a specific status
@@ -736,12 +423,6 @@ type ChangesServiceHandler interface {
 	// Ask the gateway to refresh all internal caches and status slots
 	// The RPC will return immediately doing all processing in the background
 	RefreshState(context.Context, *connect.Request[sdp_go.RefreshStateRequest]) (*connect.Response[sdp_go.RefreshStateResponse], error)
-	// Calculates the blast radius of a change using the
-	// `changingItemsBookmarkUUID` as the starting point. If the
-	// `changingItemsBookmarkUUID` is blank, this will return an error.
-	// Returns a stream of status updates. The response stream closes when all calculating has been done.
-	// Executing this RPC will move the Change to the `STATUS_DEFINING` state or return an error.
-	CalculateBlastRadius(context.Context, *connect.Request[sdp_go.CalculateBlastRadiusRequest], *connect.ServerStream[sdp_go.CalculateBlastRadiusResponse]) error
 	// Executing this RPC take a snapshot of the current blast radius and store it
 	// in `systemBeforeSnapshotUUID` and then advance the status to
 	// `STATUS_HAPPENING`. It can only be called once per change.
@@ -750,43 +431,15 @@ type ChangesServiceHandler interface {
 	// the change diff and stores it as a list of DiffedItems and
 	// advances the change status to `STATUS_DONE`
 	EndChange(context.Context, *connect.Request[sdp_go.EndChangeRequest], *connect.ServerStream[sdp_go.EndChangeResponse]) error
-	// Simulates a change without the user actually having to do anything. The
-	// change specified in the request should be in the `STATUS_DEFINING` state.
-	// It will be moved to the `STATUS_DONE` state after the simulation is
-	// complete.
-	SimulateChange(context.Context, *connect.Request[sdp_go.SimulateChangeRequest], *connect.ServerStream[sdp_go.SimulateChangeResponse]) error
-	GetOnboarding(context.Context, *connect.Request[sdp_go.GetOnboardingRequest]) (*connect.Response[sdp_go.GetOnboardingResponse], error)
-	UpdateOnboarding(context.Context, *connect.Request[sdp_go.UpdateOnboardingRequest]) (*connect.Response[sdp_go.UpdateOnboardingResponse], error)
-	// Lists all apps, designed for use in the apps home page
-	ListHomeApps(context.Context, *connect.Request[sdp_go.ListHomeAppsRequest]) (*connect.Response[sdp_go.ListHomeAppsResponse], error)
 	// Lists all changes, designed for use in the changes home page
 	ListHomeChanges(context.Context, *connect.Request[sdp_go.ListHomeChangesRequest]) (*connect.Response[sdp_go.ListHomeChangesResponse], error)
-	// Gets a summary of an app, used when a user clicks on a given app
-	GetAppSummary(context.Context, *connect.Request[sdp_go.GetAppSummaryRequest]) (*connect.Response[sdp_go.GetAppSummaryResponse], error)
-	// Gets a summaries of a list of apps
-	GetAppSummaries(context.Context, *connect.Request[sdp_go.GetAppSummariesRequest]) (*connect.Response[sdp_go.GetAppSummariesResponse], error)
-	// Lists all changes affecting an app
-	ListAppChanges(context.Context, *connect.Request[sdp_go.ListAppChangesRequest]) (*connect.Response[sdp_go.ListAppChangesResponse], error)
-	// Lists all changes affecting an app, returning only a summary of each change
-	// rather than the full details
-	ListAppChangesSummary(context.Context, *connect.Request[sdp_go.ListAppChangesSummaryRequest]) (*connect.Response[sdp_go.ListAppChangesSummaryResponse], error)
-	// This sets the items that are changing in a given change, and updates the
-	// blast radius. In the backend this will convert the references to GET
-	// requests, save them to a bookmark, and set this as the
-	// changingItemsBookmarkUUID in the change itself before triggering a blast
-	// radius calculation
-	UpdateChangingItems(context.Context, *connect.Request[sdp_go.UpdateChangingItemsRequest], *connect.ServerStream[sdp_go.CalculateBlastRadiusResponse]) error
 	// This sets the item diffs that are changing in a given change, and updates
 	// the blast radius. In the backend this will save the item diffs for later
 	// display and use the item's references to fabricate a bookmark, and set this
 	// as changingItemsBookmarkUUID in the change itself before triggering a blast
 	// radius calculation. Note that not all of the changing items have to exist
 	// in our current sources.
-	UpdatePlannedChanges(context.Context, *connect.Request[sdp_go.UpdatePlannedChangesRequest], *connect.ServerStream[sdp_go.CalculateBlastRadiusResponse]) error
-	// Returns a list of apps that are affected by this change. This is calculated
-	// by looking at the blast radius snapshot and finding all apps that have
-	// items in the snapshot.
-	GetAffectedApps(context.Context, *connect.Request[sdp_go.GetAffectedAppsRequest]) (*connect.Response[sdp_go.GetAffectedAppsResponse], error)
+	UpdatePlannedChanges(context.Context, *connect.Request[sdp_go.UpdatePlannedChangesRequest], *connect.ServerStream[sdp_go.UpdatePlannedChangesResponse]) error
 	// Gets the diff summary for all items that were planned to change as part of
 	// this change. This includes the high level details of the item, and the
 	// status (e.g. changed, deleted) but not the diff itself
@@ -805,42 +458,6 @@ type ChangesServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	changesServiceMethods := sdp_go.File_changes_proto.Services().ByName("ChangesService").Methods()
-	changesServiceListAppsHandler := connect.NewUnaryHandler(
-		ChangesServiceListAppsProcedure,
-		svc.ListApps,
-		connect.WithSchema(changesServiceMethods.ByName("ListApps")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceCreateAppHandler := connect.NewUnaryHandler(
-		ChangesServiceCreateAppProcedure,
-		svc.CreateApp,
-		connect.WithSchema(changesServiceMethods.ByName("CreateApp")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceCreateSimpleAppHandler := connect.NewUnaryHandler(
-		ChangesServiceCreateSimpleAppProcedure,
-		svc.CreateSimpleApp,
-		connect.WithSchema(changesServiceMethods.ByName("CreateSimpleApp")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceGetAppHandler := connect.NewUnaryHandler(
-		ChangesServiceGetAppProcedure,
-		svc.GetApp,
-		connect.WithSchema(changesServiceMethods.ByName("GetApp")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceUpdateAppHandler := connect.NewUnaryHandler(
-		ChangesServiceUpdateAppProcedure,
-		svc.UpdateApp,
-		connect.WithSchema(changesServiceMethods.ByName("UpdateApp")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceDeleteAppHandler := connect.NewUnaryHandler(
-		ChangesServiceDeleteAppProcedure,
-		svc.DeleteApp,
-		connect.WithSchema(changesServiceMethods.ByName("DeleteApp")),
-		connect.WithHandlerOptions(opts...),
-	)
 	changesServiceListChangesHandler := connect.NewUnaryHandler(
 		ChangesServiceListChangesProcedure,
 		svc.ListChanges,
@@ -907,12 +524,6 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 		connect.WithSchema(changesServiceMethods.ByName("RefreshState")),
 		connect.WithHandlerOptions(opts...),
 	)
-	changesServiceCalculateBlastRadiusHandler := connect.NewServerStreamHandler(
-		ChangesServiceCalculateBlastRadiusProcedure,
-		svc.CalculateBlastRadius,
-		connect.WithSchema(changesServiceMethods.ByName("CalculateBlastRadius")),
-		connect.WithHandlerOptions(opts...),
-	)
 	changesServiceStartChangeHandler := connect.NewServerStreamHandler(
 		ChangesServiceStartChangeProcedure,
 		svc.StartChange,
@@ -925,76 +536,16 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 		connect.WithSchema(changesServiceMethods.ByName("EndChange")),
 		connect.WithHandlerOptions(opts...),
 	)
-	changesServiceSimulateChangeHandler := connect.NewServerStreamHandler(
-		ChangesServiceSimulateChangeProcedure,
-		svc.SimulateChange,
-		connect.WithSchema(changesServiceMethods.ByName("SimulateChange")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceGetOnboardingHandler := connect.NewUnaryHandler(
-		ChangesServiceGetOnboardingProcedure,
-		svc.GetOnboarding,
-		connect.WithSchema(changesServiceMethods.ByName("GetOnboarding")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceUpdateOnboardingHandler := connect.NewUnaryHandler(
-		ChangesServiceUpdateOnboardingProcedure,
-		svc.UpdateOnboarding,
-		connect.WithSchema(changesServiceMethods.ByName("UpdateOnboarding")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceListHomeAppsHandler := connect.NewUnaryHandler(
-		ChangesServiceListHomeAppsProcedure,
-		svc.ListHomeApps,
-		connect.WithSchema(changesServiceMethods.ByName("ListHomeApps")),
-		connect.WithHandlerOptions(opts...),
-	)
 	changesServiceListHomeChangesHandler := connect.NewUnaryHandler(
 		ChangesServiceListHomeChangesProcedure,
 		svc.ListHomeChanges,
 		connect.WithSchema(changesServiceMethods.ByName("ListHomeChanges")),
 		connect.WithHandlerOptions(opts...),
 	)
-	changesServiceGetAppSummaryHandler := connect.NewUnaryHandler(
-		ChangesServiceGetAppSummaryProcedure,
-		svc.GetAppSummary,
-		connect.WithSchema(changesServiceMethods.ByName("GetAppSummary")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceGetAppSummariesHandler := connect.NewUnaryHandler(
-		ChangesServiceGetAppSummariesProcedure,
-		svc.GetAppSummaries,
-		connect.WithSchema(changesServiceMethods.ByName("GetAppSummaries")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceListAppChangesHandler := connect.NewUnaryHandler(
-		ChangesServiceListAppChangesProcedure,
-		svc.ListAppChanges,
-		connect.WithSchema(changesServiceMethods.ByName("ListAppChanges")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceListAppChangesSummaryHandler := connect.NewUnaryHandler(
-		ChangesServiceListAppChangesSummaryProcedure,
-		svc.ListAppChangesSummary,
-		connect.WithSchema(changesServiceMethods.ByName("ListAppChangesSummary")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceUpdateChangingItemsHandler := connect.NewServerStreamHandler(
-		ChangesServiceUpdateChangingItemsProcedure,
-		svc.UpdateChangingItems,
-		connect.WithSchema(changesServiceMethods.ByName("UpdateChangingItems")),
-		connect.WithHandlerOptions(opts...),
-	)
 	changesServiceUpdatePlannedChangesHandler := connect.NewServerStreamHandler(
 		ChangesServiceUpdatePlannedChangesProcedure,
 		svc.UpdatePlannedChanges,
 		connect.WithSchema(changesServiceMethods.ByName("UpdatePlannedChanges")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceGetAffectedAppsHandler := connect.NewUnaryHandler(
-		ChangesServiceGetAffectedAppsProcedure,
-		svc.GetAffectedApps,
-		connect.WithSchema(changesServiceMethods.ByName("GetAffectedApps")),
 		connect.WithHandlerOptions(opts...),
 	)
 	changesServiceListChangingItemsSummaryHandler := connect.NewUnaryHandler(
@@ -1017,18 +568,6 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 	)
 	return "/changes.ChangesService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case ChangesServiceListAppsProcedure:
-			changesServiceListAppsHandler.ServeHTTP(w, r)
-		case ChangesServiceCreateAppProcedure:
-			changesServiceCreateAppHandler.ServeHTTP(w, r)
-		case ChangesServiceCreateSimpleAppProcedure:
-			changesServiceCreateSimpleAppHandler.ServeHTTP(w, r)
-		case ChangesServiceGetAppProcedure:
-			changesServiceGetAppHandler.ServeHTTP(w, r)
-		case ChangesServiceUpdateAppProcedure:
-			changesServiceUpdateAppHandler.ServeHTTP(w, r)
-		case ChangesServiceDeleteAppProcedure:
-			changesServiceDeleteAppHandler.ServeHTTP(w, r)
 		case ChangesServiceListChangesProcedure:
 			changesServiceListChangesHandler.ServeHTTP(w, r)
 		case ChangesServiceListChangesByStatusProcedure:
@@ -1051,36 +590,14 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 			changesServiceGetChangeTimelineHandler.ServeHTTP(w, r)
 		case ChangesServiceRefreshStateProcedure:
 			changesServiceRefreshStateHandler.ServeHTTP(w, r)
-		case ChangesServiceCalculateBlastRadiusProcedure:
-			changesServiceCalculateBlastRadiusHandler.ServeHTTP(w, r)
 		case ChangesServiceStartChangeProcedure:
 			changesServiceStartChangeHandler.ServeHTTP(w, r)
 		case ChangesServiceEndChangeProcedure:
 			changesServiceEndChangeHandler.ServeHTTP(w, r)
-		case ChangesServiceSimulateChangeProcedure:
-			changesServiceSimulateChangeHandler.ServeHTTP(w, r)
-		case ChangesServiceGetOnboardingProcedure:
-			changesServiceGetOnboardingHandler.ServeHTTP(w, r)
-		case ChangesServiceUpdateOnboardingProcedure:
-			changesServiceUpdateOnboardingHandler.ServeHTTP(w, r)
-		case ChangesServiceListHomeAppsProcedure:
-			changesServiceListHomeAppsHandler.ServeHTTP(w, r)
 		case ChangesServiceListHomeChangesProcedure:
 			changesServiceListHomeChangesHandler.ServeHTTP(w, r)
-		case ChangesServiceGetAppSummaryProcedure:
-			changesServiceGetAppSummaryHandler.ServeHTTP(w, r)
-		case ChangesServiceGetAppSummariesProcedure:
-			changesServiceGetAppSummariesHandler.ServeHTTP(w, r)
-		case ChangesServiceListAppChangesProcedure:
-			changesServiceListAppChangesHandler.ServeHTTP(w, r)
-		case ChangesServiceListAppChangesSummaryProcedure:
-			changesServiceListAppChangesSummaryHandler.ServeHTTP(w, r)
-		case ChangesServiceUpdateChangingItemsProcedure:
-			changesServiceUpdateChangingItemsHandler.ServeHTTP(w, r)
 		case ChangesServiceUpdatePlannedChangesProcedure:
 			changesServiceUpdatePlannedChangesHandler.ServeHTTP(w, r)
-		case ChangesServiceGetAffectedAppsProcedure:
-			changesServiceGetAffectedAppsHandler.ServeHTTP(w, r)
 		case ChangesServiceListChangingItemsSummaryProcedure:
 			changesServiceListChangingItemsSummaryHandler.ServeHTTP(w, r)
 		case ChangesServiceGetDiffProcedure:
@@ -1095,30 +612,6 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 
 // UnimplementedChangesServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedChangesServiceHandler struct{}
-
-func (UnimplementedChangesServiceHandler) ListApps(context.Context, *connect.Request[sdp_go.ListAppsRequest]) (*connect.Response[sdp_go.ListAppsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.ListApps is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) CreateApp(context.Context, *connect.Request[sdp_go.CreateAppRequest]) (*connect.Response[sdp_go.CreateAppResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.CreateApp is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) CreateSimpleApp(context.Context, *connect.Request[sdp_go.CreateSimpleAppRequest]) (*connect.Response[sdp_go.CreateSimpleAppResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.CreateSimpleApp is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) GetApp(context.Context, *connect.Request[sdp_go.GetAppRequest]) (*connect.Response[sdp_go.GetAppResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetApp is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) UpdateApp(context.Context, *connect.Request[sdp_go.UpdateAppRequest]) (*connect.Response[sdp_go.UpdateAppResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.UpdateApp is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) DeleteApp(context.Context, *connect.Request[sdp_go.DeleteAppRequest]) (*connect.Response[sdp_go.DeleteAppResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.DeleteApp is not implemented"))
-}
 
 func (UnimplementedChangesServiceHandler) ListChanges(context.Context, *connect.Request[sdp_go.ListChangesRequest]) (*connect.Response[sdp_go.ListChangesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.ListChanges is not implemented"))
@@ -1164,10 +657,6 @@ func (UnimplementedChangesServiceHandler) RefreshState(context.Context, *connect
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.RefreshState is not implemented"))
 }
 
-func (UnimplementedChangesServiceHandler) CalculateBlastRadius(context.Context, *connect.Request[sdp_go.CalculateBlastRadiusRequest], *connect.ServerStream[sdp_go.CalculateBlastRadiusResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.CalculateBlastRadius is not implemented"))
-}
-
 func (UnimplementedChangesServiceHandler) StartChange(context.Context, *connect.Request[sdp_go.StartChangeRequest], *connect.ServerStream[sdp_go.StartChangeResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.StartChange is not implemented"))
 }
@@ -1176,52 +665,12 @@ func (UnimplementedChangesServiceHandler) EndChange(context.Context, *connect.Re
 	return connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.EndChange is not implemented"))
 }
 
-func (UnimplementedChangesServiceHandler) SimulateChange(context.Context, *connect.Request[sdp_go.SimulateChangeRequest], *connect.ServerStream[sdp_go.SimulateChangeResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.SimulateChange is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) GetOnboarding(context.Context, *connect.Request[sdp_go.GetOnboardingRequest]) (*connect.Response[sdp_go.GetOnboardingResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetOnboarding is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) UpdateOnboarding(context.Context, *connect.Request[sdp_go.UpdateOnboardingRequest]) (*connect.Response[sdp_go.UpdateOnboardingResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.UpdateOnboarding is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) ListHomeApps(context.Context, *connect.Request[sdp_go.ListHomeAppsRequest]) (*connect.Response[sdp_go.ListHomeAppsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.ListHomeApps is not implemented"))
-}
-
 func (UnimplementedChangesServiceHandler) ListHomeChanges(context.Context, *connect.Request[sdp_go.ListHomeChangesRequest]) (*connect.Response[sdp_go.ListHomeChangesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.ListHomeChanges is not implemented"))
 }
 
-func (UnimplementedChangesServiceHandler) GetAppSummary(context.Context, *connect.Request[sdp_go.GetAppSummaryRequest]) (*connect.Response[sdp_go.GetAppSummaryResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetAppSummary is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) GetAppSummaries(context.Context, *connect.Request[sdp_go.GetAppSummariesRequest]) (*connect.Response[sdp_go.GetAppSummariesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetAppSummaries is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) ListAppChanges(context.Context, *connect.Request[sdp_go.ListAppChangesRequest]) (*connect.Response[sdp_go.ListAppChangesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.ListAppChanges is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) ListAppChangesSummary(context.Context, *connect.Request[sdp_go.ListAppChangesSummaryRequest]) (*connect.Response[sdp_go.ListAppChangesSummaryResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.ListAppChangesSummary is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) UpdateChangingItems(context.Context, *connect.Request[sdp_go.UpdateChangingItemsRequest], *connect.ServerStream[sdp_go.CalculateBlastRadiusResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.UpdateChangingItems is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) UpdatePlannedChanges(context.Context, *connect.Request[sdp_go.UpdatePlannedChangesRequest], *connect.ServerStream[sdp_go.CalculateBlastRadiusResponse]) error {
+func (UnimplementedChangesServiceHandler) UpdatePlannedChanges(context.Context, *connect.Request[sdp_go.UpdatePlannedChangesRequest], *connect.ServerStream[sdp_go.UpdatePlannedChangesResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.UpdatePlannedChanges is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) GetAffectedApps(context.Context, *connect.Request[sdp_go.GetAffectedAppsRequest]) (*connect.Response[sdp_go.GetAffectedAppsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetAffectedApps is not implemented"))
 }
 
 func (UnimplementedChangesServiceHandler) ListChangingItemsSummary(context.Context, *connect.Request[sdp_go.ListChangingItemsSummaryRequest]) (*connect.Response[sdp_go.ListChangingItemsSummaryResponse], error) {

@@ -14,3 +14,14 @@ func deleteRestAPI(ctx context.Context, client *apigateway.Client, restAPIID str
 
 	return err
 }
+
+func deleteAPIKeyByName(ctx context.Context, client *apigateway.Client, id *string) error {
+	_, err := client.DeleteApiKey(ctx, &apigateway.DeleteApiKeyInput{
+		ApiKey: id,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

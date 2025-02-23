@@ -663,10 +663,10 @@ func TestStart(t *testing.T) {
 	rp.DrainDelay = 0
 
 	conn := TestConnection{}
-	items := make(chan *Item, 128)
-	errs := make(chan *QueryError, 128)
+	responses := make(chan *QueryResponse, 128)
 	// this emulates a source
 	sourceHit := atomic.Bool{}
+
 	_, err := conn.Subscribe(fmt.Sprintf("request.scope.%v", query.GetScope()), func(msg *nats.Msg) {
 		sourceHit.Store(true)
 		response := QueryResponse{
@@ -684,12 +684,12 @@ func TestStart(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = rp.Start(context.Background(), &conn, items, errs)
+	err = rp.Start(context.Background(), &conn, responses)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	receivedItem := <-items
+	response := <-responses
 
 	conn.messagesMutex.Lock()
 	if len(conn.Messages) != 2 {
@@ -697,7 +697,11 @@ func TestStart(t *testing.T) {
 	}
 	conn.messagesMutex.Unlock()
 
-	if receivedItem.Hash() != item.Hash() {
+	returnedItem := response.GetNewItem()
+	if returnedItem == nil {
+		t.Fatal("expected item to be returned")
+	}
+	if returnedItem.Hash() != item.Hash() {
 		t.Error("item hash mismatch")
 	}
 	if !sourceHit.Load() {
@@ -716,10 +720,8 @@ func TestAsyncCancel(t *testing.T) {
 		rp := NewQueryProgress(&query)
 		rp.DrainDelay = 0
 
-		itemChan := make(chan *Item, 128)
-		errChan := make(chan *QueryError, 128)
-
-		err = rp.Start(context.Background(), &conn, itemChan, errChan)
+		responseChan := make(chan *QueryResponse, 128)
+		err = rp.Start(context.Background(), &conn, responseChan)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -753,8 +755,7 @@ func TestAsyncCancel(t *testing.T) {
 
 		t.Run("making sure channels closed", func(t *testing.T) {
 			// If the chan is still open this will block forever
-			<-itemChan
-			<-errChan
+			<-responseChan
 		})
 	})
 
@@ -887,7 +888,7 @@ func TestExecute(t *testing.T) {
 		}
 
 		if len(items) != 2 {
-			t.Errorf("expected 2 items got %v", len(items))
+			t.Errorf("expected 2 items got %v: %v", len(items), items)
 		}
 	})
 }
@@ -964,12 +965,10 @@ func TestRealNats(t *testing.T) {
 		ready <- true
 	}()
 
-	slowChan := make(chan *Item)
-	var nilChan chan *QueryError
-
 	<-ready
 
-	err = rp.Start(context.Background(), &enc, slowChan, nilChan)
+	slowChan := make(chan *QueryResponse)
+	err = rp.Start(context.Background(), &enc, slowChan)
 
 	if err != nil {
 		t.Fatal(err)
@@ -1104,10 +1103,10 @@ func TestFastFinisher(t *testing.T) {
 	}
 
 	if len(items) != 2 {
-		t.Errorf("Expected 2 items, got %d", len(items))
+		t.Errorf("Expected 2 items, got %d: %v", len(items), items)
 	}
 
 	if len(errs) != 0 {
-		t.Errorf("Expected 0 errors, got %d", len(errs))
+		t.Errorf("Expected 0 errors, got %d: %v", len(errs), errs)
 	}
 }

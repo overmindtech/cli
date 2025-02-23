@@ -56,6 +56,23 @@ func resourceOutputMapper(query, scope string, awsItem *types.Resource) (*sdp.It
 		Scope:           scope,
 	}
 
+	for methodString := range awsItem.ResourceMethods {
+		if awsItem.Id != nil {
+			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "apigateway-method",
+					Method: sdp.QueryMethod_GET,
+					Query:  fmt.Sprintf("%s/%s/%s", restApiID, *awsItem.Id, methodString),
+					Scope:  scope,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: true,
+				},
+			})
+		}
+	}
+
 	return &item, nil
 }
 
@@ -119,5 +136,8 @@ var apiGatewayResourceAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{TerraformQueryMap: "aws_api_gateway_resource.id"},
+	},
+	PotentialLinks: []string{
+		"apigateway-method",
 	},
 })

@@ -115,9 +115,7 @@ readLoop:
 }
 
 // TODO: CancelQuery
-// TODO: UndoQuery
 // TODO: Expand
-// TODO: UndoExpand
 
 func (c *Client) SendLoadSnapshot(ctx context.Context, s *sdp.LoadSnapshot) error {
 	if c.Closed() {

@@ -144,7 +144,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 			log.WithContext(ctx).WithError(err).WithFields(lf).Debug("Failed to detect repository URL. Use the --repo flag to specify it manually if you require it")
 		}
 	}
-	tags, err := parseTagsArgument()
+	enrichedTags, err := parseTagsArgument()
 	if err != nil {
 		return loggedError{
 			err:     err,
@@ -152,15 +152,16 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 			message: "Failed to parse tags",
 		}
 	}
+
 	properties := &sdp.ChangeProperties{
-		Title:       title,
-		Description: viper.GetString("description"),
-		TicketLink:  viper.GetString("ticket-link"),
-		Owner:       viper.GetString("owner"),
-		RawPlan:     tfPlanOutput,
-		CodeChanges: codeChangesOutput,
-		Repo:        repoUrl,
-		Tags:        tags,
+		Title:        title,
+		Description:  viper.GetString("description"),
+		TicketLink:   viper.GetString("ticket-link"),
+		Owner:        viper.GetString("owner"),
+		RawPlan:      tfPlanOutput,
+		CodeChanges:  codeChangesOutput,
+		Repo:         repoUrl,
+		EnrichedTags: enrichedTags,
 	}
 
 	if changeUuid == uuid.Nil {
@@ -259,7 +260,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		// log the first message and at most every 250ms during discovery
 		// to avoid spanning the cli output
 		time_since_last_log := time.Since(last_log)
-		if first_log || msg.GetState() != sdp.CalculateBlastRadiusResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
+		if first_log || msg.GetState() != sdp.UpdatePlannedChangesResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
 			log.WithContext(ctx).WithFields(lf).WithField("msg", msg).Info("Status update")
 			last_log = time.Now()
 			first_log = false
@@ -277,33 +278,6 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", app, changeUuid)
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("Change ready")
 	fmt.Println(changeUrl)
-
-	fetchResponse, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
-		Msg: &sdp.GetChangeRequest{
-			UUID: changeUuid[:],
-		},
-	})
-	if err != nil {
-		log.WithContext(ctx).WithFields(lf).WithError(err).Error("")
-		return loggedError{
-			err:     err,
-			fields:  lf,
-			message: "Failed to get updated change",
-		}
-	}
-
-	for _, a := range fetchResponse.Msg.GetChange().GetProperties().GetAffectedAppsUUID() {
-		appUuid, err := uuid.FromBytes(a)
-		if err != nil {
-			log.WithContext(ctx).WithFields(lf).WithError(err).WithField("app", a).Error("Received invalid app uuid")
-			continue
-		}
-		log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
-			"change-url": changeUrl,
-			"app":        appUuid,
-			"app-url":    fmt.Sprintf("%v/apps/%v", app, appUuid),
-		}).Info("Affected app")
-	}
 
 	return nil
 }

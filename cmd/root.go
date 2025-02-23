@@ -88,7 +88,7 @@ func PreRunSetup(cmd *cobra.Command, args []string) {
 	// set up app, it may be ambiguous if frontend is set
 	app := getAppUrl(viper.GetString("frontend"), viper.GetString("app"))
 	if app == "" {
-		log.Fatal("no app specified, please use --app or set OVM_APP")
+		log.Fatal("no app specified, please use --app or set the 'APP' environment variable")
 	}
 	viper.Set("app", app)
 	// capture span in global variable to allow Execute() below to end it
@@ -182,7 +182,7 @@ Then enter the code:
 	%v
 `
 
-// getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a state with the specified status and having --ticket-link
+// getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a change with the specified status and having --ticket-link
 func getChangeUuid(ctx context.Context, oi sdp.OvermindInstance, expectedStatus sdp.ChangeStatus, ticketLink string, errNotFound bool) (uuid.UUID, error) {
 	var changeUuid uuid.UUID
 	var err error

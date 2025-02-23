@@ -233,21 +233,21 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	if repoUrl == "" {
 		repoUrl, _ = DetectRepoURL(AllDetectors)
 	}
-	tags, err := parseTagsArgument()
+	enrichedTags, err := parseTagsArgument()
 	if err != nil {
 		uploadChangesSpinner.Fail(fmt.Sprintf("Uploading planned changes: failed to parse tags: %v", err))
 		return nil
 	}
 
 	properties := &sdp.ChangeProperties{
-		Title:       title,
-		Description: viper.GetString("description"),
-		TicketLink:  ticketLink,
-		Owner:       viper.GetString("owner"),
-		RawPlan:     string(tfPlanOutput),
-		CodeChanges: codeChangesOutput,
-		Repo:        repoUrl,
-		Tags:        tags,
+		Title:        title,
+		Description:  viper.GetString("description"),
+		TicketLink:   ticketLink,
+		Owner:        viper.GetString("owner"),
+		RawPlan:      string(tfPlanOutput),
+		CodeChanges:  codeChangesOutput,
+		Repo:         repoUrl,
+		EnrichedTags: enrichedTags,
 	}
 
 	if changeUuid == uuid.Nil {
@@ -314,29 +314,27 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	// spamming the cli output
 	last_log := time.Now()
 	first_log := true
-	var msg *sdp.CalculateBlastRadiusResponse
+	var msg *sdp.UpdatePlannedChangesResponse
 	var blastRadiusItems uint32
 	var blastRadiusEdges uint32
 	for resultStream.Receive() {
 		msg = resultStream.Msg()
 
 		time_since_last_log := time.Since(last_log)
-		if first_log || msg.GetState() != sdp.CalculateBlastRadiusResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
+		if first_log || msg.GetState() != sdp.UpdatePlannedChangesResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
 			log.WithField("msg", msg).Trace("Status update")
 			last_log = time.Now()
 			first_log = false
 		}
 		stateLabel := "unknown"
 		switch msg.GetState() {
-		case sdp.CalculateBlastRadiusResponse_STATE_UNSPECIFIED:
+		case sdp.UpdatePlannedChangesResponse_STATE_UNSPECIFIED:
 			stateLabel = "unknown"
-		case sdp.CalculateBlastRadiusResponse_STATE_DISCOVERING:
+		case sdp.UpdatePlannedChangesResponse_STATE_DISCOVERING:
 			stateLabel = "discovering blast radius"
-		case sdp.CalculateBlastRadiusResponse_STATE_FINDING_APPS:
-			stateLabel = "finding apps"
-		case sdp.CalculateBlastRadiusResponse_STATE_SAVING:
+		case sdp.UpdatePlannedChangesResponse_STATE_SAVING:
 			stateLabel = "saving"
-		case sdp.CalculateBlastRadiusResponse_STATE_DONE:
+		case sdp.UpdatePlannedChangesResponse_STATE_DONE:
 			stateLabel = "done"
 		}
 		blastRadiusItems = msg.GetNumItems()

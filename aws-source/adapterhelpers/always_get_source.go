@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
@@ -236,10 +237,16 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) listInternal(ctx context.Context, scope string, input ListInput, ck sdpcache.CacheKey, stream *discovery.QueryResultStream) {
 	paginator := s.ListFuncPaginatorBuilder(s.Client, input)
 	var newGetInputs []GetInput
+	p := pool.New().WithContext(ctx).WithMaxGoroutines(s.MaxParallel.Value())
+	defer func() {
+		// Always wait for everything to be completed before returning
+		err := p.Wait()
+		if err != nil {
+			sentry.CaptureException(err)
+		}
+	}()
 
 	for paginator.HasMorePages() {
-		p := pool.New().WithContext(ctx).WithMaxGoroutines(s.MaxParallel.Value())
-
 		output, err := paginator.NextPage(ctx)
 
 		if err != nil {
@@ -263,6 +270,9 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		}
 
 		for _, input := range newGetInputs {
+			// This call will block if no workers are available, and therefore
+			// we will only load new pages once there are workers ready to
+			// accept that work
 			p.Go(func(ctx context.Context) error {
 				item, err := s.GetFunc(ctx, s.Client, scope, input)
 
@@ -278,9 +288,6 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 				return nil
 			})
 		}
-
-		// Wait for this page to be processed before moving on to the next one
-		_ = p.Wait()
 	}
 }
 

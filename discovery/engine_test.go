@@ -330,10 +330,8 @@ func TestNatsCancel(t *testing.T) {
 			UUID:  u[:],
 		})
 
-		items := make(chan *sdp.Item, 1000)
-		errs := make(chan *sdp.QueryError, 1000)
-
-		err := progress.Start(context.Background(), conn, items, errs)
+		responses := make(chan *sdp.QueryResponse, 1000)
+		err := progress.Start(context.Background(), conn, responses)
 		if err != nil {
 			t.Error(err)
 		}
@@ -348,9 +346,7 @@ func TestNatsCancel(t *testing.T) {
 		}
 
 		// Read and discard all items and errors until they are closed
-		for range items {
-		}
-		for range errs {
+		for range responses {
 		}
 
 		time.Sleep(250 * time.Millisecond)

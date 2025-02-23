@@ -372,7 +372,7 @@ func TestSendQuerySync(t *testing.T) {
 			}
 
 			if len(items) != 1 {
-				t.Fatalf("expected 1 item, got %v", len(items))
+				t.Fatalf("expected 1 item, got %v: %v", len(items), items)
 			}
 
 			if progress.NumComplete() != 1 {

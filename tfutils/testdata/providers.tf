@@ -15,7 +15,7 @@ provider "google" {
   region  = "us-central1"
 }
 
-// This should also be ignonred
+// This should also be ignored
 variable "image_id" {
   type = string
 }
@@ -41,7 +41,7 @@ provider "aws" {
 }
 
 provider "aws" {
-  alias  = "assume_role"
+  alias = "assume_role"
 
   assume_role {
     role_arn     = "arn:aws:iam::123456789012:role/ROLE_NAME"

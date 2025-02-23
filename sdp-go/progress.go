@@ -291,8 +291,7 @@ type QueryProgress struct {
 	respondersMutex sync.RWMutex
 
 	// Channel storage for sending back to the user
-	itemChan       chan<- *Item
-	errorChan      chan<- *QueryError
+	responseChan   chan<- *QueryResponse
 	doneChan       chan struct{} // Closed when request is fully complete
 	chanMutex      sync.RWMutex
 	channelsClosed bool // Additional protection against send on closed chan. This isn't brilliant but I can't think of a better way at the moment
@@ -343,7 +342,7 @@ func NewQueryProgress(q *Query) *QueryProgress {
 //
 //		// This loop  will exit once the request is finished
 //	}
-func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, itemChannel chan<- *Item, errorChannel chan<- *QueryError) error {
+func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, responseChan chan<- *QueryResponse) error {
 	if qp.started {
 		return errors.New("already started")
 	}
@@ -352,8 +351,8 @@ func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, itemCh
 		return errors.New("nil NATS connection")
 	}
 
-	if itemChannel == nil {
-		return errors.New("nil item channel")
+	if responseChan == nil {
+		return errors.New("nil response channel")
 	}
 
 	qp.requestCtx = ctx
@@ -378,8 +377,7 @@ func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, itemCh
 	// Store the channels
 	qp.chanMutex.Lock()
 	defer qp.chanMutex.Unlock()
-	qp.itemChan = itemChannel
-	qp.errorChan = errorChannel
+	qp.responseChan = responseChan
 
 	qp.subMutex.Lock()
 	defer qp.subMutex.Unlock()
@@ -425,24 +423,28 @@ func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, itemCh
 				return
 			}
 
-			qp.itemChan <- item
+			// TODO: extract linked items and linked item queries and pass them on
+			qp.responseChan <- &QueryResponse{
+				ResponseType: &QueryResponse_NewItem{NewItem: item},
+			}
+
 		}
 	}
 
-	errorHandler := func(ctx context.Context, err *QueryError) {
+	errorHandler := func(ctx context.Context, qErr *QueryError) {
 		defer atomic.AddInt64(qp.errorsProcessed, 1)
 
-		if err != nil {
+		if qErr != nil {
 			span := trace.SpanFromContext(ctx)
-			span.SetStatus(codes.Error, err.Error())
+			span.SetStatus(codes.Error, qErr.Error())
 			span.SetAttributes(
 				attribute.Int64("ovm.sdp.errorsProcessed", *qp.errorsProcessed),
-				attribute.String("ovm.sdp.errorString", err.GetErrorString()),
-				attribute.String("ovm.sdp.errorType", err.GetErrorType().String()),
-				attribute.String("ovm.scope", err.GetScope()),
-				attribute.String("ovm.type", err.GetItemType()),
-				attribute.String("ovm.sdp.sourceName", err.GetSourceName()),
-				attribute.String("ovm.sdp.responderName", err.GetResponderName()),
+				attribute.String("ovm.sdp.errorString", qErr.GetErrorString()),
+				attribute.String("ovm.sdp.errorType", qErr.GetErrorType().String()),
+				attribute.String("ovm.scope", qErr.GetScope()),
+				attribute.String("ovm.type", qErr.GetItemType()),
+				attribute.String("ovm.sdp.sourceName", qErr.GetSourceName()),
+				attribute.String("ovm.sdp.responderName", qErr.GetResponderName()),
 			)
 
 			qp.chanMutex.RLock()
@@ -452,18 +454,22 @@ func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, itemCh
 				// occasionally. In order to avoid a panic I'm instead going to
 				// log it here
 				log.WithContext(ctx).WithFields(log.Fields{
-					"UUID":          err.GetUUID(),
-					"ErrorType":     err.GetErrorType(),
-					"ErrorString":   err.GetErrorString(),
-					"Scope":         err.GetScope(),
-					"SourceName":    err.GetSourceName(),
-					"ItemType":      err.GetItemType(),
-					"ResponderName": err.GetResponderName(),
+					"UUID":          qErr.GetUUID(),
+					"ErrorType":     qErr.GetErrorType(),
+					"ErrorString":   qErr.GetErrorString(),
+					"Scope":         qErr.GetScope(),
+					"SourceName":    qErr.GetSourceName(),
+					"ItemType":      qErr.GetItemType(),
+					"ResponderName": qErr.GetResponderName(),
 				}).Error("SDP-GO ERROR: A QueryError was processed after Drain() was called. Please add these details to: https://github.com/overmindtech/cli/sdp-go/issues/15.")
 				return
 			}
 
-			qp.errorChan <- err
+			qp.responseChan <- &QueryResponse{
+				ResponseType: &QueryResponse_Error{
+					Error: qErr,
+				},
+			}
 		}
 	}
 
@@ -560,12 +566,8 @@ func (qp *QueryProgress) Drain() {
 		qp.chanMutex.Lock()
 		defer qp.chanMutex.Unlock()
 
-		if qp.itemChan != nil {
-			close(qp.itemChan)
-		}
-
-		if qp.errorChan != nil {
-			close(qp.errorChan)
+		if qp.responseChan != nil {
+			close(qp.responseChan)
 		}
 
 		// Only if the drain is fully complete should we close the doneChan
@@ -647,14 +649,13 @@ func (qp *QueryProgress) AsyncCancel(ec EncodedConnection) error {
 func (qp *QueryProgress) Execute(ctx context.Context, ec EncodedConnection) ([]*Item, []*QueryError, error) {
 	items := make([]*Item, 0)
 	errs := make([]*QueryError, 0)
-	i := make(chan *Item)
-	e := make(chan *QueryError)
+	r := make(chan *QueryResponse)
 
 	if ec == nil {
 		return items, errs, errors.New("nil NATS connection")
 	}
 
-	err := qp.Start(ctx, ec, i, e)
+	err := qp.Start(ctx, ec, r)
 
 	if err != nil {
 		return items, errs, err
@@ -663,29 +664,26 @@ func (qp *QueryProgress) Execute(ctx context.Context, ec EncodedConnection) ([]*
 	for {
 		// Read items and errors
 		select {
-		case item, ok := <-i:
-			if ok {
+		case response, ok := <-r:
+			if !ok {
+				// when the channel closes, we're done
+				return items, errs, nil
+			}
+			item := response.GetNewItem()
+			if item != nil {
 				items = append(items, item)
-			} else {
-				// If the channel is closed, set it to nil so we don't receive
-				// from it any more
-				i = nil
 			}
-		case err, ok := <-e:
-			if ok {
-				errs = append(errs, err)
-			} else {
-				e = nil
+			qErr := response.GetError()
+			if qErr != nil {
+				errs = append(errs, qErr)
 			}
-		}
-
-		if i == nil && e == nil {
-			// If both channels are closed then we're done
-			break
+			// ignore status responses for now
+			// status := response.GetResponse()
+			// if status != nil {
+			// 	panic("qp: status not implemented yet")
+			// }
 		}
 	}
-
-	return items, errs, nil
 }
 
 // ProcessResponse processes an SDP Response and updates the database

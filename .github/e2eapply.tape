@@ -15,5 +15,5 @@ Show
 
 Type@1ms "overmind terraform apply -- tfplan"
 Enter
-Sleep 60
+Sleep 70
 Screenshot e2e/apply.png
