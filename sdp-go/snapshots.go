@@ -16,10 +16,9 @@ func (sm *SnapshotMetadata) ToMap() map[string]any {
 
 func (sp *SnapshotProperties) ToMap() map[string]any {
 	return map[string]any{
-		"name":          sp.GetName(),
-		"description":   sp.GetDescription(),
-		"queries":       sp.GetQueries(),
-		"excludedItems": sp.GetExcludedItems(),
-		"Items":         sp.GetItems(),
+		"name":        sp.GetName(),
+		"description": sp.GetDescription(),
+		"queries":     sp.GetQueries(),
+		"Items":       sp.GetItems(),
 	}
 }
