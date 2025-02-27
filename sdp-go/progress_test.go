@@ -15,6 +15,48 @@ import (
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
+func TestNewQueryProgress(t *testing.T) {
+	u := uuid.New()
+	q := Query{
+		Type:   "person",
+		Method: QueryMethod_GET,
+		Query:  "dylan",
+		RecursionBehaviour: &Query_RecursionBehaviour{
+			LinkDepth: 0,
+		},
+		Scope:       "test",
+		IgnoreCache: false,
+		UUID:        u[:],
+		Deadline:    timestamppb.New(time.Now().Add(20 * time.Second)),
+	}
+
+	t.Run("with no start timeout", func(t *testing.T) {
+		p := NewQueryProgress(&q, 0)
+
+		if p.StartTimeout != DefaultStartTimeout {
+			t.Error("expected StartTimeout to be equal to DefaultStartTimeout")
+		}
+	})
+
+	t.Run("with a start timeout shorter than the request timeout", func(t *testing.T) {
+		timeout := time.Second
+		p := NewQueryProgress(&q, timeout)
+
+		if p.StartTimeout != timeout {
+			t.Errorf("expected time to be %v got %v", timeout.String(), p.StartTimeout.String())
+		}
+	})
+
+	t.Run("with a start timeout longer than the request timeout", func(t *testing.T) {
+		timeout := 30 * time.Second
+		p := NewQueryProgress(&q, timeout)
+
+		if p.StartTimeout != timeout {
+			t.Errorf("expected time to be %v got %v", timeout.String(), p.StartTimeout.String())
+		}
+	})
+}
+
 func TestResponseNilPublisher(t *testing.T) {
 	ctx := context.Background()
 
@@ -229,7 +271,7 @@ func (em ExpectedMetrics) Validate(qp *QueryProgress) error {
 
 func TestQueryProgressNormal(t *testing.T) {
 	ctx := context.Background()
-	rp := NewQueryProgress(&query)
+	rp := NewQueryProgress(&query, 0)
 	rp.DrainDelay = 0
 
 	ru1 := uuid.New()
@@ -406,7 +448,7 @@ func TestQueryProgressNormal(t *testing.T) {
 }
 
 func TestQueryProgressParallel(t *testing.T) {
-	rp := NewQueryProgress(&query)
+	rp := NewQueryProgress(&query, 0)
 	rp.DrainDelay = 0
 
 	ru1 := uuid.New()
@@ -460,7 +502,7 @@ func TestQueryProgressParallel(t *testing.T) {
 }
 
 func TestQueryProgressStalled(t *testing.T) {
-	rp := NewQueryProgress(&query)
+	rp := NewQueryProgress(&query, 0)
 	rp.DrainDelay = 0
 
 	ru1 := uuid.New()
@@ -539,8 +581,7 @@ func TestQueryProgressStalled(t *testing.T) {
 }
 
 func TestRogueResponder(t *testing.T) {
-	rp := NewQueryProgress(&query)
-	rp.StartTimeout = 100 * time.Millisecond
+	rp := NewQueryProgress(&query, 100*time.Millisecond)
 	rp.DrainDelay = 0
 
 	rur := uuid.New()
@@ -587,7 +628,7 @@ func TestRogueResponder(t *testing.T) {
 }
 
 func TestQueryProgressError(t *testing.T) {
-	rp := NewQueryProgress(&query)
+	rp := NewQueryProgress(&query, 0)
 	rp.DrainDelay = 0
 
 	ru1 := uuid.New()
@@ -659,7 +700,7 @@ func TestQueryProgressError(t *testing.T) {
 }
 
 func TestStart(t *testing.T) {
-	rp := NewQueryProgress(&query)
+	rp := NewQueryProgress(&query, 0)
 	rp.DrainDelay = 0
 
 	conn := TestConnection{}
@@ -717,7 +758,7 @@ func TestAsyncCancel(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		rp := NewQueryProgress(&query)
+		rp := NewQueryProgress(&query, 0)
 		rp.DrainDelay = 0
 
 		responseChan := make(chan *QueryResponse, 128)
@@ -783,8 +824,7 @@ func TestExecute(t *testing.T) {
 			Deadline:    timestamppb.New(time.Now().Add(10 * time.Second)),
 		}
 
-		rp := NewQueryProgress(&q)
-		rp.StartTimeout = 100 * time.Millisecond
+		rp := NewQueryProgress(&q, 100*time.Millisecond)
 		rp.DrainDelay = 0
 
 		_, _, err := rp.Execute(context.Background(), &conn)
@@ -808,7 +848,7 @@ func TestExecute(t *testing.T) {
 			Deadline:    timestamppb.New(time.Now().Add(10 * time.Second)),
 		}
 
-		rp := NewQueryProgress(&q)
+		rp := NewQueryProgress(&q, 0)
 		rp.DrainDelay = 0
 
 		go func() {
@@ -910,7 +950,7 @@ func TestRealNats(t *testing.T) {
 		UUID:   u[:],
 	}
 
-	rp := NewQueryProgress(&q)
+	rp := NewQueryProgress(&q, 0)
 	rp.DrainDelay = 0
 
 	ru1 := uuid.New()
@@ -989,8 +1029,7 @@ func TestFastFinisher(t *testing.T) {
 	fast := uuid.New()
 	slow := uuid.New()
 
-	progress := NewQueryProgress(newQuery())
-	progress.StartTimeout = 500 * time.Millisecond
+	progress := NewQueryProgress(newQuery(), 500*time.Millisecond)
 
 	// Set up the fast responder, it should respond immediately and take only
 	// 100ms to complete its work
