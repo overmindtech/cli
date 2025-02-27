@@ -254,7 +254,7 @@ func TestNats(t *testing.T) {
 				LinkDepth: 0,
 			},
 			Scope: "test",
-		})
+		}, 0)
 
 		_, _, err := req.Execute(context.Background(), e.natsConnection)
 
@@ -328,7 +328,7 @@ func TestNatsCancel(t *testing.T) {
 			},
 			Scope: "*",
 			UUID:  u[:],
-		})
+		}, 0)
 
 		responses := make(chan *sdp.QueryResponse, 1000)
 		err := progress.Start(context.Background(), conn, responses)
@@ -651,7 +651,7 @@ func TestNatsAuth(t *testing.T) {
 				LinkDepth: 0,
 			},
 			Scope: "test",
-		}).Execute(context.Background(), e.natsConnection)
+		}, 0).Execute(context.Background(), e.natsConnection)
 
 		if err != nil {
 			t.Error(err)

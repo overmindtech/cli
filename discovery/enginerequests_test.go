@@ -356,7 +356,7 @@ func TestSendQuerySync(t *testing.T) {
 				IgnoreCache: false,
 				UUID:        u[:],
 				Deadline:    timestamppb.New(time.Now().Add(10 * time.Minute)),
-			})
+			}, 0)
 			progress.StartTimeout = 1 * time.Second
 
 			items, errs, err := progress.Execute(ctx, e.natsConnection)

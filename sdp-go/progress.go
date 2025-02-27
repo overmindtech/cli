@@ -24,6 +24,11 @@ import (
 // are sent (5 seconds)
 const DefaultResponseInterval = (5 * time.Second)
 
+// DefaultStartTimeout is the default period of time to wait for the first
+// response on a query. If no response is received in this time, the query will
+// be marked as complete.
+const DefaultStartTimeout = 500 * time.Millisecond
+
 // DefaultDrainDelay How long to wait after all is complete before draining all
 // NATS connections
 const DefaultDrainDelay = (100 * time.Millisecond)
@@ -314,11 +319,23 @@ type QueryProgress struct {
 	noRespondersCancel context.CancelFunc
 }
 
-// NewQueryProgress returns a pointer to a QueryProgress object with the
-// responders map initialized
-func NewQueryProgress(q *Query) *QueryProgress {
+// NewQueryProgress returns a pointer to a QueryProgress object with the various
+// internal members initialized. A startTimeout must also be provided, however
+// if it's nil it will default to `DefaultStartTimeout`
+func NewQueryProgress(q *Query, startTimeout time.Duration) *QueryProgress {
+
+	var finalTimeout time.Duration
+
+	// Ensure that we time out eventually if nothing responds
+	if startTimeout == 0 {
+		finalTimeout = DefaultStartTimeout
+	} else {
+		finalTimeout = startTimeout
+	}
+
 	return &QueryProgress{
 		Query:           q,
+		StartTimeout:    finalTimeout,
 		DrainDelay:      DefaultDrainDelay,
 		responders:      make(map[uuid.UUID]*responderStatus),
 		doneChan:        make(chan struct{}),
