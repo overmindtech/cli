@@ -37,6 +37,14 @@ type TestCluster struct {
 	T          *testing.T
 }
 
+func buildConfigWithContextFromFlags(context string, kubeconfigPath string) (*rest.Config, error) {
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		&clientcmd.ClientConfigLoadingRules{ExplicitPath: kubeconfigPath},
+		&clientcmd.ConfigOverrides{
+			CurrentContext: context,
+		}).ClientConfig()
+}
+
 func (t *TestCluster) ConnectExisting(name string) error {
 	kubeconfig := homedir.HomeDir() + "/.kube/config"
 
@@ -44,8 +52,7 @@ func (t *TestCluster) ConnectExisting(name string) error {
 	var err error
 
 	// Load kubernetes config
-	rc, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-
+	rc, err = buildConfigWithContextFromFlags("kind-"+name, kubeconfig)
 	if err != nil {
 		return err
 	}
@@ -54,14 +61,12 @@ func (t *TestCluster) ConnectExisting(name string) error {
 
 	// Create clientset
 	clientSet, err = kubernetes.NewForConfig(rc)
-
 	if err != nil {
 		return err
 	}
 
 	// Validate that we can connect to the cluster
 	_, err = clientSet.CoreV1().Namespaces().List(context.Background(), v1.ListOptions{})
-
 	if err != nil {
 		return err
 	}
