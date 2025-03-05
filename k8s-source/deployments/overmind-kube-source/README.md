@@ -16,9 +16,4 @@ helm uninstall k8s-source
 
 ## Releasing
 
-These charts are released automatically using [helm-chart-releaser](https://github.com/marketplace/actions/helm-chart-releaser). Chart version has to match the tags in the repo. Since the action only checks for changes since the last tag, these are the right hoops to jump through:
-
-* Edit `Chart.yaml`, updating `version` to the new version
-* Commit and push to `main`
-* wait for the release to happen (`overmind-kube-source-$version` tag shows up, discord notification)
-* tag the same commit with `v$version` and push to github to have the corresponding docker image built
+These charts are automatically released and pushed to Cloudsmith when the monorepo is tagged with a version in the following format `k8s-source/v1.2.3`. This will cause the docker container to be built, tagged with `1.2.3`, pushed, and a new corresponding helm chart released. See `.github/workflows/k8s-source-release.yml` for more details

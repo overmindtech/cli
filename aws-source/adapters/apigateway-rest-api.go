@@ -139,6 +139,36 @@ func restApiOutputMapper(scope string, awsItem *types.RestApi) (*sdp.Item, error
 		},
 	})
 
+	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   "apigateway-deployment",
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  *awsItem.Id,
+			Scope:  scope,
+		},
+		BlastPropagation: &sdp.BlastPropagation{
+			// Updating a deployment won't affect the REST API
+			In: false,
+			// Updating the REST API will affect the deployments
+			Out: true,
+		},
+	})
+
+	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   "apigateway-authorizer",
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  *awsItem.Id,
+			Scope:  scope,
+		},
+		BlastPropagation: &sdp.BlastPropagation{
+			// Updating an authorizer won't affect the REST API
+			In: false,
+			// Updating the REST API will affect the authorizers
+			Out: true,
+		},
+	})
+
 	return &item, nil
 }
 

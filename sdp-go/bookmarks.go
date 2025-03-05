@@ -16,9 +16,8 @@ func (bm *BookmarkMetadata) ToMap() map[string]any {
 
 func (bp *BookmarkProperties) ToMap() map[string]any {
 	return map[string]any{
-		"name":          bp.GetName(),
-		"description":   bp.GetDescription(),
-		"queries":       bp.GetQueries(),
-		"excludedItems": bp.GetExcludedItems(),
+		"name":        bp.GetName(),
+		"description": bp.GetDescription(),
+		"queries":     bp.GetQueries(),
 	}
 }

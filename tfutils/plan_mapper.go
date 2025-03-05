@@ -46,8 +46,11 @@ const (
 const KnownAfterApply = `(known after apply)`
 
 type PlannedChangeMapResult struct {
-	// The name of the resource in the Terraform plan
+	// The full name of the resource in the Terraform plan
 	TerraformName string
+
+	// The terraform resource type
+	TerraformType string
 
 	// The status of the mapping
 	Status MapStatus
@@ -200,6 +203,7 @@ func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 			log.WithContext(ctx).WithFields(lf).WithField("terraform-address", resourceChange.Address).Debug("Skipping unmapped resource")
 			results.Results = append(results.Results, PlannedChangeMapResult{
 				TerraformName: resourceChange.Address,
+				TerraformType: resourceChange.Type,
 				Status:        MapStatusUnsupported,
 				Message:       "unsupported",
 				MappedItemDiff: &sdp.MappedItemDiff{
@@ -243,6 +247,7 @@ func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 				attribute.String("ovm.climap.status", result.Status.String()),
 				attribute.String("ovm.climap.message", result.Message),
 				attribute.String("ovm.climap.terraform-name", result.TerraformName),
+				attribute.String("ovm.climap.terraform-type", result.TerraformType),
 			))
 		case MapStatusSuccess:
 			// Don't include these
@@ -263,6 +268,7 @@ func mapResourceToQuery(itemDiff *sdp.ItemDiff, terraformResource *Resource, map
 	if len(mappings) == 0 {
 		return PlannedChangeMapResult{
 			TerraformName: terraformResource.Address,
+			TerraformType: terraformResource.Type,
 			Status:        MapStatusUnsupported,
 			Message:       "unsupported",
 			MappedItemDiff: &sdp.MappedItemDiff{
@@ -300,6 +306,7 @@ func mapResourceToQuery(itemDiff *sdp.ItemDiff, terraformResource *Resource, map
 
 			return PlannedChangeMapResult{
 				TerraformName: terraformResource.Address,
+				TerraformType: terraformResource.Type,
 				Status:        MapStatusSuccess,
 				Message:       "mapped",
 				MappedItemDiff: &sdp.MappedItemDiff{
@@ -317,6 +324,7 @@ func mapResourceToQuery(itemDiff *sdp.ItemDiff, terraformResource *Resource, map
 	// If we get to this point, we haven't found a mapping
 	return PlannedChangeMapResult{
 		TerraformName: terraformResource.Address,
+		TerraformType: terraformResource.Type,
 		Status:        MapStatusNotEnoughInfo,
 		Message:       fmt.Sprintf("missing mapping attribute: %v", strings.Join(attemptedMappings, ", ")),
 		MappedItemDiff: &sdp.MappedItemDiff{

@@ -15,6 +15,8 @@ const (
 	methodResponseSrc = "method-response"
 	integrationSrc    = "integration"
 	apiKeySrc         = "api-key"
+	authorizerSrc     = "authorizer"
+	deploymentSrc     = "deployment"
 )
 
 func setup(ctx context.Context, logger *slog.Logger, client *apigateway.Client) error {
@@ -58,6 +60,18 @@ func setup(ctx context.Context, logger *slog.Logger, client *apigateway.Client) 
 
 	// Create API Key
 	err = createAPIKey(ctx, logger, client, testID)
+	if err != nil {
+		return err
+	}
+
+	// Create Authorizer
+	err = createAuthorizer(ctx, logger, client, *restApiID, testID)
+	if err != nil {
+		return err
+	}
+
+	// Create Deployment
+	_, err = createDeployment(ctx, logger, client, *restApiID)
 	if err != nil {
 		return err
 	}

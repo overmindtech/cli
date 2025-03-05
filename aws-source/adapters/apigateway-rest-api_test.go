@@ -86,6 +86,18 @@ func TestRestApiOutputMapper(t *testing.T) {
 			ExpectedQuery:  "abc123",
 			ExpectedScope:  "scope",
 		},
+		{
+			ExpectedType:   "apigateway-deployment",
+			ExpectedMethod: sdp.QueryMethod_SEARCH,
+			ExpectedQuery:  "abc123",
+			ExpectedScope:  "scope",
+		},
+		{
+			ExpectedType:   "apigateway-authorizer",
+			ExpectedMethod: sdp.QueryMethod_SEARCH,
+			ExpectedQuery:  "abc123",
+			ExpectedScope:  "scope",
+		},
 	}
 
 	tests.Execute(t, item)
