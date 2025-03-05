@@ -24,6 +24,11 @@ import (
 // are sent (5 seconds)
 const DefaultResponseInterval = (5 * time.Second)
 
+// DefaultStartTimeout is the default period of time to wait for the first
+// response on a query. If no response is received in this time, the query will
+// be marked as complete.
+const DefaultStartTimeout = 500 * time.Millisecond
+
 // DefaultDrainDelay How long to wait after all is complete before draining all
 // NATS connections
 const DefaultDrainDelay = (100 * time.Millisecond)
@@ -314,11 +319,23 @@ type QueryProgress struct {
 	noRespondersCancel context.CancelFunc
 }
 
-// NewQueryProgress returns a pointer to a QueryProgress object with the
-// responders map initialized
-func NewQueryProgress(q *Query) *QueryProgress {
+// NewQueryProgress returns a pointer to a QueryProgress object with the various
+// internal members initialized. A startTimeout must also be provided, however
+// if it's nil it will default to `DefaultStartTimeout`
+func NewQueryProgress(q *Query, startTimeout time.Duration) *QueryProgress {
+
+	var finalTimeout time.Duration
+
+	// Ensure that we time out eventually if nothing responds
+	if startTimeout == 0 {
+		finalTimeout = DefaultStartTimeout
+	} else {
+		finalTimeout = startTimeout
+	}
+
 	return &QueryProgress{
 		Query:           q,
+		StartTimeout:    finalTimeout,
 		DrainDelay:      DefaultDrainDelay,
 		responders:      make(map[uuid.UUID]*responderStatus),
 		doneChan:        make(chan struct{}),
@@ -423,11 +440,15 @@ func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, respon
 				return
 			}
 
-			// TODO: extract linked items and linked item queries and pass them on
+			item, edges := TranslateLinksToEdges(item)
 			qp.responseChan <- &QueryResponse{
 				ResponseType: &QueryResponse_NewItem{NewItem: item},
 			}
-
+			for _, e := range edges {
+				qp.responseChan <- &QueryResponse{
+					ResponseType: &QueryResponse_Edge{Edge: e},
+				}
+			}
 		}
 	}
 
@@ -480,6 +501,8 @@ func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, respon
 		switch qr.GetResponseType().(type) {
 		case *QueryResponse_NewItem:
 			itemHandler(ctx, qr.GetNewItem())
+		case *QueryResponse_Edge:
+			panic("edge-from-source not implemented yet")
 		case *QueryResponse_Error:
 			errorHandler(ctx, qr.GetError())
 		case *QueryResponse_Response:
@@ -501,6 +524,41 @@ func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, respon
 	}
 
 	return nil
+}
+
+// TranslateLinksToEdges Translates linked items and queries into edges. This is
+// a temporary stop gap measure to allow parallel processing of items and edges
+// in the gateway while allowing other parts of the system to be updated
+// independently. See https://github.com/overmindtech/workspace/issues/753
+func TranslateLinksToEdges(item *Item) (*Item, []*Edge) {
+	lis := item.GetLinkedItems()
+	item.LinkedItems = nil
+	liqs := item.GetLinkedItemQueries()
+	item.LinkedItemQueries = nil
+
+	edges := []*Edge{}
+
+	if lis != nil {
+		for _, li := range lis {
+			edges = append(edges, &Edge{
+				From:             item.Reference(),
+				To:               li.GetItem(),
+				BlastPropagation: li.GetBlastPropagation(),
+			})
+		}
+	}
+
+	if liqs != nil {
+		for _, liq := range liqs {
+			edges = append(edges, &Edge{
+				From:             item.Reference(),
+				To:               liq.GetQuery().Reference(),
+				BlastPropagation: liq.GetBlastPropagation(),
+			})
+		}
+	}
+
+	return item, edges
 }
 
 // markStarted Marks the request as started and will cause it to be marked as
@@ -568,6 +626,7 @@ func (qp *QueryProgress) Drain() {
 
 		if qp.responseChan != nil {
 			close(qp.responseChan)
+			qp.responseChan = nil
 		}
 
 		// Only if the drain is fully complete should we close the doneChan
@@ -641,24 +700,25 @@ func (qp *QueryProgress) AsyncCancel(ec EncodedConnection) error {
 	return nil
 }
 
-// Execute Executes a given request and waits for it to finish, returns the
-// items that were found and any errors. The third return error value  will only
-// be returned only if there is a problem making the request. Details of which
-// responders have failed etc. should be determined using the typical methods
-// like `NumError()`.
-func (qp *QueryProgress) Execute(ctx context.Context, ec EncodedConnection) ([]*Item, []*QueryError, error) {
+// Execute a given request and wait for it to finish, returns the items that
+// were found and any errors. The third return error value will only be returned
+// only if there is a problem making the request. Details of which responders
+// have failed etc. should be determined using the typical methods like
+// `NumError()`.
+func (qp *QueryProgress) Execute(ctx context.Context, ec EncodedConnection) ([]*Item, []*Edge, []*QueryError, error) {
 	items := make([]*Item, 0)
+	edges := make([]*Edge, 0)
 	errs := make([]*QueryError, 0)
 	r := make(chan *QueryResponse)
 
 	if ec == nil {
-		return items, errs, errors.New("nil NATS connection")
+		return items, edges, errs, errors.New("nil NATS connection")
 	}
 
 	err := qp.Start(ctx, ec, r)
 
 	if err != nil {
-		return items, errs, err
+		return items, edges, errs, err
 	}
 
 	for {
@@ -667,11 +727,15 @@ func (qp *QueryProgress) Execute(ctx context.Context, ec EncodedConnection) ([]*
 		case response, ok := <-r:
 			if !ok {
 				// when the channel closes, we're done
-				return items, errs, nil
+				return items, edges, errs, nil
 			}
 			item := response.GetNewItem()
 			if item != nil {
 				items = append(items, item)
+			}
+			edge := response.GetEdge()
+			if edge != nil {
+				edges = append(edges, edge)
 			}
 			qErr := response.GetError()
 			if qErr != nil {

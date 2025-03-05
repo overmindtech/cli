@@ -23,4 +23,4 @@ jobs:
       - name: Go Test
         run: |
           go run main.go --version
-          go test -v -timeout 5m github.com/overmindtech/cli github.com/overmindtech/cli/tfutils
+          go test -race -v -timeout 5m github.com/overmindtech/cli github.com/overmindtech/cli/tfutils

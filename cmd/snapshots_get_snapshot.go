@@ -56,11 +56,6 @@ func GetSnapshot(cmd *cobra.Command, args []string) error {
 			"snapshot-query": q,
 		}).Info("found snapshot query")
 	}
-	for _, i := range response.Msg.GetSnapshot().GetProperties().GetExcludedItems() {
-		log.WithContext(ctx).WithFields(log.Fields{
-			"snapshot-excluded-item": i,
-		}).Info("found snapshot excluded item")
-	}
 	for _, i := range response.Msg.GetSnapshot().GetProperties().GetItems() {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"snapshot-item": i,

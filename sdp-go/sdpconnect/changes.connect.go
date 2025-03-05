@@ -80,6 +80,9 @@ const (
 	// ChangesServiceUpdatePlannedChangesProcedure is the fully-qualified name of the ChangesService's
 	// UpdatePlannedChanges RPC.
 	ChangesServiceUpdatePlannedChangesProcedure = "/changes.ChangesService/UpdatePlannedChanges"
+	// ChangesServiceStartChangeAnalysisProcedure is the fully-qualified name of the ChangesService's
+	// StartChangeAnalysis RPC.
+	ChangesServiceStartChangeAnalysisProcedure = "/changes.ChangesService/StartChangeAnalysis"
 	// ChangesServiceListChangingItemsSummaryProcedure is the fully-qualified name of the
 	// ChangesService's ListChangingItemsSummary RPC.
 	ChangesServiceListChangingItemsSummaryProcedure = "/changes.ChangesService/ListChangingItemsSummary"
@@ -153,6 +156,10 @@ type ChangesServiceClient interface {
 	// radius calculation. Note that not all of the changing items have to exist
 	// in our current sources.
 	UpdatePlannedChanges(context.Context, *connect.Request[sdp_go.UpdatePlannedChangesRequest]) (*connect.ServerStreamForClient[sdp_go.UpdatePlannedChangesResponse], error)
+	// Start the change analysis process. This will calculate various things
+	// blast radius, risks, auto-tagging etc. This will return immediately and
+	// the results can be fetched using the other RPCs
+	StartChangeAnalysis(context.Context, *connect.Request[sdp_go.StartChangeAnalysisRequest]) (*connect.Response[sdp_go.StartChangeAnalysisResponse], error)
 	// Gets the diff summary for all items that were planned to change as part of
 	// this change. This includes the high level details of the item, and the
 	// status (e.g. changed, deleted) but not the diff itself
@@ -265,6 +272,12 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(changesServiceMethods.ByName("UpdatePlannedChanges")),
 			connect.WithClientOptions(opts...),
 		),
+		startChangeAnalysis: connect.NewClient[sdp_go.StartChangeAnalysisRequest, sdp_go.StartChangeAnalysisResponse](
+			httpClient,
+			baseURL+ChangesServiceStartChangeAnalysisProcedure,
+			connect.WithSchema(changesServiceMethods.ByName("StartChangeAnalysis")),
+			connect.WithClientOptions(opts...),
+		),
 		listChangingItemsSummary: connect.NewClient[sdp_go.ListChangingItemsSummaryRequest, sdp_go.ListChangingItemsSummaryResponse](
 			httpClient,
 			baseURL+ChangesServiceListChangingItemsSummaryProcedure,
@@ -303,6 +316,7 @@ type changesServiceClient struct {
 	endChange                 *connect.Client[sdp_go.EndChangeRequest, sdp_go.EndChangeResponse]
 	listHomeChanges           *connect.Client[sdp_go.ListHomeChangesRequest, sdp_go.ListHomeChangesResponse]
 	updatePlannedChanges      *connect.Client[sdp_go.UpdatePlannedChangesRequest, sdp_go.UpdatePlannedChangesResponse]
+	startChangeAnalysis       *connect.Client[sdp_go.StartChangeAnalysisRequest, sdp_go.StartChangeAnalysisResponse]
 	listChangingItemsSummary  *connect.Client[sdp_go.ListChangingItemsSummaryRequest, sdp_go.ListChangingItemsSummaryResponse]
 	getDiff                   *connect.Client[sdp_go.GetDiffRequest, sdp_go.GetDiffResponse]
 	populateChangeFilters     *connect.Client[sdp_go.PopulateChangeFiltersRequest, sdp_go.PopulateChangeFiltersResponse]
@@ -383,6 +397,11 @@ func (c *changesServiceClient) UpdatePlannedChanges(ctx context.Context, req *co
 	return c.updatePlannedChanges.CallServerStream(ctx, req)
 }
 
+// StartChangeAnalysis calls changes.ChangesService.StartChangeAnalysis.
+func (c *changesServiceClient) StartChangeAnalysis(ctx context.Context, req *connect.Request[sdp_go.StartChangeAnalysisRequest]) (*connect.Response[sdp_go.StartChangeAnalysisResponse], error) {
+	return c.startChangeAnalysis.CallUnary(ctx, req)
+}
+
 // ListChangingItemsSummary calls changes.ChangesService.ListChangingItemsSummary.
 func (c *changesServiceClient) ListChangingItemsSummary(ctx context.Context, req *connect.Request[sdp_go.ListChangingItemsSummaryRequest]) (*connect.Response[sdp_go.ListChangingItemsSummaryResponse], error) {
 	return c.listChangingItemsSummary.CallUnary(ctx, req)
@@ -440,6 +459,10 @@ type ChangesServiceHandler interface {
 	// radius calculation. Note that not all of the changing items have to exist
 	// in our current sources.
 	UpdatePlannedChanges(context.Context, *connect.Request[sdp_go.UpdatePlannedChangesRequest], *connect.ServerStream[sdp_go.UpdatePlannedChangesResponse]) error
+	// Start the change analysis process. This will calculate various things
+	// blast radius, risks, auto-tagging etc. This will return immediately and
+	// the results can be fetched using the other RPCs
+	StartChangeAnalysis(context.Context, *connect.Request[sdp_go.StartChangeAnalysisRequest]) (*connect.Response[sdp_go.StartChangeAnalysisResponse], error)
 	// Gets the diff summary for all items that were planned to change as part of
 	// this change. This includes the high level details of the item, and the
 	// status (e.g. changed, deleted) but not the diff itself
@@ -548,6 +571,12 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 		connect.WithSchema(changesServiceMethods.ByName("UpdatePlannedChanges")),
 		connect.WithHandlerOptions(opts...),
 	)
+	changesServiceStartChangeAnalysisHandler := connect.NewUnaryHandler(
+		ChangesServiceStartChangeAnalysisProcedure,
+		svc.StartChangeAnalysis,
+		connect.WithSchema(changesServiceMethods.ByName("StartChangeAnalysis")),
+		connect.WithHandlerOptions(opts...),
+	)
 	changesServiceListChangingItemsSummaryHandler := connect.NewUnaryHandler(
 		ChangesServiceListChangingItemsSummaryProcedure,
 		svc.ListChangingItemsSummary,
@@ -598,6 +627,8 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 			changesServiceListHomeChangesHandler.ServeHTTP(w, r)
 		case ChangesServiceUpdatePlannedChangesProcedure:
 			changesServiceUpdatePlannedChangesHandler.ServeHTTP(w, r)
+		case ChangesServiceStartChangeAnalysisProcedure:
+			changesServiceStartChangeAnalysisHandler.ServeHTTP(w, r)
 		case ChangesServiceListChangingItemsSummaryProcedure:
 			changesServiceListChangingItemsSummaryHandler.ServeHTTP(w, r)
 		case ChangesServiceGetDiffProcedure:
@@ -671,6 +702,10 @@ func (UnimplementedChangesServiceHandler) ListHomeChanges(context.Context, *conn
 
 func (UnimplementedChangesServiceHandler) UpdatePlannedChanges(context.Context, *connect.Request[sdp_go.UpdatePlannedChangesRequest], *connect.ServerStream[sdp_go.UpdatePlannedChangesResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.UpdatePlannedChanges is not implemented"))
+}
+
+func (UnimplementedChangesServiceHandler) StartChangeAnalysis(context.Context, *connect.Request[sdp_go.StartChangeAnalysisRequest]) (*connect.Response[sdp_go.StartChangeAnalysisResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.StartChangeAnalysis is not implemented"))
 }
 
 func (UnimplementedChangesServiceHandler) ListChangingItemsSummary(context.Context, *connect.Request[sdp_go.ListChangingItemsSummaryRequest]) (*connect.Response[sdp_go.ListChangingItemsSummaryResponse], error) {

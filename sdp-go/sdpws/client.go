@@ -129,14 +129,6 @@ func (c *Client) receive(ctx context.Context) {
 
 		typ, r, err := c.conn.Reader(ctx)
 		if err != nil {
-			var ce websocket.CloseError
-			if errors.As(err, &ce) {
-				if ce.Code == websocket.StatusNormalClosure {
-					// tear down the connection without a new error
-					c.abort(ctx, nil)
-					return
-				}
-			}
 			c.abort(ctx, fmt.Errorf("failed to initialise websocket reader: %w", err))
 			return
 		}
@@ -361,7 +353,16 @@ func (c *Client) abort(ctx context.Context, err error) {
 	}
 	c.closedMu.Unlock()
 
-	log.WithContext(ctx).WithError(err).Error("aborting client")
+	isNormalClosure := false
+	var ce websocket.CloseError
+	if errors.As(err, &ce) {
+		// tear down the connection without a new error if this is a regular close
+		isNormalClosure = ce.Code == websocket.StatusNormalClosure
+	}
+
+	if err != nil && !isNormalClosure {
+		log.WithContext(ctx).WithError(err).Error("aborting client")
+	}
 	c.errMu.Lock()
 	c.err = errors.Join(c.err, err)
 	c.errMu.Unlock()

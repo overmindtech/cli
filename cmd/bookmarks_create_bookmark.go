@@ -85,11 +85,6 @@ func CreateBookmark(cmd *cobra.Command, args []string) error {
 			"bookmark-query": q,
 		}).Info("created bookmark query")
 	}
-	for _, i := range response.Msg.GetBookmark().GetProperties().GetExcludedItems() {
-		log.WithContext(ctx).WithFields(log.Fields{
-			"bookmark-excluded-item": i,
-		}).Info("created bookmark excluded item")
-	}
 
 	b, err := json.MarshalIndent(response.Msg.GetBookmark().GetProperties(), "", "  ")
 	if err != nil {
