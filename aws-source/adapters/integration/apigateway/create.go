@@ -3,6 +3,7 @@ package apigateway
 import (
 	"context"
 	"errors"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"log/slog"
 	"strings"
 
@@ -195,4 +196,62 @@ func createAPIKey(ctx context.Context, logger *slog.Logger, client *apigateway.C
 	}
 
 	return nil
+}
+
+func createAuthorizer(ctx context.Context, logger *slog.Logger, client *apigateway.Client, restAPIID, testID string) error {
+	// check if an authorizer with the same name already exists
+	id, err := findAuthorizerByName(ctx, client, restAPIID, integration.ResourceName(integration.APIGateway, authorizerSrc, testID))
+	if err != nil {
+		if errors.As(err, new(integration.NotFoundError)) {
+			logger.InfoContext(ctx, "Creating authorizer")
+		} else {
+			return err
+		}
+	}
+
+	if id != nil {
+		logger.InfoContext(ctx, "Authorizer already exists")
+		return nil
+	}
+
+	identitySource := "method.request.header.Authorization"
+	_, err = client.CreateAuthorizer(ctx, &apigateway.CreateAuthorizerInput{
+		RestApiId:      &restAPIID,
+		Name:           adapterhelpers.PtrString(integration.ResourceName(integration.APIGateway, authorizerSrc, testID)),
+		Type:           types.AuthorizerTypeToken,
+		IdentitySource: &identitySource,
+		AuthorizerUri:  adapterhelpers.PtrString("arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:123456789012:function:auth-function/invocations"),
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createDeployment(ctx context.Context, logger *slog.Logger, client *apigateway.Client, restAPIID string) (*string, error) {
+	// check if a deployment with the same name already exists
+	id, err := findDeploymentByDescription(ctx, client, restAPIID, "test-deployment")
+	if err != nil {
+		if errors.As(err, new(integration.NotFoundError)) {
+			logger.InfoContext(ctx, "Creating deployment")
+		} else {
+			return nil, err
+		}
+	}
+
+	if id != nil {
+		logger.InfoContext(ctx, "Deployment already exists")
+		return id, nil
+	}
+
+	resp, err := client.CreateDeployment(ctx, &apigateway.CreateDeploymentInput{
+		RestApiId:   &restAPIID,
+		Description: adapterhelpers.PtrString("test-deployment"),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Id, nil
 }

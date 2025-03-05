@@ -73,6 +73,20 @@ func APIGateway(t *testing.T) {
 		t.Fatalf("failed to validate APIGateway API key adapter: %v", err)
 	}
 
+	authorizerSource := adapters.NewAPIGatewayAuthorizerAdapter(testClient, accountID, testAWSConfig.Region)
+
+	err = authorizerSource.Validate()
+	if err != nil {
+		t.Fatalf("failed to validate APIGateway authorizer adapter: %v", err)
+	}
+
+	deploymentSource := adapters.NewAPIGatewayDeploymentAdapter(testClient, accountID, testAWSConfig.Region)
+
+	err = deploymentSource.Validate()
+	if err != nil {
+		t.Fatalf("failed to validate APIGateway deployment adapter: %v", err)
+	}
+
 	// Tests ----------------------------------------------------------------------------------------------------------
 
 	scope := adapterhelpers.FormatScope(accountID, testAWSConfig.Region)
@@ -303,6 +317,145 @@ func APIGateway(t *testing.T) {
 
 	if apiKeyID != apiKeyIDFromSearch {
 		t.Fatalf("expected API key ID %s, got %s", apiKeyID, apiKeyIDFromSearch)
+	}
+
+	// Search authorizers by restApiID
+	authorizers, err := authorizerSource.Search(ctx, scope, restApiID, true)
+	if err != nil {
+		t.Fatalf("failed to search APIGateway authorizers: %v", err)
+	}
+
+	authorizerUniqueAttribute := authorizers[0].GetUniqueAttribute()
+
+	authorizerTestName := integration.ResourceName(integration.APIGateway, authorizerSrc, integration.TestID())
+	authorizerID, err := integration.GetUniqueAttributeValueBySignificantAttribute(
+		authorizerUniqueAttribute,
+		"Name",
+		authorizerTestName,
+		authorizers,
+		true,
+	)
+	if err != nil {
+		t.Fatalf("failed to get authorizer ID: %v", err)
+	}
+
+	// Get authorizer
+	query := fmt.Sprintf("%s/%s", restApiID, authorizerID)
+	authorizer, err := authorizerSource.Get(ctx, scope, query, true)
+	if err != nil {
+		t.Fatalf("failed to get APIGateway authorizer: %v", err)
+	}
+
+	authorizerIDFromGet, err := integration.GetUniqueAttributeValueBySignificantAttribute(
+		authorizerUniqueAttribute,
+		"Name",
+		authorizerTestName,
+		[]*sdp.Item{authorizer},
+		true,
+	)
+	if err != nil {
+		t.Fatalf("failed to get authorizer ID from get: %v", err)
+	}
+
+	if authorizerID != authorizerIDFromGet {
+		t.Fatalf("expected authorizer ID %s, got %s", authorizerID, authorizerIDFromGet)
+	}
+
+	// Search authorizer by restApiID/name
+	query = fmt.Sprintf("%s/%s", restApiID, authorizerTestName)
+	authorizersFromSearch, err := authorizerSource.Search(ctx, scope, query, true)
+	if err != nil {
+		t.Fatalf("failed to search APIGateway authorizers: %v", err)
+	}
+
+	if len(authorizersFromSearch) == 0 {
+		t.Fatalf("no authorizers found")
+	}
+
+	authorizerIDFromSearch, err := integration.GetUniqueAttributeValueBySignificantAttribute(
+		authorizerUniqueAttribute,
+		"Name",
+		authorizerTestName,
+		authorizersFromSearch,
+		true,
+	)
+	if err != nil {
+		t.Fatalf("failed to get authorizer ID from search: %v", err)
+	}
+
+	if authorizerID != authorizerIDFromSearch {
+		t.Fatalf("expected authorizer ID %s, got %s", authorizerID, authorizerIDFromSearch)
+	}
+
+	// Search deployments by restApiID
+	deployments, err := deploymentSource.Search(ctx, scope, restApiID, true)
+	if err != nil {
+		t.Fatalf("failed to search APIGateway deployments: %v", err)
+	}
+
+	if len(deployments) == 0 {
+		t.Fatalf("no deployments found")
+	}
+
+	deploymentUniqueAttribute := deployments[0].GetUniqueAttribute()
+
+	deploymentID, err := integration.GetUniqueAttributeValueBySignificantAttribute(
+		deploymentUniqueAttribute,
+		"Description",
+		"test-deployment",
+		deployments,
+		true,
+	)
+	if err != nil {
+		t.Fatalf("failed to get deployment ID: %v", err)
+	}
+
+	// Get deployment
+	query = fmt.Sprintf("%s/%s", restApiID, deploymentID)
+	deployment, err := deploymentSource.Get(ctx, scope, query, true)
+	if err != nil {
+		t.Fatalf("failed to get APIGateway deployment: %v", err)
+	}
+
+	deploymentIDFromGet, err := integration.GetUniqueAttributeValueBySignificantAttribute(
+		deploymentUniqueAttribute,
+		"Description",
+		"test-deployment",
+		[]*sdp.Item{deployment},
+		true,
+	)
+	if err != nil {
+		t.Fatalf("failed to get deployment ID from get: %v", err)
+	}
+
+	if deploymentID != deploymentIDFromGet {
+		t.Fatalf("expected deployment ID %s, got %s", deploymentID, deploymentIDFromGet)
+	}
+
+	// Search deployment by restApiID/description
+	query = fmt.Sprintf("%s/test-deployment", restApiID)
+	deploymentsFromSearch, err := deploymentSource.Search(ctx, scope, query, true)
+	if err != nil {
+		t.Fatalf("failed to search APIGateway deployments: %v", err)
+	}
+
+	if len(deploymentsFromSearch) == 0 {
+		t.Fatalf("no deployments found")
+	}
+
+	deploymentIDFromSearch, err := integration.GetUniqueAttributeValueBySignificantAttribute(
+		deploymentUniqueAttribute,
+		"Description",
+		"test-deployment",
+		deploymentsFromSearch,
+		true,
+	)
+	if err != nil {
+		t.Fatalf("failed to get deployment ID from search: %v", err)
+	}
+
+	if deploymentID != deploymentIDFromSearch {
+		t.Fatalf("expected deployment ID %s, got %s", deploymentID, deploymentIDFromSearch)
 	}
 
 	t.Log("APIGateway integration test completed")
