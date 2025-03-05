@@ -132,3 +132,41 @@ func findAPIKeyByName(ctx context.Context, client *apigateway.Client, name strin
 
 	return nil, integration.NewNotFoundError(integration.ResourceName(integration.APIGateway, apiKeySrc, name))
 }
+
+func findAuthorizerByName(ctx context.Context, client *apigateway.Client, restAPIID, name string) (*string, error) {
+	result, err := client.GetAuthorizers(ctx, &apigateway.GetAuthorizersInput{
+		RestApiId: &restAPIID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(result.Items) == 0 {
+		return nil, integration.NewNotFoundError(integration.ResourceName(integration.APIGateway, authorizerSrc, name))
+	}
+
+	for _, authorizer := range result.Items {
+		if *authorizer.Name == name {
+			return authorizer.Id, nil
+		}
+	}
+
+	return nil, integration.NewNotFoundError(integration.ResourceName(integration.APIGateway, authorizerSrc, name))
+}
+
+func findDeploymentByDescription(ctx context.Context, client *apigateway.Client, restAPIID, description string) (*string, error) {
+	result, err := client.GetDeployments(ctx, &apigateway.GetDeploymentsInput{
+		RestApiId: &restAPIID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, deployment := range result.Items {
+		if *deployment.Description == description {
+			return deployment.Id, nil
+		}
+	}
+
+	return nil, integration.NewNotFoundError(integration.ResourceName(integration.APIGateway, deploymentSrc, description))
+}
