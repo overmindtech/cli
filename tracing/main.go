@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
 	"time"
 
@@ -56,14 +57,44 @@ func Tracer() trace.Tracer {
 	return tracer
 }
 
+// hasGitDir returns true if the current directory or any parent directory contains a .git directory
+func hasGitDir() bool {
+	// Start with the current working directory
+	dir, err := os.Getwd()
+	if err != nil {
+		return false
+	}
+
+	// Check the current directory and all parent directories
+	for {
+		// Check if .git exists in this directory
+		_, err := os.Stat(filepath.Join(dir, ".git"))
+		if err == nil {
+			return true // Found a .git directory
+		}
+
+		// Get the parent directory
+		parentDir := filepath.Dir(dir)
+
+		// If we've reached the root directory, stop searching
+		if parentDir == dir {
+			break
+		}
+
+		// Move up to the parent directory
+		dir = parentDir
+	}
+
+	return false // No .git directory found
+}
+
 func tracingResource(component string) *resource.Resource {
 	// Identify your application using resource detection
 	resources := []*resource.Resource{}
 
 	// the EC2 detector takes ~10s to time out outside EC2
 	// disable it if we're running from a git checkout
-	_, err := os.Stat(".git")
-	if os.IsNotExist(err) {
+	if !hasGitDir() {
 		ec2Res, err := resource.New(context.Background(), resource.WithDetectors(ec2.NewResourceDetector()))
 		if err != nil {
 			log.WithError(err).Error("error initialising EC2 resource detector")
@@ -180,7 +211,6 @@ func InitTracerWithUpstreams(component, honeycombApiKey, sentryDSN string, opts 
 }
 
 func InitTracer(component string, opts ...otlptracehttp.Option) error {
-
 	client := otlptracehttp.NewClient(opts...)
 	otlpExp, err := otlptrace.New(context.Background(), client)
 	if err != nil {
