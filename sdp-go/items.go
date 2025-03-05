@@ -21,9 +21,13 @@ import (
 const WILDCARD = "*"
 
 // Copy copies all information from one item pointer to another
-func (liq *BlastPropagation) Copy(dest *BlastPropagation) {
-	dest.In = liq.GetIn()
-	dest.Out = liq.GetOut()
+func (bp *BlastPropagation) Copy(dest *BlastPropagation) {
+	dest.In = bp.GetIn()
+	dest.Out = bp.GetOut()
+}
+
+func (bp *BlastPropagation) IsEqual(other *BlastPropagation) bool {
+	return bp.GetIn() == other.GetIn() && bp.GetOut() == other.GetOut()
 }
 
 // Copy copies all information from one item pointer to another
@@ -153,6 +157,12 @@ func (i *Item) Hash() string {
 	return hashSum(([]byte(fmt.Sprint(i.GloballyUniqueName()))))
 }
 
+func (e *Edge) IsEqual(other *Edge) bool {
+	return e.GetFrom().IsEqual(other.GetFrom()) &&
+		e.GetTo().IsEqual(other.GetTo()) &&
+		e.GetBlastPropagation().IsEqual(other.GetBlastPropagation())
+}
+
 // Hash Returns a 12 character hash for the item. This is likely but not
 // guaranteed to be unique. The hash is calculated using the GloballyUniqueName
 func (r *Reference) Hash() string {
@@ -168,13 +178,61 @@ func (r *Reference) Hash() string {
 //
 // They are concatenated with dots (.)
 func (r *Reference) GloballyUniqueName() string {
-	return strings.Join([]string{
-		r.GetScope(),
-		r.GetType(),
-		r.GetUniqueAttributeValue(),
-	},
-		".",
-	)
+	if r == nil {
+		// in the llm templates nil references are processed, and after spending
+		// half an hour on trying to figure out what was happening in the
+		// reflect code, I decided to just return an empty string here. DS,
+		// 2025-02-26
+		return ""
+	}
+	if r.GetIsQuery() {
+		if r.GetMethod() == QueryMethod_GET {
+			// GET queries are single items
+			return fmt.Sprintf("%v.%v.%v", r.GetScope(), r.GetType(), r.GetQuery())
+		}
+		panic(fmt.Sprintf("cannot get globally unique name for query reference: %v", r))
+	}
+	return fmt.Sprintf("%v.%v.%v", r.GetScope(), r.GetType(), r.GetUniqueAttributeValue())
+
+}
+
+// Key returns a globally unique string for this reference, even if it is a GET query
+func (r *Reference) Key() string {
+	if r == nil {
+		panic("cannot get key for nil reference")
+	}
+	if r.GetIsQuery() {
+		if r.IsSingle() {
+			// GET queries without wildcards are single items
+			return fmt.Sprintf("%v.%v.%v", r.GetScope(), r.GetType(), r.GetQuery())
+		}
+		return fmt.Sprintf("%v: %v.%v.%v", r.GetMethod(), r.GetScope(), r.GetType(), r.GetQuery())
+	}
+	return r.GloballyUniqueName()
+}
+
+// IsSingle returns true if this references a single item, false if it is a LIST
+// or SEARCH query, or a GET query with scope and/or type wildcards.
+func (r *Reference) IsSingle() bool {
+	// nil reference is never good
+	if r == nil {
+		return false
+	}
+	// if it is a query, then it is only a single item if it is a GET query with no wildcards
+	if r.GetIsQuery() {
+		return r.GetMethod() == QueryMethod_GET && r.GetScope() != "*" && r.GetType() != "*"
+	}
+	// if it is not a query, then it is always single item
+	return true
+}
+
+func (r *Reference) IsEqual(other *Reference) bool {
+	return r.GetScope() == other.GetScope() &&
+		r.GetType() == other.GetType() &&
+		r.GetUniqueAttributeValue() == other.GetUniqueAttributeValue() &&
+		r.GetIsQuery() == other.GetIsQuery() &&
+		r.GetMethod() == other.GetMethod() &&
+		r.GetQuery() == other.GetQuery()
 }
 
 // Copy copies all information from one Reference pointer to another
@@ -182,6 +240,24 @@ func (r *Reference) Copy(dest *Reference) {
 	dest.Type = r.GetType()
 	dest.UniqueAttributeValue = r.GetUniqueAttributeValue()
 	dest.Scope = r.GetScope()
+}
+
+func (r *Reference) ToQuery() *Query {
+	if !r.GetIsQuery() {
+		return &Query{
+			Scope:  r.GetScope(),
+			Type:   r.GetType(),
+			Method: QueryMethod_GET,
+			Query:  r.GetUniqueAttributeValue(),
+		}
+	}
+
+	return &Query{
+		Scope:  r.GetScope(),
+		Type:   r.GetType(),
+		Method: r.GetMethod(),
+		Query:  r.GetQuery(),
+	}
 }
 
 // Copy copies all information from one Metadata pointer to another
@@ -348,6 +424,37 @@ func (r *Query) ParseUuid() uuid.UUID {
 		r.UUID = reqUUID[:]
 	}
 	return reqUUID
+}
+
+func (qr *QueryResponse) ToGatewayResponse() *GatewayResponse {
+	switch qr.GetResponseType().(type) {
+	case *QueryResponse_NewItem:
+		return &GatewayResponse{
+			ResponseType: &GatewayResponse_NewItem{
+				NewItem: qr.GetNewItem(),
+			},
+		}
+	case *QueryResponse_Edge:
+		return &GatewayResponse{
+			ResponseType: &GatewayResponse_NewEdge{
+				NewEdge: qr.GetEdge(),
+			},
+		}
+	case *QueryResponse_Error:
+		return &GatewayResponse{
+			ResponseType: &GatewayResponse_QueryError{
+				QueryError: qr.GetError(),
+			},
+		}
+	case *QueryResponse_Response:
+		return &GatewayResponse{
+			ResponseType: &GatewayResponse_QueryStatus{
+				QueryStatus: qr.GetResponse().ToQueryStatus(),
+			},
+		}
+	default:
+		panic(fmt.Sprintf("encountered unknown QueryResponse type: %T", qr))
+	}
 }
 
 func (x *CancelQuery) GetUUIDParsed() *uuid.UUID {
