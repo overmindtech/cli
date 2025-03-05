@@ -48,7 +48,7 @@ func (l *LoggingGatewayMessageHandler) NewEdge(ctx context.Context, edge *sdp.Ed
 }
 
 func (l *LoggingGatewayMessageHandler) Status(ctx context.Context, status *sdp.GatewayRequestStatus) {
-	log.WithContext(ctx).WithField("status", status).Log(l.Level, "received status")
+	log.WithContext(ctx).WithField("status", status.GetSummary()).Log(l.Level, "received status")
 }
 
 func (l *LoggingGatewayMessageHandler) Error(ctx context.Context, errorMessage string) {
@@ -88,7 +88,7 @@ func (l *LoggingGatewayMessageHandler) BookmarkLoadResult(ctx context.Context, r
 }
 
 func (l *LoggingGatewayMessageHandler) QueryStatus(ctx context.Context, status *sdp.QueryStatus) {
-	log.WithContext(ctx).WithField("status", status).Log(l.Level, "received query status")
+	log.WithContext(ctx).WithField("status", status).WithField("uuid", status.GetUUIDParsed()).Log(l.Level, "received query status")
 }
 
 func (l *LoggingGatewayMessageHandler) ChatResponse(ctx context.Context, chatResponse *sdp.ChatResponse) {
