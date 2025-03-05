@@ -359,7 +359,7 @@ func TestSendQuerySync(t *testing.T) {
 			}, 0)
 			progress.StartTimeout = 1 * time.Second
 
-			items, errs, err := progress.Execute(ctx, e.natsConnection)
+			items, _, errs, err := progress.Execute(ctx, e.natsConnection)
 
 			if err != nil {
 				t.Error(err)
