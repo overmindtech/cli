@@ -5,10 +5,33 @@ on:
     tags:
       - 'v*'
 jobs:
+  test:
+    name: Run Tests
+    runs-on: depot-ubuntu-22.04-4
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.x
+          check-latest: true
+          cache: true
+
+      - name: Go Test
+        run: |
+          go run main.go --version
+          go test -race -v -timeout 5m github.com/overmindtech/cli github.com/overmindtech/cli/tfutils
+
   # Actually release the binaries including signing them
   release:
     runs-on: depot-ubuntu-22.04-32
     if: ${{ github.event_name != 'pull_request' }}
+    needs: test
     permissions:
       contents: write
       packages: write
@@ -57,6 +80,7 @@ jobs:
   bump-formula:
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' }}
+    needs: test
     steps:
       - name: Update Homebrew formula
         uses: dawidd6/action-homebrew-bump-formula@v4
