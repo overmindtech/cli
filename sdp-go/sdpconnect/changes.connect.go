@@ -47,6 +47,9 @@ const (
 	// ChangesServiceGetChangeProcedure is the fully-qualified name of the ChangesService's GetChange
 	// RPC.
 	ChangesServiceGetChangeProcedure = "/changes.ChangesService/GetChange"
+	// ChangesServiceGetChangeTimelineV2Procedure is the fully-qualified name of the ChangesService's
+	// GetChangeTimelineV2 RPC.
+	ChangesServiceGetChangeTimelineV2Procedure = "/changes.ChangesService/GetChangeTimelineV2"
 	// ChangesServiceGetChangeRisksProcedure is the fully-qualified name of the ChangesService's
 	// GetChangeRisks RPC.
 	ChangesServiceGetChangeRisksProcedure = "/changes.ChangesService/GetChangeRisks"
@@ -124,7 +127,11 @@ type ChangesServiceClient interface {
 	CreateChange(context.Context, *connect.Request[sdp_go.CreateChangeRequest]) (*connect.Response[sdp_go.CreateChangeResponse], error)
 	// Gets the details of an existing change
 	GetChange(context.Context, *connect.Request[sdp_go.GetChangeRequest]) (*connect.Response[sdp_go.GetChangeResponse], error)
-	// Gets the risks and risk calculation status of an existing change
+	// Gets the full timeline for this change, this will send one response
+	// immediately and then hold the connection open, and send the entire
+	// timeline again if there are any changes
+	GetChangeTimelineV2(context.Context, *connect.Request[sdp_go.GetChangeTimelineV2Request]) (*connect.Response[sdp_go.GetChangeTimelineV2Response], error)
+	// (DEPRECATED: This has been replaced by GetChangeTimeline) Gets the risks and risk calculation status of an existing change
 	GetChangeRisks(context.Context, *connect.Request[sdp_go.GetChangeRisksRequest]) (*connect.Response[sdp_go.GetChangeRisksResponse], error)
 	// Gets the all data of an existing change for archival
 	GetChangeArchive(context.Context, *connect.Request[sdp_go.GetChangeArchiveRequest]) (*connect.Response[sdp_go.GetChangeArchiveResponse], error)
@@ -204,6 +211,12 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			httpClient,
 			baseURL+ChangesServiceGetChangeProcedure,
 			connect.WithSchema(changesServiceMethods.ByName("GetChange")),
+			connect.WithClientOptions(opts...),
+		),
+		getChangeTimelineV2: connect.NewClient[sdp_go.GetChangeTimelineV2Request, sdp_go.GetChangeTimelineV2Response](
+			httpClient,
+			baseURL+ChangesServiceGetChangeTimelineV2Procedure,
+			connect.WithSchema(changesServiceMethods.ByName("GetChangeTimelineV2")),
 			connect.WithClientOptions(opts...),
 		),
 		getChangeRisks: connect.NewClient[sdp_go.GetChangeRisksRequest, sdp_go.GetChangeRisksResponse](
@@ -305,6 +318,7 @@ type changesServiceClient struct {
 	listChangesByStatus       *connect.Client[sdp_go.ListChangesByStatusRequest, sdp_go.ListChangesByStatusResponse]
 	createChange              *connect.Client[sdp_go.CreateChangeRequest, sdp_go.CreateChangeResponse]
 	getChange                 *connect.Client[sdp_go.GetChangeRequest, sdp_go.GetChangeResponse]
+	getChangeTimelineV2       *connect.Client[sdp_go.GetChangeTimelineV2Request, sdp_go.GetChangeTimelineV2Response]
 	getChangeRisks            *connect.Client[sdp_go.GetChangeRisksRequest, sdp_go.GetChangeRisksResponse]
 	getChangeArchive          *connect.Client[sdp_go.GetChangeArchiveRequest, sdp_go.GetChangeArchiveResponse]
 	updateChange              *connect.Client[sdp_go.UpdateChangeRequest, sdp_go.UpdateChangeResponse]
@@ -340,6 +354,11 @@ func (c *changesServiceClient) CreateChange(ctx context.Context, req *connect.Re
 // GetChange calls changes.ChangesService.GetChange.
 func (c *changesServiceClient) GetChange(ctx context.Context, req *connect.Request[sdp_go.GetChangeRequest]) (*connect.Response[sdp_go.GetChangeResponse], error) {
 	return c.getChange.CallUnary(ctx, req)
+}
+
+// GetChangeTimelineV2 calls changes.ChangesService.GetChangeTimelineV2.
+func (c *changesServiceClient) GetChangeTimelineV2(ctx context.Context, req *connect.Request[sdp_go.GetChangeTimelineV2Request]) (*connect.Response[sdp_go.GetChangeTimelineV2Response], error) {
+	return c.getChangeTimelineV2.CallUnary(ctx, req)
 }
 
 // GetChangeRisks calls changes.ChangesService.GetChangeRisks.
@@ -427,7 +446,11 @@ type ChangesServiceHandler interface {
 	CreateChange(context.Context, *connect.Request[sdp_go.CreateChangeRequest]) (*connect.Response[sdp_go.CreateChangeResponse], error)
 	// Gets the details of an existing change
 	GetChange(context.Context, *connect.Request[sdp_go.GetChangeRequest]) (*connect.Response[sdp_go.GetChangeResponse], error)
-	// Gets the risks and risk calculation status of an existing change
+	// Gets the full timeline for this change, this will send one response
+	// immediately and then hold the connection open, and send the entire
+	// timeline again if there are any changes
+	GetChangeTimelineV2(context.Context, *connect.Request[sdp_go.GetChangeTimelineV2Request]) (*connect.Response[sdp_go.GetChangeTimelineV2Response], error)
+	// (DEPRECATED: This has been replaced by GetChangeTimeline) Gets the risks and risk calculation status of an existing change
 	GetChangeRisks(context.Context, *connect.Request[sdp_go.GetChangeRisksRequest]) (*connect.Response[sdp_go.GetChangeRisksResponse], error)
 	// Gets the all data of an existing change for archival
 	GetChangeArchive(context.Context, *connect.Request[sdp_go.GetChangeArchiveRequest]) (*connect.Response[sdp_go.GetChangeArchiveResponse], error)
@@ -503,6 +526,12 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 		ChangesServiceGetChangeProcedure,
 		svc.GetChange,
 		connect.WithSchema(changesServiceMethods.ByName("GetChange")),
+		connect.WithHandlerOptions(opts...),
+	)
+	changesServiceGetChangeTimelineV2Handler := connect.NewUnaryHandler(
+		ChangesServiceGetChangeTimelineV2Procedure,
+		svc.GetChangeTimelineV2,
+		connect.WithSchema(changesServiceMethods.ByName("GetChangeTimelineV2")),
 		connect.WithHandlerOptions(opts...),
 	)
 	changesServiceGetChangeRisksHandler := connect.NewUnaryHandler(
@@ -605,6 +634,8 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 			changesServiceCreateChangeHandler.ServeHTTP(w, r)
 		case ChangesServiceGetChangeProcedure:
 			changesServiceGetChangeHandler.ServeHTTP(w, r)
+		case ChangesServiceGetChangeTimelineV2Procedure:
+			changesServiceGetChangeTimelineV2Handler.ServeHTTP(w, r)
 		case ChangesServiceGetChangeRisksProcedure:
 			changesServiceGetChangeRisksHandler.ServeHTTP(w, r)
 		case ChangesServiceGetChangeArchiveProcedure:
@@ -658,6 +689,10 @@ func (UnimplementedChangesServiceHandler) CreateChange(context.Context, *connect
 
 func (UnimplementedChangesServiceHandler) GetChange(context.Context, *connect.Request[sdp_go.GetChangeRequest]) (*connect.Response[sdp_go.GetChangeResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetChange is not implemented"))
+}
+
+func (UnimplementedChangesServiceHandler) GetChangeTimelineV2(context.Context, *connect.Request[sdp_go.GetChangeTimelineV2Request]) (*connect.Response[sdp_go.GetChangeTimelineV2Response], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetChangeTimelineV2 is not implemented"))
 }
 
 func (UnimplementedChangesServiceHandler) GetChangeRisks(context.Context, *connect.Request[sdp_go.GetChangeRisksRequest]) (*connect.Response[sdp_go.GetChangeRisksResponse], error) {
