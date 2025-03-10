@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 )
 
@@ -169,4 +170,62 @@ func findDeploymentByDescription(ctx context.Context, client *apigateway.Client,
 	}
 
 	return nil, integration.NewNotFoundError(integration.ResourceName(integration.APIGateway, deploymentSrc, description))
+}
+
+func findStageByName(ctx context.Context, client *apigateway.Client, restAPIID, name string) error {
+	result, err := client.GetStage(ctx, &apigateway.GetStageInput{
+		RestApiId: &restAPIID,
+		StageName: &name,
+	})
+	if err != nil {
+		var notFoundErr *types.NotFoundException
+		if errors.As(err, &notFoundErr) {
+			return integration.NewNotFoundError(integration.ResourceName(
+				integration.APIGateway,
+				stageSrc,
+				name,
+			))
+		}
+
+		return err
+	}
+
+	if result == nil {
+		return integration.NewNotFoundError(integration.ResourceName(
+			integration.APIGateway,
+			stageSrc,
+			name,
+		))
+	}
+
+	return nil
+}
+
+func findModelByName(ctx context.Context, client *apigateway.Client, restAPIID, name string) error {
+	result, err := client.GetModel(ctx, &apigateway.GetModelInput{
+		RestApiId: &restAPIID,
+		ModelName: &name,
+	})
+	if err != nil {
+		var notFoundErr *types.NotFoundException
+		if errors.As(err, &notFoundErr) {
+			return integration.NewNotFoundError(integration.ResourceName(
+				integration.APIGateway,
+				stageSrc,
+				name,
+			))
+		}
+
+		return err
+	}
+
+	if result == nil {
+		return integration.NewNotFoundError(integration.ResourceName(
+			integration.APIGateway,
+			stageSrc,
+			name,
+		))
+	}
+
+	return nil
 }

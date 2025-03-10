@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 )
 
@@ -17,6 +18,8 @@ const (
 	apiKeySrc         = "api-key"
 	authorizerSrc     = "authorizer"
 	deploymentSrc     = "deployment"
+	stageSrc          = "stage"
+	modelSrc          = "model"
 )
 
 func setup(ctx context.Context, logger *slog.Logger, client *apigateway.Client) error {
@@ -71,10 +74,22 @@ func setup(ctx context.Context, logger *slog.Logger, client *apigateway.Client) 
 	}
 
 	// Create Deployment
-	_, err = createDeployment(ctx, logger, client, *restApiID)
+	deploymentID, err := createDeployment(ctx, logger, client, *restApiID)
 	if err != nil {
 		return err
 	}
 
+	// Create Stage
+	err = createStage(ctx, logger, client, *restApiID, *deploymentID)
+	if err != nil {
+		return err
+	}
+
+	// Create Model
+	err = createModel(ctx, logger, client, *restApiID)
+	if err != nil {
+		return err
+	}
+	
 	return nil
 }

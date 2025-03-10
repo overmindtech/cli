@@ -35,15 +35,38 @@ func deploymentOutputMapper(query, scope string, awsItem *types.Deployment) (*sd
 		Scope:           scope,
 	}
 
+	restAPIID := strings.Split(query, "/")[0]
+
 	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
 			Type:   "apigateway-rest-api",
 			Method: sdp.QueryMethod_GET,
-			Query:  strings.Split(query, "/")[0],
+			Query:  restAPIID,
 			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			// They are tightly coupled, so we need to propagate the blast to the linked item
+			In:  true,
+			Out: true,
+		},
+	})
+
+	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   "apigateway-stage",
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  fmt.Sprintf("%s/%s", restAPIID, *awsItem.Id),
+			Scope:  scope,
+		},
+		BlastPropagation: &sdp.BlastPropagation{
+			/*
+				If an aws_api_gateway_deployment is deleted,
+				any stage that references this deployment will be affected
+				because the stage will no longer have a valid deployment to point to.
+				However, if an aws_api_gateway_stage is deleted,
+				it does not affect the aws_api_gateway_deployment itself,
+				but it will remove the specific environment where the deployment was available.
+			*/
 			In:  true,
 			Out: true,
 		},

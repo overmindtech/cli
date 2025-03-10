@@ -12,15 +12,16 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 )
 
-func TestDeploymentOutputMapper(t *testing.T) {
-	awsItem := &types.Deployment{
-		Id:          aws.String("deployment-id"),
-		CreatedDate: aws.Time(time.Now()),
-		Description: aws.String("deployment-description"),
-		ApiSummary:  map[string]map[string]types.MethodSnapshot{},
+func TestModelOutputMapper(t *testing.T) {
+	awsItem := &types.Model{
+		Id:          aws.String("model-id"),
+		Name:        aws.String("model-name"),
+		Description: aws.String("description"),
+		Schema:      aws.String("{\"type\": \"object\"}"),
+		ContentType: aws.String("application/json"),
 	}
 
-	item, err := deploymentOutputMapper("rest-api-id", "scope", awsItem)
+	item, err := modelOutputMapper("rest-api-id/model-name", "scope", awsItem)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -36,23 +37,17 @@ func TestDeploymentOutputMapper(t *testing.T) {
 			ExpectedQuery:  "rest-api-id",
 			ExpectedScope:  "scope",
 		},
-		{
-			ExpectedType:   "apigateway-stage",
-			ExpectedMethod: sdp.QueryMethod_SEARCH,
-			ExpectedQuery:  "rest-api-id/deployment-id",
-			ExpectedScope:  "scope",
-		},
 	}
 
 	tests.Execute(t, item)
 }
 
-func TestNewAPIGatewayDeploymentAdapter(t *testing.T) {
+func TestNewAPIGatewayModelAdapter(t *testing.T) {
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 
 	client := apigateway.NewFromConfig(config)
 
-	adapter := NewAPIGatewayDeploymentAdapter(client, account, region)
+	adapter := NewAPIGatewayModelAdapter(client, account, region)
 
 	test := adapterhelpers.E2ETest{
 		Adapter:  adapter,

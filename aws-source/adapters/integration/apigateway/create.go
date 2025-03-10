@@ -3,11 +3,12 @@ package apigateway
 import (
 	"context"
 	"errors"
-	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"log/slog"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 )
@@ -254,4 +255,64 @@ func createDeployment(ctx context.Context, logger *slog.Logger, client *apigatew
 	}
 
 	return resp.Id, nil
+}
+
+func createStage(ctx context.Context, logger *slog.Logger, client *apigateway.Client, restAPIID, deploymentID string) error {
+	// check if a stage with the same name already exists
+	stgName := "dev"
+	err := findStageByName(ctx, client, restAPIID, stgName)
+	if err != nil {
+		if errors.As(err, new(integration.NotFoundError)) {
+			logger.InfoContext(ctx, "Creating stage")
+		} else {
+			return err
+		}
+	}
+
+	if err == nil {
+		logger.InfoContext(ctx, "Stage already exists")
+		return nil
+	}
+
+	_, err = client.CreateStage(ctx, &apigateway.CreateStageInput{
+		RestApiId:    &restAPIID,
+		DeploymentId: &deploymentID,
+		StageName:    &stgName,
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createModel(ctx context.Context, logger *slog.Logger, client *apigateway.Client, restAPIID string) error {
+	modelName := "testModel"
+
+	// check if a model with the same testID already exists
+	err := findModelByName(ctx, client, restAPIID, modelName)
+	if err != nil {
+		if errors.As(err, new(integration.NotFoundError)) {
+			logger.InfoContext(ctx, "Creating model")
+		} else {
+			return err
+		}
+	}
+
+	if err == nil {
+		logger.InfoContext(ctx, "Model already exists")
+		return nil
+	}
+
+	_, err = client.CreateModel(ctx, &apigateway.CreateModelInput{
+		RestApiId:   &restAPIID,
+		Name:        &modelName,
+		Schema:      adapterhelpers.PtrString("{}"),
+		ContentType: adapterhelpers.PtrString("application/json"),
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
