@@ -334,8 +334,16 @@ func ensureValidTokenHandler(config AuthConfig, next http.Handler) http.Handler 
 			attribute.String("ovm.auth.accountName", customClaims.AccountName),
 			attribute.Int64("ovm.auth.expiry", claims.RegisteredClaims.Expiry),
 			attribute.String("ovm.auth.scopes", customClaims.Scope),
+			// subject is the auth0 client id or user id
 			attribute.String("ovm.auth.subject", claims.RegisteredClaims.Subject),
 		)
+
+		// if its a service impersonating an account, we should mark it as impersonation
+		if strings.HasSuffix(claims.RegisteredClaims.Subject, "@clients") {
+			trace.SpanFromContext(ctx).SetAttributes(
+				attribute.Bool("ovm.auth.impersonation", true),
+			)
+		}
 
 		r = r.Clone(ctx)
 
