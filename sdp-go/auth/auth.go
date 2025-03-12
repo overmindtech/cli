@@ -72,10 +72,25 @@ type ClientCredentialsConfig struct {
 	ClientSecret string
 }
 
+type TokenSourceOptionsFunc func(*clientcredentials.Config)
+
+// This option means that the token that is retrieved will have the following
+// account embedded in it through impersonation. In order for this to work, the
+// Auth0 ClientID must be added to workspace/deploy/auth0.tf. This will use
+// deploy/auth0_embed_account_m2m.tftpl to update the Auth0 action that we use
+// to allow impersonation. If this isn't done first you will get an error from
+// Auth0.
+func WithImpersonateAccount(account string) TokenSourceOptionsFunc {
+	return func(c *clientcredentials.Config) {
+		c.EndpointParams.Set("account_name", account)
+	}
+}
+
 // TokenSource Returns a token source that can be used to get OAuth tokens.
 // Cache this between invocations to avoid additional charges by Auth0 for M2M
-// tokens.
-func (flowConfig ClientCredentialsConfig) TokenSource(oAuthTokenURL, oAuthAudience string) oauth2.TokenSource {
+// tokens. The oAuthTokenURL looks like this:
+// https://somedomain.auth0.com/oauth/token
+func (flowConfig ClientCredentialsConfig) TokenSource(oAuthTokenURL, oAuthAudience string, opts ...TokenSourceOptionsFunc) oauth2.TokenSource {
 	ctx := context.Background()
 	// inject otel into oauth2
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, otelhttp.DefaultClient)
@@ -87,6 +102,10 @@ func (flowConfig ClientCredentialsConfig) TokenSource(oAuthTokenURL, oAuthAudien
 		EndpointParams: url.Values{
 			"audience": []string{oAuthAudience},
 		},
+	}
+
+	for _, opt := range opts {
+		opt(conf)
 	}
 	// this will be a `oauth2.ReuseTokenSource`, thus caching the M2M token.
 	// note that this token source is safe for concurrent use and will
