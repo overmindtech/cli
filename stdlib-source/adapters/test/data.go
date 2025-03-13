@@ -11,8 +11,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-// This test data is designed to provide a full-featured graph to exercise all parts of the system.
-// The graph is as follows:
+// This test data is designed to provide a full-featured graph to exercise all
+// parts of the system. The graph is as follows:
 //
 //                      +--------+
 //                      | admins |
@@ -20,28 +20,30 @@ import (
 //                        |
 //                        |
 //                        v
-// +--------------+     +--------+
+// +--------------+   b +--------+ b
 // | motorcycling | <-- | dylan  | -+
 // +--------------+     +--------+  |
+//                        |b        |
 //                        |         |
-//                        |         |
-//                        v         |
+//                        vb        |
 //                      +--------+  |
 //                      | manny  |  |
 //                      +--------+  |
-//                        |         |
+//                        |b        |
 //                        |         |
 //                        v         |
 //                      +--------+  |
 //                      | london | <+
 //                      +--------+
+//                        |b
 //                        |
-//                        |
-//                        v
+//                        vb
 //                      +----+
 //                      | gb |
 //                      +----+
 //
+// arrows indicate edge directions. b annotations indicate blast radius
+// propagation.
 
 // this global atomic variable keeps track of the generation count for test
 // items. It is increased every time a new item is created, and is used to
