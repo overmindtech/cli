@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"os/user"
 	"strings"
-	"time"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
@@ -236,8 +235,8 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	resultStream, err := client.UpdatePlannedChanges(ctx, &connect.Request[sdp.UpdatePlannedChangesRequest]{
-		Msg: &sdp.UpdatePlannedChangesRequest{
+	_, err = client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
+		Msg: &sdp.StartChangeAnalysisRequest{
 			ChangeUUID:                changeUuid[:],
 			ChangingItems:             plannedChanges,
 			BlastRadiusConfigOverride: blastRadiusConfigOverride,
@@ -248,29 +247,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		return loggedError{
 			err:     err,
 			fields:  lf,
-			message: "Failed to update planned changes",
-		}
-	}
-
-	last_log := time.Now()
-	first_log := true
-	for resultStream.Receive() {
-		msg := resultStream.Msg()
-
-		// log the first message and at most every 250ms during discovery
-		// to avoid spanning the cli output
-		time_since_last_log := time.Since(last_log)
-		if first_log || msg.GetState() != sdp.UpdatePlannedChangesResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
-			log.WithContext(ctx).WithFields(lf).WithField("msg", msg).Info("Status update")
-			last_log = time.Now()
-			first_log = false
-		}
-	}
-	if resultStream.Err() != nil {
-		return loggedError{
-			err:     resultStream.Err(),
-			fields:  lf,
-			message: "Error streaming results",
+			message: "Failed to start change analysis",
 		}
 	}
 

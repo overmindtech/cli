@@ -293,93 +293,33 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	uploadChangesSpinner.Success()
 
 	///////////////////////////////////////////////////////////////////
-	// calculate blast radius and risks
+	// Upload the planned changes to the API
 	///////////////////////////////////////////////////////////////////
 
-	blastRadiusSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Calculating Blast Radius")
+	uploadPlannedChange, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Uploading planned changes")
 	log.WithField("change", changeUuid).Debug("Uploading planned changes")
 
-	resultStream, err := client.UpdatePlannedChanges(ctx, &connect.Request[sdp.UpdatePlannedChangesRequest]{
-		Msg: &sdp.UpdatePlannedChangesRequest{
+	_, err = client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
+		Msg: &sdp.StartChangeAnalysisRequest{
 			ChangeUUID:    changeUuid[:],
 			ChangingItems: mappingResponse.GetItemDiffs(),
 		},
 	})
 	if err != nil {
-		blastRadiusSpinner.Fail(fmt.Sprintf("Calculating Blast Radius: failed to update planned changes: %v", err))
+		uploadPlannedChange.Fail(fmt.Sprintf("Uploading planned changes: failed to update: %v", err))
 		return nil
 	}
-
-	// log the first message and at most every 250ms during discovery to avoid
-	// spamming the cli output
-	last_log := time.Now()
-	first_log := true
-	var msg *sdp.UpdatePlannedChangesResponse
-	var blastRadiusItems uint32
-	var blastRadiusEdges uint32
-	for resultStream.Receive() {
-		msg = resultStream.Msg()
-
-		time_since_last_log := time.Since(last_log)
-		if first_log || msg.GetState() != sdp.UpdatePlannedChangesResponse_STATE_DISCOVERING || time_since_last_log > 250*time.Millisecond {
-			log.WithField("msg", msg).Trace("Status update")
-			last_log = time.Now()
-			first_log = false
-		}
-		stateLabel := "unknown"
-		switch msg.GetState() {
-		case sdp.UpdatePlannedChangesResponse_STATE_UNSPECIFIED:
-			stateLabel = "unknown"
-		case sdp.UpdatePlannedChangesResponse_STATE_DISCOVERING:
-			stateLabel = "discovering blast radius"
-		case sdp.UpdatePlannedChangesResponse_STATE_SAVING:
-			stateLabel = "saving"
-		case sdp.UpdatePlannedChangesResponse_STATE_DONE:
-			stateLabel = "done"
-		}
-		blastRadiusItems = msg.GetNumItems()
-		blastRadiusEdges = msg.GetNumEdges()
-		blastRadiusSpinner.UpdateText(fmt.Sprintf("Calculating Blast Radius: %v", snapshotDetail(stateLabel, blastRadiusItems, blastRadiusEdges)))
-	}
-	if resultStream.Err() != nil {
-		blastRadiusSpinner.Fail(fmt.Sprintf("Calculating Blast Radius: error streaming results: %v", resultStream.Err()))
-		return nil
-	}
-	blastRadiusSpinner.Success("Calculating Blast Radius: done")
-
-	// Add tracing that the blast radius has finished
-	if cmdSpan != nil {
-		cmdSpan.AddEvent("Blast radius calculation finished", trace.WithAttributes(
-			attribute.Int("ovm.blast_radius.items", int(msg.GetNumItems())),
-			attribute.Int("ovm.blast_radius.edges", int(msg.GetNumEdges())),
-			attribute.String("ovm.blast_radius.state", msg.GetState().String()),
-			attribute.StringSlice("ovm.blast_radius.errors", msg.GetErrors()),
-			attribute.String("ovm.change.uuid", changeUuid.String()),
-		))
-	}
+	uploadPlannedChange.Success("Uploaded planned changes: Done")
 
 	changeUrl := *oi.FrontendUrl
 	changeUrl.Path = fmt.Sprintf("%v/changes/%v/blast-radius", changeUrl.Path, changeUuid)
 	log.WithField("change-url", changeUrl.String()).Info("Change ready")
 
-	skipChangeMessage := atomic.Bool{}
-	go func() {
-		time.Sleep(1500 * time.Millisecond)
-		if !skipChangeMessage.Load() {
-			changeWaitWriter := multi.NewWriter()
-			// only show this if risk calculation hasn't already finished
-			_, err := changeWaitWriter.Write([]byte(fmt.Sprintf(" │  Check the blast radius graph while you wait:\n │  %v\n", changeUrl.String())))
-			if err != nil {
-				log.WithError(err).Error("error writing to change wait writer")
-			}
-		}
-	}()
-
 	///////////////////////////////////////////////////////////////////
-	// wait for risk calculation to happen
+	// wait for change analysis to complete
 	///////////////////////////////////////////////////////////////////
 
-	riskSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Calculating Risks")
+	changeAnalysisSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Change Analysis")
 
 	var riskRes *connect.Response[sdp.GetChangeRisksResponse]
 	milestoneSpinners := []*pterm.SpinnerPrinter{}
@@ -390,7 +330,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 			},
 		})
 		if err != nil {
-			riskSpinner.Fail(fmt.Sprintf("Calculating Risks: failed to get change risks: %v", err))
+			changeAnalysisSpinner.Fail(fmt.Sprintf("Change Analysis failed to get change risks: %v", err))
 			return nil
 		}
 
@@ -421,37 +361,30 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 
 		status := riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetStatus()
 		if status == sdp.ChangeAnalysisStatus_STATUS_UNSPECIFIED || status == sdp.ChangeAnalysisStatus_STATUS_INPROGRESS {
-			if !riskSpinner.IsActive {
+			if !changeAnalysisSpinner.IsActive {
 				// restart after a Fail()
-				riskSpinner, _ = riskSpinner.Start("Calculating Risks")
+				changeAnalysisSpinner, _ = changeAnalysisSpinner.Start("Change Analysis")
 			}
 			// retry
 			time.Sleep(time.Second)
 
 		} else if status == sdp.ChangeAnalysisStatus_STATUS_ERROR {
-			riskSpinner.Fail("Calculating Risks: waiting for a retry")
+			changeAnalysisSpinner.Fail("Change Analysis: waiting for a retry")
 		} else {
 			// it's done
-			skipChangeMessage.Store(true)
-			riskSpinner.Success()
+			changeAnalysisSpinner.Success()
 			break
 		}
 	}
-
 	// Submit milestone for tracing
 	if cmdSpan != nil {
-		cmdSpan.AddEvent("Risk calculation finished", trace.WithAttributes(
+		cmdSpan.AddEvent("Change Analysis finished", trace.WithAttributes(
 			attribute.Int("ovm.risks.count", len(riskRes.Msg.GetChangeRiskMetadata().GetRisks())),
 			attribute.String("ovm.change.uuid", changeUuid.String()),
 		))
 	}
 
 	bits := []string{}
-	if blastRadiusItems > 0 {
-		bits = append(bits, styleH1().Render("Blast Radius"))
-		bits = append(bits, fmt.Sprintf("\nItems: %v\nEdges: %v\n", blastRadiusItems, blastRadiusEdges))
-	}
-
 	risks := riskRes.Msg.GetChangeRiskMetadata().GetRisks()
 	bits = append(bits, "")
 	bits = append(bits, "")
