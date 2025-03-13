@@ -440,15 +440,11 @@ func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, respon
 				return
 			}
 
-			item, edges := TranslateLinksToEdges(item)
+			// TODO: extract linked items and linked item queries and pass them on
 			qp.responseChan <- &QueryResponse{
 				ResponseType: &QueryResponse_NewItem{NewItem: item},
 			}
-			for _, e := range edges {
-				qp.responseChan <- &QueryResponse{
-					ResponseType: &QueryResponse_Edge{Edge: e},
-				}
-			}
+
 		}
 	}
 
@@ -501,8 +497,6 @@ func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, respon
 		switch qr.GetResponseType().(type) {
 		case *QueryResponse_NewItem:
 			itemHandler(ctx, qr.GetNewItem())
-		case *QueryResponse_Edge:
-			panic("edge-from-source not implemented yet")
 		case *QueryResponse_Error:
 			errorHandler(ctx, qr.GetError())
 		case *QueryResponse_Response:
@@ -524,41 +518,6 @@ func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, respon
 	}
 
 	return nil
-}
-
-// TranslateLinksToEdges Translates linked items and queries into edges. This is
-// a temporary stop gap measure to allow parallel processing of items and edges
-// in the gateway while allowing other parts of the system to be updated
-// independently. See https://github.com/overmindtech/workspace/issues/753
-func TranslateLinksToEdges(item *Item) (*Item, []*Edge) {
-	lis := item.GetLinkedItems()
-	item.LinkedItems = nil
-	liqs := item.GetLinkedItemQueries()
-	item.LinkedItemQueries = nil
-
-	edges := []*Edge{}
-
-	if lis != nil {
-		for _, li := range lis {
-			edges = append(edges, &Edge{
-				From:             item.Reference(),
-				To:               li.GetItem(),
-				BlastPropagation: li.GetBlastPropagation(),
-			})
-		}
-	}
-
-	if liqs != nil {
-		for _, liq := range liqs {
-			edges = append(edges, &Edge{
-				From:             item.Reference(),
-				To:               liq.GetQuery().Reference(),
-				BlastPropagation: liq.GetBlastPropagation(),
-			})
-		}
-	}
-
-	return item, edges
 }
 
 // markStarted Marks the request as started and will cause it to be marked as
@@ -626,7 +585,6 @@ func (qp *QueryProgress) Drain() {
 
 		if qp.responseChan != nil {
 			close(qp.responseChan)
-			qp.responseChan = nil
 		}
 
 		// Only if the drain is fully complete should we close the doneChan
@@ -700,25 +658,24 @@ func (qp *QueryProgress) AsyncCancel(ec EncodedConnection) error {
 	return nil
 }
 
-// Execute a given request and wait for it to finish, returns the items that
-// were found and any errors. The third return error value will only be returned
-// only if there is a problem making the request. Details of which responders
-// have failed etc. should be determined using the typical methods like
-// `NumError()`.
-func (qp *QueryProgress) Execute(ctx context.Context, ec EncodedConnection) ([]*Item, []*Edge, []*QueryError, error) {
+// Execute Executes a given request and waits for it to finish, returns the
+// items that were found and any errors. The third return error value  will only
+// be returned only if there is a problem making the request. Details of which
+// responders have failed etc. should be determined using the typical methods
+// like `NumError()`.
+func (qp *QueryProgress) Execute(ctx context.Context, ec EncodedConnection) ([]*Item, []*QueryError, error) {
 	items := make([]*Item, 0)
-	edges := make([]*Edge, 0)
 	errs := make([]*QueryError, 0)
 	r := make(chan *QueryResponse)
 
 	if ec == nil {
-		return items, edges, errs, errors.New("nil NATS connection")
+		return items, errs, errors.New("nil NATS connection")
 	}
 
 	err := qp.Start(ctx, ec, r)
 
 	if err != nil {
-		return items, edges, errs, err
+		return items, errs, err
 	}
 
 	for {
@@ -727,15 +684,11 @@ func (qp *QueryProgress) Execute(ctx context.Context, ec EncodedConnection) ([]*
 		case response, ok := <-r:
 			if !ok {
 				// when the channel closes, we're done
-				return items, edges, errs, nil
+				return items, errs, nil
 			}
 			item := response.GetNewItem()
 			if item != nil {
 				items = append(items, item)
-			}
-			edge := response.GetEdge()
-			if edge != nil {
-				edges = append(edges, edge)
 			}
 			qErr := response.GetError()
 			if qErr != nil {

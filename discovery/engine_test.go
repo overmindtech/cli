@@ -256,7 +256,7 @@ func TestNats(t *testing.T) {
 			Scope: "test",
 		}, 0)
 
-		_, _, _, err := req.Execute(context.Background(), e.natsConnection)
+		_, _, err := req.Execute(context.Background(), e.natsConnection)
 
 		if err != nil {
 			t.Error(err)
@@ -643,7 +643,7 @@ func TestNatsAuth(t *testing.T) {
 			e.ClearCache()
 		})
 
-		_, _, _, err := sdp.NewQueryProgress(&sdp.Query{
+		_, _, err := sdp.NewQueryProgress(&sdp.Query{
 			Type:   "person",
 			Method: sdp.QueryMethod_GET,
 			Query:  "basic",

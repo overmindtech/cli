@@ -827,7 +827,7 @@ func TestExecute(t *testing.T) {
 		rp := NewQueryProgress(&q, 100*time.Millisecond)
 		rp.DrainDelay = 0
 
-		_, _, _, err := rp.Execute(context.Background(), &conn)
+		_, _, err := rp.Execute(context.Background(), &conn)
 
 		if err != nil {
 			t.Fatal(err)
@@ -914,7 +914,7 @@ func TestExecute(t *testing.T) {
 			}
 		}()
 
-		items, _, errs, err := rp.Execute(context.Background(), &conn)
+		items, errs, err := rp.Execute(context.Background(), &conn)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -1135,7 +1135,7 @@ func TestFastFinisher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	items, _, errs, err := progress.Execute(context.Background(), &conn)
+	items, errs, err := progress.Execute(context.Background(), &conn)
 
 	if err != nil {
 		t.Fatal(err)
