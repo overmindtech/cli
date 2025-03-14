@@ -14,9 +14,9 @@ import (
 // This test data is designed to provide a full-featured graph to exercise all
 // parts of the system. The graph is as follows:
 //
-//                      +--------+
-//                      | admins |
-//                      +--------+
+//  +----------+        +--------+
+//  | knitting |        | admins |
+//  +----------+        +--------+
 //                        |
 //                        |
 //                        v
@@ -24,13 +24,13 @@ import (
 // | motorcycling | <-- | dylan  | -+
 // +--------------+     +--------+  |
 //                        |b        |
-//                        |         |
+//                        L         |
 //                        vb        |
-//                      +--------+  |
-//                      | manny  |  |
-//                      +--------+  |
+//       +--------+ b   +--------+  |
+//       | kibble | <-- | manny  |  |
+//       +--------+     +--------+  |
 //                        |b        |
-//                        |         |
+//                        S         S
 //                        v         |
 //                      +--------+  |
 //                      | london | <+
@@ -43,7 +43,7 @@ import (
 //                      +----+
 //
 // arrows indicate edge directions. b annotations indicate blast radius
-// propagation.
+// propagation. L indicates a LIST edge, S indicates a SEARCH edge.
 
 // this global atomic variable keeps track of the generation count for test
 // items. It is increased every time a new item is created, and is used to
@@ -116,8 +116,7 @@ func dylan() *sdp.Item {
 		{
 			Query: &sdp.Query{
 				Type:   "test-dog",
-				Method: sdp.QueryMethod_GET,
-				Query:  "test-manny",
+				Method: sdp.QueryMethod_LIST,
 				Scope:  "test",
 			},
 			BlastPropagation: &sdp.BlastPropagation{
@@ -143,7 +142,7 @@ func dylan() *sdp.Item {
 		{
 			Query: &sdp.Query{
 				Type:   "test-location",
-				Method: sdp.QueryMethod_GET,
+				Method: sdp.QueryMethod_SEARCH,
 				Query:  "test-london",
 				Scope:  "test",
 			},
@@ -166,7 +165,7 @@ func manny() *sdp.Item {
 		{
 			Query: &sdp.Query{
 				Type:   "test-location",
-				Method: sdp.QueryMethod_GET,
+				Method: sdp.QueryMethod_SEARCH,
 				Query:  "test-london",
 				Scope:  "test",
 			},
@@ -177,9 +176,27 @@ func manny() *sdp.Item {
 				Out: false,
 			},
 		},
+		{
+			Query: &sdp.Query{
+				Type:   "test-food",
+				Method: sdp.QueryMethod_GET,
+				Query:  "test-kibble",
+				Scope:  "test",
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// there are other options
+				In: false,
+				// the kibble is soon gone
+				Out: true,
+			},
+		},
 	}
 
 	return i
+}
+
+func kibble() *sdp.Item {
+	return createTestItem("test-food", "test-kibble")
 }
 
 func motorcycling() *sdp.Item {
