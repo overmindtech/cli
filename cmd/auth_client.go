@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/overmindtech/cli/auth"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdp-go/sdpconnect"
 	log "github.com/sirupsen/logrus"
@@ -96,7 +97,7 @@ func (y *AuthenticatedTransport) RoundTrip(req *http.Request) (*http.Response, e
 	req.Header.Set("X-overmind-interactive", "false")
 
 	// Extract auth from the context
-	ctxToken := y.ctx.Value(sdp.UserTokenContextKey{})
+	ctxToken := y.ctx.Value(auth.UserTokenContextKey{})
 
 	if ctxToken != nil {
 		token, ok := ctxToken.(string)

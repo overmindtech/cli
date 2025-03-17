@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/overmindtech/cli/auth"
 	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdp-go/auth"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/sourcegraph/conc/pool"
 	"google.golang.org/protobuf/types/known/timestamppb"

@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	instrumentationName    = "github.com/overmindtech/cli/sdp-go/auth"
+	instrumentationName    = "github.com/overmindtech/cli/auth"
 	instrumentationVersion = "0.0.1"
 )
 

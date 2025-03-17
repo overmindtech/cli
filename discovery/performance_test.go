@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/overmindtech/cli/auth"
 	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdp-go/auth"
 )
 
 type SlowAdapter struct {

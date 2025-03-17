@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/auth"
 	"golang.org/x/oauth2"
 )
 
@@ -34,7 +34,7 @@ func TestParseChangeUrl(t *testing.T) {
 }
 
 func TestHasScopesFlexible(t *testing.T) {
-	claims := &sdp.CustomClaims{
+	claims := &auth.CustomClaims{
 		Scope:       "changes:read users:write",
 		AccountName: "test",
 	}
@@ -117,7 +117,7 @@ func TestSaveTokenFile(t *testing.T) {
 	tempDir := t.TempDir()
 	app := "https://localhost.df.overmind-demo.com:3000"
 
-	claims := sdp.CustomClaims{
+	claims := auth.CustomClaims{
 		Scope:       "scope1 scope2",
 		AccountName: "test",
 	}
@@ -176,7 +176,7 @@ func TestSaveTokenFile(t *testing.T) {
 	}
 
 	// lets update the first app token
-	claims = sdp.CustomClaims{
+	claims = auth.CustomClaims{
 		Scope:       "scope3 scope4",
 		AccountName: "test",
 	}

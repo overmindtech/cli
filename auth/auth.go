@@ -90,8 +90,14 @@ func WithImpersonateAccount(account string) TokenSourceOptionsFunc {
 // Cache this between invocations to avoid additional charges by Auth0 for M2M
 // tokens. The oAuthTokenURL looks like this:
 // https://somedomain.auth0.com/oauth/token
-func (flowConfig ClientCredentialsConfig) TokenSource(oAuthTokenURL, oAuthAudience string, opts ...TokenSourceOptionsFunc) oauth2.TokenSource {
-	ctx := context.Background()
+//
+// The context that is passed to this function is used when getting new tokens,
+// which will happen initially, and then subsequently when the token expires.
+// This means that if this token source is going to be stored and used for many
+// requests, it should not use the context of the request that created it, as
+// this will be cancelled. Instead it should probably use `context.Background()`
+// or similar.
+func (flowConfig ClientCredentialsConfig) TokenSource(ctx context.Context, oAuthTokenURL, oAuthAudience string, opts ...TokenSourceOptionsFunc) oauth2.TokenSource {
 	// inject otel into oauth2
 	ctx = context.WithValue(ctx, oauth2.HTTPClient, otelhttp.DefaultClient)
 
@@ -114,47 +120,6 @@ func (flowConfig ClientCredentialsConfig) TokenSource(oAuthTokenURL, oAuthAudien
 	// requests, but will not get the actual caller's context, so spans will not
 	// link up.
 	return conf.TokenSource(ctx)
-}
-
-// NewOAuthTokenClient creates a token client that uses the provided TokenSource
-// to get a NATS token. `overmindAPIURL` is the root URL of the NATS token
-// exchange API that will be used e.g. https://api.server.test/v1
-//
-// Tokens will be minted under the specified account as long as the client has
-// admin permissions, if not, the account that is attached to the client via
-// Auth0 metadata will be used
-func NewOAuthTokenClient(overmindAPIURL string, account string, ts oauth2.TokenSource) *natsTokenClient {
-	return NewOAuthTokenClientWithContext(context.Background(), overmindAPIURL, account, ts)
-}
-
-// NewOAuthTokenClientWithContext creates a token client that uses the provided
-// TokenSource to get a NATS token. `overmindAPIURL` is the root URL of the NATS
-// token exchange API that will be used e.g. https://api.server.test/v1
-//
-// Tokens will be minted under the specified account as long as the client has
-// admin permissions, if not, the account that is attached to the client via
-// Auth0 metadata will be used
-//
-// The provided context is used for cancellation and to lookup the HTTP client
-// used by oauth2. See the oauth2.HTTPClient variable.
-//
-// Provide an account name and an admin token to create a token client for a
-// foreign account.
-func NewOAuthTokenClientWithContext(ctx context.Context, overmindAPIURL string, account string, ts oauth2.TokenSource) *natsTokenClient {
-	authenticatedClient := oauth2.NewClient(ctx, ts)
-
-	// backwards compatibility: remove previously existing "/api" suffix from URL for connect
-	apiUrl, err := url.Parse(overmindAPIURL)
-	if err == nil {
-		apiUrl.Path = ""
-		overmindAPIURL = apiUrl.String()
-	}
-
-	return &natsTokenClient{
-		Account:     account,
-		adminClient: sdpconnect.NewAdminServiceClient(authenticatedClient, overmindAPIURL),
-		mgmtClient:  sdpconnect.NewManagementServiceClient(authenticatedClient, overmindAPIURL),
-	}
 }
 
 // natsTokenClient A client that is capable of getting NATS JWTs and signing the
@@ -413,4 +378,45 @@ func NewStaticTokenClient(overmindAPIURL, token, tokenType string) (*natsTokenCl
 		adminClient: sdpconnect.NewAdminServiceClient(&httpClient, overmindAPIURL),
 		mgmtClient:  sdpconnect.NewManagementServiceClient(&httpClient, overmindAPIURL),
 	}, nil
+}
+
+// NewOAuthTokenClient creates a token client that uses the provided TokenSource
+// to get a NATS token. `overmindAPIURL` is the root URL of the NATS token
+// exchange API that will be used e.g. https://api.server.test/v1
+//
+// Tokens will be minted under the specified account as long as the client has
+// admin permissions, if not, the account that is attached to the client via
+// Auth0 metadata will be used
+func NewOAuthTokenClient(overmindAPIURL string, account string, ts oauth2.TokenSource) *natsTokenClient {
+	return NewOAuthTokenClientWithContext(context.Background(), overmindAPIURL, account, ts)
+}
+
+// NewOAuthTokenClientWithContext creates a token client that uses the provided
+// TokenSource to get a NATS token. `overmindAPIURL` is the root URL of the NATS
+// token exchange API that will be used e.g. https://api.server.test/v1
+//
+// Tokens will be minted under the specified account as long as the client has
+// admin permissions, if not, the account that is attached to the client via
+// Auth0 metadata will be used
+//
+// The provided context is used for cancellation and to lookup the HTTP client
+// used by oauth2. See the oauth2.HTTPClient variable.
+//
+// Provide an account name and an admin token to create a token client for a
+// foreign account.
+func NewOAuthTokenClientWithContext(ctx context.Context, overmindAPIURL string, account string, ts oauth2.TokenSource) *natsTokenClient {
+	authenticatedClient := oauth2.NewClient(ctx, ts)
+
+	// backwards compatibility: remove previously existing "/api" suffix from URL for connect
+	apiUrl, err := url.Parse(overmindAPIURL)
+	if err == nil {
+		apiUrl.Path = ""
+		overmindAPIURL = apiUrl.String()
+	}
+
+	return &natsTokenClient{
+		Account:     account,
+		adminClient: sdpconnect.NewAdminServiceClient(authenticatedClient, overmindAPIURL),
+		mgmtClient:  sdpconnect.NewManagementServiceClient(authenticatedClient, overmindAPIURL),
+	}
 }

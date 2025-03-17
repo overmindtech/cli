@@ -22,6 +22,7 @@ import (
 	josejwt "github.com/go-jose/go-jose/v4/jwt"
 	"github.com/google/uuid"
 	"github.com/overmindtech/pterm"
+	"github.com/overmindtech/cli/auth"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/pkg/browser"
@@ -427,7 +428,7 @@ func ensureToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes []
 	// loses access to the RefreshToken and could be done better by using an
 	// oauth2.TokenSource, but this would require more work on updating sdp-go
 	// that is currently not scheduled
-	ctx = context.WithValue(ctx, sdp.UserTokenContextKey{}, token.AccessToken)
+	ctx = context.WithValue(ctx, auth.UserTokenContextKey{}, token.AccessToken)
 
 	return ctx, token, nil
 }
@@ -518,7 +519,7 @@ func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes 
 		os.Exit(1)
 	}
 	out := josejwt.Claims{}
-	customClaims := sdp.CustomClaims{}
+	customClaims := auth.CustomClaims{}
 	err = tok.UnsafeClaimsWithoutVerification(&out, &customClaims)
 	if err != nil {
 		pterm.Error.Printf("Error running program: received unparsable token: %v", err)

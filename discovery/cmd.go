@@ -12,8 +12,8 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
+	"github.com/overmindtech/cli/auth"
 	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdp-go/auth"
 	"github.com/overmindtech/cli/sdp-go/sdpconnect"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"

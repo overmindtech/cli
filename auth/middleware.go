@@ -1,4 +1,4 @@
-package sdp
+package auth
 
 import (
 	"context"
@@ -18,11 +18,11 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// AuthBypassedContextKey is a key that is stored in the request context when auth is
-// actively being bypassed, e.g. in development. When this is set the
-// `HasScopes()` function will always return true, and can be set using the
-// `BypassAuth()` middleware.
-type AuthBypassedContextKey struct{}
+// ScopeCheckBypassedContextKey is a key that is stored in the request context
+// when scope checking is actively being bypassed, e.g. in development. When
+// this is set the `HasScopes()` function will always return true, and can be
+// set using the `WithBypassScopeCheck()` middleware.
+type ScopeCheckBypassedContextKey struct{}
 
 // CustomClaimsContextKey is the key that is used to store the custom claims
 // from the JWT
@@ -84,7 +84,7 @@ func HasAllScopes(ctx context.Context, requiredScopes ...string) bool {
 		attribute.StringSlice("ovm.auth.requiredScopes.all", requiredScopes),
 	)
 
-	if ctx.Value(AuthBypassedContextKey{}) == true {
+	if ctx.Value(ScopeCheckBypassedContextKey{}) == true {
 		// this is always set when auth is bypassed
 		// set it here again to capture non-standard auth configs
 		span.SetAttributes(attribute.Bool("ovm.auth.bypass", true))
@@ -116,7 +116,7 @@ func HasAnyScopes(ctx context.Context, requiredScopes ...string) bool {
 		attribute.StringSlice("ovm.auth.requiredScopes.any", requiredScopes),
 	)
 
-	if ctx.Value(AuthBypassedContextKey{}) == true {
+	if ctx.Value(ScopeCheckBypassedContextKey{}) == true {
 		// this is always set when auth is bypassed
 		// set it here again to capture non-standard auth configs
 		span.SetAttributes(attribute.Bool("ovm.auth.bypass", true))
@@ -169,7 +169,20 @@ func ExtractAccount(ctx context.Context) (string, error) {
 // must also be set.
 func NewAuthMiddleware(config AuthConfig, next http.Handler) http.Handler {
 	processOverrides := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := OverrideCustomClaims(r.Context(), config.ScopeOverride, config.AccountOverride)
+		options := []OverrideAuthOptionFunc{}
+
+		if config.ScopeOverride != nil {
+			options = append(options, WithScope(*config.ScopeOverride))
+		}
+
+		if config.AccountOverride != nil {
+			options = append(options, WithAccount(*config.AccountOverride))
+		}
+
+		ctx := r.Context()
+		if len(options) > 0 {
+			ctx = OverrideAuth(r.Context(), options...)
+		}
 
 		r = r.Clone(ctx)
 
@@ -179,51 +192,83 @@ func NewAuthMiddleware(config AuthConfig, next http.Handler) http.Handler {
 	return ensureValidTokenHandler(config, processOverrides)
 }
 
-// AddBypassAuthConfig Adds the requires keys to the context so that
-// authentication is bypassed. This is intended to be used in tests
-func AddBypassAuthConfig(ctx context.Context) context.Context {
-	return context.WithValue(ctx, AuthBypassedContextKey{}, true)
+type OverrideAuthOptionFunc func(ctx context.Context) context.Context
+
+// Sets the scope in the context to the given value. This should be the value
+// that would be embedded directly in the token, with each scope being separated
+// by a space.
+func WithScope(scope string) OverrideAuthOptionFunc {
+	return withCustomClaims(func(claims *CustomClaims) {
+		claims.Scope = scope
+	})
 }
 
-// OverrideAuthContext overrides the authentication data and token stored in the context.
-// This is mostly useful for testing or delegating access locally into a protected API.
-func OverrideAuthContext(ctx context.Context, claims *validator.ValidatedClaims) context.Context {
-	customClaims := claims.CustomClaims.(*CustomClaims)
-	ctx = context.WithValue(ctx, jwtmiddleware.ContextKey{}, claims)
-	ctx = context.WithValue(ctx, CustomClaimsContextKey{}, customClaims)
-	ctx = context.WithValue(ctx, CurrentSubjectContextKey{}, claims.RegisteredClaims.Subject)
-	ctx = context.WithValue(ctx, AccountNameContextKey{}, customClaims.AccountName)
+// Sets the account in the context to the given value.
+func WithAccount(account string) OverrideAuthOptionFunc {
+	return withCustomClaims(func(claims *CustomClaims) {
+		claims.AccountName = account
+	})
+}
+
+// Sets the auth info in the context directly from the validated claims produced
+// by the `github.com/auth0/go-jwt-middleware/v2/validator` package. This is
+// essentially what the middleware already does when receiving a request, and
+// therefore should only be used in exceptional circumstances, like testing, when the
+// middleware is not being used.
+//
+// If this is being used, there is no need to use the `WithScope` or `WithAccount`
+// options as the claims will be extracted directly from the validated claims.
+func WithValidatedClaims(claims *validator.ValidatedClaims) OverrideAuthOptionFunc {
+	return func(ctx context.Context) context.Context {
+		customClaims := claims.CustomClaims.(*CustomClaims)
+		ctx = context.WithValue(ctx, jwtmiddleware.ContextKey{}, claims)
+		ctx = context.WithValue(ctx, CustomClaimsContextKey{}, customClaims)
+		ctx = context.WithValue(ctx, CurrentSubjectContextKey{}, claims.RegisteredClaims.Subject)
+		ctx = context.WithValue(ctx, AccountNameContextKey{}, customClaims.AccountName)
+		return ctx
+	}
+}
+
+// Bypasses the scope check, meaning that `HasScopes()` and `HasAllScopes` will
+// always return true. This is useful for testing.
+func WithBypassScopeCheck() OverrideAuthOptionFunc {
+	return func(ctx context.Context) context.Context {
+		return context.WithValue(ctx, ScopeCheckBypassedContextKey{}, true)
+	}
+}
+
+// Overrides the authentication that is currently stored in the context. This
+// can only be used within a single process, and doesn't mean that the overrides
+// set here will be passed on if you are using `NewAuthenticatedClient` to pass
+// through auth. It is however useful for testing, or for calling other handlers
+// within the same process.
+func OverrideAuth(ctx context.Context, opts ...OverrideAuthOptionFunc) context.Context {
+	for _, opt := range opts {
+		ctx = opt(ctx)
+	}
 	return ctx
 }
 
-// OverrideCustomClaims Overrides the custom claims in the context that have
-// been set at CustomClaimsContextKey
-func OverrideCustomClaims(ctx context.Context, scope *string, account *string) context.Context {
-	// Read existing claims from the context
-	i := ctx.Value(CustomClaimsContextKey{})
+func withCustomClaims(modify func(*CustomClaims)) OverrideAuthOptionFunc {
+	return func(ctx context.Context) context.Context {
+		i := ctx.Value(CustomClaimsContextKey{})
+		var claims *CustomClaims
+		var newClaims CustomClaims
+		var ok bool
 
-	var claims *CustomClaims
-	var newClaims CustomClaims
-	var ok bool
+		if claims, ok = i.(*CustomClaims); ok {
+			// clone out the values to avoid sharing
+			newClaims = *claims
+		}
 
-	if claims, ok = i.(*CustomClaims); ok {
-		// clone out the values to avoid false sharing
-		newClaims = *claims
+		modify(&newClaims)
+
+		// Store the new claims in the context
+		ctx = context.WithValue(ctx, CustomClaimsContextKey{}, &newClaims)
+		ctx = context.WithValue(ctx, AccountNameContextKey{}, newClaims.AccountName)
+
+		return ctx
 	}
-
-	if scope != nil {
-		newClaims.Scope = *scope
-	}
-
-	if account != nil {
-		newClaims.AccountName = *account
-	}
-
-	// Store the new claims in the context
-	ctx = context.WithValue(ctx, CustomClaimsContextKey{}, &newClaims)
-	ctx = context.WithValue(ctx, AccountNameContextKey{}, newClaims.AccountName)
-
-	return ctx
 }
 
 // ensureValidTokenHandler is a middleware that will check the validity of our
@@ -375,7 +420,7 @@ func ensureValidTokenHandler(config AuthConfig, next http.Handler) http.Handler 
 		span.SetAttributes(attribute.Bool("ovm.auth.bypass", shouldBypass))
 
 		if shouldBypass {
-			ctx = AddBypassAuthConfig(ctx)
+			ctx = OverrideAuth(ctx, WithBypassScopeCheck())
 
 			r = r.Clone(ctx)
 

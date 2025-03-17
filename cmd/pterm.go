@@ -15,9 +15,9 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/overmindtech/pterm"
+	"github.com/overmindtech/cli/auth"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdp-go/auth"
 	"github.com/overmindtech/cli/sdp-go/sdpconnect"
 	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
@@ -319,7 +319,7 @@ func HasScopesFlexible(token *oauth2.Token, requiredScopes []string) (bool, stri
 
 // extracts custom claims from a JWT token. Note that this does not verify the
 // signature of the token, it just extracts the claims from the payload
-func extractClaims(token string) (*sdp.CustomClaims, error) {
+func extractClaims(token string) (*auth.CustomClaims, error) {
 	// We aren't interested in checking the signature of the token since
 	// the server will do that. All we need to do is make sure it
 	// contains the right scopes. Therefore we just parse the payload
@@ -336,7 +336,7 @@ func extractClaims(token string) (*sdp.CustomClaims, error) {
 	}
 
 	// Parse the payload
-	claims := new(sdp.CustomClaims)
+	claims := new(auth.CustomClaims)
 	err = json.Unmarshal(decodedPayload, claims)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing token payload: %w", err)

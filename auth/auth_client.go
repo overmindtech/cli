@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdp-go/sdpconnect"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -37,7 +36,7 @@ func (y *AuthenticatedTransport) RoundTrip(req *http.Request) (*http.Response, e
 // NewAuthenticatedClient creates a new AuthenticatedClient from the given
 // context and http.Client.
 func NewAuthenticatedClient(ctx context.Context, from *http.Client) *http.Client {
-	token, ok := ctx.Value(sdp.UserTokenContextKey{}).(string)
+	token, ok := ctx.Value(UserTokenContextKey{}).(string)
 	if !ok {
 		token = ""
 	}

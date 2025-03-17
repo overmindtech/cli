@@ -12,8 +12,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/nats-io/nats-server/v2/server"
 	"github.com/nats-io/nats-server/v2/test"
+	"github.com/overmindtech/cli/auth"
 	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdp-go/auth"
 	"golang.org/x/oauth2"
 )
 
@@ -739,7 +739,11 @@ func GetTestOAuthTokenClient(t *testing.T, account string) auth.TokenClient {
 			ClientID:     clientID,
 			ClientSecret: clientSecret,
 		}
-		testTokenSource = ccc.TokenSource(fmt.Sprintf("https://%v/oauth/token", domain), os.Getenv("API_SERVER_AUDIENCE"))
+		testTokenSource = ccc.TokenSource(
+			t.Context(),
+			fmt.Sprintf("https://%v/oauth/token", domain),
+			os.Getenv("API_SERVER_AUDIENCE"),
+		)
 	}
 
 	return auth.NewOAuthTokenClient(

@@ -1,4 +1,4 @@
-package sdp
+package auth
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/jwt"
 	log "github.com/sirupsen/logrus"
@@ -21,7 +22,7 @@ func TestHasScopes(t *testing.T) {
 	t.Run("with auth bypassed", func(t *testing.T) {
 		t.Parallel()
 
-		ctx := AddBypassAuthConfig(context.Background())
+		ctx := OverrideAuth(context.Background(), WithBypassScopeCheck())
 
 		pass := HasAllScopes(ctx, "test")
 
@@ -35,7 +36,7 @@ func TestHasScopes(t *testing.T) {
 
 		account := "foo"
 		scope := "test foo bar"
-		ctx := OverrideCustomClaims(context.Background(), &scope, &account)
+		ctx := OverrideAuth(context.Background(), WithScope(scope), WithAccount(account))
 
 		pass := HasAllScopes(ctx, "test")
 
@@ -49,7 +50,7 @@ func TestHasScopes(t *testing.T) {
 
 		account := "foo"
 		scope := "test foo bar"
-		ctx := OverrideCustomClaims(context.Background(), &scope, &account)
+		ctx := OverrideAuth(context.Background(), WithScope(scope), WithAccount(account))
 
 		pass := HasAllScopes(ctx, "test", "foo")
 
@@ -63,7 +64,7 @@ func TestHasScopes(t *testing.T) {
 
 		account := "foo"
 		scope := "test foo bar"
-		ctx := OverrideCustomClaims(context.Background(), &scope, &account)
+		ctx := OverrideAuth(context.Background(), WithScope(scope), WithAccount(account))
 
 		pass := HasAllScopes(ctx, "baz")
 
@@ -77,7 +78,7 @@ func TestHasScopes(t *testing.T) {
 
 		account := "foo"
 		scope := "test foo bar"
-		ctx := OverrideCustomClaims(context.Background(), &scope, &account)
+		ctx := OverrideAuth(context.Background(), WithScope(scope), WithAccount(account))
 
 		pass := HasAllScopes(ctx, "test", "baz")
 
@@ -91,7 +92,7 @@ func TestHasScopes(t *testing.T) {
 
 		account := "foo"
 		scope := "test foo bar"
-		ctx := OverrideCustomClaims(context.Background(), &scope, &account)
+		ctx := OverrideAuth(context.Background(), WithScope(scope), WithAccount(account))
 
 		pass := HasAnyScopes(ctx, "fail", "foo")
 
@@ -105,7 +106,7 @@ func TestHasScopes(t *testing.T) {
 
 		account := "foo"
 		scope := "test foo bar"
-		ctx := OverrideCustomClaims(context.Background(), &scope, &account)
+		ctx := OverrideAuth(context.Background(), WithScope(scope), WithAccount(account))
 
 		pass := HasAnyScopes(ctx, "fail", "fail harder")
 
@@ -401,7 +402,7 @@ func TestNewAuthMiddleware(t *testing.T) {
 
 				claims := ctx.Value(CustomClaimsContextKey{}).(*CustomClaims)
 
-				if ctx.Value(AuthBypassedContextKey{}) == true {
+				if ctx.Value(ScopeCheckBypassedContextKey{}) == true {
 					// If we are bypassing auth then we don't want to check the account
 				} else {
 					if claims.AccountName != "test" {
@@ -435,6 +436,92 @@ func TestNewAuthMiddleware(t *testing.T) {
 			if rr.Code != test.ExpectedCode {
 				t.Errorf("expected status code %d, but got %d", test.ExpectedCode, rr.Code)
 				t.Error(rr.Body.String())
+			}
+		})
+	}
+}
+
+func TestOverrideAuth(t *testing.T) {
+	tests := []struct {
+		Name           string
+		Options        []OverrideAuthOptionFunc
+		HasAllScopes   []string
+		HasAccountName string
+	}{
+		{
+			Name: "with account override",
+			Options: []OverrideAuthOptionFunc{
+				WithAccount("test"),
+			},
+			HasAccountName: "test",
+		},
+		{
+			Name: "with scope override",
+			Options: []OverrideAuthOptionFunc{
+				WithScope("test:pass"),
+			},
+			HasAllScopes: []string{"test:pass"},
+		},
+		{
+			Name: "with account and scope override",
+			Options: []OverrideAuthOptionFunc{
+				WithAccount("test"),
+				WithScope("test:pass"),
+			},
+			HasAccountName: "test",
+			HasAllScopes:   []string{"test:pass"},
+		},
+		{
+			Name: "with account and scope override in reverse order",
+			Options: []OverrideAuthOptionFunc{
+				WithScope("test:pass"),
+				WithAccount("test"),
+			},
+			HasAccountName: "test",
+			HasAllScopes:   []string{"test:pass"},
+		},
+		{
+			Name: "with validated custom claims",
+			Options: []OverrideAuthOptionFunc{
+				WithValidatedClaims(&validator.ValidatedClaims{
+					CustomClaims: &CustomClaims{
+						Scope:       "test:pass",
+						AccountName: "test",
+					},
+					RegisteredClaims: validator.RegisteredClaims{
+						Issuer:   "https://api.overmind.tech",
+						Subject:  "test",
+						Audience: []string{"https://api.overmind.tech"},
+						ID:       "test",
+					},
+				}),
+			},
+			HasAccountName: "test",
+			HasAllScopes:   []string{"test:pass"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			ctx := context.Background()
+
+			ctx = OverrideAuth(ctx, test.Options...)
+
+			if test.HasAccountName != "" {
+				accountName, err := ExtractAccount(ctx)
+				if err != nil {
+					t.Error(err)
+				}
+
+				if accountName != test.HasAccountName {
+					t.Errorf("expected account name to be %s, but got %s", test.HasAccountName, accountName)
+				}
+			}
+
+			for _, scope := range test.HasAllScopes {
+				if !HasAllScopes(ctx, scope) {
+					t.Errorf("expected to have scope %s, but did not", scope)
+				}
 			}
 		})
 	}
