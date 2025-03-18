@@ -341,6 +341,9 @@ func (q *Query) TimeoutContext(ctx context.Context) (context.Context, context.Ca
 // ParseUuid returns this request's UUID. If there's an error parsing it,
 // generates and stores a fresh one
 func (r *Query) ParseUuid() uuid.UUID {
+	if r == nil {
+		return uuid.UUID{}
+	}
 	// Extract and parse the UUID
 	reqUUID, uuidErr := uuid.FromBytes(r.GetUUID())
 	if uuidErr != nil {
