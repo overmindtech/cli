@@ -47,6 +47,7 @@ func InitializeEngine(ec *discovery.EngineConfig, reverseDNS bool) (*discovery.E
 		&HTTPAdapter{},
 		&IPAdapter{},
 		&test.TestDogAdapter{},
+		&test.TestFoodAdapter{},
 		&test.TestGroupAdapter{},
 		&test.TestHobbyAdapter{},
 		&test.TestLocationAdapter{},
