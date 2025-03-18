@@ -16,26 +16,9 @@ func (x *GatewayRequestStatus) Equal(y *GatewayRequestStatus) bool {
 		}
 	}
 
-	// Check the basics first
-	if len(x.GetResponderStates()) != len(y.GetResponderStates()) {
-		return false
-	}
-
 	if (x.GetSummary() == nil || y.GetSummary() == nil) && x.GetSummary() != y.GetSummary() {
 		// If one of them is nil, and they aren't both nil
 		return false
-	}
-
-	for xResponder, xState := range x.GetResponderStates() {
-		yState, exists := y.GetResponderStates()[xResponder]
-
-		if !exists {
-			return false
-		}
-
-		if yState != xState {
-			return false
-		}
 	}
 
 	if x.GetSummary() != nil && y.GetSummary() != nil {

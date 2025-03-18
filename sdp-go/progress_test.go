@@ -260,12 +260,6 @@ func (em ExpectedMetrics) Validate(qp *QueryProgress) error {
 		return fmt.Errorf("Expected NumCancelled to be %v, got %v", em.Cancelled, x)
 	}
 
-	rStatus := qp.ResponderStates()
-
-	if len(rStatus) != em.Responders {
-		return fmt.Errorf("Expected ResponderStatuses to have %v responders, got %v", em.Responders, len(rStatus))
-	}
-
 	return nil
 }
 
@@ -341,7 +335,6 @@ func TestQueryProgressNormal(t *testing.T) {
 		}
 
 		if err := expected.Validate(rp); err != nil {
-			t.Log(rp.ResponderStates())
 			t.Error(err)
 		}
 	})

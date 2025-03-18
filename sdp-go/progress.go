@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"runtime/debug"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -301,7 +300,6 @@ type QueryProgress struct {
 	chanMutex      sync.RWMutex
 	channelsClosed bool // Additional protection against send on closed chan. This isn't brilliant but I can't think of a better way at the moment
 	drain          sync.Once
-	drainStack     []byte
 
 	started   bool
 	cancelled bool
@@ -433,7 +431,6 @@ func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, respon
 					"UniqueAttributeValue": item.UniqueAttributeValue(),
 					"Item Timestamp":       itemTime.String(),
 					"Current Time":         time.Now().String(),
-					"Stack":                string(qp.drainStack),
 				}).Error("SDP-GO ERROR: An Item was processed after Drain() was called. Please add these details to: https://github.com/overmindtech/cli/sdp-go/issues/15.")
 
 				span.SetStatus(codes.Error, "SDP-GO ERROR: An Item was processed after Drain() was called. Please add these details to: https://github.com/overmindtech/cli/sdp-go/issues/15.")
@@ -607,8 +604,6 @@ func (qp *QueryProgress) Drain() {
 	qp.drain.Do(func() {
 		qp.subMutex.Lock()
 		defer qp.subMutex.Unlock()
-
-		qp.drainStack = debug.Stack()
 
 		if qp.noRespondersCancel != nil {
 			// Cancel the no responders watcher to release the resources
@@ -941,19 +936,6 @@ func (qp *QueryProgress) NumResponders() int {
 // lock
 func (qp *QueryProgress) numResponders() int {
 	return len(qp.responders)
-}
-
-// ResponderStates Returns the status details for all responders as a map.
-// Where the key is the name of the responder and the value is its status
-func (qp *QueryProgress) ResponderStates() map[uuid.UUID]ResponderState {
-	statuses := make(map[uuid.UUID]ResponderState)
-	qp.respondersMutex.RLock()
-	defer qp.respondersMutex.RUnlock()
-	for _, responder := range qp.responders {
-		statuses[responder.ID] = responder.LastState()
-	}
-
-	return statuses
 }
 
 func (qp *QueryProgress) String() string {
