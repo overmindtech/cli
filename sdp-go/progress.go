@@ -8,14 +8,13 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -27,10 +26,6 @@ const DefaultResponseInterval = (5 * time.Second)
 // response on a query. If no response is received in this time, the query will
 // be marked as complete.
 const DefaultStartTimeout = 500 * time.Millisecond
-
-// DefaultDrainDelay How long to wait after all is complete before draining all
-// NATS connections
-const DefaultDrainDelay = (100 * time.Millisecond)
 
 // ResponseSender is a struct responsible for sending responses out on behalf of
 // agents that are working on that request. Think of it as the agent side
@@ -221,306 +216,433 @@ func (rs *ResponseSender) CancelWithContext(ctx context.Context) {
 	rs.killWithResponse(ctx, &resp)
 }
 
-// responderStatus represents the status of a responder
-type responderStatus struct {
-	Name           string
-	ID             uuid.UUID
-	monitorContext context.Context
-	monitorCancel  context.CancelFunc
-	lastState      ResponderState
-	lastStateTime  time.Time
-	mutex          sync.RWMutex
+type lastResponse struct {
+	Response  *Response
+	Timestamp time.Time
 }
 
-// CancelMonitor Cancels the running stall monitor goroutine if there is one
-func (re *responderStatus) CancelMonitor() {
-	re.mutex.Lock()
-	defer re.mutex.Unlock()
+// Checks to see if this responder is stalled. If it is, it will update the
+// responder state to ResponderState_STALLED. Only runs if the responder is in
+// the WORKING state, doesn't do anything otherwise.
+func (l *lastResponse) checkStalled() {
+	if l.Response == nil || l.Response.GetState() != ResponderState_WORKING {
+		return
+	}
 
-	if re.monitorCancel != nil {
-		re.monitorCancel()
+	// Calculate if it's stalled, but only if it has a `NextUpdateIn` value.
+	// Responders that do not provided a `NextUpdateIn` value are not considered
+	// for stalling
+	timeSinceLastUpdate := time.Since(l.Timestamp)
+	timeToNextUpdate := l.Response.GetNextUpdateIn().AsDuration()
+	if timeToNextUpdate > 0 && timeSinceLastUpdate > timeToNextUpdate {
+		l.Response.State = ResponderState_STALLED
 	}
 }
 
-// SetMonitorContext Saves the context details for the monitor goroutine so that
-// it can be cancelled later, freeing up resources
-func (re *responderStatus) SetMonitorContext(ctx context.Context, cancel context.CancelFunc) {
-	re.mutex.Lock()
-	defer re.mutex.Unlock()
-
-	re.monitorContext = ctx
-	re.monitorCancel = cancel
-}
-
-// SetState updates the state and last state time of the responder
-func (re *responderStatus) SetState(s ResponderState) {
-	re.mutex.Lock()
-	defer re.mutex.Unlock()
-
-	re.lastState = s
-	re.lastStateTime = time.Now()
-}
-
-// LastState Returns the last state response for a given responder
-func (re *responderStatus) LastState() ResponderState {
-	re.mutex.RLock()
-	defer re.mutex.RUnlock()
-
-	return re.lastState
-}
-
-// LastStateTime Returns the last state response for a given responder
-func (re *responderStatus) LastStateTime() time.Time {
-	re.mutex.RLock()
-	defer re.mutex.RUnlock()
-
-	return re.lastStateTime
-}
-
-// QueryProgress represents the status of a query
-type QueryProgress struct {
-	// How long to wait after `MarkStarted()` has been called to get at least
-	// one responder, if there are no responders in this time, the request will
-	// be marked as completed
-	StartTimeout        time.Duration
-	StartTimeoutElapsed atomic.Bool // Whether the start timeout has elapsed
-	Query               *Query
-	requestCtx          context.Context
-
-	// How long to wait before draining NATS connections after all have
-	// completed
-	DrainDelay time.Duration
-
-	responders      map[uuid.UUID]*responderStatus
-	respondersMutex sync.RWMutex
+// SourceQuery represents the status of a query
+type SourceQuery struct {
+	// A map of ResponderUUIDs to the last response we got from them
+	responders   map[uuid.UUID]*lastResponse
+	respondersMu sync.Mutex
 
 	// Channel storage for sending back to the user
-	responseChan   chan<- *QueryResponse
-	doneChan       chan struct{} // Closed when request is fully complete
-	chanMutex      sync.RWMutex
-	channelsClosed bool // Additional protection against send on closed chan. This isn't brilliant but I can't think of a better way at the moment
-	drain          sync.Once
+	responseChan chan<- *QueryResponse
 
-	started   bool
-	cancelled bool
-	subMutex  sync.Mutex
+	// Use to make sure a user doesn't try to start a request twice. This is an
+	// atomic to allow tests to directly inject messages using
+	// `handleQueryResponse`
+	startTimeoutElapsed atomic.Bool
 
 	querySub *nats.Subscription
 
-	// Counters for how many things we have sent over the channels. This is
-	// required to make sure that we aren't closing channels that have pending
-	// things to be sent on them
-	itemsProcessed  *int64
-	errorsProcessed *int64
-
-	noResponderContext context.Context
-	noRespondersCancel context.CancelFunc
+	cancel context.CancelFunc
 }
 
-// NewQueryProgress returns a pointer to a QueryProgress object with the various
-// internal members initialized. A startTimeout must also be provided, however
-// if it's nil it will default to `DefaultStartTimeout`
-func NewQueryProgress(q *Query, startTimeout time.Duration) *QueryProgress {
+// The current progress of the tracked query
+type SourceQueryProgress struct {
+	// How many responders are currently working on this query. This means they
+	// are active sending updates
+	Working int
 
-	var finalTimeout time.Duration
+	// Stalled responders are ones that have sent updates in the past, but the
+	// latest update is overdue. This likely indicates a problem with the
+	// responder
+	Stalled int
 
-	// Ensure that we time out eventually if nothing responds
+	// Responders that are complete
+	Complete int
+
+	// Responders that failed
+	Error int
+
+	// Responders that were cancelled. When cancelling the QueryProgress does
+	// not wait for responders to acknowledge the cancellation, it simply sends
+	// the message and marks all responders that are currently "working" as
+	// "cancelled". It is possible that a responder will self-report
+	// cancellation, but given the timings this is unlikely as it would need to
+	// be very fast
+	Cancelled int
+
+	// The total number of tracked responders
+	Responders int
+}
+
+// RunSourceQuery returns a pointer to a QueryProgress object with the various
+// internal members initialized. A startTimeout must also be provided, feel free
+// to use `DefaultStartTimeout` if you don't have a specific value in mind.
+func RunSourceQuery(ctx context.Context, query *Query, startTimeout time.Duration, ec EncodedConnection, responseChan chan<- *QueryResponse) (*SourceQuery, error) {
 	if startTimeout == 0 {
-		finalTimeout = DefaultStartTimeout
-	} else {
-		finalTimeout = startTimeout
-	}
-
-	return &QueryProgress{
-		Query:           q,
-		StartTimeout:    finalTimeout,
-		DrainDelay:      DefaultDrainDelay,
-		responders:      make(map[uuid.UUID]*responderStatus),
-		doneChan:        make(chan struct{}),
-		itemsProcessed:  new(int64),
-		errorsProcessed: new(int64),
-	}
-}
-
-// Start starts a given request, sending items to the supplied itemChannel. It
-// is up to the user to watch for completion. When the request does complete,
-// the NATS subscriptions will automatically drain and the itemChannel will be
-// closed.
-//
-// The fact that the items chan is closed when all items have been received
-// means that the only thing a user needs to do in order to process all items
-// and then continue is range over the channel e.g.
-//
-//	for item := range itemChannel {
-//		// Do something with the item
-//		fmt.Println(item)
-//
-//		// This loop  will exit once the request is finished
-//	}
-func (qp *QueryProgress) Start(ctx context.Context, ec EncodedConnection, responseChan chan<- *QueryResponse) error {
-	if qp.started {
-		return errors.New("already started")
+		return nil, errors.New("startTimeout must be greater than 0")
 	}
 
 	if ec.Underlying() == nil {
-		return errors.New("nil NATS connection")
+		return nil, errors.New("nil NATS connection")
 	}
 
 	if responseChan == nil {
-		return errors.New("nil response channel")
+		return nil, errors.New("nil response channel")
 	}
 
-	qp.requestCtx = ctx
+	if query.GetScope() == "" {
+		return nil, errors.New("cannot execute request with blank scope")
+	}
 
-	if len(qp.Query.GetUUID()) == 0 {
+	// Generate a UUID if required
+	if len(query.GetUUID()) == 0 {
 		u := uuid.New()
-		qp.Query.UUID = u[:]
+		query.UUID = u[:]
 	}
 
+	// Calculate the correct subject to send the message on
 	var requestSubject string
-
-	if qp.Query.GetScope() == "" {
-		return errors.New("cannot execute request with blank scope")
-	}
-
-	if qp.Query.GetScope() == WILDCARD {
+	if query.GetScope() == WILDCARD {
 		requestSubject = "request.all"
 	} else {
-		requestSubject = fmt.Sprintf("request.scope.%v", qp.Query.GetScope())
+		requestSubject = fmt.Sprintf("request.scope.%v", query.GetScope())
 	}
 
-	// Store the channels
-	qp.chanMutex.Lock()
-	defer qp.chanMutex.Unlock()
-	qp.responseChan = responseChan
+	// Create the channel that NATS responses will come through
+	natsResponses := make(chan *QueryResponse)
 
-	qp.subMutex.Lock()
-	defer qp.subMutex.Unlock()
+	// Create a timer for the start timeout
+	startTimeoutTimer := time.NewTimer(startTimeout)
 
-	var err error
-
-	itemHandler := func(ctx context.Context, item *Item) {
-		defer atomic.AddInt64(qp.itemsProcessed, 1)
-
-		span := trace.SpanFromContext(ctx)
-
-		if item == nil {
-			span.SetAttributes(
-				attribute.String("ovm.item", "nil"),
-			)
-		} else {
-			span.SetAttributes(
-				attribute.String("ovm.item", item.GloballyUniqueName()),
-			)
-
-			qp.chanMutex.RLock()
-			defer qp.chanMutex.RUnlock()
-			if qp.channelsClosed {
-				var itemTime time.Time
-
-				if item.GetMetadata() != nil {
-					itemTime = item.GetMetadata().GetTimestamp().AsTime()
-				}
-
-				// This *should* never happen but I am seeing it happen
-				// occasionally. In order to avoid a panic I'm instead going to
-				// log it here
-				log.WithContext(ctx).WithFields(log.Fields{
-					"Type":                 item.GetType(),
-					"Scope":                item.GetScope(),
-					"UniqueAttributeValue": item.UniqueAttributeValue(),
-					"Item Timestamp":       itemTime.String(),
-					"Current Time":         time.Now().String(),
-				}).Error("SDP-GO ERROR: An Item was processed after Drain() was called. Please add these details to: https://github.com/overmindtech/cli/sdp-go/issues/15.")
-
-				span.SetStatus(codes.Error, "SDP-GO ERROR: An Item was processed after Drain() was called. Please add these details to: https://github.com/overmindtech/cli/sdp-go/issues/15.")
-				return
-			}
-
-			item, edges := TranslateLinksToEdges(item)
-			qp.responseChan <- &QueryResponse{
-				ResponseType: &QueryResponse_NewItem{NewItem: item},
-			}
-			for _, e := range edges {
-				qp.responseChan <- &QueryResponse{
-					ResponseType: &QueryResponse_Edge{Edge: e},
-				}
-			}
-		}
-	}
-
-	errorHandler := func(ctx context.Context, qErr *QueryError) {
-		defer atomic.AddInt64(qp.errorsProcessed, 1)
-
-		if qErr != nil {
-			span := trace.SpanFromContext(ctx)
-			span.SetStatus(codes.Error, qErr.Error())
-			span.SetAttributes(
-				attribute.Int64("ovm.sdp.errorsProcessed", *qp.errorsProcessed),
-				attribute.String("ovm.sdp.errorString", qErr.GetErrorString()),
-				attribute.String("ovm.sdp.errorType", qErr.GetErrorType().String()),
-				attribute.String("ovm.scope", qErr.GetScope()),
-				attribute.String("ovm.type", qErr.GetItemType()),
-				attribute.String("ovm.sdp.sourceName", qErr.GetSourceName()),
-				attribute.String("ovm.sdp.responderName", qErr.GetResponderName()),
-			)
-
-			qp.chanMutex.RLock()
-			defer qp.chanMutex.RUnlock()
-			if qp.channelsClosed {
-				// This *should* never happen but I am seeing it happen
-				// occasionally. In order to avoid a panic I'm instead going to
-				// log it here
-				log.WithContext(ctx).WithFields(log.Fields{
-					"UUID":          qErr.GetUUID(),
-					"ErrorType":     qErr.GetErrorType(),
-					"ErrorString":   qErr.GetErrorString(),
-					"Scope":         qErr.GetScope(),
-					"SourceName":    qErr.GetSourceName(),
-					"ItemType":      qErr.GetItemType(),
-					"ResponderName": qErr.GetResponderName(),
-				}).Error("SDP-GO ERROR: A QueryError was processed after Drain() was called. Please add these details to: https://github.com/overmindtech/cli/sdp-go/issues/15.")
-				return
-			}
-
-			qp.responseChan <- &QueryResponse{
-				ResponseType: &QueryResponse_Error{
-					Error: qErr,
-				},
-			}
-		}
-	}
-
-	qp.querySub, err = ec.Subscribe(qp.Query.Subject(), NewQueryResponseHandler("", func(ctx context.Context, qr *QueryResponse) { //nolint:contextcheck // we pass the context in the func
-		log.WithContext(ctx).WithFields(log.Fields{
-			"response": qr,
-		}).Trace("Received response")
-		switch qr.GetResponseType().(type) {
-		case *QueryResponse_NewItem:
-			itemHandler(ctx, qr.GetNewItem())
-		case *QueryResponse_Edge:
-			panic("edge-from-source not implemented yet")
-		case *QueryResponse_Error:
-			errorHandler(ctx, qr.GetError())
-		case *QueryResponse_Response:
-			qp.ProcessResponse(ctx, qr.GetResponse())
-		default:
-			panic(fmt.Sprintf("Received unexpected QueryResponse: %v", qr))
-		}
+	// Subscribe to the query subject and wait for responses
+	querySub, err := ec.Subscribe(query.Subject(), NewQueryResponseHandler("", func(ctx context.Context, qr *QueryResponse) { //nolint:contextcheck // we pass the context in the func
+		natsResponses <- qr
 	}))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = ec.Publish(ctx, requestSubject, qp.Query)
+	ctx, cancel := context.WithCancel(ctx)
 
-	qp.markStarted()
+	sq := &SourceQuery{
+		responders:          make(map[uuid.UUID]*lastResponse),
+		startTimeoutElapsed: atomic.Bool{},
+		querySub:            querySub,
+		cancel:              cancel,
+		responseChan:        responseChan,
+	}
 
+	// Main processing loop. This runs is the main goroutine that tracks this
+	// request
+	go func() {
+		// Initialise the stall check ticker
+		stallCheck := time.NewTicker(500 * time.Millisecond)
+		defer stallCheck.Stop()
+		ctx, span := tracing.Tracer().Start(ctx, "QueryProgress")
+		defer span.End()
+
+		// Attach query information to the span
+		span.SetAttributes(
+			attribute.String("ovm.sdp.type", query.GetType()),
+			attribute.String("ovm.sdp.scope", query.GetScope()),
+			attribute.String("ovm.sdp.uuid", uuid.UUID(query.GetUUID()).String()),
+			attribute.String("ovm.sdp.method", query.GetMethod().String()),
+		)
+
+		for {
+			select {
+			case <-ctx.Done():
+				// Since this context is done, we need a new context just to
+				// send the cancellation message
+				cancelCtx, cancelCtxCancel := context.WithTimeout(context.WithoutCancel(ctx), 3*time.Second)
+				defer cancelCtxCancel()
+
+				// Send a cancel message to all responders
+				cancelRequest := CancelQuery{
+					UUID: query.GetUUID(),
+				}
+
+				var cancelSubject string
+				if query.GetScope() == WILDCARD {
+					cancelSubject = "cancel.all"
+				} else {
+					cancelSubject = fmt.Sprintf("cancel.scope.%v", query.GetScope())
+				}
+
+				err := ec.Publish(cancelCtx, cancelSubject, &cancelRequest)
+
+				if err != nil {
+					log.WithContext(ctx).WithError(err).Error("Error sending cancel message")
+					span.RecordError(err)
+				}
+
+				sq.markWorkingRespondersCancelled()
+				sq.cleanup(ctx)
+				return
+			case <-startTimeoutTimer.C:
+				sq.startTimeoutElapsed.Store(true)
+
+				if sq.finished() {
+					sq.cleanup(ctx)
+					return
+				}
+			case response := <-natsResponses:
+				// Handle the response
+				if sq.handleQueryResponse(ctx, response) {
+					// This means we are done
+					return
+				}
+			case <-stallCheck.C:
+
+				// If we get here, it means that we haven't had a response
+				// in a while, so we should check to see if things have
+				// stalled
+				if sq.finished() {
+					sq.cleanup(ctx)
+					return
+				}
+			}
+		}
+	}()
+
+	// Send the message to start the query
+	err = ec.Publish(ctx, requestSubject, query)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return sq, nil
+}
+
+// Execute a given request and wait for it to finish, returns the items that
+// were found and any errors. The third return error value will only be returned
+// only if there is a problem making the request. Details of which responders
+// have failed etc. should be determined using the typical methods like
+// `NumError()`.
+func RunSourceQuerySync(ctx context.Context, query *Query, startTimeout time.Duration, ec EncodedConnection) ([]*Item, []*Edge, []*QueryError, error) {
+	items := make([]*Item, 0)
+	edges := make([]*Edge, 0)
+	errs := make([]*QueryError, 0)
+	r := make(chan *QueryResponse)
+
+	if ec == nil {
+		return items, edges, errs, errors.New("nil NATS connection")
+	}
+
+	_, err := RunSourceQuery(ctx, query, startTimeout, ec, r)
+	if err != nil {
+		return items, edges, errs, err
+	}
+
+	for {
+		// Read items and errors
+		select {
+		case response, ok := <-r:
+			if !ok {
+				// when the channel closes, we're done
+				return items, edges, errs, nil
+			}
+			item := response.GetNewItem()
+			if item != nil {
+				items = append(items, item)
+			}
+			edge := response.GetEdge()
+			if edge != nil {
+				edges = append(edges, edge)
+			}
+			qErr := response.GetError()
+			if qErr != nil {
+				errs = append(errs, qErr)
+			}
+			// ignore status responses for now
+			// status := response.GetResponse()
+			// if status != nil {
+			// 	panic("qp: status not implemented yet")
+			// }
+		}
+	}
+}
+
+// Cancels the request, sending a cancel message to all responders and closing
+// the response channel. The query can also be cancelled by cancelling the
+// context that was passed in the `Start` method
+func (sq *SourceQuery) Cancel() {
+	sq.cancel()
+}
+
+// This is split out into its own function so that it can be tested more easily
+// with out having to worry about race conditions. This returns a boolean which
+// indicates if the request is complete or not
+func (sq *SourceQuery) handleQueryResponse(ctx context.Context, response *QueryResponse) bool {
+	switch r := response.GetResponseType().(type) {
+	case *QueryResponse_NewItem:
+		sq.handleItem(r.NewItem)
+	case *QueryResponse_Edge:
+		sq.handleEdge(r.Edge)
+	case *QueryResponse_Error:
+		sq.handleError(r.Error)
+	case *QueryResponse_Response:
+		sq.handleResponse(ctx, r.Response)
+
+		if sq.finished() {
+			sq.cleanup(ctx)
+			return true
+		}
+	}
+
+	return false
+}
+
+// markWorkingRespondersCancelled marks all working responders as cancelled
+// internally, there is no need to wait for them to confirm the cancellation, as
+// we're not going to wait for any further responses.
+func (sq *SourceQuery) markWorkingRespondersCancelled() {
+	sq.respondersMu.Lock()
+	defer sq.respondersMu.Unlock()
+
+	for _, lastResponse := range sq.responders {
+		if lastResponse.Response.GetState() == ResponderState_WORKING {
+			lastResponse.Response.State = ResponderState_CANCELLED
+		}
+	}
+}
+
+// Whether the query should be considered finished or not. This is based on
+// whether the start timeout has elapsed and all responders are done
+func (sq *SourceQuery) finished() bool {
+	return sq.startTimeoutElapsed.Load() && sq.allDone()
+}
+
+// Cleans up the query, unsubscribing from the query subject and closing the
+// response channel
+func (sq *SourceQuery) cleanup(ctx context.Context) {
+	span := trace.SpanFromContext(ctx)
+	if sq.querySub != nil {
+		err := sq.querySub.Unsubscribe()
+		if err != nil {
+			log.WithField("error", err).Error("Error unsubscribing from query subject")
+			span.RecordError(err)
+		}
+	}
+
+	close(sq.responseChan)
+	sq.cancel()
+}
+
+// Sends the item back to the response channel, also extracts and synthesises
+// edges from `LinkedItems` and `LinkedItemQueries` and sends them back too
+func (sq *SourceQuery) handleItem(item *Item) {
+	if item == nil {
+		return
+	}
+
+	// Send the item back over the channel
+	item, edges := TranslateLinksToEdges(item)
+	sq.responseChan <- &QueryResponse{
+		ResponseType: &QueryResponse_NewItem{NewItem: item},
+	}
+	for _, e := range edges {
+		sq.responseChan <- &QueryResponse{
+			ResponseType: &QueryResponse_Edge{Edge: e},
+		}
+	}
+}
+
+// Sends the edge back to the response channel
+func (sq *SourceQuery) handleEdge(edge *Edge) {
+	if edge == nil {
+		return
+	}
+
+	sq.responseChan <- &QueryResponse{
+		ResponseType: &QueryResponse_Edge{Edge: edge},
+	}
+}
+
+// Send the error back to the response channel
+func (sq *SourceQuery) handleError(err *QueryError) {
+	if err == nil {
+		return
+	}
+
+	sq.responseChan <- &QueryResponse{
+		ResponseType: &QueryResponse_Error{
+			Error: err,
+		},
+	}
+}
+
+// Update the internal state with the response
+func (sq *SourceQuery) handleResponse(ctx context.Context, response *Response) {
+	span := trace.SpanFromContext(ctx)
+
+	// do not deal with responses that do not have a responder UUID
+	ru, err := uuid.FromBytes(response.GetResponderUUID())
+	if err != nil {
+		span.RecordError(fmt.Errorf("error parsing responder UUID: %w", err))
+		return
+	}
+
+	sq.respondersMu.Lock()
+	defer sq.respondersMu.Unlock()
+
+	// Protect against out-of order responses. Do not mark a responder as
+	// working if it has already finished. this should never happen, but we want
+	// to know if it does as it will indicate a bug in the responder itself
+	last, exists := sq.responders[ru]
+	if exists {
+		if last.Response != nil {
+			switch last.Response.GetState() {
+			case ResponderState_COMPLETE, ResponderState_ERROR, ResponderState_CANCELLED:
+				err = fmt.Errorf("out-of-order response. Responder was already in the state %v, skipping update to %v", last.Response.String(), response.GetState().String())
+				span.RecordError(err)
+				sentry.CaptureException(err)
+				return
+			case ResponderState_WORKING, ResponderState_STALLED:
+				// This is fine, we can update the state
+			}
+		}
+	}
+
+	// Update the stored data
+	sq.responders[ru] = &lastResponse{
+		Response:  response,
+		Timestamp: time.Now(),
+	}
+}
+
+// Checks whether all responders are done or not. A "Done" responder is one that
+// is either: Complete, Error, Cancelled or Stalled
+//
+// Note that this doesn't perform locking if the mutex, this needs to be done by
+// the caller
+func (sq *SourceQuery) allDone() bool {
+	sq.respondersMu.Lock()
+	defer sq.respondersMu.Unlock()
+
+	for _, lastResponse := range sq.responders {
+		// Recalculate the stall status
+		lastResponse.checkStalled()
+
+		if lastResponse.Response.GetState() == ResponderState_WORKING {
+			return false
+		}
+	}
+
+	return true
 }
 
 // TranslateLinksToEdges Translates linked items and queries into edges. This is
@@ -558,456 +680,51 @@ func TranslateLinksToEdges(item *Item) (*Item, []*Edge) {
 	return item, edges
 }
 
-// markStarted Marks the request as started and will cause it to be marked as
-// done if there are no responders after StartTimeout duration
-func (qp *QueryProgress) markStarted() {
-	// We're using this mutex to also lock access to the context and cancel
-	qp.respondersMutex.Lock()
-	defer qp.respondersMutex.Unlock()
+func (sq *SourceQuery) Progress() SourceQueryProgress {
+	sq.respondersMu.Lock()
+	defer sq.respondersMu.Unlock()
 
-	qp.started = true
-	qp.noResponderContext, qp.noRespondersCancel = context.WithCancel(context.Background())
+	var numWorking, numStalled, numComplete, numError, numCancelled int
 
-	var startTimeout *time.Timer
-	if qp.StartTimeout == 0 {
-		startTimeout = time.NewTimer(1 * time.Second)
-	} else {
-		startTimeout = time.NewTimer(qp.StartTimeout)
-	}
+	// Loop over all responders once and calculate the progress
+	for _, lastResponse := range sq.responders {
+		// Recalculate the stall status
+		lastResponse.checkStalled()
 
-	go func(ctx context.Context) {
-		defer tracing.LogRecoverToReturn(ctx, "QueryProgress startTimeout")
-		select {
-		case <-startTimeout.C:
-			qp.StartTimeoutElapsed.Store(true)
-
-			// Once the start timeout has elapsed, if there are no
-			// responders, or all of them are done, we can drain the
-			// connections and mark everything as done
-			qp.respondersMutex.RLock()
-			defer qp.respondersMutex.RUnlock()
-
-			if qp.numResponders() == 0 || qp.allDone() {
-				qp.Drain()
-			}
-		case <-ctx.Done():
-			startTimeout.Stop()
-		}
-	}(qp.noResponderContext)
-}
-
-// Drain Tries to drain connections gracefully. If not though, connections are
-// forcibly closed and the item and error channels closed
-func (qp *QueryProgress) Drain() {
-	// Use sync.Once to ensure that if this is called in parallel goroutines it
-	// isn't run twice
-	qp.drain.Do(func() {
-		qp.subMutex.Lock()
-		defer qp.subMutex.Unlock()
-
-		if qp.noRespondersCancel != nil {
-			// Cancel the no responders watcher to release the resources
-			qp.noRespondersCancel()
-		}
-
-		// Close the item and error subscriptions
-		err := unsubscribeGracefully(qp.querySub)
-		if err != nil {
-			log.WithContext(qp.requestCtx).WithError(err).Error("Error unsubscribing from query subject")
-		}
-
-		qp.chanMutex.Lock()
-		defer qp.chanMutex.Unlock()
-
-		if qp.responseChan != nil {
-			close(qp.responseChan)
-			qp.responseChan = nil
-		}
-
-		// Only if the drain is fully complete should we close the doneChan
-		close(qp.doneChan)
-
-		qp.channelsClosed = true
-	})
-}
-
-// Done Returns a channel when the request is fully complete and all channels
-// closed
-func (qp *QueryProgress) Done() <-chan struct{} {
-	return qp.doneChan
-}
-
-// Cancel Cancels a request and waits for all responders to report that they
-// were finished, cancelled or to be marked as stalled. If the context expires
-// before this happens, the request is cancelled forcibly, with subscriptions
-// being removed and channels closed. This method will only return when
-// cancellation is complete
-//
-// Returns a boolean indicating whether the cancellation needed to be forced
-func (qp *QueryProgress) Cancel(ctx context.Context, ec EncodedConnection) bool {
-	err := qp.AsyncCancel(ec)
-	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("Error cancelling request")
-	}
-
-	select {
-	case <-qp.Done():
-		// If the request finishes gracefully, that's good
-		return false
-	case <-ctx.Done():
-		// If the context is cancelled first, then force the draining
-		qp.Drain()
-		return true
-	}
-}
-
-// Cancel Sends a cancellation request for a given request
-func (qp *QueryProgress) AsyncCancel(ec EncodedConnection) error {
-	if ec == nil {
-		return errors.New("nil NATS connection")
-	}
-
-	cancelRequest := CancelQuery{
-		UUID: qp.Query.GetUUID(),
-	}
-
-	var cancelSubject string
-
-	if qp.Query.GetScope() == WILDCARD {
-		cancelSubject = "cancel.all"
-	} else {
-		cancelSubject = fmt.Sprintf("cancel.scope.%v", qp.Query.GetScope())
-	}
-
-	qp.cancelled = true
-
-	err := ec.Publish(qp.requestCtx, cancelSubject, &cancelRequest)
-
-	if err != nil {
-		return err
-	}
-
-	// Check this immediately in case nothing had started yet
-	if qp.allDone() {
-		qp.Drain()
-	}
-
-	return nil
-}
-
-// Execute a given request and wait for it to finish, returns the items that
-// were found and any errors. The third return error value will only be returned
-// only if there is a problem making the request. Details of which responders
-// have failed etc. should be determined using the typical methods like
-// `NumError()`.
-func (qp *QueryProgress) Execute(ctx context.Context, ec EncodedConnection) ([]*Item, []*Edge, []*QueryError, error) {
-	items := make([]*Item, 0)
-	edges := make([]*Edge, 0)
-	errs := make([]*QueryError, 0)
-	r := make(chan *QueryResponse)
-
-	if ec == nil {
-		return items, edges, errs, errors.New("nil NATS connection")
-	}
-
-	err := qp.Start(ctx, ec, r)
-
-	if err != nil {
-		return items, edges, errs, err
-	}
-
-	for {
-		// Read items and errors
-		select {
-		case response, ok := <-r:
-			if !ok {
-				// when the channel closes, we're done
-				return items, edges, errs, nil
-			}
-			item := response.GetNewItem()
-			if item != nil {
-				items = append(items, item)
-			}
-			edge := response.GetEdge()
-			if edge != nil {
-				edges = append(edges, edge)
-			}
-			qErr := response.GetError()
-			if qErr != nil {
-				errs = append(errs, qErr)
-			}
-			// ignore status responses for now
-			// status := response.GetResponse()
-			// if status != nil {
-			// 	panic("qp: status not implemented yet")
-			// }
-		}
-	}
-}
-
-// ProcessResponse processes an SDP Response and updates the database
-// accordingly
-func (qp *QueryProgress) ProcessResponse(ctx context.Context, response *Response) {
-	span := trace.SpanFromContext(ctx)
-	span.SetAttributes(attribute.String("ovm.sdp.response", protojson.Format(response)))
-
-	// do not deal with responses that do not have a responder UUID
-	ru, err := uuid.FromBytes(response.GetResponderUUID())
-	if err != nil {
-		log.WithContext(ctx).WithError(err).WithField("response", response).Error("Error parsing responder UUID")
-		return
-	}
-
-	// Update the stored data
-	qp.respondersMutex.Lock()
-	defer qp.respondersMutex.Unlock()
-
-	responder, exists := qp.responders[ru]
-
-	if exists {
-		responder.CancelMonitor()
-
-		// Protect against out-of order responses. Do not mark a responder as
-		// working if it has already finished
-		if responder.lastState == ResponderState_COMPLETE ||
-			responder.lastState == ResponderState_ERROR ||
-			responder.lastState == ResponderState_CANCELLED {
-			return
-		}
-	} else {
-		// If the responder is new, add it to the list
-		responder = &responderStatus{
-			Name: response.GetResponder(),
-			ID:   ru,
-		}
-		qp.responders[ru] = responder
-	}
-
-	responder.SetState(response.GetState())
-
-	// Check if we should expect another response
-	expectFollowUp := (response.GetNextUpdateIn() != nil && response.GetState() != ResponderState_COMPLETE)
-
-	// If we are told to expect a new response, set up context for it
-	if expectFollowUp {
-		timeout := response.GetNextUpdateIn().AsDuration()
-
-		monitorContext, monitorCancel := context.WithCancel(context.Background())
-
-		responder.SetMonitorContext(monitorContext, monitorCancel) //nolint: contextcheck // we expect a new response
-
-		// Create a goroutine to watch for a stalled connection
-		go stallMonitor(monitorContext, timeout, responder, qp) //nolint: contextcheck // we expect a new response
-	}
-
-	// Finally check to see if this was the final request and if so drain
-	// everything. We also need to check that the start timeout has elapsed to
-	// ensure that we don't drain too early. The start timeout goroutine will
-	// drain everything when it elapses if required
-	if qp.allDone() && qp.StartTimeoutElapsed.Load() {
-		// at this point I need to add some slack in case the we have received
-		// the completion response before the final item. The sources are
-		// supposed to wait until all items have been sent in order to send
-		// this, but NATS doesn't guarantee ordering so there's still a
-		// reasonable chance that things will arrive in a weird order. This is a
-		// pretty bad solution and realistically this should be addressed in the
-		// protocol itself, but for now this will do. Especially since it
-		// doesn't actually block anything that the client sees, it's just
-		// delaying cleanup for a little longer than we need
-		time.Sleep(qp.DrainDelay)
-
-		qp.Drain()
-	}
-}
-
-// NumWorking returns the number of responders that are in the Working state
-func (qp *QueryProgress) NumWorking() int {
-	qp.respondersMutex.RLock()
-	defer qp.respondersMutex.RUnlock()
-	return qp.numWorking()
-}
-
-// numWorking Returns the number of responders that are working without taking a
-// lock
-func (qp *QueryProgress) numWorking() int {
-	var numWorking int
-
-	for _, responder := range qp.responders {
-		if responder.LastState() == ResponderState_WORKING {
+		switch lastResponse.Response.GetState() {
+		case ResponderState_WORKING:
 			numWorking++
-		}
-	}
-
-	return numWorking
-}
-
-// NumStalled returns the number of responders that are in the STALLED state
-func (qp *QueryProgress) NumStalled() int {
-	qp.respondersMutex.RLock()
-	defer qp.respondersMutex.RUnlock()
-	return qp.numStalled()
-}
-
-// numStalled Returns the number of responders that are stalled without taking a
-// lock
-func (qp *QueryProgress) numStalled() int {
-	var numStalled int
-
-	for _, responder := range qp.responders {
-		if responder.LastState() == ResponderState_STALLED {
+		case ResponderState_STALLED:
 			numStalled++
-		}
-	}
-
-	return numStalled
-}
-
-// NumComplete returns the number of responders that are in the COMPLETE state
-func (qp *QueryProgress) NumComplete() int {
-	qp.respondersMutex.RLock()
-	defer qp.respondersMutex.RUnlock()
-	return qp.numComplete()
-}
-
-// numComplete Returns the number of responders that are complete without taking
-// a lock
-func (qp *QueryProgress) numComplete() int {
-	var numComplete int
-
-	for _, responder := range qp.responders {
-		if responder.LastState() == ResponderState_COMPLETE {
+		case ResponderState_COMPLETE:
 			numComplete++
-		}
-	}
-
-	return numComplete
-}
-
-// NumError returns the number of responders that are in the ERROR state
-func (qp *QueryProgress) NumError() int {
-	qp.respondersMutex.RLock()
-	defer qp.respondersMutex.RUnlock()
-	return qp.numError()
-}
-
-// numError Returns the number of responders that are in the ERROR state
-// without taking a lock
-func (qp *QueryProgress) numError() int {
-	var numError int
-
-	for _, responder := range qp.responders {
-		if responder.LastState() == ResponderState_ERROR {
+		case ResponderState_ERROR:
 			numError++
-		}
-	}
-
-	return numError
-}
-
-// NumCancelled returns the number of responders that are in the CANCELLED state
-func (qp *QueryProgress) NumCancelled() int {
-	qp.respondersMutex.RLock()
-	defer qp.respondersMutex.RUnlock()
-	return qp.numCancelled()
-}
-
-// numCancelled Returns the number of responders that are in the CANCELLED state
-// without taking a lock
-func (qp *QueryProgress) numCancelled() int {
-	var numCancelled int
-
-	for _, responder := range qp.responders {
-		if responder.LastState() == ResponderState_CANCELLED {
+		case ResponderState_CANCELLED:
 			numCancelled++
 		}
 	}
 
-	return numCancelled
+	return SourceQueryProgress{
+		Working:    numWorking,
+		Stalled:    numStalled,
+		Complete:   numComplete,
+		Error:      numError,
+		Cancelled:  numCancelled,
+		Responders: len(sq.responders),
+	}
 }
 
-// NumResponders returns the total number of unique responders
-func (qp *QueryProgress) NumResponders() int {
-	qp.respondersMutex.RLock()
-	defer qp.respondersMutex.RUnlock()
-	return qp.numResponders()
-}
+func (sq *SourceQuery) String() string {
+	progress := sq.Progress()
 
-// numResponders Returns the total number of unique responders without taking a
-// lock
-func (qp *QueryProgress) numResponders() int {
-	return len(qp.responders)
-}
-
-func (qp *QueryProgress) String() string {
 	return fmt.Sprintf(
-		"Working: %v\nStalled: %v\nComplete: %v\nFailed: %v\nCancelled: %v\nResponders: %v\n",
-		qp.NumWorking(),
-		qp.NumStalled(),
-		qp.NumComplete(),
-		qp.NumError(),
-		qp.NumCancelled(),
-		qp.NumResponders(),
+		"Working: %v\nStalled: %v\nComplete: %v\nError: %v\nCancelled: %v\nResponders: %v\n",
+		progress.Working,
+		progress.Stalled,
+		progress.Complete,
+		progress.Error,
+		progress.Cancelled,
+		progress.Responders,
 	)
-}
-
-// Complete will return true if there are no remaining responders working, does
-// not take locks
-func (qp *QueryProgress) allDone() bool {
-	if qp.numResponders() > 0 || qp.cancelled {
-		// If we have had at least one response, and there aren't any waiting
-		// then we are going to assume that everything is done. It is of course
-		// possible that there has just been a very fast responder and so a
-		// minimum execution time might be a good idea
-		return (qp.numWorking() == 0)
-	}
-	// If there have been no responders at all we can't say that we're "done"
-	return false
-}
-
-// stallMonitor watches for stalled connections. It should be passed the
-// responder to monitor, the time to wait before marking the connection as
-// stalled, and a context. The context is used to allow cancellation of the
-// stall monitor from another thread in the case that another message is
-// received.
-func stallMonitor(ctx context.Context, timeout time.Duration, responder *responderStatus, qp *QueryProgress) {
-	defer tracing.LogRecoverToReturn(ctx, "stallMonitor")
-	select {
-	case <-ctx.Done():
-		// If the context is cancelled then we don't want to do anything
-		return
-	case <-time.After(timeout):
-		// If the timeout elapses before the context is cancelled it
-		// means that we haven't received a response in the expected
-		// time, we now need to mark that responder as STALLED
-		responder.SetState(ResponderState_STALLED)
-		log.WithContext(ctx).WithField("ovm.timeout", timeout).WithField("ovm.responder", responder.Name).Error("marking responder as stalled after timeout")
-
-		if qp.allDone() {
-			qp.Drain()
-		}
-
-		return
-	}
-}
-
-// unsubscribeGracefully Closes a NATS subscription gracefully, this includes
-// draining, unsubscribing and ensuring that all callbacks are complete
-func unsubscribeGracefully(s *nats.Subscription) error {
-	if s != nil {
-		// Drain NATS connections
-		err := s.Drain()
-
-		if err != nil {
-			// If that fails, fall back to an unsubscribe
-			err = s.Unsubscribe()
-
-			if err != nil {
-				return err
-			}
-		}
-
-		// Wait for all items to finish processing, including all callbacks
-	}
-
-	return nil
 }

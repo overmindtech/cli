@@ -246,7 +246,7 @@ func TestNats(t *testing.T) {
 			e.ClearCache()
 		})
 
-		req := sdp.NewQueryProgress(&sdp.Query{
+		query := &sdp.Query{
 			Type:   "person",
 			Method: sdp.QueryMethod_GET,
 			Query:  "basic",
@@ -254,9 +254,9 @@ func TestNats(t *testing.T) {
 				LinkDepth: 0,
 			},
 			Scope: "test",
-		}, 0)
+		}
 
-		_, _, _, err := req.Execute(context.Background(), e.natsConnection)
+		_, _, _, err := sdp.RunSourceQuerySync(context.Background(), query, sdp.DefaultStartTimeout, e.natsConnection)
 
 		if err != nil {
 			t.Error(err)
@@ -319,7 +319,7 @@ func TestNatsCancel(t *testing.T) {
 		conn := e.natsConnection
 		u := uuid.New()
 
-		progress := sdp.NewQueryProgress(&sdp.Query{
+		query := &sdp.Query{
 			Type:   "person",
 			Method: sdp.QueryMethod_GET,
 			Query:  "foo",
@@ -328,10 +328,10 @@ func TestNatsCancel(t *testing.T) {
 			},
 			Scope: "*",
 			UUID:  u[:],
-		}, 0)
+		}
 
 		responses := make(chan *sdp.QueryResponse, 1000)
-		err := progress.Start(context.Background(), conn, responses)
+		progress, err := sdp.RunSourceQuery(t.Context(), query, sdp.DefaultStartTimeout, conn, responses)
 		if err != nil {
 			t.Error(err)
 		}
@@ -351,7 +351,7 @@ func TestNatsCancel(t *testing.T) {
 
 		time.Sleep(250 * time.Millisecond)
 
-		if progress.NumCancelled() != 1 {
+		if progress.Progress().Cancelled != 1 {
 			t.Errorf("Expected query to be cancelled, got\n%v", progress.String())
 		}
 	})
@@ -643,7 +643,7 @@ func TestNatsAuth(t *testing.T) {
 			e.ClearCache()
 		})
 
-		_, _, _, err := sdp.NewQueryProgress(&sdp.Query{
+		query := &sdp.Query{
 			Type:   "person",
 			Method: sdp.QueryMethod_GET,
 			Query:  "basic",
@@ -651,7 +651,9 @@ func TestNatsAuth(t *testing.T) {
 				LinkDepth: 0,
 			},
 			Scope: "test",
-		}, 0).Execute(context.Background(), e.natsConnection)
+		}
+
+		_, _, _, err := sdp.RunSourceQuerySync(t.Context(), query, sdp.DefaultStartTimeout, e.natsConnection)
 
 		if err != nil {
 			t.Error(err)

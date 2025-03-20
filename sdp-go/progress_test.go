@@ -2,7 +2,10 @@ package sdp
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"math/rand"
+	"os"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -15,7 +18,7 @@ import (
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func TestNewQueryProgress(t *testing.T) {
+func TestRunSourceQueryParams(t *testing.T) {
 	u := uuid.New()
 	q := Query{
 		Type:   "person",
@@ -31,28 +34,10 @@ func TestNewQueryProgress(t *testing.T) {
 	}
 
 	t.Run("with no start timeout", func(t *testing.T) {
-		p := NewQueryProgress(&q, 0)
+		_, err := RunSourceQuery(t.Context(), &q, 0, nil, nil)
 
-		if p.StartTimeout != DefaultStartTimeout {
-			t.Error("expected StartTimeout to be equal to DefaultStartTimeout")
-		}
-	})
-
-	t.Run("with a start timeout shorter than the request timeout", func(t *testing.T) {
-		timeout := time.Second
-		p := NewQueryProgress(&q, timeout)
-
-		if p.StartTimeout != timeout {
-			t.Errorf("expected time to be %v got %v", timeout.String(), p.StartTimeout.String())
-		}
-	})
-
-	t.Run("with a start timeout longer than the request timeout", func(t *testing.T) {
-		timeout := 30 * time.Second
-		p := NewQueryProgress(&q, timeout)
-
-		if p.StartTimeout != timeout {
-			t.Errorf("expected time to be %v got %v", timeout.String(), p.StartTimeout.String())
+		if err == nil {
+			t.Error("expected an error when there is not startTimeout")
 		}
 	})
 }
@@ -83,12 +68,10 @@ func TestResponseSenderDone(t *testing.T) {
 		ResponseSubject:  "responses",
 	}
 
-	tp := TestConnection{
-		Messages: make([]ResponseMessage, 0),
-	}
+	tc := TestConnection{IgnoreNoResponders: true}
 
 	// Start sending responses
-	rs.Start(ctx, &tp, "test", uuid.New())
+	rs.Start(ctx, &tc, "test", uuid.New())
 
 	// Give it enough time for ~10 responses
 	time.Sleep(100 * time.Millisecond)
@@ -100,14 +83,14 @@ func TestResponseSenderDone(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Inspect what was sent
-	tp.messagesMutex.Lock()
-	if len(tp.Messages) <= 10 {
-		t.Errorf("Expected <= 10 responses to be sent, found %v", len(tp.Messages))
+	tc.messagesMutex.Lock()
+	if len(tc.Messages) <= 10 {
+		t.Errorf("Expected <= 10 responses to be sent, found %v", len(tc.Messages))
 	}
 
 	// Make sure that the final message was a completion one
-	finalMessage := tp.Messages[len(tp.Messages)-1]
-	tp.messagesMutex.Unlock()
+	finalMessage := tc.Messages[len(tc.Messages)-1]
+	tc.messagesMutex.Unlock()
 
 	if queryResponse, ok := finalMessage.V.(*QueryResponse); ok {
 		if finalResponse, ok := queryResponse.GetResponseType().(*QueryResponse_Response); ok {
@@ -130,12 +113,10 @@ func TestResponseSenderError(t *testing.T) {
 		ResponseSubject:  "responses",
 	}
 
-	tp := TestConnection{
-		Messages: make([]ResponseMessage, 0),
-	}
+	tc := TestConnection{IgnoreNoResponders: true}
 
 	// Start sending responses
-	rs.Start(ctx, &tp, "test", uuid.New())
+	rs.Start(ctx, &tc, "test", uuid.New())
 
 	// Give it enough time for >10 responses
 	time.Sleep(120 * time.Millisecond)
@@ -147,14 +128,14 @@ func TestResponseSenderError(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Inspect what was sent
-	tp.messagesMutex.Lock()
-	if len(tp.Messages) <= 10 {
-		t.Errorf("Expected <= 10 responses to be sent, found %v", len(tp.Messages))
+	tc.messagesMutex.Lock()
+	if len(tc.Messages) <= 10 {
+		t.Errorf("Expected <= 10 responses to be sent, found %v", len(tc.Messages))
 	}
 
 	// Make sure that the final message was a completion one
-	finalMessage := tp.Messages[len(tp.Messages)-1]
-	tp.messagesMutex.Unlock()
+	finalMessage := tc.Messages[len(tc.Messages)-1]
+	tc.messagesMutex.Unlock()
 
 	if queryResponse, ok := finalMessage.V.(*QueryResponse); ok {
 		if finalResponse, ok := queryResponse.GetResponseType().(*QueryResponse_Response); ok {
@@ -177,12 +158,10 @@ func TestResponseSenderCancel(t *testing.T) {
 		ResponseSubject:  "responses",
 	}
 
-	tp := TestConnection{
-		Messages: make([]ResponseMessage, 0),
-	}
+	tc := TestConnection{IgnoreNoResponders: true}
 
 	// Start sending responses
-	rs.Start(ctx, &tp, "test", uuid.New())
+	rs.Start(ctx, &tc, "test", uuid.New())
 
 	// Give it enough time for >10 responses
 	time.Sleep(120 * time.Millisecond)
@@ -194,14 +173,14 @@ func TestResponseSenderCancel(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Inspect what was sent
-	tp.messagesMutex.Lock()
-	if len(tp.Messages) <= 10 {
-		t.Errorf("Expected <= 10 responses to be sent, found %v", len(tp.Messages))
+	tc.messagesMutex.Lock()
+	if len(tc.Messages) <= 10 {
+		t.Errorf("Expected <= 10 responses to be sent, found %v", len(tc.Messages))
 	}
 
 	// Make sure that the final message was a completion one
-	finalMessage := tp.Messages[len(tp.Messages)-1]
-	tp.messagesMutex.Unlock()
+	finalMessage := tc.Messages[len(tc.Messages)-1]
+	tc.messagesMutex.Unlock()
 
 	if queryResponse, ok := finalMessage.V.(*QueryResponse); ok {
 		if finalResponse, ok := queryResponse.GetResponseType().(*QueryResponse_Response); ok {
@@ -229,44 +208,53 @@ func TestDefaultResponseInterval(t *testing.T) {
 	}
 }
 
-// Test object used for validation that metrics are coming out properly
-type ExpectedMetrics struct {
-	Working    int
-	Stalled    int
-	Cancelled  int
-	Complete   int
-	Error      int
-	Responders int
+// ExpectToMatch Checks that metrics are as expected and returns an error if not
+func (expected SourceQueryProgress) ExpectToMatch(qp *SourceQuery) error {
+	actual := qp.Progress()
+
+	var err error
+
+	if expected.Working != actual.Working {
+		err = errors.Join(err, fmt.Errorf("Expected Working to be %v, got %v", expected.Working, actual.Working))
+	}
+	if expected.Stalled != actual.Stalled {
+		err = errors.Join(err, fmt.Errorf("Expected Stalled to be %v, got %v", expected.Stalled, actual.Stalled))
+	}
+	if expected.Complete != actual.Complete {
+		err = errors.Join(err, fmt.Errorf("Expected Complete to be %v, got %v", expected.Complete, actual.Complete))
+	}
+	if expected.Error != actual.Error {
+		err = errors.Join(err, fmt.Errorf("Expected Error to be %v, got %v", expected.Error, actual.Error))
+	}
+	if expected.Responders != actual.Responders {
+		err = errors.Join(err, fmt.Errorf("Expected Responders to be %v, got %v", expected.Responders, actual.Responders))
+	}
+	if expected.Cancelled != actual.Cancelled {
+		err = errors.Join(err, fmt.Errorf("Expected Cancelled to be %v, got %v", expected.Cancelled, actual.Cancelled))
+	}
+
+	return err
 }
 
-// Validate Checks that metrics are as expected and returns an error if not
-func (em ExpectedMetrics) Validate(qp *QueryProgress) error {
-	if x := qp.NumWorking(); x != em.Working {
-		return fmt.Errorf("Expected NumWorking to be %v, got %v", em.Working, x)
-	}
-	if x := qp.NumStalled(); x != em.Stalled {
-		return fmt.Errorf("Expected NumStalled to be %v, got %v", em.Stalled, x)
-	}
-	if x := qp.NumComplete(); x != em.Complete {
-		return fmt.Errorf("Expected NumComplete to be %v, got %v", em.Complete, x)
-	}
-	if x := qp.NumError(); x != em.Error {
-		return fmt.Errorf("Expected NumError to be %v, got %v", em.Error, x)
-	}
-	if x := qp.NumResponders(); x != em.Responders {
-		return fmt.Errorf("Expected NumResponders to be %v, got %v", em.Responders, x)
-	}
-	if x := qp.NumCancelled(); x != em.Cancelled {
-		return fmt.Errorf("Expected NumCancelled to be %v, got %v", em.Cancelled, x)
-	}
-
-	return nil
+// Create a channel that discards everything
+func devNull() chan<- *QueryResponse {
+	c := make(chan *QueryResponse, 128)
+	go func() {
+		for range c {
+		}
+	}()
+	return c
 }
 
 func TestQueryProgressNormal(t *testing.T) {
-	ctx := context.Background()
-	rp := NewQueryProgress(&query, 0)
-	rp.DrainDelay = 0
+	t.Parallel()
+
+	ctx := t.Context()
+	tc := TestConnection{IgnoreNoResponders: true}
+	sq, err := RunSourceQuery(ctx, &query, DefaultStartTimeout, &tc, devNull())
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	ru1 := uuid.New()
 	ru2 := uuid.New()
@@ -274,9 +262,9 @@ func TestQueryProgressNormal(t *testing.T) {
 	t.Logf("UUIDs: %v %v %v", ru1, ru2, ru3)
 
 	// Make sure that the details are correct initially
-	var expected ExpectedMetrics
+	var expected SourceQueryProgress
 
-	expected = ExpectedMetrics{
+	expected = SourceQueryProgress{
 		Working:    0,
 		Stalled:    0,
 		Complete:   0,
@@ -284,20 +272,24 @@ func TestQueryProgressNormal(t *testing.T) {
 		Responders: 0,
 	}
 
-	if err := expected.Validate(rp); err != nil {
+	if err := expected.ExpectToMatch(sq); err != nil {
 		t.Error(err)
 	}
 
 	t.Run("Processing initial response", func(t *testing.T) {
 		// Test the initial response
-		rp.ProcessResponse(ctx, &Response{
-			Responder:     "test",
-			ResponderUUID: ru1[:],
-			State:         ResponderState_WORKING,
-			NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
+					Responder:     "test",
+					ResponderUUID: ru1[:],
+					State:         ResponderState_WORKING,
+					NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+				},
+			},
 		})
 
-		expected = ExpectedMetrics{
+		expected = SourceQueryProgress{
 			Working:    1,
 			Stalled:    0,
 			Complete:   0,
@@ -305,28 +297,36 @@ func TestQueryProgressNormal(t *testing.T) {
 			Responders: 1,
 		}
 
-		if err := expected.Validate(rp); err != nil {
+		if err := expected.ExpectToMatch(sq); err != nil {
 			t.Error(err)
 		}
 	})
 
 	t.Run("Processing when other scopes also responding", func(t *testing.T) {
 		// Then another scope starts working
-		rp.ProcessResponse(ctx, &Response{
-			Responder:     "test",
-			ResponderUUID: ru2[:],
-			State:         ResponderState_WORKING,
-			NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
+					Responder:     "test",
+					ResponderUUID: ru2[:],
+					State:         ResponderState_WORKING,
+					NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+				},
+			},
 		})
 
-		rp.ProcessResponse(ctx, &Response{
-			Responder:     "test",
-			ResponderUUID: ru3[:],
-			State:         ResponderState_WORKING,
-			NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
+					Responder:     "test",
+					ResponderUUID: ru3[:],
+					State:         ResponderState_WORKING,
+					NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+				},
+			},
 		})
 
-		expected = ExpectedMetrics{
+		expected = SourceQueryProgress{
 			Working:    3,
 			Stalled:    0,
 			Complete:   0,
@@ -334,7 +334,7 @@ func TestQueryProgressNormal(t *testing.T) {
 			Responders: 3,
 		}
 
-		if err := expected.Validate(rp); err != nil {
+		if err := expected.ExpectToMatch(sq); err != nil {
 			t.Error(err)
 		}
 	})
@@ -343,29 +343,41 @@ func TestQueryProgressNormal(t *testing.T) {
 		time.Sleep(5 * time.Millisecond)
 
 		// test 1 still working
-		rp.ProcessResponse(ctx, &Response{
-			Responder:     "test",
-			ResponderUUID: ru1[:],
-			State:         ResponderState_WORKING,
-			NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
+					Responder:     "test",
+					ResponderUUID: ru1[:],
+					State:         ResponderState_WORKING,
+					NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+				},
+			},
 		})
 
 		// Test 2 finishes
-		rp.ProcessResponse(ctx, &Response{
-			Responder:     "test",
-			ResponderUUID: ru2[:],
-			State:         ResponderState_COMPLETE,
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
+					Responder:     "test",
+					ResponderUUID: ru2[:],
+					State:         ResponderState_COMPLETE,
+				},
+			},
 		})
 
 		// Test 3 still working
-		rp.ProcessResponse(ctx, &Response{
-			Responder:     "test",
-			ResponderUUID: ru3[:],
-			State:         ResponderState_WORKING,
-			NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
+					Responder:     "test",
+					ResponderUUID: ru3[:],
+					State:         ResponderState_WORKING,
+					NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+				},
+			},
 		})
 
-		expected = ExpectedMetrics{
+		expected = SourceQueryProgress{
 			Working:    2,
 			Stalled:    0,
 			Complete:   1,
@@ -373,7 +385,7 @@ func TestQueryProgressNormal(t *testing.T) {
 			Responders: 3,
 		}
 
-		if err := expected.Validate(rp); err != nil {
+		if err := expected.ExpectToMatch(sq); err != nil {
 			t.Error(err)
 		}
 	})
@@ -382,21 +394,29 @@ func TestQueryProgressNormal(t *testing.T) {
 		time.Sleep(5 * time.Millisecond)
 
 		// test 1 still working
-		rp.ProcessResponse(ctx, &Response{
-			Responder:     "test",
-			ResponderUUID: ru1[:],
-			State:         ResponderState_WORKING,
-			NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
+					Responder:     "test",
+					ResponderUUID: ru1[:],
+					State:         ResponderState_WORKING,
+					NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+				},
+			},
 		})
 
 		// Test 3 cancelled
-		rp.ProcessResponse(ctx, &Response{
-			Responder:     "test",
-			ResponderUUID: ru3[:],
-			State:         ResponderState_CANCELLED,
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
+					Responder:     "test",
+					ResponderUUID: ru3[:],
+					State:         ResponderState_CANCELLED,
+				},
+			},
 		})
 
-		expected = ExpectedMetrics{
+		expected = SourceQueryProgress{
 			Working:    1,
 			Stalled:    0,
 			Complete:   1,
@@ -405,7 +425,7 @@ func TestQueryProgressNormal(t *testing.T) {
 			Responders: 3,
 		}
 
-		if err := expected.Validate(rp); err != nil {
+		if err := expected.ExpectToMatch(sq); err != nil {
 			t.Error(err)
 		}
 	})
@@ -414,14 +434,18 @@ func TestQueryProgressNormal(t *testing.T) {
 		time.Sleep(5 * time.Millisecond)
 
 		// Test 1 finishes
-		rp.ProcessResponse(ctx, &Response{
-			Responder:     "test",
-			ResponderUUID: ru1[:],
-			State:         ResponderState_COMPLETE,
-			NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
+					Responder:     "test",
+					ResponderUUID: ru1[:],
+					State:         ResponderState_COMPLETE,
+					NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+				},
+			},
 		})
 
-		expected = ExpectedMetrics{
+		expected = SourceQueryProgress{
 			Working:    0,
 			Stalled:    0,
 			Complete:   2,
@@ -430,26 +454,32 @@ func TestQueryProgressNormal(t *testing.T) {
 			Responders: 3,
 		}
 
-		if err := expected.Validate(rp); err != nil {
+		if err := expected.ExpectToMatch(sq); err != nil {
 			t.Error(err)
 		}
 	})
 
-	if rp.allDone() == false {
+	if sq.allDone() == false {
 		t.Error("expected allDone() to be true")
 	}
 }
 
 func TestQueryProgressParallel(t *testing.T) {
-	rp := NewQueryProgress(&query, 0)
-	rp.DrainDelay = 0
+	t.Parallel()
+
+	ctx := t.Context()
+	tc := TestConnection{IgnoreNoResponders: true}
+	sq, err := RunSourceQuery(ctx, &query, DefaultStartTimeout, &tc, devNull())
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	ru1 := uuid.New()
 
 	// Make sure that the details are correct initially
-	var expected ExpectedMetrics
+	var expected SourceQueryProgress
 
-	expected = ExpectedMetrics{
+	expected = SourceQueryProgress{
 		Working:    0,
 		Stalled:    0,
 		Complete:   0,
@@ -457,7 +487,7 @@ func TestQueryProgressParallel(t *testing.T) {
 		Responders: 0,
 	}
 
-	if err := expected.Validate(rp); err != nil {
+	if err := expected.ExpectToMatch(sq); err != nil {
 		t.Error(err)
 	}
 
@@ -469,18 +499,22 @@ func TestQueryProgressParallel(t *testing.T) {
 			go func() {
 				defer wg.Done()
 				// Test the initial response
-				rp.ProcessResponse(context.Background(), &Response{
-					Responder:     "test",
-					ResponderUUID: ru1[:],
-					State:         ResponderState_WORKING,
-					NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+				sq.handleQueryResponse(ctx, &QueryResponse{
+					ResponseType: &QueryResponse_Response{
+						Response: &Response{
+							Responder:     "test",
+							ResponderUUID: ru1[:],
+							State:         ResponderState_WORKING,
+							NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+						},
+					},
 				})
 			}()
 		}
 
 		wg.Wait()
 
-		expected = ExpectedMetrics{
+		expected = SourceQueryProgress{
 			Working:    1,
 			Stalled:    0,
 			Complete:   0,
@@ -488,31 +522,41 @@ func TestQueryProgressParallel(t *testing.T) {
 			Responders: 1,
 		}
 
-		if err := expected.Validate(rp); err != nil {
+		if err := expected.ExpectToMatch(sq); err != nil {
 			t.Error(err)
 		}
 	})
 }
 
 func TestQueryProgressStalled(t *testing.T) {
-	rp := NewQueryProgress(&query, 0)
-	rp.DrainDelay = 0
+	t.Parallel()
+
+	ctx := t.Context()
+	tc := TestConnection{IgnoreNoResponders: true}
+	sq, err := RunSourceQuery(ctx, &query, DefaultStartTimeout, &tc, devNull())
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	ru1 := uuid.New()
 
 	// Make sure that the details are correct initially
-	var expected ExpectedMetrics
+	var expected SourceQueryProgress
 
 	t.Run("Processing the initial response", func(t *testing.T) {
 		// Test the initial response
-		rp.ProcessResponse(context.Background(), &Response{
-			Responder:     "test",
-			ResponderUUID: ru1[:],
-			State:         ResponderState_WORKING,
-			NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
+					Responder:     "test",
+					ResponderUUID: ru1[:],
+					State:         ResponderState_WORKING,
+					NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+				},
+			},
 		})
 
-		expected = ExpectedMetrics{
+		expected = SourceQueryProgress{
 			Working:    1,
 			Stalled:    0,
 			Complete:   0,
@@ -520,7 +564,7 @@ func TestQueryProgressStalled(t *testing.T) {
 			Responders: 1,
 		}
 
-		if err := expected.Validate(rp); err != nil {
+		if err := expected.ExpectToMatch(sq); err != nil {
 			t.Error(err)
 		}
 	})
@@ -529,7 +573,7 @@ func TestQueryProgressStalled(t *testing.T) {
 		// Wait long enough for the thing to be marked as stalled
 		time.Sleep(20 * time.Millisecond)
 
-		expected = ExpectedMetrics{
+		expected = SourceQueryProgress{
 			Working:    0,
 			Stalled:    1,
 			Complete:   0,
@@ -537,25 +581,31 @@ func TestQueryProgressStalled(t *testing.T) {
 			Responders: 1,
 		}
 
-		if err := expected.Validate(rp); err != nil {
+		if err := expected.ExpectToMatch(sq); err != nil {
 			t.Error(err)
 		}
 
-		if _, ok := rp.responders[ru1]; !ok {
+		sq.respondersMu.Lock()
+		defer sq.respondersMu.Unlock()
+		if _, ok := sq.responders[ru1]; !ok {
 			t.Error("Could not get responder for scope test1")
 		}
 	})
 
 	t.Run("After a responder recovers from a stall", func(t *testing.T) {
 		// See if it will un-stall itself
-		rp.ProcessResponse(context.Background(), &Response{
-			Responder:     "test",
-			ResponderUUID: ru1[:],
-			State:         ResponderState_COMPLETE,
-			NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
+					Responder:     "test",
+					ResponderUUID: ru1[:],
+					State:         ResponderState_COMPLETE,
+					NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+				},
+			},
 		})
 
-		expected = ExpectedMetrics{
+		expected = SourceQueryProgress{
 			Working:    0,
 			Stalled:    0,
 			Complete:   1,
@@ -563,19 +613,25 @@ func TestQueryProgressStalled(t *testing.T) {
 			Responders: 1,
 		}
 
-		if err := expected.Validate(rp); err != nil {
+		if err := expected.ExpectToMatch(sq); err != nil {
 			t.Error(err)
 		}
 	})
 
-	if rp.allDone() == false {
+	if sq.allDone() == false {
 		t.Error("expected allDone() to be true")
 	}
 }
 
 func TestRogueResponder(t *testing.T) {
-	rp := NewQueryProgress(&query, 100*time.Millisecond)
-	rp.DrainDelay = 0
+	t.Parallel()
+
+	ctx, cancel := context.WithCancel(t.Context())
+	tc := TestConnection{IgnoreNoResponders: true}
+	sq, err := RunSourceQuery(ctx, &query, 100*time.Millisecond, &tc, devNull())
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	rur := uuid.New()
 
@@ -586,14 +642,31 @@ func TestRogueResponder(t *testing.T) {
 	defer ticker.Stop()
 
 	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				rp.ProcessResponse(context.Background(), &Response{ //nolint: contextcheck // testing a rogue responder
+		// Send an initial response
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
 					Responder:     "test",
 					ResponderUUID: rur[:],
 					State:         ResponderState_WORKING,
 					NextUpdateIn:  durationpb.New(5 * time.Second),
+				},
+			},
+		})
+
+		// Now start ticking
+		for {
+			select {
+			case <-ticker.C:
+				sq.handleQueryResponse(ctx, &QueryResponse{
+					ResponseType: &QueryResponse_Response{
+						Response: &Response{
+							Responder:     "test",
+							ResponderUUID: rur[:],
+							State:         ResponderState_WORKING,
+							NextUpdateIn:  durationpb.New(5 * time.Second),
+						},
+					},
 				})
 			case <-tickerCtx.Done():
 				return
@@ -604,41 +677,59 @@ func TestRogueResponder(t *testing.T) {
 	time.Sleep(300 * time.Millisecond)
 
 	// Check that we've noticed the testRogue responder
-	if rp.allDone() == true {
+	if sq.allDone() == true {
 		t.Error("expected allDone() to be false")
 	}
 
-	cancelCtx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
+	cancel()
 
-	// Try to cancel the request. This will never get a response to say it's all
-	// done so instead we're expecting it to be forcibly cancelled
-	forced := rp.Cancel(cancelCtx, nil)
+	time.Sleep(100 * time.Millisecond)
 
-	if !forced {
-		t.Error("expected cancellation to be forced")
+	// We expect that it has been marked as cancelled, regardless of what the
+	// responder actually did
+	expected := SourceQueryProgress{
+		Working:    0,
+		Stalled:    0,
+		Complete:   0,
+		Error:      0,
+		Responders: 1,
+		Cancelled:  1,
+	}
+
+	if err := expected.ExpectToMatch(sq); err != nil {
+		t.Error(err)
 	}
 }
 
 func TestQueryProgressError(t *testing.T) {
-	rp := NewQueryProgress(&query, 0)
-	rp.DrainDelay = 0
+	t.Parallel()
+
+	ctx := t.Context()
+	tc := TestConnection{IgnoreNoResponders: true}
+	sq, err := RunSourceQuery(ctx, &query, DefaultStartTimeout, &tc, devNull())
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	ru1 := uuid.New()
 
 	// Make sure that the details are correct initially
-	var expected ExpectedMetrics
+	var expected SourceQueryProgress
 
 	t.Run("Processing the initial response", func(t *testing.T) {
 		// Test the initial response
-		rp.ProcessResponse(context.Background(), &Response{
-			Responder:     "test",
-			ResponderUUID: ru1[:],
-			State:         ResponderState_WORKING,
-			NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
+					Responder:     "test",
+					ResponderUUID: ru1[:],
+					State:         ResponderState_WORKING,
+					NextUpdateIn:  durationpb.New(10 * time.Millisecond),
+				},
+			},
 		})
 
-		expected = ExpectedMetrics{
+		expected = SourceQueryProgress{
 			Working:    1,
 			Stalled:    0,
 			Complete:   0,
@@ -646,19 +737,23 @@ func TestQueryProgressError(t *testing.T) {
 			Responders: 1,
 		}
 
-		if err := expected.Validate(rp); err != nil {
+		if err := expected.ExpectToMatch(sq); err != nil {
 			t.Error(err)
 		}
 	})
 
 	t.Run("After a responder has failed", func(t *testing.T) {
-		rp.ProcessResponse(context.Background(), &Response{
-			Responder:     "test",
-			ResponderUUID: ru1[:],
-			State:         ResponderState_ERROR,
+		sq.handleQueryResponse(ctx, &QueryResponse{
+			ResponseType: &QueryResponse_Response{
+				Response: &Response{
+					Responder:     "test",
+					ResponderUUID: ru1[:],
+					State:         ResponderState_ERROR,
+				},
+			},
 		})
 
-		expected = ExpectedMetrics{
+		expected = SourceQueryProgress{
 			Working:    0,
 			Stalled:    0,
 			Complete:   0,
@@ -666,7 +761,7 @@ func TestQueryProgressError(t *testing.T) {
 			Responders: 1,
 		}
 
-		if err := expected.Validate(rp); err != nil {
+		if err := expected.ExpectToMatch(sq); err != nil {
 			t.Error(err)
 		}
 	})
@@ -674,7 +769,7 @@ func TestQueryProgressError(t *testing.T) {
 	t.Run("Ensuring that a failed responder does not get marked as stalled", func(t *testing.T) {
 		time.Sleep(12 * time.Millisecond)
 
-		expected = ExpectedMetrics{
+		expected = SourceQueryProgress{
 			Working:    0,
 			Stalled:    0,
 			Complete:   0,
@@ -682,26 +777,27 @@ func TestQueryProgressError(t *testing.T) {
 			Responders: 1,
 		}
 
-		if err := expected.Validate(rp); err != nil {
+		if err := expected.ExpectToMatch(sq); err != nil {
 			t.Error(err)
 		}
 	})
 
-	if rp.allDone() == false {
+	if sq.allDone() == false {
 		t.Error("expected allDone() to be true")
 	}
 }
 
 func TestStart(t *testing.T) {
-	rp := NewQueryProgress(&query, 0)
-	rp.DrainDelay = 0
+	t.Parallel()
 
-	conn := TestConnection{}
+	ctx := t.Context()
+	tc := TestConnection{IgnoreNoResponders: true}
+
 	responses := make(chan *QueryResponse, 128)
 	// this emulates a source
 	sourceHit := atomic.Bool{}
 
-	_, err := conn.Subscribe(fmt.Sprintf("request.scope.%v", query.GetScope()), func(msg *nats.Msg) {
+	_, err := tc.Subscribe(fmt.Sprintf("request.scope.%v", query.GetScope()), func(msg *nats.Msg) {
 		sourceHit.Store(true)
 		response := QueryResponse{
 			ResponseType: &QueryResponse_NewItem{
@@ -709,7 +805,7 @@ func TestStart(t *testing.T) {
 			},
 		}
 		// Test that the handlers work
-		err := conn.Publish(context.Background(), query.Subject(), &response)
+		err := tc.Publish(ctx, query.Subject(), &response)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -718,18 +814,18 @@ func TestStart(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = rp.Start(context.Background(), &conn, responses)
+	_, err = RunSourceQuery(ctx, &query, DefaultStartTimeout, &tc, responses)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	response := <-responses
 
-	conn.messagesMutex.Lock()
-	if len(conn.Messages) != 2 {
-		t.Errorf("expected 2 messages to be sent, got %v", len(conn.Messages))
+	tc.messagesMutex.Lock()
+	if len(tc.Messages) != 2 {
+		t.Errorf("expected 2 messages to be sent, got %v", len(tc.Messages))
 	}
-	conn.messagesMutex.Unlock()
+	tc.messagesMutex.Unlock()
 
 	returnedItem := response.GetNewItem()
 	if returnedItem == nil {
@@ -743,59 +839,9 @@ func TestStart(t *testing.T) {
 	}
 }
 
-func TestAsyncCancel(t *testing.T) {
-	t.Run("With no responders", func(t *testing.T) {
-		conn := TestConnection{}
-		_, err := conn.Subscribe("test", func(msg *nats.Msg) {})
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		rp := NewQueryProgress(&query, 0)
-		rp.DrainDelay = 0
-
-		responseChan := make(chan *QueryResponse, 128)
-		err = rp.Start(context.Background(), &conn, responseChan)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		err = rp.AsyncCancel(&conn)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		t.Run("ensuring the cancel is sent", func(t *testing.T) {
-			time.Sleep(100 * time.Millisecond)
-
-			if len(conn.Messages) != 2 {
-				t.Fatal("did not receive cancellation message")
-			}
-		})
-
-		t.Run("ensure it is marked as done", func(t *testing.T) {
-			expected := ExpectedMetrics{
-				Working:    0,
-				Stalled:    0,
-				Complete:   0,
-				Error:      0,
-				Responders: 0,
-			}
-
-			if err := expected.Validate(rp); err != nil {
-				t.Error(err)
-			}
-		})
-
-		t.Run("making sure channels closed", func(t *testing.T) {
-			// If the chan is still open this will block forever
-			<-responseChan
-		})
-	})
-
-}
-
 func TestExecute(t *testing.T) {
+	t.Parallel()
+
 	conn := TestConnection{}
 	_, err := conn.Subscribe("request.scope.global", func(msg *nats.Msg) {})
 	if err != nil {
@@ -817,10 +863,7 @@ func TestExecute(t *testing.T) {
 			Deadline:    timestamppb.New(time.Now().Add(10 * time.Second)),
 		}
 
-		rp := NewQueryProgress(&q, 100*time.Millisecond)
-		rp.DrainDelay = 0
-
-		_, _, _, err := rp.Execute(context.Background(), &conn)
+		_, _, _, err := RunSourceQuerySync(t.Context(), &q, 100*time.Millisecond, &conn)
 
 		if err != nil {
 			t.Fatal(err)
@@ -840,9 +883,6 @@ func TestExecute(t *testing.T) {
 			UUID:        u[:],
 			Deadline:    timestamppb.New(time.Now().Add(10 * time.Second)),
 		}
-
-		rp := NewQueryProgress(&q, 0)
-		rp.DrainDelay = 0
 
 		go func() {
 			ru1 := uuid.New()
@@ -907,17 +947,13 @@ func TestExecute(t *testing.T) {
 			}
 		}()
 
-		items, _, errs, err := rp.Execute(context.Background(), &conn)
+		items, _, errs, err := RunSourceQuerySync(t.Context(), &q, DefaultStartTimeout, &conn)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		if len(errs) != 0 {
 			t.Fatal(errs)
-		}
-
-		if rp.NumComplete() != 1 {
-			t.Errorf("expected num complete to be 1, got %v", rp.NumComplete())
 		}
 
 		if len(items) != 2 {
@@ -942,9 +978,6 @@ func TestRealNats(t *testing.T) {
 		Scope:  "global",
 		UUID:   u[:],
 	}
-
-	rp := NewQueryProgress(&q, 0)
-	rp.DrainDelay = 0
 
 	ru1 := uuid.New()
 
@@ -1001,8 +1034,8 @@ func TestRealNats(t *testing.T) {
 	<-ready
 
 	slowChan := make(chan *QueryResponse)
-	err = rp.Start(context.Background(), &enc, slowChan)
 
+	_, err = RunSourceQuery(t.Context(), &q, DefaultStartTimeout, &enc, slowChan)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1015,14 +1048,14 @@ func TestRealNats(t *testing.T) {
 }
 
 func TestFastFinisher(t *testing.T) {
+	t.Parallel()
+
 	// Test for a situation where there is one responder that finishes really
 	// quickly and results in the other responders not getting a chance to start
 	conn := TestConnection{}
 
 	fast := uuid.New()
 	slow := uuid.New()
-
-	progress := NewQueryProgress(newQuery(), 500*time.Millisecond)
 
 	// Set up the fast responder, it should respond immediately and take only
 	// 100ms to complete its work
@@ -1128,7 +1161,7 @@ func TestFastFinisher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	items, _, errs, err := progress.Execute(context.Background(), &conn)
+	items, _, errs, err := RunSourceQuerySync(t.Context(), newQuery(), 500*time.Millisecond, &conn)
 
 	if err != nil {
 		t.Fatal(err)
@@ -1140,5 +1173,327 @@ func TestFastFinisher(t *testing.T) {
 
 	if len(errs) != 0 {
 		t.Errorf("Expected 0 errors, got %d: %v", len(errs), errs)
+	}
+}
+
+// This source will simply respond to any query that it sent with a configured
+// number of items, and configurable delays. This is designed to replicate a
+// real system at scale
+type SimpleSource struct {
+	// How many items to return from the query
+	NumItemsReturn int
+
+	// How long to wait before starting work on the query
+	StartDelay time.Duration
+
+	// How long to wait before sending each item
+	PerItemDelay time.Duration
+
+	// How long to wait before sending the completion message
+	CompletionDelay time.Duration
+
+	// The connection to use
+	Conn *TestConnection
+
+	// The probability of stalling where 0 is no stall and 1 is always stall
+	StallProbability float64
+
+	// The probability of failing where 0 is no fail and 1 is always fail
+	FailProbability float64
+
+	// The responder name to use
+	ResponderName string
+}
+
+func (s *SimpleSource) Start(ctx context.Context, t *testing.T) {
+	// ignore errors from test connection
+	_, _ = s.Conn.Subscribe("request.>", func(msg *nats.Msg) {
+		// Run these in parallel
+		go func(msg *nats.Msg) {
+			query := &Query{}
+
+			err := Unmarshal(ctx, msg.Data, query)
+			if err != nil {
+				panic(fmt.Errorf("Unmarshal(%v): %w", query, err))
+			}
+
+			// Create the number of items that were requested
+			items := make([]*Item, s.NumItemsReturn)
+			for i := range s.NumItemsReturn {
+				items[i] = newItem()
+			}
+
+			// Make a UUID for yourself
+			responderUUID := uuid.New()
+
+			// Wait for the start delay
+			time.Sleep(s.StartDelay)
+
+			// Calculate the expected duration of the query
+			expectedQueryDuration := (s.PerItemDelay * time.Duration(s.NumItemsReturn)) + s.CompletionDelay + 500*time.Millisecond
+
+			err = s.Conn.Publish(ctx, query.Subject(), &QueryResponse{ResponseType: &QueryResponse_Response{Response: &Response{
+				Responder:     s.ResponderName,
+				ResponderUUID: responderUUID[:],
+				State:         ResponderState_WORKING,
+				NextUpdateIn:  durationpb.New(expectedQueryDuration),
+				UUID:          query.GetUUID(),
+			}}})
+			if err != nil {
+				t.Errorf("error publishing response: %v", err)
+			}
+
+			for _, item := range items {
+				time.Sleep(s.PerItemDelay)
+				err = s.Conn.Publish(ctx, query.Subject(), &QueryResponse{ResponseType: &QueryResponse_NewItem{NewItem: item}})
+				if err != nil {
+					t.Errorf("error publishing item: %v", err)
+				}
+			}
+
+			// Stall with a certain probability
+			if rand.Float64() < s.StallProbability {
+				return
+			}
+
+			// Fail with a certain probability
+			if rand.Float64() < s.FailProbability {
+				err = s.Conn.Publish(ctx, query.Subject(), &QueryResponse{ResponseType: &QueryResponse_Response{Response: &Response{
+					Responder:     s.ResponderName,
+					ResponderUUID: responderUUID[:],
+					State:         ResponderState_ERROR,
+					UUID:          query.GetUUID(),
+				}}})
+				if err != nil {
+					t.Errorf("error publishing response: %v", err)
+				}
+				return
+			}
+
+			time.Sleep(s.CompletionDelay)
+			err = s.Conn.Publish(ctx, query.Subject(), &QueryResponse{ResponseType: &QueryResponse_Response{Response: &Response{
+				Responder:     s.ResponderName,
+				ResponderUUID: responderUUID[:],
+				State:         ResponderState_COMPLETE,
+				UUID:          query.GetUUID(),
+			}}})
+			if err != nil {
+				t.Errorf("error publishing response: %v", err)
+			}
+		}(msg)
+	})
+}
+
+func TestMassiveScale(t *testing.T) {
+	t.Parallel()
+
+	if _, exists := os.LookupEnv("GITHUB_ACTIONS"); exists {
+		// Note that in these tests we can push things even further, to 10,000
+		// sources for example. The problem is that once the CPU is context
+		// switching too heavily you end up in a position where the sources
+		// start getting marked as stalled as they don't have enough CPU to send
+		// their messages quickly enough and they blow through their expected
+		// timeout.
+		//
+		// They can also fail locally when using -race as this puts a lot more
+		// load on the CPU than there would normally be
+		t.Skip("These tests are too flaky due to reliance on wall clock time and fast timings")
+	}
+
+	tests := []struct {
+		// The number of sources to create
+		NumSources int
+		// The maximum time to wait before starting
+		MaxStartDelayMilliseconds int
+		// The maximum time to wait between items
+		MaxPerItemDelayMilliseconds int
+		// The maximum time to wait before completion
+		MaxCompletionDelayMilliseconds int
+		// The maximum number of items to return
+		MaxItemsToReturn int
+		// The probability of a source stalling where 0 is no stall and 1 is
+		// always stall
+		StallProbability float64
+		// The probability of a source failing where 0 is no fail and 1 is
+		// always fail
+		FailProbability float64
+		// How long to give sources to start responding, over and above the
+		// maxStartDelayMilliseconds
+		StartDelayGracePeriodMilliseconds int
+	}{
+		{
+			NumSources:                        100,
+			MaxStartDelayMilliseconds:         100,
+			MaxPerItemDelayMilliseconds:       10,
+			MaxCompletionDelayMilliseconds:    100,
+			MaxItemsToReturn:                  100,
+			StallProbability:                  0.0,
+			FailProbability:                   0.0,
+			StartDelayGracePeriodMilliseconds: 100,
+		},
+		{
+			NumSources:                        1_000,
+			MaxStartDelayMilliseconds:         100,
+			MaxPerItemDelayMilliseconds:       10,
+			MaxCompletionDelayMilliseconds:    100,
+			MaxItemsToReturn:                  100,
+			StallProbability:                  0.0,
+			FailProbability:                   0.0,
+			StartDelayGracePeriodMilliseconds: 100,
+		},
+		{
+			NumSources:                        100,
+			MaxStartDelayMilliseconds:         100,
+			MaxPerItemDelayMilliseconds:       10,
+			MaxCompletionDelayMilliseconds:    100,
+			MaxItemsToReturn:                  100,
+			StallProbability:                  0.3,
+			FailProbability:                   0.0,
+			StartDelayGracePeriodMilliseconds: 100,
+		},
+		{
+			NumSources:                        1_000,
+			MaxStartDelayMilliseconds:         100,
+			MaxPerItemDelayMilliseconds:       10,
+			MaxCompletionDelayMilliseconds:    100,
+			MaxItemsToReturn:                  100,
+			StallProbability:                  0.3,
+			FailProbability:                   0.0,
+			StartDelayGracePeriodMilliseconds: 100,
+		},
+		{
+			NumSources:                        100,
+			MaxStartDelayMilliseconds:         100,
+			MaxPerItemDelayMilliseconds:       10,
+			MaxCompletionDelayMilliseconds:    100,
+			MaxItemsToReturn:                  100,
+			StallProbability:                  0.3,
+			FailProbability:                   0.3,
+			StartDelayGracePeriodMilliseconds: 100,
+		},
+		{
+			NumSources:                        1_000,
+			MaxStartDelayMilliseconds:         100,
+			MaxPerItemDelayMilliseconds:       10,
+			MaxCompletionDelayMilliseconds:    100,
+			MaxItemsToReturn:                  100,
+			StallProbability:                  0.3,
+			FailProbability:                   0.3,
+			StartDelayGracePeriodMilliseconds: 100,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("NumSources %v, MaxStartDelay %v, MaxPerItemDelay %v, MaxCompletionDelay %v, MaxItemsToReturn %v, StallProbability %v, FailProbability %v, StartDelayGracePeriod %v",
+			test.NumSources,
+			test.MaxStartDelayMilliseconds,
+			test.MaxPerItemDelayMilliseconds,
+			test.MaxCompletionDelayMilliseconds,
+			test.MaxItemsToReturn,
+			test.StallProbability,
+			test.FailProbability,
+			test.StartDelayGracePeriodMilliseconds,
+		), func(t *testing.T) {
+			tConn := TestConnection{}
+
+			// Generate a random duration between 0 and max
+			randomDuration := func(max int) time.Duration {
+				return time.Duration(rand.Intn(max)) * time.Millisecond
+			}
+
+			expectedItems := 0
+
+			// Start all the sources
+			sources := make([]*SimpleSource, test.NumSources)
+			for i := range sources {
+				numItemsReturn := rand.Intn(test.MaxItemsToReturn)
+				expectedItems += numItemsReturn // Count how many items we expect to receive
+				startDelay := randomDuration(test.MaxStartDelayMilliseconds)
+				perItemDelay := randomDuration(test.MaxPerItemDelayMilliseconds)
+				completionDelay := randomDuration(test.MaxCompletionDelayMilliseconds)
+
+				sources[i] = &SimpleSource{
+					NumItemsReturn:   numItemsReturn,
+					StartDelay:       startDelay,
+					PerItemDelay:     perItemDelay,
+					CompletionDelay:  completionDelay,
+					StallProbability: test.StallProbability,
+					FailProbability:  test.FailProbability,
+					Conn:             &tConn,
+					ResponderName: fmt.Sprintf("NumItems %v, StartDelay %v, PerItemDelay %v CompletionDelay %v",
+						numItemsReturn,
+						startDelay.String(),
+						perItemDelay.String(),
+						completionDelay.String(),
+					),
+				}
+
+				sources[i].Start(context.Background(), t)
+			}
+
+			// Create the query
+			u := uuid.New()
+			q := Query{
+				Type:     "massive-scale-test",
+				Method:   QueryMethod_GET,
+				Query:    "GO!!!!!",
+				Scope:    "test",
+				UUID:     u[:],
+				Deadline: timestamppb.New(time.Now().Add(60 * time.Second)),
+			}
+
+			responseChan := make(chan *QueryResponse)
+			doneChan := make(chan struct{})
+
+			// Begin handling the responses
+			actualItems := 0
+			go func() {
+				for {
+					select {
+					case <-t.Context().Done():
+						return
+					case response, ok := <-responseChan:
+						if !ok {
+							// Channel closed
+							close(doneChan)
+							return
+						}
+
+						switch response.GetResponseType().(type) {
+						case *QueryResponse_NewItem:
+							actualItems++
+						}
+					}
+				}
+			}()
+
+			// Start the query
+			startTimeout := time.Duration(test.MaxStartDelayMilliseconds+test.StartDelayGracePeriodMilliseconds) * time.Millisecond
+			qp, err := RunSourceQuery(t.Context(), &q, startTimeout, &tConn, responseChan)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// Wait for the query to finish
+			<-doneChan
+
+			if actualItems != expectedItems {
+				t.Errorf("Expected %v items, got %v", expectedItems, actualItems)
+			}
+
+			progress := qp.Progress()
+
+			if progress.Responders != test.NumSources {
+				t.Errorf("Expected %v responders, got %v", test.NumSources, progress.Responders)
+			}
+
+			fmt.Printf("Num Complete: %v\n", progress.Complete)
+			fmt.Printf("Num Working: %v\n", progress.Working)
+			fmt.Printf("Num Stalled: %v\n", progress.Stalled)
+			fmt.Printf("Num Error: %v\n", progress.Error)
+			fmt.Printf("Num Cancelled: %v\n", progress.Cancelled)
+			fmt.Printf("Num Responders: %v\n", progress.Responders)
+			fmt.Printf("Num Items: %v\n", actualItems)
+		})
 	}
 }

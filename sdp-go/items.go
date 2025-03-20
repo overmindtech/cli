@@ -476,30 +476,37 @@ func (x *Expand) GetUUIDParsed() *uuid.UUID {
 	return &u
 }
 
-// Converts to attributes using an additional set of custom transformers. These
-// can be used to change the transform behaviour of known types to do things
-// like redaction of sensitive data or simplification of complex types.
-//
-// For example this could be used to completely remove anything of type `Secret`:
-//
-// ```go
-//
-//	TransformMap{
-//		reflect.TypeOf(Secret{}): func(i interface{}) interface{} {
-//			// Remove it
-//			return "REDACTED"
-//		},
-//	}
-//
-// ```
-func ToAttributesCustom(m map[string]interface{}, sort bool, customTransforms TransformMap) (*ItemAttributes, error) {
-	// Add the default transforms
+// AddDefaultTransforms adds the default transforms to a TransformMap
+func AddDefaultTransforms(customTransforms TransformMap) TransformMap {
 	for k, v := range DefaultTransforms {
 		if _, ok := customTransforms[k]; !ok {
 			customTransforms[k] = v
 		}
 	}
+	return customTransforms
+}
 
+// Converts to attributes using an additional set of custom transformers. These
+// can be used to change the transform behaviour of known types to do things
+// like redaction of sensitive data or simplification of complex types.
+//
+// For example this could be used to completely remove anything of type
+// `Secret`:
+//
+// ```go
+//
+//	TransformMap{
+//	    reflect.TypeOf(Secret{}): func(i interface{}) interface{} {
+//	        // Remove it
+//	        return "REDACTED"
+//	    },
+//	}
+//
+// ```
+//
+// Note that you need to use `AddDefaultTransforms(TransformMap) TransformMap`
+// to get sensible default transformations.
+func ToAttributesCustom(m map[string]interface{}, sort bool, customTransforms TransformMap) (*ItemAttributes, error) {
 	return toAttributes(m, sort, customTransforms)
 }
 

@@ -20,8 +20,12 @@ type ResponseMessage struct {
 
 // TestConnection Used to mock a NATS connection for testing
 type TestConnection struct {
-	Messages      []ResponseMessage
-	messagesMutex sync.Mutex
+	Messages []ResponseMessage
+
+	// If set, the test connection will not return ErrNoResponders if someone
+	// tries to publish a message to a subject with no responders
+	IgnoreNoResponders bool
+	messagesMutex      sync.Mutex
 
 	Subscriptions      map[*regexp.Regexp][]nats.MsgHandler
 	subscriptionsMutex sync.RWMutex
@@ -197,7 +201,7 @@ func (t *TestConnection) runHandlers(msg *nats.Msg) error {
 		}
 	}
 
-	if hasResponder {
+	if hasResponder || t.IgnoreNoResponders {
 		return nil
 	} else {
 		return ErrNoResponders

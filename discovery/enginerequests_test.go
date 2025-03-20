@@ -342,10 +342,9 @@ func TestSendQuerySync(t *testing.T) {
 			u := uuid.New()
 			t.Log("starting query: ", u)
 
-			var progress *sdp.QueryProgress
 			var items []*sdp.Item
 
-			progress = sdp.NewQueryProgress(&sdp.Query{
+			query := &sdp.Query{
 				Type:   "person",
 				Method: sdp.QueryMethod_GET,
 				Query:  "Dylan",
@@ -356,10 +355,9 @@ func TestSendQuerySync(t *testing.T) {
 				IgnoreCache: false,
 				UUID:        u[:],
 				Deadline:    timestamppb.New(time.Now().Add(10 * time.Minute)),
-			}, 0)
-			progress.StartTimeout = 1 * time.Second
+			}
 
-			items, _, errs, err := progress.Execute(ctx, e.natsConnection)
+			items, _, errs, err := sdp.RunSourceQuerySync(ctx, query, 1*time.Second, e.natsConnection)
 
 			if err != nil {
 				t.Error(err)
@@ -373,10 +371,6 @@ func TestSendQuerySync(t *testing.T) {
 
 			if len(items) != 1 {
 				t.Fatalf("expected 1 item, got %v: %v", len(items), items)
-			}
-
-			if progress.NumComplete() != 1 {
-				t.Fatalf("expected 1 to be complete, got %v\nProgress: %v", progress.NumComplete(), progress)
 			}
 		})
 	}
