@@ -50,7 +50,7 @@ var ReconnectHandlerDefault = func(c *nats.Conn) {
 var ClosedHandlerDefault = func(c *nats.Conn) {
 	fields := log.Fields{}
 
-	if c != nil {
+	if c != nil && c.LastError() != nil {
 		fields["error"] = c.LastError()
 	}
 

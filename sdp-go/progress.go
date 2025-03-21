@@ -275,10 +275,10 @@ type SourceQueryProgress struct {
 	// Responders that failed
 	Error int
 
-	// Responders that were cancelled. When cancelling the QueryProgress does
-	// not wait for responders to acknowledge the cancellation, it simply sends
-	// the message and marks all responders that are currently "working" as
-	// "cancelled". It is possible that a responder will self-report
+	// Responders that were cancelled. When cancelling the SourceQueryProgress
+	// does not wait for responders to acknowledge the cancellation, it simply
+	// sends the message and marks all responders that are currently "working"
+	// as "cancelled". It is possible that a responder will self-report
 	// cancellation, but given the timings this is unlikely as it would need to
 	// be very fast
 	Cancelled int
@@ -287,7 +287,7 @@ type SourceQueryProgress struct {
 	Responders int
 }
 
-// RunSourceQuery returns a pointer to a QueryProgress object with the various
+// RunSourceQuery returns a pointer to a SourceQuery object with the various
 // internal members initialized. A startTimeout must also be provided, feel free
 // to use `DefaultStartTimeout` if you don't have a specific value in mind.
 func RunSourceQuery(ctx context.Context, query *Query, startTimeout time.Duration, ec EncodedConnection, responseChan chan<- *QueryResponse) (*SourceQuery, error) {
