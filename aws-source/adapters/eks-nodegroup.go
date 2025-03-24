@@ -174,7 +174,6 @@ func NewEKSNodegroupAdapter(client EKSClient, accountID string, region string) *
 		Client:           client,
 		AccountID:        accountID,
 		Region:           region,
-		DisableList:      true,
 		AlwaysSearchARNs: true,
 		AdapterMetadata:  nodegroupAdapterMetadata,
 		SearchInputMapper: func(scope, query string) (*eks.ListNodegroupsInput, error) {
@@ -203,6 +202,15 @@ func NewEKSNodegroupAdapter(client EKSClient, accountID string, region string) *
 		ListFuncPaginatorBuilder: func(client EKSClient, input *eks.ListNodegroupsInput) adapterhelpers.Paginator[*eks.ListNodegroupsOutput, *eks.Options] {
 			return eks.NewListNodegroupsPaginator(client, input)
 		},
+		// While LIST queries are not supported for this adapter, we do support
+		// SEARCH. Since a Search is handled like this
+		//
+		// Query -> SearchInputMapper -> ListFuncPaginatorBuilder ->
+		// ListFuncOutputMapper
+		//
+		// We still need a ListFuncPaginatorBuilder and ListFuncOutputMapper to
+		// ensure that SEARCH works
+		DisableList: true,
 		ListFuncOutputMapper: func(output *eks.ListNodegroupsOutput, input *eks.ListNodegroupsInput) ([]*eks.DescribeNodegroupInput, error) {
 			inputs := make([]*eks.DescribeNodegroupInput, 0, len(output.Nodegroups))
 
@@ -224,10 +232,9 @@ var nodegroupAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	DescriptiveName: "EKS Nodegroup",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 		Get:               true,
-		List:              true,
+		List:              false, // LIST not supported
 		Search:            true,
 		GetDescription:    "Get a node group by unique name ({clusterName}/{NodegroupName})",
-		ListDescription:   "List all node groups",
 		SearchDescription: "Search for node groups by cluster name",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
