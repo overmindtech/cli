@@ -324,7 +324,7 @@ func (e *Engine) Start() error {
 }
 
 // subscribe Subscribes to a subject using the current NATS connection.
-// Remember to use sdp.NewMsgHandler to get a nats.MsgHandler with otel propagation and protobuf marshaling
+// Remember to use sdp's genhandler to get a nats.MsgHandler with otel propagation and protobuf marshaling
 func (e *Engine) subscribe(subject string, handler nats.MsgHandler) error {
 	var subscription *nats.Subscription
 	var err error

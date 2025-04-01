@@ -13,8 +13,10 @@ import (
 	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
 	"github.com/auth0/go-jwt-middleware/v2/jwks"
 	"github.com/auth0/go-jwt-middleware/v2/validator"
+	"github.com/getsentry/sentry-go"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -315,17 +317,33 @@ func ensureValidTokenHandler(config AuthConfig, next http.Handler) http.Handler 
 	}
 
 	errorHandler := func(w http.ResponseWriter, r *http.Request, err error) {
-		log.WithContext(r.Context()).WithFields(log.Fields{
-			"ovm.auth.audience":       config.Auth0Audience,
-			"ovm.auth.domain":         config.Auth0Domain,
-			"ovm.auth.expectedIssuer": issuerURL.String(),
-		}).WithError(err).Errorf("Encountered error while validating JWT")
-
+		// copied from auth0's DefaultErrorHandler, but with some extra logging and reporting
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		_, err = w.Write([]byte(`{"message":"Failed to validate JWT."}`))
-		if err != nil {
-			log.WithContext(r.Context()).WithError(err).Error("Failed to write response")
+		span := trace.SpanFromContext(r.Context())
+		span.SetAttributes(
+			attribute.String("ovm.auth.error", err.Error()),
+			attribute.String("ovm.auth.audience", config.Auth0Audience),
+			attribute.String("ovm.auth.domain", config.Auth0Domain),
+			attribute.String("ovm.auth.expectedIssuer", issuerURL.String()),
+		)
+
+		switch {
+		case errors.Is(err, jwtmiddleware.ErrJWTMissing):
+			// since connectrpc would translate the original `BadRequest` to a
+			// `CodeInternal` instead of something sensible, we also need to
+			// return StatusUnauthorized here, to provide the correct status
+			// code to the client.
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = w.Write([]byte(`{"message":"JWT is missing."}`))
+		case errors.Is(err, jwtmiddleware.ErrJWTInvalid):
+			w.WriteHeader(http.StatusUnauthorized)
+			_, _ = w.Write([]byte(`{"message":"JWT is invalid."}`))
+		default:
+			span.SetStatus(codes.Error, "Something went wrong while checking the JWT")
+			sentry.CaptureException(err)
+
+			w.WriteHeader(http.StatusInternalServerError)
+			_, _ = w.Write([]byte(`{"message":"Something went wrong while checking the JWT."}`))
 		}
 	}
 

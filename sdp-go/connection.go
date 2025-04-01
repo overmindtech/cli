@@ -82,12 +82,12 @@ func (ec *EncodedConnectionImpl) PublishMsg(ctx context.Context, msg *nats.Msg) 
 	return ec.Conn.PublishMsg(msg)
 }
 
-// Subscribe Use NewMsgHandler to get a nats.MsgHandler with otel propagation and protobuf marshaling
+// Subscribe Use genhandler to get a nats.MsgHandler with otel propagation and protobuf marshaling
 func (ec *EncodedConnectionImpl) Subscribe(subj string, cb nats.MsgHandler) (*nats.Subscription, error) {
 	return ec.Conn.Subscribe(subj, cb)
 }
 
-// QueueSubscribe Use NewMsgHandler to get a nats.MsgHandler with otel propagation and protobuf marshaling
+// QueueSubscribe Use genhandler to get a nats.MsgHandler with otel propagation and protobuf marshaling
 func (ec *EncodedConnectionImpl) QueueSubscribe(subj, queue string, cb nats.MsgHandler) (*nats.Subscription, error) {
 	return ec.Conn.QueueSubscribe(subj, queue, cb)
 }
