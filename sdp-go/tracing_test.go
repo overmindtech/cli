@@ -31,8 +31,6 @@ func TestTraceContextPropagation(t *testing.T) {
 	// }
 	handlerCalled := make(chan struct{})
 	_, err := tc.Subscribe("test.subject", NewOtelExtractingHandler("inner span", func(innerCtx context.Context, msg *nats.Msg) {
-		handlerCalled <- struct{}{}
-
 		_, innerSpan := tp.Tracer("innerTracer").Start(innerCtx, "innerSpan")
 		// innerJson, err := innerSpan.SpanContext().MarshalJSON()
 		// if err != nil {
@@ -45,6 +43,12 @@ func TestTraceContextPropagation(t *testing.T) {
 		if innerSpan.SpanContext().TraceID() != outerSpan.SpanContext().TraceID() {
 			t.Error("inner span did not link up to outer span")
 		}
+
+		// clean up
+		innerSpan.End()
+
+		// finish the test
+		handlerCalled <- struct{}{}
 	}, tp.Tracer("providedTracer")))
 	if err != nil {
 		t.Errorf("error subscribing: %v", err)
@@ -55,10 +59,14 @@ func TestTraceContextPropagation(t *testing.T) {
 		Data:    make([]byte, 0),
 	}
 
-	InjectOtelTraceContext(outerCtx, m)
-	err = tc.PublishMsg(outerCtx, m)
-	if err != nil {
-		t.Errorf("error publishing message: %v", err)
-	}
+	go func() {
+		InjectOtelTraceContext(outerCtx, m)
+		err = tc.PublishMsg(outerCtx, m)
+		if err != nil {
+			t.Errorf("error publishing message: %v", err)
+		}
+	}()
+
+	// Wait for the handler to be called
 	<-handlerCalled
 }

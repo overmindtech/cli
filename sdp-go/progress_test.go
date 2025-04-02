@@ -842,14 +842,13 @@ func TestStart(t *testing.T) {
 func TestExecute(t *testing.T) {
 	t.Parallel()
 
-	conn := TestConnection{}
-	_, err := conn.Subscribe("request.scope.global", func(msg *nats.Msg) {})
-	if err != nil {
-		t.Fatal(err)
-	}
-	u := uuid.New()
-
 	t.Run("with no responders", func(t *testing.T) {
+		conn := TestConnection{}
+		_, err := conn.Subscribe("request.scope.global", func(msg *nats.Msg) {})
+		if err != nil {
+			t.Fatal(err)
+		}
+		u := uuid.New()
 		q := Query{
 			Type:   "user",
 			Method: QueryMethod_GET,
@@ -863,7 +862,7 @@ func TestExecute(t *testing.T) {
 			Deadline:    timestamppb.New(time.Now().Add(10 * time.Second)),
 		}
 
-		_, _, _, err := RunSourceQuerySync(t.Context(), &q, 100*time.Millisecond, &conn)
+		_, _, _, err = RunSourceQuerySync(t.Context(), &q, 100*time.Millisecond, &conn)
 
 		if err != nil {
 			t.Fatal(err)
@@ -871,6 +870,12 @@ func TestExecute(t *testing.T) {
 	})
 
 	t.Run("with a full response set", func(t *testing.T) {
+		conn := TestConnection{}
+		_, err := conn.Subscribe("request.scope.global", func(msg *nats.Msg) {})
+		if err != nil {
+			t.Fatal(err)
+		}
+		u := uuid.New()
 		q := Query{
 			Type:   "user",
 			Method: QueryMethod_GET,
@@ -884,11 +889,15 @@ func TestExecute(t *testing.T) {
 			Deadline:    timestamppb.New(time.Now().Add(10 * time.Second)),
 		}
 
-		go func() {
-			ru1 := uuid.New()
+		querySent := make(chan struct{})
+		done := make(chan struct{})
 
-			delay := 100 * time.Millisecond
-			time.Sleep(delay)
+		go func() {
+			defer close(done)
+			// wait for the query to be sent
+			<-querySent
+
+			ru1 := uuid.New()
 
 			err := conn.Publish(context.Background(), q.Subject(), &QueryResponse{
 				ResponseType: &QueryResponse_Response{
@@ -908,8 +917,6 @@ func TestExecute(t *testing.T) {
 				t.Error(err)
 			}
 
-			time.Sleep(delay)
-
 			err = conn.Publish(context.Background(), q.Subject(), &QueryResponse{
 				ResponseType: &QueryResponse_NewItem{
 					NewItem: &item,
@@ -919,8 +926,6 @@ func TestExecute(t *testing.T) {
 				t.Error(err)
 			}
 
-			time.Sleep(delay)
-
 			err = conn.Publish(context.Background(), q.Subject(), &QueryResponse{
 				ResponseType: &QueryResponse_NewItem{
 					NewItem: &item,
@@ -929,8 +934,6 @@ func TestExecute(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
-
-			time.Sleep(delay)
 
 			err = conn.Publish(context.Background(), q.Subject(), &QueryResponse{
 				ResponseType: &QueryResponse_Response{
@@ -947,17 +950,40 @@ func TestExecute(t *testing.T) {
 			}
 		}()
 
-		items, _, errs, err := RunSourceQuerySync(t.Context(), &q, DefaultStartTimeout, &conn)
+		responseChan := make(chan *QueryResponse)
+		// items, _, errs, err := RunSourceQuerySync(t.Context(), &q, DefaultStartTimeout, &conn)
+		_, err = RunSourceQuery(t.Context(), &q, DefaultStartTimeout, &conn, responseChan)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if len(errs) != 0 {
-			t.Fatal(errs)
+		close(querySent)
+
+		items := []*Item{}
+		errs := []*QueryError{}
+
+		for r := range responseChan {
+			if r == nil {
+				t.Fatal("expected a response")
+			}
+			switch r.GetResponseType().(type) {
+			case *QueryResponse_NewItem:
+				items = append(items, r.GetNewItem())
+			case *QueryResponse_Error:
+				errs = append(errs, r.GetError())
+			default:
+				t.Errorf("unexpected response type: %T", r.GetResponseType())
+			}
 		}
+
+		<-done
 
 		if len(items) != 2 {
 			t.Errorf("expected 2 items got %v: %v", len(items), items)
+		}
+
+		if len(errs) != 0 {
+			t.Errorf("expected 0 errors got %v: %v", len(errs), errs)
 		}
 	})
 }

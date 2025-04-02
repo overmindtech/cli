@@ -29,6 +29,17 @@ func (n NilConnection) Publish(ctx context.Context, subj string, m proto.Message
 	return nil
 }
 
+// PublishRequest Does nothing except log an error
+func (n NilConnection) PublishRequest(ctx context.Context, subj, replyTo string, m proto.Message) error {
+	log.WithFields(log.Fields{
+		"subject": subj,
+		"replyTo": replyTo,
+		"message": fmt.Sprint(m),
+	}).Error("Could not publish NATS message request due to no connection")
+
+	return nil
+}
+
 // PublishMsg Does nothing except log an error
 func (n NilConnection) PublishMsg(ctx context.Context, msg *nats.Msg) error {
 	log.WithFields(log.Fields{

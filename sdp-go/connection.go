@@ -19,6 +19,7 @@ import (
 // testing we will mock this with something that does nothing
 type EncodedConnection interface {
 	Publish(ctx context.Context, subj string, m proto.Message) error
+	PublishRequest(ctx context.Context, subj, replyTo string, m proto.Message) error
 	PublishMsg(ctx context.Context, msg *nats.Msg) error
 	Subscribe(subj string, cb nats.MsgHandler) (*nats.Subscription, error)
 	QueueSubscribe(subj, queue string, cb nats.MsgHandler) (*nats.Subscription, error)
@@ -71,6 +72,24 @@ func (ec *EncodedConnectionImpl) Publish(ctx context.Context, subj string, m pro
 		Subject: subj,
 		Data:    data,
 	}
+	InjectOtelTraceContext(ctx, msg)
+	return ec.Conn.PublishMsg(msg)
+}
+
+func (ec *EncodedConnectionImpl) PublishRequest(ctx context.Context, subj, replyTo string, m proto.Message) error {
+	// TODO: protojson.Format is pretty expensive, replace with summarized data
+	recordMessage(ctx, "Publish", subj, fmt.Sprint(reflect.TypeOf(m)), protojson.Format(m))
+
+	data, err := proto.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	msg := &nats.Msg{
+		Subject: subj,
+		Data:    data,
+	}
+	msg.Header.Add("reply-to", replyTo)
 	InjectOtelTraceContext(ctx, msg)
 	return ec.Conn.PublishMsg(msg)
 }

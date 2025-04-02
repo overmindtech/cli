@@ -56,6 +56,28 @@ func (t *TestConnection) Publish(ctx context.Context, subj string, m proto.Messa
 	return t.runHandlers(&msg)
 }
 
+// PublishRequest Test publish method, notes down the subject and the message
+func (t *TestConnection) PublishRequest(ctx context.Context, subj, replyTo string, m proto.Message) error {
+	t.messagesMutex.Lock()
+	t.Messages = append(t.Messages, ResponseMessage{
+		Subject: subj,
+		V:       m,
+	})
+	t.messagesMutex.Unlock()
+
+	data, err := proto.Marshal(m)
+	if err != nil {
+		return err
+	}
+	msg := nats.Msg{
+		Subject: subj,
+		Data:    data,
+		Header:  nats.Header{},
+	}
+	msg.Header.Add("reply-to", replyTo)
+	return t.runHandlers(&msg)
+}
+
 // PublishMsg Test publish method, notes down the subject and the message
 func (t *TestConnection) PublishMsg(ctx context.Context, msg *nats.Msg) error {
 	t.messagesMutex.Lock()
@@ -196,7 +218,7 @@ func (t *TestConnection) runHandlers(msg *nats.Msg) error {
 		if subjectRegex.MatchString(msg.Subject) {
 			for _, handler := range handlers {
 				hasResponder = true
-				go handler(msg)
+				handler(msg)
 			}
 		}
 	}

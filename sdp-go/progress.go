@@ -436,7 +436,7 @@ func RunSourceQuerySync(ctx context.Context, query *Query, startTimeout time.Dur
 	items := make([]*Item, 0)
 	edges := make([]*Edge, 0)
 	errs := make([]*QueryError, 0)
-	r := make(chan *QueryResponse)
+	r := make(chan *QueryResponse, 128)
 
 	if ec == nil {
 		return items, edges, errs, errors.New("nil NATS connection")
