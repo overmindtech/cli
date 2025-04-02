@@ -368,8 +368,20 @@ func (qrb *Query_RecursionBehaviour) Copy(dest *Query_RecursionBehaviour) {
 	dest.FollowOnlyBlastPropagation = qrb.GetFollowOnlyBlastPropagation()
 }
 
+// IsSingle returns true if this query can only return a single item.
+func (q *Query) IsSingle() bool {
+	return q.GetMethod() == QueryMethod_GET && q.GetScope() != "*" && q.GetType() != "*"
+}
+
 // Reference returns an SDP reference equivalent to this Query
 func (q *Query) Reference() *Reference {
+	if q.IsSingle() {
+		return &Reference{
+			Scope:                q.GetScope(),
+			Type:                 q.GetType(),
+			UniqueAttributeValue: q.GetQuery(),
+		}
+	}
 	return &Reference{
 		Scope:   q.GetScope(),
 		Type:    q.GetType(),
