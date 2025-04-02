@@ -180,3 +180,11 @@ func (x *QueryStatus) GetUUIDParsed() *uuid.UUID {
 	}
 	return &u
 }
+
+func (x *LoadSnapshot) GetUUIDParsed() *uuid.UUID {
+	u, err := uuid.FromBytes(x.GetUUID())
+	if err != nil {
+		return nil
+	}
+	return &u
+}
