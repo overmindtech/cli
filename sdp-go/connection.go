@@ -175,3 +175,6 @@ func Unmarshal(ctx context.Context, b []byte, m proto.Message) error {
 //go:generate go run genhandler.go CancelQuery
 
 //go:generate go run genhandler.go GatewayResponse
+
+//go:generate go run genhandler.go NATSGetLogRecordsRequest
+//go:generate go run genhandler.go NATSGetLogRecordsResponse

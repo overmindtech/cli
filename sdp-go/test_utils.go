@@ -34,8 +34,6 @@ type TestConnection struct {
 // assert interface implementation
 var _ EncodedConnection = (*TestConnection)(nil)
 
-var ErrNoResponders = errors.New("no responders available")
-
 // Publish Test publish method, notes down the subject and the message
 func (t *TestConnection) Publish(ctx context.Context, subj string, m proto.Message) error {
 	t.messagesMutex.Lock()
@@ -226,7 +224,7 @@ func (t *TestConnection) runHandlers(msg *nats.Msg) error {
 	if hasResponder || t.IgnoreNoResponders {
 		return nil
 	} else {
-		return ErrNoResponders
+		return nats.ErrNoResponders
 	}
 }
 
