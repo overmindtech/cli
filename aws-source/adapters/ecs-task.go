@@ -257,10 +257,8 @@ var ecsTaskAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	DescriptiveName: "ECS Task",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 		Get:               true,
-		List:              true,
 		Search:            true,
 		GetDescription:    "Get an ECS task by ID",
-		ListDescription:   "List all ECS tasks",
 		SearchDescription: "Search for ECS tasks by cluster",
 	},
 	PotentialLinks: []string{"ecs-cluster", "ecs-container-instance", "ecs-task-definition", "ec2-network-interface", "ip"},

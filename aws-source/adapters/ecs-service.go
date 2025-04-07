@@ -413,10 +413,8 @@ var ecsServiceAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	DescriptiveName: "ECS Service",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 		Get:               true,
-		List:              true,
 		Search:            true,
 		GetDescription:    "Get an ECS service by full name ({clusterName}/{id})",
-		ListDescription:   "List all ECS services",
 		SearchDescription: "Search for ECS services by cluster",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
