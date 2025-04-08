@@ -268,7 +268,7 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, items chan<
 					expandedMutex.RLock()
 					for q, adapter := range expanded {
 						log.WithContext(ctx).WithFields(log.Fields{
-							"ovm.query.uuid":    q.ParseUuid().String(),
+							"ovm.query.uuid":    q.GetUUIDParsed().String(),
 							"ovm.query.type":    q.GetType(),
 							"ovm.query.scope":   q.GetScope(),
 							"ovm.query.method":  q.GetMethod().String(),

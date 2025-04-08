@@ -33,7 +33,7 @@ import (
 //                        S         S
 //                        v         |
 //                      +--------+  |
-//                      | london | <+
+//       HOBBIES <--S-- | london | <+
 //                      +--------+
 //                        |b
 //                        |
@@ -42,8 +42,8 @@ import (
 //                      | gb |
 //                      +----+
 //
-// arrows indicate edge directions. b annotations indicate blast radius
-// propagation. L indicates a LIST edge, S indicates a SEARCH edge.
+// arrows indicate edge directions. `b` annotations indicate blast radius
+// propagation. `L` indicates a LIST edge, `S` indicates a SEARCH edge.
 
 // this global atomic variable keeps track of the generation count for test
 // items. It is increased every time a new item is created, and is used to
@@ -221,6 +221,18 @@ func london() *sdp.Item {
 				// politics, enough said
 				In:  true,
 				Out: true,
+			},
+		},
+		{
+			Query: &sdp.Query{
+				Type:   "test-hobby",
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  "*",
+				Scope:  "test",
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  false,
+				Out: false,
 			},
 		},
 	}

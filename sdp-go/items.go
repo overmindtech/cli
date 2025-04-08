@@ -393,7 +393,7 @@ func (q *Query) Reference() *Reference {
 
 // Subject returns a NATS subject for all traffic relating to this query
 func (q *Query) Subject() string {
-	return fmt.Sprintf("query.%v", q.ParseUuid())
+	return fmt.Sprintf("query.%v", q.GetUUIDParsed())
 }
 
 // Copy copies all information from one Query pointer to another
@@ -426,9 +426,9 @@ func (q *Query) TimeoutContext(ctx context.Context) (context.Context, context.Ca
 	return context.WithDeadline(ctx, q.GetDeadline().AsTime())
 }
 
-// ParseUuid returns this request's UUID. If there's an error parsing it,
+// GetUUIDParsed returns this request's UUID. If there's an error parsing it,
 // generates and stores a fresh one
-func (r *Query) ParseUuid() uuid.UUID {
+func (r *Query) GetUUIDParsed() uuid.UUID {
 	if r == nil {
 		return uuid.UUID{}
 	}
