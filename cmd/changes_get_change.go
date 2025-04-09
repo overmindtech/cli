@@ -102,7 +102,14 @@ fetch:
 			}
 		}
 
-		if riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetStatus() == sdp.ChangeAnalysisStatus_STATUS_INPROGRESS {
+		currentStatus := riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetStatus()
+		// if everything is pending or in progress we need to wait.
+		// - ChangeAnalysisStatus_STATUS_UNSPECIFIED: When all are pending
+		// - ChangeAnalysisStatus_STATUS_SKIPPED: When all are skipped
+		// - ChangeAnalysisStatus_STATUS_INPROGRESS: When >1 is in progress
+		// - ChangeAnalysisStatus_STATUS_ERROR: When any of the steps are errored
+		// - ChangeAnalysisStatus_STATUS_DONE: Any other situation
+		if currentStatus == sdp.ChangeAnalysisStatus_STATUS_INPROGRESS || currentStatus == sdp.ChangeAnalysisStatus_STATUS_UNSPECIFIED {
 			// Extract the currently running milestone if you can
 			milestones := riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetProgressMilestones()
 			var currentMilestone string
