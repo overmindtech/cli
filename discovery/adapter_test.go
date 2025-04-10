@@ -38,7 +38,7 @@ func TestGet(t *testing.T) {
 		},
 	}
 
-	e := newStartedEngine(t, "TestGet", nil, &adapter)
+	e := newStartedEngine(t, "TestGet", nil, nil, &adapter)
 
 	t.Run("Basic test", func(t *testing.T) {
 		t.Cleanup(func() {
@@ -77,7 +77,6 @@ func TestGet(t *testing.T) {
 			Query:  "three",
 			Method: sdp.QueryMethod_GET,
 		})
-
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -204,7 +203,6 @@ func TestGet(t *testing.T) {
 				Query:  "three",
 				Method: sdp.QueryMethod_GET,
 			})
-
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -220,7 +218,6 @@ func TestGet(t *testing.T) {
 				Scope:  "test",
 				Method: sdp.QueryMethod_LIST,
 			})
-
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -237,7 +234,6 @@ func TestGet(t *testing.T) {
 				Query:  "three",
 				Method: sdp.QueryMethod_SEARCH,
 			})
-
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -252,7 +248,7 @@ func TestGet(t *testing.T) {
 func TestList(t *testing.T) {
 	adapter := TestAdapter{}
 
-	e := newStartedEngine(t, "TestList", nil, &adapter)
+	e := newStartedEngine(t, "TestList", nil, nil, &adapter)
 
 	_, _, err := e.executeQuerySync(context.Background(), &sdp.Query{
 		Type:   "person",
@@ -277,7 +273,7 @@ func TestList(t *testing.T) {
 func TestSearch(t *testing.T) {
 	adapter := TestAdapter{}
 
-	e := newStartedEngine(t, "TestSearch", nil, &adapter)
+	e := newStartedEngine(t, "TestSearch", nil, nil, &adapter)
 
 	_, _, err := e.executeQuerySync(context.Background(), &sdp.Query{
 		Type:   "person",
@@ -309,7 +305,7 @@ func TestListSearchCaching(t *testing.T) {
 		},
 	}
 
-	e := newStartedEngine(t, "TestListSearchCaching", nil, &adapter)
+	e := newStartedEngine(t, "TestListSearchCaching", nil, nil, &adapter)
 
 	t.Run("caching with successful list", func(t *testing.T) {
 		t.Cleanup(func() {
@@ -327,7 +323,6 @@ func TestListSearchCaching(t *testing.T) {
 		}
 
 		list1, _, err = e.executeQuerySync(context.Background(), &q)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -466,7 +461,6 @@ func TestListSearchCaching(t *testing.T) {
 		}
 
 		_, errs, err := e.executeQuerySync(context.Background(), &q)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -478,7 +472,6 @@ func TestListSearchCaching(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 
 		_, errs, err = e.executeQuerySync(context.Background(), &q)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -490,7 +483,6 @@ func TestListSearchCaching(t *testing.T) {
 		time.Sleep(200 * time.Millisecond)
 
 		_, errs, err = e.executeQuerySync(context.Background(), &q)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -624,7 +616,7 @@ func TestSearchGetCaching(t *testing.T) {
 		},
 	}
 
-	e := newStartedEngine(t, "TestSearchGetCaching", nil, &adapter)
+	e := newStartedEngine(t, "TestSearchGetCaching", nil, nil, &adapter)
 
 	t.Run("caching with successful search", func(t *testing.T) {
 		t.Cleanup(func() {
@@ -671,7 +663,6 @@ func TestSearchGetCaching(t *testing.T) {
 
 		t.Logf("Getting %v from cache", q.GetQuery())
 		getResult, getErrors, err = e.executeQuerySync(context.Background(), &q)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -691,6 +682,7 @@ func TestSearchGetCaching(t *testing.T) {
 		}
 	})
 }
+
 func TestNewQueryResultStream(t *testing.T) {
 	items := make(chan *sdp.Item)
 	errs := make(chan error)

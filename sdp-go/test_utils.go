@@ -20,12 +20,12 @@ type ResponseMessage struct {
 
 // TestConnection Used to mock a NATS connection for testing
 type TestConnection struct {
-	Messages []ResponseMessage
+	Messages   []ResponseMessage
+	MessagesMu sync.Mutex
 
 	// If set, the test connection will not return ErrNoResponders if someone
 	// tries to publish a message to a subject with no responders
 	IgnoreNoResponders bool
-	messagesMutex      sync.Mutex
 
 	Subscriptions      map[*regexp.Regexp][]nats.MsgHandler
 	subscriptionsMutex sync.RWMutex
@@ -36,12 +36,12 @@ var _ EncodedConnection = (*TestConnection)(nil)
 
 // Publish Test publish method, notes down the subject and the message
 func (t *TestConnection) Publish(ctx context.Context, subj string, m proto.Message) error {
-	t.messagesMutex.Lock()
+	t.MessagesMu.Lock()
 	t.Messages = append(t.Messages, ResponseMessage{
 		Subject: subj,
 		V:       m,
 	})
-	t.messagesMutex.Unlock()
+	t.MessagesMu.Unlock()
 
 	data, err := proto.Marshal(m)
 	if err != nil {
@@ -56,12 +56,12 @@ func (t *TestConnection) Publish(ctx context.Context, subj string, m proto.Messa
 
 // PublishRequest Test publish method, notes down the subject and the message
 func (t *TestConnection) PublishRequest(ctx context.Context, subj, replyTo string, m proto.Message) error {
-	t.messagesMutex.Lock()
+	t.MessagesMu.Lock()
 	t.Messages = append(t.Messages, ResponseMessage{
 		Subject: subj,
 		V:       m,
 	})
-	t.messagesMutex.Unlock()
+	t.MessagesMu.Unlock()
 
 	data, err := proto.Marshal(m)
 	if err != nil {
@@ -78,12 +78,12 @@ func (t *TestConnection) PublishRequest(ctx context.Context, subj, replyTo strin
 
 // PublishMsg Test publish method, notes down the subject and the message
 func (t *TestConnection) PublishMsg(ctx context.Context, msg *nats.Msg) error {
-	t.messagesMutex.Lock()
+	t.MessagesMu.Lock()
 	t.Messages = append(t.Messages, ResponseMessage{
 		Subject: msg.Subject,
 		V:       msg.Data,
 	})
-	t.messagesMutex.Unlock()
+	t.MessagesMu.Unlock()
 
 	err := t.runHandlers(msg)
 	if err != nil {
@@ -109,7 +109,8 @@ func (t *TestConnection) Subscribe(subj string, cb nats.MsgHandler) (*nats.Subsc
 }
 
 func (t *TestConnection) QueueSubscribe(subj, queue string, cb nats.MsgHandler) (*nats.Subscription, error) {
-	panic("TODO")
+	// TODO: implement queue groups here
+	return t.Subscribe(subj, cb)
 }
 
 func (r *TestConnection) subjectToRegexp(subject string) *regexp.Regexp {

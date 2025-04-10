@@ -50,6 +50,7 @@ func TestExecuteQuery(t *testing.T) {
 			ConnectionTimeout: time.Second,
 			MaxReconnects:     5,
 		},
+		nil,
 		&adapter,
 	)
 
@@ -65,7 +66,6 @@ func TestExecuteQuery(t *testing.T) {
 		}
 
 		items, errs, err := e.executeQuerySync(context.Background(), q)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -117,7 +117,6 @@ func TestExecuteQuery(t *testing.T) {
 		} else {
 			t.Errorf("expected 1 error, got %v", len(errs))
 		}
-
 	})
 
 	t.Run("Wrong type Get query", func(t *testing.T) {
@@ -157,7 +156,6 @@ func TestExecuteQuery(t *testing.T) {
 		}
 
 		items, errs, err := e.executeQuerySync(context.Background(), q)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -183,7 +181,6 @@ func TestExecuteQuery(t *testing.T) {
 		}
 
 		items, errs, err := e.executeQuerySync(context.Background(), q)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -196,7 +193,6 @@ func TestExecuteQuery(t *testing.T) {
 			t.Error("expected at least one item")
 		}
 	})
-
 }
 
 func TestHandleQuery(t *testing.T) {
@@ -217,7 +213,7 @@ func TestHandleQuery(t *testing.T) {
 		},
 	}
 
-	e := newStartedEngine(t, "TestHandleQuery", nil, &personAdapter, &dogAdapter)
+	e := newStartedEngine(t, "TestHandleQuery", nil, nil, &personAdapter, &dogAdapter)
 
 	t.Run("Wildcard type should be expanded", func(t *testing.T) {
 		t.Cleanup(func() {
@@ -275,11 +271,9 @@ func TestHandleQuery(t *testing.T) {
 			t.Errorf("expected dog backend to have 0 Get calls, got %v", l)
 		}
 	})
-
 }
 
 func TestWildcardAdapterExpansion(t *testing.T) {
-
 	personAdapter := TestAdapter{
 		ReturnType: "person",
 		ReturnScopes: []string{
@@ -287,7 +281,7 @@ func TestWildcardAdapterExpansion(t *testing.T) {
 		},
 	}
 
-	e := newStartedEngine(t, "TestWildcardAdapterExpansion", nil, &personAdapter)
+	e := newStartedEngine(t, "TestWildcardAdapterExpansion", nil, nil, &personAdapter)
 
 	t.Run("query scope should be preserved", func(t *testing.T) {
 		req := sdp.Query{
@@ -334,7 +328,7 @@ func TestSendQuerySync(t *testing.T) {
 		},
 	}
 
-	e := newStartedEngine(t, "TestSendQuerySync", nil, &adapter)
+	e := newStartedEngine(t, "TestSendQuerySync", nil, nil, &adapter)
 
 	p := pool.New()
 	for i := 0; i < 250; i++ {
@@ -358,7 +352,6 @@ func TestSendQuerySync(t *testing.T) {
 			}
 
 			items, _, errs, err := sdp.RunSourceQuerySync(ctx, query, 1*time.Second, e.natsConnection)
-
 			if err != nil {
 				t.Error(err)
 			}
@@ -385,7 +378,7 @@ func TestExpandQuery(t *testing.T) {
 				"test1",
 			},
 		}
-		e := newStartedEngine(t, "TestExpandQuery", nil, &simple)
+		e := newStartedEngine(t, "TestExpandQuery", nil, nil, &simple)
 
 		e.HandleQuery(context.Background(), &sdp.Query{
 			Type:   "person",
@@ -408,7 +401,7 @@ func TestExpandQuery(t *testing.T) {
 				"test3",
 			},
 		}
-		e := newStartedEngine(t, "TestExpandQuery", nil, &many)
+		e := newStartedEngine(t, "TestExpandQuery", nil, nil, &many)
 
 		e.HandleQuery(context.Background(), &sdp.Query{
 			Type:   "person",
@@ -431,7 +424,7 @@ func TestExpandQuery(t *testing.T) {
 			},
 		}
 
-		e := newStartedEngine(t, "TestExpandQuery", nil, &sx)
+		e := newStartedEngine(t, "TestExpandQuery", nil, nil, &sx)
 
 		e.HandleQuery(context.Background(), &sdp.Query{
 			Type:   "person",

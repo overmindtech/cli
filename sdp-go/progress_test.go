@@ -83,14 +83,14 @@ func TestResponseSenderDone(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Inspect what was sent
-	tc.messagesMutex.Lock()
+	tc.MessagesMu.Lock()
 	if len(tc.Messages) <= 10 {
 		t.Errorf("Expected <= 10 responses to be sent, found %v", len(tc.Messages))
 	}
 
 	// Make sure that the final message was a completion one
 	finalMessage := tc.Messages[len(tc.Messages)-1]
-	tc.messagesMutex.Unlock()
+	tc.MessagesMu.Unlock()
 
 	if queryResponse, ok := finalMessage.V.(*QueryResponse); ok {
 		if finalResponse, ok := queryResponse.GetResponseType().(*QueryResponse_Response); ok {
@@ -128,14 +128,14 @@ func TestResponseSenderError(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Inspect what was sent
-	tc.messagesMutex.Lock()
+	tc.MessagesMu.Lock()
 	if len(tc.Messages) <= 10 {
 		t.Errorf("Expected <= 10 responses to be sent, found %v", len(tc.Messages))
 	}
 
 	// Make sure that the final message was a completion one
 	finalMessage := tc.Messages[len(tc.Messages)-1]
-	tc.messagesMutex.Unlock()
+	tc.MessagesMu.Unlock()
 
 	if queryResponse, ok := finalMessage.V.(*QueryResponse); ok {
 		if finalResponse, ok := queryResponse.GetResponseType().(*QueryResponse_Response); ok {
@@ -173,14 +173,14 @@ func TestResponseSenderCancel(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Inspect what was sent
-	tc.messagesMutex.Lock()
+	tc.MessagesMu.Lock()
 	if len(tc.Messages) <= 10 {
 		t.Errorf("Expected <= 10 responses to be sent, found %v", len(tc.Messages))
 	}
 
 	// Make sure that the final message was a completion one
 	finalMessage := tc.Messages[len(tc.Messages)-1]
-	tc.messagesMutex.Unlock()
+	tc.MessagesMu.Unlock()
 
 	if queryResponse, ok := finalMessage.V.(*QueryResponse); ok {
 		if finalResponse, ok := queryResponse.GetResponseType().(*QueryResponse_Response); ok {
@@ -821,11 +821,11 @@ func TestStart(t *testing.T) {
 
 	response := <-responses
 
-	tc.messagesMutex.Lock()
+	tc.MessagesMu.Lock()
 	if len(tc.Messages) != 2 {
 		t.Errorf("expected 2 messages to be sent, got %v", len(tc.Messages))
 	}
-	tc.messagesMutex.Unlock()
+	tc.MessagesMu.Unlock()
 
 	returnedItem := response.GetNewItem()
 	if returnedItem == nil {

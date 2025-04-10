@@ -118,7 +118,6 @@ func addPolicyEntities(ctx context.Context, client IAMClient, details *PolicyDet
 
 	for paginator.HasMorePages() {
 		out, err := paginator.NextPage(ctx)
-
 		if err != nil {
 			return err
 		}
@@ -140,7 +139,6 @@ func policyItemMapper(_ *string, scope string, awsItem *PolicyDetails) (*sdp.Ite
 		Document: awsItem.Document,
 	}
 	attributes, err := adapterhelpers.ToAttributesWithExclude(finalAttributes)
-
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +231,6 @@ func policyListTagsFunc(ctx context.Context, p *PolicyDetails, client IAMClient)
 
 	for paginator.HasMorePages() {
 		out, err := paginator.NextPage(ctx)
-
 		if err != nil {
 			return adapterhelpers.HandleTagsError(ctx, err), nil
 		}
@@ -249,7 +246,7 @@ func policyListTagsFunc(ctx context.Context, p *PolicyDetails, client IAMClient)
 }
 
 func policyListExtractor(ctx context.Context, output *iam.ListPoliciesOutput, client IAMClient) ([]*PolicyDetails, error) {
-	return iter.MapErr[types.Policy, *PolicyDetails](output.Policies, func(p *types.Policy) (*PolicyDetails, error) {
+	return iter.MapErr(output.Policies, func(p *types.Policy) (*PolicyDetails, error) {
 		details := PolicyDetails{
 			Policy: p,
 		}

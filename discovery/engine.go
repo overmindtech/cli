@@ -4,10 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"github.com/overmindtech/cli/auth"
@@ -18,8 +21,10 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const DefaultMaxRequestTimeout = 5 * time.Minute
-const DefaultConnectionWatchInterval = 3 * time.Second
+const (
+	DefaultMaxRequestTimeout       = 5 * time.Minute
+	DefaultConnectionWatchInterval = 3 * time.Second
+)
 
 // The clint that will be used to send heartbeats. This will usually be an
 // `sdpconnect.ManagementServiceClient`
@@ -113,11 +118,12 @@ type Engine struct {
 	natsConnection      sdp.EncodedConnection
 	natsConnectionMutex sync.Mutex
 
-	// List of all current subscriptions
-	subscriptions []*nats.Subscription
-
 	// All Adapters managed by this Engine
 	sh *AdapterHost
+
+	// handle log requests with this adapter
+	logAdapter   LogAdapter
+	logAdapterMu sync.RWMutex
 
 	// GetListMutex used for locking out Get queries when there's a List happening
 	gfm GetListMutex
@@ -184,7 +190,6 @@ func (e *Engine) AddAdapters(adapters ...Adapter) error {
 
 // Connect Connects to NATS
 func (e *Engine) connect() error {
-	// Try to connect to NATS
 	if e.EngineConfig.NATSOptions != nil {
 		encodedConnection, err := e.EngineConfig.NATSOptions.Connect()
 		if err != nil {
@@ -195,6 +200,9 @@ func (e *Engine) connect() error {
 		e.natsConnection = encodedConnection
 		e.natsConnectionMutex.Unlock()
 
+		// TODO: this could be replaced by setting the various callbacks on the
+		// natsConnection and waiting for notification from the underlying
+		// connection.
 		e.connectionWatcher = NATSWatcher{
 			Connection: e.natsConnection,
 			FailureHandler: func() {
@@ -221,42 +229,57 @@ func (e *Engine) connect() error {
 			"ServerID": e.natsConnection.Underlying().ConnectedServerId(),
 			"URL:":     e.natsConnection.Underlying().ConnectedUrl(),
 		}).Info("NATS connected")
-
-		// Since the underlying query processing logic creates its own spans
-		// when it has some real work to do, we are not passing a name to these
-		// query handlers so that we don't get spans that are completely empty
-		err = e.subscribe("request.all", sdp.NewAsyncRawQueryHandler("", func(ctx context.Context, _ *nats.Msg, i *sdp.Query) {
-			e.HandleQuery(ctx, i)
-		}))
-		if err != nil {
-			return fmt.Errorf("error subscribing to request.all: %w", err)
-		}
-
-		err = e.subscribe("request.scope.>", sdp.NewAsyncRawQueryHandler("", func(ctx context.Context, m *nats.Msg, i *sdp.Query) {
-			e.HandleQuery(ctx, i)
-		}))
-		if err != nil {
-			return fmt.Errorf("error subscribing to request.scope.>: %w", err)
-		}
-
-		err = e.subscribe("cancel.all", sdp.NewAsyncRawCancelQueryHandler("CancelQueryHandler", func(ctx context.Context, m *nats.Msg, i *sdp.CancelQuery) {
-			e.HandleCancelQuery(ctx, i)
-		}))
-		if err != nil {
-			return fmt.Errorf("error subscribing to cancel.all: %w", err)
-		}
-
-		err = e.subscribe("cancel.scope.>", sdp.NewAsyncRawCancelQueryHandler("WildcardCancelQueryHandler", func(ctx context.Context, m *nats.Msg, i *sdp.CancelQuery) {
-			e.HandleCancelQuery(ctx, i)
-		}))
-		if err != nil {
-			return fmt.Errorf("error subscribing to cancel.scope.>: %w", err)
-		}
-
-		return nil
 	}
 
-	return errors.New("no NATSOptions struct provided")
+	if e.natsConnection == nil {
+		return errors.New("no NATSOptions struct and no natsConnection provided")
+	}
+
+	// Since the underlying query processing logic creates its own spans
+	// when it has some real work to do, we are not passing a name to these
+	// query handlers so that we don't get spans that are completely empty
+	err := e.subscribe("request.all", sdp.NewAsyncRawQueryHandler("", func(ctx context.Context, _ *nats.Msg, i *sdp.Query) {
+		e.HandleQuery(ctx, i)
+	}))
+	if err != nil {
+		return fmt.Errorf("error subscribing to request.all: %w", err)
+	}
+
+	err = e.subscribe("request.scope.>", sdp.NewAsyncRawQueryHandler("", func(ctx context.Context, m *nats.Msg, i *sdp.Query) {
+		e.HandleQuery(ctx, i)
+	}))
+	if err != nil {
+		return fmt.Errorf("error subscribing to request.scope.>: %w", err)
+	}
+
+	err = e.subscribe("cancel.all", sdp.NewAsyncRawCancelQueryHandler("CancelQueryHandler", func(ctx context.Context, m *nats.Msg, i *sdp.CancelQuery) {
+		e.HandleCancelQuery(ctx, i)
+	}))
+	if err != nil {
+		return fmt.Errorf("error subscribing to cancel.all: %w", err)
+	}
+
+	err = e.subscribe("cancel.scope.>", sdp.NewAsyncRawCancelQueryHandler("WildcardCancelQueryHandler", func(ctx context.Context, m *nats.Msg, i *sdp.CancelQuery) {
+		e.HandleCancelQuery(ctx, i)
+	}))
+	if err != nil {
+		return fmt.Errorf("error subscribing to cancel.scope.>: %w", err)
+	}
+
+	if e.logAdapter != nil {
+		for _, scope := range e.logAdapter.Scopes() {
+			subj := fmt.Sprintf("logs.scope.%v", scope)
+			err = e.subscribe(subj, sdp.NewAsyncRawNATSGetLogRecordsRequestHandler("WildcardCancelQueryHandler", func(ctx context.Context, m *nats.Msg, i *sdp.NATSGetLogRecordsRequest) {
+				replyTo := m.Header.Get("reply-to")
+				e.HandleLogRecordsRequest(ctx, replyTo, i)
+			}))
+			if err != nil {
+				return fmt.Errorf("error subscribing to %v: %w", subj, err)
+			}
+		}
+	}
+
+	return nil
 }
 
 // disconnect Disconnects the engine from the NATS network
@@ -270,32 +293,7 @@ func (e *Engine) disconnect() error {
 		return nil
 	}
 
-	if e.natsConnection.Underlying() != nil {
-		// Only unsubscribe if the connection is not closed. If it's closed
-		// there is no point
-		for _, c := range e.subscriptions {
-			if e.natsConnection.Status() != nats.CONNECTED {
-				// If the connection is not connected we can't unsubscribe
-				continue
-			}
-
-			err := c.Drain()
-			if err != nil {
-				return fmt.Errorf("error draining subscription: %w", err)
-			}
-
-			err = c.Unsubscribe()
-			if err != nil {
-				return fmt.Errorf("error unsubscribing: %w", err)
-			}
-		}
-
-		e.subscriptions = nil
-
-		// Finally close the connection
-		e.natsConnection.Close()
-	}
-
+	e.natsConnection.Close()
 	e.natsConnection.Drop()
 
 	return nil
@@ -326,7 +324,6 @@ func (e *Engine) Start() error {
 // subscribe Subscribes to a subject using the current NATS connection.
 // Remember to use sdp's genhandler to get a nats.MsgHandler with otel propagation and protobuf marshaling
 func (e *Engine) subscribe(subject string, handler nats.MsgHandler) error {
-	var subscription *nats.Subscription
 	var err error
 
 	e.natsConnectionMutex.Lock()
@@ -343,15 +340,13 @@ func (e *Engine) subscribe(subject string, handler nats.MsgHandler) error {
 	}).Debug("creating NATS subscription")
 
 	if e.EngineConfig.NATSQueueName == "" {
-		subscription, err = e.natsConnection.Subscribe(subject, handler)
+		_, err = e.natsConnection.Subscribe(subject, handler)
 	} else {
-		subscription, err = e.natsConnection.QueueSubscribe(subject, e.EngineConfig.NATSQueueName, handler)
+		_, err = e.natsConnection.QueueSubscribe(subject, e.EngineConfig.NATSQueueName, handler)
 	}
 	if err != nil {
 		return fmt.Errorf("error subscribing to NATS: %w", err)
 	}
-
-	e.subscriptions = append(e.subscriptions, subscription)
 
 	return nil
 }
@@ -453,6 +448,134 @@ func (e *Engine) HandleCancelQuery(ctx context.Context, cancelQuery *sdp.CancelQ
 	}
 }
 
+func (e *Engine) HandleLogRecordsRequest(ctx context.Context, replyTo string, request *sdp.NATSGetLogRecordsRequest) {
+	span := trace.SpanFromContext(ctx)
+	span.SetName("HandleLogRecordsRequest")
+
+	if !strings.HasPrefix(replyTo, "logs.records.") {
+		sentry.CaptureException(fmt.Errorf("received log records request with invalid reply-to header: %s", replyTo))
+		return
+	}
+
+	err := e.natsConnection.Publish(ctx, replyTo, &sdp.NATSGetLogRecordsResponse{
+		Content: &sdp.NATSGetLogRecordsResponse_Status{
+			Status: &sdp.NATSGetLogRecordsResponseStatus{
+				Status: sdp.NATSGetLogRecordsResponseStatus_STARTED,
+			},
+		},
+	})
+	if err != nil {
+		sentry.CaptureException(fmt.Errorf("error publishing log records STARTED response: %w", err))
+		return
+	}
+
+	// ensure that we send an error response if the HandleLogRecordsRequestWithErrors call panics
+	defer func() {
+		if r := recover(); r != nil {
+			sentry.CaptureException(fmt.Errorf("panic in log records request handler: %v", r))
+			err = e.natsConnection.Publish(ctx, replyTo, &sdp.NATSGetLogRecordsResponse{
+				Content: &sdp.NATSGetLogRecordsResponse_Status{
+					Status: &sdp.NATSGetLogRecordsResponseStatus{
+						Status: sdp.NATSGetLogRecordsResponseStatus_ERRORED,
+						Error:  sdp.NewLocalSourceError(connect.CodeInternal, "panic in log records request handler"),
+					},
+				},
+			})
+			if err != nil {
+				sentry.CaptureException(fmt.Errorf("error publishing log records FINISHED response: %w", err))
+				return
+			}
+		}
+	}()
+
+	srcErr := e.HandleLogRecordsRequestWithErrors(ctx, replyTo, request)
+	if srcErr != nil {
+		err = e.natsConnection.Publish(ctx, replyTo, &sdp.NATSGetLogRecordsResponse{
+			Content: &sdp.NATSGetLogRecordsResponse_Status{
+				Status: &sdp.NATSGetLogRecordsResponseStatus{
+					Status: sdp.NATSGetLogRecordsResponseStatus_ERRORED,
+					Error:  srcErr,
+				},
+			},
+		})
+		if err != nil {
+			sentry.CaptureException(fmt.Errorf("error publishing log records FINISHED response: %w", err))
+			return
+		}
+		return
+	}
+
+	err = e.natsConnection.Publish(ctx, replyTo, &sdp.NATSGetLogRecordsResponse{
+		Content: &sdp.NATSGetLogRecordsResponse_Status{
+			Status: &sdp.NATSGetLogRecordsResponseStatus{
+				Status: sdp.NATSGetLogRecordsResponseStatus_FINISHED,
+			},
+		},
+	})
+	if err != nil {
+		sentry.CaptureException(fmt.Errorf("error publishing log records FINISHED response: %w", err))
+		return
+	}
+}
+
+func (e *Engine) HandleLogRecordsRequestWithErrors(ctx context.Context, replyTo string, natsRequest *sdp.NATSGetLogRecordsRequest) *sdp.SourceError {
+	if e.logAdapter == nil {
+		return sdp.NewLocalSourceError(connect.CodeInvalidArgument, "no logs adapter registered")
+	}
+
+	if natsRequest == nil {
+		return sdp.NewLocalSourceError(connect.CodeInvalidArgument, "received nil log records request")
+	}
+
+	req := natsRequest.GetRequest()
+	if req == nil {
+		return sdp.NewLocalSourceError(connect.CodeInvalidArgument, "received nil log records request body")
+	}
+
+	err := req.Validate()
+	if err != nil {
+		return sdp.NewLocalSourceError(connect.CodeInvalidArgument, fmt.Sprintf("invalid log records request: %v", err))
+	}
+
+	if !slices.Contains(e.logAdapter.Scopes(), req.GetScope()) {
+		return sdp.NewLocalSourceError(connect.CodeInvalidArgument, fmt.Sprintf("scope %s is not available", req.GetScope()))
+	}
+
+	span := trace.SpanFromContext(ctx)
+	span.SetAttributes(
+		attribute.String("ovm.logs.replyTo", replyTo),
+		attribute.String("ovm.logs.scope", req.GetScope()),
+		attribute.String("ovm.logs.query", req.GetQuery()),
+		attribute.String("ovm.logs.from", req.GetFrom().String()),
+		attribute.String("ovm.logs.to", req.GetTo().String()),
+		attribute.Int("ovm.logs.maxRecords", int(req.GetMaxRecords())),
+		attribute.Bool("ovm.logs.startFromOldest", req.GetStartFromOldest()),
+	)
+
+	stream := &LogRecordsStreamImpl{
+		subject: replyTo,
+		stream:  e.natsConnection,
+	}
+	err = e.logAdapter.Get(ctx, req, stream)
+
+	span.SetAttributes(
+		attribute.Int("ovm.logs.numResponses", stream.responses),
+		attribute.Int("ovm.logs.numRecords", stream.records),
+	)
+	srcErr := &sdp.SourceError{}
+	if errors.As(err, &srcErr) {
+		return srcErr
+	}
+	if errors.Is(err, context.DeadlineExceeded) || ctx.Err() == context.DeadlineExceeded {
+		return sdp.NewLocalSourceError(connect.CodeDeadlineExceeded, "log records request deadline exceeded")
+	}
+	if err != nil {
+		return sdp.NewLocalSourceError(connect.CodeInternal, fmt.Sprintf("error handling log records request: %v", err))
+	}
+
+	return nil
+}
+
 // ClearCache Completely clears the cache
 func (e *Engine) ClearCache() {
 	e.sh.ClearCaches()
@@ -470,4 +593,45 @@ func (e *Engine) ClearAdapters() {
 // wildcard at a later date we can do so here
 func IsWildcard(s string) bool {
 	return s == sdp.WILDCARD
+}
+
+// SetLogAdapter registers a single LogAdapter with the engine.
+// Returns an error when there is already a log adapter registered.
+func (e *Engine) SetLogAdapter(adapter LogAdapter) error {
+	if adapter == nil {
+		return errors.New("log adapter cannot be nil")
+	}
+
+	e.logAdapterMu.Lock()
+	defer e.logAdapterMu.Unlock()
+
+	if e.logAdapter != nil {
+		return errors.New("log adapter already registered")
+	}
+
+	e.logAdapter = adapter
+	return nil
+}
+
+// GetAvailableScopesAndMetadata returns the available scopes and adapter metadata
+// from all visible adapters. This is useful for heartbeats and other reporting.
+func (e *Engine) GetAvailableScopesAndMetadata() ([]string, []*sdp.AdapterMetadata) {
+	// Get available types and scopes
+	availableScopesMap := map[string]bool{}
+	adapterMetadata := []*sdp.AdapterMetadata{}
+
+	for _, adapter := range e.sh.VisibleAdapters() {
+		for _, scope := range adapter.Scopes() {
+			availableScopesMap[scope] = true
+		}
+		adapterMetadata = append(adapterMetadata, adapter.Metadata())
+	}
+
+	// Extract slices from maps
+	availableScopes := []string{}
+	for s := range availableScopesMap {
+		availableScopes = append(availableScopes, s)
+	}
+
+	return availableScopes, adapterMetadata
 }

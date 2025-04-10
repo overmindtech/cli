@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"connectrpc.com/connect"
 )
 
 // Validate ensures that GetLogRecordsRequest is valid
@@ -38,10 +40,38 @@ func (req *GetLogRecordsRequest) Validate() error {
 		return fmt.Errorf("from timestamp (%v) must be before or equal to to timestamp (%v)", fromTime, toTime)
 	}
 
-	// maxRecords is either missing or greater than zero
-	if req.MaxRecords != nil && req.GetMaxRecords() <= 0 {
-		return errors.New("maxRecords must be greater than zero")
+	if req.GetMaxRecords() < 0 {
+		return errors.New("maxRecords must be greater than or equal to zero")
 	}
 
 	return nil
+}
+
+// NewUpstreamSourceError creates a new SourceError with the given message and error
+func NewUpstreamSourceError(code connect.Code, message string) *SourceError {
+	return &SourceError{
+		Code:     SourceError_Code(code), //nolint:gosec
+		Message:  message,
+		Upstream: true,
+	}
+}
+
+// NewLocalSourceError creates a new SourceError with the given message and error, indicating a local (non-upstream) error
+func NewLocalSourceError(code connect.Code, message string) *SourceError {
+	return &SourceError{
+		Code:     SourceError_Code(code), //nolint:gosec
+		Message:  message,
+		Upstream: false,
+	}
+}
+
+// assert interface implementation
+var _ error = (*SourceError)(nil)
+
+// Error implements the error interface for SourceError
+func (e *SourceError) Error() string {
+	if e.GetUpstream() {
+		return fmt.Sprintf("Upstream Error: %s", e.GetMessage())
+	}
+	return fmt.Sprintf("Source Error: %s", e.GetMessage())
 }

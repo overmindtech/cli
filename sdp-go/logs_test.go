@@ -12,11 +12,6 @@ func TestGetLogRecordsRequest_Validate(t *testing.T) {
 	pastTime := now.Add(-1 * time.Hour)
 	futureTime := now.Add(1 * time.Hour)
 
-	// Helper to create int32 pointer
-	createInt32Ptr := func(value int32) *int32 {
-		return &value
-	}
-
 	tests := []struct {
 		name    string
 		req     *GetLogRecordsRequest
@@ -34,7 +29,7 @@ func TestGetLogRecordsRequest_Validate(t *testing.T) {
 				Query:           "valid-query",
 				From:            timestamppb.New(pastTime),
 				To:              timestamppb.New(now),
-				MaxRecords:      createInt32Ptr(100),
+				MaxRecords:      100,
 				StartFromOldest: false,
 			},
 			wantErr: true,
@@ -46,7 +41,7 @@ func TestGetLogRecordsRequest_Validate(t *testing.T) {
 				Query:           "",
 				From:            timestamppb.New(pastTime),
 				To:              timestamppb.New(now),
-				MaxRecords:      createInt32Ptr(100),
+				MaxRecords:      100,
 				StartFromOldest: false,
 			},
 			wantErr: true,
@@ -58,7 +53,7 @@ func TestGetLogRecordsRequest_Validate(t *testing.T) {
 				Query:           "valid-query",
 				From:            nil,
 				To:              timestamppb.New(now),
-				MaxRecords:      createInt32Ptr(100),
+				MaxRecords:      100,
 				StartFromOldest: false,
 			},
 			wantErr: true,
@@ -70,7 +65,7 @@ func TestGetLogRecordsRequest_Validate(t *testing.T) {
 				Query:           "valid-query",
 				From:            timestamppb.New(pastTime),
 				To:              nil,
-				MaxRecords:      createInt32Ptr(100),
+				MaxRecords:      100,
 				StartFromOldest: false,
 			},
 			wantErr: true,
@@ -82,7 +77,7 @@ func TestGetLogRecordsRequest_Validate(t *testing.T) {
 				Query:           "valid-query",
 				From:            timestamppb.New(futureTime),
 				To:              timestamppb.New(pastTime),
-				MaxRecords:      createInt32Ptr(100),
+				MaxRecords:      100,
 				StartFromOldest: false,
 			},
 			wantErr: true,
@@ -94,10 +89,10 @@ func TestGetLogRecordsRequest_Validate(t *testing.T) {
 				Query:           "valid-query",
 				From:            timestamppb.New(pastTime),
 				To:              timestamppb.New(now),
-				MaxRecords:      createInt32Ptr(0),
+				MaxRecords:      0,
 				StartFromOldest: false,
 			},
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name: "MaxRecords negative",
@@ -106,7 +101,7 @@ func TestGetLogRecordsRequest_Validate(t *testing.T) {
 				Query:           "valid-query",
 				From:            timestamppb.New(pastTime),
 				To:              timestamppb.New(now),
-				MaxRecords:      createInt32Ptr(-10),
+				MaxRecords:      -10,
 				StartFromOldest: false,
 			},
 			wantErr: true,
@@ -118,7 +113,7 @@ func TestGetLogRecordsRequest_Validate(t *testing.T) {
 				Query:           "valid-query",
 				From:            timestamppb.New(pastTime),
 				To:              timestamppb.New(now),
-				MaxRecords:      createInt32Ptr(100),
+				MaxRecords:      100,
 				StartFromOldest: false,
 			},
 			wantErr: false,
@@ -130,7 +125,7 @@ func TestGetLogRecordsRequest_Validate(t *testing.T) {
 				Query:           "valid-query",
 				From:            timestamppb.New(pastTime),
 				To:              timestamppb.New(now),
-				MaxRecords:      nil,
+				MaxRecords:      0,
 				StartFromOldest: false,
 			},
 			wantErr: false,
@@ -142,7 +137,7 @@ func TestGetLogRecordsRequest_Validate(t *testing.T) {
 				Query:           "valid-query",
 				From:            timestamppb.New(now),
 				To:              timestamppb.New(now),
-				MaxRecords:      createInt32Ptr(100),
+				MaxRecords:      100,
 				StartFromOldest: true,
 			},
 			wantErr: false,

@@ -6,7 +6,6 @@ import (
 	"os"
 	"sync"
 	"testing"
-
 	"time"
 
 	"github.com/google/uuid"
@@ -17,8 +16,13 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func newStartedEngine(t *testing.T, name string, no *auth.NATSOptions, adapters ...Adapter) *Engine {
+func newEngine(t *testing.T, name string, no *auth.NATSOptions, eConn sdp.EncodedConnection, adapters ...Adapter) *Engine {
 	t.Helper()
+
+	if no != nil && eConn != nil {
+		t.Fatal("Cannot provide both NATSOptions and EncodedConnection")
+	}
+
 	ec := EngineConfig{
 		MaxParallelExecutions: 10,
 		SourceName:            name,
@@ -26,7 +30,7 @@ func newStartedEngine(t *testing.T, name string, no *auth.NATSOptions, adapters 
 	}
 	if no != nil {
 		ec.NATSOptions = no
-	} else {
+	} else if eConn == nil {
 		ec.NATSOptions = &auth.NATSOptions{
 			NumRetries:        5,
 			RetryDelay:        time.Second,
@@ -42,11 +46,23 @@ func newStartedEngine(t *testing.T, name string, no *auth.NATSOptions, adapters 
 		t.Fatalf("Error initializing Engine: %v", err)
 	}
 
+	if eConn != nil {
+		e.natsConnection = eConn
+	}
+
 	if err := e.AddAdapters(adapters...); err != nil {
 		t.Fatalf("Error adding adapters: %v", err)
 	}
 
-	err = e.Start()
+	return e
+}
+
+func newStartedEngine(t *testing.T, name string, no *auth.NATSOptions, eConn sdp.EncodedConnection, adapters ...Adapter) *Engine {
+	t.Helper()
+
+	e := newEngine(t, name, no, eConn, adapters...)
+
+	err := e.Start()
 	if err != nil {
 		t.Fatalf("Error starting Engine: %v", err)
 	}
@@ -65,7 +81,7 @@ func TestTrackQuery(t *testing.T) {
 	t.Run("With normal query", func(t *testing.T) {
 		t.Parallel()
 
-		e := newStartedEngine(t, "TestTrackQuery_normal", nil)
+		e := newStartedEngine(t, "TestTrackQuery_normal", nil, nil)
 
 		u := uuid.New()
 
@@ -95,7 +111,7 @@ func TestTrackQuery(t *testing.T) {
 	t.Run("With many queries", func(t *testing.T) {
 		t.Parallel()
 
-		e := newStartedEngine(t, "TestTrackQuery_many", nil)
+		e := newStartedEngine(t, "TestTrackQuery_many", nil, nil)
 
 		var wg sync.WaitGroup
 
@@ -132,7 +148,7 @@ func TestTrackQuery(t *testing.T) {
 
 func TestDeleteTrackedQuery(t *testing.T) {
 	t.Parallel()
-	e := newStartedEngine(t, "TestDeleteTrackedQuery", nil)
+	e := newStartedEngine(t, "TestDeleteTrackedQuery", nil, nil)
 
 	var wg sync.WaitGroup
 
@@ -212,31 +228,28 @@ func TestNats(t *testing.T) {
 
 	t.Run("Starting", func(t *testing.T) {
 		err := e.Start()
-
 		if err != nil {
 			t.Error(err)
 		}
 
-		if len(e.subscriptions) != 4 {
-			t.Errorf("Expected engine to have 4 subscriptions, got %v", len(e.subscriptions))
+		if e.natsConnection.Underlying().NumSubscriptions() != 4 {
+			t.Errorf("Expected engine to have 4 subscriptions, got %v", e.natsConnection.Underlying().NumSubscriptions())
 		}
 	})
 
 	t.Run("Restarting", func(t *testing.T) {
 		err := e.Stop()
-
 		if err != nil {
 			t.Error(err)
 		}
 
 		err = e.Start()
-
 		if err != nil {
 			t.Error(err)
 		}
 
-		if len(e.subscriptions) != 4 {
-			t.Errorf("Expected engine to have 4 subscriptions, got %v", len(e.subscriptions))
+		if e.natsConnection.Underlying().NumSubscriptions() != 4 {
+			t.Errorf("Expected engine to have 4 subscriptions, got %v", e.natsConnection.Underlying().NumSubscriptions())
 		}
 	})
 
@@ -257,7 +270,6 @@ func TestNats(t *testing.T) {
 		}
 
 		_, _, _, err := sdp.RunSourceQuerySync(context.Background(), query, sdp.DefaultStartTimeout, e.natsConnection)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -269,7 +281,6 @@ func TestNats(t *testing.T) {
 
 	t.Run("stopping", func(t *testing.T) {
 		err := e.Stop()
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -309,7 +320,6 @@ func TestNatsCancel(t *testing.T) {
 
 	t.Run("Starting", func(t *testing.T) {
 		err := e.Start()
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -358,7 +368,6 @@ func TestNatsCancel(t *testing.T) {
 
 	t.Run("stopping", func(t *testing.T) {
 		err := e.Stop()
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -627,13 +636,12 @@ func TestNatsAuth(t *testing.T) {
 
 	t.Run("Starting", func(t *testing.T) {
 		err := e.Start()
-
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if len(e.subscriptions) != 4 {
-			t.Errorf("Expected engine to have 4 subscriptions, got %v", len(e.subscriptions))
+		if e.natsConnection.Underlying().NumSubscriptions() != 4 {
+			t.Errorf("Expected engine to have 4 subscriptions, got %v", e.natsConnection.Underlying().NumSubscriptions())
 		}
 	})
 
@@ -654,7 +662,6 @@ func TestNatsAuth(t *testing.T) {
 		}
 
 		_, _, _, err := sdp.RunSourceQuerySync(t.Context(), query, sdp.DefaultStartTimeout, e.natsConnection)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -666,12 +673,10 @@ func TestNatsAuth(t *testing.T) {
 
 	t.Run("stopping", func(t *testing.T) {
 		err := e.Stop()
-
 		if err != nil {
 			t.Error(err)
 		}
 	})
-
 }
 
 func TestSetupMaxQueryTimeout(t *testing.T) {
@@ -701,8 +706,10 @@ func TestSetupMaxQueryTimeout(t *testing.T) {
 	})
 }
 
-var testTokenSource oauth2.TokenSource
-var testTokenSourceMu sync.Mutex
+var (
+	testTokenSource   oauth2.TokenSource
+	testTokenSourceMu sync.Mutex
+)
 
 func GetTestOAuthTokenClient(t *testing.T, account string) auth.TokenClient {
 	var domain string
@@ -729,7 +736,6 @@ func GetTestOAuthTokenClient(t *testing.T, account string) auth.TokenClient {
 	}
 
 	exchangeURL, err := GetWorkingTokenExchange()
-
 	if err != nil {
 		t.Fatal(err)
 	}

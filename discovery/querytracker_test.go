@@ -77,7 +77,6 @@ func (s *SpeedTestAdapter) Get(ctx context.Context, scope string, query string, 
 			Scope:       scope,
 		}
 	}
-
 }
 
 func (s *SpeedTestAdapter) List(ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error) {
@@ -98,7 +97,7 @@ func TestExecute(t *testing.T) {
 		},
 	}
 
-	e := newStartedEngine(t, "TestExecute", nil, &adapter)
+	e := newStartedEngine(t, "TestExecute", nil, nil, &adapter)
 
 	t.Run("Without linking", func(t *testing.T) {
 		t.Parallel()
@@ -117,7 +116,6 @@ func TestExecute(t *testing.T) {
 		}
 
 		items, errs, err := qt.Execute(context.Background())
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -162,19 +160,17 @@ func TestExecute(t *testing.T) {
 		}
 
 		_, _, err := qt.Execute(context.Background())
-
 		if err != nil {
 			t.Error(err)
 		}
 	})
-
 }
 
 func TestTimeout(t *testing.T) {
 	adapter := SpeedTestAdapter{
 		QueryDelay: 100 * time.Millisecond,
 	}
-	e := newStartedEngine(t, "TestTimeout", nil, &adapter)
+	e := newStartedEngine(t, "TestTimeout", nil, nil, &adapter)
 
 	t.Run("With a timeout, but not exceeding it", func(t *testing.T) {
 		t.Parallel()
@@ -197,7 +193,6 @@ func TestTimeout(t *testing.T) {
 		}
 
 		items, errs, err := qt.Execute(context.Background())
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -240,7 +235,7 @@ func TestTimeout(t *testing.T) {
 }
 
 func TestCancel(t *testing.T) {
-	e := newStartedEngine(t, "TestCancel", nil)
+	e := newStartedEngine(t, "TestCancel", nil, nil)
 
 	u := uuid.New()
 	ctx, cancel := context.WithCancel(context.Background())

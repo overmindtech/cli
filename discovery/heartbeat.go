@@ -40,21 +40,7 @@ func (e *Engine) SendHeartbeat(ctx context.Context) error {
 		engineUUID = e.EngineConfig.SourceUUID[:]
 	}
 
-	// Get available types and scopes
-	availableScopesMap := make(map[string]bool)
-	adapterMetadata := []*sdp.AdapterMetadata{}
-	for _, adapter := range e.sh.VisibleAdapters() {
-		for _, scope := range adapter.Scopes() {
-			availableScopesMap[scope] = true
-		}
-		adapterMetadata = append(adapterMetadata, adapter.Metadata())
-	}
-
-	// Extract slices from maps
-	availableScopes := make([]string, 0)
-	for s := range availableScopesMap {
-		availableScopes = append(availableScopes, s)
-	}
+	availableScopes, adapterMetadata := e.GetAvailableScopesAndMetadata()
 
 	// Calculate the duration for the next heartbeat, based on the current
 	// frequency x2.5 to give us some leeway
