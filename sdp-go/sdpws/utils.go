@@ -117,6 +117,8 @@ readLoop:
 // TODO: CancelQuery
 // TODO: Expand
 
+// Sends a LoadSnapshot request on the websocket connection without waiting for
+// a response.
 func (c *Client) SendLoadSnapshot(ctx context.Context, s *sdp.LoadSnapshot) error {
 	if c.Closed() {
 		return errors.New("client closed")
@@ -132,6 +134,48 @@ func (c *Client) SendLoadSnapshot(ctx context.Context, s *sdp.LoadSnapshot) erro
 		return fmt.Errorf("error sending load snapshot: %w", err)
 	}
 	return nil
+}
+
+// Load a snapshot and wait for it to complete. This will return the
+// SnapshotLoadResult from the gateway. A separate error is only returned when
+// there is a communication error. Logic errors from the gateway are reported
+// through the returned SnapshotLoadResult.
+func (c *Client) LoadSnapshot(ctx context.Context, id uuid.UUID) (*sdp.SnapshotLoadResult, error) {
+	if c.Closed() {
+		return nil, errors.New("client closed")
+	}
+
+	u := uuid.New()
+	s := &sdp.LoadSnapshot{
+		UUID:  id[:],
+		MsgID: u[:],
+	}
+	r := c.createRequestChan(u)
+
+	err := c.SendLoadSnapshot(ctx, s)
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("context canceled: %w", ctx.Err())
+		case resp, more := <-r:
+			if !more {
+				return nil, errors.New("request channel closed")
+			}
+			switch resp.GetResponseType().(type) {
+			case *sdp.GatewayResponse_SnapshotLoadResult:
+				slr := resp.GetSnapshotLoadResult()
+				log.WithContext(ctx).WithField("snapshot", s).WithField("snapshotLoadResult", slr).Trace("received snapshot load result")
+				return slr, nil
+			default:
+				log.WithContext(ctx).WithField("response", resp).WithField("responseType", fmt.Sprintf("%T", resp.GetResponseType())).Warn("unexpected response")
+				return nil, errors.New("unexpected response")
+			}
+		}
+	}
 }
 
 // Sends a StoreSnapshot request on the websocket connection without waiting for

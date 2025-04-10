@@ -32,10 +32,10 @@ import (
 //                        |b        |
 //                        S         S
 //                        v         |
-//                      +--------+  |
-//       HOBBIES <--S-- | london | <+
-//                      +--------+
-//                        |b
+//                      +--------+ <+
+//       HOBBIES <--S-- | london |        +------+
+//                      +--------+ --S--> | soho |
+//                        |b       b      +------+
 //                        |
 //                        vb
 //                      +----+
@@ -235,7 +235,26 @@ func london() *sdp.Item {
 				Out: false,
 			},
 		},
+		{
+			Query: &sdp.Query{
+				Type:   "test-location",
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  "test-soho",
+				Scope:  "test",
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
+		},
 	}
+
+	return l
+}
+
+func soho() *sdp.Item {
+	l := createTestItem("test-location", "test-soho")
+	l.LinkedItemQueries = []*sdp.LinkedItemQuery{}
 
 	return l
 }

@@ -55,6 +55,8 @@ func (d *TestLocationAdapter) Get(ctx context.Context, scope string, query strin
 	switch query {
 	case "test-london":
 		return london(), nil
+	case "test-soho":
+		return soho(), nil
 	default:
 		return nil, &sdp.QueryError{
 			ErrorType: sdp.QueryError_NOTFOUND,
@@ -72,7 +74,7 @@ func (d *TestLocationAdapter) List(ctx context.Context, scope string, ignoreCach
 		}
 	}
 
-	return []*sdp.Item{london()}, nil
+	return []*sdp.Item{london(), soho()}, nil
 }
 
 func (d *TestLocationAdapter) Search(ctx context.Context, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
@@ -85,8 +87,12 @@ func (d *TestLocationAdapter) Search(ctx context.Context, scope string, query st
 	}
 
 	switch query {
-	case "", "*", "test-london":
+	case "", "*":
+		return []*sdp.Item{london(), soho()}, nil
+	case "test-london":
 		return []*sdp.Item{london()}, nil
+	case "test-soho":
+		return []*sdp.Item{soho()}, nil
 	default:
 		return nil, &sdp.QueryError{
 			ErrorType: sdp.QueryError_NOTFOUND,
