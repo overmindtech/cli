@@ -39,6 +39,9 @@ const (
 	// RevlinkServiceIngestGatewayResponsesProcedure is the fully-qualified name of the RevlinkService's
 	// IngestGatewayResponses RPC.
 	RevlinkServiceIngestGatewayResponsesProcedure = "/revlink.RevlinkService/IngestGatewayResponses"
+	// RevlinkServiceCheckpointProcedure is the fully-qualified name of the RevlinkService's Checkpoint
+	// RPC.
+	RevlinkServiceCheckpointProcedure = "/revlink.RevlinkService/Checkpoint"
 )
 
 // RevlinkServiceClient is a client for the revlink.RevlinkService service.
@@ -47,6 +50,16 @@ type RevlinkServiceClient interface {
 	GetReverseLinks(context.Context, *connect.Request[sdp_go.GetReverseLinksRequest]) (*connect.Response[sdp_go.GetReverseLinksResponse], error)
 	// Ingests a stream of gateway responses
 	IngestGatewayResponses(context.Context) *connect.ClientStreamForClient[sdp_go.IngestGatewayResponseRequest, sdp_go.IngestGatewayResponsesResponse]
+	// Waits until all currently submitted gateway responses are committed to
+	// the database. This is primarily intended for tests to ensure that setup
+	// was completed.
+	//
+	// Note that this does only count the first try of each insertion; retries
+	// are not considered.
+	//
+	// Note2 that this is implemented in memory, so there is no guarantee
+	// that this will work in a distributed environment.
+	Checkpoint(context.Context, *connect.Request[sdp_go.CheckpointRequest]) (*connect.Response[sdp_go.CheckpointResponse], error)
 }
 
 // NewRevlinkServiceClient constructs a client for the revlink.RevlinkService service. By default,
@@ -72,6 +85,12 @@ func NewRevlinkServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(revlinkServiceMethods.ByName("IngestGatewayResponses")),
 			connect.WithClientOptions(opts...),
 		),
+		checkpoint: connect.NewClient[sdp_go.CheckpointRequest, sdp_go.CheckpointResponse](
+			httpClient,
+			baseURL+RevlinkServiceCheckpointProcedure,
+			connect.WithSchema(revlinkServiceMethods.ByName("Checkpoint")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -79,6 +98,7 @@ func NewRevlinkServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 type revlinkServiceClient struct {
 	getReverseLinks        *connect.Client[sdp_go.GetReverseLinksRequest, sdp_go.GetReverseLinksResponse]
 	ingestGatewayResponses *connect.Client[sdp_go.IngestGatewayResponseRequest, sdp_go.IngestGatewayResponsesResponse]
+	checkpoint             *connect.Client[sdp_go.CheckpointRequest, sdp_go.CheckpointResponse]
 }
 
 // GetReverseLinks calls revlink.RevlinkService.GetReverseLinks.
@@ -91,12 +111,27 @@ func (c *revlinkServiceClient) IngestGatewayResponses(ctx context.Context) *conn
 	return c.ingestGatewayResponses.CallClientStream(ctx)
 }
 
+// Checkpoint calls revlink.RevlinkService.Checkpoint.
+func (c *revlinkServiceClient) Checkpoint(ctx context.Context, req *connect.Request[sdp_go.CheckpointRequest]) (*connect.Response[sdp_go.CheckpointResponse], error) {
+	return c.checkpoint.CallUnary(ctx, req)
+}
+
 // RevlinkServiceHandler is an implementation of the revlink.RevlinkService service.
 type RevlinkServiceHandler interface {
 	// Gets reverse links for a given item
 	GetReverseLinks(context.Context, *connect.Request[sdp_go.GetReverseLinksRequest]) (*connect.Response[sdp_go.GetReverseLinksResponse], error)
 	// Ingests a stream of gateway responses
 	IngestGatewayResponses(context.Context, *connect.ClientStream[sdp_go.IngestGatewayResponseRequest]) (*connect.Response[sdp_go.IngestGatewayResponsesResponse], error)
+	// Waits until all currently submitted gateway responses are committed to
+	// the database. This is primarily intended for tests to ensure that setup
+	// was completed.
+	//
+	// Note that this does only count the first try of each insertion; retries
+	// are not considered.
+	//
+	// Note2 that this is implemented in memory, so there is no guarantee
+	// that this will work in a distributed environment.
+	Checkpoint(context.Context, *connect.Request[sdp_go.CheckpointRequest]) (*connect.Response[sdp_go.CheckpointResponse], error)
 }
 
 // NewRevlinkServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -118,12 +153,20 @@ func NewRevlinkServiceHandler(svc RevlinkServiceHandler, opts ...connect.Handler
 		connect.WithSchema(revlinkServiceMethods.ByName("IngestGatewayResponses")),
 		connect.WithHandlerOptions(opts...),
 	)
+	revlinkServiceCheckpointHandler := connect.NewUnaryHandler(
+		RevlinkServiceCheckpointProcedure,
+		svc.Checkpoint,
+		connect.WithSchema(revlinkServiceMethods.ByName("Checkpoint")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/revlink.RevlinkService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case RevlinkServiceGetReverseLinksProcedure:
 			revlinkServiceGetReverseLinksHandler.ServeHTTP(w, r)
 		case RevlinkServiceIngestGatewayResponsesProcedure:
 			revlinkServiceIngestGatewayResponsesHandler.ServeHTTP(w, r)
+		case RevlinkServiceCheckpointProcedure:
+			revlinkServiceCheckpointHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -139,4 +182,8 @@ func (UnimplementedRevlinkServiceHandler) GetReverseLinks(context.Context, *conn
 
 func (UnimplementedRevlinkServiceHandler) IngestGatewayResponses(context.Context, *connect.ClientStream[sdp_go.IngestGatewayResponseRequest]) (*connect.Response[sdp_go.IngestGatewayResponsesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("revlink.RevlinkService.IngestGatewayResponses is not implemented"))
+}
+
+func (UnimplementedRevlinkServiceHandler) Checkpoint(context.Context, *connect.Request[sdp_go.CheckpointRequest]) (*connect.Response[sdp_go.CheckpointResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("revlink.RevlinkService.Checkpoint is not implemented"))
 }
