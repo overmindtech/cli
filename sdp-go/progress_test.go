@@ -1422,9 +1422,9 @@ func TestMassiveScale(t *testing.T) {
 		), func(t *testing.T) {
 			tConn := TestConnection{}
 
-			// Generate a random duration between 0 and max
-			randomDuration := func(max int) time.Duration {
-				return time.Duration(rand.Intn(max)) * time.Millisecond
+			// Generate a random duration between 0 and maxDuration
+			randomDuration := func(maxDuration int) time.Duration {
+				return time.Duration(rand.Intn(maxDuration)) * time.Millisecond
 			}
 
 			expectedItems := 0

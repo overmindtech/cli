@@ -70,7 +70,7 @@ func TestIntegrationSSM(t *testing.T) {
 				for _, service := range services {
 					for _, component := range components {
 						for _, config := range configs {
-							for i := 0; i < 1; i++ {
+							for i := range 1 {
 								path := fmt.Sprintf("/integration-test/%s/%s/%s/%s/%s/param%d",
 									env, region, service, component, config, i)
 

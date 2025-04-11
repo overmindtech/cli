@@ -48,14 +48,14 @@ var planOnlyArgs = []string{
 // command
 func planArgsFromApplyArgs(args []string) []string {
 	planArgs := []string{}
-append:
+appendLoop:
 	for _, arg := range args {
 		for _, applyOnlyArg := range applyOnlyArgs {
 			if strings.HasPrefix(arg, "-"+applyOnlyArg) {
-				continue append
+				continue appendLoop
 			}
 			if strings.HasPrefix(arg, "--"+applyOnlyArg) {
-				continue append
+				continue appendLoop
 			}
 		}
 		planArgs = append(planArgs, arg)
@@ -66,14 +66,14 @@ append:
 // applyArgsFromApplyArgs filters out all plan-specific arguments from arguments to `terraform apply`, so that we can run the corresponding `terraform apply` command
 func applyArgsFromApplyArgs(args []string) []string {
 	applyArgs := []string{}
-append:
+appendLoop:
 	for _, arg := range args {
 		for _, planOnlyArg := range planOnlyArgs {
 			if strings.HasPrefix(arg, "-"+planOnlyArg) {
-				continue append
+				continue appendLoop
 			}
 			if strings.HasPrefix(arg, "--"+planOnlyArg) {
-				continue append
+				continue appendLoop
 			}
 		}
 		applyArgs = append(applyArgs, arg)

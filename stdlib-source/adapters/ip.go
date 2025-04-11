@@ -206,5 +206,5 @@ func (bc *IPAdapter) List(ctx context.Context, scope string, ignoreCache bool) (
 // * Private
 // * Other (All non-reserved addresses)
 func IsGlobalScopeIP(ip net.IP) bool {
-	return !(ip.IsLinkLocalMulticast() || ip.IsLinkLocalUnicast() || ip.IsInterfaceLocalMulticast() || ip.IsLoopback())
+	return !ip.IsLinkLocalMulticast() && !ip.IsLinkLocalUnicast() && !ip.IsInterfaceLocalMulticast() && !ip.IsLoopback()
 }

@@ -418,7 +418,7 @@ func TestConcurrent(t *testing.T) {
 
 	numParallel := 1_000
 
-	for i := 0; i < numParallel; i++ {
+	for range numParallel {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

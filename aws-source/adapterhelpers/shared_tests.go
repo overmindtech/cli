@@ -143,7 +143,7 @@ func (v *VPCConfig) CreateGateway(client *ec2.Client) error {
 	internetGatewayId := gatewayOutput.InternetGateway.InternetGatewayId
 
 	v.Cleanup(func() {
-		delete := func() error {
+		del := func() error {
 			_, err := client.DeleteInternetGateway(
 				context.Background(),
 				&ec2.DeleteInternetGatewayInput{
@@ -154,7 +154,7 @@ func (v *VPCConfig) CreateGateway(client *ec2.Client) error {
 			return err
 		}
 
-		err := retry(10, time.Second, delete)
+		err := retry(10, time.Second, del)
 
 		if err != nil {
 			log.Println(err)
@@ -174,7 +174,7 @@ func (v *VPCConfig) CreateGateway(client *ec2.Client) error {
 	}
 
 	v.Cleanup(func() {
-		delete := func() error {
+		del := func() error {
 			_, err := client.DetachInternetGateway(
 				context.Background(),
 				&ec2.DetachInternetGatewayInput{
@@ -186,7 +186,7 @@ func (v *VPCConfig) CreateGateway(client *ec2.Client) error {
 			return err
 		}
 
-		err := retry(10, time.Second, delete)
+		err := retry(10, time.Second, del)
 
 		if err != nil {
 			log.Println(err)
@@ -196,7 +196,7 @@ func (v *VPCConfig) CreateGateway(client *ec2.Client) error {
 }
 
 func retry(attempts int, sleep time.Duration, f func() error) (err error) {
-	for i := 0; i < attempts; i++ {
+	for i := range attempts {
 		if i > 0 {
 			time.Sleep(sleep)
 			sleep *= 2

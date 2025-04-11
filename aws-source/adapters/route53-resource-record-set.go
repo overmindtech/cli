@@ -63,12 +63,12 @@ func resourceRecordSetSearchFunc(ctx context.Context, client *route53.Client, sc
 			fullName = recordName + "." + *zoneResp.HostedZone.Name
 		}
 
-		var max int32 = 1
+		var maxItems int32 = 1
 		req := route53.ListResourceRecordSetsInput{
 			HostedZoneId:    &hostedZoneID,
 			StartRecordName: &fullName,
 			StartRecordType: types.RRType(recordType),
-			MaxItems:        &max,
+			MaxItems:        &maxItems,
 		}
 		out, err = client.ListResourceRecordSets(ctx, &req)
 	} else {

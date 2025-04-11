@@ -447,33 +447,29 @@ func RunSourceQuerySync(ctx context.Context, query *Query, startTimeout time.Dur
 		return items, edges, errs, err
 	}
 
-	for {
-		// Read items and errors
-		select {
-		case response, ok := <-r:
-			if !ok {
-				// when the channel closes, we're done
-				return items, edges, errs, nil
-			}
-			item := response.GetNewItem()
-			if item != nil {
-				items = append(items, item)
-			}
-			edge := response.GetEdge()
-			if edge != nil {
-				edges = append(edges, edge)
-			}
-			qErr := response.GetError()
-			if qErr != nil {
-				errs = append(errs, qErr)
-			}
-			// ignore status responses for now
-			// status := response.GetResponse()
-			// if status != nil {
-			// 	panic("qp: status not implemented yet")
-			// }
+	// Read items and errors
+	for response := range r {
+		item := response.GetNewItem()
+		if item != nil {
+			items = append(items, item)
 		}
+		edge := response.GetEdge()
+		if edge != nil {
+			edges = append(edges, edge)
+		}
+		qErr := response.GetError()
+		if qErr != nil {
+			errs = append(errs, qErr)
+		}
+		// ignore status responses for now
+		// status := response.GetResponse()
+		// if status != nil {
+		// 	panic("qp: status not implemented yet")
+		// }
 	}
+
+	// when the channel closes, we're done
+	return items, edges, errs, nil
 }
 
 // Cancels the request, sending a cancel message to all responders and closing
@@ -657,24 +653,20 @@ func TranslateLinksToEdges(item *Item) (*Item, []*Edge) {
 
 	edges := []*Edge{}
 
-	if lis != nil {
-		for _, li := range lis {
-			edges = append(edges, &Edge{
-				From:             item.Reference(),
-				To:               li.GetItem(),
-				BlastPropagation: li.GetBlastPropagation(),
-			})
-		}
+	for _, li := range lis {
+		edges = append(edges, &Edge{
+			From:             item.Reference(),
+			To:               li.GetItem(),
+			BlastPropagation: li.GetBlastPropagation(),
+		})
 	}
 
-	if liqs != nil {
-		for _, liq := range liqs {
-			edges = append(edges, &Edge{
-				From:             item.Reference(),
-				To:               liq.GetQuery().Reference(),
-				BlastPropagation: liq.GetBlastPropagation(),
-			})
-		}
+	for _, liq := range liqs {
+		edges = append(edges, &Edge{
+			From:             item.Reference(),
+			To:               liq.GetQuery().Reference(),
+			BlastPropagation: liq.GetBlastPropagation(),
+		})
 	}
 
 	return item, edges

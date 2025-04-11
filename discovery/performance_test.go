@@ -2,7 +2,6 @@ package discovery
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"os"
 	"sync"
@@ -136,22 +135,22 @@ func TimeQueries(t *testing.T, numQueries int, linkDepth int, numParallel int) T
 	}
 	e, err := NewEngine(&ec)
 	if err != nil {
-		t.Fatal(fmt.Sprintf("Error initializing Engine: %v", err))
+		t.Fatalf("Error initializing Engine: %v", err)
 	}
 	err = e.AddAdapters(&SlowAdapter{
 		QueryDuration: 100 * time.Millisecond,
 	})
 	if err != nil {
-		t.Fatal(fmt.Sprintf("Error adding adapter: %v", err))
+		t.Fatalf("Error adding adapter: %v", err)
 	}
 	err = e.Start()
 	if err != nil {
-		t.Fatal(fmt.Sprintf("Error starting Engine: %v", err))
+		t.Fatalf("Error starting Engine: %v", err)
 	}
 	defer func() {
 		err = e.Stop()
 		if err != nil {
-			t.Fatal(fmt.Sprintf("Error stopping Engine: %v", err))
+			t.Fatalf("Error stopping Engine: %v", err)
 		}
 	}()
 
@@ -174,7 +173,7 @@ func TimeQueries(t *testing.T, numQueries int, linkDepth int, numParallel int) T
 
 	start := time.Now()
 
-	for i := 0; i < numQueries; i++ {
+	for range numQueries {
 		qt := QueryTracker{
 			Query: &sdp.Query{
 				Type:   "person",

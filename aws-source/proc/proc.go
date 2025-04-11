@@ -82,9 +82,10 @@ func (c AwsAuthConfig) GetAWSConfig(region string) (aws.Config, error) {
 		return config.LoadDefaultConfig(ctx, options...)
 	}
 
-	if c.Strategy == "defaults" {
+	switch c.Strategy {
+	case "defaults":
 		return config.LoadDefaultConfig(ctx, options...)
-	} else if c.Strategy == "access-key" {
+	case "access-key":
 		if c.AccessKeyID == "" {
 			return aws.Config{}, errors.New("with access-key strategy, aws-access-key-id cannot be blank")
 		}
@@ -106,7 +107,7 @@ func (c AwsAuthConfig) GetAWSConfig(region string) (aws.Config, error) {
 		))
 
 		return config.LoadDefaultConfig(ctx, options...)
-	} else if c.Strategy == "external-id" {
+	case "external-id":
 		if c.AccessKeyID != "" {
 			return aws.Config{}, errors.New("with external-id strategy, aws-access-key-id must be blank")
 		}
@@ -139,7 +140,7 @@ func (c AwsAuthConfig) GetAWSConfig(region string) (aws.Config, error) {
 		))
 
 		return config.LoadDefaultConfig(ctx, options...)
-	} else if c.Strategy == "sso-profile" {
+	case "sso-profile":
 		if c.AccessKeyID != "" {
 			return aws.Config{}, errors.New("with sso-profile strategy, aws-access-key-id must be blank")
 		}
@@ -159,7 +160,7 @@ func (c AwsAuthConfig) GetAWSConfig(region string) (aws.Config, error) {
 		options = append(options, config.WithSharedConfigProfile(c.Profile))
 
 		return config.LoadDefaultConfig(ctx, options...)
-	} else {
+	default:
 		return aws.Config{}, errors.New("invalid aws-access-strategy")
 	}
 }

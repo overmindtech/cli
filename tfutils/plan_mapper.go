@@ -625,9 +625,9 @@ func handleKnownAfterApply(before, after *sdp.ItemAttributes, afterUnknown json.
 // `null` which produces a bad diff, so we replace them with (known after apply)
 // to more accurately mirror what Terraform does in the CLI
 func insertKnownAfterApply(before, after *structpb.Value, afterUnknown interface{}) error {
-	switch afterUnknown.(type) {
+	switch afterUnknown := afterUnknown.(type) {
 	case map[string]interface{}:
-		for k, v := range afterUnknown.(map[string]interface{}) {
+		for k, v := range afterUnknown {
 			if v == true {
 				if afterFields := after.GetStructValue().GetFields(); afterFields != nil {
 					// Insert this in the after fields even if it doesn't exist.
@@ -652,7 +652,7 @@ func insertKnownAfterApply(before, after *structpb.Value, afterUnknown interface
 			}
 		}
 	case []interface{}:
-		for i, v := range afterUnknown.([]interface{}) {
+		for i, v := range afterUnknown {
 			if v == true {
 				// If this value in a slice is true, set the corresponding value
 				// in after to (know after apply)

@@ -687,8 +687,8 @@ func sanitizeInterface(i interface{}, sortArrays bool, customTransforms Transfor
 
 		returnSlice = make([]interface{}, v.Len())
 
-		for index := 0; index < v.Len(); index++ {
-			returnSlice[index] = sanitizeInterface(v.Index(index).Interface(), sortArrays, customTransforms)
+		for i := range v.Len() {
+			returnSlice[i] = sanitizeInterface(v.Index(i).Interface(), sortArrays, customTransforms)
 		}
 
 		if sortArrays {
@@ -720,7 +720,7 @@ func sanitizeInterface(i interface{}, sortArrays bool, customTransforms Transfor
 
 		// Range over fields
 		n := t.NumField()
-		for i := 0; i < n; i++ {
+		for i := range n {
 			field := t.Field(i)
 
 			if field.PkgPath != "" {

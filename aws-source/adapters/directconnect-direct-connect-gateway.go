@@ -43,7 +43,7 @@ func directConnectGatewayOutputMapper(ctx context.Context, cli *directconnect.Cl
 			return nil, err
 		}
 
-		relevantTags, _ := tags[directconnectARN(scope, *directConnectGateway.OwnerAccount, *directConnectGateway.DirectConnectGatewayId)]
+		relevantTags := tags[directconnectARN(scope, *directConnectGateway.OwnerAccount, *directConnectGateway.DirectConnectGatewayId)]
 
 		item := sdp.Item{
 			Type:            "directconnect-direct-connect-gateway",

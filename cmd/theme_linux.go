@@ -23,9 +23,10 @@ func IsConhost() bool {
 	w := isWslCache
 	isWslCacheMu.RUnlock()
 
-	if w == 1 {
+	switch w {
+	case 1:
 		return true
-	} else if w == 2 {
+	case 2:
 		return false
 	}
 

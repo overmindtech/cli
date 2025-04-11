@@ -94,7 +94,7 @@ func NewAuthenticatedClient(ctx context.Context, from *http.Client) *http.Client
 // underlying roundTripper
 func (y *AuthenticatedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	// ask for otel trace linkup
-	req.Header.Set("X-overmind-interactive", "false")
+	req.Header.Set("X-Overmind-Interactive", "false")
 
 	// Extract auth from the context
 	ctxToken := y.ctx.Value(auth.UserTokenContextKey{})

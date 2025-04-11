@@ -102,7 +102,7 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 
 	// Start by querying the whole domain, then go down from there, however
 	// don't query for the top-level domain as it won't return anything useful
-	for i := 0; i < len(sections)-1; i++ {
+	for i := range len(sections) - 1 {
 		domainName := strings.Join(sections[i:], ".")
 
 		request := &rdap.Request{

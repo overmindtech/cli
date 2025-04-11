@@ -20,7 +20,7 @@ func NewPopulatedCache(numberItems int) (*Cache, CacheKey) {
 	var exampleCk CacheKey
 	exampleIndex := rand.Intn(numberItems)
 
-	for i := 0; i < numberItems; i++ {
+	for i := range numberItems {
 		item = GenerateRandomItem()
 		ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
@@ -41,7 +41,7 @@ func BenchmarkCache1SingleItem(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		// Search for a single item
 		_, err = c.Search(query)
 
@@ -58,7 +58,7 @@ func BenchmarkCache10SingleItem(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		// Search for a single item
 		_, err = c.Search(query)
 
@@ -75,7 +75,7 @@ func BenchmarkCache100SingleItem(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		// Search for a single item
 		_, err = c.Search(query)
 
@@ -92,7 +92,7 @@ func BenchmarkCache1000SingleItem(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		// Search for a single item
 		_, err = c.Search(query)
 
@@ -109,7 +109,7 @@ func BenchmarkCache10_000SingleItem(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		// Search for a single item
 		_, err = c.Search(query)
 

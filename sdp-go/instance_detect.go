@@ -52,7 +52,7 @@ func NewOvermindInstance(ctx context.Context, app string) (OvermindInstance, err
 
 	// Get the instance data
 	instanceDataUrl := fmt.Sprintf("%v/api/public/instance-data", instance.FrontendUrl)
-	req, err := http.NewRequest("GET", instanceDataUrl, nil)
+	req, err := http.NewRequest(http.MethodGet, instanceDataUrl, nil)
 	if err != nil {
 		return OvermindInstance{}, fmt.Errorf("could not initialize instance-data fetch: %w", err)
 	}
@@ -63,7 +63,7 @@ func NewOvermindInstance(ctx context.Context, app string) (OvermindInstance, err
 		return OvermindInstance{}, fmt.Errorf("could not fetch instance-data: %w", err)
 	}
 
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		return OvermindInstance{}, fmt.Errorf("instance-data fetch returned non-200 status: %v", res.StatusCode)
 	}
 

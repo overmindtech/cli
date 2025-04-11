@@ -72,9 +72,7 @@ func (sh *AdapterHost) Adapters() []Adapter {
 
 	adapters := make([]Adapter, 0)
 
-	for _, adapter := range sh.adapters {
-		adapters = append(adapters, adapter)
-	}
+	adapters = append(adapters, sh.adapters...)
 
 	return adapters
 }

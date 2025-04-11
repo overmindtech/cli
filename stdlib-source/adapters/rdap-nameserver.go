@@ -71,7 +71,7 @@ func (s *RdapNameserverAdapter) Get(ctx context.Context, scope string, query str
 	return nil, &sdp.QueryError{
 		ErrorType:   sdp.QueryError_NOTFOUND,
 		Scope:       scope,
-		ErrorString: fmt.Sprintf("Nameservers can't be queried by handle, use the SEARCH method instead"),
+		ErrorString: "Nameservers can't be queried by handle, use the SEARCH method instead",
 	}
 }
 
@@ -79,7 +79,7 @@ func (s *RdapNameserverAdapter) List(ctx context.Context, scope string, ignoreCa
 	return nil, &sdp.QueryError{
 		ErrorType:   sdp.QueryError_NOTFOUND,
 		Scope:       scope,
-		ErrorString: fmt.Sprintf("Nameservers cannot be listed, use the SEARCH method instead"),
+		ErrorString: "Nameservers cannot be listed, use the SEARCH method instead",
 	}
 }
 

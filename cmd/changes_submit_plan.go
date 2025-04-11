@@ -66,8 +66,9 @@ func changeTitle(arg string) string {
 	if err != nil {
 		log.WithError(err).Trace("failed to get current user for default title")
 		username = "unknown"
+	} else {
+		username = u.Username
 	}
-	username = u.Username
 
 	result := fmt.Sprintf("Deployment from %v by %v", describe, username)
 	log.WithField("generated-title", result).Debug("Using default title")
@@ -315,7 +316,7 @@ func checkForAndLoadAutoTagRulesFile(ctx context.Context, lf log.Fields, manualP
 	if foundPath != "" {
 		// we found a file, load it
 		lf["autoTagRules"] = foundPath
-		log.WithContext(ctx).WithFields(lf).Info(fmt.Sprintf("Loading auto-tag rules"))
+		log.WithContext(ctx).WithFields(lf).Info("Loading auto-tag rules")
 		autoTaggingRulesOverride, err := loadAutoTagRulesFile(foundPath)
 		if err != nil {
 			return nil, err

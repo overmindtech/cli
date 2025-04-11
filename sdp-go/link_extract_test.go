@@ -418,7 +418,7 @@ version: 5
 func BenchmarkExtractLinksFromAttributes(b *testing.B) {
 	attrs, _ := createTestData()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_ = ExtractLinksFromAttributes(attrs)
 	}
 }
@@ -428,7 +428,7 @@ func BenchmarkExtractLinksFromAttributes(b *testing.B) {
 func BenchmarkExtractLinksFrom(b *testing.B) {
 	_, data := createTestData()
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		_, _ = ExtractLinksFrom(data)
 	}
 }

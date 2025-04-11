@@ -167,7 +167,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 		}
 
 		line := printer.Sprintf("%v (%v)", mapping.TerraformName, mapping.Message)
-		_, err = resourceExtractionResults.Write([]byte(fmt.Sprintf("   %v\n", line)))
+		_, err = fmt.Fprintf(resourceExtractionResults, "   %v\n", line)
 		if err != nil {
 			return fmt.Errorf("error writing to resource extraction results: %w", err)
 		}
@@ -265,7 +265,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 
 		maybeChangeUuid := createResponse.Msg.GetChange().GetMetadata().GetUUIDParsed()
 		if maybeChangeUuid == nil {
-			uploadChangesSpinner.Fail(fmt.Sprintf("Uploading planned changes: failed to read change id"))
+			uploadChangesSpinner.Fail("Uploading planned changes: failed to read change id")
 			return nil
 		}
 
@@ -337,11 +337,10 @@ retryLoop:
 
 		for i, ms := range riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetProgressMilestones() {
 			if i <= len(milestoneSpinners) {
-				new := pterm.DefaultSpinner.
+				milestoneSpinners = append(milestoneSpinners, pterm.DefaultSpinner.
 					WithWriter(multi.NewWriter()).
 					WithIndentation(IndentSymbol()).
-					WithText(ms.GetDescription())
-				milestoneSpinners = append(milestoneSpinners, new)
+					WithText(ms.GetDescription()))
 			}
 
 			switch ms.GetStatus() {
@@ -361,7 +360,8 @@ retryLoop:
 		}
 
 		status := riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetStatus()
-		if status == sdp.ChangeAnalysisStatus_STATUS_UNSPECIFIED || status == sdp.ChangeAnalysisStatus_STATUS_INPROGRESS {
+		switch status {
+		case sdp.ChangeAnalysisStatus_STATUS_UNSPECIFIED, sdp.ChangeAnalysisStatus_STATUS_INPROGRESS:
 			if !changeAnalysisSpinner.IsActive {
 				// restart after a Fail()
 				changeAnalysisSpinner, _ = changeAnalysisSpinner.Start("Change Analysis")
@@ -369,9 +369,9 @@ retryLoop:
 			// retry
 			time.Sleep(time.Second)
 
-		} else if status == sdp.ChangeAnalysisStatus_STATUS_ERROR {
+		case sdp.ChangeAnalysisStatus_STATUS_ERROR:
 			changeAnalysisSpinner.Fail("Change Analysis: waiting for a retry")
-		} else {
+		case sdp.ChangeAnalysisStatus_STATUS_SKIPPED, sdp.ChangeAnalysisStatus_STATUS_DONE:
 			// it's done
 			changeAnalysisSpinner.Success()
 			break retryLoop

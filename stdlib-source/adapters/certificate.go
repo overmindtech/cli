@@ -224,7 +224,7 @@ func (s *CertificateAdapter) Search(ctx context.Context, scope string, query str
 		if len(cert.PolicyIdentifiers) > 0 {
 			objectIdentifiers := make([]string, len(cert.PolicyIdentifiers))
 
-			for i := 0; i < len(cert.PolicyIdentifiers); i++ {
+			for i := range len(cert.PolicyIdentifiers) {
 				objectIdentifiers[i] = cert.PolicyIdentifiers[i].String()
 			}
 

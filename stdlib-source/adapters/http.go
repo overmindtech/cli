@@ -117,7 +117,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 		},
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "HEAD", query, http.NoBody)
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, query, http.NoBody)
 	if err != nil {
 		err = &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,

@@ -23,7 +23,7 @@ type AuthenticatedTransport struct {
 // underlying roundTripper
 func (y *AuthenticatedTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	// ask for otel trace linkup
-	req.Header.Set("X-overmind-interactive", "false")
+	req.Header.Set("X-Overmind-Interactive", "false")
 
 	if y.token != "" {
 		bearer := fmt.Sprintf("Bearer %v", y.token)

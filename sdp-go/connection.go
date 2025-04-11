@@ -37,7 +37,7 @@ type EncodedConnection interface {
 }
 
 type EncodedConnectionImpl struct {
-	*nats.Conn
+	Conn *nats.Conn
 }
 
 // assert interface implementation

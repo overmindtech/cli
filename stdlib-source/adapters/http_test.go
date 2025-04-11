@@ -31,7 +31,7 @@ func NewTestServer() (*TestHTTPServer, error) {
 	sm := http.NewServeMux()
 
 	sm.Handle("/404", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(404)
+		w.WriteHeader(http.StatusNotFound)
 		_, err := w.Write([]byte("not found innit"))
 		if err != nil {
 			return
@@ -39,7 +39,7 @@ func NewTestServer() (*TestHTTPServer, error) {
 	}))
 
 	sm.Handle("/500", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 		_, err := w.Write([]byte("yeah nah innit"))
 		if err != nil {
 			return
@@ -48,7 +48,7 @@ func NewTestServer() (*TestHTTPServer, error) {
 
 	sm.Handle("/301", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Location", "https://www.google.com")
-		w.WriteHeader(301)
+		w.WriteHeader(http.StatusMovedPermanently)
 	}))
 
 	sm.Handle("/200", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

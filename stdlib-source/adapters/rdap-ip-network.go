@@ -69,7 +69,7 @@ func (s *RdapIPNetworkAdapter) Get(ctx context.Context, scope string, query stri
 	return nil, &sdp.QueryError{
 		ErrorType:   sdp.QueryError_NOTFOUND,
 		Scope:       scope,
-		ErrorString: fmt.Sprintf("IP networks can't be queried by handle, use the SEARCH method instead"),
+		ErrorString: "IP networks can't be queried by handle, use the SEARCH method instead",
 	}
 }
 
@@ -77,7 +77,7 @@ func (s *RdapIPNetworkAdapter) List(ctx context.Context, scope string, ignoreCac
 	return nil, &sdp.QueryError{
 		ErrorType:   sdp.QueryError_NOTFOUND,
 		Scope:       scope,
-		ErrorString: fmt.Sprintf("IP networks cannot be listed, use the SEARCH method instead"),
+		ErrorString: "IP networks cannot be listed, use the SEARCH method instead",
 	}
 }
 
@@ -207,7 +207,7 @@ func calculateNetwork(startIP, endIP string) (*net.IPNet, error) {
 
 	// Calculate the CIDR prefix length
 	var prefixLen int
-	for i := 0; i < len(start); i++ {
+	for i := range start {
 		startByte := start[i]
 		endByte := end[i]
 

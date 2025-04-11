@@ -10,12 +10,12 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func TestMain(m *testing.M) {
-	logrus.SetLevel(logrus.TraceLevel)
+	log.SetLevel(log.TraceLevel)
 	os.Exit(m.Run())
 }
 

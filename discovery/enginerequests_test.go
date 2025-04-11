@@ -331,7 +331,7 @@ func TestSendQuerySync(t *testing.T) {
 	e := newStartedEngine(t, "TestSendQuerySync", nil, nil, &adapter)
 
 	p := pool.New()
-	for i := 0; i < 250; i++ {
+	for range 250 {
 		p.Go(func() {
 			u := uuid.New()
 			t.Log("starting query: ", u)

@@ -209,20 +209,22 @@ func RunApply(ctx context.Context, args []string) error {
 
 func snapshotDetail(state string, items, edges uint32) string {
 	itemStr := ""
-	if items == 0 {
+	switch items {
+	case 0:
 		itemStr = "0 items"
-	} else if items == 1 {
+	case 1:
 		itemStr = "1 item"
-	} else {
+	default:
 		itemStr = fmt.Sprintf("%d items", items)
 	}
 
 	edgeStr := ""
-	if edges == 0 {
+	switch edges {
+	case 0:
 		edgeStr = "0 edges"
-	} else if edges == 1 {
+	case 1:
 		edgeStr = "1 edge"
-	} else {
+	default:
 		edgeStr = fmt.Sprintf("%d edges", edges)
 	}
 

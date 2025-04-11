@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 
@@ -88,7 +87,7 @@ func TestTargetGroupOutputMapper(t *testing.T) {
 
 func TestNewELBv2TargetGroupAdapter(t *testing.T) {
 	config, account, region := adapterhelpers.GetAutoConfig(t)
-	client := elasticloadbalancingv2.NewFromConfig(config)
+	client := elbv2.NewFromConfig(config)
 
 	adapter := NewELBv2TargetGroupAdapter(client, account, region)
 

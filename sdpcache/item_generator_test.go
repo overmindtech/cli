@@ -47,7 +47,7 @@ func GenerateRandomItem() *sdp.Item {
 	scope := randSeq(rand.Intn(MaxAttributeKeyLength))
 	attrs["name"] = name
 
-	for i := 0; i < rand.Intn(MaxAttributes); i++ {
+	for range rand.Intn(MaxAttributes) {
 		attrs[randSeq(rand.Intn(MaxAttributeKeyLength))] = randSeq(rand.Intn(MaxAttributeValueLength))
 	}
 
@@ -55,7 +55,7 @@ func GenerateRandomItem() *sdp.Item {
 
 	tags := make(map[string]string)
 
-	for i := 0; i < rand.Intn(MaxTags); i++ {
+	for range rand.Intn(MaxTags) {
 		tags[randSeq(rand.Intn(MaxTagKeyLength))] = randSeq(rand.Intn(MaxTagValueLength))
 	}
 

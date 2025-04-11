@@ -9,13 +9,13 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 	"github.com/xiam/dig"
 )
 
 func TestWithStateFile(t *testing.T) {
-	_, err := MappedItemDiffsFromPlanFile(context.Background(), "testdata/state.json", logrus.Fields{})
+	_, err := MappedItemDiffsFromPlanFile(context.Background(), "testdata/state.json", log.Fields{})
 
 	if err == nil {
 		t.Error("Expected error when running with state file, got none")
@@ -48,7 +48,7 @@ func TestExtractProviderNameFromConfigKey(t *testing.T) {
 }
 
 func TestMappedItemDiffsFromPlan(t *testing.T) {
-	results, err := MappedItemDiffsFromPlanFile(context.Background(), "testdata/plan.json", logrus.Fields{})
+	results, err := MappedItemDiffsFromPlanFile(context.Background(), "testdata/plan.json", log.Fields{})
 	if err != nil {
 		t.Error(err)
 	}

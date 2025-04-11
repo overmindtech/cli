@@ -39,7 +39,7 @@ func TestLoadAutoTagRulesFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			filePath := fmt.Sprintf("%s", tt.name)
+			filePath := tt.name
 			if tt.fileContent != "" {
 				err := os.WriteFile(filePath, []byte(tt.fileContent), 0644)
 				if err != nil {

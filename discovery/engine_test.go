@@ -115,7 +115,7 @@ func TestTrackQuery(t *testing.T) {
 
 		var wg sync.WaitGroup
 
-		for i := 0; i < 1000; i++ {
+		for i := range 1000 {
 			wg.Add(1)
 			go func(i int) {
 				defer wg.Done()
@@ -444,7 +444,7 @@ func TestNatsConnections(t *testing.T) {
 		t.Log("Stopping NATS server")
 		s.Shutdown()
 
-		for i := 0; i <= 20; i++ {
+		for i := range 21 {
 			if i == 20 {
 				t.Errorf("Engine did not report a NATS disconnect after %v tries", i)
 			}
@@ -465,7 +465,7 @@ func TestNatsConnections(t *testing.T) {
 		// Wait 2 more seconds for a reconnect
 		time.Sleep(2 * time.Second)
 
-		for i := 0; i <= 20; i++ {
+		for range 21 {
 			if e.IsNATSConnected() {
 				return
 			}

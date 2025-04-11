@@ -229,7 +229,8 @@ func (ec *EngineConfig) CreateClients() error {
 		return nil
 	}
 
-	if ec.OvermindManagedSource == sdp.SourceManaged_LOCAL {
+	switch ec.OvermindManagedSource {
+	case sdp.SourceManaged_LOCAL:
 		log.Info("Using API Key for authentication, heartbeats will be sent")
 		tokenClient, err := auth.NewAPIKeyClient(ec.APIServerURL, ec.ApiKey)
 		if err != nil {
@@ -256,7 +257,7 @@ func (ec *EngineConfig) CreateClients() error {
 		// lets print out the config
 		log.WithFields(MapFromEngineConfig(ec)).Info("Engine config")
 		return nil
-	} else if ec.OvermindManagedSource == sdp.SourceManaged_MANAGED {
+	case sdp.SourceManaged_MANAGED:
 		log.Info("Using static token for authentication, heartbeats will be sent")
 		tokenClient, err := auth.NewStaticTokenClient(ec.APIServerURL, ec.SourceAccessToken, ec.SourceAccessTokenType)
 		if err != nil {

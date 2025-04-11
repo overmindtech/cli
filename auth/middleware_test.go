@@ -407,7 +407,7 @@ func TestNewAuthMiddleware(t *testing.T) {
 				} else {
 					if claims.AccountName != "test" {
 						w.WriteHeader(http.StatusUnauthorized)
-						_, err := w.Write([]byte(fmt.Sprintf("expected account to be 'test', but was '%s'", claims.AccountName)))
+						_, err := fmt.Fprintf(w, "expected account to be 'test', but was '%s'", claims.AccountName)
 						if err != nil {
 							t.Error(err)
 						}
@@ -417,7 +417,7 @@ func TestNewAuthMiddleware(t *testing.T) {
 			}))
 
 			rr := httptest.NewRecorder()
-			req, err := http.NewRequestWithContext(context.Background(), "GET", test.Path, nil)
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, test.Path, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -542,10 +542,10 @@ func BenchmarkAuthMiddleware(b *testing.B) {
 	// Reduce logging
 	log.SetLevel(log.FatalLevel)
 
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 		// pass 'nil' as the third parameter.
-		req, err := http.NewRequestWithContext(context.Background(), "GET", "/", nil)
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
 
 		if err != nil {
 			b.Fatal(err)
@@ -654,7 +654,7 @@ func (s *TestJWTServer) Start(ctx context.Context) string {
 			// issued by our server
 			w.WriteHeader(http.StatusOK)
 			w.Header().Set("Content-Type", "application/json")
-			_, err := w.Write([]byte(fmt.Sprintf(`{"jwks_uri": "%s/.well-known/jwks.json"}`, s.server.URL)))
+			_, err := fmt.Fprintf(w, `{"jwks_uri": "%s/.well-known/jwks.json"}`, s.server.URL)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}

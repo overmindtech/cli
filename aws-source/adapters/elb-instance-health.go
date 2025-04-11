@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 
@@ -88,7 +87,7 @@ func instanceHealthOutputMapper(_ context.Context, _ *elb.Client, scope string, 
 	return items, nil
 }
 
-func NewELBInstanceHealthAdapter(client *elasticloadbalancing.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*elb.DescribeInstanceHealthInput, *elb.DescribeInstanceHealthOutput, *elb.Client, *elb.Options] {
+func NewELBInstanceHealthAdapter(client *elb.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*elb.DescribeInstanceHealthInput, *elb.DescribeInstanceHealthOutput, *elb.Client, *elb.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*elb.DescribeInstanceHealthInput, *elb.DescribeInstanceHealthOutput, *elb.Client, *elb.Options]{
 		Region:          region,
 		Client:          client,
