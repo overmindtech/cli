@@ -323,6 +323,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 
 	var riskRes *connect.Response[sdp.GetChangeRisksResponse]
 	milestoneSpinners := []*pterm.SpinnerPrinter{}
+retryLoop:
 	for {
 		riskRes, err = client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
 			Msg: &sdp.GetChangeRisksRequest{
@@ -373,7 +374,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 		} else {
 			// it's done
 			changeAnalysisSpinner.Success()
-			break
+			break retryLoop
 		}
 	}
 	// Submit milestone for tracing
