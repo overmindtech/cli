@@ -33,9 +33,9 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// RevlinkServiceGetReverseLinksProcedure is the fully-qualified name of the RevlinkService's
-	// GetReverseLinks RPC.
-	RevlinkServiceGetReverseLinksProcedure = "/revlink.RevlinkService/GetReverseLinks"
+	// RevlinkServiceGetReverseEdgesProcedure is the fully-qualified name of the RevlinkService's
+	// GetReverseEdges RPC.
+	RevlinkServiceGetReverseEdgesProcedure = "/revlink.RevlinkService/GetReverseEdges"
 	// RevlinkServiceIngestGatewayResponsesProcedure is the fully-qualified name of the RevlinkService's
 	// IngestGatewayResponses RPC.
 	RevlinkServiceIngestGatewayResponsesProcedure = "/revlink.RevlinkService/IngestGatewayResponses"
@@ -46,8 +46,8 @@ const (
 
 // RevlinkServiceClient is a client for the revlink.RevlinkService service.
 type RevlinkServiceClient interface {
-	// Gets reverse links for a given item
-	GetReverseLinks(context.Context, *connect.Request[sdp_go.GetReverseLinksRequest]) (*connect.Response[sdp_go.GetReverseLinksResponse], error)
+	// Gets reverse edges for a given item
+	GetReverseEdges(context.Context, *connect.Request[sdp_go.GetReverseEdgesRequest]) (*connect.Response[sdp_go.GetReverseEdgesResponse], error)
 	// Ingests a stream of gateway responses
 	IngestGatewayResponses(context.Context) *connect.ClientStreamForClient[sdp_go.IngestGatewayResponseRequest, sdp_go.IngestGatewayResponsesResponse]
 	// Waits until all currently submitted gateway responses are committed to
@@ -73,10 +73,10 @@ func NewRevlinkServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 	baseURL = strings.TrimRight(baseURL, "/")
 	revlinkServiceMethods := sdp_go.File_revlink_proto.Services().ByName("RevlinkService").Methods()
 	return &revlinkServiceClient{
-		getReverseLinks: connect.NewClient[sdp_go.GetReverseLinksRequest, sdp_go.GetReverseLinksResponse](
+		getReverseEdges: connect.NewClient[sdp_go.GetReverseEdgesRequest, sdp_go.GetReverseEdgesResponse](
 			httpClient,
-			baseURL+RevlinkServiceGetReverseLinksProcedure,
-			connect.WithSchema(revlinkServiceMethods.ByName("GetReverseLinks")),
+			baseURL+RevlinkServiceGetReverseEdgesProcedure,
+			connect.WithSchema(revlinkServiceMethods.ByName("GetReverseEdges")),
 			connect.WithClientOptions(opts...),
 		),
 		ingestGatewayResponses: connect.NewClient[sdp_go.IngestGatewayResponseRequest, sdp_go.IngestGatewayResponsesResponse](
@@ -96,14 +96,14 @@ func NewRevlinkServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // revlinkServiceClient implements RevlinkServiceClient.
 type revlinkServiceClient struct {
-	getReverseLinks        *connect.Client[sdp_go.GetReverseLinksRequest, sdp_go.GetReverseLinksResponse]
+	getReverseEdges        *connect.Client[sdp_go.GetReverseEdgesRequest, sdp_go.GetReverseEdgesResponse]
 	ingestGatewayResponses *connect.Client[sdp_go.IngestGatewayResponseRequest, sdp_go.IngestGatewayResponsesResponse]
 	checkpoint             *connect.Client[sdp_go.CheckpointRequest, sdp_go.CheckpointResponse]
 }
 
-// GetReverseLinks calls revlink.RevlinkService.GetReverseLinks.
-func (c *revlinkServiceClient) GetReverseLinks(ctx context.Context, req *connect.Request[sdp_go.GetReverseLinksRequest]) (*connect.Response[sdp_go.GetReverseLinksResponse], error) {
-	return c.getReverseLinks.CallUnary(ctx, req)
+// GetReverseEdges calls revlink.RevlinkService.GetReverseEdges.
+func (c *revlinkServiceClient) GetReverseEdges(ctx context.Context, req *connect.Request[sdp_go.GetReverseEdgesRequest]) (*connect.Response[sdp_go.GetReverseEdgesResponse], error) {
+	return c.getReverseEdges.CallUnary(ctx, req)
 }
 
 // IngestGatewayResponses calls revlink.RevlinkService.IngestGatewayResponses.
@@ -118,8 +118,8 @@ func (c *revlinkServiceClient) Checkpoint(ctx context.Context, req *connect.Requ
 
 // RevlinkServiceHandler is an implementation of the revlink.RevlinkService service.
 type RevlinkServiceHandler interface {
-	// Gets reverse links for a given item
-	GetReverseLinks(context.Context, *connect.Request[sdp_go.GetReverseLinksRequest]) (*connect.Response[sdp_go.GetReverseLinksResponse], error)
+	// Gets reverse edges for a given item
+	GetReverseEdges(context.Context, *connect.Request[sdp_go.GetReverseEdgesRequest]) (*connect.Response[sdp_go.GetReverseEdgesResponse], error)
 	// Ingests a stream of gateway responses
 	IngestGatewayResponses(context.Context, *connect.ClientStream[sdp_go.IngestGatewayResponseRequest]) (*connect.Response[sdp_go.IngestGatewayResponsesResponse], error)
 	// Waits until all currently submitted gateway responses are committed to
@@ -141,10 +141,10 @@ type RevlinkServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewRevlinkServiceHandler(svc RevlinkServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	revlinkServiceMethods := sdp_go.File_revlink_proto.Services().ByName("RevlinkService").Methods()
-	revlinkServiceGetReverseLinksHandler := connect.NewUnaryHandler(
-		RevlinkServiceGetReverseLinksProcedure,
-		svc.GetReverseLinks,
-		connect.WithSchema(revlinkServiceMethods.ByName("GetReverseLinks")),
+	revlinkServiceGetReverseEdgesHandler := connect.NewUnaryHandler(
+		RevlinkServiceGetReverseEdgesProcedure,
+		svc.GetReverseEdges,
+		connect.WithSchema(revlinkServiceMethods.ByName("GetReverseEdges")),
 		connect.WithHandlerOptions(opts...),
 	)
 	revlinkServiceIngestGatewayResponsesHandler := connect.NewClientStreamHandler(
@@ -161,8 +161,8 @@ func NewRevlinkServiceHandler(svc RevlinkServiceHandler, opts ...connect.Handler
 	)
 	return "/revlink.RevlinkService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case RevlinkServiceGetReverseLinksProcedure:
-			revlinkServiceGetReverseLinksHandler.ServeHTTP(w, r)
+		case RevlinkServiceGetReverseEdgesProcedure:
+			revlinkServiceGetReverseEdgesHandler.ServeHTTP(w, r)
 		case RevlinkServiceIngestGatewayResponsesProcedure:
 			revlinkServiceIngestGatewayResponsesHandler.ServeHTTP(w, r)
 		case RevlinkServiceCheckpointProcedure:
@@ -176,8 +176,8 @@ func NewRevlinkServiceHandler(svc RevlinkServiceHandler, opts ...connect.Handler
 // UnimplementedRevlinkServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedRevlinkServiceHandler struct{}
 
-func (UnimplementedRevlinkServiceHandler) GetReverseLinks(context.Context, *connect.Request[sdp_go.GetReverseLinksRequest]) (*connect.Response[sdp_go.GetReverseLinksResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("revlink.RevlinkService.GetReverseLinks is not implemented"))
+func (UnimplementedRevlinkServiceHandler) GetReverseEdges(context.Context, *connect.Request[sdp_go.GetReverseEdgesRequest]) (*connect.Response[sdp_go.GetReverseEdgesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("revlink.RevlinkService.GetReverseEdges is not implemented"))
 }
 
 func (UnimplementedRevlinkServiceHandler) IngestGatewayResponses(context.Context, *connect.ClientStream[sdp_go.IngestGatewayResponseRequest]) (*connect.Response[sdp_go.IngestGatewayResponsesResponse], error) {

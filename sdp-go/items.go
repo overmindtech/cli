@@ -154,7 +154,7 @@ func (i *Item) Copy(dest *Item) {
 // Hash Returns a 12 character hash for the item. This is likely but not
 // guaranteed to be unique. The hash is calculated using the GloballyUniqueName
 func (i *Item) Hash() string {
-	return hashSum(([]byte(fmt.Sprint(i.GloballyUniqueName()))))
+	return HashSum(([]byte(fmt.Sprint(i.GloballyUniqueName()))))
 }
 
 func (e *Edge) IsEqual(other *Edge) bool {
@@ -166,7 +166,7 @@ func (e *Edge) IsEqual(other *Edge) bool {
 // Hash Returns a 12 character hash for the item. This is likely but not
 // guaranteed to be unique. The hash is calculated using the GloballyUniqueName
 func (r *Reference) Hash() string {
-	return hashSum(([]byte(fmt.Sprint(r.GloballyUniqueName()))))
+	return HashSum(([]byte(fmt.Sprint(r.GloballyUniqueName()))))
 }
 
 // GloballyUniqueName Returns a string that defines the Item globally. This a
@@ -193,7 +193,6 @@ func (r *Reference) GloballyUniqueName() string {
 		panic(fmt.Sprintf("cannot get globally unique name for query reference: %v", r))
 	}
 	return fmt.Sprintf("%v.%v.%v", r.GetScope(), r.GetType(), r.GetUniqueAttributeValue())
-
 }
 
 // Key returns a globally unique string for this reference, even if it is a GET query
@@ -343,7 +342,6 @@ func (a *ItemAttributes) Set(name string, value interface{}) error {
 	// Ensure that this interface will be able to be converted to a struct value
 	sanitizedValue := sanitizeInterface(value, false, DefaultTransforms)
 	structValue, err := structpb.NewValue(sanitizedValue)
-
 	if err != nil {
 		return err
 	}
@@ -549,7 +547,6 @@ func toAttributes(m map[string]interface{}, sort bool, customTransforms Transfor
 	for k, v := range m {
 		sanitizedValue := sanitizeInterface(v, sort, customTransforms)
 		structValue, err := structpb.NewValue(sanitizedValue)
-
 		if err != nil {
 			return nil, err
 		}
@@ -569,7 +566,6 @@ func toAttributes(m map[string]interface{}, sort bool, customTransforms Transfor
 // does save work when copying large structs to attributes in their entirety
 func ToAttributesViaJson(v interface{}) (*ItemAttributes, error) {
 	b, err := json.Marshal(v)
-
 	if err != nil {
 		return nil, err
 	}
@@ -577,7 +573,6 @@ func ToAttributesViaJson(v interface{}) (*ItemAttributes, error) {
 	var m map[string]interface{}
 
 	err = json.Unmarshal(b, &m)
-
 	if err != nil {
 		return nil, err
 	}
@@ -766,7 +761,8 @@ func sortInterfaceArray(input []interface{}) {
 	})
 }
 
-func hashSum(b []byte) string {
+// HashSum is a function that takes a byte array and returns a 12 character hash for use in neo4j
+func HashSum(b []byte) string {
 	var paddedEncoding *base32.Encoding
 	var unpaddedEncoding *base32.Encoding
 
