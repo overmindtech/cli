@@ -99,10 +99,8 @@ var eksAddonAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	DescriptiveName: "EKS Addon",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 		Get:               true,
-		List:              true,
 		Search:            true,
 		GetDescription:    "Get an addon by unique name ({clusterName}/{addonName})",
-		ListDescription:   "List all addons",
 		SearchDescription: "Search addons by cluster name",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{

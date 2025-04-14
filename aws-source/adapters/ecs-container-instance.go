@@ -160,10 +160,8 @@ var containerInstanceAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	DescriptiveName: "Container Instance",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 		Get:               true,
-		List:              true,
 		Search:            true,
 		GetDescription:    "Get a container instance by ID which consists of {clusterName}/{id}",
-		ListDescription:   "List all container instances",
 		SearchDescription: "Search for container instances by cluster",
 	},
 	PotentialLinks: []string{"ec2-instance"},

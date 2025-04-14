@@ -137,10 +137,8 @@ var fargateProfileAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	DescriptiveName: "Fargate Profile",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 		Get:               true,
-		List:              true,
 		Search:            true,
 		GetDescription:    "Get a fargate profile by unique name ({clusterName}/{FargateProfileName})",
-		ListDescription:   "List all fargate profiles",
 		SearchDescription: "Search for fargate profiles by cluster name",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{

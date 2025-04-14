@@ -179,10 +179,8 @@ var resourceRecordSetAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	DescriptiveName: "Route53 Record Set",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 		Get:               true,
-		List:              true,
 		Search:            true,
 		GetDescription:    "Get a Route53 record Set by name",
-		ListDescription:   "List all record sets",
 		SearchDescription: "Search for a record set by hosted zone ID in the format \"/hostedzone/JJN928734JH7HV\" or \"JJN928734JH7HV\" or by terraform ID in the format \"{hostedZone}_{recordName}_{type}\"",
 	},
 	Category:       sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
