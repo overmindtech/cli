@@ -450,7 +450,7 @@ func GetAutoConfig(t *testing.T) (aws.Config, string, string) {
 
 // Converts an interface to SDP attributes using the `sdp.ToAttributesSorted`
 // function, and also allows the user to exclude certain top-level fields from
-// teh resulting attributes
+// the resulting attributes
 func ToAttributesWithExclude(i interface{}, exclusions ...string) (*sdp.ItemAttributes, error) {
 	attrs, err := sdp.ToAttributesViaJson(i)
 	if err != nil {
