@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bufbuild/protovalidate-go"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -86,7 +87,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Validate() error {
 		return errors.New("ItemMapper is nil")
 	}
 
-	return nil
+	return protovalidate.Validate(s.AdapterMetadata)
 }
 
 func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Type() string {
