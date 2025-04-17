@@ -26,7 +26,7 @@ const (
 	DefaultConnectionWatchInterval = 3 * time.Second
 )
 
-// The clint that will be used to send heartbeats. This will usually be an
+// The client that will be used to send heartbeats. This will usually be an
 // `sdpconnect.ManagementServiceClient`
 type HeartbeatClient interface {
 	SubmitSourceHeartbeat(context.Context, *connect.Request[sdp.SubmitSourceHeartbeatRequest]) (*connect.Response[sdp.SubmitSourceHeartbeatResponse], error)
@@ -39,7 +39,7 @@ type HeartbeatOptions struct {
 	// The function that should be run to check if the adapter is healthy. It
 	// will be executed each time a heartbeat is sent and should return an error
 	// if the adapter is unhealthy.
-	HealthCheck func() error
+	HealthCheck func(context.Context) error
 
 	// How frequently to send a heartbeat
 	Frequency time.Duration
@@ -415,6 +415,15 @@ func (e *Engine) HealthCheck(ctx context.Context) error {
 		attribute.Int("ovm.discovery.listExecutionPoolCount", int(listExecutionPoolCount.Load())),
 		attribute.Int("ovm.discovery.getExecutionPoolCount", int(getExecutionPoolCount.Load())),
 	)
+
+	if e.natsConnection.Underlying() != nil {
+		u := e.natsConnection.Underlying()
+		span.SetAttributes(
+			attribute.String("ovm.nats.serverId", u.ConnectedServerId()),
+			attribute.String("ovm.nats.url", u.ConnectedUrl()),
+			attribute.Int64("ovm.nats.reconnects", int64(u.Reconnects)), //nolint:gosec // Reconnects is always a small positive number
+		)
+	}
 
 	if !natsConnected {
 		return errors.New("NATS connection is not connected")

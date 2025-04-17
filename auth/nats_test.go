@@ -22,6 +22,7 @@ func TestToNatsOptions(t *testing.T) {
 			nats.MaxReconnects(MaxReconnectsDefault),
 			nats.ReconnectWait(ReconnectWaitDefault),
 			nats.ReconnectJitter(ReconnectJitterDefault, ReconnectJitterDefault),
+			nats.ConnectHandler(ConnectHandlerDefault),
 			nats.DisconnectErrHandler(DisconnectErrHandlerDefault),
 			nats.ReconnectHandler(ReconnectHandlerDefault),
 			nats.ClosedHandler(ClosedHandlerDefault),
@@ -88,6 +89,7 @@ func TestToNatsOptions(t *testing.T) {
 	})
 
 	t.Run("with non-defaults", func(t *testing.T) {
+		var connectHandlerUsed bool
 		var disconnectErrHandlerUsed bool
 		var reconnectHandlerUsed bool
 		var closedHandlerUsed bool
@@ -100,6 +102,7 @@ func TestToNatsOptions(t *testing.T) {
 			MaxReconnects:        999,
 			ReconnectWait:        999,
 			ReconnectJitter:      999,
+			ConnectHandler:       func(c *nats.Conn) { connectHandlerUsed = true },
 			DisconnectErrHandler: func(c *nats.Conn, err error) { disconnectErrHandlerUsed = true },
 			ReconnectHandler:     func(c *nats.Conn) { reconnectHandlerUsed = true },
 			ClosedHandler:        func(c *nats.Conn) { closedHandlerUsed = true },
@@ -154,6 +157,15 @@ func TestToNatsOptions(t *testing.T) {
 			}
 		} else {
 			t.Error("Expected DisconnectedErrCB to non-nil")
+		}
+
+		if actualOptions.ConnectedCB != nil {
+			actualOptions.ConnectedCB(nil)
+			if !connectHandlerUsed {
+				t.Error("ConnectHandler not used")
+			}
+		} else {
+			t.Error("Expected ConnectedCB to non-nil")
 		}
 
 		if actualOptions.ReconnectedCB != nil {

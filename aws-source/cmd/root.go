@@ -29,15 +29,8 @@ var rootCmd = &cobra.Command{
 	Long: `This sources looks for AWS resources in your account.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		defer func() {
-			err := recover()
-
-			if err != nil {
-				sentry.CurrentHub().Recover(err)
-				defer sentry.Flush(time.Second * 5)
-				panic(err)
-			}
-		}()
+		ctx := context.Background()
+		defer tracing.LogRecoverToReturn(ctx, "aws-source.root")
 		healthCheckPort := viper.GetInt("health-check-port")
 
 		awsAuthConfig := proc.AwsAuthConfig{
@@ -99,7 +92,7 @@ var rootCmd = &cobra.Command{
 		healthCheckPath := "/healthz"
 
 		http.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
-			ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck")
+			ctx, span := tracing.Tracer().Start(r.Context(), "healthcheck")
 			defer span.End()
 
 			err := e.HealthCheck(ctx)

@@ -23,12 +23,25 @@ func (m MaxRetriesError) Error() string {
 	return "maximum retries reached"
 }
 
-var DisconnectErrHandlerDefault = func(c *nats.Conn, err error) {
+func fieldsFromConn(c *nats.Conn) log.Fields {
 	fields := log.Fields{}
 
 	if c != nil {
-		fields["address"] = c.ConnectedAddr()
+		fields["ovm.nats.address"] = c.ConnectedAddr()
+		fields["ovm.nats.reconnects"] = c.Reconnects
+		fields["ovm.nats.serverId"] = c.ConnectedServerId()
+		fields["ovm.nats.url"] = c.ConnectedUrl()
+
+		if c.LastError() != nil {
+			fields["ovm.nats.lastError"] = c.LastError()
+		}
 	}
+
+	return fields
+}
+
+var DisconnectErrHandlerDefault = func(c *nats.Conn, err error) {
+	fields := fieldsFromConn(c)
 
 	if err != nil {
 		log.WithError(err).WithFields(fields).Error("NATS disconnected")
@@ -36,51 +49,36 @@ var DisconnectErrHandlerDefault = func(c *nats.Conn, err error) {
 		log.WithFields(fields).Debug("NATS disconnected")
 	}
 }
-var ReconnectHandlerDefault = func(c *nats.Conn) {
-	fields := log.Fields{}
 
-	if c != nil {
-		fields["reconnects"] = c.Reconnects
-		fields["serverId"] = c.ConnectedServerId()
-		fields["url"] = c.ConnectedUrl()
-	}
+var ConnectHandlerDefault = func(c *nats.Conn) {
+	fields := fieldsFromConn(c)
+
+	log.WithFields(fields).Debug("NATS connected")
+}
+var ReconnectHandlerDefault = func(c *nats.Conn) {
+	fields := fieldsFromConn(c)
 
 	log.WithFields(fields).Debug("NATS reconnected")
 }
 var ClosedHandlerDefault = func(c *nats.Conn) {
-	fields := log.Fields{}
-
-	if c != nil && c.LastError() != nil {
-		fields["error"] = c.LastError()
-	}
+	fields := fieldsFromConn(c)
 
 	log.WithFields(fields).Debug("NATS connection closed")
 }
 var LameDuckModeHandlerDefault = func(c *nats.Conn) {
-	fields := log.Fields{}
-
-	if c != nil {
-		fields["address"] = c.ConnectedAddr()
-
-	}
+	fields := fieldsFromConn(c)
 
 	log.WithFields(fields).Debug("NATS server has entered lame duck mode")
 }
-var ErrorHandlerDefault = func(c *nats.Conn, s *nats.Subscription, e error) {
-	fields := log.Fields{
-		"error": e,
-	}
-
-	if c != nil {
-		fields["address"] = c.ConnectedAddr()
-	}
+var ErrorHandlerDefault = func(c *nats.Conn, s *nats.Subscription, err error) {
+	fields := fieldsFromConn(c)
 
 	if s != nil {
-		fields["subject"] = s.Subject
-		fields["queue"] = s.Queue
+		fields["ovm.nats.subject"] = s.Subject
+		fields["ovm.nats.queue"] = s.Queue
 	}
 
-	log.WithFields(fields).Error("NATS error")
+	log.WithFields(fields).WithError(err).Error("NATS error")
 }
 
 type NATSOptions struct {
@@ -91,11 +89,12 @@ type NATSOptions struct {
 	ReconnectWait        time.Duration       // Wait time between reconnect attempts
 	ReconnectJitter      time.Duration       // The upper bound of a random delay added ReconnectWait
 	TokenClient          TokenClient         // The client to use to get NATS tokens
-	DisconnectErrHandler nats.ConnErrHandler // Runs when NATS is diconnected
-	ReconnectHandler     nats.ConnHandler    // Runs when NATS has reconnected
-	ClosedHandler        nats.ConnHandler    // Runs when a connection has been closed
-	LameDuckModeHandler  nats.ConnHandler    // Runs when the connction enters "lame duck mode"
+	ConnectHandler       nats.ConnHandler    // Runs when NATS is connected
+	DisconnectErrHandler nats.ConnErrHandler // Runs when NATS is disconnected
+	ReconnectHandler     nats.ConnHandler    // Runs when NATS has successfully reconnected
+	ClosedHandler        nats.ConnHandler    // Runs when NATS will no longer be connected
 	ErrorHandler         nats.ErrHandler     // Runs when there is a NATS error
+	LameDuckModeHandler  nats.ConnHandler    // Runs when the connection enters "lame duck mode"
 	AdditionalOptions    []nats.Option       // Addition options to pass to the connection
 	NumRetries           int                 // How many times to retry connecting initially, use -1 to retry indefinitely
 	RetryDelay           time.Duration       // Delay between connection attempts
@@ -111,6 +110,7 @@ func (o NATSOptions) Copy() NATSOptions {
 		ConnectionTimeout:    o.ConnectionTimeout,
 		ReconnectWait:        o.ReconnectWait,
 		ReconnectJitter:      o.ReconnectJitter,
+		ConnectHandler:       o.ConnectHandler,
 		DisconnectErrHandler: o.DisconnectErrHandler,
 		ReconnectHandler:     o.ReconnectHandler,
 		ClosedHandler:        o.ClosedHandler,
@@ -126,7 +126,7 @@ func (o NATSOptions) Copy() NATSOptions {
 // options
 func (o NATSOptions) ToNatsOptions() (string, []nats.Option) {
 	serverString := strings.Join(o.Servers, ",")
-	options := make([]nats.Option, 0)
+	options := []nats.Option{}
 
 	if o.ConnectionName != "" {
 		options = append(options, nats.Name(o.ConnectionName))
@@ -160,6 +160,12 @@ func (o NATSOptions) ToNatsOptions() (string, []nats.Option) {
 		options = append(options, nats.UserJWT(func() (string, error) {
 			return o.TokenClient.GetJWT()
 		}, o.TokenClient.Sign))
+	}
+
+	if o.ConnectHandler != nil {
+		options = append(options, nats.ConnectHandler(o.ConnectHandler))
+	} else {
+		options = append(options, nats.ConnectHandler(ConnectHandlerDefault))
 	}
 
 	if o.DisconnectErrHandler != nil {

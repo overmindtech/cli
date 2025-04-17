@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"context"
 	"errors"
 	"net/url"
 	"reflect"
@@ -32,7 +33,7 @@ func InitializeEngine(ec *discovery.EngineConfig, reverseDNS bool) (*discovery.E
 	}
 
 	if ec.HeartbeatOptions != nil {
-		ec.HeartbeatOptions.HealthCheck = func() error {
+		ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
 			// This can't fail, it's always healthy
 			return nil
 		}

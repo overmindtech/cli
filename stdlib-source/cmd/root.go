@@ -32,15 +32,8 @@ var rootCmd = &cobra.Command{
 (usually) and able to be queried without authentication.
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		defer func() {
-			err := recover()
-
-			if err != nil {
-				sentry.CurrentHub().Recover(err)
-				defer sentry.Flush(time.Second * 5)
-				panic(err)
-			}
-		}()
+		ctx := context.Background()
+		defer tracing.LogRecoverToReturn(ctx, "stdlib-source.root")
 
 		// get engine config
 		engineConfig, err := discovery.EngineConfigFromViper("stdlib", tracing.Version())
@@ -77,7 +70,7 @@ var rootCmd = &cobra.Command{
 		healthCheckDNSAdapter := adapters.DNSAdapter{}
 
 		// Set up the health check
-		healthCheck := func() error {
+		healthCheck := func(ctx context.Context) error {
 			if !e.IsNATSConnected() {
 				return errors.New("NATS not connected")
 			}
@@ -86,7 +79,7 @@ var rootCmd = &cobra.Command{
 			// stdlib container will just start timing out on DNS requests. We
 			// should check that the DNS adapter is working so that the
 			// container can die if this happens to it
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 			defer cancel()
 			_, err := healthCheckDNSAdapter.Search(ctx, "global", "www.google.com", true)
 			if err != nil {
@@ -100,7 +93,10 @@ var rootCmd = &cobra.Command{
 			e.EngineConfig.HeartbeatOptions.HealthCheck = healthCheck
 		}
 		http.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
-			err := healthCheck()
+			ctx, span := tracing.Tracer().Start(r.Context(), "healthcheck")
+			defer span.End()
+
+			err := healthCheck(ctx)
 			if err == nil {
 				fmt.Fprint(rw, "ok")
 			} else {

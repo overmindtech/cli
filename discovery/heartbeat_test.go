@@ -63,7 +63,7 @@ func TestHeartbeats(t *testing.T) {
 	}
 
 	t.Run("sendHeartbeat when healthy", func(t *testing.T) {
-		ec.HeartbeatOptions.HealthCheck = func() error {
+		ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
 			return nil
 		}
 		responses <- &connect.Response[sdp.SubmitSourceHeartbeatResponse]{
@@ -123,7 +123,7 @@ func TestHeartbeats(t *testing.T) {
 	})
 
 	t.Run("sendHeartbeat when unhealthy", func(t *testing.T) {
-		e.EngineConfig.HeartbeatOptions.HealthCheck = func() error {
+		e.EngineConfig.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
 			return ErrNoHealthcheckDefined
 		}
 
@@ -145,7 +145,7 @@ func TestHeartbeats(t *testing.T) {
 
 	t.Run("startSendingHeartbeats", func(t *testing.T) {
 		e.EngineConfig.HeartbeatOptions.Frequency = time.Millisecond * 250
-		e.EngineConfig.HeartbeatOptions.HealthCheck = func() error {
+		e.EngineConfig.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
 			return nil
 		}
 

@@ -25,7 +25,7 @@ func (e *Engine) SendHeartbeat(ctx context.Context) error {
 		return ErrNoHealthcheckDefined
 	}
 
-	healthCheckError := e.EngineConfig.HeartbeatOptions.HealthCheck()
+	healthCheckError := e.EngineConfig.HeartbeatOptions.HealthCheck(ctx)
 
 	var heartbeatError *string
 
