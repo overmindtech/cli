@@ -2527,7 +2527,7 @@ type AdapterSupportedQueryMethods struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Whether or not the GET method is supported
 	Get bool `protobuf:"varint,1,opt,name=get,proto3" json:"get,omitempty"`
-	// Description of the query that should be passed to the GET method
+	// Description of what data the GET query expects.
 	GetDescription string `protobuf:"bytes,2,opt,name=getDescription,proto3" json:"getDescription,omitempty"`
 	// Whether or not the LIST method is supported
 	List bool `protobuf:"varint,3,opt,name=list,proto3" json:"list,omitempty"`
@@ -3382,24 +3382,31 @@ const file_account_proto_rawDesc = "" +
 	"\x0favailableScopes\x18\t \x03(\tR\x0favailableScopes\x12B\n" +
 	"\x0fadapterMetadata\x18\n" +
 	" \x03(\v2\x18.account.AdapterMetadataR\x0fadapterMetadataB\b\n" +
-	"\x06_errorJ\x04\b\b\x10\t\"\xdb\x02\n" +
+	"\x06_errorJ\x04\b\b\x10\t\"\xb5\x05\n" +
 	"\x0fAdapterMetadata\x12\x12\n" +
-	"\x04type\x18\x01 \x01(\tR\x04type\x12<\n" +
-	"\bcategory\x18\x02 \x01(\x0e2\x18.account.AdapterCategoryB\x06\xbaH\x03\xc8\x01\x01R\bcategory\x12&\n" +
-	"\x0epotentialLinks\x18\x03 \x03(\tR\x0epotentialLinks\x12(\n" +
-	"\x0fdescriptiveName\x18\x04 \x01(\tR\x0fdescriptiveName\x12[\n" +
-	"\x15supportedQueryMethods\x18\x05 \x01(\v2%.account.AdapterSupportedQueryMethodsR\x15supportedQueryMethods\x12G\n" +
-	"\x11terraformMappings\x18\x06 \x03(\v2\x19.account.TerraformMappingR\x11terraformMappings\"\xdc\x01\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12A\n" +
+	"\bcategory\x18\x02 \x01(\x0e2\x18.account.AdapterCategoryB\v\xbaH\b\xc8\x01\x01\x82\x01\x02\x10\x01R\bcategory\x12\xc9\x01\n" +
+	"\x0epotentialLinks\x18\x03 \x03(\tB\xa0\x01\xbaH\x9c\x01\xba\x01\x98\x01\n" +
+	"\x18potentialLinksValidation\x12MIf 'potentialLinks' is not empty, none of its members should be empty strings\x1a-this.size() == 0 || this.all(x, x.size() > 0)R\x0epotentialLinks\x124\n" +
+	"\x0fdescriptiveName\x18\x04 \x01(\tB\n" +
+	"\xbaH\a\xc8\x01\x01r\x02\x10\x01R\x0fdescriptiveName\x12c\n" +
+	"\x15supportedQueryMethods\x18\x05 \x01(\v2%.account.AdapterSupportedQueryMethodsB\x06\xbaH\x03\xc8\x01\x01R\x15supportedQueryMethods\x12\xe3\x01\n" +
+	"\x11terraformMappings\x18\x06 \x03(\v2\x19.account.TerraformMappingB\x99\x01\xbaH\x95\x01\xba\x01\x91\x01\n" +
+	"\x1bterraformMappingsValidation\x12FIf 'terraformMappings' is not empty, none of its members should be nil\x1a*this.size() != 0 && this.all(x, x != null)R\x11terraformMappings\"\xd7\x05\n" +
 	"\x1cAdapterSupportedQueryMethods\x12\x10\n" +
 	"\x03get\x18\x01 \x01(\bR\x03get\x12&\n" +
 	"\x0egetDescription\x18\x02 \x01(\tR\x0egetDescription\x12\x12\n" +
 	"\x04list\x18\x03 \x01(\bR\x04list\x12(\n" +
 	"\x0flistDescription\x18\x04 \x01(\tR\x0flistDescription\x12\x16\n" +
 	"\x06search\x18\x05 \x01(\bR\x06search\x12,\n" +
-	"\x11searchDescription\x18\x06 \x01(\tR\x11searchDescription\"~\n" +
-	"\x10TerraformMapping\x126\n" +
-	"\x0fterraformMethod\x18\x01 \x01(\x0e2\f.QueryMethodR\x0fterraformMethod\x12,\n" +
-	"\x11terraformQueryMap\x18\x02 \x01(\tR\x11terraformQueryMapJ\x04\b\x03\x10\x04\"\x1f\n" +
+	"\x11searchDescription\x18\x06 \x01(\tR\x11searchDescription:\xf8\x03\xbaH\xf4\x03\x1a\x9d\x01\n" +
+	"*AdapterSupportedQueryMethods.getValidation\x12BIf 'get' is true, 'getDescription' must have more than 1 character\x1a+!this.get || this.getDescription.size() > 1\x1a\xa2\x01\n" +
+	"+AdapterSupportedQueryMethods.listValidation\x12DIf 'list' is true, 'listDescription' must have more than 1 character\x1a-!this.list || this.listDescription.size() > 1\x1a\xac\x01\n" +
+	"-AdapterSupportedQueryMethods.searchValidation\x12HIf 'search' is true, 'searchDescription' must have more than 1 character\x1a1!this.search || this.searchDescription.size() > 1\"\xad\x02\n" +
+	"\x10TerraformMapping\x12@\n" +
+	"\x0fterraformMethod\x18\x01 \x01(\x0e2\f.QueryMethodB\b\xbaH\x05\x82\x01\x02\x10\x01R\x0fterraformMethod\x12\xd0\x01\n" +
+	"\x11terraformQueryMap\x18\x02 \x01(\tB\xa1\x01\xbaH\x9d\x01\xba\x01\x92\x01\n" +
+	"\x17terraformQueryMapFormat\x12ZThe value must be in the format '<item>.<attribute>' (dot notation with exactly two items)\x1a\x1bthis.split('.').size() == 2\xc8\x01\x01r\x02\x10\x03R\x11terraformQueryMapJ\x04\b\x03\x10\x04\"\x1f\n" +
 	"\x1dSubmitSourceHeartbeatResponse\"A\n" +
 	"\x17KeepaliveSourcesRequest\x12&\n" +
 	"\x0ewaitForHealthy\x18\x01 \x01(\bR\x0ewaitForHealthy\"T\n" +

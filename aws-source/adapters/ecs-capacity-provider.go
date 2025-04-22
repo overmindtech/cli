@@ -93,9 +93,12 @@ var capacityProviderAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:            "ecs-capacity-provider",
 	DescriptiveName: "Capacity Provider",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
-		Get:    true,
-		List:   true,
-		Search: true,
+		Get:               true,
+		GetDescription:    "Get a capacity provider by its short name or full Amazon Resource Name (ARN).",
+		List:              true,
+		ListDescription:   "List capacity providers.",
+		Search:            true,
+		SearchDescription: "Search capacity providers by ARN",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{

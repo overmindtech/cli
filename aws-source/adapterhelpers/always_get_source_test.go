@@ -53,11 +53,12 @@ func TestAlwaysGetSourceScopes(t *testing.T) {
 func TestAlwaysGetSourceGet(t *testing.T) {
 	t.Run("with no errors", func(t *testing.T) {
 		lgs := AlwaysGetAdapter[string, string, string, string, struct{}, struct{}]{
-			ItemType:  "test",
-			AccountID: "foo",
-			Region:    "bar",
-			Client:    struct{}{},
-			ListInput: "",
+			AdapterMetadata: adapterMetadata,
+			ItemType:        "test",
+			AccountID:       "foo",
+			Region:          "bar",
+			Client:          struct{}{},
+			ListInput:       "",
 			ListFuncPaginatorBuilder: func(client struct{}, input string) Paginator[string, struct{}] {
 				// Returns 3 pages
 				return &TestPaginator{DataFunc: func() string {
@@ -85,11 +86,12 @@ func TestAlwaysGetSourceGet(t *testing.T) {
 
 	t.Run("with an error", func(t *testing.T) {
 		lgs := AlwaysGetAdapter[string, string, string, string, struct{}, struct{}]{
-			ItemType:  "test",
-			AccountID: "foo",
-			Region:    "bar",
-			Client:    struct{}{},
-			ListInput: "",
+			AdapterMetadata: adapterMetadata,
+			ItemType:        "test",
+			AccountID:       "foo",
+			Region:          "bar",
+			Client:          struct{}{},
+			ListInput:       "",
 			ListFuncPaginatorBuilder: func(client struct{}, input string) Paginator[string, struct{}] {
 				// Returns 3 pages
 				return &TestPaginator{DataFunc: func() string {
@@ -119,12 +121,13 @@ func TestAlwaysGetSourceGet(t *testing.T) {
 func TestAlwaysGetSourceList(t *testing.T) {
 	t.Run("with no errors", func(t *testing.T) {
 		lgs := AlwaysGetAdapter[string, string, string, string, struct{}, struct{}]{
-			ItemType:    "test",
-			AccountID:   "foo",
-			Region:      "bar",
-			Client:      struct{}{},
-			MaxParallel: MaxParallel(1),
-			ListInput:   "",
+			AdapterMetadata: adapterMetadata,
+			ItemType:        "test",
+			AccountID:       "foo",
+			Region:          "bar",
+			Client:          struct{}{},
+			MaxParallel:     MaxParallel(1),
+			ListInput:       "",
 			ListFuncPaginatorBuilder: func(client struct{}, input string) Paginator[string, struct{}] {
 				// Returns 3 pages
 				return &TestPaginator{DataFunc: func() string {
@@ -167,12 +170,13 @@ func TestAlwaysGetSourceList(t *testing.T) {
 
 	t.Run("with a failing output mapper", func(t *testing.T) {
 		lgs := AlwaysGetAdapter[string, string, string, string, struct{}, struct{}]{
-			ItemType:    "test",
-			AccountID:   "foo",
-			Region:      "bar",
-			Client:      struct{}{},
-			MaxParallel: MaxParallel(1),
-			ListInput:   "",
+			AdapterMetadata: adapterMetadata,
+			ItemType:        "test",
+			AccountID:       "foo",
+			Region:          "bar",
+			Client:          struct{}{},
+			MaxParallel:     MaxParallel(1),
+			ListInput:       "",
 			ListFuncPaginatorBuilder: func(client struct{}, input string) Paginator[string, struct{}] {
 				// Returns 3 pages
 				return &TestPaginator{DataFunc: func() string {
@@ -217,12 +221,13 @@ func TestAlwaysGetSourceList(t *testing.T) {
 
 	t.Run("with a failing GetFunc", func(t *testing.T) {
 		lgs := AlwaysGetAdapter[string, string, string, string, struct{}, struct{}]{
-			ItemType:    "test",
-			AccountID:   "foo",
-			Region:      "bar",
-			Client:      struct{}{},
-			MaxParallel: MaxParallel(1),
-			ListInput:   "",
+			AdapterMetadata: adapterMetadata,
+			ItemType:        "test",
+			AccountID:       "foo",
+			Region:          "bar",
+			Client:          struct{}{},
+			MaxParallel:     MaxParallel(1),
+			ListInput:       "",
 			ListFuncPaginatorBuilder: func(client struct{}, input string) Paginator[string, struct{}] {
 				// Returns 3 pages
 				return &TestPaginator{DataFunc: func() string {
@@ -267,12 +272,13 @@ func TestAlwaysGetSourceList(t *testing.T) {
 func TestAlwaysGetSourceSearch(t *testing.T) {
 	t.Run("with ARN search", func(t *testing.T) {
 		lgs := AlwaysGetAdapter[string, string, string, string, struct{}, struct{}]{
-			ItemType:    "test",
-			AccountID:   "foo",
-			Region:      "bar",
-			Client:      struct{}{},
-			MaxParallel: MaxParallel(1),
-			ListInput:   "",
+			AdapterMetadata: adapterMetadata,
+			ItemType:        "test",
+			AccountID:       "foo",
+			Region:          "bar",
+			Client:          struct{}{},
+			MaxParallel:     MaxParallel(1),
+			ListInput:       "",
 			ListFuncPaginatorBuilder: func(client struct{}, input string) Paginator[string, struct{}] {
 				// Returns 3 pages
 				return &TestPaginator{DataFunc: func() string {
@@ -358,6 +364,7 @@ func TestAlwaysGetSourceSearch(t *testing.T) {
 
 	t.Run("with Custom & ARN search", func(t *testing.T) {
 		lgs := AlwaysGetAdapter[string, string, string, string, struct{}, struct{}]{
+			AdapterMetadata:  adapterMetadata,
 			ItemType:         "test",
 			AccountID:        "foo",
 			Region:           "bar",
@@ -442,11 +449,12 @@ func TestAlwaysGetSourceSearch(t *testing.T) {
 		var searchMapperCalled bool
 
 		lgs := AlwaysGetAdapter[string, string, string, string, struct{}, struct{}]{
-			ItemType:  "test",
-			AccountID: "foo",
-			Region:    "bar",
-			Client:    struct{}{},
-			ListInput: "",
+			AdapterMetadata: adapterMetadata,
+			ItemType:        "test",
+			AccountID:       "foo",
+			Region:          "bar",
+			Client:          struct{}{},
+			ListInput:       "",
 			ListFuncPaginatorBuilder: func(client struct{}, input string) Paginator[string, struct{}] {
 				// Returns 3 pages
 				return &TestPaginator{DataFunc: func() string {
@@ -494,6 +502,7 @@ func TestAlwaysGetSourceSearch(t *testing.T) {
 
 	t.Run("with SearchGetInputMapper", func(t *testing.T) {
 		ags := AlwaysGetAdapter[string, string, string, string, struct{}, struct{}]{
+			AdapterMetadata:  adapterMetadata,
 			ItemType:         "test",
 			AccountID:        "foo",
 			Region:           "bar",
@@ -554,11 +563,12 @@ func TestAlwaysGetSourceCaching(t *testing.T) {
 	ctx := context.Background()
 	generation := 0
 	s := AlwaysGetAdapter[string, string, string, string, struct{}, struct{}]{
-		ItemType:  "test",
-		AccountID: "foo",
-		Region:    "eu-west-2",
-		Client:    struct{}{},
-		ListInput: "",
+		AdapterMetadata: adapterMetadata,
+		ItemType:        "test",
+		AccountID:       "foo",
+		Region:          "eu-west-2",
+		Client:          struct{}{},
+		ListInput:       "",
 		ListFuncPaginatorBuilder: func(client struct{}, input string) Paginator[string, struct{}] {
 			return &TestPaginator{
 				DataFunc: func() string {
@@ -735,4 +745,25 @@ func TestAlwaysGetSourceCaching(t *testing.T) {
 			t.Errorf("with cache: expected generation %v, got %v", firstGen, withoutCache)
 		}
 	})
+}
+
+var adapterMetadata = &sdp.AdapterMetadata{
+	Type:            "test-adapter",
+	DescriptiveName: "Test Adapter",
+	Category:        sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
+		Get:               true,
+		GetDescription:    "Get a test adapter",
+		Search:            true,
+		SearchDescription: "Search test adapters",
+		List:              true,
+		ListDescription:   "List test adapters",
+	},
+	PotentialLinks: []string{"test-link"},
+	TerraformMappings: []*sdp.TerraformMapping{
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "aws_test_adapter.test_adapter",
+		},
+	},
 }

@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bufbuild/protovalidate-go"
 	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -129,7 +130,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		return errors.New("SearchGetInputMapper and SearchInputMapper are mutually exclusive")
 	}
 
-	return nil
+	return protovalidate.Validate(s.AdapterMetadata)
 }
 
 func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) Type() string {

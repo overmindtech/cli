@@ -21,7 +21,8 @@ func TestMain(m *testing.M) {
 
 func TestType(t *testing.T) {
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-		ItemType: "foo",
+		AdapterMetadata: adapterMetadata,
+		ItemType:        "foo",
 	}
 
 	if s.Type() != "foo" {
@@ -32,7 +33,8 @@ func TestType(t *testing.T) {
 func TestName(t *testing.T) {
 	// Basically just test that it's not empty. It doesn't matter what it is
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-		ItemType: "foo",
+		AdapterMetadata: adapterMetadata,
+		ItemType:        "foo",
 	}
 
 	if s.Name() == "" {
@@ -42,8 +44,9 @@ func TestName(t *testing.T) {
 
 func TestScopes(t *testing.T) {
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-		Region:    "outer-space",
-		AccountID: "mars",
+		AdapterMetadata: adapterMetadata,
+		Region:          "outer-space",
+		AccountID:       "mars",
 	}
 
 	scopes := s.Scopes()
@@ -64,8 +67,9 @@ func TestGet(t *testing.T) {
 		var describeFuncCalled bool
 
 		s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-			Region:    "eu-west-2",
-			AccountID: "foo",
+			AdapterMetadata: adapterMetadata,
+			Region:          "eu-west-2",
+			AccountID:       "foo",
 			InputMapperGet: func(scope, query string) (string, error) {
 				inputMapperCalled = true
 				return "input", nil
@@ -117,8 +121,9 @@ func TestGet(t *testing.T) {
 		var describeFuncCalled bool
 
 		s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-			Region:    "eu-west-2",
-			AccountID: "foo",
+			AdapterMetadata: adapterMetadata,
+			Region:          "eu-west-2",
+			AccountID:       "foo",
 			InputMapperGet: func(scope, query string) (string, error) {
 				inputMapperCalled = true
 				return "input", nil
@@ -183,8 +188,9 @@ func TestGet(t *testing.T) {
 
 	t.Run("with too many results", func(t *testing.T) {
 		s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-			Region:    "eu-west-2",
-			AccountID: "foo",
+			AdapterMetadata: adapterMetadata,
+			Region:          "eu-west-2",
+			AccountID:       "foo",
 			InputMapperGet: func(scope, query string) (string, error) {
 				return "input", nil
 			},
@@ -212,8 +218,9 @@ func TestGet(t *testing.T) {
 
 	t.Run("with no results", func(t *testing.T) {
 		s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-			Region:    "eu-west-2",
-			AccountID: "foo",
+			AdapterMetadata: adapterMetadata,
+			Region:          "eu-west-2",
+			AccountID:       "foo",
 			InputMapperGet: func(scope, query string) (string, error) {
 				return "input", nil
 			},
@@ -238,8 +245,9 @@ func TestGet(t *testing.T) {
 
 func TestSearchARN(t *testing.T) {
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-		Region:    "region",
-		AccountID: "account-id",
+		AdapterMetadata: adapterMetadata,
+		Region:          "region",
+		AccountID:       "account-id",
 		InputMapperGet: func(scope, query string) (string, error) {
 			return "input", nil
 		},
@@ -280,8 +288,9 @@ func TestSearchARN(t *testing.T) {
 
 func TestSearchCustom(t *testing.T) {
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-		Region:    "region",
-		AccountID: "account-id",
+		AdapterMetadata: adapterMetadata,
+		Region:          "region",
+		AccountID:       "account-id",
 		InputMapperGet: func(scope, query string) (string, error) {
 			return "input", nil
 		},
@@ -366,8 +375,9 @@ func TestSearchCustom(t *testing.T) {
 
 func TestNoInputMapper(t *testing.T) {
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-		Region:    "eu-west-2",
-		AccountID: "foo",
+		AdapterMetadata: adapterMetadata,
+		Region:          "eu-west-2",
+		AccountID:       "foo",
 		OutputMapper: func(_ context.Context, _ struct{}, scope, input, output string) ([]*sdp.Item, error) {
 			return []*sdp.Item{
 				{},
@@ -405,8 +415,9 @@ func TestNoInputMapper(t *testing.T) {
 
 func TestNoOutputMapper(t *testing.T) {
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-		Region:    "eu-west-2",
-		AccountID: "foo",
+		AdapterMetadata: adapterMetadata,
+		Region:          "eu-west-2",
+		AccountID:       "foo",
 		InputMapperGet: func(scope, query string) (string, error) {
 			return "input", nil
 		},
@@ -445,8 +456,9 @@ func TestNoOutputMapper(t *testing.T) {
 
 func TestNoDescribeFunc(t *testing.T) {
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-		Region:    "eu-west-2",
-		AccountID: "foo",
+		AdapterMetadata: adapterMetadata,
+		Region:          "eu-west-2",
+		AccountID:       "foo",
 		InputMapperGet: func(scope, query string) (string, error) {
 			return "input", nil
 		},
@@ -487,8 +499,9 @@ func TestNoDescribeFunc(t *testing.T) {
 
 func TestFailingInputMapper(t *testing.T) {
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-		Region:    "eu-west-2",
-		AccountID: "foo",
+		AdapterMetadata: adapterMetadata,
+		Region:          "eu-west-2",
+		AccountID:       "foo",
 		InputMapperGet: func(scope, query string) (string, error) {
 			return "input", errors.New("foobar")
 		},
@@ -542,8 +555,9 @@ func TestFailingInputMapper(t *testing.T) {
 
 func TestFailingOutputMapper(t *testing.T) {
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-		Region:    "eu-west-2",
-		AccountID: "foo",
+		AdapterMetadata: adapterMetadata,
+		Region:          "eu-west-2",
+		AccountID:       "foo",
 		InputMapperGet: func(scope, query string) (string, error) {
 			return "input", nil
 		},
@@ -595,8 +609,9 @@ func TestFailingOutputMapper(t *testing.T) {
 
 func TestFailingDescribeFunc(t *testing.T) {
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
-		Region:    "eu-west-2",
-		AccountID: "foo",
+		AdapterMetadata: adapterMetadata,
+		Region:          "eu-west-2",
+		AccountID:       "foo",
 		InputMapperGet: func(scope, query string) (string, error) {
 			return "input", nil
 		},
@@ -671,6 +686,7 @@ func (t *TestPaginator) NextPage(context.Context, ...func(struct{})) (string, er
 
 func TestPaginated(t *testing.T) {
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
+		AdapterMetadata:   adapterMetadata,
 		MaxResultsPerPage: 1,
 		Region:            "eu-west-2",
 		AccountID:         "foo",
@@ -733,6 +749,7 @@ func TestDescribeOnlySourceCaching(t *testing.T) {
 	ctx := context.Background()
 	generation := 0
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
+		AdapterMetadata:   adapterMetadata,
 		ItemType:          "test-type",
 		MaxResultsPerPage: 1,
 		Region:            "eu-west-2",

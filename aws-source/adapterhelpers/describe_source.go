@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bufbuild/protovalidate-go"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
@@ -138,7 +139,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Validate() e
 		return errors.New("adapter output mapper is nil")
 	}
 
-	return nil
+	return protovalidate.Validate(s.AdapterMetadata)
 }
 
 // Paginated returns whether or not this adapter is using a paginated API

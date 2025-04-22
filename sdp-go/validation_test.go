@@ -1,6 +1,8 @@
 package sdp
 
 import (
+	"errors"
+	"github.com/bufbuild/protovalidate-go"
 	"testing"
 	"time"
 
@@ -490,4 +492,467 @@ func newItem() *Item {
 			},
 		},
 	}
+}
+
+func TestAdapterMetadataValidation(t *testing.T) {
+	t.Run("Valid Metadata", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "Get a test adapter",
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+				ListDescription:   "List test adapters",
+			},
+			PotentialLinks: []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{
+				{
+					TerraformMethod:   QueryMethod_GET,
+					TerraformQueryMap: "aws_test_adapter.test_adapter",
+				},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err != nil {
+			t.Errorf("expected no errors, got %v", err)
+		}
+	})
+
+	t.Run("Empty strings in the potential links", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "Get a test adapter",
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+				ListDescription:   "List test adapters",
+			},
+			PotentialLinks: []string{""},
+			TerraformMappings: []*TerraformMapping{
+				{
+					TerraformMethod:   QueryMethod_GET,
+					TerraformQueryMap: "aws_test_adapter.test_adapter",
+				},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
+
+	t.Run("Undefined category", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        9999, // Undefined category
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "Get a test adapter",
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+				ListDescription:   "List test adapters",
+			},
+			PotentialLinks: []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{
+				{
+					TerraformMethod:   QueryMethod_GET,
+					TerraformQueryMap: "aws_test_adapter.test_adapter",
+				},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
+
+	t.Run("Undefined Terraform query method", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "Get a test adapter",
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+				ListDescription:   "List test adapters",
+			},
+			PotentialLinks: []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{
+				{
+					TerraformMethod:   9999, // Undefined method
+					TerraformQueryMap: "aws_test_adapter.test_adapter",
+				},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
+
+	t.Run("Malformed Terraform query map - no dots", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "Get a test adapter",
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+				ListDescription:   "List test adapters",
+			},
+			PotentialLinks: []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{
+				{
+					TerraformMethod:   QueryMethod_GET,
+					TerraformQueryMap: "aws_test_adapter_test_adapter", // no dots!
+				},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
+
+	t.Run("Malformed Terraform query map - more than 2 items", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "Get a test adapter",
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+				ListDescription:   "List test adapters",
+			},
+			PotentialLinks: []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{
+				{
+					TerraformMethod:   QueryMethod_GET,
+					TerraformQueryMap: "aws_test_adapter.test_adapter_id.something_else", // expected 2 items, got 3
+				},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
+
+	t.Run("Empty Terraform mapping", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "Get a test adapter",
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+				ListDescription:   "List test adapters",
+			},
+			PotentialLinks:    []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
+
+	t.Run("With Nil Terraform mapping", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "Get a test adapter",
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+				ListDescription:   "List test adapters",
+			},
+			PotentialLinks: []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{
+				nil,
+				{
+					TerraformMethod:   QueryMethod_GET,
+					TerraformQueryMap: "aws_test_adapter.test_adapter_id",
+				},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
+
+	t.Run("Missing get description", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+				ListDescription:   "List test adapters",
+			},
+			PotentialLinks: []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{
+				{TerraformQueryMap: "aws_test_adapter.test_adapter"},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
+
+	t.Run("Missing search description", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:             true,
+				GetDescription:  "Get a test adapter",
+				Search:          true,
+				List:            true,
+				ListDescription: "List test adapters",
+			},
+			PotentialLinks: []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{
+				{TerraformQueryMap: "aws_test_adapter.test_adapter"},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
+
+	t.Run("Missing list description", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "Get a test adapter",
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+			},
+			PotentialLinks: []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{
+				{TerraformQueryMap: "aws_test_adapter.test_adapter"},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
+
+	t.Run("Empty string in the get description", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "",
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+				ListDescription:   "List test adapters",
+			},
+			PotentialLinks: []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{
+				{TerraformQueryMap: "aws_test_adapter.test_adapter"},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
+
+	t.Run("Empty string in the search description", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "Get a test adapter",
+				Search:            true,
+				SearchDescription: "",
+				List:              true,
+				ListDescription:   "List test adapters",
+			},
+			PotentialLinks: []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{
+				{TerraformQueryMap: "aws_test_adapter.test_adapter"},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
+
+	t.Run("Empty string in the list description", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "Get a test adapter",
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+				ListDescription:   "",
+			},
+			PotentialLinks: []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{
+				{TerraformQueryMap: "aws_test_adapter.test_adapter"},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
+
+	t.Run("Missing Category", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "Get a test adapter",
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+				ListDescription:   "List test adapters",
+			},
+			PotentialLinks: []string{"test-link"},
+			TerraformMappings: []*TerraformMapping{
+				{TerraformQueryMap: "aws_test_adapter.test_adapter"},
+			},
+		}
+
+		err := protovalidate.Validate(md)
+		if err == nil {
+			t.Errorf("expected error, got nil")
+		}
+
+		var validationError *protovalidate.ValidationError
+		if !errors.As(err, &validationError) {
+			t.Errorf("expected validation error, got %T: %v", err, err)
+		}
+	})
 }
