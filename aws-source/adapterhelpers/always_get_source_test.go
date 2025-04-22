@@ -78,7 +78,6 @@ func TestAlwaysGetSourceGet(t *testing.T) {
 		}
 
 		_, err := lgs.Get(context.Background(), "foo.bar", "", false)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -145,26 +144,16 @@ func TestAlwaysGetSourceList(t *testing.T) {
 				return ""
 			},
 		}
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
 
+		stream := discovery.NewRecordingQueryResultStream()
 		lgs.ListStream(context.Background(), "foo.bar", false, stream)
-		stream.Close()
 
-		if len(errs) != 0 {
-			t.Errorf("expected no errors, got %v", len(errs))
+		if len(stream.GetErrors()) != 0 {
+			t.Errorf("expected no errors, got %v: %v", len(stream.GetErrors()), stream.GetErrors())
 		}
 
-		if len(items) != 6 {
-			t.Errorf("expected 6 results, got %v", len(items))
+		if len(stream.GetItems()) != 6 {
+			t.Errorf("expected 6 results, got %v: %v", len(stream.GetItems()), stream.GetItems())
 		}
 	})
 
@@ -194,19 +183,13 @@ func TestAlwaysGetSourceList(t *testing.T) {
 				return ""
 			},
 		}
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
 
+		stream := discovery.NewRecordingQueryResultStream()
 		lgs.ListStream(context.Background(), "foo.bar", false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) != 1 {
-			t.Fatalf("expected 1 error, got %v", len(errs))
+			t.Fatalf("expected 1 error, got %v: %v", len(errs), errs)
 		}
 
 		qErr := &sdp.QueryError{}
@@ -245,24 +228,16 @@ func TestAlwaysGetSourceList(t *testing.T) {
 				return ""
 			},
 		}
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
 
+		stream := discovery.NewRecordingQueryResultStream()
 		lgs.ListStream(context.Background(), "foo.bar", false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) != 6 {
 			t.Fatalf("expected 6 error, got %v", len(errs))
 		}
 
+		items := stream.GetItems()
 		if len(items) != 0 {
 			t.Errorf("expected no items, got %v", len(items))
 		}
@@ -302,62 +277,29 @@ func TestAlwaysGetSourceSearch(t *testing.T) {
 		}
 
 		t.Run("bad ARN", func(t *testing.T) {
-			items := make([]*sdp.Item, 0)
-			errs := make([]error, 0)
-			stream := discovery.NewQueryResultStream(
-				func(item *sdp.Item) {
-					items = append(items, item)
-				},
-				func(err error) {
-					errs = append(errs, err)
-				},
-			)
-
+			stream := discovery.NewRecordingQueryResultStream()
 			lgs.SearchStream(context.Background(), "foo.bar", "query", false, stream)
-			stream.Close()
 
-			if len(errs) == 0 {
+			if len(stream.GetErrors()) == 0 {
 				t.Error("expected error because the ARN was bad")
 			}
 		})
 
 		t.Run("good ARN but bad scope", func(t *testing.T) {
-			items := make([]*sdp.Item, 0)
-			errs := make([]error, 0)
-			stream := discovery.NewQueryResultStream(
-				func(item *sdp.Item) {
-					items = append(items, item)
-				},
-				func(err error) {
-					errs = append(errs, err)
-				},
-			)
-
+			stream := discovery.NewRecordingQueryResultStream()
 			lgs.SearchStream(context.Background(), "foo.bar", "arn:aws:service:region:account:type/id", false, stream)
-			stream.Close()
 
-			if len(errs) == 0 {
+			if len(stream.GetErrors()) == 0 {
 				t.Error("expected error because the ARN had a bad scope")
 			}
 		})
 
 		t.Run("good ARN", func(t *testing.T) {
-			items := make([]*sdp.Item, 0)
-			errs := make([]error, 0)
-			stream := discovery.NewQueryResultStream(
-				func(item *sdp.Item) {
-					items = append(items, item)
-				},
-				func(err error) {
-					errs = append(errs, err)
-				},
-			)
-
+			stream := discovery.NewRecordingQueryResultStream()
 			lgs.SearchStream(context.Background(), "foo.bar", "arn:aws:service:bar:foo:type/id", false, stream)
-			stream.Close()
 
-			if len(errs) != 0 {
-				t.Error(errs[0])
+			if len(stream.GetErrors()) != 0 {
+				t.Errorf("expected no errors, got %v: %v", len(stream.GetErrors()), stream.GetErrors())
 			}
 		})
 	})
@@ -398,55 +340,37 @@ func TestAlwaysGetSourceSearch(t *testing.T) {
 		}
 
 		t.Run("ARN", func(t *testing.T) {
-			items := make([]*sdp.Item, 0)
-			errs := make([]error, 0)
-			stream := discovery.NewQueryResultStream(
-				func(item *sdp.Item) {
-					items = append(items, item)
-				},
-				func(err error) {
-					errs = append(errs, err)
-				},
-			)
-
+			stream := discovery.NewRecordingQueryResultStream()
 			lgs.SearchStream(context.Background(), "foo.bar", "arn:aws:service:bar:foo:type/id", false, stream)
-			stream.Close()
 
+			errs := stream.GetErrors()
 			if len(errs) != 0 {
 				t.Error(errs[0])
 			}
 
+			items := stream.GetItems()
 			if len(items) != 1 {
 				t.Errorf("expected 1 item, got %v", len(items))
 			}
 		})
 
 		t.Run("other search", func(t *testing.T) {
-			items := make([]*sdp.Item, 0)
-			errs := make([]error, 0)
-			stream := discovery.NewQueryResultStream(
-				func(item *sdp.Item) {
-					items = append(items, item)
-				},
-				func(err error) {
-					errs = append(errs, err)
-				},
-			)
-
+			stream := discovery.NewRecordingQueryResultStream()
 			lgs.SearchStream(context.Background(), "foo.bar", "id", false, stream)
-			stream.Close()
 
+			errs := stream.GetErrors()
 			if len(errs) != 6 {
 				t.Errorf("expected 6 error, got %v", len(errs))
 			}
 
+			items := stream.GetItems()
 			if len(items) != 0 {
 				t.Errorf("expected 0 items, got %v", len(items))
 			}
 		})
 	})
 	t.Run("with custom search logic", func(t *testing.T) {
-		var searchMapperCalled bool
+		searchMapperCalled := false
 
 		lgs := AlwaysGetAdapter[string, string, string, string, struct{}, struct{}]{
 			AdapterMetadata: adapterMetadata,
@@ -477,20 +401,10 @@ func TestAlwaysGetSourceSearch(t *testing.T) {
 			},
 		}
 
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
-
+		stream := discovery.NewRecordingQueryResultStream()
 		lgs.SearchStream(context.Background(), "foo.bar", "bar", false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) != 0 {
 			t.Error(errs[0])
 		}
@@ -535,24 +449,15 @@ func TestAlwaysGetSourceSearch(t *testing.T) {
 			},
 		}
 
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
-
+		stream := discovery.NewRecordingQueryResultStream()
 		ags.SearchStream(context.Background(), "foo.bar", "id", false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) != 0 {
 			t.Error(errs[0])
 		}
 
+		items := stream.GetItems()
 		if len(items) != 1 {
 			t.Errorf("expected 1 item, got %v", len(items))
 		}
@@ -560,7 +465,7 @@ func TestAlwaysGetSourceSearch(t *testing.T) {
 }
 
 func TestAlwaysGetSourceCaching(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	generation := 0
 	s := AlwaysGetAdapter[string, string, string, string, struct{}, struct{}]{
 		AdapterMetadata: adapterMetadata,
@@ -584,7 +489,8 @@ func TestAlwaysGetSourceCaching(t *testing.T) {
 		},
 		GetFunc: func(ctx context.Context, client struct{}, scope, input string) (*sdp.Item, error) {
 			generation += 1
-			return &sdp.Item{Scope: "foo.eu-west-2",
+			return &sdp.Item{
+				Scope:           "foo.eu-west-2",
 				Type:            "test-type",
 				UniqueAttribute: "name",
 				Attributes: &sdp.ItemAttributes{
@@ -594,7 +500,8 @@ func TestAlwaysGetSourceCaching(t *testing.T) {
 							"generation": structpb.NewStringValue(fmt.Sprintf("%v%v", input, generation)),
 						},
 					},
-				}}, nil
+				},
+			}, nil
 		},
 		GetInputMapper: func(scope, query string) string {
 			return ""
@@ -641,16 +548,7 @@ func TestAlwaysGetSourceCaching(t *testing.T) {
 	})
 
 	t.Run("list", func(t *testing.T) {
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
+		stream := discovery.NewRecordingQueryResultStream()
 
 		// First query
 		s.ListStream(ctx, "foo.eu-west-2", false, stream)
@@ -658,8 +556,8 @@ func TestAlwaysGetSourceCaching(t *testing.T) {
 		s.ListStream(ctx, "foo.eu-west-2", false, stream)
 		// Third time we're expecting no caching since we asked it to ignore
 		s.ListStream(ctx, "foo.eu-west-2", true, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) != 0 {
 			for _, err := range errs {
 				t.Error(err)
@@ -667,6 +565,7 @@ func TestAlwaysGetSourceCaching(t *testing.T) {
 			t.Fatal("expected no errors")
 		}
 
+		items := stream.GetItems()
 		if len(items) != 3 {
 			t.Errorf("expected 3 items, got %v", len(items))
 		}
@@ -694,16 +593,7 @@ func TestAlwaysGetSourceCaching(t *testing.T) {
 	})
 
 	t.Run("search", func(t *testing.T) {
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
+		stream := discovery.NewRecordingQueryResultStream()
 
 		// First query
 		s.SearchStream(ctx, "foo.eu-west-2", "arn:aws:test-type:eu-west-2:foo:test-item", false, stream)
@@ -711,8 +601,8 @@ func TestAlwaysGetSourceCaching(t *testing.T) {
 		s.SearchStream(ctx, "foo.eu-west-2", "arn:aws:test-type:eu-west-2:foo:test-item", false, stream)
 		// Third time we're expecting no caching since we asked it to ignore
 		s.SearchStream(ctx, "foo.eu-west-2", "arn:aws:test-type:eu-west-2:foo:test-item", true, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) != 0 {
 			for _, err := range errs {
 				t.Error(err)
@@ -720,6 +610,7 @@ func TestAlwaysGetSourceCaching(t *testing.T) {
 			t.Fatal("expected no errors")
 		}
 
+		items := stream.GetItems()
 		if len(items) != 3 {
 			t.Errorf("expected 3 items, got %v", len(items))
 		}

@@ -90,7 +90,6 @@ func TestGet(t *testing.T) {
 		}
 
 		item, err := s.Get(context.Background(), "foo.eu-west-2", "bar", false)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -164,7 +163,6 @@ func TestGet(t *testing.T) {
 		}
 
 		item, err := s.Get(context.Background(), "foo.eu-west-2", uniqueAttributeValue, false)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -263,24 +261,16 @@ func TestSearchARN(t *testing.T) {
 			return "fancy", nil
 		},
 	}
-	items := make([]*sdp.Item, 0)
-	errs := make([]error, 0)
-	stream := discovery.NewQueryResultStream(
-		func(item *sdp.Item) {
-			items = append(items, item)
-		},
-		func(err error) {
-			errs = append(errs, err)
-		},
-	)
 
+	stream := discovery.NewRecordingQueryResultStream()
 	s.SearchStream(context.Background(), "account-id.region", "arn:partition:service:region:account-id:resource-type:resource-id", false, stream)
-	stream.Close()
 
+	errs := stream.GetErrors()
 	if len(errs) > 0 {
 		t.Error(errs)
 	}
 
+	items := stream.GetItems()
 	if len(items) != 1 {
 		t.Errorf("expected 1 item, got %v", len(items))
 	}
@@ -319,24 +309,16 @@ func TestSearchCustom(t *testing.T) {
 			return input, nil
 		},
 	}
-	items := make([]*sdp.Item, 0)
-	errs := make([]error, 0)
-	stream := discovery.NewQueryResultStream(
-		func(item *sdp.Item) {
-			items = append(items, item)
-		},
-		func(err error) {
-			errs = append(errs, err)
-		},
-	)
 
+	stream := discovery.NewRecordingQueryResultStream()
 	s.SearchStream(context.Background(), "account-id.region", "foo", false, stream)
-	stream.Close()
 
+	errs := stream.GetErrors()
 	if len(errs) > 0 {
 		t.Error(errs)
 	}
 
+	items := stream.GetItems()
 	if len(items) != 1 {
 		t.Errorf("expected 1 item, got %v", len(items))
 	}
@@ -349,24 +331,16 @@ func TestSearchCustom(t *testing.T) {
 		s.PostSearchFilter = func(ctx context.Context, query string, items []*sdp.Item) ([]*sdp.Item, error) {
 			return nil, nil
 		}
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
 
+		stream := discovery.NewRecordingQueryResultStream()
 		s.SearchStream(context.Background(), "account-id.region", "bar", false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) > 0 {
 			t.Error(errs)
 		}
 
+		items := stream.GetItems()
 		if len(items) != 0 {
 			t.Errorf("expected 0 item, got %v", len(items))
 		}
@@ -397,17 +371,10 @@ func TestNoInputMapper(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
+		stream := discovery.NewRecordingQueryResultStream()
 		s.ListStream(context.Background(), "foo.eu-west-2", false, stream)
-		stream.Close()
 
-		if len(errs) == 0 {
+		if len(stream.GetErrors()) == 0 {
 			t.Error("expected error but got none")
 		}
 	})
@@ -438,17 +405,10 @@ func TestNoOutputMapper(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
+		stream := discovery.NewRecordingQueryResultStream()
 		s.ListStream(context.Background(), "foo.eu-west-2", false, stream)
-		stream.Close()
 
-		if len(errs) == 0 {
+		if len(stream.GetErrors()) == 0 {
 			t.Error("expected error but got none")
 		}
 	})
@@ -481,17 +441,10 @@ func TestNoDescribeFunc(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
+		stream := discovery.NewRecordingQueryResultStream()
 		s.ListStream(context.Background(), "foo.eu-west-2", false, stream)
-		stream.Close()
 
-		if len(errs) == 0 {
+		if len(stream.GetErrors()) == 0 {
 			t.Error("expected error but got none")
 		}
 	})
@@ -533,16 +486,10 @@ func TestFailingInputMapper(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
+		stream := discovery.NewRecordingQueryResultStream()
 		s.ListStream(context.Background(), "foo.eu-west-2", false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) == 0 {
 			t.Error("expected error but got none")
 		}
@@ -587,16 +534,10 @@ func TestFailingOutputMapper(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
+		stream := discovery.NewRecordingQueryResultStream()
 		s.ListStream(context.Background(), "foo.eu-west-2", false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) == 0 {
 			t.Error("expected error but got none")
 		}
@@ -643,16 +584,10 @@ func TestFailingDescribeFunc(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
+		stream := discovery.NewRecordingQueryResultStream()
 		s.ListStream(context.Background(), "foo.eu-west-2", false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) == 0 {
 			t.Error("expected error but got none")
 		}
@@ -722,23 +657,15 @@ func TestPaginated(t *testing.T) {
 	})
 
 	t.Run("paginating a List query", func(t *testing.T) {
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
+		stream := discovery.NewRecordingQueryResultStream()
 		s.ListStream(context.Background(), "foo.eu-west-2", false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) > 0 {
 			t.Error(errs)
 		}
 
+		items := stream.GetItems()
 		if len(items) != 3 {
 			t.Errorf("expected 3 items, got %v", len(items))
 		}
@@ -832,16 +759,7 @@ func TestDescribeOnlySourceCaching(t *testing.T) {
 	})
 
 	t.Run("list", func(t *testing.T) {
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
+		stream := discovery.NewRecordingQueryResultStream()
 
 		// Fist list
 		s.ListStream(ctx, "foo.eu-west-2", false, stream)
@@ -849,12 +767,13 @@ func TestDescribeOnlySourceCaching(t *testing.T) {
 		s.ListStream(ctx, "foo.eu-west-2", false, stream)
 		// List again, ignore cache
 		s.ListStream(ctx, "foo.eu-west-2", true, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) > 0 {
 			t.Error(errs)
 		}
 
+		items := stream.GetItems()
 		if len(items) != 3 {
 			t.Fatalf("expected 3 items, got %v", len(items))
 		}
@@ -882,16 +801,7 @@ func TestDescribeOnlySourceCaching(t *testing.T) {
 	})
 
 	t.Run("search", func(t *testing.T) {
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
+		stream := discovery.NewRecordingQueryResultStream()
 
 		// First time
 		s.SearchStream(ctx, "foo.eu-west-2", "arn:aws:test-type:eu-west-2:foo:test-item", false, stream)
@@ -899,12 +809,13 @@ func TestDescribeOnlySourceCaching(t *testing.T) {
 		s.SearchStream(ctx, "foo.eu-west-2", "arn:aws:test-type:eu-west-2:foo:test-item", false, stream)
 		// Search again, ignore cache
 		s.SearchStream(ctx, "foo.eu-west-2", "arn:aws:test-type:eu-west-2:foo:test-item", true, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) > 0 {
 			t.Error(errs)
 		}
 
+		items := stream.GetItems()
 		if len(items) != 3 {
 			t.Fatalf("expected 3 items, got %v", len(items))
 		}

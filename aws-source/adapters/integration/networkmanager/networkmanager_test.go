@@ -14,25 +14,15 @@ import (
 )
 
 func searchSync(adapter discovery.StreamingAdapter, ctx context.Context, scope, query string, ignoreCache bool) ([]*sdp.Item, error) {
-	items := make([]*sdp.Item, 0)
-	errs := make([]error, 0)
-	stream := discovery.NewQueryResultStream(
-		func(item *sdp.Item) {
-			items = append(items, item)
-		},
-		func(err error) {
-			errs = append(errs, err)
-		},
-	)
-
+	stream := discovery.NewRecordingQueryResultStream()
 	adapter.SearchStream(ctx, scope, query, ignoreCache, stream)
-	stream.Close()
 
+	errs := stream.GetErrors()
 	if len(errs) > 0 {
 		return nil, fmt.Errorf("failed to search: %v", errs)
 	}
 
-	return items, nil
+	return stream.GetItems(), nil
 }
 
 func NetworkManager(t *testing.T) {
@@ -86,31 +76,22 @@ func NetworkManager(t *testing.T) {
 	globalScope := adapterhelpers.FormatScope(accountID, "")
 
 	t.Run("Global Network", func(t *testing.T) {
-		globalNetworks := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				globalNetworks = append(globalNetworks, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
-
+		stream := discovery.NewRecordingQueryResultStream()
 		globalNetworkSource.ListStream(ctx, globalScope, false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) > 0 {
 			t.Fatalf("failed to list NetworkManager global networks: %v", errs)
 		}
 
-		if len(globalNetworks) == 0 {
+		items := stream.GetItems()
+		if len(items) == 0 {
 			t.Fatalf("no global networks found")
 		}
 
-		globalNetworkUniqueAttribute := globalNetworks[0].GetUniqueAttribute()
+		globalNetworkUniqueAttribute := items[0].GetUniqueAttribute()
 
-		globalNetworkID, err := integration.GetUniqueAttributeValueByTags(globalNetworkUniqueAttribute, globalNetworks, integration.ResourceTags(integration.NetworkManager, globalNetworkSrc), false)
+		globalNetworkID, err := integration.GetUniqueAttributeValueByTags(globalNetworkUniqueAttribute, items, integration.ResourceTags(integration.NetworkManager, globalNetworkSrc), false)
 		if err != nil {
 			t.Fatalf("failed to get global network ID: %v", err)
 		}
@@ -140,16 +121,16 @@ func NetworkManager(t *testing.T) {
 			t.Fatalf("expected global scope %s, got %s", globalScope, globalNetwork.GetScope())
 		}
 
-		globalNetworks, err = searchSync(globalNetworkSource, ctx, globalScope, globalNetworkARN.(string), true)
+		items, err = searchSync(globalNetworkSource, ctx, globalScope, globalNetworkARN.(string), true)
 		if err != nil {
 			t.Fatalf("failed to search NetworkManager global networks: %v", err)
 		}
 
-		if len(globalNetworks) == 0 {
+		if len(items) == 0 {
 			t.Fatalf("no global networks found")
 		}
 
-		globalNetworkIDFromSearch, err := integration.GetUniqueAttributeValueByTags(globalNetworkUniqueAttribute, globalNetworks, integration.ResourceTags(integration.NetworkManager, globalNetworkSrc), false)
+		globalNetworkIDFromSearch, err := integration.GetUniqueAttributeValueByTags(globalNetworkUniqueAttribute, items, integration.ResourceTags(integration.NetworkManager, globalNetworkSrc), false)
 		if err != nil {
 			t.Fatalf("failed to get global network ID from search: %v", err)
 		}

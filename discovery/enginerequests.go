@@ -393,7 +393,6 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, ite
 		errs <- convertToSDPError(err, q, adapter, e.EngineConfig.SourceName)
 	}
 	stream := NewQueryResultStream(itemHandler, errHandler)
-	defer stream.Close()
 
 	// Check that our context is okay before doing anything expensive
 	if ctx.Err() != nil {

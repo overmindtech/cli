@@ -115,7 +115,6 @@ func (t *TestIAMClient) ListUserTags(context.Context, *iam.ListUserTagsInput, ..
 
 func TestGetUserGroups(t *testing.T) {
 	groups, err := getUserGroups(context.Background(), &TestIAMClient{}, adapterhelpers.PtrString("foo"))
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -127,7 +126,6 @@ func TestGetUserGroups(t *testing.T) {
 
 func TestUserGetFunc(t *testing.T) {
 	user, err := userGetFunc(context.Background(), &TestIAMClient{}, "foo", "bar")
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -138,31 +136,21 @@ func TestUserGetFunc(t *testing.T) {
 
 	if len(user.UserGroups) != 3 {
 		t.Errorf("expected 3 groups, got %v", len(user.UserGroups))
-
 	}
 }
 
 func TestUserListFunc(t *testing.T) {
 	adapter := NewIAMUserAdapter(&TestIAMClient{}, "foo")
 
-	items := make([]*sdp.Item, 0)
-	errs := make([]error, 0)
-	stream := discovery.NewQueryResultStream(
-		func(item *sdp.Item) {
-			items = append(items, item)
-		},
-		func(err error) {
-			errs = append(errs, err)
-		},
-	)
-
+	stream := discovery.NewRecordingQueryResultStream()
 	adapter.ListStream(context.Background(), "foo", false, stream)
-	stream.Close()
 
+	errs := stream.GetErrors()
 	if len(errs) > 0 {
 		t.Error(errs)
 	}
 
+	items := stream.GetItems()
 	if len(items) != 3 {
 		t.Errorf("expected 3 items, got %v", len(items))
 	}
@@ -183,7 +171,6 @@ func TestUserListTagsFunc(t *testing.T) {
 			UserName: adapterhelpers.PtrString("foo"),
 		},
 	}, &TestIAMClient{})
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -214,7 +201,6 @@ func TestUserItemMapper(t *testing.T) {
 	}
 
 	item, err := userItemMapper(nil, "foo", &details)
-
 	if err != nil {
 		t.Error(err)
 	}

@@ -684,8 +684,8 @@ func TestSearchGetCaching(t *testing.T) {
 }
 
 func TestNewQueryResultStream(t *testing.T) {
-	items := make(chan *sdp.Item)
-	errs := make(chan error)
+	items := make(chan *sdp.Item, 10)
+	errs := make(chan error, 10)
 
 	itemHandler := func(item *sdp.Item) {
 		time.Sleep(10 * time.Millisecond)
@@ -705,12 +705,6 @@ func TestNewQueryResultStream(t *testing.T) {
 	}
 	if stream.itemHandler == nil || stream.errHandler == nil {
 		t.Fatal("Expected handlers to be set")
-	}
-	if stream.items == nil || stream.errs == nil {
-		t.Fatal("Expected channels to be initialized")
-	}
-	if !stream.open {
-		t.Fatal("Expected stream to be open")
 	}
 
 	// Test SendItem
@@ -739,7 +733,6 @@ func TestNewQueryResultStream(t *testing.T) {
 	// and the stream is marked as closed
 	closed := make(chan struct{})
 	go func() {
-		stream.Close()
 		close(closed)
 	}()
 	stream.SendItem(testItem)

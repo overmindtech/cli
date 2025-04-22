@@ -13,47 +13,27 @@ import (
 )
 
 func searchSync(adapter discovery.StreamingAdapter, ctx context.Context, scope, query string, ignoreCache bool) ([]*sdp.Item, error) {
-	items := make([]*sdp.Item, 0)
-	errs := make([]error, 0)
-	stream := discovery.NewQueryResultStream(
-		func(item *sdp.Item) {
-			items = append(items, item)
-		},
-		func(err error) {
-			errs = append(errs, err)
-		},
-	)
-
+	stream := discovery.NewRecordingQueryResultStream()
 	adapter.SearchStream(ctx, scope, query, ignoreCache, stream)
-	stream.Close()
 
+	errs := stream.GetErrors()
 	if len(errs) > 0 {
 		return nil, fmt.Errorf("failed to search: %v", errs)
 	}
 
-	return items, nil
+	return stream.GetItems(), nil
 }
 
 func listSync(adapter discovery.StreamingAdapter, ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error) {
-	items := make([]*sdp.Item, 0)
-	errs := make([]error, 0)
-	stream := discovery.NewQueryResultStream(
-		func(item *sdp.Item) {
-			items = append(items, item)
-		},
-		func(err error) {
-			errs = append(errs, err)
-		},
-	)
-
+	stream := discovery.NewRecordingQueryResultStream()
 	adapter.ListStream(ctx, scope, ignoreCache, stream)
-	stream.Close()
 
+	errs := stream.GetErrors()
 	if len(errs) > 0 {
 		return nil, fmt.Errorf("failed to List: %v", errs)
 	}
 
-	return items, nil
+	return stream.GetItems(), nil
 }
 
 func EC2(t *testing.T) {

@@ -97,7 +97,6 @@ func TestCapacityProviderOutputMapper(t *testing.T) {
 			},
 		},
 	)
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -127,24 +126,15 @@ func TestCapacityProviderOutputMapper(t *testing.T) {
 func TestCapacityProviderAdapter(t *testing.T) {
 	adapter := NewECSCapacityProviderAdapter(&ecsTestClient{}, "", "")
 
-	items := make([]*sdp.Item, 0)
-	errs := make([]error, 0)
-	stream := discovery.NewQueryResultStream(
-		func(item *sdp.Item) {
-			items = append(items, item)
-		},
-		func(err error) {
-			errs = append(errs, err)
-		},
-	)
-
+	stream := discovery.NewRecordingQueryResultStream()
 	adapter.ListStream(context.Background(), "", false, stream)
-	stream.Close()
 
+	errs := stream.GetErrors()
 	if len(errs) > 0 {
 		t.Error(errs)
 	}
 
+	items := stream.GetItems()
 	if len(items) != 3 {
 		t.Errorf("expected 3 items, got %v", len(items))
 	}

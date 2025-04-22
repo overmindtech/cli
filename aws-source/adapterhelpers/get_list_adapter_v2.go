@@ -214,7 +214,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 
 // List Lists all available items. This is done by running the ListFunc, then
 // passing these results to GetFunc in order to get the details
-func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]) ListStream(ctx context.Context, scope string, ignoreCache bool, stream *discovery.QueryResultStream) {
+func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]) ListStream(ctx context.Context, scope string, ignoreCache bool, stream discovery.QueryResultStream) {
 	if !s.hasScope(scope) {
 		stream.SendError(&sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOSCOPE,
@@ -312,7 +312,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 // generic ARN search that tries to extract the globally unique name from the
 // ARN and pass this to a Get request, or a custom search function that can be
 // used to search for items in a different, adapter-specific way
-func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]) SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream *discovery.QueryResultStream) {
+func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]) SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
 	if !s.hasScope(scope) {
 		stream.SendError(&sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOSCOPE,
@@ -349,7 +349,6 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 	// Since this gits the Get method, and this method implements caching, we
 	// don't need to implement it here
 	item, err := s.Get(ctx, scope, a.ResourceID(), ignoreCache)
-
 	if err != nil {
 		stream.SendError(err)
 		return

@@ -15,7 +15,6 @@ import (
 	"github.com/overmindtech/cli/aws-source/adapters"
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/tracing"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -89,7 +88,6 @@ func TestIntegrationSSM(t *testing.T) {
 										},
 									},
 								})
-
 								if err != nil {
 									var alreadyExistsErr *types.ParameterAlreadyExists
 									if errors.As(err, &alreadyExistsErr) {
@@ -128,32 +126,20 @@ func TestIntegrationSSM(t *testing.T) {
 		defer span.End()
 		start := time.Now()
 
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
-
+		stream := discovery.NewRecordingQueryResultStream()
 		adapter.ListStream(ctx, scope, false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) > 0 {
 			t.Error(errs)
 		}
 
-		timeTaken := time.Since(start)
-		timeTakenString := timeTaken.String()
-		t.Logf("Listed %d SSM parameters in %v", len(items), timeTakenString)
+		items := stream.GetItems()
+		t.Logf("Listed %d SSM parameters in %v", len(items), time.Since(start))
 
 		span.SetAttributes(
 			attribute.Int("ssm.parameters", len(items)),
 		)
-
 	})
 
 	t.Run("Teardown", func(t *testing.T) {

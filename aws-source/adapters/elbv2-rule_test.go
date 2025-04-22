@@ -71,7 +71,6 @@ func TestRuleOutputMapper(t *testing.T) {
 	}
 
 	items, err := ruleOutputMapper(context.Background(), mockElbv2Client{}, "foo", nil, &output)
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -102,56 +101,38 @@ func TestNewELBv2RuleAdapter(t *testing.T) {
 	listenerSource := NewELBv2ListenerAdapter(client, account, region)
 	ruleSource := NewELBv2RuleAdapter(client, account, region)
 
-	lbs := make([]*sdp.Item, 0)
-	errs := make([]error, 0)
-	stream := discovery.NewQueryResultStream(
-		func(item *sdp.Item) {
-			lbs = append(lbs, item)
-		},
-		func(err error) {
-			errs = append(errs, err)
-		},
-	)
-
+	stream := discovery.NewRecordingQueryResultStream()
 	lbSource.ListStream(context.Background(), lbSource.Scopes()[0], false, stream)
-	stream.Close()
 
+	errs := stream.GetErrors()
 	if len(errs) > 0 {
 		t.Error(errs)
 	}
 
-	if len(lbs) == 0 {
+	items := stream.GetItems()
+	if len(items) == 0 {
 		t.Skip("no load balancers found")
 	}
 
-	lbARN, err := lbs[0].GetAttributes().Get("LoadBalancerArn")
+	lbARN, err := items[0].GetAttributes().Get("LoadBalancerArn")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	listeners := make([]*sdp.Item, 0)
-	errs = make([]error, 0)
-	stream = discovery.NewQueryResultStream(
-		func(item *sdp.Item) {
-			listeners = append(listeners, item)
-		},
-		func(err error) {
-			errs = append(errs, err)
-		},
-	)
-
+	stream = discovery.NewRecordingQueryResultStream()
 	listenerSource.SearchStream(context.Background(), listenerSource.Scopes()[0], fmt.Sprint(lbARN), false, stream)
-	stream.Close()
 
+	errs = stream.GetErrors()
 	if len(errs) > 0 {
 		t.Error(errs)
 	}
 
-	if len(listeners) == 0 {
+	items = stream.GetItems()
+	if len(items) == 0 {
 		t.Skip("no listeners found")
 	}
 
-	listenerARN, err := listeners[0].GetAttributes().Get("ListenerArn")
+	listenerARN, err := items[0].GetAttributes().Get("ListenerArn")
 	if err != nil {
 		t.Fatal(err)
 	}

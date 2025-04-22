@@ -136,24 +136,15 @@ func TestGetListAdapterV2ListStream(t *testing.T) {
 			},
 		}
 
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
-
+		stream := discovery.NewRecordingQueryResultStream()
 		s.ListStream(context.Background(), "12345.eu-west-2", false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) > 0 {
 			t.Error(errs)
 		}
 
+		items := stream.GetItems()
 		if len(items) != 2 {
 			t.Errorf("expected 2 items, got %v", len(items))
 		}
@@ -175,17 +166,10 @@ func TestGetListAdapterV2ListStream(t *testing.T) {
 			},
 		}
 
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
-
+		stream := discovery.NewRecordingQueryResultStream()
 		s.ListStream(context.Background(), "12345.eu-west-2", false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) == 0 {
 			t.Error("expected errors got none")
 		}
@@ -213,24 +197,15 @@ func TestGetListAdapterV2ListStream(t *testing.T) {
 			},
 		}
 
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
-
+		stream := discovery.NewRecordingQueryResultStream()
 		s.ListStream(context.Background(), "12345.eu-west-2", false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) != 2 {
 			t.Errorf("expected 2 errors got %v", len(errs))
 		}
 
+		items := stream.GetItems()
 		if len(items) != 0 {
 			t.Errorf("expected no items, got %v", len(items))
 		}
@@ -294,29 +269,18 @@ func TestListFuncPaginatorBuilder(t *testing.T) {
 		},
 	}
 
-	ctx := context.Background()
-	items := make([]*sdp.Item, 0)
-	errs := make([]error, 0)
-	stream := discovery.NewQueryResultStream(
-		func(item *sdp.Item) {
-			items = append(items, item)
-		},
-		func(err error) {
-			errs = append(errs, err)
-		},
-	)
+	stream := discovery.NewRecordingQueryResultStream()
+	adapter.ListStream(context.Background(), "foo.eu-west-2", false, stream)
 
-	adapter.ListStream(ctx, "foo.eu-west-2", false, stream)
-	stream.Close()
-
+	errs := stream.GetErrors()
 	if len(errs) > 0 {
 		t.Error(errs)
 	}
 
+	items := stream.GetItems()
 	if len(items) != 4 {
 		t.Errorf("expected 4 items, got %v", len(items))
 	}
-
 }
 
 func TestGetListAdapterV2Caching(t *testing.T) {
@@ -397,16 +361,7 @@ func TestGetListAdapterV2Caching(t *testing.T) {
 	})
 
 	t.Run("list", func(t *testing.T) {
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
+		stream := discovery.NewRecordingQueryResultStream()
 
 		// First call
 		s.ListStream(ctx, "foo.eu-west-2", false, stream)
@@ -414,12 +369,13 @@ func TestGetListAdapterV2Caching(t *testing.T) {
 		s.ListStream(ctx, "foo.eu-west-2", false, stream)
 		// Third call without caching
 		s.ListStream(ctx, "foo.eu-west-2", true, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) > 0 {
 			t.Error(errs)
 		}
 
+		items := stream.GetItems()
 		firstGen, err := items[0].GetAttributes().Get("generation")
 		if err != nil {
 			t.Fatal(err)

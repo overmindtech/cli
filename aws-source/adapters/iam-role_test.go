@@ -124,7 +124,6 @@ func (t *TestIAMClient) ListAttachedRolePolicies(ctx context.Context, params *ia
 
 func TestRoleGetFunc(t *testing.T) {
 	role, err := roleGetFunc(context.Background(), &TestIAMClient{}, "foo", "bar")
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -145,24 +144,15 @@ func TestRoleGetFunc(t *testing.T) {
 func TestRoleListFunc(t *testing.T) {
 	adapter := NewIAMRoleAdapter(&TestIAMClient{}, "foo")
 
-	items := make([]*sdp.Item, 0)
-	errs := make([]error, 0)
-	stream := discovery.NewQueryResultStream(
-		func(item *sdp.Item) {
-			items = append(items, item)
-		},
-		func(err error) {
-			errs = append(errs, err)
-		},
-	)
-
+	stream := discovery.NewRecordingQueryResultStream()
 	adapter.ListStream(context.Background(), "foo", false, stream)
-	stream.Close()
 
+	errs := stream.GetErrors()
 	if len(errs) > 0 {
 		t.Error(errs)
 	}
 
+	items := stream.GetItems()
 	if len(items) != 1 {
 		t.Errorf("expected 1 role, got %b", len(items))
 	}
@@ -174,7 +164,6 @@ func TestRoleListTagsFunc(t *testing.T) {
 			Arn: adapterhelpers.PtrString("arn:aws:iam::801795385023:role/service-role/AWSControlTowerConfigAggregatorRoleForOrganizations"),
 		},
 	}, &TestIAMClient{})
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -237,7 +226,6 @@ func TestRoleItemMapper(t *testing.T) {
 	}
 
 	item, err := roleItemMapper(nil, "foo", &role)
-
 	if err != nil {
 		t.Fatal(err)
 	}

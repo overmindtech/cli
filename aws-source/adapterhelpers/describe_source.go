@@ -267,7 +267,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 }
 
 // List Lists all items in a given scope
-func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) ListStream(ctx context.Context, scope string, ignoreCache bool, stream *discovery.QueryResultStream) {
+func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) ListStream(ctx context.Context, scope string, ignoreCache bool, stream discovery.QueryResultStream) {
 	if scope != s.Scopes()[0] {
 		stream.SendError(&sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOSCOPE,
@@ -314,7 +314,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) ListStream(c
 }
 
 // Search Searches for AWS resources by ARN
-func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream *discovery.QueryResultStream) {
+func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
 	if scope != s.Scopes()[0] {
 		stream.SendError(&sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOSCOPE,
@@ -330,10 +330,9 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) SearchStream
 	}
 }
 
-func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchARN(ctx context.Context, scope string, query string, ignoreCache bool, stream *discovery.QueryResultStream) {
+func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchARN(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
 	// Parse the ARN
 	a, err := ParseARN(query)
-
 	if err != nil {
 		stream.SendError(WrapAWSError(err))
 		return
@@ -369,7 +368,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchARN(ct
 }
 
 // searchCustom Runs custom search logic using the `InputMapperSearch` function
-func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchCustom(ctx context.Context, scope string, query string, ignoreCache bool, stream *discovery.QueryResultStream) {
+func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchCustom(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
 	// We need to cache here since this is the only place it'll be called
 	s.ensureCache()
 	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
@@ -414,7 +413,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) processError
 // describe Runs describe on the given input, intelligently choosing whether to
 // run the paginated or unpaginated query. This handles caching, error handling,
 // and post-search filtering if the query param is passed
-func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) describe(ctx context.Context, query *string, input Input, scope string, ck sdpcache.CacheKey, stream *discovery.QueryResultStream) {
+func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) describe(ctx context.Context, query *string, input Input, scope string, ck sdpcache.CacheKey, stream discovery.QueryResultStream) {
 	if s.Paginated() {
 		paginator := s.PaginatorBuilder(s.Client, input)
 

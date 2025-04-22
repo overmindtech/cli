@@ -177,7 +177,6 @@ func TestGetCurrentPolicyVersion(t *testing.T) {
 
 func TestPolicyGetFunc(t *testing.T) {
 	policy, err := policyGetFunc(context.Background(), &TestIAMClient{}, "foo", "bar")
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -213,7 +212,6 @@ func TestPolicyListTagsFunc(t *testing.T) {
 			Arn: adapterhelpers.PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerAdminPolicy"),
 		},
 	}, &TestIAMClient{})
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -261,7 +259,6 @@ func TestPolicyItemMapper(t *testing.T) {
 		t.Fatal(err)
 	}
 	item, err := policyItemMapper(nil, "foo", details)
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -348,7 +345,6 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 		t.Parallel()
 		// This item shouldn't be found since it lives globally
 		item, err := adapter.Get(ctx, "aws", "ReadOnlyAccess", false)
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -362,33 +358,21 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 		ctx, span := tracer.Start(context.Background(), t.Name())
 		defer span.End()
 
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
-
+		stream := discovery.NewRecordingQueryResultStream()
 		adapter.ListStream(ctx, adapterhelpers.FormatScope(account, ""), false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) > 0 {
 			t.Error(errs)
 		}
 
-		for _, item := range items {
+		for _, item := range stream.GetItems() {
 			arnString, err := item.GetAttributes().Get("Arn")
-
 			if err != nil {
 				t.Errorf("expected item to have an arn attribute, got %v", err)
 			}
 
 			arn, err := adapterhelpers.ParseARN(arnString.(string))
-
 			if err != nil {
 				t.Error(err)
 			}
@@ -398,25 +382,22 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 			}
 		}
 
+		if len(stream.GetItems()) == 0 {
+			t.Fatal("no items found")
+		}
+
+		arn, _ := stream.GetItems()[0].GetAttributes().Get("Arn")
+
 		t.Run("searching via ARN for a resource in a specific scope", func(t *testing.T) {
 			ctx, span := tracer.Start(context.Background(), t.Name())
 			defer span.End()
 
 			t.Parallel()
 
-			arn, _ := items[0].GetAttributes().Get("Arn")
-
-			errs := make([]error, 0)
-			stream := discovery.NewQueryResultStream(
-				func(item *sdp.Item) {},
-				func(err error) {
-					errs = append(errs, err)
-				},
-			)
-
+			stream := discovery.NewRecordingQueryResultStream()
 			adapter.SearchStream(ctx, adapterhelpers.FormatScope(account, ""), arn.(string), false, stream)
-			stream.Close()
 
+			errs := stream.GetErrors()
 			if len(errs) > 0 {
 				t.Error(errs)
 			}
@@ -428,18 +409,8 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 
 			t.Parallel()
 
-			arn, _ := items[0].GetAttributes().Get("Arn")
-
-			errs := make([]error, 0)
-			stream := discovery.NewQueryResultStream(
-				func(item *sdp.Item) {},
-				func(err error) {
-					errs = append(errs, err)
-				},
-			)
-
+			stream := discovery.NewRecordingQueryResultStream()
 			adapter.SearchStream(ctx, "aws", arn.(string), false, stream)
-			stream.Close()
 
 			if len(errs) == 0 {
 				t.Error("expected error, got nil")
@@ -451,37 +422,26 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 		ctx, span := tracer.Start(context.Background(), t.Name())
 		defer span.End()
 
-		items := make([]*sdp.Item, 0)
-		errs := make([]error, 0)
-		stream := discovery.NewQueryResultStream(
-			func(item *sdp.Item) {
-				items = append(items, item)
-			},
-			func(err error) {
-				errs = append(errs, err)
-			},
-		)
-
+		stream := discovery.NewRecordingQueryResultStream()
 		adapter.ListStream(ctx, "aws", false, stream)
-		stream.Close()
 
+		errs := stream.GetErrors()
 		if len(errs) > 0 {
 			t.Error(errs)
 		}
 
+		items := stream.GetItems()
 		if len(items) == 0 {
 			t.Fatal("expected items, got none")
 		}
 
 		for _, item := range items {
 			arnString, err := item.GetAttributes().Get("Arn")
-
 			if err != nil {
 				t.Errorf("expected item to have an arn attribute, got %v", err)
 			}
 
 			arn, err := adapterhelpers.ParseARN(arnString.(string))
-
 			if err != nil {
 				t.Error(err)
 			}
@@ -498,18 +458,10 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 			t.Parallel()
 
 			arn, _ := items[0].GetAttributes().Get("Arn")
-
-			errs := make([]error, 0)
-			stream := discovery.NewQueryResultStream(
-				func(item *sdp.Item) {},
-				func(err error) {
-					errs = append(errs, err)
-				},
-			)
-
+			stream := discovery.NewRecordingQueryResultStream()
 			adapter.SearchStream(ctx, adapterhelpers.FormatScope(account, ""), arn.(string), false, stream)
-			stream.Close()
 
+			errs := stream.GetErrors()
 			if len(errs) == 0 {
 				t.Error("expected error, got nil")
 			}
@@ -522,22 +474,13 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 			t.Parallel()
 
 			arn, _ := items[0].GetAttributes().Get("Arn")
-
-			errs := make([]error, 0)
-			stream := discovery.NewQueryResultStream(
-				func(item *sdp.Item) {},
-				func(err error) {
-					errs = append(errs, err)
-				},
-			)
-
+			stream := discovery.NewRecordingQueryResultStream()
 			adapter.SearchStream(ctx, "aws", arn.(string), false, stream)
-			stream.Close()
 
+			errs := stream.GetErrors()
 			if len(errs) > 0 {
 				t.Error(errs)
 			}
 		})
 	})
-
 }

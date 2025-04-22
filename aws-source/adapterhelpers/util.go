@@ -266,22 +266,11 @@ func (e E2ETest) Run(t *testing.T) {
 				if searchSrc, ok := e.Adapter.(discovery.SearchableAdapter); ok {
 					items, err = searchSrc.Search(ctx, scope, *e.GoodSearchQuery, false)
 				} else if streamSrc, ok := e.Adapter.(discovery.StreamingAdapter); ok {
-					items = make([]*sdp.Item, 0)
-					errs := make([]error, 0)
-					stream := discovery.NewQueryResultStream(
-						func(item *sdp.Item) {
-							items = append(items, item)
-						},
-						func(err error) {
-							errs = append(errs, err)
-						},
-					)
-
+					stream := discovery.NewRecordingQueryResultStream()
 					streamSrc.SearchStream(context.Background(), scope, *e.GoodSearchQuery, false, stream)
-					stream.Close()
 
-					if len(errs) > 0 {
-						err = errs[0]
+					if len(stream.GetErrors()) > 0 {
+						err = stream.GetErrors()[0]
 					}
 				} else {
 					t.Skip("adapter is not searchable or streamable")
@@ -319,21 +308,13 @@ func (e E2ETest) Run(t *testing.T) {
 			defer cancel()
 
 			if streamingAdapter, ok := e.Adapter.(discovery.StreamingAdapter); ok {
-				stream := discovery.NewQueryResultStream(
-					func(item *sdp.Item) {
-						items = append(items, item)
-					},
-					func(err error) {
-						errs = append(errs, err)
-					},
-				)
-
+				stream := discovery.NewRecordingQueryResultStream()
 				streamingAdapter.ListStream(context.Background(), scope, false, stream)
-				stream.Close()
+				items = stream.GetItems()
+				errs = stream.GetErrors()
 			} else if listableAdapter, ok := e.Adapter.(discovery.ListableAdapter); ok {
 				var err error
 				items, err = listableAdapter.List(ctx, scope, false)
-
 				if err != nil {
 					errs = append(errs, err)
 				}

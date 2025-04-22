@@ -2,6 +2,7 @@ package discovery
 
 import (
 	"context"
+	"slices"
 	"sync"
 
 	"github.com/overmindtech/cli/sdp-go"
@@ -47,6 +48,20 @@ type ListableAdapter interface {
 	List(ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error)
 }
 
+// An adapter that supports streaming responses for List and Search queries
+type StreamingAdapter interface {
+	Adapter
+
+	// List Lists all items in a given scope
+	ListStream(ctx context.Context, scope string, ignoreCache bool, stream QueryResultStream)
+
+	// Search executes a specific search and returns zero or many items as a
+	// result (and optionally an error). The specific format of the query that
+	// needs to be provided to Search is dependant on the adapter itself as each
+	// adapter will respond to searches differently
+	SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream QueryResultStream)
+}
+
 // CachingAdapter Is an adapter of items that supports caching
 type CachingAdapter interface {
 	Adapter
@@ -77,16 +92,34 @@ type HiddenAdapter interface {
 // discovered using the `SendItem` method and should send any errors that occur
 // using the `SendError` method. These errors will be considered non-fatal. If
 // the process encounters a fatal error it should return an error to the caller
+// rather then sending one on the stream.
+//
+// Note that this interface does not have a `Close()` method. Clients of this
+// interface are specific functions that get passed in an instance implementing
+// this interface. The expectation is that those clients do not return until all
+// calls into the stream have finished.
+type QueryResultStream interface {
+	// SendItem sends an item to the stream. This method is thread-safe, but the
+	// ordering vs SendError is only guaranteed for non-overlapping calls.
+	SendItem(item *sdp.Item)
+	// SendError sends an Error to the stream. This method is thread-safe, but
+	// the ordering vs SendItem is only guaranteed for non-overlapping calls.
+	SendError(err error)
+}
+
+// QueryResultStream is a stream of items and errors that are returned from a
+// query. Adapters should send items to the stream as soon as they are
+// discovered using the `SendItem` method and should send any errors that occur
+// using the `SendError` method. These errors will be considered non-fatal. If
+// the process encounters a fatal error it should return an error to the caller
 // rather then sending one on the stream
-type QueryResultStream struct {
-	items       chan *sdp.Item
-	errs        chan error
+type QueryResultStreamWithHandlers struct {
 	itemHandler ItemHandler
 	errHandler  ErrHandler
-	open        bool
-	wg          sync.WaitGroup
-	mutex       sync.RWMutex
 }
+
+// assert interface implementation
+var _ QueryResultStream = (*QueryResultStreamWithHandlers)(nil)
 
 // ItemHandler is a function that can be used to handle items as they are
 // received from a QueryResultStream
@@ -96,78 +129,64 @@ type ItemHandler func(item *sdp.Item)
 // received from a QueryResultStream
 type ErrHandler func(err error)
 
-// NewQueryResultStream creates a new QueryResultStream
-func NewQueryResultStream(itemHandler ItemHandler, errHandler ErrHandler) *QueryResultStream {
-	stream := &QueryResultStream{
-		items:       make(chan *sdp.Item, 100),
-		errs:        make(chan error, 100),
+// NewQueryResultStream creates a new QueryResultStream that calls the provided
+// handlers when items and errors are received. Note that the handlers are
+// called asynchronously and need to provide for their own thread safety.
+func NewQueryResultStream(itemHandler ItemHandler, errHandler ErrHandler) *QueryResultStreamWithHandlers {
+	stream := &QueryResultStreamWithHandlers{
 		itemHandler: itemHandler,
 		errHandler:  errHandler,
-		open:        true,
 	}
-
-	stream.wg.Add(2)
-	go stream.processItems()
-	go stream.processErrors()
 
 	return stream
 }
 
 // SendItem sends an item to the stream
-func (qrs *QueryResultStream) SendItem(item *sdp.Item) {
-	qrs.mutex.RLock()
-	defer qrs.mutex.RUnlock()
-	if qrs.open {
-		qrs.items <- item
-	}
+func (qrs *QueryResultStreamWithHandlers) SendItem(item *sdp.Item) {
+	qrs.itemHandler(item)
 }
 
 // SendError sends an error to the stream
-func (qrs *QueryResultStream) SendError(err error) {
-	qrs.mutex.RLock()
-	defer qrs.mutex.RUnlock()
-	if qrs.open {
-		qrs.errs <- err
+func (qrs *QueryResultStreamWithHandlers) SendError(err error) {
+	qrs.errHandler(err)
+}
+
+type RecordingQueryResultStream struct {
+	streamMu sync.Mutex
+	items    []*sdp.Item
+	errs     []error
+}
+
+// assert interface implementation
+var _ QueryResultStream = (*RecordingQueryResultStream)(nil)
+
+func NewRecordingQueryResultStream() *RecordingQueryResultStream {
+	return &RecordingQueryResultStream{
+		items: []*sdp.Item{},
+		errs:  []error{},
 	}
 }
 
-// Close closes the stream and waits for all handlers to finish. This should be
-// called by the caller, and not by adapters themselves
-func (qrs *QueryResultStream) Close() {
-	qrs.mutex.Lock()
-	defer qrs.mutex.Unlock()
-	qrs.open = false
-	close(qrs.items)
-	close(qrs.errs)
-	qrs.wg.Wait()
+func (r *RecordingQueryResultStream) SendItem(item *sdp.Item) {
+	r.streamMu.Lock()
+	defer r.streamMu.Unlock()
+	r.items = append(r.items, item)
 }
 
-// processItems processes items using the itemHandler
-func (qrs *QueryResultStream) processItems() {
-	defer qrs.wg.Done()
-	for item := range qrs.items {
-		qrs.itemHandler(item)
-	}
+func (r *RecordingQueryResultStream) GetItems() []*sdp.Item {
+	r.streamMu.Lock()
+	defer r.streamMu.Unlock()
+	return slices.Clone(r.items)
 }
 
-// processErrors processes errors using the errHandler
-func (qrs *QueryResultStream) processErrors() {
-	defer qrs.wg.Done()
-	for err := range qrs.errs {
-		qrs.errHandler(err)
-	}
+func (r *RecordingQueryResultStream) SendError(err error) {
+	r.streamMu.Lock()
+	defer r.streamMu.Unlock()
+	r.errs = append(r.errs, err)
 }
 
-// An adapter that supports streaming responses for List and Search queries
-type StreamingAdapter interface {
-	Adapter
-
-	// List Lists all items in a given scope
-	ListStream(ctx context.Context, scope string, ignoreCache bool, stream *QueryResultStream)
-
-	// Search executes a specific search and returns zero or many items as a
-	// result (and optionally an error). The specific format of the query that
-	// needs to be provided to Search is dependant on the adapter itself as each
-	// adapter will respond to searches differently
-	SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream *QueryResultStream)
+func (r *RecordingQueryResultStream) GetErrors() []error {
+	r.streamMu.Lock()
+	defer r.streamMu.Unlock()
+	return slices.Clone(r.errs)
 }

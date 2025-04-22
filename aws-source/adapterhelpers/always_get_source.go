@@ -184,7 +184,6 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 	input := s.GetInputMapper(scope, query)
 
 	item, err = s.GetFunc(ctx, s.Client, scope, input)
-
 	if err != nil {
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
@@ -199,7 +198,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 
 // List Lists all available items. This is done by running the ListFunc, then
 // passing these results to GetFunc in order to get the details
-func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) ListStream(ctx context.Context, scope string, ignoreCache bool, stream *discovery.QueryResultStream) {
+func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) ListStream(ctx context.Context, scope string, ignoreCache bool, stream discovery.QueryResultStream) {
 	if scope != s.Scopes()[0] {
 		stream.SendError(&sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOSCOPE,
@@ -235,7 +234,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 	s.listInternal(ctx, scope, s.ListInput, ck, stream)
 }
 
-func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) listInternal(ctx context.Context, scope string, input ListInput, ck sdpcache.CacheKey, stream *discovery.QueryResultStream) {
+func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) listInternal(ctx context.Context, scope string, input ListInput, ck sdpcache.CacheKey, stream discovery.QueryResultStream) {
 	paginator := s.ListFuncPaginatorBuilder(s.Client, input)
 	var newGetInputs []GetInput
 	p := pool.New().WithContext(ctx).WithMaxGoroutines(s.MaxParallel.Value())
@@ -249,7 +248,6 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 
 	for paginator.HasMorePages() {
 		output, err := paginator.NextPage(ctx)
-
 		if err != nil {
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
@@ -260,7 +258,6 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		}
 
 		newGetInputs, err = s.ListFuncOutputMapper(output, input)
-
 		if err != nil {
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
@@ -276,7 +273,6 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 			// accept that work
 			p.Go(func(ctx context.Context) error {
 				item, err := s.GetFunc(ctx, s.Client, scope, input)
-
 				if err != nil {
 					// Don't cache individual errors as they are cheap to re-run
 					stream.SendError(WrapAWSError(err))
@@ -293,7 +289,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 }
 
 // Search Searches for AWS resources by ARN
-func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream *discovery.QueryResultStream) {
+func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
 	if scope != s.Scopes()[0] {
 		stream.SendError(&sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOSCOPE,
@@ -325,7 +321,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 
 // SearchCustom Searches using custom mapping logic. The SearchInputMapper is
 // used to create an input for ListFunc, at which point the usual logic is used
-func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) SearchCustom(ctx context.Context, scope string, query string, ignoreCache bool, stream *discovery.QueryResultStream) {
+func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) SearchCustom(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
 	s.ensureCache()
 	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
 	if qErr != nil {
@@ -341,7 +337,6 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 
 	if s.SearchInputMapper != nil {
 		input, err := s.SearchInputMapper(scope, query)
-
 		if err != nil {
 			// Don't bother caching this error since it costs nearly nothing
 			stream.SendError(WrapAWSError(err))
@@ -351,7 +346,6 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		s.listInternal(ctx, scope, input, ck, stream)
 	} else if s.SearchGetInputMapper != nil {
 		input, err := s.SearchGetInputMapper(scope, query)
-
 		if err != nil {
 			// Don't cache this as it costs nearly nothing
 			stream.SendError(WrapAWSError(err))
@@ -359,7 +353,6 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		}
 
 		item, err := s.GetFunc(ctx, s.Client, scope, input)
-
 		if err != nil {
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
@@ -379,10 +372,9 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 	}
 }
 
-func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) SearchARN(ctx context.Context, scope string, query string, ignoreCache bool, stream *discovery.QueryResultStream) {
+func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) SearchARN(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
 	// Parse the ARN
 	a, err := ParseARN(query)
-
 	if err != nil {
 		stream.SendError(WrapAWSError(err))
 		return
