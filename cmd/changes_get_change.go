@@ -15,6 +15,7 @@ import (
 	"github.com/hexops/gotextdiff"
 	"github.com/hexops/gotextdiff/myers"
 	diffspan "github.com/hexops/gotextdiff/span"
+	"github.com/overmindtech/workspace/api-server/server/changetimeline"
 	"github.com/overmindtech/cli/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -84,56 +85,45 @@ func GetChange(cmd *cobra.Command, args []string) error {
 	}
 
 	client := AuthenticatedChangesClient(ctx, oi)
-	var riskRes *connect.Response[sdp.GetChangeRisksResponse]
+	var timeLine *sdp.GetChangeTimelineV2Response
 fetch:
 	for {
-		// declare err variable to avoid shadowing riskRes outside the loop by using `:=`
-		var err error
-		riskRes, err = client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
-			Msg: &sdp.GetChangeRisksRequest{
-				UUID: changeUuid[:],
+		rawTimeLine, timelineErr := client.GetChangeTimelineV2(ctx, &connect.Request[sdp.GetChangeTimelineV2Request]{
+			Msg: &sdp.GetChangeTimelineV2Request{
+				ChangeUUID: changeUuid[:],
 			},
 		})
+		if timelineErr != nil || rawTimeLine.Msg == nil {
+			return loggedError{
+				err:     timelineErr,
+				fields:  lf,
+				message: "failed to get timeline",
+			}
+		}
+		timeLine = rawTimeLine.Msg
+		for _, entry := range timeLine.GetEntries() {
+			if entry.GetName() == string(changetimeline.ChangeTimelineEntryV2NameAutoTagging) && entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
+				break fetch
+			}
+		}
+		// display the running entry
+		runningEntry, status, err := sdp.TimelineFindInProgressEntry(timeLine.GetEntries())
 		if err != nil {
 			return loggedError{
 				err:     err,
 				fields:  lf,
-				message: "failed to get change risks",
+				message: "failed to find running entry",
 			}
 		}
+		// find the running timeline entry
+		log.WithContext(ctx).WithFields(log.Fields{
+			"status":  status.String(),
+			"running": runningEntry,
+		}).Info("Waiting for change analysis to complete")
+		// retry
+		time.Sleep(3 * time.Second)
 
-		currentStatus := riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetStatus()
-		// if everything is pending or in progress we need to wait.
-		// - ChangeAnalysisStatus_STATUS_UNSPECIFIED: When all are pending
-		// - ChangeAnalysisStatus_STATUS_SKIPPED: When all are skipped
-		// - ChangeAnalysisStatus_STATUS_INPROGRESS: When >1 is in progress
-		// - ChangeAnalysisStatus_STATUS_ERROR: When any of the steps are errored
-		// - ChangeAnalysisStatus_STATUS_DONE: Any other situation
-		if currentStatus == sdp.ChangeAnalysisStatus_STATUS_INPROGRESS || currentStatus == sdp.ChangeAnalysisStatus_STATUS_UNSPECIFIED {
-			// Extract the currently running milestone if you can
-			milestones := riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetProgressMilestones()
-			var currentMilestone string
-			for _, milestone := range milestones {
-				if milestone == nil {
-					continue
-				}
-
-				if milestone.GetStatus() == sdp.ChangeAnalysisStatus_ProgressMilestone_STATUS_INPROGRESS {
-					currentMilestone = milestone.GetDescription()
-				}
-			}
-
-			log.WithContext(ctx).WithFields(log.Fields{
-				"status":    riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetStatus().String(),
-				"milestone": currentMilestone,
-			}).Info("Waiting for risk calculation")
-
-			time.Sleep(3 * time.Second)
-			// retry
-		} else {
-			// it's done (or errored)
-			break fetch
-		}
+		// check if the context is cancelled
 		if ctx.Err() != nil {
 			return loggedError{
 				err:     ctx.Err(),
@@ -142,7 +132,7 @@ fetch:
 			}
 		}
 	}
-
+	// get the change
 	changeRes, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
 		Msg: &sdp.GetChangeRequest{
 			UUID: changeUuid[:],
@@ -163,27 +153,38 @@ fetch:
 		"change-description": changeRes.Msg.GetChange().GetProperties().GetDescription(),
 	}).Info("found change")
 
-	// in parsing the risks, we have ensured that there is only unique values in
-	// `riskLevels`, so if there are 3 values, then we don't need to filter
+	var calculateRiskStep *sdp.ChangeTimelineEntryV2
+	for _, entry := range timeLine.GetEntries() {
+		if entry.GetName() == string(changetimeline.ChangeTimelineEntryV2NameCalculatedRisks) {
+			calculateRiskStep = entry
+			break
+		}
+	}
+	if calculateRiskStep == nil || calculateRiskStep.GetCalculatedRisks() == nil {
+		return loggedError{
+			err:     fmt.Errorf("failed to find risk calculation step"),
+			fields:  lf,
+			message: "failed to find risk calculation step",
+		}
+	}
+	// filter the risks
+	calculatedRisks := calculateRiskStep.GetCalculatedRisks().GetRisks()
 	if len(riskLevels) != 3 {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"risk-levels": renderRiskFilter(riskLevels),
 		}).Info("filtering risks")
 
-		md := riskRes.Msg.GetChangeRiskMetadata()
-		if md != nil {
-			md.Risks = filterRisks(md.GetRisks(), riskLevels)
-		}
+		calculatedRisks = filterRisks(calculatedRisks, riskLevels)
 	}
 
 	switch viper.GetString("format") {
 	case "json":
 		jsonStruct := struct {
-			Change       *sdp.Change             `json:"change"`
-			RiskMetadata *sdp.ChangeRiskMetadata `json:"risk_metadata"`
+			Change *sdp.Change `json:"change"`
+			Risks  []*sdp.Risk `json:"risks"`
 		}{
-			Change:       changeRes.Msg.GetChange(),
-			RiskMetadata: riskRes.Msg.GetChangeRiskMetadata(),
+			Change: changeRes.Msg.GetChange(),
+			Risks:  calculatedRisks,
 		}
 
 		b, err := json.MarshalIndent(jsonStruct, "", "  ")
@@ -336,7 +337,7 @@ fetch:
 			}
 		}
 
-		for _, risk := range riskRes.Msg.GetChangeRiskMetadata().GetRisks() {
+		for _, risk := range calculatedRisks {
 			// parse the risk UUID to a string
 			riskUuid, _ := uuid.FromBytes(risk.GetUUID())
 			data.Risks = append(data.Risks, TemplateRisk{

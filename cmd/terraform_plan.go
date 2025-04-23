@@ -16,6 +16,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/overmindtech/pterm"
+	"github.com/overmindtech/workspace/api-server/server/changetimeline"
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/cli/sdp-go"
 	log "github.com/sirupsen/logrus"
@@ -318,78 +319,82 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	///////////////////////////////////////////////////////////////////
 	// wait for change analysis to complete
 	///////////////////////////////////////////////////////////////////
-
 	changeAnalysisSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Change Analysis")
 
-	var riskRes *connect.Response[sdp.GetChangeRisksResponse]
+	var timeLine *sdp.GetChangeTimelineV2Response
 	milestoneSpinners := []*pterm.SpinnerPrinter{}
 retryLoop:
 	for {
-		riskRes, err = client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
-			Msg: &sdp.GetChangeRisksRequest{
-				UUID: changeUuid[:],
+		rawTimeLine, timelineErr := client.GetChangeTimelineV2(ctx, &connect.Request[sdp.GetChangeTimelineV2Request]{
+			Msg: &sdp.GetChangeTimelineV2Request{
+				ChangeUUID: changeUuid[:],
 			},
 		})
-		if err != nil {
-			changeAnalysisSpinner.Fail(fmt.Sprintf("Change Analysis failed to get change risks: %v", err))
+		if timelineErr != nil || rawTimeLine.Msg == nil {
+			changeAnalysisSpinner.Fail(fmt.Sprintf("Change Analysis failed to get timeline: %v", timelineErr))
 			return nil
 		}
+		timeLine = rawTimeLine.Msg
 
-		for i, ms := range riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetProgressMilestones() {
+		// display the status for the timeline entries
+		for i, entry := range timeLine.GetEntries() {
+			// populate the spinner list on the first run
 			if i <= len(milestoneSpinners) {
 				milestoneSpinners = append(milestoneSpinners, pterm.DefaultSpinner.
 					WithWriter(multi.NewWriter()).
 					WithIndentation(IndentSymbol()).
-					WithText(ms.GetDescription()))
+					WithText(entry.GetName()))
 			}
-
-			switch ms.GetStatus() {
-			case sdp.ChangeAnalysisStatus_ProgressMilestone_STATUS_PENDING:
+			// render the spinner for this entry
+			switch entry.GetStatus() {
+			case sdp.ChangeTimelineEntryStatus_PENDING:
 				continue
-			case sdp.ChangeAnalysisStatus_ProgressMilestone_STATUS_INPROGRESS:
+			case sdp.ChangeTimelineEntryStatus_IN_PROGRESS:
 				if !milestoneSpinners[i].IsActive {
 					milestoneSpinners[i], _ = milestoneSpinners[i].Start()
 				}
-			case sdp.ChangeAnalysisStatus_ProgressMilestone_STATUS_ERROR:
+			case sdp.ChangeTimelineEntryStatus_ERROR:
 				milestoneSpinners[i].Fail()
-			case sdp.ChangeAnalysisStatus_ProgressMilestone_STATUS_DONE:
+			case sdp.ChangeTimelineEntryStatus_DONE:
 				milestoneSpinners[i].Success()
-			case sdp.ChangeAnalysisStatus_ProgressMilestone_STATUS_SKIPPED:
-				milestoneSpinners[i].Warning(fmt.Sprintf("%v: skipped", ms.GetDescription()))
+			case sdp.ChangeTimelineEntryStatus_UNSPECIFIED:
+				// do nothing
+			default:
+				milestoneSpinners[i].Fail(fmt.Sprintf("Unknown status: %v", entry.GetStatus()))
+			}
+
+			// check if change analysis is done
+			if entry.GetName() == string(changetimeline.ChangeTimelineEntryV2NameAutoTagging) && entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
+				changeAnalysisSpinner.Success()
+				break retryLoop
 			}
 		}
-
-		status := riskRes.Msg.GetChangeRiskMetadata().GetChangeAnalysisStatus().GetStatus()
-		switch status {
-		case sdp.ChangeAnalysisStatus_STATUS_UNSPECIFIED, sdp.ChangeAnalysisStatus_STATUS_INPROGRESS:
-			if !changeAnalysisSpinner.IsActive {
-				// restart after a Fail()
-				changeAnalysisSpinner, _ = changeAnalysisSpinner.Start("Change Analysis")
-			}
-			// retry
-			time.Sleep(time.Second)
-
-		case sdp.ChangeAnalysisStatus_STATUS_ERROR:
-			changeAnalysisSpinner.Fail("Change Analysis: waiting for a retry")
-		case sdp.ChangeAnalysisStatus_STATUS_SKIPPED, sdp.ChangeAnalysisStatus_STATUS_DONE:
-			// it's done
-			changeAnalysisSpinner.Success()
-			break retryLoop
+		// retry
+		time.Sleep(3 * time.Second)
+	}
+	var calculateRiskStep *sdp.ChangeTimelineEntryV2
+	for _, entry := range timeLine.GetEntries() {
+		if entry.GetName() == string(changetimeline.ChangeTimelineEntryV2NameCalculatedRisks) {
+			calculateRiskStep = entry
+			break
 		}
 	}
+	if calculateRiskStep == nil || calculateRiskStep.GetCalculatedRisks() == nil {
+		return fmt.Errorf("Failed to get calculated risks")
+	}
+	calculatedRisks := calculateRiskStep.GetCalculatedRisks().GetRisks()
 	// Submit milestone for tracing
 	if cmdSpan != nil {
 		cmdSpan.AddEvent("Change Analysis finished", trace.WithAttributes(
-			attribute.Int("ovm.risks.count", len(riskRes.Msg.GetChangeRiskMetadata().GetRisks())),
+			attribute.Int("ovm.risks.count", len(calculatedRisks)),
 			attribute.String("ovm.change.uuid", changeUuid.String()),
 		))
 	}
 
 	bits := []string{}
-	risks := riskRes.Msg.GetChangeRiskMetadata().GetRisks()
 	bits = append(bits, "")
 	bits = append(bits, "")
-	if len(risks) == 0 {
+	if len(calculatedRisks) == 0 {
 		bits = append(bits, styleH1().Render("Potential Risks"))
 		bits = append(bits, "")
 		bits = append(bits, "Overmind has not identified any risks associated with this change.")
@@ -398,7 +403,7 @@ retryLoop:
 	} else if changeUrl.String() != "" {
 		bits = append(bits, styleH1().Render("Potential Risks"))
 		bits = append(bits, "")
-		for _, r := range risks {
+		for _, r := range calculatedRisks {
 			severity := ""
 			switch r.GetSeverity() {
 			case sdp.Risk_SEVERITY_HIGH:
@@ -460,7 +465,3 @@ func init() {
 	addChangeUuidFlags(terraformPlanCmd)
 	addTerraformBaseFlags(terraformPlanCmd)
 }
-
-const TEST_RISK = `In publishing and graphic design, Lorem ipsum (/ˌlɔː.rəm ˈɪp.səm/) is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content. Lorem ipsum may be used as a placeholder before the final copy is available. It is also used to temporarily replace text in a process called greeking, which allows designers to consider the form of a webpage or publication, without the meaning of the text influencing the design.
-
-Lorem ipsum is typically a corrupted version of De finibus bonorum et malorum, a 1st-century BC text by the Roman statesman and philosopher Cicero, with words altered, added, and removed to make it nonsensical and improper Latin. The first two words themselves are a truncation of dolorem ipsum ("pain itself").`

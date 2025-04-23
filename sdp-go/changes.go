@@ -400,3 +400,32 @@ func YamlStringToRuleProperties(yamlString string) ([]*RuleProperties, error) {
 
 	return rules, nil
 }
+
+// TimelineFindInProgressEntry returns the current running entry in the list of entries
+// The function handles the following cases:
+//   - If the input slice is nil or empty, it returns an error.
+//   - The first entry that has a status of IN_PROGRESS, PENDING, or ERROR, it returns the entry's name, status, and a nil error.
+//   - If an entry has an unknown status, it returns an error.
+//   - If the timeline is complete it returns an empty string, DONE status, and a nil error.
+func TimelineFindInProgressEntry(entries []*ChangeTimelineEntryV2) (string, ChangeTimelineEntryStatus, error) {
+	if entries == nil {
+		return "", ChangeTimelineEntryStatus_UNSPECIFIED, errors.New("entries is nil")
+	}
+	if len(entries) == 0 {
+		return "", ChangeTimelineEntryStatus_UNSPECIFIED, errors.New("entries is empty")
+	}
+
+	for _, entry := range entries {
+		switch entry.GetStatus() {
+		case ChangeTimelineEntryStatus_IN_PROGRESS, ChangeTimelineEntryStatus_PENDING, ChangeTimelineEntryStatus_ERROR:
+			// if the entry is in progress or about to start, or has an error(to be retried)
+			return entry.GetName(), entry.GetStatus(), nil
+		case ChangeTimelineEntryStatus_UNSPECIFIED, ChangeTimelineEntryStatus_DONE:
+			// do nothing
+		default:
+			return "", ChangeTimelineEntryStatus_UNSPECIFIED, fmt.Errorf("unknown status: %s", entry.GetStatus().String())
+		}
+	}
+
+	return "", ChangeTimelineEntryStatus_DONE, nil
+}
