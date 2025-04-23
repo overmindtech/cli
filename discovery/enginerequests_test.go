@@ -18,23 +18,26 @@ import (
 // along with the error, rather than using channels. The singular error sill only
 // be returned if the query could not be executed, otherwise all errors will be
 // in the slice
-func (e *Engine) executeQuerySync(ctx context.Context, q *sdp.Query) ([]*sdp.Item, []*sdp.QueryError, error) {
-	itemsChan := make(chan *sdp.Item, 100_000)
-	errsChan := make(chan *sdp.QueryError, 100_000)
+func (e *Engine) executeQuerySync(ctx context.Context, q *sdp.Query) ([]*sdp.Item, []*sdp.Edge, []*sdp.QueryError, error) {
+	responseChan := make(chan *sdp.QueryResponse, 100_000)
 	items := make([]*sdp.Item, 0)
+	edges := make([]*sdp.Edge, 0)
 	errs := make([]*sdp.QueryError, 0)
 
-	err := e.ExecuteQuery(ctx, q, itemsChan, errsChan)
+	err := e.ExecuteQuery(ctx, q, responseChan)
 
-	for i := range itemsChan {
-		items = append(items, i)
+	for r := range responseChan {
+		switch r := r.GetResponseType().(type) {
+		case *sdp.QueryResponse_NewItem:
+			items = append(items, r.NewItem)
+		case *sdp.QueryResponse_Edge:
+			edges = append(edges, r.Edge)
+		case *sdp.QueryResponse_Error:
+			errs = append(errs, r.Error)
+		}
 	}
 
-	for e := range errsChan {
-		errs = append(errs, e)
-	}
-
-	return items, errs, err
+	return items, edges, errs, err
 }
 
 func TestExecuteQuery(t *testing.T) {
@@ -65,7 +68,7 @@ func TestExecuteQuery(t *testing.T) {
 			},
 		}
 
-		items, errs, err := e.executeQuerySync(context.Background(), q)
+		items, _, errs, err := e.executeQuerySync(context.Background(), q)
 		if err != nil {
 			t.Error(err)
 		}
@@ -104,7 +107,7 @@ func TestExecuteQuery(t *testing.T) {
 			},
 		}
 
-		_, errs, err := e.executeQuerySync(context.Background(), q)
+		_, _, errs, err := e.executeQuerySync(context.Background(), q)
 
 		if err == nil {
 			t.Error("expected error but got nil")
@@ -130,7 +133,7 @@ func TestExecuteQuery(t *testing.T) {
 			},
 		}
 
-		_, errs, err := e.executeQuerySync(context.Background(), q)
+		_, _, errs, err := e.executeQuerySync(context.Background(), q)
 
 		if err == nil {
 			t.Error("expected error but got nil")
@@ -155,7 +158,7 @@ func TestExecuteQuery(t *testing.T) {
 			},
 		}
 
-		items, errs, err := e.executeQuerySync(context.Background(), q)
+		items, _, errs, err := e.executeQuerySync(context.Background(), q)
 		if err != nil {
 			t.Error(err)
 		}
@@ -180,7 +183,7 @@ func TestExecuteQuery(t *testing.T) {
 			},
 		}
 
-		items, errs, err := e.executeQuerySync(context.Background(), q)
+		items, _, errs, err := e.executeQuerySync(context.Background(), q)
 		if err != nil {
 			t.Error(err)
 		}

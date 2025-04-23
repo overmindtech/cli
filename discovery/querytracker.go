@@ -31,86 +31,56 @@ type QueryTracker struct {
 // error was encountered while trying run the query
 //
 // If the context is cancelled, all query work will stop
-func (qt *QueryTracker) Execute(ctx context.Context) ([]*sdp.Item, []*sdp.QueryError, error) {
+func (qt *QueryTracker) Execute(ctx context.Context) ([]*sdp.Item, []*sdp.Edge, []*sdp.QueryError, error) {
 	if qt.Query == nil {
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
 
 	if qt.Engine == nil {
-		return nil, nil, errors.New("no engine supplied, cannot execute")
+		return nil, nil, nil, errors.New("no engine supplied, cannot execute")
 	}
 
 	span := trace.SpanFromContext(ctx)
 
-	items := make(chan *sdp.Item)
-	errs := make(chan *sdp.QueryError)
-	errChan := make(chan error)
-	sdpErrs := make([]*sdp.QueryError, 0)
-	sdpItems := make([]*sdp.Item, 0)
+	responses := make(chan *sdp.QueryResponse)
+	errChan := make(chan error, 1)
 
-	// Run the query
+	sdpItems := make([]*sdp.Item, 0)
+	sdpEdges := make([]*sdp.Edge, 0)
+	sdpErrs := make([]*sdp.QueryError, 0)
+
+	// Run the query in the background
 	go func(e chan error) {
 		defer tracing.LogRecoverToReturn(ctx, "Execute -> ExecuteQuery")
-		e <- qt.Engine.ExecuteQuery(ctx, qt.Query, items, errs)
+		defer close(e)
+		e <- qt.Engine.ExecuteQuery(ctx, qt.Query, responses)
 	}(errChan)
 
-	// Process the items and errors as they come in
-	for {
-		select {
-		case item, ok := <-items:
-			if ok {
-				sdpItems = append(sdpItems, item)
-
-				if qt.Query.Subject() != "" && qt.Engine.natsConnection != nil {
-					// Respond with the Item
-					err := qt.Engine.natsConnection.Publish(ctx, qt.Query.Subject(), &sdp.QueryResponse{
-						ResponseType: &sdp.QueryResponse_NewItem{
-							NewItem: item,
-						},
-					})
-
-					if err != nil {
-						span.RecordError(err)
-						log.WithFields(log.Fields{
-							"error": err,
-						}).Error("Response publishing error")
-					}
-				}
-			} else {
-				items = nil
-			}
-		case err, ok := <-errs:
-			if ok {
-				sdpErrs = append(sdpErrs, err)
-
-				if qt.Query.Subject() != "" && qt.Engine.natsConnection != nil {
-					pubErr := qt.Engine.natsConnection.Publish(ctx, qt.Query.Subject(), &sdp.QueryResponse{ResponseType: &sdp.QueryResponse_Error{Error: err}})
-
-					if pubErr != nil {
-						span.RecordError(err)
-						log.WithFields(log.Fields{
-							"error": err,
-						}).Error("Error publishing item query error")
-					}
-				}
-			} else {
-				errs = nil
+	// Process the responses as they come in
+	for response := range responses {
+		if qt.Query.Subject() != "" && qt.Engine.natsConnection != nil {
+			err := qt.Engine.natsConnection.Publish(ctx, qt.Query.Subject(), response)
+			if err != nil {
+				span.RecordError(err)
+				log.WithError(err).Error("Response publishing error")
 			}
 		}
 
-		if items == nil && errs == nil {
-			// If both channels have been closed and set to nil, we're done so
-			// break
-			break
+		switch response := response.GetResponseType().(type) {
+		case *sdp.QueryResponse_NewItem:
+			sdpItems = append(sdpItems, response.NewItem)
+		case *sdp.QueryResponse_Edge:
+			sdpEdges = append(sdpEdges, response.Edge)
+		case *sdp.QueryResponse_Error:
+			sdpErrs = append(sdpErrs, response.Error)
 		}
 	}
 
 	// Get the result of the execution
 	err := <-errChan
-
 	if err != nil {
-		return sdpItems, sdpErrs, err
+		return sdpItems, sdpEdges, sdpErrs, err
 	}
 
-	return sdpItems, sdpErrs, ctx.Err()
+	return sdpItems, sdpEdges, sdpErrs, ctx.Err()
 }

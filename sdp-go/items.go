@@ -439,6 +439,38 @@ func (r *Query) GetUUIDParsed() uuid.UUID {
 	return reqUUID
 }
 
+func NewQueryResponseFromItem(item *Item) *QueryResponse {
+	return &QueryResponse{
+		ResponseType: &QueryResponse_NewItem{
+			NewItem: item,
+		},
+	}
+}
+
+func NewQueryResponseFromEdge(edge *Edge) *QueryResponse {
+	return &QueryResponse{
+		ResponseType: &QueryResponse_Edge{
+			Edge: edge,
+		},
+	}
+}
+
+func NewQueryResponseFromError(qe *QueryError) *QueryResponse {
+	return &QueryResponse{
+		ResponseType: &QueryResponse_Error{
+			Error: qe,
+		},
+	}
+}
+
+func NewQueryResponseFromResponse(r *Response) *QueryResponse {
+	return &QueryResponse{
+		ResponseType: &QueryResponse_Response{
+			Response: r,
+		},
+	}
+}
+
 func (qr *QueryResponse) ToGatewayResponse() *GatewayResponse {
 	switch qr.GetResponseType().(type) {
 	case *QueryResponse_NewItem:

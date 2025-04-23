@@ -114,7 +114,9 @@ func (e *Engine) HandleQuery(ctx context.Context, query *sdp.Query) {
 		defer e.DeleteTrackedQuery(u)
 	}
 
-	_, _, err := qt.Execute(ctx)
+	// the query tracker will send responses directly through the embedded
+	// engine's nats connection
+	_, _, _, err := qt.Execute(ctx)
 
 	// If all failed then return an error
 	if err != nil {
@@ -143,15 +145,12 @@ var getExecutionPoolCount atomic.Int32
 // Note that if these channels are not buffered, something will need to be
 // receiving the results or this method will never finish. If results are not
 // required the channels can be nil
-func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, items chan<- *sdp.Item, errs chan<- *sdp.QueryError) error {
+func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses chan<- *sdp.QueryResponse) error {
 	span := trace.SpanFromContext(ctx)
 
 	// Make sure we close channels once we're done
-	if items != nil {
-		defer close(items)
-	}
-	if errs != nil {
-		defer close(errs)
+	if responses != nil {
+		defer close(responses)
 	}
 
 	if ctx.Err() != nil {
@@ -165,11 +164,11 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, items chan<
 	)
 
 	if len(expanded) == 0 {
-		errs <- &sdp.QueryError{
+		responses <- sdp.NewQueryResponseFromError(&sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOSCOPE,
 			ErrorString: "no matching adapters found",
 			Scope:       query.GetScope(),
-		}
+		})
 
 		return errors.New("no matching adapters found")
 	}
@@ -235,7 +234,7 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, items chan<
 				}
 
 				// Execute the query against the adapter
-				e.Execute(ctx, localQ, localAdapter, items, errs)
+				e.Execute(ctx, localQ, localAdapter, responses)
 			})
 		}()
 	}
@@ -294,7 +293,7 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, items chan<
 // should be sent on the stream. Channels for items and errors will NOT be
 // closed by this function, the caller should do that as this will likely be
 // called in parallel with other queries and the results should be merged
-func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, items chan<- *sdp.Item, errs chan<- *sdp.QueryError) {
+func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, responses chan<- *sdp.QueryResponse) {
 	ctx, span := tracer.Start(ctx, "Execute", trace.WithAttributes(
 		attribute.String("ovm.adapter.queryMethod", q.GetMethod().String()),
 		attribute.String("ovm.adapter.queryType", q.GetType()),
@@ -353,14 +352,14 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, ite
 
 		if err := item.Validate(); err != nil {
 			span.RecordError(err)
-			errs <- &sdp.QueryError{
+			responses <- sdp.NewQueryResponseFromError(&sdp.QueryError{
 				UUID:          q.GetUUID(),
 				ErrorType:     sdp.QueryError_OTHER,
 				ErrorString:   err.Error(),
 				Scope:         q.GetScope(),
 				ResponderName: e.EngineConfig.SourceName,
 				ItemType:      q.GetType(),
-			}
+			})
 			return
 		}
 
@@ -378,7 +377,7 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, ite
 
 		// Send the item back to the caller
 		numItems.Add(1)
-		items <- item
+		responses <- sdp.NewQueryResponseFromItem(item)
 	}
 	var errHandler ErrHandler = func(err error) {
 		if err == nil {
@@ -390,7 +389,7 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, ite
 
 		// Send the error back to the caller
 		numErrs.Add(1)
-		errs <- convertToSDPError(err, q, adapter, e.EngineConfig.SourceName)
+		responses <- queryResponseFromError(err, q, adapter, e.EngineConfig.SourceName)
 	}
 	stream := NewQueryResultStream(itemHandler, errHandler)
 
@@ -398,14 +397,14 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, ite
 	if ctx.Err() != nil {
 		span.RecordError(ctx.Err())
 
-		errs <- &sdp.QueryError{
+		responses <- sdp.NewQueryResponseFromError(&sdp.QueryError{
 			UUID:          q.GetUUID(),
 			ErrorType:     sdp.QueryError_OTHER,
 			ErrorString:   ctx.Err().Error(),
 			Scope:         q.GetScope(),
 			ResponderName: e.EngineConfig.SourceName,
 			ItemType:      q.GetType(),
-		}
+		})
 		return
 	}
 
@@ -467,9 +466,9 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, ite
 	)
 }
 
-// Converts any error type to an SDP error, if it isn't already
-func convertToSDPError(err error, q *sdp.Query, adapter Adapter, sourceName string) *sdp.QueryError {
-	// Convert all errors to SDP errors if they aren't already
+// queryResponseFromError converts an error into a QueryResponse. This takes
+// care to not double-wrap `sdp.QueryError` errors.
+func queryResponseFromError(err error, q *sdp.Query, adapter Adapter, sourceName string) *sdp.QueryResponse {
 	var sdpErr *sdp.QueryError
 	if !errors.As(err, &sdpErr) {
 		sdpErr = &sdp.QueryError{
@@ -485,5 +484,5 @@ func convertToSDPError(err error, q *sdp.Query, adapter Adapter, sourceName stri
 	sdpErr.ItemType = adapter.Metadata().GetType()
 	sdpErr.ResponderName = sourceName
 
-	return sdpErr
+	return sdp.NewQueryResponseFromError(sdpErr)
 }

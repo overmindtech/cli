@@ -29,7 +29,6 @@ func TestToNatsOptions(t *testing.T) {
 			nats.LameDuckModeHandler(LameDuckModeHandlerDefault),
 			nats.ErrorHandler(ErrorHandlerDefault),
 		})
-
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -41,7 +40,6 @@ func TestToNatsOptions(t *testing.T) {
 		}
 
 		actualOptions, err := optionsToStruct(options)
-
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -121,7 +119,6 @@ func TestToNatsOptions(t *testing.T) {
 			nats.LameDuckModeHandler(nil),
 			nats.ErrorHandler(nil),
 		})
-
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -133,7 +130,6 @@ func TestToNatsOptions(t *testing.T) {
 		}
 
 		actualOptions, err := optionsToStruct(options)
-
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -240,7 +236,6 @@ func TestNATSConnect(t *testing.T) {
 		tk := GetTestOAuthTokenClient(t)
 
 		startToken, err := tk.GetJWT()
-
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -258,7 +253,6 @@ func TestNATSConnect(t *testing.T) {
 		if errors.As(err, &maxRetriesError) {
 			// Make sure we have only got one token, not three
 			currentToken, err := o.TokenClient.GetJWT()
-
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -282,7 +276,6 @@ func TestNATSConnect(t *testing.T) {
 		}
 
 		conn, err := o.Connect()
-
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -299,7 +292,6 @@ func TestNATSConnect(t *testing.T) {
 		}
 
 		conn, err := o.Connect()
-
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -318,7 +310,6 @@ func TestNATSConnect(t *testing.T) {
 		}
 
 		conn, err := o.Connect()
-
 		if err != nil {
 			t.Error(err)
 		}
@@ -332,20 +323,17 @@ func TestTokenRefresh(t *testing.T) {
 
 	// Get a token
 	token, err := tk.GetJWT()
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Artificially set the expiry and replace the token
 	claims, err := jwt.DecodeUserClaims(token)
-
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	pair, err := nkeys.CreateAccount()
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -360,7 +348,6 @@ func TestTokenRefresh(t *testing.T) {
 
 	// Get the token again
 	newToken, err := tk.GetJWT()
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -384,18 +371,16 @@ func ValidateNATSConnection(t *testing.T, ec sdp.EncodedConnection) {
 			done <- struct{}{}
 		}
 	}))
-
 	if err != nil {
 		t.Error(err)
 	}
 
 	ru := uuid.New()
-	err = ec.Publish(context.Background(), "test", &sdp.QueryResponse{ResponseType: &sdp.QueryResponse_Response{Response: &sdp.Response{
+	err = ec.Publish(context.Background(), "test", sdp.NewQueryResponseFromResponse(&sdp.Response{
 		Responder:     "test",
 		ResponderUUID: ru[:],
 		State:         sdp.ResponderState_COMPLETE,
-	}}})
-
+	}))
 	if err != nil {
 		t.Error(err)
 	}
@@ -409,7 +394,6 @@ func ValidateNATSConnection(t *testing.T, ec sdp.EncodedConnection) {
 	}
 
 	err = sub.Unsubscribe()
-
 	if err != nil {
 		t.Error(err)
 	}
@@ -421,7 +405,6 @@ func optionsToStruct(options []nats.Option) (nats.Options, error) {
 
 	for _, option := range options {
 		err = option(&o)
-
 		if err != nil {
 			return o, err
 		}

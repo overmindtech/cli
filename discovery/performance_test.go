@@ -192,7 +192,7 @@ func TimeQueries(t *testing.T, numQueries int, linkDepth int, numParallel int) T
 		go func(qt *QueryTracker) {
 			defer wg.Done()
 
-			items, errs, _ := qt.Execute(context.Background())
+			items, _, errs, _ := qt.Execute(context.Background())
 
 			resultsMutex.Lock()
 			results = append(results, items...)

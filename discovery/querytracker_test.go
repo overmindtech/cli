@@ -115,7 +115,7 @@ func TestExecute(t *testing.T) {
 			},
 		}
 
-		items, errs, err := qt.Execute(context.Background())
+		items, edges, errs, err := qt.Execute(context.Background())
 		if err != nil {
 			t.Error(err)
 		}
@@ -125,7 +125,11 @@ func TestExecute(t *testing.T) {
 		}
 
 		if l := len(items); l != 1 {
-			t.Errorf("expected 1 items, got %v", l)
+			t.Errorf("expected 1 items, got %v: %v", l, items)
+		}
+
+		if l := len(edges); l != 0 {
+			t.Errorf("expected 0 items, got %v: %v", l, edges)
 		}
 	})
 
@@ -145,7 +149,7 @@ func TestExecute(t *testing.T) {
 			},
 		}
 
-		_, _, err := qt.Execute(context.Background())
+		_, _, _, err := qt.Execute(context.Background())
 
 		if err == nil {
 			t.Error("expected error but got nil")
@@ -159,7 +163,7 @@ func TestExecute(t *testing.T) {
 			Engine: e,
 		}
 
-		_, _, err := qt.Execute(context.Background())
+		_, _, _, err := qt.Execute(context.Background())
 		if err != nil {
 			t.Error(err)
 		}
@@ -192,7 +196,7 @@ func TestTimeout(t *testing.T) {
 			},
 		}
 
-		items, errs, err := qt.Execute(context.Background())
+		items, edges, errs, err := qt.Execute(context.Background())
 		if err != nil {
 			t.Error(err)
 		}
@@ -202,7 +206,11 @@ func TestTimeout(t *testing.T) {
 		}
 
 		if l := len(items); l != 1 {
-			t.Errorf("expected 1 items, got %v", l)
+			t.Errorf("expected 1 items, got %v: %v", l, items)
+		}
+
+		if l := len(edges); l != 0 {
+			t.Errorf("expected 0 edges, got %v: %v", l, edges)
 		}
 	})
 
@@ -226,7 +234,7 @@ func TestTimeout(t *testing.T) {
 			},
 		}
 
-		_, _, err := qt.Execute(ctx)
+		_, _, _, err := qt.Execute(ctx)
 
 		if err == nil {
 			t.Error("Expected timeout but got no error")
@@ -257,12 +265,13 @@ func TestCancel(t *testing.T) {
 	}
 
 	items := make([]*sdp.Item, 0)
+	edges := make([]*sdp.Edge, 0)
 	var wg sync.WaitGroup
 
 	var err error
 	wg.Add(1)
 	go func() {
-		items, _, err = qt.Execute(context.Background())
+		items, edges, _, err = qt.Execute(context.Background())
 		wg.Done()
 	}()
 
@@ -279,5 +288,9 @@ func TestCancel(t *testing.T) {
 
 	if len(items) != 0 {
 		t.Errorf("Expected no items but got %v", items)
+	}
+
+	if len(edges) != 0 {
+		t.Errorf("Expected no edges but got %v", edges)
 	}
 }
