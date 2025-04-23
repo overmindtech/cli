@@ -301,7 +301,7 @@ func (e E2ETest) Run(t *testing.T) {
 				t.Skip("list tests deliberately skipped")
 			}
 
-			items := make([]*sdp.Item, 0)
+			var items []*sdp.Item
 			errs := make([]error, 0)
 
 			ctx, cancel := context.WithTimeout(context.Background(), e.Timeout)
