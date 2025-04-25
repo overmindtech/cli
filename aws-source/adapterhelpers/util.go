@@ -423,7 +423,8 @@ func GetAutoConfig(t *testing.T) (aws.Config, string, string) {
 
 	callerID, err = stsClient.GetCallerIdentity(context.Background(), &sts.GetCallerIdentityInput{})
 	if err != nil {
-		t.Fatal(err)
+		t.Skipf("Skipping test due to missing AWS Auth. Make sure you are logged in to the AWS CLI to run tests that require hitting the AWS API. Error: %v", err)
+		return aws.Config{}, "", ""
 	}
 
 	return config, *callerID.Account, config.Region
