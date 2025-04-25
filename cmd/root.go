@@ -18,6 +18,8 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/getsentry/sentry-go"
+	"github.com/go-jose/go-jose/v4"
+	josejwt "github.com/go-jose/go-jose/v4/jwt"
 	"github.com/google/uuid"
 	"github.com/overmindtech/pterm"
 	"github.com/overmindtech/cli/auth"
@@ -412,12 +414,6 @@ func ensureToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes []
 		return ctx, nil, fmt.Errorf("error getting token: %w", err)
 	}
 
-	// lets add account info to the span, for traceability
-	ctx, err = auth.AddAuthInfoContextAndSpan(ctx, token.AccessToken)
-	if err != nil {
-		return ctx, nil, fmt.Errorf("error adding auth info to context: %w", err)
-	}
-
 	// Check that we actually got the claims we asked for. If you don't have
 	// permission auth0 will just not assign those scopes rather than fail
 	ok, missing, err := HasScopesFlexible(token, requiredScopes)
@@ -516,6 +512,27 @@ func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes 
 
 	authSpinner.Success("Authenticated successfully")
 	_, _ = multi.Stop()
+
+	tok, err := josejwt.ParseSigned(token.AccessToken, []jose.SignatureAlgorithm{jose.RS256})
+	if err != nil {
+		pterm.Error.Printf("Error running program: received invalid token: %v", err)
+		os.Exit(1)
+	}
+	out := josejwt.Claims{}
+	customClaims := auth.CustomClaims{}
+	err = tok.UnsafeClaimsWithoutVerification(&out, &customClaims)
+	if err != nil {
+		pterm.Error.Printf("Error running program: received unparsable token: %v", err)
+		os.Exit(1)
+	}
+
+	if cmdSpan != nil {
+		cmdSpan.SetAttributes(
+			attribute.Bool("ovm.cli.authenticated", true),
+			attribute.String("ovm.cli.accountName", customClaims.AccountName),
+			attribute.String("ovm.cli.userId", out.Subject),
+		)
+	}
 
 	// Save the token to the local file, if the home directory is available
 	if home != "" {

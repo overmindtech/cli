@@ -14,8 +14,6 @@ import (
 	"github.com/auth0/go-jwt-middleware/v2/jwks"
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/getsentry/sentry-go"
-	jose "github.com/go-jose/go-jose/v4"
-	josejwt "github.com/go-jose/go-jose/v4/jwt"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -385,13 +383,23 @@ func ensureValidTokenHandler(config AuthConfig, next http.Handler) http.Handler 
 			return
 		}
 
-		ctx, err := AddAuthInfoContextAndSpan(r.Context(), token)
-		if err != nil {
-			// This is not ErrJWTMissing because an error here means that the
-			// tokenExtractor had an error and _not_ that the token was missing.
-			errorHandler(w, r, fmt.Errorf("error adding auth info to span: %w", err))
-			return
-		}
+		ctx := r.Context()
+
+		// note that the values are looked up in last-in-first-out order, so
+		// there is an absolutely minor perf optimisation to have the context
+		// values set in ascending order of access frequency.
+		ctx = context.WithValue(ctx, UserTokenContextKey{}, token)
+		ctx = context.WithValue(ctx, CustomClaimsContextKey{}, customClaims)
+		ctx = context.WithValue(ctx, CurrentSubjectContextKey{}, claims.RegisteredClaims.Subject)
+		ctx = context.WithValue(ctx, AccountNameContextKey{}, customClaims.AccountName)
+
+		trace.SpanFromContext(ctx).SetAttributes(
+			attribute.String("ovm.auth.accountName", customClaims.AccountName),
+			attribute.Int64("ovm.auth.expiry", claims.RegisteredClaims.Expiry),
+			attribute.String("ovm.auth.scopes", customClaims.Scope),
+			// subject is the auth0 client id or user id
+			attribute.String("ovm.auth.subject", claims.RegisteredClaims.Subject),
+		)
 
 		// if its a service impersonating an account, we should mark it as impersonation
 		if strings.HasSuffix(claims.RegisteredClaims.Subject, "@clients") {
@@ -441,36 +449,6 @@ func ensureValidTokenHandler(config AuthConfig, next http.Handler) http.Handler 
 			jwtValidationMiddleware.ServeHTTP(w, r)
 		}
 	})
-}
-
-// AddAuthInfoContextAndSpan adds auth information to the request context for re-use by downstream methods and for telemetry. The token is expected to be already validated and contain the overmind `CustomClaims`.
-func AddAuthInfoContextAndSpan(ctx context.Context, token string) (context.Context, error) {
-	tok, err := josejwt.ParseSigned(token, []jose.SignatureAlgorithm{jose.RS256})
-	if err != nil {
-		return nil, fmt.Errorf("error parsing token: %w", err)
-	}
-	out := josejwt.Claims{}
-	customClaims := CustomClaims{}
-	err = tok.UnsafeClaimsWithoutVerification(&out, &customClaims)
-	if err != nil {
-		return nil, fmt.Errorf("error extracting claims from token: %w", err)
-	}
-
-	ctx = context.WithValue(ctx, UserTokenContextKey{}, token)
-	ctx = context.WithValue(ctx, CustomClaimsContextKey{}, customClaims)
-	ctx = context.WithValue(ctx, CurrentSubjectContextKey{}, out.Subject)
-	ctx = context.WithValue(ctx, AccountNameContextKey{}, customClaims.AccountName)
-
-	trace.SpanFromContext(ctx).SetAttributes(
-		attribute.String("ovm.auth.accountName", customClaims.AccountName),
-		attribute.String("ovm.auth.scopes", customClaims.Scope),
-    // subject is the auth0 client id or user id
-		attribute.String("ovm.auth.subject", out.Subject),
-		attribute.String("ovm.auth.expiry", out.Expiry.Time().String()),
-		attribute.String("ovm.auth.userID", out.Subject),
-	)
-
-	return ctx, nil
 }
 
 // CustomClaims contains custom data we want from the token.
