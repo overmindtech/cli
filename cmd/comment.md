@@ -1,52 +1,66 @@
-{{ $top := . -}}
-# <img alt="banner" src="{{ .AssetPath }}/banner_dark.svg#gh-dark-mode-only"><img alt="banner" src="{{ .AssetPath }}/banner_light.svg#gh-light-mode-only">
+<p align="center">
+  <img alt="Overmind" src="{{ .AssetPath }}/logo.png" width="124px" align="center">
+    <h3 align="center">
+      <a href="{{ .ChangeUrl }}">Open in Overmind ↗  </a>
+   </h3>
+</p>
+
+---
+
 {{ if .TagsLine -}}
-{{ .TagsLine }}
+ {{ .TagsLine }}
 {{ end -}}
 
-# <img width="24" alt="warning" src="{{ .AssetPath }}/risks.svg"> Risks
-{{ if not .Risks }}
-Overmind has not identified any risks associated with this change.
+<h3>🔥 Risks</h3>
 
-This could be due to the change being low risk with no impact on other parts of the system, or involving resources that Overmind currently does not support.
+{{ if not .Risks }}
+
+> [!NOTE] > **Overmind has not identified any risks associated with this change**
+> This could be due to the change being low risk with no impact on other parts of the system, or involving resources that Overmind currently does not support.
+
 {{ else -}}
 {{ range .Risks }}
-## <img width="16" alt="{{ .SeverityAlt }}" src="{{ $top.AssetPath }}/{{ .SeverityIcon }}"> {{ .Title }} [{{ .SeverityText }}]
+**{{ .Title }}** `{{.SeverityText }}`  [Open Risk ↗]({{ .RiskUrl }})
+{{ .Description }}
 
-{{ .Description }} [Open Risk]({{ .RiskUrl }})
 {{ end }}
 {{ end -}}
 
-# <img width="24" alt="mapped" src="{{ .AssetPath }}/item.svg"> Expected Changes
+---
+
+<h3>🟣 Expected Changes</h3>
 
 {{ range .ExpectedChanges -}}
+
 <details>
-<summary><img width="16" alt="{{ .StatusAlt }}" src="{{ $top.AssetPath }}/{{ .StatusIcon }}"> {{ .Type }} › {{ .Title }}</summary>
+<summary> {{ .StatusSymbol }} {{ .Type }} › {{ .Title }}</summary>
 
 {{ if .Diff -}}
+
 ```diff
 {{ .Diff }}
 ```
 
 {{ else -}}
-(no changed attributes)
+_No changed attributes_
 {{ end -}}
 
 </details>
 {{ else -}}
-No expected changes found.
+> [!NOTE]
+> **No expected changes found.**
 {{ end }}
 
-{{ if .UnmappedChanges -}}
-# <img width="24" alt="unmapped" src="{{ .AssetPath }}/unmapped.svg"> Unmapped Changes
+---
 
-> [!NOTE]
-> These changes couldn't be mapped to a discoverable cloud resource and therefore won't be included in the blast radius calculation.
+{{ if .UnmappedChanges -}}
+
+<h3>🟠 Unmapped Changes</h3>
 
 {{ range .UnmappedChanges -}}
 
 <details>
-<summary><img width="16" alt="{{ .StatusAlt }}" src="{{ $top.AssetPath }}/{{ .StatusIcon }}"> {{ .Type }} › {{ .Title }}</summary>
+<summary > {{ .StatusSymbol }} {{ .Type }} › {{ .Title }}</summary>
 
 {{ if .Diff -}}
 
@@ -55,19 +69,17 @@ No expected changes found.
 ```
 
 {{ else -}}
-(no changed attributes)
+_No changed attributes_
 {{ end -}}
 
 </details>
 {{ end }}
 {{ end }}
 
-#  <img width="24" alt="edges" src="{{ .AssetPath }}/edge.svg"> Blast Radius
+---
 
-| <img width="16" alt="items" src="{{ .AssetPath }}/item.svg"> Items | <img width="14" alt="edges" src="{{ .AssetPath }}/edge.svg"> Edges |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| {{ .BlastItems }}                                                                                                                                       | {{ .BlastEdges }}                                                                                                                                       |
+<h3>💥 Blast Radius</h3>
 
-[Open Blast Radius]({{ .BlastRadiusUrl }})
+**Items** ` {{ .BlastItems }} `
 
-[<img alt="Open in Overmind" src="{{ .AssetPath }}/open_in_overmind.svg">]({{ .ChangeUrl }})
+**Edges** ` {{ .BlastEdges }} `

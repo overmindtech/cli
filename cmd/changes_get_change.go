@@ -200,15 +200,12 @@ fetch:
 		fmt.Println(string(b))
 	case "markdown":
 		type TemplateItem struct {
-			StatusAlt  string
-			StatusIcon string
-			Type       string
-			Title      string
-			Diff       string
+			StatusSymbol string
+			Type         string
+			Title        string
+			Diff         string
 		}
 		type TemplateRisk struct {
-			SeverityAlt  string
-			SeverityIcon string
 			SeverityText string
 			Title        string
 			Description  string
@@ -228,51 +225,37 @@ fetch:
 		}
 		status := map[sdp.ItemDiffStatus]TemplateItem{
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNSPECIFIED: {
-				StatusAlt:  "unspecified",
-				StatusIcon: "",
+				StatusSymbol: "-",
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNCHANGED: {
-				StatusAlt:  "unchanged",
-				StatusIcon: "item.svg",
+				StatusSymbol: "✓",
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED: {
-				StatusAlt:  "created",
-				StatusIcon: "created.svg",
+				StatusSymbol: "+",
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED: {
-				StatusAlt:  "updated",
-				StatusIcon: "changed.svg",
+				StatusSymbol: "~",
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_DELETED: {
-				StatusAlt:  "deleted",
-				StatusIcon: "deleted.svg",
+				StatusSymbol: "-",
 			},
 			sdp.ItemDiffStatus_ITEM_DIFF_STATUS_REPLACED: {
-				StatusAlt:  "replaced",
-				StatusIcon: "replaced.svg",
+				StatusSymbol: "+/-",
 			},
 		}
 
 		severity := map[sdp.Risk_Severity]TemplateRisk{
 			sdp.Risk_SEVERITY_UNSPECIFIED: {
-				SeverityAlt:  "unspecified",
-				SeverityIcon: "",
 				SeverityText: "unspecified",
 			},
 			sdp.Risk_SEVERITY_LOW: {
-				SeverityAlt:  "low",
-				SeverityIcon: "low.svg",
 				SeverityText: "Low",
 			},
 			sdp.Risk_SEVERITY_MEDIUM: {
-				SeverityAlt:  "medium",
-				SeverityIcon: "medium.svg",
-				SeverityText: "Medium",
+				SeverityText: "❗Medium",
 			},
 			sdp.Risk_SEVERITY_HIGH: {
-				SeverityAlt:  "high",
-				SeverityIcon: "high.svg",
-				SeverityText: "High",
+				SeverityText: "‼️High",
 			},
 		}
 		app, _ = strings.CutSuffix(app, "/")
@@ -312,11 +295,10 @@ fetch:
 
 			if item.GetItem() != nil {
 				data.ExpectedChanges = append(data.ExpectedChanges, TemplateItem{
-					StatusAlt:  status[item.GetStatus()].StatusAlt,
-					StatusIcon: status[item.GetStatus()].StatusIcon,
-					Type:       item.GetItem().GetType(),
-					Title:      item.GetItem().GetUniqueAttributeValue(),
-					Diff:       diff,
+					StatusSymbol: status[item.GetStatus()].StatusSymbol,
+					Type:         item.GetItem().GetType(),
+					Title:        item.GetItem().GetUniqueAttributeValue(),
+					Diff:         diff,
 				})
 			} else {
 				var typ, title string
@@ -328,11 +310,10 @@ fetch:
 					title = item.GetBefore().UniqueAttributeValue()
 				}
 				data.UnmappedChanges = append(data.UnmappedChanges, TemplateItem{
-					StatusAlt:  status[item.GetStatus()].StatusAlt,
-					StatusIcon: status[item.GetStatus()].StatusIcon,
-					Type:       typ,
-					Title:      title,
-					Diff:       diff,
+					StatusSymbol: status[item.GetStatus()].StatusSymbol,
+					Type:         typ,
+					Title:        title,
+					Diff:         diff,
 				})
 			}
 		}
@@ -341,8 +322,6 @@ fetch:
 			// parse the risk UUID to a string
 			riskUuid, _ := uuid.FromBytes(risk.GetUUID())
 			data.Risks = append(data.Risks, TemplateRisk{
-				SeverityAlt:  severity[risk.GetSeverity()].SeverityAlt,
-				SeverityIcon: severity[risk.GetSeverity()].SeverityIcon,
 				SeverityText: severity[risk.GetSeverity()].SeverityText,
 				Title:        risk.GetTitle(),
 				Description:  risk.GetDescription(),
