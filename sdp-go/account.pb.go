@@ -3382,7 +3382,7 @@ const file_account_proto_rawDesc = "" +
 	"\x0favailableScopes\x18\t \x03(\tR\x0favailableScopes\x12B\n" +
 	"\x0fadapterMetadata\x18\n" +
 	" \x03(\v2\x18.account.AdapterMetadataR\x0fadapterMetadataB\b\n" +
-	"\x06_errorJ\x04\b\b\x10\t\"\xb5\x05\n" +
+	"\x06_errorJ\x04\b\b\x10\t\"\xa0\x05\n" +
 	"\x0fAdapterMetadata\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12A\n" +
 	"\bcategory\x18\x02 \x01(\x0e2\x18.account.AdapterCategoryB\v\xbaH\b\xc8\x01\x01\x82\x01\x02\x10\x01R\bcategory\x12\xc9\x01\n" +
@@ -3390,9 +3390,9 @@ const file_account_proto_rawDesc = "" +
 	"\x18potentialLinksValidation\x12MIf 'potentialLinks' is not empty, none of its members should be empty strings\x1a-this.size() == 0 || this.all(x, x.size() > 0)R\x0epotentialLinks\x124\n" +
 	"\x0fdescriptiveName\x18\x04 \x01(\tB\n" +
 	"\xbaH\a\xc8\x01\x01r\x02\x10\x01R\x0fdescriptiveName\x12c\n" +
-	"\x15supportedQueryMethods\x18\x05 \x01(\v2%.account.AdapterSupportedQueryMethodsB\x06\xbaH\x03\xc8\x01\x01R\x15supportedQueryMethods\x12\xe3\x01\n" +
-	"\x11terraformMappings\x18\x06 \x03(\v2\x19.account.TerraformMappingB\x99\x01\xbaH\x95\x01\xba\x01\x91\x01\n" +
-	"\x1bterraformMappingsValidation\x12FIf 'terraformMappings' is not empty, none of its members should be nil\x1a*this.size() != 0 && this.all(x, x != null)R\x11terraformMappings\"\xd7\x05\n" +
+	"\x15supportedQueryMethods\x18\x05 \x01(\v2%.account.AdapterSupportedQueryMethodsB\x06\xbaH\x03\xc8\x01\x01R\x15supportedQueryMethods\x12\xce\x01\n" +
+	"\x11terraformMappings\x18\x06 \x03(\v2\x19.account.TerraformMappingB\x84\x01\xbaH\x80\x01\xba\x01}\n" +
+	"\x1bterraformMappingsValidation\x12FIf 'terraformMappings' is not empty, none of its members should be nil\x1a\x16this.all(x, x != null)R\x11terraformMappings\"\xd7\x05\n" +
 	"\x1cAdapterSupportedQueryMethods\x12\x10\n" +
 	"\x03get\x18\x01 \x01(\bR\x03get\x12&\n" +
 	"\x0egetDescription\x18\x02 \x01(\tR\x0egetDescription\x12\x12\n" +

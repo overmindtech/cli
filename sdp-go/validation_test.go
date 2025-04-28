@@ -522,6 +522,27 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected no errors, got %v", err)
 		}
 	})
+	t.Run("Empty Terraform mappings is OK", func(t *testing.T) {
+		md := &AdapterMetadata{
+			Type:            "test-adapter",
+			DescriptiveName: "Test Adapter",
+			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+			SupportedQueryMethods: &AdapterSupportedQueryMethods{
+				Get:               true,
+				GetDescription:    "Get a test adapter",
+				Search:            true,
+				SearchDescription: "Search test adapters",
+				List:              true,
+				ListDescription:   "List test adapters",
+			},
+			PotentialLinks: []string{"test-link"},
+		}
+
+		err := protovalidate.Validate(md)
+		if err != nil {
+			t.Errorf("expected no errors, got %v", err)
+		}
+	})
 
 	t.Run("Empty strings in the potential links", func(t *testing.T) {
 		md := &AdapterMetadata{
@@ -675,34 +696,6 @@ func TestAdapterMetadataValidation(t *testing.T) {
 					TerraformQueryMap: "aws_test_adapter.test_adapter_id.something_else", // expected 2 items, got 3
 				},
 			},
-		}
-
-		err := protovalidate.Validate(md)
-		if err == nil {
-			t.Errorf("expected error, got nil")
-		}
-
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
-			t.Errorf("expected validation error, got %T: %v", err, err)
-		}
-	})
-
-	t.Run("Empty Terraform mapping", func(t *testing.T) {
-		md := &AdapterMetadata{
-			Type:            "test-adapter",
-			DescriptiveName: "Test Adapter",
-			Category:        AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			SupportedQueryMethods: &AdapterSupportedQueryMethods{
-				Get:               true,
-				GetDescription:    "Get a test adapter",
-				Search:            true,
-				SearchDescription: "Search test adapters",
-				List:              true,
-				ListDescription:   "List test adapters",
-			},
-			PotentialLinks:    []string{"test-link"},
-			TerraformMappings: []*TerraformMapping{},
 		}
 
 		err := protovalidate.Validate(md)
