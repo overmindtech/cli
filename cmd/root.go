@@ -235,7 +235,7 @@ func getChangeUuid(ctx context.Context, oi sdp.OvermindInstance, expectedStatus 
 	}
 
 	if errNotFound && changeUuid == uuid.Nil {
-		return uuid.Nil, fmt.Errorf("no change found with ticket link %v", ticketLink)
+		return uuid.Nil, fmt.Errorf("no change found with ticket link %v and status %v", ticketLink, expectedStatus.String())
 	}
 
 	return changeUuid, nil
