@@ -31,3 +31,6 @@ terraform.tfstate.backup
 /tmp/
 /node_modules
 __debug_bin*
+
+# ignore local terraform files
+tfplan.json*

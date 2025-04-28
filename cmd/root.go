@@ -413,6 +413,30 @@ func ensureToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes []
 	if err != nil {
 		return ctx, nil, fmt.Errorf("error getting token: %w", err)
 	}
+	if token == nil {
+		// this should never happen, but just in case
+		return ctx, nil, fmt.Errorf("error token: nil")
+	}
+
+	// let's add account/auth info to the span for traceability
+	tok, err := josejwt.ParseSigned(token.AccessToken, []jose.SignatureAlgorithm{jose.RS256})
+	if err != nil {
+		return ctx, nil, fmt.Errorf("Error running program: received invalid token: %w", err)
+	}
+	out := josejwt.Claims{}
+	customClaims := auth.CustomClaims{}
+	err = tok.UnsafeClaimsWithoutVerification(&out, &customClaims)
+	if err != nil {
+		return ctx, nil, fmt.Errorf("Error running program: received unparsable token: %w", err)
+	}
+	trace.SpanFromContext(ctx).SetAttributes(
+		attribute.Bool("ovm.auth.authenticated", true),
+		attribute.String("ovm.auth.accountName", customClaims.AccountName),
+		attribute.String("ovm.auth.scopes", customClaims.Scope),
+		// subject is the auth0 client id or the user id
+		attribute.String("ovm.auth.subject", out.Subject),
+		attribute.String("ovm.auth.expiry", out.Expiry.Time().String()),
+	)
 
 	// Check that we actually got the claims we asked for. If you don't have
 	// permission auth0 will just not assign those scopes rather than fail
@@ -451,7 +475,6 @@ func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes 
 			return localToken, nil
 		}
 	}
-
 	// If we need to get a new token, request the required scopes on top of
 	// whatever ones the current local, valid token has so that we don't
 	// keep replacing it
@@ -500,39 +523,17 @@ func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes 
 	token, err = config.DeviceAccessToken(ctx, deviceCode)
 	if err != nil {
 		authSpinner.Fail("Unable to authenticate. Please try again.")
-		log.WithContext(ctx).WithError(err).Error("Error getting device code")
-		os.Exit(1)
+		_, _ = multi.Stop()
+		return nil, fmt.Errorf("error getting device code: %w", err)
 	}
-
 	if token == nil {
 		authSpinner.Fail("Error running program: no token received")
-		log.WithContext(ctx).Error("Error running program: no token received")
-		os.Exit(1)
+		_, _ = multi.Stop()
+		return nil, errors.New("no token received")
 	}
 
 	authSpinner.Success("Authenticated successfully")
 	_, _ = multi.Stop()
-
-	tok, err := josejwt.ParseSigned(token.AccessToken, []jose.SignatureAlgorithm{jose.RS256})
-	if err != nil {
-		pterm.Error.Printf("Error running program: received invalid token: %v", err)
-		os.Exit(1)
-	}
-	out := josejwt.Claims{}
-	customClaims := auth.CustomClaims{}
-	err = tok.UnsafeClaimsWithoutVerification(&out, &customClaims)
-	if err != nil {
-		pterm.Error.Printf("Error running program: received unparsable token: %v", err)
-		os.Exit(1)
-	}
-
-	if cmdSpan != nil {
-		cmdSpan.SetAttributes(
-			attribute.Bool("ovm.cli.authenticated", true),
-			attribute.String("ovm.cli.accountName", customClaims.AccountName),
-			attribute.String("ovm.cli.userId", out.Subject),
-		)
-	}
 
 	// Save the token to the local file, if the home directory is available
 	if home != "" {
