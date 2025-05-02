@@ -58,6 +58,7 @@ func (s *SpeedTestAdapter) Get(ctx context.Context, scope string, query string, 
 					},
 				},
 			},
+			// TODO(LIQs): convert to returning edges
 			LinkedItemQueries: []*sdp.LinkedItemQuery{
 				{
 					Query: &sdp.Query{

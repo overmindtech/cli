@@ -58,6 +58,7 @@ Type names should match RFC1123 (lower case). This means the name must:
 		t.Errorf("UniqueAttribute %v for item %v is empty", i.GetUniqueAttribute(), i.GloballyUniqueName())
 	}
 
+	// TODO(LIQs): delete this
 	for index, linkedItem := range i.GetLinkedItems() {
 		item := linkedItem.GetItem()
 		if item.GetType() == "" {
@@ -72,6 +73,7 @@ Type names should match RFC1123 (lower case). This means the name must:
 		// it will just inherit the scope of the parent
 	}
 
+	// TODO(LIQs): delete this
 	for index, linkedItemQuery := range i.GetLinkedItemQueries() {
 		query := linkedItemQuery.GetQuery()
 		if query.GetType() == "" {

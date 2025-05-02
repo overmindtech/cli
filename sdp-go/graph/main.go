@@ -182,6 +182,7 @@ func (g *SDPGraph) AddItem(item *sdp.Item, weight float64) int64 {
 	g.nodesByID[id] = &node
 	g.nodesByGUN[item.GloballyUniqueName()] = &node
 
+	// TODO(LIQs): https://github.com/overmindtech/workspace/issues/1228
 	// Find all edges and add them
 	for _, linkedItem := range item.GetLinkedItems() {
 		// Check if the linked item node exists

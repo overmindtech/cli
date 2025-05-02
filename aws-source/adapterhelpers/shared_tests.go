@@ -222,6 +222,7 @@ func (i QueryTests) Execute(t *testing.T, item *sdp.Item) {
 	for _, test := range i {
 		var found bool
 
+		// TODO(LIQs): update this to receive and evaluate edges instead of linked item queries
 		for _, lir := range item.GetLinkedItemQueries() {
 			if lirMatches(test, lir.GetQuery()) {
 				found = true

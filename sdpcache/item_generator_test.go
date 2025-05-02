@@ -34,7 +34,11 @@ const MaxTagKeyLength = 10
 const MaxTagValueLength = 10
 const MaxAttributeKeyLength = 20
 const MaxAttributeValueLength = 50
+
+// TODO(LIQs): rewrite this to `MaxEdges`
 const MaxLinkedItems = 10
+
+// TODO(LIQs): delete
 const MaxLinkedItemQueries = 10
 
 // GenerateRandomItem Generates a random item and the tags for this item. The
@@ -59,6 +63,7 @@ func GenerateRandomItem() *sdp.Item {
 		tags[randSeq(rand.Intn(MaxTagKeyLength))] = randSeq(rand.Intn(MaxTagValueLength))
 	}
 
+	// TODO(LIQs): rewrite this to `MaxEdges` and return and additional []*sdp.Edge
 	linkedItems := make([]*sdp.LinkedItem, rand.Intn(MaxLinkedItems))
 
 	for i := range linkedItems {

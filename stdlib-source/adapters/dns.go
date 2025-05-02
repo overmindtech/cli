@@ -402,6 +402,7 @@ func (d *DNSAdapter) makeQueryImpl(ctx context.Context, query string, server str
 				UniqueAttribute: UniqueAttribute,
 				Scope:           "global",
 				Attributes:      attrs,
+				// TODO(LIQs): update this method to return the data as edges; fixup all callers
 				LinkedItems: []*sdp.LinkedItem{
 					{
 						Item: &sdp.Reference{

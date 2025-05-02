@@ -117,6 +117,7 @@ func (i *Item) Copy(dest *Item) {
 	i.GetMetadata().Copy(dest.GetMetadata())
 	i.GetAttributes().Copy(dest.GetAttributes())
 
+	// TODO(LIQs): delete this; it's not part of `(*sdp.Item)` anymore
 	dest.LinkedItemQueries = make([]*LinkedItemQuery, 0)
 	dest.LinkedItems = make([]*LinkedItem, 0)
 

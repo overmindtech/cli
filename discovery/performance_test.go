@@ -47,13 +47,15 @@ func (s *SlowAdapter) Get(ctx context.Context, scope string, query string, ignor
 	})
 
 	item := sdp.Item{
-		Type:              "person",
-		UniqueAttribute:   "name",
-		Attributes:        attributes,
-		Scope:             "test",
+		Type:            "person",
+		UniqueAttribute: "name",
+		Attributes:      attributes,
+		Scope:           "test",
+		// TODO(LIQs): delete this
 		LinkedItemQueries: []*sdp.LinkedItemQuery{},
 	}
 
+	// TODO(LIQs): convert to returning edges
 	for i := 0; i != 2; i++ {
 		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{Query: &sdp.Query{
 			Type:   "person",

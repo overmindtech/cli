@@ -81,7 +81,8 @@ func createTestItem(typ, value string) *sdp.Item {
 			SourceDurationPerItem: durationpb.New(time.Second),
 			Hidden:                true,
 		},
-		Scope:             "test",
+		Scope: "test",
+		// TODO(LIQs): delete empty data
 		LinkedItemQueries: []*sdp.LinkedItemQuery{},
 		LinkedItems:       []*sdp.LinkedItem{},
 	}
@@ -90,6 +91,7 @@ func createTestItem(typ, value string) *sdp.Item {
 func admins() *sdp.Item {
 	i := createTestItem("test-group", "test-admins")
 
+	// TODO(LIQs): convert to returning edges
 	i.LinkedItemQueries = []*sdp.LinkedItemQuery{
 		{
 			Query: &sdp.Query{

@@ -127,6 +127,7 @@ func TestGraph(t *testing.T) {
 	c := makeTestItem("c")
 	d := makeTestItem("d")
 
+	// TODO(LIQs): https://github.com/overmindtech/workspace/issues/1228
 	a.LinkedItems = []*sdp.LinkedItem{
 		{
 			Item: b.Reference(),

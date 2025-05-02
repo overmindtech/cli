@@ -51,6 +51,7 @@ func (s *TestAdapter) NewTestItem(scope string, query string) *sdp.Item {
 				},
 			},
 		},
+		// TODO(LIQs): convert to returning edges
 		LinkedItemQueries: []*sdp.LinkedItemQuery{
 			{
 				Query: &sdp.Query{

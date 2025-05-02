@@ -546,6 +546,7 @@ func (sq *SourceQuery) handleItem(item *Item) {
 	}
 
 	// Send the item back over the channel
+	// TODO(LIQs): translation is not necessary anymore; update code and method comment
 	item, edges := TranslateLinksToEdges(item)
 	sq.responseChan <- &QueryResponse{
 		ResponseType: &QueryResponse_NewItem{NewItem: item},
@@ -646,6 +647,7 @@ func (sq *SourceQuery) allDone() bool {
 // in the gateway while allowing other parts of the system to be updated
 // independently. See https://github.com/overmindtech/workspace/issues/753
 func TranslateLinksToEdges(item *Item) (*Item, []*Edge) {
+	// TODO(LIQs): translation is not necessary anymore; delete this method and all callsites
 	lis := item.GetLinkedItems()
 	item.LinkedItems = nil
 	liqs := item.GetLinkedItemQueries()

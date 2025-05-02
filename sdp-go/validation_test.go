@@ -2,9 +2,10 @@ package sdp
 
 import (
 	"errors"
-	"github.com/bufbuild/protovalidate-go"
 	"testing"
 	"time"
+
+	"github.com/bufbuild/protovalidate-go"
 
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -454,9 +455,10 @@ func newReference() *Reference {
 
 func newItem() *Item {
 	return &Item{
-		Type:              "user",
-		UniqueAttribute:   "name",
-		Scope:             "test",
+		Type:            "user",
+		UniqueAttribute: "name",
+		Scope:           "test",
+		// TODO(LIQs): delete empty data
 		LinkedItemQueries: []*LinkedItemQuery{},
 		LinkedItems:       []*LinkedItem{},
 		Attributes: &ItemAttributes{

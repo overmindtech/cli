@@ -366,6 +366,7 @@ func TestCopy(t *testing.T) {
 			UniqueAttribute: "name",
 			Scope:           "test",
 			Attributes:      exampleAttributes,
+			// TODO(LIQs): delete this; it's not part of `(*sdp.Item).Copy()` anymore
 			LinkedItemQueries: []*LinkedItemQuery{
 				{
 					Query: &Query{
@@ -375,6 +376,7 @@ func TestCopy(t *testing.T) {
 					},
 				},
 			},
+			// TODO(LIQs): delete this; it's not part of `(*sdp.Item).Copy()` anymore
 			LinkedItems: []*LinkedItem{},
 			Metadata: &Metadata{
 				SourceName: "test",
@@ -410,6 +412,7 @@ func TestCopy(t *testing.T) {
 			UniqueAttribute: "name",
 			Scope:           "test",
 			Attributes:      exampleAttributes,
+			// TODO(LIQs): delete this; it's not part of `(*sdp.Item).Copy()` anymore
 			LinkedItemQueries: []*LinkedItemQuery{
 				{
 					Query: &Query{
@@ -419,6 +422,7 @@ func TestCopy(t *testing.T) {
 					},
 				},
 			},
+			// TODO(LIQs): delete this; it's not part of `(*sdp.Item).Copy()` anymore
 			LinkedItems: []*LinkedItem{},
 			Metadata: &Metadata{
 				Hidden:                true,
@@ -440,10 +444,11 @@ func TestCopy(t *testing.T) {
 
 	t.Run("With a minimal item", func(t *testing.T) {
 		itemA := Item{
-			Type:              "user",
-			UniqueAttribute:   "name",
-			Scope:             "test",
-			Attributes:        exampleAttributes,
+			Type:            "user",
+			UniqueAttribute: "name",
+			Scope:           "test",
+			Attributes:      exampleAttributes,
+			// TODO(LIQs): delete this; it's not part of `(*sdp.Item).Copy()` anymore
 			LinkedItemQueries: []*LinkedItemQuery{},
 			LinkedItems:       []*LinkedItem{},
 		}
@@ -493,6 +498,7 @@ func AssertItemsEqual(itemA *Item, itemB *Item, t *testing.T) {
 
 	}
 
+	// TODO(LIQs): delete this; it's not part of `(*sdp.Item).Copy()` anymore
 	if len(itemA.GetLinkedItemQueries()) != len(itemB.GetLinkedItemQueries()) {
 		t.Error("LinkedItemQueries length did not match")
 	}
@@ -503,6 +509,7 @@ func AssertItemsEqual(itemA *Item, itemB *Item, t *testing.T) {
 		}
 	}
 
+	// TODO(LIQs): delete this; it's not part of `(*sdp.Item).Copy()` anymore
 	if len(itemA.GetLinkedItems()) != len(itemB.GetLinkedItems()) {
 		t.Error("LinkedItems length did not match")
 	}
