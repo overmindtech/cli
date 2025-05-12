@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/bufbuild/protovalidate-go"
+	"buf.build/go/protovalidate"
 
 	"github.com/google/uuid"
 	"google.golang.org/protobuf/types/known/durationpb"

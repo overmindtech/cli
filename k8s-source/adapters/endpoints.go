@@ -7,7 +7,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItemQuery, error) {
+func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItemQuery, error) { //nolint:staticcheck
 	queries := make([]*sdp.LinkedItemQuery, 0)
 
 	sd, err := ParseScope(scope, true)
@@ -81,15 +81,15 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 }
 
 func newEndpointsAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
-	return &KubeTypeAdapter[*v1.Endpoints, *v1.EndpointsList]{
+	return &KubeTypeAdapter[*v1.Endpoints, *v1.EndpointsList]{ //nolint:staticcheck
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Endpoints",
-		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Endpoints, *v1.EndpointsList] {
+		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Endpoints, *v1.EndpointsList] { //nolint:staticcheck
 			return cs.CoreV1().Endpoints(namespace)
 		},
-		ListExtractor: func(list *v1.EndpointsList) ([]*v1.Endpoints, error) {
-			extracted := make([]*v1.Endpoints, len(list.Items))
+		ListExtractor: func(list *v1.EndpointsList) ([]*v1.Endpoints, error) { //nolint:staticcheck
+			extracted := make([]*v1.Endpoints, len(list.Items)) //nolint:staticcheck
 
 			for i := range list.Items {
 				extracted[i] = &list.Items[i]
