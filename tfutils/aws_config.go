@@ -538,7 +538,7 @@ func ParseAWSProviders(terraformDir string, evalContext *hcl.EvalContext) ([]Pro
 					continue
 				} else {
 					results = append(results, ProviderResult{
-						Provider: &awsProvider, 
+						Provider: &awsProvider,
 						FilePath: file,
 					})
 				}

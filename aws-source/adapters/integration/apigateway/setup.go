@@ -90,6 +90,6 @@ func setup(ctx context.Context, logger *slog.Logger, client *apigateway.Client) 
 	if err != nil {
 		return err
 	}
-	
+
 	return nil
 }
