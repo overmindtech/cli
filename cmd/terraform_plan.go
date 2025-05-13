@@ -16,7 +16,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/overmindtech/pterm"
-	"github.com/overmindtech/workspace/api-server/server/changetimeline"
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/cli/sdp-go"
 	log "github.com/sirupsen/logrus"
@@ -364,7 +363,7 @@ retryLoop:
 			}
 
 			// check if change analysis is done
-			if entry.GetName() == string(changetimeline.ChangeTimelineEntryV2NameAutoTagging) && entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
+			if entry.GetName() == string(sdp.ChangeTimelineEntryV2NameAutoTagging) && entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
 				changeAnalysisSpinner.Success()
 				break retryLoop
 			}
@@ -374,7 +373,7 @@ retryLoop:
 	}
 	var calculateRiskStep *sdp.ChangeTimelineEntryV2
 	for _, entry := range timeLine.GetEntries() {
-		if entry.GetName() == string(changetimeline.ChangeTimelineEntryV2NameCalculatedRisks) {
+		if entry.GetName() == string(sdp.ChangeTimelineEntryV2NameCalculatedRisks) {
 			calculateRiskStep = entry
 			break
 		}

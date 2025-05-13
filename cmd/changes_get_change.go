@@ -15,7 +15,6 @@ import (
 	"github.com/hexops/gotextdiff"
 	"github.com/hexops/gotextdiff/myers"
 	diffspan "github.com/hexops/gotextdiff/span"
-	"github.com/overmindtech/workspace/api-server/server/changetimeline"
 	"github.com/overmindtech/cli/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -102,7 +101,7 @@ fetch:
 		}
 		timeLine = rawTimeLine.Msg
 		for _, entry := range timeLine.GetEntries() {
-			if entry.GetName() == string(changetimeline.ChangeTimelineEntryV2NameAutoTagging) && entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
+			if entry.GetName() == string(sdp.ChangeTimelineEntryV2NameAutoTagging) && entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
 				break fetch
 			}
 		}
@@ -155,7 +154,7 @@ fetch:
 
 	var calculateRiskStep *sdp.ChangeTimelineEntryV2
 	for _, entry := range timeLine.GetEntries() {
-		if entry.GetName() == string(changetimeline.ChangeTimelineEntryV2NameCalculatedRisks) {
+		if entry.GetName() == string(sdp.ChangeTimelineEntryV2NameCalculatedRisks) {
 			calculateRiskStep = entry
 			break
 		}
