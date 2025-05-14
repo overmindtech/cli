@@ -14,6 +14,7 @@ import (
 	awsAdapters "github.com/overmindtech/cli/aws-source/adapters"
 	k8sAdapters "github.com/overmindtech/cli/k8s-source/adapters"
 	"github.com/overmindtech/cli/sdp-go"
+	gcpAdapters "github.com/overmindtech/workspace/sources/gcp/adapters"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -147,7 +148,9 @@ func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 
 	// Load mapping data from the sources and convert into a map so that we can
 	// index by Terraform type
-	adapterMetadata := append(awsAdapters.Metadata.AllAdapterMetadata(), k8sAdapters.Metadata.AllAdapterMetadata()...)
+	adapterMetadata := awsAdapters.Metadata.AllAdapterMetadata()
+	adapterMetadata = append(adapterMetadata, k8sAdapters.Metadata.AllAdapterMetadata()...)
+	adapterMetadata = append(adapterMetadata, gcpAdapters.Metadata.AllAdapterMetadata()...)
 	// These mappings are from the terraform type, to required mapping data
 	mappings := make(map[string][]TfMapData)
 	for _, metadata := range adapterMetadata {

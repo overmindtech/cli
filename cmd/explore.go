@@ -15,6 +15,7 @@ import (
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	gcpproc "github.com/overmindtech/workspace/sources/gcp/proc"
 	stdlibSource "github.com/overmindtech/cli/stdlib-source/adapters"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/pkg/browser"
@@ -49,6 +50,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 	}()
 	stdlibSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting stdlib source engine")
 	awsSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting AWS source engine")
+	gcpSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting GCP source engine")
 	statusArea := pterm.DefaultParagraph.WithWriter(multi.NewWriter())
 
 	natsOptions := natsOptions(ctx, oi, token)
@@ -165,6 +167,39 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 
 		awsSpinner.Success("AWS source engine started")
 		return awsEngine, nil
+	})
+
+	p.Go(func() (*discovery.Engine, error) {
+		ec := discovery.EngineConfig{
+			EngineType:            "cli-gcp",
+			Version:               fmt.Sprintf("cli-%v", tracing.Version()),
+			SourceName:            fmt.Sprintf("gcp-source-%v", hostname),
+			SourceUUID:            uuid.New(),
+			App:                   oi.ApiUrl.Host,
+			ApiKey:                token.AccessToken,
+			MaxParallelExecutions: 2_000,
+			NATSOptions:           &natsOptions,
+			HeartbeatOptions:      heartbeatOptions,
+		}
+
+		gcpEngine, err := gcpproc.Initialize(ctx, &ec)
+		if err != nil {
+			gcpSpinner.Fail("Failed to initialize GCP source engine", err.Error())
+			// TODO: return the actual error when we have a company-wide GCP setup
+			// https://github.com/overmindtech/workspace/issues/1337
+			return nil, nil
+		}
+
+		err = gcpEngine.Start() //nolint:contextcheck
+		if err != nil {
+			gcpSpinner.Fail("Failed to start GCP source engine", err.Error())
+			// TODO: return the actual error when we have a company-wide GCP setup
+			// https://github.com/overmindtech/workspace/issues/1337
+			return nil, nil
+		}
+
+		gcpSpinner.Success("GCP source engine started")
+		return gcpEngine, nil
 	})
 
 	engines, err := p.Wait()
