@@ -311,7 +311,7 @@ func TestStartPurge(t *testing.T) {
 
 	if !errors.Is(err, ErrCacheNotFound) {
 		t.Errorf("unexpected error: %v", err)
-		t.Errorf("unexpected items: %v", len(items))
+		t.Errorf("unexpected items: %v: %v", len(items), items)
 	}
 }
 
