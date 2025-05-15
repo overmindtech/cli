@@ -207,14 +207,17 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 			p.Go(func() {
 				defer tracing.LogRecoverToReturn(ctx, "ExecuteQuery inner")
 				defer func() {
+					// Mark the work as done. This happens before we start
+					// waiting on `expandedMutex` below, to ensure that the
+					// queues can continue executing even if we are waiting on
+					// the mutex.
+					wg.Done()
+
 					// Delete our query from the map so that we can track which
 					// ones are still running
 					expandedMutex.Lock()
 					defer expandedMutex.Unlock()
 					delete(expanded, localQ)
-
-					// Mark the work as done
-					wg.Done()
 				}()
 				defer func() {
 					if localQ.GetMethod() == sdp.QueryMethod_LIST {
@@ -252,8 +255,10 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 	case <-ctx.Done():
 		// The context was cancelled, this should have propagated to all the
 		// adapters and therefore we should see the wait group finish very
-		// quickly now. We will check this though to make sure
-		longRunningAdaptersTimeout := 10 * time.Second
+		// quickly now. We will check this though to make sure. This will wait
+		// until we reach Change Analysis SLO violation territory. If this is
+		// too quick, we are only spamming logs for nothing.
+		longRunningAdaptersTimeout := 2 * time.Minute
 
 		// Wait for the wait group, but ping the logs if it's taking
 		// too long

@@ -223,7 +223,7 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 	var b backoff.BackOff
 	b = backoff.NewExponentialBackOff(
 		backoff.WithMaxInterval(30*time.Second),
-		backoff.WithMaxElapsedTime(15*time.Minute),
+		backoff.WithMaxElapsedTime(3*time.Minute), // do not wait longer than max allowed time for Change Analysis SLO
 	)
 	b = backoff.WithMaxRetries(b, maxRetries)
 	tick := backoff.NewTicker(b)
