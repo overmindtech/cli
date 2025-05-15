@@ -133,3 +133,34 @@ func NewComputeForwardingRuleClient(forwardingRuleClient *compute.ForwardingRule
 		client: forwardingRuleClient,
 	}
 }
+
+// Interface for interating over compute autoscalers.
+type ComputeAutoscalerIterator interface {
+	Next() (*computepb.Autoscaler, error)
+}
+
+// Interface for accessing compute autoscaler resources.
+type ComputeAutoscalerClient interface {
+	Get(ctx context.Context, req *computepb.GetAutoscalerRequest, opts ...gax.CallOption) (*computepb.Autoscaler, error)
+	List(ctx context.Context, req *computepb.ListAutoscalersRequest, opts ...gax.CallOption) ComputeAutoscalerIterator
+}
+
+// Wrapper for a ComputeAutoscalerClient implementation.
+type computeAutoscalerClient struct {
+	autoscalerClient *compute.AutoscalersClient
+}
+
+// Create a new NewComputeAutoscalerClient from a real GCP client.
+func NewComputeAutoscalerClient(autoscalerClient *compute.AutoscalersClient) ComputeAutoscalerClient {
+	return &computeAutoscalerClient{
+		autoscalerClient: autoscalerClient,
+	}
+}
+
+func (c computeAutoscalerClient) Get(ctx context.Context, req *computepb.GetAutoscalerRequest, opts ...gax.CallOption) (*computepb.Autoscaler, error) {
+	return c.autoscalerClient.Get(ctx, req, opts...)
+}
+
+func (c computeAutoscalerClient) List(ctx context.Context, req *computepb.ListAutoscalersRequest, opts ...gax.CallOption) ComputeAutoscalerIterator {
+	return c.autoscalerClient.List(ctx, req, opts...)
+}

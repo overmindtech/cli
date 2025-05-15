@@ -325,6 +325,108 @@ func (mr *MockComputeImagesClientMockRecorder) List(ctx, req any, opts ...any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeImagesClient)(nil).List), varargs...)
 }
 
+// MockComputeAutoscalerIterator is a mock of ComputeAutoscalerIterator interface.
+type MockComputeAutoscalerIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeAutoscalerIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeAutoscalerIteratorMockRecorder is the mock recorder for MockComputeAutoscalerIterator.
+type MockComputeAutoscalerIteratorMockRecorder struct {
+	mock *MockComputeAutoscalerIterator
+}
+
+// NewMockComputeAutoscalerIterator creates a new mock instance.
+func NewMockComputeAutoscalerIterator(ctrl *gomock.Controller) *MockComputeAutoscalerIterator {
+	mock := &MockComputeAutoscalerIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeAutoscalerIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeAutoscalerIterator) EXPECT() *MockComputeAutoscalerIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeAutoscalerIterator) Next() (*computepb.Autoscaler, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.Autoscaler)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeAutoscalerIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeAutoscalerIterator)(nil).Next))
+}
+
+// MockComputeAutoscalerClient is a mock of ComputeAutoscalerClient interface.
+type MockComputeAutoscalerClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeAutoscalerClientMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeAutoscalerClientMockRecorder is the mock recorder for MockComputeAutoscalerClient.
+type MockComputeAutoscalerClientMockRecorder struct {
+	mock *MockComputeAutoscalerClient
+}
+
+// NewMockComputeAutoscalerClient creates a new mock instance.
+func NewMockComputeAutoscalerClient(ctrl *gomock.Controller) *MockComputeAutoscalerClient {
+	mock := &MockComputeAutoscalerClient{ctrl: ctrl}
+	mock.recorder = &MockComputeAutoscalerClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeAutoscalerClient) EXPECT() *MockComputeAutoscalerClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockComputeAutoscalerClient) Get(ctx context.Context, req *computepb.GetAutoscalerRequest, opts ...gax.CallOption) (*computepb.Autoscaler, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*computepb.Autoscaler)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockComputeAutoscalerClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeAutoscalerClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockComputeAutoscalerClient) List(ctx context.Context, req *computepb.ListAutoscalersRequest, opts ...gax.CallOption) shared.ComputeAutoscalerIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.ComputeAutoscalerIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockComputeAutoscalerClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeAutoscalerClient)(nil).List), varargs...)
+}
+
 // MockForwardingRuleIterator is a mock of ForwardingRuleIterator interface.
 type MockForwardingRuleIterator struct {
 	ctrl     *gomock.Controller
