@@ -10,6 +10,7 @@ require (
 	buf.build/go/protovalidate v0.12.0
 	cloud.google.com/go/compute v1.37.0
 	cloud.google.com/go/container v1.42.4
+	cloud.google.com/go/networksecurity v0.10.6
 	connectrpc.com/connect v1.18.1
 	github.com/MrAlias/otel-schema-utils v0.4.0-alpha
 	github.com/auth0/go-jwt-middleware/v2 v2.3.0
@@ -109,9 +110,12 @@ require (
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
 	cel.dev/expr v0.24.0 // indirect
+	cloud.google.com/go v0.120.0 // indirect
 	cloud.google.com/go/auth v0.16.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.7.0 // indirect
+	cloud.google.com/go/iam v1.5.2 // indirect
+	cloud.google.com/go/longrunning v0.6.7 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/Masterminds/semver/v3 v3.3.1 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
