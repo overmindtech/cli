@@ -25,26 +25,51 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		return nil, err
 	}
 
+	autoscalerCli, err := compute.NewAutoscalersRESTClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	computeImagesCli, err := compute.NewImagesRESTClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	computeForwardingCli, err := compute.NewForwardingRulesRESTClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	backendServiceCli, err := compute.NewBackendServicesRESTClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	var adapters []discovery.Adapter
 
 	for _, region := range regions {
-		adapter := sources.WrapperToAdapter(
-			NewComputeAddress(shared.NewComputeAddressClient(addressCli), projectID, region),
+		adapters = append(adapters,
+			sources.WrapperToAdapter(NewComputeAddress(shared.NewComputeAddressClient(addressCli), projectID, region)),
+			sources.WrapperToAdapter(NewComputeForwardingRule(shared.NewComputeForwardingRuleClient(computeForwardingCli), projectID, region)),
 		)
-
-		Metadata.Register(adapter.Metadata())
-
-		adapters = append(adapters, adapter)
 	}
 
 	for _, zone := range zones {
-		adapter := sources.WrapperToAdapter(
-			NewComputeInstance(shared.NewComputeInstanceClient(instanceCli), projectID, zone),
+		adapters = append(adapters,
+			sources.WrapperToAdapter(NewComputeInstance(shared.NewComputeInstanceClient(instanceCli), projectID, zone)),
+			sources.WrapperToAdapter(NewComputeAutoscaler(shared.NewComputeAutoscalerClient(autoscalerCli), projectID, zone)),
 		)
+	}
 
+	// global - project level - adapters
+	adapters = append(adapters,
+		sources.WrapperToAdapter(NewComputeBackendService(shared.NewComputeBackendServiceClient(backendServiceCli), projectID)),
+		sources.WrapperToAdapter(NewComputeImage(shared.NewComputeImagesClient(computeImagesCli), projectID)),
+	)
+
+	// Register the metadata for each adapter
+	for _, adapter := range adapters {
 		Metadata.Register(adapter.Metadata())
-
-		adapters = append(adapters, adapter)
 	}
 
 	return adapters, nil

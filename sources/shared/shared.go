@@ -98,3 +98,5 @@ func NewItemTypesSet(items ...ItemType) map[ItemType]bool {
 
 	return m
 }
+
+const QuerySeparator = "|"

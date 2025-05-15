@@ -3483,7 +3483,7 @@ const file_account_proto_rawDesc = "" +
 	"\vCreateToken\x12\x1b.account.CreateTokenRequest\x1a\x1c.account.CreateTokenResponse\x12P\n" +
 	"\rRevlinkWarmup\x12\x1d.account.RevlinkWarmupRequest\x1a\x1e.account.RevlinkWarmupResponse0\x01\x12H\n" +
 	"\vGetTrialEnd\x12\x1b.account.GetTrialEndRequest\x1a\x1c.account.GetTrialEndResponse\x12i\n" +
-	"\x16ListAvailableItemTypes\x12&.account.ListAvailableItemTypesRequest\x1a'.account.ListAvailableItemTypesResponseB.Z,github.com/overmindtech/cli/sdp-go;sdpb\x06proto3"
+	"\x16ListAvailableItemTypes\x12&.account.ListAvailableItemTypesRequest\x1a'.account.ListAvailableItemTypesResponseB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_account_proto_rawDescOnce sync.Once

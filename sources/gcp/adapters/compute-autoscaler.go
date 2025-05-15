@@ -6,11 +6,12 @@ import (
 	"strings"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"google.golang.org/api/iterator"
+
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
-	"google.golang.org/api/iterator"
 )
 
 var (
@@ -28,8 +29,8 @@ type computeAutoscalerWrapper struct {
 	*gcpshared.ZoneBase
 }
 
-// Create a new computeAutoscalerWrapper instance.
-func NewComputeAutoscalerWrapper(client gcpshared.ComputeAutoscalerClient, projectID, zone string) sources.ListableWrapper {
+// NewComputeAutoscaler creates a new computeAutoscalerWrapper instance.
+func NewComputeAutoscaler(client gcpshared.ComputeAutoscalerClient, projectID, zone string) sources.ListableWrapper {
 	return &computeAutoscalerWrapper{
 		client: client,
 		ZoneBase: gcpshared.NewZoneBase(

@@ -212,7 +212,7 @@ const file_cli_proto_rawDesc = "" +
 	"\x11SetConfigResponse2\x8b\x01\n" +
 	"\rConfigService\x12<\n" +
 	"\tGetConfig\x12\x15.cli.GetConfigRequest\x1a\x16.cli.GetConfigResponse\"\x00\x12<\n" +
-	"\tSetConfig\x12\x15.cli.SetConfigRequest\x1a\x16.cli.SetConfigResponse\"\x00B.Z,github.com/overmindtech/cli/sdp-go;sdpb\x06proto3"
+	"\tSetConfig\x12\x15.cli.SetConfigRequest\x1a\x16.cli.SetConfigResponse\"\x00B.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_cli_proto_rawDescOnce sync.Once

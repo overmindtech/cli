@@ -10,11 +10,12 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
+	log "github.com/sirupsen/logrus"
+	"k8s.io/utils/ptr"
+
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/adapters"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
-	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 )
 
 func TestComputeAutoscalerIntegration(t *testing.T) {
@@ -82,7 +83,7 @@ func TestComputeAutoscalerIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Autoscaler in project %s, zone %s", projectID, zone)
 
-		autoscalerWrapper := adapters.NewComputeAutoscalerWrapper(gcpshared.NewComputeAutoscalerClient(client), projectID, zone)
+		autoscalerWrapper := adapters.NewComputeAutoscaler(gcpshared.NewComputeAutoscalerClient(client), projectID, zone)
 		scope := autoscalerWrapper.Scopes()[0]
 
 		autoscalerAdapter := sources.WrapperToAdapter(autoscalerWrapper)

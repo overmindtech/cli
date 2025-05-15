@@ -14,8 +14,6 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-const QuerySeparator = "|"
-
 // ItemTypeLookups is a slice of ItemTypeLookup.
 type ItemTypeLookups []shared.ItemTypeLookup
 
@@ -26,7 +24,7 @@ func (lookups ItemTypeLookups) ReadableFormat() string {
 		readableLookups = append(readableLookups, lookup.Readable())
 	}
 
-	return strings.Join(readableLookups, QuerySeparator)
+	return strings.Join(readableLookups, shared.QuerySeparator)
 }
 
 // Wrapper defines the base interface for resource wrappers.
@@ -121,7 +119,7 @@ func (s *standardAdapterImpl) Get(ctx context.Context, scope string, query strin
 		return nil, err
 	}
 
-	queryParts := strings.Split(query, QuerySeparator)
+	queryParts := strings.Split(query, shared.QuerySeparator)
 	if len(queryParts) != len(s.wrapper.GetLookups()) {
 		return nil, fmt.Errorf(
 			"invalid query format: %s, expected: %s",
@@ -170,7 +168,7 @@ func (s *standardAdapterImpl) Search(ctx context.Context, scope string, query st
 		return nil, nil
 	}
 
-	queryParts := strings.Split(query, QuerySeparator)
+	queryParts := strings.Split(query, shared.QuerySeparator)
 
 	var validQuery bool
 	for _, kw := range s.searchable.SearchLookups() {

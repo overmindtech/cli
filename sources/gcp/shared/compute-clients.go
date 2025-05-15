@@ -164,3 +164,32 @@ func (c computeAutoscalerClient) Get(ctx context.Context, req *computepb.GetAuto
 func (c computeAutoscalerClient) List(ctx context.Context, req *computepb.ListAutoscalersRequest, opts ...gax.CallOption) ComputeAutoscalerIterator {
 	return c.autoscalerClient.List(ctx, req, opts...)
 }
+
+// ComputeBackendServiceClient is an interface for the Compute Engine Backend Service client
+type ComputeBackendServiceClient interface {
+	Get(ctx context.Context, req *computepb.GetBackendServiceRequest, opts ...gax.CallOption) (*computepb.BackendService, error)
+	List(ctx context.Context, req *computepb.ListBackendServicesRequest, opts ...gax.CallOption) ComputeBackendServiceIterator
+}
+
+type ComputeBackendServiceIterator interface {
+	Next() (*computepb.BackendService, error)
+}
+
+type computeBackendServiceClient struct {
+	client *compute.BackendServicesClient
+}
+
+func (c computeBackendServiceClient) Get(ctx context.Context, req *computepb.GetBackendServiceRequest, opts ...gax.CallOption) (*computepb.BackendService, error) {
+	return c.client.Get(ctx, req, opts...)
+}
+
+func (c computeBackendServiceClient) List(ctx context.Context, req *computepb.ListBackendServicesRequest, opts ...gax.CallOption) ComputeBackendServiceIterator {
+	return c.client.List(ctx, req, opts...)
+}
+
+// NewComputeBackendServiceClient creates a new ComputeBackendServiceClient
+func NewComputeBackendServiceClient(backendServiceClient *compute.BackendServicesClient) ComputeBackendServiceClient {
+	return &computeBackendServiceClient{
+		client: backendServiceClient,
+	}
+}

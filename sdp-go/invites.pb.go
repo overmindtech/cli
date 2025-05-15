@@ -474,7 +474,7 @@ const file_invites_proto_rawDesc = "" +
 	"\fCreateInvite\x12\x1c.invites.CreateInviteRequest\x1a\x1d.invites.CreateInviteResponse\x12H\n" +
 	"\vListInvites\x12\x1b.invites.ListInvitesRequest\x1a\x1c.invites.ListInvitesResponse\x12K\n" +
 	"\fRevokeInvite\x12\x1c.invites.RevokeInviteRequest\x1a\x1d.invites.RevokeInviteResponse\x12K\n" +
-	"\fResendInvite\x12\x1c.invites.ResendInviteRequest\x1a\x1d.invites.ResendInviteResponseB.Z,github.com/overmindtech/cli/sdp-go;sdpb\x06proto3"
+	"\fResendInvite\x12\x1c.invites.ResendInviteRequest\x1a\x1d.invites.ResendInviteResponseB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_invites_proto_rawDescOnce sync.Once

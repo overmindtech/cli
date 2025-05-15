@@ -5976,7 +5976,7 @@ const file_changes_proto_rawDesc = "" +
 	"DeleteRule\x12\x1a.changes.DeleteRuleRequest\x1a\x1b.changes.DeleteRuleResponse\x12E\n" +
 	"\n" +
 	"ExportRule\x12\x1a.changes.ExportRuleRequest\x1a\x1b.changes.ExportRuleResponse\x12A\n" +
-	"\bTestRule\x12\x18.changes.TestRuleRequest\x1a\x19.changes.TestRuleResponse0\x01B.Z,github.com/overmindtech/cli/sdp-go;sdpb\x06proto3"
+	"\bTestRule\x12\x18.changes.TestRuleRequest\x1a\x19.changes.TestRuleResponse0\x01B.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_changes_proto_rawDescOnce sync.Once

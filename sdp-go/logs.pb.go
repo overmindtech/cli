@@ -997,7 +997,7 @@ const file_logs_proto_rawDesc = "" +
 	"\n" +
 	"\x06FATAL4\x10\x182Y\n" +
 	"\vLogsService\x12J\n" +
-	"\rGetLogRecords\x12\x1a.logs.GetLogRecordsRequest\x1a\x1b.logs.GetLogRecordsResponse0\x01B.Z,github.com/overmindtech/cli/sdp-go;sdpb\x06proto3"
+	"\rGetLogRecords\x12\x1a.logs.GetLogRecordsRequest\x1a\x1b.logs.GetLogRecordsResponse0\x01B.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_logs_proto_rawDescOnce sync.Once

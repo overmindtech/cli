@@ -325,6 +325,108 @@ func (mr *MockComputeImagesClientMockRecorder) List(ctx, req any, opts ...any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeImagesClient)(nil).List), varargs...)
 }
 
+// MockForwardingRuleIterator is a mock of ForwardingRuleIterator interface.
+type MockForwardingRuleIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockForwardingRuleIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockForwardingRuleIteratorMockRecorder is the mock recorder for MockForwardingRuleIterator.
+type MockForwardingRuleIteratorMockRecorder struct {
+	mock *MockForwardingRuleIterator
+}
+
+// NewMockForwardingRuleIterator creates a new mock instance.
+func NewMockForwardingRuleIterator(ctrl *gomock.Controller) *MockForwardingRuleIterator {
+	mock := &MockForwardingRuleIterator{ctrl: ctrl}
+	mock.recorder = &MockForwardingRuleIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockForwardingRuleIterator) EXPECT() *MockForwardingRuleIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockForwardingRuleIterator) Next() (*computepb.ForwardingRule, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.ForwardingRule)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockForwardingRuleIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockForwardingRuleIterator)(nil).Next))
+}
+
+// MockComputeForwardingRuleClient is a mock of ComputeForwardingRuleClient interface.
+type MockComputeForwardingRuleClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeForwardingRuleClientMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeForwardingRuleClientMockRecorder is the mock recorder for MockComputeForwardingRuleClient.
+type MockComputeForwardingRuleClientMockRecorder struct {
+	mock *MockComputeForwardingRuleClient
+}
+
+// NewMockComputeForwardingRuleClient creates a new mock instance.
+func NewMockComputeForwardingRuleClient(ctrl *gomock.Controller) *MockComputeForwardingRuleClient {
+	mock := &MockComputeForwardingRuleClient{ctrl: ctrl}
+	mock.recorder = &MockComputeForwardingRuleClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeForwardingRuleClient) EXPECT() *MockComputeForwardingRuleClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockComputeForwardingRuleClient) Get(ctx context.Context, req *computepb.GetForwardingRuleRequest, opts ...gax.CallOption) (*computepb.ForwardingRule, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*computepb.ForwardingRule)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockComputeForwardingRuleClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeForwardingRuleClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockComputeForwardingRuleClient) List(ctx context.Context, req *computepb.ListForwardingRulesRequest, opts ...gax.CallOption) shared.ForwardingRuleIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.ForwardingRuleIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockComputeForwardingRuleClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeForwardingRuleClient)(nil).List), varargs...)
+}
+
 // MockComputeAutoscalerIterator is a mock of ComputeAutoscalerIterator interface.
 type MockComputeAutoscalerIterator struct {
 	ctrl     *gomock.Controller
@@ -427,104 +529,104 @@ func (mr *MockComputeAutoscalerClientMockRecorder) List(ctx, req any, opts ...an
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeAutoscalerClient)(nil).List), varargs...)
 }
 
-// MockForwardingRuleIterator is a mock of ForwardingRuleIterator interface.
-type MockForwardingRuleIterator struct {
+// MockComputeBackendServiceClient is a mock of ComputeBackendServiceClient interface.
+type MockComputeBackendServiceClient struct {
 	ctrl     *gomock.Controller
-	recorder *MockForwardingRuleIteratorMockRecorder
+	recorder *MockComputeBackendServiceClientMockRecorder
 	isgomock struct{}
 }
 
-// MockForwardingRuleIteratorMockRecorder is the mock recorder for MockForwardingRuleIterator.
-type MockForwardingRuleIteratorMockRecorder struct {
-	mock *MockForwardingRuleIterator
+// MockComputeBackendServiceClientMockRecorder is the mock recorder for MockComputeBackendServiceClient.
+type MockComputeBackendServiceClientMockRecorder struct {
+	mock *MockComputeBackendServiceClient
 }
 
-// NewMockForwardingRuleIterator creates a new mock instance.
-func NewMockForwardingRuleIterator(ctrl *gomock.Controller) *MockForwardingRuleIterator {
-	mock := &MockForwardingRuleIterator{ctrl: ctrl}
-	mock.recorder = &MockForwardingRuleIteratorMockRecorder{mock}
+// NewMockComputeBackendServiceClient creates a new mock instance.
+func NewMockComputeBackendServiceClient(ctrl *gomock.Controller) *MockComputeBackendServiceClient {
+	mock := &MockComputeBackendServiceClient{ctrl: ctrl}
+	mock.recorder = &MockComputeBackendServiceClientMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockForwardingRuleIterator) EXPECT() *MockForwardingRuleIteratorMockRecorder {
-	return m.recorder
-}
-
-// Next mocks base method.
-func (m *MockForwardingRuleIterator) Next() (*computepb.ForwardingRule, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Next")
-	ret0, _ := ret[0].(*computepb.ForwardingRule)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Next indicates an expected call of Next.
-func (mr *MockForwardingRuleIteratorMockRecorder) Next() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockForwardingRuleIterator)(nil).Next))
-}
-
-// MockComputeForwardingRuleClient is a mock of ComputeForwardingRuleClient interface.
-type MockComputeForwardingRuleClient struct {
-	ctrl     *gomock.Controller
-	recorder *MockComputeForwardingRuleClientMockRecorder
-	isgomock struct{}
-}
-
-// MockComputeForwardingRuleClientMockRecorder is the mock recorder for MockComputeForwardingRuleClient.
-type MockComputeForwardingRuleClientMockRecorder struct {
-	mock *MockComputeForwardingRuleClient
-}
-
-// NewMockComputeForwardingRuleClient creates a new mock instance.
-func NewMockComputeForwardingRuleClient(ctrl *gomock.Controller) *MockComputeForwardingRuleClient {
-	mock := &MockComputeForwardingRuleClient{ctrl: ctrl}
-	mock.recorder = &MockComputeForwardingRuleClientMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockComputeForwardingRuleClient) EXPECT() *MockComputeForwardingRuleClientMockRecorder {
+func (m *MockComputeBackendServiceClient) EXPECT() *MockComputeBackendServiceClientMockRecorder {
 	return m.recorder
 }
 
 // Get mocks base method.
-func (m *MockComputeForwardingRuleClient) Get(ctx context.Context, req *computepb.GetForwardingRuleRequest, opts ...gax.CallOption) (*computepb.ForwardingRule, error) {
+func (m *MockComputeBackendServiceClient) Get(ctx context.Context, req *computepb.GetBackendServiceRequest, opts ...gax.CallOption) (*computepb.BackendService, error) {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, req}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Get", varargs...)
-	ret0, _ := ret[0].(*computepb.ForwardingRule)
+	ret0, _ := ret[0].(*computepb.BackendService)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockComputeForwardingRuleClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+func (mr *MockComputeBackendServiceClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, req}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeForwardingRuleClient)(nil).Get), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeBackendServiceClient)(nil).Get), varargs...)
 }
 
 // List mocks base method.
-func (m *MockComputeForwardingRuleClient) List(ctx context.Context, req *computepb.ListForwardingRulesRequest, opts ...gax.CallOption) shared.ForwardingRuleIterator {
+func (m *MockComputeBackendServiceClient) List(ctx context.Context, req *computepb.ListBackendServicesRequest, opts ...gax.CallOption) shared.ComputeBackendServiceIterator {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx, req}
 	for _, a := range opts {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "List", varargs...)
-	ret0, _ := ret[0].(shared.ForwardingRuleIterator)
+	ret0, _ := ret[0].(shared.ComputeBackendServiceIterator)
 	return ret0
 }
 
 // List indicates an expected call of List.
-func (mr *MockComputeForwardingRuleClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+func (mr *MockComputeBackendServiceClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, req}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeForwardingRuleClient)(nil).List), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeBackendServiceClient)(nil).List), varargs...)
+}
+
+// MockComputeBackendServiceIterator is a mock of ComputeBackendServiceIterator interface.
+type MockComputeBackendServiceIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeBackendServiceIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeBackendServiceIteratorMockRecorder is the mock recorder for MockComputeBackendServiceIterator.
+type MockComputeBackendServiceIteratorMockRecorder struct {
+	mock *MockComputeBackendServiceIterator
+}
+
+// NewMockComputeBackendServiceIterator creates a new mock instance.
+func NewMockComputeBackendServiceIterator(ctrl *gomock.Controller) *MockComputeBackendServiceIterator {
+	mock := &MockComputeBackendServiceIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeBackendServiceIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeBackendServiceIterator) EXPECT() *MockComputeBackendServiceIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeBackendServiceIterator) Next() (*computepb.BackendService, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.BackendService)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeBackendServiceIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeBackendServiceIterator)(nil).Next))
 }

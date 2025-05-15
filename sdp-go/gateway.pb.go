@@ -2167,7 +2167,7 @@ const file_gateway_proto_rawDesc = "" +
 	"\ttool_type\"8\n" +
 	"\fChatResponse\x12\x12\n" +
 	"\x04text\x18\x01 \x01(\tR\x04text\x12\x14\n" +
-	"\x05error\x18\x02 \x01(\tR\x05errorB.Z,github.com/overmindtech/cli/sdp-go;sdpb\x06proto3"
+	"\x05error\x18\x02 \x01(\tR\x05errorB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_gateway_proto_rawDescOnce sync.Once

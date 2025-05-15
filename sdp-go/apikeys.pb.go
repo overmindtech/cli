@@ -1015,7 +1015,7 @@ const file_apikeys_proto_rawDesc = "" +
 	"\fUpdateAPIKey\x12\x1c.apikeys.UpdateAPIKeyRequest\x1a\x1d.apikeys.UpdateAPIKeyResponse\x12H\n" +
 	"\vListAPIKeys\x12\x1b.apikeys.ListAPIKeysRequest\x1a\x1c.apikeys.ListAPIKeysResponse\x12K\n" +
 	"\fDeleteAPIKey\x12\x1c.apikeys.DeleteAPIKeyRequest\x1a\x1d.apikeys.DeleteAPIKeyResponse\x12`\n" +
-	"\x13ExchangeKeyForToken\x12#.apikeys.ExchangeKeyForTokenRequest\x1a$.apikeys.ExchangeKeyForTokenResponseB.Z,github.com/overmindtech/cli/sdp-go;sdpb\x06proto3"
+	"\x13ExchangeKeyForToken\x12#.apikeys.ExchangeKeyForTokenRequest\x1a$.apikeys.ExchangeKeyForTokenResponseB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_apikeys_proto_rawDescOnce sync.Once

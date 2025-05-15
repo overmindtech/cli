@@ -798,7 +798,7 @@ const file_config_proto_rawDesc = "" +
 	"\x13UpdateAccountConfig\x12\".config.UpdateAccountConfigRequest\x1a#.config.UpdateAccountConfigResponse\x12R\n" +
 	"\x0fCreateHcpConfig\x12\x1e.config.CreateHcpConfigRequest\x1a\x1f.config.CreateHcpConfigResponse\x12I\n" +
 	"\fGetHcpConfig\x12\x1b.config.GetHcpConfigRequest\x1a\x1c.config.GetHcpConfigResponse\x12R\n" +
-	"\x0fDeleteHcpConfig\x12\x1e.config.DeleteHcpConfigRequest\x1a\x1f.config.DeleteHcpConfigResponseB.Z,github.com/overmindtech/cli/sdp-go;sdpb\x06proto3"
+	"\x0fDeleteHcpConfig\x12\x1e.config.DeleteHcpConfigRequest\x1a\x1f.config.DeleteHcpConfigResponseB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_config_proto_rawDescOnce sync.Once

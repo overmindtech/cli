@@ -189,7 +189,7 @@ const file_responses_proto_rawDesc = "" +
 	"\bCOMPLETE\x10\x01\x12\t\n" +
 	"\x05ERROR\x10\x02\x12\r\n" +
 	"\tCANCELLED\x10\x03\x12\v\n" +
-	"\aSTALLED\x10\x04B.Z,github.com/overmindtech/cli/sdp-go;sdpb\x06proto3"
+	"\aSTALLED\x10\x04B.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_responses_proto_rawDescOnce sync.Once

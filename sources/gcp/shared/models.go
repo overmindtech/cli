@@ -8,8 +8,10 @@ const GCP shared.Source = "gcp"
 
 // APIs
 const (
-	Compute   shared.API = "compute"
-	Container shared.API = "container"
+	Compute         shared.API = "compute"
+	Container       shared.API = "container"
+	NetworkSecurity shared.API = "network-security"
+	NetworkServices shared.API = "network-services"
 )
 
 // Resources
@@ -24,4 +26,8 @@ const (
 	BackendService       shared.Resource = "backend-service"
 	Autoscaler           shared.Resource = "autoscaler"
 	InstanceGroupManager shared.Resource = "instance-group-manager"
+	SecurityPolicy       shared.Resource = "security-policy"
+	ClientTlsPolicy      shared.Resource = "client-tls-policy"
+	ServiceLbPolicy      shared.Resource = "service-lb-policy"
+	ServiceBinding       shared.Resource = "service-binding"
 )

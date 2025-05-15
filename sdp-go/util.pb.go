@@ -230,7 +230,7 @@ const file_util_proto_rawDesc = "" +
 	"\x16ALPHABETICAL_ASCENDING\x10\x00\x12\x1b\n" +
 	"\x17ALPHABETICAL_DESCENDING\x10\x01\x12\x12\n" +
 	"\x0eDATE_ASCENDING\x10\x02\x12\x13\n" +
-	"\x0fDATE_DESCENDING\x10\x03B.Z,github.com/overmindtech/cli/sdp-go;sdpb\x06proto3"
+	"\x0fDATE_DESCENDING\x10\x03B.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_util_proto_rawDescOnce sync.Once

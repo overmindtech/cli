@@ -906,7 +906,7 @@ const file_snapshots_proto_rawDesc = "" +
 	"\vGetSnapshot\x12\x1d.snapshots.GetSnapshotRequest\x1a\x1e.snapshots.GetSnapshotResponse\x12U\n" +
 	"\x0eUpdateSnapshot\x12 .snapshots.UpdateSnapshotRequest\x1a!.snapshots.UpdateSnapshotResponse\x12U\n" +
 	"\x0eDeleteSnapshot\x12 .snapshots.DeleteSnapshotRequest\x1a!.snapshots.DeleteSnapshotResponse\x12`\n" +
-	"\x11ListSnapshotByGUN\x12$.snapshots.ListSnapshotsByGUNRequest\x1a%.snapshots.ListSnapshotsByGUNResponseB.Z,github.com/overmindtech/cli/sdp-go;sdpb\x06proto3"
+	"\x11ListSnapshotByGUN\x12$.snapshots.ListSnapshotsByGUNRequest\x1a%.snapshots.ListSnapshotsByGUNResponseB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_snapshots_proto_rawDescOnce sync.Once

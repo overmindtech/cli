@@ -1722,7 +1722,7 @@ const file_items_proto_rawDesc = "" +
 	"\x03GET\x10\x00\x12\b\n" +
 	"\x04LIST\x10\x01\x12\n" +
 	"\n" +
-	"\x06SEARCH\x10\x02B.Z,github.com/overmindtech/cli/sdp-go;sdpb\x06proto3"
+	"\x06SEARCH\x10\x02B.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_items_proto_rawDescOnce sync.Once

@@ -5,14 +5,15 @@ import (
 	"testing"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"go.uber.org/mock/gomock"
+	"google.golang.org/api/iterator"
+	"k8s.io/utils/ptr"
+
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/adapters"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
-	"go.uber.org/mock/gomock"
-	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 )
 
 func TestComputeAutoscalerWrapper(t *testing.T) {
@@ -26,7 +27,7 @@ func TestComputeAutoscalerWrapper(t *testing.T) {
 
 	t.Run("Get", func(t *testing.T) {
 		// Attach mock client to our wrapper.
-		wrapper := adapters.NewComputeAutoscalerWrapper(mockClient, projectID, zone)
+		wrapper := adapters.NewComputeAutoscaler(mockClient, projectID, zone)
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createAutoscalerApiFixture("test-autoscaler"), nil)
 
@@ -97,7 +98,7 @@ func TestComputeAutoscalerWrapper(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := adapters.NewComputeAutoscalerWrapper(mockClient, projectID, zone)
+		wrapper := adapters.NewComputeAutoscaler(mockClient, projectID, zone)
 
 		adapter := sources.WrapperToAdapter(wrapper)
 

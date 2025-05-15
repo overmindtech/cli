@@ -796,7 +796,7 @@ const file_bookmarks_proto_rawDesc = "" +
 	"\vGetBookmark\x12\x1d.bookmarks.GetBookmarkRequest\x1a\x1e.bookmarks.GetBookmarkResponse\x12U\n" +
 	"\x0eUpdateBookmark\x12 .bookmarks.UpdateBookmarkRequest\x1a!.bookmarks.UpdateBookmarkResponse\x12U\n" +
 	"\x0eDeleteBookmark\x12 .bookmarks.DeleteBookmarkRequest\x1a!.bookmarks.DeleteBookmarkResponse\x12g\n" +
-	"\x14GetAffectedBookmarks\x12&.bookmarks.GetAffectedBookmarksRequest\x1a'.bookmarks.GetAffectedBookmarksResponseB.Z,github.com/overmindtech/cli/sdp-go;sdpb\x06proto3"
+	"\x14GetAffectedBookmarks\x12&.bookmarks.GetAffectedBookmarksRequest\x1a'.bookmarks.GetAffectedBookmarksResponseB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_bookmarks_proto_rawDescOnce sync.Once

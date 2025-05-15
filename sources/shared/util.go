@@ -1,6 +1,10 @@
 package shared
 
-import "github.com/overmindtech/cli/sdp-go"
+import (
+	"strings"
+
+	"github.com/overmindtech/cli/sdp-go"
+)
 
 // ToAttributesWithExclude converts an interface to SDP attributes using the `sdp.ToAttributesSorted`
 // function, and also allows the user to exclude certain top-level fields from
@@ -18,4 +22,10 @@ func ToAttributesWithExclude(i interface{}, exclusions ...string) (*sdp.ItemAttr
 	}
 
 	return attrs, nil
+}
+
+// CompositeLookupKey creates a composite lookup key from multiple query parts.
+func CompositeLookupKey(queryParts ...string) string {
+	// Join the query parts with the default separator "|"
+	return strings.Join(queryParts, QuerySeparator)
 }
