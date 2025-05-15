@@ -15,7 +15,7 @@ import (
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
-	gcpproc "github.com/overmindtech/workspace/sources/gcp/proc"
+	gcpproc "github.com/overmindtech/cli/sources/gcp/proc"
 	stdlibSource "github.com/overmindtech/cli/stdlib-source/adapters"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/pkg/browser"
