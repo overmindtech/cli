@@ -142,7 +142,9 @@ func run(_ *cobra.Command, _ []string) int {
 	if clusterName == "" {
 		clusterName = k8sURL.Host
 	}
-
+	if engineConfig.HeartbeatOptions == nil {
+		engineConfig.HeartbeatOptions = &discovery.HeartbeatOptions{}
+	}
 	engineConfig.HeartbeatOptions.HealthCheck = func(ctx context.Context) error {
 		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
