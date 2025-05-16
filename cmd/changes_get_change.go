@@ -159,15 +159,29 @@ fetch:
 			break
 		}
 	}
-	if calculateRiskStep == nil || calculateRiskStep.GetCalculatedRisks() == nil {
+	lf["ovm.calculate.risk.step"] = fmt.Sprintf("%#v", calculateRiskStep)
+	if calculateRiskStep == nil {
 		return loggedError{
 			err:     fmt.Errorf("failed to find risk calculation step"),
 			fields:  lf,
 			message: "failed to find risk calculation step",
 		}
 	}
+	// calculatedRisks is set to []*sdp.Risk{} if the calculation step is done, but has no risks
+	calculatedRisks := []*sdp.Risk{}
+	if calculateRiskStep.GetCalculatedRisks() != nil {
+		if calculateRiskStep.GetStatus() != sdp.ChangeTimelineEntryStatus_DONE {
+			// error if we have some other status
+			return loggedError{
+				err:     fmt.Errorf("risk calculation step is not done"),
+				fields:  lf,
+				message: "risk calculation step is not done",
+			}
+		}
+		calculatedRisks = calculateRiskStep.GetCalculatedRisks().GetRisks()
+	}
+
 	// filter the risks
-	calculatedRisks := calculateRiskStep.GetCalculatedRisks().GetRisks()
 	if len(riskLevels) != 3 {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"risk-levels": renderRiskFilter(riskLevels),
