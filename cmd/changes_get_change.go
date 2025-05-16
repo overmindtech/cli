@@ -38,7 +38,7 @@ var getChangeCmd = &cobra.Command{
 // to reflect the latest version
 //
 // This allows us to update the assets without fear of breaking older comments
-const assetVersion = "476f6df5bc783c17b1d0513a43e0a0aa9c075588" // tag from v1.6.1
+const assetVersion = "a824e776f5db7c351c9222ab3da8cfef43f1e306" // tag from v1.8.0
 
 func GetChange(cmd *cobra.Command, args []string) error {
 	ctx := cmd.Context()
