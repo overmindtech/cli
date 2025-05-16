@@ -101,3 +101,46 @@ func TestExtractZone(t *testing.T) {
 		})
 	}
 }
+
+func TestLastPathComponent(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{
+			input:    "projects/test-project/zones/us-central1-a/disks/my-disk",
+			expected: "my-disk",
+		},
+		{
+			input:    "projects/test-project/zones/us-central1-a",
+			expected: "us-central1-a",
+		},
+		{
+			input:    "my-disk",
+			expected: "my-disk",
+		},
+		{
+			input:    "",
+			expected: "",
+		},
+		{
+			input:    "/",
+			expected: "",
+		},
+		{
+			input:    "////",
+			expected: "",
+		},
+		{
+			input:    "foo/bar/baz",
+			expected: "baz",
+		},
+	}
+
+	for _, tc := range tests {
+		actual := shared.LastPathComponent(tc.input)
+		if actual != tc.expected {
+			t.Errorf("LastPathComponent(%q) = %q; want %q", tc.input, actual, tc.expected)
+		}
+	}
+}

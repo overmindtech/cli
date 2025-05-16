@@ -42,3 +42,19 @@ func RegionalScope(projectID, region string) string {
 func ZonalScope(projectID, zone string) string {
 	return fmt.Sprintf("%s.%s", projectID, zone)
 }
+
+// LastPathComponent extracts the last component from a GCP resource URL.
+// If the input does not contain a "/", it returns the input itself.
+// If the input is empty or only slashes, it returns an empty string.
+func LastPathComponent(url string) string {
+	if url == "" {
+		return ""
+	}
+	parts := strings.Split(url, "/")
+	for i := len(parts) - 1; i >= 0; i-- {
+		if parts[i] != "" {
+			return parts[i]
+		}
+	}
+	return ""
+}

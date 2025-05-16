@@ -193,3 +193,35 @@ func NewComputeBackendServiceClient(backendServiceClient *compute.BackendService
 		client: backendServiceClient,
 	}
 }
+
+// ComputeInstanceGroupIterator is an interface for iterating over compute instance groups
+type ComputeInstanceGroupIterator interface {
+	Next() (*computepb.InstanceGroup, error)
+}
+
+// ComputeInstanceGroupsClient is an interface for the Compute Engine Instance Groups client
+type ComputeInstanceGroupsClient interface {
+	Get(ctx context.Context, req *computepb.GetInstanceGroupRequest, opts ...gax.CallOption) (*computepb.InstanceGroup, error)
+	List(ctx context.Context, req *computepb.ListInstanceGroupsRequest, opts ...gax.CallOption) ComputeInstanceGroupIterator
+}
+
+type computeInstanceGroupsClient struct {
+	client *compute.InstanceGroupsClient
+}
+
+// NewComputeInstanceGroupsClient creates a new ComputeInstanceGroupsClient
+func NewComputeInstanceGroupsClient(instanceGroupsClient *compute.InstanceGroupsClient) ComputeInstanceGroupsClient {
+	return &computeInstanceGroupsClient{
+		client: instanceGroupsClient,
+	}
+}
+
+// Get retrieves a compute instance group
+func (c computeInstanceGroupsClient) Get(ctx context.Context, req *computepb.GetInstanceGroupRequest, opts ...gax.CallOption) (*computepb.InstanceGroup, error) {
+	return c.client.Get(ctx, req, opts...)
+}
+
+// List lists compute instance groups and returns an iterator
+func (c computeInstanceGroupsClient) List(ctx context.Context, req *computepb.ListInstanceGroupsRequest, opts ...gax.CallOption) ComputeInstanceGroupIterator {
+	return c.client.List(ctx, req, opts...)
+}
