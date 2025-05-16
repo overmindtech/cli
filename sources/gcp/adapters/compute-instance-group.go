@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	ComputeInstanceGroup = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, "instance-group")
+	ComputeInstanceGroup = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.InstanceGroup)
 
 	ComputeInstanceGroupLookupByName = shared.NewItemTypeLookup("name", ComputeInstanceGroup)
 )

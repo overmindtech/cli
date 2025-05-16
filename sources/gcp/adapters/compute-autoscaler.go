@@ -18,9 +18,6 @@ var (
 	ComputeAutoscaler = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Autoscaler)
 
 	ComputeAutoscalerLookupByName = shared.NewItemTypeLookup("name", ComputeAutoscaler)
-
-	// TODO: Move to instance group manager adapter
-	ComputeInstanceGroupManager = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.InstanceGroupManager)
 )
 
 type computeAutoscalerWrapper struct {

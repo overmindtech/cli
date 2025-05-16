@@ -325,6 +325,108 @@ func (mr *MockComputeImagesClientMockRecorder) List(ctx, req any, opts ...any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeImagesClient)(nil).List), varargs...)
 }
 
+// MockComputeInstanceGroupManagerIterator is a mock of ComputeInstanceGroupManagerIterator interface.
+type MockComputeInstanceGroupManagerIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeInstanceGroupManagerIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeInstanceGroupManagerIteratorMockRecorder is the mock recorder for MockComputeInstanceGroupManagerIterator.
+type MockComputeInstanceGroupManagerIteratorMockRecorder struct {
+	mock *MockComputeInstanceGroupManagerIterator
+}
+
+// NewMockComputeInstanceGroupManagerIterator creates a new mock instance.
+func NewMockComputeInstanceGroupManagerIterator(ctrl *gomock.Controller) *MockComputeInstanceGroupManagerIterator {
+	mock := &MockComputeInstanceGroupManagerIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeInstanceGroupManagerIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeInstanceGroupManagerIterator) EXPECT() *MockComputeInstanceGroupManagerIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeInstanceGroupManagerIterator) Next() (*computepb.InstanceGroupManager, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.InstanceGroupManager)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeInstanceGroupManagerIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeInstanceGroupManagerIterator)(nil).Next))
+}
+
+// MockComputeInstanceGroupManagerClient is a mock of ComputeInstanceGroupManagerClient interface.
+type MockComputeInstanceGroupManagerClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeInstanceGroupManagerClientMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeInstanceGroupManagerClientMockRecorder is the mock recorder for MockComputeInstanceGroupManagerClient.
+type MockComputeInstanceGroupManagerClientMockRecorder struct {
+	mock *MockComputeInstanceGroupManagerClient
+}
+
+// NewMockComputeInstanceGroupManagerClient creates a new mock instance.
+func NewMockComputeInstanceGroupManagerClient(ctrl *gomock.Controller) *MockComputeInstanceGroupManagerClient {
+	mock := &MockComputeInstanceGroupManagerClient{ctrl: ctrl}
+	mock.recorder = &MockComputeInstanceGroupManagerClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeInstanceGroupManagerClient) EXPECT() *MockComputeInstanceGroupManagerClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockComputeInstanceGroupManagerClient) Get(ctx context.Context, req *computepb.GetInstanceGroupManagerRequest, opts ...gax.CallOption) (*computepb.InstanceGroupManager, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*computepb.InstanceGroupManager)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockComputeInstanceGroupManagerClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeInstanceGroupManagerClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockComputeInstanceGroupManagerClient) List(ctx context.Context, req *computepb.ListInstanceGroupManagersRequest, opts ...gax.CallOption) shared.ComputeInstanceGroupManagerIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.ComputeInstanceGroupManagerIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockComputeInstanceGroupManagerClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeInstanceGroupManagerClient)(nil).List), varargs...)
+}
+
 // MockForwardingRuleIterator is a mock of ForwardingRuleIterator interface.
 type MockForwardingRuleIterator struct {
 	ctrl     *gomock.Controller

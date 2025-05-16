@@ -64,10 +64,7 @@ func TestComputeAutoscalerIntegration(t *testing.T) {
 			t.Fatalf("Failed to create compute instance template: %v", err)
 		}
 
-		// Instance templates can be regional or global. We have a global template here.
-		fullInstanceTemplateName := "projects/" + projectID + "/global/instanceTemplates/" + instanceTemplateName
-
-		err = createInstanceGroupManager(ctx, igmClient, fullInstanceTemplateName, projectID, zone, instanceGroupManagerName)
+		err = createInstanceGroupManager(ctx, igmClient, projectID, zone, instanceGroupManagerName, instanceTemplateName)
 		if err != nil {
 			t.Fatalf("Failed to create instance group manager: %v", err)
 		}
@@ -261,64 +258,6 @@ func deleteComputeInstanceTemplate(ctx context.Context, client *compute.Instance
 	}
 
 	log.Printf("Instance template %s deleted successfully in project %s", name, projectID)
-	return nil
-}
-
-// Create an instance group manager that uses the given instance template.
-func createInstanceGroupManager(ctx context.Context, client *compute.InstanceGroupManagersClient, instanceTemplate, projectID, zone, name string) error {
-	// Create a new instance group manager
-	igmTemplate := &computepb.InstanceGroupManager{
-		Name:             ptr.To(name),
-		InstanceTemplate: &instanceTemplate,
-		// No compute allocated (yet?)
-		TargetSize: ptr.To(int32(0)),
-	}
-
-	req := &computepb.InsertInstanceGroupManagerRequest{
-		Project:                      projectID,
-		Zone:                         zone,
-		InstanceGroupManagerResource: igmTemplate,
-	}
-
-	op, err := client.Insert(ctx, req)
-	if err != nil {
-		return fmt.Errorf("failed to create instance group manager: %w", err)
-	}
-
-	// Wait for the operation to complete
-	if err := op.Wait(ctx); err != nil {
-		return fmt.Errorf("failed to wait for instance group manager creation operation: %w", err)
-	}
-
-	log.Printf("Instance group manager %s created successfully in project %s, zone %s", name, projectID, zone)
-
-	return nil
-}
-
-// Delete an instance group manager.
-func deleteInstanceGroupManager(ctx context.Context, client *compute.InstanceGroupManagersClient, projectID, zone, name string) error {
-	req := &computepb.DeleteInstanceGroupManagerRequest{
-		Project:              projectID,
-		Zone:                 zone,
-		InstanceGroupManager: name,
-	}
-
-	op, err := client.Delete(ctx, req)
-	var apiErr *apierror.APIError
-	if errors.As(err, &apiErr) && apiErr.HTTPCode() == 404 {
-		log.Printf("Instance group manager %s not found in project %s, zone %s", name, projectID, zone)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("failed to delete instance group manager: %w", err)
-	}
-
-	if err := op.Wait(ctx); err != nil {
-		return fmt.Errorf("failed to wait for instance group manager deletion operation: %w", err)
-	}
-
-	log.Printf("Instance group manager %s deleted successfully in project %s, zone %s", name, projectID, zone)
 	return nil
 }
 

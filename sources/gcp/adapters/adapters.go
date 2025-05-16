@@ -50,6 +50,11 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		return nil, err
 	}
 
+	instanceGroupManagerCli, err := compute.NewInstanceGroupManagersRESTClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	var adapters []discovery.Adapter
 
 	for _, region := range regions {
@@ -64,6 +69,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 			sources.WrapperToAdapter(NewComputeInstance(shared.NewComputeInstanceClient(instanceCli), projectID, zone)),
 			sources.WrapperToAdapter(NewComputeAutoscaler(shared.NewComputeAutoscalerClient(autoscalerCli), projectID, zone)),
 			sources.WrapperToAdapter(NewComputeInstanceGroup(shared.NewComputeInstanceGroupsClient(instanceGroupCli), projectID, zone)),
+			sources.WrapperToAdapter(NewComputeInstanceGroupManager(shared.NewComputeInstanceGroupManagerClient(instanceGroupManagerCli), projectID, zone)),
 		)
 	}
 

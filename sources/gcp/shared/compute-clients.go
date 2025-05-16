@@ -105,6 +105,38 @@ func (c computeImagesClient) List(ctx context.Context, req *computepb.ListImages
 	return c.imageClient.List(ctx, req, opts...)
 }
 
+// ComputeInstanceGroupManagerIterator is an interface for iterating over instance group managers
+type ComputeInstanceGroupManagerIterator interface {
+	Next() (*computepb.InstanceGroupManager, error)
+}
+
+// ComputeInstanceGroupManagerClient is an interface for the Compute Instance Group Manager client
+type ComputeInstanceGroupManagerClient interface {
+	Get(ctx context.Context, req *computepb.GetInstanceGroupManagerRequest, opts ...gax.CallOption) (*computepb.InstanceGroupManager, error)
+	List(ctx context.Context, req *computepb.ListInstanceGroupManagersRequest, opts ...gax.CallOption) ComputeInstanceGroupManagerIterator
+}
+
+type computeInstanceGroupManagerClient struct {
+	instanceGroupManagersClient *compute.InstanceGroupManagersClient
+}
+
+// NewComputeInstanceGroupManagerClient creates a new ComputeInstanceGroupManagerClient
+func NewComputeInstanceGroupManagerClient(instanceGroupManagersClient *compute.InstanceGroupManagersClient) ComputeInstanceGroupManagerClient {
+	return &computeInstanceGroupManagerClient{
+		instanceGroupManagersClient: instanceGroupManagersClient,
+	}
+}
+
+// Get retrieves a compute instance group manager
+func (c computeInstanceGroupManagerClient) Get(ctx context.Context, req *computepb.GetInstanceGroupManagerRequest, opts ...gax.CallOption) (*computepb.InstanceGroupManager, error) {
+	return c.instanceGroupManagersClient.Get(ctx, req, opts...)
+}
+
+// List lists compute instance group managers and returns an iterator
+func (c computeInstanceGroupManagerClient) List(ctx context.Context, req *computepb.ListInstanceGroupManagersRequest, opts ...gax.CallOption) ComputeInstanceGroupManagerIterator {
+	return c.instanceGroupManagersClient.List(ctx, req, opts...)
+}
+
 type ForwardingRuleIterator interface {
 	Next() (*computepb.ForwardingRule, error)
 }
