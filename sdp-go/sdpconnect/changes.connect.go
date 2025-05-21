@@ -47,6 +47,9 @@ const (
 	// ChangesServiceGetChangeProcedure is the fully-qualified name of the ChangesService's GetChange
 	// RPC.
 	ChangesServiceGetChangeProcedure = "/changes.ChangesService/GetChange"
+	// ChangesServiceGetChangeSummaryProcedure is the fully-qualified name of the ChangesService's
+	// GetChangeSummary RPC.
+	ChangesServiceGetChangeSummaryProcedure = "/changes.ChangesService/GetChangeSummary"
 	// ChangesServiceGetChangeTimelineV2Procedure is the fully-qualified name of the ChangesService's
 	// GetChangeTimelineV2 RPC.
 	ChangesServiceGetChangeTimelineV2Procedure = "/changes.ChangesService/GetChangeTimelineV2"
@@ -127,6 +130,8 @@ type ChangesServiceClient interface {
 	CreateChange(context.Context, *connect.Request[sdp_go.CreateChangeRequest]) (*connect.Response[sdp_go.CreateChangeResponse], error)
 	// Gets the details of an existing change
 	GetChange(context.Context, *connect.Request[sdp_go.GetChangeRequest]) (*connect.Response[sdp_go.GetChangeResponse], error)
+	// Gets the details of an existing change in markdown format
+	GetChangeSummary(context.Context, *connect.Request[sdp_go.GetChangeSummaryRequest]) (*connect.Response[sdp_go.GetChangeSummaryResponse], error)
 	// Gets the full timeline for this change, this will send one response
 	// immediately and then hold the connection open, and send the entire
 	// timeline again if there are any changes
@@ -211,6 +216,12 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			httpClient,
 			baseURL+ChangesServiceGetChangeProcedure,
 			connect.WithSchema(changesServiceMethods.ByName("GetChange")),
+			connect.WithClientOptions(opts...),
+		),
+		getChangeSummary: connect.NewClient[sdp_go.GetChangeSummaryRequest, sdp_go.GetChangeSummaryResponse](
+			httpClient,
+			baseURL+ChangesServiceGetChangeSummaryProcedure,
+			connect.WithSchema(changesServiceMethods.ByName("GetChangeSummary")),
 			connect.WithClientOptions(opts...),
 		),
 		getChangeTimelineV2: connect.NewClient[sdp_go.GetChangeTimelineV2Request, sdp_go.GetChangeTimelineV2Response](
@@ -318,6 +329,7 @@ type changesServiceClient struct {
 	listChangesByStatus       *connect.Client[sdp_go.ListChangesByStatusRequest, sdp_go.ListChangesByStatusResponse]
 	createChange              *connect.Client[sdp_go.CreateChangeRequest, sdp_go.CreateChangeResponse]
 	getChange                 *connect.Client[sdp_go.GetChangeRequest, sdp_go.GetChangeResponse]
+	getChangeSummary          *connect.Client[sdp_go.GetChangeSummaryRequest, sdp_go.GetChangeSummaryResponse]
 	getChangeTimelineV2       *connect.Client[sdp_go.GetChangeTimelineV2Request, sdp_go.GetChangeTimelineV2Response]
 	getChangeRisks            *connect.Client[sdp_go.GetChangeRisksRequest, sdp_go.GetChangeRisksResponse]
 	getChangeArchive          *connect.Client[sdp_go.GetChangeArchiveRequest, sdp_go.GetChangeArchiveResponse]
@@ -354,6 +366,11 @@ func (c *changesServiceClient) CreateChange(ctx context.Context, req *connect.Re
 // GetChange calls changes.ChangesService.GetChange.
 func (c *changesServiceClient) GetChange(ctx context.Context, req *connect.Request[sdp_go.GetChangeRequest]) (*connect.Response[sdp_go.GetChangeResponse], error) {
 	return c.getChange.CallUnary(ctx, req)
+}
+
+// GetChangeSummary calls changes.ChangesService.GetChangeSummary.
+func (c *changesServiceClient) GetChangeSummary(ctx context.Context, req *connect.Request[sdp_go.GetChangeSummaryRequest]) (*connect.Response[sdp_go.GetChangeSummaryResponse], error) {
+	return c.getChangeSummary.CallUnary(ctx, req)
 }
 
 // GetChangeTimelineV2 calls changes.ChangesService.GetChangeTimelineV2.
@@ -446,6 +463,8 @@ type ChangesServiceHandler interface {
 	CreateChange(context.Context, *connect.Request[sdp_go.CreateChangeRequest]) (*connect.Response[sdp_go.CreateChangeResponse], error)
 	// Gets the details of an existing change
 	GetChange(context.Context, *connect.Request[sdp_go.GetChangeRequest]) (*connect.Response[sdp_go.GetChangeResponse], error)
+	// Gets the details of an existing change in markdown format
+	GetChangeSummary(context.Context, *connect.Request[sdp_go.GetChangeSummaryRequest]) (*connect.Response[sdp_go.GetChangeSummaryResponse], error)
 	// Gets the full timeline for this change, this will send one response
 	// immediately and then hold the connection open, and send the entire
 	// timeline again if there are any changes
@@ -526,6 +545,12 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 		ChangesServiceGetChangeProcedure,
 		svc.GetChange,
 		connect.WithSchema(changesServiceMethods.ByName("GetChange")),
+		connect.WithHandlerOptions(opts...),
+	)
+	changesServiceGetChangeSummaryHandler := connect.NewUnaryHandler(
+		ChangesServiceGetChangeSummaryProcedure,
+		svc.GetChangeSummary,
+		connect.WithSchema(changesServiceMethods.ByName("GetChangeSummary")),
 		connect.WithHandlerOptions(opts...),
 	)
 	changesServiceGetChangeTimelineV2Handler := connect.NewUnaryHandler(
@@ -634,6 +659,8 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 			changesServiceCreateChangeHandler.ServeHTTP(w, r)
 		case ChangesServiceGetChangeProcedure:
 			changesServiceGetChangeHandler.ServeHTTP(w, r)
+		case ChangesServiceGetChangeSummaryProcedure:
+			changesServiceGetChangeSummaryHandler.ServeHTTP(w, r)
 		case ChangesServiceGetChangeTimelineV2Procedure:
 			changesServiceGetChangeTimelineV2Handler.ServeHTTP(w, r)
 		case ChangesServiceGetChangeRisksProcedure:
@@ -689,6 +716,10 @@ func (UnimplementedChangesServiceHandler) CreateChange(context.Context, *connect
 
 func (UnimplementedChangesServiceHandler) GetChange(context.Context, *connect.Request[sdp_go.GetChangeRequest]) (*connect.Response[sdp_go.GetChangeResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetChange is not implemented"))
+}
+
+func (UnimplementedChangesServiceHandler) GetChangeSummary(context.Context, *connect.Request[sdp_go.GetChangeSummaryRequest]) (*connect.Response[sdp_go.GetChangeSummaryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetChangeSummary is not implemented"))
 }
 
 func (UnimplementedChangesServiceHandler) GetChangeTimelineV2(context.Context, *connect.Request[sdp_go.GetChangeTimelineV2Request]) (*connect.Response[sdp_go.GetChangeTimelineV2Response], error) {
