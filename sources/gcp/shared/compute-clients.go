@@ -320,3 +320,34 @@ func (c computeHealthCheckClient) Get(ctx context.Context, req *computepb.GetHea
 func (c computeHealthCheckClient) List(ctx context.Context, req *computepb.ListHealthChecksRequest, opts ...gax.CallOption) ComputeHealthCheckIterator {
 	return c.client.List(ctx, req, opts...)
 }
+
+// Interface for interating over compute node groups.
+type ComputeNodeTemplateIterator interface {
+	Next() (*computepb.NodeTemplate, error)
+}
+
+// Interface for accessing compute NodeTemplate resources.
+type ComputeNodeTemplateClient interface {
+	Get(ctx context.Context, req *computepb.GetNodeTemplateRequest, opts ...gax.CallOption) (*computepb.NodeTemplate, error)
+	List(ctx context.Context, req *computepb.ListNodeTemplatesRequest, opts ...gax.CallOption) ComputeNodeTemplateIterator
+}
+
+// Wrapper for a ComputeNodeTemplateClient implementation.
+type computeNodeTemplateClient struct {
+	nodeTemplateClient *compute.NodeTemplatesClient
+}
+
+// Create a ComputeNodeTemplateClient from a real GCP client.
+func NewComputeNodeTemplateClient(NodeTemplateClient *compute.NodeTemplatesClient) ComputeNodeTemplateClient {
+	return &computeNodeTemplateClient{
+		nodeTemplateClient: NodeTemplateClient,
+	}
+}
+
+func (c computeNodeTemplateClient) Get(ctx context.Context, req *computepb.GetNodeTemplateRequest, opts ...gax.CallOption) (*computepb.NodeTemplate, error) {
+	return c.nodeTemplateClient.Get(ctx, req, opts...)
+}
+
+func (c computeNodeTemplateClient) List(ctx context.Context, req *computepb.ListNodeTemplatesRequest, opts ...gax.CallOption) ComputeNodeTemplateIterator {
+	return c.nodeTemplateClient.List(ctx, req, opts...)
+}

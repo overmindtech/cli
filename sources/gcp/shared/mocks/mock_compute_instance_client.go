@@ -1038,3 +1038,105 @@ func (mr *MockComputeHealthCheckClientMockRecorder) List(ctx, req any, opts ...a
 	varargs := append([]any{ctx, req}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeHealthCheckClient)(nil).List), varargs...)
 }
+
+// MockComputeNodeTemplateIterator is a mock of ComputeNodeTemplateIterator interface.
+type MockComputeNodeTemplateIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeNodeTemplateIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeNodeTemplateIteratorMockRecorder is the mock recorder for MockComputeNodeTemplateIterator.
+type MockComputeNodeTemplateIteratorMockRecorder struct {
+	mock *MockComputeNodeTemplateIterator
+}
+
+// NewMockComputeNodeTemplateIterator creates a new mock instance.
+func NewMockComputeNodeTemplateIterator(ctrl *gomock.Controller) *MockComputeNodeTemplateIterator {
+	mock := &MockComputeNodeTemplateIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeNodeTemplateIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeNodeTemplateIterator) EXPECT() *MockComputeNodeTemplateIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeNodeTemplateIterator) Next() (*computepb.NodeTemplate, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.NodeTemplate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeNodeTemplateIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeNodeTemplateIterator)(nil).Next))
+}
+
+// MockComputeNodeTemplateClient is a mock of ComputeNodeTemplateClient interface.
+type MockComputeNodeTemplateClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeNodeTemplateClientMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeNodeTemplateClientMockRecorder is the mock recorder for MockComputeNodeTemplateClient.
+type MockComputeNodeTemplateClientMockRecorder struct {
+	mock *MockComputeNodeTemplateClient
+}
+
+// NewMockComputeNodeTemplateClient creates a new mock instance.
+func NewMockComputeNodeTemplateClient(ctrl *gomock.Controller) *MockComputeNodeTemplateClient {
+	mock := &MockComputeNodeTemplateClient{ctrl: ctrl}
+	mock.recorder = &MockComputeNodeTemplateClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeNodeTemplateClient) EXPECT() *MockComputeNodeTemplateClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockComputeNodeTemplateClient) Get(ctx context.Context, req *computepb.GetNodeTemplateRequest, opts ...gax.CallOption) (*computepb.NodeTemplate, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*computepb.NodeTemplate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockComputeNodeTemplateClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeNodeTemplateClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockComputeNodeTemplateClient) List(ctx context.Context, req *computepb.ListNodeTemplatesRequest, opts ...gax.CallOption) shared.ComputeNodeTemplateIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.ComputeNodeTemplateIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockComputeNodeTemplateClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeNodeTemplateClient)(nil).List), varargs...)
+}

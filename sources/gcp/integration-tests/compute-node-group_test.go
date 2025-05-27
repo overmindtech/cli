@@ -14,9 +14,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
+	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/adapters"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+	"github.com/overmindtech/cli/sources/shared"
 )
 
 // The scope of this integration test should cover nodegroups, nodes, and node templates.
@@ -40,6 +42,9 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 	// Nodegroup -> Node Template
 	nodeTemplateName := "overmind-integration-test-node-template-" + suffix
 	nodeGroupName := "overmind-integration-test-node-group-" + suffix
+
+	fullNodeTemplateName := "projects/" + projectID + "/regions/" + region + "/nodeTemplates/" + nodeTemplateName
+
 	ctx := context.Background()
 
 	// Create a new Compute Engine client
@@ -61,15 +66,13 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 			t.Fatalf("Failed to create compute node template: %v", err)
 		}
 
-		fullNodeTemplateName := "projects/" + projectID + "/regions/" + region + "/nodeTemplates/" + nodeTemplateName
-
 		err = createComputeNodeGroup(ctx, client, fullNodeTemplateName, projectID, zone, nodeGroupName)
 		if err != nil {
 			t.Fatalf("Failed to create compute node group: %v", err)
 		}
 	})
 
-	t.Run("Run", func(t *testing.T) {
+	t.Run("Test for Node Group", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Node Group in project %s, zone %s", projectID, zone)
 
 		nodeGroupWrapper := adapters.NewComputeNodeGroup(gcpshared.NewComputeNodeGroupClient(client), projectID, zone)
@@ -142,6 +145,100 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 
 		if !found {
 			t.Fatalf("Expected to find node group %s in list, but it was not found", nodeGroupName)
+		}
+	})
+
+	t.Run("Test for Node Template", func(t *testing.T) {
+		log.Printf("Running integration test for Compute Node Template in project %s, zone %s", projectID, zone)
+
+		nodeTemplateWrapper := adapters.NewComputeNodeTemplate(gcpshared.NewComputeNodeTemplateClient(ntClient), projectID, region)
+		scope := nodeTemplateWrapper.Scopes()[0]
+
+		nodeTemplateAdapter := sources.WrapperToAdapter(nodeTemplateWrapper)
+
+		// [SPEC] GET against a valid resource name will return an SDP item wrapping the
+		// available resource.
+		sdpItem, err := nodeTemplateAdapter.Get(ctx, scope, nodeTemplateName, true)
+		if err != nil {
+			t.Fatalf("nodeTemplateAdapter.Get returned unexpected error: %v", err)
+		}
+		if sdpItem == nil {
+			t.Fatalf("Expected sdpItem to be non-nil")
+		}
+
+		// [SPEC] The attributes contained in the SDP item directly match the attributes
+		// from the GCP API.
+		uniqueAttrKey := sdpItem.GetUniqueAttribute()
+		uniqueAttrValue, err := sdpItem.GetAttributes().Get(uniqueAttrKey)
+		if err != nil {
+			t.Fatalf("Failed to get unique attribute: %v", err)
+		}
+
+		if uniqueAttrValue != nodeTemplateName {
+			t.Fatalf("Expected unique attribute value to be %s, got %s", nodeTemplateName, uniqueAttrValue)
+		}
+
+		// [SPEC] Node templates one backlink defined, linking to node groups.
+		{
+			if len(sdpItem.GetLinkedItemQueries()) != 1 {
+				t.Fatalf("Expected 1 linked item query, got: %d", len(sdpItem.GetLinkedItemQueries()))
+			}
+
+			// [SPEC] The expected query must match the full URL, including the Google API
+			// hostname.
+
+			queryTests := shared.QueryTests{
+				{
+					ExpectedType:   adapters.ComputeNodeGroup.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  nodeTemplateName,
+					ExpectedScope:  "*",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  false,
+						Out: true,
+					},
+				},
+			}
+
+			shared.RunStaticTests(t, nodeTemplateAdapter, sdpItem, queryTests)
+
+			linkedItem := sdpItem.GetLinkedItemQueries()[0]
+			if linkedItem.GetQuery().GetType() != adapters.ComputeNodeGroup.String() {
+				t.Fatalf("Expected linked item type to be %s, got: %s", adapters.ComputeNodeGroup.String(), linkedItem.GetQuery().GetType())
+			}
+
+			if linkedItem.GetQuery().GetQuery() != nodeTemplateName {
+				t.Fatalf("Expected linked item query to be %s, got: %s", nodeTemplateName, linkedItem.GetQuery().GetQuery())
+			}
+
+			expectedScope := "*"
+			if linkedItem.GetQuery().GetScope() != expectedScope {
+				t.Fatalf("Expected linked item scope to be %s, got: %s", expectedScope, linkedItem.GetQuery().GetScope())
+			}
+		}
+
+		// [SPEC] The LIST operation for node templates will list all node groups in a given
+		// scope.
+		sdpItems, err := nodeTemplateAdapter.List(ctx, scope, true)
+		if err != nil {
+			t.Fatalf("Failed to list compute node templates: %v", err)
+		}
+
+		if len(sdpItems) < 1 {
+			t.Fatalf("Expected at least one compute node template, got %d", len(sdpItems))
+		}
+
+		// The LIST operation result should include our node group.
+		found := false
+		for _, item := range sdpItems {
+			if v, err := item.GetAttributes().Get(uniqueAttrKey); err == nil && v == nodeTemplateName {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			t.Fatalf("Expected to find node group %s in list, but it was not found", nodeTemplateName)
 		}
 	})
 

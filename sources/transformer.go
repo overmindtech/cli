@@ -188,7 +188,12 @@ func (s *standardAdapterImpl) Search(ctx context.Context, scope string, query st
 		)
 	}
 
-	return s.searchable.Search(ctx, queryParts...)
+	items, err := s.searchable.Search(ctx, queryParts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
 }
 
 // Cache returns the cache of the adapter.
