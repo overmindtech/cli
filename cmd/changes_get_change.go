@@ -12,14 +12,10 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"github.com/hexops/gotextdiff"
-	"github.com/hexops/gotextdiff/myers"
-	diffspan "github.com/hexops/gotextdiff/span"
 	"github.com/overmindtech/cli/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"gopkg.in/yaml.v3"
 )
 
 //go:embed comment.md
@@ -319,27 +315,13 @@ fetch:
 			}
 
 			for _, item := range changeRes.Msg.GetChange().GetProperties().GetPlannedChanges() {
-				var before, after string
-				if item.GetBefore() != nil {
-					bb, err := yaml.Marshal(item.GetBefore().GetAttributes().GetAttrStruct().AsMap())
-					if err != nil {
-						log.WithContext(ctx).WithError(err).Error("error marshalling 'before' attributes")
-						before = ""
-					} else {
-						before = string(bb)
-					}
-				}
-				if item.GetAfter() != nil {
-					ab, err := yaml.Marshal(item.GetAfter().GetAttributes().GetAttrStruct().AsMap())
-					if err != nil {
-						log.WithContext(ctx).WithError(err).Error("error marshalling 'after' attributes")
-						after = ""
-					} else {
-						after = string(ab)
-					}
-				}
-				edits := myers.ComputeEdits(diffspan.URIFromPath("current"), before, after)
-				diff := fmt.Sprint(gotextdiff.ToUnified("current", "planned", before, edits))
+				diff := sdp.RenderItemDiff(
+					item.GloballyUniqueName(),
+					item.GetBefore().GetAttributes().GetAttrStruct().AsMap(),
+					item.GetAfter().GetAttributes().GetAttrStruct().AsMap(),
+					nil, // data is not accessible from the CLI
+					nil,
+				)
 
 				if item.GetItem() != nil {
 					data.ExpectedChanges = append(data.ExpectedChanges, TemplateItem{

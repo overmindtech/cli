@@ -62,3 +62,99 @@ func TestCalculatePaginationOffsetLimit(t *testing.T) {
 		}
 	})
 }
+
+func TestItemDiffParagraphRendering(t *testing.T) {
+	t.Parallel()
+
+	// table driven tests for rendering item diffs
+	tests := []struct {
+		Name                  string
+		Before                map[string]any
+		After                 map[string]any
+		ChangeRollups         []RoutineRollup
+		RawRollups            []RoutineRollup
+		ExpectedDiffParagraph string
+	}{
+		{
+			Name: "no changes",
+			Before: map[string]any{
+				"name": "test",
+				"age":  30,
+			},
+			After: map[string]any{
+				"name": "test",
+				"age":  30,
+			},
+			ExpectedDiffParagraph: "",
+		},
+		{
+			Name: "update changes",
+			Before: map[string]any{
+				"name": "test",
+				"age":  30,
+			},
+			After: map[string]any{
+				"name": "updated",
+				"age":  30,
+			},
+			ExpectedDiffParagraph: "- name: test\n+ name: updated",
+		},
+		{
+			Name: "nested map",
+			Before: map[string]any{
+				"name": map[string]any{
+					"first": "test",
+					"last":  "user",
+				},
+			},
+			After: map[string]any{
+				"name": map[string]any{
+					"first": "test",
+					"last":  "updated",
+				},
+			},
+			ExpectedDiffParagraph: "- name.last: user\n+ name.last: updated",
+		},
+		{
+			Name: "with stats",
+			Before: map[string]any{
+				"name": map[string]any{
+					"first": "test",
+					"last":  "user",
+				},
+			},
+			After: map[string]any{
+				"name": map[string]any{
+					"first": "test",
+					"last":  "updated",
+				},
+			},
+			ChangeRollups: []RoutineRollup{
+				{
+					Gun:   "testGun",
+					Attr:  "name.last",
+					Value: "user",
+				},
+			},
+			RawRollups: []RoutineRollup{
+				{
+					Gun:   "testGun",
+					Attr:  "name.last",
+					Value: "user",
+				},
+			},
+			ExpectedDiffParagraph: "- name.last: user\n+ name.last: updated\n# → 🔁 The 'testGun.name.last' attribute has changed 1 times in the last 30 days. The previous values were [user].",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			diff := RenderItemDiff("testGun", test.Before, test.After, test.ChangeRollups, test.RawRollups)
+
+			if diff != test.ExpectedDiffParagraph {
+				t.Errorf("expected diff paragraph to be '%s', got '%s'", test.ExpectedDiffParagraph, diff)
+			}
+		})
+	}
+
+}
