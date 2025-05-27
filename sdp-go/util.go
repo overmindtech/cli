@@ -140,25 +140,31 @@ func RenderItemDiff(gun string, before, after map[string]any, changeData, rawDat
 		beforeValueStr := fmt.Sprintf("%v", beforeValue)
 		afterValueStr := fmt.Sprintf("%v", afterValue)
 
+		hasChanged := false
 		if beforeExists && afterExists {
 			if beforeValueStr != afterValueStr {
 				// This is an update
 				para = append(para, fmt.Sprintf("- %s: %s\n+ %s: %s", key, beforeValueStr, key, afterValueStr))
+				hasChanged = true
 			}
 		} else if beforeExists && !afterExists {
 			// This is a deletion
 			para = append(para, fmt.Sprintf("- %s: %s", key, beforeValueStr))
+			hasChanged = true
 		} else if !beforeExists && afterExists {
 			// This is a creation
 			para = append(para, fmt.Sprintf("+ %s: %s", key, afterValueStr))
+			hasChanged = true
 		}
 
-		k := fmt.Sprintf("%v.%v", gun, key)
-		v := attrs[k]
-		slices.Sort(v)
+		if hasChanged {
+			k := fmt.Sprintf("%v.%v", gun, key)
+			v := attrs[k]
+			slices.Sort(v)
 
-		if len(v) > 0 {
-			para = append(para, fmt.Sprintf("# → 🔁 The '%v' attribute has changed %d times in the last 30 days. The previous values were %v.", k, len(v), v))
+			if len(v) > 0 {
+				para = append(para, fmt.Sprintf("# → 🔁 The '%v' attribute has changed %d times in the last 30 days. The previous values were %v.", k, len(v), v))
+			}
 		}
 	}
 	return strings.Join(para, "\n")
