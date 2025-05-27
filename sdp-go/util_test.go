@@ -143,7 +143,7 @@ func TestItemDiffParagraphRendering(t *testing.T) {
 					Value: "user",
 				},
 			},
-			ExpectedDiffParagraph: "- name.last: user\n+ name.last: updated\n# → 🔁 The 'testGun.name.last' attribute has changed 1 times in the last 30 days. The previous values were [user].",
+			ExpectedDiffParagraph: "- name.last: user\n+ name.last: updated\n# → 🔁 This attribute has changed 1 times in the last 30 days.\n#      The previous values were [user].",
 		},
 		{
 			Name: "with stats, no changes",

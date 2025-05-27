@@ -163,7 +163,7 @@ func RenderItemDiff(gun string, before, after map[string]any, changeData, rawDat
 			slices.Sort(v)
 
 			if len(v) > 0 {
-				para = append(para, fmt.Sprintf("# → 🔁 The '%v' attribute has changed %d times in the last 30 days. The previous values were %v.", k, len(v), v))
+				para = append(para, fmt.Sprintf("# → 🔁 This attribute has changed %d times in the last 30 days.\n#      The previous values were %v.", len(v), v))
 			}
 		}
 	}
