@@ -314,11 +314,15 @@ func (e *Engine) Start() error {
 		e.EngineConfig.SourceUUID = uuid.New()
 	}
 
+	err := e.connect()
+	if err != nil {
+		return e.SendHeartbeat(e.backgroundJobContext, err)		
+	}
+
 	// Start background jobs
 	e.sh.StartPurger(e.backgroundJobContext)
 	e.StartSendingHeartbeats(e.backgroundJobContext)
-
-	return e.connect()
+	return nil
 }
 
 // subscribe Subscribes to a subject using the current NATS connection.

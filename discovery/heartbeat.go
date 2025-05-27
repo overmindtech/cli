@@ -19,13 +19,16 @@ var ErrNoHealthcheckDefined = errors.New("no healthcheck defined")
 // HeartbeatSender sends a heartbeat to the management API, this is called at
 // `DefaultHeartbeatFrequency` by default when the engine is running, or
 // `StartSendingHeartbeats` has been called manually. Users can also call this
-// method to immediately send a heartbeat if required
-func (e *Engine) SendHeartbeat(ctx context.Context) error {
+// method to immediately send a heartbeat if required. Pass non-`nil` error
+// to indicate that the engine is in an error state, this will be sent to the
+// management API and will be displayed in the UI.
+func (e *Engine) SendHeartbeat(ctx context.Context, customErr error) error {
 	if e.EngineConfig.HeartbeatOptions == nil || e.EngineConfig.HeartbeatOptions.HealthCheck == nil {
 		return ErrNoHealthcheckDefined
 	}
 
 	healthCheckError := e.EngineConfig.HeartbeatOptions.HealthCheck(ctx)
+	healthCheckError = errors.Join(healthCheckError, customErr)
 
 	var heartbeatError *string
 
@@ -85,7 +88,7 @@ func (e *Engine) StartSendingHeartbeats(ctx context.Context) {
 	heartbeatContext, e.heartbeatCancel = context.WithCancel(ctx)
 
 	// Send one heartbeat at the beginning
-	err := e.SendHeartbeat(heartbeatContext)
+	err := e.SendHeartbeat(heartbeatContext, nil)
 	if err != nil {
 		log.WithError(err).Error("Failed to send heartbeat")
 	}
@@ -99,7 +102,7 @@ func (e *Engine) StartSendingHeartbeats(ctx context.Context) {
 			case <-heartbeatContext.Done():
 				return
 			case <-ticker.C:
-				err := e.SendHeartbeat(heartbeatContext)
+				err := e.SendHeartbeat(heartbeatContext, nil)
 				if err != nil {
 					log.WithError(err).Error("Failed to send heartbeat")
 				}

@@ -546,7 +546,7 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 			startupErrorMutex.Lock()
 			startupError = err
 			startupErrorMutex.Unlock()
-			brokenHeart := e.SendHeartbeat(ctx) // Send the error immediately
+			brokenHeart := e.SendHeartbeat(ctx, nil) // Send the error immediately through the custom health check func
 			if brokenHeart != nil {
 				log.WithError(brokenHeart).Error("Error sending heartbeat")
 			}

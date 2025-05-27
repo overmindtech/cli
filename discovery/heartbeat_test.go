@@ -70,7 +70,7 @@ func TestHeartbeats(t *testing.T) {
 			Msg: &sdp.SubmitSourceHeartbeatResponse{},
 		}
 
-		err := e.SendHeartbeat(context.Background())
+		err := e.SendHeartbeat(context.Background(), nil)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -131,7 +131,7 @@ func TestHeartbeats(t *testing.T) {
 			Msg: &sdp.SubmitSourceHeartbeatResponse{},
 		}
 
-		err := e.SendHeartbeat(context.Background())
+		err := e.SendHeartbeat(context.Background(), nil)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
