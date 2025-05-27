@@ -40,6 +40,11 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		return nil, err
 	}
 
+	computeHealthCheckCli, err := compute.NewHealthChecksRESTClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	backendServiceCli, err := compute.NewBackendServicesRESTClient(ctx)
 	if err != nil {
 		return nil, err
@@ -77,6 +82,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 	adapters = append(adapters,
 		sources.WrapperToAdapter(NewComputeBackendService(shared.NewComputeBackendServiceClient(backendServiceCli), projectID)),
 		sources.WrapperToAdapter(NewComputeImage(shared.NewComputeImagesClient(computeImagesCli), projectID)),
+		sources.WrapperToAdapter(NewComputeHealthCheck(shared.NewComputeHealthCheckClient(computeHealthCheckCli), projectID)),
 	)
 
 	// Register the metadata for each adapter

@@ -37,4 +37,5 @@ const (
 	InstanceGroup            shared.Resource = "instance-group"
 	TargetPool               shared.Resource = "target-pool"
 	ResourcePolicy           shared.Resource = "resource-policy"
+	HealthCheck              shared.Resource = "health-check"
 )

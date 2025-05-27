@@ -936,3 +936,105 @@ func (mr *MockComputeNodeGroupClientMockRecorder) List(ctx, req any, opts ...any
 	varargs := append([]any{ctx, req}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeNodeGroupClient)(nil).List), varargs...)
 }
+
+// MockComputeHealthCheckIterator is a mock of ComputeHealthCheckIterator interface.
+type MockComputeHealthCheckIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeHealthCheckIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeHealthCheckIteratorMockRecorder is the mock recorder for MockComputeHealthCheckIterator.
+type MockComputeHealthCheckIteratorMockRecorder struct {
+	mock *MockComputeHealthCheckIterator
+}
+
+// NewMockComputeHealthCheckIterator creates a new mock instance.
+func NewMockComputeHealthCheckIterator(ctrl *gomock.Controller) *MockComputeHealthCheckIterator {
+	mock := &MockComputeHealthCheckIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeHealthCheckIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeHealthCheckIterator) EXPECT() *MockComputeHealthCheckIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeHealthCheckIterator) Next() (*computepb.HealthCheck, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.HealthCheck)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeHealthCheckIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeHealthCheckIterator)(nil).Next))
+}
+
+// MockComputeHealthCheckClient is a mock of ComputeHealthCheckClient interface.
+type MockComputeHealthCheckClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeHealthCheckClientMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeHealthCheckClientMockRecorder is the mock recorder for MockComputeHealthCheckClient.
+type MockComputeHealthCheckClientMockRecorder struct {
+	mock *MockComputeHealthCheckClient
+}
+
+// NewMockComputeHealthCheckClient creates a new mock instance.
+func NewMockComputeHealthCheckClient(ctrl *gomock.Controller) *MockComputeHealthCheckClient {
+	mock := &MockComputeHealthCheckClient{ctrl: ctrl}
+	mock.recorder = &MockComputeHealthCheckClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeHealthCheckClient) EXPECT() *MockComputeHealthCheckClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockComputeHealthCheckClient) Get(ctx context.Context, req *computepb.GetHealthCheckRequest, opts ...gax.CallOption) (*computepb.HealthCheck, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*computepb.HealthCheck)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockComputeHealthCheckClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeHealthCheckClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockComputeHealthCheckClient) List(ctx context.Context, req *computepb.ListHealthChecksRequest, opts ...gax.CallOption) shared.ComputeHealthCheckIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.ComputeHealthCheckIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockComputeHealthCheckClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeHealthCheckClient)(nil).List), varargs...)
+}

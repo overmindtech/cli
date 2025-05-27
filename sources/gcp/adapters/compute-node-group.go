@@ -1,9 +1,10 @@
 package adapters
 
 import (
-	"cloud.google.com/go/compute/apiv1/computepb"
 	"context"
 	"errors"
+
+	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
 
 	"github.com/overmindtech/cli/sdp-go"

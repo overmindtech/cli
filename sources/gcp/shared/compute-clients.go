@@ -288,3 +288,35 @@ func (c computeNodeGroupClient) Get(ctx context.Context, req *computepb.GetNodeG
 func (c computeNodeGroupClient) List(ctx context.Context, req *computepb.ListNodeGroupsRequest, opts ...gax.CallOption) ComputeNodeGroupIterator {
 	return c.nodeGroupClient.List(ctx, req, opts...)
 }
+
+// ComputeHealthCheckIterator is an interface for iterating over compute health checks
+type ComputeHealthCheckIterator interface {
+	Next() (*computepb.HealthCheck, error)
+}
+
+// ComputeHealthCheckClient is an interface for the Compute Engine Health Checks client
+type ComputeHealthCheckClient interface {
+	Get(ctx context.Context, req *computepb.GetHealthCheckRequest, opts ...gax.CallOption) (*computepb.HealthCheck, error)
+	List(ctx context.Context, req *computepb.ListHealthChecksRequest, opts ...gax.CallOption) ComputeHealthCheckIterator
+}
+
+type computeHealthCheckClient struct {
+	client *compute.HealthChecksClient
+}
+
+// NewComputeHealthCheckClient creates a new ComputeHealthCheckClient
+func NewComputeHealthCheckClient(healthChecksClient *compute.HealthChecksClient) ComputeHealthCheckClient {
+	return &computeHealthCheckClient{
+		client: healthChecksClient,
+	}
+}
+
+// Get retrieves a compute health check
+func (c computeHealthCheckClient) Get(ctx context.Context, req *computepb.GetHealthCheckRequest, opts ...gax.CallOption) (*computepb.HealthCheck, error) {
+	return c.client.Get(ctx, req, opts...)
+}
+
+// List lists compute health checks and returns an iterator
+func (c computeHealthCheckClient) List(ctx context.Context, req *computepb.ListHealthChecksRequest, opts ...gax.CallOption) ComputeHealthCheckIterator {
+	return c.client.List(ctx, req, opts...)
+}
