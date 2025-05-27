@@ -834,3 +834,105 @@ func (mr *MockComputeInstanceGroupsClientMockRecorder) List(ctx, req any, opts .
 	varargs := append([]any{ctx, req}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeInstanceGroupsClient)(nil).List), varargs...)
 }
+
+// MockComputeNodeGroupIterator is a mock of ComputeNodeGroupIterator interface.
+type MockComputeNodeGroupIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeNodeGroupIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeNodeGroupIteratorMockRecorder is the mock recorder for MockComputeNodeGroupIterator.
+type MockComputeNodeGroupIteratorMockRecorder struct {
+	mock *MockComputeNodeGroupIterator
+}
+
+// NewMockComputeNodeGroupIterator creates a new mock instance.
+func NewMockComputeNodeGroupIterator(ctrl *gomock.Controller) *MockComputeNodeGroupIterator {
+	mock := &MockComputeNodeGroupIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeNodeGroupIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeNodeGroupIterator) EXPECT() *MockComputeNodeGroupIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeNodeGroupIterator) Next() (*computepb.NodeGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.NodeGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeNodeGroupIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeNodeGroupIterator)(nil).Next))
+}
+
+// MockComputeNodeGroupClient is a mock of ComputeNodeGroupClient interface.
+type MockComputeNodeGroupClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeNodeGroupClientMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeNodeGroupClientMockRecorder is the mock recorder for MockComputeNodeGroupClient.
+type MockComputeNodeGroupClientMockRecorder struct {
+	mock *MockComputeNodeGroupClient
+}
+
+// NewMockComputeNodeGroupClient creates a new mock instance.
+func NewMockComputeNodeGroupClient(ctrl *gomock.Controller) *MockComputeNodeGroupClient {
+	mock := &MockComputeNodeGroupClient{ctrl: ctrl}
+	mock.recorder = &MockComputeNodeGroupClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeNodeGroupClient) EXPECT() *MockComputeNodeGroupClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockComputeNodeGroupClient) Get(ctx context.Context, req *computepb.GetNodeGroupRequest, opts ...gax.CallOption) (*computepb.NodeGroup, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*computepb.NodeGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockComputeNodeGroupClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeNodeGroupClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockComputeNodeGroupClient) List(ctx context.Context, req *computepb.ListNodeGroupsRequest, opts ...gax.CallOption) shared.ComputeNodeGroupIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.ComputeNodeGroupIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockComputeNodeGroupClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeNodeGroupClient)(nil).List), varargs...)
+}

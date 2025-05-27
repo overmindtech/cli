@@ -20,6 +20,8 @@ const (
 	Cluster                  shared.Resource = "cluster"
 	Disk                     shared.Resource = "disk"
 	Network                  shared.Resource = "network"
+	NodeGroup                shared.Resource = "node-group"
+	NodeTemplate             shared.Resource = "node-template"
 	Subnetwork               shared.Resource = "subnetwork"
 	Address                  shared.Resource = "address"
 	ForwardingRule           shared.Resource = "forwarding-rule"

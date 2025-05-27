@@ -182,7 +182,7 @@ type computeAutoscalerClient struct {
 	autoscalerClient *compute.AutoscalersClient
 }
 
-// Create a new NewComputeAutoscalerClient from a real GCP client.
+// Create a ComputeAutoscalerClient from a real GCP client.
 func NewComputeAutoscalerClient(autoscalerClient *compute.AutoscalersClient) ComputeAutoscalerClient {
 	return &computeAutoscalerClient{
 		autoscalerClient: autoscalerClient,
@@ -256,4 +256,35 @@ func (c computeInstanceGroupsClient) Get(ctx context.Context, req *computepb.Get
 // List lists compute instance groups and returns an iterator
 func (c computeInstanceGroupsClient) List(ctx context.Context, req *computepb.ListInstanceGroupsRequest, opts ...gax.CallOption) ComputeInstanceGroupIterator {
 	return c.client.List(ctx, req, opts...)
+}
+
+// Interface for interating over compute node groups.
+type ComputeNodeGroupIterator interface {
+	Next() (*computepb.NodeGroup, error)
+}
+
+// Interface for accessing compute NodeGroup resources.
+type ComputeNodeGroupClient interface {
+	Get(ctx context.Context, req *computepb.GetNodeGroupRequest, opts ...gax.CallOption) (*computepb.NodeGroup, error)
+	List(ctx context.Context, req *computepb.ListNodeGroupsRequest, opts ...gax.CallOption) ComputeNodeGroupIterator
+}
+
+// Wrapper for a ComputeNodeGroupClient implementation.
+type computeNodeGroupClient struct {
+	nodeGroupClient *compute.NodeGroupsClient
+}
+
+// Create a ComputeNodeGroupClient from a real GCP client.
+func NewComputeNodeGroupClient(NodeGroupClient *compute.NodeGroupsClient) ComputeNodeGroupClient {
+	return &computeNodeGroupClient{
+		nodeGroupClient: NodeGroupClient,
+	}
+}
+
+func (c computeNodeGroupClient) Get(ctx context.Context, req *computepb.GetNodeGroupRequest, opts ...gax.CallOption) (*computepb.NodeGroup, error) {
+	return c.nodeGroupClient.Get(ctx, req, opts...)
+}
+
+func (c computeNodeGroupClient) List(ctx context.Context, req *computepb.ListNodeGroupsRequest, opts ...gax.CallOption) ComputeNodeGroupIterator {
+	return c.nodeGroupClient.List(ctx, req, opts...)
 }

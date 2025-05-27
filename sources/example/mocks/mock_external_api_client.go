@@ -11,9 +11,9 @@ package mocks
 
 import (
 	context "context"
-	"github.com/overmindtech/cli/sources/example"
 	reflect "reflect"
 
+	example "github.com/overmindtech/cli/sources/example"
 	gomock "go.uber.org/mock/gomock"
 )
 
