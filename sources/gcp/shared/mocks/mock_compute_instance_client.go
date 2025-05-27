@@ -1140,3 +1140,105 @@ func (mr *MockComputeNodeTemplateClientMockRecorder) List(ctx, req any, opts ...
 	varargs := append([]any{ctx, req}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeNodeTemplateClient)(nil).List), varargs...)
 }
+
+// MockComputeReservationIterator is a mock of ComputeReservationIterator interface.
+type MockComputeReservationIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeReservationIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeReservationIteratorMockRecorder is the mock recorder for MockComputeReservationIterator.
+type MockComputeReservationIteratorMockRecorder struct {
+	mock *MockComputeReservationIterator
+}
+
+// NewMockComputeReservationIterator creates a new mock instance.
+func NewMockComputeReservationIterator(ctrl *gomock.Controller) *MockComputeReservationIterator {
+	mock := &MockComputeReservationIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeReservationIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeReservationIterator) EXPECT() *MockComputeReservationIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeReservationIterator) Next() (*computepb.Reservation, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.Reservation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeReservationIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeReservationIterator)(nil).Next))
+}
+
+// MockComputeReservationClient is a mock of ComputeReservationClient interface.
+type MockComputeReservationClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeReservationClientMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeReservationClientMockRecorder is the mock recorder for MockComputeReservationClient.
+type MockComputeReservationClientMockRecorder struct {
+	mock *MockComputeReservationClient
+}
+
+// NewMockComputeReservationClient creates a new mock instance.
+func NewMockComputeReservationClient(ctrl *gomock.Controller) *MockComputeReservationClient {
+	mock := &MockComputeReservationClient{ctrl: ctrl}
+	mock.recorder = &MockComputeReservationClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeReservationClient) EXPECT() *MockComputeReservationClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockComputeReservationClient) Get(ctx context.Context, req *computepb.GetReservationRequest, opts ...gax.CallOption) (*computepb.Reservation, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*computepb.Reservation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockComputeReservationClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeReservationClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockComputeReservationClient) List(ctx context.Context, req *computepb.ListReservationsRequest, opts ...gax.CallOption) shared.ComputeReservationIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.ComputeReservationIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockComputeReservationClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeReservationClient)(nil).List), varargs...)
+}

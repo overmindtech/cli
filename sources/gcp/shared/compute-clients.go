@@ -351,3 +351,35 @@ func (c computeNodeTemplateClient) Get(ctx context.Context, req *computepb.GetNo
 func (c computeNodeTemplateClient) List(ctx context.Context, req *computepb.ListNodeTemplatesRequest, opts ...gax.CallOption) ComputeNodeTemplateIterator {
 	return c.nodeTemplateClient.List(ctx, req, opts...)
 }
+
+// ComputeReservationIterator is an interface for iterating over compute reservations
+type ComputeReservationIterator interface {
+	Next() (*computepb.Reservation, error)
+}
+
+// ComputeReservationClient is an interface for the Compute Engine Reservations client
+type ComputeReservationClient interface {
+	Get(ctx context.Context, req *computepb.GetReservationRequest, opts ...gax.CallOption) (*computepb.Reservation, error)
+	List(ctx context.Context, req *computepb.ListReservationsRequest, opts ...gax.CallOption) ComputeReservationIterator
+}
+
+type computeReservationClient struct {
+	client *compute.ReservationsClient
+}
+
+// NewComputeReservationClient creates a new ComputeReservationClient
+func NewComputeReservationClient(reservationsClient *compute.ReservationsClient) ComputeReservationClient {
+	return &computeReservationClient{
+		client: reservationsClient,
+	}
+}
+
+// Get retrieves a compute reservation
+func (c computeReservationClient) Get(ctx context.Context, req *computepb.GetReservationRequest, opts ...gax.CallOption) (*computepb.Reservation, error) {
+	return c.client.Get(ctx, req, opts...)
+}
+
+// List lists compute reservations and returns an iterator
+func (c computeReservationClient) List(ctx context.Context, req *computepb.ListReservationsRequest, opts ...gax.CallOption) ComputeReservationIterator {
+	return c.client.List(ctx, req, opts...)
+}

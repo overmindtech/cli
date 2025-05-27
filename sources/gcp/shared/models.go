@@ -38,4 +38,8 @@ const (
 	TargetPool               shared.Resource = "target-pool"
 	ResourcePolicy           shared.Resource = "resource-policy"
 	HealthCheck              shared.Resource = "health-check"
+	RegionCommitment         shared.Resource = "region-commitment"
+	Reservation              shared.Resource = "reservation"
+	MachineType              shared.Resource = "machine-type"
+	AcceleratorType          shared.Resource = "accelerator-type"
 )

@@ -45,6 +45,11 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		return nil, err
 	}
 
+	computeReservationCli, err := compute.NewReservationsRESTClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	backendServiceCli, err := compute.NewBackendServicesRESTClient(ctx)
 	if err != nil {
 		return nil, err
@@ -75,6 +80,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 			sources.WrapperToAdapter(NewComputeAutoscaler(shared.NewComputeAutoscalerClient(autoscalerCli), projectID, zone)),
 			sources.WrapperToAdapter(NewComputeInstanceGroup(shared.NewComputeInstanceGroupsClient(instanceGroupCli), projectID, zone)),
 			sources.WrapperToAdapter(NewComputeInstanceGroupManager(shared.NewComputeInstanceGroupManagerClient(instanceGroupManagerCli), projectID, zone)),
+			sources.WrapperToAdapter(NewComputeReservation(shared.NewComputeReservationClient(computeReservationCli), projectID, zone)),
 		)
 	}
 

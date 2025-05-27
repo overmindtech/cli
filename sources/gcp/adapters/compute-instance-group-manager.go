@@ -18,7 +18,6 @@ var (
 	ComputeInstanceTemplate       = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.InstanceTemplate)
 	ComputeRegionInstanceTemplate = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.RegionalInstanceTemplate)
 	ComputeTargetPool             = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.TargetPool)
-	ComputeResourcePolicy         = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.ResourcePolicy)
 
 	ComputeInstanceGroupManagerLookupByName = shared.NewItemTypeLookup("name", ComputeInstanceGroupManager)
 )
