@@ -74,7 +74,9 @@ func TerraformPlan(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	defer cleanup()
+	if cleanup != nil {
+		defer cleanup()
+	}
 
 	return TerraformPlanImpl(ctx, cmd, oi, args, planFile)
 }
