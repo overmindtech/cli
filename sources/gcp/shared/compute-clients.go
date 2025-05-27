@@ -383,3 +383,35 @@ func (c computeReservationClient) Get(ctx context.Context, req *computepb.GetRes
 func (c computeReservationClient) List(ctx context.Context, req *computepb.ListReservationsRequest, opts ...gax.CallOption) ComputeReservationIterator {
 	return c.client.List(ctx, req, opts...)
 }
+
+// ComputeSecurityPolicyIterator is an interface for iterating over compute security policies
+type ComputeSecurityPolicyIterator interface {
+	Next() (*computepb.SecurityPolicy, error)
+}
+
+// ComputeSecurityPolicyClient is an interface for the Compute Security Policies client
+type ComputeSecurityPolicyClient interface {
+	Get(ctx context.Context, req *computepb.GetSecurityPolicyRequest, opts ...gax.CallOption) (*computepb.SecurityPolicy, error)
+	List(ctx context.Context, req *computepb.ListSecurityPoliciesRequest, opts ...gax.CallOption) ComputeSecurityPolicyIterator
+}
+
+type computeSecurityPolicyClient struct {
+	client *compute.SecurityPoliciesClient
+}
+
+// NewComputeSecurityPolicyClient creates a new ComputeSecurityPolicyClient
+func NewComputeSecurityPolicyClient(securityPolicyClient *compute.SecurityPoliciesClient) ComputeSecurityPolicyClient {
+	return &computeSecurityPolicyClient{
+		client: securityPolicyClient,
+	}
+}
+
+// Get retrieves a compute security policy
+func (c computeSecurityPolicyClient) Get(ctx context.Context, req *computepb.GetSecurityPolicyRequest, opts ...gax.CallOption) (*computepb.SecurityPolicy, error) {
+	return c.client.Get(ctx, req, opts...)
+}
+
+// List lists compute security policies and returns an iterator
+func (c computeSecurityPolicyClient) List(ctx context.Context, req *computepb.ListSecurityPoliciesRequest, opts ...gax.CallOption) ComputeSecurityPolicyIterator {
+	return c.client.List(ctx, req, opts...)
+}

@@ -42,4 +42,5 @@ const (
 	Reservation              shared.Resource = "reservation"
 	MachineType              shared.Resource = "machine-type"
 	AcceleratorType          shared.Resource = "accelerator-type"
+	Rule                     shared.Resource = "security-policy-rule"
 )

@@ -1242,3 +1242,105 @@ func (mr *MockComputeReservationClientMockRecorder) List(ctx, req any, opts ...a
 	varargs := append([]any{ctx, req}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeReservationClient)(nil).List), varargs...)
 }
+
+// MockComputeSecurityPolicyIterator is a mock of ComputeSecurityPolicyIterator interface.
+type MockComputeSecurityPolicyIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeSecurityPolicyIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeSecurityPolicyIteratorMockRecorder is the mock recorder for MockComputeSecurityPolicyIterator.
+type MockComputeSecurityPolicyIteratorMockRecorder struct {
+	mock *MockComputeSecurityPolicyIterator
+}
+
+// NewMockComputeSecurityPolicyIterator creates a new mock instance.
+func NewMockComputeSecurityPolicyIterator(ctrl *gomock.Controller) *MockComputeSecurityPolicyIterator {
+	mock := &MockComputeSecurityPolicyIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeSecurityPolicyIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeSecurityPolicyIterator) EXPECT() *MockComputeSecurityPolicyIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeSecurityPolicyIterator) Next() (*computepb.SecurityPolicy, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.SecurityPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeSecurityPolicyIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeSecurityPolicyIterator)(nil).Next))
+}
+
+// MockComputeSecurityPolicyClient is a mock of ComputeSecurityPolicyClient interface.
+type MockComputeSecurityPolicyClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeSecurityPolicyClientMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeSecurityPolicyClientMockRecorder is the mock recorder for MockComputeSecurityPolicyClient.
+type MockComputeSecurityPolicyClientMockRecorder struct {
+	mock *MockComputeSecurityPolicyClient
+}
+
+// NewMockComputeSecurityPolicyClient creates a new mock instance.
+func NewMockComputeSecurityPolicyClient(ctrl *gomock.Controller) *MockComputeSecurityPolicyClient {
+	mock := &MockComputeSecurityPolicyClient{ctrl: ctrl}
+	mock.recorder = &MockComputeSecurityPolicyClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeSecurityPolicyClient) EXPECT() *MockComputeSecurityPolicyClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockComputeSecurityPolicyClient) Get(ctx context.Context, req *computepb.GetSecurityPolicyRequest, opts ...gax.CallOption) (*computepb.SecurityPolicy, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*computepb.SecurityPolicy)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockComputeSecurityPolicyClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeSecurityPolicyClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockComputeSecurityPolicyClient) List(ctx context.Context, req *computepb.ListSecurityPoliciesRequest, opts ...gax.CallOption) shared.ComputeSecurityPolicyIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.ComputeSecurityPolicyIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockComputeSecurityPolicyClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeSecurityPolicyClient)(nil).List), varargs...)
+}
