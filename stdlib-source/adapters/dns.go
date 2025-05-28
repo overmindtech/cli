@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/miekg/dns"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
@@ -217,13 +217,12 @@ func (d *DNSAdapter) retryDNSQuery(ctx context.Context, queryFn func(context.Con
 	b := backoff.NewExponentialBackOff()
 	b.InitialInterval = 100 * time.Millisecond
 	b.MaxInterval = 500 * time.Millisecond
-	b.MaxElapsedTime = 30 * time.Second
 
 	var items []*sdp.Item
 	var i int
 	var server string
 
-	operation := func() error {
+	operation := func() (any, error) {
 		if i >= len(d.GetServers()) {
 			i = 0
 		}
@@ -241,15 +240,18 @@ func (d *DNSAdapter) retryDNSQuery(ctx context.Context, queryFn func(context.Con
 			if errors.Is(err, context.DeadlineExceeded) ||
 				strings.Contains(err.Error(), "timeout") ||
 				strings.Contains(err.Error(), "temporary failure") {
-				return err // Retry on timeout
+				return nil, err // Retry on timeout
 			}
-			return backoff.Permanent(err)
+			return nil, backoff.Permanent(err)
 		}
 
-		return nil
+		return nil, nil
 	}
 
-	err := backoff.Retry(operation, b)
+	_, err := backoff.Retry(ctx, operation,
+		backoff.WithBackOff(b),
+		backoff.WithMaxElapsedTime(30*time.Second),
+	)
 	span := trace.SpanFromContext(ctx)
 	span.SetAttributes(
 		attribute.String("ovm.dns.server", server),

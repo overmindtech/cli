@@ -32,7 +32,7 @@ import (
 	awssns "github.com/aws/aws-sdk-go-v2/service/sns"
 	awssqs "github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
-	"github.com/cenkalti/backoff/v4"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/sourcegraph/conc/pool"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -198,7 +198,7 @@ func CreateAWSConfigs(awsAuthConfig AwsAuthConfig) ([]aws.Config, error) {
 // engine, and an error if any. The context provided will be used for the rate
 // limit buckets and should not be cancelled until the source is shut down. AWS
 // configs should be provided for each region that is enabled
-func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, maxRetries uint64, configs ...aws.Config) (*discovery.Engine, error) {
+func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, maxRetries int, configs ...aws.Config) (*discovery.Engine, error) {
 	e, err := discovery.NewEngine(ec)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing Engine: %w", err)
@@ -220,15 +220,18 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 	}
 
 	var globalDone atomic.Bool
-	var b backoff.BackOff
-	b = backoff.NewExponentialBackOff(
-		backoff.WithMaxInterval(30*time.Second),
-		backoff.WithMaxElapsedTime(3*time.Minute), // do not wait longer than max allowed time for Change Analysis SLO
-	)
-	b = backoff.WithMaxRetries(b, maxRetries)
+	b := backoff.NewExponentialBackOff()
+	b.MaxInterval = 30 * time.Second
 	tick := backoff.NewTicker(b)
 
+	try := 0
+
 	for {
+		try++
+		if try > maxRetries {
+			return nil, fmt.Errorf("maximum retries (%d) exceeded", maxRetries)
+		}
+
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
