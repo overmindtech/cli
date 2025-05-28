@@ -175,6 +175,36 @@ func TestItemDiffParagraphRendering(t *testing.T) {
 			},
 			ExpectedDiffParagraph: "",
 		},
+		{
+			Name: "with stats, previous values truncated to 100 characters",
+			Before: map[string]any{
+				"name": map[string]any{
+					"first": "test",
+					"last":  "user",
+				},
+			},
+			After: map[string]any{
+				"name": map[string]any{
+					"first": "test",
+					"last":  "updated",
+				},
+			},
+			ChangeRollups: []RoutineRollup{
+				{
+					Gun:   "testGun",
+					Attr:  "name.last",
+					Value: "user",
+				},
+			},
+			RawRollups: []RoutineRollup{
+				{
+					Gun:   "testGun",
+					Attr:  "name.last",
+					Value: "123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.AAAAAA",
+				},
+			},
+			ExpectedDiffParagraph: "- name.last: user\n+ name.last: updated\n# → 🔁 This attribute has changed 1 times in the last 30 days.\n#      The previous values were [123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.].",
+		},
 	}
 
 	for _, test := range tests {

@@ -161,6 +161,15 @@ func RenderItemDiff(gun string, before, after map[string]any, changeData, rawDat
 			k := fmt.Sprintf("%v.%v", gun, key)
 			v := attrs[k]
 			slices.Sort(v)
+			v = slices.Compact(v)
+			for i, val := range v {
+				val = strings.ReplaceAll(val, "\n", " ")
+				val = strings.ReplaceAll(val, "\t", " ")
+				if len(val) > 100 {
+					val = val[:100]
+				}
+				v[i] = val
+			}
 
 			if len(v) > 0 {
 				para = append(para, fmt.Sprintf("# → 🔁 This attribute has changed %d times in the last 30 days.\n#      The previous values were %v.", len(v), v))
