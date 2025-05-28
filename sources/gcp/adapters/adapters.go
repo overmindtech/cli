@@ -51,6 +51,10 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 	}
 
 	computeSecurityPolicyCli, err := compute.NewSecurityPoliciesRESTClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	computeInstantSnapshotCli, err := compute.NewInstantSnapshotsRESTClient(ctx)
 	if err != nil {
 		return nil, err
