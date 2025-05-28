@@ -415,3 +415,35 @@ func (c computeSecurityPolicyClient) Get(ctx context.Context, req *computepb.Get
 func (c computeSecurityPolicyClient) List(ctx context.Context, req *computepb.ListSecurityPoliciesRequest, opts ...gax.CallOption) ComputeSecurityPolicyIterator {
 	return c.client.List(ctx, req, opts...)
 }
+
+// ComputeInstantSnapshotIterator is an interface for iterating over compute instant snapshots
+type ComputeInstantSnapshotIterator interface {
+	Next() (*computepb.InstantSnapshot, error)
+}
+
+// ComputeInstantSnapshotsClient is an interface for the Compute Instant Snapshots client
+type ComputeInstantSnapshotsClient interface {
+	Get(ctx context.Context, req *computepb.GetInstantSnapshotRequest, opts ...gax.CallOption) (*computepb.InstantSnapshot, error)
+	List(ctx context.Context, req *computepb.ListInstantSnapshotsRequest, opts ...gax.CallOption) ComputeInstantSnapshotIterator
+}
+
+type computeInstantSnapshotsClient struct {
+	client *compute.InstantSnapshotsClient
+}
+
+// NewComputeInstantSnapshotsClient creates a new ComputeInstantSnapshotsClient
+func NewComputeInstantSnapshotsClient(instantSnapshotsClient *compute.InstantSnapshotsClient) ComputeInstantSnapshotsClient {
+	return &computeInstantSnapshotsClient{
+		client: instantSnapshotsClient,
+	}
+}
+
+// Get retrieves a compute instant snapshot
+func (c computeInstantSnapshotsClient) Get(ctx context.Context, req *computepb.GetInstantSnapshotRequest, opts ...gax.CallOption) (*computepb.InstantSnapshot, error) {
+	return c.client.Get(ctx, req, opts...)
+}
+
+// List lists compute instant snapshots and returns an iterator
+func (c computeInstantSnapshotsClient) List(ctx context.Context, req *computepb.ListInstantSnapshotsRequest, opts ...gax.CallOption) ComputeInstantSnapshotIterator {
+	return c.client.List(ctx, req, opts...)
+}

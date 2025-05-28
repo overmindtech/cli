@@ -51,6 +51,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 	}
 
 	computeSecurityPolicyCli, err := compute.NewSecurityPoliciesRESTClient(ctx)
+	computeInstantSnapshotCli, err := compute.NewInstantSnapshotsRESTClient(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -86,6 +87,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 			sources.WrapperToAdapter(NewComputeInstanceGroup(shared.NewComputeInstanceGroupsClient(instanceGroupCli), projectID, zone)),
 			sources.WrapperToAdapter(NewComputeInstanceGroupManager(shared.NewComputeInstanceGroupManagerClient(instanceGroupManagerCli), projectID, zone)),
 			sources.WrapperToAdapter(NewComputeReservation(shared.NewComputeReservationClient(computeReservationCli), projectID, zone)),
+			sources.WrapperToAdapter(NewComputeInstantSnapshot(shared.NewComputeInstantSnapshotsClient(computeInstantSnapshotCli), projectID, zone)),
 		)
 	}
 

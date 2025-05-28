@@ -43,4 +43,5 @@ const (
 	MachineType              shared.Resource = "machine-type"
 	AcceleratorType          shared.Resource = "accelerator-type"
 	Rule                     shared.Resource = "security-policy-rule"
+	InstantSnapshot          shared.Resource = "instant-snapshot"
 )

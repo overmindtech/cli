@@ -1344,3 +1344,105 @@ func (mr *MockComputeSecurityPolicyClientMockRecorder) List(ctx, req any, opts .
 	varargs := append([]any{ctx, req}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeSecurityPolicyClient)(nil).List), varargs...)
 }
+
+// MockComputeInstantSnapshotIterator is a mock of ComputeInstantSnapshotIterator interface.
+type MockComputeInstantSnapshotIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeInstantSnapshotIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeInstantSnapshotIteratorMockRecorder is the mock recorder for MockComputeInstantSnapshotIterator.
+type MockComputeInstantSnapshotIteratorMockRecorder struct {
+	mock *MockComputeInstantSnapshotIterator
+}
+
+// NewMockComputeInstantSnapshotIterator creates a new mock instance.
+func NewMockComputeInstantSnapshotIterator(ctrl *gomock.Controller) *MockComputeInstantSnapshotIterator {
+	mock := &MockComputeInstantSnapshotIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeInstantSnapshotIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeInstantSnapshotIterator) EXPECT() *MockComputeInstantSnapshotIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeInstantSnapshotIterator) Next() (*computepb.InstantSnapshot, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.InstantSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeInstantSnapshotIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeInstantSnapshotIterator)(nil).Next))
+}
+
+// MockComputeInstantSnapshotsClient is a mock of ComputeInstantSnapshotsClient interface.
+type MockComputeInstantSnapshotsClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeInstantSnapshotsClientMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeInstantSnapshotsClientMockRecorder is the mock recorder for MockComputeInstantSnapshotsClient.
+type MockComputeInstantSnapshotsClientMockRecorder struct {
+	mock *MockComputeInstantSnapshotsClient
+}
+
+// NewMockComputeInstantSnapshotsClient creates a new mock instance.
+func NewMockComputeInstantSnapshotsClient(ctrl *gomock.Controller) *MockComputeInstantSnapshotsClient {
+	mock := &MockComputeInstantSnapshotsClient{ctrl: ctrl}
+	mock.recorder = &MockComputeInstantSnapshotsClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeInstantSnapshotsClient) EXPECT() *MockComputeInstantSnapshotsClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockComputeInstantSnapshotsClient) Get(ctx context.Context, req *computepb.GetInstantSnapshotRequest, opts ...gax.CallOption) (*computepb.InstantSnapshot, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*computepb.InstantSnapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockComputeInstantSnapshotsClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeInstantSnapshotsClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockComputeInstantSnapshotsClient) List(ctx context.Context, req *computepb.ListInstantSnapshotsRequest, opts ...gax.CallOption) shared.ComputeInstantSnapshotIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.ComputeInstantSnapshotIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockComputeInstantSnapshotsClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeInstantSnapshotsClient)(nil).List), varargs...)
+}
