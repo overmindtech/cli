@@ -48,8 +48,11 @@ const (
 	Image                    shared.Resource = "image"
 	User                     shared.Resource = "user"
 	SourceDisk               shared.Resource = "source-disk"
-	CryptoKeyVersion         shared.Resource = "crypto-key-version"
 	Snapshot                 shared.Resource = "snapshot"
+	License                  shared.Resource = "license"
+	CryptoKeyVersion         shared.Resource = "crypto-key-version"
 	DiskType                 shared.Resource = "disk-type"
 	MachineImage             shared.Resource = "machine-image"
+	Zone                     shared.Resource = "zone"
+	Region                   shared.Resource = "region"
 )

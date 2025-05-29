@@ -5,4 +5,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var CloudKMSCryptoKeyVersion = shared.NewItemType(gcpshared.GCP, gcpshared.CloudKMS, gcpshared.CryptoKeyVersion)
+var (
+	CloudKMSCryptoKeyVersion             = shared.NewItemType(gcpshared.GCP, gcpshared.CloudKMS, gcpshared.CryptoKeyVersion)
+	CloudKMSCryptoKeyVersionLookupByName = shared.NewItemTypeLookup("name", CloudKMSCryptoKeyVersion)
+)

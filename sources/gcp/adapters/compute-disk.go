@@ -16,7 +16,6 @@ import (
 
 var (
 	ComputeDisk     = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Disk)
-	ComputeSnapshot = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Snapshot)
 	ComputeDiskType = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.DiskType)
 
 	ComputeDiskLookupByName = shared.NewItemTypeLookup("name", ComputeDisk)

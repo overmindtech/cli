@@ -55,6 +55,11 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		return nil, err
 	}
 
+	computeSnapshotCli, err := compute.NewSnapshotsRESTClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	computeInstantSnapshotCli, err := compute.NewInstantSnapshotsRESTClient(ctx)
 	if err != nil {
 		return nil, err
@@ -113,6 +118,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		sources.WrapperToAdapter(NewComputeHealthCheck(shared.NewComputeHealthCheckClient(computeHealthCheckCli), projectID)),
 		sources.WrapperToAdapter(NewComputeSecurityPolicy(shared.NewComputeSecurityPolicyClient(computeSecurityPolicyCli), projectID)),
 		sources.WrapperToAdapter(NewComputeMachineImage(shared.NewComputeMachineImageClient(computeMachineImageCli), projectID)),
+		sources.WrapperToAdapter(NewComputeSnapshot(shared.NewComputeSnapshotsClient(computeSnapshotCli), projectID)),
 	)
 
 	// Register the metadata for each adapter

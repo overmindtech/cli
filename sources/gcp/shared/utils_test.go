@@ -49,6 +49,112 @@ func TestLastPathComponent(t *testing.T) {
 	}
 }
 
+func TestIsRegion(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{
+			name:     "valid region",
+			input:    "us-central1",
+			expected: true,
+		},
+		{
+			name:     "another valid region",
+			input:    "asia-east1",
+			expected: true,
+		},
+		{
+			name:     "zone, not region",
+			input:    "us-central1-a",
+			expected: false,
+		},
+		{
+			name:     "empty string",
+			input:    "",
+			expected: false,
+		},
+		{
+			name:     "no hyphen",
+			input:    "uscentral1",
+			expected: false,
+		},
+		{
+			name:     "too many hyphens",
+			input:    "us-central-1",
+			expected: false,
+		},
+		{
+			name:     "just a hyphen",
+			input:    "-",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := shared.IsRegion(tt.input)
+			if result != tt.expected {
+				t.Errorf("IsRegion(%q) = %v, expected %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestIsZone(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{
+			name:     "valid zone",
+			input:    "us-central1-a",
+			expected: true,
+		},
+		{
+			name:     "another valid zone",
+			input:    "asia-east1-b",
+			expected: true,
+		},
+		{
+			name:     "region, not zone",
+			input:    "us-central1",
+			expected: false,
+		},
+		{
+			name:     "empty string",
+			input:    "",
+			expected: false,
+		},
+		{
+			name:     "no hyphen",
+			input:    "uscentral1a",
+			expected: false,
+		},
+		{
+			name:     "too many hyphens",
+			input:    "us-central-1-a",
+			expected: false,
+		},
+		{
+			name:     "just hyphens",
+			input:    "--",
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := shared.IsZone(tt.input)
+			if result != tt.expected {
+				t.Errorf("IsZone(%q) = %v, expected %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
 func TestExtractPathParam(t *testing.T) {
 	tests := []struct {
 		name     string

@@ -523,3 +523,35 @@ type CloudKMSCryptoKeyVersionClient interface {
 	Get(ctx context.Context, req *kmspb.GetCryptoKeyVersionRequest, opts ...gax.CallOption) (*kmspb.CryptoKeyVersion, error)
 	List(ctx context.Context, req *kmspb.ListCryptoKeyVersionsRequest, opts ...gax.CallOption) CloudKMSCryptoKeyVersionIterator
 }
+
+// ComputeSnapshotIterator is an interface for iterating over compute snapshots
+type ComputeSnapshotIterator interface {
+	Next() (*computepb.Snapshot, error)
+}
+
+// ComputeSnapshotsClient is an interface for the Compute Snapshots client
+type ComputeSnapshotsClient interface {
+	Get(ctx context.Context, req *computepb.GetSnapshotRequest, opts ...gax.CallOption) (*computepb.Snapshot, error)
+	List(ctx context.Context, req *computepb.ListSnapshotsRequest, opts ...gax.CallOption) ComputeSnapshotIterator
+}
+
+type computeSnapshotsClient struct {
+	snapshotClient *compute.SnapshotsClient
+}
+
+// NewComputeSnapshotsClient creates a new ComputeSnapshotsClient
+func NewComputeSnapshotsClient(snapshotClient *compute.SnapshotsClient) ComputeSnapshotsClient {
+	return &computeSnapshotsClient{
+		snapshotClient: snapshotClient,
+	}
+}
+
+// Get retrieves a compute snapshot
+func (c computeSnapshotsClient) Get(ctx context.Context, req *computepb.GetSnapshotRequest, opts ...gax.CallOption) (*computepb.Snapshot, error) {
+	return c.snapshotClient.Get(ctx, req, opts...)
+}
+
+// List lists compute snapshots and returns an iterator
+func (c computeSnapshotsClient) List(ctx context.Context, req *computepb.ListSnapshotsRequest, opts ...gax.CallOption) ComputeSnapshotIterator {
+	return c.snapshotClient.List(ctx, req, opts...)
+}

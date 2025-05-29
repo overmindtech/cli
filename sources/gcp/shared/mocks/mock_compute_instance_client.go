@@ -1753,3 +1753,105 @@ func (mr *MockCloudKMSCryptoKeyVersionClientMockRecorder) List(ctx, req any, opt
 	varargs := append([]any{ctx, req}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockCloudKMSCryptoKeyVersionClient)(nil).List), varargs...)
 }
+
+// MockComputeSnapshotIterator is a mock of ComputeSnapshotIterator interface.
+type MockComputeSnapshotIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeSnapshotIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeSnapshotIteratorMockRecorder is the mock recorder for MockComputeSnapshotIterator.
+type MockComputeSnapshotIteratorMockRecorder struct {
+	mock *MockComputeSnapshotIterator
+}
+
+// NewMockComputeSnapshotIterator creates a new mock instance.
+func NewMockComputeSnapshotIterator(ctrl *gomock.Controller) *MockComputeSnapshotIterator {
+	mock := &MockComputeSnapshotIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeSnapshotIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeSnapshotIterator) EXPECT() *MockComputeSnapshotIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeSnapshotIterator) Next() (*computepb.Snapshot, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.Snapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeSnapshotIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeSnapshotIterator)(nil).Next))
+}
+
+// MockComputeSnapshotsClient is a mock of ComputeSnapshotsClient interface.
+type MockComputeSnapshotsClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeSnapshotsClientMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeSnapshotsClientMockRecorder is the mock recorder for MockComputeSnapshotsClient.
+type MockComputeSnapshotsClientMockRecorder struct {
+	mock *MockComputeSnapshotsClient
+}
+
+// NewMockComputeSnapshotsClient creates a new mock instance.
+func NewMockComputeSnapshotsClient(ctrl *gomock.Controller) *MockComputeSnapshotsClient {
+	mock := &MockComputeSnapshotsClient{ctrl: ctrl}
+	mock.recorder = &MockComputeSnapshotsClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeSnapshotsClient) EXPECT() *MockComputeSnapshotsClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockComputeSnapshotsClient) Get(ctx context.Context, req *computepb.GetSnapshotRequest, opts ...gax.CallOption) (*computepb.Snapshot, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*computepb.Snapshot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockComputeSnapshotsClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeSnapshotsClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockComputeSnapshotsClient) List(ctx context.Context, req *computepb.ListSnapshotsRequest, opts ...gax.CallOption) shared.ComputeSnapshotIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.ComputeSnapshotIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockComputeSnapshotsClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeSnapshotsClient)(nil).List), varargs...)
+}

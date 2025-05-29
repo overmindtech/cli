@@ -43,3 +43,17 @@ func ExtractPathParam(key, input string) string {
 	}
 	return ""
 }
+
+// IsRegion checks if a string represents a GCP region.
+// GCP regions typically follow the pattern "x-y" (e.g., "us-central1").
+func IsRegion(s string) bool {
+	parts := strings.Split(s, "-")
+	return len(parts) == 2 && parts[0] != "" && parts[1] != ""
+}
+
+// IsZone checks if a string represents a GCP zone.
+// GCP zones typically follow the pattern "x-y-z" (e.g., "us-central1-a").
+func IsZone(s string) bool {
+	parts := strings.Split(s, "-")
+	return len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != ""
+}
