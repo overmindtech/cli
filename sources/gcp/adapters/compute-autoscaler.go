@@ -131,7 +131,7 @@ func (c computeAutoscalerWrapper) gcpComputeAutoscalerToSDPItem(autoscaler *comp
 
 	instanceGroupManagerName := autoscaler.GetTarget()
 	if instanceGroupManagerName != "" {
-		zone := gcpshared.ExtractZone(instanceGroupManagerName)
+		zone := gcpshared.ExtractPathParam("zones", instanceGroupManagerName)
 		igmNameParts := strings.Split(instanceGroupManagerName, "/")
 		igmName := igmNameParts[len(igmNameParts)-1]
 

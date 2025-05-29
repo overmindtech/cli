@@ -6,6 +6,7 @@ import (
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"cloud.google.com/go/kms/apiv1/kmspb"
 	"github.com/googleapis/gax-go/v2"
 )
 
@@ -446,4 +447,47 @@ func (c computeInstantSnapshotsClient) Get(ctx context.Context, req *computepb.G
 // List lists compute instant snapshots and returns an iterator
 func (c computeInstantSnapshotsClient) List(ctx context.Context, req *computepb.ListInstantSnapshotsRequest, opts ...gax.CallOption) ComputeInstantSnapshotIterator {
 	return c.client.List(ctx, req, opts...)
+}
+
+// ComputeDiskIterator is an interface for iterating over compute disks
+type ComputeDiskIterator interface {
+	Next() (*computepb.Disk, error)
+}
+
+// ComputeDiskClient is an interface for the Compute Engine Disk client
+type ComputeDiskClient interface {
+	Get(ctx context.Context, req *computepb.GetDiskRequest, opts ...gax.CallOption) (*computepb.Disk, error)
+	List(ctx context.Context, req *computepb.ListDisksRequest, opts ...gax.CallOption) ComputeDiskIterator
+}
+
+type computeDiskClient struct {
+	client *compute.DisksClient
+}
+
+// NewComputeDiskClient creates a new ComputeDiskClient
+func NewComputeDiskClient(client *compute.DisksClient) ComputeDiskClient {
+	return &computeDiskClient{
+		client: client,
+	}
+}
+
+// Get retrieves a compute disk
+func (c computeDiskClient) Get(ctx context.Context, req *computepb.GetDiskRequest, opts ...gax.CallOption) (*computepb.Disk, error) {
+	return c.client.Get(ctx, req, opts...)
+}
+
+// List lists compute disks and returns an iterator
+func (c computeDiskClient) List(ctx context.Context, req *computepb.ListDisksRequest, opts ...gax.CallOption) ComputeDiskIterator {
+	return c.client.List(ctx, req, opts...)
+}
+
+// CloudKMSCryptoKeyVersionIterator is an interface for iterating over Cloud KMS CryptoKeyVersions
+type CloudKMSCryptoKeyVersionIterator interface {
+	Next() (*kmspb.CryptoKeyVersion, error)
+}
+
+// CloudKMSCryptoKeyVersionClient is an interface for the Cloud KMS CryptoKeyVersion client
+type CloudKMSCryptoKeyVersionClient interface {
+	Get(ctx context.Context, req *kmspb.GetCryptoKeyVersionRequest, opts ...gax.CallOption) (*kmspb.CryptoKeyVersion, error)
+	List(ctx context.Context, req *kmspb.ListCryptoKeyVersionsRequest, opts ...gax.CallOption) CloudKMSCryptoKeyVersionIterator
 }

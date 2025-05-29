@@ -132,7 +132,7 @@ func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(instan
 	}
 
 	if disk := instantSnapshot.GetSourceDisk(); disk != "" {
-		zone := gcpshared.ExtractZone(disk)
+		zone := gcpshared.ExtractPathParam("zones", disk)
 		if zone != "" {
 			diskName := gcpshared.LastPathComponent(disk)
 			if diskName != "" {

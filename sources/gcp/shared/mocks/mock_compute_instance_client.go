@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	computepb "cloud.google.com/go/compute/apiv1/computepb"
+	kmspb "cloud.google.com/go/kms/apiv1/kmspb"
 	gax "github.com/googleapis/gax-go/v2"
 	shared "github.com/overmindtech/cli/sources/gcp/shared"
 	gomock "go.uber.org/mock/gomock"
@@ -1445,4 +1446,208 @@ func (mr *MockComputeInstantSnapshotsClientMockRecorder) List(ctx, req any, opts
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, req}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeInstantSnapshotsClient)(nil).List), varargs...)
+}
+
+// MockComputeDiskIterator is a mock of ComputeDiskIterator interface.
+type MockComputeDiskIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeDiskIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeDiskIteratorMockRecorder is the mock recorder for MockComputeDiskIterator.
+type MockComputeDiskIteratorMockRecorder struct {
+	mock *MockComputeDiskIterator
+}
+
+// NewMockComputeDiskIterator creates a new mock instance.
+func NewMockComputeDiskIterator(ctrl *gomock.Controller) *MockComputeDiskIterator {
+	mock := &MockComputeDiskIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeDiskIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeDiskIterator) EXPECT() *MockComputeDiskIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeDiskIterator) Next() (*computepb.Disk, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.Disk)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeDiskIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeDiskIterator)(nil).Next))
+}
+
+// MockComputeDiskClient is a mock of ComputeDiskClient interface.
+type MockComputeDiskClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeDiskClientMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeDiskClientMockRecorder is the mock recorder for MockComputeDiskClient.
+type MockComputeDiskClientMockRecorder struct {
+	mock *MockComputeDiskClient
+}
+
+// NewMockComputeDiskClient creates a new mock instance.
+func NewMockComputeDiskClient(ctrl *gomock.Controller) *MockComputeDiskClient {
+	mock := &MockComputeDiskClient{ctrl: ctrl}
+	mock.recorder = &MockComputeDiskClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeDiskClient) EXPECT() *MockComputeDiskClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockComputeDiskClient) Get(ctx context.Context, req *computepb.GetDiskRequest, opts ...gax.CallOption) (*computepb.Disk, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*computepb.Disk)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockComputeDiskClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeDiskClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockComputeDiskClient) List(ctx context.Context, req *computepb.ListDisksRequest, opts ...gax.CallOption) shared.ComputeDiskIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.ComputeDiskIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockComputeDiskClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeDiskClient)(nil).List), varargs...)
+}
+
+// MockCloudKMSCryptoKeyVersionIterator is a mock of CloudKMSCryptoKeyVersionIterator interface.
+type MockCloudKMSCryptoKeyVersionIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockCloudKMSCryptoKeyVersionIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockCloudKMSCryptoKeyVersionIteratorMockRecorder is the mock recorder for MockCloudKMSCryptoKeyVersionIterator.
+type MockCloudKMSCryptoKeyVersionIteratorMockRecorder struct {
+	mock *MockCloudKMSCryptoKeyVersionIterator
+}
+
+// NewMockCloudKMSCryptoKeyVersionIterator creates a new mock instance.
+func NewMockCloudKMSCryptoKeyVersionIterator(ctrl *gomock.Controller) *MockCloudKMSCryptoKeyVersionIterator {
+	mock := &MockCloudKMSCryptoKeyVersionIterator{ctrl: ctrl}
+	mock.recorder = &MockCloudKMSCryptoKeyVersionIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockCloudKMSCryptoKeyVersionIterator) EXPECT() *MockCloudKMSCryptoKeyVersionIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockCloudKMSCryptoKeyVersionIterator) Next() (*kmspb.CryptoKeyVersion, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*kmspb.CryptoKeyVersion)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockCloudKMSCryptoKeyVersionIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockCloudKMSCryptoKeyVersionIterator)(nil).Next))
+}
+
+// MockCloudKMSCryptoKeyVersionClient is a mock of CloudKMSCryptoKeyVersionClient interface.
+type MockCloudKMSCryptoKeyVersionClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockCloudKMSCryptoKeyVersionClientMockRecorder
+	isgomock struct{}
+}
+
+// MockCloudKMSCryptoKeyVersionClientMockRecorder is the mock recorder for MockCloudKMSCryptoKeyVersionClient.
+type MockCloudKMSCryptoKeyVersionClientMockRecorder struct {
+	mock *MockCloudKMSCryptoKeyVersionClient
+}
+
+// NewMockCloudKMSCryptoKeyVersionClient creates a new mock instance.
+func NewMockCloudKMSCryptoKeyVersionClient(ctrl *gomock.Controller) *MockCloudKMSCryptoKeyVersionClient {
+	mock := &MockCloudKMSCryptoKeyVersionClient{ctrl: ctrl}
+	mock.recorder = &MockCloudKMSCryptoKeyVersionClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockCloudKMSCryptoKeyVersionClient) EXPECT() *MockCloudKMSCryptoKeyVersionClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockCloudKMSCryptoKeyVersionClient) Get(ctx context.Context, req *kmspb.GetCryptoKeyVersionRequest, opts ...gax.CallOption) (*kmspb.CryptoKeyVersion, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*kmspb.CryptoKeyVersion)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockCloudKMSCryptoKeyVersionClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockCloudKMSCryptoKeyVersionClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockCloudKMSCryptoKeyVersionClient) List(ctx context.Context, req *kmspb.ListCryptoKeyVersionsRequest, opts ...gax.CallOption) shared.CloudKMSCryptoKeyVersionIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.CloudKMSCryptoKeyVersionIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockCloudKMSCryptoKeyVersionClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockCloudKMSCryptoKeyVersionClient)(nil).List), varargs...)
 }

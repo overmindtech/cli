@@ -5,34 +5,6 @@ import (
 	"strings"
 )
 
-// ExtractRegion extracts the region from a given string.
-// Expected format: "projects/{project}/regions/{region}"
-// I.e., "https://www.googleapis.com/compute/v1/projects/project-test/regions/us-central1/subnetworks/default"
-func ExtractRegion(input string) string {
-	parts := strings.Split(input, "/")
-	for i, part := range parts {
-		if part == "regions" && len(parts) >= i+1 {
-			return parts[i+1]
-		}
-	}
-
-	return "" // Return empty string if "regions" not found
-}
-
-// ExtractZone extracts the zone from a given string.
-// Expected format: "projects/{project}/zones/{zone}"
-// I.e., "https://www.googleapis.com/compute/v1/projects/project-test/zones/us-central1-c/disks/integration-test-instance"
-func ExtractZone(input string) string {
-	parts := strings.Split(input, "/")
-	for i, part := range parts {
-		if part == "zones" && len(parts) >= i+1 {
-			return parts[i+1]
-		}
-	}
-
-	return "" // Return empty string if "zones" not found
-}
-
 // RegionalScope constructs a regional scope string from project ID and region.
 func RegionalScope(projectID, region string) string {
 	return fmt.Sprintf("%s.%s", projectID, region)
@@ -54,6 +26,19 @@ func LastPathComponent(url string) string {
 	for i := len(parts) - 1; i >= 0; i-- {
 		if parts[i] != "" {
 			return parts[i]
+		}
+	}
+	return ""
+}
+
+// ExtractPathParam extracts the value following a given key from a GCP resource name.
+// For example, for input="projects/my-proj/locations/global/keyRings/my-kr/cryptoKeys/my-key"
+// and key="cryptoKeys", it will return "my-key".
+func ExtractPathParam(key, input string) string {
+	parts := strings.Split(input, "/")
+	for i, part := range parts {
+		if part == key && len(parts) > i+1 {
+			return parts[i+1]
 		}
 	}
 	return ""

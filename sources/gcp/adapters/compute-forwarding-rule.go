@@ -157,7 +157,7 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(rule *co
 		if strings.Contains(rule.GetBackendService(), "/") {
 			backendServiceNameParts := strings.Split(rule.GetBackendService(), "/")
 			backendServiceName := backendServiceNameParts[len(backendServiceNameParts)-1]
-			region := gcpshared.ExtractRegion(rule.GetBackendService())
+			region := gcpshared.ExtractPathParam("regions", rule.GetBackendService())
 			if region != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
@@ -219,7 +219,7 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(rule *co
 		if strings.Contains(subnetwork, "/") {
 			subnetworkNameParts := strings.Split(subnetwork, "/")
 			subnetworkName := subnetworkNameParts[len(subnetworkNameParts)-1]
-			region := gcpshared.ExtractRegion(subnetwork)
+			region := gcpshared.ExtractPathParam("regions", subnetwork)
 			if region != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{

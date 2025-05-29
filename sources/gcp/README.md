@@ -59,6 +59,8 @@ func NewComputeInstance(client gcpshared.ComputeInstanceClient, projectID, zone 
 
 ## Linked Item Queries
 
+### Simple Queries for the Same API
+
 When defining a relation between two adapters, we need to answer the following questions:
 - What is the type of the related item?
 - What is the method to use to get the related item?: `sdp.QueryMethod_GET`, `sdp.QueryMethod_SEARCH`, `sdp.QueryMethod_LIST`
@@ -87,3 +89,19 @@ In the following example, we define a relation between the `ComputeInstance` and
     },
 }
 ```
+
+### Composite Queries for Different APIs
+
+When the related item is not in the same API as the adapter, we need to investigate how to get the related item.
+In the case of creating a link to a crypto key version, first we need to find the [relevant API](https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings.cryptoKeys.cryptoKeyVersions/get?rep_location=global#path-parameters).
+It gives us the GET method to use, the `https://cloudkms.googleapis.com/v1/{name=projects/*/locations/*/keyRings/*/cryptoKeys/*/cryptoKeyVersions/*}`.
+
+Now, we need to decide how the linked item will look like:
+- API: `cloudkms`, first item of the domain after `https://` and before `googleapis.com`.
+- Name: `cryptoKeyVersion`, which is the single version of the identifier for the resource.
+- Scope: `Project` level. Because the `locations` in the url can be a region or zone, so it will be dynamically required from the query.
+
+Putting together all this information:
+- Linked Item Type: `CloudKMSCryptoKeyVersion.String()`: assuming that we defined this type in its own file for future.
+- Linked Item Query: What we need to construct the full URL? ProjectID will come from the scope. We need to pass: `location`, `keyring`, `cryptoKey` and `cryptoKeyVersion`. So we need a helper function to extract these information and compose a query by constructing a string simply joining all these variables by our default query separator `|`. We can use the helper function from shared: `shared.CompositeLookupKey(location, keyring, cryptoKey, cryptoKeyVersion)`.
+- Linked Item Scope: Project level, because the adapter for this type will have a project level scope.

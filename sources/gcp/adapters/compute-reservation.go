@@ -137,7 +137,7 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *c
 	if commitmentURL := reservation.GetCommitment(); commitmentURL != "" {
 		commitmentName := gcpshared.LastPathComponent(commitmentURL)
 		if commitmentName != "" {
-			region := gcpshared.ExtractRegion(commitmentURL)
+			region := gcpshared.ExtractPathParam("regions", commitmentURL)
 			if region != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
@@ -167,7 +167,7 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *c
 		if machineType := reservation.GetSpecificReservation().GetInstanceProperties().GetMachineType(); machineType != "" {
 			machineTypeName := gcpshared.LastPathComponent(machineType)
 			if machineTypeName != "" {
-				zone := gcpshared.ExtractZone(machineType)
+				zone := gcpshared.ExtractPathParam("zones", machineType)
 				if zone != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
@@ -197,7 +197,7 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *c
 				acceleratorType := accelerator.GetAcceleratorType()
 				acceleratorName := gcpshared.LastPathComponent(acceleratorType)
 				if acceleratorName != "" {
-					zone := gcpshared.ExtractZone(acceleratorType)
+					zone := gcpshared.ExtractPathParam("zones", acceleratorType)
 					if zone != "" {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
@@ -228,7 +228,7 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *c
 			if policyURL != "" {
 				policyName := gcpshared.LastPathComponent(policyURL)
 				if policyName != "" {
-					region := gcpshared.ExtractRegion(policyURL)
+					region := gcpshared.ExtractPathParam("regions", policyURL)
 					if region != "" {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{

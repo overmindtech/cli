@@ -184,7 +184,7 @@ func (c computeNodeGroupWrapper) gcpComputeNodeGroupToSDPItem(nodegroup *compute
 	if templateUrl != "" {
 		// https://www.googleapis.com/compute/v1/projects/{project}/regions/{region}/nodeTemplates/{name}
 
-		region := gcpshared.ExtractRegion(templateUrl)
+		region := gcpshared.ExtractPathParam("regions", templateUrl)
 		name := gcpshared.LastPathComponent(templateUrl)
 
 		if region != "" && name != "" {

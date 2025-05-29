@@ -163,7 +163,7 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(address *computepb.Add
 		if strings.Contains(subnetwork, "/") {
 			subnetworkNameParts := strings.Split(subnetwork, "/")
 			subnetworkName := subnetworkNameParts[len(subnetworkNameParts)-1]
-			region := gcpshared.ExtractRegion(subnetwork)
+			region := gcpshared.ExtractPathParam("regions", subnetwork)
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   ComputeSubnetwork.String(),

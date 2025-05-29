@@ -145,7 +145,7 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ins
 	//Deleting an instance template also doesn't not delete the IGM.
 	if instanceTemplate := instanceGroupManager.GetInstanceTemplate(); instanceTemplate != "" {
 		instanceTemplateName := gcpshared.LastPathComponent(instanceTemplate)
-		region := gcpshared.ExtractRegion(instanceTemplate)
+		region := gcpshared.ExtractPathParam("regions", instanceTemplate)
 		//Set type as ComputeRegionInstanceTemplate if this is a regional template
 		if region != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -173,7 +173,7 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ins
 
 	if group := instanceGroupManager.GetInstanceGroup(); group != "" {
 		instanceGroupName := gcpshared.LastPathComponent(group)
-		zone := gcpshared.ExtractZone(group)
+		zone := gcpshared.ExtractPathParam("zones", group)
 		if zone != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
@@ -189,7 +189,7 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ins
 
 	for _, targetPool := range instanceGroupManager.GetTargetPools() {
 		targetPoolName := gcpshared.LastPathComponent(targetPool)
-		region := gcpshared.ExtractRegion(targetPool)
+		region := gcpshared.ExtractPathParam("regions", targetPool)
 		if region != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
@@ -228,7 +228,7 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ins
 	if status := instanceGroupManager.GetStatus(); status != nil {
 		if autoscalerURL := status.GetAutoscaler(); autoscalerURL != "" {
 			autoscalerName := gcpshared.LastPathComponent(autoscalerURL)
-			zone := gcpshared.ExtractZone(autoscalerURL)
+			zone := gcpshared.ExtractPathParam("zones", autoscalerURL)
 			if autoscalerName != "" && zone != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{

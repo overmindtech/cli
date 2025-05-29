@@ -17,7 +17,6 @@ import (
 
 var (
 	ComputeInstance   = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Instance)
-	ComputeDisk       = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Disk)
 	ComputeSubnetwork = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Subnetwork)
 	ComputeNetwork    = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Network)
 
@@ -150,7 +149,7 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(instance *computepb.
 			if strings.Contains(disk.GetSource(), "/") {
 				diskNameParts := strings.Split(disk.GetSource(), "/")
 				diskName := diskNameParts[len(diskNameParts)-1]
-				zone := gcpshared.ExtractZone(disk.GetSource())
+				zone := gcpshared.ExtractPathParam("zones", disk.GetSource())
 				if zone != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
@@ -215,7 +214,7 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(instance *computepb.
 				if strings.Contains(subnetwork, "/") {
 					subnetworkNameParts := strings.Split(subnetwork, "/")
 					subnetworkName := subnetworkNameParts[len(subnetworkNameParts)-1]
-					region := gcpshared.ExtractRegion(subnetwork)
+					region := gcpshared.ExtractPathParam("regions", subnetwork)
 					if region != "" {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{

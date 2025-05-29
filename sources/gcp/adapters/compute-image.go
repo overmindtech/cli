@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	ComputeImage = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, "image")
+	ComputeImage = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Image)
 
 	ComputeImageLookupByName = shared.NewItemTypeLookup("name", ComputeImage)
 )

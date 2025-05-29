@@ -12,6 +12,7 @@ const (
 	Container       shared.API = "container"
 	NetworkSecurity shared.API = "network-security"
 	NetworkServices shared.API = "network-services"
+	CloudKMS        shared.API = "cloud-kms"
 )
 
 // Resources
@@ -44,4 +45,10 @@ const (
 	AcceleratorType          shared.Resource = "accelerator-type"
 	Rule                     shared.Resource = "security-policy-rule"
 	InstantSnapshot          shared.Resource = "instant-snapshot"
+	Image                    shared.Resource = "image"
+	User                     shared.Resource = "user"
+	SourceDisk               shared.Resource = "source-disk"
+	CryptoKeyVersion         shared.Resource = "crypto-key-version"
+	Snapshot                 shared.Resource = "snapshot"
+	DiskType                 shared.Resource = "disk-type"
 )

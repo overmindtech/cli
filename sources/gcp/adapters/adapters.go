@@ -75,6 +75,11 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		return nil, err
 	}
 
+	diskCli, err := compute.NewDisksRESTClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	var adapters []discovery.Adapter
 
 	for _, region := range regions {
@@ -92,6 +97,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 			sources.WrapperToAdapter(NewComputeInstanceGroupManager(shared.NewComputeInstanceGroupManagerClient(instanceGroupManagerCli), projectID, zone)),
 			sources.WrapperToAdapter(NewComputeReservation(shared.NewComputeReservationClient(computeReservationCli), projectID, zone)),
 			sources.WrapperToAdapter(NewComputeInstantSnapshot(shared.NewComputeInstantSnapshotsClient(computeInstantSnapshotCli), projectID, zone)),
+			sources.WrapperToAdapter(NewComputeDisk(shared.NewComputeDiskClient(diskCli), projectID, zone)),
 		)
 	}
 

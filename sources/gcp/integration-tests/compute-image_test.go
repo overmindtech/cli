@@ -187,32 +187,3 @@ func createComputeImage(ctx context.Context, client *compute.ImagesClient, proje
 	log.Printf("Image %s created successfully in project %s", imageName, projectID)
 	return nil
 }
-
-func createDisk(ctx context.Context, client *compute.DisksClient, projectID, zone, diskName string) error {
-	disk := &computepb.Disk{
-		Name:   ptr.To(diskName),
-		SizeGb: ptr.To(int64(10)),
-		Type: ptr.To(fmt.Sprintf(
-			"projects/%s/zones/%s/diskTypes/pd-standard",
-			projectID, zone,
-		)),
-	}
-
-	req := &computepb.InsertDiskRequest{
-		Project:      projectID,
-		Zone:         zone,
-		DiskResource: disk,
-	}
-
-	op, err := client.Insert(ctx, req)
-	if err != nil {
-		return fmt.Errorf("Failed to create disk: %w", err)
-	}
-
-	if err := op.Wait(ctx); err != nil {
-		return fmt.Errorf("Failed to wait for disk creation operation: %w", err)
-	}
-
-	log.Printf("Disk %s created successfully in project %s, zone %s", diskName, projectID, zone)
-	return nil
-}
