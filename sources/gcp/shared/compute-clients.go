@@ -481,6 +481,38 @@ func (c computeDiskClient) List(ctx context.Context, req *computepb.ListDisksReq
 	return c.client.List(ctx, req, opts...)
 }
 
+// ComputeMachineImageIterator is an interface for iterating over compute machine images
+type ComputeMachineImageIterator interface {
+	Next() (*computepb.MachineImage, error)
+}
+
+// ComputeMachineImageClient is an interface for the Compute Engine Machine Images client
+type ComputeMachineImageClient interface {
+	Get(ctx context.Context, req *computepb.GetMachineImageRequest, opts ...gax.CallOption) (*computepb.MachineImage, error)
+	List(ctx context.Context, req *computepb.ListMachineImagesRequest, opts ...gax.CallOption) ComputeMachineImageIterator
+}
+
+type computeMachineImageClient struct {
+	client *compute.MachineImagesClient
+}
+
+// NewComputeMachineImageClient creates a new ComputeMachineImageClient
+func NewComputeMachineImageClient(machineImageClient *compute.MachineImagesClient) ComputeMachineImageClient {
+	return &computeMachineImageClient{
+		client: machineImageClient,
+	}
+}
+
+// Get retrieves a compute machine image
+func (c computeMachineImageClient) Get(ctx context.Context, req *computepb.GetMachineImageRequest, opts ...gax.CallOption) (*computepb.MachineImage, error) {
+	return c.client.Get(ctx, req, opts...)
+}
+
+// List lists compute machine images and returns an iterator
+func (c computeMachineImageClient) List(ctx context.Context, req *computepb.ListMachineImagesRequest, opts ...gax.CallOption) ComputeMachineImageIterator {
+	return c.client.List(ctx, req, opts...)
+}
+
 // CloudKMSCryptoKeyVersionIterator is an interface for iterating over Cloud KMS CryptoKeyVersions
 type CloudKMSCryptoKeyVersionIterator interface {
 	Next() (*kmspb.CryptoKeyVersion, error)

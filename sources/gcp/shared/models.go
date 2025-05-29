@@ -51,4 +51,5 @@ const (
 	CryptoKeyVersion         shared.Resource = "crypto-key-version"
 	Snapshot                 shared.Resource = "snapshot"
 	DiskType                 shared.Resource = "disk-type"
+	MachineImage             shared.Resource = "machine-image"
 )

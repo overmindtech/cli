@@ -41,7 +41,7 @@ func TestComputeInstanceIntegration(t *testing.T) {
 	defer client.Close()
 
 	t.Run("Setup", func(t *testing.T) {
-		err := createComputeInstance(ctx, client, projectID, zone, instanceName)
+		err := createComputeInstance(ctx, client, projectID, zone, instanceName, "", "", "")
 		if err != nil {
 			t.Fatalf("Failed to create compute instance: %v", err)
 		}
@@ -117,7 +117,20 @@ func TestComputeInstanceIntegration(t *testing.T) {
 }
 
 // createComputeInstance creates a GCP Compute Instance with the given parameters.
-func createComputeInstance(ctx context.Context, client *compute.InstancesClient, projectID, zone, instanceName string) error {
+// If network or subnetwork is an empty string, it defaults to the project's default network configuration.
+func createComputeInstance(ctx context.Context, client *compute.InstancesClient, projectID, zone, instanceName, network, subnetwork, region string) error {
+	// Construct the network interface
+	networkInterface := &computepb.NetworkInterface{
+		StackType: ptr.To("IPV4_ONLY"),
+	}
+
+	if network != "" {
+		networkInterface.Network = ptr.To(fmt.Sprintf("projects/%s/global/networks/%s", projectID, network))
+	}
+	if subnetwork != "" {
+		networkInterface.Subnetwork = ptr.To(fmt.Sprintf("projects/%s/regions/%s/subnetworks/%s", projectID, region, subnetwork))
+	}
+
 	// Define the instance configuration
 	instance := &computepb.Instance{
 		Name:        ptr.To(instanceName),
@@ -132,12 +145,7 @@ func createComputeInstance(ctx context.Context, client *compute.InstancesClient,
 				},
 			},
 		},
-		NetworkInterfaces: []*computepb.NetworkInterface{
-			{
-				StackType: ptr.To("IPV4_ONLY"),
-				//Subnetwork: ptr.To("default"),
-			},
-		},
+		NetworkInterfaces: []*computepb.NetworkInterface{networkInterface},
 		Labels: map[string]string{
 			"test": "integration",
 		},

@@ -1550,6 +1550,108 @@ func (mr *MockComputeDiskClientMockRecorder) List(ctx, req any, opts ...any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeDiskClient)(nil).List), varargs...)
 }
 
+// MockComputeMachineImageIterator is a mock of ComputeMachineImageIterator interface.
+type MockComputeMachineImageIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeMachineImageIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeMachineImageIteratorMockRecorder is the mock recorder for MockComputeMachineImageIterator.
+type MockComputeMachineImageIteratorMockRecorder struct {
+	mock *MockComputeMachineImageIterator
+}
+
+// NewMockComputeMachineImageIterator creates a new mock instance.
+func NewMockComputeMachineImageIterator(ctrl *gomock.Controller) *MockComputeMachineImageIterator {
+	mock := &MockComputeMachineImageIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeMachineImageIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeMachineImageIterator) EXPECT() *MockComputeMachineImageIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeMachineImageIterator) Next() (*computepb.MachineImage, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.MachineImage)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeMachineImageIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeMachineImageIterator)(nil).Next))
+}
+
+// MockComputeMachineImageClient is a mock of ComputeMachineImageClient interface.
+type MockComputeMachineImageClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeMachineImageClientMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeMachineImageClientMockRecorder is the mock recorder for MockComputeMachineImageClient.
+type MockComputeMachineImageClientMockRecorder struct {
+	mock *MockComputeMachineImageClient
+}
+
+// NewMockComputeMachineImageClient creates a new mock instance.
+func NewMockComputeMachineImageClient(ctrl *gomock.Controller) *MockComputeMachineImageClient {
+	mock := &MockComputeMachineImageClient{ctrl: ctrl}
+	mock.recorder = &MockComputeMachineImageClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeMachineImageClient) EXPECT() *MockComputeMachineImageClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockComputeMachineImageClient) Get(ctx context.Context, req *computepb.GetMachineImageRequest, opts ...gax.CallOption) (*computepb.MachineImage, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*computepb.MachineImage)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockComputeMachineImageClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeMachineImageClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockComputeMachineImageClient) List(ctx context.Context, req *computepb.ListMachineImagesRequest, opts ...gax.CallOption) shared.ComputeMachineImageIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.ComputeMachineImageIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockComputeMachineImageClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeMachineImageClient)(nil).List), varargs...)
+}
+
 // MockCloudKMSCryptoKeyVersionIterator is a mock of CloudKMSCryptoKeyVersionIterator interface.
 type MockCloudKMSCryptoKeyVersionIterator struct {
 	ctrl     *gomock.Controller
