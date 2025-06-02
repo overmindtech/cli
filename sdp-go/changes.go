@@ -88,14 +88,6 @@ func (x *ListChangingItemsSummaryRequest) GetChangeUUIDParsed() *uuid.UUID {
 	return &u
 }
 
-func (x *UpdatePlannedChangesRequest) GetChangeUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(x.GetChangeUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
 func (x *StartChangeRequest) GetChangeUUIDParsed() *uuid.UUID {
 	u, err := uuid.FromBytes(x.GetChangeUUID())
 	if err != nil {
@@ -271,21 +263,6 @@ func (m *ChangeAnalysisStatus_ProgressMilestone) ToMap() map[string]any {
 	return map[string]any{
 		"description": m.GetDescription(),
 		"status":      m.GetStatus().String(),
-	}
-}
-
-func (s UpdatePlannedChangesResponse_State) ToMessage() string {
-	switch s {
-	case UpdatePlannedChangesResponse_STATE_UNSPECIFIED:
-		return "unknown"
-	case UpdatePlannedChangesResponse_STATE_DISCOVERING:
-		return "The blast radius is being calculated"
-	case UpdatePlannedChangesResponse_STATE_SAVING:
-		return "The blast radius has been calculated and is being saved"
-	case UpdatePlannedChangesResponse_STATE_DONE:
-		return "The blast radius calculation is complete"
-	default:
-		return "unknown"
 	}
 }
 
