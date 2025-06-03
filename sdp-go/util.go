@@ -162,6 +162,9 @@ func RenderItemDiff(gun string, before, after map[string]any, changeData, rawDat
 			v := attrs[k]
 			slices.Sort(v)
 			v = slices.Compact(v)
+			if len(v) > 3 {
+				v = v[:3] // Only show the first 3 values
+			}
 			for i, val := range v {
 				val = strings.ReplaceAll(val, "\n", " ")
 				val = strings.ReplaceAll(val, "\t", " ")
