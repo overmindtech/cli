@@ -13,6 +13,7 @@ const (
 	ChangeTimelineEntryV2NameCalculatedBlastRadius ChangeTimelineEntryV2Name = "Calculated Blast Radius"
 	ChangeTimelineEntryV2NameCalculatedRisks       ChangeTimelineEntryV2Name = "Calculated Risks"
 	ChangeTimelineEntryV2NameAutoTagging           ChangeTimelineEntryV2Name = "Auto Tagging"
+	ChangeTimelineEntryV2NameChangeValidation      ChangeTimelineEntryV2Name = "Change Validation"
 	ChangeTimelineEntryV2NameChangeStarted         ChangeTimelineEntryV2Name = "Change Started"
 	ChangeTimelineEntryV2NameChangeFinished        ChangeTimelineEntryV2Name = "Change Finished"
 )
