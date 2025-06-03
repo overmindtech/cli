@@ -12,7 +12,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/sources"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -50,7 +50,7 @@ func TestComputeInstanceIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Instance in project %s, zone %s", projectID, zone)
 
-		instanceWrapper := adapters.NewComputeInstance(gcpshared.NewComputeInstanceClient(client), projectID, zone)
+		instanceWrapper := manual.NewComputeInstance(gcpshared.NewComputeInstanceClient(client), projectID, zone)
 		scope := instanceWrapper.Scopes()[0]
 
 		instanceAdapter := sources.WrapperToAdapter(instanceWrapper)

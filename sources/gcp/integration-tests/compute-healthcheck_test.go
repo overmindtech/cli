@@ -14,7 +14,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/sources"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -45,7 +45,7 @@ func TestComputeHealthCheckIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute HealthCheck in project %s", projectID)
 
-		healthCheckWrapper := adapters.NewComputeHealthCheck(gcpshared.NewComputeHealthCheckClient(client), projectID)
+		healthCheckWrapper := manual.NewComputeHealthCheck(gcpshared.NewComputeHealthCheckClient(client), projectID)
 		scope := healthCheckWrapper.Scopes()[0]
 
 		healthCheckAdapter := sources.WrapperToAdapter(healthCheckWrapper)

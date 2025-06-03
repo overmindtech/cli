@@ -12,7 +12,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/sources"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -48,7 +48,7 @@ func TestComputeDisksIntegration(t *testing.T) {
 	t.Run("ListDisks", func(t *testing.T) {
 		log.Printf("Listing disks in project %s, zone %s", projectID, zone)
 
-		disksWrapper := adapters.NewComputeDisk(gcpshared.NewComputeDiskClient(diskClient), projectID, zone)
+		disksWrapper := manual.NewComputeDisk(gcpshared.NewComputeDiskClient(diskClient), projectID, zone)
 		scope := disksWrapper.Scopes()[0]
 
 		disksAdapter := sources.WrapperToAdapter(disksWrapper)
@@ -80,7 +80,7 @@ func TestComputeDisksIntegration(t *testing.T) {
 	t.Run("GetDisk", func(t *testing.T) {
 		log.Printf("Retrieving disk %s in project %s, zone %s", diskName, projectID, zone)
 
-		disksWrapper := adapters.NewComputeDisk(gcpshared.NewComputeDiskClient(diskClient), projectID, zone)
+		disksWrapper := manual.NewComputeDisk(gcpshared.NewComputeDiskClient(diskClient), projectID, zone)
 		scope := disksWrapper.Scopes()[0]
 
 		disksAdapter := sources.WrapperToAdapter(disksWrapper)

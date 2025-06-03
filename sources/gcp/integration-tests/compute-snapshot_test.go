@@ -12,7 +12,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/sources"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -60,7 +60,7 @@ func TestComputeSnapshotsIntegration(t *testing.T) {
 	t.Run("ListSnapshots", func(t *testing.T) {
 		log.Printf("Listing snapshots in project %s", projectID)
 
-		snapshotsWrapper := adapters.NewComputeSnapshot(gcpshared.NewComputeSnapshotsClient(client), projectID)
+		snapshotsWrapper := manual.NewComputeSnapshot(gcpshared.NewComputeSnapshotsClient(client), projectID)
 		scope := snapshotsWrapper.Scopes()[0]
 
 		snapshotsAdapter := sources.WrapperToAdapter(snapshotsWrapper)
@@ -92,7 +92,7 @@ func TestComputeSnapshotsIntegration(t *testing.T) {
 	t.Run("GetSnapshot", func(t *testing.T) {
 		log.Printf("Retrieving snapshot %s in project %s", snapshotName, projectID)
 
-		snapshotsWrapper := adapters.NewComputeSnapshot(gcpshared.NewComputeSnapshotsClient(client), projectID)
+		snapshotsWrapper := manual.NewComputeSnapshot(gcpshared.NewComputeSnapshotsClient(client), projectID)
 		scope := snapshotsWrapper.Scopes()[0]
 
 		snapshotsAdapter := sources.WrapperToAdapter(snapshotsWrapper)

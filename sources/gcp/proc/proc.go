@@ -9,7 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 )
 
 func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Engine, error) {
@@ -29,7 +29,7 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 		"zones":      l.Zones,
 	}).Info("Got locations")
 
-	adapters, err := adapters.Adapters(ctx, l.ProjectID, l.Regions, l.Zones)
+	adapters, err := manual.Adapters(ctx, l.ProjectID, l.Regions, l.Zones)
 	if err != nil {
 		return nil, fmt.Errorf("error creating adapters: %w", err)
 	}

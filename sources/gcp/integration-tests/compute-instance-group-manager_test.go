@@ -12,7 +12,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/sources"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -59,7 +59,7 @@ func TestComputeInstanceGroupManagerIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Instance Group Manager in project %s, zone %s", projectID, zone)
 
-		instanceGroupManagerWrapper := adapters.NewComputeInstanceGroupManager(gcpshared.NewComputeInstanceGroupManagerClient(instanceGroupManagerClient), projectID, zone)
+		instanceGroupManagerWrapper := manual.NewComputeInstanceGroupManager(gcpshared.NewComputeInstanceGroupManagerClient(instanceGroupManagerClient), projectID, zone)
 		scope := instanceGroupManagerWrapper.Scopes()[0]
 
 		instanceGroupManagerAdapter := sources.WrapperToAdapter(instanceGroupManagerWrapper)
@@ -89,8 +89,8 @@ func TestComputeInstanceGroupManagerIntegration(t *testing.T) {
 
 			// [SPEC] Ensure Instance Template is present
 			linkedItem := sdpItem.GetLinkedItemQueries()[0]
-			if linkedItem.GetQuery().GetType() != adapters.ComputeInstanceTemplate.String() {
-				t.Fatalf("Expected linked item type to be %s, got: %s", adapters.ComputeInstanceTemplate, linkedItem.GetQuery().GetType())
+			if linkedItem.GetQuery().GetType() != manual.ComputeInstanceTemplate.String() {
+				t.Fatalf("Expected linked item type to be %s, got: %s", manual.ComputeInstanceTemplate, linkedItem.GetQuery().GetType())
 			}
 
 			if linkedItem.GetQuery().GetQuery() != templateName {

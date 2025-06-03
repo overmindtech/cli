@@ -16,7 +16,7 @@ import (
 
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -75,7 +75,7 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 	t.Run("Test for Node Group", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Node Group in project %s, zone %s", projectID, zone)
 
-		nodeGroupWrapper := adapters.NewComputeNodeGroup(gcpshared.NewComputeNodeGroupClient(client), projectID, zone)
+		nodeGroupWrapper := manual.NewComputeNodeGroup(gcpshared.NewComputeNodeGroupClient(client), projectID, zone)
 		scope := nodeGroupWrapper.Scopes()[0]
 
 		nodeGroupAdapter := sources.WrapperToAdapter(nodeGroupWrapper)
@@ -109,8 +109,8 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 			}
 
 			linkedItem := sdpItem.GetLinkedItemQueries()[0]
-			if linkedItem.GetQuery().GetType() != adapters.ComputeNodeTemplate.String() {
-				t.Fatalf("Expected linked item type to be %s, got: %s", adapters.ComputeNodeTemplate.String(), linkedItem.GetQuery().GetType())
+			if linkedItem.GetQuery().GetType() != manual.ComputeNodeTemplate.String() {
+				t.Fatalf("Expected linked item type to be %s, got: %s", manual.ComputeNodeTemplate.String(), linkedItem.GetQuery().GetType())
 			}
 
 			if linkedItem.GetQuery().GetQuery() != nodeTemplateName {
@@ -151,7 +151,7 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 	t.Run("Test for Node Template", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Node Template in project %s, zone %s", projectID, zone)
 
-		nodeTemplateWrapper := adapters.NewComputeNodeTemplate(gcpshared.NewComputeNodeTemplateClient(ntClient), projectID, region)
+		nodeTemplateWrapper := manual.NewComputeNodeTemplate(gcpshared.NewComputeNodeTemplateClient(ntClient), projectID, region)
 		scope := nodeTemplateWrapper.Scopes()[0]
 
 		nodeTemplateAdapter := sources.WrapperToAdapter(nodeTemplateWrapper)
@@ -189,7 +189,7 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   adapters.ComputeNodeGroup.String(),
+					ExpectedType:   manual.ComputeNodeGroup.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  nodeTemplateName,
 					ExpectedScope:  "*",
@@ -203,8 +203,8 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 			shared.RunStaticTests(t, nodeTemplateAdapter, sdpItem, queryTests)
 
 			linkedItem := sdpItem.GetLinkedItemQueries()[0]
-			if linkedItem.GetQuery().GetType() != adapters.ComputeNodeGroup.String() {
-				t.Fatalf("Expected linked item type to be %s, got: %s", adapters.ComputeNodeGroup.String(), linkedItem.GetQuery().GetType())
+			if linkedItem.GetQuery().GetType() != manual.ComputeNodeGroup.String() {
+				t.Fatalf("Expected linked item type to be %s, got: %s", manual.ComputeNodeGroup.String(), linkedItem.GetQuery().GetType())
 			}
 
 			if linkedItem.GetQuery().GetQuery() != nodeTemplateName {

@@ -12,7 +12,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/sources"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -48,7 +48,7 @@ func TestComputeInstanceGroupsIntegration(t *testing.T) {
 	t.Run("ListInstanceGroups", func(t *testing.T) {
 		log.Printf("Listing instance groups in project %s, zone %s", projectID, zone)
 
-		instanceGroupWrapper := adapters.NewComputeInstanceGroup(gcpshared.NewComputeInstanceGroupsClient(client), projectID, zone)
+		instanceGroupWrapper := manual.NewComputeInstanceGroup(gcpshared.NewComputeInstanceGroupsClient(client), projectID, zone)
 		scope := instanceGroupWrapper.Scopes()[0]
 
 		adapter := sources.WrapperToAdapter(instanceGroupWrapper)
@@ -81,7 +81,7 @@ func TestComputeInstanceGroupsIntegration(t *testing.T) {
 	t.Run("GetInstanceGroup", func(t *testing.T) {
 		log.Printf("Retrieving instance group %s in project %s, zone %s", instanceGroupName, projectID, zone)
 
-		instanceGroupWrapper := adapters.NewComputeInstanceGroup(gcpshared.NewComputeInstanceGroupsClient(client), projectID, zone)
+		instanceGroupWrapper := manual.NewComputeInstanceGroup(gcpshared.NewComputeInstanceGroupsClient(client), projectID, zone)
 		scope := instanceGroupWrapper.Scopes()[0]
 
 		adapter := sources.WrapperToAdapter(instanceGroupWrapper)

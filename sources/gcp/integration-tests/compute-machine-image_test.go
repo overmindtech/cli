@@ -12,7 +12,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/sources"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -65,7 +65,7 @@ func TestComputeMachineImagesIntegration(t *testing.T) {
 	t.Run("ListMachineImages", func(t *testing.T) {
 		log.Printf("Listing machine images in project %s", projectID)
 
-		machineImagesWrapper := adapters.NewComputeMachineImage(gcpshared.NewComputeMachineImageClient(client), projectID)
+		machineImagesWrapper := manual.NewComputeMachineImage(gcpshared.NewComputeMachineImageClient(client), projectID)
 		scope := machineImagesWrapper.Scopes()[0]
 
 		machineImagesAdapter := sources.WrapperToAdapter(machineImagesWrapper)
@@ -97,7 +97,7 @@ func TestComputeMachineImagesIntegration(t *testing.T) {
 	t.Run("GetMachineImage", func(t *testing.T) {
 		log.Printf("Retrieving machine image %s in project %s", machineImageName, projectID)
 
-		machineImagesWrapper := adapters.NewComputeMachineImage(gcpshared.NewComputeMachineImageClient(client), projectID)
+		machineImagesWrapper := manual.NewComputeMachineImage(gcpshared.NewComputeMachineImageClient(client), projectID)
 		scope := machineImagesWrapper.Scopes()[0]
 
 		machineImagesAdapter := sources.WrapperToAdapter(machineImagesWrapper)

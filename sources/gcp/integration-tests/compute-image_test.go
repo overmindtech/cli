@@ -12,7 +12,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/sources"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -60,7 +60,7 @@ func TestComputeImagesIntegration(t *testing.T) {
 	t.Run("ListImages", func(t *testing.T) {
 		log.Printf("Listing images in project %s", projectID)
 
-		imagesWrapper := adapters.NewComputeImage(gcpshared.NewComputeImagesClient(client), projectID)
+		imagesWrapper := manual.NewComputeImage(gcpshared.NewComputeImagesClient(client), projectID)
 		scope := imagesWrapper.Scopes()[0]
 
 		imagesAdapter := sources.WrapperToAdapter(imagesWrapper)
@@ -92,7 +92,7 @@ func TestComputeImagesIntegration(t *testing.T) {
 	t.Run("GetImage", func(t *testing.T) {
 		log.Printf("Retrieving image %s in project %s", imageName, projectID)
 
-		imagesWrapper := adapters.NewComputeImage(gcpshared.NewComputeImagesClient(client), projectID)
+		imagesWrapper := manual.NewComputeImage(gcpshared.NewComputeImagesClient(client), projectID)
 		scope := imagesWrapper.Scopes()[0]
 
 		imagesAdapter := sources.WrapperToAdapter(imagesWrapper)

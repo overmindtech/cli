@@ -12,7 +12,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/sources"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -64,7 +64,7 @@ func TestComputeInstantSnapshotsIntegration(t *testing.T) {
 	t.Run("ListInstantSnapshots", func(t *testing.T) {
 		log.Printf("Listing instant snapshots in project %s, zone %s", projectID, zone)
 
-		snapshotsWrapper := adapters.NewComputeInstantSnapshot(gcpshared.NewComputeInstantSnapshotsClient(client), projectID, zone)
+		snapshotsWrapper := manual.NewComputeInstantSnapshot(gcpshared.NewComputeInstantSnapshotsClient(client), projectID, zone)
 		scope := snapshotsWrapper.Scopes()[0]
 
 		snapshotsAdapter := sources.WrapperToAdapter(snapshotsWrapper)
@@ -96,7 +96,7 @@ func TestComputeInstantSnapshotsIntegration(t *testing.T) {
 	t.Run("GetInstantSnapshot", func(t *testing.T) {
 		log.Printf("Retrieving instant snapshot %s in project %s, zone %s", snapshotName, projectID, zone)
 
-		snapshotsWrapper := adapters.NewComputeInstantSnapshot(gcpshared.NewComputeInstantSnapshotsClient(client), projectID, zone)
+		snapshotsWrapper := manual.NewComputeInstantSnapshot(gcpshared.NewComputeInstantSnapshotsClient(client), projectID, zone)
 		scope := snapshotsWrapper.Scopes()[0]
 
 		snapshotsAdapter := sources.WrapperToAdapter(snapshotsWrapper)
@@ -127,8 +127,8 @@ func TestComputeInstantSnapshotsIntegration(t *testing.T) {
 
 			// [SPEC] Ensure Source Disk is linked
 			linkedItem := sdpItem.GetLinkedItemQueries()[0]
-			if linkedItem.GetQuery().GetType() != adapters.ComputeDisk.String() {
-				t.Fatalf("Expected linked item type to be %s, got: %s", adapters.ComputeDisk, linkedItem.GetQuery().GetType())
+			if linkedItem.GetQuery().GetType() != manual.ComputeDisk.String() {
+				t.Fatalf("Expected linked item type to be %s, got: %s", manual.ComputeDisk, linkedItem.GetQuery().GetType())
 			}
 
 			if linkedItem.GetQuery().GetQuery() != diskName {

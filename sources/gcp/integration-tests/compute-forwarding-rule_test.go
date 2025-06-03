@@ -11,7 +11,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/sources"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -50,7 +50,7 @@ func TestComputeForwardingRuleIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Forwarding Rule in project %s, region %s", projectID, region)
 
-		ruleWrapper := adapters.NewComputeForwardingRule(gcpshared.NewComputeForwardingRuleClient(client), projectID, region)
+		ruleWrapper := manual.NewComputeForwardingRule(gcpshared.NewComputeForwardingRuleClient(client), projectID, region)
 		scope := ruleWrapper.Scopes()[0]
 
 		ruleAdapter := sources.WrapperToAdapter(ruleWrapper)

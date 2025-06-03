@@ -14,7 +14,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/sources"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -80,7 +80,7 @@ func TestComputeAutoscalerIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Autoscaler in project %s, zone %s", projectID, zone)
 
-		autoscalerWrapper := adapters.NewComputeAutoscaler(gcpshared.NewComputeAutoscalerClient(client), projectID, zone)
+		autoscalerWrapper := manual.NewComputeAutoscaler(gcpshared.NewComputeAutoscalerClient(client), projectID, zone)
 		scope := autoscalerWrapper.Scopes()[0]
 
 		autoscalerAdapter := sources.WrapperToAdapter(autoscalerWrapper)
@@ -114,8 +114,8 @@ func TestComputeAutoscalerIntegration(t *testing.T) {
 			}
 
 			linkedItem := sdpItem.GetLinkedItemQueries()[0]
-			if linkedItem.GetQuery().GetType() != adapters.ComputeInstanceGroupManager.String() {
-				t.Fatalf("Expected linked item type to be %s, got: %s", adapters.ComputeInstanceGroupManager, linkedItem.GetQuery().GetType())
+			if linkedItem.GetQuery().GetType() != manual.ComputeInstanceGroupManager.String() {
+				t.Fatalf("Expected linked item type to be %s, got: %s", manual.ComputeInstanceGroupManager, linkedItem.GetQuery().GetType())
 			}
 
 			if linkedItem.GetQuery().GetQuery() != instanceGroupManagerName {

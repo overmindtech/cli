@@ -12,7 +12,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/sources"
-	"github.com/overmindtech/cli/sources/gcp/adapters"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	"github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -48,7 +48,7 @@ func TestComputeAddressIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Address in project %s, region %s", projectID, region)
 
-		addressWrapper := adapters.NewComputeAddress(shared.NewComputeAddressClient(client), projectID, region)
+		addressWrapper := manual.NewComputeAddress(shared.NewComputeAddressClient(client), projectID, region)
 		scope := addressWrapper.Scopes()[0]
 
 		addressAdapter := sources.WrapperToAdapter(addressWrapper)
