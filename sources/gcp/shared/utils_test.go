@@ -3,7 +3,7 @@ package shared_test
 import (
 	"testing"
 
-	"github.com/overmindtech/cli/sources/gcp/shared"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
 func TestLastPathComponent(t *testing.T) {
@@ -42,7 +42,7 @@ func TestLastPathComponent(t *testing.T) {
 	}
 
 	for _, tc := range tests {
-		actual := shared.LastPathComponent(tc.input)
+		actual := gcpshared.LastPathComponent(tc.input)
 		if actual != tc.expected {
 			t.Errorf("LastPathComponent(%q) = %q; want %q", tc.input, actual, tc.expected)
 		}
@@ -94,7 +94,7 @@ func TestIsRegion(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := shared.IsRegion(tt.input)
+			result := gcpshared.IsRegion(tt.input)
 			if result != tt.expected {
 				t.Errorf("IsRegion(%q) = %v, expected %v", tt.input, result, tt.expected)
 			}
@@ -147,7 +147,7 @@ func TestIsZone(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := shared.IsZone(tt.input)
+			result := gcpshared.IsZone(tt.input)
 			if result != tt.expected {
 				t.Errorf("IsZone(%q) = %v, expected %v", tt.input, result, tt.expected)
 			}
@@ -369,9 +369,47 @@ func TestExtractPathParam(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := shared.ExtractPathParam(tt.key, tt.input)
+			result := gcpshared.ExtractPathParam(tt.key, tt.input)
 			if result != tt.expected {
 				t.Errorf("ExtractPathParam(%q, %q) = %q; want %q", tt.input, tt.key, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestShortenSelfLink(t *testing.T) {
+	tests := []struct {
+		name     string
+		selfLink string
+		expected string
+	}{
+		{
+			name:     "Valid input",
+			selfLink: "https://www.googleapis.com/compute/v1/projects/test-project/zones/us-central1-c/instanceGroupManagers/test-igm",
+			expected: "zones/us-central1-c/instanceGroupManagers/test-igm",
+		},
+		{
+			name:     "Empty input",
+			selfLink: "",
+			expected: "",
+		},
+		{
+			name:     "Malformed input",
+			selfLink: "invalid/selfLink/format",
+			expected: "invalid/selfLink/format",
+		},
+		{
+			name:     "Short input",
+			selfLink: "https://www.googleapis.com/compute/v1/projects/test-project",
+			expected: "compute/v1/projects/test-project",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := gcpshared.ShortenSelfLink(tt.selfLink)
+			if result != tt.expected {
+				t.Errorf("ShortenSelfLink(%q) = %q, want %q", tt.selfLink, result, tt.expected)
 			}
 		})
 	}

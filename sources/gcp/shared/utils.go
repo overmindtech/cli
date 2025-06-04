@@ -57,3 +57,20 @@ func IsZone(s string) bool {
 	parts := strings.Split(s, "-")
 	return len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != ""
 }
+
+// LastSegmentsCount is the number of segments to keep when shortening a self link
+const LastSegmentsCount = 4
+
+// ShortenSelfLink shortens a given link for human readability
+// https://www.googleapis.com/compute/v1/projects/test-457614/zones/us-central1-c/instanceGroupManagers/overmind-integration-test-igm-default
+// /zones/us-central1-c/instanceGroupManagers/overmind-integration-test-igm-default
+// this is a primitive initial work
+func ShortenSelfLink(selfLink string) string {
+	parts := strings.Split(selfLink, "/")
+
+	if len(parts) < LastSegmentsCount {
+		return selfLink
+	}
+
+	return strings.Join(parts[len(parts)-LastSegmentsCount:], "/")
+}
