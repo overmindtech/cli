@@ -81,15 +81,28 @@ func (l *Linker) Link(
 		return
 	}
 
-	fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-		Query: &sdp.Query{
-			Type:   toSDPItemType.String(),
-			Method: sdp.QueryMethod_GET, // Dynamic adapters use GET method.
-			Query:  toItemGCPResourceName,
-			Scope:  projectID, // This is a dynamic adapter, so we use the project ID as the scope.
-		},
-		BlastPropagation: impact.BlastPropagation,
-	})
+	var selfLink string
+
+	if itemMeta, ok := l.AllKnownItems[toItemGCPResourceName]; ok {
+		selfLink = itemMeta.SelfLink
+	} else if strings.HasPrefix(toItemGCPResourceName, "https://") {
+		selfLink = toItemGCPResourceName
+	}
+
+	if selfLink != "" {
+		fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   toSDPItemType.String(),
+				Method: sdp.QueryMethod_GET,
+				Query:  selfLink,
+				Scope:  projectID,
+			},
+			BlastPropagation: impact.BlastPropagation,
+		})
+		return
+	}
+
+	log.WithContext(ctx).WithFields(lf).Warnf("failed to link items")
 }
 
 // AutoLink tries to find the item type of the TO item based on its GCP resource name.

@@ -154,6 +154,7 @@ func Test_isDNSName(t *testing.T) {
 
 func TestLinker_Link(t *testing.T) {
 	type fields struct {
+		allKnownItems       ItemLookup
 		blastPropagations   map[shared.ItemType]map[shared.ItemType]Impact
 		manualAdapterLinker map[shared.ItemType]func(scope, selfLink string, bp *sdp.BlastPropagation) *sdp.LinkedItemQuery
 	}
@@ -196,12 +197,18 @@ func TestLinker_Link(t *testing.T) {
 		{
 			name: "Link to a dynamic adapter",
 			fields: fields{
+				allKnownItems: ItemLookup{
+					"projects/my-project/global/networks/my-network": {
+						GCPAssetType: "compute.googleapis.com/Network",
+						SelfLink:     "https://compute.googleapis.com/compute/v1/projects/my-project/global/networks/my-network",
+					},
+				},
 				blastPropagations:   BlastPropagations,
 				manualAdapterLinker: ManualAdapterGetLinksByAssetType,
 			},
 			args: args{
 				fromSDPItemType:       ComputeInstance,
-				toItemGCPResourceName: "https://compute.googleapis.com/compute/v1/projects/my-project/global/networks/my-network",
+				toItemGCPResourceName: "projects/my-project/global/networks/my-network",
 				toSDPItemType:         ComputeNetwork, // We don't have a manual adapter for this, so it should use the dynamic adapter
 			},
 			expectLink: true,
@@ -224,6 +231,7 @@ func TestLinker_Link(t *testing.T) {
 		fromSDPItem := &sdp.Item{}
 		t.Run(tt.name, func(t *testing.T) {
 			l := &Linker{
+				AllKnownItems:       tt.fields.allKnownItems,
 				blastPropagations:   tt.fields.blastPropagations,
 				manualAdapterLinker: tt.fields.manualAdapterLinker,
 			}

@@ -9,7 +9,7 @@ import (
 
 func ZoneBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
 	return func(projectID, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
-		zone := ExtractPathParam(query, "zones")
+		zone := ExtractPathParam("zones", query)
 		name := LastPathComponent(query)
 		if projectID != "" && zone != "" && name != "" {
 			return &sdp.LinkedItemQuery{
@@ -29,7 +29,7 @@ func ZoneBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, quer
 
 func RegionBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
 	return func(projectID, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
-		region := ExtractPathParam(query, "regions")
+		region := ExtractPathParam("regions", query)
 		name := LastPathComponent(query)
 		if projectID != "" && region != "" && name != "" {
 			return &sdp.LinkedItemQuery{

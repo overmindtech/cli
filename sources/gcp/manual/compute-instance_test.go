@@ -12,6 +12,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
@@ -26,8 +27,21 @@ func TestComputeInstance(t *testing.T) {
 	projectID := "test-project-id"
 	zone := "us-central1-a"
 
+	// This map should contain the selfLinks for the linked items that we (will) have dynamic adapters for
+	// The key should be the string that we are expecting from the API response for this item.
+	allKnownItems := gcpshared.ItemLookup{
+		"global/networks/network": gcpshared.ItemTypeMeta{
+			SelfLink: "https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/network",
+		},
+		"projects/test-project-id/regions/us-central1/subnetworks/default": gcpshared.ItemTypeMeta{
+			SelfLink: "https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/subnetworks/default",
+		},
+	}
+
+	linker := gcpshared.NewLinker(allKnownItems)
+
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstance(mockClient, projectID, zone, linker)
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeInstance("test-instance", computepb.Instance_RUNNING), nil)
 
@@ -67,8 +81,9 @@ func TestComputeInstance(t *testing.T) {
 				{
 					ExpectedType:   manual.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "default",
-					ExpectedScope:  "test-project-id.us-central1",
+					// Query is the selfLink of the subnetwork
+					ExpectedQuery: "https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/subnetworks/default",
+					ExpectedScope: "test-project-id", // For dynamic adapters, the scope is the project ID
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: false,
@@ -77,8 +92,9 @@ func TestComputeInstance(t *testing.T) {
 				{
 					ExpectedType:   manual.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "network",
-					ExpectedScope:  "test-project-id",
+					// Query is the selfLink of the network
+					ExpectedQuery: "https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/network",
+					ExpectedScope: "test-project-id",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: false,
@@ -158,7 +174,7 @@ func TestComputeInstance(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+				wrapper := manual.NewComputeInstance(mockClient, projectID, zone, linker)
 				adapter := sources.WrapperToAdapter(wrapper)
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeInstance("test-instance", tc.input), nil)
@@ -176,7 +192,7 @@ func TestComputeInstance(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstance(mockClient, projectID, zone, linker)
 
 		adapter := sources.WrapperToAdapter(wrapper)
 
@@ -224,7 +240,7 @@ func createComputeInstance(instanceName string, status computepb.Instance_Status
 		NetworkInterfaces: []*computepb.NetworkInterface{
 			{
 				NetworkIP:   ptr.To("192.168.1.3"),
-				Subnetwork:  ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/subnetworks/default"),
+				Subnetwork:  ptr.To("projects/test-project-id/regions/us-central1/subnetworks/default"),
 				Network:     ptr.To("global/networks/network"),
 				Ipv6Address: ptr.To("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
 			},

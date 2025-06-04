@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
 func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Engine, error) {
@@ -29,7 +30,12 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 		"zones":      l.Zones,
 	}).Info("Got locations")
 
-	adapters, err := manual.Adapters(ctx, l.ProjectID, l.Regions, l.Zones)
+	// This will be shared between APIs, so all API adapters will be aware of all the known items.
+	allKnownItems := make(gcpshared.ItemLookup)
+
+	linker := gcpshared.NewLinker(allKnownItems)
+
+	adapters, err := manual.Adapters(ctx, l.ProjectID, l.Regions, l.Zones, linker)
 	if err != nil {
 		return nil, fmt.Errorf("error creating adapters: %w", err)
 	}
