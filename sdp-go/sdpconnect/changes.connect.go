@@ -68,9 +68,6 @@ const (
 	// ChangesServiceListChangesBySnapshotUUIDProcedure is the fully-qualified name of the
 	// ChangesService's ListChangesBySnapshotUUID RPC.
 	ChangesServiceListChangesBySnapshotUUIDProcedure = "/changes.ChangesService/ListChangesBySnapshotUUID"
-	// ChangesServiceGetChangeTimelineProcedure is the fully-qualified name of the ChangesService's
-	// GetChangeTimeline RPC.
-	ChangesServiceGetChangeTimelineProcedure = "/changes.ChangesService/GetChangeTimeline"
 	// ChangesServiceRefreshStateProcedure is the fully-qualified name of the ChangesService's
 	// RefreshState RPC.
 	ChangesServiceRefreshStateProcedure = "/changes.ChangesService/RefreshState"
@@ -143,8 +140,6 @@ type ChangesServiceClient interface {
 	DeleteChange(context.Context, *connect.Request[sdp_go.DeleteChangeRequest]) (*connect.Response[sdp_go.DeleteChangeResponse], error)
 	// Lists all changes for a snapshot UUID
 	ListChangesBySnapshotUUID(context.Context, *connect.Request[sdp_go.ListChangesBySnapshotUUIDRequest]) (*connect.Response[sdp_go.ListChangesBySnapshotUUIDResponse], error)
-	// Get the timeline of changes for a given change
-	GetChangeTimeline(context.Context, *connect.Request[sdp_go.GetChangeTimelineRequest]) (*connect.Response[sdp_go.GetChangeTimelineResponse], error)
 	// Ask the gateway to refresh all internal caches and status slots
 	// The RPC will return immediately doing all processing in the background
 	RefreshState(context.Context, *connect.Request[sdp_go.RefreshStateRequest]) (*connect.Response[sdp_go.RefreshStateResponse], error)
@@ -250,12 +245,6 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(changesServiceMethods.ByName("ListChangesBySnapshotUUID")),
 			connect.WithClientOptions(opts...),
 		),
-		getChangeTimeline: connect.NewClient[sdp_go.GetChangeTimelineRequest, sdp_go.GetChangeTimelineResponse](
-			httpClient,
-			baseURL+ChangesServiceGetChangeTimelineProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("GetChangeTimeline")),
-			connect.WithClientOptions(opts...),
-		),
 		refreshState: connect.NewClient[sdp_go.RefreshStateRequest, sdp_go.RefreshStateResponse](
 			httpClient,
 			baseURL+ChangesServiceRefreshStateProcedure,
@@ -320,7 +309,6 @@ type changesServiceClient struct {
 	updateChange              *connect.Client[sdp_go.UpdateChangeRequest, sdp_go.UpdateChangeResponse]
 	deleteChange              *connect.Client[sdp_go.DeleteChangeRequest, sdp_go.DeleteChangeResponse]
 	listChangesBySnapshotUUID *connect.Client[sdp_go.ListChangesBySnapshotUUIDRequest, sdp_go.ListChangesBySnapshotUUIDResponse]
-	getChangeTimeline         *connect.Client[sdp_go.GetChangeTimelineRequest, sdp_go.GetChangeTimelineResponse]
 	refreshState              *connect.Client[sdp_go.RefreshStateRequest, sdp_go.RefreshStateResponse]
 	startChange               *connect.Client[sdp_go.StartChangeRequest, sdp_go.StartChangeResponse]
 	endChange                 *connect.Client[sdp_go.EndChangeRequest, sdp_go.EndChangeResponse]
@@ -384,11 +372,6 @@ func (c *changesServiceClient) DeleteChange(ctx context.Context, req *connect.Re
 // ListChangesBySnapshotUUID calls changes.ChangesService.ListChangesBySnapshotUUID.
 func (c *changesServiceClient) ListChangesBySnapshotUUID(ctx context.Context, req *connect.Request[sdp_go.ListChangesBySnapshotUUIDRequest]) (*connect.Response[sdp_go.ListChangesBySnapshotUUIDResponse], error) {
 	return c.listChangesBySnapshotUUID.CallUnary(ctx, req)
-}
-
-// GetChangeTimeline calls changes.ChangesService.GetChangeTimeline.
-func (c *changesServiceClient) GetChangeTimeline(ctx context.Context, req *connect.Request[sdp_go.GetChangeTimelineRequest]) (*connect.Response[sdp_go.GetChangeTimelineResponse], error) {
-	return c.getChangeTimeline.CallUnary(ctx, req)
 }
 
 // RefreshState calls changes.ChangesService.RefreshState.
@@ -457,8 +440,6 @@ type ChangesServiceHandler interface {
 	DeleteChange(context.Context, *connect.Request[sdp_go.DeleteChangeRequest]) (*connect.Response[sdp_go.DeleteChangeResponse], error)
 	// Lists all changes for a snapshot UUID
 	ListChangesBySnapshotUUID(context.Context, *connect.Request[sdp_go.ListChangesBySnapshotUUIDRequest]) (*connect.Response[sdp_go.ListChangesBySnapshotUUIDResponse], error)
-	// Get the timeline of changes for a given change
-	GetChangeTimeline(context.Context, *connect.Request[sdp_go.GetChangeTimelineRequest]) (*connect.Response[sdp_go.GetChangeTimelineResponse], error)
 	// Ask the gateway to refresh all internal caches and status slots
 	// The RPC will return immediately doing all processing in the background
 	RefreshState(context.Context, *connect.Request[sdp_go.RefreshStateRequest]) (*connect.Response[sdp_go.RefreshStateResponse], error)
@@ -560,12 +541,6 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 		connect.WithSchema(changesServiceMethods.ByName("ListChangesBySnapshotUUID")),
 		connect.WithHandlerOptions(opts...),
 	)
-	changesServiceGetChangeTimelineHandler := connect.NewUnaryHandler(
-		ChangesServiceGetChangeTimelineProcedure,
-		svc.GetChangeTimeline,
-		connect.WithSchema(changesServiceMethods.ByName("GetChangeTimeline")),
-		connect.WithHandlerOptions(opts...),
-	)
 	changesServiceRefreshStateHandler := connect.NewUnaryHandler(
 		ChangesServiceRefreshStateProcedure,
 		svc.RefreshState,
@@ -638,8 +613,6 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 			changesServiceDeleteChangeHandler.ServeHTTP(w, r)
 		case ChangesServiceListChangesBySnapshotUUIDProcedure:
 			changesServiceListChangesBySnapshotUUIDHandler.ServeHTTP(w, r)
-		case ChangesServiceGetChangeTimelineProcedure:
-			changesServiceGetChangeTimelineHandler.ServeHTTP(w, r)
 		case ChangesServiceRefreshStateProcedure:
 			changesServiceRefreshStateHandler.ServeHTTP(w, r)
 		case ChangesServiceStartChangeProcedure:
@@ -707,10 +680,6 @@ func (UnimplementedChangesServiceHandler) DeleteChange(context.Context, *connect
 
 func (UnimplementedChangesServiceHandler) ListChangesBySnapshotUUID(context.Context, *connect.Request[sdp_go.ListChangesBySnapshotUUIDRequest]) (*connect.Response[sdp_go.ListChangesBySnapshotUUIDResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.ListChangesBySnapshotUUID is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) GetChangeTimeline(context.Context, *connect.Request[sdp_go.GetChangeTimelineRequest]) (*connect.Response[sdp_go.GetChangeTimelineResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetChangeTimeline is not implemented"))
 }
 
 func (UnimplementedChangesServiceHandler) RefreshState(context.Context, *connect.Request[sdp_go.RefreshStateRequest]) (*connect.Response[sdp_go.RefreshStateResponse], error) {

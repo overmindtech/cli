@@ -64,14 +64,6 @@ func (a *DeleteChangeRequest) GetUUIDParsed() *uuid.UUID {
 	return &u
 }
 
-func (x *GetChangeTimelineRequest) GetChangeUUIDParsed() *uuid.UUID {
-	u, err := uuid.FromBytes(x.GetChangeUUID())
-	if err != nil {
-		return nil
-	}
-	return &u
-}
-
 func (x *GetDiffRequest) GetChangeUUIDParsed() *uuid.UUID {
 	u, err := uuid.FromBytes(x.GetChangeUUID())
 	if err != nil {
