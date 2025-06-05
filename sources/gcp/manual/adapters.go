@@ -4,6 +4,7 @@ import (
 	"context"
 
 	compute "cloud.google.com/go/compute/apiv1"
+	iam "cloud.google.com/go/iam/admin/apiv1"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -90,6 +91,12 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		return nil, err
 	}
 
+	//IAM
+	serviceAccountKeyCli, err := iam.NewIamClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	var adapters []discovery.Adapter
 
 	for _, region := range regions {
@@ -119,6 +126,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		sources.WrapperToAdapter(NewComputeSecurityPolicy(shared.NewComputeSecurityPolicyClient(computeSecurityPolicyCli), projectID)),
 		sources.WrapperToAdapter(NewComputeMachineImage(shared.NewComputeMachineImageClient(computeMachineImageCli), projectID)),
 		sources.WrapperToAdapter(NewComputeSnapshot(shared.NewComputeSnapshotsClient(computeSnapshotCli), projectID)),
+		sources.WrapperToAdapter(NewIAMServiceAccountKey(shared.NewIAMServiceAccountKeyClient(serviceAccountKeyCli), projectID)),
 	)
 
 	// Register the metadata for each adapter

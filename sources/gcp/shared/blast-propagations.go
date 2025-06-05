@@ -230,4 +230,16 @@ var BlastPropagations = map[shared.ItemType]map[shared.ItemType]Impact{
 	ComputeRoute: {
 		ComputeNetwork: tightCoupledImpact,
 	},
+	IAMServiceAccount: {
+		IAMServiceAccountKey: {
+			Description:      "If the service account is deleted: All keys that belong to it are deleted. If the service account key is deleted: Resources using that particular key lose access to the service account  but account still works.",
+			BlastPropagation: impactOutOnly,
+		},
+	},
+	IAMServiceAccountKey: {
+		IAMServiceAccount: {
+			Description:      "If the service account key is deleted: Resources using that particular key lose access to the service account but account still works. If the service account is deleted: All keys that belong to it are deleted.",
+			BlastPropagation: impactInOnly,
+		},
+	},
 }

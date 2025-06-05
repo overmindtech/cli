@@ -13,6 +13,7 @@ const (
 	NetworkSecurity shared.API = "network-security"
 	NetworkServices shared.API = "network-services"
 	CloudKMS        shared.API = "cloud-kms"
+	IAM             shared.API = "iam"
 )
 
 // Resources
@@ -54,4 +55,6 @@ const (
 	Zone                     shared.Resource = "zone"
 	Firewall                 shared.Resource = "firewall"
 	Route                    shared.Resource = "route"
+	ServiceAccountKey        shared.Resource = "service-account-key"
+	ServiceAccount           shared.Resource = "service-account"
 )

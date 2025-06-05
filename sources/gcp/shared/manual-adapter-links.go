@@ -107,4 +107,5 @@ var ManualAdapterGetLinksByAssetType = map[shared.ItemType]func(projectID, query
 		}
 		return nil
 	},
+	IAMServiceAccountKey: ProjectBaseLinkedItemQueryByName(IAMServiceAccountKey),
 }

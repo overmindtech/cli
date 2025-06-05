@@ -37,4 +37,6 @@ var (
 	ComputeRegionCommitment        = shared.NewItemType(GCP, Compute, RegionCommitment)
 	ComputeAcceleratorType         = shared.NewItemType(GCP, Compute, AcceleratorType)
 	ComputeRule                    = shared.NewItemType(GCP, Compute, Rule)
+	IAMServiceAccountKey           = shared.NewItemType(GCP, IAM, ServiceAccountKey)
+	IAMServiceAccount              = shared.NewItemType(GCP, IAM, ServiceAccount)
 )
