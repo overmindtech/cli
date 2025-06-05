@@ -39,4 +39,8 @@ var (
 	ComputeRule                    = shared.NewItemType(GCP, Compute, Rule)
 	IAMServiceAccountKey           = shared.NewItemType(GCP, IAM, ServiceAccountKey)
 	IAMServiceAccount              = shared.NewItemType(GCP, IAM, ServiceAccount)
+	BigQueryTable                  = shared.NewItemType(GCP, BigQuery, Table)
+	BigQueryDataset                = shared.NewItemType(GCP, BigQuery, Dataset)
+	PubSubSubscription             = shared.NewItemType(GCP, PubSub, Subscription)
+	PubSubTopic                    = shared.NewItemType(GCP, PubSub, Topic)
 )

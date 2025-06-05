@@ -14,6 +14,8 @@ const (
 	NetworkServices shared.API = "network-services"
 	CloudKMS        shared.API = "cloud-kms"
 	IAM             shared.API = "iam"
+	BigQuery        shared.API = "big-query"
+	PubSub          shared.API = "pub-sub"
 )
 
 // Resources
@@ -57,4 +59,8 @@ const (
 	Route                    shared.Resource = "route"
 	ServiceAccountKey        shared.Resource = "service-account-key"
 	ServiceAccount           shared.Resource = "service-account"
+	Table                    shared.Resource = "table"
+	Dataset                  shared.Resource = "dataset"
+	Subscription             shared.Resource = "subscription"
+	Topic                    shared.Resource = "topic"
 )
