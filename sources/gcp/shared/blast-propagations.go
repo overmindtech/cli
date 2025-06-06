@@ -245,4 +245,10 @@ var BlastPropagations = map[shared.ItemType]map[shared.ItemType]Impact{
 	CloudResourceManagerProject: {
 		IAMServiceAccount: tightCoupledImpact,
 	},
+	CloudKMSKeyRing: {
+		IAMPolicy: tightCoupledImpact,
+	},
+	IAMPolicy: {
+		IAMPolicy: tightCoupledImpact,
+	},
 }

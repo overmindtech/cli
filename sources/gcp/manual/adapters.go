@@ -5,6 +5,7 @@ import (
 
 	compute "cloud.google.com/go/compute/apiv1"
 	iam "cloud.google.com/go/iam/admin/apiv1"
+	kms "cloud.google.com/go/kms/apiv1"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -101,6 +102,11 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 	if err != nil {
 		return nil, err
 	}
+	//KMS
+	kmsKeyRingCli, err := kms.NewKeyManagementClient(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	var adapters []discovery.Adapter
 
@@ -133,6 +139,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		sources.WrapperToAdapter(NewComputeSnapshot(shared.NewComputeSnapshotsClient(computeSnapshotCli), projectID)),
 		sources.WrapperToAdapter(NewIAMServiceAccountKey(shared.NewIAMServiceAccountKeyClient(iamServiceAccountKeyCli), projectID)),
 		sources.WrapperToAdapter(NewIAMServiceAccount(shared.NewIAMServiceAccountClient(iamServiceAccountCli), projectID)),
+		sources.WrapperToAdapter(NewCloudKMSKeyRing(shared.NewCloudKMSKeyRingClient(kmsKeyRingCli), projectID)),
 	)
 
 	// Register the metadata for each adapter

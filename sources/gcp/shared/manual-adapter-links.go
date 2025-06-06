@@ -109,4 +109,5 @@ var ManualAdapterGetLinksByAssetType = map[shared.ItemType]func(projectID, query
 	},
 	IAMServiceAccountKey: ProjectBaseLinkedItemQueryByName(IAMServiceAccountKey),
 	IAMServiceAccount:    ProjectBaseLinkedItemQueryByName(IAMServiceAccount),
+	CloudKMSKeyRing:      RegionBaseLinkedItemQueryByName(CloudKMSKeyRing),
 }

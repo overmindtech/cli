@@ -44,4 +44,6 @@ var (
 	PubSubSubscription             = shared.NewItemType(GCP, PubSub, Subscription)
 	PubSubTopic                    = shared.NewItemType(GCP, PubSub, Topic)
 	CloudResourceManagerProject    = shared.NewItemType(GCP, CloudResourceManager, Project)
+	CloudKMSKeyRing                = shared.NewItemType(GCP, CloudKMS, KeyRing)
+	IAMPolicy                      = shared.NewItemType(GCP, IAM, Policy)
 )
