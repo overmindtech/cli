@@ -18,7 +18,7 @@ RUN --mount=type=cache,target=/go/pkg \
     --mount=type=cache,target=/root/.cache/go-build \
     GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -trimpath -ldflags="-s -w -X github.com/overmindtech/cli/tracing.version=${BUILD_VERSION} -X github.com/overmindtech/cli/tracing.commit=${BUILD_COMMIT}" -o source aws-source/main.go
 
-FROM alpine:3.21
+FROM alpine:3.22
 WORKDIR /
 COPY --from=builder /workspace/source .
 USER 65534:65534
