@@ -92,7 +92,12 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 	}
 
 	//IAM
-	serviceAccountKeyCli, err := iam.NewIamClient(ctx)
+	iamServiceAccountKeyCli, err := iam.NewIamClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	iamServiceAccountCli, err := iam.NewIamClient(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +131,8 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		sources.WrapperToAdapter(NewComputeSecurityPolicy(shared.NewComputeSecurityPolicyClient(computeSecurityPolicyCli), projectID)),
 		sources.WrapperToAdapter(NewComputeMachineImage(shared.NewComputeMachineImageClient(computeMachineImageCli), projectID)),
 		sources.WrapperToAdapter(NewComputeSnapshot(shared.NewComputeSnapshotsClient(computeSnapshotCli), projectID)),
-		sources.WrapperToAdapter(NewIAMServiceAccountKey(shared.NewIAMServiceAccountKeyClient(serviceAccountKeyCli), projectID)),
+		sources.WrapperToAdapter(NewIAMServiceAccountKey(shared.NewIAMServiceAccountKeyClient(iamServiceAccountKeyCli), projectID)),
+		sources.WrapperToAdapter(NewIAMServiceAccount(shared.NewIAMServiceAccountClient(iamServiceAccountCli), projectID)),
 	)
 
 	// Register the metadata for each adapter

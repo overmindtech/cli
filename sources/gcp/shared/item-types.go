@@ -43,4 +43,5 @@ var (
 	BigQueryDataset                = shared.NewItemType(GCP, BigQuery, Dataset)
 	PubSubSubscription             = shared.NewItemType(GCP, PubSub, Subscription)
 	PubSubTopic                    = shared.NewItemType(GCP, PubSub, Topic)
+	CloudResourceManagerProject    = shared.NewItemType(GCP, CloudResourceManager, Project)
 )

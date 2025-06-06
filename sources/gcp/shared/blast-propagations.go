@@ -242,4 +242,7 @@ var BlastPropagations = map[shared.ItemType]map[shared.ItemType]Impact{
 			BlastPropagation: impactInOnly,
 		},
 	},
+	CloudResourceManagerProject: {
+		IAMServiceAccount: tightCoupledImpact,
+	},
 }

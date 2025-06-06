@@ -8,14 +8,15 @@ const GCP shared.Source = "gcp"
 
 // APIs
 const (
-	Compute         shared.API = "compute"
-	Container       shared.API = "container"
-	NetworkSecurity shared.API = "network-security"
-	NetworkServices shared.API = "network-services"
-	CloudKMS        shared.API = "cloud-kms"
-	IAM             shared.API = "iam"
-	BigQuery        shared.API = "big-query"
-	PubSub          shared.API = "pub-sub"
+	Compute              shared.API = "compute"
+	Container            shared.API = "container"
+	NetworkSecurity      shared.API = "network-security"
+	NetworkServices      shared.API = "network-services"
+	CloudKMS             shared.API = "cloud-kms"
+	IAM                  shared.API = "iam"
+	BigQuery             shared.API = "big-query"
+	PubSub               shared.API = "pub-sub"
+	CloudResourceManager shared.API = "cloud-resource-manager"
 )
 
 // Resources
@@ -63,4 +64,5 @@ const (
 	Dataset                  shared.Resource = "dataset"
 	Subscription             shared.Resource = "subscription"
 	Topic                    shared.Resource = "topic"
+	Project                  shared.Resource = "project"
 )
