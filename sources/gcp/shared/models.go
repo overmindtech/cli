@@ -17,6 +17,8 @@ const (
 	BigQuery             shared.API = "big-query"
 	PubSub               shared.API = "pub-sub"
 	CloudResourceManager shared.API = "cloud-resource-manager"
+	AIPlatform           shared.API = "ai-platform"
+	BigTableAdmin        shared.API = "big-table-admin"
 )
 
 // Resources
@@ -75,6 +77,10 @@ const (
 	StoragePool              shared.Resource = "storage-pool"
 	VpnTunnel                shared.Resource = "vpn-tunnel"
 	NetworkPeering           shared.Resource = "network-peering"
-	ConnectivityHub          shared.Resource = "connectivity-hub"
 	Gateway                  shared.Resource = "gateway"
+	CustomJob                shared.Resource = "custom-job"
+	PipelineJob              shared.Resource = "pipeline-job"
+	Role                     shared.Resource = "role"
+	AppProfile               shared.Resource = "app-profile"
+	Backup                   shared.Resource = "backup"
 )
