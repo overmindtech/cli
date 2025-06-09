@@ -69,4 +69,12 @@ const (
 	CloudKMSEKMConnection    shared.Resource = "ekm-connection"
 	Policy                   shared.Resource = "policy"
 	KeyRing                  shared.Resource = "key-ring"
+	InstanceSettings         shared.Resource = "instance-settings"
+	Bucket                   shared.Resource = "bucket"
+	NetworkAttachment        shared.Resource = "network-attachment"
+	StoragePool              shared.Resource = "storage-pool"
+	VpnTunnel                shared.Resource = "vpn-tunnel"
+	NetworkPeering           shared.Resource = "network-peering"
+	ConnectivityHub          shared.Resource = "connectivity-hub"
+	Gateway                  shared.Resource = "gateway"
 )
