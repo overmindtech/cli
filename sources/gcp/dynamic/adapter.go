@@ -13,29 +13,31 @@ import (
 
 // AdapterConfig holds the configuration for a GCP dynamic adapter.
 type AdapterConfig struct {
-	ProjectID          string
-	Token              string
-	Scope              string
-	GetBaseURL         string
-	SDPAssetType       shared.ItemType
-	SDPAdapterCategory sdp.AdapterCategory
-	TerraformMappings  []*sdp.TerraformMapping
-	Linker             *gcpshared.Linker
-	HTTPClient         *http.Client
+	ProjectID           string
+	Token               string
+	Scope               string
+	GetURLFunc          gcpshared.EndpointFunc
+	SDPAssetType        shared.ItemType
+	SDPAdapterCategory  sdp.AdapterCategory
+	TerraformMappings   []*sdp.TerraformMapping
+	Linker              *gcpshared.Linker
+	HTTPClient          *http.Client
+	UniqueAttributeKeys []string
 }
 
 // Adapter implements discovery.ListableAdapter for GCP dynamic adapters.
 type Adapter struct {
-	projectID          string
-	httpCli            *http.Client
-	httpHeaders        http.Header
-	getBaseURL         string
-	scope              string
-	sdpAssetType       shared.ItemType
-	sdpAdapterCategory sdp.AdapterCategory
-	terraformMappings  []*sdp.TerraformMapping
-	potentialLinks     []string
-	linker             *gcpshared.Linker
+	projectID           string
+	httpCli             *http.Client
+	httpHeaders         http.Header
+	getURLFunc          gcpshared.EndpointFunc
+	scope               string
+	sdpAssetType        shared.ItemType
+	sdpAdapterCategory  sdp.AdapterCategory
+	terraformMappings   []*sdp.TerraformMapping
+	potentialLinks      []string
+	linker              *gcpshared.Linker
+	uniqueAttributeKeys []string
 }
 
 // NewAdapter creates a new GCP dynamic adapter.
@@ -51,15 +53,16 @@ func NewAdapter(config *AdapterConfig) discovery.Adapter {
 		projectID:  config.ProjectID,
 		scope:      config.Scope,
 		httpCli:    config.HTTPClient,
-		getBaseURL: config.GetBaseURL,
+		getURLFunc: config.GetURLFunc,
 		httpHeaders: http.Header{
 			"Authorization": []string{"Bearer " + config.Token},
 		},
-		sdpAssetType:       config.SDPAssetType,
-		sdpAdapterCategory: config.SDPAdapterCategory,
-		terraformMappings:  config.TerraformMappings,
-		linker:             config.Linker,
-		potentialLinks:     potentialLinks,
+		sdpAssetType:        config.SDPAssetType,
+		sdpAdapterCategory:  config.SDPAdapterCategory,
+		terraformMappings:   config.TerraformMappings,
+		linker:              config.Linker,
+		potentialLinks:      potentialLinks,
+		uniqueAttributeKeys: config.UniqueAttributeKeys,
 	}
 }
 
@@ -78,7 +81,7 @@ func (g Adapter) Metadata() *sdp.AdapterMetadata {
 		DescriptiveName: g.sdpAssetType.Readable(),
 		SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 			Get:            true,
-			GetDescription: fmt.Sprintf("Get a %s by its name i.e: zones/<zone>/instances/<instance-name>", g.sdpAssetType),
+			GetDescription: fmt.Sprintf("Get a %s by its unique name within its scope: %s", g.sdpAssetType, g.scope),
 		},
 		TerraformMappings: g.terraformMappings,
 		PotentialLinks:    g.potentialLinks,
@@ -97,10 +100,15 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		}
 	}
 
-	resp, err := externalCallSingle(ctx, g.httpCli, g.httpHeaders, g.getBaseURL+query)
+	url := g.getURLFunc(query)
+	if url == "" {
+		return nil, fmt.Errorf("unable to determine base URL for %s", g.sdpAssetType)
+	}
+
+	resp, err := externalCallSingle(ctx, g.httpCli, g.httpHeaders, url)
 	if err != nil {
 		return nil, err
 	}
 
-	return externalToSDP(ctx, g.projectID, resp, g.sdpAssetType, g.linker)
+	return externalToSDP(ctx, g.projectID, g.scope, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker)
 }

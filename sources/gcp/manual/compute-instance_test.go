@@ -27,18 +27,7 @@ func TestComputeInstance(t *testing.T) {
 	projectID := "test-project-id"
 	zone := "us-central1-a"
 
-	// This map should contain the selfLinks for the linked items that we (will) have dynamic adapters for
-	// The key should be the string that we are expecting from the API response for this item.
-	allKnownItems := gcpshared.ItemLookup{
-		"global/networks/network": gcpshared.ItemTypeMeta{
-			SelfLink: "https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/network",
-		},
-		"projects/test-project-id/regions/us-central1/subnetworks/default": gcpshared.ItemTypeMeta{
-			SelfLink: "https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/subnetworks/default",
-		},
-	}
-
-	linker := gcpshared.NewLinker(allKnownItems)
+	linker := gcpshared.NewLinker()
 
 	t.Run("Get", func(t *testing.T) {
 		wrapper := manual.NewComputeInstance(mockClient, projectID, zone, linker)
@@ -81,9 +70,8 @@ func TestComputeInstance(t *testing.T) {
 				{
 					ExpectedType:   manual.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
-					// Query is the selfLink of the subnetwork
-					ExpectedQuery: "https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/subnetworks/default",
-					ExpectedScope: "test-project-id", // For dynamic adapters, the scope is the project ID
+					ExpectedQuery:  "default",
+					ExpectedScope:  "test-project-id.us-central1",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: false,
@@ -92,9 +80,8 @@ func TestComputeInstance(t *testing.T) {
 				{
 					ExpectedType:   manual.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
-					// Query is the selfLink of the network
-					ExpectedQuery: "https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/network",
-					ExpectedScope: "test-project-id",
+					ExpectedQuery:  "network",
+					ExpectedScope:  "test-project-id",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: false,

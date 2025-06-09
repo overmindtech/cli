@@ -414,3 +414,81 @@ func TestShortenSelfLink(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractPathParams(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		keys     []string
+		expected []string
+	}{
+		{
+			name:     "single key present",
+			input:    "projects/proj/locations/us-central1/keyRings/my-ring",
+			keys:     []string{"locations"},
+			expected: []string{"us-central1"},
+		},
+		{
+			name:     "multiple keys, both present",
+			input:    "projects/proj/locations/us-central1/keyRings/my-ring/cryptoKeys/my-key",
+			keys:     []string{"keyRings", "cryptoKeys"},
+			expected: []string{"my-key", "my-ring"},
+		},
+		{
+			name:     "multiple keys, one missing",
+			input:    "projects/proj/locations/us-central1/keyRings/my-ring",
+			keys:     []string{"keyRings", "cryptoKeys"},
+			expected: []string{"my-ring"},
+		},
+		{
+			name:     "all keys missing",
+			input:    "projects/proj/locations/us-central1",
+			keys:     []string{"foo", "bar"},
+			expected: []string{},
+		},
+		{
+			name:     "empty input",
+			input:    "",
+			keys:     []string{"locations"},
+			expected: []string{},
+		},
+		{
+			name:     "empty keys",
+			input:    "projects/proj/locations/us-central1/keyRings/my-ring",
+			keys:     []string{},
+			expected: []string{},
+		},
+		{
+			name:     "key at end, no value",
+			input:    "projects/proj/locations",
+			keys:     []string{"locations"},
+			expected: []string{},
+		},
+		{
+			name:     "multiple keys, both present, reverse order",
+			input:    "projects/proj/locations/us-central1/keyRings/my-ring/cryptoKeys/my-key",
+			keys:     []string{"locations", "cryptoKeys"},
+			expected: []string{"my-key", "us-central1"},
+		},
+		{
+			name:     "default",
+			input:    "default",
+			keys:     []string{"subnetworks"},
+			expected: []string{"default"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := gcpshared.ExtractPathParams(tt.input, tt.keys...)
+			if len(result) != len(tt.expected) {
+				t.Errorf("ExtractPathParams(%q, %v) returned %d results, want %d", tt.input, tt.keys, len(result), len(tt.expected))
+			}
+			for i := range result {
+				if result[i] != tt.expected[i] {
+					t.Errorf("ExtractPathParams(%q, %v)[%d] = %q; want %q", tt.input, tt.keys, i, result[i], tt.expected[i])
+				}
+			}
+		})
+	}
+}

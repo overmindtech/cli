@@ -44,6 +44,34 @@ func ExtractPathParam(key, input string) string {
 	return ""
 }
 
+// ExtractPathParams extracts values following specified keys from a GCP resource name.
+// It returns a slice of values in the order of the keys provided.
+// For example, for input="projects/my-proj/locations/global/keyRings/my-kr/cryptoKeys/my-key"
+// and keys=["keyRings", "cryptoKeys"], it will return ["my-kr", "my-key"].
+// If a key is not found, it will not be included in the results.
+// If it fails to extract any values, it returns an empty slice.
+func ExtractPathParams(input string, keys ...string) []string {
+	parts := strings.Split(input, "/")
+	results := make([]string, 0, len(keys))
+
+	for k := len(keys) - 1; k >= 0; k-- {
+		key := keys[k]
+		for i, part := range parts {
+			if part == key && len(parts) > i+1 {
+				results = append(results, parts[i+1])
+				break
+			}
+		}
+	}
+
+	// if it's a single part and no results were found, return the part itself
+	if len(results) == 0 && len(parts) == 1 && parts[0] != "" {
+		return []string{parts[0]}
+	}
+
+	return results
+}
+
 // IsRegion checks if a string represents a GCP region.
 // GCP regions typically follow the pattern "x-y" (e.g., "us-central1").
 func IsRegion(s string) bool {

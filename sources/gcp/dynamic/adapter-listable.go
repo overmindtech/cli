@@ -31,15 +31,16 @@ func NewListableAdapter(listEndpoint string, config *AdapterConfig) discovery.Li
 			projectID:  config.ProjectID,
 			scope:      config.Scope,
 			httpCli:    config.HTTPClient,
-			getBaseURL: config.GetBaseURL,
+			getURLFunc: config.GetURLFunc,
 			httpHeaders: http.Header{
 				"Authorization": []string{"Bearer " + config.Token},
 			},
-			sdpAssetType:       config.SDPAssetType,
-			sdpAdapterCategory: config.SDPAdapterCategory,
-			terraformMappings:  config.TerraformMappings,
-			linker:             config.Linker,
-			potentialLinks:     potentialLinks,
+			sdpAssetType:        config.SDPAssetType,
+			sdpAdapterCategory:  config.SDPAdapterCategory,
+			terraformMappings:   config.TerraformMappings,
+			linker:              config.Linker,
+			potentialLinks:      potentialLinks,
+			uniqueAttributeKeys: config.UniqueAttributeKeys,
 		},
 	}
 }
@@ -75,7 +76,7 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 	}
 
 	for _, resp := range multiResp {
-		item, err := externalToSDP(ctx, g.projectID, resp, g.sdpAssetType, g.linker)
+		item, err := externalToSDP(ctx, g.projectID, g.scope, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker)
 		if err != nil {
 			return nil, err
 		}

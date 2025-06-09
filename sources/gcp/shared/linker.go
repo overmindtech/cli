@@ -2,6 +2,7 @@ package shared
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"regexp"
 	"strings"
@@ -26,16 +27,18 @@ type ItemLookup map[string]ItemTypeMeta
 
 // Linker is responsible for linking items based on their types and relationships.
 type Linker struct {
-	AllKnownItems                      ItemLookup
+	sdpAssetTypeToAdapterMeta          map[shared.ItemType]AdapterMeta
+	gcpItemTypeToSDPAssetType          map[string]shared.ItemType
 	blastPropagations                  map[shared.ItemType]map[shared.ItemType]Impact
 	manualAdapterLinker                map[shared.ItemType]func(scope, selfLink string, bp *sdp.BlastPropagation) *sdp.LinkedItemQuery
 	gcpResourceTypeInURLToSDPAssetType map[string]shared.ItemType
 }
 
 // NewLinker creates a new Linker instance with the provided item lookup and predefined mappings.
-func NewLinker(allKnownItems ItemLookup) *Linker {
+func NewLinker() *Linker {
 	return &Linker{
-		AllKnownItems:                      allKnownItems,
+		sdpAssetTypeToAdapterMeta:          SDPAssetTypeToAdapterMeta,
+		gcpItemTypeToSDPAssetType:          GCPResourceTypeInURLToSDPAssetType,
 		blastPropagations:                  BlastPropagations,
 		manualAdapterLinker:                ManualAdapterGetLinksByAssetType,
 		gcpResourceTypeInURLToSDPAssetType: GCPResourceTypeInURLToSDPAssetType,
@@ -81,28 +84,43 @@ func (l *Linker) Link(
 		return
 	}
 
-	var selfLink string
-
-	if itemMeta, ok := l.AllKnownItems[toItemGCPResourceName]; ok {
-		selfLink = itemMeta.SelfLink
-	} else if strings.HasPrefix(toItemGCPResourceName, "https://") {
-		selfLink = toItemGCPResourceName
-	}
-
-	if selfLink != "" {
-		fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-			Query: &sdp.Query{
-				Type:   toSDPItemType.String(),
-				Method: sdp.QueryMethod_GET,
-				Query:  selfLink,
-				Scope:  projectID,
-			},
-			BlastPropagation: impact.BlastPropagation,
-		})
+	sdpItemTypeMeta, ok := l.sdpAssetTypeToAdapterMeta[toSDPItemType]
+	if !ok {
+		// This should never happen at runtime!
+		log.WithContext(ctx).WithFields(lf).Warnf(
+			"could not find adapter meta for %s",
+			toSDPItemType.String(),
+		)
 		return
 	}
 
-	log.WithContext(ctx).WithFields(lf).Warnf("failed to link items")
+	parts := strings.Split(toItemGCPResourceName, "/")
+	if len(parts) < 2 {
+		log.WithContext(ctx).WithFields(lf).Warnf(
+			"resource name is in unexpected format: %s",
+			toItemGCPResourceName,
+		)
+		return
+	}
+
+	scope := determineScope(ctx, projectID, sdpItemTypeMeta.Scope, lf, toItemGCPResourceName, parts)
+	if scope == "" {
+		log.WithContext(ctx).WithFields(lf).Warnf(
+			"failed to determine scope for item type %s",
+			toSDPItemType.String(),
+		)
+		return
+	}
+
+	fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   toSDPItemType.String(),
+			Method: sdp.QueryMethod_GET,
+			Query:  parts[len(parts)-1], // e.g., "my-instance", "my-network", etc.
+			Scope:  scope,
+		},
+		BlastPropagation: impact.BlastPropagation,
+	})
 }
 
 // AutoLink tries to find the item type of the TO item based on its GCP resource name.
@@ -114,18 +132,37 @@ func (l *Linker) AutoLink(
 	fromSDPItemType shared.ItemType,
 	toItemGCPResourceName string,
 ) {
-	toSDPItemType, ok := l.identifyItemType(ctx, toItemGCPResourceName)
-	if ok {
-		l.Link(ctx, projectID, fromSDPItem, fromSDPItemType, toItemGCPResourceName, *toSDPItemType)
+	lf := log.Fields{
+		"ovm.gcp.projectId":          projectID,
+		"ovm.gcp.fromItemType":       fromSDPItemType.String(),
+		"ovm.gcp.toItemResourceName": toItemGCPResourceName,
+	}
+
+	parts := strings.Split(toItemGCPResourceName, "/")
+	if len(parts) < 2 {
+		l.tryGlobalResources(fromSDPItem, toItemGCPResourceName)
 		return
 	}
 
-	if isIPAddress(toItemGCPResourceName) {
+	toItemType, ok := l.gcpItemTypeToSDPAssetType[parts[len(parts)-2]] // e.g., "instances", "networks", etc.
+	if !ok {
+		log.WithContext(ctx).WithFields(lf).Warnf(
+			"could not identify item type for GCP resource name %s",
+			toItemGCPResourceName,
+		)
+		return
+	}
+
+	l.Link(ctx, projectID, fromSDPItem, fromSDPItemType, toItemGCPResourceName, toItemType)
+}
+
+func (l *Linker) tryGlobalResources(fromSDPItem *sdp.Item, toItemValue string) {
+	if isIPAddress(toItemValue) {
 		fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "ip",
 				Method: sdp.QueryMethod_GET,
-				Query:  toItemGCPResourceName,
+				Query:  toItemValue,
 				Scope:  "global",
 			},
 			BlastPropagation: &sdp.BlastPropagation{
@@ -135,12 +172,12 @@ func (l *Linker) AutoLink(
 		})
 	}
 
-	if isDNSName(toItemGCPResourceName) {
+	if isDNSName(toItemValue) {
 		fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "dns",
 				Method: sdp.QueryMethod_SEARCH,
-				Query:  toItemGCPResourceName,
+				Query:  toItemValue,
 				Scope:  "global",
 			},
 			BlastPropagation: &sdp.BlastPropagation{
@@ -149,43 +186,6 @@ func (l *Linker) AutoLink(
 			},
 		})
 	}
-}
-
-// identifyItemType identifies the item type based on the GCP resource name.
-func (l *Linker) identifyItemType(ctx context.Context, gcpResourceName string) (*shared.ItemType, bool) {
-	lf := log.Fields{
-		"ovm.GCPResourceName": gcpResourceName,
-	}
-
-	if itemType, ok := l.AllKnownItems[gcpResourceName]; ok {
-		return &itemType.SDPAssetType, true
-	}
-
-	if strings.HasPrefix(gcpResourceName, "http://") || strings.HasPrefix(gcpResourceName, "https://") ||
-		strings.Contains(gcpResourceName, "projects/") ||
-		strings.Contains(gcpResourceName, "zones/") ||
-		strings.Contains(gcpResourceName, "regions/") {
-		parts := strings.Split(gcpResourceName, "/")
-		if len(parts) > 1 {
-			// We are extracting the GCP resource type from the URL.
-			// Example: https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-a/instances/my-instance
-			// `instances` is the item type identifier.
-			itemTypeIdentifier := parts[len(parts)-2]
-
-			// ignore region and zone links, because we don't have adapters and we are not interested in them (yet).
-			if itemTypeIdentifier == "zones" || itemTypeIdentifier == "regions" {
-				return nil, false
-			}
-
-			if toSDPAssetType, ok := l.gcpResourceTypeInURLToSDPAssetType[itemTypeIdentifier]; ok {
-				return &toSDPAssetType, true
-			}
-
-			log.WithContext(ctx).WithFields(lf).Warnf("failed to identify item type for a potentially linked item")
-		}
-	}
-
-	return nil, false
 }
 
 func isIPAddress(s string) bool {
@@ -209,3 +209,32 @@ func isDNSName(s string) bool {
 // Source:
 // https://stackoverflow.com/questions/10306690/what-is-a-regular-expression-which-will-match-a-valid-domain-name-without-a-subd/30007882#30007882
 var dnsNameRegexp = regexp.MustCompile(`^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$`)
+
+// determineScope determines the scope of the GCP resource based on its type and parts.
+// If it fails to determine the scope.
+func determineScope(ctx context.Context, projectID string, scope Scope, lf log.Fields, toItemGCPResourceName string, parts []string) string {
+	switch scope {
+	case ScopeProject:
+		return projectID
+	case ScopeRegional:
+		if len(parts) < 4 {
+			log.WithContext(ctx).WithFields(lf).Warnf(
+				"resource name is in unexpected format for regional item %s",
+				toItemGCPResourceName,
+			)
+			return ""
+		}
+		return fmt.Sprintf("%s.%s", projectID, parts[len(parts)-3])
+	case ScopeZonal:
+		if len(parts) < 4 {
+			log.WithContext(ctx).WithFields(lf).Warnf(
+				"resource name is in unexpected format for zonal item %s",
+				toItemGCPResourceName,
+			)
+			return ""
+		}
+		return fmt.Sprintf("%s.%s", projectID, parts[len(parts)-3])
+	default:
+		return ""
+	}
+}

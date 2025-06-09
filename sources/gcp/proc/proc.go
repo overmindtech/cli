@@ -9,9 +9,14 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
+
+// Metadata contains the metadata for the GCP source
+var Metadata = sdp.AdapterMetadataList{}
 
 func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Engine, error) {
 	engine, err := discovery.NewEngine(ec)
@@ -19,25 +24,48 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 		return nil, fmt.Errorf("error initializing Engine: %w", err)
 	}
 
-	l, err := makeLocations()
+	cfg, err := readConfig()
 	if err != nil {
-		return nil, fmt.Errorf("error creating locations: %w", err)
+		return nil, fmt.Errorf("error creating config: %w", err)
 	}
 
 	log.WithFields(log.Fields{
-		"project_id": l.ProjectID,
-		"regions":    l.Regions,
-		"zones":      l.Zones,
-	}).Info("Got locations")
+		"project_id": cfg.ProjectID,
+		"regions":    cfg.Regions,
+		"zones":      cfg.Zones,
+	}).Info("Got config")
 
-	// This will be shared between APIs, so all API adapters will be aware of all the known items.
-	allKnownItems := make(gcpshared.ItemLookup)
+	linker := gcpshared.NewLinker()
 
-	linker := gcpshared.NewLinker(allKnownItems)
-
-	adapters, err := manual.Adapters(ctx, l.ProjectID, l.Regions, l.Zones, linker)
+	manualAdapters, err := manual.Adapters(ctx, cfg.ProjectID, cfg.Regions, cfg.Zones, linker)
 	if err != nil {
-		return nil, fmt.Errorf("error creating adapters: %w", err)
+		return nil, fmt.Errorf("error creating manual adapters: %w", err)
+	}
+
+	initiatedManualAdapters := make(map[string]bool)
+	for _, adapter := range manualAdapters {
+		initiatedManualAdapters[adapter.Type()] = true
+	}
+
+	dynamicAdapters, err := dynamic.Adapters(
+		cfg.ProjectID,
+		cfg.Token,
+		cfg.Regions,
+		cfg.Zones,
+		linker,
+		initiatedManualAdapters,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error creating dynamic adapters: %w", err)
+	}
+
+	var adapters []discovery.Adapter
+	adapters = append(adapters, manualAdapters...)
+	adapters = append(adapters, dynamicAdapters...)
+
+	// Register adapters metadata
+	for _, adapter := range adapters {
+		Metadata.Register(adapter.Metadata())
 	}
 
 	// Add the adapters to the engine
@@ -49,19 +77,20 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 	return engine, nil
 }
 
-type locations struct {
+type config struct {
 	ProjectID string
 	Regions   []string
 	Zones     []string
+	Token     string
 }
 
-func makeLocations() (*locations, error) {
+func readConfig() (*config, error) {
 	projectID := os.Getenv("GCP_PROJECT_ID")
 	if projectID == "" {
 		return nil, fmt.Errorf("GCP_PROJECT_ID environment variable not set")
 	}
 
-	l := &locations{
+	l := &config{
 		ProjectID: projectID,
 	}
 
@@ -88,6 +117,17 @@ func makeLocations() (*locations, error) {
 
 		regions[region] = true
 	}
+
+	for region := range regions {
+		l.Regions = append(l.Regions, region)
+	}
+
+	token := os.Getenv("GCP_TOKEN")
+	if token == "" {
+		return nil, fmt.Errorf("GCP_TOKEN environment variable not set")
+	}
+
+	l.Token = token
 
 	return l, nil
 }

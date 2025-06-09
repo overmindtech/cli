@@ -153,11 +153,6 @@ func Test_isDNSName(t *testing.T) {
 }
 
 func TestLinker_Link(t *testing.T) {
-	type fields struct {
-		allKnownItems       ItemLookup
-		blastPropagations   map[shared.ItemType]map[shared.ItemType]Impact
-		manualAdapterLinker map[shared.ItemType]func(scope, selfLink string, bp *sdp.BlastPropagation) *sdp.LinkedItemQuery
-	}
 	type args struct {
 		fromSDPItemType       shared.ItemType
 		toItemGCPResourceName string
@@ -165,16 +160,11 @@ func TestLinker_Link(t *testing.T) {
 	}
 	tests := []struct {
 		name       string
-		fields     fields
 		args       args
 		expectLink bool
 	}{
 		{
 			name: "Link to a manual adapter",
-			fields: fields{
-				blastPropagations:   BlastPropagations,
-				manualAdapterLinker: ManualAdapterGetLinksByAssetType,
-			},
 			args: args{
 				fromSDPItemType:       ComputeInstance,
 				toItemGCPResourceName: "https://www.googleapis.com/compute/v1/projects/project-test/zones/us-central1-c/disks/integration-test-instance",
@@ -184,10 +174,6 @@ func TestLinker_Link(t *testing.T) {
 		},
 		{
 			name: "Should not link to itself",
-			fields: fields{
-				blastPropagations:   BlastPropagations,
-				manualAdapterLinker: ManualAdapterGetLinksByAssetType,
-			},
 			args: args{
 				fromSDPItemType:       ComputeInstance,
 				toItemGCPResourceName: "https://www.googleapis.com/compute/v1/projects/project-test/zones/us-central1-c/instances/integration-test-instance",
@@ -196,16 +182,6 @@ func TestLinker_Link(t *testing.T) {
 		},
 		{
 			name: "Link to a dynamic adapter",
-			fields: fields{
-				allKnownItems: ItemLookup{
-					"projects/my-project/global/networks/my-network": {
-						GCPAssetType: "compute.googleapis.com/Network",
-						SelfLink:     "https://compute.googleapis.com/compute/v1/projects/my-project/global/networks/my-network",
-					},
-				},
-				blastPropagations:   BlastPropagations,
-				manualAdapterLinker: ManualAdapterGetLinksByAssetType,
-			},
 			args: args{
 				fromSDPItemType:       ComputeInstance,
 				toItemGCPResourceName: "projects/my-project/global/networks/my-network",
@@ -215,11 +191,8 @@ func TestLinker_Link(t *testing.T) {
 		},
 		{
 			name: "Missing blast propagation for the From type",
-			fields: fields{
-				blastPropagations: map[shared.ItemType]map[shared.ItemType]Impact{},
-			},
 			args: args{
-				fromSDPItemType:       ComputeInstance,
+				fromSDPItemType:       shared.NewItemType("foo", "bar", "baz"),
 				toItemGCPResourceName: "https://www.googleapis.com/compute/v1/projects/project-test/zones/us-central1-c/disks/test-disk",
 				toSDPItemType:         ComputeDisk,
 			},
@@ -227,14 +200,10 @@ func TestLinker_Link(t *testing.T) {
 		},
 	}
 	projectID := "test-project-id"
+	l := NewLinker()
 	for _, tt := range tests {
 		fromSDPItem := &sdp.Item{}
 		t.Run(tt.name, func(t *testing.T) {
-			l := &Linker{
-				AllKnownItems:       tt.fields.allKnownItems,
-				blastPropagations:   tt.fields.blastPropagations,
-				manualAdapterLinker: tt.fields.manualAdapterLinker,
-			}
 			l.Link(context.TODO(), projectID, fromSDPItem, tt.args.fromSDPItemType, tt.args.toItemGCPResourceName, tt.args.toSDPItemType)
 
 			if tt.expectLink && len(fromSDPItem.GetLinkedItemQueries()) == 0 {
@@ -258,35 +227,17 @@ func TestLinker_Link(t *testing.T) {
 }
 
 func TestLinker_AutoLink(t *testing.T) {
-	type fields struct {
-		AllKnownItems                      ItemLookup
-		blastPropagations                  map[shared.ItemType]map[shared.ItemType]Impact
-		manualAdapterLinker                map[shared.ItemType]func(scope, selfLink string, bp *sdp.BlastPropagation) *sdp.LinkedItemQuery
-		gcpResourceTypeInURLToSDPAssetType map[string]shared.ItemType
-	}
 	type args struct {
 		fromSDPItemType       shared.ItemType
 		toItemGCPResourceName string
 		toSDPItemType         shared.ItemType
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
+		name string
+		args args
 	}{
 		{
-			name: "Auto link from ComputeInstance to ComputeDisk via known items",
-			fields: fields{
-				AllKnownItems: ItemLookup{
-					"projects/project-test/zones/us-central1-c/disks/test-disk": {
-						GCPAssetType: "compute.googleapis.com/Disk",
-						SDPAssetType: ComputeDisk,
-						SDPCategory:  sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
-						SelfLink:     "https://www.googleapis.com/compute/v1/projects/project-test/zones/us-central1-c/disks/test-disk",
-					},
-				},
-				blastPropagations: BlastPropagations,
-			},
+			name: "Auto link from ComputeInstance to ComputeDisk via manual adapters",
 			args: args{
 				fromSDPItemType:       ComputeInstance,
 				toItemGCPResourceName: "projects/project-test/zones/us-central1-c/disks/test-disk",
@@ -294,28 +245,19 @@ func TestLinker_AutoLink(t *testing.T) {
 			},
 		},
 		{
-			name: "Auto link from ComputeInstance to ComputeDisk via asset type in the URL",
-			fields: fields{
-				blastPropagations:                  BlastPropagations,
-				gcpResourceTypeInURLToSDPAssetType: GCPResourceTypeInURLToSDPAssetType,
-			},
+			name: "Auto link from ComputeInstance to ComputeNetwork via dynamic adapters",
 			args: args{
 				fromSDPItemType:       ComputeInstance,
-				toItemGCPResourceName: "https://www.googleapis.com/compute/v1/projects/project-test/zones/us-central1-c/disks/test-disk",
-				toSDPItemType:         ComputeDisk,
+				toItemGCPResourceName: "https://compute.googleapis.com/compute/v1/projects/my-project/global/networks/my-network",
+				toSDPItemType:         ComputeNetwork,
 			},
 		},
 	}
 	projectID := "project-test"
+	l := NewLinker()
 	for _, tt := range tests {
 		fromSDPItem := &sdp.Item{}
 		t.Run(tt.name, func(t *testing.T) {
-			l := &Linker{
-				AllKnownItems:                      tt.fields.AllKnownItems,
-				blastPropagations:                  tt.fields.blastPropagations,
-				manualAdapterLinker:                tt.fields.manualAdapterLinker,
-				gcpResourceTypeInURLToSDPAssetType: tt.fields.gcpResourceTypeInURLToSDPAssetType,
-			}
 			l.AutoLink(context.TODO(), projectID, fromSDPItem, tt.args.fromSDPItemType, tt.args.toItemGCPResourceName)
 
 			if len(fromSDPItem.GetLinkedItemQueries()) == 0 {
@@ -325,6 +267,94 @@ func TestLinker_AutoLink(t *testing.T) {
 			linkedItemQuery := fromSDPItem.GetLinkedItemQueries()[0]
 			if linkedItemQuery.GetQuery() != nil && linkedItemQuery.GetQuery().GetType() != tt.args.toSDPItemType.String() {
 				t.Errorf("Linker.Link() returned linked item with type %s, expected %s", linkedItemQuery.GetQuery().GetType(), tt.args.toSDPItemType.String())
+			}
+		})
+	}
+}
+
+func Test_determineScope(t *testing.T) {
+	type args struct {
+		ctx                   context.Context
+		projectID             string
+		scope                 Scope
+		toItemGCPResourceName string
+		parts                 []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "Project scope",
+			args: args{
+				ctx:                   context.TODO(),
+				projectID:             "my-project",
+				scope:                 ScopeProject,
+				toItemGCPResourceName: "projects/my-project/global/networks/my-network",
+				parts:                 []string{"projects", "my-project", "global", "networks", "my-network"},
+			},
+			want: "my-project",
+		},
+		{
+			name: "Regional scope",
+			args: args{
+				ctx:                   context.TODO(),
+				projectID:             "my-project",
+				scope:                 ScopeRegional,
+				toItemGCPResourceName: "projects/my-project/regions/us-central1/networks/my-network",
+				parts:                 []string{"projects", "my-project", "regions", "us-central1", "networks", "my-network"},
+			},
+			want: "my-project.us-central1",
+		},
+		{
+			name: "Zonal scope",
+			args: args{
+				ctx:                   context.TODO(),
+				projectID:             "my-project",
+				scope:                 ScopeZonal,
+				toItemGCPResourceName: "projects/my-project/zones/us-central1-c/instances/my-instance",
+				parts:                 []string{"projects", "my-project", "zones", "us-central1-c", "instances", "my-instance"},
+			},
+			want: "my-project.us-central1-c",
+		},
+		{
+			name: "Regional scope, invalid parts length",
+			args: args{
+				ctx:                   context.TODO(),
+				projectID:             "my-project",
+				scope:                 ScopeRegional,
+				toItemGCPResourceName: "projects/my-project",
+				parts:                 []string{"projects", "my-project"},
+			},
+			want: "",
+		},
+		{
+			name: "Zonal scope, invalid parts length",
+			args: args{
+				ctx:                   context.TODO(),
+				projectID:             "my-project",
+				scope:                 ScopeZonal,
+				toItemGCPResourceName: "projects/my-project",
+				parts:                 []string{"projects", "my-project"},
+			},
+			want: "",
+		},
+		{
+			name: "Unknown scope",
+			args: args{
+				ctx:                   context.TODO(),
+				projectID:             "my-project",
+				scope:                 Scope("unknown"),
+				toItemGCPResourceName: "projects/my-project/zones/us-central1-c/instances/my-instance",
+				parts:                 []string{"projects", "my-project", "zones", "us-central1-c", "instances", "my-instance"},
+			},
+			want: "",
+		}}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := determineScope(tt.args.ctx, tt.args.projectID, tt.args.scope, nil, tt.args.toItemGCPResourceName, tt.args.parts); got != tt.want {
+				t.Errorf("determineScope() = %v, want %v", got, tt.want)
 			}
 		})
 	}

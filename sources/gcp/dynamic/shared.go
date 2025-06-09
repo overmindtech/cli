@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -35,7 +36,7 @@ func linkItem(ctx context.Context, projectID string, sdpItem *sdp.Item, sdpAsset
 	}
 }
 
-func externalToSDP(ctx context.Context, projectID string, resp map[string]interface{}, sdpAssetType shared.ItemType, linker *gcpshared.Linker) (*sdp.Item, error) {
+func externalToSDP(ctx context.Context, projectID string, scope string, uniqueAttrKeys []string, resp map[string]interface{}, sdpAssetType shared.ItemType, linker *gcpshared.Linker) (*sdp.Item, error) {
 	attributes, err := shared.ToAttributesWithExclude(resp, "labels")
 	if err != nil {
 		return nil, err
@@ -56,14 +57,15 @@ func externalToSDP(ctx context.Context, projectID string, resp map[string]interf
 		Type:            sdpAssetType.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
-		Scope:           projectID,
+		Scope:           scope,
 		Tags:            labels,
 	}
 
-	// TODO: SelfLink is not guaranteed to work in other APIs
 	// We need to keep an eye on this.
-	if selfLink, ok := resp["selfLink"].(string); ok {
-		err = sdpItem.GetAttributes().Set("uniqueAttr", gcpshared.ShortenSelfLink(selfLink))
+	if name, ok := resp["name"].(string); ok {
+		attrValues := gcpshared.ExtractPathParams(name, uniqueAttrKeys...)
+		uniqueAttrValue := strings.Join(attrValues, shared.QuerySeparator)
+		err = sdpItem.GetAttributes().Set("uniqueAttr", uniqueAttrValue)
 		if err != nil {
 			return nil, err
 		}

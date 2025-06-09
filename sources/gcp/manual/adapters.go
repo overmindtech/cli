@@ -8,12 +8,9 @@ import (
 	kms "cloud.google.com/go/kms/apiv1"
 
 	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/shared"
 )
-
-var Metadata = sdp.AdapterMetadataList{}
 
 // Adapters returns a slice of discovery.Adapter instances for GCP Source.
 func Adapters(ctx context.Context, projectID string, regions []string, zones []string, linker *shared.Linker) ([]discovery.Adapter, error) {
@@ -147,11 +144,6 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		sources.WrapperToAdapter(NewCloudKMSKeyRing(shared.NewCloudKMSKeyRingClient(kmsKeyRingCli), projectID)),
 		sources.WrapperToAdapter(NewCloudKMSCryptoKey(shared.NewCloudKMSCryptoKeyClient(kmsCryptoKeyCli), projectID)),
 	)
-
-	// Register the metadata for each adapter
-	for _, adapter := range adapters {
-		Metadata.Register(adapter.Metadata())
-	}
 
 	return adapters, nil
 }
