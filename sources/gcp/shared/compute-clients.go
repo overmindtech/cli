@@ -6,7 +6,6 @@ import (
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
-	"cloud.google.com/go/kms/apiv1/kmspb"
 	"github.com/googleapis/gax-go/v2"
 )
 
@@ -511,17 +510,6 @@ func (c computeMachineImageClient) Get(ctx context.Context, req *computepb.GetMa
 // List lists compute machine images and returns an iterator
 func (c computeMachineImageClient) List(ctx context.Context, req *computepb.ListMachineImagesRequest, opts ...gax.CallOption) ComputeMachineImageIterator {
 	return c.client.List(ctx, req, opts...)
-}
-
-// CloudKMSCryptoKeyVersionIterator is an interface for iterating over Cloud KMS CryptoKeyVersions
-type CloudKMSCryptoKeyVersionIterator interface {
-	Next() (*kmspb.CryptoKeyVersion, error)
-}
-
-// CloudKMSCryptoKeyVersionClient is an interface for the Cloud KMS CryptoKeyVersion client
-type CloudKMSCryptoKeyVersionClient interface {
-	Get(ctx context.Context, req *kmspb.GetCryptoKeyVersionRequest, opts ...gax.CallOption) (*kmspb.CryptoKeyVersion, error)
-	List(ctx context.Context, req *kmspb.ListCryptoKeyVersionsRequest, opts ...gax.CallOption) CloudKMSCryptoKeyVersionIterator
 }
 
 // ComputeSnapshotIterator is an interface for iterating over compute snapshots

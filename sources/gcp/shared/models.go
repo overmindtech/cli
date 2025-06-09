@@ -65,7 +65,8 @@ const (
 	Subscription             shared.Resource = "subscription"
 	Topic                    shared.Resource = "topic"
 	Project                  shared.Resource = "project"
-	KeyRing                  shared.Resource = "key-ring"
 	CryptoKey                shared.Resource = "crypto-key"
+	CloudKMSEKMConnection    shared.Resource = "ekm-connection"
 	Policy                   shared.Resource = "policy"
+	KeyRing                  shared.Resource = "key-ring"
 )

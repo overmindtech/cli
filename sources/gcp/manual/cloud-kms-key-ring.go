@@ -17,8 +17,8 @@ import (
 var (
 	CloudKMSKeyRing = shared.NewItemType(gcpshared.GCP, gcpshared.CloudKMS, gcpshared.KeyRing)
 
-	CloudKMSKeyRingLookupByName     = shared.NewItemTypeLookup("name", CloudKMSKeyRing)
-	CloudKMSKeyRingLookupByLocation = shared.NewItemTypeLookup("location", CloudKMSKeyRing)
+	CloudKMSCryptoKeyRingLookupByName     = shared.NewItemTypeLookup("name", CloudKMSKeyRing)
+	CloudKMSCryptoKeyRingLookupByLocation = shared.NewItemTypeLookup("location", CloudKMSKeyRing)
 )
 
 // cloudKMSKeyRingWrapper wraps the KMS KeyRing client for SDP adaptation.
@@ -60,8 +60,8 @@ func (c cloudKMSKeyRingWrapper) TerraformMappings() []*sdp.TerraformMapping {
 // GetLookups returns the lookups for the KeyRing wrapper.
 func (c cloudKMSKeyRingWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
-		CloudKMSKeyRingLookupByLocation,
-		CloudKMSKeyRingLookupByName,
+		CloudKMSCryptoKeyRingLookupByLocation,
+		CloudKMSCryptoKeyRingLookupByName,
 	}
 }
 
@@ -97,7 +97,7 @@ func (c cloudKMSKeyRingWrapper) Get(ctx context.Context, queryParts ...string) (
 func (c cloudKMSKeyRingWrapper) SearchLookups() []sources.ItemTypeLookups {
 	return []sources.ItemTypeLookups{
 		{
-			CloudKMSKeyRingLookupByLocation,
+			CloudKMSCryptoKeyRingLookupByLocation,
 		},
 	}
 }
