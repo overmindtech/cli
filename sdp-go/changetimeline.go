@@ -7,6 +7,7 @@ type ChangeTimelineEntryV2Name string
 // - GetChangeTimelineV2 in api-server/server/changesservice.go
 // - resetChangeAnalysisTables in api-server/server/changeanalysis/shared.go
 // - the cli tool if we are waiting for a change analysis to finish
+// - frontend/src/features/changes-v2/change-timeline/ChangeTimeline.tsx - also update the entryNames object as this is used for comparing entry names
 const (
 	ChangeTimelineEntryV2NameChangeCreated         ChangeTimelineEntryV2Name = "Change Created"
 	ChangeTimelineEntryV2NameMappedResources       ChangeTimelineEntryV2Name = "Mapped Resources"
