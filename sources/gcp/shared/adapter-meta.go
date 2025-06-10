@@ -95,6 +95,28 @@ func projectLevelEndpointFuncWithThreeQueries(format string) func(queryParts ...
 	}
 }
 
+func projectLevelEndpointFuncWithFourQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
+	// count number of `%s` in the format string
+	if strings.Count(format, "%s") != 5 { // project ID, and 4 parts of the query
+		panic(fmt.Sprintf("format string must contain 5 %%s placeholders: %s", format))
+	}
+	return func(adapterInitParams ...string) (EndpointFunc, error) {
+		if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
+			return func(query string) string {
+				if query != "" {
+					// query must be a composite
+					queryParts := strings.Split(query, shared.QuerySeparator)
+					if len(queryParts) == 4 && queryParts[0] != "" && queryParts[1] != "" && queryParts[2] != "" && queryParts[3] != "" {
+						return fmt.Sprintf(format, adapterInitParams[0], queryParts[0], queryParts[1], queryParts[2], queryParts[3])
+					}
+				}
+				return ""
+			}, nil
+		}
+		return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+	}
+}
+
 func zoneLevelEndpointFuncWithSingleQuery(format string) func(queryParts ...string) (EndpointFunc, error) {
 	// count number of `%s` in the format string
 	if strings.Count(format, "%s") != 3 { // project ID, zone, and query
@@ -177,6 +199,44 @@ func regionalLevelEndpointFuncWithTwoQueries(format string) func(queryParts ...s
 	}
 }
 
+func projectLevelListFunc(format string) func(adapterInitParams ...string) (string, error) {
+	if strings.Count(format, "%s") != 1 {
+		panic(fmt.Sprintf("format string must contain 1 %%s placeholder: %s", format))
+	}
+	return func(adapterInitParams ...string) (string, error) {
+		if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
+			return fmt.Sprintf(format, adapterInitParams[0]), nil
+		}
+		return "", fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+	}
+}
+
+func regionLevelListFunc(format string) func(adapterInitParams ...string) (string, error) {
+	// count number of `%s` in the format string
+	if strings.Count(format, "%s") != 2 { // project ID and region
+		panic(fmt.Sprintf("format string must contain 2 %%s placeholders: %s", format))
+	}
+	return func(adapterInitParams ...string) (string, error) {
+		if len(adapterInitParams) == 2 && adapterInitParams[0] != "" && adapterInitParams[1] != "" {
+			return fmt.Sprintf(format, adapterInitParams[0], adapterInitParams[1]), nil
+		}
+		return "", fmt.Errorf("projectID and region cannot be empty: %v", adapterInitParams)
+	}
+}
+
+func zoneLevelListFunc(format string) func(adapterInitParams ...string) (string, error) {
+	// count number of `%s` in the format string
+	if strings.Count(format, "%s") != 2 { // project ID and zone
+		panic(fmt.Sprintf("format string must contain 2 %%s placeholders: %s", format))
+	}
+	return func(adapterInitParams ...string) (string, error) {
+		if len(adapterInitParams) == 2 && adapterInitParams[0] != "" && adapterInitParams[1] != "" {
+			return fmt.Sprintf(format, adapterInitParams[0], adapterInitParams[1]), nil
+		}
+		return "", fmt.Errorf("projectID and zone cannot be empty: %v", adapterInitParams)
+	}
+}
+
 // SDPAssetTypeToAdapterMeta maps GCP asset types to their corresponding adapter metadata.
 var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 	AIPlatformCustomJob: {
@@ -201,35 +261,26 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SearchEndpointFunc:     projectLevelEndpointFuncWithSingleQuery("https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/pipelineJobs"),
 		UniqueAttributeKeys:    []string{"locations", "pipelineJobs"},
 	},
+	ArtifactRegistryDockerImage: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/artifact-registry/docs/reference/rest/v1/projects.locations.repositories.dockerImages/get?rep_location=global
+		// GET https://artifactregistry.googleapis.com/v1/{name=projects/*/locations/*/repositories/*/dockerImages/*}
+		// IAM permissions: artifactregistry.dockerImages.get
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithThreeQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s/dockerImages/%s"),
+		// Reference: https://cloud.google.com/artifact-registry/docs/reference/rest/v1/projects.locations.repositories.dockerImages/list?rep_location=global
+		// GET https://artifactregistry.googleapis.com/v1/{parent=projects/*/locations/*/repositories/*}/dockerImages
+		// IAM permissions: artifactregistry.dockerImages.list
+		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s/dockerImages"),
+		UniqueAttributeKeys: []string{"locations", "repositories", "dockerImages"},
+	},
 	BigQueryTable: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 		Scope:              ScopeProject,
 		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}/tables/{tableId}
-		GetEndpointBaseURLFunc: func(adapterInitParams ...string) (EndpointFunc, error) {
-			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-				return func(query string) string {
-					// query must be a composite of datasetID and tableID
-					queryParts := strings.Split(query, shared.QuerySeparator)
-					if len(queryParts) == 1 && queryParts[0] != "" && queryParts[1] != "" {
-						return fmt.Sprintf("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets/%s/tables/%s", adapterInitParams[0], queryParts[0], queryParts[1])
-					}
-					return ""
-				}, nil
-			}
-			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
-		},
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets/%s/tables/%s"),
 		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}/tables
-		SearchEndpointFunc: func(adapterInitParams ...string) (EndpointFunc, error) {
-			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-				return func(query string) string {
-					if query != "" {
-						return fmt.Sprintf("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets/%s/tables", adapterInitParams[0], query)
-					}
-					return ""
-				}, nil
-			}
-			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
-		},
+		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets/%s/tables"),
 		UniqueAttributeKeys: []string{"datasets", "tables"},
 	},
 	BigQueryDataset: {
@@ -288,18 +339,63 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/tables"),
 		UniqueAttributeKeys: []string{"instances", "tables"},
 	},
+	CloudBillingBillingInfo: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/billing/docs/reference/rest/v1/projects/getBillingInfo
+		// Gets the billing information for a project.
+		// GET https://cloudbilling.googleapis.com/v1/{name=projects/*}/billingInfo
+		// IAM permissions: resourcemanager.projects.get
+		GetEndpointBaseURLFunc: func(adapterInitParams ...string) (EndpointFunc, error) {
+			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
+				return func(query string) string {
+					if query != "" {
+						return fmt.Sprintf("https://cloudbilling.googleapis.com/v1/projects/%s/billingInfo", query)
+					}
+					return ""
+				}, nil
+			}
+			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+		},
+		UniqueAttributeKeys: []string{"billingInfo"},
+	},
+	CloudBuildBuild: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/build/docs/api/reference/rest/v1/projects.builds/get
+		// GET https://cloudbuild.googleapis.com/v1/projects/{projectId}/builds/{id}
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://cloudbuild.googleapis.com/v1/projects/%s/builds/%s"),
+		// Reference: https://cloud.google.com/build/docs/api/reference/rest/v1/projects.builds/list
+		// GET https://cloudbuild.googleapis.com/v1/projects/{projectId}/builds
+		ListEndpointFunc:    projectLevelListFunc("https://cloudbuild.googleapis.com/v1/projects/%s/builds"),
+		UniqueAttributeKeys: []string{"builds"},
+	},
+	CloudResourceManagerProject: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/resource-manager/reference/rest/v3/projects/get
+		// GET https://cloudresourcemanager.googleapis.com/v3/projects/*
+		// IAM permissions: resourcemanager.projects.get
+		GetEndpointBaseURLFunc: func(adapterInitParams ...string) (EndpointFunc, error) {
+			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
+				return func(query string) string {
+					if query != "" {
+						return fmt.Sprintf("https://cloudresourcemanager.googleapis.com/v3/projects/%s", query)
+					}
+					return ""
+				}, nil
+			}
+			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+		},
+		UniqueAttributeKeys: []string{"projects"},
+	},
 	ComputeNetwork: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 		Scope:              ScopeProject,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/networks/{network}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/networks/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/networks
-		ListEndpointFunc: func(adapterInitParams ...string) (string, error) {
-			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-				return fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/networks", adapterInitParams[0]), nil
-			}
-			return "", fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
-		},
+		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/networks"),
 		UniqueAttributeKeys: []string{"networks"},
 	},
 	ComputeSubnetwork: {
@@ -308,12 +404,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/subnetworks/{subnetwork}
 		GetEndpointBaseURLFunc: regionalLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/subnetworks
-		ListEndpointFunc: func(queryParts ...string) (string, error) {
-			if len(queryParts) == 2 && queryParts[0] != "" && queryParts[1] != "" {
-				return fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks", queryParts[0], queryParts[1]), nil
-			}
-			return "", fmt.Errorf("projectID and region cannot be empty: %v", queryParts)
-		},
+		ListEndpointFunc:    regionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks"),
 		UniqueAttributeKeys: []string{"subnetworks"},
 	},
 	ComputeInstance: {
@@ -322,12 +413,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances/{instance}
 		GetEndpointBaseURLFunc: zoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/instances/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances
-		ListEndpointFunc: func(queryParts ...string) (string, error) {
-			if len(queryParts) == 2 && queryParts[0] != "" && queryParts[1] != "" {
-				return fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/instances", queryParts[0], queryParts[1]), nil
-			}
-			return "", fmt.Errorf("projectID and zone cannot be empty: %v", queryParts)
-		},
+		ListEndpointFunc:    zoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/instances"),
 		UniqueAttributeKeys: []string{"instances"},
 	},
 	ComputeInstanceTemplate: {
@@ -336,12 +422,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/instanceTemplates/{instanceTemplate}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/instanceTemplates/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/instanceTemplates
-		ListEndpointFunc: func(queryParts ...string) (string, error) {
-			if len(queryParts) == 1 && queryParts[0] != "" {
-				return fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/instanceTemplates", queryParts[0]), nil
-			}
-			return "", fmt.Errorf("projectID cannot be empty: %v", queryParts)
-		},
+		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/instanceTemplates"),
 		UniqueAttributeKeys: []string{"instanceTemplates"},
 	},
 	ComputeRoute: {
@@ -350,12 +431,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/routes/{route}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/routes/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/routes
-		ListEndpointFunc: func(queryParts ...string) (string, error) {
-			if len(queryParts) == 1 && queryParts[0] != "" {
-				return fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/routes", queryParts[0]), nil
-			}
-			return "", fmt.Errorf("projectID cannot be empty: %v", queryParts)
-		},
+		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/routes"),
 		UniqueAttributeKeys: []string{"routes"},
 	},
 	ComputeFirewall: {
@@ -364,12 +440,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/firewalls/{firewall}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/firewalls
-		ListEndpointFunc: func(queryParts ...string) (string, error) {
-			if len(queryParts) == 1 && queryParts[0] != "" {
-				return fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls", queryParts[0]), nil
-			}
-			return "", fmt.Errorf("projectID cannot be empty: %v", queryParts)
-		},
+		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls"),
 		UniqueAttributeKeys: []string{"firewalls"},
 	},
 	ComputeProject: {
@@ -401,6 +472,54 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		},
 		UniqueAttributeKeys: []string{"projects"},
 	},
+	DataformRepository: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/dataform/reference/rest/v1/projects.locations.repositories/get
+		// GET https://dataform.googleapis.com/v1/projects/*/locations/*/repositories/*
+		// IAM permissions: dataform.repositories.get
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories/%s"),
+		// Reference: https://cloud.google.com/dataform/reference/rest/v1/projects.locations.repositories/list
+		// GET https://dataform.googleapis.com/v1/projects/*/locations/*/repositories
+		// IAM permissions: dataform.repositories.list
+		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories"),
+		UniqueAttributeKeys: []string{"locations", "repositories"},
+	},
+	DataplexEntryGroup: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.entryGroups/get
+		// GET https://dataplex.googleapis.com/v1/{name=projects/*/locations/*/entryGroups/*}
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups/%s"),
+		// Reference: https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.entryGroups/list
+		// GET https://dataplex.googleapis.com/v1/{parent=projects/*/locations/*}/entryGroups
+		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups"),
+		UniqueAttributeKeys: []string{"locations", "entryGroups"},
+	},
+	DNSManagedZone: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/dns/docs/reference/rest/v1/managedZones/get
+		// GET https://dns.googleapis.com/dns/v1/projects/{project}/managedZones/{managedZone}
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://dns.googleapis.com/dns/v1/projects/%s/managedZones/%s"),
+		// Reference: https://cloud.google.com/dns/docs/reference/rest/v1/managedZones/list
+		// GET https://dns.googleapis.com/dns/v1/projects/{project}/managedZones
+		ListEndpointFunc:    projectLevelListFunc("https://dns.googleapis.com/dns/v1/projects/%s/managedZones"),
+		UniqueAttributeKeys: []string{"managedZones"},
+	},
+	EssentialContactsContact: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OTHER,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/resource-manager/docs/reference/essentialcontacts/rest/v1/projects.contacts/get
+		// GET https://essentialcontacts.googleapis.com/v1/projects/*/contacts/*
+		// IAM permissions: essentialcontacts.contacts.get
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts/%s"),
+		// Reference: https://cloud.google.com/resource-manager/docs/reference/essentialcontacts/rest/v1/projects.contacts/list
+		// GET https://essentialcontacts.googleapis.com/v1/projects/*/contacts
+		// IAM permissions: essentialcontacts.contacts.list
+		ListEndpointFunc:    projectLevelListFunc("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts"),
+		UniqueAttributeKeys: []string{"contacts"},
+	},
 	IamRole: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 		Scope:              ScopeProject,
@@ -409,13 +528,20 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://iam.googleapis.com/v1/projects/%s/roles/%s"),
 		// Reference: https://cloud.google.com/iam/docs/reference/rest/v1/roles/list
 		// https://iam.googleapis.com/v1/projects/{PROJECT_ID}/roles
-		ListEndpointFunc: func(adapterInitParams ...string) (string, error) {
-			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-				return fmt.Sprintf("https://iam.googleapis.com/v1/projects/%s/roles", adapterInitParams[0]), nil
-			}
-			return "", fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
-		},
+		ListEndpointFunc:    projectLevelListFunc("https://iam.googleapis.com/v1/projects/%s/roles"),
 		UniqueAttributeKeys: []string{"roles"},
+	},
+	MonitoringCustomDashboard: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/monitoring/api/ref_v3/rest/v1/projects.dashboards/get
+		// GET https://monitoring.googleapis.com/v1/projects/[PROJECT_ID_OR_NUMBER]/dashboards/[DASHBOARD_ID] (for custom dashboards).
+		// IAM Perm: monitoring.dashboards.get
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://monitoring.googleapis.com/v1/projects/%s/dashboards/%s"),
+		// Reference: https://cloud.google.com/monitoring/api/ref_v3/rest/v1/projects.dashboards/list
+		// GET https://monitoring.googleapis.com/v1/{parent}/dashboards
+		// IAM Perm: monitoring.dashboards.list
+		ListEndpointFunc: projectLevelListFunc("https://monitoring.googleapis.com/v1/projects/%s/dashboards"),
 	},
 	PubSubSubscription: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
@@ -423,12 +549,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://pubsub.googleapis.com/v1/projects/{project}/subscriptions/{subscription}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://pubsub.googleapis.com/v1/projects/%s/subscriptions/%s"),
 		// https://pubsub.googleapis.com/v1/projects/{project}/subscriptions
-		ListEndpointFunc: func(queryParts ...string) (string, error) {
-			if len(queryParts) == 1 && queryParts[0] != "" {
-				return fmt.Sprintf("https://pubsub.googleapis.com/v1/projects/%s/subscriptions", queryParts[0]), nil
-			}
-			return "", fmt.Errorf("projectID cannot be empty: %v", queryParts)
-		},
+		ListEndpointFunc:    projectLevelListFunc("https://pubsub.googleapis.com/v1/projects/%s/subscriptions"),
 		UniqueAttributeKeys: []string{"subscriptions"},
 	},
 	PubSubTopic: {
@@ -437,12 +558,101 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://pubsub.googleapis.com/v1/projects/{project}/topics/{topic}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://pubsub.googleapis.com/v1/projects/%s/topics/%s"),
 		// https://pubsub.googleapis.com/v1/projects/{project}/topics
-		ListEndpointFunc: func(queryParts ...string) (string, error) {
-			if len(queryParts) == 1 && queryParts[0] != "" {
-				return fmt.Sprintf("https://pubsub.googleapis.com/v1/projects/%s/topics", queryParts[0]), nil
-			}
-			return "", fmt.Errorf("projectID cannot be empty: %v", queryParts)
-		},
+		ListEndpointFunc:    projectLevelListFunc("https://pubsub.googleapis.com/v1/projects/%s/topics"),
 		UniqueAttributeKeys: []string{"topics"},
+	},
+	RunRevision: {
+		/*
+			A Revision is an immutable snapshot of code and configuration.
+			A Revision references a container image.
+			Revisions are only created by updates to its parent Service.
+		*/
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.services.revisions/get
+		// GET https://run.googleapis.com/v2/projects/{project}/locations/{location}/services/{service}/revisions/{revision}
+		// IAM Perm: run.revisions.get
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithThreeQueries("https://run.googleapis.com/v2/projects/%s/locations/%s/services/%s/revisions/%s"),
+		// Reference: https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.services.revisions/list
+		// GET https://run.googleapis.com/v2/projects/{project}/locations/{location}/services/{service}/revisions
+		// IAM Perm: run.revisions.list
+		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://run.googleapis.com/v2/projects/%s/locations/%s/services/%s/revisions"),
+		UniqueAttributeKeys: []string{"locations", "services", "revisions"},
+	},
+	ServiceDirectoryEndpoint: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/service-directory/docs/reference/rest/v1/projects.locations.namespaces.services.endpoints/get
+		// GET https://servicedirectory.googleapis.com/v1/projects/*/locations/*/namespaces/*/services/*/endpoints/*
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithFourQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s/endpoints/%s"),
+		// Reference: https://cloud.google.com/service-directory/docs/reference/rest/v1/projects.locations.namespaces.services.endpoints/list
+		// IAM Perm: servicedirectory.endpoints.list
+		// GET https://servicedirectory.googleapis.com/v1/projects/*/locations/*/namespaces/*/services/*/endpoints
+		SearchEndpointFunc:  projectLevelEndpointFuncWithThreeQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s/endpoints"),
+		UniqueAttributeKeys: []string{"locations", "namespaces", "services", "endpoints"},
+	},
+	ServiceUsageService: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/service-usage/docs/reference/rest/v1/services/get
+		// GET https://serviceusage.googleapis.com/v1/{name=*/*/services/*}
+		// An example name would be: projects/123/services/service
+		// where 123 is the project number TODO: make sure that this is working with project ID as well
+		// IAM Perm: serviceusage.services.get
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://serviceusage.googleapis.com/v1/projects/%s/services/%s"),
+		// Reference: https://cloud.google.com/service-usage/docs/reference/rest/v1/services/list
+		// GET https://serviceusage.googleapis.com/v1/{parent=*/*}/services
+		/*
+			List all services available to the specified project, and the current state of those services with respect to the project.
+			The list includes all public services, all services for which the calling user has the `servicemanagement.services.bind` permission,
+			and all services that have already been enabled on the project.
+			The list can be filtered to only include services in a specific state, for example to only include services enabled on the project.
+		*/
+		// Let's use the filter to only list enabled services.
+		// IAM Perm: serviceusage.services.list
+		ListEndpointFunc:    projectLevelListFunc("https://serviceusage.googleapis.com/v1/projects/%s/services?filter=state:ENABLED"),
+		UniqueAttributeKeys: []string{"services"},
+	},
+	SqlAdminBackup: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/Backups/GetBackup
+		// GET https://sqladmin.googleapis.com/v1/{name=projects/*/backups/*}
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://sqladmin.googleapis.com/v1/projects/%s/backups/%s"),
+		// GET https://sqladmin.googleapis.com/v1/{parent=projects/*}/backups
+		ListEndpointFunc:    projectLevelListFunc("https://sqladmin.googleapis.com/v1/projects/%s/backups"),
+		UniqueAttributeKeys: []string{"backups"},
+	},
+	SqlAdminBackupRun: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/backupRuns/get
+		// GET https://sqladmin.googleapis.com/v1/projects/{project}/instances/{instance}/backupRuns/{id}
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://sqladmin.googleapis.com/v1/projects/%s/instances/%s/backupRuns/%s"),
+		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/backupRuns/list
+		// GET https://sqladmin.googleapis.com/v1/projects/{project}/instances/{instance}/backupRuns
+		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://sqladmin.googleapis.com/v1/projects/%s/instances/%s/backupRuns"),
+		UniqueAttributeKeys: []string{"instances", "backupRuns"},
+	},
+	StorageBucket: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/storage/docs/json_api/v1/buckets/get
+		// GET https://storage.googleapis.com/storage/v1/b/{bucket}
+		GetEndpointBaseURLFunc: func(queryParts ...string) (EndpointFunc, error) {
+			if len(queryParts) == 1 && queryParts[0] != "" {
+				return func(query string) string {
+					if query != "" {
+						return fmt.Sprintf("https://storage.googleapis.com/storage/v1/b/%s", query)
+					}
+					return ""
+				}, nil
+			}
+			return nil, fmt.Errorf("bucket name cannot be empty: %v", queryParts)
+		},
+		// Reference: https://cloud.google.com/storage/docs/json_api/v1/buckets/list
+		// GET https://storage.googleapis.com/storage/v1/b?project={project}
+		ListEndpointFunc:    projectLevelListFunc("https://storage.googleapis.com/storage/v1/b?project=%s"),
+		UniqueAttributeKeys: []string{"b"},
 	},
 }

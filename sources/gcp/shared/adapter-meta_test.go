@@ -927,3 +927,250 @@ func TestEndpointFuncWithQueries_PanicsOnWrongFormat(t *testing.T) {
 		})
 	}
 }
+
+func Test_projectLevelListFunc(t *testing.T) {
+	tests := []struct {
+		name        string
+		format      string
+		params      []string
+		expectedURL string
+		expectErr   bool
+	}{
+		{
+			name:        "valid project id",
+			format:      "https://example.com/projects/%s/resources",
+			params:      []string{"my-project"},
+			expectedURL: "https://example.com/projects/my-project/resources",
+			expectErr:   false,
+		},
+		{
+			name:      "empty project id",
+			format:    "https://example.com/projects/%s/resources",
+			params:    []string{""},
+			expectErr: true,
+		},
+		{
+			name:      "too many params",
+			format:    "https://example.com/projects/%s/resources",
+			params:    []string{"my-project", "extra"},
+			expectErr: true,
+		},
+		{
+			name:      "too few params",
+			format:    "https://example.com/projects/%s/resources",
+			params:    []string{},
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fn := projectLevelListFunc(tt.format)
+			got, err := fn(tt.params...)
+			if tt.expectErr {
+				if err == nil {
+					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, got)
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, got, tt.expectedURL)
+				return
+			}
+			if got != tt.expectedURL {
+				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
+			}
+		})
+	}
+}
+
+func Test_regionLevelListFunc(t *testing.T) {
+	tests := []struct {
+		name        string
+		format      string
+		params      []string
+		expectedURL string
+		expectErr   bool
+	}{
+		{
+			name:        "valid project and region",
+			format:      "https://example.com/projects/%s/regions/%s/resources",
+			params:      []string{"my-project", "my-region"},
+			expectedURL: "https://example.com/projects/my-project/regions/my-region/resources",
+			expectErr:   false,
+		},
+		{
+			name:      "empty project id",
+			format:    "https://example.com/projects/%s/regions/%s/resources",
+			params:    []string{"", "my-region"},
+			expectErr: true,
+		},
+		{
+			name:      "empty region",
+			format:    "https://example.com/projects/%s/regions/%s/resources",
+			params:    []string{"my-project", ""},
+			expectErr: true,
+		},
+		{
+			name:      "too few params",
+			format:    "https://example.com/projects/%s/regions/%s/resources",
+			params:    []string{"my-project"},
+			expectErr: true,
+		},
+		{
+			name:      "too many params",
+			format:    "https://example.com/projects/%s/regions/%s/resources",
+			params:    []string{"my-project", "my-region", "extra"},
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fn := regionLevelListFunc(tt.format)
+			got, err := fn(tt.params...)
+			if tt.expectErr {
+				if err == nil {
+					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, got)
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, got, tt.expectedURL)
+				return
+			}
+			if got != tt.expectedURL {
+				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
+			}
+		})
+	}
+}
+
+func Test_zoneLevelListFunc(t *testing.T) {
+	tests := []struct {
+		name        string
+		format      string
+		params      []string
+		expectedURL string
+		expectErr   bool
+	}{
+		{
+			name:        "valid project and zone",
+			format:      "https://example.com/projects/%s/zones/%s/resources",
+			params:      []string{"my-project", "my-zone"},
+			expectedURL: "https://example.com/projects/my-project/zones/my-zone/resources",
+			expectErr:   false,
+		},
+		{
+			name:      "empty project id",
+			format:    "https://example.com/projects/%s/zones/%s/resources",
+			params:    []string{"", "my-zone"},
+			expectErr: true,
+		},
+		{
+			name:      "empty zone",
+			format:    "https://example.com/projects/%s/zones/%s/resources",
+			params:    []string{"my-project", ""},
+			expectErr: true,
+		},
+		{
+			name:      "too few params",
+			format:    "https://example.com/projects/%s/zones/%s/resources",
+			params:    []string{"my-project"},
+			expectErr: true,
+		},
+		{
+			name:      "too many params",
+			format:    "https://example.com/projects/%s/zones/%s/resources",
+			params:    []string{"my-project", "my-zone", "extra"},
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fn := zoneLevelListFunc(tt.format)
+			got, err := fn(tt.params...)
+			if tt.expectErr {
+				if err == nil {
+					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, got)
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, got, tt.expectedURL)
+				return
+			}
+			if got != tt.expectedURL {
+				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
+			}
+		})
+	}
+}
+
+func Test_projectLevelEndpointFuncWithFourQueries(t *testing.T) {
+	tests := []struct {
+		name          string
+		format        string
+		params        []string
+		query         string
+		expectedURL   string
+		expectInitErr bool
+	}{
+		{
+			name:        "valid project and quadruple composite query",
+			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
+			params:      []string{"my-project"},
+			query:       "foo|bar|baz|qux",
+			expectedURL: "https://example.com/projects/my-project/resources/foo/child/bar/grandchild/baz/greatgrandchild/qux",
+		},
+		{
+			name:          "empty project id",
+			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
+			params:        []string{""},
+			query:         "foo|bar|baz|qux",
+			expectInitErr: true,
+		},
+		{
+			name:        "missing query",
+			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
+			params:      []string{"my-project"},
+			query:       "",
+			expectedURL: "",
+		},
+		{
+			name:          "too many params",
+			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
+			params:        []string{"my-project", "extra"},
+			query:         "foo|bar|baz|qux",
+			expectInitErr: true,
+		},
+		{
+			name:          "too few params",
+			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
+			params:        []string{},
+			query:         "foo|bar|baz|qux",
+			expectInitErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fn := projectLevelEndpointFuncWithFourQueries(tt.format)
+			endpointFunc, err := fn(tt.params...)
+			if tt.expectInitErr {
+				if err == nil {
+					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, endpointFunc)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, endpointFunc, tt.expectedURL)
+			}
+			got := endpointFunc(tt.query)
+			if got != tt.expectedURL {
+				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
+			}
+		})
+	}
+}
