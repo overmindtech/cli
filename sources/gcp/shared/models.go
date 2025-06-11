@@ -32,6 +32,7 @@ const (
 	DNS                  shared.API = "dns"
 	CloudBilling         shared.API = "cloud-billing"
 	EssentialContacts    shared.API = "essential-contacts"
+	Logging              shared.API = "logging"
 )
 
 // Resources
@@ -108,4 +109,7 @@ const (
 	ManagedZone              shared.Resource = "managed-zone"
 	BillingInfo              shared.Resource = "billing-info"
 	Contact                  shared.Resource = "contact"
+	SavedQuery               shared.Resource = "saved-query"
+	Link                     shared.Resource = "link"
+	Sink                     shared.Resource = "sink"
 )

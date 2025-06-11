@@ -585,6 +585,58 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		ListEndpointFunc:    projectLevelListFunc("https://iam.googleapis.com/v1/projects/%s/roles"),
 		UniqueAttributeKeys: []string{"roles"},
 	},
+	LoggingBucket: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets/get
+		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets/*
+		// IAM permissions: logging.buckets.get
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s"),
+		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets/list
+		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets
+		// IAM permissions: logging.buckets.list
+		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets"),
+		UniqueAttributeKeys: []string{"locations", "buckets"},
+	},
+	LoggingLink: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets.links/get
+		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets/*/links/*
+		// IAM permissions: logging.links.get
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithThreeQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s/links/%s"),
+		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets.links/list
+		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets/*/links
+		// IAM permissions: logging.links.list
+		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s/links"),
+		UniqueAttributeKeys: []string{"locations", "buckets", "links"},
+	},
+	LoggingSavedQuery: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.savedQueries/get
+		// GET https://logging.googleapis.com/v2/projects/*/locations/*/savedQueries/*
+		// IAM permissions: logging.savedQueries.get
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/savedQueries/%s"),
+		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.savedQueries/list
+		// GET https://logging.googleapis.com/v2/projects/*/locations/*/savedQueries
+		// IAM permissions: logging.savedQueries.list
+		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://logging.googleapis.com/v2/projects/%s/locations/%s/savedQueries"),
+		UniqueAttributeKeys: []string{"locations", "savedQueries"},
+	},
+	LoggingSink: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.sinks/get
+		// GET https://logging.googleapis.com/v2/projects/*/sinks/*
+		// IAM permissions: logging.sinks.get
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://logging.googleapis.com/v2/projects/%s/sinks/%s"),
+		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.sinks/list
+		// GET https://logging.googleapis.com/v2/projects/*/sinks
+		// IAM permissions: logging.sinks.list
+		ListEndpointFunc:    projectLevelListFunc("https://logging.googleapis.com/v2/projects/%s/sinks"),
+		UniqueAttributeKeys: []string{"sinks"},
+	},
 	MonitoringCustomDashboard: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
 		Scope:              ScopeProject,

@@ -73,4 +73,8 @@ var (
 	DNSManagedZone                 = shared.NewItemType(GCP, DNS, ManagedZone)
 	CloudBillingBillingInfo        = shared.NewItemType(GCP, CloudBilling, BillingInfo)
 	EssentialContactsContact       = shared.NewItemType(GCP, EssentialContacts, Contact)
+	LoggingSavedQuery              = shared.NewItemType(GCP, Logging, SavedQuery)
+	LoggingBucket                  = shared.NewItemType(GCP, Logging, Bucket)
+	LoggingLink                    = shared.NewItemType(GCP, Logging, Link)
+	LoggingSink                    = shared.NewItemType(GCP, Logging, Sink)
 )

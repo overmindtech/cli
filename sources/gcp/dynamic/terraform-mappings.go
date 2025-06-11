@@ -179,6 +179,24 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 	gcpshared.IAMRole: {
 		Description: "There is no terraform resource for this type.",
 	},
+	gcpshared.LoggingBucket: {
+		Description: "There is no terraform resource for this type.",
+	},
+	gcpshared.LoggingLink: {
+		Description: "There is no terraform resource for this type.",
+	},
+	gcpshared.LoggingSavedQuery: {
+		Description: "There is no terraform resource for this type.",
+	},
+	gcpshared.LoggingSink: {
+		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/logging_project_sink",
+		Mappings: []*sdp.TerraformMapping{
+			{
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_logging_project_sink.name",
+			},
+		},
+	},
 	gcpshared.MonitoringCustomDashboard: {
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/monitoring_dashboard",
 		Description: "id => projects/{{project}}/dashboards/{{dashboard_id}}",
