@@ -25,8 +25,11 @@ type AdapterMeta struct {
 	GetEndpointBaseURLFunc func(queryParts ...string) (EndpointFunc, error)
 	ListEndpointFunc       func(queryParts ...string) (string, error)
 	SearchEndpointFunc     func(queryParts ...string) (EndpointFunc, error)
-	SDPAdapterCategory     sdp.AdapterCategory
-	UniqueAttributeKeys    []string
+	// We will normally generate the search description from the UniqueAttributeKeys
+	// but we allow it to be overridden for specific adapters.
+	SearchDescription   string
+	SDPAdapterCategory  sdp.AdapterCategory
+	UniqueAttributeKeys []string
 }
 
 // We have group of functions that are similar in nature, however they cannot simplified into a generic function because
@@ -271,8 +274,47 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/artifact-registry/docs/reference/rest/v1/projects.locations.repositories.dockerImages/list?rep_location=global
 		// GET https://artifactregistry.googleapis.com/v1/{parent=projects/*/locations/*/repositories/*}/dockerImages
 		// IAM permissions: artifactregistry.dockerImages.list
-		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s/dockerImages"),
+		SearchEndpointFunc: func(adapterInitParams ...string) (EndpointFunc, error) {
+			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
+				return func(query string) string {
+					if strings.Contains(query, "/") {
+						// That means this is coming from terraform mapping, and the query is in the form of
+						// projects/{{project}}/locations/{{location}}/repository/{{repository_id}}/dockerImages/{{docker_image}}
+						// We need to extract the relevant parts and construct the URL accordingly
+						parts := strings.Split(strings.TrimPrefix(query, "/"), "/")
+						if len(parts) == 8 {
+							// 3: location
+							// 5: repository_id
+							// 7: docker_image
+							return fmt.Sprintf("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s/dockerImages/%s", adapterInitParams[0], parts[3], parts[5], parts[7])
+						}
+						return ""
+					}
+					if query != "" {
+						// This is a regular query coming from user interaction, and it should be in the form of
+						// {{location}}|{{repository_id}}
+						queryParts := strings.Split(query, shared.QuerySeparator)
+						if len(queryParts) == 2 && queryParts[0] != "" && queryParts[1] != "" {
+							return fmt.Sprintf("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s/dockerImages", adapterInitParams[0], queryParts[0], queryParts[1])
+						}
+						return ""
+					}
+					return ""
+				}, nil
+			}
+			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+		},
+		SearchDescription:   "Search for Docker images in Artifact Registry. Use the format {{location}}|{{repository_id}} or projects/{{project}}/locations/{{location}}/repository/{{repository_id}}/dockerImages/{{docker_image}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "repositories", "dockerImages"},
+	},
+	BigQueryDataset: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
+		Scope:              ScopeProject,
+		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets/%s"),
+		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets
+		ListEndpointFunc:    projectLevelListFunc("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets"),
+		UniqueAttributeKeys: []string{"datasets"},
 	},
 	BigQueryTable: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
@@ -280,32 +322,11 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}/tables/{tableId}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets/%s/tables/%s"),
 		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}/tables
+		// TODO: Update this for => https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
+		// id => projects/{{project}}/datasets/{{dataset}}/tables/{{table}}
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets/%s/tables"),
+		SearchDescription:   "Search for BigQuery tables in a dataset. Use the format {{dataset}} or projects/{{project}}/datasets/{{dataset}}/tables/{{table}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"datasets", "tables"},
-	},
-	BigQueryDataset: {
-		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
-		Scope:              ScopeProject,
-		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}
-		GetEndpointBaseURLFunc: func(adapterInitParams ...string) (EndpointFunc, error) {
-			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-				return func(query string) string {
-					if query != "" {
-						return fmt.Sprintf("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets/%s", adapterInitParams[0], query)
-					}
-					return ""
-				}, nil
-			}
-			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
-		},
-		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets
-		ListEndpointFunc: func(queryParts ...string) (string, error) {
-			if len(queryParts) == 1 && queryParts[0] != "" {
-				return fmt.Sprintf("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets", queryParts[0]), nil
-			}
-			return "", fmt.Errorf("projectID cannot be empty: %v", queryParts)
-		},
-		UniqueAttributeKeys: []string{"datasets"},
 	},
 	BigTableAdminAppProfile: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
@@ -315,7 +336,10 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/appProfiles/%s"),
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.appProfiles/list
 		// GET https://bigtableadmin.googleapis.com/v2/{parent=projects/*/instances/*}/appProfiles
+		// TODO: Update this for => https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
+		// id => projects/{{project}}/instances/{{instance}}/appProfiles/{{app_profile_id}}
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/appProfiles"),
+		SearchDescription:   "Search for BigTable App Profiles in an instance. Use the format {{instance}} or projects/{{project}}/instances/{{instance}}/appProfiles/{{app_profile_id}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"instances", "appProfiles"},
 	},
 	BigTableAdminBackup: {
@@ -336,7 +360,10 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/tables/%s"),
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.tables/list
 		// GET https://bigtableadmin.googleapis.com/v2/{parent=projects/*/instances/*}/tables
+		// TODO: Update this for => https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
+		// id => projects/{{project}}/instances/{{instance_name}}/tables/{{name}}
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/tables"),
+		SearchDescription:   "Search for BigTable tables in an instance. Use the format {{instance_name}} or projects/{{project}}/instances/{{instance_name}}/tables/{{name}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"instances", "tables"},
 	},
 	CloudBillingBillingInfo: {
@@ -389,23 +416,14 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		},
 		UniqueAttributeKeys: []string{"projects"},
 	},
-	ComputeNetwork: {
+	ComputeFirewall: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 		Scope:              ScopeProject,
-		// https://compute.googleapis.com/compute/v1/projects/{project}/global/networks/{network}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/networks/%s"),
-		// https://compute.googleapis.com/compute/v1/projects/{project}/global/networks
-		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/networks"),
-		UniqueAttributeKeys: []string{"networks"},
-	},
-	ComputeSubnetwork: {
-		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-		Scope:              ScopeRegional,
-		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/subnetworks/{subnetwork}
-		GetEndpointBaseURLFunc: regionalLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks/%s"),
-		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/subnetworks
-		ListEndpointFunc:    regionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks"),
-		UniqueAttributeKeys: []string{"subnetworks"},
+		// https://compute.googleapis.com/compute/v1/projects/{project}/global/firewalls/{firewall}
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls/%s"),
+		// https://compute.googleapis.com/compute/v1/projects/{project}/global/firewalls
+		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls"),
+		UniqueAttributeKeys: []string{"firewalls"},
 	},
 	ComputeInstance: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
@@ -425,23 +443,14 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/instanceTemplates"),
 		UniqueAttributeKeys: []string{"instanceTemplates"},
 	},
-	ComputeRoute: {
+	ComputeNetwork: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 		Scope:              ScopeProject,
-		// https://compute.googleapis.com/compute/v1/projects/{project}/global/routes/{route}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/routes/%s"),
-		// https://compute.googleapis.com/compute/v1/projects/{project}/global/routes
-		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/routes"),
-		UniqueAttributeKeys: []string{"routes"},
-	},
-	ComputeFirewall: {
-		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-		Scope:              ScopeProject,
-		// https://compute.googleapis.com/compute/v1/projects/{project}/global/firewalls/{firewall}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls/%s"),
-		// https://compute.googleapis.com/compute/v1/projects/{project}/global/firewalls
-		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls"),
-		UniqueAttributeKeys: []string{"firewalls"},
+		// https://compute.googleapis.com/compute/v1/projects/{project}/global/networks/{network}
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/networks/%s"),
+		// https://compute.googleapis.com/compute/v1/projects/{project}/global/networks
+		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/networks"),
+		UniqueAttributeKeys: []string{"networks"},
 	},
 	ComputeProject: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
@@ -472,6 +481,24 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		},
 		UniqueAttributeKeys: []string{"projects"},
 	},
+	ComputeRoute: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
+		Scope:              ScopeProject,
+		// https://compute.googleapis.com/compute/v1/projects/{project}/global/routes/{route}
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/routes/%s"),
+		// https://compute.googleapis.com/compute/v1/projects/{project}/global/routes
+		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/routes"),
+		UniqueAttributeKeys: []string{"routes"},
+	},
+	ComputeSubnetwork: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
+		Scope:              ScopeRegional,
+		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/subnetworks/{subnetwork}
+		GetEndpointBaseURLFunc: regionalLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks/%s"),
+		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/subnetworks
+		ListEndpointFunc:    regionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks"),
+		UniqueAttributeKeys: []string{"subnetworks"},
+	},
 	DataformRepository: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 		Scope:              ScopeProject,
@@ -482,7 +509,10 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/dataform/reference/rest/v1/projects.locations.repositories/list
 		// GET https://dataform.googleapis.com/v1/projects/*/locations/*/repositories
 		// IAM permissions: dataform.repositories.list
+		// TODO: Update this for => https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
+		// id => projects/{{project}}/locations/{{region}}/repositories/{{name}}
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories"),
+		SearchDescription:   "Search for Dataform repositories in a location. Use the format {{location}} or projects/{{project}}/locations/{{location}}/repositories/{{name}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "repositories"},
 	},
 	DataplexEntryGroup: {
@@ -493,7 +523,10 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups/%s"),
 		// Reference: https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.entryGroups/list
 		// GET https://dataplex.googleapis.com/v1/{parent=projects/*/locations/*}/entryGroups
+		// TODO: Update this for => https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
+		// id => projects/{{project}}/locations/{{location}}/entryGroups/{{entry_group_id}}
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups"),
+		SearchDescription:   "Search for Dataplex entry groups in a location. Use the format {{location}} or projects/{{project}}/locations/{{location}}/entryGroups/{{entry_group_id}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "entryGroups"},
 	},
 	DNSManagedZone: {
@@ -517,10 +550,31 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/resource-manager/docs/reference/essentialcontacts/rest/v1/projects.contacts/list
 		// GET https://essentialcontacts.googleapis.com/v1/projects/*/contacts
 		// IAM permissions: essentialcontacts.contacts.list
-		ListEndpointFunc:    projectLevelListFunc("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts"),
+		ListEndpointFunc: projectLevelListFunc("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts"),
+		// This is for terraform mapping, where the query is in the form of
+		// projects/{projectId}/contacts/{contact_id}
+		SearchEndpointFunc: func(adapterInitParams ...string) (EndpointFunc, error) {
+			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
+				return func(query string) string {
+					if strings.Contains(query, "/") {
+						// That means this is coming from terraform mapping, and the query is in the form of
+						// projects/{projectId}/contacts/{contact_id}
+						// We need to extract the relevant parts and construct the URL accordingly
+						values := ExtractPathParams(query, "projects", "contacts")
+						if len(values) == 2 {
+							return fmt.Sprintf("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts/%s", values[0], values[1])
+						}
+						return ""
+					}
+					return ""
+				}, nil
+			}
+			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+		},
+		SearchDescription:   "Search for contacts by their ID in the form of projects/{projectId}/contacts/{contact_id}.",
 		UniqueAttributeKeys: []string{"contacts"},
 	},
-	IamRole: {
+	IAMRole: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/iam/docs/reference/rest/v1/roles/get
@@ -541,7 +595,27 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/monitoring/api/ref_v3/rest/v1/projects.dashboards/list
 		// GET https://monitoring.googleapis.com/v1/{parent}/dashboards
 		// IAM Perm: monitoring.dashboards.list
-		ListEndpointFunc: projectLevelListFunc("https://monitoring.googleapis.com/v1/projects/%s/dashboards"),
+		ListEndpointFunc:  projectLevelListFunc("https://monitoring.googleapis.com/v1/projects/%s/dashboards"),
+		SearchDescription: "Search for custom dashboards by their ID in the form of projects/{projectId}/dashboards/{dashboard_id}. This is supported for terraform mappings.",
+		SearchEndpointFunc: func(adapterInitParams ...string) (EndpointFunc, error) {
+			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
+				return func(query string) string {
+					if strings.Contains(query, "/") {
+						// That means this is coming from terraform mapping, and the query is in the form of
+						// projects/{projectId}/dashboards/{dashboard_id}
+						// We need to extract the relevant parts and construct the URL accordingly
+						values := ExtractPathParams(query, "projects", "dashboards")
+						if len(values) == 2 {
+							return fmt.Sprintf("https://monitoring.googleapis.com/v1/projects/%s/dashboards/%s", values[0], values[1])
+						}
+						return ""
+					}
+					return ""
+				}, nil
+			}
+			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+		},
+		UniqueAttributeKeys: []string{"dashboards"},
 	},
 	PubSubSubscription: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
@@ -588,7 +662,10 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/service-directory/docs/reference/rest/v1/projects.locations.namespaces.services.endpoints/list
 		// IAM Perm: servicedirectory.endpoints.list
 		// GET https://servicedirectory.googleapis.com/v1/projects/*/locations/*/namespaces/*/services/*/endpoints
+		// TODO: Update this for => https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
+		// id => projects/*/locations/*/namespaces/*/services/*/endpoints/*
 		SearchEndpointFunc:  projectLevelEndpointFuncWithThreeQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s/endpoints"),
+		SearchDescription:   "Search for endpoints by {location}|{namespace_id}|{service_id} or projects/{project}/locations/{location}/namespaces/{namespace_id}/services/{service_id}/endpoints/{endpoint_id} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "namespaces", "services", "endpoints"},
 	},
 	ServiceUsageService: {
@@ -613,7 +690,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		ListEndpointFunc:    projectLevelListFunc("https://serviceusage.googleapis.com/v1/projects/%s/services?filter=state:ENABLED"),
 		UniqueAttributeKeys: []string{"services"},
 	},
-	SqlAdminBackup: {
+	SQLAdminBackup: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/Backups/GetBackup
@@ -623,7 +700,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		ListEndpointFunc:    projectLevelListFunc("https://sqladmin.googleapis.com/v1/projects/%s/backups"),
 		UniqueAttributeKeys: []string{"backups"},
 	},
-	SqlAdminBackupRun: {
+	SQLAdminBackupRun: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/backupRuns/get
