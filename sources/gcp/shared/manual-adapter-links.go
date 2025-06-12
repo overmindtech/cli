@@ -5,6 +5,7 @@ import (
 
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 func ZoneBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
@@ -110,4 +111,32 @@ var ManualAdapterGetLinksByAssetType = map[shared.ItemType]func(projectID, query
 	IAMServiceAccountKey: ProjectBaseLinkedItemQueryByName(IAMServiceAccountKey),
 	IAMServiceAccount:    ProjectBaseLinkedItemQueryByName(IAMServiceAccount),
 	CloudKMSKeyRing:      RegionBaseLinkedItemQueryByName(CloudKMSKeyRing),
+	stdlib.NetworkIP: func(_, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		if query != "" {
+			return &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "ip",
+					Method: sdp.QueryMethod_GET,
+					Query:  query,
+					Scope:  "global",
+				},
+				BlastPropagation: blastPropagation,
+			}
+		}
+		return nil
+	},
+	stdlib.NetworkDNS: func(_, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		if query != "" {
+			return &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "dns",
+					Method: sdp.QueryMethod_SEARCH,
+					Query:  query,
+					Scope:  "global",
+				},
+				BlastPropagation: blastPropagation,
+			}
+		}
+		return nil
+	},
 }

@@ -27,8 +27,10 @@ type ItemLookup map[string]ItemTypeMeta
 
 // Linker is responsible for linking items based on their types and relationships.
 type Linker struct {
-	sdpAssetTypeToAdapterMeta          map[shared.ItemType]AdapterMeta
-	gcpItemTypeToSDPAssetType          map[string]shared.ItemType
+	sdpAssetTypeToAdapterMeta map[shared.ItemType]AdapterMeta
+	gcpItemTypeToSDPAssetType map[string]shared.ItemType
+	explicitBlastPropagations map[shared.ItemType]map[string]Impact
+	// TODO: Deprecate this after moving to explicit blast propagations
 	blastPropagations                  map[shared.ItemType]map[shared.ItemType]Impact
 	manualAdapterLinker                map[shared.ItemType]func(scope, selfLink string, bp *sdp.BlastPropagation) *sdp.LinkedItemQuery
 	gcpResourceTypeInURLToSDPAssetType map[string]shared.ItemType
@@ -39,6 +41,7 @@ func NewLinker() *Linker {
 	return &Linker{
 		sdpAssetTypeToAdapterMeta:          SDPAssetTypeToAdapterMeta,
 		gcpItemTypeToSDPAssetType:          GCPResourceTypeInURLToSDPAssetType,
+		explicitBlastPropagations:          ExplicitBlastPropagations,
 		blastPropagations:                  BlastPropagations,
 		manualAdapterLinker:                ManualAdapterGetLinksByAssetType,
 		gcpResourceTypeInURLToSDPAssetType: GCPResourceTypeInURLToSDPAssetType,
@@ -46,6 +49,7 @@ func NewLinker() *Linker {
 }
 
 // Link links the FROM item TO another item based on the provided parameters.
+// TODO: Deprecate this since it doesn't add much value over defining the relations in the manual adapters.
 func (l *Linker) Link(
 	ctx context.Context,
 	projectID string,
@@ -125,38 +129,102 @@ func (l *Linker) Link(
 
 // AutoLink tries to find the item type of the TO item based on its GCP resource name.
 // If the item type is identified, it links the FROM item to the TO item.
-func (l *Linker) AutoLink(
-	ctx context.Context,
-	projectID string,
-	fromSDPItem *sdp.Item,
-	fromSDPItemType shared.ItemType,
-	toItemGCPResourceName string,
-) {
+func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sdp.Item, fromSDPItemType shared.ItemType, toItemGCPResourceName string, keys []string) {
+	key := strings.Join(keys, ".")
+
 	lf := log.Fields{
 		"ovm.gcp.projectId":          projectID,
 		"ovm.gcp.fromItemType":       fromSDPItemType.String(),
 		"ovm.gcp.toItemResourceName": toItemGCPResourceName,
+		"ovm.gcp.key":                key,
 	}
 
-	parts := strings.Split(toItemGCPResourceName, "/")
-	if len(parts) < 2 {
-		l.tryGlobalResources(fromSDPItem, toItemGCPResourceName)
+	impacts, ok := l.explicitBlastPropagations[fromSDPItemType]
+	if !ok {
+		log.WithContext(ctx).WithFields(lf).Warnf("there are no blast propagations for the FROM item type")
 		return
 	}
 
-	toItemType, ok := l.gcpItemTypeToSDPAssetType[parts[len(parts)-2]] // e.g., "instances", "networks", etc.
+	impact, ok := impacts[key]
 	if !ok {
-		log.WithContext(ctx).WithFields(lf).Warnf(
-			"could not identify item type for GCP resource name %s",
-			toItemGCPResourceName,
+		if strings.Contains(toItemGCPResourceName, "/") {
+			// There is a high chance that the item type is not recognized, so we log a warning.
+			log.WithContext(ctx).WithFields(lf).Warnf("missing blast propagation between two item types")
+		}
+		return
+	}
+
+	if linkFunc, ok := l.manualAdapterLinker[impact.ToSDPITemType]; ok {
+		fromSDPItem.LinkedItemQueries = append(
+			fromSDPItem.LinkedItemQueries,
+			linkFunc(projectID, toItemGCPResourceName, impact.BlastPropagation),
 		)
 		return
 	}
 
-	l.Link(ctx, projectID, fromSDPItem, fromSDPItemType, toItemGCPResourceName, toItemType)
+	toSDPItemMeta, ok := l.sdpAssetTypeToAdapterMeta[impact.ToSDPITemType]
+	if !ok {
+		// This should never happen at runtime!
+		log.WithContext(ctx).WithFields(lf).Warnf(
+			"could not find adapter meta for %s",
+			impact.ToSDPITemType.String(),
+		)
+		return
+	}
+
+	var scope string
+	var query string
+	switch toSDPItemMeta.Scope {
+	case ScopeProject:
+		scope = projectID
+		values := ExtractPathParams(toItemGCPResourceName, toSDPItemMeta.UniqueAttributeKeys...)
+		if len(values) != len(toSDPItemMeta.UniqueAttributeKeys) {
+			log.WithContext(ctx).WithFields(lf).Warnf(
+				"resource name is in unexpected format for project item",
+			)
+			return
+		}
+		query = strings.Join(values, shared.QuerySeparator)
+	case ScopeRegional:
+		keysToExtract := append(toSDPItemMeta.UniqueAttributeKeys, "regions")
+		values := ExtractPathParams(toItemGCPResourceName, keysToExtract...)
+		if len(values) != len(keysToExtract) {
+			log.WithContext(ctx).WithFields(lf).Warnf(
+				"resource name is in unexpected format for regional item",
+			)
+			return
+		}
+		scope = fmt.Sprintf("%s.%s", projectID, values[len(values)-1])      // e.g., "my-project.my-region"
+		query = strings.Join(values[:len(values)-1], shared.QuerySeparator) // e.g., "my-instance" or "my-network"
+	case ScopeZonal:
+		keysToExtract := append(toSDPItemMeta.UniqueAttributeKeys, "zones")
+		values := ExtractPathParams(toItemGCPResourceName, keysToExtract...)
+		if len(values) != len(keysToExtract) {
+			log.WithContext(ctx).WithFields(lf).Warnf(
+				"resource name is in unexpected format for zonal item",
+			)
+			return
+		}
+		scope = fmt.Sprintf("%s.%s", projectID, values[len(values)-1])      // e.g., "my-project.my-zone"
+		query = strings.Join(values[:len(values)-1], shared.QuerySeparator) // e.g., "my-instance" or "my-network"
+
+	default:
+		log.WithContext(ctx).WithFields(lf).Errorf("unsupported scope %s", toSDPItemMeta.Scope)
+		return
+	}
+
+	fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   impact.ToSDPITemType.String(),
+			Method: sdp.QueryMethod_GET,
+			Query:  query,
+			Scope:  scope,
+		},
+		BlastPropagation: impact.BlastPropagation,
+	})
 }
 
-func (l *Linker) tryGlobalResources(fromSDPItem *sdp.Item, toItemValue string) {
+func (l *Linker) tryGlobalResources(fromSDPItem *sdp.Item, toItemValue string) { //nolint: unused
 	if isIPAddress(toItemValue) {
 		fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{

@@ -11,5 +11,6 @@ const (
 )
 
 const (
-	IP shared.Resource = "ip"
+	IP  shared.Resource = "ip"
+	DNS shared.Resource = "dns"
 )

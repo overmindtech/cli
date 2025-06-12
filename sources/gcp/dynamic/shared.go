@@ -15,22 +15,22 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-func linkItem(ctx context.Context, projectID string, sdpItem *sdp.Item, sdpAssetType shared.ItemType, linker *gcpshared.Linker, resp any) {
+func linkItem(ctx context.Context, projectID string, sdpItem *sdp.Item, sdpAssetType shared.ItemType, linker *gcpshared.Linker, resp any, keys []string) {
 	if value, ok := resp.(string); ok {
-		linker.AutoLink(ctx, projectID, sdpItem, sdpAssetType, value)
+		linker.AutoLink(ctx, projectID, sdpItem, sdpAssetType, value, keys)
 		return
 	}
 
 	if listAny, ok := resp.([]any); ok {
 		for _, v := range listAny {
-			linkItem(ctx, projectID, sdpItem, sdpAssetType, linker, v)
+			linkItem(ctx, projectID, sdpItem, sdpAssetType, linker, v, keys)
 		}
 		return
 	}
 
 	if mapAny, ok := resp.(map[string]any); ok {
-		for _, item := range mapAny {
-			linkItem(ctx, projectID, sdpItem, sdpAssetType, linker, item)
+		for k, item := range mapAny {
+			linkItem(ctx, projectID, sdpItem, sdpAssetType, linker, item, append(keys, k))
 		}
 		return
 	}
@@ -73,8 +73,9 @@ func externalToSDP(ctx context.Context, projectID string, scope string, uniqueAt
 		return nil, fmt.Errorf("unable to determine self link")
 	}
 
-	for _, v := range resp {
-		linkItem(ctx, projectID, sdpItem, sdpAssetType, linker, v)
+	for k, v := range resp {
+		keys := []string{k}
+		linkItem(ctx, projectID, sdpItem, sdpAssetType, linker, v, keys)
 	}
 
 	return sdpItem, nil

@@ -230,26 +230,29 @@ func TestLinker_AutoLink(t *testing.T) {
 	type args struct {
 		fromSDPItemType       shared.ItemType
 		toItemGCPResourceName string
-		toSDPItemType         shared.ItemType
+		toSDPItemType         string
+		keys                  []string
 	}
 	tests := []struct {
 		name string
 		args args
 	}{
 		{
-			name: "Auto link from ComputeInstance to ComputeDisk via manual adapters",
+			name: "Auto link from ComputeRoute to IP via manual adapters",
 			args: args{
-				fromSDPItemType:       ComputeInstance,
-				toItemGCPResourceName: "projects/project-test/zones/us-central1-c/disks/test-disk",
-				toSDPItemType:         ComputeDisk,
+				fromSDPItemType:       ComputeRoute,
+				toItemGCPResourceName: "203.0.113.42",
+				toSDPItemType:         "ip",
+				keys:                  []string{"nextHopIp"},
 			},
 		},
 		{
-			name: "Auto link from ComputeInstance to ComputeNetwork via dynamic adapters",
+			name: "Auto link from ComputeInstanceTemplate to ComputeImage via dynamic adapters",
 			args: args{
-				fromSDPItemType:       ComputeInstance,
-				toItemGCPResourceName: "https://compute.googleapis.com/compute/v1/projects/my-project/global/networks/my-network",
-				toSDPItemType:         ComputeNetwork,
+				fromSDPItemType:       ComputeInstanceTemplate,
+				toItemGCPResourceName: "debian-cloud/debian-11",
+				toSDPItemType:         ComputeImage.String(),
+				keys:                  []string{"properties", "disks", "initializeParams", "sourceImage"},
 			},
 		},
 	}
@@ -258,15 +261,15 @@ func TestLinker_AutoLink(t *testing.T) {
 	for _, tt := range tests {
 		fromSDPItem := &sdp.Item{}
 		t.Run(tt.name, func(t *testing.T) {
-			l.AutoLink(context.TODO(), projectID, fromSDPItem, tt.args.fromSDPItemType, tt.args.toItemGCPResourceName)
+			l.AutoLink(context.TODO(), projectID, fromSDPItem, tt.args.fromSDPItemType, tt.args.toItemGCPResourceName, tt.args.keys)
 
 			if len(fromSDPItem.GetLinkedItemQueries()) == 0 {
 				t.Fatalf("Linker.AutoLink() did not return any linked items, expected at least one")
 			}
 
 			linkedItemQuery := fromSDPItem.GetLinkedItemQueries()[0]
-			if linkedItemQuery.GetQuery() != nil && linkedItemQuery.GetQuery().GetType() != tt.args.toSDPItemType.String() {
-				t.Errorf("Linker.Link() returned linked item with type %s, expected %s", linkedItemQuery.GetQuery().GetType(), tt.args.toSDPItemType.String())
+			if linkedItemQuery.GetQuery() != nil && linkedItemQuery.GetQuery().GetType() != tt.args.toSDPItemType {
+				t.Errorf("Linker.Link() returned linked item with type %s, expected %s", linkedItemQuery.GetQuery().GetType(), tt.args.toSDPItemType)
 			}
 		})
 	}

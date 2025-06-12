@@ -6,5 +6,6 @@ import (
 )
 
 var (
-	NetworkIP = shared.NewItemType(stdlibshared.Stdlib, stdlibshared.Network, stdlibshared.IP)
+	NetworkIP  = shared.NewItemType(stdlibshared.Stdlib, stdlibshared.Network, stdlibshared.IP)
+	NetworkDNS = shared.NewItemType(stdlibshared.Stdlib, stdlibshared.Network, stdlibshared.DNS)
 )

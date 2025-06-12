@@ -3,9 +3,11 @@ package shared
 import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 type Impact struct {
+	ToSDPITemType    shared.ItemType
 	Description      string
 	BlastPropagation *sdp.BlastPropagation
 }
@@ -440,5 +442,41 @@ var BlastPropagations = map[shared.ItemType]map[shared.ItemType]Impact{
 	},
 	IAMPolicy: {
 		IAMPolicy: tightCoupledImpact,
+	},
+}
+
+var ExplicitBlastPropagations = map[shared.ItemType]map[string]Impact{
+	// https://cloud.google.com/compute/docs/reference/rest/v1/routes/get
+	ComputeRoute: {
+		// Network that the route belongs to
+		"network": {
+			Description:      "If the Compute Network is updated: The route may no longer be valid or correctly associated. If the route is updated: The network remains unaffected, but its routing behavior may change.",
+			ToSDPITemType:    ComputeNetwork,
+			BlastPropagation: impactBothWays,
+		},
+		// Network that the route forwards traffic to, so the relationship will/may be different
+		"nextHopNetwork": {
+			Description:      "If the Compute Network is updated: The route may no longer forward traffic properly. If the route is updated: The network remains unaffected but traffic routed through it may be affected.",
+			ToSDPITemType:    ComputeNetwork,
+			BlastPropagation: impactBothWays,
+		},
+		"nextHopIp": {
+			Description:      "The network IP address of an instance that should handle matching packets. Tightly coupled with the Compute Route.",
+			ToSDPITemType:    stdlib.NetworkIP,
+			BlastPropagation: impactBothWays,
+		},
+		"nextHopInstance": {
+			Description:      "If the Compute Instance is updated: Routes using it as a next hop may break or change behavior. If the route is deleted: The instance remains unaffected but traffic that was previously using that route will be impacted.",
+			ToSDPITemType:    ComputeInstance,
+			BlastPropagation: impactInOnly,
+		},
+	},
+	// https://cloud.google.com/compute/docs/reference/rest/v1/instanceTemplates/get
+	ComputeInstanceTemplate: {
+		"properties.disks.initializeParams.sourceImage": {
+			Description:      "If the Compute Image is updated: Instances created from this template may not boot correctly. If the template is updated: Image is not affected.",
+			ToSDPITemType:    ComputeImage,
+			BlastPropagation: impactInOnly,
+		},
 	},
 }
