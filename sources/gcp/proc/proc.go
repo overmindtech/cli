@@ -37,7 +37,7 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 
 	linker := gcpshared.NewLinker()
 
-	manualAdapters, err := manual.Adapters(ctx, cfg.ProjectID, cfg.Regions, cfg.Zones, linker)
+	manualAdapters, err := manual.Adapters(ctx, cfg.ProjectID, cfg.Regions, cfg.Zones)
 	if err != nil {
 		return nil, fmt.Errorf("error creating manual adapters: %w", err)
 	}

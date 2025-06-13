@@ -261,8 +261,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		//  Format: projects/{project}/locations/{location}/pipelineJobs/{pipelineJob}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/pipelineJobs/%s"),
-		SearchEndpointFunc:     projectLevelEndpointFuncWithSingleQuery("https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/pipelineJobs"),
-		UniqueAttributeKeys:    []string{"locations", "pipelineJobs"},
+		// Reference: https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.pipelineJobs/list
+		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/pipelineJobs"),
+		UniqueAttributeKeys: []string{"locations", "pipelineJobs"},
 	},
 	ArtifactRegistryDockerImage: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
@@ -312,6 +313,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets/%s"),
+		// Reference: https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets/list
 		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets
 		ListEndpointFunc:    projectLevelListFunc("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets"),
 		UniqueAttributeKeys: []string{"datasets"},
@@ -321,6 +323,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}/tables/{tableId}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets/%s/tables/%s"),
+		// Reference: https://cloud.google.com/bigquery/docs/reference/rest/v2/tables/list
 		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}/tables
 		// TODO: Update this for => https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
 		// id => projects/{{project}}/datasets/{{dataset}}/tables/{{table}}
@@ -421,6 +424,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/firewalls/{firewall}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls/%s"),
+		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/list
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/firewalls
 		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls"),
 		UniqueAttributeKeys: []string{"firewalls"},
@@ -674,6 +678,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// https://pubsub.googleapis.com/v1/projects/{project}/subscriptions/{subscription}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://pubsub.googleapis.com/v1/projects/%s/subscriptions/%s"),
+		// Reference: https://cloud.google.com/pubsub/docs/reference/rest/v1/projects.subscriptions/list?rep_location=global
 		// https://pubsub.googleapis.com/v1/projects/{project}/subscriptions
 		ListEndpointFunc:    projectLevelListFunc("https://pubsub.googleapis.com/v1/projects/%s/subscriptions"),
 		UniqueAttributeKeys: []string{"subscriptions"},
@@ -748,6 +753,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/Backups/GetBackup
 		// GET https://sqladmin.googleapis.com/v1/{name=projects/*/backups/*}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://sqladmin.googleapis.com/v1/projects/%s/backups/%s"),
+		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/Backups/ListBackups
 		// GET https://sqladmin.googleapis.com/v1/{parent=projects/*}/backups
 		ListEndpointFunc:    projectLevelListFunc("https://sqladmin.googleapis.com/v1/projects/%s/backups"),
 		UniqueAttributeKeys: []string{"backups"},

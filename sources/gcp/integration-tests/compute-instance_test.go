@@ -50,8 +50,7 @@ func TestComputeInstanceIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Instance in project %s, zone %s", projectID, zone)
 
-		// TODO: Use the actual linker with this ticket: https://linear.app/overmind/issue/ENG-523/centralise-integration-tests
-		instanceWrapper := manual.NewComputeInstance(gcpshared.NewComputeInstanceClient(client), projectID, zone, nil)
+		instanceWrapper := manual.NewComputeInstance(gcpshared.NewComputeInstanceClient(client), projectID, zone)
 		scope := instanceWrapper.Scopes()[0]
 
 		instanceAdapter := sources.WrapperToAdapter(instanceWrapper)

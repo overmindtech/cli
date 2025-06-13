@@ -42,12 +42,6 @@ type Adapter struct {
 
 // NewAdapter creates a new GCP dynamic adapter.
 func NewAdapter(config *AdapterConfig) discovery.Adapter {
-	var potentialLinks []string
-	if blasts, ok := gcpshared.BlastPropagations[config.SDPAssetType]; ok {
-		for item := range blasts {
-			potentialLinks = append(potentialLinks, item.String())
-		}
-	}
 
 	return Adapter{
 		projectID:  config.ProjectID,
@@ -61,7 +55,7 @@ func NewAdapter(config *AdapterConfig) discovery.Adapter {
 		sdpAdapterCategory:  config.SDPAdapterCategory,
 		terraformMappings:   config.TerraformMappings,
 		linker:              config.Linker,
-		potentialLinks:      potentialLinks,
+		potentialLinks:      potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
 		uniqueAttributeKeys: config.UniqueAttributeKeys,
 	}
 }

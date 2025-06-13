@@ -18,12 +18,6 @@ type ListableAdapter struct {
 
 // NewListableAdapter creates a new GCP dynamic adapter.
 func NewListableAdapter(listEndpoint string, config *AdapterConfig) discovery.ListableAdapter {
-	var potentialLinks []string
-	if blasts, ok := gcpshared.BlastPropagations[config.SDPAssetType]; ok {
-		for item := range blasts {
-			potentialLinks = append(potentialLinks, item.String())
-		}
-	}
 
 	return ListableAdapter{
 		listEndpoint: listEndpoint,
@@ -39,7 +33,7 @@ func NewListableAdapter(listEndpoint string, config *AdapterConfig) discovery.Li
 			sdpAdapterCategory:  config.SDPAdapterCategory,
 			terraformMappings:   config.TerraformMappings,
 			linker:              config.Linker,
-			potentialLinks:      potentialLinks,
+			potentialLinks:      potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
 			uniqueAttributeKeys: config.UniqueAttributeKeys,
 		},
 	}
@@ -70,7 +64,8 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 	}
 
 	var items []*sdp.Item
-	multiResp, err := externalCallMulti(ctx, g.httpCli, g.httpHeaders, g.listEndpoint)
+	itemsSelector := g.uniqueAttributeKeys[len(g.uniqueAttributeKeys)-1] // Use the last key as the item selector
+	multiResp, err := externalCallMulti(ctx, itemsSelector, g.httpCli, g.httpHeaders, g.listEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list items for %s: %w", g.listEndpoint, err)
 	}

@@ -3,6 +3,7 @@ package manual
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
@@ -24,16 +25,14 @@ var (
 
 type computeInstanceWrapper struct {
 	client gcpshared.ComputeInstanceClient
-	linker *gcpshared.Linker
 
 	*gcpshared.ZoneBase
 }
 
 // NewComputeInstance creates a new computeInstanceWrapper instance
-func NewComputeInstance(client gcpshared.ComputeInstanceClient, projectID, zone string, linker *gcpshared.Linker) sources.ListableWrapper {
+func NewComputeInstance(client gcpshared.ComputeInstanceClient, projectID, zone string) sources.ListableWrapper {
 	return &computeInstanceWrapper{
 		client: client,
-		linker: linker,
 		ZoneBase: gcpshared.NewZoneBase(
 			projectID,
 			zone,
@@ -87,7 +86,7 @@ func (c computeInstanceWrapper) Get(ctx context.Context, queryParts ...string) (
 
 	var sdpErr *sdp.QueryError
 	var item *sdp.Item
-	item, sdpErr = c.gcpComputeInstanceToSDPItem(ctx, instance)
+	item, sdpErr = c.gcpComputeInstanceToSDPItem(instance)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -114,7 +113,7 @@ func (c computeInstanceWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Que
 
 		var sdpErr *sdp.QueryError
 		var item *sdp.Item
-		item, sdpErr = c.gcpComputeInstanceToSDPItem(ctx, instance)
+		item, sdpErr = c.gcpComputeInstanceToSDPItem(instance)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -125,7 +124,7 @@ func (c computeInstanceWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Que
 	return items, nil
 }
 
-func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context, instance *computepb.Instance) (*sdp.Item, *sdp.QueryError) {
+func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(instance *computepb.Instance) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(instance, "labels")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -147,7 +146,25 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 			// Specifies a valid partial or full URL to an existing Persistent Disk resource.
 			// "source": "https://www.googleapis.com/compute/v1/projects/project-test/zones/us-central1-c/disks/integration-test-instance"
 			// last part is the disk name
-			c.linker.Link(ctx, c.ProjectID(), sdpItem, ComputeInstance, disk.GetSource(), ComputeDisk)
+			if strings.Contains(disk.GetSource(), "/") {
+				diskNameParts := strings.Split(disk.GetSource(), "/")
+				diskName := diskNameParts[len(diskNameParts)-1]
+				zone := gcpshared.ExtractPathParam("zones", disk.GetSource())
+				if zone != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   ComputeDisk.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  diskName,
+							Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					})
+				}
+			}
 		}
 	}
 
@@ -194,7 +211,26 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 				//	- regions/region/subnetworks/subnetwork
 				// "subnetwork": "https://www.googleapis.com/compute/v1/projects/project-test/regions/us-central1/subnetworks/default"
 				// last part is the subnetwork name
-				c.linker.Link(ctx, c.ProjectID(), sdpItem, ComputeInstance, subnetwork, ComputeSubnetwork)
+				if strings.Contains(subnetwork, "/") {
+					subnetworkNameParts := strings.Split(subnetwork, "/")
+					subnetworkName := subnetworkNameParts[len(subnetworkNameParts)-1]
+					region := gcpshared.ExtractPathParam("regions", subnetwork)
+					if region != "" {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   ComputeSubnetwork.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  subnetworkName,
+								// This is a regional resource
+								Scope: gcpshared.RegionalScope(c.ProjectID(), region),
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
+				}
 			}
 
 			if network := networkInterface.GetNetwork(); network != "" {
@@ -210,7 +246,23 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 				//	- global/networks/default
 				//
 				// "network": "https://www.googleapis.com/compute/v1/projects/project-test/global/networks/default"
-				c.linker.Link(ctx, c.ProjectID(), sdpItem, ComputeInstance, network, ComputeNetwork)
+				if strings.Contains(network, "/") {
+					networkNameParts := strings.Split(network, "/")
+					networkName := networkNameParts[len(networkNameParts)-1]
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   ComputeNetwork.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  networkName,
+							// This is a global resource
+							Scope: c.ProjectID(),
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					})
+				}
 			}
 		}
 	}

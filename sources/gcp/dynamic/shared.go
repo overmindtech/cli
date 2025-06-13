@@ -112,7 +112,7 @@ func externalCallSingle(ctx context.Context, httpCli *http.Client, httpHeaders h
 	return result, nil
 }
 
-func externalCallMulti(ctx context.Context, httpCli *http.Client, httpHeader http.Header, url string) ([]map[string]interface{}, error) {
+func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.Client, httpHeader http.Header, url string) ([]map[string]interface{}, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -140,13 +140,16 @@ func externalCallMulti(ctx context.Context, httpCli *http.Client, httpHeader htt
 		return nil, err
 	}
 
-	items, ok := result["items"].([]any)
+	items, ok := result[itemsSelector].([]any)
 	if !ok {
-		log.WithContext(ctx).WithFields(log.Fields{
-			"url": url,
-		}).Warnf("failed to cast resp as a list of items: %v", result)
-
-		return nil, nil
+		// fallback to a generic "items" key if the itemsSelector is not found
+		items, ok = result["items"].([]any)
+		if !ok {
+			log.WithContext(ctx).WithFields(log.Fields{
+				"url": url,
+			}).Warnf("failed to cast resp as a list of items: %v", result)
+			return nil, nil
+		}
 	}
 
 	var ii []map[string]interface{}
@@ -157,4 +160,18 @@ func externalCallMulti(ctx context.Context, httpCli *http.Client, httpHeader htt
 	}
 
 	return ii, nil
+}
+
+func potentialLinksFromBlasts(itemType shared.ItemType, blasts map[shared.ItemType]map[string]*gcpshared.Impact) []string {
+	var potentialLinks []string
+	var potentialLinksMap = make(map[string]bool)
+	for _, impact := range blasts[itemType] {
+		potentialLinksMap[impact.ToSDPITemType.String()] = true
+	}
+
+	for it := range potentialLinksMap {
+		potentialLinks = append(potentialLinks, it)
+	}
+
+	return potentialLinks
 }

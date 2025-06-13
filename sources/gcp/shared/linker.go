@@ -27,12 +27,10 @@ type ItemLookup map[string]ItemTypeMeta
 
 // Linker is responsible for linking items based on their types and relationships.
 type Linker struct {
-	sdpAssetTypeToAdapterMeta map[shared.ItemType]AdapterMeta
-	gcpItemTypeToSDPAssetType map[string]shared.ItemType
-	explicitBlastPropagations map[shared.ItemType]map[string]Impact
-	// TODO: Deprecate this after moving to explicit blast propagations
-	blastPropagations                  map[shared.ItemType]map[shared.ItemType]Impact
-	manualAdapterLinker                map[shared.ItemType]func(scope, selfLink string, bp *sdp.BlastPropagation) *sdp.LinkedItemQuery
+	sdpAssetTypeToAdapterMeta          map[shared.ItemType]AdapterMeta
+	gcpItemTypeToSDPAssetType          map[string]shared.ItemType
+	explicitBlastPropagations          map[shared.ItemType]map[string]*Impact
+	manualAdapterLinker                map[shared.ItemType]func(scope, fromItemScope, query string, bp *sdp.BlastPropagation) *sdp.LinkedItemQuery
 	gcpResourceTypeInURLToSDPAssetType map[string]shared.ItemType
 }
 
@@ -41,96 +39,20 @@ func NewLinker() *Linker {
 	return &Linker{
 		sdpAssetTypeToAdapterMeta:          SDPAssetTypeToAdapterMeta,
 		gcpItemTypeToSDPAssetType:          GCPResourceTypeInURLToSDPAssetType,
-		explicitBlastPropagations:          ExplicitBlastPropagations,
-		blastPropagations:                  BlastPropagations,
+		explicitBlastPropagations:          BlastPropagations,
 		manualAdapterLinker:                ManualAdapterGetLinksByAssetType,
 		gcpResourceTypeInURLToSDPAssetType: GCPResourceTypeInURLToSDPAssetType,
 	}
-}
-
-// Link links the FROM item TO another item based on the provided parameters.
-// TODO: Deprecate this since it doesn't add much value over defining the relations in the manual adapters.
-func (l *Linker) Link(
-	ctx context.Context,
-	projectID string,
-	fromSDPItem *sdp.Item,
-	fromSDPItemType shared.ItemType,
-	toItemGCPResourceName string,
-	toSDPItemType shared.ItemType,
-) {
-	if fromSDPItemType == toSDPItemType {
-		return
-	}
-
-	lf := log.Fields{
-		"ovm.gcp.projectId":    projectID,
-		"ovm.gcp.fromItemType": fromSDPItemType.String(),
-		"ovm.gcp.toItemType":   toSDPItemType.String(),
-	}
-
-	impacts, ok := l.blastPropagations[fromSDPItemType]
-	if !ok {
-		log.WithContext(ctx).WithFields(lf).Warnf("there are no blast propagations for the FROM item type")
-		return
-	}
-
-	impact, ok := impacts[toSDPItemType]
-	if !ok {
-		log.WithContext(ctx).WithFields(lf).Warnf("missing blast propagation between two item types")
-		return
-	}
-
-	if linkFunc, ok := l.manualAdapterLinker[toSDPItemType]; ok {
-		fromSDPItem.LinkedItemQueries = append(
-			fromSDPItem.LinkedItemQueries,
-			linkFunc(projectID, toItemGCPResourceName, impact.BlastPropagation),
-		)
-		return
-	}
-
-	sdpItemTypeMeta, ok := l.sdpAssetTypeToAdapterMeta[toSDPItemType]
-	if !ok {
-		// This should never happen at runtime!
-		log.WithContext(ctx).WithFields(lf).Warnf(
-			"could not find adapter meta for %s",
-			toSDPItemType.String(),
-		)
-		return
-	}
-
-	parts := strings.Split(toItemGCPResourceName, "/")
-	if len(parts) < 2 {
-		log.WithContext(ctx).WithFields(lf).Warnf(
-			"resource name is in unexpected format: %s",
-			toItemGCPResourceName,
-		)
-		return
-	}
-
-	scope := determineScope(ctx, projectID, sdpItemTypeMeta.Scope, lf, toItemGCPResourceName, parts)
-	if scope == "" {
-		log.WithContext(ctx).WithFields(lf).Warnf(
-			"failed to determine scope for item type %s",
-			toSDPItemType.String(),
-		)
-		return
-	}
-
-	fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-		Query: &sdp.Query{
-			Type:   toSDPItemType.String(),
-			Method: sdp.QueryMethod_GET,
-			Query:  parts[len(parts)-1], // e.g., "my-instance", "my-network", etc.
-			Scope:  scope,
-		},
-		BlastPropagation: impact.BlastPropagation,
-	})
 }
 
 // AutoLink tries to find the item type of the TO item based on its GCP resource name.
 // If the item type is identified, it links the FROM item to the TO item.
 func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sdp.Item, fromSDPItemType shared.ItemType, toItemGCPResourceName string, keys []string) {
 	key := strings.Join(keys, ".")
+
+	if key == "selfLink" || key == "name" {
+		return
+	}
 
 	lf := log.Fields{
 		"ovm.gcp.projectId":          projectID,
@@ -155,9 +77,17 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 	}
 
 	if linkFunc, ok := l.manualAdapterLinker[impact.ToSDPITemType]; ok {
+		linkedItemQuery := linkFunc(projectID, fromSDPItem.GetScope(), toItemGCPResourceName, impact.BlastPropagation)
+		if linkedItemQuery == nil {
+			log.WithContext(ctx).WithFields(lf).Warn(
+				"manual adapter linker failed to create a linked item query",
+			)
+			return
+		}
+
 		fromSDPItem.LinkedItemQueries = append(
 			fromSDPItem.LinkedItemQueries,
-			linkFunc(projectID, toItemGCPResourceName, impact.BlastPropagation),
+			linkedItemQuery,
 		)
 		return
 	}

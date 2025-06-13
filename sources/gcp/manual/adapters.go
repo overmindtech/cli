@@ -13,7 +13,7 @@ import (
 )
 
 // Adapters returns a slice of discovery.Adapter instances for GCP Source.
-func Adapters(ctx context.Context, projectID string, regions []string, zones []string, linker *shared.Linker) ([]discovery.Adapter, error) {
+func Adapters(ctx context.Context, projectID string, regions []string, zones []string) ([]discovery.Adapter, error) {
 	instanceCli, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
 		return nil, err
@@ -121,7 +121,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 
 	for _, zone := range zones {
 		adapters = append(adapters,
-			sources.WrapperToAdapter(NewComputeInstance(shared.NewComputeInstanceClient(instanceCli), projectID, zone, linker)),
+			sources.WrapperToAdapter(NewComputeInstance(shared.NewComputeInstanceClient(instanceCli), projectID, zone)),
 			sources.WrapperToAdapter(NewComputeAutoscaler(shared.NewComputeAutoscalerClient(autoscalerCli), projectID, zone)),
 			sources.WrapperToAdapter(NewComputeInstanceGroup(shared.NewComputeInstanceGroupsClient(instanceGroupCli), projectID, zone)),
 			sources.WrapperToAdapter(NewComputeInstanceGroupManager(shared.NewComputeInstanceGroupManagerClient(instanceGroupManagerCli), projectID, zone)),
