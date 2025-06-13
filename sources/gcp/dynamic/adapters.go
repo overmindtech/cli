@@ -63,6 +63,17 @@ func Adapters(projectID string, token string, regions []string, zones []string, 
 			continue
 		}
 
+		if meta.SearchEndpointFunc != nil {
+			searchEndpointFunc, err := meta.SearchEndpointFunc(projectID)
+			if err != nil {
+				return nil, err
+			}
+
+			adapters = append(adapters, NewSearchableAdapter(searchEndpointFunc, cfg))
+
+			continue
+		}
+
 		adapters = append(adapters, NewAdapter(cfg))
 	}
 
@@ -104,6 +115,17 @@ func Adapters(projectID string, token string, regions []string, zones []string, 
 				continue
 			}
 
+			if meta.SearchEndpointFunc != nil {
+				searchEndpointFunc, err := meta.SearchEndpointFunc(projectID, region)
+				if err != nil {
+					return nil, err
+				}
+
+				adapters = append(adapters, NewSearchableAdapter(searchEndpointFunc, cfg))
+
+				continue
+			}
+
 			adapters = append(adapters, NewAdapter(cfg))
 		}
 	}
@@ -135,12 +157,24 @@ func Adapters(projectID string, token string, regions []string, zones []string, 
 				HTTPClient:          otelhttp.DefaultClient,
 				UniqueAttributeKeys: meta.UniqueAttributeKeys,
 			}
+
 			if meta.ListEndpointFunc != nil {
 				listEndpoint, err := meta.ListEndpointFunc(projectID, zone)
 				if err != nil {
 					return nil, err
 				}
 				adapters = append(adapters, NewListableAdapter(listEndpoint, cfg))
+
+				continue
+			}
+
+			if meta.SearchEndpointFunc != nil {
+				searchEndpointFunc, err := meta.SearchEndpointFunc(projectID, zone)
+				if err != nil {
+					return nil, err
+				}
+
+				adapters = append(adapters, NewSearchableAdapter(searchEndpointFunc, cfg))
 
 				continue
 			}

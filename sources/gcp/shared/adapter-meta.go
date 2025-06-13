@@ -246,24 +246,30 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// There are multiple service endpoints: https://cloud.google.com/vertex-ai/docs/reference/rest#rest_endpoints
 		// We stick to the default one for now: https://aiplatform.googleapis.com
 		// Other endpoints are in the form of https://{region}-aiplatform.googleapis.com
+		// If we use the default endpoint the location must be set to `global`.
+		// So, for simplicity, we can get custom jobs by their name globally, list globally,
+		// otherwise we have to check the validity of the location and use the regional endpoint.
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_AI,
 		Scope:              ScopeProject,
+		// Vertex AI API must be enabled for the project!
 		// Reference: https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.customJobs/get
 		// https://aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/customJobs/{customJob}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/customJobs/%s"),
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/customJobs/%s"),
 		// Reference: https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.customJobs/list
 		// https://aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/customJobs
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/customJobs"),
-		UniqueAttributeKeys: []string{"locations", "customJobs"},
+		// Expected location is `global` for the default endpoint.
+		ListEndpointFunc:    projectLevelListFunc("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/customJobs"),
+		UniqueAttributeKeys: []string{"customJobs"},
 	},
 	AIPlatformPipelineJob: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_AI,
 		Scope:              ScopeProject,
+		// When using the default endpoint, the location must be set to `global`.
 		//  Format: projects/{project}/locations/{location}/pipelineJobs/{pipelineJob}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/pipelineJobs/%s"),
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/pipelineJobs/%s"),
 		// Reference: https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.pipelineJobs/list
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/pipelineJobs"),
-		UniqueAttributeKeys: []string{"locations", "pipelineJobs"},
+		ListEndpointFunc:    projectLevelListFunc("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/pipelineJobs"),
+		UniqueAttributeKeys: []string{"pipelineJobs"},
 	},
 	ArtifactRegistryDockerImage: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,

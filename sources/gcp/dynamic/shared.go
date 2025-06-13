@@ -15,6 +15,35 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
+var (
+	getDescription = func(sdpAssetType shared.ItemType, scope string, uniqueAttributeKeys []string) string {
+		selector := "{name}"
+		if len(uniqueAttributeKeys) > 1 {
+			// i.e.: {datasets|tables} for bigquery tables
+			selector = "{" + strings.Join(uniqueAttributeKeys, shared.QuerySeparator) + "}"
+		}
+
+		return fmt.Sprintf("Get a %s by its %s within its scope: %s", sdpAssetType, selector, scope)
+	}
+
+	listDescription = func(sdpAssetType shared.ItemType, scope string) string {
+		return fmt.Sprintf("List all %s within its scope: %s", sdpAssetType, scope)
+	}
+
+	searchDescription = func(sdpAssetType shared.ItemType, scope string, uniqueAttributeKeys []string) string {
+		if len(uniqueAttributeKeys) < 2 {
+			panic("searchDescription requires at least two unique attribute keys")
+		}
+		// For service directory endpoint adapter, the uniqueAttributeKeys is: []string{"locations", "namespaces", "services", "endpoints"}
+		// We want to create a selector like:
+		// {locations|namespaces|services}
+		// We remove the last key, because it defines the actual item selector
+		selector := "{" + strings.Join(uniqueAttributeKeys[:len(uniqueAttributeKeys)-1], shared.QuerySeparator) + "}"
+
+		return fmt.Sprintf("Search for %s by its %s within its scope: %s", sdpAssetType, selector, scope)
+	}
+)
+
 func linkItem(ctx context.Context, projectID string, sdpItem *sdp.Item, sdpAssetType shared.ItemType, linker *gcpshared.Linker, resp any, keys []string) {
 	if value, ok := resp.(string); ok {
 		linker.AutoLink(ctx, projectID, sdpItem, sdpAssetType, value, keys)
@@ -62,6 +91,7 @@ func externalToSDP(ctx context.Context, projectID string, scope string, uniqueAt
 	}
 
 	// We need to keep an eye on this.
+	// Name might not exist in the response for all APIs.
 	if name, ok := resp["name"].(string); ok {
 		attrValues := gcpshared.ExtractPathParams(name, uniqueAttrKeys...)
 		uniqueAttrValue := strings.Join(attrValues, shared.QuerySeparator)
@@ -70,7 +100,7 @@ func externalToSDP(ctx context.Context, projectID string, scope string, uniqueAt
 			return nil, err
 		}
 	} else {
-		return nil, fmt.Errorf("unable to determine self link")
+		return nil, fmt.Errorf("unable to determine the name")
 	}
 
 	for k, v := range resp {
@@ -96,6 +126,15 @@ func externalCallSingle(ctx context.Context, httpCli *http.Client, httpHeaders h
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(resp.Body)
+		if err == nil {
+			return nil, fmt.Errorf("failed to make a GET call: %s, HTTP Status: %s, HTTP Body: %s", url, resp.Status, string(body))
+		}
+
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.gcp.dynamic.http.get.url":            url,
+			"ovm.gcp.dynamic.http.get.responseStatus": resp.Status,
+		}).Warnf("failed to read the response body: %v", err)
 		return nil, fmt.Errorf("failed to make call: %s", resp.Status)
 	}
 
@@ -127,7 +166,17 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to make the GET call for the %s URL. HTTP Status: %s", url, resp.Status)
+		// Read the body to provide more context in the error message
+		body, err := io.ReadAll(resp.Body)
+		if err == nil {
+			return nil, fmt.Errorf("failed to make the GET call. HTTP Status: %s, HTTP Body: %s", resp.Status, string(body))
+		}
+
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.gcp.dynamic.http.get.url":            url,
+			"ovm.gcp.dynamic.http.get.responseStatus": resp.Status,
+		}).Warnf("failed to read the response body: %v", err)
+		return nil, fmt.Errorf("failed to make the GET callL. HTTP Status: %s", resp.Status)
 	}
 
 	data, err := io.ReadAll(resp.Body)
@@ -142,12 +191,13 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 
 	items, ok := result[itemsSelector].([]any)
 	if !ok {
-		// fallback to a generic "items" key if the itemsSelector is not found
-		items, ok = result["items"].([]any)
+		itemsSelector = "items" // Fallback to a generic "items" key
+		items, ok = result[itemsSelector].([]any)
 		if !ok {
 			log.WithContext(ctx).WithFields(log.Fields{
-				"url": url,
-			}).Warnf("failed to cast resp as a list of items: %v", result)
+				"ovm.gcp.dynamic.http.get.url":           url,
+				"ovm.gcp.dynamic.http.get.itemsSelector": itemsSelector,
+			}).Warnf("failed to cast resp as a list of %s: %v", itemsSelector, result)
 			return nil, nil
 		}
 	}

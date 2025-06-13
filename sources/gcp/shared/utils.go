@@ -54,7 +54,7 @@ func ExtractPathParams(input string, keys ...string) []string {
 	parts := strings.Split(input, "/")
 	results := make([]string, 0, len(keys))
 
-	for k := len(keys) - 1; k >= 0; k-- {
+	for k := 0; k <= len(keys)-1; k++ {
 		key := keys[k]
 		for i, part := range parts {
 			if part == key && len(parts) > i+1 {

@@ -432,7 +432,7 @@ func TestExtractPathParams(t *testing.T) {
 			name:     "multiple keys, both present",
 			input:    "projects/proj/locations/us-central1/keyRings/my-ring/cryptoKeys/my-key",
 			keys:     []string{"keyRings", "cryptoKeys"},
-			expected: []string{"my-key", "my-ring"},
+			expected: []string{"my-ring", "my-key"},
 		},
 		{
 			name:     "multiple keys, one missing",
@@ -468,7 +468,7 @@ func TestExtractPathParams(t *testing.T) {
 			name:     "multiple keys, both present, reverse order",
 			input:    "projects/proj/locations/us-central1/keyRings/my-ring/cryptoKeys/my-key",
 			keys:     []string{"locations", "cryptoKeys"},
-			expected: []string{"my-key", "us-central1"},
+			expected: []string{"us-central1", "my-key"},
 		},
 		{
 			name:     "default",
