@@ -128,7 +128,12 @@ func externalCallSingle(ctx context.Context, httpCli *http.Client, httpHeaders h
 	if resp.StatusCode != http.StatusOK {
 		body, err := io.ReadAll(resp.Body)
 		if err == nil {
-			return nil, fmt.Errorf("failed to make a GET call: %s, HTTP Status: %s, HTTP Body: %s", url, resp.Status, string(body))
+			return nil, fmt.Errorf(
+				"failed to make a GET call: %s, HTTP Status: %s, HTTP Body: %s",
+				url,
+				resp.Status,
+				string(body),
+			)
 		}
 
 		log.WithContext(ctx).WithFields(log.Fields{
@@ -169,7 +174,11 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 		// Read the body to provide more context in the error message
 		body, err := io.ReadAll(resp.Body)
 		if err == nil {
-			return nil, fmt.Errorf("failed to make the GET call. HTTP Status: %s, HTTP Body: %s", resp.Status, string(body))
+			return nil, fmt.Errorf(
+				"failed to make the GET call. HTTP Status: %s, HTTP Body: %s",
+				resp.Status,
+				string(body),
+			)
 		}
 
 		log.WithContext(ctx).WithFields(log.Fields{
@@ -189,17 +198,27 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 		return nil, err
 	}
 
-	items, ok := result[itemsSelector].([]any)
+	itemsAny, ok := result[itemsSelector]
 	if !ok {
 		itemsSelector = "items" // Fallback to a generic "items" key
-		items, ok = result[itemsSelector].([]any)
+		itemsAny, ok = result[itemsSelector]
 		if !ok {
 			log.WithContext(ctx).WithFields(log.Fields{
 				"ovm.gcp.dynamic.http.get.url":           url,
 				"ovm.gcp.dynamic.http.get.itemsSelector": itemsSelector,
-			}).Warnf("failed to cast resp as a list of %s: %v", itemsSelector, result)
+			}).Debugf("not found any items for %s: within %v", itemsSelector, result)
 			return nil, nil
 		}
+	}
+
+	items, ok := itemsAny.([]any)
+	if !ok {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.gcp.dynamic.http.get.url":           url,
+			"ovm.gcp.dynamic.http.get.itemsSelector": itemsSelector,
+		}).Warnf("failed to cast resp as a list of %s: within %v", itemsSelector, result)
+		return nil, nil
+
 	}
 
 	var ii []map[string]interface{}

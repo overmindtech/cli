@@ -96,7 +96,14 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 
 	url := g.getURLFunc(query)
 	if url == "" {
-		return nil, fmt.Errorf("unable to determine base URL for %s", g.sdpAssetType)
+		return nil, &sdp.QueryError{
+			ErrorType: sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf(
+				"no get endpoint found for query \"%s\". %s",
+				query,
+				g.Metadata().GetSupportedQueryMethods().GetGetDescription(),
+			),
+		}
 	}
 
 	resp, err := externalCallSingle(ctx, g.httpCli, g.httpHeaders, url)

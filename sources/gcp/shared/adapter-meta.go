@@ -358,7 +358,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// GET https://bigtableadmin.googleapis.com/v2/{name=projects/*/instances/*/clusters/*/backups/*}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithThreeQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s/backups/%s"),
 		// GET https://bigtableadmin.googleapis.com/v2/{parent=projects/*/instances/*/clusters/*}/backups
-		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/parent=projects/%s/instances/%s/clusters/%s/backups"),
+		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s/backups"),
 		UniqueAttributeKeys: []string{"instances", "clusters", "backups"},
 	},
 	BigTableAdminTable: {
@@ -596,6 +596,8 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		UniqueAttributeKeys: []string{"roles"},
 	},
 	LoggingBucket: {
+		// global is a type of location.
+		// location is generally a region.
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets/get
@@ -631,6 +633,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.savedQueries/list
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/savedQueries
 		// IAM permissions: logging.savedQueries.list
+		// Saved Query has to be shared with the project (opposite is a private one) to show up here.
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://logging.googleapis.com/v2/projects/%s/locations/%s/savedQueries"),
 		UniqueAttributeKeys: []string{"locations", "savedQueries"},
 	},

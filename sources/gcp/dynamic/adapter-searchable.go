@@ -64,6 +64,13 @@ func (g SearchableAdapter) Search(ctx context.Context, scope, query string, igno
 		}
 	}
 	searchEndpoint := g.searchURLFunc(query)
+	if searchEndpoint == "" {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf("no search endpoint found for query \"%s\". %s", query, g.Metadata().GetSupportedQueryMethods().GetSearchDescription()),
+		}
+	}
+
 	var items []*sdp.Item
 	itemsSelector := g.uniqueAttributeKeys[len(g.uniqueAttributeKeys)-1] // Use the last key as the item selector
 
