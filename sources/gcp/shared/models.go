@@ -115,4 +115,8 @@ const (
 	Sink                     shared.Resource = "sink"
 	Hub                      shared.Resource = "hub"
 	FirewallPolicy           shared.Resource = "firewall-policy"
+	TensorBoard              shared.Resource = "tensor-board"
+	Experiment               shared.Resource = "experiment"
+	ExperimentRun            shared.Resource = "experiment-run"
+	Model                    shared.Resource = "model"
 )

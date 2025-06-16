@@ -314,6 +314,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SearchDescription:   "Search for Docker images in Artifact Registry. Use the format {{location}}|{{repository_id}} or projects/{{project}}/locations/{{location}}/repository/{{repository_id}}/dockerImages/{{docker_image}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "repositories", "dockerImages"},
 	},
+	// TODO: Remove this: https://linear.app/overmind/issue/ENG-635/create-manual-adapter-for-bigquerygoogleapiscomdataset
 	BigQueryDataset: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 		Scope:              ScopeProject,
@@ -324,6 +325,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		ListEndpointFunc:    projectLevelListFunc("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets"),
 		UniqueAttributeKeys: []string{"datasets"},
 	},
+	// TODO: Remove this: https://linear.app/overmind/issue/ENG-634/create-manual-adapter-for-bigquerygoogleapiscomtable
 	BigQueryTable: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 		Scope:              ScopeProject,
@@ -609,8 +611,12 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// IAM permissions: logging.buckets.list
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets"),
 		UniqueAttributeKeys: []string{"locations", "buckets"},
+		// HEALTH: Supports Health status: https://cloud.google.com/logging/docs/reference/v2/rest/v2/LifecycleState
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
 	LoggingLink: {
+		// HEALTH: https://cloud.google.com/logging/docs/reference/v2/rest/v2/LifecycleState
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets.links/get
@@ -637,6 +643,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://logging.googleapis.com/v2/projects/%s/locations/%s/savedQueries"),
 		UniqueAttributeKeys: []string{"locations", "savedQueries"},
 	},
+	// TODO: Remove this: https://linear.app/overmind/issue/ENG-632/create-a-manual-adapter-for-logginggoogleapiscomlogsink
 	LoggingSink: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
 		Scope:              ScopeProject,

@@ -80,4 +80,8 @@ var (
 	CloudKMSCryptoKey              = shared.NewItemType(GCP, CloudKMS, CryptoKey)
 	NetworkConnectivityHub         = shared.NewItemType(GCP, NetworkConnectivity, Hub)
 	ComputeFirewallPolicy          = shared.NewItemType(GCP, Compute, FirewallPolicy)
+	AIPlatformTensorBoard          = shared.NewItemType(GCP, AIPlatform, TensorBoard)
+	AIPlatformExperiment           = shared.NewItemType(GCP, AIPlatform, Experiment)
+	AIPlatformExperimentRun        = shared.NewItemType(GCP, AIPlatform, ExperimentRun)
+	AIPlatformModel                = shared.NewItemType(GCP, AIPlatform, Model)
 )

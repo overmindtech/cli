@@ -34,6 +34,11 @@ var (
 		ToSDPITemType:    CloudKMSCryptoKey,
 		BlastPropagation: impactInOnly,
 	}
+	cryptoKeyVersionImpactInOnly = &Impact{
+		Description:      "If the crypto key version is updated: The source may not be able to access encrypted data. If the source is updated: The crypto key version remains unaffected.",
+		ToSDPITemType:    CloudKMSCryptoKeyVersion,
+		BlastPropagation: impactInOnly,
+	}
 	iamServiceAccountImpactInOnly = &Impact{
 		Description:      "If the service account is updated: The source may not be able to access encrypted data. If the source is updated: The service account remains unaffected.",
 		ToSDPITemType:    IAMServiceAccount,
@@ -47,6 +52,82 @@ var (
 )
 
 var BlastPropagations = map[shared.ItemType]map[string]*Impact{
+	AIPlatformCustomJob: {
+		// The Cloud KMS key that will be used to encrypt the output artifacts.
+		"encryptionSpec.kmsKeyName": {
+			Description:      "If the Cloud KMS CryptoKey is updated: The CustomJob may not be able to access encrypted output artifacts. If the CustomJob is updated: The CryptoKey remains unaffected.",
+			ToSDPITemType:    CloudKMSCryptoKey,
+			BlastPropagation: impactInOnly,
+		},
+		// The full name of the network to which the job should be peered.
+		"jobSpec.network": {
+			Description:      "If the Compute Network is deleted or updated: The CustomJob may lose connectivity or fail to run as expected. If the CustomJob is updated: The network remains unaffected.",
+			ToSDPITemType:    ComputeNetwork,
+			BlastPropagation: impactInOnly,
+		},
+		// The service account that the job runs as.
+		"jobSpec.serviceAccount": {
+			Description:      "If the IAM Service Account is deleted or updated: The CustomJob may fail to run or lose permissions. If the CustomJob is updated: The service account remains unaffected.",
+			ToSDPITemType:    IAMServiceAccount,
+			BlastPropagation: impactInOnly,
+		},
+		// The Cloud Storage location to store the output of this CustomJob.
+		"jobSpec.baseOutputDirectory.gcsOutputDirectory": {
+			Description:      "If the Storage Bucket is deleted or updated: The CustomJob may fail to write outputs. If the CustomJob is updated: The bucket remains unaffected.",
+			ToSDPITemType:    StorageBucket,
+			BlastPropagation: impactInOnly,
+		},
+		// Optional. The name of a Vertex AI Tensorboard resource to which this CustomJob will upload Tensorboard logs.
+		"jobSpec.tensorboard": {
+			Description:      "If the Vertex AI Tensorboard is deleted or updated: The CustomJob may fail to upload logs or lose access to previous logs. If the CustomJob is updated: The tensorboard remains unaffected.",
+			ToSDPITemType:    AIPlatformTensorBoard,
+			BlastPropagation: impactInOnly,
+		},
+		// Optional. The name of an experiment to associate with the CustomJob.
+		"jobSpec.experiment": {
+			Description:      "If the Vertex AI Experiment is deleted or updated: The CustomJob may lose experiment tracking or association. If the CustomJob is updated: The experiment remains unaffected.",
+			ToSDPITemType:    AIPlatformExperiment,
+			BlastPropagation: impactInOnly,
+		},
+		// Optional. The name of an experiment run to associate with the CustomJob.
+		"jobSpec.experimentRun": {
+			Description:      "If the Vertex AI ExperimentRun is deleted or updated: The CustomJob may lose run tracking or association. If the CustomJob is updated: The experiment run remains unaffected.",
+			ToSDPITemType:    AIPlatformExperimentRun,
+			BlastPropagation: impactInOnly,
+		},
+		// Optional. The name of a model to upload the trained Model to upon job completion.
+		"jobSpec.models": {
+			Description:      "If the Vertex AI Model is deleted or updated: The CustomJob may fail to upload or associate the trained model. If the CustomJob is updated: The model remains unaffected.",
+			ToSDPITemType:    AIPlatformModel,
+			BlastPropagation: impactInOnly,
+		},
+	},
+	AIPlatformPipelineJob: {
+		// The service account that the pipeline workload runs as (root-level).
+		"serviceAccount": {
+			Description:      "If the IAM Service Account is deleted or updated: The PipelineJob may fail to run or lose permissions. If the PipelineJob is updated: The service account remains unaffected.",
+			ToSDPITemType:    IAMServiceAccount,
+			BlastPropagation: impactInOnly,
+		},
+		// The full name of the network to which the job should be peered (root-level).
+		"network": {
+			Description:      "If the Compute Network is deleted or updated: The PipelineJob may lose connectivity or fail to run as expected. If the PipelineJob is updated: The network remains unaffected.",
+			ToSDPITemType:    ComputeNetwork,
+			BlastPropagation: impactInOnly,
+		},
+		// The Cloud KMS key used to encrypt PipelineJob outputs.
+		"encryptionSpec.kmsKeyName": {
+			Description:      "If the Cloud KMS CryptoKey is updated: The PipelineJob may not be able to access encrypted output artifacts. If the PipelineJob is updated: The CryptoKey remains unaffected.",
+			ToSDPITemType:    CloudKMSCryptoKey,
+			BlastPropagation: impactInOnly,
+		},
+		// The Cloud Storage location to store the output of this PipelineJob.
+		"runtimeConfig.gcsOutputDirectory": {
+			Description:      "If the Storage Bucket is deleted or updated: The PipelineJob may fail to write outputs. If the PipelineJob is updated: The bucket remains unaffected.",
+			ToSDPITemType:    StorageBucket,
+			BlastPropagation: impactInOnly,
+		},
+	},
 	ComputeFirewall: {
 		"network": {
 			Description:      "If the Compute Network is updated: The firewall rules may no longer apply correctly. If the firewall is updated: The network remains unaffected, but its security posture may change.",
@@ -245,5 +326,23 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			ToSDPITemType:    ComputeGateway,
 			BlastPropagation: impactOutOnly,
 		},
+	},
+	LoggingLink: {
+		"bigqueryDataset.datasetId": {
+			Description:      "They are tightly coupled with the Logging Link.",
+			ToSDPITemType:    BigQueryDataset,
+			BlastPropagation: impactBothWays,
+		},
+	},
+	LoggingSavedQuery: {
+		// There is no links for this item type.
+	},
+	LoggingBucket: {
+		"cmekSettings.kmsKeyName":        cryptoKeyImpactInOnly,
+		"cmekSettings.kmsKeyVersionName": cryptoKeyVersionImpactInOnly,
+		"cmekSettings.serviceAccountId":  iamServiceAccountImpactInOnly,
+	},
+	IAMRole: {
+		// There is no links for this item type.
 	},
 }
