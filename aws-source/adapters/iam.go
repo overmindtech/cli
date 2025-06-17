@@ -192,6 +192,11 @@ func LinksFromPolicy(document *policy.Policy) []*sdp.LinkedItemQuery {
 				// configurable extractors
 				for _, extractor := range extractors {
 					if extractor.RelevantResources != nil && extractor.RelevantResources.MatchString(resource) {
+						if statement.Action == nil || len(statement.Action.Values()) == 0 {
+							// If there is no action, then we can't extract
+							// anything from this resource
+							continue
+						}
 						queries = append(queries, extractor.ExtractorFunc(resource, statement.Action.Values())...)
 
 						// Only use the first one that matches
