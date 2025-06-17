@@ -119,4 +119,5 @@ const (
 	Experiment               shared.Resource = "experiment"
 	ExperimentRun            shared.Resource = "experiment-run"
 	Model                    shared.Resource = "model"
+	Connection               shared.Resource = "connection"
 )

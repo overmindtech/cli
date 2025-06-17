@@ -46,21 +46,6 @@ func TestSDPAssetTypeToAdapterMeta_GetEndpointBaseURLFunc(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			name:        "BigQueryDataset valid",
-			assetType:   BigQueryDataset,
-			params:      []string{"proj"},
-			query:       "dataset",
-			expectedURL: "https://bigquery.googleapis.com/bigquery/v2/projects/proj/datasets/dataset",
-			expectErr:   false,
-		},
-		{
-			name:      "BigQueryDataset missing param",
-			assetType: BigQueryDataset,
-			params:    []string{""},
-			query:     "dataset",
-			expectErr: true,
-		},
-		{
 			name:        "PubSubSubscription valid",
 			assetType:   PubSubSubscription,
 			params:      []string{"proj"},
@@ -164,19 +149,6 @@ func TestSDPAssetTypeToAdapterMeta_ListEndpointFunc(t *testing.T) {
 			name:      "ComputeSubnetwork missing region",
 			assetType: ComputeSubnetwork,
 			params:    []string{"proj", ""},
-			expectErr: true,
-		},
-		{
-			name:        "BigQueryDataset valid",
-			assetType:   BigQueryDataset,
-			params:      []string{"proj"},
-			expectedURL: "https://bigquery.googleapis.com/bigquery/v2/projects/proj/datasets",
-			expectErr:   false,
-		},
-		{
-			name:      "BigQueryDataset missing param",
-			assetType: BigQueryDataset,
-			params:    []string{""},
 			expectErr: true,
 		},
 		{

@@ -84,4 +84,5 @@ var (
 	AIPlatformExperiment           = shared.NewItemType(GCP, AIPlatform, Experiment)
 	AIPlatformExperimentRun        = shared.NewItemType(GCP, AIPlatform, ExperimentRun)
 	AIPlatformModel                = shared.NewItemType(GCP, AIPlatform, Model)
+	BigQueryConnection             = shared.NewItemType(GCP, BigQuery, Connection)
 )

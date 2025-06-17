@@ -314,17 +314,6 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SearchDescription:   "Search for Docker images in Artifact Registry. Use the format {{location}}|{{repository_id}} or projects/{{project}}/locations/{{location}}/repository/{{repository_id}}/dockerImages/{{docker_image}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "repositories", "dockerImages"},
 	},
-	// TODO: Remove this: https://linear.app/overmind/issue/ENG-635/create-manual-adapter-for-bigquerygoogleapiscomdataset
-	BigQueryDataset: {
-		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
-		Scope:              ScopeProject,
-		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets/%s"),
-		// Reference: https://cloud.google.com/bigquery/docs/reference/rest/v2/datasets/list
-		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets
-		ListEndpointFunc:    projectLevelListFunc("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets"),
-		UniqueAttributeKeys: []string{"datasets"},
-	},
 	// TODO: Remove this: https://linear.app/overmind/issue/ENG-634/create-manual-adapter-for-bigquerygoogleapiscomtable
 	BigQueryTable: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
