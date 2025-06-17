@@ -2,6 +2,7 @@ package shared
 
 import (
 	"github.com/overmindtech/cli/sdp-go"
+	aws "github.com/overmindtech/cli/sources/aws/shared"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
 )
@@ -125,6 +126,78 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"runtimeConfig.gcsOutputDirectory": {
 			Description:      "If the Storage Bucket is deleted or updated: The PipelineJob may fail to write outputs. If the PipelineJob is updated: The bucket remains unaffected.",
 			ToSDPITemType:    StorageBucket,
+			BlastPropagation: impactInOnly,
+		},
+	},
+	BigTableAdminAppProfile: {
+		"multiClusterRoutingUseAny.clusterIds": {
+			ToSDPITemType:    BigTableAdminCluster,
+			Description:      "If the BigTableAdmin Cluster is deleted or updated: The AppProfile may lose routing capabilities or fail to access data. If the AppProfile is updated: The cluster remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"singleClusterRouting.clusterId": {
+			ToSDPITemType:    BigTableAdminCluster,
+			Description:      "If the BigTableAdmin Cluster is deleted or updated: The AppProfile may lose routing capabilities or fail to access data. If the AppProfile is updated: The cluster remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+	},
+	BigTableAdminBackup: {
+		"sourceTable": {
+			ToSDPITemType:    BigTableAdminTable,
+			Description:      "If the BigTableAdmin Table is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The table remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"sourceBackup": {
+			ToSDPITemType:    BigTableAdminBackup,
+			Description:      "If the source Backup is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The source backup remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"encryptionInfo.kmsKeyVersion": cryptoKeyVersionImpactInOnly,
+	},
+	BigTableAdminTable: {
+		// If this table was restored from another data source (e.g. a backup), this field, restoreInfo, will be populated with information about the restore.
+		"restoreInfo.backupInfo.sourceTable": {
+			ToSDPITemType:    BigTableAdminTable,
+			Description:      "If the source BigTableAdmin Table is deleted or updated: The restored table may become invalid or inaccessible. If the restored table is updated: The source table remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"restoreInfo.backupInfo.sourceBackup": {
+			ToSDPITemType:    BigTableAdminBackup,
+			Description:      "If the source BigTableAdmin Backup is deleted or updated: The restored table may become invalid or inaccessible. If the restored table is updated: The source backup remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+	},
+	CloudBuildBuild: {
+		"source.storageSource.bucket": {
+			ToSDPITemType:    StorageBucket,
+			Description:      "If the Storage Bucket is deleted or updated: The Cloud Build may fail to access source files. If the Cloud Build is updated: The bucket remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"steps.name": {
+			ToSDPITemType:    ArtifactRegistryDockerImage,
+			Description:      "If the Artifact Registry Docker Image is deleted or updated: The Cloud Build may fail to pull the image. If the Cloud Build is updated: The Docker image remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"results.images": {
+			ToSDPITemType:    ArtifactRegistryDockerImage,
+			Description:      "If the Cloud Build is updated or deleted: The Artifact Registry Docker Images may no longer be valid or accessible. If the Docker Images are updated: The Cloud Build remains unaffected.",
+			BlastPropagation: impactOutOnly,
+		},
+		"images": {
+			ToSDPITemType:    ArtifactRegistryDockerImage,
+			Description:      "If any of the images fail to be pushed, the build status is marked FAILURE.",
+			BlastPropagation: impactOutOnly,
+		},
+		"logsBucket": {
+			ToSDPITemType:    LoggingBucket,
+			Description:      "If the Logging Bucket is deleted or updated: The Cloud Build may fail to write logs. If the Cloud Build is updated: The bucket remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"serviceAccount": iamServiceAccountImpactInOnly,
+		"buildTriggerId": {
+			// The ID of the BuildTrigger that triggered this build, if it was triggered automatically.
+			ToSDPITemType:    CloudBuildTrigger,
+			Description:      "If the Cloud Build Trigger is deleted or updated: The Cloud Build may not be retriggered as expected. If the Cloud Build is updated: The trigger remains unaffected.",
 			BlastPropagation: impactInOnly,
 		},
 	},
@@ -327,6 +400,9 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactOutOnly,
 		},
 	},
+	DataplexEntryGroup: {
+		// There is no links for this item type.
+	},
 	LoggingLink: {
 		"bigqueryDataset.datasetId": {
 			Description:      "They are tightly coupled with the Logging Link.",
@@ -344,5 +420,129 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 	},
 	IAMRole: {
 		// There is no links for this item type.
+	},
+	PubSubSubscription: {
+		"topic": {
+			ToSDPITemType:    PubSubTopic,
+			Description:      "If the Pub/Sub Topic is deleted or updated: The Subscription may fail to receive messages. If the Subscription is updated: The topic remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"bigqueryConfig.table": {
+			// The name of the table to which to write data, of the form {projectId}.{datasetId}.{tableId}
+			// We have a manual adapter for this.
+			ToSDPITemType:    BigQueryTable,
+			Description:      "If the BigQuery Table is deleted or updated: The Subscription may fail to write data. If the Subscription is updated: The table remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"cloudStorageConfig.bucket": {
+			ToSDPITemType:    StorageBucket,
+			Description:      "If the Cloud Storage Bucket is deleted or updated: The Subscription may fail to write data. If the Subscription is updated: The bucket remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"analyticsHubSubscriptionInfo.subscription": {
+			ToSDPITemType:    PubSubSubscription,
+			Description:      "If the Pub/Sub Subscription is deleted or updated: The Analytics Hub Subscription may fail to receive messages. If the Analytics Hub Subscription is updated: The Pub/Sub Subscription remains unaffected.",
+			BlastPropagation: impactOutOnly,
+		},
+	},
+	PubSubTopic: {
+		"kmsKeyName": cryptoKeyImpactInOnly,
+		// Settings for ingestion from a data source into this topic.
+		"ingestionDataSourceSettings.cloudStorage.bucket": {
+			ToSDPITemType:    StorageBucket,
+			Description:      "If the Cloud Storage Bucket is deleted or updated: The Pub/Sub Topic may fail to receive data. If the Topic is updated: The bucket remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"ingestionDataSourceSettings.awsKinesis.streamAr": {
+			ToSDPITemType:    aws.KinesisStream,
+			Description:      "The Kinesis stream ARN to ingest data from.",
+			BlastPropagation: impactInOnly,
+		},
+		"ingestionDataSourceSettings.awsKinesis.consumerArn": {
+			ToSDPITemType:    aws.KinesisStreamConsumer,
+			Description:      "The Kinesis consumer ARN to used for ingestion in Enhanced Fan-Out mode. The consumer must be already created and ready to be used.",
+			BlastPropagation: impactInOnly,
+		},
+		"ingestionDataSourceSettings.awsKinesis.awsRoleArn": {
+			Description:      "AWS role ARN to be used for Federated Identity authentication with Kinesis.",
+			BlastPropagation: impactInOnly,
+		},
+	},
+	RunRevision: {
+		"service": {
+			ToSDPITemType:    RunService,
+			Description:      "If the Run Service is deleted or updated: The Revision may lose its association or fail to run. If the Revision is updated: The service remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"vpcAccess.networkInterfaces.network": {
+			ToSDPITemType:    ComputeNetwork,
+			Description:      "If the Compute Network is deleted or updated: The Revision may lose connectivity or fail to run as expected. If the Revision is updated: The network remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"vpcAccess.networkInterfaces.subnetwork": {
+			ToSDPITemType:    ComputeSubnetwork,
+			Description:      "If the Compute Subnetwork is deleted or updated: The Revision may lose connectivity or fail to run as expected. If the Revision is updated: The subnetwork remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"vpcAccess.connector": {
+			ToSDPITemType:    VPCAccessConnector,
+			Description:      "If the VPC Access Connector is deleted or updated: The Revision may lose connectivity or fail to run as expected. If the Revision is updated: The connector remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"serviceAccount": iamServiceAccountImpactInOnly,
+		"containers.image": {
+			ToSDPITemType:    ArtifactRegistryDockerImage,
+			Description:      "If the Artifact Registry Docker Image is deleted or updated: The Revision may fail to pull the image. If the Revision is updated: The Docker image remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"volumes.cloudSqlInstance.instances": {
+			// Format: {project}:{location}:{instance}
+			// We need a manual adapter link for this.
+			ToSDPITemType:    SQLAdminInstance,
+			Description:      "If the Cloud SQL Instance is deleted or updated: The Revision may fail to access the database. If the Revision is updated: The instance remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"volumes.gcs.bucket": {
+			ToSDPITemType:    StorageBucket,
+			Description:      "If the Cloud Storage Bucket is deleted or updated: The Revision may fail to access the GCS volume. If the Revision is updated: The bucket remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"encryptionKey": cryptoKeyImpactInOnly,
+	},
+	ServiceUsageService: {
+		"config.name": {
+			ToSDPITemType:    stdlib.NetworkDNS,
+			Description:      "The DNS address at which this service is available. They are tightly coupled with the Service Usage Service.",
+			BlastPropagation: impactBothWays,
+		},
+		"config.usage.producerNotificationChannel": {
+			// Google Service Management currently only supports Google Cloud Pub/Sub as a notification channel.
+			// To use Google Cloud Pub/Sub as the channel, this must be the name of a Cloud Pub/Sub topic
+			ToSDPITemType:    PubSubTopic,
+			Description:      "If the Pub/Sub Topic is deleted or updated: The Service Usage Service may fail to send notifications. If the Service Usage Service is updated: The topic remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+	},
+	SQLAdminBackup: {
+		"instance": {
+			ToSDPITemType:    SQLAdminInstance,
+			Description:      "If the Cloud SQL Instance is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The instance cannot recover from the backup.",
+			BlastPropagation: impactBothWays,
+		},
+		"kmsKey":        cryptoKeyImpactInOnly,
+		"kmsKeyVersion": cryptoKeyVersionImpactInOnly,
+		"backupRun": {
+			ToSDPITemType:    SQLAdminBackupRun,
+			Description:      "They are tightly coupled with the SQL Admin Backup.",
+			BlastPropagation: impactBothWays,
+		},
+	},
+	SQLAdminBackupRun: {
+		"instance": {
+			ToSDPITemType:    SQLAdminInstance,
+			Description:      "They are tightly coupled",
+			BlastPropagation: impactBothWays,
+		},
+		"diskEncryptionConfiguration.kmsKeyName": cryptoKeyImpactInOnly,
 	},
 }

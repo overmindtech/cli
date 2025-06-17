@@ -40,7 +40,7 @@ func NewLinker() *Linker {
 		sdpAssetTypeToAdapterMeta:          SDPAssetTypeToAdapterMeta,
 		gcpItemTypeToSDPAssetType:          GCPResourceTypeInURLToSDPAssetType,
 		explicitBlastPropagations:          BlastPropagations,
-		manualAdapterLinker:                ManualAdapterGetLinksByAssetType,
+		manualAdapterLinker:                ManualAdapterLinksByAssetType,
 		gcpResourceTypeInURLToSDPAssetType: GCPResourceTypeInURLToSDPAssetType,
 	}
 }

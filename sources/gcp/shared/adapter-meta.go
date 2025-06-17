@@ -351,12 +351,15 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// GET https://bigtableadmin.googleapis.com/v2/{parent=projects/*/instances/*/clusters/*}/backups
 		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s/backups"),
 		UniqueAttributeKeys: []string{"instances", "clusters", "backups"},
+		// HEALTH: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.clusters.backups#state
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
 	BigTableAdminTable: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.tables/get
 		// GET https://bigtableadmin.googleapis.com/v2/{name=projects/*/instances/*/tables/*}
+		// IAM permissions: bigtable.tables.get
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/tables/%s"),
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.tables/list
 		// GET https://bigtableadmin.googleapis.com/v2/{parent=projects/*/instances/*}/tables
@@ -391,11 +394,14 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/build/docs/api/reference/rest/v1/projects.builds/get
 		// GET https://cloudbuild.googleapis.com/v1/projects/{projectId}/builds/{id}
+		// IAM permissions: cloudbuild.builds.get
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://cloudbuild.googleapis.com/v1/projects/%s/builds/%s"),
 		// Reference: https://cloud.google.com/build/docs/api/reference/rest/v1/projects.builds/list
 		// GET https://cloudbuild.googleapis.com/v1/projects/{projectId}/builds
 		ListEndpointFunc:    projectLevelListFunc("https://cloudbuild.googleapis.com/v1/projects/%s/builds"),
 		UniqueAttributeKeys: []string{"builds"},
+		// HEALTH: https://cloud.google.com/build/docs/api/reference/rest/v1/projects.builds#Build.Status
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
 	CloudResourceManagerProject: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
@@ -521,6 +527,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.entryGroups/get
 		// GET https://dataplex.googleapis.com/v1/{name=projects/*/locations/*/entryGroups/*}
+		// IAM permissions: dataplex.entryGroups.get
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups/%s"),
 		// Reference: https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.entryGroups/list
 		// GET https://dataplex.googleapis.com/v1/{parent=projects/*/locations/*}/entryGroups
@@ -529,6 +536,8 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups"),
 		SearchDescription:   "Search for Dataplex entry groups in a location. Use the format {{location}} or projects/{{project}}/locations/{{location}}/entryGroups/{{entry_group_id}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "entryGroups"},
+		// HEALTH: https://cloud.google.com/dataplex/docs/reference/rest/v1/TransferStatus
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
 	DNSManagedZone: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
@@ -687,6 +696,8 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://pubsub.googleapis.com/v1/projects/{project}/subscriptions
 		ListEndpointFunc:    projectLevelListFunc("https://pubsub.googleapis.com/v1/projects/%s/subscriptions"),
 		UniqueAttributeKeys: []string{"subscriptions"},
+		// HEALTH: https://cloud.google.com/pubsub/docs/reference/rest/v1/projects.subscriptions#state_2
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
 	PubSubTopic: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
@@ -696,6 +707,8 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://pubsub.googleapis.com/v1/projects/{project}/topics
 		ListEndpointFunc:    projectLevelListFunc("https://pubsub.googleapis.com/v1/projects/%s/topics"),
 		UniqueAttributeKeys: []string{"topics"},
+		// HEALTH: https://cloud.google.com/pubsub/docs/reference/rest/v1/projects.topics#state
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
 	RunRevision: {
 		/*
@@ -751,6 +764,8 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// IAM Perm: serviceusage.services.list
 		ListEndpointFunc:    projectLevelListFunc("https://serviceusage.googleapis.com/v1/projects/%s/services?filter=state:ENABLED"),
 		UniqueAttributeKeys: []string{"services"},
+		// HEALTH: https://cloud.google.com/service-usage/docs/reference/rest/v1/services#state
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
 	SQLAdminBackup: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
@@ -762,6 +777,8 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// GET https://sqladmin.googleapis.com/v1/{parent=projects/*}/backups
 		ListEndpointFunc:    projectLevelListFunc("https://sqladmin.googleapis.com/v1/projects/%s/backups"),
 		UniqueAttributeKeys: []string{"backups"},
+		// HEALTH: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/Backups#sqlbackupstate
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
 	SQLAdminBackupRun: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
@@ -773,6 +790,8 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// GET https://sqladmin.googleapis.com/v1/projects/{project}/instances/{instance}/backupRuns
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://sqladmin.googleapis.com/v1/projects/%s/instances/%s/backupRuns"),
 		UniqueAttributeKeys: []string{"instances", "backupRuns"},
+		// HEALTH: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/backupRuns#sqlbackuprunstatus
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
 	StorageBucket: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,

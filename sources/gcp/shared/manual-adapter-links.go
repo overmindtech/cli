@@ -2,8 +2,12 @@ package shared
 
 import (
 	"fmt"
+	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/overmindtech/cli/sdp-go"
+	aws "github.com/overmindtech/cli/sources/aws/shared"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
 )
@@ -75,9 +79,43 @@ func ProjectBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, _
 	}
 }
 
-// ManualAdapterGetLinksByAssetType defines how to link manually created adapters.
+func AWSLinkByARN(awsItem string) func(_, _, arn string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	return func(_, _, arn string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		// https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html#arns-syntax
+		parts := strings.Split(arn, ":")
+		if len(parts) < 5 {
+			log.Warnf("invalid ARN: %s", arn)
+			return nil
+		}
+		/*
+			arn:partition:service:region:account-id:resource-id
+			arn:partition:service:region:account-id:resource-type/resource-id
+			arn:partition:service:region:account-id:resource-type:resource-id
+		*/
+		region := parts[3]
+		accountID := parts[4]
+		scope := accountID
+		if region != "" {
+			scope = fmt.Sprintf("%s.%s", accountID, region)
+		}
+		return &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   awsItem,
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  arn, // By default, we search by the full ARN
+				Scope:  scope,
+			},
+			BlastPropagation: blastPropagation,
+		}
+	}
+}
+
+// ManualAdapterLinksByAssetType defines how to link a specific item type to its linked items.
+// This is used when the query that holds the linked item information is not a standard query for the dynamic adapter framework.
+// So we need to manually define how to create the linked item query based on the item type and the query string.
+//
 // Expects that the query will have all the necessary information to create the linked item query.
-var ManualAdapterGetLinksByAssetType = map[shared.ItemType]func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery{
+var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery{
 	ComputeInstance:             ZoneBaseLinkedItemQueryByName(ComputeInstance),
 	ComputeInstanceGroup:        ZoneBaseLinkedItemQueryByName(ComputeInstanceGroup),
 	ComputeInstanceGroupManager: ZoneBaseLinkedItemQueryByName(ComputeInstanceGroupManager),
@@ -163,6 +201,48 @@ var ManualAdapterGetLinksByAssetType = map[shared.ItemType]func(projectID, fromI
 					Type:   CloudKMSCryptoKey.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey),
+					Scope:  projectID,
+				},
+				BlastPropagation: blastPropagation,
+			}
+		}
+		return nil
+	},
+	BigQueryTable: func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		// expected query format: {projectId}.{datasetId}.{tableId}
+		// See: https://cloud.google.com/pubsub/docs/reference/rest/v1/projects.subscriptions#bigqueryconfig
+		parts := strings.Split(query, ".")
+		if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+			return &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   BigQueryTable.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  shared.CompositeLookupKey(parts[1], parts[2]),
+					Scope:  parts[0],
+				},
+				BlastPropagation: blastPropagation,
+			}
+		}
+
+		return nil
+	},
+	aws.KinesisStream:         AWSLinkByARN("kinesis-stream"),
+	aws.KinesisStreamConsumer: AWSLinkByARN("kinesis-stream-consumer"),
+	aws.IAMRole:               AWSLinkByARN("iam-role"),
+	SQLAdminInstance: func(_, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		// expected query format: {project}:{location}:{instance}
+		// See: https://cloud.google.com/run/docs/reference/rest/v2/Volume#cloudsqlinstance
+		parts := strings.Split(query, ":")
+		if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+			// It will be a project level adapter
+			// https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/instances/get
+			projectID := parts[0]
+			instance := parts[2]
+			return &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   SQLAdminInstance.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  instance,
 					Scope:  projectID,
 				},
 				BlastPropagation: blastPropagation,

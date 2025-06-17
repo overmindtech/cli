@@ -34,6 +34,7 @@ const (
 	EssentialContacts    shared.API = "essential-contacts"
 	Logging              shared.API = "logging"
 	NetworkConnectivity  shared.API = "network-connectivity"
+	VPCAccess            shared.API = "vpc-access"
 )
 
 // Resources
@@ -120,4 +121,6 @@ const (
 	ExperimentRun            shared.Resource = "experiment-run"
 	Model                    shared.Resource = "model"
 	Connection               shared.Resource = "connection"
+	Trigger                  shared.Resource = "trigger"
+	Connector                shared.Resource = "connector"
 )

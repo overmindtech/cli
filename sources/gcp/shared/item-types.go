@@ -85,4 +85,9 @@ var (
 	AIPlatformExperimentRun        = shared.NewItemType(GCP, AIPlatform, ExperimentRun)
 	AIPlatformModel                = shared.NewItemType(GCP, AIPlatform, Model)
 	BigQueryConnection             = shared.NewItemType(GCP, BigQuery, Connection)
+	BigTableAdminCluster           = shared.NewItemType(GCP, BigTableAdmin, Cluster)
+	CloudBuildTrigger              = shared.NewItemType(GCP, CloudBuild, Trigger)
+	RunService                     = shared.NewItemType(GCP, Run, Service)
+	VPCAccessConnector             = shared.NewItemType(GCP, VPCAccess, Connector) // https://cloud.google.com/vpc/docs/reference/vpcaccess/rest/v1/projects.locations.connectors/get
+	SQLAdminInstance               = shared.NewItemType(GCP, SqlAdmin, Instance)   // https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/instances/get
 )
