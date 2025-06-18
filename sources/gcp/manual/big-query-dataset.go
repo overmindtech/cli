@@ -159,7 +159,7 @@ func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, me
 					Type:   gcpshared.CloudKMSCryptoKey.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(values...),
-					Scope:  b.DefaultScope(),
+					Scope:  b.ProjectID(),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,
@@ -169,7 +169,7 @@ func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, me
 		}
 	}
 
-	if metadata.ExternalDatasetReference != nil {
+	if metadata.ExternalDatasetReference != nil && metadata.ExternalDatasetReference.Connection != "" {
 		// Link to the external dataset reference
 		// Format: projects/{projectId}/locations/{locationId}/connections/{connectionId}
 		values := gcpshared.ExtractPathParams(metadata.ExternalDatasetReference.Connection, "locations", "connections")

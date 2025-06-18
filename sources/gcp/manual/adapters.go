@@ -2,7 +2,9 @@ package manual
 
 import (
 	"context"
+	"fmt"
 
+	"cloud.google.com/go/bigquery"
 	compute "cloud.google.com/go/compute/apiv1"
 	iam "cloud.google.com/go/iam/admin/apiv1"
 	kms "cloud.google.com/go/kms/apiv1"
@@ -16,98 +18,104 @@ import (
 func Adapters(ctx context.Context, projectID string, regions []string, zones []string) ([]discovery.Adapter, error) {
 	instanceCli, err := compute.NewInstancesRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute instances client: %w", err)
 	}
 
 	addressCli, err := compute.NewAddressesRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute addresses client: %w", err)
 	}
 
 	autoscalerCli, err := compute.NewAutoscalersRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute autoscalers client: %w", err)
 	}
 
 	computeImagesCli, err := compute.NewImagesRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute images client: %w", err)
 	}
 
 	computeForwardingCli, err := compute.NewForwardingRulesRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute forwarding rules client: %w", err)
 	}
 
 	computeHealthCheckCli, err := compute.NewHealthChecksRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute health checks client: %w", err)
 	}
 
 	computeReservationCli, err := compute.NewReservationsRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute reservations client: %w", err)
 	}
 
 	computeSecurityPolicyCli, err := compute.NewSecurityPoliciesRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute security policies client: %w", err)
 	}
 
 	computeSnapshotCli, err := compute.NewSnapshotsRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute snapshots client: %w", err)
 	}
 
 	computeInstantSnapshotCli, err := compute.NewInstantSnapshotsRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute instant snapshots client: %w", err)
 	}
 
 	computeMachineImageCli, err := compute.NewMachineImagesRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute machine images client: %w", err)
 	}
 
 	backendServiceCli, err := compute.NewBackendServicesRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute backend services client: %w", err)
 	}
 
 	instanceGroupCli, err := compute.NewInstanceGroupsRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute instance groups client: %w", err)
 	}
 
 	instanceGroupManagerCli, err := compute.NewInstanceGroupManagersRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute instance group managers client: %w", err)
 	}
 
 	diskCli, err := compute.NewDisksRESTClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create compute disks client: %w", err)
 	}
 
 	//IAM
 	iamServiceAccountKeyCli, err := iam.NewIamClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create IAM service account key client: %w", err)
 	}
 
 	iamServiceAccountCli, err := iam.NewIamClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create IAM service account client: %w", err)
 	}
+
 	//KMS
 	kmsKeyRingCli, err := kms.NewKeyManagementClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create KMS key ring client: %w", err)
 	}
 
 	kmsCryptoKeyCli, err := kms.NewKeyManagementClient(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create KMS crypto key client: %w", err)
+	}
+
+	bigQueryDatasetCli, err := bigquery.NewClient(ctx, projectID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create bigquery client: %w", err)
 	}
 
 	var adapters []discovery.Adapter
@@ -143,6 +151,8 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		sources.WrapperToAdapter(NewIAMServiceAccount(shared.NewIAMServiceAccountClient(iamServiceAccountCli), projectID)),
 		sources.WrapperToAdapter(NewCloudKMSKeyRing(shared.NewCloudKMSKeyRingClient(kmsKeyRingCli), projectID)),
 		sources.WrapperToAdapter(NewCloudKMSCryptoKey(shared.NewCloudKMSCryptoKeyClient(kmsCryptoKeyCli), projectID)),
+		sources.WrapperToAdapter(NewBigQueryDataset(shared.NewBigQueryDatasetClient(bigQueryDatasetCli), projectID)),
+		sources.WrapperToAdapter(NewBigQueryTable(shared.NewBigQueryTableClient(bigQueryDatasetCli), projectID)),
 	)
 
 	return adapters, nil
