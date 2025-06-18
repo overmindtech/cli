@@ -46,10 +46,15 @@ func ExtractPathParam(key, input string) string {
 
 // ExtractPathParams extracts values following specified keys from a GCP resource name.
 // It returns a slice of values in the order of the keys provided.
+//
 // For example, for input="projects/my-proj/locations/global/keyRings/my-kr/cryptoKeys/my-key"
 // and keys=["keyRings", "cryptoKeys"], it will return ["my-kr", "my-key"].
 // If a key is not found, it will not be included in the results.
+//
 // If it fails to extract any values, it returns an empty slice.
+//
+// If it's a single part and no results were found for the given key(s), it returns the input itself.
+// input => "my-managed-dns-zone", keys => "managedZones", output => ["my-managed-dns-zone"]
 func ExtractPathParams(input string, keys ...string) []string {
 	parts := strings.Split(input, "/")
 	results := make([]string, 0, len(keys))

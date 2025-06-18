@@ -229,19 +229,27 @@ func TestSDPAssetTypeToAdapterMeta_SearchEndpointFunc(t *testing.T) {
 		expectErr   bool
 	}{
 		{
-			name:        "BigQueryTable valid",
-			assetType:   BigQueryTable,
-			params:      []string{"proj"},
-			query:       "dataset",
-			expectedURL: "https://bigquery.googleapis.com/bigquery/v2/projects/proj/datasets/dataset/tables",
+			name:        "ArtifactRegistryDockerImage valid",
+			assetType:   ArtifactRegistryDockerImage,
+			params:      []string{"my-project"},
+			query:       "my-location|my-repo",
+			expectedURL: "https://artifactregistry.googleapis.com/v1/projects/my-project/locations/my-location/repositories/my-repo/dockerImages",
 			expectErr:   false,
 		},
 		{
-			name:      "BigQueryTable missing param",
-			assetType: BigQueryTable,
-			params:    []string{""},
-			query:     "dataset",
+			name:      "ArtifactRegistryDockerImage missing param - during adapter init",
+			assetType: ArtifactRegistryDockerImage,
+			params:    []string{},
+			query:     "my-location|my-repo",
 			expectErr: true,
+		},
+		{
+			name:        "ArtifactRegistryDockerImage invalid query - during a search call",
+			assetType:   ArtifactRegistryDockerImage,
+			params:      []string{"my-project"},
+			query:       "my-location",
+			expectedURL: "",    // This is checked in the adapter. So, it won't slip.
+			expectErr:   false, // We only return error during adapter init, not during search calls.
 		},
 	}
 

@@ -50,6 +50,11 @@ var (
 		ToSDPITemType:    ComputeResourcePolicy,
 		BlastPropagation: impactInOnly,
 	}
+	computeNetworkImpactInOnly = &Impact{
+		Description:      "If the Compute Network is updated: The source may lose connectivity or fail to run as expected. If the source is updated: The network remains unaffected.",
+		ToSDPITemType:    ComputeNetwork,
+		BlastPropagation: impactInOnly,
+	}
 )
 
 var BlastPropagations = map[shared.ItemType]map[string]*Impact{
@@ -129,6 +134,9 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactInOnly,
 		},
 	},
+	ArtifactRegistryDockerImage: {
+		// There is no links for this item type.
+	},
 	BigTableAdminAppProfile: {
 		"multiClusterRoutingUseAny.clusterIds": {
 			ToSDPITemType:    BigTableAdminCluster,
@@ -167,6 +175,18 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactInOnly,
 		},
 	},
+	CloudBillingBillingInfo: {
+		"projectId": {
+			ToSDPITemType:    CloudResourceManagerProject,
+			Description:      "If the Cloud Resource Manager Project is deleted or updated: The billing information may become invalid or inaccessible. If the billing info is updated: The project remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		"billingAccountName": {
+			ToSDPITemType:    CloudBillingBillingAccount,
+			Description:      "If the Cloud Billing Billing Account is deleted or updated: The billing information may become invalid or inaccessible. If the billing info is updated: The billing account is impacted as well.",
+			BlastPropagation: impactBothWays,
+		},
+	},
 	CloudBuildBuild: {
 		"source.storageSource.bucket": {
 			ToSDPITemType:    StorageBucket,
@@ -200,6 +220,13 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			Description:      "If the Cloud Build Trigger is deleted or updated: The Cloud Build may not be retriggered as expected. If the Cloud Build is updated: The trigger remains unaffected.",
 			BlastPropagation: impactInOnly,
 		},
+	},
+	CloudResourceManagerProject: {
+		// There are no links for this item type.
+		// TODO: Currently our highest level of scope is the project.
+		// This item has `parent` attribute that refers to organization or folder which are higher level scopes that we don't support yet.
+		// If we support those scopes in the future, we can add links to them.
+		// https://cloud.google.com/resource-manager/reference/rest/v3/projects#Project
 	},
 	ComputeFirewall: {
 		"network": {
@@ -400,7 +427,59 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactOutOnly,
 		},
 	},
+	DataformRepository: {
+		// The name of the Secret Manager secret version to use as an authentication token for Git operations. Must be in the format projects/*/secrets/*/versions/*.
+		"gitRemoteSettings.authenticationTokenSecretVersion": {
+			ToSDPITemType:    SecretManagerSecret,
+			Description:      "If the Secret Manager Secret is deleted or updated: The Dataform Repository may fail to authenticate with the Git remote. If the Dataform Repository is updated: The secret remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		// The name of the Secret Manager secret version to use as a ssh private key for Git operations. Must be in the format projects/*/secrets/*/versions/*.
+		"gitRemoteSettings.sshAuthenticationConfig.userPrivateKeySecretVersion": {
+			ToSDPITemType:    SecretManagerSecret,
+			Description:      "If the Secret Manager Secret is deleted or updated: The Dataform Repository may fail to authenticate with the Git remote. If the Dataform Repository is updated: The secret remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+		// The service account to run workflow invocations under.
+		"serviceAccount": iamServiceAccountImpactInOnly,
+		// The reference to a KMS encryption key.
+		// If provided, it will be used to encrypt user data in the repository and all child resources.
+		// It is not possible to add or update the encryption key after the repository is created.
+		// Example: projects/{kms_project}/locations/{location}/keyRings/{key_location}/cryptoKeys/{key}
+		"kmsKeyName": cryptoKeyImpactInOnly,
+		// A data encryption state of a Git repository if this Repository is protected by a KMS key.
+		"dataEncryptionState.kmsKeyVersionName": cryptoKeyVersionImpactInOnly,
+	},
 	DataplexEntryGroup: {
+		// There is no links for this item type.
+	},
+	DNSManagedZone: {
+		"dnsName": {
+			ToSDPITemType:    stdlib.NetworkDNS,
+			Description:      "Tightly coupled with the DNS Managed Zone.",
+			BlastPropagation: impactBothWays,
+		},
+		"privateVisibilityConfig.networks.networkUrl": computeNetworkImpactInOnly,
+		// The resource name of the cluster to bind this ManagedZone to. This should be specified in the format like: projects/*/locations/*/clusters/*.
+		// This is referenced from GKE projects.locations.clusters.get
+		// API: https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.locations.clusters/get
+		"privateVisibilityConfig.gkeClusters.gkeClusterName": {
+			ToSDPITemType: ContainerCluster,
+		},
+		"forwardingConfig.targetNameServers.ipv4Address": ipImpactBothWays,
+		"forwardingConfig.targetNameServers.ipv6Address": ipImpactBothWays,
+		// The presence of this field indicates that DNS Peering is enabled for this zone. The value of this field contains the network to peer with.
+		"peeringConfig.targetNetwork.networkUrl": computeNetworkImpactInOnly,
+		// This field links to the associated service directory namespace.
+		// The fully qualified URL of the namespace associated with the zone.
+		// Format must be https://servicedirectory.googleapis.com/v1/projects/{project}/locations/{location}/namespaces/{namespace}
+		"serviceDirectoryConfig.namespace.namespaceUrl": {
+			ToSDPITemType:    ServiceDirectoryNamespace,
+			Description:      "If the Service Directory Namespace is deleted or updated: The DNS Managed Zone may lose its association or fail to resolve names. If the DNS Managed Zone is updated: The namespace remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+	},
+	EssentialContactsContact: {
 		// There is no links for this item type.
 	},
 	LoggingLink: {
@@ -417,6 +496,9 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"cmekSettings.kmsKeyName":        cryptoKeyImpactInOnly,
 		"cmekSettings.kmsKeyVersionName": cryptoKeyVersionImpactInOnly,
 		"cmekSettings.serviceAccountId":  iamServiceAccountImpactInOnly,
+	},
+	MonitoringCustomDashboard: {
+		// There is no links for this item type.
 	},
 	IAMRole: {
 		// There is no links for this item type.
@@ -509,6 +591,12 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		},
 		"encryptionKey": cryptoKeyImpactInOnly,
 	},
+	ServiceDirectoryEndpoint: {
+		// An IPv4 or IPv6 address.
+		"address": ipImpactBothWays,
+		// The Google Compute Engine network (VPC) of the endpoint in the format projects/<project number>/locations/global/networks/*.
+		"network": computeNetworkImpactInOnly,
+	},
 	ServiceUsageService: {
 		"config.name": {
 			ToSDPITemType:    stdlib.NetworkDNS,
@@ -544,5 +632,18 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactBothWays,
 		},
 		"diskEncryptionConfiguration.kmsKeyName": cryptoKeyImpactInOnly,
+	},
+	StorageBucket: {
+		// A Cloud KMS key that will be used to encrypt objects written to this bucket if no encryption method is specified as part of the object write request.
+		"encryption.defaultKmsKeyName": cryptoKeyImpactInOnly,
+		// Name of the network.
+		// Format: projects/PROJECT_ID/global/networks/NETWORK_NAME
+		"ipFilter.vpcNetworkSources.network": computeNetworkImpactInOnly,
+		// The destination bucket where the current bucket's logs should be placed.
+		"logging.logBucket": {
+			ToSDPITemType:    LoggingBucket,
+			Description:      "If the Logging Bucket is deleted or updated: The Storage Bucket may fail to write logs. If the Storage Bucket is updated: The Logging Bucket remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
 	},
 }

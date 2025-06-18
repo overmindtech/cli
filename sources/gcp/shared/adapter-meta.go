@@ -314,20 +314,6 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SearchDescription:   "Search for Docker images in Artifact Registry. Use the format {{location}}|{{repository_id}} or projects/{{project}}/locations/{{location}}/repository/{{repository_id}}/dockerImages/{{docker_image}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "repositories", "dockerImages"},
 	},
-	// TODO: Remove this: https://linear.app/overmind/issue/ENG-634/create-manual-adapter-for-bigquerygoogleapiscomtable
-	BigQueryTable: {
-		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
-		Scope:              ScopeProject,
-		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}/tables/{tableId}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets/%s/tables/%s"),
-		// Reference: https://cloud.google.com/bigquery/docs/reference/rest/v2/tables/list
-		// https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}/tables
-		// TODO: Update this for => https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
-		// id => projects/{{project}}/datasets/{{dataset}}/tables/{{table}}
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://bigquery.googleapis.com/bigquery/v2/projects/%s/datasets/%s/tables"),
-		SearchDescription:   "Search for BigQuery tables in a dataset. Use the format {{dataset}} or projects/{{project}}/datasets/{{dataset}}/tables/{{table}} which is supported for terraform mappings.",
-		UniqueAttributeKeys: []string{"datasets", "tables"},
-	},
 	BigTableAdminAppProfile: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 		Scope:              ScopeProject,
@@ -421,6 +407,8 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
 		},
 		UniqueAttributeKeys: []string{"projects"},
+		// HEALTH: https://cloud.google.com/resource-manager/reference/rest/v3/projects#State
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
 	ComputeFirewall: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
@@ -583,6 +571,8 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		},
 		SearchDescription:   "Search for contacts by their ID in the form of projects/{projectId}/contacts/{contact_id}.",
 		UniqueAttributeKeys: []string{"contacts"},
+		// HEALTH: https://cloud.google.com/resource-manager/docs/reference/essentialcontacts/rest/v1/folders.contacts#validationstate
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
 	IAMRole: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,

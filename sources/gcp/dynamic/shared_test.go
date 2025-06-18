@@ -58,6 +58,37 @@ func Test_externalToSDP(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "ReturnsSDPItemWithCorrectAttributesWhenNameDoesNotHaveUniqueAttrKeys",
+			args: args{
+				projectID:      "test-project",
+				scope:          "test-scope",
+				uniqueAttrKeys: []string{"projects", "locations", "instances"},
+				resp: map[string]interface{}{
+					// There is name, but it does not include uniqueAttrKeys, expected to use the name as is.
+					"name":   "instance-1",
+					"labels": map[string]interface{}{"env": "prod"},
+					"foo":    "bar",
+				},
+				sdpAssetType: gcpshared.ComputeInstance,
+			},
+			want: &sdp.Item{
+				Type:            gcpshared.ComputeInstance.String(),
+				UniqueAttribute: "uniqueAttr",
+				Scope:           "test-scope",
+				Tags:            map[string]string{"env": "prod"},
+				Attributes: &sdp.ItemAttributes{
+					AttrStruct: &structpb.Struct{
+						Fields: map[string]*structpb.Value{
+							"name":       structpb.NewStringValue("instance-1"),
+							"foo":        structpb.NewStringValue("bar"),
+							"uniqueAttr": structpb.NewStringValue("instance-1"),
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "ReturnsErrorWhenNameMissing",
 			args: args{
 				projectID:      "test-project",

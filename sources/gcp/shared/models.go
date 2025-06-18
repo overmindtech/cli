@@ -35,6 +35,7 @@ const (
 	Logging              shared.API = "logging"
 	NetworkConnectivity  shared.API = "network-connectivity"
 	VPCAccess            shared.API = "vpc-access"
+	SecretManager        shared.API = "secret-manager"
 )
 
 // Resources
@@ -123,4 +124,7 @@ const (
 	Connection               shared.Resource = "connection"
 	Trigger                  shared.Resource = "trigger"
 	Connector                shared.Resource = "connector"
+	BillingAccount           shared.Resource = "billing-account"
+	Namespace                shared.Resource = "namespace"
+	Secret                   shared.Resource = "secret"
 )
