@@ -8,6 +8,7 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	iam "cloud.google.com/go/iam/admin/apiv1"
 	kms "cloud.google.com/go/kms/apiv1"
+	logging "cloud.google.com/go/logging/apiv2"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sources"
@@ -118,6 +119,11 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		return nil, fmt.Errorf("failed to create bigquery client: %w", err)
 	}
 
+	loggingConfigCli, err := logging.NewConfigClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create logging config client: %w", err)
+	}
+
 	var adapters []discovery.Adapter
 
 	for _, region := range regions {
@@ -153,6 +159,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		sources.WrapperToAdapter(NewCloudKMSCryptoKey(shared.NewCloudKMSCryptoKeyClient(kmsCryptoKeyCli), projectID)),
 		sources.WrapperToAdapter(NewBigQueryDataset(shared.NewBigQueryDatasetClient(bigQueryDatasetCli), projectID)),
 		sources.WrapperToAdapter(NewBigQueryTable(shared.NewBigQueryTableClient(bigQueryDatasetCli), projectID)),
+		sources.WrapperToAdapter(NewLoggingSink(shared.NewLoggingConfigClient(loggingConfigCli), projectID)),
 	)
 
 	return adapters, nil

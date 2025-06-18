@@ -631,20 +631,6 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://logging.googleapis.com/v2/projects/%s/locations/%s/savedQueries"),
 		UniqueAttributeKeys: []string{"locations", "savedQueries"},
 	},
-	// TODO: Remove this: https://linear.app/overmind/issue/ENG-632/create-a-manual-adapter-for-logginggoogleapiscomlogsink
-	LoggingSink: {
-		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
-		Scope:              ScopeProject,
-		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.sinks/get
-		// GET https://logging.googleapis.com/v2/projects/*/sinks/*
-		// IAM permissions: logging.sinks.get
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://logging.googleapis.com/v2/projects/%s/sinks/%s"),
-		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.sinks/list
-		// GET https://logging.googleapis.com/v2/projects/*/sinks
-		// IAM permissions: logging.sinks.list
-		ListEndpointFunc:    projectLevelListFunc("https://logging.googleapis.com/v2/projects/%s/sinks"),
-		UniqueAttributeKeys: []string{"sinks"},
-	},
 	MonitoringCustomDashboard: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
 		Scope:              ScopeProject,
