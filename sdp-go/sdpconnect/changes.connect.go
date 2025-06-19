@@ -130,7 +130,7 @@ type ChangesServiceClient interface {
 	// immediately and then hold the connection open, and send the entire
 	// timeline again if there are any changes
 	GetChangeTimelineV2(context.Context, *connect.Request[sdp_go.GetChangeTimelineV2Request]) (*connect.Response[sdp_go.GetChangeTimelineV2Response], error)
-	// (DEPRECATED: This has been replaced by GetChangeTimeline) Gets the risks and risk calculation status of an existing change
+	// This is used on the blast radius page to get the risks and status for a change.
 	GetChangeRisks(context.Context, *connect.Request[sdp_go.GetChangeRisksRequest]) (*connect.Response[sdp_go.GetChangeRisksResponse], error)
 	// Gets the all data of an existing change for archival
 	GetChangeArchive(context.Context, *connect.Request[sdp_go.GetChangeArchiveRequest]) (*connect.Response[sdp_go.GetChangeArchiveResponse], error)
@@ -430,7 +430,7 @@ type ChangesServiceHandler interface {
 	// immediately and then hold the connection open, and send the entire
 	// timeline again if there are any changes
 	GetChangeTimelineV2(context.Context, *connect.Request[sdp_go.GetChangeTimelineV2Request]) (*connect.Response[sdp_go.GetChangeTimelineV2Response], error)
-	// (DEPRECATED: This has been replaced by GetChangeTimeline) Gets the risks and risk calculation status of an existing change
+	// This is used on the blast radius page to get the risks and status for a change.
 	GetChangeRisks(context.Context, *connect.Request[sdp_go.GetChangeRisksRequest]) (*connect.Response[sdp_go.GetChangeRisksResponse], error)
 	// Gets the all data of an existing change for archival
 	GetChangeArchive(context.Context, *connect.Request[sdp_go.GetChangeArchiveRequest]) (*connect.Response[sdp_go.GetChangeArchiveResponse], error)

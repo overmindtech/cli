@@ -239,22 +239,8 @@ func (rcs *ChangeAnalysisStatus) ToMap() map[string]any {
 		return map[string]any{}
 	}
 
-	milestones := make([]map[string]any, len(rcs.GetProgressMilestones()))
-
-	for i, milestone := range rcs.GetProgressMilestones() {
-		milestones[i] = milestone.ToMap()
-	}
-
 	return map[string]any{
-		"status":             rcs.GetStatus().String(),
-		"progressMilestones": milestones,
-	}
-}
-
-func (m *ChangeAnalysisStatus_ProgressMilestone) ToMap() map[string]any {
-	return map[string]any{
-		"description": m.GetDescription(),
-		"status":      m.GetStatus().String(),
+		"status": rcs.GetStatus().String(),
 	}
 }
 
