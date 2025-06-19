@@ -10,6 +10,15 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
+type typeOfAdapter string
+
+const (
+	Standard           typeOfAdapter = "standard"
+	Listable           typeOfAdapter = "listable"
+	Searchable         typeOfAdapter = "searchable"
+	SearchableListable typeOfAdapter = "searchableListable"
+)
+
 var adaptersByScope = map[gcpshared.Scope]map[shared.ItemType]gcpshared.AdapterMeta{}
 
 func init() {
@@ -52,29 +61,12 @@ func Adapters(projectID string, token string, regions []string, zones []string, 
 			UniqueAttributeKeys: meta.UniqueAttributeKeys,
 		}
 
-		if meta.ListEndpointFunc != nil {
-			listEndpoint, err := meta.ListEndpointFunc(projectID)
-			if err != nil {
-				return nil, err
-			}
-
-			adapters = append(adapters, NewListableAdapter(listEndpoint, cfg))
-
-			continue
+		adapter, err := makeAdapter(meta, cfg, projectID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to add adapter for %s: %w", sdpItemType, err)
 		}
 
-		if meta.SearchEndpointFunc != nil {
-			searchEndpointFunc, err := meta.SearchEndpointFunc(projectID)
-			if err != nil {
-				return nil, err
-			}
-
-			adapters = append(adapters, NewSearchableAdapter(searchEndpointFunc, cfg))
-
-			continue
-		}
-
-		adapters = append(adapters, NewAdapter(cfg))
+		adapters = append(adapters, adapter)
 	}
 
 	// Regional adapters
@@ -105,28 +97,12 @@ func Adapters(projectID string, token string, regions []string, zones []string, 
 				UniqueAttributeKeys: meta.UniqueAttributeKeys,
 			}
 
-			if meta.ListEndpointFunc != nil {
-				listEndpoint, err := meta.ListEndpointFunc(projectID, region)
-				if err != nil {
-					return nil, err
-				}
-				adapters = append(adapters, NewListableAdapter(listEndpoint, cfg))
-
-				continue
+			adapter, err := makeAdapter(meta, cfg, projectID, region)
+			if err != nil {
+				return nil, fmt.Errorf("failed to add adapter for %s in region %s: %w", sdpItemType, region, err)
 			}
 
-			if meta.SearchEndpointFunc != nil {
-				searchEndpointFunc, err := meta.SearchEndpointFunc(projectID, region)
-				if err != nil {
-					return nil, err
-				}
-
-				adapters = append(adapters, NewSearchableAdapter(searchEndpointFunc, cfg))
-
-				continue
-			}
-
-			adapters = append(adapters, NewAdapter(cfg))
+			adapters = append(adapters, adapter)
 		}
 	}
 
@@ -158,30 +134,65 @@ func Adapters(projectID string, token string, regions []string, zones []string, 
 				UniqueAttributeKeys: meta.UniqueAttributeKeys,
 			}
 
-			if meta.ListEndpointFunc != nil {
-				listEndpoint, err := meta.ListEndpointFunc(projectID, zone)
-				if err != nil {
-					return nil, err
-				}
-				adapters = append(adapters, NewListableAdapter(listEndpoint, cfg))
-
-				continue
+			adapter, err := makeAdapter(meta, cfg, projectID, zone)
+			if err != nil {
+				return nil, fmt.Errorf("failed to add adapter for %s in zone %s: %w", sdpItemType, zone, err)
 			}
 
-			if meta.SearchEndpointFunc != nil {
-				searchEndpointFunc, err := meta.SearchEndpointFunc(projectID, zone)
-				if err != nil {
-					return nil, err
-				}
-
-				adapters = append(adapters, NewSearchableAdapter(searchEndpointFunc, cfg))
-
-				continue
-			}
-
-			adapters = append(adapters, NewAdapter(cfg))
+			adapters = append(adapters, adapter)
 		}
 	}
 
 	return adapters, nil
+}
+
+func adapterType(meta gcpshared.AdapterMeta) typeOfAdapter {
+	if meta.ListEndpointFunc != nil && meta.SearchEndpointFunc == nil {
+		return Listable
+	}
+
+	if meta.SearchEndpointFunc != nil && meta.ListEndpointFunc == nil {
+		return Searchable
+	}
+
+	if meta.ListEndpointFunc != nil && meta.SearchEndpointFunc != nil {
+		return SearchableListable
+	}
+
+	return Standard
+}
+
+func makeAdapter(meta gcpshared.AdapterMeta, cfg *AdapterConfig, opts ...string) (discovery.Adapter, error) {
+	switch adapterType(meta) {
+	case SearchableListable:
+		searchEndpointFunc, err := meta.SearchEndpointFunc(opts...)
+		if err != nil {
+			return nil, err
+		}
+
+		listEndpoint, err := meta.ListEndpointFunc(opts...)
+		if err != nil {
+			return nil, err
+		}
+
+		return NewSearchableListableAdapter(searchEndpointFunc, listEndpoint, cfg), nil
+	case Searchable:
+		searchEndpointFunc, err := meta.SearchEndpointFunc(opts...)
+		if err != nil {
+			return nil, err
+		}
+
+		return NewSearchableAdapter(searchEndpointFunc, cfg), nil
+	case Listable:
+		listEndpoint, err := meta.ListEndpointFunc(opts...)
+		if err != nil {
+			return nil, err
+		}
+
+		return NewListableAdapter(listEndpoint, cfg), nil
+	case Standard:
+		return NewAdapter(cfg), nil
+	default:
+		return nil, fmt.Errorf("unknown adapter type %s", adapterType(meta))
+	}
 }
