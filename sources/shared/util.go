@@ -25,6 +25,12 @@ func ToAttributesWithExclude(i interface{}, exclusions ...string) (*sdp.ItemAttr
 }
 
 // CompositeLookupKey creates a composite lookup key from multiple query parts.
+// It joins the parts using the default separator "|"
+//
+// Example usage:
+//
+//	key := CompositeLookupKey("part1", "part2", "part3")
+//	Output: "part1|part2|part3"
 func CompositeLookupKey(queryParts ...string) string {
 	// Join the query parts with the default separator "|"
 	return strings.Join(queryParts, QuerySeparator)

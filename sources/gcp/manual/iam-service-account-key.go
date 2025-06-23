@@ -2,7 +2,7 @@ package manual
 
 import (
 	"context"
-	"strings"
+	"fmt"
 
 	"cloud.google.com/go/iam/admin/apiv1/adminpb"
 
@@ -126,9 +126,32 @@ func (c iamServiceAccountKeyWrapper) gcpIAMServiceAccountKeyToSDPItem(key *admin
 		}
 	}
 
+	// The unique attribute must be the same as the query parameter for the Get method.
+	// Which is in the format: serviceAccountName|keyName
+	// We will extract the path parameters from the ServiceAccountKey name to create a unique lookup key.
+	//
+	// `projects/{PROJECT_ID}/serviceAccounts/{ACCOUNT}/keys/{key}`.
+	keyVals := gcpshared.ExtractPathParams(key.GetName(), "serviceAccounts", "keys")
+	serviceAccountName := keyVals[0]
+	keyName := keyVals[1]
+	if serviceAccountName == "" {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: "service account name not found in key name",
+		}
+	}
+
+	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(serviceAccountName, keyName))
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf("failed to set unique attribute: %v", err),
+		}
+	}
+
 	sdpItem := &sdp.Item{
 		Type:            IAMServiceAccountKey.String(),
-		UniqueAttribute: "name",
+		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
 		Scope:           c.ProjectID(),
 	}
@@ -136,29 +159,21 @@ func (c iamServiceAccountKeyWrapper) gcpIAMServiceAccountKeyToSDPItem(key *admin
 	// The URL for the ServiceAccount related to this ServiceAccountKey
 	// GET https://iam.googleapis.com/v1/{name=projects/*/serviceAccounts/*}
 	// https://cloud.google.com/iam/docs/reference/rest/v1/projects.serviceAccounts
-	if serviceAccountKeyName := key.GetName(); serviceAccountKeyName != "" {
-		if strings.Contains(serviceAccountKeyName, "/") {
-			serviceAccountName := gcpshared.ExtractPathParam("serviceAccounts", serviceAccountKeyName)
-			if serviceAccountName != "" {
-				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-					Query: &sdp.Query{
-						Type:   IAMServiceAccount.String(),
-						Method: sdp.QueryMethod_GET,
-						Query:  serviceAccountName,
-						Scope:  c.ProjectID(),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// If service account is deleted, all keys that belong to it are deleted
-						// If key is deleted, resources using that particular key lose access to service-account.
-						// But account itself keeps working.
-						In:  true,
-						Out: false,
-					},
-				})
-			}
-
-		}
-	}
+	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   IAMServiceAccount.String(),
+			Method: sdp.QueryMethod_GET,
+			Query:  serviceAccountName,
+			Scope:  c.ProjectID(),
+		},
+		BlastPropagation: &sdp.BlastPropagation{
+			// If service account is deleted, all keys that belong to it are deleted
+			// If key is deleted, resources using that particular key lose access to service-account.
+			// But account itself keeps working.
+			In:  true,
+			Out: false,
+		},
+	})
 
 	return sdpItem, nil
 }

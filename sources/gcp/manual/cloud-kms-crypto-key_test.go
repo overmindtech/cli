@@ -12,6 +12,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -50,7 +51,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   manual.CloudKMSCryptoKeyVersion.String(),
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|1",
 					ExpectedScope:  "test-project-id",

@@ -43,7 +43,7 @@ func (c computeSnapshotWrapper) PotentialLinks() map[shared.ItemType]bool {
 		ComputeInstantSnapshot,
 		ComputeLicense,
 		ComputeDisk,
-		CloudKMSCryptoKeyVersion,
+		gcpshared.CloudKMSCryptoKeyVersion,
 		ComputeResourcePolicy,
 	)
 }
@@ -193,7 +193,7 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(snapshot *computepb.
 				if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   CloudKMSCryptoKeyVersion.String(),
+							Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
 							Scope:  c.ProjectID(),
@@ -249,7 +249,7 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(snapshot *computepb.
 				if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   CloudKMSCryptoKeyVersion.String(),
+							Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
 							Scope:  c.ProjectID(),

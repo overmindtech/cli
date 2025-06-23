@@ -12,6 +12,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -63,7 +64,7 @@ func TestComputeSnapshot(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.CloudKMSCryptoKeyVersion.String(),
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-snapshot",
 					ExpectedScope:  "test-project-id",
@@ -83,7 +84,7 @@ func TestComputeSnapshot(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.CloudKMSCryptoKeyVersion.String(),
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-disk",
 					ExpectedScope:  "test-project-id",

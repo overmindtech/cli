@@ -85,7 +85,7 @@ func (c cloudKMSKeyRingWrapper) Get(ctx context.Context, queryParts ...string) (
 		return nil, gcpshared.QueryError(err)
 	}
 
-	item, sdpErr := c.gcpKeyRingToSDPItem(keyRing, location)
+	item, sdpErr := c.gcpKeyRingToSDPItem(keyRing)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -106,8 +106,7 @@ func (c cloudKMSKeyRingWrapper) SearchLookups() []sources.ItemTypeLookups {
 // Searchable adapter because location parameter needs to be passed as a queryPart.
 // GET https://cloudkms.googleapis.com/v1/{parent=projects/*/locations/*}/keyRings
 func (c cloudKMSKeyRingWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	location := queryParts[0]
-	parent := fmt.Sprintf("projects/%s/locations/%s", c.ProjectID(), location)
+	parent := fmt.Sprintf("projects/%s/locations/%s", c.ProjectID(), queryParts[0])
 
 	it := c.client.Search(ctx, &kmspb.ListKeyRingsRequest{
 		Parent: parent,
@@ -123,7 +122,7 @@ func (c cloudKMSKeyRingWrapper) Search(ctx context.Context, queryParts ...string
 			return nil, gcpshared.QueryError(err)
 		}
 
-		item, sdpErr := c.gcpKeyRingToSDPItem(keyRing, queryParts[0])
+		item, sdpErr := c.gcpKeyRingToSDPItem(keyRing)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -136,7 +135,7 @@ func (c cloudKMSKeyRingWrapper) Search(ctx context.Context, queryParts ...string
 
 // gcpKeyRingToSDPItem converts a GCP KeyRing to an SDP Item, linking GCP resource fields.
 // See: https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings
-func (c cloudKMSKeyRingWrapper) gcpKeyRingToSDPItem(keyRing *kmspb.KeyRing, location string) (*sdp.Item, *sdp.QueryError) {
+func (c cloudKMSKeyRingWrapper) gcpKeyRingToSDPItem(keyRing *kmspb.KeyRing) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(keyRing)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -145,36 +144,50 @@ func (c cloudKMSKeyRingWrapper) gcpKeyRingToSDPItem(keyRing *kmspb.KeyRing, loca
 		}
 	}
 
+	// The unique attribute must be the same as the query parameter for the Get method.
+	// Which is in the format: locations|keyRingName
+	// We will extract the path parameters from the KeyRing name to create a unique lookup key.
+	//
+	// Example KeyRing name: projects/{PROJECT_ID}/locations/{LOCATION}/keyRings/{KEY_RING}
+	// Unique lookup key: locations|keyRingName
+	// Extract the keyRingName from the KeyRing name.
+	keyRingVals := gcpshared.ExtractPathParams(keyRing.GetName(), "locations", "keyRings")
+	if len(keyRingVals) != 2 && keyRingVals[0] != "" && keyRingVals[1] != "" {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf("invalid KeyRing name: %s", keyRing.GetName()),
+		}
+	}
+
+	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(keyRingVals...))
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf("failed to set unique attribute: %v", err),
+		}
+	}
+
 	sdpItem := &sdp.Item{
 		Type:            CloudKMSKeyRing.String(),
-		UniqueAttribute: "name",
+		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
 	}
 
-	// CryptoKeys are associated with KeyRings, but no changes can be made to any of them that will affect the other.
-	// Link will be skipped for now.
-
 	// The IAM policy associated with this KeyRing.
 	// GET https://cloudkms.googleapis.com/v1/{resource=projects/*/locations/*/keyRings/*}:getIamPolicy
 	// https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings/getIamPolicy
-	if keyRingName := keyRing.GetName(); keyRingName != "" {
-		keyRingID := gcpshared.ExtractPathParam("keyRings", keyRingName)
-		if keyRingName := keyRing.GetName(); keyRingName != "" {
-			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   IAMPolicy.String(),
-					Method: sdp.QueryMethod_GET,
-					//TODO(Nauany): "":getIamPolicy" needs to be appended at the end of the URL, ensure team is aware
-					Query: shared.CompositeLookupKey(location, keyRingID),
-					Scope: c.ProjectID(),
-				},
-				//Updating the IAM Policy makes the KeyRing non-functional
-				//KeyRings cannot be deleted or updated
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: true}})
-		}
-
-	}
+	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   IAMPolicy.String(),
+			Method: sdp.QueryMethod_GET,
+			//TODO(Nauany): "":getIamPolicy" needs to be appended at the end of the URL, ensure team is aware
+			Query: shared.CompositeLookupKey(keyRingVals...),
+			Scope: c.ProjectID(),
+		},
+		//Updating the IAM Policy makes the KeyRing non-functional
+		//KeyRings cannot be deleted or updated
+		BlastPropagation: &sdp.BlastPropagation{In: true, Out: true}})
 
 	return sdpItem, nil
 }

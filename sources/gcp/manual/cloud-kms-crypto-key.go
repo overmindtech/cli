@@ -42,7 +42,7 @@ func NewCloudKMSCryptoKey(client gcpshared.CloudKMSCryptoKeyClient, projectID st
 // PotentialLinks returns the potential links for the CryptoKey wrapper.
 func (c cloudKMSCryptoKeyWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		CloudKMSCryptoKeyVersion,
+		gcpshared.CloudKMSCryptoKeyVersion,
 		CloudKMSEKMConnection,
 		IAMPolicy,
 	)
@@ -96,7 +96,7 @@ func (c cloudKMSCryptoKeyWrapper) Get(ctx context.Context, queryParts ...string)
 	return item, nil
 }
 
-// GetLookups returns the lookups for the CryptoKey wrapper.
+// SearchLookups returns the lookups for the CryptoKey wrapper.
 func (c cloudKMSCryptoKeyWrapper) SearchLookups() []sources.ItemTypeLookups {
 	return []sources.ItemTypeLookups{
 		{
@@ -106,7 +106,7 @@ func (c cloudKMSCryptoKeyWrapper) SearchLookups() []sources.ItemTypeLookups {
 	}
 }
 
-// List lists KMS CryptoKeys and converts them to sdp.Items.
+// Search searches KMS CryptoKeys and converts them to sdp.Items.
 // GET https://cloudkms.googleapis.com/v1/{parent=projects/*/locations/*/keyRings/*}/cryptoKeys
 func (c cloudKMSCryptoKeyWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
 	location := queryParts[0]
@@ -152,13 +152,54 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 		}
 	}
 
+	// The unique attribute must be the same as the query parameter for the Get method.
+	// Which is in the format: locations|keyRingName|cryptoKeyName
+	// We will extract the path parameters from the CryptoKey name to create a unique lookup key.
+	//
+	// [CryptoKey][google.cloud.kms.v1.CryptoKey] in the format
+	// `projects/*/locations/*/keyRings/*/cryptoKeys/*`.
+	values := gcpshared.ExtractPathParams(cryptoKey.GetName(), "locations", "keyRings", "cryptoKeys")
+	location := values[0]
+	keyRing := values[1]
+	cryptoKeyName := values[2]
+	if len(values) != 3 {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf("invalid CryptoKey name: %s", cryptoKey.GetName()),
+		}
+	}
+
+	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(values...))
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf("failed to set unique attribute: %v", err),
+		}
+	}
+
 	sdpItem := &sdp.Item{
 		Type:            CloudKMSCryptoKey.String(),
-		UniqueAttribute: "name",
+		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
 		Tags:            cryptoKey.GetLabels(),
 	}
+
+	// The IAM policy associated with this CryptoKey.
+	// GET https://cloudkms.googleapis.com/v1/{resource=projects/*/locations/*/keyRings/*/cryptoKeys/*}:getIamPolicy
+	// https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings.cryptoKeys/getIamPolicy
+	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   IAMPolicy.String(),
+			Method: sdp.QueryMethod_GET,
+			//TODO(Nauany): "":getIamPolicy" needs to be appended at the end of the URL, ensure team is aware
+			Query: shared.CompositeLookupKey(location, keyRing, cryptoKeyName),
+			Scope: c.ProjectID(),
+		},
+		//Deleting the IAM Policy makes the CryptoKey non-functional
+		//Deleting the CryptoKey deletes the IAM Policy
+		BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+	})
 
 	// The resource name of the primary CryptoKeyVersion for this CryptoKey.
 	// GET https://cloudkms.googleapis.com/v1/{name=projects/*/locations/*/keyRings/*/cryptoKeys/*/cryptoKeyVersions/*}
@@ -166,47 +207,37 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 	// Attribute link: https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings.cryptoKeys#:~:text=keyRings/*/cryptoKeys/*.-,primary,-object%20(CryptoKeyVersion
 	if primary := cryptoKey.GetPrimary(); primary != nil {
 		if name := primary.GetName(); name != "" {
-			// Parsing them all together to improve readability
-			location := gcpshared.ExtractPathParam("locations", name)
-			keyRing := gcpshared.ExtractPathParam("keyRings", name)
-			cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", name)
-			cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", name)
-
-			// Validate all parts before proceeding, a bit less performatic if any is missing but readability is improved
-			if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
+			keyVersionVals := gcpshared.ExtractPathParams(name, "locations", "keyRings", "cryptoKeys", "cryptoKeyVersions")
+			if len(keyVersionVals) == 4 && keyVersionVals[0] != "" && keyVersionVals[1] != "" && keyVersionVals[2] != "" && keyVersionVals[3] != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   CloudKMSCryptoKeyVersion.String(),
+						Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 						Method: sdp.QueryMethod_GET,
-						Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
+						Query:  shared.CompositeLookupKey(keyVersionVals...),
 						Scope:  c.ProjectID(),
 					},
-					//Note: Not exactly sure of the relationships, so settin both as true just in case
 					//If all versions of a crypto key are deleted it will become non-functional
 					//CryptoKey can only be deleted if all versions are deleted
 					BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 				})
 			}
 		}
-	}
 
-	// The EKM connection used by the key material, if applicable.
-	// Only applicable if CryptoKeyVersions have a ProtectionLevel of EXTERNAL_VPC.
-	// Primary is the CryptoKeyVersion that will be used by cryptoKeys.encrypt.
-	// with the resource name in the format: projects/*/locations/*/ekmConnections/*.
-	// GET https://cloudkms.googleapis.com/v1/{name=projects/*/locations/*/ekmConnections/*}
-	// https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.ekmConnections/get
-	if primary := cryptoKey.GetPrimary(); primary != nil {
+		// The EKM connection used by the key material, if applicable.
+		// Only applicable if CryptoKeyVersions have a ProtectionLevel of EXTERNAL_VPC.
+		// Primary is the CryptoKeyVersion that will be used by cryptoKeys.encrypt.
+		// with the resource name in the format: projects/*/locations/*/ekmConnections/*.
+		// GET https://cloudkms.googleapis.com/v1/{name=projects/*/locations/*/ekmConnections/*}
+		// https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.ekmConnections/get
 		if protectionLevel := primary.GetProtectionLevel(); protectionLevel == kmspb.ProtectionLevel_EXTERNAL_VPC {
 			if cryptoKeyBackend := cryptoKey.GetCryptoKeyBackend(); cryptoKeyBackend != "" {
-				location := gcpshared.ExtractPathParam("locations", cryptoKeyBackend)
-				ekmConnections := gcpshared.ExtractPathParam("ekmConnections", cryptoKeyBackend)
-				if location != "" && ekmConnections != "" {
+				backendVals := gcpshared.ExtractPathParams(cryptoKeyBackend, "locations", "ekmConnections")
+				if len(backendVals) == 2 && backendVals[0] != "" && backendVals[1] != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   CloudKMSEKMConnection.String(),
 							Method: sdp.QueryMethod_GET,
-							Query:  shared.CompositeLookupKey(location, ekmConnections),
+							Query:  shared.CompositeLookupKey(backendVals...),
 							Scope:  c.ProjectID(),
 						},
 						//Deleting the CryptoKeyBackend makes the CryptoKey non-functional
@@ -215,29 +246,6 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 					})
 				}
 			}
-		}
-	}
-
-	// The IAM policy associated with this CryptoKey.
-	// GET https://cloudkms.googleapis.com/v1/{resource=projects/*/locations/*/keyRings/*/cryptoKeys/*}:getIamPolicy
-	// https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings.cryptoKeys/getIamPolicy
-	if name := cryptoKey.GetName(); name != "" {
-		location := gcpshared.ExtractPathParam("locations", name)
-		keyRings := gcpshared.ExtractPathParam("keyRings", name)
-		cryptoKeys := gcpshared.ExtractPathParam("cryptoKeys", name)
-		if location != "" && keyRings != "" && cryptoKeys != "" {
-			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   IAMPolicy.String(),
-					Method: sdp.QueryMethod_GET,
-					//TODO(Nauany): "":getIamPolicy" needs to be appended at the end of the URL, ensure team is aware
-					Query: shared.CompositeLookupKey(location, keyRings, cryptoKeys),
-					Scope: c.ProjectID(),
-				},
-				//Deleting the IAM Policy makes the CryptoKey non-functional
-				//Deleting the CryptoKey deletes the IAM Policy
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
-			})
 		}
 	}
 
