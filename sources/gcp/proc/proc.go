@@ -49,7 +49,6 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 
 	dynamicAdapters, err := dynamic.Adapters(
 		cfg.ProjectID,
-		cfg.Token,
 		cfg.Regions,
 		cfg.Zones,
 		linker,
@@ -81,7 +80,6 @@ type config struct {
 	ProjectID string
 	Regions   []string
 	Zones     []string
-	Token     string
 }
 
 func readConfig() (*config, error) {
@@ -121,13 +119,6 @@ func readConfig() (*config, error) {
 	for region := range regions {
 		l.Regions = append(l.Regions, region)
 	}
-
-	token := os.Getenv("GCP_TOKEN")
-	if token == "" {
-		return nil, fmt.Errorf("GCP_TOKEN environment variable not set")
-	}
-
-	l.Token = token
 
 	return l, nil
 }

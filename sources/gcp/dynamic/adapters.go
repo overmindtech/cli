@@ -2,9 +2,6 @@ package dynamic
 
 import (
 	"fmt"
-
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-
 	"github.com/overmindtech/cli/discovery"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -32,9 +29,14 @@ func init() {
 
 }
 
-// Adapters returns a list of discovery.Adapters for the given project ID, token, regions, and zones.
-func Adapters(projectID string, token string, regions []string, zones []string, linker *gcpshared.Linker, manualAdapters map[string]bool) ([]discovery.Adapter, error) {
+// Adapters returns a list of discovery.Adapters for the given project ID, regions, and zones.
+func Adapters(projectID string, regions []string, zones []string, linker *gcpshared.Linker, manualAdapters map[string]bool) ([]discovery.Adapter, error) {
 	var adapters []discovery.Adapter
+
+	gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
+	if err != nil {
+		return nil, err
+	}
 
 	// Project level adapters
 	for sdpItemType, meta := range adaptersByScope[gcpshared.ScopeProject] {
@@ -51,13 +53,12 @@ func Adapters(projectID string, token string, regions []string, zones []string, 
 		cfg := &AdapterConfig{
 			ProjectID:           projectID,
 			Scope:               projectID,
-			Token:               token,
 			GetURLFunc:          getEndpointBaseURL,
 			SDPAssetType:        sdpItemType,
 			SDPAdapterCategory:  meta.SDPAdapterCategory,
 			TerraformMappings:   SDPAssetTypeToTerraformMappings[sdpItemType].Mappings,
 			Linker:              linker,
-			HTTPClient:          otelhttp.DefaultClient,
+			HTTPClient:          gcpHTTPCliWithOtel,
 			UniqueAttributeKeys: meta.UniqueAttributeKeys,
 		}
 
@@ -87,13 +88,12 @@ func Adapters(projectID string, token string, regions []string, zones []string, 
 			cfg := &AdapterConfig{
 				ProjectID:           projectID,
 				Scope:               scope,
-				Token:               token,
 				GetURLFunc:          getEndpointBaseURL,
 				SDPAssetType:        sdpItemType,
 				SDPAdapterCategory:  meta.SDPAdapterCategory,
 				TerraformMappings:   SDPAssetTypeToTerraformMappings[sdpItemType].Mappings,
 				Linker:              linker,
-				HTTPClient:          otelhttp.DefaultClient,
+				HTTPClient:          gcpHTTPCliWithOtel,
 				UniqueAttributeKeys: meta.UniqueAttributeKeys,
 			}
 
@@ -124,13 +124,12 @@ func Adapters(projectID string, token string, regions []string, zones []string, 
 			cfg := &AdapterConfig{
 				ProjectID:           projectID,
 				Scope:               scope,
-				Token:               token,
 				GetURLFunc:          getEndpointBaseURL,
 				SDPAssetType:        sdpItemType,
 				SDPAdapterCategory:  meta.SDPAdapterCategory,
 				TerraformMappings:   SDPAssetTypeToTerraformMappings[sdpItemType].Mappings,
 				Linker:              linker,
-				HTTPClient:          otelhttp.DefaultClient,
+				HTTPClient:          gcpHTTPCliWithOtel,
 				UniqueAttributeKeys: meta.UniqueAttributeKeys,
 			}
 
@@ -175,23 +174,23 @@ func makeAdapter(meta gcpshared.AdapterMeta, cfg *AdapterConfig, opts ...string)
 			return nil, err
 		}
 
-		return NewSearchableListableAdapter(searchEndpointFunc, listEndpoint, cfg), nil
+		return NewSearchableListableAdapter(searchEndpointFunc, listEndpoint, cfg)
 	case Searchable:
 		searchEndpointFunc, err := meta.SearchEndpointFunc(opts...)
 		if err != nil {
 			return nil, err
 		}
 
-		return NewSearchableAdapter(searchEndpointFunc, cfg), nil
+		return NewSearchableAdapter(searchEndpointFunc, cfg)
 	case Listable:
 		listEndpoint, err := meta.ListEndpointFunc(opts...)
 		if err != nil {
 			return nil, err
 		}
 
-		return NewListableAdapter(listEndpoint, cfg), nil
+		return NewListableAdapter(listEndpoint, cfg)
 	case Standard:
-		return NewAdapter(cfg), nil
+		return NewAdapter(cfg)
 	default:
 		return nil, fmt.Errorf("unknown adapter type %s", adapterType(meta))
 	}

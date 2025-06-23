@@ -3,7 +3,6 @@ package dynamic
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/overmindtech/cli/discovery"
@@ -23,28 +22,36 @@ type SearchableListableAdapter struct {
 }
 
 // NewSearchableListableAdapter creates a new GCP dynamic adapter.
-func NewSearchableListableAdapter(searchURLFunc gcpshared.EndpointFunc, listEndpoint string, config *AdapterConfig) SearchableListableDiscoveryAdapter {
+func NewSearchableListableAdapter(searchURLFunc gcpshared.EndpointFunc, listEndpoint string, config *AdapterConfig) (SearchableListableDiscoveryAdapter, error) {
+	a := Adapter{
+		projectID:           config.ProjectID,
+		scope:               config.Scope,
+		httpCli:             config.HTTPClient,
+		getURLFunc:          config.GetURLFunc,
+		sdpAssetType:        config.SDPAssetType,
+		sdpAdapterCategory:  config.SDPAdapterCategory,
+		terraformMappings:   config.TerraformMappings,
+		linker:              config.Linker,
+		potentialLinks:      potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
+		uniqueAttributeKeys: config.UniqueAttributeKeys,
+	}
+
+	if a.httpCli == nil {
+		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
+		if err != nil {
+			return nil, err
+		}
+
+		a.httpCli = gcpHTTPCliWithOtel
+	}
+
 	return SearchableListableAdapter{
 		searchEndpointFunc: searchURLFunc,
 		ListableAdapter: ListableAdapter{
 			listEndpoint: listEndpoint,
-			Adapter: Adapter{
-				projectID:  config.ProjectID,
-				scope:      config.Scope,
-				httpCli:    config.HTTPClient,
-				getURLFunc: config.GetURLFunc,
-				httpHeaders: http.Header{
-					"Authorization": []string{"Bearer " + config.Token},
-				},
-				sdpAssetType:        config.SDPAssetType,
-				sdpAdapterCategory:  config.SDPAdapterCategory,
-				terraformMappings:   config.TerraformMappings,
-				linker:              config.Linker,
-				potentialLinks:      potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
-				uniqueAttributeKeys: config.UniqueAttributeKeys,
-			},
+			Adapter:      a,
 		},
-	}
+	}, nil
 }
 
 func (g SearchableListableAdapter) Metadata() *sdp.AdapterMetadata {
@@ -86,7 +93,7 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 	if strings.HasPrefix(query, "projects/") {
 		// This is a single item query for terraform search method mappings.
 		// See: https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
-		resp, err := externalCallSingle(ctx, g.httpCli, g.httpHeaders, searchEndpoint)
+		resp, err := externalCallSingle(ctx, g.httpCli, searchEndpoint)
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +106,7 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 		return append(items, item), nil
 	}
 
-	multiResp, err := externalCallMulti(ctx, itemsSelector, g.httpCli, g.httpHeaders, searchEndpoint)
+	multiResp, err := externalCallMulti(ctx, itemsSelector, g.httpCli, searchEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve items for %s: %w", searchEndpoint, err)
 	}

@@ -111,13 +111,12 @@ func externalToSDP(ctx context.Context, projectID string, scope string, uniqueAt
 	return sdpItem, nil
 }
 
-func externalCallSingle(ctx context.Context, httpCli *http.Client, httpHeaders http.Header, url string) (map[string]interface{}, error) {
+func externalCallSingle(ctx context.Context, httpCli *http.Client, url string) (map[string]interface{}, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header = httpHeaders
 	resp, err := httpCli.Do(req)
 	if err != nil {
 		return nil, err
@@ -156,13 +155,12 @@ func externalCallSingle(ctx context.Context, httpCli *http.Client, httpHeaders h
 	return result, nil
 }
 
-func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.Client, httpHeader http.Header, url string) ([]map[string]interface{}, error) {
+func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.Client, url string) ([]map[string]interface{}, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header = httpHeader
 	resp, err := httpCli.Do(req)
 	if err != nil {
 		return nil, err

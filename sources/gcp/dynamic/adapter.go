@@ -14,7 +14,6 @@ import (
 // AdapterConfig holds the configuration for a GCP dynamic adapter.
 type AdapterConfig struct {
 	ProjectID           string
-	Token               string
 	Scope               string
 	GetURLFunc          gcpshared.EndpointFunc
 	SDPAssetType        shared.ItemType
@@ -29,7 +28,6 @@ type AdapterConfig struct {
 type Adapter struct {
 	projectID           string
 	httpCli             *http.Client
-	httpHeaders         http.Header
 	getURLFunc          gcpshared.EndpointFunc
 	scope               string
 	sdpAssetType        shared.ItemType
@@ -41,16 +39,12 @@ type Adapter struct {
 }
 
 // NewAdapter creates a new GCP dynamic adapter.
-func NewAdapter(config *AdapterConfig) discovery.Adapter {
-
-	return Adapter{
-		projectID:  config.ProjectID,
-		scope:      config.Scope,
-		httpCli:    config.HTTPClient,
-		getURLFunc: config.GetURLFunc,
-		httpHeaders: http.Header{
-			"Authorization": []string{"Bearer " + config.Token},
-		},
+func NewAdapter(config *AdapterConfig) (discovery.Adapter, error) {
+	a := Adapter{
+		projectID:           config.ProjectID,
+		scope:               config.Scope,
+		httpCli:             config.HTTPClient,
+		getURLFunc:          config.GetURLFunc,
 		sdpAssetType:        config.SDPAssetType,
 		sdpAdapterCategory:  config.SDPAdapterCategory,
 		terraformMappings:   config.TerraformMappings,
@@ -58,6 +52,17 @@ func NewAdapter(config *AdapterConfig) discovery.Adapter {
 		potentialLinks:      potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
 		uniqueAttributeKeys: config.UniqueAttributeKeys,
 	}
+
+	if a.httpCli == nil {
+		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
+		if err != nil {
+			return nil, err
+		}
+
+		a.httpCli = gcpHTTPCliWithOtel
+	}
+
+	return a, nil
 }
 
 func (g Adapter) Type() string {
@@ -106,7 +111,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		}
 	}
 
-	resp, err := externalCallSingle(ctx, g.httpCli, g.httpHeaders, url)
+	resp, err := externalCallSingle(ctx, g.httpCli, url)
 	if err != nil {
 		return nil, err
 	}

@@ -3,8 +3,6 @@ package dynamic
 import (
 	"context"
 	"fmt"
-	"net/http"
-
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -17,26 +15,33 @@ type ListableAdapter struct {
 }
 
 // NewListableAdapter creates a new GCP dynamic adapter.
-func NewListableAdapter(listEndpoint string, config *AdapterConfig) discovery.ListableAdapter {
+func NewListableAdapter(listEndpoint string, config *AdapterConfig) (discovery.ListableAdapter, error) {
+	a := Adapter{
+		projectID:           config.ProjectID,
+		scope:               config.Scope,
+		httpCli:             config.HTTPClient,
+		getURLFunc:          config.GetURLFunc,
+		sdpAssetType:        config.SDPAssetType,
+		sdpAdapterCategory:  config.SDPAdapterCategory,
+		terraformMappings:   config.TerraformMappings,
+		linker:              config.Linker,
+		potentialLinks:      potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
+		uniqueAttributeKeys: config.UniqueAttributeKeys,
+	}
+
+	if a.httpCli == nil {
+		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
+		if err != nil {
+			return nil, err
+		}
+
+		a.httpCli = gcpHTTPCliWithOtel
+	}
 
 	return ListableAdapter{
 		listEndpoint: listEndpoint,
-		Adapter: Adapter{
-			projectID:  config.ProjectID,
-			scope:      config.Scope,
-			httpCli:    config.HTTPClient,
-			getURLFunc: config.GetURLFunc,
-			httpHeaders: http.Header{
-				"Authorization": []string{"Bearer " + config.Token},
-			},
-			sdpAssetType:        config.SDPAssetType,
-			sdpAdapterCategory:  config.SDPAdapterCategory,
-			terraformMappings:   config.TerraformMappings,
-			linker:              config.Linker,
-			potentialLinks:      potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
-			uniqueAttributeKeys: config.UniqueAttributeKeys,
-		},
-	}
+		Adapter:      a,
+	}, nil
 }
 
 func (g ListableAdapter) Metadata() *sdp.AdapterMetadata {
@@ -65,7 +70,7 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 
 	var items []*sdp.Item
 	itemsSelector := g.uniqueAttributeKeys[len(g.uniqueAttributeKeys)-1] // Use the last key as the item selector
-	multiResp, err := externalCallMulti(ctx, itemsSelector, g.httpCli, g.httpHeaders, g.listEndpoint)
+	multiResp, err := externalCallMulti(ctx, itemsSelector, g.httpCli, g.listEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve items for %s: %w", g.listEndpoint, err)
 	}

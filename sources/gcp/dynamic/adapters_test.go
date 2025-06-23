@@ -1,6 +1,7 @@
 package dynamic
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/overmindtech/cli/discovery"
@@ -98,8 +99,7 @@ func Test_addAdapter(t *testing.T) {
 			cfg := &AdapterConfig{
 				ProjectID:    "my-project",
 				Scope:        "us-central1-a",
-				Token:        "test-token",
-				HTTPClient:   nil,
+				HTTPClient:   http.DefaultClient,
 				SDPAssetType: tc.sdpType,
 			}
 
