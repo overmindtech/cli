@@ -158,7 +158,7 @@ func TestIPCachePurge(t *testing.T) {
 	}
 }
 
-func TestPlayground(t *testing.T) {
+func TestParseIPWithCIDR(t *testing.T) {
 	ip := net.ParseIP("10.0.0.1/32")
 
 	t.Log(ip)

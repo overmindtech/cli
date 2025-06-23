@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://vimeo.com/903381683">🎥 Watch a demo</a> | <a href="https://docs.overmind.tech">📖 Docs</a> | <a href="https://app.overmind.tech/api/auth/signup">🚀 Sign up</a> | <a href="https://app.overmind.tech/playground">💻 Playground</a> | <a href="https://www.linkedin.com/company/overmindtech/">🙌 Follow us</a>
+  <a href="https://vimeo.com/903381683">🎥 Watch a demo</a> | <a href="https://docs.overmind.tech">📖 Docs</a> | <a href="https://app.overmind.tech/api/auth/signup">🚀 Sign up</a> | <a href="https://www.linkedin.com/company/overmindtech/">🙌 Follow us</a>
 </p>
 
 # What is Overmind?
@@ -252,7 +252,6 @@ overmind terraform plan -- -var-file=production.tfvars -parallelism=20 -auto-app
 ## Additional Resources
 
 - [Documentation](https://docs.overmind.tech)
-- [Playground](https://app.overmind.tech/playground)
 - [Getting Started Guide](https://docs.overmind.tech)
 - [Overmind Blog](https://overmind.tech/blog)
 
