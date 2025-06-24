@@ -83,6 +83,13 @@ func (c iamServiceAccountWrapper) Get(ctx context.Context, queryParts ...string)
 		return nil, sdpErr
 	}
 
+	// If the resourceIdentifier is an email, set the unique attribute to "email"
+	// This is to ensure tha the get method query parameter matches the unique attribute
+	if strings.Contains(resourceIdentifier, "@") {
+		// SDP item has an attribute of "email".
+		item.UniqueAttribute = "email"
+	}
+
 	return item, nil
 }
 

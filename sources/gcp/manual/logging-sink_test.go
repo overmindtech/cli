@@ -153,7 +153,7 @@ func TestNewLoggingSink(t *testing.T) {
 
 func createLoggingSink(name, destination string) *loggingpb.LogSink {
 	return &loggingpb.LogSink{
-		Name:        "projects/my-project-id/sinks/" + name,
+		Name:        name,
 		Destination: destination,
 		Filter:      "severity>=ERROR",
 	}

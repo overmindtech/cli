@@ -107,25 +107,9 @@ func (l loggingSinkWrapper) gcpLoggingSinkToItem(sink *loggingpb.LogSink) (*sdp.
 		}
 	}
 
-	simpleName := gcpshared.ExtractPathParam("sinks", sink.GetName())
-	if simpleName == "" {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_OTHER,
-			ErrorString: "unable to extract sink name from the full name",
-		}
-	}
-
-	err = attributes.Set("uniqueAttr", simpleName)
-	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_OTHER,
-			ErrorString: err.Error(),
-		}
-	}
-
 	item := &sdp.Item{
 		Type:            gcpshared.LoggingSink.String(),
-		UniqueAttribute: "uniqueAttr",
+		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           l.DefaultScope(),
 	}
