@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://vimeo.com/903381683">🎥 Watch a demo</a> | <a href="https://docs.overmind.tech">📖 Docs</a> | <a href="https://app.overmind.tech/api/auth/signup">🚀 Sign up</a> | <a href="https://www.linkedin.com/company/overmindtech/">🙌 Follow us</a>
+  <a href="https://www.youtube.com/watch?v=cr4Q0oLaANk">🎥 Watch a demo</a> | <a href="https://docs.overmind.tech">📖 Docs</a> | <a href="https://app.overmind.tech/api/auth/signup">🚀 Sign up</a> | <a href="https://www.linkedin.com/company/overmindtech/">🙌 Follow us</a>
 </p>
 
 # What is Overmind?
