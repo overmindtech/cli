@@ -190,6 +190,10 @@ var iamUserAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 			TerraformQueryMap: "aws_iam_user.arn",
 			TerraformMethod:   sdp.QueryMethod_SEARCH,
 		},
+		{
+			TerraformQueryMap: "aws_iam_user_group_membership.user",
+			TerraformMethod:   sdp.QueryMethod_GET,
+		},
 	},
 	PotentialLinks: []string{"iam-group"},
 	Category:       sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
