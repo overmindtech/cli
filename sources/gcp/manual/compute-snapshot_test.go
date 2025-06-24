@@ -44,7 +44,7 @@ func TestComputeSnapshot(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   manual.ComputeLicense.String(),
+					ExpectedType:   gcpshared.ComputeLicense.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-license",
 					ExpectedScope:  "test-project-id",
@@ -54,7 +54,7 @@ func TestComputeSnapshot(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.ComputeInstantSnapshot.String(),
+					ExpectedType:   gcpshared.ComputeInstantSnapshot.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instant-snapshot",
 					ExpectedScope:  "test-project-id.us-central1-a",
@@ -74,7 +74,7 @@ func TestComputeSnapshot(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.ComputeDisk.String(),
+					ExpectedType:   gcpshared.ComputeDisk.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-disk",
 					ExpectedScope:  "test-project-id.us-central1-a",
@@ -94,7 +94,7 @@ func TestComputeSnapshot(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:             manual.ComputeResourcePolicy.String(),
+					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-source-snapshot-schedule-policy",
 					ExpectedScope:            "test-project-id.us-central1",

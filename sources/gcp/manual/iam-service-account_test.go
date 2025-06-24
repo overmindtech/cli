@@ -11,6 +11,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -42,14 +43,14 @@ func TestIAMServiceAccount(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:             manual.CloudResourceManagerProject.String(),
+					ExpectedType:             gcpshared.CloudResourceManagerProject.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-project-id",
 					ExpectedScope:            "test-project-id",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 				},
 				{
-					ExpectedType:             manual.IAMServiceAccountKey.String(),
+					ExpectedType:             gcpshared.IAMServiceAccountKey.String(),
 					ExpectedMethod:           sdp.QueryMethod_SEARCH,
 					ExpectedQuery:            "test-service-account-id",
 					ExpectedScope:            "test-project-id",
@@ -75,14 +76,14 @@ func TestIAMServiceAccount(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:             manual.CloudResourceManagerProject.String(),
+					ExpectedType:             gcpshared.CloudResourceManagerProject.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-project-id",
 					ExpectedScope:            "test-project-id",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 				},
 				{
-					ExpectedType:             manual.IAMServiceAccountKey.String(),
+					ExpectedType:             gcpshared.IAMServiceAccountKey.String(),
 					ExpectedMethod:           sdp.QueryMethod_SEARCH,
 					ExpectedQuery:            "test-service-account-id",
 					ExpectedScope:            "test-project-id",

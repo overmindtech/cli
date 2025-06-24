@@ -13,11 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeSnapshot = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Snapshot)
-
-	ComputeSnapshotLookupByName = shared.NewItemTypeLookup("name", ComputeSnapshot)
-)
+var ComputeSnapshotLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeSnapshot)
 
 type computeSnapshotWrapper struct {
 	client gcpshared.ComputeSnapshotsClient
@@ -32,7 +28,7 @@ func NewComputeSnapshot(client gcpshared.ComputeSnapshotsClient, projectID strin
 		ProjectBase: gcpshared.NewProjectBase(
 			projectID,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
-			ComputeSnapshot,
+			gcpshared.ComputeSnapshot,
 		),
 	}
 }
@@ -40,11 +36,11 @@ func NewComputeSnapshot(client gcpshared.ComputeSnapshotsClient, projectID strin
 // PotentialLinks returns the potential links for the compute snapshot wrapper
 func (c computeSnapshotWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		ComputeInstantSnapshot,
-		ComputeLicense,
-		ComputeDisk,
+		gcpshared.ComputeInstantSnapshot,
+		gcpshared.ComputeLicense,
+		gcpshared.ComputeDisk,
 		gcpshared.CloudKMSCryptoKeyVersion,
-		ComputeResourcePolicy,
+		gcpshared.ComputeResourcePolicy,
 	)
 }
 
@@ -127,7 +123,7 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(snapshot *computepb.
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeSnapshot.String(),
+		Type:            gcpshared.ComputeSnapshot.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -143,7 +139,7 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(snapshot *computepb.
 		if licenseName != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   ComputeLicense.String(),
+					Type:   gcpshared.ComputeLicense.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  licenseName,
 					Scope:  c.ProjectID(),
@@ -165,7 +161,7 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(snapshot *computepb.
 			if zone != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   ComputeInstantSnapshot.String(),
+						Type:   gcpshared.ComputeInstantSnapshot.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  instantSnapshotName,
 						Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
@@ -219,7 +215,7 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(snapshot *computepb.
 			if diskName != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   ComputeDisk.String(),
+						Type:   gcpshared.ComputeDisk.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  diskName,
 						Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
@@ -273,7 +269,7 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(snapshot *computepb.
 			if region != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   ComputeResourcePolicy.String(),
+						Type:   gcpshared.ComputeResourcePolicy.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  snapshotSchedulePolicyName,
 						Scope:  gcpshared.RegionalScope(c.ProjectID(), region),

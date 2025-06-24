@@ -14,11 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeAutoscaler = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Autoscaler)
-
-	ComputeAutoscalerLookupByName = shared.NewItemTypeLookup("name", ComputeAutoscaler)
-)
+var ComputeAutoscalerLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeAutoscaler)
 
 type computeAutoscalerWrapper struct {
 	client gcpshared.ComputeAutoscalerClient
@@ -34,14 +30,14 @@ func NewComputeAutoscaler(client gcpshared.ComputeAutoscalerClient, projectID, z
 			projectID,
 			zone,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-			ComputeAutoscaler,
+			gcpshared.ComputeAutoscaler,
 		),
 	}
 }
 
 func (c computeAutoscalerWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		ComputeInstanceGroupManager,
+		gcpshared.ComputeInstanceGroupManager,
 	)
 }
 
@@ -122,7 +118,7 @@ func (c computeAutoscalerWrapper) gcpComputeAutoscalerToSDPItem(autoscaler *comp
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeAutoscaler.String(),
+		Type:            gcpshared.ComputeAutoscaler.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -137,7 +133,7 @@ func (c computeAutoscalerWrapper) gcpComputeAutoscalerToSDPItem(autoscaler *comp
 
 		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
-				Type:   ComputeInstanceGroupManager.String(),
+				Type:   gcpshared.ComputeInstanceGroupManager.String(),
 				Method: sdp.QueryMethod_GET,
 				Query:  igmName,
 				Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),

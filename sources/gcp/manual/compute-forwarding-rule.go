@@ -15,11 +15,7 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-var (
-	ComputeForwardingRule = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.ForwardingRule)
-
-	ComputeForwardingRuleLookupByName = shared.NewItemTypeLookup("name", ComputeForwardingRule)
-)
+var ComputeForwardingRuleLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeForwardingRule)
 
 type computeForwardingRuleWrapper struct {
 	client gcpshared.ComputeForwardingRuleClient
@@ -35,7 +31,7 @@ func NewComputeForwardingRule(client gcpshared.ComputeForwardingRuleClient, proj
 			projectID,
 			region,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-			ComputeForwardingRule,
+			gcpshared.ComputeForwardingRule,
 		),
 	}
 }
@@ -44,9 +40,9 @@ func NewComputeForwardingRule(client gcpshared.ComputeForwardingRuleClient, proj
 func (c computeForwardingRuleWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		stdlib.NetworkIP,
-		ComputeSubnetwork,
-		ComputeNetwork,
-		ComputeBackendService,
+		gcpshared.ComputeSubnetwork,
+		gcpshared.ComputeNetwork,
+		gcpshared.ComputeBackendService,
 	)
 }
 
@@ -127,7 +123,7 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(rule *co
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeForwardingRule.String(),
+		Type:            gcpshared.ComputeForwardingRule.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -161,7 +157,7 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(rule *co
 			if region != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   ComputeBackendService.String(),
+						Type:   gcpshared.ComputeBackendService.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  backendServiceName,
 						// This is a regional resource
@@ -201,7 +197,7 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(rule *co
 			networkName := networkNameParts[len(networkNameParts)-1]
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   ComputeNetwork.String(),
+					Type:   gcpshared.ComputeNetwork.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  networkName,
 					// This is a global resource
@@ -223,7 +219,7 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(rule *co
 			if region != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   ComputeSubnetwork.String(),
+						Type:   gcpshared.ComputeSubnetwork.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  subnetworkName,
 						// This is a regional resource

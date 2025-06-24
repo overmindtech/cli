@@ -15,10 +15,8 @@ import (
 )
 
 var (
-	ComputeNodeGroup = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.NodeGroup)
-
-	ComputeNodeGroupLookupByName             = shared.NewItemTypeLookup("name", ComputeNodeGroup)
-	ComputeNodeGroupLookupByNodeTemplateName = shared.NewItemTypeLookup("nodeTemplateName", ComputeNodeGroup)
+	ComputeNodeGroupLookupByName             = shared.NewItemTypeLookup("name", gcpshared.ComputeNodeGroup)
+	ComputeNodeGroupLookupByNodeTemplateName = shared.NewItemTypeLookup("nodeTemplateName", gcpshared.ComputeNodeGroup)
 )
 
 type computeNodeGroupWrapper struct {
@@ -34,7 +32,7 @@ func NewComputeNodeGroup(client gcpshared.ComputeNodeGroupClient, projectID, zon
 			projectID,
 			zone,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			ComputeNodeGroup,
+			gcpshared.ComputeNodeGroup,
 		),
 	}
 }
@@ -42,7 +40,7 @@ func NewComputeNodeGroup(client gcpshared.ComputeNodeGroupClient, projectID, zon
 // PotentialLinks returns the potential links for the compute instance wrapper
 func (c computeNodeGroupWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		ComputeNodeTemplate,
+		gcpshared.ComputeNodeTemplate,
 	)
 }
 
@@ -172,7 +170,7 @@ func (c computeNodeGroupWrapper) gcpComputeNodeGroupToSDPItem(nodegroup *compute
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeNodeGroup.String(),
+		Type:            gcpshared.ComputeNodeGroup.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -190,7 +188,7 @@ func (c computeNodeGroupWrapper) gcpComputeNodeGroupToSDPItem(nodegroup *compute
 		if region != "" && name != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   ComputeNodeTemplate.String(),
+					Type:   gcpshared.ComputeNodeTemplate.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  name,
 					Scope:  gcpshared.RegionalScope(c.ProjectID(), region),

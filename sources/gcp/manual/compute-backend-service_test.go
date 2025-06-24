@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -83,7 +84,7 @@ func TestComputeBackendService(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   ComputeNetwork.String(),
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "network",
 					ExpectedScope:  "test-project",
@@ -93,7 +94,7 @@ func TestComputeBackendService(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   ComputeSecurityPolicy.String(),
+					ExpectedType:   gcpshared.ComputeSecurityPolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-security-policy",
 					ExpectedScope:  "test-project",
@@ -103,7 +104,7 @@ func TestComputeBackendService(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   ComputeSecurityPolicy.String(),
+					ExpectedType:   gcpshared.ComputeSecurityPolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-edge-security-policy",
 					ExpectedScope:  "test-project",
@@ -113,7 +114,7 @@ func TestComputeBackendService(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   NetworkSecurityClientTlsPolicy.String(),
+					ExpectedType:   gcpshared.NetworkSecurityClientTlsPolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-location|test-client-tls-policy",
 					ExpectedScope:  "test-project",
@@ -123,7 +124,7 @@ func TestComputeBackendService(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   NetworkServicesServiceLbPolicy.String(),
+					ExpectedType:   gcpshared.NetworkServicesServiceLbPolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-location|test-service-lb-policy",
 					ExpectedScope:  "test-project",
@@ -133,7 +134,7 @@ func TestComputeBackendService(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   NetworkServicesServiceBinding.String(),
+					ExpectedType:   gcpshared.NetworkServicesServiceBinding.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-location|test-service-binding",
 					ExpectedScope:  "test-project",

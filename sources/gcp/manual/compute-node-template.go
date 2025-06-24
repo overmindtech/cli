@@ -13,11 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeNodeTemplate = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.NodeTemplate)
-
-	ComputeNodeTemplateLookupByName = shared.NewItemTypeLookup("name", ComputeNodeTemplate)
-)
+var ComputeNodeTemplateLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeNodeTemplate)
 
 type computeNodeTemplateWrapper struct {
 	client gcpshared.ComputeNodeTemplateClient
@@ -33,14 +29,14 @@ func NewComputeNodeTemplate(client gcpshared.ComputeNodeTemplateClient, projectI
 			projectID,
 			region,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-			ComputeNodeTemplate,
+			gcpshared.ComputeNodeTemplate,
 		),
 	}
 }
 
 func (c computeNodeTemplateWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		ComputeNodeGroup,
+		gcpshared.ComputeNodeGroup,
 	)
 }
 
@@ -121,7 +117,7 @@ func (c computeNodeTemplateWrapper) gcpComputeNodeTemplateToSDPItem(nodeTemplate
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeNodeTemplate.String(),
+		Type:            gcpshared.ComputeNodeTemplate.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -133,7 +129,7 @@ func (c computeNodeTemplateWrapper) gcpComputeNodeTemplateToSDPItem(nodeTemplate
 	// https://linear.app/overmind/issue/ENG-404/investigate-how-to-create-backlinks-without-the-location-information
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
-			Type:   ComputeNodeGroup.String(),
+			Type:   gcpshared.ComputeNodeGroup.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  nodeTemplate.GetName(),
 			Scope:  "*",

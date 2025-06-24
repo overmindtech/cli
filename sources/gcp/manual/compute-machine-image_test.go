@@ -44,7 +44,7 @@ func TestComputeMachineImage(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   manual.ComputeNetwork.String(),
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-network",
 					ExpectedScope:  "test-project-id",
@@ -54,7 +54,7 @@ func TestComputeMachineImage(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.ComputeSubnetwork.String(),
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-subnetwork",
 					ExpectedScope:  "test-project-id.us-central1",
@@ -64,7 +64,7 @@ func TestComputeMachineImage(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.ComputeDisk.String(),
+					ExpectedType:   gcpshared.ComputeDisk.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-disk",
 					ExpectedScope:  "test-project-id.us-central1-a",
@@ -93,7 +93,7 @@ func TestComputeMachineImage(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.ComputeInstance.String(),
+					ExpectedType:   gcpshared.ComputeInstance.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance",
 					ExpectedScope:  "test-project-id.us-central1-a",

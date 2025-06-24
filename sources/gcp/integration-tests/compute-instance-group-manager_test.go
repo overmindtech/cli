@@ -89,8 +89,8 @@ func TestComputeInstanceGroupManagerIntegration(t *testing.T) {
 
 			// [SPEC] Ensure Instance Template is present
 			linkedItem := sdpItem.GetLinkedItemQueries()[0]
-			if linkedItem.GetQuery().GetType() != manual.ComputeInstanceTemplate.String() {
-				t.Fatalf("Expected linked item type to be %s, got: %s", manual.ComputeInstanceTemplate, linkedItem.GetQuery().GetType())
+			if linkedItem.GetQuery().GetType() != gcpshared.ComputeInstanceTemplate.String() {
+				t.Fatalf("Expected linked item type to be %s, got: %s", gcpshared.ComputeInstanceTemplate, linkedItem.GetQuery().GetType())
 			}
 
 			if linkedItem.GetQuery().GetQuery() != templateName {

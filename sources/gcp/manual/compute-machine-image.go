@@ -14,11 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeMachineImage = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.MachineImage)
-
-	ComputeMachineImageLookupByName = shared.NewItemTypeLookup("name", ComputeMachineImage)
-)
+var ComputeMachineImageLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeMachineImage)
 
 type computeMachineImageWrapper struct {
 	client gcpshared.ComputeMachineImageClient
@@ -32,18 +28,18 @@ func NewComputeMachineImage(client gcpshared.ComputeMachineImageClient, projectI
 		ProjectBase: gcpshared.NewProjectBase(
 			projectID,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			ComputeMachineImage,
+			gcpshared.ComputeMachineImage,
 		),
 	}
 }
 
 func (c computeMachineImageWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		ComputeNetwork,
-		ComputeSubnetwork,
-		ComputeDisk,
+		gcpshared.ComputeNetwork,
+		gcpshared.ComputeSubnetwork,
+		gcpshared.ComputeDisk,
 		gcpshared.CloudKMSCryptoKeyVersion,
-		ComputeInstance,
+		gcpshared.ComputeInstance,
 	)
 }
 
@@ -121,7 +117,7 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(machineImage
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeMachineImage.String(),
+		Type:            gcpshared.ComputeMachineImage.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -143,7 +139,7 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(machineImage
 				if networkName != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   ComputeNetwork.String(),
+							Type:   gcpshared.ComputeNetwork.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  networkName,
 							Scope:  c.ProjectID(),
@@ -165,7 +161,7 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(machineImage
 					if region != "" {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
-								Type:   ComputeSubnetwork.String(),
+								Type:   gcpshared.ComputeSubnetwork.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  subnetworkName,
 								Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
@@ -194,7 +190,7 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(machineImage
 						if zone != "" {
 							sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 								Query: &sdp.Query{
-									Type:   ComputeDisk.String(),
+									Type:   gcpshared.ComputeDisk.String(),
 									Method: sdp.QueryMethod_GET,
 									Query:  diskName,
 									Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
@@ -287,7 +283,7 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(machineImage
 			if zone != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   ComputeInstance.String(),
+						Type:   gcpshared.ComputeInstance.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  sourceInstanceName,
 						Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),

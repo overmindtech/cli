@@ -12,6 +12,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -40,7 +41,7 @@ func TestComputeReservation(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   manual.ComputeRegionCommitment.String(),
+					ExpectedType:   gcpshared.ComputeRegionCommitment.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-commitment",
 					ExpectedScope:  "test-project-id.us-central1",
@@ -50,7 +51,7 @@ func TestComputeReservation(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.ComputeMachineType.String(),
+					ExpectedType:   gcpshared.ComputeMachineType.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "n1-standard-1",
 					ExpectedScope:  "test-project-id.us-central1-a",
@@ -60,7 +61,7 @@ func TestComputeReservation(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.ComputeAcceleratorType.String(),
+					ExpectedType:   gcpshared.ComputeAcceleratorType.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "nvidia-tesla-k80",
 					ExpectedScope:  "test-project-id.us-central1-a",
@@ -70,7 +71,7 @@ func TestComputeReservation(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.ComputeResourcePolicy.String(),
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-policy",
 					ExpectedScope:  "test-project-id.us-central1",

@@ -15,13 +15,7 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-var (
-	ComputeInstance   = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Instance)
-	ComputeSubnetwork = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Subnetwork)
-	ComputeNetwork    = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Network)
-
-	ComputeInstanceLookupByName = shared.NewItemTypeLookup("name", ComputeInstance)
-)
+var ComputeInstanceLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeInstance)
 
 type computeInstanceWrapper struct {
 	client gcpshared.ComputeInstanceClient
@@ -37,7 +31,7 @@ func NewComputeInstance(client gcpshared.ComputeInstanceClient, projectID, zone 
 			projectID,
 			zone,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			ComputeInstance,
+			gcpshared.ComputeInstance,
 		),
 	}
 }
@@ -46,9 +40,9 @@ func NewComputeInstance(client gcpshared.ComputeInstanceClient, projectID, zone 
 func (c computeInstanceWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		stdlib.NetworkIP,
-		ComputeDisk,
-		ComputeSubnetwork,
-		ComputeNetwork,
+		gcpshared.ComputeDisk,
+		gcpshared.ComputeSubnetwork,
+		gcpshared.ComputeNetwork,
 	)
 }
 
@@ -134,7 +128,7 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(instance *computepb.
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeInstance.String(),
+		Type:            gcpshared.ComputeInstance.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -153,7 +147,7 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(instance *computepb.
 				if zone != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   ComputeDisk.String(),
+							Type:   gcpshared.ComputeDisk.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  diskName,
 							Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
@@ -218,7 +212,7 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(instance *computepb.
 					if region != "" {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
-								Type:   ComputeSubnetwork.String(),
+								Type:   gcpshared.ComputeSubnetwork.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  subnetworkName,
 								// This is a regional resource
@@ -251,7 +245,7 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(instance *computepb.
 					networkName := networkNameParts[len(networkNameParts)-1]
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   ComputeNetwork.String(),
+							Type:   gcpshared.ComputeNetwork.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  networkName,
 							// This is a global resource

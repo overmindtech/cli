@@ -13,11 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeReservation = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Reservation)
-
-	ComputeReservationLookupByName = shared.NewItemTypeLookup("name", ComputeReservation)
-)
+var ComputeReservationLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeReservation)
 
 type computeReservationWrapper struct {
 	client gcpshared.ComputeReservationClient
@@ -33,7 +29,7 @@ func NewComputeReservation(client gcpshared.ComputeReservationClient, projectID,
 			projectID,
 			zone,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			ComputeReservation,
+			gcpshared.ComputeReservation,
 		),
 	}
 }
@@ -41,10 +37,10 @@ func NewComputeReservation(client gcpshared.ComputeReservationClient, projectID,
 // PotentialLinks returns the potential links for the compute reservation wrapper
 func (c computeReservationWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		ComputeRegionCommitment,
-		ComputeMachineType,
-		ComputeAcceleratorType,
-		ComputeResourcePolicy,
+		gcpshared.ComputeRegionCommitment,
+		gcpshared.ComputeMachineType,
+		gcpshared.ComputeAcceleratorType,
+		gcpshared.ComputeResourcePolicy,
 	)
 }
 
@@ -124,7 +120,7 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *c
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeReservation.String(),
+		Type:            gcpshared.ComputeReservation.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.Scopes()[0],
@@ -141,7 +137,7 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *c
 			if region != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   ComputeRegionCommitment.String(),
+						Type:   gcpshared.ComputeRegionCommitment.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  commitmentName,
 						Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
@@ -171,7 +167,7 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *c
 				if zone != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   ComputeMachineType.String(),
+							Type:   gcpshared.ComputeMachineType.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  machineTypeName,
 							Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
@@ -201,7 +197,7 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *c
 					if zone != "" {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
-								Type:   ComputeAcceleratorType.String(),
+								Type:   gcpshared.ComputeAcceleratorType.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  acceleratorName,
 								Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
@@ -232,7 +228,7 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *c
 					if region != "" {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
-								Type:   ComputeResourcePolicy.String(),
+								Type:   gcpshared.ComputeResourcePolicy.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  policyName,
 								Scope:  gcpshared.RegionalScope(c.ProjectID(), region),

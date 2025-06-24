@@ -13,11 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeInstanceGroup = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.InstanceGroup)
-
-	ComputeInstanceGroupLookupByName = shared.NewItemTypeLookup("name", ComputeInstanceGroup)
-)
+var ComputeInstanceGroupLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeInstanceGroup)
 
 type computeInstanceGroupWrapper struct {
 	client gcpshared.ComputeInstanceGroupsClient
@@ -33,7 +29,7 @@ func NewComputeInstanceGroup(client gcpshared.ComputeInstanceGroupsClient, proje
 			projectID,
 			zone,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			ComputeInstanceGroup,
+			gcpshared.ComputeInstanceGroup,
 		),
 	}
 }
@@ -41,8 +37,8 @@ func NewComputeInstanceGroup(client gcpshared.ComputeInstanceGroupsClient, proje
 // PotentialLinks returns the potential links for the compute instance wrapper
 func (c computeInstanceGroupWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		ComputeSubnetwork,
-		ComputeNetwork,
+		gcpshared.ComputeSubnetwork,
+		gcpshared.ComputeNetwork,
 	)
 }
 
@@ -123,7 +119,7 @@ func (c computeInstanceGroupWrapper) gcpInstanceGroupToSDPItem(instanceGroup *co
 	}
 
 	item := &sdp.Item{
-		Type:            ComputeInstanceGroup.String(),
+		Type:            gcpshared.ComputeInstanceGroup.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -134,7 +130,7 @@ func (c computeInstanceGroupWrapper) gcpInstanceGroupToSDPItem(instanceGroup *co
 		if networkName != "" {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   ComputeNetwork.String(),
+					Type:   gcpshared.ComputeNetwork.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  networkName,
 					Scope:  c.ProjectID(),
@@ -149,7 +145,7 @@ func (c computeInstanceGroupWrapper) gcpInstanceGroupToSDPItem(instanceGroup *co
 		if subnetworkName != "" {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   ComputeSubnetwork.String(),
+					Type:   gcpshared.ComputeSubnetwork.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  subnetworkName,
 					Scope:  c.ProjectID(),

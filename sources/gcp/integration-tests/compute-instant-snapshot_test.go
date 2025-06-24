@@ -127,8 +127,8 @@ func TestComputeInstantSnapshotsIntegration(t *testing.T) {
 
 			// [SPEC] Ensure Source Disk is linked
 			linkedItem := sdpItem.GetLinkedItemQueries()[0]
-			if linkedItem.GetQuery().GetType() != manual.ComputeDisk.String() {
-				t.Fatalf("Expected linked item type to be %s, got: %s", manual.ComputeDisk, linkedItem.GetQuery().GetType())
+			if linkedItem.GetQuery().GetType() != gcpshared.ComputeDisk.String() {
+				t.Fatalf("Expected linked item type to be %s, got: %s", gcpshared.ComputeDisk, linkedItem.GetQuery().GetType())
 			}
 
 			if linkedItem.GetQuery().GetQuery() != diskName {

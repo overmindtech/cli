@@ -13,6 +13,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
@@ -56,7 +57,7 @@ func TestComputeForwardingRule(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.ComputeSubnetwork.String(),
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-subnetwork",
 					ExpectedScope:  "test-project-id.us-central1",
@@ -66,7 +67,7 @@ func TestComputeForwardingRule(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.ComputeNetwork.String(),
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-network",
 					ExpectedScope:  "test-project-id",
@@ -76,7 +77,7 @@ func TestComputeForwardingRule(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.ComputeBackendService.String(),
+					ExpectedType:   gcpshared.ComputeBackendService.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "backend-service",
 					ExpectedScope:  "test-project-id.us-central1",

@@ -85,7 +85,7 @@ const (
 	Topic                    shared.Resource = "topic"
 	Project                  shared.Resource = "project"
 	CryptoKey                shared.Resource = "crypto-key"
-	CloudKMSEKMConnection    shared.Resource = "ekm-connection"
+	EKMConnection            shared.Resource = "ekm-connection"
 	Policy                   shared.Resource = "policy"
 	KeyRing                  shared.Resource = "key-ring"
 	InstanceSettings         shared.Resource = "instance-settings"

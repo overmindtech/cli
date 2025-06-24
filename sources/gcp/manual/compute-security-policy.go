@@ -14,12 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeSecurityPolicy = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.SecurityPolicy)
-	ComputeRule           = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Rule)
-
-	ComputeSecurityPolicyLookupByName = shared.NewItemTypeLookup("name", ComputeSecurityPolicy)
-)
+var ComputeSecurityPolicyLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeSecurityPolicy)
 
 type computeSecurityPolicyWrapper struct {
 	client gcpshared.ComputeSecurityPolicyClient
@@ -34,7 +29,7 @@ func NewComputeSecurityPolicy(client gcpshared.ComputeSecurityPolicyClient, proj
 		ProjectBase: gcpshared.NewProjectBase(
 			projectID,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
-			ComputeSecurityPolicy,
+			gcpshared.ComputeSecurityPolicy,
 		),
 	}
 }
@@ -42,7 +37,7 @@ func NewComputeSecurityPolicy(client gcpshared.ComputeSecurityPolicyClient, proj
 // PotentialLinks returns the potential links for the compute forwarding rule wrapper
 func (c computeSecurityPolicyWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		ComputeRule,
+		gcpshared.ComputeRule,
 	)
 }
 
@@ -121,7 +116,7 @@ func (c computeSecurityPolicyWrapper) gcpComputeSecurityPolicyToSDPItem(security
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeSecurityPolicy.String(),
+		Type:            gcpshared.ComputeSecurityPolicy.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -137,7 +132,7 @@ func (c computeSecurityPolicyWrapper) gcpComputeSecurityPolicyToSDPItem(security
 		rulePriority := strconv.Itoa(int(rule.GetPriority()))
 		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
-				Type:   ComputeRule.String(),
+				Type:   gcpshared.ComputeRule.String(),
 				Method: sdp.QueryMethod_GET,
 				Query:  shared.CompositeLookupKey(policyName, rulePriority),
 				Scope:  c.ProjectID(),

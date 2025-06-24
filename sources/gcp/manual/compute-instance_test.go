@@ -12,6 +12,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
@@ -45,7 +46,7 @@ func TestComputeInstance(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   manual.ComputeDisk.String(),
+					ExpectedType:   gcpshared.ComputeDisk.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance",
 					ExpectedScope:  "test-project-id.us-central1-a",
@@ -65,7 +66,7 @@ func TestComputeInstance(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.ComputeSubnetwork.String(),
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  "test-project-id.us-central1",
@@ -75,7 +76,7 @@ func TestComputeInstance(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.ComputeNetwork.String(),
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "network",
 					ExpectedScope:  "test-project-id",

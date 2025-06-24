@@ -41,8 +41,8 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 			t.Fatalf("Expected no error, got: %v", qErr)
 		}
 
-		if sdpItem.GetType() != manual.ComputeInstanceGroupManager.String() {
-			t.Fatalf("Expected type %s, got: %s", manual.ComputeInstanceGroupManager.String(), sdpItem.GetType())
+		if sdpItem.GetType() != gcpshared.ComputeInstanceGroupManager.String() {
+			t.Fatalf("Expected type %s, got: %s", gcpshared.ComputeInstanceGroupManager.String(), sdpItem.GetType())
 		}
 
 		t.Run("StaticTests", func(t *testing.T) {
@@ -60,7 +60,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 
 				queryTests := shared.QueryTests{
 					{
-						ExpectedType:   manual.ComputeInstanceTemplate.String(),
+						ExpectedType:   gcpshared.ComputeInstanceTemplate.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "unit-test-template",
 						ExpectedScope:  projectID,
@@ -70,7 +70,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						},
 					},
 					{
-						ExpectedType:   manual.ComputeInstanceGroup.String(),
+						ExpectedType:   gcpshared.ComputeInstanceGroup.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-group",
 						ExpectedScope:  "test-project-id.us-central1-a",
@@ -80,7 +80,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						},
 					},
 					{
-						ExpectedType:   manual.ComputeResourcePolicy.String(),
+						ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-policy",
 						ExpectedScope:  "test-project-id",
@@ -90,7 +90,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						},
 					},
 					{
-						ExpectedType:   manual.ComputeTargetPool.String(),
+						ExpectedType:   gcpshared.ComputeTargetPool.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-pool",
 						ExpectedScope:  "test-project-id.us-central1",
@@ -119,7 +119,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 
 				queryTests := shared.QueryTests{
 					{
-						ExpectedType:   manual.ComputeRegionInstanceTemplate.String(),
+						ExpectedType:   gcpshared.ComputeRegionInstanceTemplate.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "unit-test-template",
 						ExpectedScope:  gcpshared.RegionalScope(projectID, region),
@@ -129,7 +129,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						},
 					},
 					{
-						ExpectedType:   manual.ComputeInstanceGroup.String(),
+						ExpectedType:   gcpshared.ComputeInstanceGroup.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-group",
 						ExpectedScope:  "test-project-id.us-central1-a",
@@ -139,7 +139,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						},
 					},
 					{
-						ExpectedType:   manual.ComputeResourcePolicy.String(),
+						ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-policy",
 						ExpectedScope:  "test-project-id",
@@ -149,7 +149,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						},
 					},
 					{
-						ExpectedType:   manual.ComputeTargetPool.String(),
+						ExpectedType:   gcpshared.ComputeTargetPool.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-pool",
 						ExpectedScope:  "test-project-id.us-central1",

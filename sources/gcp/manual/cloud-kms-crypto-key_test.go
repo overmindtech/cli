@@ -61,7 +61,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.CloudKMSEKMConnection.String(),
+					ExpectedType:   gcpshared.CloudKMSEKMConnection.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|valid-ekm-connection",
 					ExpectedScope:  "test-project-id",
@@ -71,7 +71,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   manual.IAMPolicy.String(),
+					ExpectedType:   gcpshared.IAMPolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key",
 					ExpectedScope:  "test-project-id",

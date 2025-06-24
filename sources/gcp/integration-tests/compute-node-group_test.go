@@ -109,8 +109,8 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 			}
 
 			linkedItem := sdpItem.GetLinkedItemQueries()[0]
-			if linkedItem.GetQuery().GetType() != manual.ComputeNodeTemplate.String() {
-				t.Fatalf("Expected linked item type to be %s, got: %s", manual.ComputeNodeTemplate.String(), linkedItem.GetQuery().GetType())
+			if linkedItem.GetQuery().GetType() != gcpshared.ComputeNodeTemplate.String() {
+				t.Fatalf("Expected linked item type to be %s, got: %s", gcpshared.ComputeNodeTemplate.String(), linkedItem.GetQuery().GetType())
 			}
 
 			if linkedItem.GetQuery().GetQuery() != nodeTemplateName {
@@ -189,7 +189,7 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   manual.ComputeNodeGroup.String(),
+					ExpectedType:   gcpshared.ComputeNodeGroup.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  nodeTemplateName,
 					ExpectedScope:  "*",
@@ -203,8 +203,8 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 			shared.RunStaticTests(t, nodeTemplateAdapter, sdpItem, queryTests)
 
 			linkedItem := sdpItem.GetLinkedItemQueries()[0]
-			if linkedItem.GetQuery().GetType() != manual.ComputeNodeGroup.String() {
-				t.Fatalf("Expected linked item type to be %s, got: %s", manual.ComputeNodeGroup.String(), linkedItem.GetQuery().GetType())
+			if linkedItem.GetQuery().GetType() != gcpshared.ComputeNodeGroup.String() {
+				t.Fatalf("Expected linked item type to be %s, got: %s", gcpshared.ComputeNodeGroup.String(), linkedItem.GetQuery().GetType())
 			}
 
 			if linkedItem.GetQuery().GetQuery() != nodeTemplateName {

@@ -2,6 +2,7 @@ package dynamic
 
 import (
 	"fmt"
+
 	"github.com/overmindtech/cli/discovery"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"

@@ -54,8 +54,8 @@ func TestComputeInstantSnapshot(t *testing.T) {
 		// [SPEC] Ensure Source Disk is linked
 		linkedItem := sdpItem.GetLinkedItemQueries()[0]
 		diskName := "test-disk"
-		if linkedItem.GetQuery().GetType() != manual.ComputeDisk.String() {
-			t.Fatalf("Expected linked item type to be %s, got: %s", manual.ComputeDisk, linkedItem.GetQuery().GetType())
+		if linkedItem.GetQuery().GetType() != gcpshared.ComputeDisk.String() {
+			t.Fatalf("Expected linked item type to be %s, got: %s", gcpshared.ComputeDisk, linkedItem.GetQuery().GetType())
 		}
 
 		if linkedItem.GetQuery().GetQuery() != diskName {
@@ -68,7 +68,7 @@ func TestComputeInstantSnapshot(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   manual.ComputeDisk.String(),
+					ExpectedType:   gcpshared.ComputeDisk.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-disk",
 					ExpectedScope:  "test-project-id.us-central1-a",

@@ -13,11 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeInstantSnapshot = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.InstantSnapshot)
-
-	ComputeInstantSnapshotLookupByName = shared.NewItemTypeLookup("name", ComputeInstantSnapshot)
-)
+var ComputeInstantSnapshotLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeInstantSnapshot)
 
 type computeInstantSnapshotWrapper struct {
 	client gcpshared.ComputeInstantSnapshotsClient
@@ -33,7 +29,7 @@ func NewComputeInstantSnapshot(client gcpshared.ComputeInstantSnapshotsClient, p
 			projectID,
 			zone,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
-			ComputeInstantSnapshot,
+			gcpshared.ComputeInstantSnapshot,
 		),
 	}
 }
@@ -41,7 +37,7 @@ func NewComputeInstantSnapshot(client gcpshared.ComputeInstantSnapshotsClient, p
 // PotentialLinks returns the potential links for the compute snapshot wrapper
 func (c computeInstantSnapshotWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		ComputeDisk,
+		gcpshared.ComputeDisk,
 	)
 }
 
@@ -124,7 +120,7 @@ func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(instan
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeInstantSnapshot.String(),
+		Type:            gcpshared.ComputeInstantSnapshot.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -138,7 +134,7 @@ func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(instan
 			if diskName != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   ComputeDisk.String(),
+						Type:   gcpshared.ComputeDisk.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  diskName,
 						Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),

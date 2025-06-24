@@ -14,12 +14,7 @@ import (
 )
 
 var (
-	ComputeInstanceGroupManager   = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.InstanceGroupManager)
-	ComputeInstanceTemplate       = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.InstanceTemplate)
-	ComputeRegionInstanceTemplate = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.RegionalInstanceTemplate)
-	ComputeTargetPool             = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.TargetPool)
-
-	ComputeInstanceGroupManagerLookupByName = shared.NewItemTypeLookup("name", ComputeInstanceGroupManager)
+	ComputeInstanceGroupManagerLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeInstanceGroupManager)
 )
 
 type computeInstanceGroupManagerWrapper struct {
@@ -36,7 +31,7 @@ func NewComputeInstanceGroupManager(client gcpshared.ComputeInstanceGroupManager
 			projectID,
 			zone,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			ComputeInstanceGroupManager,
+			gcpshared.ComputeInstanceGroupManager,
 		),
 	}
 }
@@ -44,12 +39,12 @@ func NewComputeInstanceGroupManager(client gcpshared.ComputeInstanceGroupManager
 // PotentialLinks returns the potential links for the compute instance group manager wrapper
 func (c computeInstanceGroupManagerWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		ComputeInstanceTemplate,
-		ComputeRegionInstanceTemplate,
-		ComputeInstanceGroup,
-		ComputeTargetPool,
-		ComputeResourcePolicy,
-		ComputeAutoscaler,
+		gcpshared.ComputeInstanceTemplate,
+		gcpshared.ComputeRegionInstanceTemplate,
+		gcpshared.ComputeInstanceGroup,
+		gcpshared.ComputeTargetPool,
+		gcpshared.ComputeResourcePolicy,
+		gcpshared.ComputeAutoscaler,
 	)
 }
 
@@ -133,7 +128,7 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ins
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeInstanceGroupManager.String(),
+		Type:            gcpshared.ComputeInstanceGroupManager.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -150,7 +145,7 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ins
 		if region != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   ComputeRegionInstanceTemplate.String(),
+					Type:   gcpshared.ComputeRegionInstanceTemplate.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  instanceTemplateName,
 					Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
@@ -161,7 +156,7 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ins
 		} else {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   ComputeInstanceTemplate.String(),
+					Type:   gcpshared.ComputeInstanceTemplate.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  instanceTemplateName,
 					Scope:  c.ProjectID(),
@@ -177,7 +172,7 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ins
 		if zone != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   ComputeInstanceGroup.String(),
+					Type:   gcpshared.ComputeInstanceGroup.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  instanceGroupName,
 					Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
@@ -193,7 +188,7 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ins
 		if region != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   ComputeTargetPool.String(),
+					Type:   gcpshared.ComputeTargetPool.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  targetPoolName,
 					Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
@@ -212,7 +207,7 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ins
 			if resourcePolicyName != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   ComputeResourcePolicy.String(),
+						Type:   gcpshared.ComputeResourcePolicy.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  resourcePolicyName,
 						Scope:  c.ProjectID(),
@@ -232,7 +227,7 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ins
 			if autoscalerName != "" && zone != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   ComputeAutoscaler.String(),
+						Type:   gcpshared.ComputeAutoscaler.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  autoscalerName,
 						Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),

@@ -13,11 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeImage = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Image)
-
-	ComputeImageLookupByName = shared.NewItemTypeLookup("name", ComputeImage)
-)
+var ComputeImageLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeImage)
 
 type computeImageWrapper struct {
 	client gcpshared.ComputeImagesClient
@@ -32,7 +28,7 @@ func NewComputeImage(client gcpshared.ComputeImagesClient, projectID string) sou
 		ProjectBase: gcpshared.NewProjectBase(
 			projectID,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			ComputeImage,
+			gcpshared.ComputeImage,
 		),
 	}
 }
@@ -116,7 +112,7 @@ func (c computeImageWrapper) gcpComputeImageToSDPItem(image *computepb.Image) (*
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeImage.String(),
+		Type:            gcpshared.ComputeImage.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),

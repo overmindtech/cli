@@ -14,11 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	CloudKMSCryptoKey = shared.NewItemType(gcpshared.GCP, gcpshared.CloudKMS, gcpshared.CryptoKey)
-
-	CloudKMSCryptoKeyLookupByName = shared.NewItemTypeLookup("name", CloudKMSCryptoKey)
-)
+var CloudKMSCryptoKeyLookupByName = shared.NewItemTypeLookup("name", gcpshared.CloudKMSCryptoKey)
 
 // cloudKMSCryptoKeyWrapper wraps the KMS CryptoKey client for SDP adaptation.
 type cloudKMSCryptoKeyWrapper struct {
@@ -34,7 +30,7 @@ func NewCloudKMSCryptoKey(client gcpshared.CloudKMSCryptoKeyClient, projectID st
 		ProjectBase: gcpshared.NewProjectBase(
 			projectID,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
-			CloudKMSCryptoKey,
+			gcpshared.CloudKMSCryptoKey,
 		),
 	}
 }
@@ -43,8 +39,8 @@ func NewCloudKMSCryptoKey(client gcpshared.CloudKMSCryptoKeyClient, projectID st
 func (c cloudKMSCryptoKeyWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.CloudKMSCryptoKeyVersion,
-		CloudKMSEKMConnection,
-		IAMPolicy,
+		gcpshared.CloudKMSEKMConnection,
+		gcpshared.IAMPolicy,
 	)
 }
 
@@ -178,7 +174,7 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            CloudKMSCryptoKey.String(),
+		Type:            gcpshared.CloudKMSCryptoKey.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -190,7 +186,7 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 	// https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings.cryptoKeys/getIamPolicy
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
-			Type:   IAMPolicy.String(),
+			Type:   gcpshared.IAMPolicy.String(),
 			Method: sdp.QueryMethod_GET,
 			//TODO(Nauany): "":getIamPolicy" needs to be appended at the end of the URL, ensure team is aware
 			Query: shared.CompositeLookupKey(location, keyRing, cryptoKeyName),
@@ -235,7 +231,7 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 				if len(backendVals) == 2 && backendVals[0] != "" && backendVals[1] != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   CloudKMSEKMConnection.String(),
+							Type:   gcpshared.CloudKMSEKMConnection.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(backendVals...),
 							Scope:  c.ProjectID(),

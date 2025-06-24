@@ -12,11 +12,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	IAMServiceAccountKey = shared.NewItemType(gcpshared.GCP, gcpshared.IAM, gcpshared.ServiceAccountKey)
-
-	IAMServiceAccountKeyLookupByName = shared.NewItemTypeLookup("name", IAMServiceAccountKey)
-)
+var IAMServiceAccountKeyLookupByName = shared.NewItemTypeLookup("name", gcpshared.IAMServiceAccountKey)
 
 type iamServiceAccountKeyWrapper struct {
 	client gcpshared.IAMServiceAccountKeyClient
@@ -30,7 +26,7 @@ func NewIAMServiceAccountKey(client gcpshared.IAMServiceAccountKeyClient, projec
 		ProjectBase: gcpshared.NewProjectBase(
 			projectID,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
-			IAMServiceAccountKey,
+			gcpshared.IAMServiceAccountKey,
 		),
 	}
 }
@@ -38,7 +34,7 @@ func NewIAMServiceAccountKey(client gcpshared.IAMServiceAccountKeyClient, projec
 // PotentialLinks returns the potential links for the iam service account wrapper
 func (c iamServiceAccountKeyWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		IAMServiceAccount,
+		gcpshared.IAMServiceAccount,
 	)
 }
 
@@ -150,7 +146,7 @@ func (c iamServiceAccountKeyWrapper) gcpIAMServiceAccountKeyToSDPItem(key *admin
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            IAMServiceAccountKey.String(),
+		Type:            gcpshared.IAMServiceAccountKey.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
 		Scope:           c.ProjectID(),
@@ -161,7 +157,7 @@ func (c iamServiceAccountKeyWrapper) gcpIAMServiceAccountKeyToSDPItem(key *admin
 	// https://cloud.google.com/iam/docs/reference/rest/v1/projects.serviceAccounts
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
-			Type:   IAMServiceAccount.String(),
+			Type:   gcpshared.IAMServiceAccount.String(),
 			Method: sdp.QueryMethod_GET,
 			Query:  serviceAccountName,
 			Scope:  c.ProjectID(),

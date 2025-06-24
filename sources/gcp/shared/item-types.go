@@ -94,4 +94,6 @@ var (
 	ContainerCluster               = shared.NewItemType(GCP, Container, Cluster)           // https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.locations.clusters/get
 	ServiceDirectoryNamespace      = shared.NewItemType(GCP, ServiceDirectory, Namespace)  // https://cloud.google.com/service-directory/docs/reference/rest/v1/projects.locations.namespaces/get
 	SecretManagerSecret            = shared.NewItemType(GCP, SecretManager, Secret)        //https://cloud.google.com/secret-manager/docs/reference/rest/v1/projects.secrets/get
+	CloudKMSEKMConnection          = shared.NewItemType(GCP, CloudKMS, EKMConnection)      // https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.ekmConnections/get
+	ComputeRegionInstanceTemplate  = shared.NewItemType(GCP, Compute, RegionalInstanceTemplate)
 )

@@ -14,11 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	IAMServiceAccount = shared.NewItemType(gcpshared.GCP, gcpshared.IAM, gcpshared.ServiceAccount)
-
-	IAMServiceAccountLookupByEmailOrUniqueID = shared.NewItemTypeLookup("email or unique_id", IAMServiceAccount)
-)
+var IAMServiceAccountLookupByEmailOrUniqueID = shared.NewItemTypeLookup("email or unique_id", gcpshared.IAMServiceAccount)
 
 type iamServiceAccountWrapper struct {
 	client gcpshared.IAMServiceAccountClient
@@ -33,7 +29,7 @@ func NewIAMServiceAccount(client gcpshared.IAMServiceAccountClient, projectID st
 		ProjectBase: gcpshared.NewProjectBase(
 			projectID,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
-			IAMServiceAccount,
+			gcpshared.IAMServiceAccount,
 		),
 	}
 }
@@ -41,8 +37,8 @@ func NewIAMServiceAccount(client gcpshared.IAMServiceAccountClient, projectID st
 // PotentialLinks returns the potential links for the IAM ServiceAccount wrapper
 func (c iamServiceAccountWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		CloudResourceManagerProject,
-		IAMServiceAccountKey,
+		gcpshared.CloudResourceManagerProject,
+		gcpshared.IAMServiceAccountKey,
 	)
 }
 
@@ -131,7 +127,7 @@ func (c iamServiceAccountWrapper) gcpIAMServiceAccountToSDPItem(serviceAccount *
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            IAMServiceAccount.String(),
+		Type:            gcpshared.IAMServiceAccount.String(),
 		UniqueAttribute: "unique_id",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -143,7 +139,7 @@ func (c iamServiceAccountWrapper) gcpIAMServiceAccountToSDPItem(serviceAccount *
 	if projectID := serviceAccount.GetProjectId(); projectID != "" {
 		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
-				Type:   CloudResourceManagerProject.String(),
+				Type:   gcpshared.CloudResourceManagerProject.String(),
 				Method: sdp.QueryMethod_GET,
 				Query:  projectID,
 				Scope:  c.ProjectID(),
@@ -166,7 +162,7 @@ func (c iamServiceAccountWrapper) gcpIAMServiceAccountToSDPItem(serviceAccount *
 			if serviceAccountID != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   IAMServiceAccountKey.String(),
+						Type:   gcpshared.IAMServiceAccountKey.String(),
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  serviceAccountID,
 						Scope:  c.ProjectID(),

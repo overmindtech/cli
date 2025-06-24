@@ -14,12 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeDisk     = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Disk)
-	ComputeDiskType = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.DiskType)
-
-	ComputeDiskLookupByName = shared.NewItemTypeLookup("name", ComputeDisk)
-)
+var ComputeDiskLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeDisk)
 
 type computeDiskWrapper struct {
 	client gcpshared.ComputeDiskClient
@@ -35,7 +30,7 @@ func NewComputeDisk(client gcpshared.ComputeDiskClient, projectID, zone string) 
 			projectID,
 			zone,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
-			ComputeDisk,
+			gcpshared.ComputeDisk,
 		),
 	}
 }
@@ -43,13 +38,13 @@ func NewComputeDisk(client gcpshared.ComputeDiskClient, projectID, zone string) 
 // PotentialLinks returns the potential links for the compute instance wrapper
 func (c computeDiskWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		ComputeResourcePolicy,
-		ComputeDisk,
-		ComputeImage,
-		ComputeSnapshot,
-		ComputeInstantSnapshot,
-		ComputeDiskType,
-		ComputeInstance,
+		gcpshared.ComputeResourcePolicy,
+		gcpshared.ComputeDisk,
+		gcpshared.ComputeImage,
+		gcpshared.ComputeSnapshot,
+		gcpshared.ComputeInstantSnapshot,
+		gcpshared.ComputeDiskType,
+		gcpshared.ComputeInstance,
 		gcpshared.CloudKMSCryptoKeyVersion,
 	)
 }
@@ -135,7 +130,7 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(disk *computepb.Disk) (*sdp.
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeDisk.String(),
+		Type:            gcpshared.ComputeDisk.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -153,7 +148,7 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(disk *computepb.Disk) (*sdp.
 				if zone != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   ComputeDiskType.String(),
+							Type:   gcpshared.ComputeDiskType.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  diskTypeName,
 							Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
@@ -179,7 +174,7 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(disk *computepb.Disk) (*sdp.
 			if imageName != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   ComputeImage.String(),
+						Type:   gcpshared.ComputeImage.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  imageName,
 						Scope:  c.ProjectID(),
@@ -202,7 +197,7 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(disk *computepb.Disk) (*sdp.
 			if snapshotName != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   ComputeSnapshot.String(),
+						Type:   gcpshared.ComputeSnapshot.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  snapshotName,
 						Scope:  c.ProjectID(),
@@ -228,7 +223,7 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(disk *computepb.Disk) (*sdp.
 				if zone != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   ComputeInstantSnapshot.String(),
+							Type:   gcpshared.ComputeInstantSnapshot.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  instantSnapshotName,
 							Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
@@ -255,7 +250,7 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(disk *computepb.Disk) (*sdp.
 				if zone != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   ComputeDisk.String(),
+							Type:   gcpshared.ComputeDisk.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  sourceDiskName,
 							Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
@@ -281,7 +276,7 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(disk *computepb.Disk) (*sdp.
 				if region != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   ComputeResourcePolicy.String(),
+							Type:   gcpshared.ComputeResourcePolicy.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  rpName,
 							Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
@@ -307,7 +302,7 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(disk *computepb.Disk) (*sdp.
 				if zone != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   ComputeInstance.String(),
+							Type:   gcpshared.ComputeInstance.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  instanceName,
 							Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
@@ -426,7 +421,7 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(disk *computepb.Disk) (*sdp.
 				if region != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   ComputeResourcePolicy.String(),
+							Type:   gcpshared.ComputeResourcePolicy.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  rpName,
 							Scope:  gcpshared.RegionalScope(c.ProjectID(), region),

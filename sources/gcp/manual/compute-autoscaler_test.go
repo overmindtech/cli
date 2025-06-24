@@ -12,6 +12,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -78,7 +79,7 @@ func TestComputeAutoscalerWrapper(t *testing.T) {
 			// match the name of the IGM resource, and the scope is the same zone.
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   manual.ComputeInstanceGroupManager.String(),
+					ExpectedType:   gcpshared.ComputeInstanceGroupManager.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance-group",
 					ExpectedScope:  "test-project-id.us-central1-a",

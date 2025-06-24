@@ -13,6 +13,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -44,7 +45,7 @@ func TestComputeNodeGroup(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   manual.ComputeNodeTemplate.String(),
+					ExpectedType:   gcpshared.ComputeNodeTemplate.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "node-template-1",
 					ExpectedScope:  "test-project-id.northamerica-northeast1",

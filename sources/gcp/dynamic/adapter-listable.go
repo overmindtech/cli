@@ -3,6 +3,7 @@ package dynamic
 import (
 	"context"
 	"fmt"
+
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"

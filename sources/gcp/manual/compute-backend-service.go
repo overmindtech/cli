@@ -14,11 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeBackendService = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.BackendService)
-
-	ComputeBackendServiceLookupByName = shared.NewItemTypeLookup("name", ComputeBackendService)
-)
+var ComputeBackendServiceLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeBackendService)
 
 type computeBackendServiceWrapper struct {
 	client gcpshared.ComputeBackendServiceClient
@@ -33,18 +29,18 @@ func NewComputeBackendService(client gcpshared.ComputeBackendServiceClient, proj
 		ProjectBase: gcpshared.NewProjectBase(
 			projectID,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			ComputeBackendService,
+			gcpshared.ComputeBackendService,
 		),
 	}
 }
 
 func (computeBackendServiceWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		ComputeNetwork,
-		ComputeSecurityPolicy,
-		NetworkSecurityClientTlsPolicy,
-		NetworkServicesServiceLbPolicy,
-		NetworkServicesServiceBinding,
+		gcpshared.ComputeNetwork,
+		gcpshared.ComputeSecurityPolicy,
+		gcpshared.NetworkSecurityClientTlsPolicy,
+		gcpshared.NetworkServicesServiceLbPolicy,
+		gcpshared.NetworkServicesServiceBinding,
 	)
 }
 
@@ -122,7 +118,7 @@ func (c computeBackendServiceWrapper) gcpComputeBackendServiceToSDPItem(bs *comp
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeBackendService.String(),
+		Type:            gcpshared.ComputeBackendService.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -138,7 +134,7 @@ func (c computeBackendServiceWrapper) gcpComputeBackendServiceToSDPItem(bs *comp
 			networkName := networkNameParts[len(networkNameParts)-1]
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   ComputeNetwork.String(),
+					Type:   gcpshared.ComputeNetwork.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  networkName,
 					// This is a global resource
@@ -167,7 +163,7 @@ func (c computeBackendServiceWrapper) gcpComputeBackendServiceToSDPItem(bs *comp
 				securityPolicyName := securityPolicyNameParts[len(securityPolicyNameParts)-1]
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   ComputeSecurityPolicy.String(),
+						Type:   gcpshared.ComputeSecurityPolicy.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  securityPolicyName,
 						// This is a global resource
@@ -189,7 +185,7 @@ func (c computeBackendServiceWrapper) gcpComputeBackendServiceToSDPItem(bs *comp
 			edgeSecurityPolicyName := edgeSecurityPolicyNameParts[len(edgeSecurityPolicyNameParts)-1]
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   ComputeSecurityPolicy.String(),
+					Type:   gcpshared.ComputeSecurityPolicy.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  edgeSecurityPolicyName,
 					// This is a global resource
@@ -219,7 +215,7 @@ func (c computeBackendServiceWrapper) gcpComputeBackendServiceToSDPItem(bs *comp
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							// The resource name will be: "gcp-network-security-client-tls-policy"
-							Type:   NetworkSecurityClientTlsPolicy.String(),
+							Type:   gcpshared.NetworkSecurityClientTlsPolicy.String(),
 							Method: sdp.QueryMethod_GET,
 							// This is a global resource but it will require a location dynamically.
 							Query: shared.CompositeLookupKey(location, policyName),
@@ -244,7 +240,7 @@ func (c computeBackendServiceWrapper) gcpComputeBackendServiceToSDPItem(bs *comp
 			if location != "" && policyName != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   NetworkServicesServiceLbPolicy.String(),
+						Type:   gcpshared.NetworkServicesServiceLbPolicy.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(location, policyName),
 						Scope:  c.ProjectID(),
@@ -268,7 +264,7 @@ func (c computeBackendServiceWrapper) gcpComputeBackendServiceToSDPItem(bs *comp
 				if location != "" && bindingName != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   NetworkServicesServiceBinding.String(),
+							Type:   gcpshared.NetworkServicesServiceBinding.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(location, bindingName),
 							Scope:  c.ProjectID(),

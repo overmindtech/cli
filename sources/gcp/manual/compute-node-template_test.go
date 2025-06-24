@@ -12,6 +12,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -80,7 +81,7 @@ func TestComputeNodeTemplate(t *testing.T) {
 			// The query uses all scopes as the scope of the node group is not the same as the template.
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   manual.ComputeNodeGroup.String(),
+					ExpectedType:   gcpshared.ComputeNodeGroup.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "test-node-template",
 					ExpectedScope:  "*",

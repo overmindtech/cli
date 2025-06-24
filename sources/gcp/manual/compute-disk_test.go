@@ -58,7 +58,7 @@ func TestComputeDisk(t *testing.T) {
 					sourceValue: "projects/test-project-id/global/images/test-image",
 					expectedLinked: shared.QueryTests{
 						{
-							ExpectedType:             manual.ComputeImage.String(),
+							ExpectedType:             gcpshared.ComputeImage.String(),
 							ExpectedMethod:           sdp.QueryMethod_GET,
 							ExpectedQuery:            "test-image",
 							ExpectedScope:            "test-project-id",
@@ -72,7 +72,7 @@ func TestComputeDisk(t *testing.T) {
 					sourceValue: "projects/test-project-id/global/snapshots/test-snapshot",
 					expectedLinked: shared.QueryTests{
 						{
-							ExpectedType:             manual.ComputeSnapshot.String(),
+							ExpectedType:             gcpshared.ComputeSnapshot.String(),
 							ExpectedMethod:           sdp.QueryMethod_GET,
 							ExpectedQuery:            "test-snapshot",
 							ExpectedScope:            "test-project-id",
@@ -86,7 +86,7 @@ func TestComputeDisk(t *testing.T) {
 					sourceValue: "projects/test-project-id/zones/us-central1-a/instantSnapshots/test-instant-snapshot",
 					expectedLinked: shared.QueryTests{
 						{
-							ExpectedType:             manual.ComputeInstantSnapshot.String(),
+							ExpectedType:             gcpshared.ComputeInstantSnapshot.String(),
 							ExpectedMethod:           sdp.QueryMethod_GET,
 							ExpectedQuery:            "test-instant-snapshot",
 							ExpectedScope:            "test-project-id.us-central1-a",
@@ -100,7 +100,7 @@ func TestComputeDisk(t *testing.T) {
 					sourceValue: "projects/test-project-id/zones/us-central1-a/disks/source-disk",
 					expectedLinked: shared.QueryTests{
 						{
-							ExpectedType:             manual.ComputeDisk.String(),
+							ExpectedType:             gcpshared.ComputeDisk.String(),
 							ExpectedMethod:           sdp.QueryMethod_GET,
 							ExpectedQuery:            "source-disk",
 							ExpectedScope:            "test-project-id.us-central1-a",
@@ -112,21 +112,21 @@ func TestComputeDisk(t *testing.T) {
 
 			// These are always present
 			resourcePolicyTest := shared.QueryTest{
-				ExpectedType:             manual.ComputeResourcePolicy.String(),
+				ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "test-policy",
 				ExpectedScope:            "test-project-id.us-central1",
 				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 			}
 			userTest := shared.QueryTest{
-				ExpectedType:             manual.ComputeInstance.String(),
+				ExpectedType:             gcpshared.ComputeInstance.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "test-instance",
 				ExpectedScope:            "test-project-id.us-central1-a",
 				ExpectedBlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
 			}
 			diskTypeTest := shared.QueryTest{
-				ExpectedType:             manual.ComputeDiskType.String(),
+				ExpectedType:             gcpshared.ComputeDiskType.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "pd-standard",
 				ExpectedScope:            "test-project-id.us-central1-a",
@@ -154,7 +154,7 @@ func TestComputeDisk(t *testing.T) {
 				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 			}
 			sourceConsistencyGroupPolicy := shared.QueryTest{
-				ExpectedType:             manual.ComputeResourcePolicy.String(),
+				ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "test-consistency-group-policy",
 				ExpectedScope:            "test-project-id.us-central1",

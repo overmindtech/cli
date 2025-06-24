@@ -13,11 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeHealthCheck = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.HealthCheck)
-
-	ComputeHealthCheckLookupByName = shared.NewItemTypeLookup("name", ComputeHealthCheck)
-)
+var ComputeHealthCheckLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeHealthCheck)
 
 type computeHealthCheckWrapper struct {
 	client gcpshared.ComputeHealthCheckClient
@@ -32,7 +28,7 @@ func NewComputeHealthCheck(client gcpshared.ComputeHealthCheckClient, projectID 
 		ProjectBase: gcpshared.NewProjectBase(
 			projectID,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-			ComputeHealthCheck,
+			gcpshared.ComputeHealthCheck,
 		),
 	}
 }
@@ -113,7 +109,7 @@ func (c computeHealthCheckWrapper) gcpComputeHealthCheckToSDPItem(healthCheck *c
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeHealthCheck.String(),
+		Type:            gcpshared.ComputeHealthCheck.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),

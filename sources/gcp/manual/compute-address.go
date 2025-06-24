@@ -15,11 +15,7 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-var (
-	ComputeAddress = shared.NewItemType(gcpshared.GCP, gcpshared.Compute, gcpshared.Address)
-
-	ComputeAddressLookupByName = shared.NewItemTypeLookup("name", ComputeAddress)
-)
+var ComputeAddressLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeAddress)
 
 type computeAddressWrapper struct {
 	client gcpshared.ComputeAddressClient
@@ -35,7 +31,7 @@ func NewComputeAddress(client gcpshared.ComputeAddressClient, projectID, region 
 			projectID,
 			region,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-			ComputeAddress,
+			gcpshared.ComputeAddress,
 		),
 	}
 }
@@ -44,9 +40,9 @@ func NewComputeAddress(client gcpshared.ComputeAddressClient, projectID, region 
 func (c computeAddressWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		stdlib.NetworkIP,
-		ComputeAddress,
-		ComputeSubnetwork,
-		ComputeNetwork,
+		gcpshared.ComputeAddress,
+		gcpshared.ComputeSubnetwork,
+		gcpshared.ComputeNetwork,
 	)
 }
 
@@ -133,7 +129,7 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(address *computepb.Add
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            ComputeAddress.String(),
+		Type:            gcpshared.ComputeAddress.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           c.Scopes()[0],
@@ -146,7 +142,7 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(address *computepb.Add
 			networkName := networkNameParts[len(networkNameParts)-1]
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   ComputeNetwork.String(),
+					Type:   gcpshared.ComputeNetwork.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  networkName,
 					Scope:  c.ProjectID(),
@@ -166,7 +162,7 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(address *computepb.Add
 			region := gcpshared.ExtractPathParam("regions", subnetwork)
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   ComputeSubnetwork.String(),
+					Type:   gcpshared.ComputeSubnetwork.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  subnetworkName,
 					Scope:  gcpshared.RegionalScope(c.ProjectID(), region),

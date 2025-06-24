@@ -15,10 +15,8 @@ import (
 )
 
 var (
-	CloudKMSKeyRing = shared.NewItemType(gcpshared.GCP, gcpshared.CloudKMS, gcpshared.KeyRing)
-
-	CloudKMSCryptoKeyRingLookupByName     = shared.NewItemTypeLookup("name", CloudKMSKeyRing)
-	CloudKMSCryptoKeyRingLookupByLocation = shared.NewItemTypeLookup("location", CloudKMSKeyRing)
+	CloudKMSCryptoKeyRingLookupByName     = shared.NewItemTypeLookup("name", gcpshared.CloudKMSKeyRing)
+	CloudKMSCryptoKeyRingLookupByLocation = shared.NewItemTypeLookup("location", gcpshared.CloudKMSKeyRing)
 )
 
 // cloudKMSKeyRingWrapper wraps the KMS KeyRing client for SDP adaptation.
@@ -35,7 +33,7 @@ func NewCloudKMSKeyRing(client gcpshared.CloudKMSKeyRingClient, projectID string
 		ProjectBase: gcpshared.NewProjectBase(
 			projectID,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
-			CloudKMSKeyRing,
+			gcpshared.CloudKMSKeyRing,
 		),
 	}
 }
@@ -43,7 +41,7 @@ func NewCloudKMSKeyRing(client gcpshared.CloudKMSKeyRingClient, projectID string
 // PotentialLinks returns the potential links for the kms key ring
 func (c cloudKMSKeyRingWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		IAMPolicy,
+		gcpshared.IAMPolicy,
 	)
 }
 
@@ -168,7 +166,7 @@ func (c cloudKMSKeyRingWrapper) gcpKeyRingToSDPItem(keyRing *kmspb.KeyRing) (*sd
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            CloudKMSKeyRing.String(),
+		Type:            gcpshared.CloudKMSKeyRing.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
 		Scope:           c.DefaultScope(),
@@ -179,7 +177,7 @@ func (c cloudKMSKeyRingWrapper) gcpKeyRingToSDPItem(keyRing *kmspb.KeyRing) (*sd
 	// https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings/getIamPolicy
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
-			Type:   IAMPolicy.String(),
+			Type:   gcpshared.IAMPolicy.String(),
 			Method: sdp.QueryMethod_GET,
 			//TODO(Nauany): "":getIamPolicy" needs to be appended at the end of the URL, ensure team is aware
 			Query: shared.CompositeLookupKey(keyRingVals...),

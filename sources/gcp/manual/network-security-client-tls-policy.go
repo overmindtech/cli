@@ -16,10 +16,8 @@ import (
 )
 
 var (
-	NetworkSecurityClientTlsPolicy = shared.NewItemType(gcpshared.GCP, gcpshared.NetworkSecurity, gcpshared.ClientTlsPolicy)
-
-	NetworkSecurityClientTlsPolicyLookupByName     = shared.NewItemTypeLookup("name", NetworkSecurityClientTlsPolicy)
-	NetworkSecurityClientTlsPolicyLookupByLocation = shared.NewItemTypeLookup("location", NetworkSecurityClientTlsPolicy)
+	NetworkSecurityClientTlsPolicyLookupByName     = shared.NewItemTypeLookup("name", gcpshared.NetworkSecurityClientTlsPolicy)
+	NetworkSecurityClientTlsPolicyLookupByLocation = shared.NewItemTypeLookup("location", gcpshared.NetworkSecurityClientTlsPolicy)
 )
 
 type networkSecurityClientTlsPolicyWrapper struct {
@@ -35,7 +33,7 @@ func NewNetworkSecurityClientTlsPolicy(client gcpshared.NetworkSecurityClientTls
 		ProjectBase: gcpshared.NewProjectBase(
 			projectID,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
-			NetworkSecurityClientTlsPolicy,
+			gcpshared.NetworkSecurityClientTlsPolicy,
 		),
 	}
 }
