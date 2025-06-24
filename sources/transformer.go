@@ -11,6 +11,7 @@ import (
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
 
@@ -119,7 +120,21 @@ func (s *standardAdapterImpl) Get(ctx context.Context, scope string, query strin
 		return nil, err
 	}
 
-	queryParts := strings.Split(query, shared.QuerySeparator)
+	var queryParts []string
+	if strings.Contains(query, "/") {
+		// This must be a terraform query in the format of:
+		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
+		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
+		//
+		// Extract the relevant parts from the query
+		// We need to extract the path parameters based on the number of lookups
+		queryParts = gcpshared.ExtractPathParamsWithCount(query, len(s.wrapper.GetLookups()))
+	} else {
+		// This must be a reqular query in the format of:
+		// {{datasetName}}|{{tableName}}
+		queryParts = strings.Split(query, shared.QuerySeparator)
+	}
+
 	if len(queryParts) != len(s.wrapper.GetLookups()) {
 		return nil, fmt.Errorf(
 			"invalid query format: %s, expected: %s",

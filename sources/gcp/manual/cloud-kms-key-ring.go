@@ -42,6 +42,7 @@ func NewCloudKMSKeyRing(client gcpshared.CloudKMSKeyRingClient, projectID string
 func (c cloudKMSKeyRingWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.IAMPolicy,
+		gcpshared.CloudKMSCryptoKey,
 	)
 }
 
@@ -185,7 +186,22 @@ func (c cloudKMSKeyRingWrapper) gcpKeyRingToSDPItem(keyRing *kmspb.KeyRing) (*sd
 		},
 		//Updating the IAM Policy makes the KeyRing non-functional
 		//KeyRings cannot be deleted or updated
-		BlastPropagation: &sdp.BlastPropagation{In: true, Out: true}})
+		BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+	})
+
+	// The KMS CryptoKeys associated with this KeyRing.
+	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   gcpshared.CloudKMSCryptoKey.String(),
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  shared.CompositeLookupKey(keyRingVals[0], keyRingVals[1]), // location|keyRingName
+			Scope:  c.ProjectID(),
+		},
+		BlastPropagation: &sdp.BlastPropagation{
+			In:  false,
+			Out: true,
+		},
+	})
 
 	return sdpItem, nil
 }

@@ -48,7 +48,8 @@ func (c computeSnapshotWrapper) PotentialLinks() map[shared.ItemType]bool {
 func (c computeSnapshotWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_GET,
+			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_snapshot#argument-reference
 			TerraformQueryMap: "google_compute_snapshot.name",
 		},
 	}

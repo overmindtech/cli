@@ -42,8 +42,10 @@ func (c iamServiceAccountKeyWrapper) PotentialLinks() map[shared.ItemType]bool {
 func (c iamServiceAccountKeyWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_GET,
-			TerraformQueryMap: "google_service_account_key.name",
+			TerraformMethod: sdp.QueryMethod_GET,
+			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_snapshot#argument-reference
+			// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
+			TerraformQueryMap: "google_service_account_key.id",
 		},
 	}
 }

@@ -50,6 +50,16 @@ func TestCloudKMSKeyRing(t *testing.T) {
 						Out: true,
 					},
 				},
+				{
+					ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "us|test-keyring",
+					ExpectedScope:  "test-project-id",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  false,
+						Out: true,
+					},
+				},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

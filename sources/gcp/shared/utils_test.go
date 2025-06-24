@@ -1,6 +1,7 @@
 package shared_test
 
 import (
+	"reflect"
 	"testing"
 
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -46,112 +47,6 @@ func TestLastPathComponent(t *testing.T) {
 		if actual != tc.expected {
 			t.Errorf("LastPathComponent(%q) = %q; want %q", tc.input, actual, tc.expected)
 		}
-	}
-}
-
-func TestIsRegion(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{
-			name:     "valid region",
-			input:    "us-central1",
-			expected: true,
-		},
-		{
-			name:     "another valid region",
-			input:    "asia-east1",
-			expected: true,
-		},
-		{
-			name:     "zone, not region",
-			input:    "us-central1-a",
-			expected: false,
-		},
-		{
-			name:     "empty string",
-			input:    "",
-			expected: false,
-		},
-		{
-			name:     "no hyphen",
-			input:    "uscentral1",
-			expected: false,
-		},
-		{
-			name:     "too many hyphens",
-			input:    "us-central-1",
-			expected: false,
-		},
-		{
-			name:     "just a hyphen",
-			input:    "-",
-			expected: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := gcpshared.IsRegion(tt.input)
-			if result != tt.expected {
-				t.Errorf("IsRegion(%q) = %v, expected %v", tt.input, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestIsZone(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected bool
-	}{
-		{
-			name:     "valid zone",
-			input:    "us-central1-a",
-			expected: true,
-		},
-		{
-			name:     "another valid zone",
-			input:    "asia-east1-b",
-			expected: true,
-		},
-		{
-			name:     "region, not zone",
-			input:    "us-central1",
-			expected: false,
-		},
-		{
-			name:     "empty string",
-			input:    "",
-			expected: false,
-		},
-		{
-			name:     "no hyphen",
-			input:    "uscentral1a",
-			expected: false,
-		},
-		{
-			name:     "too many hyphens",
-			input:    "us-central-1-a",
-			expected: false,
-		},
-		{
-			name:     "just hyphens",
-			input:    "--",
-			expected: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := gcpshared.IsZone(tt.input)
-			if result != tt.expected {
-				t.Errorf("IsZone(%q) = %v, expected %v", tt.input, result, tt.expected)
-			}
-		})
 	}
 }
 
@@ -377,44 +272,6 @@ func TestExtractPathParam(t *testing.T) {
 	}
 }
 
-func TestShortenSelfLink(t *testing.T) {
-	tests := []struct {
-		name     string
-		selfLink string
-		expected string
-	}{
-		{
-			name:     "Valid input",
-			selfLink: "https://www.googleapis.com/compute/v1/projects/test-project/zones/us-central1-c/instanceGroupManagers/test-igm",
-			expected: "zones/us-central1-c/instanceGroupManagers/test-igm",
-		},
-		{
-			name:     "Empty input",
-			selfLink: "",
-			expected: "",
-		},
-		{
-			name:     "Malformed input",
-			selfLink: "invalid/selfLink/format",
-			expected: "invalid/selfLink/format",
-		},
-		{
-			name:     "Short input",
-			selfLink: "https://www.googleapis.com/compute/v1/projects/test-project",
-			expected: "compute/v1/projects/test-project",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := gcpshared.ShortenSelfLink(tt.selfLink)
-			if result != tt.expected {
-				t.Errorf("ShortenSelfLink(%q) = %q, want %q", tt.selfLink, result, tt.expected)
-			}
-		})
-	}
-}
-
 func TestExtractPathParams(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -488,6 +345,106 @@ func TestExtractPathParams(t *testing.T) {
 				if result[i] != tt.expected[i] {
 					t.Errorf("ExtractPathParams(%q, %v)[%d] = %q; want %q", tt.input, tt.keys, i, result[i], tt.expected[i])
 				}
+			}
+		})
+	}
+}
+
+func TestExtractPathParamsWithCount(t *testing.T) {
+	type args struct {
+		input string
+		count int
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			name: "Extract last 2 path params",
+			args: args{
+				input: "projects/my-proj/locations/global/keyRings/my-kr/cryptoKeys/my-key",
+				count: 2,
+			},
+			want: []string{"my-kr", "my-key"},
+		},
+		{
+			name: "Extract last 2 path params with slash in suffix and prefix",
+			args: args{
+				input: "/projects/my-proj/locations/global/keyRings/my-kr/cryptoKeys/my-key/",
+				count: 2,
+			},
+			want: []string{"my-kr", "my-key"},
+		},
+		{
+			name: "Extract last 3 path params",
+			args: args{
+				input: "projects/my-proj/locations/global/keyRings/my-kr/cryptoKeys/my-key",
+				count: 3,
+			},
+			want: []string{"global", "my-kr", "my-key"},
+		},
+		{
+			name: "Extract from compute path",
+			args: args{
+				input: "projects/test-project/zones/us-central1-a/instances/test-instance",
+				count: 2,
+			},
+			want: []string{"us-central1-a", "test-instance"},
+		},
+		{
+			name: "Extract more params than exist",
+			args: args{
+				input: "projects/my-proj/locations/global",
+				count: 5,
+			},
+			want: nil,
+		},
+		{
+			name: "Extract exact number of components",
+			args: args{
+				input: "a/b/c",
+				count: 3,
+			},
+			want: nil,
+		},
+		{
+			name: "Extract with count=0",
+			args: args{
+				input: "a/b/c",
+				count: 0,
+			},
+			want: nil,
+		},
+		{
+			name: "Extract with empty input",
+			args: args{
+				input: "",
+				count: 2,
+			},
+			want: nil,
+		},
+		{
+			name: "Extract with trailing slash",
+			args: args{
+				input: "a/b/c/",
+				count: 2,
+			},
+			want: nil,
+		},
+		{
+			name: "Extract with only slashes",
+			args: args{
+				input: "///",
+				count: 2,
+			},
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := gcpshared.ExtractPathParamsWithCount(tt.args.input, tt.args.count); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractPathParamsWithCount() = %v, want %v", got, tt.want)
 			}
 		})
 	}

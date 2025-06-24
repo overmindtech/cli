@@ -50,7 +50,8 @@ func (c computeForwardingRuleWrapper) PotentialLinks() map[shared.ItemType]bool 
 func (c computeForwardingRuleWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_GET,
+			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk#argument-reference
 			TerraformQueryMap: "google_compute_forwarding_rule.name",
 		},
 	}

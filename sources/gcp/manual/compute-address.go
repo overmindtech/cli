@@ -50,7 +50,8 @@ func (c computeAddressWrapper) PotentialLinks() map[shared.ItemType]bool {
 func (c computeAddressWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_GET,
+			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_address
 			TerraformQueryMap: "google_compute_address.name",
 		},
 	}

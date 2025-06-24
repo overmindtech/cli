@@ -48,7 +48,8 @@ func (c computeReservationWrapper) PotentialLinks() map[shared.ItemType]bool {
 func (c computeReservationWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_GET,
+			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_node_group#argument-reference
 			TerraformQueryMap: "google_compute_reservation.name",
 		},
 	}

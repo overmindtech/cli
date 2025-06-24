@@ -2,6 +2,7 @@ package manual_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"cloud.google.com/go/iam/admin/apiv1/adminpb"
@@ -35,6 +36,35 @@ func TestIAMServiceAccountKey(t *testing.T) {
 		adapter := sources.WrapperToAdapter(wrapper)
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey(testServiceAccount, testKeyName), true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			queryTests := shared.QueryTests{
+				{
+					ExpectedType:             gcpshared.IAMServiceAccount.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            testServiceAccount,
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+			}
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("Get with terraform query map", func(t *testing.T) {
+		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createServiceAccountKey(testKeyFullName), nil)
+
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
+		terraformResourceID := fmt.Sprintf("projects/%s/serviceAccounts/%s/keys/%s", projectID, testServiceAccount, testKeyName)
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], terraformResourceID, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)
 		}

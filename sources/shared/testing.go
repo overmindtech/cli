@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/overmindtech/cli/discovery"
@@ -78,11 +79,11 @@ func (i QueryTests) TestLinkedItems(t *testing.T, item *sdp.Item) {
 
 	linkedItemQueries := make(map[string]*sdp.LinkedItemQuery, len(i))
 	for _, lir := range item.GetLinkedItemQueries() {
-		linkedItemQueries[lir.GetQuery().GetQuery()] = lir
+		linkedItemQueries[fmt.Sprintf("%s/%s", lir.GetQuery().GetType(), lir.GetQuery().GetQuery())] = lir
 	}
 
 	for _, test := range i {
-		gotLiq, ok := linkedItemQueries[test.ExpectedQuery]
+		gotLiq, ok := linkedItemQueries[fmt.Sprintf("%s/%s", test.ExpectedType, test.ExpectedQuery)]
 		if !ok {
 			t.Fatalf("linked item query %s for %s not found in actual linked item queries", test.ExpectedType, test.ExpectedQuery)
 		}

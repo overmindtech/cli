@@ -52,7 +52,8 @@ func (c computeInstanceGroupManagerWrapper) PotentialLinks() map[shared.ItemType
 func (c computeInstanceGroupManagerWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_GET,
+			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_group_manager#argument-reference
 			TerraformQueryMap: "google_compute_instance_group_manager.name",
 		},
 	}

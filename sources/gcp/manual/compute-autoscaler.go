@@ -44,7 +44,8 @@ func (c computeAutoscalerWrapper) PotentialLinks() map[shared.ItemType]bool {
 func (c computeAutoscalerWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_GET,
+			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_address#argument-reference
 			TerraformQueryMap: "google_compute_autoscaler.name",
 		},
 	}

@@ -77,33 +77,26 @@ func ExtractPathParams(input string, keys ...string) []string {
 	return results
 }
 
-// IsRegion checks if a string represents a GCP region.
-// GCP regions typically follow the pattern "x-y" (e.g., "us-central1").
-func IsRegion(s string) bool {
-	parts := strings.Split(s, "-")
-	return len(parts) == 2 && parts[0] != "" && parts[1] != ""
-}
-
-// IsZone checks if a string represents a GCP zone.
-// GCP zones typically follow the pattern "x-y-z" (e.g., "us-central1-a").
-func IsZone(s string) bool {
-	parts := strings.Split(s, "-")
-	return len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != ""
-}
-
-// LastSegmentsCount is the number of segments to keep when shortening a self link
-const LastSegmentsCount = 4
-
-// ShortenSelfLink shortens a given link for human readability
-// https://www.googleapis.com/compute/v1/projects/test-457614/zones/us-central1-c/instanceGroupManagers/overmind-integration-test-igm-default
-// /zones/us-central1-c/instanceGroupManagers/overmind-integration-test-igm-default
-// this is a primitive initial work
-func ShortenSelfLink(selfLink string) string {
-	parts := strings.Split(selfLink, "/")
-
-	if len(parts) < LastSegmentsCount {
-		return selfLink
+// ExtractPathParamsWithCount extracts path parameters from a fully qualified GCP resource name.
+// It returns the last `count` path parameters from the input string.
+//
+// For example, for input="projects/my-proj/locations/global/keyRings/my-kr/cryptoKeys/my-key"
+// and count=2, it will return ["my-kr", "my-key"].
+func ExtractPathParamsWithCount(input string, count int) []string {
+	if count <= 0 || input == "" {
+		return nil
 	}
 
-	return strings.Join(parts[len(parts)-LastSegmentsCount:], "/")
+	parts := strings.Split(strings.Trim(input, "/"), "/")
+	if len(parts) < 2*count {
+		return nil
+	}
+
+	var result []string
+	for i := count - 1; i >= 0; i-- {
+		step := 1 + 2*i
+		result = append(result, parts[len(parts)-step])
+	}
+
+	return result
 }

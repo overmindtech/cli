@@ -132,6 +132,61 @@ func TestBigQueryTable(t *testing.T) {
 		})
 	})
 
+	t.Run("Get with terraform mapping query", func(t *testing.T) {
+		wrapper := manual.NewBigQueryTable(mockClient, projectID)
+
+		mockClient.EXPECT().Get(ctx, projectID, datasetID, tableID).Return(createTableMetadata(projectID, datasetID, tableID, fmt.Sprintf("projects/%s/locations/us/connections/test-connection", projectID)), nil)
+
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
+		terraformResourceID := fmt.Sprintf("projects/%s/datasets/%s/tables/%s", projectID, datasetID, tableID)
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], terraformResourceID, true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		if sdpItem.GetType() != gcpshared.BigQueryTable.String() {
+			t.Fatalf("Expected type %s, got: %s", gcpshared.BigQueryTable.String(), sdpItem.GetType())
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			queryTests := shared.QueryTests{
+				{
+					ExpectedType:   gcpshared.BigQueryDataset.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  datasetID,
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  shared.CompositeLookupKey("us", "test-ring", "test-key"),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.BigQueryConnection.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  shared.CompositeLookupKey("us", "test-connection"),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+			}
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
 	t.Run("List", func(t *testing.T) {
 		wrapper := manual.NewBigQueryTable(mockClient, projectID)
 		adapter := sources.WrapperToAdapter(wrapper)

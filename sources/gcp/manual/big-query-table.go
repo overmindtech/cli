@@ -48,7 +48,9 @@ func (b BigQueryTableWrapper) PotentialLinks() map[shared.ItemType]bool {
 func (b BigQueryTableWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_SEARCH,
+			TerraformMethod: sdp.QueryMethod_GET,
+			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_table
+			// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
 			TerraformQueryMap: "google_bigquery_table.id",
 		},
 	}

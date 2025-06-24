@@ -47,7 +47,8 @@ func (c computeMachineImageWrapper) PotentialLinks() map[shared.ItemType]bool {
 func (c computeMachineImageWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_GET,
+			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_machine_image#argument-reference
 			TerraformQueryMap: "google_compute_machine_image.name",
 		},
 	}

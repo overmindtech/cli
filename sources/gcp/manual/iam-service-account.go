@@ -45,6 +45,7 @@ func (c iamServiceAccountWrapper) PotentialLinks() map[shared.ItemType]bool {
 // TerraformMappings returns the Terraform mappings for the IAM ServiceAccount wrapper
 func (c iamServiceAccountWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
+		// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_snapshot#argument-reference
 		{
 			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_service_account.email",

@@ -36,7 +36,8 @@ func NewComputeHealthCheck(client gcpshared.ComputeHealthCheckClient, projectID 
 func (c computeHealthCheckWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_GET,
+			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_health_check#argument-reference
 			TerraformQueryMap: "google_compute_health_check.name",
 		},
 	}
