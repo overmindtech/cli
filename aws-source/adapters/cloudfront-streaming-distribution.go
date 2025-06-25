@@ -191,10 +191,12 @@ var streamingDistributionAdapterMetadata = Metadata.Register(&sdp.AdapterMetadat
 	DescriptiveName: "CloudFront Streaming Distribution",
 	Type:            "cloudfront-streaming-distribution",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
-		Search:         true,
-		Get:            true,
-		List:           true,
-		GetDescription: "Get a Streaming Distribution by ID",
+		Search:            true,
+		Get:               true,
+		List:              true,
+		GetDescription:    "Get a Streaming Distribution by ID",
+		ListDescription:   "List Streaming Distributions",
+		SearchDescription: "Search Streaming Distributions by ARN",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{

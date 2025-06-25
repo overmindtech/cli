@@ -133,11 +133,12 @@ var vpcPeeringConnectionAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata
 	Type:            "ec2-vpc-peering-connection",
 	DescriptiveName: "VPC Peering Connection",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
-		Get:             true,
-		List:            true,
-		Search:          true,
-		GetDescription:  "Get a VPC Peering Connection by ID",
-		ListDescription: "List all VPC Peering Connections",
+		Get:               true,
+		List:              true,
+		Search:            true,
+		GetDescription:    "Get a VPC Peering Connection by ID",
+		ListDescription:   "List all VPC Peering Connections",
+		SearchDescription: "Search for VPC Peering Connections by their ARN",
 	},
 	PotentialLinks: []string{"ec2-vpc"},
 	TerraformMappings: []*sdp.TerraformMapping{

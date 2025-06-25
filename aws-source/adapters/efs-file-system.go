@@ -122,10 +122,12 @@ var efsFileSystemAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:            "efs-file-system",
 	DescriptiveName: "EFS File System",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
-		Get:            true,
-		List:           true,
-		Search:         true,
-		GetDescription: "Get an file system by ID",
+		Get:               true,
+		List:              true,
+		Search:            true,
+		GetDescription:    "Get a file system by ID",
+		ListDescription:   "List file systems",
+		SearchDescription: "Search file systems by ARN",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{TerraformQueryMap: "aws_efs_file_system.id"},

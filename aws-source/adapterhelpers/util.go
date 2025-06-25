@@ -272,6 +272,8 @@ func (e E2ETest) Run(t *testing.T) {
 					if len(stream.GetErrors()) > 0 {
 						err = stream.GetErrors()[0]
 					}
+
+					items = stream.GetItems()
 				} else {
 					t.Skip("adapter is not searchable or streamable")
 				}

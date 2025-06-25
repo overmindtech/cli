@@ -389,30 +389,31 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 		arn, _ := stream.GetItems()[0].GetAttributes().Get("Arn")
 
 		t.Run("searching via ARN for a resource in a specific scope", func(t *testing.T) {
-			ctx, span := tracer.Start(context.Background(), t.Name())
-			defer span.End()
+			ctxSearch, spanSearch := tracer.Start(context.Background(), t.Name())
+			defer spanSearch.End()
 
 			t.Parallel()
 
-			stream := discovery.NewRecordingQueryResultStream()
-			adapter.SearchStream(ctx, adapterhelpers.FormatScope(account, ""), arn.(string), false, stream)
+			streamSearch := discovery.NewRecordingQueryResultStream()
+			adapter.SearchStream(ctxSearch, adapterhelpers.FormatScope(account, ""), arn.(string), false, streamSearch)
 
-			errs := stream.GetErrors()
-			if len(errs) > 0 {
-				t.Error(errs)
+			errsSearch := streamSearch.GetErrors()
+			if len(errsSearch) > 0 {
+				t.Error(errsSearch)
 			}
 		})
 
 		t.Run("searching via ARN for a resource in the aws scope", func(t *testing.T) {
-			ctx, span := tracer.Start(context.Background(), t.Name())
-			defer span.End()
+			ctxSearchARN, spanSearchARN := tracer.Start(context.Background(), t.Name())
+			defer spanSearchARN.End()
 
 			t.Parallel()
 
-			stream := discovery.NewRecordingQueryResultStream()
-			adapter.SearchStream(ctx, "aws", arn.(string), false, stream)
+			streamSearchARN := discovery.NewRecordingQueryResultStream()
+			adapter.SearchStream(ctxSearchARN, "aws", arn.(string), false, streamSearchARN)
 
-			if len(errs) == 0 {
+			errsSearchARN := streamSearchARN.GetErrors()
+			if len(errsSearchARN) == 0 {
 				t.Error("expected error, got nil")
 			}
 		})
@@ -452,34 +453,34 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 		}
 
 		t.Run("searching via ARN for a resource in a specific scope", func(t *testing.T) {
-			ctx, span := tracer.Start(context.Background(), t.Name())
-			defer span.End()
+			ctxSearch, spanSearch := tracer.Start(context.Background(), t.Name())
+			defer spanSearch.End()
 
 			t.Parallel()
 
 			arn, _ := items[0].GetAttributes().Get("Arn")
-			stream := discovery.NewRecordingQueryResultStream()
-			adapter.SearchStream(ctx, adapterhelpers.FormatScope(account, ""), arn.(string), false, stream)
+			streamSearch := discovery.NewRecordingQueryResultStream()
+			adapter.SearchStream(ctxSearch, adapterhelpers.FormatScope(account, ""), arn.(string), false, streamSearch)
 
-			errs := stream.GetErrors()
-			if len(errs) == 0 {
+			errorsStreamSearch := streamSearch.GetErrors()
+			if len(errorsStreamSearch) == 0 {
 				t.Error("expected error, got nil")
 			}
 		})
 
 		t.Run("searching via ARN for a resource in the aws scope", func(t *testing.T) {
-			ctx, span := tracer.Start(context.Background(), t.Name())
-			defer span.End()
+			ctxSearchARN, spanSearchARN := tracer.Start(context.Background(), t.Name())
+			defer spanSearchARN.End()
 
 			t.Parallel()
 
 			arn, _ := items[0].GetAttributes().Get("Arn")
-			stream := discovery.NewRecordingQueryResultStream()
-			adapter.SearchStream(ctx, "aws", arn.(string), false, stream)
+			streamSearchARN := discovery.NewRecordingQueryResultStream()
+			adapter.SearchStream(ctxSearchARN, "aws", arn.(string), false, streamSearchARN)
 
-			errs := stream.GetErrors()
-			if len(errs) > 0 {
-				t.Error(errs)
+			errsStreamSearch := streamSearchARN.GetErrors()
+			if len(errsStreamSearch) > 0 {
+				t.Error(errsStreamSearch)
 			}
 		})
 	})
