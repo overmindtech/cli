@@ -446,6 +446,7 @@ func watchNamespaces(ctx context.Context, clientSet *kubernetes.Clientset) (watc
 }
 
 func init() {
+	log.SetFormatter(&log.JSONFormatter{})
 	cobra.OnInitialize(initConfig)
 
 	// Here you will define your flags and configuration settings.
