@@ -8,6 +8,20 @@ import (
 	"golang.org/x/text/language"
 )
 
+const QuerySeparator = "|"
+
+// ItemType is an interface that defines the methods for an ItemTypeInstance.
+// It is used to represent the type of item in the system.
+// It provides methods to get the string representation of the item type and a human-readable version of it.
+// ItemTypeInstance is a concrete implementation of the ItemType interface.
+// I.e, an ItemTypeInstance can represent an AWS EC2 instance, a GCP Compute Engine disk, etc.
+type ItemType interface {
+	// String returns the string representation of the ItemType. This is used in adapter type and name.
+	String() string
+	// Readable returns a human-readable string representation of the ItemType. This is used in method descriptions.
+	Readable() string
+}
+
 // Source represents the source of the item. It is usually the name of the
 // source, e.g. "aws", "gcp", "azure", etc.
 type Source string
@@ -20,21 +34,21 @@ type API string
 // resource, e.g. "instance", "bucket", "disk", etc.
 type Resource string
 
-// ItemType represents the type of item. It is a combination of the Source, API and Resource.
-type ItemType struct {
+// ItemTypeInstance represents the type of item. It is a combination of the Source, API and Resource.
+type ItemTypeInstance struct {
 	Source   Source
 	API      API
 	Resource Resource
 }
 
-// String returns the string representation of the ItemType.
-func (i ItemType) String() string {
+// String returns the string representation of the ItemTypeInstance.
+func (i ItemTypeInstance) String() string {
 	return fmt.Sprintf("%s-%s-%s", i.Source, i.API, i.Resource)
 }
 
-// Readable returns a human-readable string representation of the ItemType.
+// Readable returns a human-readable string representation of the ItemTypeInstance.
 // For example, "AWS Ec2-Instance" or "GCP Compute Disk".
-func (i ItemType) Readable() string {
+func (i ItemTypeInstance) Readable() string {
 	// Split the name by hyphens
 	parts := strings.Split(i.String(), "-")
 
@@ -53,9 +67,9 @@ func (i ItemType) Readable() string {
 	return strings.Join(parts, " ")
 }
 
-// NewItemType creates a new ItemType from the given Source, API and Resource.
-func NewItemType(source Source, api API, resource Resource) ItemType {
-	return ItemType{
+// NewItemType creates a new ItemTypeInstance from the given Source, API and Resource.
+func NewItemType(source Source, api API, resource Resource) ItemTypeInstance {
+	return ItemTypeInstance{
 		Source:   source,
 		API:      api,
 		Resource: resource,
@@ -73,10 +87,8 @@ type ItemTypeLookup struct {
 
 func (i ItemTypeLookup) Readable() string {
 	return fmt.Sprintf(
-		"%s-%s-%s-%s",
-		i.ItemType.Source,
-		i.ItemType.API,
-		i.ItemType.Resource,
+		"%s-%s",
+		i.ItemType.String(),
 		i.By,
 	)
 }
@@ -98,5 +110,3 @@ func NewItemTypesSet(items ...ItemType) map[ItemType]bool {
 
 	return m
 }
-
-const QuerySeparator = "|"

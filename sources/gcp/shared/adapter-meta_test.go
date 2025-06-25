@@ -846,6 +846,73 @@ func TestProjectLevelEndpointFuncWithThreeQueries(t *testing.T) {
 	}
 }
 
+func TestProjectLevelEndpointFuncWithFourQueries(t *testing.T) {
+	tests := []struct {
+		name          string
+		format        string
+		params        []string
+		query         string
+		expectedURL   string
+		expectInitErr bool
+	}{
+		{
+			name:        "valid project and quadruple composite query",
+			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
+			params:      []string{"my-project"},
+			query:       "foo|bar|baz|qux",
+			expectedURL: "https://example.com/projects/my-project/resources/foo/child/bar/grandchild/baz/greatgrandchild/qux",
+		},
+		{
+			name:          "empty project id",
+			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
+			params:        []string{""},
+			query:         "foo|bar|baz|qux",
+			expectInitErr: true,
+		},
+		{
+			name:        "missing query",
+			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
+			params:      []string{"my-project"},
+			query:       "",
+			expectedURL: "",
+		},
+		{
+			name:          "too many params",
+			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
+			params:        []string{"my-project", "extra"},
+			query:         "foo|bar|baz|qux",
+			expectInitErr: true,
+		},
+		{
+			name:          "too few params",
+			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
+			params:        []string{},
+			query:         "foo|bar|baz|qux",
+			expectInitErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fn := projectLevelEndpointFuncWithFourQueries(tt.format)
+			endpointFunc, err := fn(tt.params...)
+			if tt.expectInitErr {
+				if err == nil {
+					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, endpointFunc)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, endpointFunc, tt.expectedURL)
+			}
+			got := endpointFunc(tt.query)
+			if got != tt.expectedURL {
+				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
+			}
+		})
+	}
+}
+
 func TestEndpointFuncWithQueries_PanicsOnWrongFormat(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -1081,73 +1148,6 @@ func Test_zoneLevelListFunc(t *testing.T) {
 				t.Errorf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, got, tt.expectedURL)
 				return
 			}
-			if got != tt.expectedURL {
-				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
-			}
-		})
-	}
-}
-
-func Test_projectLevelEndpointFuncWithFourQueries(t *testing.T) {
-	tests := []struct {
-		name          string
-		format        string
-		params        []string
-		query         string
-		expectedURL   string
-		expectInitErr bool
-	}{
-		{
-			name:        "valid project and quadruple composite query",
-			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
-			params:      []string{"my-project"},
-			query:       "foo|bar|baz|qux",
-			expectedURL: "https://example.com/projects/my-project/resources/foo/child/bar/grandchild/baz/greatgrandchild/qux",
-		},
-		{
-			name:          "empty project id",
-			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
-			params:        []string{""},
-			query:         "foo|bar|baz|qux",
-			expectInitErr: true,
-		},
-		{
-			name:        "missing query",
-			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
-			params:      []string{"my-project"},
-			query:       "",
-			expectedURL: "",
-		},
-		{
-			name:          "too many params",
-			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
-			params:        []string{"my-project", "extra"},
-			query:         "foo|bar|baz|qux",
-			expectInitErr: true,
-		},
-		{
-			name:          "too few params",
-			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
-			params:        []string{},
-			query:         "foo|bar|baz|qux",
-			expectInitErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			fn := projectLevelEndpointFuncWithFourQueries(tt.format)
-			endpointFunc, err := fn(tt.params...)
-			if tt.expectInitErr {
-				if err == nil {
-					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, endpointFunc)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, endpointFunc, tt.expectedURL)
-			}
-			got := endpointFunc(tt.query)
 			if got != tt.expectedURL {
 				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
 			}

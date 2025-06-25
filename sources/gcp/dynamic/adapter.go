@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"buf.build/go/protovalidate"
+
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -117,4 +119,8 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 	}
 
 	return externalToSDP(ctx, g.projectID, g.scope, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker)
+}
+
+func (g Adapter) Validate() error {
+	return protovalidate.Validate(g.Metadata())
 }

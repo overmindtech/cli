@@ -27,21 +27,17 @@ type ItemLookup map[string]ItemTypeMeta
 
 // Linker is responsible for linking items based on their types and relationships.
 type Linker struct {
-	sdpAssetTypeToAdapterMeta          map[shared.ItemType]AdapterMeta
-	gcpItemTypeToSDPAssetType          map[string]shared.ItemType
-	explicitBlastPropagations          map[shared.ItemType]map[string]*Impact
-	manualAdapterLinker                map[shared.ItemType]func(scope, fromItemScope, query string, bp *sdp.BlastPropagation) *sdp.LinkedItemQuery
-	gcpResourceTypeInURLToSDPAssetType map[string]shared.ItemType
+	sdpAssetTypeToAdapterMeta map[shared.ItemType]AdapterMeta
+	explicitBlastPropagations map[shared.ItemType]map[string]*Impact
+	manualAdapterLinker       map[shared.ItemType]func(scope, fromItemScope, query string, bp *sdp.BlastPropagation) *sdp.LinkedItemQuery
 }
 
 // NewLinker creates a new Linker instance with the provided item lookup and predefined mappings.
 func NewLinker() *Linker {
 	return &Linker{
-		sdpAssetTypeToAdapterMeta:          SDPAssetTypeToAdapterMeta,
-		gcpItemTypeToSDPAssetType:          GCPResourceTypeInURLToSDPAssetType,
-		explicitBlastPropagations:          BlastPropagations,
-		manualAdapterLinker:                ManualAdapterLinksByAssetType,
-		gcpResourceTypeInURLToSDPAssetType: GCPResourceTypeInURLToSDPAssetType,
+		sdpAssetTypeToAdapterMeta: SDPAssetTypeToAdapterMeta,
+		explicitBlastPropagations: BlastPropagations,
+		manualAdapterLinker:       ManualAdapterLinksByAssetType,
 	}
 }
 

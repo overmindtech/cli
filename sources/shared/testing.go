@@ -1,7 +1,13 @@
 package shared
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"sync"
 	"testing"
 
 	"github.com/overmindtech/cli/discovery"
@@ -74,16 +80,21 @@ func (i QueryTests) TestLinkedItems(t *testing.T, item *sdp.Item) {
 	}
 
 	if len(i) != len(item.GetLinkedItemQueries()) {
-		t.Fatalf("expected %d linked item query test cases, got %d", len(item.GetLinkedItemQueries()), len(i))
+		t.Errorf("expected %d linked item query test cases, got %d", len(item.GetLinkedItemQueries()), len(i))
 	}
 
 	linkedItemQueries := make(map[string]*sdp.LinkedItemQuery, len(i))
 	for _, lir := range item.GetLinkedItemQueries() {
-		linkedItemQueries[fmt.Sprintf("%s/%s", lir.GetQuery().GetType(), lir.GetQuery().GetQuery())] = lir
+		queryK := queryKey(lir.GetQuery().GetType(), lir.GetQuery().GetQuery())
+		if _, ok := linkedItemQueries[queryK]; ok {
+			t.Fatalf("linked item query %s for %s already exists in actual linked item queries", lir.GetQuery().GetType(), lir.GetQuery().GetQuery())
+		}
+		linkedItemQueries[queryK] = lir
 	}
 
 	for _, test := range i {
-		gotLiq, ok := linkedItemQueries[fmt.Sprintf("%s/%s", test.ExpectedType, test.ExpectedQuery)]
+		queryK := queryKey(test.ExpectedType, test.ExpectedQuery)
+		gotLiq, ok := linkedItemQueries[queryK]
 		if !ok {
 			t.Fatalf("linked item query %s for %s not found in actual linked item queries", test.ExpectedType, test.ExpectedQuery)
 		}
@@ -156,4 +167,70 @@ func (i QueryTests) Execute(t *testing.T, item *sdp.Item, adapter discovery.Adap
 	t.Run("PotentialLinks", func(t *testing.T) {
 		i.TestPotentialLinks(t, item, adapter)
 	})
+}
+
+func queryKey(itemType, query string) string {
+	return fmt.Sprintf("%s/%s", itemType, query)
+}
+
+type MockRoundTripper struct {
+	responses   map[string]*http.Response
+	requestURLs map[string]bool
+	mu          sync.RWMutex
+}
+
+func NewMockRoundTripper(responses map[string]*http.Response) *MockRoundTripper {
+	return &MockRoundTripper{
+		responses:   responses,
+		requestURLs: make(map[string]bool),
+	}
+}
+
+func (m *MockRoundTripper) GetRequestURLs() map[string]bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.requestURLs
+}
+
+func (m *MockRoundTripper) GetResponses() map[string]*http.Response {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.responses
+}
+
+func (m *MockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.requestURLs == nil {
+		m.requestURLs = make(map[string]bool)
+	}
+
+	m.requestURLs[req.URL.String()] = true
+
+	resp, ok := m.responses[req.URL.String()]
+	if !ok {
+		return &http.Response{
+			StatusCode: http.StatusNotFound,
+			Body:       io.NopCloser(strings.NewReader(`{"error": "Not found"}`)),
+			Header:     make(http.Header),
+		}, nil
+	}
+
+	// Clone the response body since it will be closed by the caller
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	resp.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+
+	return resp, nil
+}
+
+// MockHTTPResponse converts an input to an io.ReadCloser
+// for use in HTTP response mocking
+func MockHTTPResponse(input any) io.ReadCloser {
+	data, err := json.Marshal(input)
+	if err != nil {
+		// For test helpers, it's reasonable to panic on marshaling errors
+		panic(fmt.Sprintf("Failed to marshal instance input: %v", err))
+	}
+	return io.NopCloser(bytes.NewReader(data))
 }

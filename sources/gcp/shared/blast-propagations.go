@@ -302,7 +302,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactInOnly,
 		},
 		"properties.disks.diskEncryptionKey.kmsKeyName":           cryptoKeyImpactInOnly,
-		"properties.disks.diskEncryptionKey.kmsKeyServiceAccount": cryptoKeyImpactInOnly,
+		"properties.disks.diskEncryptionKey.kmsKeyServiceAccount": iamServiceAccountImpactInOnly,
 		"properties.guestAccelerators.acceleratorType": {
 			Description:      "If the Compute Accelerator Type is updated: New instances may misconfigure or fail hardware initialization. If the template is updated: Accelerator is not affected.",
 			ToSDPITemType:    ComputeAcceleratorType,

@@ -3,7 +3,7 @@ package shared
 import "github.com/overmindtech/cli/sources/shared"
 
 const (
-	Stdlib shared.Source = "Stdlib"
+	Stdlib shared.Source = "std-lib"
 )
 
 const (

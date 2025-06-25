@@ -30,6 +30,7 @@ type AdapterMeta struct {
 	SearchDescription   string
 	SDPAdapterCategory  sdp.AdapterCategory
 	UniqueAttributeKeys []string
+	InDevelopment       bool // If true, the adapter is in development and should not be used in production.
 }
 
 // We have group of functions that are similar in nature, however they cannot simplified into a generic function because
@@ -410,6 +411,17 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// HEALTH: https://cloud.google.com/resource-manager/reference/rest/v3/projects#State
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
+	ComputeAcceleratorType: {
+		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/acceleratorTypes/get
+		InDevelopment:      true,
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+		Scope:              ScopeZonal,
+		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/acceleratorTypes/{acceleratorType}
+		GetEndpointBaseURLFunc: zoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/acceleratorTypes/%s"),
+		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/acceleratorTypes
+		ListEndpointFunc:    zoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/acceleratorTypes"),
+		UniqueAttributeKeys: []string{"acceleratorTypes"},
+	},
 	ComputeFirewall: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 		Scope:              ScopeProject,
@@ -438,6 +450,17 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/instanceTemplates"),
 		UniqueAttributeKeys: []string{"instanceTemplates"},
 	},
+	ComputeLicense: {
+		InDevelopment: true,
+		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/licenses/get
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+		Scope:              ScopeProject,
+		// https://compute.googleapis.com/compute/v1/projects/{project}/global/licenses/{license}
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/licenses/%s"),
+		// https://compute.googleapis.com/compute/v1/projects/{project}/global/licenses
+		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/licenses"),
+		UniqueAttributeKeys: []string{"licenses"},
+	},
 	ComputeNetwork: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 		Scope:              ScopeProject,
@@ -446,6 +469,17 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/networks
 		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/networks"),
 		UniqueAttributeKeys: []string{"networks"},
+	},
+	ComputeDiskType: {
+		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/diskTypes/get
+		InDevelopment:      true,
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
+		Scope:              ScopeZonal,
+		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/diskTypes/{diskType}
+		GetEndpointBaseURLFunc: zoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/diskTypes/%s"),
+		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/diskTypes
+		ListEndpointFunc:    zoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/diskTypes"),
+		UniqueAttributeKeys: []string{"diskTypes"},
 	},
 	ComputeProject: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
@@ -476,6 +510,17 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		},
 		UniqueAttributeKeys: []string{"projects"},
 	},
+	ComputeResourcePolicy: {
+		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/resourcePolicies/get
+		InDevelopment:      true,
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+		Scope:              ScopeRegional,
+		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/resourcePolicies/{resourcePolicy}
+		GetEndpointBaseURLFunc: regionalLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/resourcePolicies/%s"),
+		// https://cloud.google.com/compute/docs/reference/rest/v1/resourcePolicies/list
+		ListEndpointFunc:    regionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/resourcePolicies"),
+		UniqueAttributeKeys: []string{"resourcePolicies"},
+	},
 	ComputeRoute: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 		Scope:              ScopeProject,
@@ -493,6 +538,17 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/subnetworks
 		ListEndpointFunc:    regionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks"),
 		UniqueAttributeKeys: []string{"subnetworks"},
+	},
+	ComputeStoragePool: {
+		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/storagePools/get
+		InDevelopment:      true,
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
+		Scope:              ScopeZonal,
+		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/storagePools/{storagePool}
+		GetEndpointBaseURLFunc: zoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools/%s"),
+		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/storagePools
+		ListEndpointFunc:    zoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools"),
+		UniqueAttributeKeys: []string{"storagePools"},
 	},
 	DataformRepository: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,

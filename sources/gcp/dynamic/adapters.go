@@ -46,6 +46,12 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 			continue
 		}
 
+		if meta.InDevelopment {
+			// Skip adapters that are in development
+			// This is useful for testing new adapters without exposing them to production
+			continue
+		}
+
 		getEndpointBaseURL, err := meta.GetEndpointBaseURLFunc(projectID)
 		if err != nil {
 			return nil, err
@@ -76,6 +82,12 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 		for sdpItemType, meta := range adaptersByScope[gcpshared.ScopeRegional] {
 			if _, ok := manualAdapters[sdpItemType.String()]; ok {
 				// Skip, because we have a manual adapter for this item type
+				continue
+			}
+
+			if meta.InDevelopment {
+				// Skip adapters that are in development
+				// This is useful for testing new adapters without exposing them to production
 				continue
 			}
 
@@ -112,6 +124,12 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 		for sdpItemType, meta := range adaptersByScope[gcpshared.ScopeZonal] {
 			if _, ok := manualAdapters[sdpItemType.String()]; ok {
 				// Skip, because we have a manual adapter for this item type
+				continue
+			}
+
+			if meta.InDevelopment {
+				// Skip adapters that are in development
+				// This is useful for testing new adapters without exposing them to production
 				continue
 			}
 
