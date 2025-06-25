@@ -173,9 +173,6 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 		return errors.New("no matching adapters found")
 	}
 
-	// These are used to calculate whether all adapters have failed or not
-	var numAdapters atomic.Int32
-
 	// Since we need to wait for only the processing of this query's executions, we need a separate WaitGroup here
 	// Overall MaxParallelExecutions evaluation is handled by e.executionPool
 	wg := sync.WaitGroup{}
@@ -226,7 +223,6 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 						getExecutionPoolCount.Add(-1)
 					}
 				}()
-				numAdapters.Add(1)
 
 				// If the context is cancelled, don't even bother doing
 				// anything. Since the `p.Go` will block, it's possible that if
@@ -271,6 +267,14 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 					// If we're here, then the wait group didn't finish in time
 					expandedMutex.RLock()
 					for q, adapter := range expanded {
+						// There is a honeycomb trigger for this message:
+						//
+						// https://ui.honeycomb.io/overmind/environments/prod/datasets/kubernetes-metrics/triggers/saWNAnCAXNb
+						//
+						// This is to ensure we are aware of any adapters that
+						// are taking too long to respond to a query, which
+						// could indicate a bug in the adapter. Make sure to
+						// keep the trigger and this message in sync.
 						log.WithContext(ctx).WithFields(log.Fields{
 							"ovm.query.uuid":    q.GetUUIDParsed().String(),
 							"ovm.query.type":    q.GetType(),
@@ -280,6 +284,8 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 						}).Errorf("Wait group still running %v after context cancelled", longRunningAdaptersTimeout)
 					}
 					expandedMutex.RUnlock()
+					// the query is already bolloxed up, we don't need continue to wait and spam the logs any more
+					return
 				}
 			}
 		}()

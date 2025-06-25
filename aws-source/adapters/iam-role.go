@@ -83,20 +83,24 @@ func getEmbeddedPolicies(ctx context.Context, client IAMClient, roleName string)
 
 	for policiesPaginator.HasMorePages() {
 		out, err := policiesPaginator.NextPage(ctx)
-
 		if err != nil {
 			return nil, err
 		}
 
 		for _, policyName := range out.PolicyNames {
 			embeddedPolicy, err := getRolePolicyDetails(ctx, client, roleName, policyName)
-
 			if err != nil {
 				// Ignore these errors
 				continue
 			}
 
 			policies = append(policies, *embeddedPolicy)
+
+			err = ctx.Err()
+			if err != nil {
+				// If the context is done, we should stop processing and return an error, as the results are not complete
+				return nil, err
+			}
 		}
 	}
 
