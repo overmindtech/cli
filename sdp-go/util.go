@@ -106,7 +106,7 @@ func flatten(data map[string]any) map[string]any {
 // maps. `changeData` is a slice of RoutineRollup objects that contain the
 // rollups for this change. `rawData` is a slice of RoutineRollup objects that
 // contain the the rollups for all changes in the last 30 days.
-func RenderItemDiff(gun string, before, after map[string]any, changeData, rawData []RoutineRollup) string {
+func RenderItemDiff(gun string, before, after map[string]any, changeData, rawData []RoutineRollUp) string {
 	flatB := flatten(before)
 	flatA := flatten(after)
 
@@ -182,14 +182,14 @@ func RenderItemDiff(gun string, before, after map[string]any, changeData, rawDat
 	return strings.Join(para, "\n")
 }
 
-type RoutineRollup struct {
+type RoutineRollUp struct {
 	ChangeId uuid.UUID
 	Gun      string
 	Attr     string
 	Value    string
 }
 
-func (rr RoutineRollup) String() string {
+func (rr RoutineRollUp) String() string {
 	val := fmt.Sprintf("%v", rr.Value)
 	if len(val) > 100 {
 		val = val[:100]
@@ -199,21 +199,21 @@ func (rr RoutineRollup) String() string {
 	return fmt.Sprintf("change:%v\tgun:%v\tattr:%v\tval:%v", rr.ChangeId, rr.Gun, rr.Attr, val)
 }
 
-func RollupDiffs(data []*ItemDiff, rawData []RoutineRollup) []RoutineRollup {
+func RollUpDiffsFromItemDiff(data []*ItemDiff, rawData []RoutineRollUp) []RoutineRollUp {
 	for _, diff := range data {
 		afterItem := diff.GetAfter()
 		afterMap := afterItem.GetAttributes().GetAttrStruct().AsMap()
 		afterGun := afterItem.GloballyUniqueName()
 
 		if len(afterMap) > 0 {
-			rawData = append(rawData, walkMap(afterGun, "", afterMap)...)
+			rawData = append(rawData, WalkMapToRoutineRollUp(afterGun, "", afterMap)...)
 		}
 	}
 	return rawData
 }
 
-func walkMap(gun string, key string, data map[string]any) []RoutineRollup {
-	results := []RoutineRollup{}
+func WalkMapToRoutineRollUp(gun string, key string, data map[string]any) []RoutineRollUp {
+	results := []RoutineRollUp{}
 
 	for k, v := range data {
 		attr := k
@@ -222,9 +222,9 @@ func walkMap(gun string, key string, data map[string]any) []RoutineRollup {
 		}
 		switch val := v.(type) {
 		case map[string]any:
-			results = append(results, walkMap(gun, attr, val)...)
+			results = append(results, WalkMapToRoutineRollUp(gun, attr, val)...)
 		default:
-			results = append(results, RoutineRollup{
+			results = append(results, RoutineRollUp{
 				Gun:   gun,
 				Attr:  attr,
 				Value: fmt.Sprintf("%v", val),

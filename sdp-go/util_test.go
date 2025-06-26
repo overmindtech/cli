@@ -71,8 +71,8 @@ func TestItemDiffParagraphRendering(t *testing.T) {
 		Name                  string
 		Before                map[string]any
 		After                 map[string]any
-		ChangeRollups         []RoutineRollup
-		RawRollups            []RoutineRollup
+		ChangeRollups         []RoutineRollUp
+		RawRollups            []RoutineRollUp
 		ExpectedDiffParagraph string
 	}{
 		{
@@ -129,14 +129,14 @@ func TestItemDiffParagraphRendering(t *testing.T) {
 					"last":  "updated",
 				},
 			},
-			ChangeRollups: []RoutineRollup{
+			ChangeRollups: []RoutineRollUp{
 				{
 					Gun:   "testGun",
 					Attr:  "name.last",
 					Value: "user",
 				},
 			},
-			RawRollups: []RoutineRollup{
+			RawRollups: []RoutineRollUp{
 				{
 					Gun:   "testGun",
 					Attr:  "name.last",
@@ -159,14 +159,14 @@ func TestItemDiffParagraphRendering(t *testing.T) {
 					"last":  "user",
 				},
 			},
-			ChangeRollups: []RoutineRollup{
+			ChangeRollups: []RoutineRollUp{
 				{
 					Gun:   "testGun",
 					Attr:  "name.last",
 					Value: "user",
 				},
 			},
-			RawRollups: []RoutineRollup{
+			RawRollups: []RoutineRollUp{
 				{
 					Gun:   "testGun",
 					Attr:  "name.last",
@@ -189,14 +189,14 @@ func TestItemDiffParagraphRendering(t *testing.T) {
 					"last":  "updated",
 				},
 			},
-			ChangeRollups: []RoutineRollup{
+			ChangeRollups: []RoutineRollUp{
 				{
 					Gun:   "testGun",
 					Attr:  "name.last",
 					Value: "user",
 				},
 			},
-			RawRollups: []RoutineRollup{
+			RawRollups: []RoutineRollUp{
 				{
 					Gun:   "testGun",
 					Attr:  "name.last",
