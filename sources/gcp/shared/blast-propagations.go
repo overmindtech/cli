@@ -138,6 +138,11 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		// There is no links for this item type.
 	},
 	BigTableAdminAppProfile: {
+		"name": {
+			ToSDPITemType:    BigTableAdminInstance,
+			Description:      "If the BigTableAdmin Instance is deleted or updated: The AppProfile may become invalid or inaccessible. If the AppProfile is updated: The instance remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
 		"multiClusterRoutingUseAny.clusterIds": {
 			ToSDPITemType:    BigTableAdminCluster,
 			Description:      "If the BigTableAdmin Cluster is deleted or updated: The AppProfile may lose routing capabilities or fail to access data. If the AppProfile is updated: The cluster remains unaffected.",
@@ -150,6 +155,11 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		},
 	},
 	BigTableAdminBackup: {
+		"name": {
+			ToSDPITemType:    BigTableAdminCluster,
+			Description:      "If the BigTableAdmin Cluster is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The cluster remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
 		"sourceTable": {
 			ToSDPITemType:    BigTableAdminTable,
 			Description:      "If the BigTableAdmin Table is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The table remains unaffected.",
@@ -163,6 +173,11 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"encryptionInfo.kmsKeyVersion": cryptoKeyVersionImpactInOnly,
 	},
 	BigTableAdminTable: {
+		"name": {
+			ToSDPITemType:    BigTableAdminInstance,
+			Description:      "If the BigTableAdmin Instance is deleted or updated: The Table may become invalid or inaccessible. If the Table is updated: The instance remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
 		// If this table was restored from another data source (e.g. a backup), this field, restoreInfo, will be populated with information about the restore.
 		"restoreInfo.backupInfo.sourceTable": {
 			ToSDPITemType:    BigTableAdminTable,
@@ -483,6 +498,11 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		// There is no links for this item type.
 	},
 	LoggingLink: {
+		"name": {
+			ToSDPITemType:    LoggingBucket,
+			Description:      "If the Logging Bucket is deleted or updated: The Logging Link may lose its association or fail to function as expected. If the Logging Link is updated: The bucket remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
 		"bigqueryDataset.datasetId": {
 			Description:      "They are tightly coupled with the Logging Link.",
 			ToSDPITemType:    BigQueryDataset,
@@ -546,7 +566,8 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactInOnly,
 		},
 		"ingestionDataSourceSettings.awsKinesis.awsRoleArn": {
-			Description:      "AWS role ARN to be used for Federated Identity authentication with Kinesis.",
+			ToSDPITemType:    aws.IAMRole,
+			Description:      "AWS role to be used for Federated Identity authentication with Kinesis.",
 			BlastPropagation: impactInOnly,
 		},
 	},
@@ -592,6 +613,11 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"encryptionKey": cryptoKeyImpactInOnly,
 	},
 	ServiceDirectoryEndpoint: {
+		"name": {
+			ToSDPITemType:    ServiceDirectoryService,
+			Description:      "If the Service Directory Service is deleted or updated: The Endpoint may lose its association or fail to resolve names. If the Endpoint is updated: The service remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
 		// An IPv4 or IPv6 address.
 		"address": ipImpactBothWays,
 		// The Google Compute Engine network (VPC) of the endpoint in the format projects/<project number>/locations/global/networks/*.

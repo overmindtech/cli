@@ -41,6 +41,7 @@ func (c cloudKMSCryptoKeyWrapper) PotentialLinks() map[shared.ItemType]bool {
 		gcpshared.CloudKMSCryptoKeyVersion,
 		gcpshared.CloudKMSEKMConnection,
 		gcpshared.IAMPolicy,
+		gcpshared.CloudKMSKeyRing,
 	)
 }
 
@@ -192,6 +193,21 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 		//Deleting the IAM Policy makes the CryptoKey non-functional
 		//Deleting the CryptoKey deletes the IAM Policy
 		BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+	})
+
+	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   gcpshared.CloudKMSKeyRing.String(),
+			Method: sdp.QueryMethod_GET,
+			Query:  shared.CompositeLookupKey(location, keyRing),
+			Scope:  c.ProjectID(),
+		},
+		//Deleting the KeyRing makes the CryptoKey non-functional
+		//Deleting the CryptoKey does not affect the KeyRing; KeyRings are not owned by individual CryptoKeys.
+		BlastPropagation: &sdp.BlastPropagation{
+			In:  true,
+			Out: false,
+		},
 	})
 
 	// The resource name of the primary CryptoKeyVersion for this CryptoKey.

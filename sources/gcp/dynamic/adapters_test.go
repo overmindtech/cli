@@ -172,5 +172,4 @@ func Test_addAdapter(t *testing.T) {
 			}
 		})
 	}
-
 }

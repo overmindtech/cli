@@ -96,4 +96,6 @@ var (
 	SecretManagerSecret            = shared.NewItemType(GCP, SecretManager, Secret)        //https://cloud.google.com/secret-manager/docs/reference/rest/v1/projects.secrets/get
 	CloudKMSEKMConnection          = shared.NewItemType(GCP, CloudKMS, EKMConnection)      // https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.ekmConnections/get
 	ComputeRegionInstanceTemplate  = shared.NewItemType(GCP, Compute, RegionalInstanceTemplate)
+	BigTableAdminInstance          = shared.NewItemType(GCP, BigTableAdmin, Instance)
+	ServiceDirectoryService        = shared.NewItemType(GCP, ServiceDirectory, Service)
 )

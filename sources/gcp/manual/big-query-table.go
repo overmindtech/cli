@@ -74,8 +74,8 @@ func (b BigQueryTableWrapper) SearchLookups() []sources.ItemTypeLookups {
 
 // Get retrieves a BigQuery dataset by its ID
 func (b BigQueryTableWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
-	// O: projectID
-	// 1: tableID
+	// O: dataset ID
+	// 1: table ID
 	metadata, err := b.client.Get(ctx, b.ProjectID(), queryParts[0], queryParts[1])
 	if err != nil {
 		return nil, gcpshared.QueryError(err)

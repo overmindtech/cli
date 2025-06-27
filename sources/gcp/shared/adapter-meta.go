@@ -329,6 +329,17 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SearchDescription:   "Search for BigTable App Profiles in an instance. Use the format {{instance}} or projects/{{project}}/instances/{{instance}}/appProfiles/{{app_profile_id}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"instances", "appProfiles"},
 	},
+	BigTableAdminInstance: {
+		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances/get
+		InDevelopment:      true,
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+		Scope:              ScopeProject,
+		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s"),
+		// https://bigtableadmin.googleapis.com/v2/projects/*/instances
+		ListEndpointFunc:    projectLevelListFunc("https://bigtableadmin.googleapis.com/v2/projects/%s/instances"),
+		UniqueAttributeKeys: []string{"instances"},
+	},
 	BigTableAdminBackup: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OTHER,
 		Scope:              ScopeProject,
@@ -340,6 +351,17 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		UniqueAttributeKeys: []string{"instances", "clusters", "backups"},
 		// HEALTH: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.clusters.backups#state
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
+	},
+	BigTableAdminCluster: {
+		InDevelopment: true,
+		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.clusters/get
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+		Scope:              ScopeProject,
+		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*/clusters/*
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s"),
+		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*/clusters
+		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters"),
+		UniqueAttributeKeys: []string{"instances", "clusters"},
 	},
 	BigTableAdminTable: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
@@ -774,6 +796,18 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SearchEndpointFunc:  projectLevelEndpointFuncWithThreeQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s/endpoints"),
 		SearchDescription:   "Search for endpoints by {location}|{namespace_id}|{service_id} or projects/{project}/locations/{location}/namespaces/{namespace_id}/services/{service_id}/endpoints/{endpoint_id} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "namespaces", "services", "endpoints"},
+	},
+	ServiceDirectoryService: {
+		InDevelopment: true,
+		// Reference: https://cloud.google.com/service-directory/docs/reference/rest/v1/projects.locations.namespaces.services/get
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+		Scope:              ScopeProject,
+		// https://servicedirectory.googleapis.com/v1/projects/*/locations/*/namespaces/*/services/*
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithThreeQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s"),
+		// https://servicedirectory.googleapis.com/v1/projects/*/locations/*/namespaces/*/services
+		// IAM Perm: servicedirectory.services.list
+		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services"),
+		UniqueAttributeKeys: []string{"locations", "namespaces", "services"},
 	},
 	ServiceUsageService: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
