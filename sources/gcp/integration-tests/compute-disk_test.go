@@ -2,12 +2,15 @@ package integrationtests
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
@@ -16,7 +19,7 @@ import (
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
-func TestComputeDisksIntegration(t *testing.T) {
+func TestComputeDiskIntegration(t *testing.T) {
 	projectID := os.Getenv("GCP_PROJECT_ID")
 	if projectID == "" {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
@@ -107,24 +110,11 @@ func TestComputeDisksIntegration(t *testing.T) {
 	})
 
 	t.Run("Teardown", func(t *testing.T) {
-		diskReq := &computepb.DeleteDiskRequest{
-			Project: projectID,
-			Zone:    zone,
-			Disk:    diskName,
-		}
-
-		diskOp, err := diskClient.Delete(ctx, diskReq)
+		err := deleteDisk(ctx, diskClient, projectID, zone, diskName)
 		if err != nil {
 			t.Fatalf("Failed to delete disk: %v", err)
 		}
-
-		if err := diskOp.Wait(ctx); err != nil {
-			t.Fatalf("Failed to wait for disk deletion operation: %v", err)
-		}
-
-		log.Printf("Disk %s deleted successfully in project %s, zone %s", diskName, projectID, zone)
 	})
-
 }
 
 func createDisk(ctx context.Context, client *compute.DisksClient, projectID, zone, diskName string) error {
@@ -148,7 +138,13 @@ func createDisk(ctx context.Context, client *compute.DisksClient, projectID, zon
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Failed to create disk: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {
@@ -156,5 +152,31 @@ func createDisk(ctx context.Context, client *compute.DisksClient, projectID, zon
 	}
 
 	log.Printf("Disk %s created successfully in project %s, zone %s", diskName, projectID, zone)
+	return nil
+}
+
+func deleteDisk(ctx context.Context, client *compute.DisksClient, projectID, zone, diskName string) error {
+	req := &computepb.DeleteDiskRequest{
+		Project: projectID,
+		Zone:    zone,
+		Disk:    diskName,
+	}
+
+	op, err := client.Delete(ctx, req)
+	if err != nil {
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
+	}
+
+	if err := op.Wait(ctx); err != nil {
+		return fmt.Errorf("failed to wait for disk deletion operation: %w", err)
+	}
+
+	log.Printf("Disk %s deleted successfully in project %s, zone %s", diskName, projectID, zone)
 	return nil
 }

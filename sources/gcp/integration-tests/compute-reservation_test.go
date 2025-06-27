@@ -2,12 +2,15 @@ package integrationtests
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
@@ -16,7 +19,7 @@ import (
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
-func TestComputeReservationsIntegration(t *testing.T) {
+func TestComputeReservationIntegration(t *testing.T) {
 	projectID := os.Getenv("GCP_PROJECT_ID")
 	if projectID == "" {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
@@ -108,22 +111,10 @@ func TestComputeReservationsIntegration(t *testing.T) {
 	})
 
 	t.Run("Teardown", func(t *testing.T) {
-		req := &computepb.DeleteReservationRequest{
-			Project:     projectID,
-			Zone:        zone,
-			Reservation: reservationName,
-		}
-
-		op, err := client.Delete(ctx, req)
+		err := deleteReservation(ctx, client, projectID, zone, reservationName)
 		if err != nil {
 			t.Fatalf("Failed to delete compute reservation: %v", err)
 		}
-
-		if err := op.Wait(ctx); err != nil {
-			t.Fatalf("Failed to wait for reservation deletion operation: %v", err)
-		}
-
-		log.Printf("Compute reservation %s deleted successfully in project %s, zone %s", reservationName, projectID, zone)
 	})
 }
 
@@ -147,7 +138,13 @@ func createComputeReservation(ctx context.Context, client *compute.ReservationsC
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to create reservation: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {
@@ -155,5 +152,31 @@ func createComputeReservation(ctx context.Context, client *compute.ReservationsC
 	}
 
 	log.Printf("Reservation %s created successfully in project %s, zone %s", reservationName, projectID, zone)
+	return nil
+}
+
+func deleteReservation(ctx context.Context, client *compute.ReservationsClient, projectID, zone, reservationName string) error {
+	req := &computepb.DeleteReservationRequest{
+		Project:     projectID,
+		Zone:        zone,
+		Reservation: reservationName,
+	}
+
+	op, err := client.Delete(ctx, req)
+	if err != nil {
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
+	}
+
+	if err := op.Wait(ctx); err != nil {
+		return fmt.Errorf("failed to wait for reservation deletion operation: %w", err)
+	}
+
+	log.Printf("Compute reservation %s deleted successfully in project %s, zone %s", reservationName, projectID, zone)
 	return nil
 }

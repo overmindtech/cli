@@ -2,12 +2,15 @@ package integrationtests
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
@@ -16,7 +19,7 @@ import (
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
-func TestComputeInstantSnapshotsIntegration(t *testing.T) {
+func TestComputeInstantSnapshotIntegration(t *testing.T) {
 	projectID := os.Getenv("GCP_PROJECT_ID")
 	if projectID == "" {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
@@ -144,39 +147,10 @@ func TestComputeInstantSnapshotsIntegration(t *testing.T) {
 	})
 
 	t.Run("Teardown", func(t *testing.T) {
-		req := &computepb.DeleteInstantSnapshotRequest{
-			Project:         projectID,
-			Zone:            zone,
-			InstantSnapshot: snapshotName,
-		}
-
-		op, err := client.Delete(ctx, req)
+		err := deleteInstantSnapshot(ctx, client, projectID, zone, snapshotName)
 		if err != nil {
 			t.Fatalf("Failed to delete instant snapshot: %v", err)
 		}
-
-		if err := op.Wait(ctx); err != nil {
-			t.Fatalf("Failed to wait for instant snapshot deletion operation: %v", err)
-		}
-
-		log.Printf("Instant snapshot %s deleted successfully", snapshotName)
-
-		diskReq := &computepb.DeleteDiskRequest{
-			Project: projectID,
-			Zone:    zone,
-			Disk:    diskName,
-		}
-
-		diskOp, err := diskClient.Delete(ctx, diskReq)
-		if err != nil {
-			t.Fatalf("Failed to delete disk: %v", err)
-		}
-
-		if err := diskOp.Wait(ctx); err != nil {
-			t.Fatalf("Failed to wait for disk deletion operation: %v", err)
-		}
-
-		log.Printf("Disk %s deleted successfully in project %s, zone %s", diskName, projectID, zone)
 	})
 }
 
@@ -199,7 +173,13 @@ func createInstantSnapshot(ctx context.Context, client *compute.InstantSnapshots
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to create instant snapshot: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {
@@ -207,5 +187,31 @@ func createInstantSnapshot(ctx context.Context, client *compute.InstantSnapshots
 	}
 
 	log.Printf("Instant snapshot %s created successfully in project %s, zone %s", snapshotName, projectID, zone)
+	return nil
+}
+
+func deleteInstantSnapshot(ctx context.Context, client *compute.InstantSnapshotsClient, projectID, zone, snapshotName string) error {
+	req := &computepb.DeleteInstantSnapshotRequest{
+		Project:         projectID,
+		Zone:            zone,
+		InstantSnapshot: snapshotName,
+	}
+
+	op, err := client.Delete(ctx, req)
+	if err != nil {
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
+	}
+
+	if err := op.Wait(ctx); err != nil {
+		return fmt.Errorf("failed to wait for instant snapshot deletion operation: %w", err)
+	}
+
+	log.Printf("Instant snapshot %s deleted successfully", snapshotName)
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
@@ -223,7 +224,13 @@ func createComputeInstanceTemplate(ctx context.Context, client *compute.Instance
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Failed to create instance template: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	// Wait for the operation to complete
@@ -243,14 +250,14 @@ func deleteComputeInstanceTemplate(ctx context.Context, client *compute.Instance
 	}
 
 	op, err := client.Delete(ctx, req)
-	var apiErr *apierror.APIError
-	if errors.As(err, &apiErr) && apiErr.HTTPCode() == 404 {
-		log.Printf("Instance template %s not found in project %s", name, projectID)
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("failed to delete instance template: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {
@@ -284,7 +291,13 @@ func createComputeAutoscaler(ctx context.Context, client *compute.AutoscalersCli
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to create autoscaler: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {
@@ -304,14 +317,14 @@ func deleteComputeAutoscaler(ctx context.Context, client *compute.AutoscalersCli
 	}
 
 	op, err := client.Delete(ctx, req)
-	var apiErr *apierror.APIError
-	if errors.As(err, &apiErr) && apiErr.HTTPCode() == 404 {
-		log.Printf("Autoscaler %s not found in project %s, zone %s", name, projectID, zone)
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("failed to delete autoscaler: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {

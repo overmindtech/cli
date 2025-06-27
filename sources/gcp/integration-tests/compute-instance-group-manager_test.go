@@ -2,12 +2,15 @@ package integrationtests
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
@@ -167,8 +170,15 @@ func createInstanceTemplate(ctx context.Context, client *compute.InstanceTemplat
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to create instance template: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
+
 	if err := op.Wait(ctx); err != nil {
 		return fmt.Errorf("failed to wait for instance template creation: %w", err)
 	}
@@ -184,8 +194,15 @@ func deleteInstanceTemplate(ctx context.Context, client *compute.InstanceTemplat
 	}
 	op, err := client.Delete(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to delete instance template: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
 	}
+
 	if err := op.Wait(ctx); err != nil {
 		return fmt.Errorf("failed to wait for instance template deletion: %w", err)
 	}
@@ -209,8 +226,15 @@ func createInstanceGroupManager(ctx context.Context, client *compute.InstanceGro
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to create instance group manager: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
+
 	if err := op.Wait(ctx); err != nil {
 		return fmt.Errorf("failed to wait for instance group manager creation: %w", err)
 	}
@@ -227,8 +251,15 @@ func deleteInstanceGroupManager(ctx context.Context, client *compute.InstanceGro
 	}
 	op, err := client.Delete(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to delete instance group manager: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
 	}
+
 	if err := op.Wait(ctx); err != nil {
 		return fmt.Errorf("failed to wait for instance group manager deletion: %w", err)
 	}

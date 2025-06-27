@@ -2,11 +2,15 @@ package integrationtests
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
@@ -96,22 +100,10 @@ func TestComputeForwardingRuleIntegration(t *testing.T) {
 	})
 
 	t.Run("Teardown", func(t *testing.T) {
-		req := &computepb.DeleteForwardingRuleRequest{
-			Project:        projectID,
-			Region:         region,
-			ForwardingRule: ruleName,
-		}
-
-		op, err := client.Delete(ctx, req)
+		err := deleteComputeForwardingRule(ctx, client, projectID, region, ruleName)
 		if err != nil {
 			t.Fatalf("Failed to delete forwarding rule: %v", err)
 		}
-
-		if err := op.Wait(ctx); err != nil {
-			t.Fatalf("Failed to wait for forwarding rule deletion operation: %v", err)
-		}
-
-		log.Printf("Forwarding rule %s deleted successfully", ruleName)
 	})
 }
 
@@ -161,7 +153,13 @@ func createComputeForwardingRule(ctx context.Context, client *compute.Forwarding
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return err
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {
@@ -169,5 +167,31 @@ func createComputeForwardingRule(ctx context.Context, client *compute.Forwarding
 	}
 
 	log.Printf("Forwarding rule %s created successfully in project %s, region %s", ruleName, projectID, region)
+	return nil
+}
+
+func deleteComputeForwardingRule(ctx context.Context, client *compute.ForwardingRulesClient, projectID, region, ruleName string) error {
+	req := &computepb.DeleteForwardingRuleRequest{
+		Project:        projectID,
+		Region:         region,
+		ForwardingRule: ruleName,
+	}
+
+	op, err := client.Delete(ctx, req)
+	if err != nil {
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
+	}
+
+	if err := op.Wait(ctx); err != nil {
+		return fmt.Errorf("failed to wait for forwarding rule deletion operation: %w", err)
+	}
+
+	log.Printf("Forwarding rule %s deleted successfully", ruleName)
 	return nil
 }

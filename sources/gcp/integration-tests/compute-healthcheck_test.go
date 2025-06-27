@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
@@ -129,7 +130,13 @@ func createComputeHealthCheck(ctx context.Context, client *compute.HealthChecksC
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to create health check: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {
@@ -148,14 +155,14 @@ func deleteComputeHealthCheck(ctx context.Context, client *compute.HealthChecksC
 	}
 
 	op, err := client.Delete(ctx, req)
-	var apiErr *apierror.APIError
-	if errors.As(err, &apiErr) && apiErr.HTTPCode() == 404 {
-		log.Printf("Health check %s not found in project %s", healthCheckName, projectID)
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("failed to delete health check: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {

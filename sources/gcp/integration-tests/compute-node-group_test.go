@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -272,7 +273,13 @@ func createComputeNodeTemplate(ctx context.Context, client *compute.NodeTemplate
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Failed to create node template: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	// Wait for the operation to complete
@@ -293,14 +300,14 @@ func deleteComputeNodeTemplate(ctx context.Context, client *compute.NodeTemplate
 	}
 
 	op, err := client.Delete(ctx, req)
-	var apiErr *apierror.APIError
-	if errors.As(err, &apiErr) && apiErr.HTTPCode() == 404 {
-		log.Printf("Node template %s not found in project %s", name, projectID)
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("failed to delete node template: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {
@@ -332,7 +339,13 @@ func createComputeNodeGroup(ctx context.Context, client *compute.NodeGroupsClien
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to create node group: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {
@@ -352,14 +365,14 @@ func deleteComputeNodeGroup(ctx context.Context, client *compute.NodeGroupsClien
 	}
 
 	op, err := client.Delete(ctx, req)
-	var apiErr *apierror.APIError
-	if errors.As(err, &apiErr) && apiErr.HTTPCode() == 404 {
-		log.Printf("Node group %s not found in project %s, zone %s", name, projectID, zone)
-		return nil
-	}
-
 	if err != nil {
-		return fmt.Errorf("failed to delete node group: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {

@@ -2,12 +2,15 @@ package integrationtests
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
@@ -16,7 +19,7 @@ import (
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
-func TestComputeInstanceGroupsIntegration(t *testing.T) {
+func TestComputeInstanceGroupIntegration(t *testing.T) {
 	projectID := os.Getenv("GCP_PROJECT_ID")
 	if projectID == "" {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
@@ -108,22 +111,10 @@ func TestComputeInstanceGroupsIntegration(t *testing.T) {
 	})
 
 	t.Run("Teardown", func(t *testing.T) {
-		req := &computepb.DeleteInstanceGroupRequest{
-			Project:       projectID,
-			Zone:          zone,
-			InstanceGroup: instanceGroupName,
-		}
-
-		op, err := client.Delete(ctx, req)
+		err := deleteInstanceGroup(ctx, client, projectID, zone, instanceGroupName)
 		if err != nil {
 			t.Fatalf("Failed to delete instance group: %v", err)
 		}
-
-		if err := op.Wait(ctx); err != nil {
-			t.Fatalf("Failed to wait for instance group deletion operation: %v", err)
-		}
-
-		log.Printf("Instance group %s deleted successfully in project %s, zone %s", instanceGroupName, projectID, zone)
 	})
 }
 
@@ -140,7 +131,13 @@ func createInstanceGroup(ctx context.Context, client *compute.InstanceGroupsClie
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to create instance group: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {
@@ -148,5 +145,31 @@ func createInstanceGroup(ctx context.Context, client *compute.InstanceGroupsClie
 	}
 
 	log.Printf("Instance group %s created successfully in project %s, zone %s", instanceGroupName, projectID, zone)
+	return nil
+}
+
+func deleteInstanceGroup(ctx context.Context, client *compute.InstanceGroupsClient, projectID, zone, instanceGroupName string) error {
+	req := &computepb.DeleteInstanceGroupRequest{
+		Project:       projectID,
+		Zone:          zone,
+		InstanceGroup: instanceGroupName,
+	}
+
+	op, err := client.Delete(ctx, req)
+	if err != nil {
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
+	}
+
+	if err := op.Wait(ctx); err != nil {
+		return fmt.Errorf("failed to wait for instance group deletion operation: %w", err)
+	}
+
+	log.Printf("Instance group %s deleted successfully in project %s, zone %s", instanceGroupName, projectID, zone)
 	return nil
 }

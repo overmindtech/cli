@@ -2,12 +2,15 @@ package integrationtests
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
@@ -123,7 +126,13 @@ func createComputeAddress(ctx context.Context, client *compute.AddressesClient, 
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to create address: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	// Wait for the operation to complete
@@ -145,11 +154,17 @@ func deleteComputeAddress(ctx context.Context, client *compute.AddressesClient, 
 
 	op, err := client.Delete(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Failed to delete compute address: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {
-		return fmt.Errorf("Failed to wait for address deletion operation: %w", err)
+		return fmt.Errorf("failed to wait for address deletion operation: %w", err)
 	}
 
 	log.Printf("Compute address %s deleted successfully", addressName)

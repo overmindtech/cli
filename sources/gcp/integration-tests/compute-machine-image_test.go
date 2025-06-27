@@ -2,12 +2,15 @@ package integrationtests
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
@@ -16,7 +19,7 @@ import (
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
-func TestComputeMachineImagesIntegration(t *testing.T) {
+func TestComputeMachineImageIntegration(t *testing.T) {
 	projectID := os.Getenv("GCP_PROJECT_ID")
 	if projectID == "" {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
@@ -56,7 +59,7 @@ func TestComputeMachineImagesIntegration(t *testing.T) {
 			t.Fatalf("Failed to create source instance: %v", err)
 		}
 
-		err := createComputeMachineImage(ctx, client, projectID, machineImageName, sourceInstanceName)
+		err := createComputeMachineImage(t, ctx, client, projectID, zone, machineImageName, sourceInstanceName)
 		if err != nil {
 			t.Fatalf("Failed to create compute machine image: %v", err)
 		}
@@ -124,48 +127,25 @@ func TestComputeMachineImagesIntegration(t *testing.T) {
 	})
 
 	t.Run("Teardown", func(t *testing.T) {
-		req := &computepb.DeleteMachineImageRequest{
-			Project:      projectID,
-			MachineImage: machineImageName,
-		}
-
-		op, err := client.Delete(ctx, req)
+		err := deleteComputeMachineImage(ctx, client, projectID, machineImageName)
 		if err != nil {
 			t.Fatalf("Failed to delete compute machine image: %v", err)
 		}
 
-		if err := op.Wait(ctx); err != nil {
-			t.Fatalf("Failed to wait for machine image deletion operation: %v", err)
-		}
-
-		log.Printf("Compute machine image %s deleted successfully", machineImageName)
-
-		instanceReq := &computepb.DeleteInstanceRequest{
-			Project:  projectID,
-			Zone:     zone,
-			Instance: sourceInstanceName,
-		}
-
-		instanceOp, err := instanceClient.Delete(ctx, instanceReq)
+		err = deleteComputeInstance(ctx, instanceClient, projectID, zone, sourceInstanceName)
 		if err != nil {
 			t.Fatalf("Failed to delete source instance: %v", err)
 		}
-
-		if err := instanceOp.Wait(ctx); err != nil {
-			t.Fatalf("Failed to wait for source instance deletion operation: %v", err)
-		}
-
-		log.Printf("Source instance %s deleted successfully in project %s, zone %s", sourceInstanceName, projectID, zone)
 	})
 }
 
 // createComputeMachineImage creates a GCP Compute Machine Image with the given parameters.
-func createComputeMachineImage(ctx context.Context, client *compute.MachineImagesClient, projectID, machineImageName, sourceInstanceName string) error {
+func createComputeMachineImage(t *testing.T, ctx context.Context, client *compute.MachineImagesClient, projectID, zone, machineImageName, sourceInstanceName string) error {
 	machineImage := &computepb.MachineImage{
 		Name: ptr.To(machineImageName),
 		SourceInstance: ptr.To(fmt.Sprintf(
 			"projects/%s/zones/%s/instances/%s",
-			projectID, "us-central1-a", sourceInstanceName,
+			projectID, zone, sourceInstanceName,
 		)),
 		Labels: map[string]string{
 			"test": "integration",
@@ -179,7 +159,13 @@ func createComputeMachineImage(ctx context.Context, client *compute.MachineImage
 
 	op, err := client.Insert(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to create machine image: %w", err)
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Resource already exists in project, skipping creation: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to create resource: %w", err)
 	}
 
 	if err := op.Wait(ctx); err != nil {
@@ -187,5 +173,30 @@ func createComputeMachineImage(ctx context.Context, client *compute.MachineImage
 	}
 
 	log.Printf("Machine image %s created successfully in project %s", machineImageName, projectID)
+	return nil
+}
+
+func deleteComputeMachineImage(ctx context.Context, client *compute.MachineImagesClient, projectID, machineImageName string) error {
+	req := &computepb.DeleteMachineImageRequest{
+		Project:      projectID,
+		MachineImage: machineImageName,
+	}
+
+	op, err := client.Delete(ctx, req)
+	if err != nil {
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusNotFound {
+			log.Printf("Failed to find resource to delete: %v", err)
+			return nil
+		}
+
+		return fmt.Errorf("failed to delete resource: %w", err)
+	}
+
+	if err := op.Wait(ctx); err != nil {
+		return fmt.Errorf("failed to wait for machine image deletion operation: %w", err)
+	}
+
+	log.Printf("Compute machine image %s deleted successfully", machineImageName)
 	return nil
 }
