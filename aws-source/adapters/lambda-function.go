@@ -51,17 +51,20 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 		FunctionName: out.Configuration.FunctionName,
 	})
 
-	var urlOut *lambda.ListFunctionUrlConfigsOutput
-
 	for urlConfigs.HasMorePages() {
-		urlOut, err = urlConfigs.NextPage(ctx)
-
+		urlOut, err := urlConfigs.NextPage(ctx)
 		if err != nil {
-			continue
+			return nil, err
 		}
 
 		for _, config := range urlOut.FunctionUrlConfigs {
 			function.UrlConfigs = append(function.UrlConfigs, &config)
+		}
+
+		err = ctx.Err()
+		if err != nil {
+			// If the context is done, we should stop processing and return an error, as the results are not complete
+			return nil, err
 		}
 	}
 
@@ -70,17 +73,20 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 		FunctionName: out.Configuration.FunctionName,
 	})
 
-	var eventOut *lambda.ListFunctionEventInvokeConfigsOutput
-
 	for eventConfigs.HasMorePages() {
-		eventOut, err = eventConfigs.NextPage(ctx)
-
+		eventOut, err := eventConfigs.NextPage(ctx)
 		if err != nil {
-			continue
+			return nil, err
 		}
 
 		for _, event := range eventOut.FunctionEventInvokeConfigs {
 			function.EventInvokeConfigs = append(function.EventInvokeConfigs, &event)
+		}
+
+		err = ctx.Err()
+		if err != nil {
+			// If the context is done, we should stop processing and return an error, as the results are not complete
+			return nil, err
 		}
 	}
 
