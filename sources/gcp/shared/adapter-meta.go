@@ -282,38 +282,20 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/artifact-registry/docs/reference/rest/v1/projects.locations.repositories.dockerImages/list?rep_location=global
 		// GET https://artifactregistry.googleapis.com/v1/{parent=projects/*/locations/*/repositories/*}/dockerImages
 		// IAM permissions: artifactregistry.dockerImages.list
-		SearchEndpointFunc: func(adapterInitParams ...string) (EndpointFunc, error) {
-			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-				return func(query string) string {
-					if strings.Contains(query, "/") {
-						// That means this is coming from terraform mapping, and the query is in the form of
-						// projects/{{project}}/locations/{{location}}/repository/{{repository_id}}/dockerImages/{{docker_image}}
-						// We need to extract the relevant parts and construct the URL accordingly
-						parts := strings.Split(strings.TrimPrefix(query, "/"), "/")
-						if len(parts) == 8 {
-							// 3: location
-							// 5: repository_id
-							// 7: docker_image
-							return fmt.Sprintf("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s/dockerImages/%s", adapterInitParams[0], parts[3], parts[5], parts[7])
-						}
-						return ""
-					}
-					if query != "" {
-						// This is a regular query coming from user interaction, and it should be in the form of
-						// {{location}}|{{repository_id}}
-						queryParts := strings.Split(query, shared.QuerySeparator)
-						if len(queryParts) == 2 && queryParts[0] != "" && queryParts[1] != "" {
-							return fmt.Sprintf("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s/dockerImages", adapterInitParams[0], queryParts[0], queryParts[1])
-						}
-						return ""
-					}
-					return ""
-				}, nil
-			}
-			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
-		},
+		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s/dockerImages"),
 		SearchDescription:   "Search for Docker images in Artifact Registry. Use the format {{location}}|{{repository_id}} or projects/{{project}}/locations/{{location}}/repository/{{repository_id}}/dockerImages/{{docker_image}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "repositories", "dockerImages"},
+	},
+	ArtifactRegistryRepository: {
+		// Reference: https://cloud.google.com/artifact-registry/docs/reference/rest/v1/projects.locations.repositories/get?rep_location=global
+		InDevelopment:      true,
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
+		Scope:              ScopeProject,
+		// https://artifactregistry.googleapis.com/v1/projects/*/locations/*/repositories/*
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s"),
+		// https://artifactregistry.googleapis.com/v1/{parent=projects/*/locations/*}/repositories
+		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories"),
+		UniqueAttributeKeys: []string{"locations", "repositories"},
 	},
 	BigTableAdminAppProfile: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
@@ -322,9 +304,6 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// GET https://bigtableadmin.googleapis.com/v2/{name=projects/*/instances/*/appProfiles/*}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/appProfiles/%s"),
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.appProfiles/list
-		// GET https://bigtableadmin.googleapis.com/v2/{parent=projects/*/instances/*}/appProfiles
-		// TODO: Update this for => https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
-		// id => projects/{{project}}/instances/{{instance}}/appProfiles/{{app_profile_id}}
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/appProfiles"),
 		SearchDescription:   "Search for BigTable App Profiles in an instance. Use the format {{instance}} or projects/{{project}}/instances/{{instance}}/appProfiles/{{app_profile_id}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"instances", "appProfiles"},
@@ -372,8 +351,6 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/tables/%s"),
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.tables/list
 		// GET https://bigtableadmin.googleapis.com/v2/{parent=projects/*/instances/*}/tables
-		// TODO: Update this for => https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
-		// id => projects/{{project}}/instances/{{instance_name}}/tables/{{name}}
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/tables"),
 		SearchDescription:   "Search for BigTable tables in an instance. Use the format {{instance_name}} or projects/{{project}}/instances/{{instance_name}}/tables/{{name}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"instances", "tables"},
@@ -581,9 +558,6 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories/%s"),
 		// Reference: https://cloud.google.com/dataform/reference/rest/v1/projects.locations.repositories/list
 		// GET https://dataform.googleapis.com/v1/projects/*/locations/*/repositories
-		// IAM permissions: dataform.repositories.list
-		// TODO: Update this for => https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
-		// id => projects/{{project}}/locations/{{region}}/repositories/{{name}}
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories"),
 		SearchDescription:   "Search for Dataform repositories in a location. Use the format {{location}} or projects/{{project}}/locations/{{location}}/repositories/{{name}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "repositories"},
@@ -597,8 +571,6 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups/%s"),
 		// Reference: https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.entryGroups/list
 		// GET https://dataplex.googleapis.com/v1/{parent=projects/*/locations/*}/entryGroups
-		// TODO: Update this for => https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
-		// id => projects/{{project}}/locations/{{location}}/entryGroups/{{entry_group_id}}
 		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups"),
 		SearchDescription:   "Search for Dataplex entry groups in a location. Use the format {{location}} or projects/{{project}}/locations/{{location}}/entryGroups/{{entry_group_id}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "entryGroups"},
@@ -627,25 +599,16 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// GET https://essentialcontacts.googleapis.com/v1/projects/*/contacts
 		// IAM permissions: essentialcontacts.contacts.list
 		ListEndpointFunc: projectLevelListFunc("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts"),
-		// This is for terraform mapping, where the query is in the form of
-		// projects/{projectId}/contacts/{contact_id}
+		// This is a special case where we have to define the SEARCH method for only to support Terraform Mapping.
+		// We only validate the adapter initiation constraint: whether the project ID is provided or not.
+		// We return a nil EndpointFunc without any error, because in the runtime we will use the
+		// GET endpoint for retrieving the item for Terraform Query.
 		SearchEndpointFunc: func(adapterInitParams ...string) (EndpointFunc, error) {
-			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-				return func(query string) string {
-					if strings.Contains(query, "/") {
-						// That means this is coming from terraform mapping, and the query is in the form of
-						// projects/{projectId}/contacts/{contact_id}
-						// We need to extract the relevant parts and construct the URL accordingly
-						values := ExtractPathParams(query, "projects", "contacts")
-						if len(values) == 2 {
-							return fmt.Sprintf("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts/%s", values[0], values[1])
-						}
-						return ""
-					}
-					return ""
-				}, nil
+			if len(adapterInitParams) != 1 || adapterInitParams[0] == "" {
+				return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
 			}
-			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+
+			return nil, nil
 		},
 		SearchDescription:   "Search for contacts by their ID in the form of projects/{projectId}/contacts/{contact_id}.",
 		UniqueAttributeKeys: []string{"contacts"},
@@ -721,23 +684,16 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// IAM Perm: monitoring.dashboards.list
 		ListEndpointFunc:  projectLevelListFunc("https://monitoring.googleapis.com/v1/projects/%s/dashboards"),
 		SearchDescription: "Search for custom dashboards by their ID in the form of projects/{projectId}/dashboards/{dashboard_id}. This is supported for terraform mappings.",
+		// This is a special case where we have to define the SEARCH method for only to support Terraform Mapping.
+		// We only validate the adapter initiation constraint: whether the project ID is provided or not.
+		// We return a nil EndpointFunc without any error, because in the runtime we will use the
+		// GET endpoint for retrieving the item for Terraform Query.
 		SearchEndpointFunc: func(adapterInitParams ...string) (EndpointFunc, error) {
-			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-				return func(query string) string {
-					if strings.Contains(query, "/") {
-						// That means this is coming from terraform mapping, and the query is in the form of
-						// projects/{projectId}/dashboards/{dashboard_id}
-						// We need to extract the relevant parts and construct the URL accordingly
-						values := ExtractPathParams(query, "projects", "dashboards")
-						if len(values) == 2 {
-							return fmt.Sprintf("https://monitoring.googleapis.com/v1/projects/%s/dashboards/%s", values[0], values[1])
-						}
-						return ""
-					}
-					return ""
-				}, nil
+			if len(adapterInitParams) != 1 || adapterInitParams[0] == "" {
+				return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
 			}
-			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+
+			return nil, nil
 		},
 		UniqueAttributeKeys: []string{"dashboards"},
 	},
@@ -791,8 +747,6 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/service-directory/docs/reference/rest/v1/projects.locations.namespaces.services.endpoints/list
 		// IAM Perm: servicedirectory.endpoints.list
 		// GET https://servicedirectory.googleapis.com/v1/projects/*/locations/*/namespaces/*/services/*/endpoints
-		// TODO: Update this for => https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
-		// id => projects/*/locations/*/namespaces/*/services/*/endpoints/*
 		SearchEndpointFunc:  projectLevelEndpointFuncWithThreeQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s/endpoints"),
 		SearchDescription:   "Search for endpoints by {location}|{namespace_id}|{service_id} or projects/{project}/locations/{location}/namespaces/{namespace_id}/services/{service_id}/endpoints/{endpoint_id} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "namespaces", "services", "endpoints"},

@@ -2,6 +2,7 @@ package dynamic
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/overmindtech/cli/discovery"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -52,24 +53,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 			continue
 		}
 
-		getEndpointBaseURL, err := meta.GetEndpointBaseURLFunc(projectID)
-		if err != nil {
-			return nil, err
-		}
-
-		cfg := &AdapterConfig{
-			ProjectID:           projectID,
-			Scope:               projectID,
-			GetURLFunc:          getEndpointBaseURL,
-			SDPAssetType:        sdpItemType,
-			SDPAdapterCategory:  meta.SDPAdapterCategory,
-			TerraformMappings:   SDPAssetTypeToTerraformMappings[sdpItemType].Mappings,
-			Linker:              linker,
-			HTTPClient:          gcpHTTPCliWithOtel,
-			UniqueAttributeKeys: meta.UniqueAttributeKeys,
-		}
-
-		adapter, err := makeAdapter(meta, cfg, projectID)
+		adapter, err := MakeAdapter(sdpItemType, meta, linker, gcpHTTPCliWithOtel, projectID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add adapter for %s: %w", sdpItemType, err)
 		}
@@ -91,26 +75,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 				continue
 			}
 
-			getEndpointBaseURL, err := meta.GetEndpointBaseURLFunc(projectID, region)
-			if err != nil {
-				return nil, err
-			}
-
-			scope := fmt.Sprintf("%s.%s", projectID, region)
-
-			cfg := &AdapterConfig{
-				ProjectID:           projectID,
-				Scope:               scope,
-				GetURLFunc:          getEndpointBaseURL,
-				SDPAssetType:        sdpItemType,
-				SDPAdapterCategory:  meta.SDPAdapterCategory,
-				TerraformMappings:   SDPAssetTypeToTerraformMappings[sdpItemType].Mappings,
-				Linker:              linker,
-				HTTPClient:          gcpHTTPCliWithOtel,
-				UniqueAttributeKeys: meta.UniqueAttributeKeys,
-			}
-
-			adapter, err := makeAdapter(meta, cfg, projectID, region)
+			adapter, err := MakeAdapter(sdpItemType, meta, linker, gcpHTTPCliWithOtel, projectID, region)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add adapter for %s in region %s: %w", sdpItemType, region, err)
 			}
@@ -133,26 +98,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 				continue
 			}
 
-			getEndpointBaseURL, err := meta.GetEndpointBaseURLFunc(projectID, zone)
-			if err != nil {
-				return nil, err
-			}
-
-			scope := fmt.Sprintf("%s.%s", projectID, zone)
-
-			cfg := &AdapterConfig{
-				ProjectID:           projectID,
-				Scope:               scope,
-				GetURLFunc:          getEndpointBaseURL,
-				SDPAssetType:        sdpItemType,
-				SDPAdapterCategory:  meta.SDPAdapterCategory,
-				TerraformMappings:   SDPAssetTypeToTerraformMappings[sdpItemType].Mappings,
-				Linker:              linker,
-				HTTPClient:          gcpHTTPCliWithOtel,
-				UniqueAttributeKeys: meta.UniqueAttributeKeys,
-			}
-
-			adapter, err := makeAdapter(meta, cfg, projectID, zone)
+			adapter, err := MakeAdapter(sdpItemType, meta, linker, gcpHTTPCliWithOtel, projectID, zone)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add adapter for %s in zone %s: %w", sdpItemType, zone, err)
 			}
@@ -180,7 +126,36 @@ func adapterType(meta gcpshared.AdapterMeta) typeOfAdapter {
 	return Standard
 }
 
-func makeAdapter(meta gcpshared.AdapterMeta, cfg *AdapterConfig, opts ...string) (discovery.Adapter, error) {
+// MakeAdapter creates a new GCP dynamic adapter based on the provided SDP item type and metadata.
+// It expects the scope components (project ID, region, zone) to be passed as options.
+// It assumes that the first option is always the project ID, and subsequent options depend on the scope type.
+// Possible options are:
+// - For project scope: project ID
+// - For regional scope: project ID and region
+// - For zonal scope: project ID, region, and zone
+func MakeAdapter(sdpItemType shared.ItemType, meta gcpshared.AdapterMeta, linker *gcpshared.Linker, httpCli *http.Client, opts ...string) (discovery.Adapter, error) {
+	getEndpointBaseURL, err := meta.GetEndpointBaseURLFunc(opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	scope := makeScope(meta, opts...)
+	if scope == "" {
+		return nil, fmt.Errorf("invalid scope for adapter %s with options %v", sdpItemType.String(), opts)
+	}
+
+	cfg := &AdapterConfig{
+		ProjectID:           opts[0],
+		Scope:               scope,
+		GetURLFunc:          getEndpointBaseURL,
+		SDPAssetType:        sdpItemType,
+		SDPAdapterCategory:  meta.SDPAdapterCategory,
+		TerraformMappings:   SDPAssetTypeToTerraformMappings[sdpItemType].Mappings,
+		Linker:              linker,
+		HTTPClient:          httpCli,
+		UniqueAttributeKeys: meta.UniqueAttributeKeys,
+	}
+
 	switch adapterType(meta) {
 	case SearchableListable:
 		searchEndpointFunc, err := meta.SearchEndpointFunc(opts...)
@@ -212,5 +187,23 @@ func makeAdapter(meta gcpshared.AdapterMeta, cfg *AdapterConfig, opts ...string)
 		return NewAdapter(cfg)
 	default:
 		return nil, fmt.Errorf("unknown adapter type %s", adapterType(meta))
+	}
+}
+
+// makeScope constructs the scope string based on the provided metadata and options.
+// It uses the first option as the project ID, and for regional or zonal scopes, it appends the region or zone.
+// For example:
+// - For project scope: opts[0] (project ID)
+// - For regional scope: opts[0] (project ID) + opts[1] (region)
+// - For zonal scope: opts[0] (project ID) + opts[1] (zone)
+// The second option can only be region or zone, depending on the scope type.
+func makeScope(meta gcpshared.AdapterMeta, opts ...string) string {
+	switch meta.Scope {
+	case gcpshared.ScopeProject:
+		return opts[0]
+	case gcpshared.ScopeRegional, gcpshared.ScopeZonal:
+		return fmt.Sprintf("%s.%s", opts[0], opts[1])
+	default:
+		return ""
 	}
 }

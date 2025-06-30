@@ -106,7 +106,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		return nil, &sdp.QueryError{
 			ErrorType: sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf(
-				"no get endpoint found for query \"%s\". %s",
+				"failed to construct the URL for the query \"%s\". GET method description: %s",
 				query,
 				g.Metadata().GetSupportedQueryMethods().GetGetDescription(),
 			),

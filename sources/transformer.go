@@ -120,21 +120,7 @@ func (s *standardAdapterImpl) Get(ctx context.Context, scope string, query strin
 		return nil, err
 	}
 
-	var queryParts []string
-	if strings.Contains(query, "/") {
-		// This must be a terraform query in the format of:
-		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
-		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
-		//
-		// Extract the relevant parts from the query
-		// We need to extract the path parameters based on the number of lookups
-		queryParts = gcpshared.ExtractPathParamsWithCount(query, len(s.wrapper.GetLookups()))
-	} else {
-		// This must be a reqular query in the format of:
-		// {{datasetName}}|{{tableName}}
-		queryParts = strings.Split(query, shared.QuerySeparator)
-	}
-
+	queryParts := strings.Split(query, shared.QuerySeparator)
 	if len(queryParts) != len(s.wrapper.GetLookups()) {
 		return nil, fmt.Errorf(
 			"invalid query format: %s, expected: %s",
@@ -177,13 +163,43 @@ func (s *standardAdapterImpl) Search(ctx context.Context, scope string, query st
 		return nil, err
 	}
 
+	var queryParts []string
+	if strings.HasPrefix(query, "projects/") {
+		// This must be a terraform query in the format of:
+		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
+		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
+		//
+		// Extract the relevant parts from the query
+		// We need to extract the path parameters based on the number of lookups
+		queryParts = gcpshared.ExtractPathParamsWithCount(query, len(s.wrapper.GetLookups()))
+		if len(queryParts) != len(s.wrapper.GetLookups()) {
+			return nil, &sdp.QueryError{
+				ErrorType: sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf(
+					"failed to handle terraform mapping from query %s for %s",
+					query,
+					s.wrapper.ItemType().Readable(),
+				),
+			}
+		}
+
+		item, err := s.Get(ctx, scope, shared.CompositeLookupKey(queryParts...), ignoreCache)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get item from terraform mapping: %w", err)
+		}
+
+		return []*sdp.Item{item}, nil
+	}
+
 	if s.searchable == nil {
 		log.WithField("adapter", s.Name()).Debug("search operation not supported")
 
 		return nil, nil
 	}
 
-	queryParts := strings.Split(query, shared.QuerySeparator)
+	// This must be a regular query in the format of:
+	// {{datasetName}}|{{tableName}}
+	queryParts = strings.Split(query, shared.QuerySeparator)
 
 	var validQuery bool
 	for _, kw := range s.searchable.SearchLookups() {

@@ -46,10 +46,6 @@ func NewLinker() *Linker {
 func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sdp.Item, fromSDPItemType shared.ItemType, toItemGCPResourceName string, keys []string) {
 	key := strings.Join(keys, ".")
 
-	if key == "selfLink" || key == "name" {
-		return
-	}
-
 	lf := log.Fields{
 		"ovm.gcp.projectId":          projectID,
 		"ovm.gcp.fromItemType":       fromSDPItemType.String(),
@@ -67,7 +63,7 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 	if !ok {
 		if strings.Contains(toItemGCPResourceName, "/") {
 			// There is a high chance that the item type is not recognized, so we log a warning.
-			log.WithContext(ctx).WithFields(lf).Warnf("missing blast propagation between two item types")
+			log.WithContext(ctx).WithFields(lf).Warnf("possible missing link")
 		}
 		return
 	}

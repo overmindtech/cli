@@ -135,7 +135,13 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		},
 	},
 	ArtifactRegistryDockerImage: {
-		// There is no links for this item type.
+		// This is a link to its parent resource: ArtifactRegistryRepository
+		// Linker will extract the repository name from the image name.
+		"name": {
+			ToSDPITemType:    ArtifactRegistryRepository,
+			Description:      "If the Artifact Registry Repository is deleted or updated: The Docker Image may become invalid or inaccessible. If the Docker Image is updated: The repository remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
 	},
 	BigTableAdminAppProfile: {
 		"name": {

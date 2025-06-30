@@ -55,35 +55,6 @@ func TestIAMServiceAccountKey(t *testing.T) {
 		})
 	})
 
-	t.Run("Get with terraform query map", func(t *testing.T) {
-		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
-
-		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createServiceAccountKey(testKeyFullName), nil)
-
-		adapter := sources.WrapperToAdapter(wrapper)
-
-		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
-		terraformResourceID := fmt.Sprintf("projects/%s/serviceAccounts/%s/keys/%s", projectID, testServiceAccount, testKeyName)
-		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], terraformResourceID, true)
-		if qErr != nil {
-			t.Fatalf("Expected no error, got: %v", qErr)
-		}
-
-		t.Run("StaticTests", func(t *testing.T) {
-			queryTests := shared.QueryTests{
-				{
-					ExpectedType:             gcpshared.IAMServiceAccount.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            testServiceAccount,
-					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
-				},
-			}
-
-			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
-		})
-	})
-
 	t.Run("Search", func(t *testing.T) {
 		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
 		adapter := sources.WrapperToAdapter(wrapper)
@@ -109,6 +80,32 @@ func TestIAMServiceAccountKey(t *testing.T) {
 			if err := item.Validate(); err != nil {
 				t.Fatalf("Expected no validation error, got: %v", err)
 			}
+		}
+	})
+
+	t.Run("SearchWithTerraformQueryMap", func(t *testing.T) {
+		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createServiceAccountKey(testKeyFullName), nil)
+
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
+		terraformResourceID := fmt.Sprintf("projects/%s/serviceAccounts/%s/keys/%s", projectID, testServiceAccount, testKeyName)
+
+		sdpItems, err := adapter.Search(ctx, wrapper.Scopes()[0], terraformResourceID, true)
+		if err != nil {
+			t.Fatalf("Expected no error, got: %v", err)
+		}
+
+		expectedCount := 1
+		actualCount := len(sdpItems)
+		if actualCount != expectedCount {
+			t.Fatalf("Expected %d items, got: %d", expectedCount, actualCount)
+		}
+
+		if err := sdpItems[0].Validate(); err != nil {
+			t.Fatalf("Expected no validation error, got: %v", err)
 		}
 	})
 

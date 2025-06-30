@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/overmindtech/cli/discovery"
@@ -173,40 +172,17 @@ func queryKey(itemType, query string) string {
 	return fmt.Sprintf("%s/%s", itemType, query)
 }
 
-type MockRoundTripper struct {
-	responses   map[string]*http.Response
-	requestURLs map[string]bool
-	mu          sync.RWMutex
+type mockRoundTripper struct {
+	responses map[string]*http.Response
 }
 
-func NewMockRoundTripper(responses map[string]*http.Response) *MockRoundTripper {
-	return &MockRoundTripper{
-		responses:   responses,
-		requestURLs: make(map[string]bool),
+func newMockRoundTripper(responses map[string]*http.Response) *mockRoundTripper {
+	return &mockRoundTripper{
+		responses: responses,
 	}
 }
 
-func (m *MockRoundTripper) GetRequestURLs() map[string]bool {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return m.requestURLs
-}
-
-func (m *MockRoundTripper) GetResponses() map[string]*http.Response {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return m.responses
-}
-
-func (m *MockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if m.requestURLs == nil {
-		m.requestURLs = make(map[string]bool)
-	}
-
-	m.requestURLs[req.URL.String()] = true
-
+func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	resp, ok := m.responses[req.URL.String()]
 	if !ok {
 		return &http.Response{
@@ -224,13 +200,38 @@ func (m *MockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) 
 	return resp, nil
 }
 
-// MockHTTPResponse converts an input to an io.ReadCloser
+// mockHTTPResponse converts an input to an io.ReadCloser
 // for use in HTTP response mocking
-func MockHTTPResponse(input any) io.ReadCloser {
+func mockHTTPResponse(input any) io.ReadCloser {
 	data, err := json.Marshal(input)
 	if err != nil {
 		// For test helpers, it's reasonable to panic on marshaling errors
 		panic(fmt.Sprintf("Failed to marshal instance input: %v", err))
 	}
 	return io.NopCloser(bytes.NewReader(data))
+}
+
+// MockResponse is a struct that defines the expected response for a mocked HTTP call.
+// It includes the status code and the body of the response.
+// Body can be any type, but it is typically a struct that can be marshaled to JSON.
+type MockResponse struct {
+	StatusCode int
+	Body       any
+}
+
+// NewMockHTTPClientProvider creates a new mock HTTP client provider with the given expected calls and responses.
+// The expectedCallAndResponse map should have the URL as the key and a MockResponse as the value.
+func NewMockHTTPClientProvider(expectedCallAndResponse map[string]MockResponse) *http.Client {
+	cp := make(map[string]*http.Response, len(expectedCallAndResponse))
+	for url, resp := range expectedCallAndResponse {
+		body := mockHTTPResponse(resp.Body)
+		cp[url] = &http.Response{
+			StatusCode: resp.StatusCode,
+			Body:       body,
+		}
+	}
+
+	return &http.Client{
+		Transport: newMockRoundTripper(cp),
+	}
 }

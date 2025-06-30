@@ -108,7 +108,7 @@ func readConfig() (*config, error) {
 
 		l.Zones = append(l.Zones, zone)
 
-		region := zoneToRegion(zone)
+		region := gcpshared.ZoneToRegion(zone)
 		if region == "" {
 			return nil, fmt.Errorf("zone %s is not valid", zone)
 		}
@@ -121,17 +121,4 @@ func readConfig() (*config, error) {
 	}
 
 	return l, nil
-}
-
-// zoneToRegion converts a GCP zone to a region.
-// The fully-qualified name for a zone is made up of <region>-<zone>.
-// For example, the fully qualified name for zone a in region us-central1 is us-central1-a.
-// https://cloud.google.com/compute/docs/regions-zones#identifying_a_region_or_zone
-func zoneToRegion(zone string) string {
-	parts := strings.Split(zone, "-")
-	if len(parts) < 2 {
-		return ""
-	}
-
-	return strings.Join(parts[:len(parts)-1], "-")
 }

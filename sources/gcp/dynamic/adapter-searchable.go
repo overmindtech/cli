@@ -8,6 +8,7 @@ import (
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+	"github.com/overmindtech/cli/sources/shared"
 )
 
 // SearchableAdapter implements discovery.SearchableAdapter for GCP dynamic adapters.
@@ -69,21 +70,48 @@ func (g SearchableAdapter) Search(ctx context.Context, scope, query string, igno
 			ErrorString: fmt.Sprintf("requested scope %v does not match any adapter scope %v", scope, g.Scopes()),
 		}
 	}
-	searchEndpoint := g.searchURLFunc(query)
-	if searchEndpoint == "" {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_OTHER,
-			ErrorString: fmt.Sprintf("no search endpoint found for query \"%s\". %s", query, g.Metadata().GetSupportedQueryMethods().GetSearchDescription()),
-		}
-	}
-
-	var items []*sdp.Item
-	itemsSelector := g.uniqueAttributeKeys[len(g.uniqueAttributeKeys)-1] // Use the last key as the item selector
 
 	if strings.HasPrefix(query, "projects/") {
-		// This is a single item query for terraform search method mappings.
-		// See: https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
-		resp, err := externalCallSingle(ctx, g.httpCli, searchEndpoint)
+		// This must be a terraform query in the format of:
+		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
+		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
+		//
+		// Extract the relevant parts from the query
+		// We need to extract the path parameters based on the number of unique attribute keys
+		// From projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
+		// we get: ["account", "key"]
+		// if the unique attribute keys are ["serviceAccounts", "keys"]
+		queryParts := gcpshared.ExtractPathParamsWithCount(query, len(g.uniqueAttributeKeys))
+		if len(queryParts) != len(g.uniqueAttributeKeys) {
+			return nil, &sdp.QueryError{
+				ErrorType: sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf(
+					"failed to handle terraform mapping from query %s for %s",
+					query,
+					g.sdpAssetType,
+				),
+			}
+		}
+
+		// Reconstruct the query from the parts with default separator
+		// For example, if the unique attribute keys are ["serviceAccounts", "keys"]
+		// and the query parts are ["account", "key"], we get "account|key"
+		query = strings.Join(queryParts, shared.QuerySeparator)
+
+		// We use the GET endpoint for this query. Because the terraform mappings are for single items,
+		url := g.getURLFunc(query)
+		if url == "" {
+			return nil, &sdp.QueryError{
+				ErrorType: sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf(
+					"failed to construct the URL for the query \"%s\". SEARCH method description: %s",
+					query,
+					g.Metadata().GetSupportedQueryMethods().GetSearchDescription(),
+				),
+			}
+		}
+
+		resp, err := externalCallSingle(ctx, g.httpCli, url)
 		if err != nil {
 			return nil, err
 		}
@@ -93,12 +121,28 @@ func (g SearchableAdapter) Search(ctx context.Context, scope, query string, igno
 			return nil, err
 		}
 
-		return append(items, item), nil
+		return []*sdp.Item{item}, nil
 	}
 
-	multiResp, err := externalCallMulti(ctx, itemsSelector, g.httpCli, searchEndpoint)
+	// This is a regular SEARCH call
+	url := g.searchURLFunc(query)
+	if url == "" {
+		return nil, &sdp.QueryError{
+			ErrorType: sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf(
+				"failed to construct the URL for the query \"%s\". SEARCH method description: %s",
+				query,
+				g.Metadata().GetSupportedQueryMethods().GetSearchDescription(),
+			),
+		}
+	}
+
+	var items []*sdp.Item
+	itemsSelector := g.uniqueAttributeKeys[len(g.uniqueAttributeKeys)-1] // Use the last key as the item selector
+
+	multiResp, err := externalCallMulti(ctx, itemsSelector, g.httpCli, url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve items for %s: %w", searchEndpoint, err)
+		return nil, fmt.Errorf("failed to retrieve items for %s: %w", url, err)
 	}
 
 	for _, resp := range multiResp {

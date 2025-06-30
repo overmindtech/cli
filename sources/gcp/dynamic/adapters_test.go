@@ -92,20 +92,14 @@ func Test_addAdapter(t *testing.T) {
 		},
 	}
 
+	linker := gcpshared.NewLinker()
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			meta := gcpshared.SDPAssetTypeToAdapterMeta[tc.sdpType]
 
-			cfg := &AdapterConfig{
-				ProjectID:    "my-project",
-				Scope:        "us-central1-a",
-				HTTPClient:   http.DefaultClient,
-				SDPAssetType: tc.sdpType,
-			}
-
-			adapter, err := makeAdapter(meta, cfg, tc.opts...)
+			adapter, err := MakeAdapter(tc.sdpType, meta, linker, http.DefaultClient, tc.opts...)
 			if err != nil {
-				t.Errorf("makeAdapter() error = %v", err)
+				t.Errorf("MakeAdapter() error = %v", err)
 			}
 
 			if tc.listable {

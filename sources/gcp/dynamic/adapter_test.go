@@ -2,11 +2,15 @@ package dynamic_test
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
+	"google.golang.org/api/artifactregistry/v1"
 	"google.golang.org/api/compute/v1"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -14,6 +18,8 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
+// TODO: Possible improvements:
+// - Create a helper function that does some of the common assertions for the adapter tests
 func TestAdapter(t *testing.T) {
 	ctx := context.Background()
 	projectID := "test-project"
@@ -106,406 +112,516 @@ func TestAdapter(t *testing.T) {
 			Items: []*compute.InstanceTemplate{template},
 		}
 
-		mockTransport := shared.NewMockRoundTripper(map[string]*http.Response{
+		expectedCallAndResponses := map[string]shared.MockResponse{
 			"https://compute.googleapis.com/compute/v1/projects/test-project/global/instanceTemplates/test-instance-template": {
 				StatusCode: http.StatusOK,
-				Body:       shared.MockHTTPResponse(template),
-				Header:     make(http.Header),
+				Body:       template,
 			},
 			"https://compute.googleapis.com/compute/v1/projects/test-project/global/instanceTemplates": {
 				StatusCode: http.StatusOK,
-				Body:       shared.MockHTTPResponse(templates),
-				Header:     make(http.Header),
+				Body:       templates,
 			},
+		}
+
+		meta := gcpshared.SDPAssetTypeToAdapterMeta[gcpshared.ComputeInstanceTemplate]
+
+		t.Run("Get", func(t *testing.T) {
+			adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, meta, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), projectID)
+			if err != nil {
+				t.Fatalf("Failed to create adapter for ComputeInstanceTemplate: %v", err)
+			}
+
+			sdpItem, err := adapter.Get(ctx, projectID, "test-instance-template", true)
+			if err != nil {
+				t.Fatalf("Failed to get instance template: %v", err)
+			}
+
+			// Verify the returned item
+			if sdpItem.GetType() != gcpshared.ComputeInstanceTemplate.String() {
+				t.Errorf("Expected type %s, got %s", gcpshared.ComputeInstanceTemplate.String(), sdpItem.GetType())
+			}
+
+			if sdpItem.UniqueAttributeValue() != "test-instance-template" {
+				t.Errorf("Expected unique attribute value 'test-instance-template', got %s", sdpItem.UniqueAttributeValue())
+			}
+
+			t.Run("StaticTests", func(t *testing.T) {
+				queryTests := shared.QueryTests{
+					{
+						ExpectedType:   gcpshared.ComputeMachineType.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "e2-medium",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						ExpectedType:   gcpshared.ComputeNetwork.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "default",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.disks.initializeParams.diskName
+						ExpectedType:   gcpshared.ComputeDisk.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "disk-name",
+						ExpectedScope:  "test-project.us-central1-a",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					},
+					{
+						// properties.disks.source
+						ExpectedType:   gcpshared.ComputeDisk.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "source",
+						ExpectedScope:  "test-project.us-central1-a",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					},
+					{
+						ExpectedType:   gcpshared.ComputeImage.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "debian-11",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "default",
+						ExpectedScope:  "test-project.us-central1",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.networkInterfaces.networkIP
+						ExpectedType:   stdlib.NetworkIP.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "10.240.17.92",
+						ExpectedScope:  "global",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					},
+					{
+						// properties.networkInterfaces.ipv6Address
+						ExpectedType:   stdlib.NetworkIP.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "2600:1901:0:1234::1",
+						ExpectedScope:  "global",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					},
+					{
+						// properties.networkInterfaces.accessConfigs.natIP
+						ExpectedType:   stdlib.NetworkIP.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "10.240.17.93",
+						ExpectedScope:  "global",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					},
+					{
+						// properties.networkInterfaces.accessConfigs.externalIpv6
+						ExpectedType:   stdlib.NetworkIP.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "2600:1901:0:1234::2",
+						ExpectedScope:  "global",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					},
+					{
+						// properties.networkInterfaces.accessConfigs.securityPolicy
+						ExpectedType:   gcpshared.ComputeSecurityPolicy.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "test-security-policy",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.networkInterfaces.ipv6AccessConfigs.natIP
+						ExpectedType:   stdlib.NetworkIP.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "10.240.17.94",
+						ExpectedScope:  "global",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					},
+					{
+						// properties.networkInterfaces.ipv6AccessConfigs.externalIpv6
+						ExpectedType:   stdlib.NetworkIP.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "2600:1901:0:1234::3",
+						ExpectedScope:  "global",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					},
+					{
+						// properties.networkInterfaces.ipv6AccessConfigs.securityPolicy
+						ExpectedType:   gcpshared.ComputeSecurityPolicy.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "test-security-policy-ipv6",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.disks.initializeParams.sourceSnapshot
+						ExpectedType:   gcpshared.ComputeSnapshot.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "my-snapshot",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.disks.initializeParams.resourcePolicies
+						ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "my-resource-policy",
+						ExpectedScope:  "test-project.us-central1",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.disks.initializeParams.storagePool
+						ExpectedType:   gcpshared.ComputeStoragePool.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "my-storage-pool",
+						ExpectedScope:  "test-project.us-central1-a",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.disks.initializeParams.licenses
+						ExpectedType:   gcpshared.ComputeLicense.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "debian-11-bullseye-init-param",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.disks.initializeParams.licenses
+						ExpectedType:   gcpshared.ComputeLicense.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "debian-11-bullseye-disk",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.disks.initializeParams.sourceImageEncryptionKey.kmsKeyName
+						ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "global|my-keyring|source-image-encryption-key",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.disks.initializeParams.sourceImageEncryptionKey.kmsKeyServiceAccount
+						ExpectedType:   gcpshared.IAMServiceAccount.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "source-image-encryption-key-service-account@test-project.iam.gserviceaccount.com",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.guestAccelerators.acceleratorType
+						ExpectedType:   gcpshared.ComputeAcceleratorType.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "nvidia-tesla-t4",
+						ExpectedScope:  "test-project.us-central1-a",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.scheduling.nodeAffinities.values
+						ExpectedType:   gcpshared.ComputeNodeGroup.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "my-node-group",
+						ExpectedScope:  "test-project.us-central1-a",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					},
+					{
+						// properties.reservationAffinity.values
+						ExpectedType:   gcpshared.ComputeReservation.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "my-reservation",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.disks.initializeParams.diskType
+						ExpectedType:   gcpshared.ComputeDiskType.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "pd-standard",
+						ExpectedScope:  "test-project.us-central1-a",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.disks.initializeParams.sourceSnapshotEncryptionKey.kmsKeyName
+						ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "global|my-keyring|source-snapshot-encryption-key",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.disks.initializeParams.sourceSnapshotEncryptionKey.kmsKeyServiceAccount
+						ExpectedType:   gcpshared.IAMServiceAccount.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "source-snapshot-encryption-key-service-account@test-project.iam.gserviceaccount.com",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.disks.diskEncryptionKey.kmsKeyName
+						ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "global|my-keyring|disk-encryption-key",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						// properties.disks.diskEncryptionKey.kmsKeyServiceAccount
+						ExpectedType:   gcpshared.IAMServiceAccount.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "disk-encryption-key-service-account@test-project.iam.gserviceaccount.com",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+				}
+
+				shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+			})
 		})
 
-		mockHTTPClient := &http.Client{
-			Transport: mockTransport,
+		t.Run("List", func(t *testing.T) {
+			adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, meta, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), projectID)
+			if err != nil {
+				t.Fatalf("Failed to create adapter for ComputeInstanceTemplate: %v", err)
+			}
+
+			listable, ok := adapter.(discovery.ListableAdapter)
+			if !ok {
+				t.Fatalf("Adapter is not a ListableAdapter")
+			}
+
+			sdpItems, err := listable.List(ctx, projectID, true)
+			if err != nil {
+				t.Fatalf("Failed to list instance templates: %v", err)
+			}
+
+			if len(sdpItems) != 1 {
+				t.Errorf("Expected 1 instance template, got %d", len(sdpItems))
+			}
+		})
+	})
+
+	t.Run("ArtifactRegistryDockerImage", func(t *testing.T) {
+		imageName := "nginx@sha256:e9954c1fc875017be1c3e36eca16be2d9e9bccc4bf072163515467d6a823c7cf"
+		location := "us-central1-a"
+		repository := "my-repo"
+		dockerImage := &artifactregistry.DockerImage{
+			Name:           fmt.Sprintf("projects/test-project/locations/%s/repositories/%s/dockerImages/%s", location, repository, imageName),
+			Uri:            fmt.Sprintf("%s-docker.pkg.dev/%s/%s/%s", strings.TrimSuffix(location, "-a"), projectID, repository, imageName),
+			Tags:           []string{"latest", "v1.2.3", "stable"},
+			MediaType:      "application/vnd.docker.distribution.manifest.v2+json",
+			BuildTime:      "2023-06-15T10:30:00Z",
+			UpdateTime:     "2023-06-15T10:35:00Z",
+			UploadTime:     "2023-06-15T10:32:00Z",
+			ImageSizeBytes: 75849324,
+		}
+		dockerImages := &artifactregistry.ListDockerImagesResponse{
+			DockerImages: []*artifactregistry.DockerImage{dockerImage},
+		}
+		sdpItemType := gcpshared.ArtifactRegistryDockerImage
+		meta := gcpshared.SDPAssetTypeToAdapterMeta[sdpItemType]
+
+		expectedCallAndResponses := map[string]shared.MockResponse{
+			fmt.Sprintf(
+				"https://artifactregistry.googleapis.com/v1/projects/test-project/locations/%s/repositories/%s/dockerImages/%s",
+				location,
+				repository,
+				imageName,
+			): {
+				StatusCode: http.StatusOK,
+				Body:       dockerImage,
+			},
+			fmt.Sprintf(
+				"https://artifactregistry.googleapis.com/v1/projects/test-project/locations/%s/repositories/%s/dockerImages",
+				location,
+				repository,
+			): {
+				StatusCode: http.StatusOK,
+				Body:       dockerImages,
+			},
 		}
 
-		computeInstanceTempMeta := gcpshared.SDPAssetTypeToAdapterMeta[gcpshared.ComputeInstanceTemplate]
+		t.Run("Get", func(t *testing.T) {
+			// This is a project level adapter, so we pass the project ID
+			httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
+			adapter, err := dynamic.MakeAdapter(sdpItemType, meta, linker, httpCli, projectID)
+			if err != nil {
+				t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
+			}
 
-		getEndpointBaseURLFunc, err := computeInstanceTempMeta.GetEndpointBaseURLFunc(projectID)
-		if err != nil {
-			t.Fatalf("Failed to get endpoint base URL: %v", err)
-		}
+			getQuery := shared.CompositeLookupKey(location, repository, imageName)
+			sdpItem, err := adapter.Get(ctx, projectID, getQuery, true)
+			if err != nil {
+				t.Fatalf("Failed to get docker image: %v", err)
+			}
 
-		listEndpoint, err := computeInstanceTempMeta.ListEndpointFunc(projectID)
-		if err != nil {
-			t.Fatalf("Failed to get list endpoint: %v", err)
-		}
+			// Verify the returned item
+			if sdpItem.GetType() != sdpItemType.String() {
+				t.Errorf("Expected type %s, got %s", sdpItemType.String(), sdpItem.GetType())
+			}
 
-		cfg := &dynamic.AdapterConfig{
-			ProjectID:           projectID,
-			Scope:               projectID,
-			GetURLFunc:          getEndpointBaseURLFunc,
-			SDPAssetType:        gcpshared.ComputeInstanceTemplate,
-			SDPAdapterCategory:  computeInstanceTempMeta.SDPAdapterCategory,
-			TerraformMappings:   dynamic.SDPAssetTypeToTerraformMappings[gcpshared.ComputeInstanceTemplate].Mappings,
-			Linker:              linker,
-			HTTPClient:          mockHTTPClient,
-			UniqueAttributeKeys: computeInstanceTempMeta.UniqueAttributeKeys,
-		}
+			if sdpItem.UniqueAttributeValue() != getQuery {
+				t.Errorf("Expected unique attribute value '%s', got %s", imageName, sdpItem.UniqueAttributeValue())
+			}
 
-		adapter, err := dynamic.NewListableAdapter(listEndpoint, cfg)
-		if err != nil {
-			t.Fatalf("Failed to create adapter: %v", err)
-		}
-
-		sdpItem, err := adapter.Get(ctx, projectID, "test-instance-template", true)
-		if err != nil {
-			t.Fatalf("Failed to get instance template: %v", err)
-		}
-
-		// Verify the returned item
-		if sdpItem.GetType() != gcpshared.ComputeInstanceTemplate.String() {
-			t.Errorf("Expected type %s, got %s", gcpshared.ComputeInstanceTemplate.String(), sdpItem.GetType())
-		}
-
-		if sdpItem.UniqueAttributeValue() != "test-instance-template" {
-			t.Errorf("Expected unique attribute value 'test-instance-template', got %s", sdpItem.UniqueAttributeValue())
-		}
-
-		sdpItems, err := adapter.List(ctx, projectID, true)
-		if err != nil {
-			t.Fatalf("Failed to list instance templates: %v", err)
-		}
-
-		if len(sdpItems) != 1 {
-			t.Errorf("Expected 1 instance template, got %d", len(sdpItems))
-		}
-
-		if len(mockTransport.GetRequestURLs()) != len(mockTransport.GetResponses()) {
-			var missingURLs []string
-			for url := range mockTransport.GetResponses() {
-				if _, found := mockTransport.GetRequestURLs()[url]; !found {
-					missingURLs = append(missingURLs, url)
+			t.Run("StaticTests", func(t *testing.T) {
+				queryTests := shared.QueryTests{
+					{
+						ExpectedType:   gcpshared.ArtifactRegistryRepository.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  shared.CompositeLookupKey(location, repository),
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
 				}
+
+				shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+			})
+		})
+
+		t.Run("SearchWithTerraformMapping", func(t *testing.T) {
+			// This is a project level adapter, so we pass the project ID
+			httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
+			adapter, err := dynamic.MakeAdapter(sdpItemType, meta, linker, httpCli, projectID)
+			if err != nil {
+				t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 			}
 
-			t.Errorf("Expected %d HTTP request, but got %d, missing calls: %v", len(mockTransport.GetRequestURLs()), len(mockTransport.GetResponses()), missingURLs)
-		}
-
-		t.Run("StaticTests", func(t *testing.T) {
-			queryTests := shared.QueryTests{
-				{
-					ExpectedType:   gcpshared.ComputeMachineType.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "e2-medium",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					ExpectedType:   gcpshared.ComputeNetwork.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "default",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.disks.initializeParams.diskName
-					ExpectedType:   gcpshared.ComputeDisk.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "disk-name",
-					ExpectedScope:  "test-project.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
-					// properties.disks.source
-					ExpectedType:   gcpshared.ComputeDisk.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "source",
-					ExpectedScope:  "test-project.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
-					ExpectedType:   gcpshared.ComputeImage.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "debian-11",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "default",
-					ExpectedScope:  "test-project.us-central1",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.networkInterfaces.networkIP
-					ExpectedType:   stdlib.NetworkIP.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "10.240.17.92",
-					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
-					// properties.networkInterfaces.ipv6Address
-					ExpectedType:   stdlib.NetworkIP.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "2600:1901:0:1234::1",
-					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
-					// properties.networkInterfaces.accessConfigs.natIP
-					ExpectedType:   stdlib.NetworkIP.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "10.240.17.93",
-					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
-					// properties.networkInterfaces.accessConfigs.externalIpv6
-					ExpectedType:   stdlib.NetworkIP.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "2600:1901:0:1234::2",
-					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
-					// properties.networkInterfaces.accessConfigs.securityPolicy
-					ExpectedType:   gcpshared.ComputeSecurityPolicy.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "test-security-policy",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.networkInterfaces.ipv6AccessConfigs.natIP
-					ExpectedType:   stdlib.NetworkIP.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "10.240.17.94",
-					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
-					// properties.networkInterfaces.ipv6AccessConfigs.externalIpv6
-					ExpectedType:   stdlib.NetworkIP.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "2600:1901:0:1234::3",
-					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
-					// properties.networkInterfaces.ipv6AccessConfigs.securityPolicy
-					ExpectedType:   gcpshared.ComputeSecurityPolicy.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "test-security-policy-ipv6",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.disks.initializeParams.sourceSnapshot
-					ExpectedType:   gcpshared.ComputeSnapshot.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "my-snapshot",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.disks.initializeParams.resourcePolicies
-					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "my-resource-policy",
-					ExpectedScope:  "test-project.us-central1",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.disks.initializeParams.storagePool
-					ExpectedType:   gcpshared.ComputeStoragePool.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "my-storage-pool",
-					ExpectedScope:  "test-project.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.disks.initializeParams.licenses
-					ExpectedType:   gcpshared.ComputeLicense.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "debian-11-bullseye-init-param",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.disks.initializeParams.licenses
-					ExpectedType:   gcpshared.ComputeLicense.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "debian-11-bullseye-disk",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.disks.initializeParams.sourceImageEncryptionKey.kmsKeyName
-					ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "global|my-keyring|source-image-encryption-key",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.disks.initializeParams.sourceImageEncryptionKey.kmsKeyServiceAccount
-					ExpectedType:   gcpshared.IAMServiceAccount.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "source-image-encryption-key-service-account@test-project.iam.gserviceaccount.com",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.guestAccelerators.acceleratorType
-					ExpectedType:   gcpshared.ComputeAcceleratorType.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "nvidia-tesla-t4",
-					ExpectedScope:  "test-project.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.scheduling.nodeAffinities.values
-					ExpectedType:   gcpshared.ComputeNodeGroup.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "my-node-group",
-					ExpectedScope:  "test-project.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
-					// properties.reservationAffinity.values
-					ExpectedType:   gcpshared.ComputeReservation.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "my-reservation",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.disks.initializeParams.diskType
-					ExpectedType:   gcpshared.ComputeDiskType.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "pd-standard",
-					ExpectedScope:  "test-project.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.disks.initializeParams.sourceSnapshotEncryptionKey.kmsKeyName
-					ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "global|my-keyring|source-snapshot-encryption-key",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.disks.initializeParams.sourceSnapshotEncryptionKey.kmsKeyServiceAccount
-					ExpectedType:   gcpshared.IAMServiceAccount.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "source-snapshot-encryption-key-service-account@test-project.iam.gserviceaccount.com",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.disks.diskEncryptionKey.kmsKeyName
-					ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "global|my-keyring|disk-encryption-key",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					// properties.disks.diskEncryptionKey.kmsKeyServiceAccount
-					ExpectedType:   gcpshared.IAMServiceAccount.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "disk-encryption-key-service-account@test-project.iam.gserviceaccount.com",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
+			searchable, ok := adapter.(discovery.SearchableAdapter)
+			if !ok {
+				t.Fatalf("Adapter for %s does not implement ListableAdapter", sdpItemType)
 			}
 
-			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+			// projects/{{project}}/locations/{{location}}/repository/{{repository_id}}/dockerImages/{{docker_image}}
+			terraformQuery := fmt.Sprintf("projects/%s/locations/%s/repositories/%s/dockerImages/%s", projectID, location, repository, imageName)
+			sdpItems, err := searchable.Search(ctx, projectID, terraformQuery, true)
+			if err != nil {
+				t.Fatalf("Failed to get docker image with terraform query: %v", err)
+			}
+
+			if len(sdpItems) != 1 {
+				t.Errorf("Unexpected number of docker images: %d", len(sdpItems))
+			}
+
+			// Verify the returned item
+			if err := sdpItems[0].Validate(); err != nil {
+				t.Errorf("Unexpected validation error: %v", err)
+			}
+		})
+
+		t.Run("Search", func(t *testing.T) {
+			// This is a project level adapter, so we pass the project
+			httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
+			adapter, err := dynamic.MakeAdapter(sdpItemType, meta, linker, httpCli, projectID)
+			if err != nil {
+				t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
+			}
+
+			searchable, ok := adapter.(discovery.SearchableAdapter)
+			if !ok {
+				t.Fatalf("Adapter for %s does not implement ListableAdapter", sdpItemType)
+			}
+
+			sdpItems, err := searchable.Search(ctx, projectID, shared.CompositeLookupKey(location, repository), true)
+			if err != nil {
+				t.Fatalf("Failed to list docker images: %v", err)
+			}
+
+			if len(sdpItems) != 1 {
+				t.Errorf("Expected 1 docker image, got %d", len(sdpItems))
+			}
 		})
 	})
 }
