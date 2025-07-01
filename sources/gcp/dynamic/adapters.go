@@ -32,13 +32,8 @@ func init() {
 }
 
 // Adapters returns a list of discovery.Adapters for the given project ID, regions, and zones.
-func Adapters(projectID string, regions []string, zones []string, linker *gcpshared.Linker, manualAdapters map[string]bool) ([]discovery.Adapter, error) {
+func Adapters(projectID string, regions []string, zones []string, linker *gcpshared.Linker, httpCli *http.Client, manualAdapters map[string]bool) ([]discovery.Adapter, error) {
 	var adapters []discovery.Adapter
-
-	gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
-	if err != nil {
-		return nil, err
-	}
 
 	// Project level adapters
 	for sdpItemType, meta := range adaptersByScope[gcpshared.ScopeProject] {
@@ -53,7 +48,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 			continue
 		}
 
-		adapter, err := MakeAdapter(sdpItemType, meta, linker, gcpHTTPCliWithOtel, projectID)
+		adapter, err := MakeAdapter(sdpItemType, meta, linker, httpCli, projectID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add adapter for %s: %w", sdpItemType, err)
 		}
@@ -75,7 +70,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 				continue
 			}
 
-			adapter, err := MakeAdapter(sdpItemType, meta, linker, gcpHTTPCliWithOtel, projectID, region)
+			adapter, err := MakeAdapter(sdpItemType, meta, linker, httpCli, projectID, region)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add adapter for %s in region %s: %w", sdpItemType, region, err)
 			}
@@ -98,7 +93,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 				continue
 			}
 
-			adapter, err := MakeAdapter(sdpItemType, meta, linker, gcpHTTPCliWithOtel, projectID, zone)
+			adapter, err := MakeAdapter(sdpItemType, meta, linker, httpCli, projectID, zone)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add adapter for %s in zone %s: %w", sdpItemType, zone, err)
 			}
@@ -168,14 +163,14 @@ func MakeAdapter(sdpItemType shared.ItemType, meta gcpshared.AdapterMeta, linker
 			return nil, err
 		}
 
-		return NewSearchableListableAdapter(searchEndpointFunc, listEndpoint, cfg)
+		return NewSearchableListableAdapter(searchEndpointFunc, listEndpoint, cfg, meta.SearchDescription)
 	case Searchable:
 		searchEndpointFunc, err := meta.SearchEndpointFunc(opts...)
 		if err != nil {
 			return nil, err
 		}
 
-		return NewSearchableAdapter(searchEndpointFunc, cfg)
+		return NewSearchableAdapter(searchEndpointFunc, cfg, meta.SearchDescription)
 	case Listable:
 		listEndpoint, err := meta.ListEndpointFunc(opts...)
 		if err != nil {

@@ -13,12 +13,13 @@ import (
 
 // SearchableAdapter implements discovery.SearchableAdapter for GCP dynamic adapters.
 type SearchableAdapter struct {
-	searchURLFunc gcpshared.EndpointFunc
+	customSearchMethodDesc string
+	searchURLFunc          gcpshared.EndpointFunc
 	Adapter
 }
 
 // NewSearchableAdapter creates a new GCP dynamic adapter.
-func NewSearchableAdapter(searchURLFunc gcpshared.EndpointFunc, config *AdapterConfig) (discovery.SearchableAdapter, error) {
+func NewSearchableAdapter(searchURLFunc gcpshared.EndpointFunc, config *AdapterConfig, customSearchMethodDesc string) (discovery.SearchableAdapter, error) {
 	a := Adapter{
 		projectID:           config.ProjectID,
 		scope:               config.Scope,
@@ -42,8 +43,9 @@ func NewSearchableAdapter(searchURLFunc gcpshared.EndpointFunc, config *AdapterC
 	}
 
 	return SearchableAdapter{
-		searchURLFunc: searchURLFunc,
-		Adapter:       a,
+		customSearchMethodDesc: customSearchMethodDesc,
+		searchURLFunc:          searchURLFunc,
+		Adapter:                a,
 	}, nil
 }
 
@@ -56,7 +58,7 @@ func (g SearchableAdapter) Metadata() *sdp.AdapterMetadata {
 			Get:               true,
 			GetDescription:    getDescription(g.sdpAssetType, g.scope, g.uniqueAttributeKeys),
 			Search:            true,
-			SearchDescription: searchDescription(g.sdpAssetType, g.scope, g.uniqueAttributeKeys),
+			SearchDescription: searchDescription(g.sdpAssetType, g.scope, g.uniqueAttributeKeys, g.customSearchMethodDesc),
 		},
 		TerraformMappings: g.terraformMappings,
 		PotentialLinks:    g.potentialLinks,

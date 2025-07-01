@@ -191,7 +191,7 @@ func Test_listDescription_HandlesEmptyScope(t *testing.T) {
 }
 
 func Test_searchDescription_ReturnsSelectorWithMultipleKeys(t *testing.T) {
-	got := searchDescription(gcpshared.ServiceDirectoryEndpoint, "test-scope", []string{"locations", "namespaces", "services", "endpoints"})
+	got := searchDescription(gcpshared.ServiceDirectoryEndpoint, "test-scope", []string{"locations", "namespaces", "services", "endpoints"}, "")
 	want := "Search for gcp-service-directory-endpoint by its {locations|namespaces|services} within its scope: test-scope"
 	if got != want {
 		t.Errorf("searchDescription() got = %v, want %v", got, want)
@@ -199,7 +199,7 @@ func Test_searchDescription_ReturnsSelectorWithMultipleKeys(t *testing.T) {
 }
 
 func Test_searchDescription_ReturnsSelectorWithTwoKeys(t *testing.T) {
-	got := searchDescription(gcpshared.BigQueryTable, "project-1", []string{"datasets", "tables"})
+	got := searchDescription(gcpshared.BigQueryTable, "project-1", []string{"datasets", "tables"}, "")
 	want := "Search for gcp-big-query-table by its {datasets} within its scope: project-1"
 	if got != want {
 		t.Errorf("searchDescription() got = %v, want %v", got, want)
@@ -212,5 +212,13 @@ func Test_searchDescription_PanicsWithOneKey(t *testing.T) {
 			t.Errorf("searchDescription() did not panic with one unique attribute key; expected panic")
 		}
 	}()
-	_ = searchDescription(gcpshared.StorageBucket, "scope-2", []string{"buckets"})
+	_ = searchDescription(gcpshared.StorageBucket, "scope-2", []string{"buckets"}, "")
+}
+
+func Test_searchDescription_WithCustomSearchDescription(t *testing.T) {
+	customDesc := "Custom search description for gcp-service-directory-endpoint"
+	got := searchDescription(gcpshared.ServiceDirectoryEndpoint, "test-scope", []string{"locations", "namespaces", "services", "endpoints"}, customDesc)
+	if got != customDesc {
+		t.Errorf("searchDescription() got = %v, want %v", got, customDesc)
+	}
 }

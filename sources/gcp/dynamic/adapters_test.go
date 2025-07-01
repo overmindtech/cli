@@ -167,3 +167,31 @@ func Test_addAdapter(t *testing.T) {
 		})
 	}
 }
+
+func TestAdapters(t *testing.T) {
+	// Let's ensure that we can create adapters without any issues.
+	adapters, err := Adapters(
+		"my-project",
+		[]string{"us-central1"},
+		[]string{"us-central1-a"},
+		gcpshared.NewLinker(),
+		http.DefaultClient,
+		nil,
+	)
+	if err != nil {
+		t.Fatalf("Adapters() error = %v", err)
+	}
+
+	for _, adapter := range adapters {
+		if adapter == nil {
+			t.Error("Expected non-nil adapter, got nil")
+			continue
+		}
+
+		meta := adapter.Metadata()
+		if meta == nil {
+			t.Error("Expected non-nil metadata, got nil")
+			continue
+		}
+	}
+}

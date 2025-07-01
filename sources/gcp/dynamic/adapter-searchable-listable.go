@@ -17,12 +17,13 @@ type SearchableListableDiscoveryAdapter interface {
 
 // SearchableListableAdapter implements discovery.SearchableAdapter for GCP dynamic adapters.
 type SearchableListableAdapter struct {
-	searchEndpointFunc gcpshared.EndpointFunc
+	customSearchMethodDescription string
+	searchEndpointFunc            gcpshared.EndpointFunc
 	ListableAdapter
 }
 
 // NewSearchableListableAdapter creates a new GCP dynamic adapter.
-func NewSearchableListableAdapter(searchURLFunc gcpshared.EndpointFunc, listEndpoint string, config *AdapterConfig) (SearchableListableDiscoveryAdapter, error) {
+func NewSearchableListableAdapter(searchURLFunc gcpshared.EndpointFunc, listEndpoint string, config *AdapterConfig, customSearchMethodDesc string) (SearchableListableDiscoveryAdapter, error) {
 	a := Adapter{
 		projectID:           config.ProjectID,
 		scope:               config.Scope,
@@ -46,7 +47,8 @@ func NewSearchableListableAdapter(searchURLFunc gcpshared.EndpointFunc, listEndp
 	}
 
 	return SearchableListableAdapter{
-		searchEndpointFunc: searchURLFunc,
+		customSearchMethodDescription: customSearchMethodDesc,
+		searchEndpointFunc:            searchURLFunc,
 		ListableAdapter: ListableAdapter{
 			listEndpoint: listEndpoint,
 			Adapter:      a,
@@ -63,7 +65,7 @@ func (g SearchableListableAdapter) Metadata() *sdp.AdapterMetadata {
 			Get:               true,
 			GetDescription:    getDescription(g.sdpAssetType, g.scope, g.uniqueAttributeKeys),
 			Search:            true,
-			SearchDescription: searchDescription(g.sdpAssetType, g.scope, g.uniqueAttributeKeys),
+			SearchDescription: searchDescription(g.sdpAssetType, g.scope, g.uniqueAttributeKeys, g.customSearchMethodDescription),
 			List:              true,
 			ListDescription:   listDescription(g.sdpAssetType, g.scope),
 		},

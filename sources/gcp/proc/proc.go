@@ -47,13 +47,12 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 		initiatedManualAdapters[adapter.Type()] = true
 	}
 
-	dynamicAdapters, err := dynamic.Adapters(
-		cfg.ProjectID,
-		cfg.Regions,
-		cfg.Zones,
-		linker,
-		initiatedManualAdapters,
-	)
+	gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
+	if err != nil {
+		return nil, err
+	}
+
+	dynamicAdapters, err := dynamic.Adapters(cfg.ProjectID, cfg.Regions, cfg.Zones, linker, gcpHTTPCliWithOtel, initiatedManualAdapters)
 	if err != nil {
 		return nil, fmt.Errorf("error creating dynamic adapters: %w", err)
 	}

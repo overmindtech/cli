@@ -30,7 +30,11 @@ var (
 		return fmt.Sprintf("List all %s within its scope: %s", sdpAssetType, scope)
 	}
 
-	searchDescription = func(sdpAssetType shared.ItemType, scope string, uniqueAttributeKeys []string) string {
+	searchDescription = func(sdpAssetType shared.ItemType, scope string, uniqueAttributeKeys []string, customSearchMethodDesc string) string {
+		if customSearchMethodDesc != "" {
+			return customSearchMethodDesc
+		}
+
 		if len(uniqueAttributeKeys) < 2 {
 			panic("searchDescription requires at least two unique attribute keys")
 		}
