@@ -12,8 +12,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// LogRecoverToReturn Recovers from a panic, logs and forwards it sentry and otel, then returns
-// Does nothing when there is no panic.
+// LogRecoverToReturn Recovers from a panic, logs and forwards it sentry and
+// otel, then returns. Does nothing when there is no panic.
 func LogRecoverToReturn(ctx context.Context, loc string) {
 	err := recover()
 	if err == nil {
@@ -24,8 +24,23 @@ func LogRecoverToReturn(ctx context.Context, loc string) {
 	HandleError(ctx, loc, err, stack)
 }
 
-// LogRecoverToExit Recovers from a panic, logs and forwards it sentry and otel, then exits
-// Does nothing when there is no panic.
+// LogRecoverToError Recovers from a panic, logs and forwards it sentry and
+// otel, then returns a new error describing the panic. Does nothing when there
+// is no panic.
+func LogRecoverToError(ctx context.Context, loc string) error {
+	err := recover()
+	if err == nil {
+		return nil
+	}
+
+	stack := string(debug.Stack())
+	HandleError(ctx, loc, err, stack)
+
+	return fmt.Errorf("panic recovered: %v", err)
+}
+
+// LogRecoverToExit Recovers from a panic, logs and forwards it sentry and otel,
+// then exits the entire process. Does nothing when there is no panic.
 func LogRecoverToExit(ctx context.Context, loc string) {
 	err := recover()
 	if err == nil {
