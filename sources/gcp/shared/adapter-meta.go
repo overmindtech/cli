@@ -787,6 +787,30 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// HEALTH: https://cloud.google.com/service-usage/docs/reference/rest/v1/services#state
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
+	SpannerInstance: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances/get?rep_location=global
+		// https://spanner.googleapis.com/v1/projects/*/instances/*
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instances/%s"),
+		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances/list?rep_location=global
+		// https://spanner.googleapis.com/v1/projects/*/instances
+		ListEndpointFunc:    projectLevelListFunc("https://spanner.googleapis.com/v1/projects/%s/instances"),
+		UniqueAttributeKeys: []string{"instances"},
+		// HEALTH: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances#State
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
+	},
+	SpannerInstanceConfig: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
+		InDevelopment:      true,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instanceConfigs/get?rep_location=global
+		// https://spanner.googleapis.com/v1/projects/*/instanceConfigs/*
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instanceConfigs/%s"),
+		// https://// https://spanner.googleapis.com/v1/projects/*/instanceConfigs
+		ListEndpointFunc:    projectLevelListFunc("https://spanner.googleapis.com/v1/projects/%s/instanceConfigs"),
+		UniqueAttributeKeys: []string{"instanceConfigs"},
+	},
 	SQLAdminBackup: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 		Scope:              ScopeProject,

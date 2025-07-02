@@ -241,6 +241,16 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 	gcpshared.ServiceUsageService: {
 		Description: "There is no terraform resource for this type.",
 	},
+	gcpshared.SpannerInstance: {
+		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/spanner_instance",
+		Mappings: []*sdp.TerraformMapping{
+			{
+				// TODO: Confirm this is the name that we want to use
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_spanner_instance.name",
+			},
+		},
+	},
 	gcpshared.SQLAdminBackup: {
 		Description: "There is no terraform resource for this type.",
 	},

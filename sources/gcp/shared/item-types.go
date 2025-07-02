@@ -99,4 +99,6 @@ var (
 	BigTableAdminInstance          = shared.NewItemType(GCP, BigTableAdmin, Instance)
 	ServiceDirectoryService        = shared.NewItemType(GCP, ServiceDirectory, Service)
 	ArtifactRegistryRepository     = shared.NewItemType(GCP, ArtifactRegistry, Repository) // https://cloud.google.com/artifact-registry/docs/reference/rest/v1/projects.locations.repositories/get?rep_location=global
+	SpannerInstance                = shared.NewItemType(GCP, Spanner, Instance)
+	SpannerInstanceConfig          = shared.NewItemType(GCP, Spanner, InstanceConfig)
 )

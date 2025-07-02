@@ -36,6 +36,7 @@ const (
 	NetworkConnectivity  shared.API = "network-connectivity"
 	VPCAccess            shared.API = "vpc-access"
 	SecretManager        shared.API = "secret-manager"
+	Spanner              shared.API = "spanner"
 )
 
 // Resources
@@ -127,4 +128,5 @@ const (
 	BillingAccount           shared.Resource = "billing-account"
 	Namespace                shared.Resource = "namespace"
 	Secret                   shared.Resource = "secret"
+	InstanceConfig           shared.Resource = "instance-config"
 )

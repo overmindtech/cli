@@ -639,6 +639,13 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactInOnly,
 		},
 	},
+	SpannerInstance: {
+		"config": {
+			ToSDPITemType:    SpannerInstanceConfig,
+			Description:      "If the Spanner Instance Config is deleted or updated: The Spanner Instance may fail to operate correctly. If the Spanner Instance is updated: The config remains unaffected.",
+			BlastPropagation: impactInOnly,
+		},
+	},
 	SQLAdminBackup: {
 		"instance": {
 			ToSDPITemType:    SQLAdminInstance,
