@@ -442,11 +442,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			ToSDPITemType:    ComputeNetwork,
 			BlastPropagation: impactBothWays,
 		},
-		"gatewayAddress": {
-			Description:      "If the Compute Gateway is deleted: subnetwork is not impacted. If the subnetwork is deleted: gateway is also deleted.",
-			ToSDPITemType:    ComputeGateway,
-			BlastPropagation: impactOutOnly,
-		},
+		"gatewayAddress": ipImpactBothWays,
 	},
 	DataformRepository: {
 		// The name of the Secret Manager secret version to use as an authentication token for Git operations. Must be in the format projects/*/secrets/*/versions/*.

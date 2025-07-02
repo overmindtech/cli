@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -159,78 +160,106 @@ func externalCallSingle(ctx context.Context, httpCli *http.Client, url string) (
 	return result, nil
 }
 
-func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.Client, url string) ([]map[string]interface{}, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
+// externalCallMulti makes a paginated HTTP GET request to the specified URL and returns all items found in the response.
+// It handles pagination by checking for a "nextPageToken" in the response and continues to fetch until no more pages are available.
+// This function can return items along with an error if a consecutive HTTP request fails or if the response cannot be parsed correctly.
+// Therefore, it is important to check both the returned items and the error.
+func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.Client, urlForList string) ([]map[string]interface{}, error) {
+	var allItems []map[string]interface{}
+	currentURL := urlForList
 
-	resp, err := httpCli.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Read the body to provide more context in the error message
-		body, err := io.ReadAll(resp.Body)
-		if err == nil {
-			return nil, fmt.Errorf(
-				"failed to make the GET call. HTTP Status: %s, HTTP Body: %s",
-				resp.Status,
-				string(body),
-			)
+	for {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, currentURL, nil)
+		if err != nil {
+			return nil, err
 		}
 
-		log.WithContext(ctx).WithFields(log.Fields{
-			"ovm.gcp.dynamic.http.get.url":            url,
-			"ovm.gcp.dynamic.http.get.responseStatus": resp.Status,
-		}).Warnf("failed to read the response body: %v", err)
-		return nil, fmt.Errorf("failed to make the GET callL. HTTP Status: %s", resp.Status)
-	}
+		resp, err := httpCli.Do(req)
+		if err != nil {
+			return nil, err
+		}
 
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
+		if resp.StatusCode != http.StatusOK {
+			// Read the body to provide more context in the error message
+			body, err := io.ReadAll(resp.Body)
+			resp.Body.Close() // Close the response body
+			if err == nil {
+				return allItems, fmt.Errorf(
+					"failed to make the GET call. HTTP Status: %s, HTTP Body: %s",
+					resp.Status,
+					string(body),
+				)
+			}
 
-	var result map[string]interface{}
-	if err = json.Unmarshal(data, &result); err != nil {
-		return nil, err
-	}
+			log.WithContext(ctx).WithFields(log.Fields{
+				"ovm.gcp.dynamic.http.get.urlForList":     currentURL,
+				"ovm.gcp.dynamic.http.get.responseStatus": resp.Status,
+			}).Warnf("failed to read the response body: %v", err)
+			return allItems, fmt.Errorf("failed to make the GET call. HTTP Status: %s", resp.Status)
+		}
 
-	itemsAny, ok := result[itemsSelector]
-	if !ok {
-		itemsSelector = "items" // Fallback to a generic "items" key
-		itemsAny, ok = result[itemsSelector]
+		data, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return allItems, err
+		}
+
+		var result map[string]interface{}
+		if err = json.Unmarshal(data, &result); err != nil {
+			return allItems, err
+		}
+
+		// Extract items from the current page
+		itemsAny, ok := result[itemsSelector]
+		if !ok {
+			itemsSelector = "items" // Fallback to a generic "items" key
+			itemsAny, ok = result[itemsSelector]
+			if !ok {
+				log.WithContext(ctx).WithFields(log.Fields{
+					"ovm.gcp.dynamic.http.get.urlForList":    currentURL,
+					"ovm.gcp.dynamic.http.get.itemsSelector": itemsSelector,
+				}).Debugf("not found any items for %s: within %v", itemsSelector, result)
+				break
+			}
+		}
+
+		items, ok := itemsAny.([]any)
 		if !ok {
 			log.WithContext(ctx).WithFields(log.Fields{
-				"ovm.gcp.dynamic.http.get.url":           url,
+				"ovm.gcp.dynamic.http.get.urlForList":    currentURL,
 				"ovm.gcp.dynamic.http.get.itemsSelector": itemsSelector,
-			}).Debugf("not found any items for %s: within %v", itemsSelector, result)
-			return nil, nil
+			}).Warnf("failed to cast resp as a list of %s: within %v", itemsSelector, result)
+			break
 		}
-	}
 
-	items, ok := itemsAny.([]any)
-	if !ok {
-		log.WithContext(ctx).WithFields(log.Fields{
-			"ovm.gcp.dynamic.http.get.url":           url,
-			"ovm.gcp.dynamic.http.get.itemsSelector": itemsSelector,
-		}).Warnf("failed to cast resp as a list of %s: within %v", itemsSelector, result)
-		return nil, nil
-
-	}
-
-	var ii []map[string]interface{}
-	for _, item := range items {
-		if itemMap, ok := item.(map[string]interface{}); ok {
-			ii = append(ii, itemMap)
+		// Add items from this page to our collection
+		for _, item := range items {
+			if itemMap, ok := item.(map[string]interface{}); ok {
+				allItems = append(allItems, itemMap)
+			}
 		}
+
+		// Check if there's a next page
+		nextPageToken, ok := result["nextPageToken"].(string)
+		if !ok || nextPageToken == "" {
+			break // No more pages to process
+		}
+
+		// Properly construct the next page URL with the pageToken
+		parsedURL, err := url.Parse(urlForList)
+		if err != nil {
+			return allItems, fmt.Errorf("failed to parse URL %s: %w", urlForList, err)
+		}
+
+		// Get existing query parameters or create new ones
+		query := parsedURL.Query()
+		query.Set("pageToken", nextPageToken)
+		parsedURL.RawQuery = query.Encode()
+
+		// Use the properly constructed URL for the next request
+		currentURL = parsedURL.String()
 	}
 
-	return ii, nil
+	return allItems, nil
 }
 
 func potentialLinksFromBlasts(itemType shared.ItemType, blasts map[shared.ItemType]map[string]*gcpshared.Impact) []string {

@@ -507,6 +507,12 @@ func TestAdapter(t *testing.T) {
 		dockerImages := &artifactregistry.ListDockerImagesResponse{
 			DockerImages: []*artifactregistry.DockerImage{dockerImage},
 		}
+
+		dockerImagesWithNextPageToken := &artifactregistry.ListDockerImagesResponse{
+			DockerImages:  []*artifactregistry.DockerImage{dockerImage},
+			NextPageToken: "next-page-token",
+		}
+
 		sdpItemType := gcpshared.ArtifactRegistryDockerImage
 		meta := gcpshared.SDPAssetTypeToAdapterMeta[sdpItemType]
 
@@ -522,6 +528,14 @@ func TestAdapter(t *testing.T) {
 			},
 			fmt.Sprintf(
 				"https://artifactregistry.googleapis.com/v1/projects/test-project/locations/%s/repositories/%s/dockerImages",
+				location,
+				repository,
+			): {
+				StatusCode: http.StatusOK,
+				Body:       dockerImagesWithNextPageToken,
+			},
+			fmt.Sprintf(
+				"https://artifactregistry.googleapis.com/v1/projects/test-project/locations/%s/repositories/%s/dockerImages?pageToken=next-page-token",
 				location,
 				repository,
 			): {
@@ -619,8 +633,8 @@ func TestAdapter(t *testing.T) {
 				t.Fatalf("Failed to list docker images: %v", err)
 			}
 
-			if len(sdpItems) != 1 {
-				t.Errorf("Expected 1 docker image, got %d", len(sdpItems))
+			if len(sdpItems) != 2 {
+				t.Errorf("Expected 2 docker images, got %d", len(sdpItems))
 			}
 		})
 	})

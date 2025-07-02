@@ -46,6 +46,11 @@ func NewLinker() *Linker {
 func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sdp.Item, fromSDPItemType shared.ItemType, toItemGCPResourceName string, keys []string) {
 	key := strings.Join(keys, ".")
 
+	if strings.HasPrefix(key, "selfLink") {
+		// selfLink is a special case, we don't want to link to it
+		return
+	}
+
 	lf := log.Fields{
 		"ovm.gcp.projectId":          projectID,
 		"ovm.gcp.fromItemType":       fromSDPItemType.String(),

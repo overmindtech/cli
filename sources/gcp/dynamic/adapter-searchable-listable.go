@@ -109,7 +109,7 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 	}
 
 	multiResp, err := externalCallMulti(ctx, itemsSelector, g.httpCli, searchEndpoint)
-	if err != nil {
+	if err != nil && len(multiResp) == 0 {
 		return nil, fmt.Errorf("failed to retrieve items for %s: %w", searchEndpoint, err)
 	}
 

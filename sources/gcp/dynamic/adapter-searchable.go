@@ -143,7 +143,7 @@ func (g SearchableAdapter) Search(ctx context.Context, scope, query string, igno
 	itemsSelector := g.uniqueAttributeKeys[len(g.uniqueAttributeKeys)-1] // Use the last key as the item selector
 
 	multiResp, err := externalCallMulti(ctx, itemsSelector, g.httpCli, url)
-	if err != nil {
+	if err != nil && len(multiResp) == 0 {
 		return nil, fmt.Errorf("failed to retrieve items for %s: %w", url, err)
 	}
 
