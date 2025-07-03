@@ -787,6 +787,30 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// HEALTH: https://cloud.google.com/service-usage/docs/reference/rest/v1/services#state
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
+	SpannerBackup: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
+		InDevelopment:      true,
+		Scope:              ScopeProject,
+		// Reference:https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.backups/get?rep_location=global
+		// https://spanner.googleapis.com/v1/projects/*/instances/*/backups/*
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://spanner.googleapis.com/v1/projects/%s/instances/%s/backups/%s"),
+		// https://spanner.googleapis.com/v1/projects/*/instances/*/backups
+		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instances/%s/backups"),
+		UniqueAttributeKeys: []string{"instances", "backups"},
+	},
+	SpannerDatabase: {
+		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
+		Scope:              ScopeProject,
+		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.databases/get?rep_location=global
+		// https://spanner.googleapis.com/v1/projects/*/instances/*/databases/*
+		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://spanner.googleapis.com/v1/projects/%s/instances/%s/databases/%s"),
+		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.databases/list?rep_location=global
+		// https://spanner.googleapis.com/v1/{parent=projects/*/instances/*}/databases
+		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instances/%s/databases"),
+		UniqueAttributeKeys: []string{"instances", "databases"},
+		// HEALTH: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.databases#state
+		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
+	},
 	SpannerInstance: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 		Scope:              ScopeProject,

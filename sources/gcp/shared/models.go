@@ -129,4 +129,5 @@ const (
 	Namespace                shared.Resource = "namespace"
 	Secret                   shared.Resource = "secret"
 	InstanceConfig           shared.Resource = "instance-config"
+	Database                 shared.Resource = "database"
 )

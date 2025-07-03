@@ -639,6 +639,17 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactInOnly,
 		},
 	},
+	SpannerDatabase: {
+		// The Cloud KMS key used to encrypt the database.
+		"encryptionConfig.kmsKeyName":  cryptoKeyImpactInOnly,
+		"encryptionConfig.kmsKeyNames": cryptoKeyImpactInOnly,
+		"restoreInfo.backupInfo.backup": {
+			Description:      "If the Spanner Backup is deleted or updated: The Database may become invalid or inaccessible. If the Database is updated: The backup remains unaffected.",
+			ToSDPITemType:    SpannerBackup,
+			BlastPropagation: impactInOnly,
+		},
+		"encryptionInfo.kmsKeyVersion": cryptoKeyVersionImpactInOnly,
+	},
 	SpannerInstance: {
 		"config": {
 			ToSDPITemType:    SpannerInstanceConfig,
