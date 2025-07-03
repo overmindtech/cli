@@ -36,7 +36,8 @@ type AdapterMeta struct {
 // We have group of functions that are similar in nature, however they cannot simplified into a generic function because
 // of the different number of query parts they accept.
 // Also, we want to keep the explicit logic for now for the sake of human readability.
-func projectLevelEndpointFuncWithSingleQuery(format string) func(queryParts ...string) (EndpointFunc, error) {
+
+func ProjectLevelEndpointFuncWithSingleQuery(format string) func(queryParts ...string) (EndpointFunc, error) {
 	// count number of `%s` in the format string
 	if strings.Count(format, "%s") != 2 { // project ID and query
 		panic(fmt.Sprintf("format string must contain 2 %%s placeholders: %s", format))
@@ -203,7 +204,7 @@ func regionalLevelEndpointFuncWithTwoQueries(format string) func(queryParts ...s
 	}
 }
 
-func projectLevelListFunc(format string) func(adapterInitParams ...string) (string, error) {
+func ProjectLevelListFunc(format string) func(adapterInitParams ...string) (string, error) {
 	if strings.Count(format, "%s") != 1 {
 		panic(fmt.Sprintf("format string must contain 1 %%s placeholder: %s", format))
 	}
@@ -255,11 +256,11 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Vertex AI API must be enabled for the project!
 		// Reference: https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.customJobs/get
 		// https://aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/customJobs/{customJob}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/customJobs/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/customJobs/%s"),
 		// Reference: https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.customJobs/list
 		// https://aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/customJobs
 		// Expected location is `global` for the default endpoint.
-		ListEndpointFunc:    projectLevelListFunc("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/customJobs"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/customJobs"),
 		UniqueAttributeKeys: []string{"customJobs"},
 	},
 	AIPlatformPipelineJob: {
@@ -267,9 +268,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// When using the default endpoint, the location must be set to `global`.
 		//  Format: projects/{project}/locations/{location}/pipelineJobs/{pipelineJob}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/pipelineJobs/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/pipelineJobs/%s"),
 		// Reference: https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.pipelineJobs/list
-		ListEndpointFunc:    projectLevelListFunc("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/pipelineJobs"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/pipelineJobs"),
 		UniqueAttributeKeys: []string{"pipelineJobs"},
 	},
 	ArtifactRegistryDockerImage: {
@@ -294,7 +295,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://artifactregistry.googleapis.com/v1/projects/*/locations/*/repositories/*
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s"),
 		// https://artifactregistry.googleapis.com/v1/{parent=projects/*/locations/*}/repositories
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories"),
 		UniqueAttributeKeys: []string{"locations", "repositories"},
 	},
 	BigTableAdminAppProfile: {
@@ -304,7 +305,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// GET https://bigtableadmin.googleapis.com/v2/{name=projects/*/instances/*/appProfiles/*}
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/appProfiles/%s"),
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.appProfiles/list
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/appProfiles"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/appProfiles"),
 		SearchDescription:   "Search for BigTable App Profiles in an instance. Use the format {{instance}} or projects/{{project}}/instances/{{instance}}/appProfiles/{{app_profile_id}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"instances", "appProfiles"},
 	},
@@ -314,9 +315,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 		Scope:              ScopeProject,
 		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s"),
 		// https://bigtableadmin.googleapis.com/v2/projects/*/instances
-		ListEndpointFunc:    projectLevelListFunc("https://bigtableadmin.googleapis.com/v2/projects/%s/instances"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://bigtableadmin.googleapis.com/v2/projects/%s/instances"),
 		UniqueAttributeKeys: []string{"instances"},
 	},
 	BigTableAdminBackup: {
@@ -339,7 +340,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*/clusters/*
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s"),
 		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*/clusters
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters"),
 		UniqueAttributeKeys: []string{"instances", "clusters"},
 	},
 	BigTableAdminTable: {
@@ -351,7 +352,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/tables/%s"),
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.tables/list
 		// GET https://bigtableadmin.googleapis.com/v2/{parent=projects/*/instances/*}/tables
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/tables"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/tables"),
 		SearchDescription:   "Search for BigTable tables in an instance. Use the format {{instance_name}} or projects/{{project}}/instances/{{instance_name}}/tables/{{name}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"instances", "tables"},
 	},
@@ -381,10 +382,10 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/build/docs/api/reference/rest/v1/projects.builds/get
 		// GET https://cloudbuild.googleapis.com/v1/projects/{projectId}/builds/{id}
 		// IAM permissions: cloudbuild.builds.get
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://cloudbuild.googleapis.com/v1/projects/%s/builds/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://cloudbuild.googleapis.com/v1/projects/%s/builds/%s"),
 		// Reference: https://cloud.google.com/build/docs/api/reference/rest/v1/projects.builds/list
 		// GET https://cloudbuild.googleapis.com/v1/projects/{projectId}/builds
-		ListEndpointFunc:    projectLevelListFunc("https://cloudbuild.googleapis.com/v1/projects/%s/builds"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://cloudbuild.googleapis.com/v1/projects/%s/builds"),
 		UniqueAttributeKeys: []string{"builds"},
 		// HEALTH: https://cloud.google.com/build/docs/api/reference/rest/v1/projects.builds#Build.Status
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
@@ -425,10 +426,10 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 		Scope:              ScopeProject,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/firewalls/{firewall}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls/%s"),
 		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/list
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/firewalls
-		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls"),
 		UniqueAttributeKeys: []string{"firewalls"},
 	},
 	ComputeInstance: {
@@ -444,9 +445,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 		Scope:              ScopeProject,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/instanceTemplates/{instanceTemplate}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/instanceTemplates/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/instanceTemplates/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/instanceTemplates
-		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/instanceTemplates"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/instanceTemplates"),
 		UniqueAttributeKeys: []string{"instanceTemplates"},
 	},
 	ComputeLicense: {
@@ -455,18 +456,18 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 		Scope:              ScopeProject,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/licenses/{license}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/licenses/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/licenses/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/licenses
-		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/licenses"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/licenses"),
 		UniqueAttributeKeys: []string{"licenses"},
 	},
 	ComputeNetwork: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 		Scope:              ScopeProject,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/networks/{network}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/networks/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/networks/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/networks
-		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/networks"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/networks"),
 		UniqueAttributeKeys: []string{"networks"},
 	},
 	ComputeDiskType: {
@@ -524,9 +525,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 		Scope:              ScopeProject,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/routes/{route}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/routes/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/routes/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/routes
-		ListEndpointFunc:    projectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/routes"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/routes"),
 		UniqueAttributeKeys: []string{"routes"},
 	},
 	ComputeSubnetwork: {
@@ -558,7 +559,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories/%s"),
 		// Reference: https://cloud.google.com/dataform/reference/rest/v1/projects.locations.repositories/list
 		// GET https://dataform.googleapis.com/v1/projects/*/locations/*/repositories
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories"),
 		SearchDescription:   "Search for Dataform repositories in a location. Use the format {{location}} or projects/{{project}}/locations/{{location}}/repositories/{{name}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "repositories"},
 	},
@@ -571,7 +572,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups/%s"),
 		// Reference: https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.entryGroups/list
 		// GET https://dataplex.googleapis.com/v1/{parent=projects/*/locations/*}/entryGroups
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups"),
 		SearchDescription:   "Search for Dataplex entry groups in a location. Use the format {{location}} or projects/{{project}}/locations/{{location}}/entryGroups/{{entry_group_id}} which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "entryGroups"},
 		// HEALTH: https://cloud.google.com/dataplex/docs/reference/rest/v1/TransferStatus
@@ -582,10 +583,10 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/dns/docs/reference/rest/v1/managedZones/get
 		// GET https://dns.googleapis.com/dns/v1/projects/{project}/managedZones/{managedZone}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://dns.googleapis.com/dns/v1/projects/%s/managedZones/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://dns.googleapis.com/dns/v1/projects/%s/managedZones/%s"),
 		// Reference: https://cloud.google.com/dns/docs/reference/rest/v1/managedZones/list
 		// GET https://dns.googleapis.com/dns/v1/projects/{project}/managedZones
-		ListEndpointFunc:    projectLevelListFunc("https://dns.googleapis.com/dns/v1/projects/%s/managedZones"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://dns.googleapis.com/dns/v1/projects/%s/managedZones"),
 		UniqueAttributeKeys: []string{"managedZones"},
 	},
 	EssentialContactsContact: {
@@ -594,11 +595,11 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/resource-manager/docs/reference/essentialcontacts/rest/v1/projects.contacts/get
 		// GET https://essentialcontacts.googleapis.com/v1/projects/*/contacts/*
 		// IAM permissions: essentialcontacts.contacts.get
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts/%s"),
 		// Reference: https://cloud.google.com/resource-manager/docs/reference/essentialcontacts/rest/v1/projects.contacts/list
 		// GET https://essentialcontacts.googleapis.com/v1/projects/*/contacts
 		// IAM permissions: essentialcontacts.contacts.list
-		ListEndpointFunc: projectLevelListFunc("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts"),
+		ListEndpointFunc: ProjectLevelListFunc("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts"),
 		// This is a special case where we have to define the SEARCH method for only to support Terraform Mapping.
 		// We only validate the adapter initiation constraint: whether the project ID is provided or not.
 		// We return a nil EndpointFunc without any error, because in the runtime we will use the
@@ -620,10 +621,10 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/iam/docs/reference/rest/v1/roles/get
 		// https://iam.googleapis.com/v1/projects/{PROJECT_ID}/roles/{CUSTOM_ROLE_ID}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://iam.googleapis.com/v1/projects/%s/roles/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://iam.googleapis.com/v1/projects/%s/roles/%s"),
 		// Reference: https://cloud.google.com/iam/docs/reference/rest/v1/roles/list
 		// https://iam.googleapis.com/v1/projects/{PROJECT_ID}/roles
-		ListEndpointFunc:    projectLevelListFunc("https://iam.googleapis.com/v1/projects/%s/roles"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://iam.googleapis.com/v1/projects/%s/roles"),
 		UniqueAttributeKeys: []string{"roles"},
 	},
 	LoggingBucket: {
@@ -638,7 +639,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets/list
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets
 		// IAM permissions: logging.buckets.list
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets"),
 		UniqueAttributeKeys: []string{"locations", "buckets"},
 		// HEALTH: Supports Health status: https://cloud.google.com/logging/docs/reference/v2/rest/v2/LifecycleState
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
@@ -669,7 +670,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/savedQueries
 		// IAM permissions: logging.savedQueries.list
 		// Saved Query has to be shared with the project (opposite is a private one) to show up here.
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://logging.googleapis.com/v2/projects/%s/locations/%s/savedQueries"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://logging.googleapis.com/v2/projects/%s/locations/%s/savedQueries"),
 		UniqueAttributeKeys: []string{"locations", "savedQueries"},
 	},
 	MonitoringCustomDashboard: {
@@ -678,11 +679,11 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/monitoring/api/ref_v3/rest/v1/projects.dashboards/get
 		// GET https://monitoring.googleapis.com/v1/projects/[PROJECT_ID_OR_NUMBER]/dashboards/[DASHBOARD_ID] (for custom dashboards).
 		// IAM Perm: monitoring.dashboards.get
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://monitoring.googleapis.com/v1/projects/%s/dashboards/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://monitoring.googleapis.com/v1/projects/%s/dashboards/%s"),
 		// Reference: https://cloud.google.com/monitoring/api/ref_v3/rest/v1/projects.dashboards/list
 		// GET https://monitoring.googleapis.com/v1/{parent}/dashboards
 		// IAM Perm: monitoring.dashboards.list
-		ListEndpointFunc:  projectLevelListFunc("https://monitoring.googleapis.com/v1/projects/%s/dashboards"),
+		ListEndpointFunc:  ProjectLevelListFunc("https://monitoring.googleapis.com/v1/projects/%s/dashboards"),
 		SearchDescription: "Search for custom dashboards by their ID in the form of projects/{projectId}/dashboards/{dashboard_id}. This is supported for terraform mappings.",
 		// This is a special case where we have to define the SEARCH method for only to support Terraform Mapping.
 		// We only validate the adapter initiation constraint: whether the project ID is provided or not.
@@ -701,10 +702,10 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 		Scope:              ScopeProject,
 		// https://pubsub.googleapis.com/v1/projects/{project}/subscriptions/{subscription}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://pubsub.googleapis.com/v1/projects/%s/subscriptions/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://pubsub.googleapis.com/v1/projects/%s/subscriptions/%s"),
 		// Reference: https://cloud.google.com/pubsub/docs/reference/rest/v1/projects.subscriptions/list?rep_location=global
 		// https://pubsub.googleapis.com/v1/projects/{project}/subscriptions
-		ListEndpointFunc:    projectLevelListFunc("https://pubsub.googleapis.com/v1/projects/%s/subscriptions"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://pubsub.googleapis.com/v1/projects/%s/subscriptions"),
 		UniqueAttributeKeys: []string{"subscriptions"},
 		// HEALTH: https://cloud.google.com/pubsub/docs/reference/rest/v1/projects.subscriptions#state_2
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
@@ -713,9 +714,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 		Scope:              ScopeProject,
 		// https://pubsub.googleapis.com/v1/projects/{project}/topics/{topic}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://pubsub.googleapis.com/v1/projects/%s/topics/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://pubsub.googleapis.com/v1/projects/%s/topics/%s"),
 		// https://pubsub.googleapis.com/v1/projects/{project}/topics
-		ListEndpointFunc:    projectLevelListFunc("https://pubsub.googleapis.com/v1/projects/%s/topics"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://pubsub.googleapis.com/v1/projects/%s/topics"),
 		UniqueAttributeKeys: []string{"topics"},
 		// HEALTH: https://cloud.google.com/pubsub/docs/reference/rest/v1/projects.topics#state
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
@@ -771,7 +772,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// An example name would be: projects/123/services/service
 		// where 123 is the project number TODO: make sure that this is working with project ID as well
 		// IAM Perm: serviceusage.services.get
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://serviceusage.googleapis.com/v1/projects/%s/services/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://serviceusage.googleapis.com/v1/projects/%s/services/%s"),
 		// Reference: https://cloud.google.com/service-usage/docs/reference/rest/v1/services/list
 		// GET https://serviceusage.googleapis.com/v1/{parent=*/*}/services
 		/*
@@ -782,7 +783,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		*/
 		// Let's use the filter to only list enabled services.
 		// IAM Perm: serviceusage.services.list
-		ListEndpointFunc:    projectLevelListFunc("https://serviceusage.googleapis.com/v1/projects/%s/services?filter=state:ENABLED"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://serviceusage.googleapis.com/v1/projects/%s/services?filter=state:ENABLED"),
 		UniqueAttributeKeys: []string{"services"},
 		// HEALTH: https://cloud.google.com/service-usage/docs/reference/rest/v1/services#state
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
@@ -795,7 +796,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// https://spanner.googleapis.com/v1/projects/*/instances/*/backups/*
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://spanner.googleapis.com/v1/projects/%s/instances/%s/backups/%s"),
 		// https://spanner.googleapis.com/v1/projects/*/instances/*/backups
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instances/%s/backups"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instances/%s/backups"),
 		UniqueAttributeKeys: []string{"instances", "backups"},
 	},
 	SpannerDatabase: {
@@ -806,22 +807,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://spanner.googleapis.com/v1/projects/%s/instances/%s/databases/%s"),
 		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.databases/list?rep_location=global
 		// https://spanner.googleapis.com/v1/{parent=projects/*/instances/*}/databases
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instances/%s/databases"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instances/%s/databases"),
 		UniqueAttributeKeys: []string{"instances", "databases"},
 		// HEALTH: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.databases#state
-		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
-	},
-	SpannerInstance: {
-		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
-		Scope:              ScopeProject,
-		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances/get?rep_location=global
-		// https://spanner.googleapis.com/v1/projects/*/instances/*
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instances/%s"),
-		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances/list?rep_location=global
-		// https://spanner.googleapis.com/v1/projects/*/instances
-		ListEndpointFunc:    projectLevelListFunc("https://spanner.googleapis.com/v1/projects/%s/instances"),
-		UniqueAttributeKeys: []string{"instances"},
-		// HEALTH: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances#State
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
 	SpannerInstanceConfig: {
@@ -830,9 +818,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instanceConfigs/get?rep_location=global
 		// https://spanner.googleapis.com/v1/projects/*/instanceConfigs/*
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instanceConfigs/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instanceConfigs/%s"),
 		// https://// https://spanner.googleapis.com/v1/projects/*/instanceConfigs
-		ListEndpointFunc:    projectLevelListFunc("https://spanner.googleapis.com/v1/projects/%s/instanceConfigs"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://spanner.googleapis.com/v1/projects/%s/instanceConfigs"),
 		UniqueAttributeKeys: []string{"instanceConfigs"},
 	},
 	SQLAdminBackup: {
@@ -840,10 +828,10 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/Backups/GetBackup
 		// GET https://sqladmin.googleapis.com/v1/{name=projects/*/backups/*}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithSingleQuery("https://sqladmin.googleapis.com/v1/projects/%s/backups/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://sqladmin.googleapis.com/v1/projects/%s/backups/%s"),
 		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/Backups/ListBackups
 		// GET https://sqladmin.googleapis.com/v1/{parent=projects/*}/backups
-		ListEndpointFunc:    projectLevelListFunc("https://sqladmin.googleapis.com/v1/projects/%s/backups"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://sqladmin.googleapis.com/v1/projects/%s/backups"),
 		UniqueAttributeKeys: []string{"backups"},
 		// HEALTH: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/Backups#sqlbackupstate
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
@@ -856,7 +844,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://sqladmin.googleapis.com/v1/projects/%s/instances/%s/backupRuns/%s"),
 		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/backupRuns/list
 		// GET https://sqladmin.googleapis.com/v1/projects/{project}/instances/{instance}/backupRuns
-		SearchEndpointFunc:  projectLevelEndpointFuncWithSingleQuery("https://sqladmin.googleapis.com/v1/projects/%s/instances/%s/backupRuns"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://sqladmin.googleapis.com/v1/projects/%s/instances/%s/backupRuns"),
 		UniqueAttributeKeys: []string{"instances", "backupRuns"},
 		// HEALTH: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/backupRuns#sqlbackuprunstatus
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
@@ -879,7 +867,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		},
 		// Reference: https://cloud.google.com/storage/docs/json_api/v1/buckets/list
 		// GET https://storage.googleapis.com/storage/v1/b?project={project}
-		ListEndpointFunc:    projectLevelListFunc("https://storage.googleapis.com/storage/v1/b?project=%s"),
+		ListEndpointFunc:    ProjectLevelListFunc("https://storage.googleapis.com/storage/v1/b?project=%s"),
 		UniqueAttributeKeys: []string{"b"},
 	},
 }

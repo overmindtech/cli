@@ -345,12 +345,12 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactInOnly,
 		},
 		"properties.disks.initializeParams.licenses": {
-			Description:      "If the Compute License is updated: New instances may violate license agreements or lose functionality. If the template is updated: License remains unaffected..",
+			Description:      "If the Compute License is updated: New instances may violate license agreements or lose functionality. If the template is updated: License remains unaffected.",
 			ToSDPITemType:    ComputeLicense,
 			BlastPropagation: impactInOnly,
 		},
 		"properties.disks.licenses": {
-			Description:      "If the Compute License is updated: New instances may violate license agreements or lose functionality. If the template is updated: License remains unaffected..",
+			Description:      "If the Compute License is updated: New instances may violate license agreements or lose functionality. If the template is updated: License remains unaffected.",
 			ToSDPITemType:    ComputeLicense,
 			BlastPropagation: impactInOnly,
 		},
@@ -649,13 +649,6 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactInOnly,
 		},
 		"encryptionInfo.kmsKeyVersion": cryptoKeyVersionImpactInOnly,
-	},
-	SpannerInstance: {
-		"config": {
-			ToSDPITemType:    SpannerInstanceConfig,
-			Description:      "If the Spanner Instance Config is deleted or updated: The Spanner Instance may fail to operate correctly. If the Spanner Instance is updated: The config remains unaffected.",
-			BlastPropagation: impactInOnly,
-		},
 	},
 	SQLAdminBackup: {
 		"instance": {

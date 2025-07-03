@@ -322,7 +322,7 @@ func TestProjectLevelEndpointFuncWithSingleQuery(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn := projectLevelEndpointFuncWithSingleQuery(tt.format)
+			fn := ProjectLevelEndpointFuncWithSingleQuery(tt.format)
 			endpointFunc, err := fn(tt.params...)
 			if tt.expectInitErr {
 				if err == nil {
@@ -927,8 +927,8 @@ func TestEndpointFuncWithQueries_PanicsOnWrongFormat(t *testing.T) {
 			count:  4,
 		},
 		{
-			name:   "projectLevelEndpointFuncWithSingleQuery panics on wrong format",
-			fn:     projectLevelEndpointFuncWithSingleQuery,
+			name:   "ProjectLevelEndpointFuncWithSingleQuery panics on wrong format",
+			fn:     ProjectLevelEndpointFuncWithSingleQuery,
 			format: "https://example.com/projects/%s/resources", // 1 %s, should be 2
 			count:  2,
 		},
@@ -1012,7 +1012,7 @@ func Test_projectLevelListFunc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn := projectLevelListFunc(tt.format)
+			fn := ProjectLevelListFunc(tt.format)
 			got, err := fn(tt.params...)
 			if tt.expectErr {
 				if err == nil {
