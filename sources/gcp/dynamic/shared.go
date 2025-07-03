@@ -10,7 +10,9 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/sourcegraph/conc/pool"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -160,23 +162,22 @@ func externalCallSingle(ctx context.Context, httpCli *http.Client, url string) (
 	return result, nil
 }
 
-// externalCallMulti makes a paginated HTTP GET request to the specified URL and returns all items found in the response.
-// It handles pagination by checking for a "nextPageToken" in the response and continues to fetch until no more pages are available.
-// This function can return items along with an error if a consecutive HTTP request fails or if the response cannot be parsed correctly.
-// Therefore, it is important to check both the returned items and the error.
-func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.Client, urlForList string) ([]map[string]interface{}, error) {
-	var allItems []map[string]interface{}
-	currentURL := urlForList
+// externalCallMulti makes a paginated HTTP GET request to the specified URL and sends the results to the provided output channel.
+func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.Client, urlForList string, out chan<- map[string]any) error {
+	if out == nil {
+		return fmt.Errorf("no output channel provided")
+	}
 
+	currentURL := urlForList
 	for {
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, currentURL, nil)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		resp, err := httpCli.Do(req)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		if resp.StatusCode != http.StatusOK {
@@ -184,7 +185,7 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 			body, err := io.ReadAll(resp.Body)
 			resp.Body.Close() // Close the response body
 			if err == nil {
-				return allItems, fmt.Errorf(
+				return fmt.Errorf(
 					"failed to make the GET call. HTTP Status: %s, HTTP Body: %s",
 					resp.Status,
 					string(body),
@@ -195,17 +196,17 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 				"ovm.gcp.dynamic.http.get.urlForList":     currentURL,
 				"ovm.gcp.dynamic.http.get.responseStatus": resp.Status,
 			}).Warnf("failed to read the response body: %v", err)
-			return allItems, fmt.Errorf("failed to make the GET call. HTTP Status: %s", resp.Status)
+			return fmt.Errorf("failed to make the GET call. HTTP Status: %s", resp.Status)
 		}
 
 		data, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return allItems, err
+			return err
 		}
 
 		var result map[string]interface{}
 		if err = json.Unmarshal(data, &result); err != nil {
-			return allItems, err
+			return err
 		}
 
 		// Extract items from the current page
@@ -234,7 +235,13 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 		// Add items from this page to our collection
 		for _, item := range items {
 			if itemMap, ok := item.(map[string]interface{}); ok {
-				allItems = append(allItems, itemMap)
+				// If out channel is provided, send the item to it
+				select {
+				case out <- itemMap:
+				case <-ctx.Done():
+					log.WithContext(ctx).Warn("context cancelled while sending items")
+					return ctx.Err()
+				}
 			}
 		}
 
@@ -247,7 +254,7 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 		// Properly construct the next page URL with the pageToken
 		parsedURL, err := url.Parse(urlForList)
 		if err != nil {
-			return allItems, fmt.Errorf("failed to parse URL %s: %w", urlForList, err)
+			return fmt.Errorf("failed to parse URL %s: %w", urlForList, err)
 		}
 
 		// Get existing query parameters or create new ones
@@ -259,7 +266,7 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 		currentURL = parsedURL.String()
 	}
 
-	return allItems, nil
+	return nil
 }
 
 func potentialLinksFromBlasts(itemType shared.ItemType, blasts map[shared.ItemType]map[string]*gcpshared.Impact) []string {
@@ -274,4 +281,122 @@ func potentialLinksFromBlasts(itemType shared.ItemType, blasts map[shared.ItemTy
 	}
 
 	return potentialLinks
+}
+
+// aggregateSDPItems retrieves items from an external API and converts them to SDP items.
+func aggregateSDPItems(ctx context.Context, a Adapter, url string) ([]*sdp.Item, error) {
+	var items []*sdp.Item
+	itemsSelector := a.uniqueAttributeKeys[len(a.uniqueAttributeKeys)-1] // Use the last key as the item selector
+
+	out := make(chan map[string]interface{})
+	p := pool.New().WithErrors().WithContext(ctx)
+	p.Go(func(ctx context.Context) error {
+		defer close(out)
+		err := externalCallMulti(ctx, itemsSelector, a.httpCli, url, out)
+		if err != nil {
+			return fmt.Errorf("failed to retrieve items for %s: %w", url, err)
+		}
+		return nil
+	},
+	)
+
+	for resp := range out {
+		item, err := externalToSDP(ctx, a.projectID, a.scope, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker)
+		if err != nil {
+			log.WithError(err).Warn("failed to extract item from response")
+		}
+
+		items = append(items, item)
+	}
+
+	err := p.Wait()
+	if err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
+
+// streamSDPItems retrieves items from an external API and streams them as SDP items.
+func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery.QueryResultStream) {
+	itemsSelector := a.uniqueAttributeKeys[len(a.uniqueAttributeKeys)-1] // Use the last key as the item selector
+
+	out := make(chan map[string]interface{})
+	p := pool.New().WithErrors().WithContext(ctx)
+	p.Go(func(ctx context.Context) error {
+		defer close(out)
+		err := externalCallMulti(ctx, itemsSelector, a.httpCli, url, out)
+		if err != nil {
+			return fmt.Errorf("failed to retrieve items for %s: %w", url, err)
+		}
+		return nil
+	})
+
+	for resp := range out {
+		item, err := externalToSDP(ctx, a.projectID, a.scope, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker)
+		if err != nil {
+			log.WithError(err).Warn("failed to extract item from response")
+			continue
+		}
+
+		stream.SendItem(item)
+	}
+
+	err := p.Wait()
+	if err != nil {
+		stream.SendError(err)
+	}
+}
+
+func terraformMappingViaSearch(ctx context.Context, a Adapter, query string) ([]*sdp.Item, error) {
+	// query is in the format of:
+	// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
+	// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
+	//
+	// Extract the relevant parts from the query
+	// We need to extract the path parameters based on the number of unique attribute keys
+	// From projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
+	// we get: ["account", "key"]
+	// if the unique attribute keys are ["serviceAccounts", "keys"]
+	queryParts := gcpshared.ExtractPathParamsWithCount(query, len(a.uniqueAttributeKeys))
+	if len(queryParts) != len(a.uniqueAttributeKeys) {
+		return nil, &sdp.QueryError{
+			ErrorType: sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf(
+				"failed to handle terraform mapping from query %s for %s",
+				query,
+				a.sdpAssetType,
+			),
+		}
+	}
+
+	// Reconstruct the query from the parts with default separator
+	// For example, if the unique attribute keys are ["serviceAccounts", "keys"]
+	// and the query parts are ["account", "key"], we get "account|key"
+	query = strings.Join(queryParts, shared.QuerySeparator)
+
+	// We use the GET endpoint for this query. Because the terraform mappings are for single items,
+	getURL := a.getURLFunc(query)
+	if getURL == "" {
+		return nil, &sdp.QueryError{
+			ErrorType: sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf(
+				"failed to construct the URL for the query \"%s\". SEARCH method description: %s",
+				query,
+				a.Metadata().GetSupportedQueryMethods().GetSearchDescription(),
+			),
+		}
+	}
+
+	resp, err := externalCallSingle(ctx, a.httpCli, getURL)
+	if err != nil {
+		return nil, err
+	}
+
+	item, err := externalToSDP(ctx, a.projectID, a.scope, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert response to SDP: %w", err)
+	}
+
+	return []*sdp.Item{item}, nil
 }

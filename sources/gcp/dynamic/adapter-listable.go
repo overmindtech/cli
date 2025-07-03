@@ -69,21 +69,17 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 		}
 	}
 
-	var items []*sdp.Item
-	itemsSelector := g.uniqueAttributeKeys[len(g.uniqueAttributeKeys)-1] // Use the last key as the item selector
-	multiResp, err := externalCallMulti(ctx, itemsSelector, g.httpCli, g.listEndpoint)
-	if err != nil && len(multiResp) == 0 {
-		return nil, fmt.Errorf("failed to retrieve items for %s: %w", g.listEndpoint, err)
+	return aggregateSDPItems(ctx, g.Adapter, g.listEndpoint)
+}
+
+func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCache bool, stream discovery.QueryResultStream) {
+	if scope != g.scope {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: fmt.Sprintf("requested scope %v does not match any adapter scope %v", scope, g.Scopes()),
+		})
+		return
 	}
 
-	for _, resp := range multiResp {
-		item, err := externalToSDP(ctx, g.projectID, g.scope, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker)
-		if err != nil {
-			return nil, err
-		}
-
-		items = append(items, item)
-	}
-
-	return items, nil
+	streamSDPItems(ctx, g.Adapter, g.listEndpoint, stream)
 }

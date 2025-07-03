@@ -81,6 +81,14 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 			ErrorString: fmt.Sprintf("requested scope %v does not match any adapter scope %v", scope, g.Scopes()),
 		}
 	}
+
+	if strings.HasPrefix(query, "projects/") {
+		// This must be a terraform query in the format of:
+		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
+		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
+		return terraformMappingViaSearch(ctx, g.Adapter, query)
+	}
+
 	searchEndpoint := g.searchEndpointFunc(query)
 	if searchEndpoint == "" {
 		return nil, &sdp.QueryError{
@@ -89,38 +97,48 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 		}
 	}
 
-	var items []*sdp.Item
-	itemsSelector := g.uniqueAttributeKeys[len(g.uniqueAttributeKeys)-1] // Use the last key as the item selector
+	return aggregateSDPItems(ctx, g.Adapter, searchEndpoint)
+}
+
+func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, query string, ignoreCache bool, stream discovery.QueryResultStream) {
+	if scope != g.scope {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: fmt.Sprintf("requested scope %v does not match any adapter scope %v", scope, g.Scopes()),
+		})
+		return
+	}
 
 	if strings.HasPrefix(query, "projects/") {
-		// This is a single item query for terraform search method mappings.
-		// See: https://linear.app/overmind/issue/ENG-580/handle-terraform-mappings-in-search-method
-		resp, err := externalCallSingle(ctx, g.httpCli, searchEndpoint)
+		// This must be a terraform query in the format of:
+		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
+		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
+		items, err := terraformMappingViaSearch(ctx, g.Adapter, query)
 		if err != nil {
-			return nil, err
+			stream.SendError(&sdp.QueryError{
+				ErrorType:   sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf("failed to execute terraform mapping search for query \"%s\": %v", query, err),
+			})
+			return
 		}
 
-		item, err := externalToSDP(ctx, g.projectID, g.scope, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker)
-		if err != nil {
-			return nil, err
-		}
-
-		return append(items, item), nil
+		// There should only be one item in the result, so we can send it directly
+		stream.SendItem(items[0])
+		return
 	}
 
-	multiResp, err := externalCallMulti(ctx, itemsSelector, g.httpCli, searchEndpoint)
-	if err != nil && len(multiResp) == 0 {
-		return nil, fmt.Errorf("failed to retrieve items for %s: %w", searchEndpoint, err)
+	searchURL := g.searchEndpointFunc(query)
+	if searchURL == "" {
+		stream.SendError(&sdp.QueryError{
+			ErrorType: sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf(
+				"failed to construct the URL for the query \"%s\". SEARCH method description: %s",
+				query,
+				g.Metadata().GetSupportedQueryMethods().GetSearchDescription(),
+			),
+		})
+		return
 	}
 
-	for _, resp := range multiResp {
-		item, err := externalToSDP(ctx, g.projectID, g.scope, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker)
-		if err != nil {
-			return nil, err
-		}
-
-		items = append(items, item)
-	}
-
-	return items, nil
+	streamSDPItems(ctx, g.Adapter, searchURL, stream)
 }

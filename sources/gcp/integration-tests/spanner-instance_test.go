@@ -10,10 +10,11 @@ import (
 	instance "cloud.google.com/go/spanner/admin/instance/apiv1"
 	"cloud.google.com/go/spanner/admin/instance/apiv1/instancepb"
 	"github.com/googleapis/gax-go/v2/apierror"
-	"github.com/overmindtech/cli/sources/gcp/dynamic"
-	"github.com/overmindtech/cli/sources/gcp/shared"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
+
+	"github.com/overmindtech/cli/sources/gcp/dynamic"
+	"github.com/overmindtech/cli/sources/gcp/shared"
 )
 
 func TestSpannerInstance(t *testing.T) {

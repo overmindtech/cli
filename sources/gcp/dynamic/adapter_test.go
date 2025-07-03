@@ -6,8 +6,10 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	instancepb "cloud.google.com/go/spanner/admin/instance/apiv1/instancepb"
+	"github.com/stretchr/testify/assert"
 	"google.golang.org/api/artifactregistry/v1"
 	"google.golang.org/api/compute/v1"
 
@@ -18,6 +20,14 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
 )
+
+type SearchStreamAdapter interface {
+	SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream)
+}
+
+type ListStreamAdapter interface {
+	ListStream(ctx context.Context, scope string, ignoreCache bool, stream discovery.QueryResultStream)
+}
 
 // TODO: Possible improvements:
 // - Create a helper function that does some of the common assertions for the adapter tests
@@ -109,8 +119,16 @@ func TestAdapter(t *testing.T) {
 			SelfLink: "https://compute.googleapis.com/compute/v1/projects/test-project/global/instanceTemplates/test-instance-template",
 		}
 
+		sizeOfFirstPage := 100
+		sizeOfLastPage := 1
+
+		templatesWithNextPage := &compute.InstanceTemplateList{
+			Items:         dynamic.Multiply(template, sizeOfFirstPage),
+			NextPageToken: "next-page-token",
+		}
+
 		templates := &compute.InstanceTemplateList{
-			Items: []*compute.InstanceTemplate{template},
+			Items: dynamic.Multiply(template, sizeOfLastPage),
 		}
 
 		expectedCallAndResponses := map[string]shared.MockResponse{
@@ -119,6 +137,10 @@ func TestAdapter(t *testing.T) {
 				Body:       template,
 			},
 			"https://compute.googleapis.com/compute/v1/projects/test-project/global/instanceTemplates": {
+				StatusCode: http.StatusOK,
+				Body:       templatesWithNextPage,
+			},
+			"https://compute.googleapis.com/compute/v1/projects/test-project/global/instanceTemplates?pageToken=next-page-token": {
 				StatusCode: http.StatusOK,
 				Body:       templates,
 			},
@@ -482,12 +504,49 @@ func TestAdapter(t *testing.T) {
 
 			sdpItems, err := listable.List(ctx, projectID, true)
 			if err != nil {
-				t.Fatalf("Failed to list instance templates: %v", err)
+				t.Fatalf("Failed to list instance templatesWithNextPage: %v", err)
 			}
 
-			if len(sdpItems) != 1 {
-				t.Errorf("Expected 1 instance template, got %d", len(sdpItems))
+			expectedItemCount := sizeOfFirstPage + sizeOfLastPage
+			if len(sdpItems) != expectedItemCount {
+				t.Errorf("Expected %d instance template, got %d", expectedItemCount, len(sdpItems))
 			}
+		})
+
+		t.Run("ListStream", func(t *testing.T) {
+			adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, meta, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), projectID)
+			if err != nil {
+				t.Fatalf("Failed to create adapter for ComputeInstanceTemplate: %v", err)
+			}
+
+			expectedItemCount := sizeOfFirstPage + sizeOfLastPage
+			items := make(chan *sdp.Item, expectedItemCount)
+			t.Cleanup(func() {
+				close(items)
+			})
+
+			itemHandler := func(item *sdp.Item) {
+				time.Sleep(10 * time.Millisecond)
+				items <- item
+			}
+
+			errHandler := func(err error) {
+				if err != nil {
+					t.Fatalf("Unexpected error in stream: %v", err)
+				}
+			}
+
+			listStreamable, ok := adapter.(ListStreamAdapter)
+			if !ok {
+				t.Fatalf("Adapter is not a ListStreamAdapter")
+			}
+
+			stream := discovery.NewQueryResultStream(itemHandler, errHandler)
+			listStreamable.ListStream(ctx, projectID, true, stream)
+
+			assert.Eventually(t, func() bool {
+				return len(items) == expectedItemCount
+			}, 5*time.Second, 100*time.Millisecond, "Expected to receive all items in the stream")
 		})
 	})
 
@@ -505,13 +564,17 @@ func TestAdapter(t *testing.T) {
 			UploadTime:     "2023-06-15T10:32:00Z",
 			ImageSizeBytes: 75849324,
 		}
-		dockerImages := &artifactregistry.ListDockerImagesResponse{
-			DockerImages: []*artifactregistry.DockerImage{dockerImage},
-		}
+
+		sizeOfFirstPage := 100
+		sizeOfLastPage := 1
 
 		dockerImagesWithNextPageToken := &artifactregistry.ListDockerImagesResponse{
-			DockerImages:  []*artifactregistry.DockerImage{dockerImage},
+			DockerImages:  dynamic.Multiply(dockerImage, sizeOfFirstPage),
 			NextPageToken: "next-page-token",
+		}
+
+		dockerImages := &artifactregistry.ListDockerImagesResponse{
+			DockerImages: dynamic.Multiply(dockerImage, sizeOfLastPage),
 		}
 
 		sdpItemType := gcpshared.ArtifactRegistryDockerImage
@@ -634,9 +697,48 @@ func TestAdapter(t *testing.T) {
 				t.Fatalf("Failed to list docker images: %v", err)
 			}
 
-			if len(sdpItems) != 2 {
-				t.Errorf("Expected 2 docker images, got %d", len(sdpItems))
+			expectedItemCount := sizeOfFirstPage + sizeOfLastPage
+			if len(sdpItems) != expectedItemCount {
+				t.Errorf("Expected %d docker images, got %d", expectedItemCount, len(sdpItems))
 			}
+		})
+
+		t.Run("SearchStream", func(t *testing.T) {
+			// This is a project level adapter, so we pass the project
+			httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
+			adapter, err := dynamic.MakeAdapter(sdpItemType, meta, linker, httpCli, projectID)
+			if err != nil {
+				t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
+			}
+
+			streaming, ok := adapter.(SearchStreamAdapter)
+			if !ok {
+				t.Fatalf("Adapter for %s does not implement StreamingAdapter", sdpItemType)
+			}
+
+			expectedItemCount := sizeOfFirstPage + sizeOfLastPage
+			items := make(chan *sdp.Item, expectedItemCount)
+			t.Cleanup(func() {
+				close(items)
+			})
+
+			itemHandler := func(item *sdp.Item) {
+				time.Sleep(10 * time.Millisecond)
+				items <- item
+			}
+
+			errHandler := func(err error) {
+				if err != nil {
+					t.Fatalf("Unexpected error in stream: %v", err)
+				}
+			}
+
+			stream := discovery.NewQueryResultStream(itemHandler, errHandler)
+			streaming.SearchStream(ctx, projectID, shared.CompositeLookupKey(location, repository), true, stream)
+
+			assert.Eventually(t, func() bool {
+				return len(items) == expectedItemCount
+			}, 5*time.Second, 100*time.Millisecond, "Expected to receive all items in the stream")
 		})
 	})
 
