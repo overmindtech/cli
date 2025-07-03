@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"github.com/charmbracelet/lipgloss"
+	lipgloss "github.com/charmbracelet/lipgloss/v2"
 	"github.com/google/uuid"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/overmindtech/pterm"

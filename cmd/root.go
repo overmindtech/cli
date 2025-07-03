@@ -278,6 +278,9 @@ func (l loggedError) Error() string {
 func init() {
 	cobra.OnInitialize(initConfig)
 
+	// Initialize the pallette for lip gloss, it detects the colour of the terminal.
+	InitPalette()
+
 	rootCmd.SetFlagErrorFunc(func(c *cobra.Command, err error) error {
 		return flagError{fmt.Sprintf("%v\n\n%s", err, c.UsageString())}
 	})

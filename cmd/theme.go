@@ -3,10 +3,12 @@ package cmd
 import (
 	_ "embed"
 	"fmt"
+	"image/color"
+	"os"
 
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/glamour/ansi"
-	"github.com/charmbracelet/lipgloss"
+	lipgloss "github.com/charmbracelet/lipgloss/v2"
 )
 
 // constrain the maximum terminal width to avoid readability issues with too
@@ -23,30 +25,30 @@ type LogoPalette struct {
 }
 
 type Palette struct {
-	BgBase          lipgloss.AdaptiveColor
-	BgBaseHover     lipgloss.AdaptiveColor
-	BgShade         lipgloss.AdaptiveColor
-	BgSub           lipgloss.AdaptiveColor
-	BgBorder        lipgloss.AdaptiveColor
-	BgBorderHover   lipgloss.AdaptiveColor
-	BgDivider       lipgloss.AdaptiveColor
-	BgMain          lipgloss.AdaptiveColor
-	BgMainHover     lipgloss.AdaptiveColor
-	BgDanger        lipgloss.AdaptiveColor
-	BgDangerHover   lipgloss.AdaptiveColor
-	BgSuccess       lipgloss.AdaptiveColor
-	BgSuccessHover  lipgloss.AdaptiveColor
-	BgContrast      lipgloss.AdaptiveColor
-	BgContrastHover lipgloss.AdaptiveColor
-	BgWarning       lipgloss.AdaptiveColor
-	BgWarningHover  lipgloss.AdaptiveColor
-	LabelControl    lipgloss.AdaptiveColor
-	LabelFaint      lipgloss.AdaptiveColor
-	LabelMuted      lipgloss.AdaptiveColor
-	LabelBase       lipgloss.AdaptiveColor
-	LabelTitle      lipgloss.AdaptiveColor
-	LabelLink       lipgloss.AdaptiveColor
-	LabelContrast   lipgloss.AdaptiveColor
+	BgBase          color.Color
+	BgBaseHover     color.Color
+	BgShade         color.Color
+	BgSub           color.Color
+	BgBorder        color.Color
+	BgBorderHover   color.Color
+	BgDivider       color.Color
+	BgMain          color.Color
+	BgMainHover     color.Color
+	BgDanger        color.Color
+	BgDangerHover   color.Color
+	BgSuccess       color.Color
+	BgSuccessHover  color.Color
+	BgContrast      color.Color
+	BgContrastHover color.Color
+	BgWarning       color.Color
+	BgWarningHover  color.Color
+	LabelControl    color.Color
+	LabelFaint      color.Color
+	LabelMuted      color.Color
+	LabelBase       color.Color
+	LabelTitle      color.Color
+	LabelLink       color.Color
+	LabelContrast   color.Color
 }
 
 // This is the gradient that is used in the Overmind logo
@@ -59,145 +61,47 @@ var LogoGradient = LogoPalette{
 	f: "#fd6e43",
 }
 
-var ColorPalette = Palette{
-	BgBase: lipgloss.AdaptiveColor{
-		Light: "#ffffff",
-		Dark:  "#242428",
-	},
-	BgBaseHover: lipgloss.AdaptiveColor{
-		Light: "#ebebeb",
-		Dark:  "#2d2d34",
-	},
-	BgShade: lipgloss.AdaptiveColor{
-		Light: "#fafafa",
-		Dark:  "#27272b",
-	},
-	BgSub: lipgloss.AdaptiveColor{
-		Light: "#ffffff",
-		Dark:  "#1a1a1f",
-	},
-	BgBorder: lipgloss.AdaptiveColor{
-		Light: "#e3e3e3",
-		Dark:  "#37373f",
-	},
-	BgBorderHover: lipgloss.AdaptiveColor{
-		Light: "#d4d4d4",
-		Dark:  "#434351",
-	},
-	BgDivider: lipgloss.AdaptiveColor{
-		Light: "#f0f0f0",
-		Dark:  "#29292e",
-	},
-	BgMain: lipgloss.AdaptiveColor{
-		Light: "#655add",
-		Dark:  "#7a70eb",
-	},
-	BgMainHover: lipgloss.AdaptiveColor{
-		Light: "#4840a0",
-		Dark:  "#938af5",
-	},
-	BgDanger: lipgloss.AdaptiveColor{
-		Light: "#d74249",
-		Dark:  "#be5056",
-	},
-	BgDangerHover: lipgloss.AdaptiveColor{
-		Light: "#c8373e",
-		Dark:  "#d0494f",
-	},
-	BgSuccess: lipgloss.AdaptiveColor{
-		Light: "#5bb856",
-		Dark:  "#61ac5d",
-	},
-	BgSuccessHover: lipgloss.AdaptiveColor{
-		Light: "#4da848",
-		Dark:  "#6ac865",
-	},
-	BgContrast: lipgloss.AdaptiveColor{
-		Light: "#141414",
-		Dark:  "#fafafa",
-	},
-	BgContrastHover: lipgloss.AdaptiveColor{
-		Light: "#2b2b2b",
-		Dark:  "#ffffff",
-	},
-	BgWarning: lipgloss.AdaptiveColor{
-		Light: "#e59c57",
-		Dark:  "#ca8d53",
-	},
-	BgWarningHover: lipgloss.AdaptiveColor{
-		Light: "#d9873a",
-		Dark:  "#f0a660",
-	},
-	LabelControl: lipgloss.AdaptiveColor{
-		Light: "#ffffff",
-		Dark:  "#ffffff",
-	},
-	LabelFaint: lipgloss.AdaptiveColor{
-		Light: "#adadad",
-		Dark:  "#616161",
-	},
-	LabelMuted: lipgloss.AdaptiveColor{
-		Light: "#616161",
-		Dark:  "#8c8c8c",
-	},
-	LabelBase: lipgloss.AdaptiveColor{
-		Light: "#383838",
-		Dark:  "#bababa",
-	},
-	LabelTitle: lipgloss.AdaptiveColor{
-		Light: "#141414",
-		Dark:  "#ededed",
-	},
-	LabelLink: lipgloss.AdaptiveColor{
-		Light: "#4f81ee",
-		Dark:  "#688ede",
-	},
-	LabelContrast: lipgloss.AdaptiveColor{
-		Light: "#ffffff",
-		Dark:  "#1e1e24",
-	},
-}
+var ColorPalette Palette
 
-func ptrBool(b bool) *bool {
-	return &b
-}
-func ptrUint(u uint) *uint {
-	return &u
-}
-func ptrString(s string) *string {
-	return &s
+func InitPalette() {
+	hasDarkBG := lipgloss.HasDarkBackground(os.Stdin, os.Stderr)
+	lightDark := lipgloss.LightDark(hasDarkBG)
+
+	ColorPalette = Palette{
+		BgBase:          lightDark(lipgloss.Color("#ffffff"), lipgloss.Color("#242428")),
+		BgBaseHover:     lightDark(lipgloss.Color("#ebebeb"), lipgloss.Color("#2d2d34")),
+		BgShade:         lightDark(lipgloss.Color("#fafafa"), lipgloss.Color("#27272b")),
+		BgSub:           lightDark(lipgloss.Color("#ffffff"), lipgloss.Color("#1a1a1f")),
+		BgBorder:        lightDark(lipgloss.Color("#e3e3e3"), lipgloss.Color("#37373f")),
+		BgBorderHover:   lightDark(lipgloss.Color("#d4d4d4"), lipgloss.Color("#434351")),
+		BgDivider:       lightDark(lipgloss.Color("#f0f0f0"), lipgloss.Color("#29292e")),
+		BgMain:          lightDark(lipgloss.Color("#655add"), lipgloss.Color("#7a70eb")),
+		BgMainHover:     lightDark(lipgloss.Color("#4840a0"), lipgloss.Color("#938af5")),
+		BgDanger:        lightDark(lipgloss.Color("#d74249"), lipgloss.Color("#be5056")),
+		BgDangerHover:   lightDark(lipgloss.Color("#c8373e"), lipgloss.Color("#d0494f")),
+		BgSuccess:       lightDark(lipgloss.Color("#5bb856"), lipgloss.Color("#61ac5d")),
+		BgSuccessHover:  lightDark(lipgloss.Color("#4da848"), lipgloss.Color("#6ac865")),
+		BgContrast:      lightDark(lipgloss.Color("#141414"), lipgloss.Color("#fafafa")),
+		BgContrastHover: lightDark(lipgloss.Color("#2b2b2b"), lipgloss.Color("#ffffff")),
+		BgWarning:       lightDark(lipgloss.Color("#e59c57"), lipgloss.Color("#ca8d53")),
+		BgWarningHover:  lightDark(lipgloss.Color("#d9873a"), lipgloss.Color("#f0a660")),
+		LabelControl:    lightDark(lipgloss.Color("#ffffff"), lipgloss.Color("#ffffff")),
+		LabelFaint:      lightDark(lipgloss.Color("#adadad"), lipgloss.Color("#616161")),
+		LabelMuted:      lightDark(lipgloss.Color("#616161"), lipgloss.Color("#8c8c8c")),
+		LabelBase:       lightDark(lipgloss.Color("#383838"), lipgloss.Color("#bababa")),
+		LabelTitle:      lightDark(lipgloss.Color("#141414"), lipgloss.Color("#ededed")),
+		LabelLink:       lightDark(lipgloss.Color("#4f81ee"), lipgloss.Color("#688ede")),
+		LabelContrast:   lightDark(lipgloss.Color("#ffffff"), lipgloss.Color("#1e1e24")),
+	}
 }
 
 func MarkdownStyle() ansi.StyleConfig {
-	var bgBase string
-	var bgMain string
-	var labelBase string
-	var labelLink string
-	var labelMuted string
-	var labelTitle string
-
-	if lipgloss.HasDarkBackground() {
-		bgBase = ColorPalette.BgBase.Dark
-		bgMain = ColorPalette.BgMain.Dark
-		labelBase = ColorPalette.LabelBase.Dark
-		labelLink = ColorPalette.LabelLink.Dark
-		labelMuted = ColorPalette.LabelMuted.Dark
-		labelTitle = ColorPalette.LabelTitle.Dark
-	} else {
-		bgBase = ColorPalette.BgBase.Light
-		bgMain = ColorPalette.BgMain.Light
-		labelBase = ColorPalette.LabelBase.Light
-		labelLink = ColorPalette.LabelLink.Light
-		labelMuted = ColorPalette.LabelMuted.Light
-		labelTitle = ColorPalette.LabelTitle.Light
-	}
-
 	return ansi.StyleConfig{
 		Document: ansi.StyleBlock{
 			StylePrimitive: ansi.StylePrimitive{
 				BlockPrefix: "\n",
 				BlockSuffix: "\n",
-				Color:       &labelBase,
+				Color:       getHex(ColorPalette.LabelBase),
 			},
 			Indent: ptrUint(2),
 		},
@@ -214,19 +118,19 @@ func MarkdownStyle() ansi.StyleConfig {
 		Heading: ansi.StyleBlock{
 			StylePrimitive: ansi.StylePrimitive{
 				Bold:        ptrBool(true),
-				Color:       &labelTitle,
+				Color:       getHex(ColorPalette.LabelTitle),
 				BlockSuffix: "\n",
 			},
 		},
 		H1: ansi.StyleBlock{
 			StylePrimitive: ansi.StylePrimitive{
-				BackgroundColor: &bgMain,
-				Color:           &bgBase,
+				BackgroundColor: getHex(ColorPalette.BgMain),
+				Color:           getHex(ColorPalette.BgBase),
 			},
 		},
 		H3: ansi.StyleBlock{
 			StylePrimitive: ansi.StylePrimitive{
-				Color: &labelMuted,
+				Color: getHex(ColorPalette.LabelMuted),
 			},
 		},
 		H4: ansi.StyleBlock{
@@ -255,7 +159,7 @@ func MarkdownStyle() ansi.StyleConfig {
 			Bold: ptrBool(true),
 		},
 		HorizontalRule: ansi.StylePrimitive{
-			Color:  &labelBase,
+			Color:  getHex(ColorPalette.LabelBase),
 			Format: "\n--------\n",
 		},
 		Item: ansi.StylePrimitive{
@@ -269,7 +173,7 @@ func MarkdownStyle() ansi.StyleConfig {
 			Unticked: "[ ] ",
 		},
 		Link: ansi.StylePrimitive{
-			Color:       &labelLink,
+			Color:       getHex(ColorPalette.LabelLink),
 			Underline:   ptrBool(true),
 			BlockPrefix: "(",
 			BlockSuffix: ")",
@@ -278,13 +182,13 @@ func MarkdownStyle() ansi.StyleConfig {
 			Bold: ptrBool(true),
 		},
 		Image: ansi.StylePrimitive{
-			Color:       &labelLink,
+			Color:       getHex(ColorPalette.LabelLink),
 			Underline:   ptrBool(true),
 			BlockPrefix: "(",
 			BlockSuffix: ")",
 		},
 		ImageText: ansi.StylePrimitive{
-			Color: &labelLink,
+			Color: getHex(ColorPalette.LabelLink),
 		},
 		CodeBlock: ansi.StyleCodeBlock{
 			StyleBlock: ansi.StyleBlock{
@@ -364,4 +268,21 @@ func IndentSymbol() string {
 		return "    "
 	}
 	return "   "
+}
+
+func ptrBool(b bool) *bool {
+	return &b
+}
+func ptrUint(u uint) *uint {
+	return &u
+}
+func ptrString(s string) *string {
+	return &s
+}
+
+func getHex(c color.Color) *string {
+	r, g, b, _ := c.RGBA()
+	// RGBA returns values in 0-65535, convert to 0-255
+	retVal := fmt.Sprintf("#%02x%02x%02x", uint8(r>>8), uint8(g>>8), uint8(b>>8)) //nolint: gosec // overflows for displaying a color is not a security issue
+	return &retVal
 }
