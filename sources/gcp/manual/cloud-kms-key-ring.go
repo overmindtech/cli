@@ -38,6 +38,13 @@ func NewCloudKMSKeyRing(client gcpshared.CloudKMSKeyRingClient, projectID string
 	}
 }
 
+func (c cloudKMSKeyRingWrapper) IAMPermissions() []string {
+	return []string{
+		"cloudkms.keyRings.get",
+		"cloudkms.keyRings.list",
+	}
+}
+
 // PotentialLinks returns the potential links for the kms key ring
 func (c cloudKMSKeyRingWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

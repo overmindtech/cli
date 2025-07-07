@@ -34,6 +34,13 @@ func NewComputeBackendService(client gcpshared.ComputeBackendServiceClient, proj
 	}
 }
 
+func (c computeBackendServiceWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.backendServices.get",
+		"compute.backendServices.list",
+	}
+}
+
 func (computeBackendServiceWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeNetwork,

@@ -36,6 +36,13 @@ func NewComputeInstance(client gcpshared.ComputeInstanceClient, projectID, zone 
 	}
 }
 
+func (c computeInstanceWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.instances.get",
+		"compute.instances.list",
+	}
+}
+
 // PotentialLinks returns the potential links for the compute instance wrapper
 func (c computeInstanceWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

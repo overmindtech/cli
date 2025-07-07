@@ -35,6 +35,13 @@ func NewComputeAutoscaler(client gcpshared.ComputeAutoscalerClient, projectID, z
 	}
 }
 
+func (c computeAutoscalerWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.autoscalers.get",
+		"compute.autoscalers.list",
+	}
+}
+
 func (c computeAutoscalerWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeInstanceGroupManager,

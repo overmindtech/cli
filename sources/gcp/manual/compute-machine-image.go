@@ -33,6 +33,13 @@ func NewComputeMachineImage(client gcpshared.ComputeMachineImageClient, projectI
 	}
 }
 
+func (c computeMachineImageWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.machineImages.get",
+		"compute.machineImages.list",
+	}
+}
+
 func (c computeMachineImageWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeNetwork,

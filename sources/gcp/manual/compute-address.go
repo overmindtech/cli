@@ -36,6 +36,13 @@ func NewComputeAddress(client gcpshared.ComputeAddressClient, projectID, region 
 	}
 }
 
+func (c computeAddressWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.addresses.get",
+		"compute.addresses.list",
+	}
+}
+
 // PotentialLinks returns the potential links for the compute address wrapper
 func (c computeAddressWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

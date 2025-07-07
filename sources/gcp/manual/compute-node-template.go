@@ -34,6 +34,13 @@ func NewComputeNodeTemplate(client gcpshared.ComputeNodeTemplateClient, projectI
 	}
 }
 
+func (c computeNodeTemplateWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.nodeTemplates.get",
+		"compute.nodeTemplates.list",
+	}
+}
+
 func (c computeNodeTemplateWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeNodeGroup,

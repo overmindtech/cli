@@ -29,6 +29,14 @@ func NewLoggingSink(client gcpshared.LoggingConfigClient, projectID string) sour
 	}
 }
 
+// IAMPermissions returns the required IAM permissions for the logging sink wrapper
+func (l loggingSinkWrapper) IAMPermissions() []string {
+	return []string{
+		"logging.sinks.get",
+		"logging.sinks.list",
+	}
+}
+
 type loggingSinkWrapper struct {
 	client gcpshared.LoggingConfigClient
 

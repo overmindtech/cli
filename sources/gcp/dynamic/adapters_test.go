@@ -169,6 +169,10 @@ func Test_addAdapter(t *testing.T) {
 }
 
 func TestAdapters(t *testing.T) {
+	type validator interface {
+		Validate() error
+	}
+
 	// Let's ensure that we can create adapters without any issues.
 	adapters, err := Adapters(
 		"my-project",
@@ -192,6 +196,16 @@ func TestAdapters(t *testing.T) {
 		if meta == nil {
 			t.Error("Expected non-nil metadata, got nil")
 			continue
+		}
+
+		validatable, ok := adapter.(validator)
+		if !ok {
+			t.Errorf("Expected adapter to implement Validate(), got %T", adapter)
+			continue
+		}
+
+		if err := validatable.Validate(); err != nil {
+			t.Errorf("Validate() error for adapter %s: %v", adapter.Name(), err)
 		}
 	}
 }

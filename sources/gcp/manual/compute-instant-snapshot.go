@@ -34,6 +34,13 @@ func NewComputeInstantSnapshot(client gcpshared.ComputeInstantSnapshotsClient, p
 	}
 }
 
+func (c computeInstantSnapshotWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.instantSnapshots.get",
+		"compute.instantSnapshots.list",
+	}
+}
+
 // PotentialLinks returns the potential links for the compute snapshot wrapper
 func (c computeInstantSnapshotWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

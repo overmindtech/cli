@@ -35,6 +35,15 @@ func NewBigQueryDataset(client gcpshared.BigQueryDatasetClient, projectID string
 	}
 }
 
+func (b BigQueryDatasetWrapper) IAMPermissions() []string {
+	// https://cloud.google.com/bigquery/docs/access-control
+	// There is no specific permission for listing datasets, so we use the get permission
+	// TODO: Confirm if this is sufficient for listing datasets and their metadata
+	return []string{
+		"bigquery.datasets.get",
+	}
+}
+
 // PotentialLinks returns the potential links for the BigQuery dataset wrapper
 func (b BigQueryDatasetWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

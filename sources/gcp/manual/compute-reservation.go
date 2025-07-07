@@ -34,6 +34,13 @@ func NewComputeReservation(client gcpshared.ComputeReservationClient, projectID,
 	}
 }
 
+func (c computeReservationWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.reservations.get",
+		"compute.reservations.list",
+	}
+}
+
 // PotentialLinks returns the potential links for the compute reservation wrapper
 func (c computeReservationWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

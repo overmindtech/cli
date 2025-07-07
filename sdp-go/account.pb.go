@@ -3382,10 +3382,10 @@ const file_account_proto_rawDesc = "" +
 	"\x0favailableScopes\x18\t \x03(\tR\x0favailableScopes\x12B\n" +
 	"\x0fadapterMetadata\x18\n" +
 	" \x03(\v2\x18.account.AdapterMetadataR\x0fadapterMetadataB\b\n" +
-	"\x06_errorJ\x04\b\b\x10\t\"\xa0\x05\n" +
+	"\x06_errorJ\x04\b\b\x10\t\"\x9d\x05\n" +
 	"\x0fAdapterMetadata\x12\x12\n" +
-	"\x04type\x18\x01 \x01(\tR\x04type\x12A\n" +
-	"\bcategory\x18\x02 \x01(\x0e2\x18.account.AdapterCategoryB\v\xbaH\b\xc8\x01\x01\x82\x01\x02\x10\x01R\bcategory\x12\xc9\x01\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12>\n" +
+	"\bcategory\x18\x02 \x01(\x0e2\x18.account.AdapterCategoryB\b\xbaH\x05\x82\x01\x02\x10\x01R\bcategory\x12\xc9\x01\n" +
 	"\x0epotentialLinks\x18\x03 \x03(\tB\xa0\x01\xbaH\x9c\x01\xba\x01\x98\x01\n" +
 	"\x18potentialLinksValidation\x12MIf 'potentialLinks' is not empty, none of its members should be empty strings\x1a-this.size() == 0 || this.all(x, x.size() > 0)R\x0epotentialLinks\x124\n" +
 	"\x0fdescriptiveName\x18\x04 \x01(\tB\n" +

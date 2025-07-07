@@ -36,6 +36,13 @@ func NewComputeForwardingRule(client gcpshared.ComputeForwardingRuleClient, proj
 	}
 }
 
+func (c computeForwardingRuleWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.forwardingRules.get",
+		"compute.forwardingRules.list",
+	}
+}
+
 // PotentialLinks returns the potential links for the compute forwarding rule wrapper
 func (c computeForwardingRuleWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

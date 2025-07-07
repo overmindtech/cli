@@ -31,6 +31,13 @@ func NewIAMServiceAccountKey(client gcpshared.IAMServiceAccountKeyClient, projec
 	}
 }
 
+func (c iamServiceAccountKeyWrapper) IAMPermissions() []string {
+	return []string{
+		"iam.serviceAccountKeys.get",
+		"iam.serviceAccountKeys.list",
+	}
+}
+
 // PotentialLinks returns the potential links for the iam service account wrapper
 func (c iamServiceAccountKeyWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

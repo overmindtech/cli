@@ -35,6 +35,13 @@ func NewCloudKMSCryptoKey(client gcpshared.CloudKMSCryptoKeyClient, projectID st
 	}
 }
 
+func (c cloudKMSCryptoKeyWrapper) IAMPermissions() []string {
+	return []string{
+		"cloudkms.cryptoKeys.get",
+		"cloudkms.cryptoKeys.list",
+	}
+}
+
 // PotentialLinks returns the potential links for the CryptoKey wrapper.
 func (c cloudKMSCryptoKeyWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

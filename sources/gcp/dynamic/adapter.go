@@ -24,6 +24,7 @@ type AdapterConfig struct {
 	Linker              *gcpshared.Linker
 	HTTPClient          *http.Client
 	UniqueAttributeKeys []string
+	IAMPermissions      []string // List of IAM permissions required by the adapter
 }
 
 // Adapter implements discovery.ListableAdapter for GCP dynamic adapters.
@@ -38,6 +39,7 @@ type Adapter struct {
 	potentialLinks      []string
 	linker              *gcpshared.Linker
 	uniqueAttributeKeys []string
+	iamPermissions      []string
 }
 
 // NewAdapter creates a new GCP dynamic adapter.
@@ -53,6 +55,7 @@ func NewAdapter(config *AdapterConfig) (discovery.Adapter, error) {
 		linker:              config.Linker,
 		potentialLinks:      potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
 		uniqueAttributeKeys: config.UniqueAttributeKeys,
+		iamPermissions:      config.IAMPermissions,
 	}
 
 	if a.httpCli == nil {

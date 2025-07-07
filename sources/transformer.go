@@ -40,6 +40,7 @@ type Wrapper interface {
 	Category() sdp.AdapterCategory
 	PotentialLinks() map[shared.ItemType]bool
 	AdapterMetadata() *sdp.AdapterMetadata
+	IAMPermissions() []string
 }
 
 // ListableWrapper defines an optional interface for resources that support listing.
@@ -88,6 +89,12 @@ func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
 
 	if err := a.Validate(); err != nil {
 		panic(fmt.Sprintf("failed to validate adapter: %v", err))
+	}
+
+	if iamPerms := wrapper.IAMPermissions(); len(iamPerms) > 0 {
+		for _, perm := range iamPerms {
+			gcpshared.IAMPermissions[perm] = true
+		}
 	}
 
 	return a

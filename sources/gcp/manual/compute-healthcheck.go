@@ -33,6 +33,13 @@ func NewComputeHealthCheck(client gcpshared.ComputeHealthCheckClient, projectID 
 	}
 }
 
+func (c computeHealthCheckWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.healthChecks.get",
+		"compute.healthChecks.list",
+	}
+}
+
 func (c computeHealthCheckWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{

@@ -70,3 +70,9 @@ func (u *Base) Scopes() []string {
 func (u *Base) ItemType() ItemType {
 	return u.itemType
 }
+
+// IAMPermissions returns a slice of IAM permissions required for the adapter.
+// This is optional, not all adapters will implement this.
+func (u *Base) IAMPermissions() []string {
+	return nil
+}

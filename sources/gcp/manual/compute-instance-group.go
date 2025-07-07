@@ -34,6 +34,13 @@ func NewComputeInstanceGroup(client gcpshared.ComputeInstanceGroupsClient, proje
 	}
 }
 
+func (c computeInstanceGroupWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.instanceGroups.get",
+		"compute.instanceGroups.list",
+	}
+}
+
 // PotentialLinks returns the potential links for the compute instance wrapper
 func (c computeInstanceGroupWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

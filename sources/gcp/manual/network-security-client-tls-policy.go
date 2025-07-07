@@ -38,6 +38,13 @@ func NewNetworkSecurityClientTlsPolicy(client gcpshared.NetworkSecurityClientTls
 	}
 }
 
+func (n networkSecurityClientTlsPolicyWrapper) IAMPermissions() []string {
+	return []string{
+		"networksecurity.clientTlsPolicies.get",
+		"networksecurity.clientTlsPolicies.list",
+	}
+}
+
 func (n networkSecurityClientTlsPolicyWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		// The order of these lookups matters

@@ -33,6 +33,13 @@ func NewComputeImage(client gcpshared.ComputeImagesClient, projectID string) sou
 	}
 }
 
+func (c computeImageWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.images.get",
+		"compute.images.list",
+	}
+}
+
 // TerraformMappings returns the Terraform mappings for the compute image wrapper
 func (c computeImageWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{

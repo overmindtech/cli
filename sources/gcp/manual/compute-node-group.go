@@ -37,6 +37,13 @@ func NewComputeNodeGroup(client gcpshared.ComputeNodeGroupClient, projectID, zon
 	}
 }
 
+func (c computeNodeGroupWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.nodeGroups.get",
+		"compute.nodeGroups.list",
+	}
+}
+
 // PotentialLinks returns the potential links for the compute instance wrapper
 func (c computeNodeGroupWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

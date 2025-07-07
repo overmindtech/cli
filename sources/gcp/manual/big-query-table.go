@@ -35,6 +35,13 @@ func NewBigQueryTable(client gcpshared.BigQueryTableClient, projectID string) so
 	}
 }
 
+func (b BigQueryTableWrapper) IAMPermissions() []string {
+	return []string{
+		"bigquery.tables.get",
+		"bigquery.tables.list",
+	}
+}
+
 // PotentialLinks returns the potential links for the BigQuery dataset wrapper
 func (b BigQueryTableWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

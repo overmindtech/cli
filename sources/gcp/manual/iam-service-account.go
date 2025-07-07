@@ -34,6 +34,13 @@ func NewIAMServiceAccount(client gcpshared.IAMServiceAccountClient, projectID st
 	}
 }
 
+func (c iamServiceAccountWrapper) IAMPermissions() []string {
+	return []string{
+		"iam.serviceAccounts.get",
+		"iam.serviceAccounts.list",
+	}
+}
+
 // PotentialLinks returns the potential links for the IAM ServiceAccount wrapper
 func (c iamServiceAccountWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

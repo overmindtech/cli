@@ -35,6 +35,13 @@ func NewComputeDisk(client gcpshared.ComputeDiskClient, projectID, zone string) 
 	}
 }
 
+func (c computeDiskWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.disks.get",
+		"compute.disks.list",
+	}
+}
+
 // PotentialLinks returns the potential links for the compute instance wrapper
 func (c computeDiskWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
