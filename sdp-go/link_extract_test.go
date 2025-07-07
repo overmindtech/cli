@@ -40,8 +40,10 @@ labels:
 spec:
   containers:
     - env:
-        - name: NATS_SERVERS
-          value: nats://[fdb4:5627:96ee::bfa3]:4222
+        - name: NATS_SERVICE_HOST
+          value: fdb4:5627:96ee::bfa3
+        - name: NATS_SERVICE_PORT
+          value: "4222"
         - name: NATS_NAME_PREFIX
           value: source.default
         - name: SERVICE_PORT

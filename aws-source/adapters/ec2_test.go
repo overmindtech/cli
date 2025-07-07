@@ -8,6 +8,8 @@ import (
 )
 
 func ec2GetAutoConfig(t *testing.T) (*ec2.Client, string, string) {
+	t.Helper()
+
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 	client := ec2.NewFromConfig(config)
 

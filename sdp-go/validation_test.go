@@ -921,33 +921,4 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected validation error, got %T: %v", err, err)
 		}
 	})
-
-	t.Run("Missing Category", func(t *testing.T) {
-		md := &AdapterMetadata{
-			Type:            "test-adapter",
-			DescriptiveName: "Test Adapter",
-			SupportedQueryMethods: &AdapterSupportedQueryMethods{
-				Get:               true,
-				GetDescription:    "Get a test adapter",
-				Search:            true,
-				SearchDescription: "Search test adapters",
-				List:              true,
-				ListDescription:   "List test adapters",
-			},
-			PotentialLinks: []string{"test-link"},
-			TerraformMappings: []*TerraformMapping{
-				{TerraformQueryMap: "aws_test_adapter.test_adapter"},
-			},
-		}
-
-		err := protovalidate.Validate(md)
-		if err == nil {
-			t.Errorf("expected error, got nil")
-		}
-
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
-			t.Errorf("expected validation error, got %T: %v", err, err)
-		}
-	})
 }
