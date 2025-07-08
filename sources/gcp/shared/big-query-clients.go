@@ -138,3 +138,72 @@ func NewBigQueryTableClient(client *bigquery.Client) BigQueryTableClient {
 		client: client,
 	}
 }
+
+type BigQueryModelClient interface {
+	Get(ctx context.Context, projectID, datasetID, modelID string) (*bigquery.ModelMetadata, error)
+	List(ctx context.Context, projectID, datasetID string, toSDPItem func(ctx context.Context, dataset *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError)) ([]*sdp.Item, *sdp.QueryError)
+}
+
+type bigQueryModelClient struct {
+	DataSet string
+	client  *bigquery.Client
+}
+
+func NewBigQueryModelClient(client *bigquery.Client, dataset string) BigQueryModelClient {
+	return &bigQueryModelClient{
+		DataSet: dataset,
+		client:  client,
+	}
+}
+
+func (b bigQueryModelClient) Get(ctx context.Context, projectID, datasetID, modelID string) (*bigquery.ModelMetadata, error) {
+	ds := b.client.DatasetInProject(projectID, datasetID)
+	if ds == nil {
+		return nil, fmt.Errorf("dataset %s not found in project %s", datasetID, projectID)
+	}
+
+	model := ds.Model(modelID)
+	if model == nil {
+		return nil, fmt.Errorf("model %s not found in dataset %s in project %s", modelID, datasetID, projectID)
+	}
+
+	return model.Metadata(ctx)
+}
+
+func (b bigQueryModelClient) List(ctx context.Context, projectID, datasetID string, toSDPItem func(ctx context.Context, dataset *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError)) ([]*sdp.Item, *sdp.QueryError) {
+	ds := b.client.DatasetInProject(projectID, datasetID)
+	if ds == nil {
+		return nil, QueryError(fmt.Errorf("dataset %s not found in project %s", datasetID, projectID))
+	}
+
+	modelIterator := ds.Models(ctx)
+	if modelIterator == nil {
+		return nil, QueryError(fmt.Errorf("failed to create model iterator for dataset %s in project %s", datasetID, projectID))
+	}
+
+	var items []*sdp.Item
+	for {
+		model, err := modelIterator.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			return nil, QueryError(fmt.Errorf("error iterating models: %w", err))
+		}
+
+		meta, err := model.Metadata(ctx)
+		if err != nil {
+			return nil, QueryError(fmt.Errorf("error getting metadata for model %s: %w", model.ModelID, err))
+		}
+
+		var sdpErr *sdp.QueryError
+		item, sdpErr := toSDPItem(ctx, meta)
+		if sdpErr != nil {
+			return nil, sdpErr
+		}
+
+		items = append(items, item)
+	}
+
+	return items, nil
+}
