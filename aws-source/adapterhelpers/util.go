@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"regexp"
 	"slices"
 	"strings"
@@ -411,7 +412,14 @@ func GetAutoConfig(t *testing.T) (aws.Config, string, string) {
 
 	config, err := config.LoadDefaultConfig(context.Background())
 	if err != nil {
-		t.Skip(err.Error())
+		rawCIString := os.Getenv("CI")
+		if strings.EqualFold(rawCIString, "true") {
+			// These tests were always just really simple smoke tests that relied on data being already populated in AWS.
+			// They were just a good way to check the shape of the data coming back during development.
+			t.Skip("Skipping test because no AWS credentials are available in CI environment. They are for during development ONLY.")
+		} else {
+			t.Fatalf("Failed to load default config: %v", err)
+		}
 	}
 
 	// Add OTel instrumentation
@@ -425,8 +433,7 @@ func GetAutoConfig(t *testing.T) (aws.Config, string, string) {
 
 	callerID, err = stsClient.GetCallerIdentity(context.Background(), &sts.GetCallerIdentityInput{})
 	if err != nil {
-		t.Skipf("Skipping test due to missing AWS Auth. Make sure you are logged in to the AWS CLI to run tests that require hitting the AWS API. Error: %v", err)
-		return aws.Config{}, "", ""
+		t.Fatalf("Failed to get caller identity, for config: %+v. %v", config, err)
 	}
 
 	return config, *callerID.Account, config.Region
