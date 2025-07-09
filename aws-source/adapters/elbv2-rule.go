@@ -119,11 +119,11 @@ var ruleAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	TerraformMappings: []*sdp.TerraformMapping{
 		{
 			TerraformQueryMap: "aws_alb_listener_rule.arn",
-			TerraformMethod:   sdp.QueryMethod_SEARCH,
+			TerraformMethod:   sdp.QueryMethod_GET,
 		},
 		{
 			TerraformQueryMap: "aws_lb_listener_rule.arn",
-			TerraformMethod:   sdp.QueryMethod_SEARCH,
+			TerraformMethod:   sdp.QueryMethod_GET,
 		},
 	},
 	Category: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
