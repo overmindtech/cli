@@ -6,8 +6,8 @@ import (
 	"connectrpc.com/connect"
 	"github.com/getsentry/sentry-go"
 	"github.com/nats-io/nats.go"
+	"github.com/overmindtech/cli/tracing"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -21,7 +21,7 @@ func NewOtelExtractingHandler(spanName string, h CtxMsgHandler, t trace.Tracer, 
 	return func(msg *nats.Msg) {
 		ctx := context.Background()
 
-		ctx = otel.GetTextMapPropagator().Extract(ctx, propagation.HeaderCarrier(msg.Header))
+		ctx = otel.GetTextMapPropagator().Extract(ctx, tracing.NewNatsHeaderCarrier(msg.Header))
 
 		// don't start a span when we have no spanName
 		if spanName != "" {
@@ -44,7 +44,7 @@ func NewAsyncOtelExtractingHandler(spanName string, h CtxMsgHandler, t trace.Tra
 			defer sentry.Recover()
 
 			ctx := context.Background()
-			ctx = otel.GetTextMapPropagator().Extract(ctx, propagation.HeaderCarrier(msg.Header))
+			ctx = otel.GetTextMapPropagator().Extract(ctx, tracing.NewNatsHeaderCarrier(msg.Header))
 
 			// don't start a span when we have no spanName
 			if spanName != "" {
@@ -62,7 +62,8 @@ func InjectOtelTraceContext(ctx context.Context, msg *nats.Msg) {
 	if msg.Header == nil {
 		msg.Header = make(nats.Header)
 	}
-	otel.GetTextMapPropagator().Inject(ctx, propagation.HeaderCarrier(msg.Header))
+
+	otel.GetTextMapPropagator().Inject(ctx, tracing.NewNatsHeaderCarrier(msg.Header))
 }
 
 type sentryInterceptor struct{}
