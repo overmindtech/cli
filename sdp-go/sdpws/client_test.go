@@ -17,6 +17,16 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// Helper function to check if a slice contains a string
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
 // TestServer is a test server for the websocket client. Note that this can only
 // handle a single connection at a time.
 type testServer struct {
@@ -363,6 +373,469 @@ func TestClient(t *testing.T) {
 
 		if len(ts.requests) != 1 {
 			t.Fatalf("expected 1 request, got %v: %v", len(ts.requests), ts.requests)
+		}
+	})
+
+	t.Run("ConcurrentQueries", func(t *testing.T) {
+		defer goleak.VerifyNone(t)
+		ctx := context.Background()
+
+		ts, closeFn := newTestServer(ctx, t)
+		defer closeFn()
+
+		c, err := Dial(ctx, ts.url, nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() {
+			_ = c.Close(ctx)
+		}()
+
+		// Create multiple queries with different UUIDs
+		numQueries := 5
+		queries := make([]*sdp.Query, numQueries)
+		expectedItems := make(map[string]*sdp.Item)
+
+		for i := range numQueries {
+			u := uuid.New()
+			queries[i] = &sdp.Query{
+				UUID:               u[:],
+				Type:               "test",
+				Method:             sdp.QueryMethod_GET,
+				Query:              fmt.Sprintf("query-%d", i),
+				RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
+				Scope:              "test",
+				IgnoreCache:        false,
+			}
+
+			// Create expected items that should be returned for each query
+			expectedItems[u.String()] = &sdp.Item{
+				Type:            "test",
+				UniqueAttribute: fmt.Sprintf("item-%d", i),
+				Scope:           "test",
+				Metadata: &sdp.Metadata{
+					SourceQuery: queries[i],
+				},
+			}
+		}
+
+		// Inject responses in a different order than queries to test proper routing
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+
+			// Send responses in reverse order to test UUID-based routing
+			for i := numQueries - 1; i >= 0; i-- {
+				u := uuid.UUID(queries[i].GetUUID())
+
+				// Send an item response first
+				ts.inject(ctx, &sdp.GatewayResponse{
+					ResponseType: &sdp.GatewayResponse_NewItem{
+						NewItem: expectedItems[u.String()],
+					},
+				})
+
+				// Then send the completion status
+				ts.inject(ctx, &sdp.GatewayResponse{
+					ResponseType: &sdp.GatewayResponse_QueryStatus{
+						QueryStatus: &sdp.QueryStatus{
+							UUID:   u[:],
+							Status: sdp.QueryStatus_FINISHED,
+						},
+					},
+				})
+
+				// Add a small delay between responses to make race conditions more likely
+				time.Sleep(10 * time.Millisecond)
+			}
+		}()
+
+		// Execute all queries concurrently
+		type queryResult struct {
+			index int
+			items []*sdp.Item
+			err   error
+		}
+
+		results := make([]queryResult, numQueries)
+		var wg sync.WaitGroup
+
+		for i := range numQueries {
+			wg.Add(1)
+			go func(index int) {
+				defer wg.Done()
+				items, err := c.Query(ctx, queries[index])
+				results[index] = queryResult{
+					index: index,
+					items: items,
+					err:   err,
+				}
+			}(i)
+		}
+
+		wg.Wait()
+
+		// Verify that each query got the correct response
+		for i, result := range results {
+			if result.err != nil {
+				t.Errorf("Query %d failed: %v", i, result.err)
+				continue
+			}
+
+			if len(result.items) != 1 {
+				t.Errorf("Query %d: expected 1 item, got %d", i, len(result.items))
+				continue
+			}
+
+			receivedItem := result.items[0]
+			expectedUniqueAttr := fmt.Sprintf("item-%d", i)
+
+			if receivedItem.GetUniqueAttribute() != expectedUniqueAttr {
+				t.Errorf("Query %d: expected item with unique attribute %s, got %s",
+					i, expectedUniqueAttr, receivedItem.GetUniqueAttribute())
+			}
+
+			// Verify the item's metadata contains the correct source query
+			if receivedItem.GetMetadata() == nil || receivedItem.GetMetadata().GetSourceQuery() == nil {
+				t.Errorf("Query %d: item missing metadata or source query", i)
+				continue
+			}
+
+			sourceQueryUUID := uuid.UUID(receivedItem.GetMetadata().GetSourceQuery().GetUUID())
+			expectedUUID := uuid.UUID(queries[i].GetUUID())
+
+			if sourceQueryUUID != expectedUUID {
+				t.Errorf("Query %d: expected source query UUID %s, got %s",
+					i, expectedUUID, sourceQueryUUID)
+			}
+		}
+
+		// Verify that the server received all queries
+		ts.requestsMu.Lock()
+		defer ts.requestsMu.Unlock()
+
+		if len(ts.requests) != numQueries {
+			t.Fatalf("expected %d requests, got %d", numQueries, len(ts.requests))
+		}
+	})
+
+	t.Run("ResponseMixupPrevention", func(t *testing.T) {
+		defer goleak.VerifyNone(t)
+		ctx := context.Background()
+
+		ts, closeFn := newTestServer(ctx, t)
+		defer closeFn()
+
+		c, err := Dial(ctx, ts.url, nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() {
+			_ = c.Close(ctx)
+		}()
+
+		// Create two queries with different UUIDs
+		query1UUID := uuid.New()
+		query2UUID := uuid.New()
+
+		query1 := &sdp.Query{
+			UUID:               query1UUID[:],
+			Type:               "test",
+			Method:             sdp.QueryMethod_GET,
+			Query:              "query-1",
+			RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
+			Scope:              "test",
+			IgnoreCache:        false,
+		}
+
+		query2 := &sdp.Query{
+			UUID:               query2UUID[:],
+			Type:               "test",
+			Method:             sdp.QueryMethod_GET,
+			Query:              "query-2",
+			RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
+			Scope:              "test",
+			IgnoreCache:        false,
+		}
+
+		// Items that should be returned for each query
+		item1 := &sdp.Item{
+			Type:            "test",
+			UniqueAttribute: "item-for-query-1",
+			Scope:           "test",
+			Metadata: &sdp.Metadata{
+				SourceQuery: query1,
+			},
+		}
+
+		item2 := &sdp.Item{
+			Type:            "test",
+			UniqueAttribute: "item-for-query-2",
+			Scope:           "test",
+			Metadata: &sdp.Metadata{
+				SourceQuery: query2,
+			},
+		}
+
+		// Inject responses in a way that could cause mixup if UUIDs aren't handled correctly
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+
+			// Send responses for query2 first, then query1
+			// If the client doesn't properly route by UUID, responses could get mixed up
+
+			// Send multiple items for query2
+			ts.inject(ctx, &sdp.GatewayResponse{
+				ResponseType: &sdp.GatewayResponse_NewItem{
+					NewItem: item2,
+				},
+			})
+
+			// Send an item for query1
+			ts.inject(ctx, &sdp.GatewayResponse{
+				ResponseType: &sdp.GatewayResponse_NewItem{
+					NewItem: item1,
+				},
+			})
+
+			// Send another item for query2 to test multiple items per query
+			item2_duplicate := &sdp.Item{
+				Type:            "test",
+				UniqueAttribute: "item-for-query-2-duplicate",
+				Scope:           "test",
+				Metadata: &sdp.Metadata{
+					SourceQuery: query2,
+				},
+			}
+			ts.inject(ctx, &sdp.GatewayResponse{
+				ResponseType: &sdp.GatewayResponse_NewItem{
+					NewItem: item2_duplicate,
+				},
+			})
+
+			// Complete query1 first (even though we sent its response second)
+			ts.inject(ctx, &sdp.GatewayResponse{
+				ResponseType: &sdp.GatewayResponse_QueryStatus{
+					QueryStatus: &sdp.QueryStatus{
+						UUID:   query1UUID[:],
+						Status: sdp.QueryStatus_FINISHED,
+					},
+				},
+			})
+
+			// Complete query2 after query1
+			ts.inject(ctx, &sdp.GatewayResponse{
+				ResponseType: &sdp.GatewayResponse_QueryStatus{
+					QueryStatus: &sdp.QueryStatus{
+						UUID:   query2UUID[:],
+						Status: sdp.QueryStatus_FINISHED,
+					},
+				},
+			})
+		}()
+
+		// Execute both queries concurrently
+		type result struct {
+			items []*sdp.Item
+			err   error
+		}
+
+		var wg sync.WaitGroup
+		results := make([]result, 2)
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			items, err := c.Query(ctx, query1)
+			results[0] = result{items: items, err: err}
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			items, err := c.Query(ctx, query2)
+			results[1] = result{items: items, err: err}
+		}()
+
+		wg.Wait()
+
+		// Verify query1 got the correct response
+		if results[0].err != nil {
+			t.Errorf("Query 1 failed: %v", results[0].err)
+		} else {
+			if len(results[0].items) != 1 {
+				t.Errorf("Query 1: expected 1 item, got %d", len(results[0].items))
+			} else if results[0].items[0].GetUniqueAttribute() != "item-for-query-1" {
+				t.Errorf("Query 1: got wrong item: %s", results[0].items[0].GetUniqueAttribute())
+			}
+		}
+
+		// Verify query2 got the correct responses
+		if results[1].err != nil {
+			t.Errorf("Query 2 failed: %v", results[1].err)
+		} else {
+			if len(results[1].items) != 2 {
+				t.Errorf("Query 2: expected 2 items, got %d", len(results[1].items))
+			} else {
+				// Check that both items are for query2
+				for i, item := range results[1].items {
+					if !contains([]string{"item-for-query-2", "item-for-query-2-duplicate"}, item.GetUniqueAttribute()) {
+						t.Errorf("Query 2, item %d: got wrong item: %s", i, item.GetUniqueAttribute())
+					}
+				}
+			}
+		}
+	})
+
+	t.Run("UUIDRoutingValidation", func(t *testing.T) {
+		defer goleak.VerifyNone(t)
+		ctx := context.Background()
+
+		ts, closeFn := newTestServer(ctx, t)
+		defer closeFn()
+
+		c, err := Dial(ctx, ts.url, nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() {
+			_ = c.Close(ctx)
+		}()
+
+		// This test validates that responses are properly routed by UUID
+		// If the client were reading responses in order (FIFO) instead of by UUID,
+		// this test would fail because we send responses out of order
+
+		queryA_UUID := uuid.New()
+		queryB_UUID := uuid.New()
+
+		queryA := &sdp.Query{
+			UUID:               queryA_UUID[:],
+			Type:               "test",
+			Method:             sdp.QueryMethod_GET,
+			Query:              "query-A",
+			RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
+			Scope:              "test",
+			IgnoreCache:        false,
+		}
+
+		queryB := &sdp.Query{
+			UUID:               queryB_UUID[:],
+			Type:               "test",
+			Method:             sdp.QueryMethod_GET,
+			Query:              "query-B",
+			RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
+			Scope:              "test",
+			IgnoreCache:        false,
+		}
+
+		// Items that should be returned for each query
+		itemA := &sdp.Item{
+			Type:            "test",
+			UniqueAttribute: "item-A",
+			Scope:           "test",
+			Metadata: &sdp.Metadata{
+				SourceQuery: queryA,
+			},
+		}
+
+		itemB := &sdp.Item{
+			Type:            "test",
+			UniqueAttribute: "item-B",
+			Scope:           "test",
+			Metadata: &sdp.Metadata{
+				SourceQuery: queryB,
+			},
+		}
+
+		// Inject responses deliberately out of order
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+
+			// Send itemB first (for queryB), then itemA (for queryA)
+			// If the client doesn't route by UUID, queryA might get itemB
+			ts.inject(ctx, &sdp.GatewayResponse{
+				ResponseType: &sdp.GatewayResponse_NewItem{
+					NewItem: itemB,
+				},
+			})
+
+			ts.inject(ctx, &sdp.GatewayResponse{
+				ResponseType: &sdp.GatewayResponse_NewItem{
+					NewItem: itemA,
+				},
+			})
+
+			// Complete queryA first (even though itemA was sent second)
+			ts.inject(ctx, &sdp.GatewayResponse{
+				ResponseType: &sdp.GatewayResponse_QueryStatus{
+					QueryStatus: &sdp.QueryStatus{
+						UUID:   queryA_UUID[:],
+						Status: sdp.QueryStatus_FINISHED,
+					},
+				},
+			})
+
+			// Complete queryB second
+			ts.inject(ctx, &sdp.GatewayResponse{
+				ResponseType: &sdp.GatewayResponse_QueryStatus{
+					QueryStatus: &sdp.QueryStatus{
+						UUID:   queryB_UUID[:],
+						Status: sdp.QueryStatus_FINISHED,
+					},
+				},
+			})
+		}()
+
+		// Execute queryA - it should get itemA despite itemB being sent first
+		var wg sync.WaitGroup
+		type result struct {
+			items []*sdp.Item
+			err   error
+		}
+
+		resultsA := make([]result, 1)
+		resultsB := make([]result, 1)
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			items, err := c.Query(ctx, queryA)
+			resultsA[0] = result{items: items, err: err}
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			items, err := c.Query(ctx, queryB)
+			resultsB[0] = result{items: items, err: err}
+		}()
+
+		wg.Wait()
+
+		// Verify queryA got the correct item
+		if resultsA[0].err != nil {
+			t.Fatalf("Query A failed: %v", resultsA[0].err)
+		}
+
+		if len(resultsA[0].items) != 1 {
+			t.Fatalf("Query A: expected 1 item, got %d", len(resultsA[0].items))
+		}
+
+		if resultsA[0].items[0].GetUniqueAttribute() != "item-A" {
+			t.Errorf("Query A got wrong item: expected 'item-A', got '%s'", resultsA[0].items[0].GetUniqueAttribute())
+		}
+
+		// Verify queryB got the correct item
+		if resultsB[0].err != nil {
+			t.Fatalf("Query B failed: %v", resultsB[0].err)
+		}
+
+		if len(resultsB[0].items) != 1 {
+			t.Fatalf("Query B: expected 1 item, got %d", len(resultsB[0].items))
+		}
+
+		if resultsB[0].items[0].GetUniqueAttribute() != "item-B" {
+			t.Errorf("Query B got wrong item: expected 'item-B', got '%s'", resultsB[0].items[0].GetUniqueAttribute())
 		}
 	})
 }
