@@ -41,7 +41,7 @@ builds:
 #     artifacts: all
 
 archives:
-  - format: tar.gz
+  - formats: [tar.gz]
     # this name template makes the OS and Arch compatible with the results of uname.
     name_template: >-
       {{ .Binary }}_
@@ -55,7 +55,7 @@ archives:
     # use zip for windows archives
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
     files:
       - LICENSE
       - README.md
@@ -67,7 +67,7 @@ nfpms:
 
     # Build IDs for the builds you want to create NFPM packages for.
     # Defaults empty, which means no filtering.
-    builds:
+    ids:
       - overmind
     vendor: Overmind
     homepage: https://overmind.tech/
