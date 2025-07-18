@@ -171,8 +171,10 @@ var elbv2ListenerAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:            "elbv2-listener",
 	DescriptiveName: "ELB Listener",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
-		Get:    true,
-		Search: true,
+		Get:               true,
+		GetDescription:    "Get an ELB listener by ARN",
+		Search:            true,
+		SearchDescription: "Search for ELB listeners by load balancer ARN",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{
