@@ -129,6 +129,58 @@ func (GetHcpConfigResponse_Status) EnumDescriptor() ([]byte, []int) {
 	return file_config_proto_rawDescGZIP(), []int{10, 0}
 }
 
+type RoutineChangesConfig_DurationUnit int32
+
+const (
+	// Days
+	RoutineChangesConfig_DAYS RoutineChangesConfig_DurationUnit = 0
+	// Weeks
+	RoutineChangesConfig_WEEKS RoutineChangesConfig_DurationUnit = 1
+	// Months
+	RoutineChangesConfig_MONTHS RoutineChangesConfig_DurationUnit = 2
+)
+
+// Enum value maps for RoutineChangesConfig_DurationUnit.
+var (
+	RoutineChangesConfig_DurationUnit_name = map[int32]string{
+		0: "DAYS",
+		1: "WEEKS",
+		2: "MONTHS",
+	}
+	RoutineChangesConfig_DurationUnit_value = map[string]int32{
+		"DAYS":   0,
+		"WEEKS":  1,
+		"MONTHS": 2,
+	}
+)
+
+func (x RoutineChangesConfig_DurationUnit) Enum() *RoutineChangesConfig_DurationUnit {
+	p := new(RoutineChangesConfig_DurationUnit)
+	*p = x
+	return p
+}
+
+func (x RoutineChangesConfig_DurationUnit) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RoutineChangesConfig_DurationUnit) Descriptor() protoreflect.EnumDescriptor {
+	return file_config_proto_enumTypes[2].Descriptor()
+}
+
+func (RoutineChangesConfig_DurationUnit) Type() protoreflect.EnumType {
+	return &file_config_proto_enumTypes[2]
+}
+
+func (x RoutineChangesConfig_DurationUnit) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RoutineChangesConfig_DurationUnit.Descriptor instead.
+func (RoutineChangesConfig_DurationUnit) EnumDescriptor() ([]byte, []int) {
+	return file_config_proto_rawDescGZIP(), []int{19, 0}
+}
+
 // The config that is used when calculating the blast radius for a change, this
 // does not affect manually requested blast radii vie the "Explore" view or the
 // API
@@ -749,6 +801,359 @@ func (*DeleteHcpConfigResponse) Descriptor() ([]byte, []int) {
 	return file_config_proto_rawDescGZIP(), []int{12}
 }
 
+// Account Signal config
+type GetSignalConfigRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSignalConfigRequest) Reset() {
+	*x = GetSignalConfigRequest{}
+	mi := &file_config_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSignalConfigRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSignalConfigRequest) ProtoMessage() {}
+
+func (x *GetSignalConfigRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_config_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSignalConfigRequest.ProtoReflect.Descriptor instead.
+func (*GetSignalConfigRequest) Descriptor() ([]byte, []int) {
+	return file_config_proto_rawDescGZIP(), []int{13}
+}
+
+type GetSignalConfigResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Config        *SignalConfig          `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetSignalConfigResponse) Reset() {
+	*x = GetSignalConfigResponse{}
+	mi := &file_config_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetSignalConfigResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSignalConfigResponse) ProtoMessage() {}
+
+func (x *GetSignalConfigResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_config_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSignalConfigResponse.ProtoReflect.Descriptor instead.
+func (*GetSignalConfigResponse) Descriptor() ([]byte, []int) {
+	return file_config_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *GetSignalConfigResponse) GetConfig() *SignalConfig {
+	if x != nil {
+		return x.Config
+	}
+	return nil
+}
+
+// Updates the signal config for the account.
+type UpdateSignalConfigRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Config        *SignalConfig          `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateSignalConfigRequest) Reset() {
+	*x = UpdateSignalConfigRequest{}
+	mi := &file_config_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateSignalConfigRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateSignalConfigRequest) ProtoMessage() {}
+
+func (x *UpdateSignalConfigRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_config_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateSignalConfigRequest.ProtoReflect.Descriptor instead.
+func (*UpdateSignalConfigRequest) Descriptor() ([]byte, []int) {
+	return file_config_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *UpdateSignalConfigRequest) GetConfig() *SignalConfig {
+	if x != nil {
+		return x.Config
+	}
+	return nil
+}
+
+type UpdateSignalConfigResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Config        *SignalConfig          `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateSignalConfigResponse) Reset() {
+	*x = UpdateSignalConfigResponse{}
+	mi := &file_config_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateSignalConfigResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateSignalConfigResponse) ProtoMessage() {}
+
+func (x *UpdateSignalConfigResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_config_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateSignalConfigResponse.ProtoReflect.Descriptor instead.
+func (*UpdateSignalConfigResponse) Descriptor() ([]byte, []int) {
+	return file_config_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *UpdateSignalConfigResponse) GetConfig() *SignalConfig {
+	if x != nil {
+		return x.Config
+	}
+	return nil
+}
+
+type SignalConfig struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Config for aggregation parameters, such as alpha
+	AggregationConfig *AggregationConfig `protobuf:"bytes,1,opt,name=aggregationConfig,proto3" json:"aggregationConfig,omitempty"`
+	// Config for routine changes, such as events per day and duration
+	RoutineChangesConfig *RoutineChangesConfig `protobuf:"bytes,2,opt,name=routineChangesConfig,proto3" json:"routineChangesConfig,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *SignalConfig) Reset() {
+	*x = SignalConfig{}
+	mi := &file_config_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignalConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignalConfig) ProtoMessage() {}
+
+func (x *SignalConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_config_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignalConfig.ProtoReflect.Descriptor instead.
+func (*SignalConfig) Descriptor() ([]byte, []int) {
+	return file_config_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *SignalConfig) GetAggregationConfig() *AggregationConfig {
+	if x != nil {
+		return x.AggregationConfig
+	}
+	return nil
+}
+
+func (x *SignalConfig) GetRoutineChangesConfig() *RoutineChangesConfig {
+	if x != nil {
+		return x.RoutineChangesConfig
+	}
+	return nil
+}
+
+type AggregationConfig struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Alpha parameter for aggregation: controls the weighting of recent data versus older data
+	Alpha         float32 `protobuf:"fixed32,1,opt,name=alpha,proto3" json:"alpha,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AggregationConfig) Reset() {
+	*x = AggregationConfig{}
+	mi := &file_config_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AggregationConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AggregationConfig) ProtoMessage() {}
+
+func (x *AggregationConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_config_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AggregationConfig.ProtoReflect.Descriptor instead.
+func (*AggregationConfig) Descriptor() ([]byte, []int) {
+	return file_config_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *AggregationConfig) GetAlpha() float32 {
+	if x != nil {
+		return x.Alpha
+	}
+	return 0
+}
+
+type RoutineChangesConfig struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The user will see the format of "12 changes per day for 3 weeks" with the user able to change these values i.e.
+	// Events per days, weeks, or months
+	EventsPer     float32                           `protobuf:"fixed32,1,opt,name=eventsPer,proto3" json:"eventsPer,omitempty"`
+	EventsPerUnit RoutineChangesConfig_DurationUnit `protobuf:"varint,2,opt,name=eventsPerUnit,proto3,enum=config.RoutineChangesConfig_DurationUnit" json:"eventsPerUnit,omitempty"`
+	// Duration the number of days, weeks, or months over which routine changes are considered.
+	Duration float32 `protobuf:"fixed32,3,opt,name=duration,proto3" json:"duration,omitempty"`
+	// Specifies the unit of time for the duration field in routine changes.
+	// The available units are days, weeks, and months.
+	DurationUnit RoutineChangesConfig_DurationUnit `protobuf:"varint,4,opt,name=durationUnit,proto3,enum=config.RoutineChangesConfig_DurationUnit" json:"durationUnit,omitempty"`
+	// Sensitivity parameter that controls the threshold for detecting routine changes.
+	// A higher sensitivity value makes the detection more responsive to smaller changes,
+	// while a lower value makes it less responsive.
+	Sensitivity   float32 `protobuf:"fixed32,5,opt,name=sensitivity,proto3" json:"sensitivity,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RoutineChangesConfig) Reset() {
+	*x = RoutineChangesConfig{}
+	mi := &file_config_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RoutineChangesConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RoutineChangesConfig) ProtoMessage() {}
+
+func (x *RoutineChangesConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_config_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RoutineChangesConfig.ProtoReflect.Descriptor instead.
+func (*RoutineChangesConfig) Descriptor() ([]byte, []int) {
+	return file_config_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *RoutineChangesConfig) GetEventsPer() float32 {
+	if x != nil {
+		return x.EventsPer
+	}
+	return 0
+}
+
+func (x *RoutineChangesConfig) GetEventsPerUnit() RoutineChangesConfig_DurationUnit {
+	if x != nil {
+		return x.EventsPerUnit
+	}
+	return RoutineChangesConfig_DAYS
+}
+
+func (x *RoutineChangesConfig) GetDuration() float32 {
+	if x != nil {
+		return x.Duration
+	}
+	return 0
+}
+
+func (x *RoutineChangesConfig) GetDurationUnit() RoutineChangesConfig_DurationUnit {
+	if x != nil {
+		return x.DurationUnit
+	}
+	return RoutineChangesConfig_DAYS
+}
+
+func (x *RoutineChangesConfig) GetSensitivity() float32 {
+	if x != nil {
+		return x.Sensitivity
+	}
+	return 0
+}
+
 var File_config_proto protoreflect.FileDescriptor
 
 const file_config_proto_rawDesc = "" +
@@ -792,13 +1197,38 @@ const file_config_proto_rawDesc = "" +
 	"CONFIGURED\x10\x00\x12\t\n" +
 	"\x05ERROR\x10\x01\"\x18\n" +
 	"\x16DeleteHcpConfigRequest\"\x19\n" +
-	"\x17DeleteHcpConfigResponse2\xc0\x03\n" +
+	"\x17DeleteHcpConfigResponse\"\x18\n" +
+	"\x16GetSignalConfigRequest\"G\n" +
+	"\x17GetSignalConfigResponse\x12,\n" +
+	"\x06config\x18\x01 \x01(\v2\x14.config.SignalConfigR\x06config\"I\n" +
+	"\x19UpdateSignalConfigRequest\x12,\n" +
+	"\x06config\x18\x01 \x01(\v2\x14.config.SignalConfigR\x06config\"J\n" +
+	"\x1aUpdateSignalConfigResponse\x12,\n" +
+	"\x06config\x18\x01 \x01(\v2\x14.config.SignalConfigR\x06config\"\xa9\x01\n" +
+	"\fSignalConfig\x12G\n" +
+	"\x11aggregationConfig\x18\x01 \x01(\v2\x19.config.AggregationConfigR\x11aggregationConfig\x12P\n" +
+	"\x14routineChangesConfig\x18\x02 \x01(\v2\x1c.config.RoutineChangesConfigR\x14routineChangesConfig\")\n" +
+	"\x11AggregationConfig\x12\x14\n" +
+	"\x05alpha\x18\x01 \x01(\x02R\x05alpha\"\xc3\x02\n" +
+	"\x14RoutineChangesConfig\x12\x1c\n" +
+	"\teventsPer\x18\x01 \x01(\x02R\teventsPer\x12O\n" +
+	"\reventsPerUnit\x18\x02 \x01(\x0e2).config.RoutineChangesConfig.DurationUnitR\reventsPerUnit\x12\x1a\n" +
+	"\bduration\x18\x03 \x01(\x02R\bduration\x12M\n" +
+	"\fdurationUnit\x18\x04 \x01(\x0e2).config.RoutineChangesConfig.DurationUnitR\fdurationUnit\x12 \n" +
+	"\vsensitivity\x18\x05 \x01(\x02R\vsensitivity\"/\n" +
+	"\fDurationUnit\x12\b\n" +
+	"\x04DAYS\x10\x00\x12\t\n" +
+	"\x05WEEKS\x10\x01\x12\n" +
+	"\n" +
+	"\x06MONTHS\x10\x022\xf1\x04\n" +
 	"\x14ConfigurationService\x12U\n" +
 	"\x10GetAccountConfig\x12\x1f.config.GetAccountConfigRequest\x1a .config.GetAccountConfigResponse\x12^\n" +
 	"\x13UpdateAccountConfig\x12\".config.UpdateAccountConfigRequest\x1a#.config.UpdateAccountConfigResponse\x12R\n" +
 	"\x0fCreateHcpConfig\x12\x1e.config.CreateHcpConfigRequest\x1a\x1f.config.CreateHcpConfigResponse\x12I\n" +
 	"\fGetHcpConfig\x12\x1b.config.GetHcpConfigRequest\x1a\x1c.config.GetHcpConfigResponse\x12R\n" +
-	"\x0fDeleteHcpConfig\x12\x1e.config.DeleteHcpConfigRequest\x1a\x1f.config.DeleteHcpConfigResponseB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
+	"\x0fDeleteHcpConfig\x12\x1e.config.DeleteHcpConfigRequest\x1a\x1f.config.DeleteHcpConfigResponse\x12R\n" +
+	"\x0fGetSignalConfig\x12\x1e.config.GetSignalConfigRequest\x1a\x1f.config.GetSignalConfigResponse\x12[\n" +
+	"\x12UpdateSignalConfig\x12!.config.UpdateSignalConfigRequest\x1a\".config.UpdateSignalConfigResponseB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_config_proto_rawDescOnce sync.Once
@@ -812,51 +1242,70 @@ func file_config_proto_rawDescGZIP() []byte {
 	return file_config_proto_rawDescData
 }
 
-var file_config_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_config_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_config_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_config_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_config_proto_goTypes = []any{
-	(AccountConfig_BlastRadiusPreset)(0), // 0: config.AccountConfig.BlastRadiusPreset
-	(GetHcpConfigResponse_Status)(0),     // 1: config.GetHcpConfigResponse.Status
-	(*BlastRadiusConfig)(nil),            // 2: config.BlastRadiusConfig
-	(*AccountConfig)(nil),                // 3: config.AccountConfig
-	(*GetAccountConfigRequest)(nil),      // 4: config.GetAccountConfigRequest
-	(*GetAccountConfigResponse)(nil),     // 5: config.GetAccountConfigResponse
-	(*UpdateAccountConfigRequest)(nil),   // 6: config.UpdateAccountConfigRequest
-	(*UpdateAccountConfigResponse)(nil),  // 7: config.UpdateAccountConfigResponse
-	(*CreateHcpConfigRequest)(nil),       // 8: config.CreateHcpConfigRequest
-	(*CreateHcpConfigResponse)(nil),      // 9: config.CreateHcpConfigResponse
-	(*HcpConfig)(nil),                    // 10: config.HcpConfig
-	(*GetHcpConfigRequest)(nil),          // 11: config.GetHcpConfigRequest
-	(*GetHcpConfigResponse)(nil),         // 12: config.GetHcpConfigResponse
-	(*DeleteHcpConfigRequest)(nil),       // 13: config.DeleteHcpConfigRequest
-	(*DeleteHcpConfigResponse)(nil),      // 14: config.DeleteHcpConfigResponse
-	(*CreateAPIKeyResponse)(nil),         // 15: apikeys.CreateAPIKeyResponse
+	(AccountConfig_BlastRadiusPreset)(0),   // 0: config.AccountConfig.BlastRadiusPreset
+	(GetHcpConfigResponse_Status)(0),       // 1: config.GetHcpConfigResponse.Status
+	(RoutineChangesConfig_DurationUnit)(0), // 2: config.RoutineChangesConfig.DurationUnit
+	(*BlastRadiusConfig)(nil),              // 3: config.BlastRadiusConfig
+	(*AccountConfig)(nil),                  // 4: config.AccountConfig
+	(*GetAccountConfigRequest)(nil),        // 5: config.GetAccountConfigRequest
+	(*GetAccountConfigResponse)(nil),       // 6: config.GetAccountConfigResponse
+	(*UpdateAccountConfigRequest)(nil),     // 7: config.UpdateAccountConfigRequest
+	(*UpdateAccountConfigResponse)(nil),    // 8: config.UpdateAccountConfigResponse
+	(*CreateHcpConfigRequest)(nil),         // 9: config.CreateHcpConfigRequest
+	(*CreateHcpConfigResponse)(nil),        // 10: config.CreateHcpConfigResponse
+	(*HcpConfig)(nil),                      // 11: config.HcpConfig
+	(*GetHcpConfigRequest)(nil),            // 12: config.GetHcpConfigRequest
+	(*GetHcpConfigResponse)(nil),           // 13: config.GetHcpConfigResponse
+	(*DeleteHcpConfigRequest)(nil),         // 14: config.DeleteHcpConfigRequest
+	(*DeleteHcpConfigResponse)(nil),        // 15: config.DeleteHcpConfigResponse
+	(*GetSignalConfigRequest)(nil),         // 16: config.GetSignalConfigRequest
+	(*GetSignalConfigResponse)(nil),        // 17: config.GetSignalConfigResponse
+	(*UpdateSignalConfigRequest)(nil),      // 18: config.UpdateSignalConfigRequest
+	(*UpdateSignalConfigResponse)(nil),     // 19: config.UpdateSignalConfigResponse
+	(*SignalConfig)(nil),                   // 20: config.SignalConfig
+	(*AggregationConfig)(nil),              // 21: config.AggregationConfig
+	(*RoutineChangesConfig)(nil),           // 22: config.RoutineChangesConfig
+	(*CreateAPIKeyResponse)(nil),           // 23: apikeys.CreateAPIKeyResponse
 }
 var file_config_proto_depIdxs = []int32{
 	0,  // 0: config.AccountConfig.blastRadiusPreset:type_name -> config.AccountConfig.BlastRadiusPreset
-	2,  // 1: config.AccountConfig.blastRadius:type_name -> config.BlastRadiusConfig
-	3,  // 2: config.GetAccountConfigResponse.config:type_name -> config.AccountConfig
-	3,  // 3: config.UpdateAccountConfigRequest.config:type_name -> config.AccountConfig
-	3,  // 4: config.UpdateAccountConfigResponse.config:type_name -> config.AccountConfig
-	10, // 5: config.CreateHcpConfigResponse.config:type_name -> config.HcpConfig
-	15, // 6: config.CreateHcpConfigResponse.apiKey:type_name -> apikeys.CreateAPIKeyResponse
-	10, // 7: config.GetHcpConfigResponse.config:type_name -> config.HcpConfig
+	3,  // 1: config.AccountConfig.blastRadius:type_name -> config.BlastRadiusConfig
+	4,  // 2: config.GetAccountConfigResponse.config:type_name -> config.AccountConfig
+	4,  // 3: config.UpdateAccountConfigRequest.config:type_name -> config.AccountConfig
+	4,  // 4: config.UpdateAccountConfigResponse.config:type_name -> config.AccountConfig
+	11, // 5: config.CreateHcpConfigResponse.config:type_name -> config.HcpConfig
+	23, // 6: config.CreateHcpConfigResponse.apiKey:type_name -> apikeys.CreateAPIKeyResponse
+	11, // 7: config.GetHcpConfigResponse.config:type_name -> config.HcpConfig
 	1,  // 8: config.GetHcpConfigResponse.status:type_name -> config.GetHcpConfigResponse.Status
-	4,  // 9: config.ConfigurationService.GetAccountConfig:input_type -> config.GetAccountConfigRequest
-	6,  // 10: config.ConfigurationService.UpdateAccountConfig:input_type -> config.UpdateAccountConfigRequest
-	8,  // 11: config.ConfigurationService.CreateHcpConfig:input_type -> config.CreateHcpConfigRequest
-	11, // 12: config.ConfigurationService.GetHcpConfig:input_type -> config.GetHcpConfigRequest
-	13, // 13: config.ConfigurationService.DeleteHcpConfig:input_type -> config.DeleteHcpConfigRequest
-	5,  // 14: config.ConfigurationService.GetAccountConfig:output_type -> config.GetAccountConfigResponse
-	7,  // 15: config.ConfigurationService.UpdateAccountConfig:output_type -> config.UpdateAccountConfigResponse
-	9,  // 16: config.ConfigurationService.CreateHcpConfig:output_type -> config.CreateHcpConfigResponse
-	12, // 17: config.ConfigurationService.GetHcpConfig:output_type -> config.GetHcpConfigResponse
-	14, // 18: config.ConfigurationService.DeleteHcpConfig:output_type -> config.DeleteHcpConfigResponse
-	14, // [14:19] is the sub-list for method output_type
-	9,  // [9:14] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	20, // 9: config.GetSignalConfigResponse.config:type_name -> config.SignalConfig
+	20, // 10: config.UpdateSignalConfigRequest.config:type_name -> config.SignalConfig
+	20, // 11: config.UpdateSignalConfigResponse.config:type_name -> config.SignalConfig
+	21, // 12: config.SignalConfig.aggregationConfig:type_name -> config.AggregationConfig
+	22, // 13: config.SignalConfig.routineChangesConfig:type_name -> config.RoutineChangesConfig
+	2,  // 14: config.RoutineChangesConfig.eventsPerUnit:type_name -> config.RoutineChangesConfig.DurationUnit
+	2,  // 15: config.RoutineChangesConfig.durationUnit:type_name -> config.RoutineChangesConfig.DurationUnit
+	5,  // 16: config.ConfigurationService.GetAccountConfig:input_type -> config.GetAccountConfigRequest
+	7,  // 17: config.ConfigurationService.UpdateAccountConfig:input_type -> config.UpdateAccountConfigRequest
+	9,  // 18: config.ConfigurationService.CreateHcpConfig:input_type -> config.CreateHcpConfigRequest
+	12, // 19: config.ConfigurationService.GetHcpConfig:input_type -> config.GetHcpConfigRequest
+	14, // 20: config.ConfigurationService.DeleteHcpConfig:input_type -> config.DeleteHcpConfigRequest
+	16, // 21: config.ConfigurationService.GetSignalConfig:input_type -> config.GetSignalConfigRequest
+	18, // 22: config.ConfigurationService.UpdateSignalConfig:input_type -> config.UpdateSignalConfigRequest
+	6,  // 23: config.ConfigurationService.GetAccountConfig:output_type -> config.GetAccountConfigResponse
+	8,  // 24: config.ConfigurationService.UpdateAccountConfig:output_type -> config.UpdateAccountConfigResponse
+	10, // 25: config.ConfigurationService.CreateHcpConfig:output_type -> config.CreateHcpConfigResponse
+	13, // 26: config.ConfigurationService.GetHcpConfig:output_type -> config.GetHcpConfigResponse
+	15, // 27: config.ConfigurationService.DeleteHcpConfig:output_type -> config.DeleteHcpConfigResponse
+	17, // 28: config.ConfigurationService.GetSignalConfig:output_type -> config.GetSignalConfigResponse
+	19, // 29: config.ConfigurationService.UpdateSignalConfig:output_type -> config.UpdateSignalConfigResponse
+	23, // [23:30] is the sub-list for method output_type
+	16, // [16:23] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_config_proto_init() }
@@ -871,8 +1320,8 @@ func file_config_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_config_proto_rawDesc), len(file_config_proto_rawDesc)),
-			NumEnums:      2,
-			NumMessages:   13,
+			NumEnums:      3,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

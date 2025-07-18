@@ -48,6 +48,12 @@ const (
 	// ConfigurationServiceDeleteHcpConfigProcedure is the fully-qualified name of the
 	// ConfigurationService's DeleteHcpConfig RPC.
 	ConfigurationServiceDeleteHcpConfigProcedure = "/config.ConfigurationService/DeleteHcpConfig"
+	// ConfigurationServiceGetSignalConfigProcedure is the fully-qualified name of the
+	// ConfigurationService's GetSignalConfig RPC.
+	ConfigurationServiceGetSignalConfigProcedure = "/config.ConfigurationService/GetSignalConfig"
+	// ConfigurationServiceUpdateSignalConfigProcedure is the fully-qualified name of the
+	// ConfigurationService's UpdateSignalConfig RPC.
+	ConfigurationServiceUpdateSignalConfigProcedure = "/config.ConfigurationService/UpdateSignalConfig"
 )
 
 // ConfigurationServiceClient is a client for the config.ConfigurationService service.
@@ -64,6 +70,10 @@ type ConfigurationServiceClient interface {
 	GetHcpConfig(context.Context, *connect.Request[sdp_go.GetHcpConfigRequest]) (*connect.Response[sdp_go.GetHcpConfigResponse], error)
 	// Remove the existing HCP Terraform config from the user's account.
 	DeleteHcpConfig(context.Context, *connect.Request[sdp_go.DeleteHcpConfigRequest]) (*connect.Response[sdp_go.DeleteHcpConfigResponse], error)
+	// Get the signal config for the account
+	GetSignalConfig(context.Context, *connect.Request[sdp_go.GetSignalConfigRequest]) (*connect.Response[sdp_go.GetSignalConfigResponse], error)
+	// Update the signal config for the account
+	UpdateSignalConfig(context.Context, *connect.Request[sdp_go.UpdateSignalConfigRequest]) (*connect.Response[sdp_go.UpdateSignalConfigResponse], error)
 }
 
 // NewConfigurationServiceClient constructs a client for the config.ConfigurationService service. By
@@ -107,6 +117,18 @@ func NewConfigurationServiceClient(httpClient connect.HTTPClient, baseURL string
 			connect.WithSchema(configurationServiceMethods.ByName("DeleteHcpConfig")),
 			connect.WithClientOptions(opts...),
 		),
+		getSignalConfig: connect.NewClient[sdp_go.GetSignalConfigRequest, sdp_go.GetSignalConfigResponse](
+			httpClient,
+			baseURL+ConfigurationServiceGetSignalConfigProcedure,
+			connect.WithSchema(configurationServiceMethods.ByName("GetSignalConfig")),
+			connect.WithClientOptions(opts...),
+		),
+		updateSignalConfig: connect.NewClient[sdp_go.UpdateSignalConfigRequest, sdp_go.UpdateSignalConfigResponse](
+			httpClient,
+			baseURL+ConfigurationServiceUpdateSignalConfigProcedure,
+			connect.WithSchema(configurationServiceMethods.ByName("UpdateSignalConfig")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -117,6 +139,8 @@ type configurationServiceClient struct {
 	createHcpConfig     *connect.Client[sdp_go.CreateHcpConfigRequest, sdp_go.CreateHcpConfigResponse]
 	getHcpConfig        *connect.Client[sdp_go.GetHcpConfigRequest, sdp_go.GetHcpConfigResponse]
 	deleteHcpConfig     *connect.Client[sdp_go.DeleteHcpConfigRequest, sdp_go.DeleteHcpConfigResponse]
+	getSignalConfig     *connect.Client[sdp_go.GetSignalConfigRequest, sdp_go.GetSignalConfigResponse]
+	updateSignalConfig  *connect.Client[sdp_go.UpdateSignalConfigRequest, sdp_go.UpdateSignalConfigResponse]
 }
 
 // GetAccountConfig calls config.ConfigurationService.GetAccountConfig.
@@ -144,6 +168,16 @@ func (c *configurationServiceClient) DeleteHcpConfig(ctx context.Context, req *c
 	return c.deleteHcpConfig.CallUnary(ctx, req)
 }
 
+// GetSignalConfig calls config.ConfigurationService.GetSignalConfig.
+func (c *configurationServiceClient) GetSignalConfig(ctx context.Context, req *connect.Request[sdp_go.GetSignalConfigRequest]) (*connect.Response[sdp_go.GetSignalConfigResponse], error) {
+	return c.getSignalConfig.CallUnary(ctx, req)
+}
+
+// UpdateSignalConfig calls config.ConfigurationService.UpdateSignalConfig.
+func (c *configurationServiceClient) UpdateSignalConfig(ctx context.Context, req *connect.Request[sdp_go.UpdateSignalConfigRequest]) (*connect.Response[sdp_go.UpdateSignalConfigResponse], error) {
+	return c.updateSignalConfig.CallUnary(ctx, req)
+}
+
 // ConfigurationServiceHandler is an implementation of the config.ConfigurationService service.
 type ConfigurationServiceHandler interface {
 	// Get the account config for the user's account
@@ -158,6 +192,10 @@ type ConfigurationServiceHandler interface {
 	GetHcpConfig(context.Context, *connect.Request[sdp_go.GetHcpConfigRequest]) (*connect.Response[sdp_go.GetHcpConfigResponse], error)
 	// Remove the existing HCP Terraform config from the user's account.
 	DeleteHcpConfig(context.Context, *connect.Request[sdp_go.DeleteHcpConfigRequest]) (*connect.Response[sdp_go.DeleteHcpConfigResponse], error)
+	// Get the signal config for the account
+	GetSignalConfig(context.Context, *connect.Request[sdp_go.GetSignalConfigRequest]) (*connect.Response[sdp_go.GetSignalConfigResponse], error)
+	// Update the signal config for the account
+	UpdateSignalConfig(context.Context, *connect.Request[sdp_go.UpdateSignalConfigRequest]) (*connect.Response[sdp_go.UpdateSignalConfigResponse], error)
 }
 
 // NewConfigurationServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -197,6 +235,18 @@ func NewConfigurationServiceHandler(svc ConfigurationServiceHandler, opts ...con
 		connect.WithSchema(configurationServiceMethods.ByName("DeleteHcpConfig")),
 		connect.WithHandlerOptions(opts...),
 	)
+	configurationServiceGetSignalConfigHandler := connect.NewUnaryHandler(
+		ConfigurationServiceGetSignalConfigProcedure,
+		svc.GetSignalConfig,
+		connect.WithSchema(configurationServiceMethods.ByName("GetSignalConfig")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configurationServiceUpdateSignalConfigHandler := connect.NewUnaryHandler(
+		ConfigurationServiceUpdateSignalConfigProcedure,
+		svc.UpdateSignalConfig,
+		connect.WithSchema(configurationServiceMethods.ByName("UpdateSignalConfig")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/config.ConfigurationService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ConfigurationServiceGetAccountConfigProcedure:
@@ -209,6 +259,10 @@ func NewConfigurationServiceHandler(svc ConfigurationServiceHandler, opts ...con
 			configurationServiceGetHcpConfigHandler.ServeHTTP(w, r)
 		case ConfigurationServiceDeleteHcpConfigProcedure:
 			configurationServiceDeleteHcpConfigHandler.ServeHTTP(w, r)
+		case ConfigurationServiceGetSignalConfigProcedure:
+			configurationServiceGetSignalConfigHandler.ServeHTTP(w, r)
+		case ConfigurationServiceUpdateSignalConfigProcedure:
+			configurationServiceUpdateSignalConfigHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -236,4 +290,12 @@ func (UnimplementedConfigurationServiceHandler) GetHcpConfig(context.Context, *c
 
 func (UnimplementedConfigurationServiceHandler) DeleteHcpConfig(context.Context, *connect.Request[sdp_go.DeleteHcpConfigRequest]) (*connect.Response[sdp_go.DeleteHcpConfigResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.ConfigurationService.DeleteHcpConfig is not implemented"))
+}
+
+func (UnimplementedConfigurationServiceHandler) GetSignalConfig(context.Context, *connect.Request[sdp_go.GetSignalConfigRequest]) (*connect.Response[sdp_go.GetSignalConfigResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.ConfigurationService.GetSignalConfig is not implemented"))
+}
+
+func (UnimplementedConfigurationServiceHandler) UpdateSignalConfig(context.Context, *connect.Request[sdp_go.UpdateSignalConfigRequest]) (*connect.Response[sdp_go.UpdateSignalConfigResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.ConfigurationService.UpdateSignalConfig is not implemented"))
 }
