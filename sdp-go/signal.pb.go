@@ -165,7 +165,7 @@ func (x *GetSignalsByChangeExternalIDRequest) GetChangeExternalId() []byte {
 
 type GetSignalsByChangeExternalIDResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Signals       []*Signal              `protobuf:"bytes,1,rep,name=signals,proto3" json:"signals,omitempty"` // List of signals associated with the change
+	Signals       []*Signal              `protobuf:"bytes,1,rep,name=signals,proto3" json:"signals,omitempty"` // List of all signals associated with the change
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -207,6 +207,278 @@ func (x *GetSignalsByChangeExternalIDResponse) GetSignals() []*Signal {
 	return nil
 }
 
+type GetChangeOverviewSignalsRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ChangeExternalId []byte                 `protobuf:"bytes,1,opt,name=change_external_id,json=changeExternalId,proto3" json:"change_external_id,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *GetChangeOverviewSignalsRequest) Reset() {
+	*x = GetChangeOverviewSignalsRequest{}
+	mi := &file_signal_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetChangeOverviewSignalsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetChangeOverviewSignalsRequest) ProtoMessage() {}
+
+func (x *GetChangeOverviewSignalsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_signal_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetChangeOverviewSignalsRequest.ProtoReflect.Descriptor instead.
+func (*GetChangeOverviewSignalsRequest) Descriptor() ([]byte, []int) {
+	return file_signal_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GetChangeOverviewSignalsRequest) GetChangeExternalId() []byte {
+	if x != nil {
+		return x.ChangeExternalId
+	}
+	return nil
+}
+
+type GetChangeOverviewSignalsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Signals       []*Signal              `protobuf:"bytes,1,rep,name=signals,proto3" json:"signals,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetChangeOverviewSignalsResponse) Reset() {
+	*x = GetChangeOverviewSignalsResponse{}
+	mi := &file_signal_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetChangeOverviewSignalsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetChangeOverviewSignalsResponse) ProtoMessage() {}
+
+func (x *GetChangeOverviewSignalsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_signal_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetChangeOverviewSignalsResponse.ProtoReflect.Descriptor instead.
+func (*GetChangeOverviewSignalsResponse) Descriptor() ([]byte, []int) {
+	return file_signal_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GetChangeOverviewSignalsResponse) GetSignals() []*Signal {
+	if x != nil {
+		return x.Signals
+	}
+	return nil
+}
+
+type GetItemSignalsRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	ChangeExternalId []byte                 `protobuf:"bytes,2,opt,name=change_external_id,json=changeExternalId,proto3" json:"change_external_id,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *GetItemSignalsRequest) Reset() {
+	*x = GetItemSignalsRequest{}
+	mi := &file_signal_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetItemSignalsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetItemSignalsRequest) ProtoMessage() {}
+
+func (x *GetItemSignalsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_signal_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetItemSignalsRequest.ProtoReflect.Descriptor instead.
+func (*GetItemSignalsRequest) Descriptor() ([]byte, []int) {
+	return file_signal_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *GetItemSignalsRequest) GetChangeExternalId() []byte {
+	if x != nil {
+		return x.ChangeExternalId
+	}
+	return nil
+}
+
+type GetItemSignalsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Signals       []*Signal              `protobuf:"bytes,1,rep,name=signals,proto3" json:"signals,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetItemSignalsResponse) Reset() {
+	*x = GetItemSignalsResponse{}
+	mi := &file_signal_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetItemSignalsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetItemSignalsResponse) ProtoMessage() {}
+
+func (x *GetItemSignalsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_signal_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetItemSignalsResponse.ProtoReflect.Descriptor instead.
+func (*GetItemSignalsResponse) Descriptor() ([]byte, []int) {
+	return file_signal_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetItemSignalsResponse) GetSignals() []*Signal {
+	if x != nil {
+		return x.Signals
+	}
+	return nil
+}
+
+type GetItemSignalDetailsRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Item             *Reference             `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	ChangeExternalId []byte                 `protobuf:"bytes,2,opt,name=change_external_id,json=changeExternalId,proto3" json:"change_external_id,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *GetItemSignalDetailsRequest) Reset() {
+	*x = GetItemSignalDetailsRequest{}
+	mi := &file_signal_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetItemSignalDetailsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetItemSignalDetailsRequest) ProtoMessage() {}
+
+func (x *GetItemSignalDetailsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_signal_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetItemSignalDetailsRequest.ProtoReflect.Descriptor instead.
+func (*GetItemSignalDetailsRequest) Descriptor() ([]byte, []int) {
+	return file_signal_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *GetItemSignalDetailsRequest) GetItem() *Reference {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+func (x *GetItemSignalDetailsRequest) GetChangeExternalId() []byte {
+	if x != nil {
+		return x.ChangeExternalId
+	}
+	return nil
+}
+
+type GetItemSignalDetailsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Signals       []*Signal              `protobuf:"bytes,1,rep,name=signals,proto3" json:"signals,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetItemSignalDetailsResponse) Reset() {
+	*x = GetItemSignalDetailsResponse{}
+	mi := &file_signal_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetItemSignalDetailsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetItemSignalDetailsResponse) ProtoMessage() {}
+
+func (x *GetItemSignalDetailsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_signal_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetItemSignalDetailsResponse.ProtoReflect.Descriptor instead.
+func (*GetItemSignalDetailsResponse) Descriptor() ([]byte, []int) {
+	return file_signal_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *GetItemSignalDetailsResponse) GetSignals() []*Signal {
+	if x != nil {
+		return x.Signals
+	}
+	return nil
+}
+
 type SignalMetadata struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// machine-generated metadata of this signal
@@ -220,7 +492,7 @@ type SignalMetadata struct {
 
 func (x *SignalMetadata) Reset() {
 	*x = SignalMetadata{}
-	mi := &file_signal_proto_msgTypes[4]
+	mi := &file_signal_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -232,7 +504,7 @@ func (x *SignalMetadata) String() string {
 func (*SignalMetadata) ProtoMessage() {}
 
 func (x *SignalMetadata) ProtoReflect() protoreflect.Message {
-	mi := &file_signal_proto_msgTypes[4]
+	mi := &file_signal_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -245,7 +517,7 @@ func (x *SignalMetadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SignalMetadata.ProtoReflect.Descriptor instead.
 func (*SignalMetadata) Descriptor() ([]byte, []int) {
-	return file_signal_proto_rawDescGZIP(), []int{4}
+	return file_signal_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *SignalMetadata) GetUUID() []byte {
@@ -282,7 +554,7 @@ type SignalProperties struct {
 
 func (x *SignalProperties) Reset() {
 	*x = SignalProperties{}
-	mi := &file_signal_proto_msgTypes[5]
+	mi := &file_signal_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -294,7 +566,7 @@ func (x *SignalProperties) String() string {
 func (*SignalProperties) ProtoMessage() {}
 
 func (x *SignalProperties) ProtoReflect() protoreflect.Message {
-	mi := &file_signal_proto_msgTypes[5]
+	mi := &file_signal_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -307,7 +579,7 @@ func (x *SignalProperties) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SignalProperties.ProtoReflect.Descriptor instead.
 func (*SignalProperties) Descriptor() ([]byte, []int) {
-	return file_signal_proto_rawDescGZIP(), []int{5}
+	return file_signal_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *SignalProperties) GetName() string {
@@ -359,7 +631,7 @@ type Signal struct {
 
 func (x *Signal) Reset() {
 	*x = Signal{}
-	mi := &file_signal_proto_msgTypes[6]
+	mi := &file_signal_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -371,7 +643,7 @@ func (x *Signal) String() string {
 func (*Signal) ProtoMessage() {}
 
 func (x *Signal) ProtoReflect() protoreflect.Message {
-	mi := &file_signal_proto_msgTypes[6]
+	mi := &file_signal_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -384,7 +656,7 @@ func (x *Signal) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Signal.ProtoReflect.Descriptor instead.
 func (*Signal) Descriptor() ([]byte, []int) {
-	return file_signal_proto_rawDescGZIP(), []int{6}
+	return file_signal_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *Signal) GetMetadata() *SignalMetadata {
@@ -416,6 +688,20 @@ const file_signal_proto_rawDesc = "" +
 	"#GetSignalsByChangeExternalIDRequest\x12,\n" +
 	"\x12change_external_id\x18\x01 \x01(\fR\x10changeExternalId\"P\n" +
 	"$GetSignalsByChangeExternalIDResponse\x12(\n" +
+	"\asignals\x18\x01 \x03(\v2\x0e.signal.SignalR\asignals\"O\n" +
+	"\x1fGetChangeOverviewSignalsRequest\x12,\n" +
+	"\x12change_external_id\x18\x01 \x01(\fR\x10changeExternalId\"L\n" +
+	" GetChangeOverviewSignalsResponse\x12(\n" +
+	"\asignals\x18\x01 \x03(\v2\x0e.signal.SignalR\asignals\"E\n" +
+	"\x15GetItemSignalsRequest\x12,\n" +
+	"\x12change_external_id\x18\x02 \x01(\fR\x10changeExternalId\"B\n" +
+	"\x16GetItemSignalsResponse\x12(\n" +
+	"\asignals\x18\x01 \x03(\v2\x0e.signal.SignalR\asignals\"k\n" +
+	"\x1bGetItemSignalDetailsRequest\x12\x1e\n" +
+	"\x04item\x18\x01 \x01(\v2\n" +
+	".ReferenceR\x04item\x12,\n" +
+	"\x12change_external_id\x18\x02 \x01(\fR\x10changeExternalId\"H\n" +
+	"\x1cGetItemSignalDetailsResponse\x12(\n" +
 	"\asignals\x18\x01 \x03(\v2\x0e.signal.SignalR\asignals\"J\n" +
 	"\x0eSignalMetadata\x12\x12\n" +
 	"\x04UUID\x18\x01 \x01(\fR\x04UUID\x12$\n" +
@@ -432,10 +718,13 @@ const file_signal_proto_rawDesc = "" +
 	"\bmetadata\x18\x01 \x01(\v2\x16.signal.SignalMetadataR\bmetadata\x128\n" +
 	"\n" +
 	"properties\x18\x02 \x01(\v2\x18.signal.SignalPropertiesR\n" +
-	"properties2\xcc\x01\n" +
+	"properties2\xef\x03\n" +
 	"\rSignalService\x12@\n" +
 	"\tAddSignal\x12\x18.signal.AddSignalRequest\x1a\x19.signal.AddSignalResponse\x12y\n" +
-	"\x1cGetSignalsByChangeExternalID\x12+.signal.GetSignalsByChangeExternalIDRequest\x1a,.signal.GetSignalsByChangeExternalIDResponseB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
+	"\x1cGetSignalsByChangeExternalID\x12+.signal.GetSignalsByChangeExternalIDRequest\x1a,.signal.GetSignalsByChangeExternalIDResponse\x12m\n" +
+	"\x18GetChangeOverviewSignals\x12'.signal.GetChangeOverviewSignalsRequest\x1a(.signal.GetChangeOverviewSignalsResponse\x12O\n" +
+	"\x0eGetItemSignals\x12\x1d.signal.GetItemSignalsRequest\x1a\x1e.signal.GetItemSignalsResponse\x12a\n" +
+	"\x14GetItemSignalDetails\x12#.signal.GetItemSignalDetailsRequest\x1a$.signal.GetItemSignalDetailsResponseB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_signal_proto_rawDescOnce sync.Once
@@ -449,33 +738,49 @@ func file_signal_proto_rawDescGZIP() []byte {
 	return file_signal_proto_rawDescData
 }
 
-var file_signal_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
+var file_signal_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_signal_proto_goTypes = []any{
 	(*AddSignalRequest)(nil),                     // 0: signal.AddSignalRequest
 	(*AddSignalResponse)(nil),                    // 1: signal.AddSignalResponse
 	(*GetSignalsByChangeExternalIDRequest)(nil),  // 2: signal.GetSignalsByChangeExternalIDRequest
 	(*GetSignalsByChangeExternalIDResponse)(nil), // 3: signal.GetSignalsByChangeExternalIDResponse
-	(*SignalMetadata)(nil),                       // 4: signal.SignalMetadata
-	(*SignalProperties)(nil),                     // 5: signal.SignalProperties
-	(*Signal)(nil),                               // 6: signal.Signal
-	(*Reference)(nil),                            // 7: Reference
+	(*GetChangeOverviewSignalsRequest)(nil),      // 4: signal.GetChangeOverviewSignalsRequest
+	(*GetChangeOverviewSignalsResponse)(nil),     // 5: signal.GetChangeOverviewSignalsResponse
+	(*GetItemSignalsRequest)(nil),                // 6: signal.GetItemSignalsRequest
+	(*GetItemSignalsResponse)(nil),               // 7: signal.GetItemSignalsResponse
+	(*GetItemSignalDetailsRequest)(nil),          // 8: signal.GetItemSignalDetailsRequest
+	(*GetItemSignalDetailsResponse)(nil),         // 9: signal.GetItemSignalDetailsResponse
+	(*SignalMetadata)(nil),                       // 10: signal.SignalMetadata
+	(*SignalProperties)(nil),                     // 11: signal.SignalProperties
+	(*Signal)(nil),                               // 12: signal.Signal
+	(*Reference)(nil),                            // 13: Reference
 }
 var file_signal_proto_depIdxs = []int32{
-	5, // 0: signal.AddSignalRequest.properties:type_name -> signal.SignalProperties
-	6, // 1: signal.AddSignalResponse.signal:type_name -> signal.Signal
-	6, // 2: signal.GetSignalsByChangeExternalIDResponse.signals:type_name -> signal.Signal
-	7, // 3: signal.SignalProperties.item:type_name -> Reference
-	4, // 4: signal.Signal.metadata:type_name -> signal.SignalMetadata
-	5, // 5: signal.Signal.properties:type_name -> signal.SignalProperties
-	0, // 6: signal.SignalService.AddSignal:input_type -> signal.AddSignalRequest
-	2, // 7: signal.SignalService.GetSignalsByChangeExternalID:input_type -> signal.GetSignalsByChangeExternalIDRequest
-	1, // 8: signal.SignalService.AddSignal:output_type -> signal.AddSignalResponse
-	3, // 9: signal.SignalService.GetSignalsByChangeExternalID:output_type -> signal.GetSignalsByChangeExternalIDResponse
-	8, // [8:10] is the sub-list for method output_type
-	6, // [6:8] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	11, // 0: signal.AddSignalRequest.properties:type_name -> signal.SignalProperties
+	12, // 1: signal.AddSignalResponse.signal:type_name -> signal.Signal
+	12, // 2: signal.GetSignalsByChangeExternalIDResponse.signals:type_name -> signal.Signal
+	12, // 3: signal.GetChangeOverviewSignalsResponse.signals:type_name -> signal.Signal
+	12, // 4: signal.GetItemSignalsResponse.signals:type_name -> signal.Signal
+	13, // 5: signal.GetItemSignalDetailsRequest.item:type_name -> Reference
+	12, // 6: signal.GetItemSignalDetailsResponse.signals:type_name -> signal.Signal
+	13, // 7: signal.SignalProperties.item:type_name -> Reference
+	10, // 8: signal.Signal.metadata:type_name -> signal.SignalMetadata
+	11, // 9: signal.Signal.properties:type_name -> signal.SignalProperties
+	0,  // 10: signal.SignalService.AddSignal:input_type -> signal.AddSignalRequest
+	2,  // 11: signal.SignalService.GetSignalsByChangeExternalID:input_type -> signal.GetSignalsByChangeExternalIDRequest
+	4,  // 12: signal.SignalService.GetChangeOverviewSignals:input_type -> signal.GetChangeOverviewSignalsRequest
+	6,  // 13: signal.SignalService.GetItemSignals:input_type -> signal.GetItemSignalsRequest
+	8,  // 14: signal.SignalService.GetItemSignalDetails:input_type -> signal.GetItemSignalDetailsRequest
+	1,  // 15: signal.SignalService.AddSignal:output_type -> signal.AddSignalResponse
+	3,  // 16: signal.SignalService.GetSignalsByChangeExternalID:output_type -> signal.GetSignalsByChangeExternalIDResponse
+	5,  // 17: signal.SignalService.GetChangeOverviewSignals:output_type -> signal.GetChangeOverviewSignalsResponse
+	7,  // 18: signal.SignalService.GetItemSignals:output_type -> signal.GetItemSignalsResponse
+	9,  // 19: signal.SignalService.GetItemSignalDetails:output_type -> signal.GetItemSignalDetailsResponse
+	15, // [15:20] is the sub-list for method output_type
+	10, // [10:15] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_signal_proto_init() }
@@ -484,14 +789,14 @@ func file_signal_proto_init() {
 		return
 	}
 	file_items_proto_init()
-	file_signal_proto_msgTypes[5].OneofWrappers = []any{}
+	file_signal_proto_msgTypes[11].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_signal_proto_rawDesc), len(file_signal_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   7,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

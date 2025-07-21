@@ -38,6 +38,15 @@ const (
 	// SignalServiceGetSignalsByChangeExternalIDProcedure is the fully-qualified name of the
 	// SignalService's GetSignalsByChangeExternalID RPC.
 	SignalServiceGetSignalsByChangeExternalIDProcedure = "/signal.SignalService/GetSignalsByChangeExternalID"
+	// SignalServiceGetChangeOverviewSignalsProcedure is the fully-qualified name of the SignalService's
+	// GetChangeOverviewSignals RPC.
+	SignalServiceGetChangeOverviewSignalsProcedure = "/signal.SignalService/GetChangeOverviewSignals"
+	// SignalServiceGetItemSignalsProcedure is the fully-qualified name of the SignalService's
+	// GetItemSignals RPC.
+	SignalServiceGetItemSignalsProcedure = "/signal.SignalService/GetItemSignals"
+	// SignalServiceGetItemSignalDetailsProcedure is the fully-qualified name of the SignalService's
+	// GetItemSignalDetails RPC.
+	SignalServiceGetItemSignalDetailsProcedure = "/signal.SignalService/GetItemSignalDetails"
 )
 
 // SignalServiceClient is a client for the signal.SignalService service.
@@ -46,11 +55,22 @@ type SignalServiceClient interface {
 	// It will be used by the CLI, the web UI, and other clients.
 	// It expects the user to provide the properties of the signal, such as name, value, description, and category.
 	// And it returns the signal that was added, including the machine-generated metadata such as UUID and aggregation ID.
+	// DOES THIS NEED TO BE UPDATED TO SPECIFY THE LEVEL OF THE SIGNAL?
 	AddSignal(context.Context, *connect.Request[sdp_go.AddSignalRequest]) (*connect.Response[sdp_go.AddSignalResponse], error)
-	// This is an API to get all signals associated with a change by its external ID.
+	// This is an API to get all signals associated with a change by its external ID. It is not used by the frontend.
 	// It returns a slice/array of Signals. Which includes both the user-facing properties of the signal, and the machine-generated metadata.
 	// Look at the Signal message for more details.
 	GetSignalsByChangeExternalID(context.Context, *connect.Request[sdp_go.GetSignalsByChangeExternalIDRequest]) (*connect.Response[sdp_go.GetSignalsByChangeExternalIDResponse], error)
+	// NB for the following we do not need to specify the icons for the Items, as they are derived by the Frontend separately.
+	// Get all top-level signals for a change.
+	// They are sorted by category: "Risks, Blast Radius, Routine, Policies, Environment, Time of Day, Custom"
+	GetChangeOverviewSignals(context.Context, *connect.Request[sdp_go.GetChangeOverviewSignalsRequest]) (*connect.Response[sdp_go.GetChangeOverviewSignalsResponse], error)
+	// Get item-level signals for all items in a change.
+	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
+	GetItemSignals(context.Context, *connect.Request[sdp_go.GetItemSignalsRequest]) (*connect.Response[sdp_go.GetItemSignalsResponse], error)
+	// Get all signals for attributes/modifications of an item. This will only be used for routineness to start with.
+	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
+	GetItemSignalDetails(context.Context, *connect.Request[sdp_go.GetItemSignalDetailsRequest]) (*connect.Response[sdp_go.GetItemSignalDetailsResponse], error)
 }
 
 // NewSignalServiceClient constructs a client for the signal.SignalService service. By default, it
@@ -76,6 +96,24 @@ func NewSignalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(signalServiceMethods.ByName("GetSignalsByChangeExternalID")),
 			connect.WithClientOptions(opts...),
 		),
+		getChangeOverviewSignals: connect.NewClient[sdp_go.GetChangeOverviewSignalsRequest, sdp_go.GetChangeOverviewSignalsResponse](
+			httpClient,
+			baseURL+SignalServiceGetChangeOverviewSignalsProcedure,
+			connect.WithSchema(signalServiceMethods.ByName("GetChangeOverviewSignals")),
+			connect.WithClientOptions(opts...),
+		),
+		getItemSignals: connect.NewClient[sdp_go.GetItemSignalsRequest, sdp_go.GetItemSignalsResponse](
+			httpClient,
+			baseURL+SignalServiceGetItemSignalsProcedure,
+			connect.WithSchema(signalServiceMethods.ByName("GetItemSignals")),
+			connect.WithClientOptions(opts...),
+		),
+		getItemSignalDetails: connect.NewClient[sdp_go.GetItemSignalDetailsRequest, sdp_go.GetItemSignalDetailsResponse](
+			httpClient,
+			baseURL+SignalServiceGetItemSignalDetailsProcedure,
+			connect.WithSchema(signalServiceMethods.ByName("GetItemSignalDetails")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -83,6 +121,9 @@ func NewSignalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 type signalServiceClient struct {
 	addSignal                    *connect.Client[sdp_go.AddSignalRequest, sdp_go.AddSignalResponse]
 	getSignalsByChangeExternalID *connect.Client[sdp_go.GetSignalsByChangeExternalIDRequest, sdp_go.GetSignalsByChangeExternalIDResponse]
+	getChangeOverviewSignals     *connect.Client[sdp_go.GetChangeOverviewSignalsRequest, sdp_go.GetChangeOverviewSignalsResponse]
+	getItemSignals               *connect.Client[sdp_go.GetItemSignalsRequest, sdp_go.GetItemSignalsResponse]
+	getItemSignalDetails         *connect.Client[sdp_go.GetItemSignalDetailsRequest, sdp_go.GetItemSignalDetailsResponse]
 }
 
 // AddSignal calls signal.SignalService.AddSignal.
@@ -95,17 +136,43 @@ func (c *signalServiceClient) GetSignalsByChangeExternalID(ctx context.Context, 
 	return c.getSignalsByChangeExternalID.CallUnary(ctx, req)
 }
 
+// GetChangeOverviewSignals calls signal.SignalService.GetChangeOverviewSignals.
+func (c *signalServiceClient) GetChangeOverviewSignals(ctx context.Context, req *connect.Request[sdp_go.GetChangeOverviewSignalsRequest]) (*connect.Response[sdp_go.GetChangeOverviewSignalsResponse], error) {
+	return c.getChangeOverviewSignals.CallUnary(ctx, req)
+}
+
+// GetItemSignals calls signal.SignalService.GetItemSignals.
+func (c *signalServiceClient) GetItemSignals(ctx context.Context, req *connect.Request[sdp_go.GetItemSignalsRequest]) (*connect.Response[sdp_go.GetItemSignalsResponse], error) {
+	return c.getItemSignals.CallUnary(ctx, req)
+}
+
+// GetItemSignalDetails calls signal.SignalService.GetItemSignalDetails.
+func (c *signalServiceClient) GetItemSignalDetails(ctx context.Context, req *connect.Request[sdp_go.GetItemSignalDetailsRequest]) (*connect.Response[sdp_go.GetItemSignalDetailsResponse], error) {
+	return c.getItemSignalDetails.CallUnary(ctx, req)
+}
+
 // SignalServiceHandler is an implementation of the signal.SignalService service.
 type SignalServiceHandler interface {
 	// This is an external API to add a signals to a change.
 	// It will be used by the CLI, the web UI, and other clients.
 	// It expects the user to provide the properties of the signal, such as name, value, description, and category.
 	// And it returns the signal that was added, including the machine-generated metadata such as UUID and aggregation ID.
+	// DOES THIS NEED TO BE UPDATED TO SPECIFY THE LEVEL OF THE SIGNAL?
 	AddSignal(context.Context, *connect.Request[sdp_go.AddSignalRequest]) (*connect.Response[sdp_go.AddSignalResponse], error)
-	// This is an API to get all signals associated with a change by its external ID.
+	// This is an API to get all signals associated with a change by its external ID. It is not used by the frontend.
 	// It returns a slice/array of Signals. Which includes both the user-facing properties of the signal, and the machine-generated metadata.
 	// Look at the Signal message for more details.
 	GetSignalsByChangeExternalID(context.Context, *connect.Request[sdp_go.GetSignalsByChangeExternalIDRequest]) (*connect.Response[sdp_go.GetSignalsByChangeExternalIDResponse], error)
+	// NB for the following we do not need to specify the icons for the Items, as they are derived by the Frontend separately.
+	// Get all top-level signals for a change.
+	// They are sorted by category: "Risks, Blast Radius, Routine, Policies, Environment, Time of Day, Custom"
+	GetChangeOverviewSignals(context.Context, *connect.Request[sdp_go.GetChangeOverviewSignalsRequest]) (*connect.Response[sdp_go.GetChangeOverviewSignalsResponse], error)
+	// Get item-level signals for all items in a change.
+	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
+	GetItemSignals(context.Context, *connect.Request[sdp_go.GetItemSignalsRequest]) (*connect.Response[sdp_go.GetItemSignalsResponse], error)
+	// Get all signals for attributes/modifications of an item. This will only be used for routineness to start with.
+	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
+	GetItemSignalDetails(context.Context, *connect.Request[sdp_go.GetItemSignalDetailsRequest]) (*connect.Response[sdp_go.GetItemSignalDetailsResponse], error)
 }
 
 // NewSignalServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -127,12 +194,36 @@ func NewSignalServiceHandler(svc SignalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(signalServiceMethods.ByName("GetSignalsByChangeExternalID")),
 		connect.WithHandlerOptions(opts...),
 	)
+	signalServiceGetChangeOverviewSignalsHandler := connect.NewUnaryHandler(
+		SignalServiceGetChangeOverviewSignalsProcedure,
+		svc.GetChangeOverviewSignals,
+		connect.WithSchema(signalServiceMethods.ByName("GetChangeOverviewSignals")),
+		connect.WithHandlerOptions(opts...),
+	)
+	signalServiceGetItemSignalsHandler := connect.NewUnaryHandler(
+		SignalServiceGetItemSignalsProcedure,
+		svc.GetItemSignals,
+		connect.WithSchema(signalServiceMethods.ByName("GetItemSignals")),
+		connect.WithHandlerOptions(opts...),
+	)
+	signalServiceGetItemSignalDetailsHandler := connect.NewUnaryHandler(
+		SignalServiceGetItemSignalDetailsProcedure,
+		svc.GetItemSignalDetails,
+		connect.WithSchema(signalServiceMethods.ByName("GetItemSignalDetails")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/signal.SignalService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case SignalServiceAddSignalProcedure:
 			signalServiceAddSignalHandler.ServeHTTP(w, r)
 		case SignalServiceGetSignalsByChangeExternalIDProcedure:
 			signalServiceGetSignalsByChangeExternalIDHandler.ServeHTTP(w, r)
+		case SignalServiceGetChangeOverviewSignalsProcedure:
+			signalServiceGetChangeOverviewSignalsHandler.ServeHTTP(w, r)
+		case SignalServiceGetItemSignalsProcedure:
+			signalServiceGetItemSignalsHandler.ServeHTTP(w, r)
+		case SignalServiceGetItemSignalDetailsProcedure:
+			signalServiceGetItemSignalDetailsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -148,4 +239,16 @@ func (UnimplementedSignalServiceHandler) AddSignal(context.Context, *connect.Req
 
 func (UnimplementedSignalServiceHandler) GetSignalsByChangeExternalID(context.Context, *connect.Request[sdp_go.GetSignalsByChangeExternalIDRequest]) (*connect.Response[sdp_go.GetSignalsByChangeExternalIDResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("signal.SignalService.GetSignalsByChangeExternalID is not implemented"))
+}
+
+func (UnimplementedSignalServiceHandler) GetChangeOverviewSignals(context.Context, *connect.Request[sdp_go.GetChangeOverviewSignalsRequest]) (*connect.Response[sdp_go.GetChangeOverviewSignalsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("signal.SignalService.GetChangeOverviewSignals is not implemented"))
+}
+
+func (UnimplementedSignalServiceHandler) GetItemSignals(context.Context, *connect.Request[sdp_go.GetItemSignalsRequest]) (*connect.Response[sdp_go.GetItemSignalsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("signal.SignalService.GetItemSignals is not implemented"))
+}
+
+func (UnimplementedSignalServiceHandler) GetItemSignalDetails(context.Context, *connect.Request[sdp_go.GetItemSignalDetailsRequest]) (*connect.Response[sdp_go.GetItemSignalDetailsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("signal.SignalService.GetItemSignalDetails is not implemented"))
 }
