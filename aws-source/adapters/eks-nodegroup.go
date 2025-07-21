@@ -33,8 +33,8 @@ func nodegroupGetFunc(ctx context.Context, client EKSClient, scope string, input
 	ng := out.Nodegroup
 
 	// The uniqueAttributeValue for this is a custom field:
-	// {clusterName}/{NodegroupName}
-	attributes.Set("UniqueName", (*out.Nodegroup.ClusterName + "/" + *out.Nodegroup.NodegroupName))
+	// {clusterName}:{NodegroupName}
+	attributes.Set("UniqueName", (*out.Nodegroup.ClusterName + ":" + *out.Nodegroup.NodegroupName))
 
 	item := sdp.Item{
 		Type:            "eks-nodegroup",
@@ -183,8 +183,8 @@ func NewEKSNodegroupAdapter(client EKSClient, accountID string, region string) *
 		},
 		GetInputMapper: func(scope, query string) *eks.DescribeNodegroupInput {
 			// The uniqueAttributeValue for this is a custom field:
-			// {clusterName}/{nodegroupName}
-			fields := strings.Split(query, "/")
+			// {clusterName}:{nodegroupName}
+			fields := strings.Split(query, ":")
 
 			var clusterName string
 			var nodegroupName string
@@ -234,13 +234,13 @@ var nodegroupAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 		Get:               true,
 		List:              false, // LIST not supported
 		Search:            true,
-		GetDescription:    "Get a node group by unique name ({clusterName}/{NodegroupName})",
+		GetDescription:    "Get a node group by unique name ({clusterName}:{NodegroupName})",
 		SearchDescription: "Search for node groups by cluster name",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{
-			TerraformQueryMap: "aws_eks_node_group.arn",
-			TerraformMethod:   sdp.QueryMethod_SEARCH,
+			TerraformQueryMap: "aws_eks_node_group.id",
+			TerraformMethod:   sdp.QueryMethod_GET,
 		},
 	},
 	PotentialLinks: []string{"ec2-key-pair", "ec2-security-group", "ec2-subnet", "autoscaling-auto-scaling-group", "ec2-launch-template"},

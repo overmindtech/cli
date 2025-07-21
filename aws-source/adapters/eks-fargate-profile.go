@@ -31,8 +31,8 @@ func fargateProfileGetFunc(ctx context.Context, client EKSClient, scope string, 
 	}
 
 	// The uniqueAttributeValue for this is a custom field:
-	// {clusterName}/{FargateProfileName}
-	attributes.Set("UniqueName", (*out.FargateProfile.ClusterName + "/" + *out.FargateProfile.FargateProfileName))
+	// {clusterName}:{FargateProfileName}
+	attributes.Set("UniqueName", (*out.FargateProfile.ClusterName + ":" + *out.FargateProfile.FargateProfileName))
 
 	item := sdp.Item{
 		Type:            "eks-fargate-profile",
@@ -98,7 +98,7 @@ func NewEKSFargateProfileAdapter(client EKSClient, accountID string, region stri
 		GetInputMapper: func(scope, query string) *eks.DescribeFargateProfileInput {
 			// The uniqueAttributeValue for this is a custom field:
 			// {clusterName}/{FargateProfileName}
-			fields := strings.Split(query, "/")
+			fields := strings.Split(query, ":")
 
 			var clusterName string
 			var FargateProfileName string
@@ -138,13 +138,13 @@ var fargateProfileAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 		Get:               true,
 		Search:            true,
-		GetDescription:    "Get a fargate profile by unique name ({clusterName}/{FargateProfileName})",
+		GetDescription:    "Get a fargate profile by unique name ({clusterName}:{FargateProfileName})",
 		SearchDescription: "Search for fargate profiles by cluster name",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{
-			TerraformQueryMap: "aws_eks_fargate_profile.arn",
-			TerraformMethod:   sdp.QueryMethod_SEARCH,
+			TerraformQueryMap: "aws_eks_fargate_profile.id",
+			TerraformMethod:   sdp.QueryMethod_GET,
 		},
 	},
 	PotentialLinks: []string{"iam-role", "ec2-subnet"},

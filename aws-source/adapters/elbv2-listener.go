@@ -178,11 +178,11 @@ var elbv2ListenerAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_SEARCH,
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "aws_alb_listener.arn",
 		},
 		{
-			TerraformMethod:   sdp.QueryMethod_SEARCH,
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "aws_lb_listener.arn",
 		},
 	},

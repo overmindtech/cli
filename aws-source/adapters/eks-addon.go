@@ -31,8 +31,8 @@ func addonGetFunc(ctx context.Context, client EKSClient, scope string, input *ek
 	}
 
 	// The uniqueAttributeValue for this is a custom field:
-	// {clusterName}/{addonName}
-	attributes.Set("UniqueName", (*out.Addon.ClusterName + "/" + *out.Addon.AddonName))
+	// {clusterName}:{addonName}
+	attributes.Set("UniqueName", (*out.Addon.ClusterName + ":" + *out.Addon.AddonName))
 
 	item := sdp.Item{
 		Type:            "eks-addon",
@@ -59,8 +59,8 @@ func NewEKSAddonAdapter(client EKSClient, accountID string, region string) *adap
 		},
 		GetInputMapper: func(scope, query string) *eks.DescribeAddonInput {
 			// The uniqueAttributeValue for this is a custom field:
-			// {clusterName}/{addonName}
-			fields := strings.Split(query, "/")
+			// {clusterName}:{addonName}
+			fields := strings.Split(query, ":")
 
 			var clusterName string
 			var addonName string
@@ -100,13 +100,13 @@ var eksAddonAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 		Get:               true,
 		Search:            true,
-		GetDescription:    "Get an addon by unique name ({clusterName}/{addonName})",
+		GetDescription:    "Get an addon by unique name ({clusterName}:{addonName})",
 		SearchDescription: "Search addons by cluster name",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_SEARCH,
-			TerraformQueryMap: "aws_eks_addon.arn",
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "aws_eks_addon.id",
 		},
 	},
 	Category: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,

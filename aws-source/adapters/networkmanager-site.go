@@ -133,7 +133,33 @@ func NewNetworkManagerSiteAdapter(client *networkmanager.Client, accountID strin
 		},
 		OutputMapper: siteOutputMapper,
 		InputMapperSearch: func(ctx context.Context, client *networkmanager.Client, scope, query string) (*networkmanager.GetSitesInput, error) {
-			// Search by GlobalNetworkId
+			// Try to parse as ARN first
+			arn, err := adapterhelpers.ParseARN(query)
+			if err == nil {
+				// Check if it's a networkmanager-site ARN
+				if arn.Service == "networkmanager" && arn.Type() == "site" {
+					// Parse the resource part: site/global-network-{id}/site-{id}
+					// Expected format: site/global-network-01231231231231231/site-444555aaabbb11223
+					resourceParts := strings.Split(arn.Resource, "/")
+					if len(resourceParts) == 3 && resourceParts[0] == "site" && strings.HasPrefix(resourceParts[1], "global-network-") && strings.HasPrefix(resourceParts[2], "site-") {
+						globalNetworkId := resourceParts[1] // Keep full ID including "global-network-" prefix
+						siteId := resourceParts[2]          // Keep full ID including "site-" prefix
+
+						return &networkmanager.GetSitesInput{
+							GlobalNetworkId: &globalNetworkId,
+							SiteIds:         []string{siteId},
+						}, nil
+					}
+				}
+				
+				// If it's not a valid networkmanager-site ARN, return an error
+				return nil, &sdp.QueryError{
+					ErrorType:   sdp.QueryError_NOTFOUND,
+					ErrorString: "ARN is not a valid networkmanager-site ARN",
+				}
+			}
+
+			// If not an ARN, treat as GlobalNetworkId for backward compatibility
 			return &networkmanager.GetSitesInput{
 				GlobalNetworkId: &query,
 			}, nil
@@ -148,7 +174,7 @@ var siteAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 		Get:               true,
 		Search:            true,
 		GetDescription:    "Get a Networkmanager Site",
-		SearchDescription: "Search for Networkmanager Sites by GlobalNetworkId",
+		SearchDescription: "Search for Networkmanager Sites by GlobalNetworkId or Site ARN",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{

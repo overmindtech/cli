@@ -148,6 +148,33 @@ func NewNetworkManagerLinkAdapter(client *networkmanager.Client, accountID strin
 		},
 		OutputMapper: linkOutputMapper,
 		InputMapperSearch: func(ctx context.Context, client *networkmanager.Client, scope, query string) (*networkmanager.GetLinksInput, error) {
+			// Try to parse as ARN first
+			arn, err := adapterhelpers.ParseARN(query)
+			if err == nil {
+				// Check if it's a networkmanager-link ARN
+				if arn.Service == "networkmanager" && arn.Type() == "link" {
+					// Parse the resource part: link/global-network-{id}/link-{id}
+					// Expected format: link/global-network-01231231231231231/link-11112222aaaabbbb1
+					resourceParts := strings.Split(arn.Resource, "/")
+					if len(resourceParts) == 3 && resourceParts[0] == "link" && strings.HasPrefix(resourceParts[1], "global-network-") && strings.HasPrefix(resourceParts[2], "link-") {
+						globalNetworkId := resourceParts[1] // Keep full ID including "global-network-" prefix
+						linkId := resourceParts[2]          // Keep full ID including "link-" prefix
+
+						return &networkmanager.GetLinksInput{
+							GlobalNetworkId: &globalNetworkId,
+							LinkIds:         []string{linkId},
+						}, nil
+					}
+				}
+
+				// If it's not a valid networkmanager-link ARN, return an error
+				return nil, &sdp.QueryError{
+					ErrorType:   sdp.QueryError_NOTFOUND,
+					ErrorString: "ARN is not a valid networkmanager-link ARN",
+				}
+			}
+
+			// If not an ARN, fall back to the original logic
 			// We may search by only globalNetworkId or by using a custom id of {globalNetworkId}|{siteId}
 			sections := strings.Split(query, "|")
 			switch len(sections) {
@@ -180,7 +207,7 @@ var linkAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 		Get:               true,
 		Search:            true,
 		GetDescription:    "Get a Networkmanager Link",
-		SearchDescription: "Search for Networkmanager Links by GlobalNetworkId, or by GlobalNetworkId with SiteId",
+		SearchDescription: "Search for Networkmanager Links by GlobalNetworkId, GlobalNetworkId with SiteId, or ARN",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{

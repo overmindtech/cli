@@ -170,6 +170,49 @@ func NewNetworkManagerConnectionAdapter(client *networkmanager.Client, accountID
 		},
 		OutputMapper: connectionOutputMapper,
 		InputMapperSearch: func(ctx context.Context, client *networkmanager.Client, scope, query string) (*networkmanager.GetConnectionsInput, error) {
+			// Try to parse as ARN first
+			arn, err := adapterhelpers.ParseARN(query)
+			if err == nil {
+				// Check if it's a networkmanager ARN
+				if arn.Service == "networkmanager" {
+					switch arn.Type() {
+					case "device":
+						// Parse the resource part which can be:
+						// 1. device/global-network-{id}/device-{id} (for device ARNs)
+						// 2. device/global-network-{id}/connection-{id} (for connection ARNs)
+						resourceParts := strings.Split(arn.Resource, "/")
+						if len(resourceParts) == 3 && resourceParts[0] == "device" && strings.HasPrefix(resourceParts[1], "global-network-") {
+							globalNetworkId := resourceParts[1] // Keep full ID including "global-network-" prefix
+
+							if strings.HasPrefix(resourceParts[2], "connection-") {
+								// This is a connection ARN: device/global-network-{id}/connection-{id}
+								connectionId := resourceParts[2] // Keep full ID including "connection-" prefix
+
+								return &networkmanager.GetConnectionsInput{
+									GlobalNetworkId: &globalNetworkId,
+									ConnectionIds:   []string{connectionId},
+								}, nil
+							} else if strings.HasPrefix(resourceParts[2], "device-") {
+								// This is a device ARN: device/global-network-{id}/device-{id}
+								deviceId := resourceParts[2] // Keep full ID including "device-" prefix
+
+								return &networkmanager.GetConnectionsInput{
+									GlobalNetworkId: &globalNetworkId,
+									DeviceId:        &deviceId,
+								}, nil
+							}
+						}
+					}
+				}
+
+				// If it's not a valid networkmanager ARN, return an error
+				return nil, &sdp.QueryError{
+					ErrorType:   sdp.QueryError_NOTFOUND,
+					ErrorString: "ARN is not a valid networkmanager-connection or networkmanager-device ARN",
+				}
+			}
+
+			// If not an ARN, fall back to the original logic
 			// We may search by only globalNetworkId or by using a custom id of {globalNetworkId}|{deviceId}
 			sections := strings.Split(query, "|")
 			switch len(sections) {
@@ -201,7 +244,7 @@ var networkmanagerConnectionAdapterMetadata = Metadata.Register(&sdp.AdapterMeta
 		Get:               true,
 		Search:            true,
 		GetDescription:    "Get a Networkmanager Connection",
-		SearchDescription: "Search for Networkmanager Connections by GlobalNetworkId",
+		SearchDescription: "Search for Networkmanager Connections by GlobalNetworkId, Device ARN, or Connection ARN",
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{
