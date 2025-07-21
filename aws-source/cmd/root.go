@@ -92,7 +92,7 @@ var rootCmd = &cobra.Command{
 		healthCheckPath := "/healthz"
 
 		http.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
-			ctx, span := tracing.Tracer().Start(r.Context(), "healthcheck")
+			ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck")
 			defer span.End()
 
 			err := e.HealthCheck(ctx)

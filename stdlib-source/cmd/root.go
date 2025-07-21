@@ -93,7 +93,7 @@ var rootCmd = &cobra.Command{
 			e.EngineConfig.HeartbeatOptions.HealthCheck = healthCheck
 		}
 		http.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
-			ctx, span := tracing.Tracer().Start(r.Context(), "healthcheck")
+			ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck")
 			defer span.End()
 
 			err := healthCheck(ctx)

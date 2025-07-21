@@ -171,6 +171,15 @@ func run(_ *cobra.Command, _ []string) int {
 	healthCheckPath := "/healthz"
 
 	http.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
+		ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck")
+		defer span.End()
+
+		err := e.HealthCheck(ctx)
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		if e.IsNATSConnected() {
 			fmt.Fprint(rw, "ok")
 		} else {
