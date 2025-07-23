@@ -21,6 +21,133 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type SignalLevel_Level int32
+
+const (
+	SignalLevel_UNSPECIFIED SignalLevel_Level = 0 // This is the default value, it should not be used
+	// A change-level signal, top level summary of all Items below it by category, and aggregated by value. EG
+	//
+	//	{
+	//		Metadata: &sdp.SignalMetadata{
+	//			UUID: changeUUID[:],
+	//		},
+	//		Properties: &sdp.SignalProperties{
+	//			Name:        "Routine",
+	//			Description: "Recent infrastructure changes span multiple attributes, with modification frequencies ranging from first-time updates to daily deployments.",
+	//			Category:    "Routine",
+	//			Value:       0.0,
+	//		},
+	//	},
+	//
+	//	{
+	//		Metadata: &sdp.SignalMetadata{
+	//			UUID: changeUUID[:],
+	//		},
+	//		Properties: &sdp.SignalProperties{
+	//			Name:        "Policies",
+	//			Description: "Policy evaluations reveal a mix of compliant configurations, partially implemented controls such as unvalidated CloudTrail logging, and high-risk exposures like unrestricted SSH access.",
+	//			Category:    "Policies",
+	//			Value:       -3.0,
+	//		},
+	//	},
+	SignalLevel_CHANGE SignalLevel_Level = 1
+	// An item-level signal, GUN/Resource/Item summary of all details (attributes/modifications) of an item by category and aggregated by value. EG
+	//
+	//	{
+	//		Metadata: &sdp.SignalMetadata{
+	//			UUID: changeUUID[:],
+	//		},
+	//		Properties: &sdp.SignalProperties{
+	//			Name:        "gp2",
+	//			Description: "High Risk",
+	//			Category:    "Change type",
+	//			Value:       -1.0,
+	//		},
+	//	},
+	//
+	//	{
+	//		Metadata: &sdp.SignalMetadata{
+	//			UUID: changeUUID[:],
+	//		},
+	//		Properties: &sdp.SignalProperties{
+	//			Name:        "gp2",
+	//			Description: "Consistent activity of 1.5 events per day has been observed over the last 2 days.",
+	//			Category:    "Routine",
+	//			Value:       0.0,
+	//		},
+	//	},
+	SignalLevel_ITEM SignalLevel_Level = 2
+	// A detail-level signal, description and value of an attribute/modification. EG
+	//
+	//	{
+	//		Metadata: &sdp.SignalMetadata{
+	//			UUID: changeUUID[:],
+	//		},
+	//		Properties: &sdp.SignalProperties{
+	//			Name:        "size",
+	//			Description: "5 changes per week in the last 3 weeks",
+	//			Category:    "Routine",
+	//			Value:       0.0,
+	//		},
+	//	},
+	//
+	//	{
+	//		Metadata: &sdp.SignalMetadata{
+	//			UUID: changeUUID[:],
+	//		},
+	//		Properties: &sdp.SignalProperties{
+	//			Name:        "security_group",
+	//			Description: "5 changes per day in the last 5 weeks",
+	//			Category:    "Routine",
+	//			Value:       5.0,
+	//		},
+	//	},
+	SignalLevel_DETAIL SignalLevel_Level = 3
+)
+
+// Enum value maps for SignalLevel_Level.
+var (
+	SignalLevel_Level_name = map[int32]string{
+		0: "UNSPECIFIED",
+		1: "CHANGE",
+		2: "ITEM",
+		3: "DETAIL",
+	}
+	SignalLevel_Level_value = map[string]int32{
+		"UNSPECIFIED": 0,
+		"CHANGE":      1,
+		"ITEM":        2,
+		"DETAIL":      3,
+	}
+)
+
+func (x SignalLevel_Level) Enum() *SignalLevel_Level {
+	p := new(SignalLevel_Level)
+	*p = x
+	return p
+}
+
+func (x SignalLevel_Level) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (SignalLevel_Level) Descriptor() protoreflect.EnumDescriptor {
+	return file_signal_proto_enumTypes[0].Descriptor()
+}
+
+func (SignalLevel_Level) Type() protoreflect.EnumType {
+	return &file_signal_proto_enumTypes[0]
+}
+
+func (x SignalLevel_Level) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use SignalLevel_Level.Descriptor instead.
+func (SignalLevel_Level) EnumDescriptor() ([]byte, []int) {
+	return file_signal_proto_rawDescGZIP(), []int{13, 0}
+}
+
 type AddSignalRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The user facing properties of the signal
@@ -673,6 +800,50 @@ func (x *Signal) GetProperties() *SignalProperties {
 	return nil
 }
 
+type SignalLevel struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Level         SignalLevel_Level      `protobuf:"varint,1,opt,name=level,proto3,enum=signal.SignalLevel_Level" json:"level,omitempty"` // The level of the signal
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignalLevel) Reset() {
+	*x = SignalLevel{}
+	mi := &file_signal_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignalLevel) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignalLevel) ProtoMessage() {}
+
+func (x *SignalLevel) ProtoReflect() protoreflect.Message {
+	mi := &file_signal_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignalLevel.ProtoReflect.Descriptor instead.
+func (*SignalLevel) Descriptor() ([]byte, []int) {
+	return file_signal_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *SignalLevel) GetLevel() SignalLevel_Level {
+	if x != nil {
+		return x.Level
+	}
+	return SignalLevel_UNSPECIFIED
+}
+
 var File_signal_proto protoreflect.FileDescriptor
 
 const file_signal_proto_rawDesc = "" +
@@ -718,7 +889,16 @@ const file_signal_proto_rawDesc = "" +
 	"\bmetadata\x18\x01 \x01(\v2\x16.signal.SignalMetadataR\bmetadata\x128\n" +
 	"\n" +
 	"properties\x18\x02 \x01(\v2\x18.signal.SignalPropertiesR\n" +
-	"properties2\xef\x03\n" +
+	"properties\"z\n" +
+	"\vSignalLevel\x12/\n" +
+	"\x05level\x18\x01 \x01(\x0e2\x19.signal.SignalLevel.LevelR\x05level\":\n" +
+	"\x05Level\x12\x0f\n" +
+	"\vUNSPECIFIED\x10\x00\x12\n" +
+	"\n" +
+	"\x06CHANGE\x10\x01\x12\b\n" +
+	"\x04ITEM\x10\x02\x12\n" +
+	"\n" +
+	"\x06DETAIL\x10\x032\xef\x03\n" +
 	"\rSignalService\x12@\n" +
 	"\tAddSignal\x12\x18.signal.AddSignalRequest\x1a\x19.signal.AddSignalResponse\x12y\n" +
 	"\x1cGetSignalsByChangeExternalID\x12+.signal.GetSignalsByChangeExternalIDRequest\x1a,.signal.GetSignalsByChangeExternalIDResponse\x12m\n" +
@@ -738,49 +918,53 @@ func file_signal_proto_rawDescGZIP() []byte {
 	return file_signal_proto_rawDescData
 }
 
-var file_signal_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_signal_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_signal_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_signal_proto_goTypes = []any{
-	(*AddSignalRequest)(nil),                     // 0: signal.AddSignalRequest
-	(*AddSignalResponse)(nil),                    // 1: signal.AddSignalResponse
-	(*GetSignalsByChangeExternalIDRequest)(nil),  // 2: signal.GetSignalsByChangeExternalIDRequest
-	(*GetSignalsByChangeExternalIDResponse)(nil), // 3: signal.GetSignalsByChangeExternalIDResponse
-	(*GetChangeOverviewSignalsRequest)(nil),      // 4: signal.GetChangeOverviewSignalsRequest
-	(*GetChangeOverviewSignalsResponse)(nil),     // 5: signal.GetChangeOverviewSignalsResponse
-	(*GetItemSignalsRequest)(nil),                // 6: signal.GetItemSignalsRequest
-	(*GetItemSignalsResponse)(nil),               // 7: signal.GetItemSignalsResponse
-	(*GetItemSignalDetailsRequest)(nil),          // 8: signal.GetItemSignalDetailsRequest
-	(*GetItemSignalDetailsResponse)(nil),         // 9: signal.GetItemSignalDetailsResponse
-	(*SignalMetadata)(nil),                       // 10: signal.SignalMetadata
-	(*SignalProperties)(nil),                     // 11: signal.SignalProperties
-	(*Signal)(nil),                               // 12: signal.Signal
-	(*Reference)(nil),                            // 13: Reference
+	(SignalLevel_Level)(0),                       // 0: signal.SignalLevel.Level
+	(*AddSignalRequest)(nil),                     // 1: signal.AddSignalRequest
+	(*AddSignalResponse)(nil),                    // 2: signal.AddSignalResponse
+	(*GetSignalsByChangeExternalIDRequest)(nil),  // 3: signal.GetSignalsByChangeExternalIDRequest
+	(*GetSignalsByChangeExternalIDResponse)(nil), // 4: signal.GetSignalsByChangeExternalIDResponse
+	(*GetChangeOverviewSignalsRequest)(nil),      // 5: signal.GetChangeOverviewSignalsRequest
+	(*GetChangeOverviewSignalsResponse)(nil),     // 6: signal.GetChangeOverviewSignalsResponse
+	(*GetItemSignalsRequest)(nil),                // 7: signal.GetItemSignalsRequest
+	(*GetItemSignalsResponse)(nil),               // 8: signal.GetItemSignalsResponse
+	(*GetItemSignalDetailsRequest)(nil),          // 9: signal.GetItemSignalDetailsRequest
+	(*GetItemSignalDetailsResponse)(nil),         // 10: signal.GetItemSignalDetailsResponse
+	(*SignalMetadata)(nil),                       // 11: signal.SignalMetadata
+	(*SignalProperties)(nil),                     // 12: signal.SignalProperties
+	(*Signal)(nil),                               // 13: signal.Signal
+	(*SignalLevel)(nil),                          // 14: signal.SignalLevel
+	(*Reference)(nil),                            // 15: Reference
 }
 var file_signal_proto_depIdxs = []int32{
-	11, // 0: signal.AddSignalRequest.properties:type_name -> signal.SignalProperties
-	12, // 1: signal.AddSignalResponse.signal:type_name -> signal.Signal
-	12, // 2: signal.GetSignalsByChangeExternalIDResponse.signals:type_name -> signal.Signal
-	12, // 3: signal.GetChangeOverviewSignalsResponse.signals:type_name -> signal.Signal
-	12, // 4: signal.GetItemSignalsResponse.signals:type_name -> signal.Signal
-	13, // 5: signal.GetItemSignalDetailsRequest.item:type_name -> Reference
-	12, // 6: signal.GetItemSignalDetailsResponse.signals:type_name -> signal.Signal
-	13, // 7: signal.SignalProperties.item:type_name -> Reference
-	10, // 8: signal.Signal.metadata:type_name -> signal.SignalMetadata
-	11, // 9: signal.Signal.properties:type_name -> signal.SignalProperties
-	0,  // 10: signal.SignalService.AddSignal:input_type -> signal.AddSignalRequest
-	2,  // 11: signal.SignalService.GetSignalsByChangeExternalID:input_type -> signal.GetSignalsByChangeExternalIDRequest
-	4,  // 12: signal.SignalService.GetChangeOverviewSignals:input_type -> signal.GetChangeOverviewSignalsRequest
-	6,  // 13: signal.SignalService.GetItemSignals:input_type -> signal.GetItemSignalsRequest
-	8,  // 14: signal.SignalService.GetItemSignalDetails:input_type -> signal.GetItemSignalDetailsRequest
-	1,  // 15: signal.SignalService.AddSignal:output_type -> signal.AddSignalResponse
-	3,  // 16: signal.SignalService.GetSignalsByChangeExternalID:output_type -> signal.GetSignalsByChangeExternalIDResponse
-	5,  // 17: signal.SignalService.GetChangeOverviewSignals:output_type -> signal.GetChangeOverviewSignalsResponse
-	7,  // 18: signal.SignalService.GetItemSignals:output_type -> signal.GetItemSignalsResponse
-	9,  // 19: signal.SignalService.GetItemSignalDetails:output_type -> signal.GetItemSignalDetailsResponse
-	15, // [15:20] is the sub-list for method output_type
-	10, // [10:15] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	12, // 0: signal.AddSignalRequest.properties:type_name -> signal.SignalProperties
+	13, // 1: signal.AddSignalResponse.signal:type_name -> signal.Signal
+	13, // 2: signal.GetSignalsByChangeExternalIDResponse.signals:type_name -> signal.Signal
+	13, // 3: signal.GetChangeOverviewSignalsResponse.signals:type_name -> signal.Signal
+	13, // 4: signal.GetItemSignalsResponse.signals:type_name -> signal.Signal
+	15, // 5: signal.GetItemSignalDetailsRequest.item:type_name -> Reference
+	13, // 6: signal.GetItemSignalDetailsResponse.signals:type_name -> signal.Signal
+	15, // 7: signal.SignalProperties.item:type_name -> Reference
+	11, // 8: signal.Signal.metadata:type_name -> signal.SignalMetadata
+	12, // 9: signal.Signal.properties:type_name -> signal.SignalProperties
+	0,  // 10: signal.SignalLevel.level:type_name -> signal.SignalLevel.Level
+	1,  // 11: signal.SignalService.AddSignal:input_type -> signal.AddSignalRequest
+	3,  // 12: signal.SignalService.GetSignalsByChangeExternalID:input_type -> signal.GetSignalsByChangeExternalIDRequest
+	5,  // 13: signal.SignalService.GetChangeOverviewSignals:input_type -> signal.GetChangeOverviewSignalsRequest
+	7,  // 14: signal.SignalService.GetItemSignals:input_type -> signal.GetItemSignalsRequest
+	9,  // 15: signal.SignalService.GetItemSignalDetails:input_type -> signal.GetItemSignalDetailsRequest
+	2,  // 16: signal.SignalService.AddSignal:output_type -> signal.AddSignalResponse
+	4,  // 17: signal.SignalService.GetSignalsByChangeExternalID:output_type -> signal.GetSignalsByChangeExternalIDResponse
+	6,  // 18: signal.SignalService.GetChangeOverviewSignals:output_type -> signal.GetChangeOverviewSignalsResponse
+	8,  // 19: signal.SignalService.GetItemSignals:output_type -> signal.GetItemSignalsResponse
+	10, // 20: signal.SignalService.GetItemSignalDetails:output_type -> signal.GetItemSignalDetailsResponse
+	16, // [16:21] is the sub-list for method output_type
+	11, // [11:16] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_signal_proto_init() }
@@ -795,13 +979,14 @@ func file_signal_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_signal_proto_rawDesc), len(file_signal_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   13,
+			NumEnums:      1,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_signal_proto_goTypes,
 		DependencyIndexes: file_signal_proto_depIdxs,
+		EnumInfos:         file_signal_proto_enumTypes,
 		MessageInfos:      file_signal_proto_msgTypes,
 	}.Build()
 	File_signal_proto = out.File
