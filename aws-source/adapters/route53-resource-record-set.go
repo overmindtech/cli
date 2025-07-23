@@ -17,6 +17,26 @@ func resourceRecordSetGetFunc(ctx context.Context, client *route53.Client, scope
 	return nil, errors.New("get is not supported for route53-resource-record-set. Use search")
 }
 
+// constructRecordFQDN constructs the full FQDN for a Route53 record based on
+// the record name and the hosted zone name. This handles the various edge cases
+// where the record name might already contain the full domain.
+func constructRecordFQDN(recordName, hostedZoneName string) string {
+	// If the name is the same as the FQDN of the hosted zone, we don't have
+	// to append it otherwise it'll be in there twice. It seems that NS and
+	// MX records sometimes have the full FQDN in the name
+	zoneFQDN := strings.TrimSuffix(hostedZoneName, ".")
+
+	if recordName == zoneFQDN {
+		return recordName
+	} else if strings.HasSuffix(recordName, "."+zoneFQDN) || strings.HasSuffix(recordName, hostedZoneName) {
+		// Record name already contains the full domain
+		return recordName
+	} else {
+		// Calculate the full FQDN based on the hosted zone name and the record name
+		return recordName + "." + hostedZoneName
+	}
+}
+
 // ResourceRecordSetSearchFunc Search func that accepts a hosted zone or a
 // terraform ID in the format {hostedZone}_{recordName}_{type}. Unfortunately
 // the "name" means the record name within the scope of the hosted zone, not the
@@ -51,17 +71,7 @@ func resourceRecordSetSearchFunc(ctx context.Context, client *route53.Client, sc
 			return nil, fmt.Errorf("hosted zone %s not found", hostedZoneID)
 		}
 
-		// If the name is the same as the FQDN of the hosted zone, we don't have
-		// to append it otherwise it'll be in there twice. It seems that NS and
-		// MX records sometimes have the full FQDN in the name
-		zoneFQDN := strings.TrimSuffix(*zoneResp.HostedZone.Name, ".")
-		var fullName string
-		if recordName == zoneFQDN {
-			fullName = recordName
-		} else {
-			// Calculate the full FQDN based on the hosted zone name and the record name
-			fullName = recordName + "." + *zoneResp.HostedZone.Name
-		}
+		fullName := constructRecordFQDN(recordName, *zoneResp.HostedZone.Name)
 
 		var maxItems int32 = 1
 		req := route53.ListResourceRecordSetsInput{

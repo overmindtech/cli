@@ -113,6 +113,93 @@ func TestResourceRecordSetItemMapper(t *testing.T) {
 	tests.Execute(t, item)
 }
 
+// TestConstructRecordFQDN tests the FQDN construction logic
+// for various record name formats
+func TestConstructRecordFQDN(t *testing.T) {
+	type testCase struct {
+		name           string
+		hostedZoneName string
+		recordName     string
+		expectedFQDN   string
+		description    string
+	}
+
+	testCases := []testCase{
+		{
+			name:           "simple_subdomain",
+			hostedZoneName: "example.com.",
+			recordName:     "www",
+			expectedFQDN:   "www.example.com.",
+			description:    "Simple subdomain record",
+		},
+		{
+			name:           "already_full_fqdn_with_trailing_dot",
+			hostedZoneName: "example.com.",
+			recordName:     "subdomain.example.com.",
+			expectedFQDN:   "subdomain.example.com.",
+			description:    "Record name already contains full FQDN with trailing dot",
+		},
+		{
+			name:           "already_full_fqdn_without_trailing_dot",
+			hostedZoneName: "example.com.",
+			recordName:     "subdomain.example.com",
+			expectedFQDN:   "subdomain.example.com",
+			description:    "Record name already contains full FQDN without trailing dot",
+		},
+		{
+			name:           "apex_record_matches_zone",
+			hostedZoneName: "example.com.",
+			recordName:     "example.com",
+			expectedFQDN:   "example.com",
+			description:    "Apex record where name matches zone FQDN (without trailing dot)",
+		},
+		{
+			name:           "complex_subdomain_case",
+			hostedZoneName: "a2d-dev.tv.",
+			recordName:     "davidtest-other.a2d-dev.tv",
+			expectedFQDN:   "davidtest-other.a2d-dev.tv",
+			description:    "Complex case from the bug report - prevents double domain concatenation",
+		},
+		{
+			name:           "nested_subdomain",
+			hostedZoneName: "example.com.",
+			recordName:     "deep.nested.subdomain",
+			expectedFQDN:   "deep.nested.subdomain.example.com.",
+			description:    "Nested subdomain that needs zone appended",
+		},
+		{
+			name:           "ns_record_with_full_domain",
+			hostedZoneName: "example.com.",
+			recordName:     "ns.example.com.",
+			expectedFQDN:   "ns.example.com.",
+			description:    "NS record with full domain (common pattern)",
+		},
+		{
+			name:           "zone_without_trailing_dot",
+			hostedZoneName: "example.com",
+			recordName:     "www",
+			expectedFQDN:   "www.example.com",
+			description:    "Hosted zone name without trailing dot",
+		},
+		{
+			name:           "record_already_ends_with_zone_no_dot",
+			hostedZoneName: "example.com",
+			recordName:     "subdomain.example.com",
+			expectedFQDN:   "subdomain.example.com",
+			description:    "Record already ends with zone name (no trailing dots)",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := constructRecordFQDN(tc.recordName, tc.hostedZoneName)
+			if result != tc.expectedFQDN {
+				t.Errorf("Expected FQDN %q but got %q. %s", tc.expectedFQDN, result, tc.description)
+			}
+		})
+	}
+}
+
 func TestNewRoute53ResourceRecordSetAdapter(t *testing.T) {
 	client, account, region := route53GetAutoConfig(t)
 
