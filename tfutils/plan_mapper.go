@@ -325,14 +325,19 @@ func mapResourceToQuery(itemDiff *sdp.ItemDiff, terraformResource *Resource, map
 	}
 
 	// If we get to this point, we haven't found a mapping
+	message := fmt.Sprintf("missing mapping attribute: %v", strings.Join(attemptedMappings, ", "))
 	return PlannedChangeMapResult{
 		TerraformName: terraformResource.Address,
 		TerraformType: terraformResource.Type,
 		Status:        MapStatusNotEnoughInfo,
-		Message:       fmt.Sprintf("missing mapping attribute: %v", strings.Join(attemptedMappings, ", ")),
+		Message:       message,
 		MappedItemDiff: &sdp.MappedItemDiff{
 			Item:         itemDiff,
 			MappingQuery: nil, // unmapped item has no mapping query
+			MappingError: &sdp.QueryError{
+				ErrorType:   sdp.QueryError_OTHER,
+				ErrorString: message,
+			},
 		},
 	}
 }
