@@ -1194,7 +1194,7 @@ type SourceProperties struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The descriptive name of the source
 	DescriptiveName string `protobuf:"bytes,1,opt,name=DescriptiveName,proto3" json:"DescriptiveName,omitempty"`
-	// What source to configure. Currently either "stdlib" or "aws"
+	// What source to configure. Can be "stdlib", "aws", or "gcp".
 	Type string `protobuf:"bytes,2,opt,name=Type,proto3" json:"Type,omitempty"`
 	// Config for this source. See the source documentation for what
 	// source-specific config is available/required. This will be supplied
