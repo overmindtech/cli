@@ -489,3 +489,137 @@ func TestRepoDetectorGitConfig(t *testing.T) {
 		}
 	})
 }
+
+func TestRepoDetectorScalr(t *testing.T) {
+	t.Parallel()
+
+	t.Run("with valid SCALR_WORKSPACE_NAME and SCALR_ENVIRONMENT_NAME", func(t *testing.T) {
+		t.Parallel()
+
+		envVars := map[string]string{
+			"SCALR_WORKSPACE_NAME":   "my-workspace",
+			"SCALR_ENVIRONMENT_NAME": "production",
+		}
+
+		detector := &RepoDetectorScalr{}
+
+		repoURL, err := detector.DetectRepoURL(envVars)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		expectedRepoURL := "scalr://production/my-workspace"
+		if repoURL != expectedRepoURL {
+			t.Fatalf("expected repoURL to be %q, got %q", expectedRepoURL, repoURL)
+		}
+	})
+
+	t.Run("with missing SCALR_WORKSPACE_NAME", func(t *testing.T) {
+		t.Parallel()
+
+		envVars := map[string]string{
+			"SCALR_ENVIRONMENT_NAME": "production",
+		}
+
+		detector := &RepoDetectorScalr{}
+
+		repoURL, err := detector.DetectRepoURL(envVars)
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		if repoURL != "" {
+			t.Fatalf("expected empty repoURL, got %q", repoURL)
+		}
+
+		expectedError := "SCALR_WORKSPACE_NAME not set"
+		if err.Error() != expectedError {
+			t.Fatalf("expected error to be %q, got %q", expectedError, err.Error())
+		}
+	})
+
+	t.Run("with missing SCALR_ENVIRONMENT_NAME", func(t *testing.T) {
+		t.Parallel()
+
+		envVars := map[string]string{
+			"SCALR_WORKSPACE_NAME": "my-workspace",
+		}
+
+		detector := &RepoDetectorScalr{}
+
+		repoURL, err := detector.DetectRepoURL(envVars)
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		if repoURL != "" {
+			t.Fatalf("expected empty repoURL, got %q", repoURL)
+		}
+
+		expectedError := "SCALR_ENVIRONMENT_NAME not set"
+		if err.Error() != expectedError {
+			t.Fatalf("expected error to be %q, got %q", expectedError, err.Error())
+		}
+	})
+
+	t.Run("with both variables missing", func(t *testing.T) {
+		t.Parallel()
+
+		envVars := map[string]string{}
+
+		detector := &RepoDetectorScalr{}
+
+		repoURL, err := detector.DetectRepoURL(envVars)
+		if err == nil {
+			t.Fatal("expected error")
+		}
+		if repoURL != "" {
+			t.Fatalf("expected empty repoURL, got %q", repoURL)
+		}
+
+		expectedError := "SCALR_WORKSPACE_NAME not set"
+		if err.Error() != expectedError {
+			t.Fatalf("expected error to be %q, got %q", expectedError, err.Error())
+		}
+	})
+
+	t.Run("with empty values", func(t *testing.T) {
+		t.Parallel()
+
+		envVars := map[string]string{
+			"SCALR_WORKSPACE_NAME":   "",
+			"SCALR_ENVIRONMENT_NAME": "",
+		}
+
+		detector := &RepoDetectorScalr{}
+
+		repoURL, err := detector.DetectRepoURL(envVars)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		expectedRepoURL := "scalr:///"
+		if repoURL != expectedRepoURL {
+			t.Fatalf("expected repoURL to be %q, got %q", expectedRepoURL, repoURL)
+		}
+	})
+
+	t.Run("with special characters", func(t *testing.T) {
+		t.Parallel()
+
+		envVars := map[string]string{
+			"SCALR_WORKSPACE_NAME":   "my-workspace-with-dashes_and_underscores",
+			"SCALR_ENVIRONMENT_NAME": "prod-env_123",
+		}
+
+		detector := &RepoDetectorScalr{}
+
+		repoURL, err := detector.DetectRepoURL(envVars)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		expectedRepoURL := "scalr://prod-env_123/my-workspace-with-dashes_and_underscores"
+		if repoURL != expectedRepoURL {
+			t.Fatalf("expected repoURL to be %q, got %q", expectedRepoURL, repoURL)
+		}
+	})
+}

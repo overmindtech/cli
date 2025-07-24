@@ -16,6 +16,7 @@ var AllDetectors = []RepoDetector{
 	&RepoDetectorCircleCI{},
 	&RepoDetectorAzureDevOps{},
 	&RepoDetectorSpacelift{},
+	&RepoDetectorScalr{},
 	&RepoDetectorGitConfig{},
 }
 
@@ -249,4 +250,30 @@ func (d *RepoDetectorGitConfig) DetectRepoURL(envVars map[string]string) (string
 	}
 
 	return "", fmt.Errorf("could not find remote URL in %v", gitConfigPath)
+}
+
+type RepoDetectorScalr struct{}
+
+func (d *RepoDetectorScalr) RequiredEnvVars() []string {
+	return []string{"SCALR_WORKSPACE_NAME", "SCALR_ENVIRONMENT_NAME"}
+}
+
+func (d *RepoDetectorScalr) DetectRepoURL(envVars map[string]string) (string, error) {
+	workspaceName, ok := envVars["SCALR_WORKSPACE_NAME"]
+	if !ok {
+		return "", errors.New("SCALR_WORKSPACE_NAME not set")
+	}
+
+	environmentName, ok := envVars["SCALR_ENVIRONMENT_NAME"]
+	if !ok {
+		return "", errors.New("SCALR_ENVIRONMENT_NAME not set")
+	}
+
+	// A full Scalr URL can be constructed using
+	// "https://$SCALR_HOSTNAME/v2/e/$SCALR_ENVIRONMENT_ID/workspaces/$SCALR_WORKSPACE_ID".
+	// The problem with this is that the environment and workspace IDs are
+	// computer generated and people aren't likely to understand what they mean.
+	// Therefore we are going to go with custom URL scheme to make sure that the
+	// URL is readable
+	return fmt.Sprintf("scalr://%s/%s", environmentName, workspaceName), nil
 }

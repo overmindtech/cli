@@ -106,7 +106,7 @@ func (r *PlanMappingResult) numStatus(status MapStatus) int {
 	return count
 }
 
-func MappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fields) (*PlanMappingResult, error) {
+func MappedItemDiffsFromPlanFile(ctx context.Context, fileName string, scope string, lf log.Fields) (*PlanMappingResult, error) {
 	// read results from `terraform show -json ${tfplan file}`
 	planJSON, err := os.ReadFile(fileName)
 	if err != nil {
@@ -114,7 +114,7 @@ func MappedItemDiffsFromPlanFile(ctx context.Context, fileName string, lf log.Fi
 		return nil, err
 	}
 
-	return MappedItemDiffsFromPlan(ctx, planJSON, fileName, lf)
+	return MappedItemDiffsFromPlan(ctx, planJSON, fileName, scope, lf)
 }
 
 type TfMapData struct {
@@ -135,8 +135,9 @@ type TfMapData struct {
 // and current resource values. The function categorizes the mapped item
 // differences into supported and unsupported changes. Finally, it logs the
 // number of supported and unsupported changes and returns the mapped item
-// differences.
-func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, lf log.Fields) (*PlanMappingResult, error) {
+// differences. The `scope` determines the scope of the resources that will be
+// generated, not the queries. These will always have a scope of `*`
+func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName string, scope string, lf log.Fields) (*PlanMappingResult, error) {
 	// Create a span for this since we're going to be attaching events to it when things fail to map
 	span := trace.SpanFromContext(ctx)
 	defer span.End()
@@ -195,7 +196,7 @@ func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 			continue
 		}
 
-		itemDiff, err := itemDiffFromResourceChange(resourceChange)
+		itemDiff, err := itemDiffFromResourceChange(resourceChange, scope)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create item diff for resource change: %w", err)
 		}
@@ -440,9 +441,7 @@ func countSensitiveAttributes(attributes, sensitive any) int {
 }
 
 // Converts a ResourceChange form a terraform plan to an ItemDiff in SDP format.
-// These items will use the scope `terraform_plan` since we haven't mapped them
-// to an actual item in the infrastructure yet
-func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, error) {
+func itemDiffFromResourceChange(resourceChange ResourceChange, scope string) (*sdp.ItemDiff, error) {
 	status := sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UNSPECIFIED
 
 	if slices.Equal(resourceChange.Change.Actions, []string{"no-op"}) || slices.Equal(resourceChange.Change.Actions, []string{"read"}) {
@@ -488,7 +487,7 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 			Type:            resourceChange.Type,
 			UniqueAttribute: "terraform_name",
 			Attributes:      beforeAttributes,
-			Scope:           "terraform_plan",
+			Scope:           scope,
 		}
 
 		err = result.GetBefore().GetAttributes().Set("terraform_name", trimmedAddress)
@@ -509,7 +508,7 @@ func itemDiffFromResourceChange(resourceChange ResourceChange) (*sdp.ItemDiff, e
 			Type:            resourceChange.Type,
 			UniqueAttribute: "terraform_name",
 			Attributes:      afterAttributes,
-			Scope:           "terraform_plan",
+			Scope:           scope,
 		}
 
 		err = result.GetAfter().GetAttributes().Set("terraform_name", trimmedAddress)

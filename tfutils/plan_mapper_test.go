@@ -15,7 +15,7 @@ import (
 )
 
 func TestWithStateFile(t *testing.T) {
-	_, err := MappedItemDiffsFromPlanFile(context.Background(), "testdata/state.json", log.Fields{})
+	_, err := MappedItemDiffsFromPlanFile(context.Background(), "testdata/state.json", "scope", log.Fields{})
 
 	if err == nil {
 		t.Error("Expected error when running with state file, got none")
@@ -48,7 +48,7 @@ func TestExtractProviderNameFromConfigKey(t *testing.T) {
 }
 
 func TestMappedItemDiffsFromPlan(t *testing.T) {
-	results, err := MappedItemDiffsFromPlanFile(context.Background(), "testdata/plan.json", log.Fields{})
+	results, err := MappedItemDiffsFromPlanFile(context.Background(), "testdata/plan.json", "scope", log.Fields{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -120,8 +120,8 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	if nats_box_deployment.GetMappingQuery().GetScope() != "*" {
 		t.Errorf("Expected nats_box_deployment query scope to be '*', got '%v'", nats_box_deployment.GetMappingQuery().GetScope())
 	}
-	if nats_box_deployment.GetItem().GetBefore().GetScope() != "terraform_plan" {
-		t.Errorf("Expected nats_box_deployment before item scope to be 'terraform_plan', got '%v'", nats_box_deployment.GetItem().GetBefore().GetScope())
+	if nats_box_deployment.GetItem().GetBefore().GetScope() != "scope" {
+		t.Errorf("Expected nats_box_deployment before item scope to be 'scope', got '%v'", nats_box_deployment.GetItem().GetBefore().GetScope())
 	}
 	if nats_box_deployment.GetMappingQuery().GetType() != "Deployment" {
 		t.Errorf("Expected nats_box_deployment query type to be 'Deployment', got '%v'", nats_box_deployment.GetMappingQuery().GetType())
@@ -150,8 +150,8 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	if api_server_deployment.GetMappingQuery().GetScope() != "*" {
 		t.Errorf("Expected api_server_deployment query scope to be '*', got '%v'", api_server_deployment.GetMappingQuery().GetScope())
 	}
-	if api_server_deployment.GetItem().GetBefore().GetScope() != "terraform_plan" {
-		t.Errorf("Expected api_server_deployment before item scope to be 'terraform_plan', got '%v'", api_server_deployment.GetItem().GetBefore().GetScope())
+	if api_server_deployment.GetItem().GetBefore().GetScope() != "scope" {
+		t.Errorf("Expected api_server_deployment before item scope to be 'scope', got '%v'", api_server_deployment.GetItem().GetBefore().GetScope())
 	}
 	if api_server_deployment.GetMappingQuery().GetType() != "Deployment" {
 		t.Errorf("Expected api_server_deployment query type to be 'Deployment', got '%v'", api_server_deployment.GetMappingQuery().GetType())
@@ -180,8 +180,8 @@ func TestMappedItemDiffsFromPlan(t *testing.T) {
 	if aws_iam_policy.GetMappingQuery().GetScope() != "*" {
 		t.Errorf("Expected aws_iam_policy query scope to be '*', got '%v'", aws_iam_policy.GetMappingQuery().GetScope())
 	}
-	if aws_iam_policy.GetItem().GetBefore().GetScope() != "terraform_plan" {
-		t.Errorf("Expected aws_iam_policy before item scope to be 'terraform_plan', got '%v'", aws_iam_policy.GetItem().GetBefore().GetScope())
+	if aws_iam_policy.GetItem().GetBefore().GetScope() != "scope" {
+		t.Errorf("Expected aws_iam_policy before item scope to be 'scope', got '%v'", aws_iam_policy.GetItem().GetBefore().GetScope())
 	}
 	if aws_iam_policy.GetMappingQuery().GetType() != "iam-policy" {
 		t.Errorf("Expected aws_iam_policy query type to be 'iam-policy', got '%v'", aws_iam_policy.GetMappingQuery().GetType())

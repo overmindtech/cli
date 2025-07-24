@@ -99,6 +99,18 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	lf := log.Fields{}
+
+	// Detect the repository URL if it wasn't provided
+	repoUrl := viper.GetString("repo")
+	if repoUrl == "" {
+		repoUrl, err = DetectRepoURL(AllDetectors)
+		if err != nil {
+			log.WithContext(ctx).WithError(err).WithFields(lf).Debug("Failed to detect repository URL. Use the --repo flag to specify it manually if you require it")
+		}
+	}
+	scope := tfutils.RepoToScope(repoUrl)
+
 	fileWord := "file"
 	if len(args) > 1 {
 		fileWord = "files"
@@ -108,10 +120,9 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 
 	plannedChanges := make([]*sdp.MappedItemDiff, 0)
 
-	lf := log.Fields{}
 	for _, f := range args {
 		lf["file"] = f
-		result, err := tfutils.MappedItemDiffsFromPlanFile(ctx, f, lf)
+		result, err := tfutils.MappedItemDiffsFromPlanFile(ctx, f, scope, lf)
 		if err != nil {
 			return loggedError{
 				err:     err,
@@ -136,14 +147,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	title := changeTitle(viper.GetString("title"))
 	tfPlanOutput := tryLoadText(ctx, viper.GetString("terraform-plan-output"))
 	codeChangesOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
-	// Detect the repository URL if it wasn't provided
-	repoUrl := viper.GetString("repo")
-	if repoUrl == "" {
-		repoUrl, err = DetectRepoURL(AllDetectors)
-		if err != nil {
-			log.WithContext(ctx).WithError(err).WithFields(lf).Debug("Failed to detect repository URL. Use the --repo flag to specify it manually if you require it")
-		}
-	}
+
 	enrichedTags, err := parseTagsArgument()
 	if err != nil {
 		return loggedError{

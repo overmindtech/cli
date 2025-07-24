@@ -127,6 +127,12 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 
 	removingSecretsSpinner.Success()
 
+	// Detect the repository URL if it wasn't provided
+	repoUrl := viper.GetString("repo")
+	if repoUrl == "" {
+		repoUrl, _ = DetectRepoURL(AllDetectors)
+	}
+
 	///////////////////////////////////////////////////////////////////
 	// Extract changes from the plan and created mapped item diffs
 	///////////////////////////////////////////////////////////////////
@@ -135,8 +141,10 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	resourceExtractionResults := multi.NewWriter()
 	time.Sleep(200 * time.Millisecond) // give the UI a little time to update
 
+	scope := tfutils.RepoToScope(repoUrl)
+
 	// Map the terraform changes to Overmind queries
-	mappingResponse, err := tfutils.MappedItemDiffsFromPlan(ctx, planJson, planFile, log.Fields{})
+	mappingResponse, err := tfutils.MappedItemDiffsFromPlan(ctx, planJson, planFile, scope, log.Fields{})
 	if err != nil {
 		resourceExtractionSpinner.Fail(fmt.Sprintf("Removing secrets: %v", err))
 		return nil
@@ -230,11 +238,6 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 
 	codeChangesOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
 
-	// Detect the repository URL if it wasn't provided
-	repoUrl := viper.GetString("repo")
-	if repoUrl == "" {
-		repoUrl, _ = DetectRepoURL(AllDetectors)
-	}
 	enrichedTags, err := parseTagsArgument()
 	if err != nil {
 		uploadChangesSpinner.Fail(fmt.Sprintf("Uploading planned changes: failed to parse tags: %v", err))
