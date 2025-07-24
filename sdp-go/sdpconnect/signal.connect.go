@@ -63,7 +63,7 @@ type SignalServiceClient interface {
 	GetSignalsByChangeExternalID(context.Context, *connect.Request[sdp_go.GetSignalsByChangeExternalIDRequest]) (*connect.Response[sdp_go.GetSignalsByChangeExternalIDResponse], error)
 	// NB for the following we do not need to specify the icons for the Items, as they are derived by the Frontend separately.
 	// Get all top-level signals for a change.
-	// They are sorted by category: "Risks, Blast Radius, Routine, Policies, Environment, Time of Day, Custom"
+	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
 	GetChangeOverviewSignals(context.Context, *connect.Request[sdp_go.GetChangeOverviewSignalsRequest]) (*connect.Response[sdp_go.GetChangeOverviewSignalsResponse], error)
 	// Get item-level signals for all items in a change.
 	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
@@ -165,7 +165,7 @@ type SignalServiceHandler interface {
 	GetSignalsByChangeExternalID(context.Context, *connect.Request[sdp_go.GetSignalsByChangeExternalIDRequest]) (*connect.Response[sdp_go.GetSignalsByChangeExternalIDResponse], error)
 	// NB for the following we do not need to specify the icons for the Items, as they are derived by the Frontend separately.
 	// Get all top-level signals for a change.
-	// They are sorted by category: "Risks, Blast Radius, Routine, Policies, Environment, Time of Day, Custom"
+	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
 	GetChangeOverviewSignals(context.Context, *connect.Request[sdp_go.GetChangeOverviewSignalsRequest]) (*connect.Response[sdp_go.GetChangeOverviewSignalsResponse], error)
 	// Get item-level signals for all items in a change.
 	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
