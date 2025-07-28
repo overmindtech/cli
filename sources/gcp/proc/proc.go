@@ -3,16 +3,14 @@ package proc
 import (
 	"context"
 	"fmt"
-	"os"
-	"strings"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 // Metadata contains the metadata for the GCP source
@@ -82,9 +80,9 @@ type config struct {
 }
 
 func readConfig() (*config, error) {
-	projectID := os.Getenv("GCP_PROJECT_ID")
+	projectID := viper.GetString("gcp-project-id")
 	if projectID == "" {
-		return nil, fmt.Errorf("GCP_PROJECT_ID environment variable not set")
+		return nil, fmt.Errorf("gcp-project-id not set")
 	}
 
 	l := &config{
@@ -94,13 +92,18 @@ func readConfig() (*config, error) {
 	// TODO: In the future, we will try to get the zones via Search API
 	// https://github.com/overmindtech/workspace/issues/1340
 
-	zonesEnv := os.Getenv("GCP_ZONES")
-	if zonesEnv == "" {
-		return nil, fmt.Errorf("GCP_ZONES environment variable not set")
+	zones := viper.GetStringSlice("gcp-zones")
+	regions := viper.GetStringSlice("gcp-regions")
+	if len(zones) == 0 && len(regions) == 0 {
+		return nil, fmt.Errorf("need at least one gcp-zones or gcp-regions value")
 	}
 
-	regions := make(map[string]bool)
-	for _, zone := range strings.Split(zonesEnv, ",") {
+	uniqueRegions := make(map[string]bool)
+	for _, region := range regions {
+		uniqueRegions[region] = true
+	}
+
+	for _, zone := range zones {
 		if zone == "" {
 			return nil, fmt.Errorf("zone name is empty")
 		}
@@ -112,10 +115,10 @@ func readConfig() (*config, error) {
 			return nil, fmt.Errorf("zone %s is not valid", zone)
 		}
 
-		regions[region] = true
+		uniqueRegions[region] = true
 	}
 
-	for region := range regions {
+	for region := range uniqueRegions {
 		l.Regions = append(l.Regions, region)
 	}
 
