@@ -58,7 +58,7 @@ func RequestQuery(cmd *cobra.Command, args []string) error {
 	}
 	defer c.Close(ctx)
 
-	q, err := createQuery()
+	q, err := CreateQuery()
 	if err != nil {
 		return flagError{usage: fmt.Sprintf("invalid query: %v\n\n%v", err, cmd.UsageString())}
 	}
@@ -140,7 +140,7 @@ func RequestQuery(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func methodFromString(method string) (sdp.QueryMethod, error) {
+func MethodFromString(method string) (sdp.QueryMethod, error) {
 	var result sdp.QueryMethod
 
 	switch method {
@@ -156,9 +156,9 @@ func methodFromString(method string) (sdp.QueryMethod, error) {
 	return result, nil
 }
 
-func createQuery() (*sdp.Query, error) {
+func CreateQuery() (*sdp.Query, error) {
 	u := uuid.New()
-	method, err := methodFromString(viper.GetString("query-method"))
+	method, err := MethodFromString(viper.GetString("query-method"))
 	if err != nil {
 		return nil, err
 	}
