@@ -7,6 +7,7 @@
 package sdp
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -1028,6 +1029,7 @@ func (x *SignalConfig) GetRoutineChangesConfig() *RoutineChangesConfig {
 type AggregationConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Alpha parameter for aggregation: controls the weighting of recent data versus older data
+	// Must be positive (greater than 0) as it's the temperature parameter for exponential decay
 	Alpha         float32 `protobuf:"fixed32,1,opt,name=alpha,proto3" json:"alpha,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1158,7 +1160,7 @@ var File_config_proto protoreflect.FileDescriptor
 
 const file_config_proto_rawDesc = "" +
 	"\n" +
-	"\fconfig.proto\x12\x06config\x1a\rapikeys.proto\"M\n" +
+	"\fconfig.proto\x12\x06config\x1a\rapikeys.proto\x1a\x1bbuf/validate/validate.proto\"M\n" +
 	"\x11BlastRadiusConfig\x12\x1a\n" +
 	"\bmaxItems\x18\x01 \x01(\x05R\bmaxItems\x12\x1c\n" +
 	"\tlinkDepth\x18\x02 \x01(\x05R\tlinkDepth\"\xbe\x02\n" +
@@ -1207,9 +1209,11 @@ const file_config_proto_rawDesc = "" +
 	"\x06config\x18\x01 \x01(\v2\x14.config.SignalConfigR\x06config\"\xa9\x01\n" +
 	"\fSignalConfig\x12G\n" +
 	"\x11aggregationConfig\x18\x01 \x01(\v2\x19.config.AggregationConfigR\x11aggregationConfig\x12P\n" +
-	"\x14routineChangesConfig\x18\x02 \x01(\v2\x1c.config.RoutineChangesConfigR\x14routineChangesConfig\")\n" +
-	"\x11AggregationConfig\x12\x14\n" +
-	"\x05alpha\x18\x01 \x01(\x02R\x05alpha\"\xc3\x02\n" +
+	"\x14routineChangesConfig\x18\x02 \x01(\v2\x1c.config.RoutineChangesConfigR\x14routineChangesConfig\"5\n" +
+	"\x11AggregationConfig\x12 \n" +
+	"\x05alpha\x18\x01 \x01(\x02B\n" +
+	"\xbaH\a\n" +
+	"\x05%\x00\x00\x00\x00R\x05alpha\"\xc3\x02\n" +
 	"\x14RoutineChangesConfig\x12\x1c\n" +
 	"\teventsPer\x18\x01 \x01(\x02R\teventsPer\x12O\n" +
 	"\reventsPerUnit\x18\x02 \x01(\x0e2).config.RoutineChangesConfig.DurationUnitR\reventsPerUnit\x12\x1a\n" +
