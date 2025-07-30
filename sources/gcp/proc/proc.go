@@ -4,17 +4,57 @@ import (
 	"context"
 	"fmt"
 
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
+
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
-	log "github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 // Metadata contains the metadata for the GCP source
 var Metadata = sdp.AdapterMetadataList{}
+
+func init() {
+	// Register the GCP source metadata for documentation purposes
+	ctx := context.Background()
+
+	// project, regions, and zones are just placeholders here
+	// They are not used in the metadata content
+	manualAdapters, err := manual.Adapters(ctx, "project", []string{"region"}, []string{"zone"})
+	if err != nil {
+		panic(fmt.Errorf("error creating manual adapters: %w", err))
+	}
+
+	for _, adapter := range manualAdapters {
+		Metadata.Register(adapter.Metadata())
+	}
+
+	initiatedManualAdapters := make(map[string]bool)
+	for _, adapter := range manualAdapters {
+		initiatedManualAdapters[adapter.Type()] = true
+	}
+
+	dynamicAdapters, err := dynamic.Adapters(
+		"project",
+		[]string{"region"},
+		[]string{"zone"},
+		nil,
+		nil,
+		initiatedManualAdapters,
+	)
+	if err != nil {
+		panic(fmt.Errorf("error creating dynamic adapters: %w", err))
+	}
+
+	for _, adapter := range dynamicAdapters {
+		Metadata.Register(adapter.Metadata())
+	}
+
+	log.Info("Registered GCP source metadata")
+}
 
 func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Engine, error) {
 	engine, err := discovery.NewEngine(ec)
@@ -58,11 +98,6 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 	var adapters []discovery.Adapter
 	adapters = append(adapters, manualAdapters...)
 	adapters = append(adapters, dynamicAdapters...)
-
-	// Register adapters metadata
-	for _, adapter := range adapters {
-		Metadata.Register(adapter.Metadata())
-	}
 
 	// Add the adapters to the engine
 	err = engine.AddAdapters(adapters...)

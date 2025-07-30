@@ -55,9 +55,9 @@ func (g SearchableAdapter) Metadata() *sdp.AdapterMetadata {
 		DescriptiveName: g.sdpAssetType.Readable(),
 		SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 			Get:               true,
-			GetDescription:    getDescription(g.sdpAssetType, g.scope, g.uniqueAttributeKeys),
+			GetDescription:    getDescription(g.sdpAssetType, g.uniqueAttributeKeys),
 			Search:            true,
-			SearchDescription: searchDescription(g.sdpAssetType, g.scope, g.uniqueAttributeKeys, g.customSearchMethodDesc),
+			SearchDescription: searchDescription(g.sdpAssetType, g.uniqueAttributeKeys, g.customSearchMethodDesc),
 		},
 		TerraformMappings: g.terraformMappings,
 		PotentialLinks:    g.potentialLinks,

@@ -19,21 +19,21 @@ import (
 )
 
 var (
-	getDescription = func(sdpAssetType shared.ItemType, scope string, uniqueAttributeKeys []string) string {
+	getDescription = func(sdpAssetType shared.ItemType, uniqueAttributeKeys []string) string {
 		selector := "{name}"
 		if len(uniqueAttributeKeys) > 1 {
 			// i.e.: {datasets|tables} for bigquery tables
 			selector = "{" + strings.Join(uniqueAttributeKeys, shared.QuerySeparator) + "}"
 		}
 
-		return fmt.Sprintf("Get a %s by its %s within its scope: %s", sdpAssetType, selector, scope)
+		return fmt.Sprintf("Get a %s by its %s", sdpAssetType, selector)
 	}
 
-	listDescription = func(sdpAssetType shared.ItemType, scope string) string {
-		return fmt.Sprintf("List all %s within its scope: %s", sdpAssetType, scope)
+	listDescription = func(sdpAssetType shared.ItemType) string {
+		return fmt.Sprintf("List all %s", sdpAssetType)
 	}
 
-	searchDescription = func(sdpAssetType shared.ItemType, scope string, uniqueAttributeKeys []string, customSearchMethodDesc string) string {
+	searchDescription = func(sdpAssetType shared.ItemType, uniqueAttributeKeys []string, customSearchMethodDesc string) string {
 		if customSearchMethodDesc != "" {
 			return customSearchMethodDesc
 		}
@@ -47,7 +47,7 @@ var (
 		// We remove the last key, because it defines the actual item selector
 		selector := "{" + strings.Join(uniqueAttributeKeys[:len(uniqueAttributeKeys)-1], shared.QuerySeparator) + "}"
 
-		return fmt.Sprintf("Search for %s by its %s within its scope: %s", sdpAssetType, selector, scope)
+		return fmt.Sprintf("Search for %s by its %s", sdpAssetType, selector)
 	}
 )
 

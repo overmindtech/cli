@@ -85,7 +85,7 @@ func (g Adapter) Metadata() *sdp.AdapterMetadata {
 		DescriptiveName: g.sdpAssetType.Readable(),
 		SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 			Get:            true,
-			GetDescription: getDescription(g.sdpAssetType, g.scope, g.uniqueAttributeKeys),
+			GetDescription: getDescription(g.sdpAssetType, g.uniqueAttributeKeys),
 		},
 		TerraformMappings: g.terraformMappings,
 		PotentialLinks:    g.potentialLinks,

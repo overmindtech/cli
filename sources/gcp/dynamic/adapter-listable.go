@@ -52,9 +52,9 @@ func (g ListableAdapter) Metadata() *sdp.AdapterMetadata {
 		DescriptiveName: g.sdpAssetType.Readable(),
 		SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 			Get:             true,
-			GetDescription:  getDescription(g.sdpAssetType, g.scope, g.uniqueAttributeKeys),
+			GetDescription:  getDescription(g.sdpAssetType, g.uniqueAttributeKeys),
 			List:            true,
-			ListDescription: listDescription(g.sdpAssetType, g.scope),
+			ListDescription: listDescription(g.sdpAssetType),
 		},
 		TerraformMappings: g.terraformMappings,
 		PotentialLinks:    g.potentialLinks,

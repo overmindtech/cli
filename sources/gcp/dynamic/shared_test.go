@@ -151,56 +151,56 @@ func Test_externalToSDP(t *testing.T) {
 }
 
 func Test_getDescription_ReturnsSelectorWithNameWhenNoUniqueAttrKeys(t *testing.T) {
-	got := getDescription(gcpshared.ComputeInstance, "test-scope", []string{})
-	want := fmt.Sprintf("Get a %s by its {name} within its scope: test-scope", gcpshared.ComputeInstance)
+	got := getDescription(gcpshared.ComputeInstance, []string{})
+	want := fmt.Sprintf("Get a %s by its {name}", gcpshared.ComputeInstance)
 	if got != want {
 		t.Errorf("getDescription() got = %v, want %v", got, want)
 	}
 }
 
 func Test_getDescription_ReturnsSelectorWithUniqueAttrKeys(t *testing.T) {
-	got := getDescription(gcpshared.BigQueryTable, "project-1", []string{"datasets", "tables"})
-	want := fmt.Sprintf("Get a %s by its {datasets|tables} within its scope: project-1", gcpshared.BigQueryTable)
+	got := getDescription(gcpshared.BigQueryTable, []string{"datasets", "tables"})
+	want := fmt.Sprintf("Get a %s by its {datasets|tables}", gcpshared.BigQueryTable)
 	if got != want {
 		t.Errorf("getDescription() got = %v, want %v", got, want)
 	}
 }
 
 func Test_getDescription_ReturnsSelectorWithSingleUniqueAttrKey(t *testing.T) {
-	got := getDescription(gcpshared.StorageBucket, "scope-2", []string{"buckets"})
-	want := fmt.Sprintf("Get a %s by its {name} within its scope: scope-2", gcpshared.StorageBucket)
+	got := getDescription(gcpshared.StorageBucket, []string{"buckets"})
+	want := fmt.Sprintf("Get a %s by its {name}", gcpshared.StorageBucket)
 	if got != want {
 		t.Errorf("getDescription() got = %v, want %v", got, want)
 	}
 }
 
 func Test_listDescription_ReturnsCorrectDescription(t *testing.T) {
-	got := listDescription(gcpshared.ComputeInstance, "test-scope")
-	want := "List all gcp-compute-instance within its scope: test-scope"
+	got := listDescription(gcpshared.ComputeInstance)
+	want := "List all gcp-compute-instance"
 	if got != want {
 		t.Errorf("listDescription() got = %v, want %v", got, want)
 	}
 }
 
 func Test_listDescription_HandlesEmptyScope(t *testing.T) {
-	got := listDescription(gcpshared.BigQueryTable, "test-scope")
-	want := "List all gcp-big-query-table within its scope: test-scope"
+	got := listDescription(gcpshared.BigQueryTable)
+	want := "List all gcp-big-query-table"
 	if got != want {
 		t.Errorf("listDescription() got = %v, want %v", got, want)
 	}
 }
 
 func Test_searchDescription_ReturnsSelectorWithMultipleKeys(t *testing.T) {
-	got := searchDescription(gcpshared.ServiceDirectoryEndpoint, "test-scope", []string{"locations", "namespaces", "services", "endpoints"}, "")
-	want := "Search for gcp-service-directory-endpoint by its {locations|namespaces|services} within its scope: test-scope"
+	got := searchDescription(gcpshared.ServiceDirectoryEndpoint, []string{"locations", "namespaces", "services", "endpoints"}, "")
+	want := "Search for gcp-service-directory-endpoint by its {locations|namespaces|services}"
 	if got != want {
 		t.Errorf("searchDescription() got = %v, want %v", got, want)
 	}
 }
 
 func Test_searchDescription_ReturnsSelectorWithTwoKeys(t *testing.T) {
-	got := searchDescription(gcpshared.BigQueryTable, "project-1", []string{"datasets", "tables"}, "")
-	want := "Search for gcp-big-query-table by its {datasets} within its scope: project-1"
+	got := searchDescription(gcpshared.BigQueryTable, []string{"datasets", "tables"}, "")
+	want := "Search for gcp-big-query-table by its {datasets}"
 	if got != want {
 		t.Errorf("searchDescription() got = %v, want %v", got, want)
 	}
@@ -212,12 +212,12 @@ func Test_searchDescription_PanicsWithOneKey(t *testing.T) {
 			t.Errorf("searchDescription() did not panic with one unique attribute key; expected panic")
 		}
 	}()
-	_ = searchDescription(gcpshared.StorageBucket, "scope-2", []string{"buckets"}, "")
+	_ = searchDescription(gcpshared.StorageBucket, []string{"buckets"}, "")
 }
 
 func Test_searchDescription_WithCustomSearchDescription(t *testing.T) {
 	customDesc := "Custom search description for gcp-service-directory-endpoint"
-	got := searchDescription(gcpshared.ServiceDirectoryEndpoint, "test-scope", []string{"locations", "namespaces", "services", "endpoints"}, customDesc)
+	got := searchDescription(gcpshared.ServiceDirectoryEndpoint, []string{"locations", "namespaces", "services", "endpoints"}, customDesc)
 	if got != customDesc {
 		t.Errorf("searchDescription() got = %v, want %v", got, customDesc)
 	}
