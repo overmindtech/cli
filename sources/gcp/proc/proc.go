@@ -6,6 +6,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"golang.org/x/oauth2/google"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -20,6 +21,15 @@ var Metadata = sdp.AdapterMetadataList{}
 func init() {
 	// Register the GCP source metadata for documentation purposes
 	ctx := context.Background()
+
+	// Check if GCP ADC in place
+	// For initiating the adapters GCP ADC is required.
+	// If not found, we will skip registering GCP source metadata
+	_, err := google.FindDefaultCredentials(ctx)
+	if err != nil {
+		log.Debug("GCP ADC not found, we will skip registering GCP source metadata")
+		return
+	}
 
 	// project, regions, and zones are just placeholders here
 	// They are not used in the metadata content
