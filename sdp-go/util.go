@@ -1,6 +1,8 @@
 package sdp
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"maps"
 	"math"
@@ -233,4 +235,18 @@ func WalkMapToRoutineRollUp(gun string, key string, data map[string]any) []Routi
 	}
 
 	return results
+}
+
+func GcpSANameFromAccountName(accountName string) string {
+	// service account ID must be 30 characters or less, and we can't use the
+	// target project ID directly as that would allow attackers to create
+	// accounts with arbitrary names. This also prefixes the account ID with "C"
+	// to ensure that it can be recognized as a customer's service account ID.
+	h := sha256.New()
+	h.Write([]byte([]byte(accountName)))
+	accountId := "C" + base64.URLEncoding.EncodeToString(h.Sum(nil))
+	if len(accountId) > 30 {
+		accountId = accountId[:30]
+	}
+	return accountId
 }

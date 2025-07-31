@@ -218,3 +218,28 @@ func TestItemDiffParagraphRendering(t *testing.T) {
 	}
 
 }
+
+func TestGcpSANameFromAccountName(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		accountName string
+		expected    string
+	}{
+		// BEWARE!! If this test needs changing, all currently existing service
+		// accounts in GCP will need to be updated, which sounds like an unholy
+		// mess.
+		{"test-account", "CMAH3VN1gbikLjzx35CRtbCKTQ1-b8"},
+		{"another-account", "C_T4fIEQucCV9UMGMGd-yxy_Qa3oim"},
+		{"", "C47DEQpj8HBSa-_TImW-5JCeuQeRkm"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.accountName, func(t *testing.T) {
+			result := GcpSANameFromAccountName(test.accountName)
+			if result != test.expected {
+				t.Errorf("expected %s, got %s", test.expected, result)
+			}
+		})
+	}
+}
