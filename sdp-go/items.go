@@ -13,46 +13,20 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 const WILDCARD = "*"
 
-// Copy copies all information from one item pointer to another
-func (bp *BlastPropagation) Copy(dest *BlastPropagation) {
-	dest.In = bp.GetIn()
-	dest.Out = bp.GetOut()
-}
+
 
 func (bp *BlastPropagation) IsEqual(other *BlastPropagation) bool {
 	return bp.GetIn() == other.GetIn() && bp.GetOut() == other.GetOut()
 }
 
-// Copy copies all information from one item pointer to another
-func (liq *LinkedItemQuery) Copy(dest *LinkedItemQuery) {
-	dest.Query = &Query{}
-	if liq.GetQuery() != nil {
-		liq.GetQuery().Copy(dest.GetQuery())
-	}
-	dest.BlastPropagation = &BlastPropagation{}
-	if liq.GetBlastPropagation() != nil {
-		liq.GetBlastPropagation().Copy(dest.GetBlastPropagation())
-	}
-}
 
-// Copy copies all information from one item pointer to another
-func (li *LinkedItem) Copy(dest *LinkedItem) {
-	dest.Item = &Reference{}
-	if li.GetItem() != nil {
-		li.GetItem().Copy(dest.GetItem())
-	}
-	dest.BlastPropagation = &BlastPropagation{}
-	if li.GetBlastPropagation() != nil {
-		li.GetBlastPropagation().Copy(dest.GetBlastPropagation())
-	}
-}
+
+
 
 // UniqueAttributeValue returns the value of whatever the Unique Attribute is
 // for this item. This will then be converted to a string and returned
@@ -96,61 +70,7 @@ func (i *Item) GloballyUniqueName() string {
 	)
 }
 
-// Copy copies all information from one item pointer to another
-func (i *Item) Copy(dest *Item) {
-	// Values can be copied directly
-	dest.Type = i.GetType()
-	dest.UniqueAttribute = i.GetUniqueAttribute()
-	dest.Scope = i.GetScope()
 
-	// We need to check that any pointers are actually populated with pointers
-	// to somewhere in memory. If they are nil then there is no data structure
-	// to copy the data into, therefore we need to create it first
-	if dest.GetMetadata() == nil {
-		dest.Metadata = &Metadata{}
-	}
-
-	if dest.GetAttributes() == nil {
-		dest.Attributes = &ItemAttributes{}
-	}
-
-	i.GetMetadata().Copy(dest.GetMetadata())
-	i.GetAttributes().Copy(dest.GetAttributes())
-
-	// TODO(LIQs): delete this; it's not part of `(*sdp.Item)` anymore
-	dest.LinkedItemQueries = make([]*LinkedItemQuery, 0)
-	dest.LinkedItems = make([]*LinkedItem, 0)
-
-	for _, r := range i.GetLinkedItemQueries() {
-		liq := &LinkedItemQuery{}
-
-		r.Copy(liq)
-
-		dest.LinkedItemQueries = append(dest.LinkedItemQueries, liq)
-	}
-
-	for _, r := range i.GetLinkedItems() {
-		newLinkedItem := &LinkedItem{}
-
-		r.Copy(newLinkedItem)
-
-		dest.LinkedItems = append(dest.LinkedItems, newLinkedItem)
-	}
-
-	if i.Health == nil {
-		dest.Health = nil
-	} else {
-		dest.Health = i.GetHealth().Enum()
-	}
-
-	if i.Tags != nil {
-		dest.Tags = make(map[string]string)
-
-		for k, v := range i.GetTags() {
-			dest.Tags[k] = v
-		}
-	}
-}
 
 // Hash Returns a 12 character hash for the item. This is likely but not
 // guaranteed to be unique. The hash is calculated using the GloballyUniqueName
@@ -235,12 +155,7 @@ func (r *Reference) IsEqual(other *Reference) bool {
 		r.GetQuery() == other.GetQuery()
 }
 
-// Copy copies all information from one Reference pointer to another
-func (r *Reference) Copy(dest *Reference) {
-	dest.Type = r.GetType()
-	dest.UniqueAttributeValue = r.GetUniqueAttributeValue()
-	dest.Scope = r.GetScope()
-}
+
 
 func (r *Reference) ToQuery() *Query {
 	if !r.GetIsQuery() {
@@ -260,45 +175,9 @@ func (r *Reference) ToQuery() *Query {
 	}
 }
 
-// Copy copies all information from one Metadata pointer to another
-func (m *Metadata) Copy(dest *Metadata) {
-	if m == nil {
-		// Protect from copy being called on a nil pointer
-		return
-	}
 
-	dest.SourceName = m.GetSourceName()
-	dest.Hidden = m.GetHidden()
 
-	if m.GetSourceQuery() != nil {
-		dest.SourceQuery = &Query{}
-		m.GetSourceQuery().Copy(dest.GetSourceQuery())
-	}
 
-	dest.Timestamp = &timestamppb.Timestamp{
-		Seconds: m.GetTimestamp().GetSeconds(),
-		Nanos:   m.GetTimestamp().GetNanos(),
-	}
-
-	dest.SourceDuration = &durationpb.Duration{
-		Seconds: m.GetSourceDuration().GetSeconds(),
-		Nanos:   m.GetSourceDuration().GetNanos(),
-	}
-
-	dest.SourceDurationPerItem = &durationpb.Duration{
-		Seconds: m.GetSourceDurationPerItem().GetSeconds(),
-		Nanos:   m.GetSourceDurationPerItem().GetNanos(),
-	}
-}
-
-// Copy copies all information from one CancelQuery pointer to another
-func (c *CancelQuery) Copy(dest *CancelQuery) {
-	if c == nil {
-		return
-	}
-
-	dest.UUID = c.GetUUID()
-}
 
 // Get Returns the value of a given attribute by name. If the attribute is
 // a nested hash, nested values can be referenced using dot notation e.g.
@@ -354,18 +233,9 @@ func (a *ItemAttributes) Set(name string, value interface{}) error {
 	return nil
 }
 
-// Copy copies all information from one ItemAttributes pointer to another
-func (a *ItemAttributes) Copy(dest *ItemAttributes) {
-	m := a.GetAttrStruct().AsMap()
 
-	dest.AttrStruct, _ = structpb.NewStruct(m)
-}
 
-// Copy copies all information from one Query pointer to another
-func (qrb *Query_RecursionBehaviour) Copy(dest *Query_RecursionBehaviour) {
-	dest.LinkDepth = qrb.GetLinkDepth()
-	dest.FollowOnlyBlastPropagation = qrb.GetFollowOnlyBlastPropagation()
-}
+
 
 // IsSingle returns true if this query can only return a single item.
 func (q *Query) IsSingle() bool {
@@ -395,24 +265,6 @@ func (q *Query) Subject() string {
 	return fmt.Sprintf("query.%v", q.GetUUIDParsed())
 }
 
-// Copy copies all information from one Query pointer to another
-func (q *Query) Copy(dest *Query) {
-	dest.Type = q.GetType()
-	dest.Method = q.GetMethod()
-	dest.Query = q.GetQuery()
-	dest.RecursionBehaviour = &Query_RecursionBehaviour{}
-	if q.GetRecursionBehaviour() != nil {
-		q.GetRecursionBehaviour().Copy(dest.GetRecursionBehaviour())
-	}
-	dest.Scope = q.GetScope()
-	dest.IgnoreCache = q.GetIgnoreCache()
-	dest.UUID = q.GetUUID()
-
-	if q.GetDeadline() != nil {
-		// allocate a new value
-		dest.Deadline = timestamppb.New(q.GetDeadline().AsTime())
-	}
-}
 
 // TimeoutContext returns a context and cancel function representing the timeout
 // for this request

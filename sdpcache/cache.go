@@ -13,6 +13,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/protobuf/proto"
 )
 
 type IndexValues struct {
@@ -364,10 +365,9 @@ func (c *Cache) Search(ck CacheKey) ([]*sdp.Item, error) {
 
 		// Return a copy of the item so the user can do whatever they want with
 		// it
-		itemCopy := sdp.Item{}
-		res.Item.Copy(&itemCopy)
+		itemCopy := proto.Clone(res.Item).(*sdp.Item)
 
-		items = append(items, &itemCopy)
+		items = append(items, itemCopy)
 	}
 
 	return items, nil
@@ -482,11 +482,10 @@ func (c *Cache) StoreItem(item *sdp.Item, duration time.Duration, ck CacheKey) {
 		return
 	}
 
-	itemCopy := sdp.Item{}
-	item.Copy(&itemCopy)
+	itemCopy := proto.Clone(item).(*sdp.Item)
 
 	res := CachedResult{
-		Item:   &itemCopy,
+		Item:   itemCopy,
 		Error:  nil,
 		Expiry: time.Now().Add(duration),
 		IndexValues: IndexValues{

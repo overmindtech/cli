@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -397,12 +398,10 @@ func TestCopy(t *testing.T) {
 			},
 		}
 
-		itemB := Item{}
-
 		t.Run("Copying an item", func(t *testing.T) {
-			itemA.Copy(&itemB)
+			itemB := proto.Clone(&itemA).(*Item)
 
-			AssertItemsEqual(&itemA, &itemB, t)
+			AssertItemsEqual(&itemA, itemB, t)
 		})
 	})
 
@@ -433,12 +432,10 @@ func TestCopy(t *testing.T) {
 			},
 		}
 
-		itemB := Item{}
-
 		t.Run("Copying an item", func(t *testing.T) {
-			itemA.Copy(&itemB)
+			itemB := proto.Clone(&itemA).(*Item)
 
-			AssertItemsEqual(&itemA, &itemB, t)
+			AssertItemsEqual(&itemA, itemB, t)
 		})
 	})
 
@@ -453,12 +450,10 @@ func TestCopy(t *testing.T) {
 			LinkedItems:       []*LinkedItem{},
 		}
 
-		itemB := Item{}
-
 		t.Run("Copying an item", func(t *testing.T) {
-			itemA.Copy(&itemB)
+			itemB := proto.Clone(&itemA).(*Item)
 
-			AssertItemsEqual(&itemA, &itemB, t)
+			AssertItemsEqual(&itemA, itemB, t)
 		})
 	})
 

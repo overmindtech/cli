@@ -11,6 +11,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/cli/sdp-go"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 )
 
 // AdapterHost This struct holds references to all Adapters in a process
@@ -154,8 +155,7 @@ func (sh *AdapterHost) ExpandQuery(q *sdp.Query) map[*sdp.Query]Adapter {
 			// * The query scope is a wildcard (and the adapter is not hidden), or
 			// * The query scope substring matches adapter scope
 			if IsWildcard(adapterScope) || (IsWildcard(q.GetScope()) && !isHidden) || strings.Contains(adapterScope, q.GetScope()) {
-				dest := sdp.Query{}
-				q.Copy(&dest)
+				dest := proto.Clone(q).(*sdp.Query)
 
 				dest.Type = adapter.Type()
 
@@ -166,7 +166,7 @@ func (sh *AdapterHost) ExpandQuery(q *sdp.Query) map[*sdp.Query]Adapter {
 					dest.Scope = adapterScope
 				}
 
-				expandedQueries[&dest] = adapter
+				expandedQueries[dest] = adapter
 			}
 		}
 	}
