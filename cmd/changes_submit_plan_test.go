@@ -22,7 +22,7 @@ func TestLoadAutoTagRulesFile(t *testing.T) {
 		{
 			name:          "FailedToParse.yaml",
 			fileContent:   "invalid yaml content",
-			errorContains: "Failed to parse",
+			errorContains: "failed to parse",
 		},
 		{
 			name:          "MoreThan10Rules.yaml",

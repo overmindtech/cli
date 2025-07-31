@@ -330,6 +330,12 @@ type AutoTaggingRuleYAML struct {
 	ValidValues  []string `yaml:"valid_values"`
 }
 
+type RoutineChangesConfigYAML struct {
+	Sensitivity    float32 `yaml:"sensitivity"`
+	DurationInDays float32 `yaml:"duration_in_days"`
+	EventsPerDay   float32 `yaml:"events_per_day"`
+}
+
 // YamlStringToRuleProperties converts a yaml string to a slice of RuleProperties
 func YamlStringToRuleProperties(yamlString string) ([]*RuleProperties, error) {
 	var rulesYaml AutoTaggingRulesYaml
@@ -354,6 +360,32 @@ func YamlStringToRuleProperties(yamlString string) ([]*RuleProperties, error) {
 	}
 
 	return rules, nil
+}
+
+// YamlStringToRoutineChangesConfig converts a yaml string to RoutineChangesConfig
+func YamlStringToRoutineChangesConfig(yamlString string) (*RoutineChangesConfig, error) {
+	var routineChangesConfigYAML RoutineChangesConfigYAML
+	err := yaml.Unmarshal([]byte(yamlString), &routineChangesConfigYAML)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling yaml to routine changes config: %w", err)
+	}
+	if routineChangesConfigYAML.EventsPerDay < 1 {
+		return nil, fmt.Errorf("events_per_day must be greater than 1, got %v", routineChangesConfigYAML.EventsPerDay)
+	}
+	if routineChangesConfigYAML.DurationInDays < 1 {
+		return nil, fmt.Errorf("duration_in_days must be greater than 1, got %v", routineChangesConfigYAML.DurationInDays)
+	}
+	if routineChangesConfigYAML.Sensitivity < 0 {
+		return nil, fmt.Errorf("sensitivity must be 0 or higher, got %v", routineChangesConfigYAML.Sensitivity)
+	}
+	routineChangesConfig := &RoutineChangesConfig{
+		Sensitivity:   routineChangesConfigYAML.Sensitivity,
+		EventsPer:     routineChangesConfigYAML.EventsPerDay,
+		EventsPerUnit: RoutineChangesConfig_DAYS,
+		Duration:      routineChangesConfigYAML.DurationInDays,
+		DurationUnit:  RoutineChangesConfig_DAYS,
+	}
+	return routineChangesConfig, nil
 }
 
 // TimelineFindInProgressEntry returns the current running entry in the list of entries

@@ -129,7 +129,85 @@ func TestYamlStringToRuleProperties(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("yamlStringToRuleProperties() got = %v, want %v", got, tt.want)
+				t.Errorf("yamlStringToRuleProperties()got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestYamlStringToRoutineChangesConfig(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name       string
+		yamlString string
+		want       *RoutineChangesConfig
+		wantErr    bool
+	}{
+		{
+			name:       "valid yaml, typical values",
+			yamlString: "sensitivity: 2.5\nduration_in_days: 10\nevents_per_day: 3",
+			want: &RoutineChangesConfig{
+				Sensitivity:   2.5,
+				EventsPer:     3.0,
+				EventsPerUnit: RoutineChangesConfig_DAYS,
+				Duration:      10.0,
+				DurationUnit:  RoutineChangesConfig_DAYS,
+			},
+			wantErr: false,
+		},
+		{
+			name:       "invalid yaml, zero values (events_per_day and duration_in_days too low)",
+			yamlString: "sensitivity: 0\nduration_in_days: 0\nevents_per_day: 0",
+			want:       nil,
+			wantErr:    true,
+		},
+		{
+			name:       "invalid yaml",
+			yamlString: "not_yaml",
+			want:       nil,
+			wantErr:    true,
+		},
+		{
+			name:       "invalid yaml, missing fields (events_per_day and duration_in_days too low)",
+			yamlString: "sensitivity: 1.2",
+			want:       nil,
+			wantErr:    true,
+		},
+		{
+			name:       "empty yaml (all values too low)",
+			yamlString: "",
+			want:       nil,
+			wantErr:    true,
+		},
+		{
+			name:       "invalid sensitivity (negative)",
+			yamlString: "sensitivity: -1\nduration_in_days: 10\nevents_per_day: 3",
+			want:       nil,
+			wantErr:    true,
+		},
+		{
+			name:       "invalid events_per_day (too low)",
+			yamlString: "sensitivity: 1\nduration_in_days: 10\nevents_per_day: 0",
+			want:       nil,
+			wantErr:    true,
+		},
+		{
+			name:       "invalid duration_in_days (too low)",
+			yamlString: "sensitivity: 1\nduration_in_days: 0\nevents_per_day: 3",
+			want:       nil,
+			wantErr:    true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := YamlStringToRoutineChangesConfig(tt.yamlString)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("YamlStringToRoutineChangesConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("YamlStringToRoutineChangesConfig()\ngot\n%#v\nwant\n%#v", got, tt.want)
 			}
 		})
 	}

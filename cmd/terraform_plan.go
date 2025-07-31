@@ -224,7 +224,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 		return nil
 	}
 
-	title := changeTitle(viper.GetString("title"))
+	title := changeTitle(ctx, viper.GetString("title"))
 	tfPlanTextCmd := exec.CommandContext(ctx, "terraform", "show", planFile)
 
 	tfPlanTextCmd.Stderr = multi.NewWriter() // send output through PTerm; is usually empty

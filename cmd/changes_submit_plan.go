@@ -44,13 +44,13 @@ type TfData struct {
 	Values  map[string]any
 }
 
-func changeTitle(arg string) string {
+func changeTitle(ctx context.Context, arg string) string {
 	if arg != "" {
 		// easy, return the user's choice
 		return arg
 	}
 
-	describeBytes, err := exec.Command("git", "describe", "--long").Output()
+	describeBytes, err := exec.CommandContext(ctx, "git", "describe", "--long").Output()
 	describe := strings.TrimSpace(string(describeBytes))
 	if err != nil {
 		log.WithError(err).Trace("failed to run 'git describe' for default title")
@@ -144,7 +144,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	title := changeTitle(viper.GetString("title"))
+	title := changeTitle(ctx, viper.GetString("title"))
 	tfPlanOutput := tryLoadText(ctx, viper.GetString("terraform-plan-output"))
 	codeChangesOutput := tryLoadText(ctx, viper.GetString("code-changes-diff"))
 
@@ -240,12 +240,25 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// setup the routine config if specified, or found in the default location
+	// order of precedence: flag > default config file
+	routineChangesConfigPath := viper.GetString("routine-changes-config")
+	routineChangesConfigOverride, err := checkForAndLoadRoutineChangesConfigFile(ctx, lf, routineChangesConfigPath)
+	if err != nil {
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "Failed to load routine config",
+		}
+	}
+
 	_, err = client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
 		Msg: &sdp.StartChangeAnalysisRequest{
-			ChangeUUID:                changeUuid[:],
-			ChangingItems:             plannedChanges,
-			BlastRadiusConfigOverride: blastRadiusConfigOverride,
-			AutoTaggingRulesOverride:  autoTaggingRulesOverride,
+			ChangeUUID:                   changeUuid[:],
+			ChangingItems:                plannedChanges,
+			BlastRadiusConfigOverride:    blastRadiusConfigOverride,
+			AutoTaggingRulesOverride:     autoTaggingRulesOverride,
+			RoutineChangesConfigOverride: routineChangesConfigOverride,
 		},
 	})
 	if err != nil {
@@ -268,16 +281,16 @@ func loadAutoTagRulesFile(autoTagRulesPath string) ([]*sdp.RuleProperties, error
 	// check if the file exists
 	_, err := os.Stat(autoTagRulesPath)
 	if err != nil {
-		return nil, fmt.Errorf("Auto-tag rules file %q does not exist: %w", autoTagRulesPath, err)
+		return nil, fmt.Errorf("auto-tag rules file %q does not exist: %w", autoTagRulesPath, err)
 	}
 	// read the file
 	autoTagRules, err := os.ReadFile(autoTagRulesPath)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to read auto-tag rules file %q: %w", autoTagRulesPath, err)
+		return nil, fmt.Errorf("failed to read auto-tag rules file %q: %w", autoTagRulesPath, err)
 	}
 	autoTaggingRulesOverride, err := sdp.YamlStringToRuleProperties(string(autoTagRules))
 	if err != nil {
-		return nil, fmt.Errorf("Failed to parse auto-tag rules file %q: %w", autoTagRulesPath, err)
+		return nil, fmt.Errorf("failed to parse auto-tag rules file %q: %w", autoTagRulesPath, err)
 	}
 	if len(autoTaggingRulesOverride) > 10 {
 		return nil, errors.New("Auto-tag rules file contains more than 10 rules")
@@ -297,11 +310,12 @@ func checkForAndLoadAutoTagRulesFile(ctx context.Context, lf log.Fields, manualP
 			// the specified file does not exist
 			// hard fail
 			lf["autoTagRules"] = manualPath
-			err = fmt.Errorf("Auto-tag rules file does not exist: %w", err)
+			err = fmt.Errorf("auto-tag rules file does not exist: %w", err)
 			return nil, err
 		}
 	}
-	// lets look for the default files
+	// let's look for the default files
+	// yaml
 	if foundPath == "" {
 		_, err := os.Stat(".overmind/auto-tag-rules.yaml")
 		if err == nil {
@@ -309,6 +323,7 @@ func checkForAndLoadAutoTagRulesFile(ctx context.Context, lf log.Fields, manualP
 			foundPath = ".overmind/auto-tag-rules.yaml"
 		}
 	}
+	// yml
 	if foundPath == "" {
 		_, err := os.Stat(".overmind/auto-tag-rules.yml")
 		if err == nil {
@@ -331,6 +346,73 @@ func checkForAndLoadAutoTagRulesFile(ctx context.Context, lf log.Fields, manualP
 	return nil, nil
 }
 
+func loadRoutineChangesConfigFile(routineChangesConfigPath string) (*sdp.RoutineChangesConfig, error) {
+	// check if the file exists
+	_, err := os.Stat(routineChangesConfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("routine config file %q does not exist: %w", routineChangesConfigPath, err)
+	}
+	// read the file
+	routineChangesConfig, err := os.ReadFile(routineChangesConfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read routine config file %q: %w", routineChangesConfigPath, err)
+	}
+	routineChangesConfigOverride, err := sdp.YamlStringToRoutineChangesConfig(string(routineChangesConfig))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse routine config file %q: %w", routineChangesConfigPath, err)
+	}
+
+	return routineChangesConfigOverride, nil
+}
+
+// order of precedence: flag > default config file
+func checkForAndLoadRoutineChangesConfigFile(ctx context.Context, lf log.Fields, manualPath string) (*sdp.RoutineChangesConfig, error) {
+	foundPath := ""
+	if manualPath != "" {
+		_, err := os.Stat(manualPath)
+		if err == nil {
+			// we found the file
+			foundPath = manualPath
+		} else {
+			// the specified file does not exist
+			// hard fail
+			lf["routineChangesConfig"] = manualPath
+			err = fmt.Errorf("routine config file does not exist: %w", err)
+			return nil, err
+		}
+	}
+	// let's look for the default files
+	// yaml
+	if foundPath == "" {
+		_, err := os.Stat(".overmind/routine-changes-config.yaml")
+		if err == nil {
+			// we found the file
+			foundPath = ".overmind/routine-changes-config.yaml"
+		}
+	}
+	// yml
+	if foundPath == "" {
+		_, err := os.Stat(".overmind/routine-changes-config.yml")
+		if err == nil {
+			// we found the file
+			foundPath = ".overmind/routine-changes-config.yml"
+		}
+	}
+
+	if foundPath != "" {
+		// we found a file, load it
+		lf["routineChangesConfig"] = foundPath
+		log.WithContext(ctx).WithFields(lf).Info("Loading routine changes config")
+		routineChangesConfigOverride, err := loadRoutineChangesConfigFile(foundPath)
+		if err != nil {
+			return nil, err
+		}
+		return routineChangesConfigOverride, nil
+	}
+	// we didn't find any files, thats ok
+	return nil, nil
+}
+
 func init() {
 	changesCmd.AddCommand(submitPlanCmd)
 
@@ -343,4 +425,5 @@ func init() {
 	submitPlanCmd.PersistentFlags().Int32("blast-radius-link-depth", 0, "Used in combination with '--blast-radius-max-items' to customise how many levels are traversed when calculating the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
 	submitPlanCmd.PersistentFlags().Int32("blast-radius-max-items", 0, "Used in combination with '--blast-radius-link-depth' to customise how many items are included in the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
 	submitPlanCmd.PersistentFlags().String("auto-tag-rules", "", "The path to the auto-tag rules file. If not provided, it will check the default location which is '.overmind/auto-tag-rules.yaml'. If no rules are found locally, the rules configured through the UI are used.")
+	submitPlanCmd.PersistentFlags().String("routine-changes-config", "", "The path to the routine changes config file. If not provided, it will check the default location which is '.overmind/routine-changes-config.yaml'. If no config is found locally, the config configured through the UI is used.")
 }
