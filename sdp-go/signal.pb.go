@@ -252,8 +252,10 @@ func (x *GetChangeOverviewSignalsRequest) GetChangeUUID() []byte {
 }
 
 type GetChangeOverviewSignalsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Signals       []*Signal              `protobuf:"bytes,1,rep,name=signals,proto3" json:"signals,omitempty"`
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	Signals []*Signal              `protobuf:"bytes,1,rep,name=signals,proto3" json:"signals,omitempty"`
+	// The aggregated value for all categories in the change, calculated by AggregateSignalScores.
+	Value         float64 `protobuf:"fixed64,2,opt,name=value,proto3" json:"value,omitempty"` // Corresponds to float64
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -293,6 +295,13 @@ func (x *GetChangeOverviewSignalsResponse) GetSignals() []*Signal {
 		return x.Signals
 	}
 	return nil
+}
+
+func (x *GetChangeOverviewSignalsResponse) GetValue() float64 {
+	if x != nil {
+		return x.Value
+	}
+	return 0
 }
 
 type ItemAggregation struct {
@@ -745,9 +754,10 @@ const file_signal_proto_rawDesc = "" +
 	"\x1fGetChangeOverviewSignalsRequest\x12\x1e\n" +
 	"\n" +
 	"changeUUID\x18\x01 \x01(\fR\n" +
-	"changeUUID\"L\n" +
+	"changeUUID\"b\n" +
 	" GetChangeOverviewSignalsResponse\x12(\n" +
-	"\asignals\x18\x01 \x03(\v2\x0e.signal.SignalR\asignals\"Q\n" +
+	"\asignals\x18\x01 \x03(\v2\x0e.signal.SignalR\asignals\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x01R\x05value\"Q\n" +
 	"\x0fItemAggregation\x12(\n" +
 	"\asignals\x18\x01 \x03(\v2\x0e.signal.SignalR\asignals\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x01R\x05value\"7\n" +
