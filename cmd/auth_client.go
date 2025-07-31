@@ -67,6 +67,12 @@ func AuthenticatedInviteClient(ctx context.Context, oi sdp.OvermindInstance) sdp
 	return sdpconnect.NewInviteServiceClient(httpClient, oi.ApiUrl.String())
 }
 
+func AuthenticatedSignalsClient(ctx context.Context, oi sdp.OvermindInstance) sdpconnect.SignalServiceClient {
+	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	log.WithContext(ctx).WithField("apiUrl", oi.ApiUrl).Debug("Connecting to overmind signals API")
+	return sdpconnect.NewSignalServiceClient(httpClient, oi.ApiUrl.String())
+}
+
 // AuthenticatedClient is a http.Client that will automatically add the required
 // Authorization header to the request, which is taken from the context that it
 // is created with. We also always set the X-overmind-interactive header to

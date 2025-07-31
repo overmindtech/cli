@@ -351,7 +351,7 @@ func (x *ItemAggregation) GetValue() float64 {
 
 type GetItemSignalsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ChangeUUID    []byte                 `protobuf:"bytes,2,opt,name=changeUUID,proto3" json:"changeUUID,omitempty"`
+	ChangeUUID    []byte                 `protobuf:"bytes,1,opt,name=changeUUID,proto3" json:"changeUUID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -753,7 +753,7 @@ const file_signal_proto_rawDesc = "" +
 	"\x05value\x18\x02 \x01(\x01R\x05value\"7\n" +
 	"\x15GetItemSignalsRequest\x12\x1e\n" +
 	"\n" +
-	"changeUUID\x18\x02 \x01(\fR\n" +
+	"changeUUID\x18\x01 \x01(\fR\n" +
 	"changeUUID\"\xd8\x01\n" +
 	"\x16GetItemSignalsResponse\x12`\n" +
 	"\x10itemAggregations\x18\x01 \x03(\v24.signal.GetItemSignalsResponse.ItemAggregationsEntryR\x10itemAggregations\x1a\\\n" +
