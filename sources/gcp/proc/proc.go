@@ -3,10 +3,10 @@ package proc
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"golang.org/x/oauth2/google"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -22,44 +22,21 @@ func init() {
 	// Register the GCP source metadata for documentation purposes
 	ctx := context.Background()
 
-	// Check if GCP ADC in place
-	// For initiating the adapters GCP ADC is required.
-	// If not found, we will skip registering GCP source metadata
-	_, err := google.FindDefaultCredentials(ctx)
-	if err != nil {
-		log.Debug("GCP ADC not found, we will skip registering GCP source metadata")
-		return
-	}
-
 	// project, regions, and zones are just placeholders here
 	// They are not used in the metadata content
-	manualAdapters, err := manual.Adapters(ctx, "project", []string{"region"}, []string{"zone"})
-	if err != nil {
-		panic(fmt.Errorf("error creating manual adapters: %w", err))
-	}
-
-	for _, adapter := range manualAdapters {
-		Metadata.Register(adapter.Metadata())
-	}
-
-	initiatedManualAdapters := make(map[string]bool)
-	for _, adapter := range manualAdapters {
-		initiatedManualAdapters[adapter.Type()] = true
-	}
-
-	dynamicAdapters, err := dynamic.Adapters(
+	discoveryAdapters, err := adapters(
+		ctx,
 		"project",
 		[]string{"region"},
 		[]string{"zone"},
 		nil,
-		nil,
-		initiatedManualAdapters,
+		false,
 	)
 	if err != nil {
-		panic(fmt.Errorf("error creating dynamic adapters: %w", err))
+		panic(fmt.Errorf("error creating adapters: %w", err))
 	}
 
-	for _, adapter := range dynamicAdapters {
+	for _, adapter := range discoveryAdapters {
 		Metadata.Register(adapter.Metadata())
 	}
 
@@ -85,32 +62,13 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 
 	linker := gcpshared.NewLinker()
 
-	manualAdapters, err := manual.Adapters(ctx, cfg.ProjectID, cfg.Regions, cfg.Zones)
+	discoveryAdapters, err := adapters(ctx, cfg.ProjectID, cfg.Regions, cfg.Zones, linker, true)
 	if err != nil {
-		return nil, fmt.Errorf("error creating manual adapters: %w", err)
+		return nil, fmt.Errorf("error creating discovery adapters: %w", err)
 	}
-
-	initiatedManualAdapters := make(map[string]bool)
-	for _, adapter := range manualAdapters {
-		initiatedManualAdapters[adapter.Type()] = true
-	}
-
-	gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
-	if err != nil {
-		return nil, err
-	}
-
-	dynamicAdapters, err := dynamic.Adapters(cfg.ProjectID, cfg.Regions, cfg.Zones, linker, gcpHTTPCliWithOtel, initiatedManualAdapters)
-	if err != nil {
-		return nil, fmt.Errorf("error creating dynamic adapters: %w", err)
-	}
-
-	var adapters []discovery.Adapter
-	adapters = append(adapters, manualAdapters...)
-	adapters = append(adapters, dynamicAdapters...)
 
 	// Add the adapters to the engine
-	err = engine.AddAdapters(adapters...)
+	err = engine.AddAdapters(discoveryAdapters...)
 	if err != nil {
 		return nil, fmt.Errorf("error adding adapters to engine: %w", err)
 	}
@@ -168,4 +126,62 @@ func readConfig() (*config, error) {
 	}
 
 	return l, nil
+}
+
+// adapters returns a list of discovery adapters for GCP
+// It includes both manual adapters and dynamic adapters.
+func adapters(
+	ctx context.Context,
+	projectID string,
+	regions []string,
+	zones []string,
+	linker *gcpshared.Linker,
+	initGCPClients bool,
+) ([]discovery.Adapter, error) {
+	discoveryAdapters := make([]discovery.Adapter, 0)
+
+	// Add manual adapters
+	manualAdapters, err := manual.Adapters(
+		ctx,
+		projectID,
+		regions,
+		zones,
+		initGCPClients,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	initiatedManualAdapters := make(map[string]bool)
+	for _, adapter := range manualAdapters {
+		initiatedManualAdapters[adapter.Type()] = true
+	}
+
+	discoveryAdapters = append(discoveryAdapters, manualAdapters...)
+
+	httpClient := http.DefaultClient
+	if initGCPClients {
+		var errCli error
+		httpClient, errCli = gcpshared.GCPHTTPClientWithOtel()
+		if errCli != nil {
+			return nil, fmt.Errorf("error creating GCP HTTP client: %w", errCli)
+		}
+	}
+
+	// Add dynamic adapters
+	dynamicAdapters, err := dynamic.Adapters(
+		projectID,
+		regions,
+		zones,
+		linker,
+		httpClient,
+		initiatedManualAdapters,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	discoveryAdapters = append(discoveryAdapters, dynamicAdapters...)
+
+	return discoveryAdapters, nil
 }
