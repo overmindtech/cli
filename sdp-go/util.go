@@ -104,11 +104,8 @@ func flatten(data map[string]any) map[string]any {
 	return flattened
 }
 
-// RenderItemDiff generates a diff between two items' attributes represented as
-// maps. `changeData` is a slice of RoutineRollup objects that contain the
-// rollups for this change. `rawData` is a slice of RoutineRollup objects that
-// contain the the rollups for all changes in the last 30 days.
-func RenderItemDiff(gun string, before, after map[string]any, changeData, rawData []RoutineRollUp) string {
+// RenderItemDiff generates a diff between two items
+func RenderItemDiff(gun string, before, after map[string]any) string {
 	flatB := flatten(before)
 	flatA := flatten(after)
 
@@ -121,19 +118,6 @@ func RenderItemDiff(gun string, before, after map[string]any, changeData, rawDat
 	// allKeys now contains every attribute present in either the before or
 	// after, so we can iterate over it to generate the diff and append stats.
 
-	attrs := map[string][]string{}
-	for _, ch := range changeData {
-		var attrVals []string
-		for _, raw := range rawData {
-			if raw.Attr == ch.Attr && raw.Gun == ch.Gun {
-				attrVals = append(attrVals, raw.Value)
-			}
-		}
-		if len(attrVals) > 0 {
-			attrs[fmt.Sprintf("%v.%v", ch.Gun, ch.Attr)] = attrVals
-		}
-	}
-
 	para := []string{}
 	for _, key := range allKeys {
 		beforeValue, beforeExists := flatB[key]
@@ -142,43 +126,17 @@ func RenderItemDiff(gun string, before, after map[string]any, changeData, rawDat
 		beforeValueStr := fmt.Sprintf("%v", beforeValue)
 		afterValueStr := fmt.Sprintf("%v", afterValue)
 
-		hasChanged := false
 		if beforeExists && afterExists {
 			if beforeValueStr != afterValueStr {
 				// This is an update
 				para = append(para, fmt.Sprintf("- %s: %s\n+ %s: %s", key, beforeValueStr, key, afterValueStr))
-				hasChanged = true
 			}
 		} else if beforeExists && !afterExists {
 			// This is a deletion
 			para = append(para, fmt.Sprintf("- %s: %s", key, beforeValueStr))
-			hasChanged = true
 		} else if !beforeExists && afterExists {
 			// This is a creation
 			para = append(para, fmt.Sprintf("+ %s: %s", key, afterValueStr))
-			hasChanged = true
-		}
-
-		if hasChanged {
-			k := fmt.Sprintf("%v.%v", gun, key)
-			v := attrs[k]
-			slices.Sort(v)
-			v = slices.Compact(v)
-			if len(v) > 3 {
-				v = v[:3] // Only show the first 3 values
-			}
-			for i, val := range v {
-				val = strings.ReplaceAll(val, "\n", " ")
-				val = strings.ReplaceAll(val, "\t", " ")
-				if len(val) > 100 {
-					val = val[:100]
-				}
-				v[i] = val
-			}
-
-			if len(v) > 0 {
-				para = append(para, fmt.Sprintf("# → 🔁 This attribute has changed %d times in the last 30 days.\n#      The previous values were %v.", len(v), v))
-			}
 		}
 	}
 	return strings.Join(para, "\n")
@@ -199,19 +157,6 @@ func (rr RoutineRollUp) String() string {
 	val = strings.ReplaceAll(val, "\n", " ")
 	val = strings.ReplaceAll(val, "\t", " ")
 	return fmt.Sprintf("change:%v\tgun:%v\tattr:%v\tval:%v", rr.ChangeId, rr.Gun, rr.Attr, val)
-}
-
-func RollUpDiffsFromItemDiff(data []*ItemDiff, rawData []RoutineRollUp) []RoutineRollUp {
-	for _, diff := range data {
-		afterItem := diff.GetAfter()
-		afterMap := afterItem.GetAttributes().GetAttrStruct().AsMap()
-		afterGun := afterItem.GloballyUniqueName()
-
-		if len(afterMap) > 0 {
-			rawData = append(rawData, WalkMapToRoutineRollUp(afterGun, "", afterMap)...)
-		}
-	}
-	return rawData
 }
 
 func WalkMapToRoutineRollUp(gun string, key string, data map[string]any) []RoutineRollUp {

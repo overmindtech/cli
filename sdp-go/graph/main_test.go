@@ -1,7 +1,6 @@
 package graph
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
@@ -152,8 +151,6 @@ func TestGraph(t *testing.T) {
 	bID := graph.AddItem(b, 1)
 	cID := graph.AddItem(c, 1)
 	dID := graph.AddItem(d, 1)
-
-	fmt.Sprintln(aID, bID, cID, dID)
 
 	t.Run("To", func(t *testing.T) {
 		nodes := graph.To(cID)

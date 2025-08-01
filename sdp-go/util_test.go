@@ -71,8 +71,6 @@ func TestItemDiffParagraphRendering(t *testing.T) {
 		Name                  string
 		Before                map[string]any
 		After                 map[string]any
-		ChangeRollups         []RoutineRollUp
-		RawRollups            []RoutineRollUp
 		ExpectedDiffParagraph string
 	}{
 		{
@@ -115,101 +113,11 @@ func TestItemDiffParagraphRendering(t *testing.T) {
 			},
 			ExpectedDiffParagraph: "- name.last: user\n+ name.last: updated",
 		},
-		{
-			Name: "with stats",
-			Before: map[string]any{
-				"name": map[string]any{
-					"first": "test",
-					"last":  "user",
-				},
-			},
-			After: map[string]any{
-				"name": map[string]any{
-					"first": "test",
-					"last":  "updated",
-				},
-			},
-			ChangeRollups: []RoutineRollUp{
-				{
-					Gun:   "testGun",
-					Attr:  "name.last",
-					Value: "user",
-				},
-			},
-			RawRollups: []RoutineRollUp{
-				{
-					Gun:   "testGun",
-					Attr:  "name.last",
-					Value: "user",
-				},
-			},
-			ExpectedDiffParagraph: "- name.last: user\n+ name.last: updated\n# → 🔁 This attribute has changed 1 times in the last 30 days.\n#      The previous values were [user].",
-		},
-		{
-			Name: "with stats, no changes",
-			Before: map[string]any{
-				"name": map[string]any{
-					"first": "test",
-					"last":  "user",
-				},
-			},
-			After: map[string]any{
-				"name": map[string]any{
-					"first": "test",
-					"last":  "user",
-				},
-			},
-			ChangeRollups: []RoutineRollUp{
-				{
-					Gun:   "testGun",
-					Attr:  "name.last",
-					Value: "user",
-				},
-			},
-			RawRollups: []RoutineRollUp{
-				{
-					Gun:   "testGun",
-					Attr:  "name.last",
-					Value: "user",
-				},
-			},
-			ExpectedDiffParagraph: "",
-		},
-		{
-			Name: "with stats, previous values truncated to 100 characters",
-			Before: map[string]any{
-				"name": map[string]any{
-					"first": "test",
-					"last":  "user",
-				},
-			},
-			After: map[string]any{
-				"name": map[string]any{
-					"first": "test",
-					"last":  "updated",
-				},
-			},
-			ChangeRollups: []RoutineRollUp{
-				{
-					Gun:   "testGun",
-					Attr:  "name.last",
-					Value: "user",
-				},
-			},
-			RawRollups: []RoutineRollUp{
-				{
-					Gun:   "testGun",
-					Attr:  "name.last",
-					Value: "123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.AAAAAA",
-				},
-			},
-			ExpectedDiffParagraph: "- name.last: user\n+ name.last: updated\n# → 🔁 This attribute has changed 1 times in the last 30 days.\n#      The previous values were [123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.123456789.].",
-		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			diff := RenderItemDiff("testGun", test.Before, test.After, test.ChangeRollups, test.RawRollups)
+			diff := RenderItemDiff("testGun", test.Before, test.After)
 
 			if diff != test.ExpectedDiffParagraph {
 				t.Errorf("expected diff paragraph to be '%s', got '%s'", test.ExpectedDiffParagraph, diff)
