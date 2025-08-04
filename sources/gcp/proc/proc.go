@@ -2,8 +2,10 @@ package proc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -49,30 +51,62 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 		return nil, fmt.Errorf("error initializing Engine: %w", err)
 	}
 
-	cfg, err := readConfig()
-	if err != nil {
-		return nil, fmt.Errorf("error creating config: %w", err)
+	var startupErrorMutex sync.Mutex
+	startupError := errors.New("source is starting")
+	if ec.HeartbeatOptions != nil {
+		ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
+			startupErrorMutex.Lock()
+			defer startupErrorMutex.Unlock()
+			return startupError
+		}
 	}
 
-	log.WithFields(log.Fields{
-		"project_id": cfg.ProjectID,
-		"regions":    cfg.Regions,
-		"zones":      cfg.Zones,
-	}).Info("Got config")
+	engine.StartSendingHeartbeats(ctx)
 
-	linker := gcpshared.NewLinker()
+	err = func() error {
+		cfg, err := readConfig()
+		if err != nil {
+			return fmt.Errorf("error creating config: %w", err)
+		}
 
-	discoveryAdapters, err := adapters(ctx, cfg.ProjectID, cfg.Regions, cfg.Zones, linker, true)
-	if err != nil {
-		return nil, fmt.Errorf("error creating discovery adapters: %w", err)
+		log.WithFields(log.Fields{
+			"project_id": cfg.ProjectID,
+			"regions":    cfg.Regions,
+			"zones":      cfg.Zones,
+		}).Info("Got config")
+
+		linker := gcpshared.NewLinker()
+
+		discoveryAdapters, err := adapters(ctx, cfg.ProjectID, cfg.Regions, cfg.Zones, linker, true)
+		if err != nil {
+			return fmt.Errorf("error creating discovery adapters: %w", err)
+		}
+
+		// Add the adapters to the engine
+		err = engine.AddAdapters(discoveryAdapters...)
+		if err != nil {
+			return fmt.Errorf("error adding adapters to engine: %w", err)
+		}
+
+		return nil
+	}()
+
+	startupErrorMutex.Lock()
+	startupError = err
+	startupErrorMutex.Unlock()
+	brokenHeart := engine.SendHeartbeat(ctx, nil) // Send the error immediately through the custom health check func
+	if brokenHeart != nil {
+		log.WithError(brokenHeart).Error("Error sending heartbeat")
 	}
 
-	// Add the adapters to the engine
-	err = engine.AddAdapters(discoveryAdapters...)
 	if err != nil {
-		return nil, fmt.Errorf("error adding adapters to engine: %w", err)
+		log.WithError(err).Debug("Error initializing GCP source")
+
+		return nil, fmt.Errorf("error initializing GCP source: %w", err)
 	}
 
+	log.Debug("Sources initialized")
+	// If there is no error then return the engine
 	return engine, nil
 }
 

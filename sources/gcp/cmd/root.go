@@ -145,7 +145,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
 
 	// Custom flags for this source
-	rootCmd.PersistentFlags().IntP("health-check-port", "", 8181, "The port that the health check should run on")
+	rootCmd.PersistentFlags().IntP("health-check-port", "", 8080, "The port that the health check should run on")
 	rootCmd.PersistentFlags().String("gcp-regions", "", "Comma-separated list of GCP regions that this source should operate in")
 	rootCmd.PersistentFlags().String("gcp-zones", "", "Comma-separated list of GCP zones that this source should operate in")
 
