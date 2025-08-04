@@ -115,7 +115,13 @@ func EngineConfigFromViper(engineType, version string) (*EngineConfig, error) {
 			return nil, errors.New("NATS_SERVICE_HOST and NATS_SERVICE_PORT (provided by k8s) must be set for managed sources")
 		}
 		natsServerURL = net.JoinHostPort(natsServerHost, natsServerPort)
-		natsServerURL = "nats://" + natsServerURL
+		// default to websocket if the port is 443; this is to allow GCP sources
+		// to connect to NATS from outside the EKS cluster
+		if natsServerPort == "443" {
+			natsServerURL = "wss://" + natsServerURL
+		} else {
+			natsServerURL = "nats://" + natsServerURL
+		}
 	} else {
 		// look up the api server url from the app url
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

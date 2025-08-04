@@ -85,7 +85,35 @@ func TestEngineConfigFromViper(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name: "managed source",
+			name: "managed source - nats",
+			setupViper: func() {
+				viper.Set("source-name", "custom-source")
+				viper.Set("source-uuid", "123e4567-e89b-12d3-a456-426614174000")
+				viper.Set("source-access-token", "custom-access-token")
+				viper.Set("source-access-token-type", "custom-token-type")
+				viper.Set("overmind-managed-source", true)
+				viper.Set("max-parallel", 10)
+
+				viper.Set("api-server-service-host", "api.app.overmind.tech")
+				viper.Set("api-server-service-port", "443")
+				viper.Set("nats-service-host", "messages.app.overmind.tech")
+				viper.Set("nats-service-port", "4222")
+			},
+			engineType:                    "test-engine",
+			version:                       "1.0",
+			expectedSourceName:            "custom-source",
+			expectedSourceUUID:            uuid.MustParse("123e4567-e89b-12d3-a456-426614174000"),
+			expectedSourceAccessToken:     "custom-access-token",
+			expectedSourceAccessTokenType: "custom-token-type",
+			expectedManagedSource:         sdp.SourceManaged_MANAGED,
+
+			expectedApiServerURL: "https://api.app.overmind.tech:443",
+			expectedNATSUrl:      "nats://messages.app.overmind.tech:4222",
+			expectedMaxParallel:  10,
+			expectError:          false,
+		},
+		{
+			name: "managed source - wss",
 			setupViper: func() {
 				viper.Set("source-name", "custom-source")
 				viper.Set("source-uuid", "123e4567-e89b-12d3-a456-426614174000")
@@ -108,7 +136,7 @@ func TestEngineConfigFromViper(t *testing.T) {
 			expectedManagedSource:         sdp.SourceManaged_MANAGED,
 
 			expectedApiServerURL: "https://api.app.overmind.tech:443",
-			expectedNATSUrl:      "nats://messages.app.overmind.tech:443",
+			expectedNATSUrl:      "wss://messages.app.overmind.tech:443",
 			expectedMaxParallel:  10,
 			expectError:          false,
 		},
