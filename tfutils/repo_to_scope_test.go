@@ -71,7 +71,7 @@ func TestRepoToScope(t *testing.T) {
 		{
 			name:     "Empty string",
 			repo:     "",
-			expected: "",
+			expected: "terraform_plan",
 		},
 		{
 			name:     "Case sensitivity test",

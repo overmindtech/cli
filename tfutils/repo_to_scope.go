@@ -12,6 +12,11 @@ import (
 // like "aws_instance.app_server". This is a common name and absolutely could
 // clash with another resource in another repo or workspace.
 func RepoToScope(repo string) string {
+	// If repo is empty, use a fallback scope to ensure items have a scope
+	if repo == "" {
+		return "terraform_plan"
+	}
+
 	parsed, err := url.Parse(repo)
 	if err != nil {
 		return repo
