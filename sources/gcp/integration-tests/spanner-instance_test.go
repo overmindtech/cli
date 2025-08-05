@@ -42,16 +42,15 @@ func TestSpannerInstance(t *testing.T) {
 		}
 	})
 	t.Run("Run", func(t *testing.T) {
-		meta := shared.SDPAssetTypeToAdapterMeta[shared.SpannerInstance]
 		linker := shared.NewLinker()
 
 		gcpHTTPCliWithOtel, err := shared.GCPHTTPClientWithOtel()
 		if err != nil {
 			t.Fatalf("Failed to create gcp http client with otel")
 		}
-		adapter, err := dynamic.MakeAdapter(shared.SpannerInstance, meta, linker, gcpHTTPCliWithOtel, projectID)
+		adapter, err := dynamic.MakeAdapter(shared.SpannerInstance, linker, gcpHTTPCliWithOtel, projectID)
 		if err != nil {
-			t.Fatalf("Failed to make adapter for spanner instance")
+			t.Fatalf("Failed to make adapter for spanner instance: %v", err)
 		}
 		sdpItem, err := adapter.Get(ctx, projectID, instanceName, true)
 		if err != nil {

@@ -48,7 +48,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 			continue
 		}
 
-		adapter, err := MakeAdapter(sdpItemType, meta, linker, httpCli, projectID)
+		adapter, err := MakeAdapter(sdpItemType, linker, httpCli, projectID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add adapter for %s: %w", sdpItemType, err)
 		}
@@ -70,7 +70,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 				continue
 			}
 
-			adapter, err := MakeAdapter(sdpItemType, meta, linker, httpCli, projectID, region)
+			adapter, err := MakeAdapter(sdpItemType, linker, httpCli, projectID, region)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add adapter for %s in region %s: %w", sdpItemType, region, err)
 			}
@@ -93,7 +93,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 				continue
 			}
 
-			adapter, err := MakeAdapter(sdpItemType, meta, linker, httpCli, projectID, zone)
+			adapter, err := MakeAdapter(sdpItemType, linker, httpCli, projectID, zone)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add adapter for %s in zone %s: %w", sdpItemType, zone, err)
 			}
@@ -128,7 +128,12 @@ func adapterType(meta gcpshared.AdapterMeta) typeOfAdapter {
 // - For project scope: project ID
 // - For regional scope: project ID and region
 // - For zonal scope: project ID, region, and zone
-func MakeAdapter(sdpItemType shared.ItemType, meta gcpshared.AdapterMeta, linker *gcpshared.Linker, httpCli *http.Client, opts ...string) (discovery.Adapter, error) {
+func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli *http.Client, opts ...string) (discovery.Adapter, error) {
+	meta, ok := gcpshared.SDPAssetTypeToAdapterMeta[sdpItemType]
+	if !ok {
+		return nil, fmt.Errorf("no adapter metadata found for item type %s", sdpItemType.String())
+	}
+
 	getEndpointBaseURL, err := meta.GetEndpointBaseURLFunc(opts...)
 	if err != nil {
 		return nil, err
@@ -145,7 +150,7 @@ func MakeAdapter(sdpItemType shared.ItemType, meta gcpshared.AdapterMeta, linker
 		GetURLFunc:          getEndpointBaseURL,
 		SDPAssetType:        sdpItemType,
 		SDPAdapterCategory:  meta.SDPAdapterCategory,
-		TerraformMappings:   SDPAssetTypeToTerraformMappings[sdpItemType].Mappings,
+		TerraformMappings:   gcpshared.SDPAssetTypeToTerraformMappings[sdpItemType].Mappings,
 		Linker:              linker,
 		HTTPClient:          httpCli,
 		UniqueAttributeKeys: meta.UniqueAttributeKeys,

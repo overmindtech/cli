@@ -37,7 +37,6 @@ func TestComputeSubnetworkIntegration(t *testing.T) {
 		t.Logf("Running test for Compute Subnetwork: %s", subnetworkName)
 
 		sdpItemType := gcpshared.ComputeSubnetwork
-		meta := gcpshared.SDPAssetTypeToAdapterMeta[sdpItemType]
 
 		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
 		if err != nil {
@@ -45,7 +44,7 @@ func TestComputeSubnetworkIntegration(t *testing.T) {
 		}
 
 		// For subnetworks, we need to include the region as an initialization parameter
-		adapter, err := dynamic.MakeAdapter(sdpItemType, meta, gcpshared.NewLinker(), gcpHTTPCliWithOtel, projectID, region)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, projectID, region)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

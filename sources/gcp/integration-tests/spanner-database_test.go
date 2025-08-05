@@ -56,14 +56,13 @@ func TestSpannerDatabase(t *testing.T) {
 		}
 	})
 	t.Run("Run", func(t *testing.T) {
-		meta := gcpshared.SDPAssetTypeToAdapterMeta[gcpshared.SpannerDatabase]
 		linker := gcpshared.NewLinker()
 
 		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
 		if err != nil {
 			t.Fatalf("Failed to create gcp http client with otel")
 		}
-		adapter, err := dynamic.MakeAdapter(gcpshared.SpannerDatabase, meta, linker, gcpHTTPCliWithOtel, projectID)
+		adapter, err := dynamic.MakeAdapter(gcpshared.SpannerDatabase, linker, gcpHTTPCliWithOtel, projectID)
 		if err != nil {
 			t.Fatalf("Failed to make adapter for spanner database")
 		}

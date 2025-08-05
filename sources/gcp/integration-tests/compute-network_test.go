@@ -28,14 +28,13 @@ func TestComputeNetworkIntegration(t *testing.T) {
 		t.Logf("Running test for Compute Network: %s", networkName)
 
 		sdpItemType := gcpshared.ComputeNetwork
-		meta := gcpshared.SDPAssetTypeToAdapterMeta[sdpItemType]
 
 		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
 		if err != nil {
 			t.Fatalf("Failed to create GCP HTTP client: %v", err)
 		}
 
-		adapter, err := dynamic.MakeAdapter(sdpItemType, meta, gcpshared.NewLinker(), gcpHTTPCliWithOtel, projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

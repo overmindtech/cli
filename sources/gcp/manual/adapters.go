@@ -42,6 +42,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		kmsCryptoKeyCli           *kms.KeyManagementClient
 		bigQueryDatasetCli        *bigquery.Client
 		loggingConfigCli          *logging.ConfigClient
+		nodeGroupCli              *compute.NodeGroupsClient
 	)
 
 	if initGCPClients {
@@ -151,6 +152,11 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		if err != nil {
 			return nil, fmt.Errorf("failed to create logging config client: %w", err)
 		}
+
+		nodeGroupCli, err = compute.NewNodeGroupsRESTClient(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create compute node groups client: %w", err)
+		}
 	}
 
 	var adapters []discovery.Adapter
@@ -171,6 +177,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 			sources.WrapperToAdapter(NewComputeReservation(shared.NewComputeReservationClient(computeReservationCli), projectID, zone)),
 			sources.WrapperToAdapter(NewComputeInstantSnapshot(shared.NewComputeInstantSnapshotsClient(computeInstantSnapshotCli), projectID, zone)),
 			sources.WrapperToAdapter(NewComputeDisk(shared.NewComputeDiskClient(diskCli), projectID, zone)),
+			sources.WrapperToAdapter(NewComputeNodeGroup(shared.NewComputeNodeGroupClient(nodeGroupCli), projectID, zone)),
 		)
 	}
 

@@ -1,14 +1,12 @@
-package dynamic
+package shared
 
 import (
 	"testing"
-
-	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
 func TestMissingMappings(t *testing.T) {
-	for sdpItemType := range gcpshared.SDPAssetTypeToAdapterMeta {
-		if gcpshared.SDPAssetTypeToAdapterMeta[sdpItemType].InDevelopment {
+	for sdpItemType := range SDPAssetTypeToAdapterMeta {
+		if SDPAssetTypeToAdapterMeta[sdpItemType].InDevelopment {
 			t.Logf("Skipping %s as it is in development", sdpItemType)
 			continue
 		}

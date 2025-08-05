@@ -146,10 +146,8 @@ func TestAdapter(t *testing.T) {
 			},
 		}
 
-		meta := gcpshared.SDPAssetTypeToAdapterMeta[gcpshared.ComputeInstanceTemplate]
-
 		t.Run("Get", func(t *testing.T) {
-			adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, meta, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), projectID)
+			adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), projectID)
 			if err != nil {
 				t.Fatalf("Failed to create adapter for ComputeInstanceTemplate: %v", err)
 			}
@@ -492,7 +490,7 @@ func TestAdapter(t *testing.T) {
 		})
 
 		t.Run("List", func(t *testing.T) {
-			adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, meta, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), projectID)
+			adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), projectID)
 			if err != nil {
 				t.Fatalf("Failed to create adapter for ComputeInstanceTemplate: %v", err)
 			}
@@ -514,7 +512,7 @@ func TestAdapter(t *testing.T) {
 		})
 
 		t.Run("ListStream", func(t *testing.T) {
-			adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, meta, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), projectID)
+			adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), projectID)
 			if err != nil {
 				t.Fatalf("Failed to create adapter for ComputeInstanceTemplate: %v", err)
 			}
@@ -578,7 +576,6 @@ func TestAdapter(t *testing.T) {
 		}
 
 		sdpItemType := gcpshared.ArtifactRegistryDockerImage
-		meta := gcpshared.SDPAssetTypeToAdapterMeta[sdpItemType]
 
 		expectedCallAndResponses := map[string]shared.MockResponse{
 			fmt.Sprintf(
@@ -611,7 +608,7 @@ func TestAdapter(t *testing.T) {
 		t.Run("Get", func(t *testing.T) {
 			// This is a project level adapter, so we pass the project ID
 			httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-			adapter, err := dynamic.MakeAdapter(sdpItemType, meta, linker, httpCli, projectID)
+			adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
 			if err != nil {
 				t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 			}
@@ -652,7 +649,7 @@ func TestAdapter(t *testing.T) {
 		t.Run("SearchWithTerraformMapping", func(t *testing.T) {
 			// This is a project level adapter, so we pass the project ID
 			httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-			adapter, err := dynamic.MakeAdapter(sdpItemType, meta, linker, httpCli, projectID)
+			adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
 			if err != nil {
 				t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 			}
@@ -682,7 +679,7 @@ func TestAdapter(t *testing.T) {
 		t.Run("Search", func(t *testing.T) {
 			// This is a project level adapter, so we pass the project
 			httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-			adapter, err := dynamic.MakeAdapter(sdpItemType, meta, linker, httpCli, projectID)
+			adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
 			if err != nil {
 				t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 			}
@@ -706,7 +703,7 @@ func TestAdapter(t *testing.T) {
 		t.Run("SearchStream", func(t *testing.T) {
 			// This is a project level adapter, so we pass the project
 			httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-			adapter, err := dynamic.MakeAdapter(sdpItemType, meta, linker, httpCli, projectID)
+			adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
 			if err != nil {
 				t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 			}
@@ -770,7 +767,6 @@ func TestAdapter(t *testing.T) {
 		}
 
 		sdpItemType := gcpshared.SpannerDatabase
-		meta := gcpshared.SDPAssetTypeToAdapterMeta[sdpItemType]
 
 		expectedCallAndResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://spanner.googleapis.com/v1/projects/%s/instances/%s/databases/%s", projectID, instanceName, databaseName): {
@@ -785,7 +781,7 @@ func TestAdapter(t *testing.T) {
 
 		t.Run("Get", func(t *testing.T) {
 			httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-			adapter, err := dynamic.MakeAdapter(sdpItemType, meta, linker, httpCli, projectID)
+			adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
 			if err != nil {
 				t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 			}
@@ -853,7 +849,7 @@ func TestAdapter(t *testing.T) {
 		t.Run("Search", func(t *testing.T) {
 			// This is a project level adapter, so we pass the project
 			httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-			adapter, err := dynamic.MakeAdapter(sdpItemType, meta, linker, httpCli, projectID)
+			adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
 			if err != nil {
 				t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 			}

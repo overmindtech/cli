@@ -13,6 +13,7 @@ import (
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
+	_ "github.com/overmindtech/cli/sources/gcp/dynamic/adapters" // Import all adapters to register them
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )

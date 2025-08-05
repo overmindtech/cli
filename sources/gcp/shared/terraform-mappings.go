@@ -1,8 +1,7 @@
-package dynamic
+package shared
 
 import (
 	"github.com/overmindtech/cli/sdp-go"
-	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
 
@@ -13,13 +12,13 @@ type TerraformMapping struct {
 }
 
 var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
-	gcpshared.AIPlatformCustomJob: {
+	AIPlatformCustomJob: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.AIPlatformPipelineJob: {
+	AIPlatformPipelineJob: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.ArtifactRegistryDockerImage: {
+	ArtifactRegistryDockerImage: {
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/artifact_registry_docker_image",
 		Description: "name => projects/{{project}}/locations/{{location}}/repository/{{repository_id}}/dockerImages/{{docker_image}}. We should use search to extract relevant fields.",
 		Mappings: []*sdp.TerraformMapping{
@@ -29,7 +28,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.BigQueryDataset: {
+	BigQueryDataset: {
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_dataset",
 		Mappings: []*sdp.TerraformMapping{
 			{
@@ -38,7 +37,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.BigQueryTable: {
+	BigQueryTable: {
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_table",
 		Description: "id => projects/{{project}}/datasets/{{dataset}}/tables/{{table}}",
 		Mappings: []*sdp.TerraformMapping{
@@ -48,7 +47,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.BigTableAdminAppProfile: {
+	BigTableAdminAppProfile: {
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigtable_app_profile",
 		Description: "id => projects/{{project}}/instances/{{instance}}/appProfiles/{{app_profile_id}}",
 		Mappings: []*sdp.TerraformMapping{
@@ -58,10 +57,10 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.BigTableAdminBackup: {
+	BigTableAdminBackup: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.BigTableAdminTable: {
+	BigTableAdminTable: {
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigtable_table",
 		Description: "id => projects/{{project}}/instances/{{instance_name}}/tables/{{name}}",
 		Mappings: []*sdp.TerraformMapping{
@@ -71,16 +70,16 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.CloudBuildBuild: {
+	CloudBuildBuild: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.CloudBillingBillingInfo: {
+	CloudBillingBillingInfo: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.CloudResourceManagerProject: {
+	CloudResourceManagerProject: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.ComputeFirewall: {
+	ComputeFirewall: {
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall",
 		Mappings: []*sdp.TerraformMapping{
 			{
@@ -89,7 +88,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.ComputeInstance: {
+	ComputeInstance: {
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance",
 		Mappings: []*sdp.TerraformMapping{
 			{
@@ -98,7 +97,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.ComputeInstanceTemplate: {
+	ComputeInstanceTemplate: {
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_template",
 		Mappings: []*sdp.TerraformMapping{
 			{
@@ -107,7 +106,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.ComputeNetwork: {
+	ComputeNetwork: {
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network",
 		Mappings: []*sdp.TerraformMapping{
 			{
@@ -116,10 +115,10 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.ComputeProject: {
+	ComputeProject: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.ComputeRoute: {
+	ComputeRoute: {
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_route",
 		Mappings: []*sdp.TerraformMapping{
 			{
@@ -128,7 +127,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.ComputeSubnetwork: {
+	ComputeSubnetwork: {
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork",
 		Mappings: []*sdp.TerraformMapping{
 			{
@@ -137,7 +136,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.DataformRepository: {
+	DataformRepository: {
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dataform_repository",
 		Description: "id => projects/{{project}}/locations/{{region}}/repositories/{{name}}",
 		Mappings: []*sdp.TerraformMapping{
@@ -147,7 +146,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.DataplexEntryGroup: {
+	DataplexEntryGroup: {
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dataplex_entry_group#entry_group_id",
 		Description: "id => projects/{{project}}/locations/{{location}}/entryGroups/{{entry_group_id}}",
 		Mappings: []*sdp.TerraformMapping{
@@ -157,7 +156,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.DNSManagedZone: {
+	DNSManagedZone: {
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dns_managed_zone#name",
 		Mappings: []*sdp.TerraformMapping{
 			{
@@ -166,7 +165,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.EssentialContactsContact: {
+	EssentialContactsContact: {
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/essential_contacts_contact#email",
 		Description: "id => {resourceType}/{resource_id}/contacts/{contact_id}",
 		Mappings: []*sdp.TerraformMapping{
@@ -176,19 +175,19 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.IAMRole: {
+	IAMRole: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.LoggingBucket: {
+	LoggingBucket: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.LoggingLink: {
+	LoggingLink: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.LoggingSavedQuery: {
+	LoggingSavedQuery: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.LoggingSink: {
+	LoggingSink: {
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/logging_project_sink",
 		Mappings: []*sdp.TerraformMapping{
 			{
@@ -197,7 +196,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.MonitoringCustomDashboard: {
+	MonitoringCustomDashboard: {
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/monitoring_dashboard",
 		Description: "id => projects/{{project}}/dashboards/{{dashboard_id}}",
 		Mappings: []*sdp.TerraformMapping{
@@ -207,7 +206,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.PubSubSubscription: {
+	PubSubSubscription: {
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/pubsub_subscription",
 		Mappings: []*sdp.TerraformMapping{
 			{
@@ -216,7 +215,7 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.PubSubTopic: {
+	PubSubTopic: {
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/pubsub_topic",
 		Mappings: []*sdp.TerraformMapping{
 			{
@@ -225,10 +224,10 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.RunRevision: {
+	RunRevision: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.ServiceDirectoryEndpoint: {
+	ServiceDirectoryEndpoint: {
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_directory_endpoint",
 		Description: "id => projects/*/locations/*/namespaces/*/services/*/endpoints/*",
 		Mappings: []*sdp.TerraformMapping{
@@ -238,10 +237,10 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.ServiceUsageService: {
+	ServiceUsageService: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.SpannerDatabase: {
+	SpannerDatabase: {
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/spanner_database.html",
 		Mappings: []*sdp.TerraformMapping{
 			{
@@ -250,13 +249,13 @@ var SDPAssetTypeToTerraformMappings = map[shared.ItemType]TerraformMapping{
 			},
 		},
 	},
-	gcpshared.SQLAdminBackup: {
+	SQLAdminBackup: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.SQLAdminBackupRun: {
+	SQLAdminBackupRun: {
 		Description: "There is no terraform resource for this type.",
 	},
-	gcpshared.StorageBucket: {
+	StorageBucket: {
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket",
 		Mappings: []*sdp.TerraformMapping{
 			{

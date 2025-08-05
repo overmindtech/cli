@@ -38,10 +38,6 @@ func TestSpannerInstance(t *testing.T) {
 	}
 
 	sdpItemType := gcpshared.SpannerInstance
-	meta, ok := gcpshared.SDPAssetTypeToAdapterMeta[sdpItemType]
-	if !ok {
-		t.Fatalf("No adapter meta found for %s, ensure calling Register() in adapter declaration", sdpItemType)
-	}
 
 	expectedCallAndResponses := map[string]shared.MockResponse{
 		fmt.Sprintf("https://spanner.googleapis.com/v1/projects/%s/instances/%s", projectID, instanceName): {
@@ -56,7 +52,7 @@ func TestSpannerInstance(t *testing.T) {
 
 	t.Run("Get", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, meta, linker, httpCli, projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}
@@ -141,7 +137,7 @@ func TestSpannerInstance(t *testing.T) {
 
 	t.Run("List", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(gcpshared.SpannerInstance, meta, linker, httpCli, projectID)
+		adapter, err := dynamic.MakeAdapter(gcpshared.SpannerInstance, linker, httpCli, projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

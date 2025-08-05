@@ -26,7 +26,6 @@ func TestComputeInstanceTemplateIntegration(t *testing.T) {
 		t.Logf("Running test for Compute Instance Templates")
 
 		sdpItemType := gcpshared.ComputeInstanceTemplate
-		meta := gcpshared.SDPAssetTypeToAdapterMeta[sdpItemType]
 
 		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
 		if err != nil {
@@ -34,7 +33,7 @@ func TestComputeInstanceTemplateIntegration(t *testing.T) {
 		}
 
 		// Instance templates are global resources, no region needed
-		adapter, err := dynamic.MakeAdapter(sdpItemType, meta, gcpshared.NewLinker(), gcpHTTPCliWithOtel, projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

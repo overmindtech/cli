@@ -97,7 +97,7 @@ func Test_addAdapter(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			meta := gcpshared.SDPAssetTypeToAdapterMeta[tc.sdpType]
 
-			adapter, err := MakeAdapter(tc.sdpType, meta, linker, http.DefaultClient, tc.opts...)
+			adapter, err := MakeAdapter(tc.sdpType, linker, http.DefaultClient, tc.opts...)
 			if err != nil {
 				t.Errorf("MakeAdapter() error = %v", err)
 			}

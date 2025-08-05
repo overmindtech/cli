@@ -31,7 +31,7 @@ func TestComputeReservationIntegration(t *testing.T) {
 	}
 
 	reservationName := "integration-test-reservation"
-	machineType := "n1-standard-1"
+	machineType := "e2-medium" // Use a common machine type for testing
 
 	ctx := context.Background()
 

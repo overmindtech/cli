@@ -2,11 +2,10 @@ package adapters
 
 import (
 	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
-var spannerInstanceAdapter = dynamicAdapter{ //nolint:unused
+var spannerInstanceAdapter = registerableAdapter{ //nolint:unused
 	sdpType: gcpshared.SpannerInstance,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
@@ -31,7 +30,7 @@ var spannerInstanceAdapter = dynamicAdapter{ //nolint:unused
 			},
 		},
 	},
-	terraformMapping: dynamic.TerraformMapping{
+	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/spanner_instance",
 		Mappings: []*sdp.TerraformMapping{
 			{
