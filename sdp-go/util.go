@@ -1,8 +1,6 @@
 package sdp
 
 import (
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"maps"
 	"math"
@@ -182,16 +180,35 @@ func WalkMapToRoutineRollUp(gun string, key string, data map[string]any) []Routi
 	return results
 }
 
+// GcpSANameFromAccountName generates a GCP service account name from the given
+// Service account must be 6-30 characters long, and must comply with the
+// `^[a-zA-Z][a-zA-Z\d\-]*[a-zA-Z\d]$` regex.
+//
+// This regex returned from an error message when trying to create a service account.
+// Unfortunately, we could not find any documentation on this.
+// The account name is expected to be in the format of a UUID, which is 36 characters long,
+// and contains dashes.
+// The service account name must be 30 characters or less,
+// and must start with a letter, end with a letter or digit, and can only contain
+// letters, digits, and dashes.
+// So we keep the SA name simple: Start with "C-" and take the first 28 characters of the account name.
 func GcpSANameFromAccountName(accountName string) string {
-	// service account ID must be 30 characters or less, and we can't use the
-	// target project ID directly as that would allow attackers to create
-	// accounts with arbitrary names. This also prefixes the account ID with "C"
-	// to ensure that it can be recognized as a customer's service account ID.
-	h := sha256.New()
-	h.Write([]byte([]byte(accountName)))
-	accountId := "C" + base64.URLEncoding.EncodeToString(h.Sum(nil))
-	if len(accountId) > 30 {
-		accountId = accountId[:30]
+	if accountName == "" {
+		return ""
 	}
-	return accountId
+
+	accountName = strings.ReplaceAll(accountName, "-", "")
+
+	if len(accountName) >= 6 {
+		// Ensure the account name is at most 30 characters long
+		// We will prefix it with "C-" to ensure it starts with a letter
+		// and truncate it to 28 characters after the prefix
+		if len(accountName) > 28 {
+			accountName = accountName[:28]
+		}
+
+		return "C-" + accountName
+	}
+
+	return ""
 }

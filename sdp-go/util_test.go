@@ -2,6 +2,7 @@ package sdp
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 )
 
@@ -137,16 +138,39 @@ func TestGcpSANameFromAccountName(t *testing.T) {
 		// BEWARE!! If this test needs changing, all currently existing service
 		// accounts in GCP will need to be updated, which sounds like an unholy
 		// mess.
-		{"test-account", "CMAH3VN1gbikLjzx35CRtbCKTQ1-b8"},
-		{"another-account", "C_T4fIEQucCV9UMGMGd-yxy_Qa3oim"},
-		{"", "C47DEQpj8HBSa-_TImW-5JCeuQeRkm"},
+		{"test-account", "C-testaccount"},
+		{"", ""},
+		{"6351cbb7-cb45-481a-99cd-909d04a58512", "C-6351cbb7cb45481a99cd909d04a5"},
+		{"d408ea46-f4c9-487f-9bf4-b0bcb6843815", "C-d408ea46f4c9487f9bf4b0bcb684"},
+		{"63d185c7141237978cfdbaa2", "C-63d185c7141237978cfdbaa2"},
+		{"b6c1119a-b80b-4a7b-b8df-acb5348525ac", "C-b6c1119ab80b4a7bb8dfacb53485"},
 	}
+
+	pattern := `^[a-zA-Z][a-zA-Z\d\-]*[a-zA-Z\d]$`
 
 	for _, test := range tests {
 		t.Run(test.accountName, func(t *testing.T) {
 			result := GcpSANameFromAccountName(test.accountName)
 			if result != test.expected {
 				t.Errorf("expected %s, got %s", test.expected, result)
+			}
+
+			if test.expected != "" {
+				matched, err := regexp.MatchString(pattern, result)
+				if err != nil {
+					t.Fatalf("failed to compile regex: %v", err)
+				}
+				if !matched {
+					t.Errorf("result %q does not match regex %q", result, pattern)
+				}
+
+				if len(result) > 30 {
+					t.Errorf("result %q exceeds 30 characters", result)
+				}
+
+				if len(result) < 6 {
+					t.Errorf("result %q is less than 6 characters", result)
+				}
 			}
 		})
 	}
