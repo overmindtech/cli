@@ -52,13 +52,24 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 		return nil, fmt.Errorf("error initializing Engine: %w", err)
 	}
 
+	var permissionCheck func() error
+
 	var startupErrorMutex sync.Mutex
 	startupError := errors.New("source is starting")
 	if ec.HeartbeatOptions != nil {
 		ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
 			startupErrorMutex.Lock()
 			defer startupErrorMutex.Unlock()
-			return startupError
+			if startupError != nil {
+				// If there is a startup error, return it
+				return startupError
+			}
+
+			if permissionCheck != nil {
+				// If the permission check is set, run it
+				return permissionCheck()
+			}
+			return nil
 		}
 	}
 
@@ -81,6 +92,53 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 		discoveryAdapters, err := adapters(ctx, cfg.ProjectID, cfg.Regions, cfg.Zones, linker, true)
 		if err != nil {
 			return fmt.Errorf("error creating discovery adapters: %w", err)
+		}
+
+		// find the cloud resource manager project adapter
+		var cloudResourceManagerProjectAdapter discovery.Adapter
+		for _, adapter := range discoveryAdapters {
+			if adapter.Type() == gcpshared.CloudResourceManagerProject.String() {
+				cloudResourceManagerProjectAdapter = adapter
+				break
+			}
+		}
+
+		if cloudResourceManagerProjectAdapter == nil {
+			return fmt.Errorf("cloud resource manager project adapter not found")
+		}
+
+		permissionCheck = func() error {
+			// Get the project from the cloud resource manager
+			// Giving this permission is mandatory for the GCP source health check
+			prj, err := cloudResourceManagerProjectAdapter.Get(ctx, cfg.ProjectID, cfg.ProjectID, false)
+			if err != nil {
+				return err
+			}
+
+			if prj == nil {
+				return fmt.Errorf("project %s not found in cloud resource manager", cfg.ProjectID)
+			}
+
+			prjID, err := prj.GetAttributes().Get("projectId")
+			if err != nil {
+				return fmt.Errorf("error getting project ID from project: %w", err)
+			}
+
+			prjIDStr, ok := prjID.(string)
+			if !ok {
+				return fmt.Errorf("project ID is not a string: %v", prjID)
+			}
+
+			if prjIDStr != cfg.ProjectID {
+				return fmt.Errorf("project ID mismatch: expected %s, got %s", cfg.ProjectID, prjIDStr)
+			}
+
+			return nil
+		}
+
+		err = permissionCheck()
+		if err != nil {
+			return fmt.Errorf("error checking permissions: %w", err)
 		}
 
 		// Add the adapters to the engine
