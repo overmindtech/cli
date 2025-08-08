@@ -2722,8 +2722,13 @@ type KeepaliveSourcesRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Set to true to have the API call wait until the source is up and healthy
 	WaitForHealthy bool `protobuf:"varint,1,opt,name=waitForHealthy,proto3" json:"waitForHealthy,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// Maximum time to wait for sources to reach a final state. Only used when
+	// waitForHealthy is true. If not specified, defaults to 4 minutes.
+	// After this timeout, the API will return the current state of all sources
+	// regardless of whether they have reached a final state.
+	Timeout       *durationpb.Duration `protobuf:"bytes,2,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *KeepaliveSourcesRequest) Reset() {
@@ -2763,14 +2768,29 @@ func (x *KeepaliveSourcesRequest) GetWaitForHealthy() bool {
 	return false
 }
 
+func (x *KeepaliveSourcesRequest) GetTimeout() *durationpb.Duration {
+	if x != nil {
+		return x.Timeout
+	}
+	return nil
+}
+
 type KeepaliveSourcesResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// If the user requested to wait for the sources to be healthy, this will
 	// contain information about the sources that came up. If the user did not
 	// request to wait, this will be empty
-	Sources       []*SourceKeepaliveResult `protobuf:"bytes,1,rep,name=sources,proto3" json:"sources,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Sources []*SourceKeepaliveResult `protobuf:"bytes,1,rep,name=sources,proto3" json:"sources,omitempty"`
+	// If all sources are healthy, this will be true. If any source is unhealthy,
+	// this will be false. If the user did not request to wait for sources to
+	// become healthy, this will be false.
+	AllSourcesHealthy bool `protobuf:"varint,2,opt,name=allSourcesHealthy,proto3" json:"allSourcesHealthy,omitempty"`
+	// If any source is healthy, this will be true. If all sources are unhealthy,
+	// this will be false. If the user did not request to wait for sources to
+	// become healthy, this will be false.
+	AnySourcesHealthy bool `protobuf:"varint,3,opt,name=anySourcesHealthy,proto3" json:"anySourcesHealthy,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *KeepaliveSourcesResponse) Reset() {
@@ -2808,6 +2828,20 @@ func (x *KeepaliveSourcesResponse) GetSources() []*SourceKeepaliveResult {
 		return x.Sources
 	}
 	return nil
+}
+
+func (x *KeepaliveSourcesResponse) GetAllSourcesHealthy() bool {
+	if x != nil {
+		return x.AllSourcesHealthy
+	}
+	return false
+}
+
+func (x *KeepaliveSourcesResponse) GetAnySourcesHealthy() bool {
+	if x != nil {
+		return x.AnySourcesHealthy
+	}
+	return false
 }
 
 type CreateTokenRequest struct {
@@ -3407,11 +3441,14 @@ const file_account_proto_rawDesc = "" +
 	"\x0fterraformMethod\x18\x01 \x01(\x0e2\f.QueryMethodB\b\xbaH\x05\x82\x01\x02\x10\x01R\x0fterraformMethod\x12\xd0\x01\n" +
 	"\x11terraformQueryMap\x18\x02 \x01(\tB\xa1\x01\xbaH\x9d\x01\xba\x01\x92\x01\n" +
 	"\x17terraformQueryMapFormat\x12ZThe value must be in the format '<item>.<attribute>' (dot notation with exactly two items)\x1a\x1bthis.split('.').size() == 2\xc8\x01\x01r\x02\x10\x03R\x11terraformQueryMapJ\x04\b\x03\x10\x04\"\x1f\n" +
-	"\x1dSubmitSourceHeartbeatResponse\"A\n" +
+	"\x1dSubmitSourceHeartbeatResponse\"v\n" +
 	"\x17KeepaliveSourcesRequest\x12&\n" +
-	"\x0ewaitForHealthy\x18\x01 \x01(\bR\x0ewaitForHealthy\"T\n" +
+	"\x0ewaitForHealthy\x18\x01 \x01(\bR\x0ewaitForHealthy\x123\n" +
+	"\atimeout\x18\x02 \x01(\v2\x19.google.protobuf.DurationR\atimeout\"\xb0\x01\n" +
 	"\x18KeepaliveSourcesResponse\x128\n" +
-	"\asources\x18\x01 \x03(\v2\x1e.account.SourceKeepaliveResultR\asources\"X\n" +
+	"\asources\x18\x01 \x03(\v2\x1e.account.SourceKeepaliveResultR\asources\x12,\n" +
+	"\x11allSourcesHealthy\x18\x02 \x01(\bR\x11allSourcesHealthy\x12,\n" +
+	"\x11anySourcesHealthy\x18\x03 \x01(\bR\x11anySourcesHealthy\"X\n" +
 	"\x12CreateTokenRequest\x12&\n" +
 	"\x0euserPublicNkey\x18\x01 \x01(\tR\x0euserPublicNkey\x12\x1a\n" +
 	"\buserName\x18\x02 \x01(\tR\buserName\"+\n" +
@@ -3609,70 +3646,71 @@ var file_account_proto_depIdxs = []int32{
 	46, // 40: account.AdapterMetadata.supportedQueryMethods:type_name -> account.AdapterSupportedQueryMethods
 	47, // 41: account.AdapterMetadata.terraformMappings:type_name -> account.TerraformMapping
 	63, // 42: account.TerraformMapping.terraformMethod:type_name -> QueryMethod
-	40, // 43: account.KeepaliveSourcesResponse.sources:type_name -> account.SourceKeepaliveResult
-	60, // 44: account.GetTrialEndResponse.endsAt:type_name -> google.protobuf.Timestamp
-	2,  // 45: account.AvailableItemType.category:type_name -> account.AdapterCategory
-	46, // 46: account.AvailableItemType.supportedQueryMethods:type_name -> account.AdapterSupportedQueryMethods
-	57, // 47: account.ListAvailableItemTypesResponse.types:type_name -> account.AvailableItemType
-	3,  // 48: account.AdminService.ListAccounts:input_type -> account.ListAccountsRequest
-	5,  // 49: account.AdminService.CreateAccount:input_type -> account.CreateAccountRequest
-	9,  // 50: account.AdminService.UpdateAccount:input_type -> account.AdminUpdateAccountRequest
-	10, // 51: account.AdminService.GetAccount:input_type -> account.AdminGetAccountRequest
-	11, // 52: account.AdminService.DeleteAccount:input_type -> account.AdminDeleteAccountRequest
-	13, // 53: account.AdminService.ListSources:input_type -> account.AdminListSourcesRequest
-	14, // 54: account.AdminService.CreateSource:input_type -> account.AdminCreateSourceRequest
-	15, // 55: account.AdminService.GetSource:input_type -> account.AdminGetSourceRequest
-	16, // 56: account.AdminService.UpdateSource:input_type -> account.AdminUpdateSourceRequest
-	17, // 57: account.AdminService.DeleteSource:input_type -> account.AdminDeleteSourceRequest
-	18, // 58: account.AdminService.KeepaliveSources:input_type -> account.AdminKeepaliveSourcesRequest
-	19, // 59: account.AdminService.CreateToken:input_type -> account.AdminCreateTokenRequest
-	26, // 60: account.ManagementService.GetAccount:input_type -> account.GetAccountRequest
-	28, // 61: account.ManagementService.DeleteAccount:input_type -> account.DeleteAccountRequest
-	30, // 62: account.ManagementService.ListSources:input_type -> account.ListSourcesRequest
-	32, // 63: account.ManagementService.CreateSource:input_type -> account.CreateSourceRequest
-	34, // 64: account.ManagementService.GetSource:input_type -> account.GetSourceRequest
-	36, // 65: account.ManagementService.UpdateSource:input_type -> account.UpdateSourceRequest
-	38, // 66: account.ManagementService.DeleteSource:input_type -> account.DeleteSourceRequest
-	41, // 67: account.ManagementService.ListAllSourcesStatus:input_type -> account.ListAllSourcesStatusRequest
-	41, // 68: account.ManagementService.ListActiveSourcesStatus:input_type -> account.ListAllSourcesStatusRequest
-	44, // 69: account.ManagementService.SubmitSourceHeartbeat:input_type -> account.SubmitSourceHeartbeatRequest
-	49, // 70: account.ManagementService.KeepaliveSources:input_type -> account.KeepaliveSourcesRequest
-	51, // 71: account.ManagementService.CreateToken:input_type -> account.CreateTokenRequest
-	53, // 72: account.ManagementService.RevlinkWarmup:input_type -> account.RevlinkWarmupRequest
-	55, // 73: account.ManagementService.GetTrialEnd:input_type -> account.GetTrialEndRequest
-	58, // 74: account.ManagementService.ListAvailableItemTypes:input_type -> account.ListAvailableItemTypesRequest
-	4,  // 75: account.AdminService.ListAccounts:output_type -> account.ListAccountsResponse
-	6,  // 76: account.AdminService.CreateAccount:output_type -> account.CreateAccountResponse
-	8,  // 77: account.AdminService.UpdateAccount:output_type -> account.UpdateAccountResponse
-	27, // 78: account.AdminService.GetAccount:output_type -> account.GetAccountResponse
-	12, // 79: account.AdminService.DeleteAccount:output_type -> account.AdminDeleteAccountResponse
-	31, // 80: account.AdminService.ListSources:output_type -> account.ListSourcesResponse
-	33, // 81: account.AdminService.CreateSource:output_type -> account.CreateSourceResponse
-	35, // 82: account.AdminService.GetSource:output_type -> account.GetSourceResponse
-	37, // 83: account.AdminService.UpdateSource:output_type -> account.UpdateSourceResponse
-	39, // 84: account.AdminService.DeleteSource:output_type -> account.DeleteSourceResponse
-	50, // 85: account.AdminService.KeepaliveSources:output_type -> account.KeepaliveSourcesResponse
-	52, // 86: account.AdminService.CreateToken:output_type -> account.CreateTokenResponse
-	27, // 87: account.ManagementService.GetAccount:output_type -> account.GetAccountResponse
-	29, // 88: account.ManagementService.DeleteAccount:output_type -> account.DeleteAccountResponse
-	31, // 89: account.ManagementService.ListSources:output_type -> account.ListSourcesResponse
-	33, // 90: account.ManagementService.CreateSource:output_type -> account.CreateSourceResponse
-	35, // 91: account.ManagementService.GetSource:output_type -> account.GetSourceResponse
-	37, // 92: account.ManagementService.UpdateSource:output_type -> account.UpdateSourceResponse
-	39, // 93: account.ManagementService.DeleteSource:output_type -> account.DeleteSourceResponse
-	43, // 94: account.ManagementService.ListAllSourcesStatus:output_type -> account.ListAllSourcesStatusResponse
-	43, // 95: account.ManagementService.ListActiveSourcesStatus:output_type -> account.ListAllSourcesStatusResponse
-	48, // 96: account.ManagementService.SubmitSourceHeartbeat:output_type -> account.SubmitSourceHeartbeatResponse
-	50, // 97: account.ManagementService.KeepaliveSources:output_type -> account.KeepaliveSourcesResponse
-	52, // 98: account.ManagementService.CreateToken:output_type -> account.CreateTokenResponse
-	54, // 99: account.ManagementService.RevlinkWarmup:output_type -> account.RevlinkWarmupResponse
-	56, // 100: account.ManagementService.GetTrialEnd:output_type -> account.GetTrialEndResponse
-	59, // 101: account.ManagementService.ListAvailableItemTypes:output_type -> account.ListAvailableItemTypesResponse
-	75, // [75:102] is the sub-list for method output_type
-	48, // [48:75] is the sub-list for method input_type
-	48, // [48:48] is the sub-list for extension type_name
-	48, // [48:48] is the sub-list for extension extendee
-	0,  // [0:48] is the sub-list for field type_name
+	62, // 43: account.KeepaliveSourcesRequest.timeout:type_name -> google.protobuf.Duration
+	40, // 44: account.KeepaliveSourcesResponse.sources:type_name -> account.SourceKeepaliveResult
+	60, // 45: account.GetTrialEndResponse.endsAt:type_name -> google.protobuf.Timestamp
+	2,  // 46: account.AvailableItemType.category:type_name -> account.AdapterCategory
+	46, // 47: account.AvailableItemType.supportedQueryMethods:type_name -> account.AdapterSupportedQueryMethods
+	57, // 48: account.ListAvailableItemTypesResponse.types:type_name -> account.AvailableItemType
+	3,  // 49: account.AdminService.ListAccounts:input_type -> account.ListAccountsRequest
+	5,  // 50: account.AdminService.CreateAccount:input_type -> account.CreateAccountRequest
+	9,  // 51: account.AdminService.UpdateAccount:input_type -> account.AdminUpdateAccountRequest
+	10, // 52: account.AdminService.GetAccount:input_type -> account.AdminGetAccountRequest
+	11, // 53: account.AdminService.DeleteAccount:input_type -> account.AdminDeleteAccountRequest
+	13, // 54: account.AdminService.ListSources:input_type -> account.AdminListSourcesRequest
+	14, // 55: account.AdminService.CreateSource:input_type -> account.AdminCreateSourceRequest
+	15, // 56: account.AdminService.GetSource:input_type -> account.AdminGetSourceRequest
+	16, // 57: account.AdminService.UpdateSource:input_type -> account.AdminUpdateSourceRequest
+	17, // 58: account.AdminService.DeleteSource:input_type -> account.AdminDeleteSourceRequest
+	18, // 59: account.AdminService.KeepaliveSources:input_type -> account.AdminKeepaliveSourcesRequest
+	19, // 60: account.AdminService.CreateToken:input_type -> account.AdminCreateTokenRequest
+	26, // 61: account.ManagementService.GetAccount:input_type -> account.GetAccountRequest
+	28, // 62: account.ManagementService.DeleteAccount:input_type -> account.DeleteAccountRequest
+	30, // 63: account.ManagementService.ListSources:input_type -> account.ListSourcesRequest
+	32, // 64: account.ManagementService.CreateSource:input_type -> account.CreateSourceRequest
+	34, // 65: account.ManagementService.GetSource:input_type -> account.GetSourceRequest
+	36, // 66: account.ManagementService.UpdateSource:input_type -> account.UpdateSourceRequest
+	38, // 67: account.ManagementService.DeleteSource:input_type -> account.DeleteSourceRequest
+	41, // 68: account.ManagementService.ListAllSourcesStatus:input_type -> account.ListAllSourcesStatusRequest
+	41, // 69: account.ManagementService.ListActiveSourcesStatus:input_type -> account.ListAllSourcesStatusRequest
+	44, // 70: account.ManagementService.SubmitSourceHeartbeat:input_type -> account.SubmitSourceHeartbeatRequest
+	49, // 71: account.ManagementService.KeepaliveSources:input_type -> account.KeepaliveSourcesRequest
+	51, // 72: account.ManagementService.CreateToken:input_type -> account.CreateTokenRequest
+	53, // 73: account.ManagementService.RevlinkWarmup:input_type -> account.RevlinkWarmupRequest
+	55, // 74: account.ManagementService.GetTrialEnd:input_type -> account.GetTrialEndRequest
+	58, // 75: account.ManagementService.ListAvailableItemTypes:input_type -> account.ListAvailableItemTypesRequest
+	4,  // 76: account.AdminService.ListAccounts:output_type -> account.ListAccountsResponse
+	6,  // 77: account.AdminService.CreateAccount:output_type -> account.CreateAccountResponse
+	8,  // 78: account.AdminService.UpdateAccount:output_type -> account.UpdateAccountResponse
+	27, // 79: account.AdminService.GetAccount:output_type -> account.GetAccountResponse
+	12, // 80: account.AdminService.DeleteAccount:output_type -> account.AdminDeleteAccountResponse
+	31, // 81: account.AdminService.ListSources:output_type -> account.ListSourcesResponse
+	33, // 82: account.AdminService.CreateSource:output_type -> account.CreateSourceResponse
+	35, // 83: account.AdminService.GetSource:output_type -> account.GetSourceResponse
+	37, // 84: account.AdminService.UpdateSource:output_type -> account.UpdateSourceResponse
+	39, // 85: account.AdminService.DeleteSource:output_type -> account.DeleteSourceResponse
+	50, // 86: account.AdminService.KeepaliveSources:output_type -> account.KeepaliveSourcesResponse
+	52, // 87: account.AdminService.CreateToken:output_type -> account.CreateTokenResponse
+	27, // 88: account.ManagementService.GetAccount:output_type -> account.GetAccountResponse
+	29, // 89: account.ManagementService.DeleteAccount:output_type -> account.DeleteAccountResponse
+	31, // 90: account.ManagementService.ListSources:output_type -> account.ListSourcesResponse
+	33, // 91: account.ManagementService.CreateSource:output_type -> account.CreateSourceResponse
+	35, // 92: account.ManagementService.GetSource:output_type -> account.GetSourceResponse
+	37, // 93: account.ManagementService.UpdateSource:output_type -> account.UpdateSourceResponse
+	39, // 94: account.ManagementService.DeleteSource:output_type -> account.DeleteSourceResponse
+	43, // 95: account.ManagementService.ListAllSourcesStatus:output_type -> account.ListAllSourcesStatusResponse
+	43, // 96: account.ManagementService.ListActiveSourcesStatus:output_type -> account.ListAllSourcesStatusResponse
+	48, // 97: account.ManagementService.SubmitSourceHeartbeat:output_type -> account.SubmitSourceHeartbeatResponse
+	50, // 98: account.ManagementService.KeepaliveSources:output_type -> account.KeepaliveSourcesResponse
+	52, // 99: account.ManagementService.CreateToken:output_type -> account.CreateTokenResponse
+	54, // 100: account.ManagementService.RevlinkWarmup:output_type -> account.RevlinkWarmupResponse
+	56, // 101: account.ManagementService.GetTrialEnd:output_type -> account.GetTrialEndResponse
+	59, // 102: account.ManagementService.ListAvailableItemTypes:output_type -> account.ListAvailableItemTypesResponse
+	76, // [76:103] is the sub-list for method output_type
+	49, // [49:76] is the sub-list for method input_type
+	49, // [49:49] is the sub-list for extension type_name
+	49, // [49:49] is the sub-list for extension extendee
+	0,  // [0:49] is the sub-list for field type_name
 }
 
 func init() { file_account_proto_init() }

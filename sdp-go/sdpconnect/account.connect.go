@@ -537,6 +537,10 @@ type ManagementServiceClient interface {
 	SubmitSourceHeartbeat(context.Context, *connect.Request[sdp_go.SubmitSourceHeartbeatRequest]) (*connect.Response[sdp_go.SubmitSourceHeartbeatResponse], error)
 	// Updates sources to keep them running in the background. This can be used
 	// to add explicit action, when the built-in keepalives are not sufficient.
+	// A user can specify how long they are willing to wait and will get a
+	// response either when all sources start, or when the timeout is reached.
+	// If the timeout is reached the response will contain the current state of
+	// all sources at that moment
 	KeepaliveSources(context.Context, *connect.Request[sdp_go.KeepaliveSourcesRequest]) (*connect.Response[sdp_go.KeepaliveSourcesResponse], error)
 	// Create a new NATS token for a given public NKey. The user requesting must
 	// control the associated private key also in order to connect to NATS as
@@ -779,6 +783,10 @@ type ManagementServiceHandler interface {
 	SubmitSourceHeartbeat(context.Context, *connect.Request[sdp_go.SubmitSourceHeartbeatRequest]) (*connect.Response[sdp_go.SubmitSourceHeartbeatResponse], error)
 	// Updates sources to keep them running in the background. This can be used
 	// to add explicit action, when the built-in keepalives are not sufficient.
+	// A user can specify how long they are willing to wait and will get a
+	// response either when all sources start, or when the timeout is reached.
+	// If the timeout is reached the response will contain the current state of
+	// all sources at that moment
 	KeepaliveSources(context.Context, *connect.Request[sdp_go.KeepaliveSourcesRequest]) (*connect.Response[sdp_go.KeepaliveSourcesResponse], error)
 	// Create a new NATS token for a given public NKey. The user requesting must
 	// control the associated private key also in order to connect to NATS as
