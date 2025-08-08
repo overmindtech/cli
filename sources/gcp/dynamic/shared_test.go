@@ -152,7 +152,7 @@ func Test_externalToSDP(t *testing.T) {
 
 func Test_getDescription_ReturnsSelectorWithNameWhenNoUniqueAttrKeys(t *testing.T) {
 	got := getDescription(gcpshared.ComputeInstance, []string{})
-	want := fmt.Sprintf("Get a %s by its {name}", gcpshared.ComputeInstance)
+	want := fmt.Sprintf("Get a %s by its \"name\"", gcpshared.ComputeInstance)
 	if got != want {
 		t.Errorf("getDescription() got = %v, want %v", got, want)
 	}
@@ -160,7 +160,7 @@ func Test_getDescription_ReturnsSelectorWithNameWhenNoUniqueAttrKeys(t *testing.
 
 func Test_getDescription_ReturnsSelectorWithUniqueAttrKeys(t *testing.T) {
 	got := getDescription(gcpshared.BigQueryTable, []string{"datasets", "tables"})
-	want := fmt.Sprintf("Get a %s by its {datasets|tables}", gcpshared.BigQueryTable)
+	want := fmt.Sprintf("Get a %s by its \"datasets|tables\"", gcpshared.BigQueryTable)
 	if got != want {
 		t.Errorf("getDescription() got = %v, want %v", got, want)
 	}
@@ -168,7 +168,7 @@ func Test_getDescription_ReturnsSelectorWithUniqueAttrKeys(t *testing.T) {
 
 func Test_getDescription_ReturnsSelectorWithSingleUniqueAttrKey(t *testing.T) {
 	got := getDescription(gcpshared.StorageBucket, []string{"buckets"})
-	want := fmt.Sprintf("Get a %s by its {name}", gcpshared.StorageBucket)
+	want := fmt.Sprintf("Get a %s by its \"name\"", gcpshared.StorageBucket)
 	if got != want {
 		t.Errorf("getDescription() got = %v, want %v", got, want)
 	}
@@ -192,7 +192,7 @@ func Test_listDescription_HandlesEmptyScope(t *testing.T) {
 
 func Test_searchDescription_ReturnsSelectorWithMultipleKeys(t *testing.T) {
 	got := searchDescription(gcpshared.ServiceDirectoryEndpoint, []string{"locations", "namespaces", "services", "endpoints"}, "")
-	want := "Search for gcp-service-directory-endpoint by its {locations|namespaces|services}"
+	want := "Search for gcp-service-directory-endpoint by its \"locations|namespaces|services\""
 	if got != want {
 		t.Errorf("searchDescription() got = %v, want %v", got, want)
 	}
@@ -200,7 +200,7 @@ func Test_searchDescription_ReturnsSelectorWithMultipleKeys(t *testing.T) {
 
 func Test_searchDescription_ReturnsSelectorWithTwoKeys(t *testing.T) {
 	got := searchDescription(gcpshared.BigQueryTable, []string{"datasets", "tables"}, "")
-	want := "Search for gcp-big-query-table by its {datasets}"
+	want := "Search for gcp-big-query-table by its \"datasets\""
 	if got != want {
 		t.Errorf("searchDescription() got = %v, want %v", got, want)
 	}

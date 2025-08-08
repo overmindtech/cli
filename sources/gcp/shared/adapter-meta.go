@@ -287,7 +287,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// GET https://artifactregistry.googleapis.com/v1/{parent=projects/*/locations/*/repositories/*}/dockerImages
 		// IAM permissions: artifactregistry.dockerImages.list
 		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s/dockerImages"),
-		SearchDescription:   "Search for Docker images in Artifact Registry. Use the format {{location}}|{{repository_id}} or projects/{{project}}/locations/{{location}}/repository/{{repository_id}}/dockerImages/{{docker_image}} which is supported for terraform mappings.",
+		SearchDescription:   "Search for Docker images in Artifact Registry. Use the format \"location|repository_id\" or \"projects/project/locations/location/repository/repository_id/dockerImages/docker_image\" which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "repositories", "dockerImages"},
 		IAMPermissions:      []string{"artifactregistry.dockerimages.get", "artifactregistry.dockerimages.list"},
 	},
@@ -311,7 +311,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/appProfiles/%s"),
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.appProfiles/list
 		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/appProfiles"),
-		SearchDescription:   "Search for BigTable App Profiles in an instance. Use the format {{instance}} or projects/{{project}}/instances/{{instance}}/appProfiles/{{app_profile_id}} which is supported for terraform mappings.",
+		SearchDescription:   "Search for BigTable App Profiles in an instance. Use the format \"instance\" or \"projects/project_id/instances/instance_name/appProfiles/app_profile_id\" which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"instances", "appProfiles"},
 		IAMPermissions:      []string{"bigtable.appProfiles.get", "bigtable.appProfiles.list"},
 	},
@@ -362,7 +362,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.tables/list
 		// GET https://bigtableadmin.googleapis.com/v2/{parent=projects/*/instances/*}/tables
 		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/tables"),
-		SearchDescription:   "Search for BigTable tables in an instance. Use the format {{instance_name}} or projects/{{project}}/instances/{{instance_name}}/tables/{{name}} which is supported for terraform mappings.",
+		SearchDescription:   "Search for BigTable tables in an instance. Use the format \"instance_name\" or \"projects/project_id/instances/instance_name/tables/table_name\" which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"instances", "tables"},
 		IAMPermissions:      []string{"bigtable.tables.get", "bigtable.tables.list"},
 	},
@@ -590,7 +590,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/dataform/reference/rest/v1/projects.locations.repositories/list
 		// GET https://dataform.googleapis.com/v1/projects/*/locations/*/repositories
 		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories"),
-		SearchDescription:   "Search for Dataform repositories in a location. Use the format {{location}} or projects/{{project}}/locations/{{location}}/repositories/{{name}} which is supported for terraform mappings.",
+		SearchDescription:   "Search for Dataform repositories in a location. Use the format \"location\" or \"projects/project_id/locations/location/repositories/repository_name\" which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "repositories"},
 		IAMPermissions:      []string{"dataform.repositories.get", "dataform.repositories.list"},
 	},
@@ -604,7 +604,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.entryGroups/list
 		// GET https://dataplex.googleapis.com/v1/{parent=projects/*/locations/*}/entryGroups
 		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups"),
-		SearchDescription:   "Search for Dataplex entry groups in a location. Use the format {{location}} or projects/{{project}}/locations/{{location}}/entryGroups/{{entry_group_id}} which is supported for terraform mappings.",
+		SearchDescription:   "Search for Dataplex entry groups in a location. Use the format \"location\" or \"projects/project_id/locations/location/entryGroups/entry_group_id\" which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "entryGroups"},
 		// HEALTH: https://cloud.google.com/dataplex/docs/reference/rest/v1/TransferStatus
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
@@ -644,7 +644,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 
 			return nil, nil
 		},
-		SearchDescription:   "Search for contacts by their ID in the form of projects/{projectId}/contacts/{contact_id}.",
+		SearchDescription:   "Search for contacts by their ID in the form of \"projects/project_id/contacts/contact_id\".",
 		UniqueAttributeKeys: []string{"contacts"},
 		// HEALTH: https://cloud.google.com/resource-manager/docs/reference/essentialcontacts/rest/v1/folders.contacts#validationstate
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
@@ -722,7 +722,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// GET https://monitoring.googleapis.com/v1/{parent}/dashboards
 		// IAM Perm: monitoring.dashboards.list
 		ListEndpointFunc:  ProjectLevelListFunc("https://monitoring.googleapis.com/v1/projects/%s/dashboards"),
-		SearchDescription: "Search for custom dashboards by their ID in the form of projects/{projectId}/dashboards/{dashboard_id}. This is supported for terraform mappings.",
+		SearchDescription: "Search for custom dashboards by their ID in the form of \"projects/project_id/dashboards/dashboard_id\". This is supported for terraform mappings.",
 		// This is a special case where we have to define the SEARCH method for only to support Terraform Mapping.
 		// We only validate the adapter initiation constraint: whether the project ID is provided or not.
 		// We return a nil EndpointFunc without any error, because in the runtime we will use the
@@ -791,7 +791,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// IAM Perm: servicedirectory.endpoints.list
 		// GET https://servicedirectory.googleapis.com/v1/projects/*/locations/*/namespaces/*/services/*/endpoints
 		SearchEndpointFunc:  projectLevelEndpointFuncWithThreeQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s/endpoints"),
-		SearchDescription:   "Search for endpoints by {location}|{namespace_id}|{service_id} or projects/{project}/locations/{location}/namespaces/{namespace_id}/services/{service_id}/endpoints/{endpoint_id} which is supported for terraform mappings.",
+		SearchDescription:   "Search for endpoints by \"location|namespace_id|service_id\" or \"projects/project_id/locations/location/namespaces/namespace_id/services/service_id/endpoints/endpoint_id\" which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "namespaces", "services", "endpoints"},
 		IAMPermissions:      []string{"servicedirectory.endpoints.get", "servicedirectory.endpoints.list"},
 	},
@@ -874,7 +874,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 	SQLAdminBackup: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 		Scope:              ScopeProject,
-		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/Backupss/GetBackup
+		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/Backups/GetBackup
 		// GET https://sqladmin.googleapis.com/v1/{name=projects/*/backups/*}
 		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://sqladmin.googleapis.com/v1/projects/%s/backups/%s"),
 		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/Backups/ListBackups

@@ -20,10 +20,10 @@ import (
 
 var (
 	getDescription = func(sdpAssetType shared.ItemType, uniqueAttributeKeys []string) string {
-		selector := "{name}"
+		selector := "\"name\""
 		if len(uniqueAttributeKeys) > 1 {
-			// i.e.: {datasets|tables} for bigquery tables
-			selector = "{" + strings.Join(uniqueAttributeKeys, shared.QuerySeparator) + "}"
+			// i.e.: "datasets|tables" for bigquery tables
+			selector = "\"" + strings.Join(uniqueAttributeKeys, shared.QuerySeparator) + "\""
 		}
 
 		return fmt.Sprintf("Get a %s by its %s", sdpAssetType, selector)
@@ -43,9 +43,9 @@ var (
 		}
 		// For service directory endpoint adapter, the uniqueAttributeKeys is: []string{"locations", "namespaces", "services", "endpoints"}
 		// We want to create a selector like:
-		// {locations|namespaces|services}
+		// locations|namespaces|services
 		// We remove the last key, because it defines the actual item selector
-		selector := "{" + strings.Join(uniqueAttributeKeys[:len(uniqueAttributeKeys)-1], shared.QuerySeparator) + "}"
+		selector := "\"" + strings.Join(uniqueAttributeKeys[:len(uniqueAttributeKeys)-1], shared.QuerySeparator) + "\""
 
 		return fmt.Sprintf("Search for %s by its %s", sdpAssetType, selector)
 	}
