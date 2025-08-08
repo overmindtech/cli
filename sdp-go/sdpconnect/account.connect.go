@@ -114,6 +114,9 @@ const (
 	// ManagementServiceListAvailableItemTypesProcedure is the fully-qualified name of the
 	// ManagementService's ListAvailableItemTypes RPC.
 	ManagementServiceListAvailableItemTypesProcedure = "/account.ManagementService/ListAvailableItemTypes"
+	// ManagementServiceGetSourceStatusProcedure is the fully-qualified name of the ManagementService's
+	// GetSourceStatus RPC.
+	ManagementServiceGetSourceStatusProcedure = "/account.ManagementService/GetSourceStatus"
 )
 
 // AdminServiceClient is a client for the account.AdminService service.
@@ -552,6 +555,8 @@ type ManagementServiceClient interface {
 	GetTrialEnd(context.Context, *connect.Request[sdp_go.GetTrialEndRequest]) (*connect.Response[sdp_go.GetTrialEndResponse], error)
 	// Lists all the available item types that can be discovered by sources that are running and healthy
 	ListAvailableItemTypes(context.Context, *connect.Request[sdp_go.ListAvailableItemTypesRequest]) (*connect.Response[sdp_go.ListAvailableItemTypesResponse], error)
+	// Get status of a single source by UUID
+	GetSourceStatus(context.Context, *connect.Request[sdp_go.GetSourceStatusRequest]) (*connect.Response[sdp_go.GetSourceStatusResponse], error)
 }
 
 // NewManagementServiceClient constructs a client for the account.ManagementService service. By
@@ -655,6 +660,12 @@ func NewManagementServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(managementServiceMethods.ByName("ListAvailableItemTypes")),
 			connect.WithClientOptions(opts...),
 		),
+		getSourceStatus: connect.NewClient[sdp_go.GetSourceStatusRequest, sdp_go.GetSourceStatusResponse](
+			httpClient,
+			baseURL+ManagementServiceGetSourceStatusProcedure,
+			connect.WithSchema(managementServiceMethods.ByName("GetSourceStatus")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -675,6 +686,7 @@ type managementServiceClient struct {
 	revlinkWarmup           *connect.Client[sdp_go.RevlinkWarmupRequest, sdp_go.RevlinkWarmupResponse]
 	getTrialEnd             *connect.Client[sdp_go.GetTrialEndRequest, sdp_go.GetTrialEndResponse]
 	listAvailableItemTypes  *connect.Client[sdp_go.ListAvailableItemTypesRequest, sdp_go.ListAvailableItemTypesResponse]
+	getSourceStatus         *connect.Client[sdp_go.GetSourceStatusRequest, sdp_go.GetSourceStatusResponse]
 }
 
 // GetAccount calls account.ManagementService.GetAccount.
@@ -752,6 +764,11 @@ func (c *managementServiceClient) ListAvailableItemTypes(ctx context.Context, re
 	return c.listAvailableItemTypes.CallUnary(ctx, req)
 }
 
+// GetSourceStatus calls account.ManagementService.GetSourceStatus.
+func (c *managementServiceClient) GetSourceStatus(ctx context.Context, req *connect.Request[sdp_go.GetSourceStatusRequest]) (*connect.Response[sdp_go.GetSourceStatusResponse], error) {
+	return c.getSourceStatus.CallUnary(ctx, req)
+}
+
 // ManagementServiceHandler is an implementation of the account.ManagementService service.
 type ManagementServiceHandler interface {
 	// Get the details of the account that this user belongs to
@@ -798,6 +815,8 @@ type ManagementServiceHandler interface {
 	GetTrialEnd(context.Context, *connect.Request[sdp_go.GetTrialEndRequest]) (*connect.Response[sdp_go.GetTrialEndResponse], error)
 	// Lists all the available item types that can be discovered by sources that are running and healthy
 	ListAvailableItemTypes(context.Context, *connect.Request[sdp_go.ListAvailableItemTypesRequest]) (*connect.Response[sdp_go.ListAvailableItemTypesResponse], error)
+	// Get status of a single source by UUID
+	GetSourceStatus(context.Context, *connect.Request[sdp_go.GetSourceStatusRequest]) (*connect.Response[sdp_go.GetSourceStatusResponse], error)
 }
 
 // NewManagementServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -897,6 +916,12 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 		connect.WithSchema(managementServiceMethods.ByName("ListAvailableItemTypes")),
 		connect.WithHandlerOptions(opts...),
 	)
+	managementServiceGetSourceStatusHandler := connect.NewUnaryHandler(
+		ManagementServiceGetSourceStatusProcedure,
+		svc.GetSourceStatus,
+		connect.WithSchema(managementServiceMethods.ByName("GetSourceStatus")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/account.ManagementService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ManagementServiceGetAccountProcedure:
@@ -929,6 +954,8 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 			managementServiceGetTrialEndHandler.ServeHTTP(w, r)
 		case ManagementServiceListAvailableItemTypesProcedure:
 			managementServiceListAvailableItemTypesHandler.ServeHTTP(w, r)
+		case ManagementServiceGetSourceStatusProcedure:
+			managementServiceGetSourceStatusHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -996,4 +1023,8 @@ func (UnimplementedManagementServiceHandler) GetTrialEnd(context.Context, *conne
 
 func (UnimplementedManagementServiceHandler) ListAvailableItemTypes(context.Context, *connect.Request[sdp_go.ListAvailableItemTypesRequest]) (*connect.Response[sdp_go.ListAvailableItemTypesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.ListAvailableItemTypes is not implemented"))
+}
+
+func (UnimplementedManagementServiceHandler) GetSourceStatus(context.Context, *connect.Request[sdp_go.GetSourceStatusRequest]) (*connect.Response[sdp_go.GetSourceStatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.GetSourceStatus is not implemented"))
 }
