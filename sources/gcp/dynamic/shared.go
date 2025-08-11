@@ -134,6 +134,10 @@ func externalCallSingle(ctx context.Context, httpCli *http.Client, url string) (
 	if resp.StatusCode != http.StatusOK {
 		body, err := io.ReadAll(resp.Body)
 		if err == nil {
+			if resp.StatusCode == http.StatusForbidden {
+				return nil, &PermissionError{URL: url}
+			}
+
 			return nil, fmt.Errorf(
 				"failed to make a GET call: %s, HTTP Status: %s, HTTP Body: %s",
 				url,

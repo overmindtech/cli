@@ -112,6 +112,12 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 			// Giving this permission is mandatory for the GCP source health check
 			prj, err := cloudResourceManagerProjectAdapter.Get(ctx, cfg.ProjectID, cfg.ProjectID, false)
 			if err != nil {
+				// Check if this is a permission error and provide a simplified message
+				var permissionError *dynamic.PermissionError
+				if errors.As(err, &permissionError) {
+					return fmt.Errorf("insufficient permissions to access GCP project '%s'. "+
+						"Please ensure the service account has the 'resourcemanager.projects.get' permission via the 'roles/browser' predefined GCP role", cfg.ProjectID)
+				}
 				return err
 			}
 
