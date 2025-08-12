@@ -103,7 +103,7 @@ func flatten(data map[string]any) map[string]any {
 }
 
 // RenderItemDiff generates a diff between two items
-func RenderItemDiff(gun string, before, after map[string]any) string {
+func RenderItemDiff(before, after map[string]any) string {
 	flatB := flatten(before)
 	flatA := flatten(after)
 
@@ -115,7 +115,6 @@ func RenderItemDiff(gun string, before, after map[string]any) string {
 
 	// allKeys now contains every attribute present in either the before or
 	// after, so we can iterate over it to generate the diff and append stats.
-
 	para := []string{}
 	for _, key := range allKeys {
 		beforeValue, beforeExists := flatB[key]

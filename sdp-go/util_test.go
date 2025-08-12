@@ -118,7 +118,7 @@ func TestItemDiffParagraphRendering(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			diff := RenderItemDiff("testGun", test.Before, test.After)
+			diff := RenderItemDiff(test.Before, test.After)
 
 			if diff != test.ExpectedDiffParagraph {
 				t.Errorf("expected diff paragraph to be '%s', got '%s'", test.ExpectedDiffParagraph, diff)
