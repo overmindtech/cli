@@ -14,6 +14,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -322,7 +323,7 @@ func aggregateSDPItems(ctx context.Context, a Adapter, url string) ([]*sdp.Item,
 }
 
 // streamSDPItems retrieves items from an external API and streams them as SDP items.
-func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery.QueryResultStream) {
+func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	itemsSelector := a.uniqueAttributeKeys[len(a.uniqueAttributeKeys)-1] // Use the last key as the item selector
 
 	out := make(chan map[string]interface{})
@@ -343,6 +344,8 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery
 			continue
 		}
 
+		cache.StoreItem(item, DefaultCacheDuration, cacheKey)
+		
 		stream.SendItem(item)
 	}
 
@@ -352,7 +355,7 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery
 	}
 }
 
-func terraformMappingViaSearch(ctx context.Context, a Adapter, query string) ([]*sdp.Item, error) {
+func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) ([]*sdp.Item, error) {
 	// query is in the format of:
 	// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
 	// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
@@ -401,6 +404,8 @@ func terraformMappingViaSearch(ctx context.Context, a Adapter, query string) ([]
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert response to SDP: %w", err)
 	}
+
+	cache.StoreItem(item, DefaultCacheDuration, cacheKey)
 
 	return []*sdp.Item{item}, nil
 }

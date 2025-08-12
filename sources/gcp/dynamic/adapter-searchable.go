@@ -5,24 +5,28 @@ import (
 	"fmt"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
 // SearchableAdapter implements discovery.SearchableAdapter for GCP dynamic adapters.
 type SearchableAdapter struct {
 	customSearchMethodDesc string
-	searchURLFunc          gcpshared.EndpointFunc
+	searchEndpointFunc     gcpshared.EndpointFunc
 	Adapter
 }
 
 // NewSearchableAdapter creates a new GCP dynamic adapter.
-func NewSearchableAdapter(searchURLFunc gcpshared.EndpointFunc, config *AdapterConfig, customSearchMethodDesc string) (discovery.SearchableAdapter, error) {
+func NewSearchableAdapter(searchEndpointFunc gcpshared.EndpointFunc, config *AdapterConfig, customSearchMethodDesc string) (discovery.SearchableAdapter, error) {
 	a := Adapter{
 		projectID:           config.ProjectID,
 		scope:               config.Scope,
 		httpCli:             config.HTTPClient,
+		cache:               sdpcache.NewCache(),
 		getURLFunc:          config.GetURLFunc,
 		sdpAssetType:        config.SDPAssetType,
 		sdpAdapterCategory:  config.SDPAdapterCategory,
@@ -43,7 +47,7 @@ func NewSearchableAdapter(searchURLFunc gcpshared.EndpointFunc, config *AdapterC
 
 	return SearchableAdapter{
 		customSearchMethodDesc: customSearchMethodDesc,
-		searchURLFunc:          searchURLFunc,
+		searchEndpointFunc:     searchEndpointFunc,
 		Adapter:                a,
 	}, nil
 }
@@ -72,27 +76,55 @@ func (g SearchableAdapter) Search(ctx context.Context, scope, query string, igno
 		}
 	}
 
+	cacheHit, ck, cachedItems, qErr := g.cache.Lookup(
+		ctx,
+		g.Name(),
+		sdp.QueryMethod_SEARCH,
+		scope,
+		g.Type(),
+		query,
+		ignoreCache,
+	)
+	if qErr != nil {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.source.type": "gcp",
+			"ovm.source.adapter":   g.Name(),
+			"ovm.source.scope":     scope,
+			"ovm.source.method":    sdp.QueryMethod_SEARCH.String(),
+			"ovm.source.cache-key": ck,
+		}).WithError(qErr).Error("failed to lookup item in cache")
+	}
+
+	if cacheHit {
+		return cachedItems, nil
+	}
+
 	if strings.HasPrefix(query, "projects/") {
 		// This must be a terraform query in the format of:
 		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
 		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
-		return terraformMappingViaSearch(ctx, g.Adapter, query)
+		return terraformMappingViaSearch(ctx, g.Adapter, query, g.cache, ck)
 	}
 
 	// This is a regular SEARCH call
-	url := g.searchURLFunc(query)
-	if url == "" {
+	searchEndpoint := g.searchEndpointFunc(query)
+	if searchEndpoint == "" {
 		return nil, &sdp.QueryError{
-			ErrorType: sdp.QueryError_OTHER,
-			ErrorString: fmt.Sprintf(
-				"failed to construct the URL for the query \"%s\". SEARCH method description: %s",
-				query,
-				g.Metadata().GetSupportedQueryMethods().GetSearchDescription(),
-			),
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf("no search endpoint found for query \"%s\". %s", query, g.Metadata().GetSupportedQueryMethods().GetSearchDescription()),
 		}
 	}
 
-	return aggregateSDPItems(ctx, g.Adapter, url)
+	items, err := aggregateSDPItems(ctx, g.Adapter, searchEndpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, item := range items {
+		g.cache.StoreItem(item, DefaultCacheDuration, ck)
+	}
+
+	return items, nil
 }
 
 func (g SearchableAdapter) SearchStream(ctx context.Context, scope, query string, ignoreCache bool, stream discovery.QueryResultStream) {
@@ -104,11 +136,38 @@ func (g SearchableAdapter) SearchStream(ctx context.Context, scope, query string
 		return
 	}
 
+	cacheHit, ck, cachedItems, qErr := g.cache.Lookup(
+		ctx,
+		g.Name(),
+		sdp.QueryMethod_SEARCH,
+		scope,
+		g.Type(),
+		query,
+		ignoreCache,
+	)
+	if qErr != nil {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.source.type": "gcp",
+			"ovm.source.adapter":   g.Name(),
+			"ovm.source.scope":     scope,
+			"ovm.source.method":    sdp.QueryMethod_SEARCH.String(),
+			"ovm.source.cache-key": ck,
+		}).WithError(qErr).Error("failed to lookup item in cache")
+	}
+
+	if cacheHit {
+		for _, item := range cachedItems {
+			stream.SendItem(item)
+		}
+
+		return
+	}
+
 	if strings.HasPrefix(query, "projects/") {
 		// This must be a terraform query in the format of:
 		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
 		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
-		items, err := terraformMappingViaSearch(ctx, g.Adapter, query)
+		items, err := terraformMappingViaSearch(ctx, g.Adapter, query, g.cache, ck)
 		if err != nil {
 			stream.SendError(&sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -122,7 +181,7 @@ func (g SearchableAdapter) SearchStream(ctx context.Context, scope, query string
 		return
 	}
 
-	searchURL := g.searchURLFunc(query)
+	searchURL := g.searchEndpointFunc(query)
 	if searchURL == "" {
 		stream.SendError(&sdp.QueryError{
 			ErrorType: sdp.QueryError_OTHER,
@@ -135,5 +194,5 @@ func (g SearchableAdapter) SearchStream(ctx context.Context, scope, query string
 		return
 	}
 
-	streamSDPItems(ctx, g.Adapter, searchURL, stream)
+	streamSDPItems(ctx, g.Adapter, searchURL, stream, g.cache, ck)
 }

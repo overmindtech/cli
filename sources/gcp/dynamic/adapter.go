@@ -4,14 +4,19 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"buf.build/go/protovalidate"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
+
+const DefaultCacheDuration = 1 * time.Hour
 
 // AdapterConfig holds the configuration for a GCP dynamic adapter.
 type AdapterConfig struct {
@@ -31,6 +36,7 @@ type AdapterConfig struct {
 type Adapter struct {
 	projectID           string
 	httpCli             *http.Client
+	cache               *sdpcache.Cache
 	getURLFunc          gcpshared.EndpointFunc
 	scope               string
 	sdpAssetType        shared.ItemType
@@ -48,6 +54,7 @@ func NewAdapter(config *AdapterConfig) (discovery.Adapter, error) {
 		projectID:           config.ProjectID,
 		scope:               config.Scope,
 		httpCli:             config.HTTPClient,
+		cache:               sdpcache.NewCache(),
 		getURLFunc:          config.GetURLFunc,
 		sdpAssetType:        config.SDPAssetType,
 		sdpAdapterCategory:  config.SDPAdapterCategory,
@@ -104,6 +111,29 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		}
 	}
 
+	cacheHit, ck, cachedItem, qErr := g.cache.Lookup(
+		ctx,
+		g.Name(),
+		sdp.QueryMethod_GET,
+		scope,
+		g.Type(),
+		query,
+		ignoreCache,
+	)
+	if qErr != nil {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.source.type": "gcp",
+			"ovm.source.adapter":   g.Name(),
+			"ovm.source.scope":     scope,
+			"ovm.source.method":    sdp.QueryMethod_GET.String(),
+			"ovm.source.cache-key": ck,
+		}).WithError(qErr).Error("failed to lookup item in cache")
+	}
+
+	if cacheHit && len(cachedItem) > 0 {
+		return cachedItem[0], nil
+	}
+
 	url := g.getURLFunc(query)
 	if url == "" {
 		return nil, &sdp.QueryError{
@@ -121,9 +151,20 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		return nil, err
 	}
 
-	return externalToSDP(ctx, g.projectID, g.scope, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker)
+	item, err := externalToSDP(ctx, g.projectID, g.scope, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker)
+	if err != nil {
+		return nil, err
+	}
+
+	g.cache.StoreItem(item, DefaultCacheDuration, ck)
+
+	return item, nil
 }
 
 func (g Adapter) Validate() error {
+	if g.cache == nil {
+		return fmt.Errorf("cache is not initialized")
+	}
+
 	return protovalidate.Validate(g.Metadata())
 }

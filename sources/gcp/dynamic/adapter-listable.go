@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -21,6 +24,7 @@ func NewListableAdapter(listEndpoint string, config *AdapterConfig) (discovery.L
 		projectID:           config.ProjectID,
 		scope:               config.Scope,
 		httpCli:             config.HTTPClient,
+		cache:               sdpcache.NewCache(),
 		getURLFunc:          config.GetURLFunc,
 		sdpAssetType:        config.SDPAssetType,
 		sdpAdapterCategory:  config.SDPAdapterCategory,
@@ -69,7 +73,39 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 		}
 	}
 
-	return aggregateSDPItems(ctx, g.Adapter, g.listEndpoint)
+	cacheHit, ck, cachedItems, qErr := g.cache.Lookup(
+		ctx,
+		g.Name(),
+		sdp.QueryMethod_LIST,
+		scope,
+		g.Type(),
+		"",
+		ignoreCache,
+	)
+	if qErr != nil {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.source.type": "gcp",
+			"ovm.source.adapter":   g.Name(),
+			"ovm.source.scope":     scope,
+			"ovm.source.method":    sdp.QueryMethod_LIST.String(),
+			"ovm.source.cache-key": ck,
+		}).WithError(qErr).Error("failed to lookup item in cache")
+	}
+
+	if cacheHit {
+		return cachedItems, nil
+	}
+
+	items, err := aggregateSDPItems(ctx, g.Adapter, g.listEndpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, item := range items {
+		g.cache.StoreItem(item, DefaultCacheDuration, ck)
+	}
+
+	return items, nil
 }
 
 func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCache bool, stream discovery.QueryResultStream) {
@@ -81,5 +117,32 @@ func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCac
 		return
 	}
 
-	streamSDPItems(ctx, g.Adapter, g.listEndpoint, stream)
+	cacheHit, ck, cachedItems, qErr := g.cache.Lookup(
+		ctx,
+		g.Name(),
+		sdp.QueryMethod_LIST,
+		scope,
+		g.Type(),
+		"",
+		ignoreCache,
+	)
+	if qErr != nil {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.source.type": "gcp",
+			"ovm.source.adapter":   g.Name(),
+			"ovm.source.scope":     scope,
+			"ovm.source.method":    sdp.QueryMethod_LIST.String(),
+			"ovm.source.cache-key": ck,
+		}).WithError(qErr).Error("failed to lookup item in cache")
+	}
+
+	if cacheHit {
+		for _, item := range cachedItems {
+			stream.SendItem(item)
+		}
+
+		return
+	}
+
+	streamSDPItems(ctx, g.Adapter, g.listEndpoint, stream, g.cache, ck)
 }
