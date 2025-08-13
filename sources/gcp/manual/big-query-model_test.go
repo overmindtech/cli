@@ -20,7 +20,7 @@ func TestBigQueryModel(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockClient := mocks.NewMockBigModelClient(ctrl)
+	mockClient := mocks.NewMockBigQueryModelClient(ctrl)
 	projectID := "test-project"
 	datasetID := "test_dataset"
 	modelName := "test_model"
@@ -105,5 +105,4 @@ func createDatasetModel(projectID, modelName string) *bigquery.ModelMetadata {
 	}
 
 	return model
-
 }

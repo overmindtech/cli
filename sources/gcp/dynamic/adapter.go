@@ -122,7 +122,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 	)
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
-			"ovm.source.type": "gcp",
+			"ovm.source.type":      "gcp",
 			"ovm.source.adapter":   g.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_GET.String(),

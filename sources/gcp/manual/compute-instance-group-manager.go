@@ -7,6 +7,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -124,6 +125,32 @@ func (c computeInstanceGroupManagerWrapper) List(ctx context.Context) ([]*sdp.It
 	}
 
 	return items, nil
+}
+
+func (c computeInstanceGroupManagerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	it := c.client.List(ctx, &computepb.ListInstanceGroupManagersRequest{
+		Project: c.ProjectID(),
+		Zone:    c.Zone(),
+	})
+
+	for {
+		instanceGroupManager, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpInstanceGroupManagerToSDPItem(instanceGroupManager)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(instanceGroupManager *computepb.InstanceGroupManager) (*sdp.Item, *sdp.QueryError) {

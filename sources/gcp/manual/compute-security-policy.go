@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -111,6 +112,32 @@ func (c computeSecurityPolicyWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 	}
 
 	return items, nil
+}
+
+// ListStream lists compute security policies and sends them as items to the stream.
+func (c computeSecurityPolicyWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	it := c.client.List(ctx, &computepb.ListSecurityPoliciesRequest{
+		Project: c.ProjectID(),
+	})
+
+	for {
+		securityPolicy, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpComputeSecurityPolicyToSDPItem(securityPolicy)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 // gcpComputeSecurityPolicyToSDPItem converts a GCP Security Policy to an SDP Item

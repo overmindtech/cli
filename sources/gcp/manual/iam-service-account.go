@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/iam/admin/apiv1/adminpb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -128,6 +129,34 @@ func (c iamServiceAccountWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Q
 	}
 
 	return items, nil
+}
+
+// ListStream lists IAM ServiceAccounts and sends them as sdp.Items to the stream.
+func (c iamServiceAccountWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	req := &adminpb.ListServiceAccountsRequest{
+		Name: "projects/" + c.ProjectID(),
+	}
+
+	results := c.client.List(ctx, req)
+
+	for {
+		sa, err := results.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpIAMServiceAccountToSDPItem(sa)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 // gcpIAMServiceAccountToSDPItem converts a GCP ServiceAccount to an SDP Item, linking GCP resource fields.

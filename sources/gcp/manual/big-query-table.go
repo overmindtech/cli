@@ -7,6 +7,7 @@ import (
 
 	"cloud.google.com/go/bigquery"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -99,6 +100,11 @@ func (b BigQueryTableWrapper) Search(ctx context.Context, queryParts ...string) 
 	}
 
 	return items, nil
+}
+
+func (b BigQueryTableWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string) {
+	// queryParts[0]: Dataset ID
+	b.client.ListStream(ctx, b.ProjectID(), queryParts[0], stream, b.GCPBigQueryTableToItem)
 }
 
 func (b BigQueryTableWrapper) GCPBigQueryTableToItem(metadata *bigquery.TableMetadata) (*sdp.Item, *sdp.QueryError) {

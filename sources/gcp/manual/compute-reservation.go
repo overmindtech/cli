@@ -7,6 +7,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -115,6 +116,33 @@ func (c computeReservationWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.
 	}
 
 	return items, nil
+}
+
+// ListStream lists compute reservations and sends them as items to the stream.
+func (c computeReservationWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	it := c.client.List(ctx, &computepb.ListReservationsRequest{
+		Project: c.ProjectID(),
+		Zone:    c.Zone(),
+	})
+
+	for {
+		reservation, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpComputeReservationToSDPItem(reservation)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 // gcpComputeReservationToSDPItem converts a GCP Reservation to an SDP Item

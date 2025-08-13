@@ -7,6 +7,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -115,6 +116,33 @@ func (c computeInstantSnapshotWrapper) List(ctx context.Context) ([]*sdp.Item, *
 	}
 
 	return items, nil
+}
+
+// ListStream lists compute instant snapshots and sends them to the stream.
+func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	it := c.client.List(ctx, &computepb.ListInstantSnapshotsRequest{
+		Project: c.ProjectID(),
+		Zone:    c.Zone(),
+	})
+
+	for {
+		instantSnapshot, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(instantSnapshot)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 // gcpComputeInstantSnapshotToSDPItem converts a GCP Instant Snapshot to an SDP Item

@@ -6,6 +6,7 @@ import (
 
 	"cloud.google.com/go/iam/admin/apiv1/adminpb"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -119,6 +120,28 @@ func (c iamServiceAccountKeyWrapper) Search(ctx context.Context, queryParts ...s
 	}
 
 	return items, nil
+}
+
+// SearchStream streams the search results for Service Account Keys.
+func (c iamServiceAccountKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string) {
+	serviceAccountIdentifier := queryParts[0]
+
+	it, err := c.client.Search(ctx, &adminpb.ListServiceAccountKeysRequest{
+		Name: "projects/" + c.ProjectID() + "/serviceAccounts/" + serviceAccountIdentifier,
+	})
+	if err != nil {
+		stream.SendError(gcpshared.QueryError(err))
+		return
+	}
+
+	for _, key := range it.GetKeys() {
+		item, sdpErr := c.gcpIAMServiceAccountKeyToSDPItem(key)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+		stream.SendItem(item)
+	}
 }
 
 // gcpIAMServiceAccountKeyToSDPItem converts a ServiceAccountKey to an sdp.Item

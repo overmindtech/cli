@@ -7,6 +7,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -104,6 +105,32 @@ func (c computeHealthCheckWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.
 	}
 
 	return items, nil
+}
+
+// ListStream implements the Streamer interface
+func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	it := c.client.List(ctx, &computepb.ListHealthChecksRequest{
+		Project: c.ProjectID(),
+	})
+
+	for {
+		healthCheck, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpComputeHealthCheckToSDPItem(healthCheck)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 // gcpComputeHealthCheckToSDPItem converts a GCP HealthCheck to an SDP Item

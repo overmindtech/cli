@@ -345,7 +345,7 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery
 		}
 
 		cache.StoreItem(item, DefaultCacheDuration, cacheKey)
-		
+
 		stream.SendItem(item)
 	}
 

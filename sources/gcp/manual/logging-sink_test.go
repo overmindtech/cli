@@ -2,12 +2,14 @@ package manual_test
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"cloud.google.com/go/logging/apiv2/loggingpb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -149,6 +151,47 @@ func TestNewLoggingSink(t *testing.T) {
 		}
 	})
 
+	t.Run("ListStream", func(t *testing.T) {
+		wrapper := manual.NewLoggingSink(mockClient, projectID)
+
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		mockLoggingSinkIterator := mocks.NewMockLoggingSinkIterator(ctrl)
+
+		// add mock implementation here
+		mockLoggingSinkIterator.EXPECT().Next().Return(createLoggingSink("sink1", "storage.googleapis.com/my_bucket"), nil)
+		mockLoggingSinkIterator.EXPECT().Next().Return(createLoggingSink("sink2", "bigquery.googleapis.com/projects/my-project-id/datasets/my_dataset"), nil)
+		mockLoggingSinkIterator.EXPECT().Next().Return(nil, iterator.Done)
+
+		// Mock the ListSinks method
+		mockClient.EXPECT().ListSinks(ctx, gomock.Any()).Return(mockLoggingSinkIterator)
+
+		wg := &sync.WaitGroup{}
+		wg.Add(2) // we added two items
+
+		var items []*sdp.Item
+		mockItemHandler := func(item *sdp.Item) {
+			items = append(items, item)
+			wg.Done() // signal that we processed an item
+		}
+
+		var errs []error
+		mockErrorHandler := func(err error) {
+			errs = append(errs, err)
+		}
+
+		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
+		adapter.ListStream(ctx, wrapper.Scopes()[0], true, stream)
+		wg.Wait()
+
+		if len(errs) != 0 {
+			t.Fatalf("Expected no errors, got: %v", errs)
+		}
+
+		if len(items) != 2 {
+			t.Fatalf("Expected 2 items, got: %d", len(items))
+		}
+	})
 }
 
 func createLoggingSink(name, destination string) *loggingpb.LogSink {

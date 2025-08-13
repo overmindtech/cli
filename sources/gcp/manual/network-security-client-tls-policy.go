@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -110,6 +111,34 @@ func (n networkSecurityClientTlsPolicyWrapper) Search(ctx context.Context, query
 	}
 
 	return items, nil
+}
+
+func (n networkSecurityClientTlsPolicyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string) {
+	req := &networksecuritypb.ListClientTlsPoliciesRequest{
+		// Required. The project and location from which the ClientTlsPolicies should
+		// be listed, specified in the format `projects/*/locations/{location}`.
+		Parent: fmt.Sprintf("projects/%s/locations/%s", n.ProjectID(), queryParts[0]),
+	}
+
+	it := n.client.List(ctx, req)
+	for {
+		p, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := n.convertClientTlsPolicyToItem(p)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 func (n networkSecurityClientTlsPolicyWrapper) convertClientTlsPolicyToItem(p *networksecuritypb.ClientTlsPolicy) (*sdp.Item, *sdp.QueryError) {

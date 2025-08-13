@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/kms/apiv1/kmspb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -137,6 +138,34 @@ func (c cloudKMSKeyRingWrapper) Search(ctx context.Context, queryParts ...string
 	}
 
 	return items, nil
+}
+
+// SearchStream streams the search results for KMS KeyRings.
+func (c cloudKMSKeyRingWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string) {
+	parent := fmt.Sprintf("projects/%s/locations/%s", c.ProjectID(), queryParts[0])
+
+	it := c.client.Search(ctx, &kmspb.ListKeyRingsRequest{
+		Parent: parent,
+	})
+
+	for {
+		keyRing, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpKeyRingToSDPItem(keyRing)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 // gcpKeyRingToSDPItem converts a GCP KeyRing to an SDP Item, linking GCP resource fields.

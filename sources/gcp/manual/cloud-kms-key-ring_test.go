@@ -2,12 +2,14 @@ package manual_test
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"cloud.google.com/go/kms/apiv1/kmspb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -95,6 +97,47 @@ func TestCloudKMSKeyRing(t *testing.T) {
 		}
 	})
 
+	t.Run("SearchStream", func(t *testing.T) {
+		wrapper := manual.NewCloudKMSKeyRing(mockClient, projectID)
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		mockIterator := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
+
+		mockIterator.EXPECT().Next().Return(createKeyRing(projectID, location, "test-keyring-1"), nil)
+		mockIterator.EXPECT().Next().Return(createKeyRing(projectID, location, "test-keyring-2"), nil)
+		mockIterator.EXPECT().Next().Return(nil, iterator.Done)
+
+		mockClient.EXPECT().Search(ctx, gomock.Any()).Return(mockIterator)
+
+		var items []*sdp.Item
+		var errs []error
+		wg := &sync.WaitGroup{}
+		wg.Add(2)
+
+		mockItemHandler := func(item *sdp.Item) {
+			items = append(items, item)
+			wg.Done()
+		}
+		mockErrorHandler := func(err error) {
+			errs = append(errs, err)
+		}
+
+		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
+		adapter.SearchStream(ctx, wrapper.Scopes()[0], location, true, stream)
+		wg.Wait()
+
+		if len(errs) > 0 {
+			t.Fatalf("Expected no errors, got: %v", errs)
+		}
+		if len(items) != 2 {
+			t.Fatalf("Expected 2 items, got: %d", len(items))
+		}
+		for _, item := range items {
+			if item.Validate() != nil {
+				t.Fatalf("Expected no validation error, got: %v", item.Validate())
+			}
+		}
+	})
 }
 
 // createKeyRing creates a KeyRing with the specified project, location, and keyRing name.

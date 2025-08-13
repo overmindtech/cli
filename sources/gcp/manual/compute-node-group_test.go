@@ -3,6 +3,7 @@ package manual_test
 import (
 	"context"
 	"strings"
+	"sync"
 	"testing"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
@@ -10,6 +11,7 @@ import (
 	"google.golang.org/api/iterator"
 	"k8s.io/utils/ptr"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -145,6 +147,42 @@ func TestComputeNodeGroup(t *testing.T) {
 		}
 	})
 
+	t.Run("ListStream", func(t *testing.T) {
+		wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		mockComputeIterator := mocks.NewMockComputeNodeGroupIterator(ctrl)
+		mockComputeIterator.EXPECT().Next().Return(createComputeNodeGroup("test-node-group-1", testTemplateUrl, computepb.NodeGroup_READY), nil)
+		mockComputeIterator.EXPECT().Next().Return(createComputeNodeGroup("test-node-group-2", testTemplateUrl2, computepb.NodeGroup_READY), nil)
+		mockComputeIterator.EXPECT().Next().Return(nil, iterator.Done)
+
+		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockComputeIterator)
+
+		wg := &sync.WaitGroup{}
+		wg.Add(2)
+
+		var items []*sdp.Item
+		var errs []error
+		mockItemHandler := func(item *sdp.Item) { items = append(items, item); wg.Done() }
+		mockErrorHandler := func(err error) { errs = append(errs, err) }
+
+		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
+		adapter.ListStream(ctx, wrapper.Scopes()[0], true, stream)
+		wg.Wait()
+
+		if len(errs) != 0 {
+			t.Fatalf("Expected no errors, got: %v", errs)
+		}
+		if len(items) != 2 {
+			t.Fatalf("Expected 2 items, got: %d", len(items))
+		}
+		for _, item := range items {
+			if item.Validate() != nil {
+				t.Fatalf("Expected no validation error, got: %v", item.Validate())
+			}
+		}
+	})
+
 	t.Run("Search", func(t *testing.T) {
 		wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
 		adapter := sources.WrapperToAdapter(wrapper)
@@ -201,6 +239,73 @@ func TestComputeNodeGroup(t *testing.T) {
 				t.Fatalf("Failed to get node_template attribute: %v", err)
 			}
 
+			if nodeTemplate != testTemplateUrl {
+				t.Fatalf("Expected node_template to be %s, got: %s", testTemplateUrl, nodeTemplate)
+			}
+		}
+	})
+
+	t.Run("SearchStream", func(t *testing.T) {
+		wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		filterBy := testTemplateUrl
+
+		mockClient.EXPECT().List(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.ListNodeGroupsRequest, opts ...any) *mocks.MockComputeNodeGroupIterator {
+			fullList := []*computepb.NodeGroup{
+				createComputeNodeGroup("test-node-group-1", testTemplateUrl, computepb.NodeGroup_READY),
+				createComputeNodeGroup("test-node-group-2", testTemplateUrl2, computepb.NodeGroup_READY),
+				createComputeNodeGroup("test-node-group-3", testTemplateUrl, computepb.NodeGroup_READY),
+				createComputeNodeGroup("test-node-group-4", testTemplateUrl, computepb.NodeGroup_READY),
+			}
+
+			expectedFilter := "nodeTemplate = " + filterBy
+			if req.GetFilter() != expectedFilter {
+				t.Fatalf("Expected filter to be %s, got: %s", expectedFilter, req.GetFilter())
+			}
+
+			mockComputeIterator := mocks.NewMockComputeNodeGroupIterator(ctrl)
+			for _, nodeGroup := range fullList {
+				if nodeGroup.GetNodeTemplate() == filterBy {
+					mockComputeIterator.EXPECT().Next().Return(nodeGroup, nil)
+				}
+			}
+			mockComputeIterator.EXPECT().Next().Return(nil, iterator.Done)
+			return mockComputeIterator
+		})
+
+		var items []*sdp.Item
+		var errs []error
+		wg := &sync.WaitGroup{}
+		wg.Add(3) // 3 items expected
+
+		mockItemHandler := func(item *sdp.Item) {
+			items = append(items, item)
+			wg.Done()
+		}
+		mockErrorHandler := func(err error) {
+			errs = append(errs, err)
+		}
+
+		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
+		adapter.SearchStream(ctx, wrapper.Scopes()[0], testTemplateUrl, true, stream)
+		wg.Wait()
+
+		if len(errs) > 0 {
+			t.Fatalf("Expected no errors, got: %v", errs)
+		}
+		if len(items) != 3 {
+			t.Fatalf("Expected 3 items, got: %d", len(items))
+		}
+		for _, item := range items {
+			if item.Validate() != nil {
+				t.Fatalf("Expected no validation error, got: %v", item.Validate())
+			}
+			attributes := item.GetAttributes()
+			nodeTemplate, err := attributes.Get("node_template")
+			if err != nil {
+				t.Fatalf("Failed to get node_template attribute: %v", err)
+			}
 			if nodeTemplate != testTemplateUrl {
 				t.Fatalf("Expected node_template to be %s, got: %s", testTemplateUrl, nodeTemplate)
 			}

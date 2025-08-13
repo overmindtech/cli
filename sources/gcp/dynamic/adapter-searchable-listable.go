@@ -97,7 +97,7 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 	)
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
-			"ovm.source.type": "gcp",
+			"ovm.source.type":      "gcp",
 			"ovm.source.adapter":   g.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_SEARCH.String(),
@@ -156,7 +156,7 @@ func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, quer
 	)
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
-			"ovm.source.type": "gcp",
+			"ovm.source.type":      "gcp",
 			"ovm.source.adapter":   g.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_SEARCH.String(),

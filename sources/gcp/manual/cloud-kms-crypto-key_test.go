@@ -3,12 +3,14 @@ package manual_test
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 
 	"cloud.google.com/go/kms/apiv1/kmspb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -150,6 +152,56 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 		}
 	})
 
+	t.Run("SearchStream", func(t *testing.T) {
+		wrapper := manual.NewCloudKMSCryptoKey(mockClient, projectID)
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		mockCryptoKeyIterator := mocks.NewMockCloudKMSCryptoKeyIterator(ctrl)
+
+		// add mock implementation here
+		mockCryptoKeyIterator.EXPECT().Next().Return(
+			createCryptoKey(
+				"projects/test-project-id/locations/global/keyRings/test-key-ring/cryptoKeys/test-key-1",
+				"1",
+				kmspb.CryptoKeyVersion_ENABLED,
+			), nil)
+		mockCryptoKeyIterator.EXPECT().Next().Return(
+			createCryptoKey(
+				"projects/test-project-id/locations/global/keyRings/test-key-ring/cryptoKeys/test-key-2",
+				"1",
+				kmspb.CryptoKeyVersion_ENABLED,
+			), nil)
+		mockCryptoKeyIterator.EXPECT().Next().Return(nil, iterator.Done)
+
+		// Mock the List method
+		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockCryptoKeyIterator)
+
+		wg := &sync.WaitGroup{}
+		wg.Add(2) // we added two items
+
+		var items []*sdp.Item
+		mockItemHandler := func(item *sdp.Item) {
+			items = append(items, item)
+			wg.Done() // signal that we processed an item
+		}
+
+		var errs []error
+		mockErrorHandler := func(err error) {
+			errs = append(errs, err)
+		}
+
+		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
+		adapter.SearchStream(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey("global", "test-key-ring"), true, stream)
+		wg.Wait()
+
+		if len(errs) != 0 {
+			t.Fatalf("Expected no errors, got: %v", errs)
+		}
+
+		if len(items) != 2 {
+			t.Fatalf("Expected 2 items, got: %d", len(items))
+		}
+	})
 }
 
 // createCryptoKey creates a CryptoKey with the specified name, primary version, and state.

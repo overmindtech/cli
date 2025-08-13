@@ -7,6 +7,7 @@ import (
 
 	"cloud.google.com/go/bigquery"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -88,6 +89,10 @@ func (b BigQueryDatasetWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Que
 	}
 
 	return items, nil
+}
+
+func (b BigQueryDatasetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	b.client.ListStream(ctx, b.ProjectID(), stream, b.GCPBigQueryDatasetToItem)
 }
 
 func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, metadata *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError) {

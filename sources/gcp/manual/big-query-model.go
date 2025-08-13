@@ -5,6 +5,7 @@ import (
 
 	"cloud.google.com/go/bigquery"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -45,10 +46,10 @@ func (m BigQueryModelWrapper) Get(ctx context.Context, queryParts ...string) (*s
 	if err != nil {
 		return nil, gcpshared.QueryError(err)
 	}
-	return m.GCPBigQueryMetadataToItem(ctx, queryParts[0], metadata)
+	return m.GCPBigQueryMetadataToItem(queryParts[0], metadata)
 }
 
-func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, dataSetId string, metadata *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
+func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(dataSetId string, metadata *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(metadata, "labels")
 	if err != nil {
 		return nil, gcpshared.QueryError(err)
@@ -133,24 +134,13 @@ func (m BigQueryModelWrapper) SearchLookups() []sources.ItemTypeLookups {
 }
 
 func (m BigQueryModelWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	items, err := m.client.List(ctx, m.ProjectBase.ProjectID(), queryParts[0], func(ctx context.Context, metadata *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
-		// Convert the dataset metadata to an SDP item
-		attributes, err := shared.ToAttributesWithExclude(metadata, "labels")
-		if err != nil {
-			return nil, gcpshared.QueryError(err)
-		}
-
-		item := &sdp.Item{
-			Type:            gcpshared.BigQueryModel.String(),
-			UniqueAttribute: "Name",
-			Scope:           m.DefaultScope(),
-			Attributes:      attributes,
-			Tags:            metadata.Labels,
-		}
-		return item, nil
-	})
+	items, err := m.client.List(ctx, m.ProjectBase.ProjectID(), queryParts[0], m.GCPBigQueryMetadataToItem)
 	if err != nil {
 		return nil, gcpshared.QueryError(err)
 	}
 	return items, nil
+}
+
+func (m BigQueryModelWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string) {
+	m.client.ListStream(ctx, m.ProjectBase.ProjectID(), queryParts[0], stream, m.GCPBigQueryMetadataToItem)
 }

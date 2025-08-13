@@ -8,6 +8,7 @@ import (
 	"google.golang.org/api/iterator"
 	"k8s.io/utils/ptr"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -134,6 +135,33 @@ func (c computeNodeGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Qu
 	return items, nil
 }
 
+// ListStream lists compute node groups and sends them as items to the stream.
+func (c computeNodeGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	it := c.client.List(ctx, &computepb.ListNodeGroupsRequest{
+		Project: c.ProjectID(),
+		Zone:    c.Zone(),
+	})
+
+	for {
+		nodeGroup, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(nodeGroup)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
+}
+
 // Search Currently supports a node template query.
 func (c computeNodeGroupWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
 	// Supported search for now is by node template
@@ -166,6 +194,38 @@ func (c computeNodeGroupWrapper) Search(ctx context.Context, queryParts ...strin
 	}
 
 	return items, nil
+}
+
+func (c computeNodeGroupWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string) {
+	// Supported search for now is by node template
+	nodeTemplate := queryParts[0]
+
+	req := &computepb.ListNodeGroupsRequest{
+		Project: c.ProjectID(),
+		Zone:    c.Zone(),
+		Filter:  ptr.To("nodeTemplate = " + nodeTemplate),
+	}
+
+	it := c.client.List(ctx, req)
+
+	for {
+		nodeGroup, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(nodeGroup)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 func (c computeNodeGroupWrapper) gcpComputeNodeGroupToSDPItem(nodegroup *computepb.NodeGroup) (*sdp.Item, *sdp.QueryError) {

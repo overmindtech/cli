@@ -9,6 +9,7 @@ import (
 	"cloud.google.com/go/logging/apiv2/loggingpb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -103,6 +104,31 @@ func (l loggingSinkWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryEr
 	}
 
 	return items, nil
+}
+
+func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	it := l.client.ListSinks(ctx, &loggingpb.ListSinksRequest{
+		Parent: fmt.Sprintf("projects/%s", l.ProjectID()),
+	})
+
+	for {
+		sink, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := l.gcpLoggingSinkToItem(sink)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 func (l loggingSinkWrapper) gcpLoggingSinkToItem(sink *loggingpb.LogSink) (*sdp.Item, *sdp.QueryError) {

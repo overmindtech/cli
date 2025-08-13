@@ -3,6 +3,7 @@ package manual_test
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
@@ -10,6 +11,7 @@ import (
 	"google.golang.org/api/iterator"
 	"k8s.io/utils/ptr"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -232,6 +234,42 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 			expectedName := "instance-group-manager-" + fmt.Sprintf("%d", i+1)
 			if item.UniqueAttributeValue() != expectedName {
 				t.Fatalf("Expected name %s, got: %s", expectedName, item.UniqueAttributeValue())
+			}
+		}
+	})
+
+	t.Run("ListStream", func(t *testing.T) {
+		wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		mockIterator := mocks.NewMockComputeInstanceGroupManagerIterator(ctrl)
+		mockIterator.EXPECT().Next().Return(createInstanceGroupManager("instance-group-manager-1", true, instanceTemplateName), nil)
+		mockIterator.EXPECT().Next().Return(createInstanceGroupManager("instance-group-manager-2", false, instanceTemplateName), nil)
+		mockIterator.EXPECT().Next().Return(nil, iterator.Done)
+
+		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockIterator)
+
+		wg := &sync.WaitGroup{}
+		wg.Add(2)
+
+		var items []*sdp.Item
+		var errs []error
+		mockItemHandler := func(item *sdp.Item) { items = append(items, item); wg.Done() }
+		mockErrorHandler := func(err error) { errs = append(errs, err) }
+
+		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
+		adapter.ListStream(ctx, wrapper.Scopes()[0], true, stream)
+		wg.Wait()
+
+		if len(errs) != 0 {
+			t.Fatalf("Expected no errors, got: %v", errs)
+		}
+		if len(items) != 2 {
+			t.Fatalf("Expected 2 items, got: %d", len(items))
+		}
+		for _, item := range items {
+			if item.Validate() != nil {
+				t.Fatalf("Expected no validation error, got: %v", item.Validate())
 			}
 		}
 	})

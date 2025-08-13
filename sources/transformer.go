@@ -49,11 +49,23 @@ type ListableWrapper interface {
 	List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError)
 }
 
+// ListStreamableWrapper defines an interface for resources that support listing with streaming.
+type ListStreamableWrapper interface {
+	Wrapper
+	ListStream(ctx context.Context, stream discovery.QueryResultStream)
+}
+
 // SearchableWrapper defines an optional interface for resources that support searching.
 type SearchableWrapper interface {
 	Wrapper
 	SearchLookups() []ItemTypeLookups
 	Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError)
+}
+
+// SearchStreamableWrapper defines an interface for resources that support searching with streaming.
+type SearchStreamableWrapper interface {
+	Wrapper
+	SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string)
 }
 
 // SearchableListableWrapper defines an interface for resources that support both searching and listing.
@@ -67,6 +79,7 @@ type StandardAdapter interface {
 	Validate() error
 	discovery.Adapter
 	discovery.ListableAdapter
+	discovery.StreamingAdapter
 	discovery.SearchableAdapter
 	discovery.CachingAdapter
 }
@@ -82,9 +95,19 @@ func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
 		a.listable = listable
 	}
 
+	// Check if the wrapper supports ListableStreamableWrapper
+	if listStreamable, ok := wrapper.(ListStreamableWrapper); ok {
+		a.listStreamable = listStreamable
+	}
+
 	// Check if the wrapper supports SearchableWrapper
 	if searchable, ok := wrapper.(SearchableWrapper); ok {
 		a.searchable = searchable
+	}
+
+	// Check if the wrapper supports SearchableStreamableWrapper
+	if searchStreamable, ok := wrapper.(SearchStreamableWrapper); ok {
+		a.searchStreamable = searchStreamable
 	}
 
 	if err := a.Validate(); err != nil {
@@ -101,9 +124,11 @@ func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
 }
 
 type standardAdapterImpl struct {
-	wrapper    Wrapper
-	listable   ListableWrapper
-	searchable SearchableWrapper
+	wrapper          Wrapper
+	listable         ListableWrapper
+	listStreamable   ListStreamableWrapper
+	searchable       SearchableWrapper
+	searchStreamable SearchStreamableWrapper
 }
 
 // Type returns the type of the adapter.
@@ -162,6 +187,20 @@ func (s *standardAdapterImpl) List(ctx context.Context, scope string, ignoreCach
 	}
 
 	return items, nil
+}
+
+func (s *standardAdapterImpl) ListStream(ctx context.Context, scope string, ignoreCache bool, stream discovery.QueryResultStream) {
+	if err := s.validateScopes(scope); err != nil {
+		stream.SendError(err)
+		return
+	}
+
+	if s.listStreamable == nil {
+		log.WithField("adapter", s.Name()).Debug("list stream operation not supported")
+		return
+	}
+
+	s.listStreamable.ListStream(ctx, stream)
 }
 
 // Search retrieves items based on a search query.
@@ -232,6 +271,74 @@ func (s *standardAdapterImpl) Search(ctx context.Context, scope string, query st
 	}
 
 	return items, nil
+}
+
+func (s *standardAdapterImpl) SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
+	if err := s.validateScopes(scope); err != nil {
+		stream.SendError(err)
+		return
+	}
+
+	var queryParts []string
+	if strings.HasPrefix(query, "projects/") {
+		// This must be a terraform query in the format of:
+		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
+		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
+		//
+		// Extract the relevant parts from the query
+		// We need to extract the path parameters based on the number of lookups
+		queryParts = gcpshared.ExtractPathParamsWithCount(query, len(s.wrapper.GetLookups()))
+		if len(queryParts) != len(s.wrapper.GetLookups()) {
+			stream.SendError(&sdp.QueryError{
+				ErrorType: sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf(
+					"failed to handle terraform mapping from query %s for %s",
+					query,
+					s.wrapper.ItemType().Readable(),
+				),
+			})
+			return
+		}
+
+		item, err := s.Get(ctx, scope, shared.CompositeLookupKey(queryParts...), ignoreCache)
+		if err != nil {
+			stream.SendError(fmt.Errorf("failed to get item from terraform mapping: %w", err))
+			return
+		}
+
+		stream.SendItem(item)
+		return
+	}
+
+	if s.searchStreamable == nil {
+		log.WithField("adapter", s.Name()).Debug("search stream operation not supported")
+		return
+	}
+
+	// This must be a regular query in the format of:
+	// {{datasetName}}|{{tableName}}
+	queryParts = strings.Split(query, shared.QuerySeparator)
+
+	var validQuery bool
+	for _, kw := range s.searchable.SearchLookups() {
+		if len(kw) == len(queryParts) {
+			validQuery = true
+			break
+		}
+
+		continue
+	}
+
+	if !validQuery {
+		stream.SendError(fmt.Errorf(
+			"invalid search query format: %s, expected: %s",
+			query,
+			expectedSearchQueryFormat(s.searchable.SearchLookups()),
+		))
+		return
+	}
+
+	s.searchStreamable.SearchStream(ctx, stream, queryParts...)
 }
 
 // Cache returns the cache of the adapter.

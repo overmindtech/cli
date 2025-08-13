@@ -3,11 +3,13 @@ package manual_test
 import (
 	"context"
 	"fmt"
+	"sync"
 	"testing"
 
 	"cloud.google.com/go/iam/admin/apiv1/adminpb"
 	"go.uber.org/mock/gomock"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -109,6 +111,45 @@ func TestIAMServiceAccountKey(t *testing.T) {
 		}
 	})
 
+	t.Run("SearchStream", func(t *testing.T) {
+		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		mockClient.EXPECT().Search(ctx, gomock.Any()).Return(&adminpb.ListServiceAccountKeysResponse{
+			Keys: []*adminpb.ServiceAccountKey{
+				createServiceAccountKey(testKeyFullName),
+			},
+		}, nil)
+
+		var items []*sdp.Item
+		var errs []error
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+
+		mockItemHandler := func(item *sdp.Item) {
+			items = append(items, item)
+			wg.Done()
+		}
+		mockErrorHandler := func(err error) {
+			errs = append(errs, err)
+		}
+
+		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
+		adapter.SearchStream(ctx, wrapper.Scopes()[0], testServiceAccount, true, stream)
+		wg.Wait()
+
+		if len(errs) > 0 {
+			t.Fatalf("Expected no errors, got: %v", errs)
+		}
+		if len(items) != 1 {
+			t.Fatalf("Expected 1 item, got: %d", len(items))
+		}
+		for _, item := range items {
+			if err := item.Validate(); err != nil {
+				t.Fatalf("Expected no validation error, got: %v", err)
+			}
+		}
+	})
 }
 
 // createServiceAccountKey creates a ServiceAccountKey with the specified name.

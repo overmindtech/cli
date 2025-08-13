@@ -2,6 +2,7 @@ package manual_test
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
@@ -9,6 +10,7 @@ import (
 	"google.golang.org/api/iterator"
 	"k8s.io/utils/ptr"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -125,6 +127,48 @@ func TestComputeImage(t *testing.T) {
 			if item.GetTags()["env"] != "test" {
 				t.Fatalf("Expected tag 'env=test', got: %s", item.GetTags()["env"])
 			}
+		}
+	})
+
+	t.Run("ListStream", func(t *testing.T) {
+		wrapper := manual.NewComputeImage(mockClient, projectID)
+
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		mockComputeIterator := mocks.NewMockComputeImageIterator(ctrl)
+
+		// add mock implementation here
+		mockComputeIterator.EXPECT().Next().Return(createComputeImage("test-image-1", computepb.Image_READY), nil)
+		mockComputeIterator.EXPECT().Next().Return(createComputeImage("test-image-2", computepb.Image_READY), nil)
+		mockComputeIterator.EXPECT().Next().Return(nil, iterator.Done)
+
+		// Mock the List method
+		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockComputeIterator)
+
+		wg := &sync.WaitGroup{}
+		wg.Add(2) // we added two items
+
+		var items []*sdp.Item
+		mockItemHandler := func(item *sdp.Item) {
+			items = append(items, item)
+			wg.Done() // signal that we processed an item
+		}
+
+		var errs []error
+		mockErrorHandler := func(err error) {
+			errs = append(errs, err)
+		}
+
+		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
+		adapter.ListStream(ctx, wrapper.Scopes()[0], true, stream)
+		wg.Wait()
+
+		if len(errs) != 0 {
+			t.Fatalf("Expected no errors, got: %v", errs)
+		}
+
+		if len(items) != 2 {
+			t.Fatalf("Expected 2 items, got: %d", len(items))
 		}
 	})
 }

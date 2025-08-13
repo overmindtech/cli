@@ -7,6 +7,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -113,6 +114,32 @@ func (c computeNodeTemplateWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp
 	}
 
 	return items, nil
+}
+
+func (c computeNodeTemplateWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	it := c.client.List(ctx, &computepb.ListNodeTemplatesRequest{
+		Project: c.ProjectID(),
+		Region:  c.Region(),
+	})
+
+	for {
+		nodeTemplate, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpComputeNodeTemplateToSDPItem(nodeTemplate)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 func (c computeNodeTemplateWrapper) gcpComputeNodeTemplateToSDPItem(nodeTemplate *computepb.NodeTemplate) (*sdp.Item, *sdp.QueryError) {

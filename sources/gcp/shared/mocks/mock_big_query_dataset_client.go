@@ -14,6 +14,7 @@ import (
 	reflect "reflect"
 
 	bigquery "cloud.google.com/go/bigquery"
+	discovery "github.com/overmindtech/cli/discovery"
 	sdp "github.com/overmindtech/cli/sdp-go"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -72,6 +73,18 @@ func (mr *MockBigQueryDatasetClientMockRecorder) List(ctx, projectID, toSDPItem 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockBigQueryDatasetClient)(nil).List), ctx, projectID, toSDPItem)
 }
 
+// ListStream mocks base method.
+func (m *MockBigQueryDatasetClient) ListStream(ctx context.Context, projectID string, stream discovery.QueryResultStream, toSDPItem func(context.Context, *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError)) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ListStream", ctx, projectID, stream, toSDPItem)
+}
+
+// ListStream indicates an expected call of ListStream.
+func (mr *MockBigQueryDatasetClientMockRecorder) ListStream(ctx, projectID, stream, toSDPItem any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStream", reflect.TypeOf((*MockBigQueryDatasetClient)(nil).ListStream), ctx, projectID, stream, toSDPItem)
+}
+
 // MockBigQueryTableClient is a mock of BigQueryTableClient interface.
 type MockBigQueryTableClient struct {
 	ctrl     *gomock.Controller
@@ -126,29 +139,39 @@ func (mr *MockBigQueryTableClientMockRecorder) List(ctx, projectID, datasetID, t
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockBigQueryTableClient)(nil).List), ctx, projectID, datasetID, toSDPItem)
 }
 
+// ListStream mocks base method.
+func (m *MockBigQueryTableClient) ListStream(ctx context.Context, projectID, datasetID string, stream discovery.QueryResultStream, toSDPItem func(*bigquery.TableMetadata) (*sdp.Item, *sdp.QueryError)) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ListStream", ctx, projectID, datasetID, stream, toSDPItem)
+}
 
+// ListStream indicates an expected call of ListStream.
+func (mr *MockBigQueryTableClientMockRecorder) ListStream(ctx, projectID, datasetID, stream, toSDPItem any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStream", reflect.TypeOf((*MockBigQueryTableClient)(nil).ListStream), ctx, projectID, datasetID, stream, toSDPItem)
+}
 
 // MockBigQueryModelClient is a mock of BigQueryModelClient interface.
 type MockBigQueryModelClient struct {
 	ctrl     *gomock.Controller
-	recorder *MockBigQueryModelClientRecorder
+	recorder *MockBigQueryModelClientMockRecorder
 	isgomock struct{}
 }
 
-// MockBigQueryModelClientRecorder is the mock recorder for MockBigQueryModelClient.
-type MockBigQueryModelClientRecorder struct {
+// MockBigQueryModelClientMockRecorder is the mock recorder for MockBigQueryModelClient.
+type MockBigQueryModelClientMockRecorder struct {
 	mock *MockBigQueryModelClient
 }
 
-// NewMockBigModelClient creates a new mock instance.
-func NewMockBigModelClient(ctrl *gomock.Controller) *MockBigQueryModelClient {
+// NewMockBigQueryModelClient creates a new mock instance.
+func NewMockBigQueryModelClient(ctrl *gomock.Controller) *MockBigQueryModelClient {
 	mock := &MockBigQueryModelClient{ctrl: ctrl}
-	mock.recorder = &MockBigQueryModelClientRecorder{mock}
+	mock.recorder = &MockBigQueryModelClientMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockBigQueryModelClient) EXPECT() *MockBigQueryModelClientRecorder {
+func (m *MockBigQueryModelClient) EXPECT() *MockBigQueryModelClientMockRecorder {
 	return m.recorder
 }
 
@@ -162,13 +185,13 @@ func (m *MockBigQueryModelClient) Get(ctx context.Context, projectID, datasetID,
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockBigQueryModelClientRecorder) Get(ctx, projectID, datasetID, modelID any) *gomock.Call {
+func (mr *MockBigQueryModelClientMockRecorder) Get(ctx, projectID, datasetID, modelID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockBigQueryModelClient)(nil).Get), ctx, projectID, datasetID, modelID)
 }
 
 // List mocks base method.
-func (m *MockBigQueryModelClient) List(ctx context.Context, projectID, datasetID string, toSDPItem func(context.Context,*bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError)) ([]*sdp.Item, *sdp.QueryError) {
+func (m *MockBigQueryModelClient) List(ctx context.Context, projectID, datasetID string, toSDPItem func(string, *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError)) ([]*sdp.Item, *sdp.QueryError) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, projectID, datasetID, toSDPItem)
 	ret0, _ := ret[0].([]*sdp.Item)
@@ -177,7 +200,19 @@ func (m *MockBigQueryModelClient) List(ctx context.Context, projectID, datasetID
 }
 
 // List indicates an expected call of List.
-func (mr *MockBigQueryModelClientRecorder) List(ctx, projectID, datasetID, toSDPItem any) *gomock.Call {
+func (mr *MockBigQueryModelClientMockRecorder) List(ctx, projectID, datasetID, toSDPItem any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockBigQueryModelClient)(nil).List), ctx, projectID, datasetID, toSDPItem)
+}
+
+// ListStream mocks base method.
+func (m *MockBigQueryModelClient) ListStream(ctx context.Context, projectID, datasetID string, stream discovery.QueryResultStream, toSDPItem func(string, *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError)) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ListStream", ctx, projectID, datasetID, stream, toSDPItem)
+}
+
+// ListStream indicates an expected call of ListStream.
+func (mr *MockBigQueryModelClientMockRecorder) ListStream(ctx, projectID, datasetID, stream, toSDPItem any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStream", reflect.TypeOf((*MockBigQueryModelClient)(nil).ListStream), ctx, projectID, datasetID, stream, toSDPItem)
 }

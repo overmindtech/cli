@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -118,6 +119,32 @@ func (c computeForwardingRuleWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 	}
 
 	return items, nil
+}
+
+func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	it := c.client.List(ctx, &computepb.ListForwardingRulesRequest{
+		Project: c.ProjectID(),
+		Region:  c.Region(),
+	})
+
+	for {
+		rule, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(rule)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(rule *computepb.ForwardingRule) (*sdp.Item, *sdp.QueryError) {

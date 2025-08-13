@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -116,6 +117,32 @@ func (c computeBackendServiceWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 	return items, nil
 }
 
+// ListStream lists compute backend services and sends them to the stream.
+func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	it := c.client.List(ctx, &computepb.ListBackendServicesRequest{
+		Project: c.ProjectID(),
+	})
+
+	for {
+		backendService, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpComputeBackendServiceToSDPItem(backendService)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
+}
+
 func (c computeBackendServiceWrapper) gcpComputeBackendServiceToSDPItem(bs *computepb.BackendService) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(bs)
 	if err != nil {
@@ -218,8 +245,10 @@ func (c computeBackendServiceWrapper) gcpComputeBackendServiceToSDPItem(bs *comp
 			// This will be a global resource but it will require a location dynamically.
 			// So, we need to extract the location and the policy name from the URL.
 			if strings.Contains(clientTlsPolicy, "/") {
-				policyName, location := extractNameAndLocation(clientTlsPolicy)
-				if location != "" && policyName != "" {
+				params := gcpshared.ExtractPathParams(clientTlsPolicy, "locations", "clientTlsPolicies")
+				if len(params) == 2 && params[0] != "" && params[1] != "" {
+					location := params[0]
+					policyName := params[1]
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							// The resource name will be: "gcp-network-security-client-tls-policy"
@@ -244,8 +273,10 @@ func (c computeBackendServiceWrapper) gcpComputeBackendServiceToSDPItem(bs *comp
 	// https://cloud.google.com/service-mesh/docs/reference/network-services/rest/v1/projects.locations.serviceLbPolicies/get
 	if serviceLbPolicy := bs.GetServiceLbPolicy(); serviceLbPolicy != "" {
 		if strings.Contains(serviceLbPolicy, "/") {
-			policyName, location := extractNameAndLocation(serviceLbPolicy)
-			if location != "" && policyName != "" {
+			params := gcpshared.ExtractPathParams(serviceLbPolicy, "locations", "serviceLbPolicies")
+			if len(params) == 2 && params[0] != "" && params[1] != "" {
+				location := params[0]
+				policyName := params[1]
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.NetworkServicesServiceLbPolicy.String(),
@@ -268,8 +299,10 @@ func (c computeBackendServiceWrapper) gcpComputeBackendServiceToSDPItem(bs *comp
 	if serviceBindings := bs.GetServiceBindings(); serviceBindings != nil {
 		for _, serviceBinding := range serviceBindings {
 			if strings.Contains(serviceBinding, "/") {
-				bindingName, location := extractNameAndLocation(serviceBinding)
-				if location != "" && bindingName != "" {
+				params := gcpshared.ExtractPathParams(serviceBinding, "locations", "serviceBindings")
+				if len(params) == 2 && params[0] != "" && params[1] != "" {
+					location := params[0]
+					bindingName := params[1]
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   gcpshared.NetworkServicesServiceBinding.String(),
@@ -288,24 +321,4 @@ func (c computeBackendServiceWrapper) gcpComputeBackendServiceToSDPItem(bs *comp
 	}
 
 	return sdpItem, nil
-}
-
-// extractNameAndLocation extracts the name and location from the URL
-func extractNameAndLocation(url string) (string, string) {
-	// The URL should look like this:
-	// GET https://networksecurity.googleapis.com/v1/{name=projects/*/locations/*/clientTlsPolicies/*}
-	// So we need to extract the location and the policy name from the URL.
-	url = strings.TrimSuffix(url, "/") // Remove trailing slash
-	parts := strings.Split(url, "/")
-	length := len(parts)
-	if length < 8 {
-		return "", ""
-	}
-
-	// It is not in the format we expect
-	if parts[length-4] != "locations" {
-		return "", ""
-	}
-
-	return parts[length-1], parts[length-3]
 }

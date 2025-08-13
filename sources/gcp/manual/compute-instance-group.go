@@ -7,6 +7,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -80,7 +81,7 @@ func (c computeInstanceGroupWrapper) Get(ctx context.Context, queryParts ...stri
 		return nil, gcpshared.QueryError(err)
 	}
 
-	item, sdpErr := c.gcpInstanceGroupToSDPItem(instanceGroup)
+	item, sdpErr := c.gcpComputeInstanceGroupToSDPItem(instanceGroup)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -105,7 +106,7 @@ func (c computeInstanceGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sd
 			return nil, gcpshared.QueryError(err)
 		}
 
-		item, sdpErr := c.gcpInstanceGroupToSDPItem(instanceGroup)
+		item, sdpErr := c.gcpComputeInstanceGroupToSDPItem(instanceGroup)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -116,8 +117,35 @@ func (c computeInstanceGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sd
 	return items, nil
 }
 
-// gcpInstanceGroupToSDPItem converts a GCP InstanceGroup to an SDP Item, linking GCP resource fields.
-func (c computeInstanceGroupWrapper) gcpInstanceGroupToSDPItem(instanceGroup *computepb.InstanceGroup) (*sdp.Item, *sdp.QueryError) {
+// ListStream lists compute instance groups and sends them as stream items.
+func (c computeInstanceGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	it := c.client.List(ctx, &computepb.ListInstanceGroupsRequest{
+		Project: c.ProjectID(),
+		Zone:    c.Zone(),
+	})
+
+	for {
+		instanceGroup, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpComputeInstanceGroupToSDPItem(instanceGroup)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
+}
+
+// gcpComputeInstanceGroupToSDPItem converts a GCP InstanceGroup to an SDP Item, linking GCP resource fields.
+func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGroup *computepb.InstanceGroup) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(instanceGroup, "")
 	if err != nil {
 		return nil, &sdp.QueryError{

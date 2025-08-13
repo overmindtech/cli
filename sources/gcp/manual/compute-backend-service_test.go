@@ -1,7 +1,8 @@
-package manual
+package manual_test
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
@@ -9,57 +10,14 @@ import (
 	"google.golang.org/api/iterator"
 	"k8s.io/utils/ptr"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
+	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 )
-
-func TestExtractPolicyNameAndLocation(t *testing.T) {
-	tests := []struct {
-		name               string
-		url                string
-		expectedPolicyName string
-		expectedLocation   string
-	}{
-		{
-			name: "Valid URL with policy and location",
-			// GET https://networkservices.googleapis.com/v1/{name=projects/*/locations/*/serviceLbPolicies/*}
-			url:                "https://networksecurity.googleapis.com/v1/projects/my-project/locations/test-location/clientTlsPolicies/my-policy",
-			expectedPolicyName: "my-policy",
-			expectedLocation:   "test-location",
-		},
-		{
-			name:               "Invalid URL with missing parts",
-			url:                "https://networksecurity.googleapis.com/v1/projects/my-project/locations/",
-			expectedPolicyName: "",
-			expectedLocation:   "",
-		},
-		{
-			name:               "Empty URL",
-			url:                "",
-			expectedPolicyName: "",
-			expectedLocation:   "",
-		},
-		{
-			name:               "URL with extra slashes",
-			url:                "https://networksecurity.googleapis.com/v1/projects/my-project/locations/test-location/clientTlsPolicies/",
-			expectedPolicyName: "",
-			expectedLocation:   "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			policyName, location := extractNameAndLocation(tt.url)
-			if policyName != tt.expectedPolicyName || location != tt.expectedLocation {
-				t.Errorf("extractNameAndLocation(%q) = (%q, %q); want (%q, %q)",
-					tt.url, policyName, location, tt.expectedPolicyName, tt.expectedLocation)
-			}
-		})
-	}
-}
 
 func TestComputeBackendService(t *testing.T) {
 	ctx := context.Background()
@@ -70,7 +28,7 @@ func TestComputeBackendService(t *testing.T) {
 	projectID := "test-project"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := NewComputeBackendService(mockClient, projectID)
+		wrapper := manual.NewComputeBackendService(mockClient, projectID)
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeBackendService("test-backend-service"), nil)
 
@@ -151,7 +109,7 @@ func TestComputeBackendService(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := NewComputeBackendService(mockClient, projectID)
+		wrapper := manual.NewComputeBackendService(mockClient, projectID)
 
 		adapter := sources.WrapperToAdapter(wrapper)
 
@@ -178,6 +136,48 @@ func TestComputeBackendService(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("ListStream", func(t *testing.T) {
+		wrapper := manual.NewComputeBackendService(mockClient, projectID)
+
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		mockBackendServiceIterator := mocks.NewMockComputeBackendServiceIterator(ctrl)
+
+		// add mock implementation here
+		mockBackendServiceIterator.EXPECT().Next().Return(createComputeBackendService("test-backend-service-1"), nil)
+		mockBackendServiceIterator.EXPECT().Next().Return(createComputeBackendService("test-backend-service-2"), nil)
+		mockBackendServiceIterator.EXPECT().Next().Return(nil, iterator.Done)
+
+		// Mock the List method
+		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockBackendServiceIterator)
+
+		wg := &sync.WaitGroup{}
+		wg.Add(2) // we added two items
+
+		var items []*sdp.Item
+		mockItemHandler := func(item *sdp.Item) {
+			items = append(items, item)
+			wg.Done() // signal that we processed an item
+		}
+
+		var errs []error
+		mockErrorHandler := func(err error) {
+			errs = append(errs, err)
+		}
+
+		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
+		adapter.ListStream(ctx, wrapper.Scopes()[0], true, stream)
+		wg.Wait()
+
+		if len(errs) != 0 {
+			t.Fatalf("Expected no errors, got: %v", errs)
+		}
+
+		if len(items) != 2 {
+			t.Fatalf("Expected 2 items, got: %d", len(items))
+		}
+	})
 }
 
 func createComputeBackendService(name string) *computepb.BackendService {
@@ -191,7 +191,7 @@ func createComputeBackendService(name string) *computepb.BackendService {
 		},
 		ServiceLbPolicy: ptr.To(" https://networkservices.googleapis.com/v1alpha1/name=projects/test-project/locations/test-location/serviceLbPolicies/test-service-lb-policy"),
 		ServiceBindings: []string{
-			"https://networkservices.googleapis.com/v1alpha1/projects/test-project/locations/test-location/serviceLbPolicies/test-service-binding",
+			"https://networkservices.googleapis.com/v1alpha1/projects/test-project/locations/test-location/serviceBindings/test-service-binding",
 		},
 	}
 }

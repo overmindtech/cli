@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/kms/apiv1/kmspb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -140,6 +141,37 @@ func (c cloudKMSCryptoKeyWrapper) Search(ctx context.Context, queryParts ...stri
 	}
 
 	return items, nil
+}
+
+func (c cloudKMSCryptoKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string) {
+	location := queryParts[0]
+	keyRing := queryParts[1]
+
+	parent := fmt.Sprintf("projects/%s/locations/%s/keyRings/%s",
+		c.ProjectID(), location, keyRing,
+	)
+
+	it := c.client.List(ctx, &kmspb.ListCryptoKeysRequest{
+		Parent: parent,
+	})
+
+	for {
+		cryptoKey, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpCryptoKeyToSDPItem(cryptoKey)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 // gcpCryptoKeyToSDPItem converts a GCP CryptoKey to an SDP Item, linking GCP resource fields.

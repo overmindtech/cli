@@ -2,12 +2,14 @@ package manual_test
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"cloud.google.com/go/iam/admin/apiv1/adminpb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -125,6 +127,46 @@ func TestIAMServiceAccount(t *testing.T) {
 		}
 	})
 
+	t.Run("ListStream", func(t *testing.T) {
+		wrapper := manual.NewIAMServiceAccount(mockClient, projectID)
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		mockIterator := mocks.NewMockIAMServiceAccountIterator(ctrl)
+
+		// add mock implementation here
+		mockIterator.EXPECT().Next().Return(createServiceAccount("111", "sa1@test-project-id.iam.gserviceaccount.com", "SA 1", projectID, false), nil)
+		mockIterator.EXPECT().Next().Return(createServiceAccount("222", "sa2@test-project-id.iam.gserviceaccount.com", "SA 2", projectID, true), nil)
+		mockIterator.EXPECT().Next().Return(nil, iterator.Done)
+
+		// Mock the List method
+		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockIterator)
+
+		wg := &sync.WaitGroup{}
+		wg.Add(2) // we added two items
+
+		var items []*sdp.Item
+		mockItemHandler := func(item *sdp.Item) {
+			items = append(items, item)
+			wg.Done() // signal that we processed an item
+		}
+
+		var errs []error
+		mockErrorHandler := func(err error) {
+			errs = append(errs, err)
+		}
+
+		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
+		adapter.ListStream(ctx, wrapper.Scopes()[0], true, stream)
+		wg.Wait()
+
+		if len(errs) != 0 {
+			t.Fatalf("Expected no errors, got: %v", errs)
+		}
+
+		if len(items) != 2 {
+			t.Fatalf("Expected 2 items, got: %d", len(items))
+		}
+	})
 }
 
 // createServiceAccount creates a ServiceAccount with the specified fields.

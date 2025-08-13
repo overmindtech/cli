@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -124,6 +125,33 @@ func (c computeAddressWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Quer
 	}
 
 	return items, nil
+}
+
+// ListStream lists compute addresses and sends them as items to the stream.
+func (c computeAddressWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	it := c.client.List(ctx, &computepb.ListAddressesRequest{
+		Project: c.ProjectID(),
+		Region:  c.Region(),
+	})
+
+	for {
+		address, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpComputeAddressToSDPItem(address)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 func (c computeAddressWrapper) gcpComputeAddressToSDPItem(address *computepb.Address) (*sdp.Item, *sdp.QueryError) {

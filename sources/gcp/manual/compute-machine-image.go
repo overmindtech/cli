@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -113,6 +114,32 @@ func (c computeMachineImageWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp
 	}
 
 	return items, nil
+}
+
+// ListStream lists compute machine images and sends them to the provided stream.
+func (c computeMachineImageWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	it := c.client.List(ctx, &computepb.ListMachineImagesRequest{
+		Project: c.ProjectID(),
+	})
+
+	for {
+		machineImage, err := it.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpComputeMachineImageToSDPItem(machineImage)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(machineImage *computepb.MachineImage) (*sdp.Item, *sdp.QueryError) {

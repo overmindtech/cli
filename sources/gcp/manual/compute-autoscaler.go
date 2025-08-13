@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -114,6 +115,32 @@ func (c computeAutoscalerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Q
 	}
 
 	return items, nil
+}
+
+func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+	results := c.client.List(ctx, &computepb.ListAutoscalersRequest{
+		Project: c.ProjectID(),
+		Zone:    c.Zone(),
+	})
+
+	for {
+		autoscaler, err := results.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			stream.SendError(gcpshared.QueryError(err))
+			return
+		}
+
+		item, sdpErr := c.gcpComputeAutoscalerToSDPItem(autoscaler)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+
+		stream.SendItem(item)
+	}
 }
 
 func (c computeAutoscalerWrapper) gcpComputeAutoscalerToSDPItem(autoscaler *computepb.Autoscaler) (*sdp.Item, *sdp.QueryError) {
