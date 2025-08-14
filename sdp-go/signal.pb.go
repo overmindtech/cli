@@ -404,7 +404,7 @@ func (x *GetItemSignalsRequest) GetChangeUUID() []byte {
 
 type GetItemSignalsResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// A map of Globally Unique Names (GUNs) of items to their aggregation of signals.
+	// A map of Globally Unique Names (GUNs) which is the friendly name to their aggregation of signals.
 	// These are by category, sorted by the signal value, ascending.
 	// We also include a value for this GUN, which is calculated by AggregateSignalScores
 	ItemAggregations map[string]*ItemAggregation `protobuf:"bytes,1,rep,name=itemAggregations,proto3" json:"itemAggregations,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
