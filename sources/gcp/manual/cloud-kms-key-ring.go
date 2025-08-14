@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -141,7 +142,7 @@ func (c cloudKMSKeyRingWrapper) Search(ctx context.Context, queryParts ...string
 }
 
 // SearchStream streams the search results for KMS KeyRings.
-func (c cloudKMSKeyRingWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string) {
+func (c cloudKMSKeyRingWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
 	parent := fmt.Sprintf("projects/%s/locations/%s", c.ProjectID(), queryParts[0])
 
 	it := c.client.Search(ctx, &kmspb.ListKeyRingsRequest{
@@ -164,6 +165,7 @@ func (c cloudKMSKeyRingWrapper) SearchStream(ctx context.Context, stream discove
 			continue
 		}
 
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

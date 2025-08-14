@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"buf.build/go/protovalidate"
 	log "github.com/sirupsen/logrus"
@@ -15,8 +14,6 @@ import (
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
-
-const DefaultCacheDuration = 1 * time.Hour
 
 // AdapterConfig holds the configuration for a GCP dynamic adapter.
 type AdapterConfig struct {
@@ -156,7 +153,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		return nil, err
 	}
 
-	g.cache.StoreItem(item, DefaultCacheDuration, ck)
+	g.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
 
 	return item, nil
 }

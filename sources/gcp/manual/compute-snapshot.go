@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -122,7 +123,7 @@ func (c computeSnapshotWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Que
 }
 
 // ListStream lists compute snapshots and sends them as items to the stream.
-func (c computeSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+func (c computeSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListSnapshotsRequest{
 		Project: c.ProjectID(),
 	})
@@ -143,6 +144,7 @@ func (c computeSnapshotWrapper) ListStream(ctx context.Context, stream discovery
 			continue
 		}
 
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

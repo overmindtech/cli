@@ -52,7 +52,7 @@ type ListableWrapper interface {
 // ListStreamableWrapper defines an interface for resources that support listing with streaming.
 type ListStreamableWrapper interface {
 	Wrapper
-	ListStream(ctx context.Context, stream discovery.QueryResultStream)
+	ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey)
 }
 
 // SearchableWrapper defines an optional interface for resources that support searching.
@@ -65,7 +65,7 @@ type SearchableWrapper interface {
 // SearchStreamableWrapper defines an interface for resources that support searching with streaming.
 type SearchStreamableWrapper interface {
 	Wrapper
-	SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string)
+	SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string)
 }
 
 // SearchableListableWrapper defines an interface for resources that support both searching and listing.
@@ -89,6 +89,9 @@ func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
 	a := &standardAdapterImpl{
 		wrapper: wrapper,
 	}
+
+	// initialize cache
+	a.cache = sdpcache.NewCache()
 
 	// Check if the wrapper supports ListableWrapper
 	if listable, ok := wrapper.(ListableWrapper); ok {
@@ -129,6 +132,7 @@ type standardAdapterImpl struct {
 	listStreamable   ListStreamableWrapper
 	searchable       SearchableWrapper
 	searchStreamable SearchStreamableWrapper
+	cache            *sdpcache.Cache
 }
 
 // Type returns the type of the adapter.
@@ -152,6 +156,29 @@ func (s *standardAdapterImpl) Get(ctx context.Context, scope string, query strin
 		return nil, err
 	}
 
+	cacheHit, ck, cachedItem, qErr := s.cache.Lookup(
+		ctx,
+		s.Name(),
+		sdp.QueryMethod_GET,
+		scope,
+		s.Type(),
+		query,
+		ignoreCache,
+	)
+	if qErr != nil {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.source.type":      "gcp",
+			"ovm.source.adapter":   s.Name(),
+			"ovm.source.scope":     scope,
+			"ovm.source.method":    sdp.QueryMethod_GET.String(),
+			"ovm.source.cache-key": ck,
+		}).WithError(qErr).Error("failed to lookup item in cache")
+	}
+
+	if cacheHit && len(cachedItem) > 0 {
+		return cachedItem[0], nil
+	}
+
 	queryParts := strings.Split(query, shared.QuerySeparator)
 	if len(queryParts) != len(s.wrapper.GetLookups()) {
 		return nil, fmt.Errorf(
@@ -164,6 +191,11 @@ func (s *standardAdapterImpl) Get(ctx context.Context, scope string, query strin
 	item, err := s.wrapper.Get(ctx, queryParts...)
 	if err != nil {
 		return nil, err
+	}
+
+	// Store in cache after successful get
+	if s.cache != nil {
+		s.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
 	}
 
 	return item, nil
@@ -181,9 +213,38 @@ func (s *standardAdapterImpl) List(ctx context.Context, scope string, ignoreCach
 		return nil, nil
 	}
 
+	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(
+		ctx,
+		s.Name(),
+		sdp.QueryMethod_LIST,
+		scope,
+		s.Type(),
+		"",
+		ignoreCache,
+	)
+	if qErr != nil {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.source.type":      "gcp",
+			"ovm.source.adapter":   s.Name(),
+			"ovm.source.scope":     scope,
+			"ovm.source.method":    sdp.QueryMethod_LIST.String(),
+			"ovm.source.cache-key": ck,
+		}).WithError(qErr).Error("failed to lookup item in cache")
+	}
+
+	if cacheHit {
+		return cachedItems, nil
+	}
+
 	items, err := s.listable.List(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	for _, item := range items {
+		if s.cache != nil {
+			s.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
+		}
 	}
 
 	return items, nil
@@ -200,7 +261,33 @@ func (s *standardAdapterImpl) ListStream(ctx context.Context, scope string, igno
 		return
 	}
 
-	s.listStreamable.ListStream(ctx, stream)
+	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(
+		ctx,
+		s.Name(),
+		sdp.QueryMethod_LIST,
+		scope,
+		s.Type(),
+		"",
+		ignoreCache,
+	)
+	if qErr != nil {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.source.type":      "gcp",
+			"ovm.source.adapter":   s.Name(),
+			"ovm.source.scope":     scope,
+			"ovm.source.method":    sdp.QueryMethod_LIST.String(),
+			"ovm.source.cache-key": ck,
+		}).WithError(qErr).Error("failed to lookup item in cache")
+	}
+
+	if cacheHit {
+		for _, item := range cachedItems {
+			stream.SendItem(item)
+		}
+		return
+	}
+
+	s.listStreamable.ListStream(ctx, stream, s.cache, ck)
 }
 
 // Search retrieves items based on a search query.
@@ -279,6 +366,33 @@ func (s *standardAdapterImpl) SearchStream(ctx context.Context, scope string, qu
 		return
 	}
 
+	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(
+		ctx,
+		s.Name(),
+		sdp.QueryMethod_SEARCH,
+		scope,
+		s.Type(),
+		query,
+		ignoreCache,
+	)
+	if qErr != nil {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.source.type":      "gcp",
+			"ovm.source.adapter":   s.Name(),
+			"ovm.source.scope":     scope,
+			"ovm.source.method":    sdp.QueryMethod_SEARCH.String(),
+			"ovm.source.cache-key": ck,
+		}).WithError(qErr).Error("failed to lookup item in cache")
+	}
+
+	if cacheHit {
+		for _, item := range cachedItems {
+			stream.SendItem(item)
+		}
+
+		return
+	}
+
 	var queryParts []string
 	if strings.HasPrefix(query, "projects/") {
 		// This must be a terraform query in the format of:
@@ -305,6 +419,8 @@ func (s *standardAdapterImpl) SearchStream(ctx context.Context, scope string, qu
 			stream.SendError(fmt.Errorf("failed to get item from terraform mapping: %w", err))
 			return
 		}
+
+		s.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
 
 		stream.SendItem(item)
 		return
@@ -338,13 +454,12 @@ func (s *standardAdapterImpl) SearchStream(ctx context.Context, scope string, qu
 		return
 	}
 
-	s.searchStreamable.SearchStream(ctx, stream, queryParts...)
+	s.searchStreamable.SearchStream(ctx, stream, s.cache, ck, queryParts...)
 }
 
 // Cache returns the cache of the adapter.
 func (s *standardAdapterImpl) Cache() *sdpcache.Cache {
-	// Returning nil as Wrapper does not define caching
-	return nil
+	return s.cache
 }
 
 // Metadata returns the metadata of the adapter.
@@ -398,12 +513,11 @@ func (s *standardAdapterImpl) Metadata() *sdp.AdapterMetadata {
 
 // Validate checks if the adapter is valid.
 func (s *standardAdapterImpl) Validate() error {
-	err := protovalidate.Validate(s.Metadata())
-	if err != nil {
-		return err
+	if s.cache == nil {
+		return fmt.Errorf("cache is not initialized")
 	}
 
-	return nil
+	return protovalidate.Validate(s.Metadata())
 }
 
 func (s *standardAdapterImpl) validateScopes(scope string) error {

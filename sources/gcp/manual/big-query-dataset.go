@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -91,8 +92,14 @@ func (b BigQueryDatasetWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Que
 	return items, nil
 }
 
-func (b BigQueryDatasetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
-	b.client.ListStream(ctx, b.ProjectID(), stream, b.GCPBigQueryDatasetToItem)
+func (b BigQueryDatasetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+	b.client.ListStream(ctx, b.ProjectID(), stream, func(ctx context.Context, md *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError) {
+		item, qerr := b.GCPBigQueryDatasetToItem(ctx, md)
+		if qerr == nil && item != nil {
+			cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+		}
+		return item, qerr
+	})
 }
 
 func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, metadata *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError) {

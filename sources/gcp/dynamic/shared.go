@@ -344,7 +344,7 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery
 			continue
 		}
 
-		cache.StoreItem(item, DefaultCacheDuration, cacheKey)
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 
 		stream.SendItem(item)
 	}
@@ -405,7 +405,7 @@ func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, cac
 		return nil, fmt.Errorf("failed to convert response to SDP: %w", err)
 	}
 
-	cache.StoreItem(item, DefaultCacheDuration, cacheKey)
+	cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 
 	return []*sdp.Item{item}, nil
 }

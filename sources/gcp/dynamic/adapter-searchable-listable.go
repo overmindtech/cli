@@ -11,6 +11,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+	"github.com/overmindtech/cli/sources/shared"
 )
 
 type SearchableListableDiscoveryAdapter interface {
@@ -130,7 +131,7 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 	}
 
 	for _, item := range items {
-		g.cache.StoreItem(item, DefaultCacheDuration, ck)
+		g.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
 	}
 
 	return items, nil
@@ -184,6 +185,8 @@ func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, quer
 			})
 			return
 		}
+
+		g.cache.StoreItem(items[0], shared.DefaultCacheDuration, ck)
 
 		// There should only be one item in the result, so we can send it directly
 		stream.SendItem(items[0])

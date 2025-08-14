@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -113,7 +114,7 @@ func (n networkSecurityClientTlsPolicyWrapper) Search(ctx context.Context, query
 	return items, nil
 }
 
-func (n networkSecurityClientTlsPolicyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string) {
+func (n networkSecurityClientTlsPolicyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
 	req := &networksecuritypb.ListClientTlsPoliciesRequest{
 		// Required. The project and location from which the ClientTlsPolicies should
 		// be listed, specified in the format `projects/*/locations/{location}`.
@@ -137,6 +138,7 @@ func (n networkSecurityClientTlsPolicyWrapper) SearchStream(ctx context.Context,
 			continue
 		}
 
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

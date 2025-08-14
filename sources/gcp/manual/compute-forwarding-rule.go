@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -121,7 +122,7 @@ func (c computeForwardingRuleWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 	return items, nil
 }
 
-func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListForwardingRulesRequest{
 		Project: c.ProjectID(),
 		Region:  c.Region(),
@@ -143,6 +144,7 @@ func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream dis
 			continue
 		}
 
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

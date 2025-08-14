@@ -10,6 +10,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+	"github.com/overmindtech/cli/sources/shared"
 )
 
 // ListableAdapter implements discovery.ListableAdapter for GCP dynamic adapters.
@@ -102,7 +103,7 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 	}
 
 	for _, item := range items {
-		g.cache.StoreItem(item, DefaultCacheDuration, ck)
+		g.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
 	}
 
 	return items, nil

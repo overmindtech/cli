@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -129,7 +130,7 @@ func (c computeDiskWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryEr
 }
 
 // ListStream lists compute disks and sends them as items to the stream.
-func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListDisksRequest{
 		Project: c.ProjectID(),
 		Zone:    c.Zone(),
@@ -151,6 +152,7 @@ func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.Que
 			continue
 		}
 
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

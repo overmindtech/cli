@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -136,7 +137,7 @@ func (c computeNodeGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Qu
 }
 
 // ListStream lists compute node groups and sends them as items to the stream.
-func (c computeNodeGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+func (c computeNodeGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListNodeGroupsRequest{
 		Project: c.ProjectID(),
 		Zone:    c.Zone(),
@@ -158,6 +159,7 @@ func (c computeNodeGroupWrapper) ListStream(ctx context.Context, stream discover
 			continue
 		}
 
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }
@@ -196,7 +198,7 @@ func (c computeNodeGroupWrapper) Search(ctx context.Context, queryParts ...strin
 	return items, nil
 }
 
-func (c computeNodeGroupWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string) {
+func (c computeNodeGroupWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
 	// Supported search for now is by node template
 	nodeTemplate := queryParts[0]
 
@@ -224,6 +226,7 @@ func (c computeNodeGroupWrapper) SearchStream(ctx context.Context, stream discov
 			continue
 		}
 
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

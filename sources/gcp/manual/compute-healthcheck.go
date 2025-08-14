@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -108,7 +109,7 @@ func (c computeHealthCheckWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.
 }
 
 // ListStream implements the Streamer interface
-func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListHealthChecksRequest{
 		Project: c.ProjectID(),
 	})
@@ -129,6 +130,7 @@ func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discov
 			continue
 		}
 
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

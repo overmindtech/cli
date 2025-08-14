@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -143,7 +144,7 @@ func (c cloudKMSCryptoKeyWrapper) Search(ctx context.Context, queryParts ...stri
 	return items, nil
 }
 
-func (c cloudKMSCryptoKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string) {
+func (c cloudKMSCryptoKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
 	location := queryParts[0]
 	keyRing := queryParts[1]
 
@@ -170,6 +171,7 @@ func (c cloudKMSCryptoKeyWrapper) SearchStream(ctx context.Context, stream disco
 			stream.SendError(sdpErr)
 		}
 
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

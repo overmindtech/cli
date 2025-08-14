@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -115,7 +116,7 @@ func (c computeSecurityPolicyWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 }
 
 // ListStream lists compute security policies and sends them as items to the stream.
-func (c computeSecurityPolicyWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+func (c computeSecurityPolicyWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListSecurityPoliciesRequest{
 		Project: c.ProjectID(),
 	})

@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -106,7 +107,7 @@ func (l loggingSinkWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryEr
 	return items, nil
 }
 
-func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := l.client.ListSinks(ctx, &loggingpb.ListSinksRequest{
 		Parent: fmt.Sprintf("projects/%s", l.ProjectID()),
 	})
@@ -127,6 +128,7 @@ func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.Que
 			continue
 		}
 
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

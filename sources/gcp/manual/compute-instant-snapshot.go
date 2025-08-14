@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -119,7 +120,7 @@ func (c computeInstantSnapshotWrapper) List(ctx context.Context) ([]*sdp.Item, *
 }
 
 // ListStream lists compute instant snapshots and sends them to the stream.
-func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListInstantSnapshotsRequest{
 		Project: c.ProjectID(),
 		Zone:    c.Zone(),
@@ -141,6 +142,7 @@ func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream di
 			continue
 		}
 
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

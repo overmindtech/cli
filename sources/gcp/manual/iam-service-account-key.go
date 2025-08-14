@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -123,7 +124,7 @@ func (c iamServiceAccountKeyWrapper) Search(ctx context.Context, queryParts ...s
 }
 
 // SearchStream streams the search results for Service Account Keys.
-func (c iamServiceAccountKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, queryParts ...string) {
+func (c iamServiceAccountKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
 	serviceAccountIdentifier := queryParts[0]
 
 	it, err := c.client.Search(ctx, &adminpb.ListServiceAccountKeysRequest{
@@ -139,6 +140,9 @@ func (c iamServiceAccountKeyWrapper) SearchStream(ctx context.Context, stream di
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
+		}
+		if item != nil {
+			cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		}
 		stream.SendItem(item)
 	}

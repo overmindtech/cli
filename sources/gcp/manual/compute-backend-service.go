@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -118,7 +119,7 @@ func (c computeBackendServiceWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 }
 
 // ListStream lists compute backend services and sends them to the stream.
-func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListBackendServicesRequest{
 		Project: c.ProjectID(),
 	})
@@ -139,6 +140,7 @@ func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream dis
 			continue
 		}
 
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

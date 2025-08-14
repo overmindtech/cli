@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -117,7 +118,7 @@ func (c computeAutoscalerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Q
 	return items, nil
 }
 
-func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream) {
+func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	results := c.client.List(ctx, &computepb.ListAutoscalersRequest{
 		Project: c.ProjectID(),
 		Zone:    c.Zone(),
@@ -139,6 +140,7 @@ func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discove
 			continue
 		}
 
+		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

@@ -3,12 +3,16 @@ package shared
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
-const QuerySeparator = "|"
+const (
+	QuerySeparator       = "|"
+	DefaultCacheDuration = 1 * time.Hour
+)
 
 // ItemType is an interface that defines the methods for an ItemTypeInstance.
 // It is used to represent the type of item in the system.
