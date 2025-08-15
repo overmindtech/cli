@@ -75,7 +75,7 @@ func (c computeAutoscalerWrapper) Get(ctx context.Context, queryParts ...string)
 
 	autoscaler, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	var sdpErr *sdp.QueryError
@@ -102,7 +102,7 @@ func (c computeAutoscalerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Q
 		}
 
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		var sdpErr *sdp.QueryError
@@ -130,7 +130,7 @@ func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discove
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

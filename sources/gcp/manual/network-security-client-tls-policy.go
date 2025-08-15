@@ -65,7 +65,7 @@ func (n networkSecurityClientTlsPolicyWrapper) Get(ctx context.Context, queryPar
 
 	p, err := n.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, n.DefaultScope(), n.Type())
 	}
 
 	// Convert the ClientTlsPolicy to a sdp.Item
@@ -100,7 +100,7 @@ func (n networkSecurityClientTlsPolicyWrapper) Search(ctx context.Context, query
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, n.DefaultScope(), n.Type())
 		}
 
 		item, sdpErr := n.convertClientTlsPolicyToItem(p)
@@ -128,7 +128,7 @@ func (n networkSecurityClientTlsPolicyWrapper) SearchStream(ctx context.Context,
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, n.DefaultScope(), n.Type()))
 			return
 		}
 

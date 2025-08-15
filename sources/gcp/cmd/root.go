@@ -69,8 +69,9 @@ var rootCmd = &cobra.Command{
 		})
 
 		log.WithFields(log.Fields{
-			"port": healthCheckPort,
-			"path": healthCheckPath,
+			"ovm.source.type": "gcp",
+			"ovm.source.port": healthCheckPort,
+			"ovm.source.path": healthCheckPath,
 		}).Debug("Starting healthcheck server")
 
 		go func() {
@@ -85,15 +86,17 @@ var rootCmd = &cobra.Command{
 			err := server.ListenAndServe()
 
 			log.WithError(err).WithFields(log.Fields{
-				"port": healthCheckPort,
-				"path": healthCheckPath,
+				"ovm.source.type": "gcp",
+				"ovm.source.port": healthCheckPort,
+				"ovm.source.path": healthCheckPath,
 			}).Error("Could not start HTTP server for /healthz health checks")
 		}()
 
 		err = e.Start()
 		if err != nil {
 			log.WithFields(log.Fields{
-				"error": err,
+				"ovm.source.type":  "gcp",
+				"ovm.source.error": err,
 			}).Fatal("Could not start engine")
 		}
 
@@ -109,7 +112,8 @@ var rootCmd = &cobra.Command{
 
 		if err != nil {
 			log.WithFields(log.Fields{
-				"error": err,
+				"ovm.source.type":  "gcp",
+				"ovm.source.error": err,
 			}).Error("Could not stop engine")
 
 			os.Exit(1)

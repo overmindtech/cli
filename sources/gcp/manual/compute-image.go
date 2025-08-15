@@ -69,7 +69,7 @@ func (c computeImageWrapper) Get(ctx context.Context, queryParts ...string) (*sd
 
 	image, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	var sdpErr *sdp.QueryError
@@ -96,7 +96,7 @@ func (c computeImageWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryE
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		var sdpErr *sdp.QueryError
@@ -124,7 +124,7 @@ func (c computeImageWrapper) ListStream(ctx context.Context, stream discovery.Qu
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

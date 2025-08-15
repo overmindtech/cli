@@ -8,7 +8,7 @@ import (
 )
 
 // QueryError is a helper function to convert errors into sdp.QueryError
-func QueryError(err error) *sdp.QueryError {
+func QueryError(err error, scope string, itemType string) *sdp.QueryError {
 	// Check if the error is a gRPC `not_found` error
 	if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
 		return &sdp.QueryError{
@@ -20,5 +20,8 @@ func QueryError(err error) *sdp.QueryError {
 	return &sdp.QueryError{
 		ErrorType:   sdp.QueryError_OTHER,
 		ErrorString: err.Error(),
+		SourceName:  "gcp-source",
+		Scope:       scope,
+		ItemType:    itemType,
 	}
 }

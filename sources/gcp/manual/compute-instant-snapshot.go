@@ -78,7 +78,7 @@ func (c computeInstantSnapshotWrapper) Get(ctx context.Context, queryParts ...st
 
 	instantSnapshot, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(instantSnapshot)
@@ -103,7 +103,7 @@ func (c computeInstantSnapshotWrapper) List(ctx context.Context) ([]*sdp.Item, *
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		var sdpErr *sdp.QueryError
@@ -132,7 +132,7 @@ func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream di
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

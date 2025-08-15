@@ -87,7 +87,7 @@ func (b BigQueryTableWrapper) Get(ctx context.Context, queryParts ...string) (*s
 	// 1: table ID
 	metadata, err := b.client.Get(ctx, b.ProjectID(), queryParts[0], queryParts[1])
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
 	}
 
 	return b.GCPBigQueryTableToItem(metadata)
@@ -97,7 +97,7 @@ func (b BigQueryTableWrapper) Search(ctx context.Context, queryParts ...string) 
 	// queryParts[0]: Dataset ID
 	items, err := b.client.List(ctx, b.ProjectID(), queryParts[0], b.GCPBigQueryTableToItem)
 	if err != nil {
-		return nil, err
+		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
 	}
 
 	return items, nil
@@ -117,20 +117,20 @@ func (b BigQueryTableWrapper) SearchStream(ctx context.Context, stream discovery
 func (b BigQueryTableWrapper) GCPBigQueryTableToItem(metadata *bigquery.TableMetadata) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(metadata, "labels")
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
 	}
 
 	// The full dataset ID in the form projectID:datasetID.tableID
 	parts := strings.Split(strings.TrimPrefix(metadata.FullID, b.ProjectID()+":"), ".")
 	if len(parts) != 2 {
-		return nil, gcpshared.QueryError(fmt.Errorf("invalid table full ID: %s", metadata.FullID))
+		return nil, gcpshared.QueryError(fmt.Errorf("invalid table full ID: %s", metadata.FullID), b.DefaultScope(), b.Type())
 	}
 
 	// O: dataset ID
 	// 1: table ID
 	err = attributes.Set("id", strings.Join(parts, shared.QuerySeparator))
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
 	}
 
 	sdpItem := &sdp.Item{

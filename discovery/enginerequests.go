@@ -445,8 +445,13 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 			}
 		} else {
 			stream.SendError(&sdp.QueryError{
-				ErrorType:   sdp.QueryError_NOTFOUND,
-				ErrorString: "adapter is not listable",
+				ErrorType:     sdp.QueryError_NOTFOUND,
+				ErrorString:   "adapter is not listable",
+				Scope:         q.GetScope(),
+				SourceName:    e.EngineConfig.SourceName,
+				ItemType:      q.GetType(),
+				ResponderName: e.EngineConfig.SourceName,
+				UUID:          q.GetUUID(),
 			})
 		}
 	case sdp.QueryMethod_SEARCH:

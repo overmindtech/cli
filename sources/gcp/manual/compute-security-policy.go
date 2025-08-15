@@ -75,12 +75,12 @@ func (c computeSecurityPolicyWrapper) Get(ctx context.Context, queryParts ...str
 		SecurityPolicy: queryParts[0],
 	}
 
-	securityPolicy, err := c.client.Get(ctx, req)
+	policy, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
-	item, sdpErr := c.gcpComputeSecurityPolicyToSDPItem(securityPolicy)
+	item, sdpErr := c.gcpComputeSecurityPolicyToSDPItem(policy)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -101,7 +101,7 @@ func (c computeSecurityPolicyWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		item, sdpErr := c.gcpComputeSecurityPolicyToSDPItem(securityPolicy)
@@ -127,7 +127,7 @@ func (c computeSecurityPolicyWrapper) ListStream(ctx context.Context, stream dis
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

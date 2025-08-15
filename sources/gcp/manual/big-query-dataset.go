@@ -77,7 +77,7 @@ func (b BigQueryDatasetWrapper) GetLookups() sources.ItemTypeLookups {
 func (b BigQueryDatasetWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	metadata, err := b.client.Get(ctx, b.ProjectID(), queryParts[0])
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
 	}
 
 	return b.GCPBigQueryDatasetToItem(ctx, metadata)
@@ -86,7 +86,7 @@ func (b BigQueryDatasetWrapper) Get(ctx context.Context, queryParts ...string) (
 func (b BigQueryDatasetWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
 	items, err := b.client.List(ctx, b.ProjectID(), b.GCPBigQueryDatasetToItem)
 	if err != nil {
-		return nil, err
+		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
 	}
 
 	return items, nil
@@ -105,18 +105,18 @@ func (b BigQueryDatasetWrapper) ListStream(ctx context.Context, stream discovery
 func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, metadata *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(metadata, "labels")
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
 	}
 
 	// The full dataset ID in the form projectID:datasetID.
 	parts := strings.Split(metadata.FullID, ":")
 	if len(parts) != 2 {
-		return nil, gcpshared.QueryError(fmt.Errorf("invalid dataset full ID: %s", metadata.FullID))
+		return nil, gcpshared.QueryError(fmt.Errorf("invalid dataset full ID: %s", metadata.FullID), b.DefaultScope(), b.Type())
 	}
 
 	err = attributes.Set("id", parts[1])
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
 	}
 
 	sdpItem := &sdp.Item{

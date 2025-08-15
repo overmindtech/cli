@@ -83,7 +83,7 @@ func (c computeForwardingRuleWrapper) Get(ctx context.Context, queryParts ...str
 
 	rule, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(rule)
@@ -108,7 +108,7 @@ func (c computeForwardingRuleWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(rule)
@@ -134,7 +134,7 @@ func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream dis
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

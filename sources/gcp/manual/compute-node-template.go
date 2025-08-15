@@ -74,7 +74,7 @@ func (c computeNodeTemplateWrapper) Get(ctx context.Context, queryParts ...strin
 
 	nodeTemplate, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	var sdpErr *sdp.QueryError
@@ -101,7 +101,7 @@ func (c computeNodeTemplateWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp
 		}
 
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		var sdpErr *sdp.QueryError
@@ -129,7 +129,7 @@ func (c computeNodeTemplateWrapper) ListStream(ctx context.Context, stream disco
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

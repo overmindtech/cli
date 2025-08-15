@@ -79,7 +79,7 @@ func (c computeInstanceGroupWrapper) Get(ctx context.Context, queryParts ...stri
 
 	instanceGroup, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	item, sdpErr := c.gcpComputeInstanceGroupToSDPItem(instanceGroup)
@@ -104,7 +104,7 @@ func (c computeInstanceGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sd
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		item, sdpErr := c.gcpComputeInstanceGroupToSDPItem(instanceGroup)
@@ -131,7 +131,7 @@ func (c computeInstanceGroupWrapper) ListStream(ctx context.Context, stream disc
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

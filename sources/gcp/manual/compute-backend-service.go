@@ -78,12 +78,12 @@ func (c computeBackendServiceWrapper) Get(ctx context.Context, queryParts ...str
 		BackendService: queryParts[0],
 	}
 
-	bs, err := c.client.Get(ctx, req)
+	service, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
-	item, sdpErr := c.gcpComputeBackendServiceToSDPItem(bs)
+	item, sdpErr := c.gcpComputeBackendServiceToSDPItem(service)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -104,7 +104,7 @@ func (c computeBackendServiceWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		item, sdpErr := c.gcpComputeBackendServiceToSDPItem(bs)
@@ -130,7 +130,7 @@ func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream dis
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

@@ -148,8 +148,9 @@ func externalCallSingle(ctx context.Context, httpCli *http.Client, url string) (
 		}
 
 		log.WithContext(ctx).WithFields(log.Fields{
-			"ovm.gcp.dynamic.http.get.url":            url,
-			"ovm.gcp.dynamic.http.get.responseStatus": resp.Status,
+			"ovm.source.type":                 "gcp",
+			"ovm.source.http.url":             url,
+			"ovm.source.http.response-status": resp.Status,
 		}).Warnf("failed to read the response body: %v", err)
 		return nil, fmt.Errorf("failed to make call: %s", resp.Status)
 	}
@@ -198,8 +199,9 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 			}
 
 			log.WithContext(ctx).WithFields(log.Fields{
-				"ovm.gcp.dynamic.http.get.urlForList":     currentURL,
-				"ovm.gcp.dynamic.http.get.responseStatus": resp.Status,
+				"ovm.source.type":                 "gcp",
+				"ovm.source.http.url-for-list":    currentURL,
+				"ovm.source.http.response-status": resp.Status,
 			}).Warnf("failed to read the response body: %v", err)
 			return fmt.Errorf("failed to make the GET call. HTTP Status: %s", resp.Status)
 		}
@@ -221,8 +223,9 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 			itemsAny, ok = result[itemsSelector]
 			if !ok {
 				log.WithContext(ctx).WithFields(log.Fields{
-					"ovm.gcp.dynamic.http.get.urlForList":    currentURL,
-					"ovm.gcp.dynamic.http.get.itemsSelector": itemsSelector,
+					"ovm.source.type":                "gcp",
+					"ovm.source.http.url-for-list":   currentURL,
+					"ovm.source.http.items-selector": itemsSelector,
 				}).Debugf("not found any items for %s: within %v", itemsSelector, result)
 				break
 			}
@@ -231,8 +234,8 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 		items, ok := itemsAny.([]any)
 		if !ok {
 			log.WithContext(ctx).WithFields(log.Fields{
-				"ovm.gcp.dynamic.http.get.urlForList":    currentURL,
-				"ovm.gcp.dynamic.http.get.itemsSelector": itemsSelector,
+				"ovm.source.http.url-for-list":   currentURL,
+				"ovm.source.http.items-selector": itemsSelector,
 			}).Warnf("failed to cast resp as a list of %s: within %v", itemsSelector, result)
 			break
 		}

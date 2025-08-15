@@ -83,14 +83,14 @@ func (c computeInstanceGroupManagerWrapper) Get(ctx context.Context, queryParts 
 		InstanceGroupManager: queryParts[0],
 	}
 
-	instanceGroupManager, err := c.client.Get(ctx, req)
+	igm, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	var sdpErr *sdp.QueryError
 	var item *sdp.Item
-	item, sdpErr = c.gcpInstanceGroupManagerToSDPItem(instanceGroupManager)
+	item, sdpErr = c.gcpInstanceGroupManagerToSDPItem(igm)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -112,7 +112,7 @@ func (c computeInstanceGroupManagerWrapper) List(ctx context.Context) ([]*sdp.It
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		var sdpErr *sdp.QueryError
@@ -140,7 +140,7 @@ func (c computeInstanceGroupManagerWrapper) ListStream(ctx context.Context, stre
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

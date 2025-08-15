@@ -66,7 +66,7 @@ func (l loggingSinkWrapper) Get(ctx context.Context, queryParts ...string) (*sdp
 		SinkName: fmt.Sprintf("projects/%s/sinks/%s", l.ProjectID(), queryParts[0]),
 	})
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, l.DefaultScope(), l.Type())
 	}
 
 	var sdpErr *sdp.QueryError
@@ -91,7 +91,7 @@ func (l loggingSinkWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryEr
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, l.DefaultScope(), l.Type())
 		}
 
 		var sdpErr *sdp.QueryError
@@ -118,7 +118,7 @@ func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.Que
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, l.DefaultScope(), l.Type()))
 			return
 		}
 

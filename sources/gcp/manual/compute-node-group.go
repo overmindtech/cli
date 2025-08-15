@@ -91,14 +91,14 @@ func (c computeNodeGroupWrapper) Get(ctx context.Context, queryParts ...string) 
 		NodeGroup: queryParts[0],
 	}
 
-	nodegroup, err := c.client.Get(ctx, req)
+	nodeGroup, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	var sdpErr *sdp.QueryError
 	var item *sdp.Item
-	item, sdpErr = c.gcpComputeNodeGroupToSDPItem(nodegroup)
+	item, sdpErr = c.gcpComputeNodeGroupToSDPItem(nodeGroup)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -120,7 +120,7 @@ func (c computeNodeGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Qu
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		var sdpErr *sdp.QueryError
@@ -149,7 +149,7 @@ func (c computeNodeGroupWrapper) ListStream(ctx context.Context, stream discover
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 
@@ -184,7 +184,7 @@ func (c computeNodeGroupWrapper) Search(ctx context.Context, queryParts ...strin
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(nodegroup)
@@ -216,7 +216,7 @@ func (c computeNodeGroupWrapper) SearchStream(ctx context.Context, stream discov
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

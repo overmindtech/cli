@@ -90,6 +90,13 @@ func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
 		wrapper: wrapper,
 	}
 
+	a.sourceType = "unknown"
+
+	it, ok := wrapper.ItemType().(shared.ItemTypeInstance)
+	if ok {
+		a.sourceType = string(it.Source)
+	}
+
 	// initialize cache
 	a.cache = sdpcache.NewCache()
 
@@ -133,6 +140,7 @@ type standardAdapterImpl struct {
 	searchable       SearchableWrapper
 	searchStreamable SearchStreamableWrapper
 	cache            *sdpcache.Cache
+	sourceType       string
 }
 
 // Type returns the type of the adapter.
@@ -167,7 +175,7 @@ func (s *standardAdapterImpl) Get(ctx context.Context, scope string, query strin
 	)
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
-			"ovm.source.type":      "gcp",
+			"ovm.source.type":      s.sourceType,
 			"ovm.source.adapter":   s.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_GET.String(),
@@ -224,7 +232,7 @@ func (s *standardAdapterImpl) List(ctx context.Context, scope string, ignoreCach
 	)
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
-			"ovm.source.type":      "gcp",
+			"ovm.source.type":      s.sourceType,
 			"ovm.source.adapter":   s.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_LIST.String(),
@@ -272,7 +280,7 @@ func (s *standardAdapterImpl) ListStream(ctx context.Context, scope string, igno
 	)
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
-			"ovm.source.type":      "gcp",
+			"ovm.source.type":      s.sourceType,
 			"ovm.source.adapter":   s.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_LIST.String(),
@@ -297,7 +305,7 @@ func (s *standardAdapterImpl) Search(ctx context.Context, scope string, query st
 	}
 
 	var queryParts []string
-	if strings.HasPrefix(query, "projects/") {
+	if s.sourceType == string(gcpshared.GCP) && strings.HasPrefix(query, "projects/") {
 		// This must be a terraform query in the format of:
 		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
 		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
@@ -377,7 +385,7 @@ func (s *standardAdapterImpl) SearchStream(ctx context.Context, scope string, qu
 	)
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
-			"ovm.source.type":      "gcp",
+			"ovm.source.type":      s.sourceType,
 			"ovm.source.adapter":   s.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_SEARCH.String(),
@@ -394,7 +402,7 @@ func (s *standardAdapterImpl) SearchStream(ctx context.Context, scope string, qu
 	}
 
 	var queryParts []string
-	if strings.HasPrefix(query, "projects/") {
+	if s.sourceType == string(gcpshared.GCP) && strings.HasPrefix(query, "projects/") {
 		// This must be a terraform query in the format of:
 		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
 		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}

@@ -45,7 +45,7 @@ func (m BigQueryModelWrapper) GetLookups() sources.ItemTypeLookups {
 func (m BigQueryModelWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	metadata, err := m.client.Get(ctx, m.ProjectBase.ProjectID(), queryParts[0], queryParts[1])
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, m.DefaultScope(), m.Type())
 	}
 	return m.GCPBigQueryMetadataToItem(queryParts[0], metadata)
 }
@@ -53,7 +53,7 @@ func (m BigQueryModelWrapper) Get(ctx context.Context, queryParts ...string) (*s
 func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(dataSetId string, metadata *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(metadata, "labels")
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, m.DefaultScope(), m.Type())
 	}
 
 	sdpItem := &sdp.Item{
@@ -137,7 +137,7 @@ func (m BigQueryModelWrapper) SearchLookups() []sources.ItemTypeLookups {
 func (m BigQueryModelWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
 	items, err := m.client.List(ctx, m.ProjectBase.ProjectID(), queryParts[0], m.GCPBigQueryMetadataToItem)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, m.DefaultScope(), m.Type())
 	}
 	return items, nil
 }

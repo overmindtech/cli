@@ -66,7 +66,7 @@ func (c computeHealthCheckWrapper) Get(ctx context.Context, queryParts ...string
 
 	healthCheck, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	var sdpErr *sdp.QueryError
@@ -92,7 +92,7 @@ func (c computeHealthCheckWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.
 		}
 
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		var sdpErr *sdp.QueryError
@@ -120,7 +120,7 @@ func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discov
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

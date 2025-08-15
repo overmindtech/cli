@@ -80,7 +80,7 @@ func (c computeSnapshotWrapper) Get(ctx context.Context, queryParts ...string) (
 
 	snapshot, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	var sdpErr *sdp.QueryError
@@ -106,7 +106,7 @@ func (c computeSnapshotWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Que
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		var sdpErr *sdp.QueryError
@@ -134,7 +134,7 @@ func (c computeSnapshotWrapper) ListStream(ctx context.Context, stream discovery
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

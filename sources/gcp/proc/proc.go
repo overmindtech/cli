@@ -82,9 +82,10 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 		}
 
 		log.WithFields(log.Fields{
-			"project_id": cfg.ProjectID,
-			"regions":    cfg.Regions,
-			"zones":      cfg.Zones,
+			"ovm.source.type":       "gcp",
+			"ovm.source.project_id": cfg.ProjectID,
+			"ovm.source.regions":    cfg.Regions,
+			"ovm.source.zones":      cfg.Zones,
 		}).Info("Got config")
 
 		linker := gcpshared.NewLinker()

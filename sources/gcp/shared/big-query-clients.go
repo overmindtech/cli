@@ -36,7 +36,7 @@ func (b bigQueryDatasetClient) Get(ctx context.Context, projectID, datasetID str
 func (b bigQueryDatasetClient) List(ctx context.Context, projectID string, toSDPItem func(ctx context.Context, dataset *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError)) ([]*sdp.Item, *sdp.QueryError) {
 	dsIterator := b.client.Datasets(ctx)
 	if dsIterator == nil {
-		return nil, QueryError(fmt.Errorf("failed to create dataset iterator for project %s", projectID))
+		return nil, QueryError(fmt.Errorf("failed to create dataset iterator for project %s", projectID), projectID, BigQueryDataset.String())
 	}
 
 	dsIterator.ProjectID = projectID
@@ -48,12 +48,12 @@ func (b bigQueryDatasetClient) List(ctx context.Context, projectID string, toSDP
 			break
 		}
 		if err != nil {
-			return nil, QueryError(fmt.Errorf("error iterating datasets: %w", err))
+			return nil, QueryError(fmt.Errorf("error iterating datasets: %w", err), projectID, BigQueryDataset.String())
 		}
 
 		meta, err := ds.Metadata(ctx)
 		if err != nil {
-			return nil, QueryError(fmt.Errorf("error getting metadata for dataset %s: %w", ds.DatasetID, err))
+			return nil, QueryError(fmt.Errorf("error getting metadata for dataset %s: %w", ds.DatasetID, err), projectID, BigQueryDataset.String())
 		}
 
 		var sdpErr *sdp.QueryError
@@ -71,7 +71,7 @@ func (b bigQueryDatasetClient) List(ctx context.Context, projectID string, toSDP
 func (b bigQueryDatasetClient) ListStream(ctx context.Context, projectID string, stream discovery.QueryResultStream, toSDPItem func(ctx context.Context, dataset *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError)) {
 	dsIterator := b.client.Datasets(ctx)
 	if dsIterator == nil {
-		stream.SendError(QueryError(fmt.Errorf("failed to create dataset iterator for project %s", projectID)))
+		stream.SendError(QueryError(fmt.Errorf("failed to create dataset iterator for project %s", projectID), projectID, BigQueryDataset.String()))
 		return
 	}
 
@@ -83,13 +83,13 @@ func (b bigQueryDatasetClient) ListStream(ctx context.Context, projectID string,
 			break
 		}
 		if err != nil {
-			stream.SendError(QueryError(fmt.Errorf("error iterating datasets: %w", err)))
+			stream.SendError(QueryError(fmt.Errorf("error iterating datasets: %w", err), projectID, BigQueryDataset.String()))
 			return
 		}
 
 		meta, err := ds.Metadata(ctx)
 		if err != nil {
-			stream.SendError(QueryError(fmt.Errorf("error getting metadata for dataset %s: %w", ds.DatasetID, err)))
+			stream.SendError(QueryError(fmt.Errorf("error getting metadata for dataset %s: %w", ds.DatasetID, err), projectID, BigQueryDataset.String()))
 			continue
 		}
 
@@ -136,12 +136,12 @@ func (b bigQueryTableClient) Get(ctx context.Context, projectID, datasetID, tabl
 func (b bigQueryTableClient) List(ctx context.Context, projectID, datasetID string, toSDPItem func(table *bigquery.TableMetadata) (*sdp.Item, *sdp.QueryError)) ([]*sdp.Item, *sdp.QueryError) {
 	ds := b.client.DatasetInProject(projectID, datasetID)
 	if ds == nil {
-		return nil, QueryError(fmt.Errorf("dataset %s not found in project %s", datasetID, projectID))
+		return nil, QueryError(fmt.Errorf("dataset %s not found in project %s", datasetID, projectID), projectID, BigQueryTable.String())
 	}
 
 	tableIterator := ds.Tables(ctx)
 	if tableIterator == nil {
-		return nil, QueryError(fmt.Errorf("failed to create table iterator for dataset %s in project %s", datasetID, projectID))
+		return nil, QueryError(fmt.Errorf("failed to create table iterator for dataset %s in project %s", datasetID, projectID), projectID, BigQueryTable.String())
 	}
 
 	var items []*sdp.Item
@@ -151,12 +151,12 @@ func (b bigQueryTableClient) List(ctx context.Context, projectID, datasetID stri
 			break
 		}
 		if err != nil {
-			return nil, QueryError(fmt.Errorf("error iterating tables: %w", err))
+			return nil, QueryError(fmt.Errorf("error iterating tables: %w", err), projectID, BigQueryTable.String())
 		}
 
 		meta, err := table.Metadata(ctx)
 		if err != nil {
-			return nil, QueryError(fmt.Errorf("error getting metadata for table %s: %w", table.TableID, err))
+			return nil, QueryError(fmt.Errorf("error getting metadata for table %s: %w", table.TableID, err), projectID, BigQueryTable.String())
 		}
 
 		var sdpErr *sdp.QueryError
@@ -174,13 +174,13 @@ func (b bigQueryTableClient) List(ctx context.Context, projectID, datasetID stri
 func (b bigQueryTableClient) ListStream(ctx context.Context, projectID, datasetID string, stream discovery.QueryResultStream, toSDPItem func(table *bigquery.TableMetadata) (*sdp.Item, *sdp.QueryError)) {
 	ds := b.client.DatasetInProject(projectID, datasetID)
 	if ds == nil {
-		stream.SendError(QueryError(fmt.Errorf("dataset %s not found in project %s", datasetID, projectID)))
+		stream.SendError(QueryError(fmt.Errorf("dataset %s not found in project %s", datasetID, projectID), projectID, BigQueryTable.String()))
 		return
 	}
 
 	tableIterator := ds.Tables(ctx)
 	if tableIterator == nil {
-		stream.SendError(QueryError(fmt.Errorf("failed to create table iterator for dataset %s in project %s", datasetID, projectID)))
+		stream.SendError(QueryError(fmt.Errorf("failed to create table iterator for dataset %s in project %s", datasetID, projectID), projectID, BigQueryTable.String()))
 		return
 	}
 
@@ -190,13 +190,13 @@ func (b bigQueryTableClient) ListStream(ctx context.Context, projectID, datasetI
 			break
 		}
 		if err != nil {
-			stream.SendError(QueryError(fmt.Errorf("error iterating tables: %w", err)))
+			stream.SendError(QueryError(fmt.Errorf("error iterating tables: %w", err), projectID, BigQueryTable.String()))
 			return
 		}
 
 		meta, err := table.Metadata(ctx)
 		if err != nil {
-			stream.SendError(QueryError(fmt.Errorf("error getting metadata for table %s: %w", table.TableID, err)))
+			stream.SendError(QueryError(fmt.Errorf("error getting metadata for table %s: %w", table.TableID, err), projectID, BigQueryTable.String()))
 			continue
 		}
 
@@ -251,12 +251,12 @@ func (b bigQueryModelClient) Get(ctx context.Context, projectID, datasetID, mode
 func (b bigQueryModelClient) List(ctx context.Context, projectID, datasetID string, toSDPItem func(datasetID string, dataset *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError)) ([]*sdp.Item, *sdp.QueryError) {
 	ds := b.client.DatasetInProject(projectID, datasetID)
 	if ds == nil {
-		return nil, QueryError(fmt.Errorf("dataset %s not found in project %s", datasetID, projectID))
+		return nil, QueryError(fmt.Errorf("dataset %s not found in project %s", datasetID, projectID), projectID, BigQueryModel.String())
 	}
 
 	modelIterator := ds.Models(ctx)
 	if modelIterator == nil {
-		return nil, QueryError(fmt.Errorf("failed to create model iterator for dataset %s in project %s", datasetID, projectID))
+		return nil, QueryError(fmt.Errorf("failed to create model iterator for dataset %s in project %s", datasetID, projectID), projectID, BigQueryModel.String())
 	}
 
 	var items []*sdp.Item
@@ -266,12 +266,12 @@ func (b bigQueryModelClient) List(ctx context.Context, projectID, datasetID stri
 			break
 		}
 		if err != nil {
-			return nil, QueryError(fmt.Errorf("error iterating models: %w", err))
+			return nil, QueryError(fmt.Errorf("error iterating models: %w", err), projectID, BigQueryModel.String())
 		}
 
 		meta, err := model.Metadata(ctx)
 		if err != nil {
-			return nil, QueryError(fmt.Errorf("error getting metadata for model %s: %w", model.ModelID, err))
+			return nil, QueryError(fmt.Errorf("error getting metadata for model %s: %w", model.ModelID, err), projectID, BigQueryModel.String())
 		}
 
 		var sdpErr *sdp.QueryError
@@ -289,13 +289,13 @@ func (b bigQueryModelClient) List(ctx context.Context, projectID, datasetID stri
 func (b bigQueryModelClient) ListStream(ctx context.Context, projectID, datasetID string, stream discovery.QueryResultStream, toSDPItem func(datasetID string, dataset *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError)) {
 	ds := b.client.DatasetInProject(projectID, datasetID)
 	if ds == nil {
-		stream.SendError(QueryError(fmt.Errorf("dataset %s not found in project %s", datasetID, projectID)))
+		stream.SendError(QueryError(fmt.Errorf("dataset %s not found in project %s", datasetID, projectID), projectID, BigQueryModel.String()))
 		return
 	}
 
 	modelIterator := ds.Models(ctx)
 	if modelIterator == nil {
-		stream.SendError(QueryError(fmt.Errorf("failed to create model iterator for dataset %s in project %s", datasetID, projectID)))
+		stream.SendError(QueryError(fmt.Errorf("failed to create model iterator for dataset %s in project %s", datasetID, projectID), projectID, BigQueryModel.String()))
 		return
 	}
 
@@ -305,13 +305,13 @@ func (b bigQueryModelClient) ListStream(ctx context.Context, projectID, datasetI
 			break
 		}
 		if err != nil {
-			stream.SendError(QueryError(fmt.Errorf("error iterating models: %w", err)))
+			stream.SendError(QueryError(fmt.Errorf("error iterating models: %w", err), projectID, BigQueryModel.String()))
 			return
 		}
 
 		meta, err := model.Metadata(ctx)
 		if err != nil {
-			stream.SendError(QueryError(fmt.Errorf("error getting metadata for model %s: %w", model.ModelID, err)))
+			stream.SendError(QueryError(fmt.Errorf("error getting metadata for model %s: %w", model.ModelID, err), projectID, BigQueryModel.String()))
 			continue
 		}
 

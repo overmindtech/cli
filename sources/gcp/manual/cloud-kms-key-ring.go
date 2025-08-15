@@ -90,7 +90,7 @@ func (c cloudKMSKeyRingWrapper) Get(ctx context.Context, queryParts ...string) (
 
 	keyRing, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	item, sdpErr := c.gcpKeyRingToSDPItem(keyRing)
@@ -127,7 +127,7 @@ func (c cloudKMSKeyRingWrapper) Search(ctx context.Context, queryParts ...string
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		item, sdpErr := c.gcpKeyRingToSDPItem(keyRing)
@@ -155,7 +155,7 @@ func (c cloudKMSKeyRingWrapper) SearchStream(ctx context.Context, stream discove
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

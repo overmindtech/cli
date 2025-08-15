@@ -85,7 +85,7 @@ func (c iamServiceAccountWrapper) Get(ctx context.Context, queryParts ...string)
 
 	serviceAccount, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	item, sdpErr := c.gcpIAMServiceAccountToSDPItem(serviceAccount)
@@ -118,7 +118,7 @@ func (c iamServiceAccountWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Q
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		item, sdpErr := c.gcpIAMServiceAccountToSDPItem(sa)
@@ -146,7 +146,7 @@ func (c iamServiceAccountWrapper) ListStream(ctx context.Context, stream discove
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

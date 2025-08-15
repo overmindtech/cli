@@ -80,7 +80,7 @@ func (c iamServiceAccountKeyWrapper) Get(ctx context.Context, queryParts ...stri
 
 	key, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	item, sdpErr := c.gcpIAMServiceAccountKeyToSDPItem(key)
@@ -108,7 +108,7 @@ func (c iamServiceAccountKeyWrapper) Search(ctx context.Context, queryParts ...s
 		Name: "projects/" + c.ProjectID() + "/serviceAccounts/" + serviceAccountIdentifier,
 	})
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	var items []*sdp.Item
@@ -131,7 +131,7 @@ func (c iamServiceAccountKeyWrapper) SearchStream(ctx context.Context, stream di
 		Name: "projects/" + c.ProjectID() + "/serviceAccounts/" + serviceAccountIdentifier,
 	})
 	if err != nil {
-		stream.SendError(gcpshared.QueryError(err))
+		stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 		return
 	}
 

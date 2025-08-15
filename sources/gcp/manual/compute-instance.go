@@ -85,7 +85,7 @@ func (c computeInstanceWrapper) Get(ctx context.Context, queryParts ...string) (
 
 	instance, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	var sdpErr *sdp.QueryError
@@ -112,7 +112,7 @@ func (c computeInstanceWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Que
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		var sdpErr *sdp.QueryError
@@ -140,7 +140,7 @@ func (c computeInstanceWrapper) ListStream(ctx context.Context, stream discovery
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

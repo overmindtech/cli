@@ -88,7 +88,7 @@ func (c cloudKMSCryptoKeyWrapper) Get(ctx context.Context, queryParts ...string)
 
 	cryptoKey, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	item, sdpErr := c.gcpCryptoKeyToSDPItem(cryptoKey)
@@ -130,7 +130,7 @@ func (c cloudKMSCryptoKeyWrapper) Search(ctx context.Context, queryParts ...stri
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		item, sdpErr := c.gcpCryptoKeyToSDPItem(cryptoKey)
@@ -162,7 +162,7 @@ func (c cloudKMSCryptoKeyWrapper) SearchStream(ctx context.Context, stream disco
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 

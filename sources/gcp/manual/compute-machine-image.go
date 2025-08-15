@@ -79,7 +79,7 @@ func (c computeMachineImageWrapper) Get(ctx context.Context, queryParts ...strin
 
 	machineImage, err := c.client.Get(ctx, req)
 	if err != nil {
-		return nil, gcpshared.QueryError(err)
+		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
 	item, sdpErr := c.gcpComputeMachineImageToSDPItem(machineImage)
@@ -103,7 +103,7 @@ func (c computeMachineImageWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err)
+			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
 		item, sdpErr := c.gcpComputeMachineImageToSDPItem(machineImage)
@@ -129,7 +129,7 @@ func (c computeMachineImageWrapper) ListStream(ctx context.Context, stream disco
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err))
+			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
 			return
 		}
 
