@@ -104,7 +104,8 @@ func TestDnsGet(t *testing.T) {
 
 	// Check that we actually have an internet connection, if not there is not
 	// point running this test
-	conn, err = net.Dial("tcp", "one.one.one.one:443")
+	dialer := &net.Dialer{}
+	conn, err = dialer.DialContext(t.Context(), "tcp", "one.one.one.one:443")
 	conn.Close()
 
 	if err != nil {

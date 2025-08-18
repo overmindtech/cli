@@ -1,6 +1,7 @@
 package discovery
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/url"
@@ -78,7 +79,10 @@ func testURL(testURL string) error {
 		return fmt.Errorf("could not parse NATS URL: %v. Error: %w", testURL, err)
 	}
 
-	conn, err := net.DialTimeout("tcp", net.JoinHostPort(url.Hostname(), url.Port()), time.Second)
+	dialer := &net.Dialer{
+		Timeout: time.Second,
+	}
+	conn, err := dialer.DialContext(context.Background(), "tcp", net.JoinHostPort(url.Hostname(), url.Port()))
 
 	if err == nil {
 		conn.Close()

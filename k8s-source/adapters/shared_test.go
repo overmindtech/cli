@@ -162,7 +162,7 @@ func (t *TestCluster) kubectl(method string, yaml string) error {
 		return err
 	}
 
-	cmd := exec.Command("kubectl", method, "-f", config.Name())
+	cmd := exec.CommandContext(context.Background(), "kubectl", method, "-f", config.Name())
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	cmd.Dir = filepath.Dir(config.Name())
