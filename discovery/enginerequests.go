@@ -394,6 +394,8 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 		if err == nil {
 			return
 		}
+		// add a recover to prevent panic from stream error handler.
+		defer tracing.LogRecoverToReturn(ctx, "StreamErrorHandler")
 
 		// Record the error in the trace
 		span.RecordError(err, trace.WithStackTrace(true))
