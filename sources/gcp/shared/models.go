@@ -130,4 +130,6 @@ const (
 	Secret                   shared.Resource = "secret"
 	InstanceConfig           shared.Resource = "instance-config"
 	Database                 shared.Resource = "database"
+	RegionBackendService     shared.Resource = "region-backend-service"
+	NetworkEndpointGroup     shared.Resource = "network-endpoint-group"
 )

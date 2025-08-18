@@ -20,37 +20,37 @@ var (
 )
 
 var (
-	ipImpactBothWays = &Impact{
+	IPImpactBothWays = &Impact{
 		Description:      "IP addresses are tightly coupled with the source type.",
 		ToSDPITemType:    stdlib.NetworkIP,
 		BlastPropagation: impactBothWays,
 	}
-	securityPolicyImpactInOnly = &Impact{
+	SecurityPolicyImpactInOnly = &Impact{
 		Description:      "Any change on the security policy impacts the source, but not the other way around.",
 		ToSDPITemType:    ComputeSecurityPolicy,
 		BlastPropagation: impactInOnly,
 	}
-	cryptoKeyImpactInOnly = &Impact{
+	CryptoKeyImpactInOnly = &Impact{
 		Description:      "If the crypto key is updated: The source may not be able to access encrypted data. If the source is updated: The crypto key remains unaffected.",
 		ToSDPITemType:    CloudKMSCryptoKey,
 		BlastPropagation: impactInOnly,
 	}
-	cryptoKeyVersionImpactInOnly = &Impact{
+	CryptoKeyVersionImpactInOnly = &Impact{
 		Description:      "If the crypto key version is updated: The source may not be able to access encrypted data. If the source is updated: The crypto key version remains unaffected.",
 		ToSDPITemType:    CloudKMSCryptoKeyVersion,
 		BlastPropagation: impactInOnly,
 	}
-	iamServiceAccountImpactInOnly = &Impact{
+	IAMServiceAccountImpactInOnly = &Impact{
 		Description:      "If the service account is updated: The source may not be able to access encrypted data. If the source is updated: The service account remains unaffected.",
 		ToSDPITemType:    IAMServiceAccount,
 		BlastPropagation: impactInOnly,
 	}
-	resourcePolicyImpactInOnly = &Impact{
+	ResourcePolicyImpactInOnly = &Impact{
 		Description:      "If the resource policy is updated: The source may not be able to access the resource as expected. If the source is updated: The resource policy remains unaffected.",
 		ToSDPITemType:    ComputeResourcePolicy,
 		BlastPropagation: impactInOnly,
 	}
-	computeNetworkImpactInOnly = &Impact{
+	ComputeNetworkImpactInOnly = &Impact{
 		Description:      "If the Compute Network is updated: The source may lose connectivity or fail to run as expected. If the source is updated: The network remains unaffected.",
 		ToSDPITemType:    ComputeNetwork,
 		BlastPropagation: impactInOnly,
@@ -176,7 +176,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			Description:      "If the source Backup is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The source backup remains unaffected.",
 			BlastPropagation: impactInOnly,
 		},
-		"encryptionInfo.kmsKeyVersion": cryptoKeyVersionImpactInOnly,
+		"encryptionInfo.kmsKeyVersion": CryptoKeyVersionImpactInOnly,
 	},
 	BigTableAdminTable: {
 		"name": {
@@ -234,7 +234,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			Description:      "If the Logging Bucket is deleted or updated: The Cloud Build may fail to write logs. If the Cloud Build is updated: The bucket remains unaffected.",
 			BlastPropagation: impactInOnly,
 		},
-		"serviceAccount": iamServiceAccountImpactInOnly,
+		"serviceAccount": IAMServiceAccountImpactInOnly,
 		"buildTriggerId": {
 			// The ID of the BuildTrigger that triggered this build, if it was triggered automatically.
 			ToSDPITemType:    CloudBuildTrigger,
@@ -255,8 +255,8 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			ToSDPITemType:    ComputeNetwork,
 			BlastPropagation: impactBothWays,
 		},
-		"sourceServiceAccounts": iamServiceAccountImpactInOnly,
-		"targetServiceAccounts": iamServiceAccountImpactInOnly,
+		"sourceServiceAccounts": IAMServiceAccountImpactInOnly,
+		"targetServiceAccounts": IAMServiceAccountImpactInOnly,
 	},
 	ComputeInstanceTemplate: {
 		// https://cloud.google.com/compute/docs/reference/rest/v1/instanceTemplates/get
@@ -280,13 +280,13 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			ToSDPITemType:    stdlib.NetworkIP,
 			BlastPropagation: impactBothWays,
 		},
-		"properties.networkInterfaces.ipv6Address":                      ipImpactBothWays,
-		"properties.networkInterfaces.accessConfigs.natIP":              ipImpactBothWays,
-		"properties.networkInterfaces.accessConfigs.externalIpv6":       ipImpactBothWays,
-		"properties.networkInterfaces.accessConfigs.securityPolicy":     securityPolicyImpactInOnly,
-		"properties.networkInterfaces.ipv6AccessConfigs.natIP":          ipImpactBothWays,
-		"properties.networkInterfaces.ipv6AccessConfigs.externalIpv6":   ipImpactBothWays,
-		"properties.networkInterfaces.ipv6AccessConfigs.securityPolicy": securityPolicyImpactInOnly,
+		"properties.networkInterfaces.ipv6Address":                      IPImpactBothWays,
+		"properties.networkInterfaces.accessConfigs.natIP":              IPImpactBothWays,
+		"properties.networkInterfaces.accessConfigs.externalIpv6":       IPImpactBothWays,
+		"properties.networkInterfaces.accessConfigs.securityPolicy":     SecurityPolicyImpactInOnly,
+		"properties.networkInterfaces.ipv6AccessConfigs.natIP":          IPImpactBothWays,
+		"properties.networkInterfaces.ipv6AccessConfigs.externalIpv6":   IPImpactBothWays,
+		"properties.networkInterfaces.ipv6AccessConfigs.securityPolicy": SecurityPolicyImpactInOnly,
 		"properties.disks.source": {
 			Description:      "If the Compute Disk is updated: Instance creation may fail or behave unexpectedly. If the template is deleted: Existing disks can be deleted.",
 			ToSDPITemType:    ComputeDisk,
@@ -307,23 +307,23 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			ToSDPITemType:    ComputeDiskType,
 			BlastPropagation: impactInOnly,
 		},
-		"properties.disks.initializeParams.sourceImageEncryptionKey.kmsKeyName":           cryptoKeyImpactInOnly,
-		"properties.disks.initializeParams.sourceImageEncryptionKey.kmsKeyServiceAccount": iamServiceAccountImpactInOnly,
+		"properties.disks.initializeParams.sourceImageEncryptionKey.kmsKeyName":           CryptoKeyImpactInOnly,
+		"properties.disks.initializeParams.sourceImageEncryptionKey.kmsKeyServiceAccount": IAMServiceAccountImpactInOnly,
 		"properties.disks.initializeParams.sourceSnapshot": {
 			Description:      "If the Compute Snapshot is updated: The template may reference an invalid or incompatible snapshot. If the template is updated: no impact on snapshots.",
 			ToSDPITemType:    ComputeSnapshot,
 			BlastPropagation: impactInOnly,
 		},
-		"properties.disks.initializeParams.sourceSnapshotEncryptionKey.kmsKeyName":           cryptoKeyImpactInOnly,
-		"properties.disks.initializeParams.sourceSnapshotEncryptionKey.kmsKeyServiceAccount": iamServiceAccountImpactInOnly,
-		"properties.disks.initializeParams.resourcePolicies":                                 resourcePolicyImpactInOnly,
+		"properties.disks.initializeParams.sourceSnapshotEncryptionKey.kmsKeyName":           CryptoKeyImpactInOnly,
+		"properties.disks.initializeParams.sourceSnapshotEncryptionKey.kmsKeyServiceAccount": IAMServiceAccountImpactInOnly,
+		"properties.disks.initializeParams.resourcePolicies":                                 ResourcePolicyImpactInOnly,
 		"properties.disks.initializeParams.storagePool": {
 			Description:      "If the Compute Storage Pool is deleted: Disk provisioning for new instances may fail. If the template is updated: Pool is not affected.",
 			ToSDPITemType:    ComputeStoragePool,
 			BlastPropagation: impactInOnly,
 		},
-		"properties.disks.diskEncryptionKey.kmsKeyName":           cryptoKeyImpactInOnly,
-		"properties.disks.diskEncryptionKey.kmsKeyServiceAccount": iamServiceAccountImpactInOnly,
+		"properties.disks.diskEncryptionKey.kmsKeyName":           CryptoKeyImpactInOnly,
+		"properties.disks.diskEncryptionKey.kmsKeyServiceAccount": IAMServiceAccountImpactInOnly,
 		"properties.guestAccelerators.acceleratorType": {
 			Description:      "If the Compute Accelerator Type is updated: New instances may misconfigure or fail hardware initialization. If the template is updated: Accelerator is not affected.",
 			ToSDPITemType:    ComputeAcceleratorType,
@@ -366,7 +366,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		},
 	},
 	ComputeNetwork: {
-		"gatewayIPv4": ipImpactBothWays,
+		"gatewayIPv4": IPImpactBothWays,
 		"subnetworks": {
 			Description:      "If the Compute Subnetwork is deleted: The network remains unaffected, but its subnetwork configuration may change. If the network is deleted: All associated subnetworks are also deleted.",
 			ToSDPITemType:    ComputeSubnetwork,
@@ -442,7 +442,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			ToSDPITemType:    ComputeNetwork,
 			BlastPropagation: impactBothWays,
 		},
-		"gatewayAddress": ipImpactBothWays,
+		"gatewayAddress": IPImpactBothWays,
 	},
 	DataformRepository: {
 		// The name of the Secret Manager secret version to use as an authentication token for Git operations. Must be in the format projects/*/secrets/*/versions/*.
@@ -458,14 +458,14 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactInOnly,
 		},
 		// The service account to run workflow invocations under.
-		"serviceAccount": iamServiceAccountImpactInOnly,
+		"serviceAccount": IAMServiceAccountImpactInOnly,
 		// The reference to a KMS encryption key.
 		// If provided, it will be used to encrypt user data in the repository and all child resources.
 		// It is not possible to add or update the encryption key after the repository is created.
 		// Example: projects/{kms_project}/locations/{location}/keyRings/{key_location}/cryptoKeys/{key}
-		"kmsKeyName": cryptoKeyImpactInOnly,
+		"kmsKeyName": CryptoKeyImpactInOnly,
 		// A data encryption state of a Git repository if this Repository is protected by a KMS key.
-		"dataEncryptionState.kmsKeyVersionName": cryptoKeyVersionImpactInOnly,
+		"dataEncryptionState.kmsKeyVersionName": CryptoKeyVersionImpactInOnly,
 	},
 	DataplexEntryGroup: {
 		// There is no links for this item type.
@@ -476,17 +476,17 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			Description:      "Tightly coupled with the DNS Managed Zone.",
 			BlastPropagation: impactBothWays,
 		},
-		"privateVisibilityConfig.networks.networkUrl": computeNetworkImpactInOnly,
+		"privateVisibilityConfig.networks.networkUrl": ComputeNetworkImpactInOnly,
 		// The resource name of the cluster to bind this ManagedZone to. This should be specified in the format like: projects/*/locations/*/clusters/*.
 		// This is referenced from GKE projects.locations.clusters.get
 		// API: https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.locations.clusters/get
 		"privateVisibilityConfig.gkeClusters.gkeClusterName": {
 			ToSDPITemType: ContainerCluster,
 		},
-		"forwardingConfig.targetNameServers.ipv4Address": ipImpactBothWays,
-		"forwardingConfig.targetNameServers.ipv6Address": ipImpactBothWays,
+		"forwardingConfig.targetNameServers.ipv4Address": IPImpactBothWays,
+		"forwardingConfig.targetNameServers.ipv6Address": IPImpactBothWays,
 		// The presence of this field indicates that DNS Peering is enabled for this zone. The value of this field contains the network to peer with.
-		"peeringConfig.targetNetwork.networkUrl": computeNetworkImpactInOnly,
+		"peeringConfig.targetNetwork.networkUrl": ComputeNetworkImpactInOnly,
 		// This field links to the associated service directory namespace.
 		// The fully qualified URL of the namespace associated with the zone.
 		// Format must be https://servicedirectory.googleapis.com/v1/projects/{project}/locations/{location}/namespaces/{namespace}
@@ -515,9 +515,9 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		// There is no links for this item type.
 	},
 	LoggingBucket: {
-		"cmekSettings.kmsKeyName":        cryptoKeyImpactInOnly,
-		"cmekSettings.kmsKeyVersionName": cryptoKeyVersionImpactInOnly,
-		"cmekSettings.serviceAccountId":  iamServiceAccountImpactInOnly,
+		"cmekSettings.kmsKeyName":        CryptoKeyImpactInOnly,
+		"cmekSettings.kmsKeyVersionName": CryptoKeyVersionImpactInOnly,
+		"cmekSettings.serviceAccountId":  IAMServiceAccountImpactInOnly,
 	},
 	MonitoringCustomDashboard: {
 		// There is no links for this item type.
@@ -550,7 +550,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		},
 	},
 	PubSubTopic: {
-		"kmsKeyName": cryptoKeyImpactInOnly,
+		"kmsKeyName": CryptoKeyImpactInOnly,
 		// Settings for ingestion from a data source into this topic.
 		"ingestionDataSourceSettings.cloudStorage.bucket": {
 			ToSDPITemType:    StorageBucket,
@@ -594,7 +594,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			Description:      "If the VPC Access Connector is deleted or updated: The Revision may lose connectivity or fail to run as expected. If the Revision is updated: The connector remains unaffected.",
 			BlastPropagation: impactInOnly,
 		},
-		"serviceAccount": iamServiceAccountImpactInOnly,
+		"serviceAccount": IAMServiceAccountImpactInOnly,
 		"containers.image": {
 			ToSDPITemType:    ArtifactRegistryDockerImage,
 			Description:      "If the Artifact Registry Docker Image is deleted or updated: The Revision may fail to pull the image. If the Revision is updated: The Docker image remains unaffected.",
@@ -612,7 +612,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			Description:      "If the Cloud Storage Bucket is deleted or updated: The Revision may fail to access the GCS volume. If the Revision is updated: The bucket remains unaffected.",
 			BlastPropagation: impactInOnly,
 		},
-		"encryptionKey": cryptoKeyImpactInOnly,
+		"encryptionKey": CryptoKeyImpactInOnly,
 	},
 	ServiceDirectoryEndpoint: {
 		"name": {
@@ -621,9 +621,9 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactInOnly,
 		},
 		// An IPv4 or IPv6 address.
-		"address": ipImpactBothWays,
+		"address": IPImpactBothWays,
 		// The Google Compute Engine network (VPC) of the endpoint in the format projects/<project number>/locations/global/networks/*.
-		"network": computeNetworkImpactInOnly,
+		"network": ComputeNetworkImpactInOnly,
 	},
 	ServiceUsageService: {
 		"config.name": {
@@ -641,14 +641,14 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 	},
 	SpannerDatabase: {
 		// The Cloud KMS key used to encrypt the database.
-		"encryptionConfig.kmsKeyName":  cryptoKeyImpactInOnly,
-		"encryptionConfig.kmsKeyNames": cryptoKeyImpactInOnly,
+		"encryptionConfig.kmsKeyName":  CryptoKeyImpactInOnly,
+		"encryptionConfig.kmsKeyNames": CryptoKeyImpactInOnly,
 		"restoreInfo.backupInfo.backup": {
 			Description:      "If the Spanner Backup is deleted or updated: The Database may become invalid or inaccessible. If the Database is updated: The backup remains unaffected.",
 			ToSDPITemType:    SpannerBackup,
 			BlastPropagation: impactInOnly,
 		},
-		"encryptionInfo.kmsKeyVersion": cryptoKeyVersionImpactInOnly,
+		"encryptionInfo.kmsKeyVersion": CryptoKeyVersionImpactInOnly,
 	},
 	SQLAdminBackup: {
 		"instance": {
@@ -656,8 +656,8 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			Description:      "If the Cloud SQL Instance is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The instance cannot recover from the backup.",
 			BlastPropagation: impactBothWays,
 		},
-		"kmsKey":        cryptoKeyImpactInOnly,
-		"kmsKeyVersion": cryptoKeyVersionImpactInOnly,
+		"kmsKey":        CryptoKeyImpactInOnly,
+		"kmsKeyVersion": CryptoKeyVersionImpactInOnly,
 		"backupRun": {
 			ToSDPITemType:    SQLAdminBackupRun,
 			Description:      "They are tightly coupled with the SQL Admin Backup.",
@@ -670,14 +670,14 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			Description:      "They are tightly coupled",
 			BlastPropagation: impactBothWays,
 		},
-		"diskEncryptionConfiguration.kmsKeyName": cryptoKeyImpactInOnly,
+		"diskEncryptionConfiguration.kmsKeyName": CryptoKeyImpactInOnly,
 	},
 	StorageBucket: {
 		// A Cloud KMS key that will be used to encrypt objects written to this bucket if no encryption method is specified as part of the object write request.
-		"encryption.defaultKmsKeyName": cryptoKeyImpactInOnly,
+		"encryption.defaultKmsKeyName": CryptoKeyImpactInOnly,
 		// Name of the network.
 		// Format: projects/PROJECT_ID/global/networks/NETWORK_NAME
-		"ipFilter.vpcNetworkSources.network": computeNetworkImpactInOnly,
+		"ipFilter.vpcNetworkSources.network": ComputeNetworkImpactInOnly,
 		// The destination bucket where the current bucket's logs should be placed.
 		"logging.logBucket": {
 			ToSDPITemType:    LoggingBucket,

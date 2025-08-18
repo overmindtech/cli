@@ -57,7 +57,7 @@ func ProjectLevelEndpointFuncWithSingleQuery(format string) func(queryParts ...s
 	}
 }
 
-func projectLevelEndpointFuncWithTwoQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
+func ProjectLevelEndpointFuncWithTwoQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
 	// count number of `%s` in the format string
 	if strings.Count(format, "%s") != 3 { // project ID, and 2 parts of the query
 		panic(fmt.Sprintf("format string must contain 3 %%s placeholders: %s", format))
@@ -79,7 +79,7 @@ func projectLevelEndpointFuncWithTwoQueries(format string) func(queryParts ...st
 	}
 }
 
-func projectLevelEndpointFuncWithThreeQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
+func ProjectLevelEndpointFuncWithThreeQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
 	// count number of `%s` in the format string
 	if strings.Count(format, "%s") != 4 { // project ID, and 3 parts of the query
 		panic(fmt.Sprintf("format string must contain 4 %%s placeholders: %s", format))
@@ -101,7 +101,7 @@ func projectLevelEndpointFuncWithThreeQueries(format string) func(queryParts ...
 	}
 }
 
-func projectLevelEndpointFuncWithFourQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
+func ProjectLevelEndpointFuncWithFourQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
 	// count number of `%s` in the format string
 	if strings.Count(format, "%s") != 5 { // project ID, and 4 parts of the query
 		panic(fmt.Sprintf("format string must contain 5 %%s placeholders: %s", format))
@@ -123,7 +123,7 @@ func projectLevelEndpointFuncWithFourQueries(format string) func(queryParts ...s
 	}
 }
 
-func zoneLevelEndpointFuncWithSingleQuery(format string) func(queryParts ...string) (EndpointFunc, error) {
+func ZoneLevelEndpointFuncWithSingleQuery(format string) func(queryParts ...string) (EndpointFunc, error) {
 	// count number of `%s` in the format string
 	if strings.Count(format, "%s") != 3 { // project ID, zone, and query
 		panic(fmt.Sprintf("format string must contain 3 %%s placeholders: %s", format))
@@ -142,7 +142,7 @@ func zoneLevelEndpointFuncWithSingleQuery(format string) func(queryParts ...stri
 	}
 }
 
-func regionalLevelEndpointFuncWithSingleQuery(format string) func(queryParts ...string) (EndpointFunc, error) {
+func RegionalLevelEndpointFuncWithSingleQuery(format string) func(queryParts ...string) (EndpointFunc, error) {
 	// count number of `%s` in the format string
 	if strings.Count(format, "%s") != 3 { // project ID, region, and query
 		panic(fmt.Sprintf("format string must contain 3 %%s placeholders: %s", format))
@@ -161,7 +161,7 @@ func regionalLevelEndpointFuncWithSingleQuery(format string) func(queryParts ...
 	}
 }
 
-func zoneLevelEndpointFuncWithTwoQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
+func ZoneLevelEndpointFuncWithTwoQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
 	// count number of `%s` in the format string
 	if strings.Count(format, "%s") != 4 { // project ID, zone, and 2 parts of the query
 		panic(fmt.Sprintf("format string must contain 4 %%s placeholders: %s", format))
@@ -183,7 +183,7 @@ func zoneLevelEndpointFuncWithTwoQueries(format string) func(queryParts ...strin
 	}
 }
 
-func regionalLevelEndpointFuncWithTwoQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
+func RegionalLevelEndpointFuncWithTwoQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
 	// count number of `%s` in the format string
 	if strings.Count(format, "%s") != 4 { // project ID, region, and 2 parts of the query
 		panic(fmt.Sprintf("format string must contain 4 %%s placeholders: %s", format))
@@ -217,7 +217,7 @@ func ProjectLevelListFunc(format string) func(adapterInitParams ...string) (stri
 	}
 }
 
-func regionLevelListFunc(format string) func(adapterInitParams ...string) (string, error) {
+func RegionLevelListFunc(format string) func(adapterInitParams ...string) (string, error) {
 	// count number of `%s` in the format string
 	if strings.Count(format, "%s") != 2 { // project ID and region
 		panic(fmt.Sprintf("format string must contain 2 %%s placeholders: %s", format))
@@ -230,7 +230,7 @@ func regionLevelListFunc(format string) func(adapterInitParams ...string) (strin
 	}
 }
 
-func zoneLevelListFunc(format string) func(adapterInitParams ...string) (string, error) {
+func ZoneLevelListFunc(format string) func(adapterInitParams ...string) (string, error) {
 	// count number of `%s` in the format string
 	if strings.Count(format, "%s") != 2 { // project ID and zone
 		panic(fmt.Sprintf("format string must contain 2 %%s placeholders: %s", format))
@@ -282,11 +282,11 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/artifact-registry/docs/reference/rest/v1/projects.locations.repositories.dockerImages/get?rep_location=global
 		// GET https://artifactregistry.googleapis.com/v1/{name=projects/*/locations/*/repositories/*/dockerImages/*}
 		// IAM permissions: artifactregistry.dockerImages.get
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithThreeQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s/dockerImages/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithThreeQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s/dockerImages/%s"),
 		// Reference: https://cloud.google.com/artifact-registry/docs/reference/rest/v1/projects.locations.repositories.dockerImages/list?rep_location=global
 		// GET https://artifactregistry.googleapis.com/v1/{parent=projects/*/locations/*/repositories/*}/dockerImages
 		// IAM permissions: artifactregistry.dockerImages.list
-		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s/dockerImages"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithTwoQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s/dockerImages"),
 		SearchDescription:   "Search for Docker images in Artifact Registry. Use the format \"location|repository_id\" or \"projects/project/locations/location/repository/repository_id/dockerImages/docker_image\" which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "repositories", "dockerImages"},
 		IAMPermissions:      []string{"artifactregistry.dockerimages.get", "artifactregistry.dockerimages.list"},
@@ -297,7 +297,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 		Scope:              ScopeProject,
 		// https://artifactregistry.googleapis.com/v1/projects/*/locations/*/repositories/*
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithTwoQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s"),
 		// https://artifactregistry.googleapis.com/v1/{parent=projects/*/locations/*}/repositories
 		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories"),
 		UniqueAttributeKeys: []string{"locations", "repositories"},
@@ -308,7 +308,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.appProfiles/get
 		// GET https://bigtableadmin.googleapis.com/v2/{name=projects/*/instances/*/appProfiles/*}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/appProfiles/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/appProfiles/%s"),
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.appProfiles/list
 		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/appProfiles"),
 		SearchDescription:   "Search for BigTable App Profiles in an instance. Use the format \"instance\" or \"projects/project_id/instances/instance_name/appProfiles/app_profile_id\" which is supported for terraform mappings.",
@@ -332,9 +332,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.clusters.backups/get
 		// GET https://bigtableadmin.googleapis.com/v2/{name=projects/*/instances/*/clusters/*/backups/*}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithThreeQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s/backups/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithThreeQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s/backups/%s"),
 		// GET https://bigtableadmin.googleapis.com/v2/{parent=projects/*/instances/*/clusters/*}/backups
-		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s/backups"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s/backups"),
 		UniqueAttributeKeys: []string{"instances", "clusters", "backups"},
 		// HEALTH: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.clusters.backups#state
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
@@ -346,7 +346,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 		Scope:              ScopeProject,
 		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*/clusters/*
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s"),
 		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*/clusters
 		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters"),
 		UniqueAttributeKeys: []string{"instances", "clusters"},
@@ -358,7 +358,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.tables/get
 		// GET https://bigtableadmin.googleapis.com/v2/{name=projects/*/instances/*/tables/*}
 		// IAM permissions: bigtable.tables.get
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/tables/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/tables/%s"),
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.tables/list
 		// GET https://bigtableadmin.googleapis.com/v2/{parent=projects/*/instances/*}/tables
 		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/tables"),
@@ -430,9 +430,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 		Scope:              ScopeZonal,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/acceleratorTypes/{acceleratorType}
-		GetEndpointBaseURLFunc: zoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/acceleratorTypes/%s"),
+		GetEndpointBaseURLFunc: ZoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/acceleratorTypes/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/acceleratorTypes
-		ListEndpointFunc:    zoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/acceleratorTypes"),
+		ListEndpointFunc:    ZoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/acceleratorTypes"),
 		UniqueAttributeKeys: []string{"acceleratorTypes"},
 		IAMPermissions:      []string{"compute.acceleratorTypes.get", "compute.acceleratorTypes.list"},
 	},
@@ -451,9 +451,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 		Scope:              ScopeZonal,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances/{instance}
-		GetEndpointBaseURLFunc: zoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/instances/%s"),
+		GetEndpointBaseURLFunc: ZoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/instances/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances
-		ListEndpointFunc:    zoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/instances"),
+		ListEndpointFunc:    ZoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/instances"),
 		UniqueAttributeKeys: []string{"instances"},
 		IAMPermissions:      []string{"compute.instances.get", "compute.instances.list"},
 	},
@@ -499,9 +499,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 		Scope:              ScopeZonal,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/diskTypes/{diskType}
-		GetEndpointBaseURLFunc: zoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/diskTypes/%s"),
+		GetEndpointBaseURLFunc: ZoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/diskTypes/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/diskTypes
-		ListEndpointFunc:    zoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/diskTypes"),
+		ListEndpointFunc:    ZoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/diskTypes"),
 		UniqueAttributeKeys: []string{"diskTypes"},
 		IAMPermissions:      []string{"compute.diskTypes.get", "compute.diskTypes.list"},
 	},
@@ -542,9 +542,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 		Scope:              ScopeRegional,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/resourcePolicies/{resourcePolicy}
-		GetEndpointBaseURLFunc: regionalLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/resourcePolicies/%s"),
+		GetEndpointBaseURLFunc: RegionalLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/resourcePolicies/%s"),
 		// https://cloud.google.com/compute/docs/reference/rest/v1/resourcePolicies/list
-		ListEndpointFunc:    regionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/resourcePolicies"),
+		ListEndpointFunc:    RegionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/resourcePolicies"),
 		UniqueAttributeKeys: []string{"resourcePolicies"},
 		IAMPermissions:      []string{"compute.resourcePolicies.get", "compute.resourcePolicies.list"},
 	},
@@ -562,9 +562,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 		Scope:              ScopeRegional,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/subnetworks/{subnetwork}
-		GetEndpointBaseURLFunc: regionalLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks/%s"),
+		GetEndpointBaseURLFunc: RegionalLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/subnetworks
-		ListEndpointFunc:    regionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks"),
+		ListEndpointFunc:    RegionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks"),
 		UniqueAttributeKeys: []string{"subnetworks"},
 		IAMPermissions:      []string{"compute.subnetworks.get", "compute.subnetworks.list"},
 	},
@@ -574,9 +574,9 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 		Scope:              ScopeZonal,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/storagePools/{storagePool}
-		GetEndpointBaseURLFunc: zoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools/%s"),
+		GetEndpointBaseURLFunc: ZoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/storagePools
-		ListEndpointFunc:    zoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools"),
+		ListEndpointFunc:    ZoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools"),
 		UniqueAttributeKeys: []string{"storagePools"},
 		IAMPermissions:      []string{"compute.storagePools.get", "compute.storagePools.list"},
 	},
@@ -586,7 +586,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/dataform/reference/rest/v1/projects.locations.repositories/get
 		// GET https://dataform.googleapis.com/v1/projects/*/locations/*/repositories/*
 		// IAM permissions: dataform.repositories.get
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithTwoQueries("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories/%s"),
 		// Reference: https://cloud.google.com/dataform/reference/rest/v1/projects.locations.repositories/list
 		// GET https://dataform.googleapis.com/v1/projects/*/locations/*/repositories
 		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories"),
@@ -600,7 +600,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.entryGroups/get
 		// GET https://dataplex.googleapis.com/v1/{name=projects/*/locations/*/entryGroups/*}
 		// IAM permissions: dataplex.entryGroups.get
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithTwoQueries("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups/%s"),
 		// Reference: https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.entryGroups/list
 		// GET https://dataplex.googleapis.com/v1/{parent=projects/*/locations/*}/entryGroups
 		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups"),
@@ -670,7 +670,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets/get
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets/*
 		// IAM permissions: logging.buckets.get
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s"),
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets/list
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets
 		// IAM permissions: logging.buckets.list
@@ -688,11 +688,11 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets.links/get
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets/*/links/*
 		// IAM permissions: logging.links.get
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithThreeQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s/links/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithThreeQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s/links/%s"),
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets.links/list
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets/*/links
 		// IAM permissions: logging.links.list
-		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s/links"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s/links"),
 		UniqueAttributeKeys: []string{"locations", "buckets", "links"},
 		IAMPermissions:      []string{"logging.links.get", "logging.links.list"},
 	},
@@ -702,7 +702,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.savedQueries/get
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/savedQueries/*
 		// IAM permissions: logging.savedQueries.get
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/savedQueries/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/savedQueries/%s"),
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.savedQueries/list
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/savedQueries
 		// IAM permissions: logging.savedQueries.list
@@ -773,11 +773,11 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// Reference: https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.services.revisions/get
 		// GET https://run.googleapis.com/v2/projects/{project}/locations/{location}/services/{service}/revisions/{revision}
 		// IAM Perm: run.revisions.get
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithThreeQueries("https://run.googleapis.com/v2/projects/%s/locations/%s/services/%s/revisions/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithThreeQueries("https://run.googleapis.com/v2/projects/%s/locations/%s/services/%s/revisions/%s"),
 		// Reference: https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.services.revisions/list
 		// GET https://run.googleapis.com/v2/projects/{project}/locations/{location}/services/{service}/revisions
 		// IAM Perm: run.revisions.list
-		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://run.googleapis.com/v2/projects/%s/locations/%s/services/%s/revisions"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithTwoQueries("https://run.googleapis.com/v2/projects/%s/locations/%s/services/%s/revisions"),
 		UniqueAttributeKeys: []string{"locations", "services", "revisions"},
 		IAMPermissions:      []string{"run.revisions.get", "run.revisions.list"},
 	},
@@ -786,11 +786,11 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/service-directory/docs/reference/rest/v1/projects.locations.namespaces.services.endpoints/get
 		// GET https://servicedirectory.googleapis.com/v1/projects/*/locations/*/namespaces/*/services/*/endpoints/*
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithFourQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s/endpoints/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithFourQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s/endpoints/%s"),
 		// Reference: https://cloud.google.com/service-directory/docs/reference/rest/v1/projects.locations.namespaces.services.endpoints/list
 		// IAM Perm: servicedirectory.endpoints.list
 		// GET https://servicedirectory.googleapis.com/v1/projects/*/locations/*/namespaces/*/services/*/endpoints
-		SearchEndpointFunc:  projectLevelEndpointFuncWithThreeQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s/endpoints"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithThreeQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s/endpoints"),
 		SearchDescription:   "Search for endpoints by \"location|namespace_id|service_id\" or \"projects/project_id/locations/location/namespaces/namespace_id/services/service_id/endpoints/endpoint_id\" which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "namespaces", "services", "endpoints"},
 		IAMPermissions:      []string{"servicedirectory.endpoints.get", "servicedirectory.endpoints.list"},
@@ -801,10 +801,10 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 		Scope:              ScopeProject,
 		// https://servicedirectory.googleapis.com/v1/projects/*/locations/*/namespaces/*/services/*
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithThreeQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithThreeQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s"),
 		// https://servicedirectory.googleapis.com/v1/projects/*/locations/*/namespaces/*/services
 		// IAM Perm: servicedirectory.services.list
-		SearchEndpointFunc:  projectLevelEndpointFuncWithTwoQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services"),
+		SearchEndpointFunc:  ProjectLevelEndpointFuncWithTwoQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services"),
 		UniqueAttributeKeys: []string{"locations", "namespaces", "services"},
 		IAMPermissions:      []string{"servicedirectory.services.get", "servicedirectory.services.list"},
 	},
@@ -839,7 +839,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// Reference:https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.backups/get?rep_location=global
 		// https://spanner.googleapis.com/v1/projects/*/instances/*/backups/*
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://spanner.googleapis.com/v1/projects/%s/instances/%s/backups/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithTwoQueries("https://spanner.googleapis.com/v1/projects/%s/instances/%s/backups/%s"),
 		// https://spanner.googleapis.com/v1/projects/*/instances/*/backups
 		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instances/%s/backups"),
 		UniqueAttributeKeys: []string{"instances", "backups"},
@@ -850,7 +850,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.databases/get?rep_location=global
 		// https://spanner.googleapis.com/v1/projects/*/instances/*/databases/*
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://spanner.googleapis.com/v1/projects/%s/instances/%s/databases/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithTwoQueries("https://spanner.googleapis.com/v1/projects/%s/instances/%s/databases/%s"),
 		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.databases/list?rep_location=global
 		// https://spanner.googleapis.com/v1/{parent=projects/*/instances/*}/databases
 		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instances/%s/databases"),
@@ -891,7 +891,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		Scope:              ScopeProject,
 		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/backupRuns/get
 		// GET https://sqladmin.googleapis.com/v1/projects/{project}/instances/{instance}/backupRuns/{id}
-		GetEndpointBaseURLFunc: projectLevelEndpointFuncWithTwoQueries("https://sqladmin.googleapis.com/v1/projects/%s/instances/%s/backupRuns/%s"),
+		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithTwoQueries("https://sqladmin.googleapis.com/v1/projects/%s/instances/%s/backupRuns/%s"),
 		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/backupRuns/list
 		// GET https://sqladmin.googleapis.com/v1/projects/{project}/instances/{instance}/backupRuns
 		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://sqladmin.googleapis.com/v1/projects/%s/instances/%s/backupRuns"),

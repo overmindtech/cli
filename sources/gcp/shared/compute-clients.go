@@ -543,3 +543,33 @@ func (c computeSnapshotsClient) Get(ctx context.Context, req *computepb.GetSnaps
 func (c computeSnapshotsClient) List(ctx context.Context, req *computepb.ListSnapshotsRequest, opts ...gax.CallOption) ComputeSnapshotIterator {
 	return c.snapshotClient.List(ctx, req, opts...)
 }
+
+// ComputeRegionBackendServiceIterator is an interface for iterating over compute region backend services
+type ComputeRegionBackendServiceIterator interface {
+	Next() (*computepb.BackendService, error)
+}
+
+// ComputeRegionBackendServiceClient is an interface for the Compute Engine Region Backend Service client
+type ComputeRegionBackendServiceClient interface {
+	Get(ctx context.Context, req *computepb.GetRegionBackendServiceRequest, opts ...gax.CallOption) (*computepb.BackendService, error)
+	List(ctx context.Context, req *computepb.ListRegionBackendServicesRequest, opts ...gax.CallOption) ComputeRegionBackendServiceIterator
+}
+
+type computeRegionBackendServiceClient struct {
+	client *compute.RegionBackendServicesClient
+}
+
+func (c computeRegionBackendServiceClient) Get(ctx context.Context, req *computepb.GetRegionBackendServiceRequest, opts ...gax.CallOption) (*computepb.BackendService, error) {
+	return c.client.Get(ctx, req, opts...)
+}
+
+func (c computeRegionBackendServiceClient) List(ctx context.Context, req *computepb.ListRegionBackendServicesRequest, opts ...gax.CallOption) ComputeRegionBackendServiceIterator {
+	return c.client.List(ctx, req, opts...)
+}
+
+// NewComputeRegionBackendServiceClient creates a new ComputeRegionBackendServiceClient
+func NewComputeRegionBackendServiceClient(regionBackendServiceClient *compute.RegionBackendServicesClient) ComputeRegionBackendServiceClient {
+	return &computeRegionBackendServiceClient{
+		client: regionBackendServiceClient,
+	}
+}

@@ -1752,3 +1752,105 @@ func (mr *MockComputeSnapshotsClientMockRecorder) List(ctx, req any, opts ...any
 	varargs := append([]any{ctx, req}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeSnapshotsClient)(nil).List), varargs...)
 }
+
+// MockComputeRegionBackendServiceIterator is a mock of ComputeRegionBackendServiceIterator interface.
+type MockComputeRegionBackendServiceIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeRegionBackendServiceIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeRegionBackendServiceIteratorMockRecorder is the mock recorder for MockComputeRegionBackendServiceIterator.
+type MockComputeRegionBackendServiceIteratorMockRecorder struct {
+	mock *MockComputeRegionBackendServiceIterator
+}
+
+// NewMockComputeRegionBackendServiceIterator creates a new mock instance.
+func NewMockComputeRegionBackendServiceIterator(ctrl *gomock.Controller) *MockComputeRegionBackendServiceIterator {
+	mock := &MockComputeRegionBackendServiceIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeRegionBackendServiceIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeRegionBackendServiceIterator) EXPECT() *MockComputeRegionBackendServiceIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeRegionBackendServiceIterator) Next() (*computepb.BackendService, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.BackendService)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeRegionBackendServiceIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeRegionBackendServiceIterator)(nil).Next))
+}
+
+// MockComputeRegionBackendServiceClient is a mock of ComputeRegionBackendServiceClient interface.
+type MockComputeRegionBackendServiceClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeRegionBackendServiceClientMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeRegionBackendServiceClientMockRecorder is the mock recorder for MockComputeRegionBackendServiceClient.
+type MockComputeRegionBackendServiceClientMockRecorder struct {
+	mock *MockComputeRegionBackendServiceClient
+}
+
+// NewMockComputeRegionBackendServiceClient creates a new mock instance.
+func NewMockComputeRegionBackendServiceClient(ctrl *gomock.Controller) *MockComputeRegionBackendServiceClient {
+	mock := &MockComputeRegionBackendServiceClient{ctrl: ctrl}
+	mock.recorder = &MockComputeRegionBackendServiceClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeRegionBackendServiceClient) EXPECT() *MockComputeRegionBackendServiceClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockComputeRegionBackendServiceClient) Get(ctx context.Context, req *computepb.GetRegionBackendServiceRequest, opts ...gax.CallOption) (*computepb.BackendService, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Get", varargs...)
+	ret0, _ := ret[0].(*computepb.BackendService)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockComputeRegionBackendServiceClientMockRecorder) Get(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeRegionBackendServiceClient)(nil).Get), varargs...)
+}
+
+// List mocks base method.
+func (m *MockComputeRegionBackendServiceClient) List(ctx context.Context, req *computepb.ListRegionBackendServicesRequest, opts ...gax.CallOption) shared.ComputeRegionBackendServiceIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "List", varargs...)
+	ret0, _ := ret[0].(shared.ComputeRegionBackendServiceIterator)
+	return ret0
+}
+
+// List indicates an expected call of List.
+func (mr *MockComputeRegionBackendServiceClientMockRecorder) List(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeRegionBackendServiceClient)(nil).List), varargs...)
+}

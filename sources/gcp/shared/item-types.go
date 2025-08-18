@@ -104,4 +104,6 @@ var (
 	SpannerInstanceConfig          = shared.NewItemType(GCP, Spanner, InstanceConfig)
 	SpannerBackup                  = shared.NewItemType(GCP, Spanner, Backup)
 	BigQueryModel                  = shared.NewItemType(GCP, BigQuery, Model)
+	ComputeRegionBackendService    = shared.NewItemType(GCP, Compute, RegionBackendService)
+	ComputeNetworkEndpointGroup    = shared.NewItemType(GCP, Compute, NetworkEndpointGroup)
 )

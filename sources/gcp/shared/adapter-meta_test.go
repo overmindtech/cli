@@ -403,7 +403,7 @@ func TestProjectLevelEndpointFuncWithTwoQueries(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn := projectLevelEndpointFuncWithTwoQueries(tt.format)
+			fn := ProjectLevelEndpointFuncWithTwoQueries(tt.format)
 			endpointFunc, err := fn(tt.params...)
 			if tt.expectInitErr {
 				if err == nil {
@@ -477,7 +477,7 @@ func TestZoneLevelEndpointFuncWithSingleQuery(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn, err := zoneLevelEndpointFuncWithSingleQuery(tt.format)(tt.params...)
+			fn, err := ZoneLevelEndpointFuncWithSingleQuery(tt.format)(tt.params...)
 			if tt.expectInitErr {
 				if err == nil {
 					t.Errorf("expected error but got none (params: %v)", tt.params)
@@ -550,7 +550,7 @@ func TestRegionalLevelEndpointFuncWithSingleQuery(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn, err := regionalLevelEndpointFuncWithSingleQuery(tt.format)(tt.params...)
+			fn, err := RegionalLevelEndpointFuncWithSingleQuery(tt.format)(tt.params...)
 			if tt.expectInitErr {
 				if err == nil {
 					t.Errorf("expected error but got none (params: %v)", tt.params)
@@ -644,7 +644,7 @@ func TestZoneLevelEndpointFuncWithTwoQueries(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn := zoneLevelEndpointFuncWithTwoQueries(tt.format)
+			fn := ZoneLevelEndpointFuncWithTwoQueries(tt.format)
 			endpointFunc, err := fn(tt.params...)
 			if tt.expectInitErr {
 				if err == nil {
@@ -739,7 +739,7 @@ func TestRegionalLevelEndpointFuncWithTwoQueries(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn := regionalLevelEndpointFuncWithTwoQueries(tt.format)
+			fn := RegionalLevelEndpointFuncWithTwoQueries(tt.format)
 			endpointFunc, err := fn(tt.params...)
 			if tt.expectInitErr {
 				if err == nil {
@@ -827,7 +827,7 @@ func TestProjectLevelEndpointFuncWithThreeQueries(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn := projectLevelEndpointFuncWithThreeQueries(tt.format)
+			fn := ProjectLevelEndpointFuncWithThreeQueries(tt.format)
 			endpointFunc, err := fn(tt.params...)
 			if tt.expectInitErr {
 				if err == nil {
@@ -894,7 +894,7 @@ func TestProjectLevelEndpointFuncWithFourQueries(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn := projectLevelEndpointFuncWithFourQueries(tt.format)
+			fn := ProjectLevelEndpointFuncWithFourQueries(tt.format)
 			endpointFunc, err := fn(tt.params...)
 			if tt.expectInitErr {
 				if err == nil {
@@ -921,8 +921,8 @@ func TestEndpointFuncWithQueries_PanicsOnWrongFormat(t *testing.T) {
 		count  int
 	}{
 		{
-			name:   "projectLevelEndpointFuncWithThreeQueries panics on wrong format",
-			fn:     projectLevelEndpointFuncWithThreeQueries,
+			name:   "ProjectLevelEndpointFuncWithThreeQueries panics on wrong format",
+			fn:     ProjectLevelEndpointFuncWithThreeQueries,
 			format: "https://example.com/projects/%s/resources/%s/child/%s", // 3 %s, should be 4
 			count:  4,
 		},
@@ -933,32 +933,32 @@ func TestEndpointFuncWithQueries_PanicsOnWrongFormat(t *testing.T) {
 			count:  2,
 		},
 		{
-			name:   "projectLevelEndpointFuncWithTwoQueries panics on wrong format",
-			fn:     projectLevelEndpointFuncWithTwoQueries,
+			name:   "ProjectLevelEndpointFuncWithTwoQueries panics on wrong format",
+			fn:     ProjectLevelEndpointFuncWithTwoQueries,
 			format: "https://example.com/projects/%s/resources/%s", // 2 %s, should be 3
 			count:  3,
 		},
 		{
-			name:   "zoneLevelEndpointFuncWithSingleQuery panics on wrong format",
-			fn:     zoneLevelEndpointFuncWithSingleQuery,
+			name:   "ZoneLevelEndpointFuncWithSingleQuery panics on wrong format",
+			fn:     ZoneLevelEndpointFuncWithSingleQuery,
 			format: "https://example.com/projects/%s/zones/%s/resources", // 2 %s, should be 3
 			count:  3,
 		},
 		{
-			name:   "regionalLevelEndpointFuncWithSingleQuery panics on wrong format",
-			fn:     regionalLevelEndpointFuncWithSingleQuery,
+			name:   "RegionalLevelEndpointFuncWithSingleQuery panics on wrong format",
+			fn:     RegionalLevelEndpointFuncWithSingleQuery,
 			format: "https://example.com/projects/%s/regions/%s/resources", // 2 %s, should be 3
 			count:  3,
 		},
 		{
-			name:   "zoneLevelEndpointFuncWithTwoQueries panics on wrong format",
-			fn:     zoneLevelEndpointFuncWithTwoQueries,
+			name:   "ZoneLevelEndpointFuncWithTwoQueries panics on wrong format",
+			fn:     ZoneLevelEndpointFuncWithTwoQueries,
 			format: "https://example.com/projects/%s/zones/%s/resources/%s", // 3 %s, should be 4
 			count:  4,
 		},
 		{
-			name:   "regionalLevelEndpointFuncWithTwoQueries panics on wrong format",
-			fn:     regionalLevelEndpointFuncWithTwoQueries,
+			name:   "RegionalLevelEndpointFuncWithTwoQueries panics on wrong format",
+			fn:     RegionalLevelEndpointFuncWithTwoQueries,
 			format: "https://example.com/projects/%s/regions/%s/resources/%s", // 3 %s, should be 4
 			count:  4,
 		}}
@@ -1074,7 +1074,7 @@ func Test_regionLevelListFunc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn := regionLevelListFunc(tt.format)
+			fn := RegionLevelListFunc(tt.format)
 			got, err := fn(tt.params...)
 			if tt.expectErr {
 				if err == nil {
@@ -1136,7 +1136,7 @@ func Test_zoneLevelListFunc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn := zoneLevelListFunc(tt.format)
+			fn := ZoneLevelListFunc(tt.format)
 			got, err := fn(tt.params...)
 			if tt.expectErr {
 				if err == nil {
