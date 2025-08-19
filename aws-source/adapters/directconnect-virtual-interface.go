@@ -72,9 +72,9 @@ func virtualInterfaceOutputMapper(_ context.Context, _ *directconnect.Client, sc
 					Scope:  "global",
 				},
 				BlastPropagation: &sdp.BlastPropagation{
-					// IPs are always linked
-					In:  true,
-					Out: true,
+					// do not link through rdap definitions to avoid huge blast radius
+					In:  false,
+					Out: false,
 				},
 			})
 		}
@@ -88,9 +88,9 @@ func virtualInterfaceOutputMapper(_ context.Context, _ *directconnect.Client, sc
 					Scope:  "global",
 				},
 				BlastPropagation: &sdp.BlastPropagation{
-					// IPs are always linked
-					In:  true,
-					Out: true,
+					// do not link through rdap definitions to avoid huge blast radius
+					In:  false,
+					Out: false,
 				},
 			})
 		}

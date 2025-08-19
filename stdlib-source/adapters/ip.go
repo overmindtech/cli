@@ -167,9 +167,8 @@ func (bc *IPAdapter) Get(ctx context.Context, scope string, query string, ignore
 					Scope:  "global",
 				},
 				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the network will affect the IP
-					In: true,
-					// The IP won't affect the network
+					// do not link through rdap definitions to avoid huge blast radius
+					In:  false,
 					Out: false,
 				},
 			},

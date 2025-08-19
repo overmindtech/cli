@@ -211,9 +211,8 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 					Scope:  "global",
 				},
 				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the network could affect the domain presumably
-					In: true,
-					// The domain won't affect the network
+					// do not link through rdap definitions to avoid huge blast radius
+					In:  false,
 					Out: false,
 				},
 			})
