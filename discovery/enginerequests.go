@@ -446,15 +446,12 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 				stream.SendError(err)
 			}
 		} else {
-			stream.SendError(&sdp.QueryError{
-				ErrorType:     sdp.QueryError_NOTFOUND,
-				ErrorString:   "adapter is not listable",
-				Scope:         q.GetScope(),
-				SourceName:    e.EngineConfig.SourceName,
-				ItemType:      q.GetType(),
-				ResponderName: e.EngineConfig.SourceName,
-				UUID:          q.GetUUID(),
-			})
+			// Log the error instead of sending it over the stream
+			log.WithContext(ctx).WithFields(log.Fields{
+				"ovm.adapter.name":  adapter.Name(),
+				"ovm.adapter.type":  q.GetType(),
+				"ovm.adapter.scope": q.GetScope(),
+			}).Warn("adapter is not listable")
 		}
 	case sdp.QueryMethod_SEARCH:
 		if streamingAdapter, ok := adapter.(StreamingAdapter); ok {
@@ -471,10 +468,12 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 				stream.SendError(err)
 			}
 		} else {
-			stream.SendError(&sdp.QueryError{
-				ErrorType:   sdp.QueryError_NOTFOUND,
-				ErrorString: "adapter is not searchable",
-			})
+			// Log the error instead of sending it over the stream
+			log.WithContext(ctx).WithFields(log.Fields{
+				"ovm.adapter.name":  adapter.Name(),
+				"ovm.adapter.type":  q.GetType(),
+				"ovm.adapter.scope": q.GetScope(),
+			}).Warn("adapter is not searchable")
 		}
 	}
 
