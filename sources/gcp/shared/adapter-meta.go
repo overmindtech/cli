@@ -315,18 +315,6 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		UniqueAttributeKeys: []string{"instances", "appProfiles"},
 		IAMPermissions:      []string{"bigtable.appProfiles.get", "bigtable.appProfiles.list"},
 	},
-	BigTableAdminInstance: {
-		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances/get
-		InDevelopment:      true,
-		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              ScopeProject,
-		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*
-		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s"),
-		// https://bigtableadmin.googleapis.com/v2/projects/*/instances
-		ListEndpointFunc:    ProjectLevelListFunc("https://bigtableadmin.googleapis.com/v2/projects/%s/instances"),
-		UniqueAttributeKeys: []string{"instances"},
-		IAMPermissions:      []string{"bigtable.instances.get", "bigtable.instances.list"},
-	},
 	BigTableAdminBackup: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OTHER,
 		Scope:              ScopeProject,
@@ -339,18 +327,6 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// HEALTH: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.clusters.backups#state
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		IAMPermissions: []string{"bigtable.backups.get", "bigtable.backups.list"},
-	},
-	BigTableAdminCluster: {
-		InDevelopment: true,
-		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.clusters/get
-		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              ScopeProject,
-		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*/clusters/*
-		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s"),
-		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*/clusters
-		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters"),
-		UniqueAttributeKeys: []string{"instances", "clusters"},
-		IAMPermissions:      []string{"bigtable.clusters.get", "bigtable.clusters.list"},
 	},
 	BigTableAdminTable: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
