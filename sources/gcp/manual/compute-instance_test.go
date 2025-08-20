@@ -97,6 +97,16 @@ func TestComputeInstance(t *testing.T) {
 						Out: true,
 					},
 				},
+				{
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-policy",
+					ExpectedScope:  "test-project-id.us-central1",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -275,5 +285,8 @@ func createComputeInstance(instanceName string, status computepb.Instance_Status
 			},
 		},
 		Status: ptr.To(status.String()),
+		ResourcePolicies: []string{
+			"projects/test-project-id/regions/us-central1/resourcePolicies/test-policy",
+		},
 	}
 }

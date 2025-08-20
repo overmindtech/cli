@@ -52,6 +52,7 @@ func (c computeInstanceWrapper) PotentialLinks() map[shared.ItemType]bool {
 		gcpshared.ComputeDisk,
 		gcpshared.ComputeSubnetwork,
 		gcpshared.ComputeNetwork,
+		gcpshared.ComputeResourcePolicy,
 	)
 }
 
@@ -296,6 +297,34 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(instance *computepb.
 						},
 					})
 				}
+			}
+		}
+	}
+
+	for _, rp := range instance.GetResourcePolicies() {
+		// The URL of the resource policy to attach to this instance.
+		// This field is optional.
+		// If you specify this field, you can specify the resource policy as a full or partial URL.
+		// For example, the following are all valid URLs:
+		//  - https://www.googleapis.com/compute/v1/projects/project/regions/region/resourcePolicies/resourcePolicy
+		//  - regions/region/resourcePolicies/resourcePolicy
+		if strings.Contains(rp, "/") {
+			parts := gcpshared.ExtractPathParams(rp, "regions", "resourcePolicies")
+			if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+				resourcePolicyName := parts[1]
+				region := parts[0]
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputeResourcePolicy.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  resourcePolicyName,
+						Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				})
 			}
 		}
 	}

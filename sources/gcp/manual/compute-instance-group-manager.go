@@ -3,6 +3,7 @@ package manual
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
@@ -239,15 +240,17 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ins
 		resourcePolicy := instanceGroupManager.GetResourcePolicies().GetWorkloadPolicy()
 		//Deleting the  Instance Group Manager does not affect the the Resource Policy.
 		//Deleting the Resource Policy doesn't stop the Instance Group Manager from running but makes it lose the policy’s scheduled effects.
-		if resourcePolicy != "" {
-			resourcePolicyName := gcpshared.LastPathComponent(string(resourcePolicy))
-			if resourcePolicyName != "" {
+		if strings.Contains(resourcePolicy, "/") {
+			parts := gcpshared.ExtractPathParams(resourcePolicy, "regions", "resourcePolicies")
+			if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+				resourcePolicyName := parts[1]
+				region := parts[0]
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.ComputeResourcePolicy.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  resourcePolicyName,
-						Scope:  c.ProjectID(),
+						Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				})

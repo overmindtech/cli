@@ -395,6 +395,9 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			BlastPropagation: impactBothWays,
 		},
 	},
+	ComputeResourcePolicy: {
+		// There is no links originating from this item type.
+	},
 	ComputeRoute: {
 		// https://cloud.google.com/compute/docs/reference/rest/v1/routes/get
 		// Network that the route belongs to

@@ -1,4 +1,4 @@
-package adapters
+package adapters_test
 
 import (
 	"context"

@@ -85,7 +85,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-policy",
-						ExpectedScope:  "test-project-id",
+						ExpectedScope:  "test-project-id.us-central1",
 						ExpectedBlastPropagation: &sdp.BlastPropagation{
 							In:  true,
 							Out: false,
@@ -144,7 +144,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-policy",
-						ExpectedScope:  "test-project-id",
+						ExpectedScope:  "test-project-id.us-central1",
 						ExpectedBlastPropagation: &sdp.BlastPropagation{
 							In:  true,
 							Out: false,

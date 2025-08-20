@@ -37,6 +37,8 @@ const (
 	VPCAccess            shared.API = "vpc-access"
 	SecretManager        shared.API = "secret-manager"
 	Spanner              shared.API = "spanner"
+	AppEngine            shared.API = "app-engine"
+	CloudFunctions       shared.API = "cloud-functions"
 )
 
 // Resources
@@ -51,6 +53,7 @@ const (
 	Address                  shared.Resource = "address"
 	ForwardingRule           shared.Resource = "forwarding-rule"
 	BackendService           shared.Resource = "backend-service"
+	UrlMap                   shared.Resource = "url-map"
 	Autoscaler               shared.Resource = "autoscaler"
 	InstanceGroupManager     shared.Resource = "instance-group-manager"
 	SecurityPolicy           shared.Resource = "security-policy"
@@ -132,4 +135,10 @@ const (
 	Database                 shared.Resource = "database"
 	RegionBackendService     shared.Resource = "region-backend-service"
 	NetworkEndpointGroup     shared.Resource = "network-endpoint-group"
+	SSLCertificate           shared.Resource = "ssl-certificate"
+	GlobalAddress            shared.Resource = "global-address"
+	VpnGateway               shared.Resource = "vpn-gateway"
+	Router                   shared.Resource = "router"
+	GlobalForwardingRule     shared.Resource = "global-forwarding-rule"
+	Function                 shared.Resource = "function"
 )
