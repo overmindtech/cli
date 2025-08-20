@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/url"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
@@ -130,19 +131,30 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 
 	if function.Code != nil {
 		if function.Code.Location != nil {
-			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   "http",
-					Method: sdp.QueryMethod_GET,
-					Query:  *function.Code.Location,
-					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These are tightly linked
-					In:  true,
-					Out: false,
-				},
-			})
+			u, err := url.Parse(*function.Code.Location)
+			if err == nil {
+				qps := u.Query()
+				for k := range qps {
+					if strings.HasPrefix(k, "X-Amz-") {
+						qps.Del(k)
+					}
+				}
+				u.RawQuery = qps.Encode()
+
+				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   "http",
+						Method: sdp.QueryMethod_GET,
+						Query:  u.String(),
+						Scope:  "global",
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// These are tightly linked
+						In:  true,
+						Out: false,
+					},
+				})
+			}
 		}
 
 		if function.Code.ImageUri != nil {

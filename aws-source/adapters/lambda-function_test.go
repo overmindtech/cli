@@ -96,9 +96,9 @@ var testFuncConfig = &types.FunctionConfiguration{
 
 var testFuncCode = &types.FunctionCodeLocation{
 	RepositoryType:   adapterhelpers.PtrString("S3"),
-	Location:         adapterhelpers.PtrString("https://awslambda-eu-west-2-tasks.s3.eu-west-2.amazonaws.com/snapshots/052392120703/aws-controltower-NotificationForwarder-bcea303b-7721-4cf0-b8db-7a0e6dca76dd"), // link
-	ImageUri:         adapterhelpers.PtrString("https://foo"),                                                                                                                                                     // link
-	ResolvedImageUri: adapterhelpers.PtrString("https://foo"),                                                                                                                                                     // link
+	Location:         adapterhelpers.PtrString("https://awslambda-eu-west-2-tasks.s3.eu-west-2.amazonaws.com/snapshots/052392120703/aws-controltower-NotificationForwarder-bcea303b-7721-4cf0-b8db-7a0e6dca76dd?versionId=3Lk06tjGEoY451GYYupIohtTV96CkVKC&X-Amz-Security-Token=IQoJb3JpZ2l&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Etc=etcetcetc"), // link
+	ImageUri:         adapterhelpers.PtrString("https://foo"),                                                                                                                                                                                                                                                                                      // link
+	ResolvedImageUri: adapterhelpers.PtrString("https://foo"),                                                                                                                                                                                                                                                                                      // link
 }
 
 func (t *TestLambdaClient) GetFunction(ctx context.Context, params *lambda.GetFunctionInput, optFns ...func(*lambda.Options)) (*lambda.GetFunctionOutput, error) {
@@ -185,7 +185,7 @@ func TestFunctionGetFunc(t *testing.T) {
 		{
 			ExpectedType:   "http",
 			ExpectedMethod: sdp.QueryMethod_GET,
-			ExpectedQuery:  "https://awslambda-eu-west-2-tasks.s3.eu-west-2.amazonaws.com/snapshots/052392120703/aws-controltower-NotificationForwarder-bcea303b-7721-4cf0-b8db-7a0e6dca76dd",
+			ExpectedQuery:  "https://awslambda-eu-west-2-tasks.s3.eu-west-2.amazonaws.com/snapshots/052392120703/aws-controltower-NotificationForwarder-bcea303b-7721-4cf0-b8db-7a0e6dca76dd?versionId=3Lk06tjGEoY451GYYupIohtTV96CkVKC",
 			ExpectedScope:  "global",
 		},
 		{
