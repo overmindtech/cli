@@ -39,6 +39,7 @@ const (
 	Spanner              shared.API = "spanner"
 	AppEngine            shared.API = "app-engine"
 	CloudFunctions       shared.API = "cloud-functions"
+	Eventarc             shared.API = "eventarc" // Added for Eventarc triggers
 )
 
 // Resources
@@ -141,4 +142,5 @@ const (
 	Router                   shared.Resource = "router"
 	GlobalForwardingRule     shared.Resource = "global-forwarding-rule"
 	Function                 shared.Resource = "function"
+	WorkerPool               shared.Resource = "worker-pool"
 )

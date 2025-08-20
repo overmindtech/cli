@@ -90,6 +90,8 @@ var (
 	BigTableAdminCluster           = shared.NewItemType(GCP, BigTableAdmin, Cluster)
 	CloudBuildTrigger              = shared.NewItemType(GCP, CloudBuild, Trigger)
 	RunService                     = shared.NewItemType(GCP, Run, Service)
+	RunWorkerPool                  = shared.NewItemType(GCP, Run, WorkerPool)
+	EventarcTrigger                = shared.NewItemType(GCP, Eventarc, Trigger)
 	VPCAccessConnector             = shared.NewItemType(GCP, VPCAccess, Connector)         // https://cloud.google.com/vpc/docs/reference/vpcaccess/rest/v1/projects.locations.connectors/get
 	SQLAdminInstance               = shared.NewItemType(GCP, SqlAdmin, Instance)           // https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/instances/get
 	CloudBillingBillingAccount     = shared.NewItemType(GCP, CloudBilling, BillingAccount) // https://cloud.google.com/billing/docs/reference/rest/v1/billingAccounts/get
