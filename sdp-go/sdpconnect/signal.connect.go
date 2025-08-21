@@ -44,6 +44,9 @@ const (
 	// SignalServiceGetItemSignalsProcedure is the fully-qualified name of the SignalService's
 	// GetItemSignals RPC.
 	SignalServiceGetItemSignalsProcedure = "/signal.SignalService/GetItemSignals"
+	// SignalServiceGetItemSignalsV2Procedure is the fully-qualified name of the SignalService's
+	// GetItemSignalsV2 RPC.
+	SignalServiceGetItemSignalsV2Procedure = "/signal.SignalService/GetItemSignalsV2"
 	// SignalServiceGetItemSignalDetailsProcedure is the fully-qualified name of the SignalService's
 	// GetItemSignalDetails RPC.
 	SignalServiceGetItemSignalDetailsProcedure = "/signal.SignalService/GetItemSignalDetails"
@@ -68,6 +71,13 @@ type SignalServiceClient interface {
 	// Get item-level signals for all items in a change.
 	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
 	GetItemSignals(context.Context, *connect.Request[sdp_go.GetItemSignalsRequest]) (*connect.Response[sdp_go.GetItemSignalsResponse], error)
+	// Get a slice of items, sorted by their aggregate signal value, ascending.
+	// for each item include
+	// - an aggregated value for the item, calculated by AggregateSignalScores.
+	// - a friendly item ref, also before and after
+	// - a slice of signals for the item, sorted by the signal value, ascending.
+	// - the status of the item, e.g. "added", "modified", "deleted".
+	GetItemSignalsV2(context.Context, *connect.Request[sdp_go.GetItemSignalsRequestV2]) (*connect.Response[sdp_go.GetItemSignalsResponseV2], error)
 	// Get all signals for attributes/modifications of an item. This will only be used for routineness to start with.
 	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
 	GetItemSignalDetails(context.Context, *connect.Request[sdp_go.GetItemSignalDetailsRequest]) (*connect.Response[sdp_go.GetItemSignalDetailsResponse], error)
@@ -108,6 +118,12 @@ func NewSignalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(signalServiceMethods.ByName("GetItemSignals")),
 			connect.WithClientOptions(opts...),
 		),
+		getItemSignalsV2: connect.NewClient[sdp_go.GetItemSignalsRequestV2, sdp_go.GetItemSignalsResponseV2](
+			httpClient,
+			baseURL+SignalServiceGetItemSignalsV2Procedure,
+			connect.WithSchema(signalServiceMethods.ByName("GetItemSignalsV2")),
+			connect.WithClientOptions(opts...),
+		),
 		getItemSignalDetails: connect.NewClient[sdp_go.GetItemSignalDetailsRequest, sdp_go.GetItemSignalDetailsResponse](
 			httpClient,
 			baseURL+SignalServiceGetItemSignalDetailsProcedure,
@@ -123,6 +139,7 @@ type signalServiceClient struct {
 	getSignalsByChangeExternalID *connect.Client[sdp_go.GetSignalsByChangeExternalIDRequest, sdp_go.GetSignalsByChangeExternalIDResponse]
 	getChangeOverviewSignals     *connect.Client[sdp_go.GetChangeOverviewSignalsRequest, sdp_go.GetChangeOverviewSignalsResponse]
 	getItemSignals               *connect.Client[sdp_go.GetItemSignalsRequest, sdp_go.GetItemSignalsResponse]
+	getItemSignalsV2             *connect.Client[sdp_go.GetItemSignalsRequestV2, sdp_go.GetItemSignalsResponseV2]
 	getItemSignalDetails         *connect.Client[sdp_go.GetItemSignalDetailsRequest, sdp_go.GetItemSignalDetailsResponse]
 }
 
@@ -144,6 +161,11 @@ func (c *signalServiceClient) GetChangeOverviewSignals(ctx context.Context, req 
 // GetItemSignals calls signal.SignalService.GetItemSignals.
 func (c *signalServiceClient) GetItemSignals(ctx context.Context, req *connect.Request[sdp_go.GetItemSignalsRequest]) (*connect.Response[sdp_go.GetItemSignalsResponse], error) {
 	return c.getItemSignals.CallUnary(ctx, req)
+}
+
+// GetItemSignalsV2 calls signal.SignalService.GetItemSignalsV2.
+func (c *signalServiceClient) GetItemSignalsV2(ctx context.Context, req *connect.Request[sdp_go.GetItemSignalsRequestV2]) (*connect.Response[sdp_go.GetItemSignalsResponseV2], error) {
+	return c.getItemSignalsV2.CallUnary(ctx, req)
 }
 
 // GetItemSignalDetails calls signal.SignalService.GetItemSignalDetails.
@@ -170,6 +192,13 @@ type SignalServiceHandler interface {
 	// Get item-level signals for all items in a change.
 	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
 	GetItemSignals(context.Context, *connect.Request[sdp_go.GetItemSignalsRequest]) (*connect.Response[sdp_go.GetItemSignalsResponse], error)
+	// Get a slice of items, sorted by their aggregate signal value, ascending.
+	// for each item include
+	// - an aggregated value for the item, calculated by AggregateSignalScores.
+	// - a friendly item ref, also before and after
+	// - a slice of signals for the item, sorted by the signal value, ascending.
+	// - the status of the item, e.g. "added", "modified", "deleted".
+	GetItemSignalsV2(context.Context, *connect.Request[sdp_go.GetItemSignalsRequestV2]) (*connect.Response[sdp_go.GetItemSignalsResponseV2], error)
 	// Get all signals for attributes/modifications of an item. This will only be used for routineness to start with.
 	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
 	GetItemSignalDetails(context.Context, *connect.Request[sdp_go.GetItemSignalDetailsRequest]) (*connect.Response[sdp_go.GetItemSignalDetailsResponse], error)
@@ -206,6 +235,12 @@ func NewSignalServiceHandler(svc SignalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(signalServiceMethods.ByName("GetItemSignals")),
 		connect.WithHandlerOptions(opts...),
 	)
+	signalServiceGetItemSignalsV2Handler := connect.NewUnaryHandler(
+		SignalServiceGetItemSignalsV2Procedure,
+		svc.GetItemSignalsV2,
+		connect.WithSchema(signalServiceMethods.ByName("GetItemSignalsV2")),
+		connect.WithHandlerOptions(opts...),
+	)
 	signalServiceGetItemSignalDetailsHandler := connect.NewUnaryHandler(
 		SignalServiceGetItemSignalDetailsProcedure,
 		svc.GetItemSignalDetails,
@@ -222,6 +257,8 @@ func NewSignalServiceHandler(svc SignalServiceHandler, opts ...connect.HandlerOp
 			signalServiceGetChangeOverviewSignalsHandler.ServeHTTP(w, r)
 		case SignalServiceGetItemSignalsProcedure:
 			signalServiceGetItemSignalsHandler.ServeHTTP(w, r)
+		case SignalServiceGetItemSignalsV2Procedure:
+			signalServiceGetItemSignalsV2Handler.ServeHTTP(w, r)
 		case SignalServiceGetItemSignalDetailsProcedure:
 			signalServiceGetItemSignalDetailsHandler.ServeHTTP(w, r)
 		default:
@@ -247,6 +284,10 @@ func (UnimplementedSignalServiceHandler) GetChangeOverviewSignals(context.Contex
 
 func (UnimplementedSignalServiceHandler) GetItemSignals(context.Context, *connect.Request[sdp_go.GetItemSignalsRequest]) (*connect.Response[sdp_go.GetItemSignalsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("signal.SignalService.GetItemSignals is not implemented"))
+}
+
+func (UnimplementedSignalServiceHandler) GetItemSignalsV2(context.Context, *connect.Request[sdp_go.GetItemSignalsRequestV2]) (*connect.Response[sdp_go.GetItemSignalsResponseV2], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("signal.SignalService.GetItemSignalsV2 is not implemented"))
 }
 
 func (UnimplementedSignalServiceHandler) GetItemSignalDetails(context.Context, *connect.Request[sdp_go.GetItemSignalDetailsRequest]) (*connect.Response[sdp_go.GetItemSignalDetailsResponse], error) {

@@ -449,9 +449,184 @@ func (x *GetItemSignalsResponse) GetItemAggregations() map[string]*ItemAggregati
 	return nil
 }
 
+type GetItemSignalsRequestV2 struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ChangeUUID    []byte                 `protobuf:"bytes,1,opt,name=changeUUID,proto3" json:"changeUUID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetItemSignalsRequestV2) Reset() {
+	*x = GetItemSignalsRequestV2{}
+	mi := &file_signal_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetItemSignalsRequestV2) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetItemSignalsRequestV2) ProtoMessage() {}
+
+func (x *GetItemSignalsRequestV2) ProtoReflect() protoreflect.Message {
+	mi := &file_signal_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetItemSignalsRequestV2.ProtoReflect.Descriptor instead.
+func (*GetItemSignalsRequestV2) Descriptor() ([]byte, []int) {
+	return file_signal_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *GetItemSignalsRequestV2) GetChangeUUID() []byte {
+	if x != nil {
+		return x.ChangeUUID
+	}
+	return nil
+}
+
+type ItemAggregationV2 struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// A sorted list of signals for this item, by category.
+	Signals []*Signal `protobuf:"bytes,1,rep,name=signals,proto3" json:"signals,omitempty"` // Corresponds to []*sdp.Signal
+	// The aggregated value for this item, calculated by AggregateSignalScores.
+	Value float64 `protobuf:"fixed64,2,opt,name=value,proto3" json:"value,omitempty"` // Corresponds to float64
+	// It is the friendly item reference, taken from the resolve mapping queries.
+	// for handiness we wall back to the afterRef if the mappedRef is not available.
+	MappedRef *Reference `protobuf:"bytes,3,opt,name=mappedRef,proto3" json:"mappedRef,omitempty"`
+	// This it the item reference from after, it is used to look up the item in GetItemSignalDetailsRequest.
+	AfterRef *Reference `protobuf:"bytes,4,opt,name=afterRef,proto3" json:"afterRef,omitempty"`
+	// status is the status of the item, e.g. "added", "modified", "deleted".
+	Status        ItemDiffStatus `protobuf:"varint,5,opt,name=status,proto3,enum=changes.ItemDiffStatus" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ItemAggregationV2) Reset() {
+	*x = ItemAggregationV2{}
+	mi := &file_signal_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ItemAggregationV2) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ItemAggregationV2) ProtoMessage() {}
+
+func (x *ItemAggregationV2) ProtoReflect() protoreflect.Message {
+	mi := &file_signal_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ItemAggregationV2.ProtoReflect.Descriptor instead.
+func (*ItemAggregationV2) Descriptor() ([]byte, []int) {
+	return file_signal_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *ItemAggregationV2) GetSignals() []*Signal {
+	if x != nil {
+		return x.Signals
+	}
+	return nil
+}
+
+func (x *ItemAggregationV2) GetValue() float64 {
+	if x != nil {
+		return x.Value
+	}
+	return 0
+}
+
+func (x *ItemAggregationV2) GetMappedRef() *Reference {
+	if x != nil {
+		return x.MappedRef
+	}
+	return nil
+}
+
+func (x *ItemAggregationV2) GetAfterRef() *Reference {
+	if x != nil {
+		return x.AfterRef
+	}
+	return nil
+}
+
+func (x *ItemAggregationV2) GetStatus() ItemDiffStatus {
+	if x != nil {
+		return x.Status
+	}
+	return ItemDiffStatus_ITEM_DIFF_STATUS_UNSPECIFIED
+}
+
+type GetItemSignalsResponseV2 struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// A map of Globally Unique Names (GUNs) of items to their aggregation of signals.
+	// These are by category, sorted by the signal value, ascending.
+	// We also include a value for this GUN, which is calculated by AggregateSignalScores
+	ItemAggregations []*ItemAggregationV2 `protobuf:"bytes,1,rep,name=itemAggregations,proto3" json:"itemAggregations,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *GetItemSignalsResponseV2) Reset() {
+	*x = GetItemSignalsResponseV2{}
+	mi := &file_signal_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetItemSignalsResponseV2) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetItemSignalsResponseV2) ProtoMessage() {}
+
+func (x *GetItemSignalsResponseV2) ProtoReflect() protoreflect.Message {
+	mi := &file_signal_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetItemSignalsResponseV2.ProtoReflect.Descriptor instead.
+func (*GetItemSignalsResponseV2) Descriptor() ([]byte, []int) {
+	return file_signal_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *GetItemSignalsResponseV2) GetItemAggregations() []*ItemAggregationV2 {
+	if x != nil {
+		return x.ItemAggregations
+	}
+	return nil
+}
+
 type GetItemSignalDetailsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The item for which we want to get the details of the signals.
+	// it is the reference of the terraform item before/after.
+	// NB it is not the lookup item from resolve mapping queries.
 	Item *Reference `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
 	// The UUID of the change this item is associated with.
 	ChangeUUID []byte `protobuf:"bytes,2,opt,name=changeUUID,proto3" json:"changeUUID,omitempty"`
@@ -463,7 +638,7 @@ type GetItemSignalDetailsRequest struct {
 
 func (x *GetItemSignalDetailsRequest) Reset() {
 	*x = GetItemSignalDetailsRequest{}
-	mi := &file_signal_proto_msgTypes[9]
+	mi := &file_signal_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -475,7 +650,7 @@ func (x *GetItemSignalDetailsRequest) String() string {
 func (*GetItemSignalDetailsRequest) ProtoMessage() {}
 
 func (x *GetItemSignalDetailsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_signal_proto_msgTypes[9]
+	mi := &file_signal_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -488,7 +663,7 @@ func (x *GetItemSignalDetailsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetItemSignalDetailsRequest.ProtoReflect.Descriptor instead.
 func (*GetItemSignalDetailsRequest) Descriptor() ([]byte, []int) {
-	return file_signal_proto_rawDescGZIP(), []int{9}
+	return file_signal_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetItemSignalDetailsRequest) GetItem() *Reference {
@@ -521,7 +696,7 @@ type GetItemSignalDetailsResponse struct {
 
 func (x *GetItemSignalDetailsResponse) Reset() {
 	*x = GetItemSignalDetailsResponse{}
-	mi := &file_signal_proto_msgTypes[10]
+	mi := &file_signal_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -533,7 +708,7 @@ func (x *GetItemSignalDetailsResponse) String() string {
 func (*GetItemSignalDetailsResponse) ProtoMessage() {}
 
 func (x *GetItemSignalDetailsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_signal_proto_msgTypes[10]
+	mi := &file_signal_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -546,7 +721,7 @@ func (x *GetItemSignalDetailsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetItemSignalDetailsResponse.ProtoReflect.Descriptor instead.
 func (*GetItemSignalDetailsResponse) Descriptor() ([]byte, []int) {
-	return file_signal_proto_rawDescGZIP(), []int{10}
+	return file_signal_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetItemSignalDetailsResponse) GetSignals() []*Signal {
@@ -564,7 +739,7 @@ type SignalMetadata struct {
 
 func (x *SignalMetadata) Reset() {
 	*x = SignalMetadata{}
-	mi := &file_signal_proto_msgTypes[11]
+	mi := &file_signal_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -576,7 +751,7 @@ func (x *SignalMetadata) String() string {
 func (*SignalMetadata) ProtoMessage() {}
 
 func (x *SignalMetadata) ProtoReflect() protoreflect.Message {
-	mi := &file_signal_proto_msgTypes[11]
+	mi := &file_signal_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -589,7 +764,7 @@ func (x *SignalMetadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SignalMetadata.ProtoReflect.Descriptor instead.
 func (*SignalMetadata) Descriptor() ([]byte, []int) {
-	return file_signal_proto_rawDescGZIP(), []int{11}
+	return file_signal_proto_rawDescGZIP(), []int{14}
 }
 
 type SignalProperties struct {
@@ -604,7 +779,8 @@ type SignalProperties struct {
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	// A category for the signal, e.g. "routineness", "anomaly", etc. How it will be grouped in the UI.
 	Category string `protobuf:"bytes,4,opt,name=category,proto3" json:"category,omitempty"`
-	// A reference to the item/resource that this signal is related to (can be nil)
+	// This is poorly named, this is the after item reference, equivalent to afterRef in ItemAggregationV2
+	// in the signals table this is the afterRef column. It is not the mappedRef / friendly item reference.
 	Item          *Reference `protobuf:"bytes,5,opt,name=item,proto3,oneof" json:"item,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -612,7 +788,7 @@ type SignalProperties struct {
 
 func (x *SignalProperties) Reset() {
 	*x = SignalProperties{}
-	mi := &file_signal_proto_msgTypes[12]
+	mi := &file_signal_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -624,7 +800,7 @@ func (x *SignalProperties) String() string {
 func (*SignalProperties) ProtoMessage() {}
 
 func (x *SignalProperties) ProtoReflect() protoreflect.Message {
-	mi := &file_signal_proto_msgTypes[12]
+	mi := &file_signal_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -637,7 +813,7 @@ func (x *SignalProperties) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SignalProperties.ProtoReflect.Descriptor instead.
 func (*SignalProperties) Descriptor() ([]byte, []int) {
-	return file_signal_proto_rawDescGZIP(), []int{12}
+	return file_signal_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *SignalProperties) GetName() string {
@@ -689,7 +865,7 @@ type Signal struct {
 
 func (x *Signal) Reset() {
 	*x = Signal{}
-	mi := &file_signal_proto_msgTypes[13]
+	mi := &file_signal_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -701,7 +877,7 @@ func (x *Signal) String() string {
 func (*Signal) ProtoMessage() {}
 
 func (x *Signal) ProtoReflect() protoreflect.Message {
-	mi := &file_signal_proto_msgTypes[13]
+	mi := &file_signal_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -714,7 +890,7 @@ func (x *Signal) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Signal.ProtoReflect.Descriptor instead.
 func (*Signal) Descriptor() ([]byte, []int) {
-	return file_signal_proto_rawDescGZIP(), []int{13}
+	return file_signal_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *Signal) GetMetadata() *SignalMetadata {
@@ -735,7 +911,7 @@ var File_signal_proto protoreflect.FileDescriptor
 
 const file_signal_proto_rawDesc = "" +
 	"\n" +
-	"\fsignal.proto\x12\x06signal\x1a\vitems.proto\"l\n" +
+	"\fsignal.proto\x12\x06signal\x1a\rchanges.proto\x1a\vitems.proto\"l\n" +
 	"\x10AddSignalRequest\x128\n" +
 	"\n" +
 	"properties\x18\x01 \x01(\v2\x18.signal.SignalPropertiesR\n" +
@@ -769,7 +945,21 @@ const file_signal_proto_rawDesc = "" +
 	"\x10itemAggregations\x18\x01 \x03(\v24.signal.GetItemSignalsResponse.ItemAggregationsEntryR\x10itemAggregations\x1a\\\n" +
 	"\x15ItemAggregationsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
-	"\x05value\x18\x02 \x01(\v2\x17.signal.ItemAggregationR\x05value:\x028\x01\"y\n" +
+	"\x05value\x18\x02 \x01(\v2\x17.signal.ItemAggregationR\x05value:\x028\x01\"9\n" +
+	"\x17GetItemSignalsRequestV2\x12\x1e\n" +
+	"\n" +
+	"changeUUID\x18\x01 \x01(\fR\n" +
+	"changeUUID\"\xd6\x01\n" +
+	"\x11ItemAggregationV2\x12(\n" +
+	"\asignals\x18\x01 \x03(\v2\x0e.signal.SignalR\asignals\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x01R\x05value\x12(\n" +
+	"\tmappedRef\x18\x03 \x01(\v2\n" +
+	".ReferenceR\tmappedRef\x12&\n" +
+	"\bafterRef\x18\x04 \x01(\v2\n" +
+	".ReferenceR\bafterRef\x12/\n" +
+	"\x06status\x18\x05 \x01(\x0e2\x17.changes.ItemDiffStatusR\x06status\"a\n" +
+	"\x18GetItemSignalsResponseV2\x12E\n" +
+	"\x10itemAggregations\x18\x01 \x03(\v2\x19.signal.ItemAggregationV2R\x10itemAggregations\"y\n" +
 	"\x1bGetItemSignalDetailsRequest\x12\x1e\n" +
 	"\x04item\x18\x01 \x01(\v2\n" +
 	".ReferenceR\x04item\x12\x1e\n" +
@@ -792,12 +982,13 @@ const file_signal_proto_rawDesc = "" +
 	"\bmetadata\x18\x01 \x01(\v2\x16.signal.SignalMetadataR\bmetadata\x128\n" +
 	"\n" +
 	"properties\x18\x02 \x01(\v2\x18.signal.SignalPropertiesR\n" +
-	"properties2\xef\x03\n" +
+	"properties2\xc6\x04\n" +
 	"\rSignalService\x12@\n" +
 	"\tAddSignal\x12\x18.signal.AddSignalRequest\x1a\x19.signal.AddSignalResponse\x12y\n" +
 	"\x1cGetSignalsByChangeExternalID\x12+.signal.GetSignalsByChangeExternalIDRequest\x1a,.signal.GetSignalsByChangeExternalIDResponse\x12m\n" +
 	"\x18GetChangeOverviewSignals\x12'.signal.GetChangeOverviewSignalsRequest\x1a(.signal.GetChangeOverviewSignalsResponse\x12O\n" +
-	"\x0eGetItemSignals\x12\x1d.signal.GetItemSignalsRequest\x1a\x1e.signal.GetItemSignalsResponse\x12a\n" +
+	"\x0eGetItemSignals\x12\x1d.signal.GetItemSignalsRequest\x1a\x1e.signal.GetItemSignalsResponse\x12U\n" +
+	"\x10GetItemSignalsV2\x12\x1f.signal.GetItemSignalsRequestV2\x1a .signal.GetItemSignalsResponseV2\x12a\n" +
 	"\x14GetItemSignalDetails\x12#.signal.GetItemSignalDetailsRequest\x1a$.signal.GetItemSignalDetailsResponseB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
@@ -812,7 +1003,7 @@ func file_signal_proto_rawDescGZIP() []byte {
 	return file_signal_proto_rawDescData
 }
 
-var file_signal_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_signal_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_signal_proto_goTypes = []any{
 	(*AddSignalRequest)(nil),                     // 0: signal.AddSignalRequest
 	(*AddSignalResponse)(nil),                    // 1: signal.AddSignalResponse
@@ -823,42 +1014,53 @@ var file_signal_proto_goTypes = []any{
 	(*ItemAggregation)(nil),                      // 6: signal.ItemAggregation
 	(*GetItemSignalsRequest)(nil),                // 7: signal.GetItemSignalsRequest
 	(*GetItemSignalsResponse)(nil),               // 8: signal.GetItemSignalsResponse
-	(*GetItemSignalDetailsRequest)(nil),          // 9: signal.GetItemSignalDetailsRequest
-	(*GetItemSignalDetailsResponse)(nil),         // 10: signal.GetItemSignalDetailsResponse
-	(*SignalMetadata)(nil),                       // 11: signal.SignalMetadata
-	(*SignalProperties)(nil),                     // 12: signal.SignalProperties
-	(*Signal)(nil),                               // 13: signal.Signal
-	nil,                                          // 14: signal.GetItemSignalsResponse.ItemAggregationsEntry
-	(*Reference)(nil),                            // 15: Reference
+	(*GetItemSignalsRequestV2)(nil),              // 9: signal.GetItemSignalsRequestV2
+	(*ItemAggregationV2)(nil),                    // 10: signal.ItemAggregationV2
+	(*GetItemSignalsResponseV2)(nil),             // 11: signal.GetItemSignalsResponseV2
+	(*GetItemSignalDetailsRequest)(nil),          // 12: signal.GetItemSignalDetailsRequest
+	(*GetItemSignalDetailsResponse)(nil),         // 13: signal.GetItemSignalDetailsResponse
+	(*SignalMetadata)(nil),                       // 14: signal.SignalMetadata
+	(*SignalProperties)(nil),                     // 15: signal.SignalProperties
+	(*Signal)(nil),                               // 16: signal.Signal
+	nil,                                          // 17: signal.GetItemSignalsResponse.ItemAggregationsEntry
+	(*Reference)(nil),                            // 18: Reference
+	(ItemDiffStatus)(0),                          // 19: changes.ItemDiffStatus
 }
 var file_signal_proto_depIdxs = []int32{
-	12, // 0: signal.AddSignalRequest.properties:type_name -> signal.SignalProperties
-	13, // 1: signal.AddSignalResponse.signal:type_name -> signal.Signal
-	13, // 2: signal.GetSignalsByChangeExternalIDResponse.signals:type_name -> signal.Signal
-	13, // 3: signal.GetChangeOverviewSignalsResponse.signals:type_name -> signal.Signal
-	13, // 4: signal.ItemAggregation.signals:type_name -> signal.Signal
-	14, // 5: signal.GetItemSignalsResponse.itemAggregations:type_name -> signal.GetItemSignalsResponse.ItemAggregationsEntry
-	15, // 6: signal.GetItemSignalDetailsRequest.item:type_name -> Reference
-	13, // 7: signal.GetItemSignalDetailsResponse.signals:type_name -> signal.Signal
-	15, // 8: signal.SignalProperties.item:type_name -> Reference
-	11, // 9: signal.Signal.metadata:type_name -> signal.SignalMetadata
-	12, // 10: signal.Signal.properties:type_name -> signal.SignalProperties
-	6,  // 11: signal.GetItemSignalsResponse.ItemAggregationsEntry.value:type_name -> signal.ItemAggregation
-	0,  // 12: signal.SignalService.AddSignal:input_type -> signal.AddSignalRequest
-	2,  // 13: signal.SignalService.GetSignalsByChangeExternalID:input_type -> signal.GetSignalsByChangeExternalIDRequest
-	4,  // 14: signal.SignalService.GetChangeOverviewSignals:input_type -> signal.GetChangeOverviewSignalsRequest
-	7,  // 15: signal.SignalService.GetItemSignals:input_type -> signal.GetItemSignalsRequest
-	9,  // 16: signal.SignalService.GetItemSignalDetails:input_type -> signal.GetItemSignalDetailsRequest
-	1,  // 17: signal.SignalService.AddSignal:output_type -> signal.AddSignalResponse
-	3,  // 18: signal.SignalService.GetSignalsByChangeExternalID:output_type -> signal.GetSignalsByChangeExternalIDResponse
-	5,  // 19: signal.SignalService.GetChangeOverviewSignals:output_type -> signal.GetChangeOverviewSignalsResponse
-	8,  // 20: signal.SignalService.GetItemSignals:output_type -> signal.GetItemSignalsResponse
-	10, // 21: signal.SignalService.GetItemSignalDetails:output_type -> signal.GetItemSignalDetailsResponse
-	17, // [17:22] is the sub-list for method output_type
-	12, // [12:17] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	15, // 0: signal.AddSignalRequest.properties:type_name -> signal.SignalProperties
+	16, // 1: signal.AddSignalResponse.signal:type_name -> signal.Signal
+	16, // 2: signal.GetSignalsByChangeExternalIDResponse.signals:type_name -> signal.Signal
+	16, // 3: signal.GetChangeOverviewSignalsResponse.signals:type_name -> signal.Signal
+	16, // 4: signal.ItemAggregation.signals:type_name -> signal.Signal
+	17, // 5: signal.GetItemSignalsResponse.itemAggregations:type_name -> signal.GetItemSignalsResponse.ItemAggregationsEntry
+	16, // 6: signal.ItemAggregationV2.signals:type_name -> signal.Signal
+	18, // 7: signal.ItemAggregationV2.mappedRef:type_name -> Reference
+	18, // 8: signal.ItemAggregationV2.afterRef:type_name -> Reference
+	19, // 9: signal.ItemAggregationV2.status:type_name -> changes.ItemDiffStatus
+	10, // 10: signal.GetItemSignalsResponseV2.itemAggregations:type_name -> signal.ItemAggregationV2
+	18, // 11: signal.GetItemSignalDetailsRequest.item:type_name -> Reference
+	16, // 12: signal.GetItemSignalDetailsResponse.signals:type_name -> signal.Signal
+	18, // 13: signal.SignalProperties.item:type_name -> Reference
+	14, // 14: signal.Signal.metadata:type_name -> signal.SignalMetadata
+	15, // 15: signal.Signal.properties:type_name -> signal.SignalProperties
+	6,  // 16: signal.GetItemSignalsResponse.ItemAggregationsEntry.value:type_name -> signal.ItemAggregation
+	0,  // 17: signal.SignalService.AddSignal:input_type -> signal.AddSignalRequest
+	2,  // 18: signal.SignalService.GetSignalsByChangeExternalID:input_type -> signal.GetSignalsByChangeExternalIDRequest
+	4,  // 19: signal.SignalService.GetChangeOverviewSignals:input_type -> signal.GetChangeOverviewSignalsRequest
+	7,  // 20: signal.SignalService.GetItemSignals:input_type -> signal.GetItemSignalsRequest
+	9,  // 21: signal.SignalService.GetItemSignalsV2:input_type -> signal.GetItemSignalsRequestV2
+	12, // 22: signal.SignalService.GetItemSignalDetails:input_type -> signal.GetItemSignalDetailsRequest
+	1,  // 23: signal.SignalService.AddSignal:output_type -> signal.AddSignalResponse
+	3,  // 24: signal.SignalService.GetSignalsByChangeExternalID:output_type -> signal.GetSignalsByChangeExternalIDResponse
+	5,  // 25: signal.SignalService.GetChangeOverviewSignals:output_type -> signal.GetChangeOverviewSignalsResponse
+	8,  // 26: signal.SignalService.GetItemSignals:output_type -> signal.GetItemSignalsResponse
+	11, // 27: signal.SignalService.GetItemSignalsV2:output_type -> signal.GetItemSignalsResponseV2
+	13, // 28: signal.SignalService.GetItemSignalDetails:output_type -> signal.GetItemSignalDetailsResponse
+	23, // [23:29] is the sub-list for method output_type
+	17, // [17:23] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_signal_proto_init() }
@@ -866,15 +1068,16 @@ func file_signal_proto_init() {
 	if File_signal_proto != nil {
 		return
 	}
+	file_changes_proto_init()
 	file_items_proto_init()
-	file_signal_proto_msgTypes[12].OneofWrappers = []any{}
+	file_signal_proto_msgTypes[15].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_signal_proto_rawDesc), len(file_signal_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
