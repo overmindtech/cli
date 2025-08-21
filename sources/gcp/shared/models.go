@@ -143,4 +143,6 @@ const (
 	GlobalForwardingRule     shared.Resource = "global-forwarding-rule"
 	Function                 shared.Resource = "function"
 	WorkerPool               shared.Resource = "worker-pool"
+	TagValue                 shared.Resource = "tag-value"
+	TagKey                   shared.Resource = "tag-key"
 )

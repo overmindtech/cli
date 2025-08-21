@@ -22,7 +22,7 @@ var spannerInstanceAdapter = registerableAdapter{ //nolint:unused
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"config": {
-			ToSDPITemType: gcpshared.SpannerInstanceConfig,
+			ToSDPItemType: gcpshared.SpannerInstanceConfig,
 			Description:   "If the Spanner Instance Config is deleted or updated: The Spanner Instance may fail to operate correctly. If the Spanner Instance is updated: The config remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,

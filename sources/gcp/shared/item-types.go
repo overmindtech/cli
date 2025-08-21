@@ -116,4 +116,6 @@ var (
 	ComputeRouter                  = shared.NewItemType(GCP, Compute, Router)
 	AppEngineService               = shared.NewItemType(GCP, AppEngine, Service)
 	CloudFunctionsFunction         = shared.NewItemType(GCP, CloudFunctions, Function)
+	CloudResourceManagerTagValue   = shared.NewItemType(GCP, CloudResourceManager, TagValue)
+	CloudResourceManagerTagKey     = shared.NewItemType(GCP, CloudResourceManager, TagKey)
 )

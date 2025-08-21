@@ -33,7 +33,7 @@ var computeVpnTunnelAdapter = registerableAdapter{ //nolint:unused
 		// The peer IP address of the remote VPN gateway.
 		"peerIp": gcpshared.IPImpactBothWays,
 		"targetVpnGateway": {
-			ToSDPITemType: gcpshared.ComputeVpnGateway,
+			ToSDPItemType: gcpshared.ComputeVpnGateway,
 			Description:   "They are tightly coupled.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,
@@ -41,7 +41,7 @@ var computeVpnTunnelAdapter = registerableAdapter{ //nolint:unused
 			},
 		},
 		"vpnGateway": {
-			ToSDPITemType: gcpshared.ComputeVpnGateway,
+			ToSDPItemType: gcpshared.ComputeVpnGateway,
 			Description:   "They are tightly coupled.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,
@@ -49,7 +49,7 @@ var computeVpnTunnelAdapter = registerableAdapter{ //nolint:unused
 			},
 		},
 		"peerExternalGateway": {
-			ToSDPITemType: gcpshared.ComputeVpnGateway,
+			ToSDPItemType: gcpshared.ComputeVpnGateway,
 			Description:   "They are tightly coupled.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,
@@ -57,7 +57,7 @@ var computeVpnTunnelAdapter = registerableAdapter{ //nolint:unused
 			},
 		},
 		"peerGcpGateway": {
-			ToSDPITemType: gcpshared.ComputeVpnGateway,
+			ToSDPItemType: gcpshared.ComputeVpnGateway,
 			Description:   "They are tightly coupled.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,
@@ -65,7 +65,7 @@ var computeVpnTunnelAdapter = registerableAdapter{ //nolint:unused
 			},
 		},
 		"router": {
-			ToSDPITemType: gcpshared.ComputeRouter,
+			ToSDPItemType: gcpshared.ComputeRouter,
 			Description:   "They are tightly coupled.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,

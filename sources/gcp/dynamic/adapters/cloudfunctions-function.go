@@ -30,44 +30,44 @@ var cloudFunctionAdapter = registerableAdapter{ //nolint:unused
 	blastPropagation: map[string]*gcpshared.Impact{
 		"kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		"buildConfig.source.storageSource.bucket": {
-			ToSDPITemType:    gcpshared.StorageBucket,
+			ToSDPItemType:    gcpshared.StorageBucket,
 			Description:      "If the Cloud Storage bucket is deleted or misconfigured: Function deployment may fail. If the function changes: The bucket remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 		},
 		"buildConfig.sourceProvenance.resolvedStorageSource.bucket": {
-			ToSDPITemType:    gcpshared.StorageBucket,
+			ToSDPItemType:    gcpshared.StorageBucket,
 			Description:      "If the Cloud Storage bucket is deleted or misconfigured: Function deployment may fail. If the function changes: The bucket remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 		},
 		"buildConfig.workerPool": {
-			ToSDPITemType:    gcpshared.RunWorkerPool,
+			ToSDPItemType:    gcpshared.RunWorkerPool,
 			Description:      "If the Cloud Run Worker Pool is deleted or misconfigured: Function deployment may fail. If the function changes: The worker pool remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 		},
 		"buildConfig.dockerRepository": {
-			ToSDPITemType:    gcpshared.ArtifactRegistryRepository,
+			ToSDPItemType:    gcpshared.ArtifactRegistryRepository,
 			Description:      "If the Container Repository is deleted or misconfigured: Function deployment may fail. If the function changes: The repository remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 		},
 		"buildConfig.serviceAccount": gcpshared.IAMServiceAccountImpactInOnly,
 		"serviceConfig.vpcConnector": {
-			ToSDPITemType:    gcpshared.VPCAccessConnector,
+			ToSDPItemType:    gcpshared.VPCAccessConnector,
 			Description:      "If the VPC Access Connector is deleted or misconfigured: Function outbound networking may fail. If the function changes: The connector remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 		},
 		"serviceConfig.service": {
-			ToSDPITemType:    gcpshared.RunService,
+			ToSDPItemType:    gcpshared.RunService,
 			Description:      "If the Cloud Run Service is deleted or misconfigured: Function execution may fail. If the function changes: The service remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 		},
 		"serviceConfig.serviceAccountEmail": gcpshared.IAMServiceAccountImpactInOnly,
 		"eventTrigger.trigger": {
-			ToSDPITemType:    gcpshared.EventarcTrigger,
+			ToSDPItemType:    gcpshared.EventarcTrigger,
 			Description:      "If the Eventarc Trigger is deleted or misconfigured: Function event handling may fail. If the function changes: The trigger remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 		},
 		"eventTrigger.pubsubTopic": {
-			ToSDPITemType:    gcpshared.PubSubTopic,
+			ToSDPItemType:    gcpshared.PubSubTopic,
 			Description:      "If the Pub/Sub Topic is deleted or misconfigured: Function event handling may fail. If the function changes: The topic remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 		},

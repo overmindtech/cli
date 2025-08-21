@@ -23,7 +23,7 @@ var computeRegionCommitmentAdapter = registerableAdapter{ //nolint:unused
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"reservations.name": {
-			ToSDPITemType: gcpshared.ComputeReservation,
+			ToSDPItemType: gcpshared.ComputeReservation,
 			Description:   "If the Region Commitment is deleted or updated: Reservations that reference this commitment may lose associated discounts or resource guarantees. If the Reservation is updated or deleted: The commitment remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  false, // Changes to reservations don't affect commitments
@@ -31,7 +31,7 @@ var computeRegionCommitmentAdapter = registerableAdapter{ //nolint:unused
 			},
 		},
 		"licenseResource.license": {
-			ToSDPITemType: gcpshared.ComputeLicense,
+			ToSDPItemType: gcpshared.ComputeLicense,
 			Description:   "If the Region Commitment is deleted or updated: Licenses that reference this commitment won't be affected. If the License is updated or deleted: The commitment may lose associated discounts or resource guarantees.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,

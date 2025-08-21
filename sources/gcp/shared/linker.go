@@ -73,7 +73,7 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 		return
 	}
 
-	if linkFunc, ok := l.manualAdapterLinker[impact.ToSDPITemType]; ok {
+	if linkFunc, ok := l.manualAdapterLinker[impact.ToSDPItemType]; ok {
 		linkedItemQuery := linkFunc(projectID, fromSDPItem.GetScope(), toItemGCPResourceName, impact.BlastPropagation)
 		if linkedItemQuery == nil {
 			log.WithContext(ctx).WithFields(lf).Warn(
@@ -89,12 +89,12 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 		return
 	}
 
-	toSDPItemMeta, ok := l.sdpAssetTypeToAdapterMeta[impact.ToSDPITemType]
+	toSDPItemMeta, ok := l.sdpAssetTypeToAdapterMeta[impact.ToSDPItemType]
 	if !ok {
 		// This should never happen at runtime!
 		log.WithContext(ctx).WithFields(lf).Warnf(
 			"could not find adapter meta for %s",
-			impact.ToSDPITemType.String(),
+			impact.ToSDPItemType.String(),
 		)
 		return
 	}
@@ -142,7 +142,7 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 
 	fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
-			Type:   impact.ToSDPITemType.String(),
+			Type:   impact.ToSDPItemType.String(),
 			Method: sdp.QueryMethod_GET,
 			Query:  query,
 			Scope:  scope,

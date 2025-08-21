@@ -40,25 +40,25 @@ var sqlAdminInstanceAdapter = registerableAdapter{ //nolint:unused
 		// Cloud Storage bucket for SQL Server audit logs.
 		"settings.sqlServerAuditConfig.bucket": {
 			Description:      "If the Storage Bucket is deleted or updated: The Cloud SQL Instance may fail to write audit logs. If the Cloud SQL Instance is updated: The bucket remains unaffected.",
-			ToSDPITemType:    gcpshared.StorageBucket,
+			ToSDPItemType:    gcpshared.StorageBucket,
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		// Name of the primary (master) instance this replica depends on.
 		"masterInstanceName": {
 			Description:      "If the master instance is deleted or updated: This replica may lose replication or become stale. If this replica is updated: The master remains unaffected.",
-			ToSDPITemType:    gcpshared.SQLAdminInstance,
+			ToSDPItemType:    gcpshared.SQLAdminInstance,
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		// Failover replica for high availability; changes in the failover target can impact this instance's HA posture.
 		"failoverReplica.name": {
 			Description:      "If the failover replica is deleted or updated: High availability for this instance may be reduced or fail. If this instance is updated: The failover replica remains unaffected.",
-			ToSDPITemType:    gcpshared.SQLAdminInstance,
+			ToSDPItemType:    gcpshared.SQLAdminInstance,
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		// Read replicas sourced from this primary instance. Changes to this instance can impact replicas, but replica changes typically do not impact the primary.
 		"replicaNames": {
 			Description:      "If this primary instance is deleted or materially updated: Its replicas may become unavailable or invalid. Changes on replicas generally do not impact the primary.",
-			ToSDPITemType:    gcpshared.SQLAdminInstance,
+			ToSDPItemType:    gcpshared.SQLAdminInstance,
 			BlastPropagation: &sdp.BlastPropagation{Out: true},
 		},
 		// Added: All assigned IP addresses (public or private). Treated as tightly coupled network identifiers.
@@ -69,7 +69,7 @@ var sqlAdminInstanceAdapter = registerableAdapter{ //nolint:unused
 		// Added: DNS name representing the instance endpoint.
 		"dnsName": {
 			Description:      "Tightly coupled with the Cloud SQL Instance endpoint.",
-			ToSDPITemType:    stdlib.NetworkDNS,
+			ToSDPItemType:    stdlib.NetworkDNS,
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 		},
 	},

@@ -38,7 +38,7 @@ var computeGlobalForwardingRuleAdapter = registerableAdapter{ //nolint:unused
 		"IPAddress": gcpshared.IPImpactBothWays,
 		// Backend service (global) tightly coupled for traffic delivery.
 		"backendService": {
-			ToSDPITemType: gcpshared.ComputeBackendService,
+			ToSDPItemType: gcpshared.ComputeBackendService,
 			Description:   "If the Backend Service is updated or deleted: The forwarding rule routing behavior changes or breaks. If the forwarding rule is updated or deleted: Traffic will stop or be re-routed affecting the backend service load.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,

@@ -281,7 +281,7 @@ func potentialLinksFromBlasts(itemType shared.ItemType, blasts map[shared.ItemTy
 	var potentialLinks []string
 	var potentialLinksMap = make(map[string]bool)
 	for _, impact := range blasts[itemType] {
-		potentialLinksMap[impact.ToSDPITemType.String()] = true
+		potentialLinksMap[impact.ToSDPItemType.String()] = true
 	}
 
 	for it := range potentialLinksMap {

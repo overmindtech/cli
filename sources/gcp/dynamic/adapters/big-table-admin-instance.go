@@ -20,11 +20,7 @@ var bigTableAdminInstanceAdapter = registerableAdapter{ //nolint:unused
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// state: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances#State
 	},
-	// The Bigtable Instance resource representation does not directly embed cluster, table,
-	// app profile, or backup identifiers as attributes (they are separate sub-resources
-	// queried via dedicated endpoints). Therefore there are currently no attribute keys
-	// suitable for establishing blast propagation links. This map remains empty until
-	// such attributes are surfaced or implicit relationships are modeled.
+	// The Bigtable Instance does not contain any fields that would cause blast propagation.
 	blastPropagation: map[string]*gcpshared.Impact{},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigtable_instance",
