@@ -291,18 +291,6 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		UniqueAttributeKeys: []string{"locations", "repositories", "dockerImages"},
 		IAMPermissions:      []string{"artifactregistry.dockerimages.get", "artifactregistry.dockerimages.list"},
 	},
-	ArtifactRegistryRepository: {
-		// Reference: https://cloud.google.com/artifact-registry/docs/reference/rest/v1/projects.locations.repositories/get?rep_location=global
-		InDevelopment:      true,
-		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
-		Scope:              ScopeProject,
-		// https://artifactregistry.googleapis.com/v1/projects/*/locations/*/repositories/*
-		GetEndpointBaseURLFunc: ProjectLevelEndpointFuncWithTwoQueries("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories/%s"),
-		// https://artifactregistry.googleapis.com/v1/{parent=projects/*/locations/*}/repositories
-		SearchEndpointFunc:  ProjectLevelEndpointFuncWithSingleQuery("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories"),
-		UniqueAttributeKeys: []string{"locations", "repositories"},
-		IAMPermissions:      []string{"artifactregistry.repositories.get", "artifactregistry.repositories.list"},
-	},
 	BigTableAdminAppProfile: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 		Scope:              ScopeProject,

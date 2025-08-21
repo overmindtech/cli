@@ -328,7 +328,7 @@ func TestExtractPathParams(t *testing.T) {
 			expected: []string{"us-central1", "my-key"},
 		},
 		{
-			name:     "default",
+			name:     "default with no keys in it",
 			input:    "default",
 			keys:     []string{"subnetworks"},
 			expected: []string{"default"},
