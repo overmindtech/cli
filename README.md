@@ -202,15 +202,28 @@ overmind --version
 
 </details>
 
-**Discover CLI Commands**
+# Discover CLI Commands
 
 - `overmind explore`
 
-    Overmind Assistant is a chat assistant that has real-time access to all your AWS and K8’s infrastructure. It alleviates the mental exhaustion of manual troubleshooting, simplifies incident resolution by easily accessing historical data, and automates time-consuming tasks such as documentation and Terraform code generation. You can access the assistant by running `overmind explore` .
+    Overmind Assistant is a chat assistant that has real-time access to all your
+    AWS, GCP and K8S infrastructure. It alleviates the mental exhaustion of
+    manual troubleshooting, simplifies incident resolution by easily accessing
+    historical data, and automates time-consuming tasks such as documentation
+    and Terraform code generation. You can access the assistant by running
+    `overmind explore`.
 
-- `overmind terrafrom plan / apply`
+- `overmind terraform plan / apply`
 
-    Overmind can identify the blast radius and uncover potential risks with `overmind terrafrom plan` before they harm your infrastructure, allowing anyone to make changes with confidence. It can also track the impact of the changes you make with `overmind teraform apply`, so that you can be sure that your changes haven't had any unexpected downstream impact.
+    Overmind can identify the blast radius and uncover potential risks with
+    `overmind terraform plan` before they harm your infrastructure, allowing
+    anyone to make changes with confidence. It can also track the impact of the
+    changes you make with `overmind terraform apply`, so that you can be sure
+    that your changes haven't had any unexpected downstream impact.
+
+## Cloud Provider Support
+
+The CLI automatically discovers AWS and GCP providers from your Terraform configuration.
 
 ## How We Solve It?
 

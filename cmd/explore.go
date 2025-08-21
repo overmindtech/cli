@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
 
 	"atomicgo.dev/keyboard"
 	"atomicgo.dev/keyboard/keys"
@@ -27,9 +28,16 @@ import (
 
 // exploreCmd represents the explore command
 var exploreCmd = &cobra.Command{
-	Use:    "explore",
-	Short:  "Run local sources for using in the Explore page",
-	Long:   `Run sources locally using terraform's configured authorization to provide data when using https://app.overmind.tech/explore.`,
+	Use:   "explore",
+	Short: "Run local sources for using in the Explore page",
+	Long: `Run sources locally using terraform's configured authorization to provide data when using https://app.overmind.tech/explore.
+
+The CLI automatically discovers and uses:
+- AWS providers from your Terraform configuration
+- GCP providers from your Terraform configuration (google and google-beta)
+- Falls back to default cloud provider credentials if no Terraform providers are found
+
+For GCP, ensure you have appropriate permissions (roles/browser or equivalent) to access project metadata.`,
 	PreRun: PreRunSetup,
 	RunE:   Explore,
 
@@ -61,9 +69,9 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 		return func() {}, fmt.Errorf("failed to get hostname: %w", err)
 	}
 
-	p := pool.NewWithResults[*discovery.Engine]().WithErrors()
+	p := pool.NewWithResults[[]*discovery.Engine]().WithErrors()
 
-	p.Go(func() (*discovery.Engine, error) { //nolint:contextcheck // todo: pass in context with timeout to abort timely and allow Ctrl-C to work
+	p.Go(func() ([]*discovery.Engine, error) { //nolint:contextcheck // todo: pass in context with timeout to abort timely and allow Ctrl-C to work
 		ec := discovery.EngineConfig{
 			Version:               fmt.Sprintf("cli-%v", tracing.Version()),
 			EngineType:            "cli-stdlib",
@@ -90,10 +98,10 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			return nil, fmt.Errorf("failed to start stdlib source engine: %w", err)
 		}
 		stdlibSpinner.Success("Stdlib source engine started")
-		return stdlibEngine, nil
+		return []*discovery.Engine{stdlibEngine}, nil
 	})
 
-	p.Go(func() (*discovery.Engine, error) {
+	p.Go(func() ([]*discovery.Engine, error) {
 		tfEval, err := tfutils.LoadEvalContext(tfArgs, os.Environ())
 		if err != nil {
 			awsSpinner.Fail("Failed to load variables from the environment")
@@ -166,40 +174,114 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 		}
 
 		awsSpinner.Success("AWS source engine started")
-		return awsEngine, nil
+		return []*discovery.Engine{awsEngine}, nil
 	})
 
-	p.Go(func() (*discovery.Engine, error) {
-		ec := discovery.EngineConfig{
-			EngineType:            "cli-gcp",
-			Version:               fmt.Sprintf("cli-%v", tracing.Version()),
-			SourceName:            fmt.Sprintf("gcp-source-%v", hostname),
-			SourceUUID:            uuid.New(),
-			App:                   oi.ApiUrl.Host,
-			ApiKey:                token.AccessToken,
-			MaxParallelExecutions: 2_000,
-			NATSOptions:           &natsOptions,
-			HeartbeatOptions:      heartbeatOptions,
-		}
-
-		gcpEngine, err := gcpproc.Initialize(ctx, &ec)
+	p.Go(func() ([]*discovery.Engine, error) {
+		// Parse GCP providers from Terraform configuration
+		tfEval, err := tfutils.LoadEvalContext(tfArgs, os.Environ())
 		if err != nil {
-			gcpSpinner.Fail("Failed to initialize GCP source engine", err.Error())
-			// TODO: return the actual error when we have a company-wide GCP setup
-			// https://github.com/overmindtech/workspace/issues/1337
-			return nil, nil
+			gcpSpinner.Fail("Failed to load variables from the environment for GCP")
+			return nil, fmt.Errorf("failed to load variables from the environment for GCP: %w", err)
 		}
 
-		err = gcpEngine.Start() //nolint:contextcheck
+		gcpProviders, err := tfutils.ParseGCPProviders(".", tfEval)
 		if err != nil {
-			gcpSpinner.Fail("Failed to start GCP source engine", err.Error())
-			// TODO: return the actual error when we have a company-wide GCP setup
-			// https://github.com/overmindtech/workspace/issues/1337
-			return nil, nil
+			gcpSpinner.Fail("Failed to parse GCP providers")
+			return nil, fmt.Errorf("failed to parse GCP providers: %w", err)
 		}
 
-		gcpSpinner.Success("GCP source engine started")
-		return gcpEngine, nil
+		// Process GCP providers and extract configurations
+		gcpConfigs := []*gcpproc.GCPConfig{}
+
+		for _, p := range gcpProviders {
+			if p.Error != nil {
+				statusArea.Println(fmt.Sprintf("Skipping GCP provider in %s: %s", p.FilePath, p.Error.Error()))
+				continue
+			}
+
+			config, err := tfutils.ConfigFromGCPProvider(*p.Provider)
+			if err != nil {
+				statusArea.Println(fmt.Sprintf("Error configuring GCP provider in %s: %s", p.FilePath, err.Error()))
+				continue
+			}
+
+			gcpConfigs = append(gcpConfigs, &gcpproc.GCPConfig{
+				ProjectID: config.ProjectID,
+				Regions:   config.Regions,
+				Zones:     config.Zones,
+			})
+
+			aliasInfo := ""
+			if config.Alias != "" {
+				aliasInfo = fmt.Sprintf(" (alias: %s)", config.Alias)
+			}
+			statusArea.Println(fmt.Sprintf("Using GCP provider in %s with project %s%s", p.FilePath, config.ProjectID, aliasInfo))
+		}
+
+		// Fallback to default GCP config if no terraform providers found
+		if len(gcpConfigs) == 0 {
+			statusArea.Println("No GCP terraform providers found. Attempting to use default GCP credentials.")
+			// Try to use Application Default Credentials by passing nil config
+			gcpConfigs = append(gcpConfigs, nil)
+		}
+
+		// Start multiple GCP engines for each configuration
+		gcpEngines := []*discovery.Engine{}
+		for i, gcpConfig := range gcpConfigs {
+			engineSuffix := ""
+			if len(gcpConfigs) > 1 {
+				engineSuffix = fmt.Sprintf("-%d", i)
+			}
+
+			ec := discovery.EngineConfig{
+				EngineType:            "cli-gcp",
+				Version:               fmt.Sprintf("cli-%v", tracing.Version()),
+				SourceName:            fmt.Sprintf("gcp-source-%v%s", hostname, engineSuffix),
+				SourceUUID:            uuid.New(),
+				App:                   oi.ApiUrl.Host,
+				ApiKey:                token.AccessToken,
+				MaxParallelExecutions: 2_000,
+				NATSOptions:           &natsOptions,
+				HeartbeatOptions:      heartbeatOptions,
+			}
+
+			gcpEngine, err := gcpproc.Initialize(ctx, &ec, gcpConfig)
+			if err != nil {
+				if gcpConfig == nil {
+					// Default config failed
+					statusArea.Println(fmt.Sprintf("Failed to initialize GCP source with default credentials: %s", err.Error()))
+				} else {
+					statusArea.Println(fmt.Sprintf("Failed to initialize GCP source for project %s: %s", gcpConfig.ProjectID, err.Error()))
+				}
+				continue // Skip this engine but continue with others
+			}
+
+			err = gcpEngine.Start() //nolint:contextcheck
+			if err != nil {
+				if gcpConfig == nil {
+					statusArea.Println(fmt.Sprintf("Failed to start GCP source with default credentials: %s", err.Error()))
+				} else {
+					statusArea.Println(fmt.Sprintf("Failed to start GCP source for project %s: %s", gcpConfig.ProjectID, err.Error()))
+				}
+				continue // Skip this engine but continue with others
+			}
+
+			gcpEngines = append(gcpEngines, gcpEngine)
+		}
+
+		if len(gcpEngines) == 0 {
+			gcpSpinner.Fail("Failed to initialize any GCP source engines")
+			return nil, nil // skip GCP if there are no valid configurations
+		}
+
+		if len(gcpEngines) == 1 {
+			gcpSpinner.Success("GCP source engine started")
+		} else {
+			gcpSpinner.Success(fmt.Sprintf("%d GCP source engines started", len(gcpEngines)))
+		}
+
+		return gcpEngines, nil
 	})
 
 	engines, err := p.Wait()
@@ -208,7 +290,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 	}
 
 	return func() {
-		for _, e := range engines {
+		for _, e := range slices.Concat(engines...) {
 			err := e.Stop()
 			if err != nil {
 				log.WithError(err).Error("failed to stop engine")

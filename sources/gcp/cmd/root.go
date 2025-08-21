@@ -45,7 +45,7 @@ var rootCmd = &cobra.Command{
 			log.WithError(err).Fatal("could not auth create clients")
 		}
 
-		e, err := proc.Initialize(ctx, engineConfig)
+		e, err := proc.Initialize(ctx, engineConfig, nil)
 		if err != nil {
 			log.WithError(err).Fatal("Could not initialize GCP source")
 		}

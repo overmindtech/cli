@@ -21,6 +21,13 @@ import (
 // Metadata contains the metadata for the GCP source
 var Metadata = sdp.AdapterMetadataList{}
 
+// GCPConfig holds configuration for GCP source
+type GCPConfig struct {
+	ProjectID string
+	Regions   []string
+	Zones     []string
+}
+
 func init() {
 	// Register the GCP source metadata for documentation purposes
 	ctx := context.Background()
@@ -46,7 +53,7 @@ func init() {
 	log.Info("Registered GCP source metadata")
 }
 
-func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Engine, error) {
+func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig) (*discovery.Engine, error) {
 	engine, err := discovery.NewEngine(ec)
 	if err != nil {
 		return nil, fmt.Errorf("error initializing Engine: %w", err)
@@ -76,17 +83,30 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 	engine.StartSendingHeartbeats(ctx)
 
 	err = func() error {
-		cfg, err := readConfig()
-		if err != nil {
-			return fmt.Errorf("error creating config: %w", err)
-		}
+		var logmsg string
+		// Use provided config, otherwise fall back to viper
+		if cfg != nil {
+			logmsg = "Using directly provided config"
+		} else {
+			var err error
+			cfg, err = readConfig()
+			if err != nil {
+				return fmt.Errorf("error creating config from command line: %w", err)
+			}
+			logmsg = "Using config from viper"
 
+		}
 		log.WithFields(log.Fields{
 			"ovm.source.type":       "gcp",
 			"ovm.source.project_id": cfg.ProjectID,
 			"ovm.source.regions":    cfg.Regions,
 			"ovm.source.zones":      cfg.Zones,
-		}).Info("Got config")
+		}).Info(logmsg)
+
+		// If still no regions/zones this is no valid config.
+		if len(cfg.Regions) == 0 && len(cfg.Zones) == 0 {
+			return fmt.Errorf("GCP source must specify at least one region or zone")
+		}
 
 		linker := gcpshared.NewLinker()
 
@@ -176,19 +196,13 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig) (*discovery.Eng
 	return engine, nil
 }
 
-type config struct {
-	ProjectID string
-	Regions   []string
-	Zones     []string
-}
-
-func readConfig() (*config, error) {
+func readConfig() (*GCPConfig, error) {
 	projectID := viper.GetString("gcp-project-id")
 	if projectID == "" {
 		return nil, fmt.Errorf("gcp-project-id not set")
 	}
 
-	l := &config{
+	l := &GCPConfig{
 		ProjectID: projectID,
 	}
 
