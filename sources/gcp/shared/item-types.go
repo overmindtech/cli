@@ -69,6 +69,7 @@ var (
 	SQLAdminBackup                         = shared.NewItemType(GCP, SqlAdmin, Backup)
 	SQLAdminBackupRun                      = shared.NewItemType(GCP, SqlAdmin, BackupRun)
 	MonitoringCustomDashboard              = shared.NewItemType(GCP, Monitoring, CustomDashboard)
+	MonitoringNotificationChannel          = shared.NewItemType(GCP, Monitoring, NotificationChannel)
 	ArtifactRegistryDockerImage            = shared.NewItemType(GCP, ArtifactRegistry, DockerImage)
 	DataformRepository                     = shared.NewItemType(GCP, Dataform, Repository)
 	ServiceDirectoryEndpoint               = shared.NewItemType(GCP, ServiceDirectory, Endpoint)
@@ -120,4 +121,5 @@ var (
 	CloudFunctionsFunction                 = shared.NewItemType(GCP, CloudFunctions, Function)
 	CloudResourceManagerTagValue           = shared.NewItemType(GCP, CloudResourceManager, TagValue)
 	CloudResourceManagerTagKey             = shared.NewItemType(GCP, CloudResourceManager, TagKey)
+	MonitoringAlertPolicy                  = shared.NewItemType(GCP, Monitoring, AlertPolicy)
 )

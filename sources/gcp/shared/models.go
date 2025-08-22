@@ -111,6 +111,7 @@ const (
 	Revision                     shared.Resource = "revision"
 	BackupRun                    shared.Resource = "backup-run"
 	CustomDashboard              shared.Resource = "custom-dashboard"
+	NotificationChannel          shared.Resource = "notification-channel"
 	DockerImage                  shared.Resource = "docker-image"
 	Repository                   shared.Resource = "repository"
 	Endpoint                     shared.Resource = "endpoint"
@@ -146,4 +147,5 @@ const (
 	WorkerPool                   shared.Resource = "worker-pool"
 	TagValue                     shared.Resource = "tag-value"
 	TagKey                       shared.Resource = "tag-key"
+	AlertPolicy                  shared.Resource = "alert-policy"
 )
