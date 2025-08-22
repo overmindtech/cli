@@ -123,4 +123,5 @@ var (
 	CloudResourceManagerTagValue           = shared.NewItemType(GCP, CloudResourceManager, TagValue)
 	CloudResourceManagerTagKey             = shared.NewItemType(GCP, CloudResourceManager, TagKey)
 	MonitoringAlertPolicy                  = shared.NewItemType(GCP, Monitoring, AlertPolicy)
+	OrgPolicyPolicy                        = shared.NewItemType(GCP, OrgPolicy, Policy)
 )

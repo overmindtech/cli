@@ -39,7 +39,8 @@ const (
 	Spanner              shared.API = "spanner"
 	AppEngine            shared.API = "app-engine"
 	CloudFunctions       shared.API = "cloud-functions"
-	Eventarc             shared.API = "eventarc" // Added for Eventarc triggers
+	Eventarc             shared.API = "eventarc"  // Added for Eventarc triggers
+	OrgPolicy            shared.API = "orgpolicy" // Added for Org Policy (orgpolicy.googleapis.com)
 )
 
 // Resources
