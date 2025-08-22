@@ -69,6 +69,8 @@ func volumeStatusOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ 
 				item.Health = sdp.Health_HEALTH_OK.Enum()
 			case types.VolumeStatusInfoStatusInsufficientData:
 				item.Health = sdp.Health_HEALTH_UNKNOWN.Enum()
+			case types.VolumeStatusInfoStatusWarning:
+				item.Health = sdp.Health_HEALTH_WARNING.Enum()
 			}
 		}
 
