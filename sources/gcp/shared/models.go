@@ -50,6 +50,7 @@ const (
 	Network                      shared.Resource = "network"
 	NodeGroup                    shared.Resource = "node-group"
 	NodeTemplate                 shared.Resource = "node-template"
+	NodePool                     shared.Resource = "node-pool"
 	Subnetwork                   shared.Resource = "subnetwork"
 	Address                      shared.Resource = "address"
 	ForwardingRule               shared.Resource = "forwarding-rule"
