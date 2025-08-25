@@ -20,6 +20,7 @@ func Test_externalToSDP(t *testing.T) {
 		uniqueAttrKeys []string
 		resp           map[string]interface{}
 		sdpAssetType   shared.ItemType
+		nameSelector   string
 	}
 	tests := []struct {
 		name    string
@@ -104,6 +105,37 @@ func Test_externalToSDP(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "UseCustomNameSelectorWhenProvided",
+			args: args{
+				projectID:      "test-project",
+				scope:          "test-scope",
+				uniqueAttrKeys: []string{"projects", "locations", "instances"},
+				resp: map[string]interface{}{
+					"instanceName": "instance-1",
+					"labels":       map[string]interface{}{"env": "prod"},
+					"foo":          "bar",
+				},
+				sdpAssetType: gcpshared.ComputeInstance,
+				nameSelector: "instanceName", // This instructs to look for instanceName instead of name
+			},
+			want: &sdp.Item{
+				Type:            gcpshared.ComputeInstance.String(),
+				UniqueAttribute: "uniqueAttr",
+				Scope:           "test-scope",
+				Tags:            map[string]string{"env": "prod"},
+				Attributes: &sdp.ItemAttributes{
+					AttrStruct: &structpb.Struct{
+						Fields: map[string]*structpb.Value{
+							"instanceName": structpb.NewStringValue("instance-1"),
+							"foo":          structpb.NewStringValue("bar"),
+							"uniqueAttr":   structpb.NewStringValue("instance-1"),
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
 			name: "ReturnsSDPItemWithEmptyLabels",
 			args: args{
 				projectID:      "test-project",
@@ -136,7 +168,7 @@ func Test_externalToSDP(t *testing.T) {
 	linker := gcpshared.NewLinker()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := externalToSDP(context.Background(), tt.args.projectID, tt.args.scope, tt.args.uniqueAttrKeys, tt.args.resp, tt.args.sdpAssetType, linker)
+			got, err := externalToSDP(context.Background(), tt.args.projectID, tt.args.scope, tt.args.uniqueAttrKeys, tt.args.resp, tt.args.sdpAssetType, linker, tt.args.nameSelector)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("externalToSDP() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -27,6 +27,7 @@ type AdapterConfig struct {
 	HTTPClient          *http.Client
 	UniqueAttributeKeys []string
 	IAMPermissions      []string // List of IAM permissions required by the adapter
+	NameSelector        string   // By default, it is `name`, but can be overridden for outlier cases
 }
 
 // Adapter implements discovery.ListableAdapter for GCP dynamic adapters.
@@ -43,6 +44,7 @@ type Adapter struct {
 	linker              *gcpshared.Linker
 	uniqueAttributeKeys []string
 	iamPermissions      []string
+	nameSelector        string // By default, it is `name`, but can be overridden for outlier cases
 }
 
 // NewAdapter creates a new GCP dynamic adapter.
@@ -60,6 +62,7 @@ func NewAdapter(config *AdapterConfig) (discovery.Adapter, error) {
 		potentialLinks:      potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
 		uniqueAttributeKeys: config.UniqueAttributeKeys,
 		iamPermissions:      config.IAMPermissions,
+		nameSelector:        config.NameSelector,
 	}
 
 	if a.httpCli == nil {
@@ -148,7 +151,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		return nil, err
 	}
 
-	item, err := externalToSDP(ctx, g.projectID, g.scope, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker)
+	item, err := externalToSDP(ctx, g.projectID, g.scope, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker, g.nameSelector)
 	if err != nil {
 		return nil, err
 	}

@@ -41,6 +41,7 @@ const (
 	CloudFunctions       shared.API = "cloud-functions"
 	Eventarc             shared.API = "eventarc"  // Added for Eventarc triggers
 	OrgPolicy            shared.API = "orgpolicy" // Added for Org Policy (orgpolicy.googleapis.com)
+	Dataproc             shared.API = "dataproc"  // Added for Dataproc (dataproc.googleapis.com)
 )
 
 // Resources
@@ -150,4 +151,5 @@ const (
 	TagValue                     shared.Resource = "tag-value"
 	TagKey                       shared.Resource = "tag-key"
 	AlertPolicy                  shared.Resource = "alert-policy"
+	AutoscalingPolicy            shared.Resource = "autoscaling-policy"
 )

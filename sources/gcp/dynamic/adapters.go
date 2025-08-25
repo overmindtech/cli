@@ -155,6 +155,7 @@ func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli 
 		HTTPClient:          httpCli,
 		UniqueAttributeKeys: meta.UniqueAttributeKeys,
 		IAMPermissions:      meta.IAMPermissions,
+		NameSelector:        meta.NameSelector,
 	}
 
 	// Add IAM permissions to the global map

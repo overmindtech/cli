@@ -73,7 +73,16 @@ func linkItem(ctx context.Context, projectID string, sdpItem *sdp.Item, sdpAsset
 	}
 }
 
-func externalToSDP(ctx context.Context, projectID string, scope string, uniqueAttrKeys []string, resp map[string]interface{}, sdpAssetType shared.ItemType, linker *gcpshared.Linker) (*sdp.Item, error) {
+func externalToSDP(
+	ctx context.Context,
+	projectID string,
+	scope string,
+	uniqueAttrKeys []string,
+	resp map[string]interface{},
+	sdpAssetType shared.ItemType,
+	linker *gcpshared.Linker,
+	nameSelector string,
+) (*sdp.Item, error) {
 	attributes, err := shared.ToAttributesWithExclude(resp, "labels")
 	if err != nil {
 		return nil, err
@@ -98,9 +107,12 @@ func externalToSDP(ctx context.Context, projectID string, scope string, uniqueAt
 		Tags:            labels,
 	}
 
-	// We need to keep an eye on this.
-	// Name might not exist in the response for all APIs.
-	if name, ok := resp["name"].(string); ok {
+	nameSel := nameSelector
+	if nameSel == "" {
+		nameSel = "name"
+	}
+
+	if name, ok := resp[nameSel].(string); ok {
 		attrValues := gcpshared.ExtractPathParams(name, uniqueAttrKeys...)
 		uniqueAttrValue := strings.Join(attrValues, shared.QuerySeparator)
 		err = sdpItem.GetAttributes().Set("uniqueAttr", uniqueAttrValue)
@@ -309,7 +321,7 @@ func aggregateSDPItems(ctx context.Context, a Adapter, url string) ([]*sdp.Item,
 	)
 
 	for resp := range out {
-		item, err := externalToSDP(ctx, a.projectID, a.scope, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker)
+		item, err := externalToSDP(ctx, a.projectID, a.scope, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
 		if err != nil {
 			log.WithError(err).Warn("failed to extract item from response")
 		}
@@ -341,7 +353,7 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery
 	})
 
 	for resp := range out {
-		item, err := externalToSDP(ctx, a.projectID, a.scope, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker)
+		item, err := externalToSDP(ctx, a.projectID, a.scope, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
 		if err != nil {
 			log.WithError(err).Warn("failed to extract item from response")
 			continue
@@ -403,7 +415,7 @@ func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, cac
 		return nil, err
 	}
 
-	item, err := externalToSDP(ctx, a.projectID, a.scope, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker)
+	item, err := externalToSDP(ctx, a.projectID, a.scope, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert response to SDP: %w", err)
 	}

@@ -35,6 +35,8 @@ func NewSearchableAdapter(searchEndpointFunc gcpshared.EndpointFunc, config *Ada
 		linker:              config.Linker,
 		potentialLinks:      potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
 		uniqueAttributeKeys: config.UniqueAttributeKeys,
+		iamPermissions:      config.IAMPermissions,
+		nameSelector:        config.NameSelector,
 	}
 
 	if a.httpCli == nil {

@@ -32,6 +32,7 @@ type AdapterMeta struct {
 	UniqueAttributeKeys []string
 	InDevelopment       bool     // If true, the adapter is in development and should not be used in production.
 	IAMPermissions      []string // List of IAM permissions required to access this resource.
+	NameSelector        string   // By default, it is `name`, but can be overridden for outlier cases
 }
 
 // We have group of functions that are similar in nature, however they cannot simplified into a generic function because

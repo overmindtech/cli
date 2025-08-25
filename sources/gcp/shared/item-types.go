@@ -124,4 +124,6 @@ var (
 	CloudResourceManagerTagKey             = shared.NewItemType(GCP, CloudResourceManager, TagKey)
 	MonitoringAlertPolicy                  = shared.NewItemType(GCP, Monitoring, AlertPolicy)
 	OrgPolicyPolicy                        = shared.NewItemType(GCP, OrgPolicy, Policy)
+	DataprocCluster                        = shared.NewItemType(GCP, Dataproc, Cluster) // https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters/get
+	DataprocAutoscalingPolicy              = shared.NewItemType(GCP, Dataproc, AutoscalingPolicy)
 )
