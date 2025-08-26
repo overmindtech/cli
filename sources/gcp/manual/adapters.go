@@ -43,6 +43,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		bigQueryDatasetCli        *bigquery.Client
 		loggingConfigCli          *logging.ConfigClient
 		nodeGroupCli              *compute.NodeGroupsClient
+		regionBackendServiceCli   *compute.RegionBackendServicesClient
 	)
 
 	if initGCPClients {
@@ -157,6 +158,11 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute node groups client: %w", err)
 		}
+
+		regionBackendServiceCli, err = compute.NewRegionBackendServicesRESTClient(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create compute region backend services client: %w", err)
+		}
 	}
 
 	var adapters []discovery.Adapter
@@ -165,6 +171,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		adapters = append(adapters,
 			sources.WrapperToAdapter(NewComputeAddress(shared.NewComputeAddressClient(addressCli), projectID, region)),
 			sources.WrapperToAdapter(NewComputeForwardingRule(shared.NewComputeForwardingRuleClient(computeForwardingCli), projectID, region)),
+			sources.WrapperToAdapter(NewComputeRegionBackendService(shared.NewComputeRegionBackendServiceClient(regionBackendServiceCli), projectID, region)),
 		)
 	}
 
@@ -195,6 +202,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		sources.WrapperToAdapter(NewCloudKMSCryptoKey(shared.NewCloudKMSCryptoKeyClient(kmsCryptoKeyCli), projectID)),
 		sources.WrapperToAdapter(NewBigQueryDataset(shared.NewBigQueryDatasetClient(bigQueryDatasetCli), projectID)),
 		sources.WrapperToAdapter(NewBigQueryTable(shared.NewBigQueryTableClient(bigQueryDatasetCli), projectID)),
+		sources.WrapperToAdapter(NewBigQueryModel(shared.NewBigQueryModelClient(bigQueryDatasetCli), projectID)),
 		sources.WrapperToAdapter(NewLoggingSink(shared.NewLoggingConfigClient(loggingConfigCli), projectID)),
 	)
 

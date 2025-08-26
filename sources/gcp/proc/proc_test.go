@@ -46,5 +46,17 @@ func Test_adapters(t *testing.T) {
 		t.Fatal("Expected to find Spanner adapter in the list of adapters")
 	}
 
+	aiPlatformCustomJobFound := false
+	for _, adapter := range discoveryAdapters {
+		if adapter.Type() == gcpshared.AIPlatformCustomJob.String() {
+			aiPlatformCustomJobFound = true
+			break
+		}
+	}
+
+	if !aiPlatformCustomJobFound {
+		t.Fatal("Expected to find AIPlatform Custom Job adapter in the list of adapters")
+	}
+
 	t.Logf("GCP Adapters found: %v", len(discoveryAdapters))
 }

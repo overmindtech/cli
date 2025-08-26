@@ -29,13 +29,13 @@ func TestComputeRegionBackendService(t *testing.T) {
 	region := "test-region"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeRegionBackendService(mockClient, projectID)
+		wrapper := manual.NewComputeRegionBackendService(mockClient, projectID, region)
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeRegionBackendService("test-backend-service"), nil)
 
 		adapter := sources.WrapperToAdapter(wrapper)
 
-		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], region+"|test-backend-service", true)
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-backend-service", true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)
 		}
@@ -118,8 +118,8 @@ func TestComputeRegionBackendService(t *testing.T) {
 		})
 	})
 
-	t.Run("Search", func(t *testing.T) {
-		wrapper := manual.NewComputeRegionBackendService(mockClient, projectID)
+	t.Run("List", func(t *testing.T) {
+		wrapper := manual.NewComputeRegionBackendService(mockClient, projectID, region)
 
 		adapter := sources.WrapperToAdapter(wrapper)
 
@@ -131,7 +131,7 @@ func TestComputeRegionBackendService(t *testing.T) {
 
 		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockBackendServiceIterator)
 
-		sdpItems, err := adapter.Search(ctx, wrapper.Scopes()[0], region, true)
+		sdpItems, err := adapter.List(ctx, wrapper.Scopes()[0], true)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -147,8 +147,8 @@ func TestComputeRegionBackendService(t *testing.T) {
 		}
 	})
 
-	t.Run("SearchStream", func(t *testing.T) {
-		wrapper := manual.NewComputeRegionBackendService(mockClient, projectID)
+	t.Run("ListStream", func(t *testing.T) {
+		wrapper := manual.NewComputeRegionBackendService(mockClient, projectID, region)
 
 		adapter := sources.WrapperToAdapter(wrapper)
 
@@ -178,8 +178,8 @@ func TestComputeRegionBackendService(t *testing.T) {
 
 		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
 
-		// For SearchStream, we need to provide the region as a query part
-		adapter.SearchStream(ctx, projectID, region, true, stream)
+		// For ListStream, we need to provide the region as a query part
+		adapter.ListStream(ctx, wrapper.Scopes()[0], true, stream)
 		wg.Wait()
 
 		if len(errs) != 0 {

@@ -83,7 +83,7 @@ func (c computeBackendServiceWrapper) Get(ctx context.Context, queryParts ...str
 		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
-	item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), service)
+	item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), c.DefaultScope(), service)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -107,7 +107,7 @@ func (c computeBackendServiceWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), bs)
+		item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), c.DefaultScope(), bs)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -134,7 +134,7 @@ func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream dis
 			return
 		}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), backendService)
+		item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), c.DefaultScope(), backendService)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -145,7 +145,7 @@ func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream dis
 	}
 }
 
-func gcpComputeBackendServiceToSDPItem(projectID string, bs *computepb.BackendService) (*sdp.Item, *sdp.QueryError) {
+func gcpComputeBackendServiceToSDPItem(projectID string, scope string, bs *computepb.BackendService) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(bs)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -158,7 +158,7 @@ func gcpComputeBackendServiceToSDPItem(projectID string, bs *computepb.BackendSe
 		Type:            gcpshared.ComputeBackendService.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           projectID,
+		Scope:           scope,
 	}
 
 	// The URL of the network to which this backend service belongs.

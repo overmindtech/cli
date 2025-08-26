@@ -15,23 +15,21 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeRegionBackendServiceLookupByRegion = shared.NewItemTypeLookup("region", gcpshared.ComputeRegionBackendService)
-	ComputeRegionBackendServiceLookupByName   = shared.NewItemTypeLookup("name", gcpshared.ComputeRegionBackendService)
-)
+var ComputeRegionBackendServiceLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeRegionBackendService)
 
 type computeRegionBackendServiceWrapper struct {
 	client gcpshared.ComputeRegionBackendServiceClient
 
-	*gcpshared.ProjectBase
+	*gcpshared.RegionBase
 }
 
 // NewComputeRegionBackendService creates a new computeRegionBackendServiceWrapper instance
-func NewComputeRegionBackendService(client gcpshared.ComputeRegionBackendServiceClient, projectID string) sources.SearchableWrapper {
+func NewComputeRegionBackendService(client gcpshared.ComputeRegionBackendServiceClient, projectID string, region string) sources.ListableWrapper {
 	return &computeRegionBackendServiceWrapper{
 		client: client,
-		ProjectBase: gcpshared.NewProjectBase(
+		RegionBase: gcpshared.NewRegionBase(
 			projectID,
+			region,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			gcpshared.ComputeRegionBackendService,
 		),
@@ -70,19 +68,17 @@ func (c computeRegionBackendServiceWrapper) TerraformMappings() []*sdp.Terraform
 // GetLookups returns the lookups for the compute region backend service wrapper
 func (c computeRegionBackendServiceWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
-		ComputeRegionBackendServiceLookupByRegion,
 		ComputeRegionBackendServiceLookupByName,
 	}
 }
 
 // Get retrieves a compute region backend service by its region and name
 func (c computeRegionBackendServiceWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
-	region := queryParts[0]
-	name := queryParts[1]
+	name := queryParts[0]
 
 	req := &computepb.GetRegionBackendServiceRequest{
 		Project:        c.ProjectID(),
-		Region:         region,
+		Region:         c.Region(),
 		BackendService: name,
 	}
 
@@ -91,7 +87,7 @@ func (c computeRegionBackendServiceWrapper) Get(ctx context.Context, queryParts 
 		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
-	item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), service)
+	item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), c.DefaultScope(), service)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -99,19 +95,11 @@ func (c computeRegionBackendServiceWrapper) Get(ctx context.Context, queryParts 
 	return item, nil
 }
 
-func (c computeRegionBackendServiceWrapper) SearchLookups() []sources.ItemTypeLookups {
-	return []sources.ItemTypeLookups{
-		{
-			ComputeRegionBackendServiceLookupByName,
-		},
-	}
-}
-
-// Search searches for compute region backend services based withing the given region.
-func (c computeRegionBackendServiceWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+// List lists all compute region backend services in the specified region
+func (c computeRegionBackendServiceWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
 	it := c.client.List(ctx, &computepb.ListRegionBackendServicesRequest{
 		Project: c.ProjectID(),
-		Region:  queryParts[0],
+		Region:  c.Region(),
 	})
 
 	var items []*sdp.Item
@@ -121,10 +109,10 @@ func (c computeRegionBackendServiceWrapper) Search(ctx context.Context, queryPar
 			break
 		}
 		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+			return nil, gcpshared.QueryError(err, c.Region(), c.Type())
 		}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), bs)
+		item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), c.Region(), bs)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -135,11 +123,11 @@ func (c computeRegionBackendServiceWrapper) Search(ctx context.Context, queryPar
 	return items, nil
 }
 
-// SearchStream streams the search results for compute region backend services.
-func (c computeRegionBackendServiceWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
+// ListStream lists all compute region backend services in the specified region and streams them to the provided stream
+func (c computeRegionBackendServiceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListRegionBackendServicesRequest{
 		Project: c.ProjectID(),
-		Region:  queryParts[0],
+		Region:  c.Region(),
 	})
 
 	for {
@@ -148,11 +136,11 @@ func (c computeRegionBackendServiceWrapper) SearchStream(ctx context.Context, st
 			break
 		}
 		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+			stream.SendError(gcpshared.QueryError(err, c.Region(), c.Type()))
 			return
 		}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), backendService)
+		item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), c.Region(), backendService)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue

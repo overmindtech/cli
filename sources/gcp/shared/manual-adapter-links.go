@@ -130,6 +130,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 	ComputeSnapshot:             ProjectBaseLinkedItemQueryByName(ComputeSnapshot),
 	ComputeHealthCheck:          ProjectBaseLinkedItemQueryByName(ComputeHealthCheck),
 	ComputeBackendService:       ProjectBaseLinkedItemQueryByName(ComputeBackendService),
+	ComputeRegionBackendService: RegionBaseLinkedItemQueryByName(ComputeRegionBackendService),
 	ComputeImage:                ProjectBaseLinkedItemQueryByName(ComputeImage),
 	ComputeAddress:              RegionBaseLinkedItemQueryByName(ComputeAddress),
 	ComputeForwardingRule:       RegionBaseLinkedItemQueryByName(ComputeForwardingRule),

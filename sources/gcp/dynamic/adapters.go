@@ -18,33 +18,27 @@ const (
 	SearchableListable typeOfAdapter = "searchableListable"
 )
 
-var adaptersByScope = map[gcpshared.Scope]map[shared.ItemType]gcpshared.AdapterMeta{}
+// Adapters returns a list of discovery.Adapters for the given project ID, regions, and zones.
+func Adapters(projectID string, regions []string, zones []string, linker *gcpshared.Linker, httpCli *http.Client, manualAdapters map[string]bool) ([]discovery.Adapter, error) {
+	var adapters []discovery.Adapter
 
-func init() {
-	adaptersByScope = make(map[gcpshared.Scope]map[shared.ItemType]gcpshared.AdapterMeta)
+	adaptersByScope := make(map[gcpshared.Scope]map[shared.ItemType]gcpshared.AdapterMeta)
 	for sdpItemType, meta := range gcpshared.SDPAssetTypeToAdapterMeta {
+		if meta.InDevelopment {
+			// Skip adapters that are in development
+			// This is useful for testing new adapters without exposing them to production
+			continue
+		}
 		if _, ok := adaptersByScope[meta.Scope]; !ok {
 			adaptersByScope[meta.Scope] = make(map[shared.ItemType]gcpshared.AdapterMeta)
 		}
 		adaptersByScope[meta.Scope][sdpItemType] = meta
 	}
 
-}
-
-// Adapters returns a list of discovery.Adapters for the given project ID, regions, and zones.
-func Adapters(projectID string, regions []string, zones []string, linker *gcpshared.Linker, httpCli *http.Client, manualAdapters map[string]bool) ([]discovery.Adapter, error) {
-	var adapters []discovery.Adapter
-
 	// Project level adapters
-	for sdpItemType, meta := range adaptersByScope[gcpshared.ScopeProject] {
+	for sdpItemType := range adaptersByScope[gcpshared.ScopeProject] {
 		if _, ok := manualAdapters[sdpItemType.String()]; ok {
 			// Skip, because we have a manual adapter for this item type
-			continue
-		}
-
-		if meta.InDevelopment {
-			// Skip adapters that are in development
-			// This is useful for testing new adapters without exposing them to production
 			continue
 		}
 
@@ -58,15 +52,9 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 
 	// Regional adapters
 	for _, region := range regions {
-		for sdpItemType, meta := range adaptersByScope[gcpshared.ScopeRegional] {
+		for sdpItemType := range adaptersByScope[gcpshared.ScopeRegional] {
 			if _, ok := manualAdapters[sdpItemType.String()]; ok {
 				// Skip, because we have a manual adapter for this item type
-				continue
-			}
-
-			if meta.InDevelopment {
-				// Skip adapters that are in development
-				// This is useful for testing new adapters without exposing them to production
 				continue
 			}
 
@@ -81,15 +69,9 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 
 	// Zonal adapters
 	for _, zone := range zones {
-		for sdpItemType, meta := range adaptersByScope[gcpshared.ScopeZonal] {
+		for sdpItemType := range adaptersByScope[gcpshared.ScopeZonal] {
 			if _, ok := manualAdapters[sdpItemType.String()]; ok {
 				// Skip, because we have a manual adapter for this item type
-				continue
-			}
-
-			if meta.InDevelopment {
-				// Skip adapters that are in development
-				// This is useful for testing new adapters without exposing them to production
 				continue
 			}
 

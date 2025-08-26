@@ -40,7 +40,7 @@ var (
 		}
 
 		if len(uniqueAttributeKeys) < 2 {
-			panic("searchDescription requires at least two unique attribute keys")
+			panic("searchDescription requires at least two unique attribute keys: " + sdpAssetType.String())
 		}
 		// For service directory endpoint adapter, the uniqueAttributeKeys is: []string{"locations", "namespaces", "services", "endpoints"}
 		// We want to create a selector like:

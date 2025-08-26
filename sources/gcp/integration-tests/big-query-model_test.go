@@ -72,7 +72,7 @@ func TestBigQueryModel(t *testing.T) {
 		t.Logf("Model created: %s", modelMetadata.Name)
 	})
 	t.Run("Get", func(t *testing.T) {
-		bigqueryClient := gcpshared.NewBigQueryModelClient(client, dataSet)
+		bigqueryClient := gcpshared.NewBigQueryModelClient(client)
 		adapter := manual.NewBigQueryModel(bigqueryClient, projectID)
 		sdpItem, err := adapter.Get(ctx, dataSet, model)
 		if err != nil {

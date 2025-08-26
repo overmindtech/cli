@@ -223,14 +223,12 @@ type BigQueryModelClient interface {
 }
 
 type bigQueryModelClient struct {
-	DataSet string
-	client  *bigquery.Client
+	client *bigquery.Client
 }
 
-func NewBigQueryModelClient(client *bigquery.Client, dataset string) BigQueryModelClient {
+func NewBigQueryModelClient(client *bigquery.Client) BigQueryModelClient {
 	return &bigQueryModelClient{
-		DataSet: dataset,
-		client:  client,
+		client: client,
 	}
 }
 
