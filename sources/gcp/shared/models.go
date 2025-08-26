@@ -152,4 +152,11 @@ const (
 	TagKey                       shared.Resource = "tag-key"
 	AlertPolicy                  shared.Resource = "alert-policy"
 	AutoscalingPolicy            shared.Resource = "autoscaling-policy"
+	InterconnectAttachment       shared.Resource = "interconnect-attachment"
+	TargetHttpsProxy             shared.Resource = "target-https-proxy"
+	SSLPolicy                    shared.Resource = "ssl-policy"
+	TargetHttpProxy              shared.Resource = "target-http-proxy"
+	PublicDelegatedPrefix        shared.Resource = "public-delegated-prefix"
+	PublicAdvertisedPrefix       shared.Resource = "public-advertised-prefix"
+	ExternalVpnGateway           shared.Resource = "external-vpn-gateway"
 )

@@ -49,7 +49,7 @@ var computeVpnTunnelAdapter = registerableAdapter{ //nolint:unused
 			},
 		},
 		"peerExternalGateway": {
-			ToSDPItemType: gcpshared.ComputeVpnGateway,
+			ToSDPItemType: gcpshared.ComputeExternalVpnGateway,
 			Description:   "They are tightly coupled.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,

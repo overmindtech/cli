@@ -126,4 +126,11 @@ var (
 	OrgPolicyPolicy                        = shared.NewItemType(GCP, OrgPolicy, Policy)
 	DataprocCluster                        = shared.NewItemType(GCP, Dataproc, Cluster) // https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters/get
 	DataprocAutoscalingPolicy              = shared.NewItemType(GCP, Dataproc, AutoscalingPolicy)
+	ComputeInterconnectAttachment          = shared.NewItemType(GCP, Compute, InterconnectAttachment)
+	ComputeTargetHttpsProxy                = shared.NewItemType(GCP, Compute, TargetHttpsProxy)
+	ComputeSSLPolicy                       = shared.NewItemType(GCP, Compute, SSLPolicy)
+	ComputeTargetHttpProxy                 = shared.NewItemType(GCP, Compute, TargetHttpProxy)
+	ComputePublicDelegatedPrefix           = shared.NewItemType(GCP, Compute, PublicDelegatedPrefix)
+	ComputePublicAdvertisedPrefix          = shared.NewItemType(GCP, Compute, PublicAdvertisedPrefix)
+	ComputeExternalVpnGateway              = shared.NewItemType(GCP, Compute, ExternalVpnGateway)
 )

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -206,6 +207,16 @@ func TestAdapters(t *testing.T) {
 
 		if err := validatable.Validate(); err != nil {
 			t.Errorf("Validate() error for adapter %s: %v", adapter.Name(), err)
+		}
+
+		if adapter.Metadata().GetTerraformMappings() != nil {
+			for _, tm := range adapter.Metadata().GetTerraformMappings() {
+				if tm.GetTerraformMethod() == sdp.QueryMethod_SEARCH {
+					if _, ok := adapter.(discovery.SearchableAdapter); !ok {
+						t.Errorf("Adapter %s has terraform mapping for SEARCH but does not implement SearchableAdapter", adapter.Name())
+					}
+				}
+			}
 		}
 	}
 }
