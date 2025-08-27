@@ -1811,9 +1811,12 @@ func (x *MappedItemsTimelineEntry) GetMappedItems() []*MappedItemDiff {
 }
 
 type CalculatedBlastRadiusTimelineEntry struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	NumItems      uint32                 `protobuf:"varint,1,opt,name=numItems,proto3" json:"numItems,omitempty"`
-	NumEdges      uint32                 `protobuf:"varint,2,opt,name=numEdges,proto3" json:"numEdges,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	NumItems uint32                 `protobuf:"varint,1,opt,name=numItems,proto3" json:"numItems,omitempty"`
+	NumEdges uint32                 `protobuf:"varint,2,opt,name=numEdges,proto3" json:"numEdges,omitempty"`
+	// If this is not set, the blast radius was calculated using the default
+	// process. In that case do not show any message to the user.
+	Summary       string `protobuf:"bytes,3,opt,name=summary,proto3" json:"summary,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1860,6 +1863,13 @@ func (x *CalculatedBlastRadiusTimelineEntry) GetNumEdges() uint32 {
 		return x.NumEdges
 	}
 	return 0
+}
+
+func (x *CalculatedBlastRadiusTimelineEntry) GetSummary() string {
+	if x != nil {
+		return x.Summary
+	}
+	return ""
 }
 
 type CalculatedRisksTimelineEntry struct {
@@ -5425,10 +5435,11 @@ const file_changes_proto_rawDesc = "" +
 	"\x06_actor\"\x0e\n" +
 	"\fEmptyContent\"U\n" +
 	"\x18MappedItemsTimelineEntry\x129\n" +
-	"\vmappedItems\x18\x01 \x03(\v2\x17.changes.MappedItemDiffR\vmappedItems\"\\\n" +
+	"\vmappedItems\x18\x01 \x03(\v2\x17.changes.MappedItemDiffR\vmappedItems\"v\n" +
 	"\"CalculatedBlastRadiusTimelineEntry\x12\x1a\n" +
 	"\bnumItems\x18\x01 \x01(\rR\bnumItems\x12\x1a\n" +
-	"\bnumEdges\x18\x02 \x01(\rR\bnumEdges\"C\n" +
+	"\bnumEdges\x18\x02 \x01(\rR\bnumEdges\x12\x18\n" +
+	"\asummary\x18\x03 \x01(\tR\asummary\"C\n" +
 	"\x1cCalculatedRisksTimelineEntry\x12#\n" +
 	"\x05risks\x18\x01 \x03(\v2\r.changes.RiskR\x05risks\"\xd7\x01\n" +
 	"\x18AutoTaggingTimelineEntry\x12]\n" +
