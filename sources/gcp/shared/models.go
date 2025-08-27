@@ -110,6 +110,7 @@ const (
 	Backup                       shared.Resource = "backup"
 	Build                        shared.Resource = "build"
 	EntryGroup                   shared.Resource = "entry-group"
+	AspectType                   shared.Resource = "aspect-type"
 	Service                      shared.Resource = "service"
 	Revision                     shared.Resource = "revision"
 	BackupRun                    shared.Resource = "backup-run"

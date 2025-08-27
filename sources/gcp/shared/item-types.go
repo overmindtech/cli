@@ -64,6 +64,7 @@ var (
 	BigTableAdminTable                     = shared.NewItemType(GCP, BigTableAdmin, Table)
 	CloudBuildBuild                        = shared.NewItemType(GCP, CloudBuild, Build)
 	DataplexEntryGroup                     = shared.NewItemType(GCP, DataPlex, EntryGroup)
+	DataplexAspectType                     = shared.NewItemType(GCP, DataPlex, AspectType)
 	ServiceUsageService                    = shared.NewItemType(GCP, ServiceUsage, Service)
 	RunRevision                            = shared.NewItemType(GCP, Run, Revision)
 	SQLAdminBackup                         = shared.NewItemType(GCP, SqlAdmin, Backup)
