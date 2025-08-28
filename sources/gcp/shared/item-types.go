@@ -136,4 +136,5 @@ var (
 	ComputePublicDelegatedPrefix           = shared.NewItemType(GCP, Compute, PublicDelegatedPrefix)
 	ComputePublicAdvertisedPrefix          = shared.NewItemType(GCP, Compute, PublicAdvertisedPrefix)
 	ComputeExternalVpnGateway              = shared.NewItemType(GCP, Compute, ExternalVpnGateway)
+	RedisInstance                          = shared.NewItemType(GCP, Redis, Instance) // https://cloud.google.com/memorystore/docs/redis/reference/rest/v1/projects.locations.instances/get
 )

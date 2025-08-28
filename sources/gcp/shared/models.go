@@ -43,6 +43,7 @@ const (
 	Eventarc             shared.API = "eventarc"  // Added for Eventarc triggers
 	OrgPolicy            shared.API = "orgpolicy" // Added for Org Policy (orgpolicy.googleapis.com)
 	Dataproc             shared.API = "dataproc"  // Added for Dataproc (dataproc.googleapis.com)
+	Redis                shared.API = "redis"     // Added for Redis (redis.googleapis.com)
 )
 
 // Resources
