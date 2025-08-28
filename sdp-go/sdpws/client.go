@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"slices"
 	"sync"
@@ -342,6 +343,18 @@ func (c *Client) Wait(ctx context.Context, reqIDs uuid.UUIDs) error {
 			return nil
 		}
 	}
+}
+
+// WaitAll blocks until all currently in-flight requests have been finished.
+// Waiting on a closed client returns immediately with no error.
+func (c *Client) WaitAll(ctx context.Context) error {
+	reqIDs := func() []uuid.UUID {
+		c.requestMapMu.RLock()
+		defer c.requestMapMu.RUnlock()
+		return slices.Collect(maps.Keys(c.requestMap))
+	}()
+
+	return c.Wait(ctx, reqIDs)
 }
 
 // abort stores the specified error and closes the connection.
