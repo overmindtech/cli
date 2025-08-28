@@ -43,6 +43,8 @@ var (
 	IAMServiceAccount                      = shared.NewItemType(GCP, IAM, ServiceAccount)
 	BigQueryTable                          = shared.NewItemType(GCP, BigQuery, Table)
 	BigQueryDataset                        = shared.NewItemType(GCP, BigQuery, Dataset)
+	BigQueryDataTransferTransferConfig     = shared.NewItemType(GCP, BigQueryDataTransfer, TransferConfig)
+	BigQueryDataTransferDataSource         = shared.NewItemType(GCP, BigQueryDataTransfer, DataSource)
 	PubSubSubscription                     = shared.NewItemType(GCP, PubSub, Subscription)
 	PubSubTopic                            = shared.NewItemType(GCP, PubSub, Topic)
 	CloudResourceManagerProject            = shared.NewItemType(GCP, CloudResourceManager, Project)

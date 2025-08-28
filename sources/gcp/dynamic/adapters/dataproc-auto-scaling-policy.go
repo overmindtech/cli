@@ -28,7 +28,7 @@ var dataprocAutoScalingPolicyAdapter = registerableAdapter{ //nolint:unused
 		},
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
-		// AutoscalingPolicies don't directly reference other resources, 
+		// AutoscalingPolicies don't directly reference other resources,
 		// but they are referenced by Dataproc clusters via config.autoscalingConfig.policyUri
 		// The reverse relationship is handled in the cluster adapter
 	},

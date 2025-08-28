@@ -15,6 +15,7 @@ const (
 	CloudKMS             shared.API = "cloud-kms"
 	IAM                  shared.API = "iam"
 	BigQuery             shared.API = "big-query"
+	BigQueryDataTransfer shared.API = "big-query-data-transfer"
 	PubSub               shared.API = "pub-sub"
 	CloudResourceManager shared.API = "cloud-resource-manager"
 	AIPlatform           shared.API = "ai-platform"
@@ -160,4 +161,6 @@ const (
 	PublicDelegatedPrefix        shared.Resource = "public-delegated-prefix"
 	PublicAdvertisedPrefix       shared.Resource = "public-advertised-prefix"
 	ExternalVpnGateway           shared.Resource = "external-vpn-gateway"
+	TransferConfig               shared.Resource = "transfer-config"
+	DataSource                   shared.Resource = "data-source"
 )
