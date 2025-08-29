@@ -8,42 +8,43 @@ const GCP shared.Source = "gcp"
 
 // APIs
 const (
-	Compute              shared.API = "compute"
-	Container            shared.API = "container"
-	NetworkSecurity      shared.API = "network-security"
-	NetworkServices      shared.API = "network-services"
-	CloudKMS             shared.API = "cloud-kms"
-	IAM                  shared.API = "iam"
-	BigQuery             shared.API = "big-query"
-	BigQueryDataTransfer shared.API = "big-query-data-transfer"
-	PubSub               shared.API = "pub-sub"
-	CloudResourceManager shared.API = "cloud-resource-manager"
-	AIPlatform           shared.API = "ai-platform"
-	BigTableAdmin        shared.API = "big-table-admin"
-	CloudBuild           shared.API = "cloud-build"
-	DataPlex             shared.API = "dataplex"
-	ServiceUsage         shared.API = "service-usage"
-	Run                  shared.API = "run"
-	SqlAdmin             shared.API = "sql-admin"
-	Monitoring           shared.API = "monitoring"
-	ArtifactRegistry     shared.API = "artifact-registry"
-	Dataform             shared.API = "dataform"
-	Storage              shared.API = "storage"
-	ServiceDirectory     shared.API = "service-directory"
-	DNS                  shared.API = "dns"
-	CloudBilling         shared.API = "cloud-billing"
-	EssentialContacts    shared.API = "essential-contacts"
-	Logging              shared.API = "logging"
-	NetworkConnectivity  shared.API = "network-connectivity"
-	VPCAccess            shared.API = "vpc-access"
-	SecretManager        shared.API = "secret-manager"
-	Spanner              shared.API = "spanner"
-	AppEngine            shared.API = "app-engine"
-	CloudFunctions       shared.API = "cloud-functions"
-	Eventarc             shared.API = "eventarc"  // Added for Eventarc triggers
-	OrgPolicy            shared.API = "orgpolicy" // Added for Org Policy (orgpolicy.googleapis.com)
-	Dataproc             shared.API = "dataproc"  // Added for Dataproc (dataproc.googleapis.com)
-	Redis                shared.API = "redis"     // Added for Redis (redis.googleapis.com)
+	Compute                  shared.API = "compute"
+	Container                shared.API = "container"
+	NetworkSecurity          shared.API = "network-security"
+	NetworkServices          shared.API = "network-services"
+	CloudKMS                 shared.API = "cloud-kms"
+	IAM                      shared.API = "iam"
+	BigQuery                 shared.API = "big-query"
+	BigQueryDataTransfer     shared.API = "big-query-data-transfer"
+	PubSub                   shared.API = "pub-sub"
+	CloudResourceManager     shared.API = "cloud-resource-manager"
+	AIPlatform               shared.API = "ai-platform"
+	BigTableAdmin            shared.API = "big-table-admin"
+	CloudBuild               shared.API = "cloud-build"
+	DataPlex                 shared.API = "dataplex"
+	ServiceUsage             shared.API = "service-usage"
+	Run                      shared.API = "run"
+	SqlAdmin                 shared.API = "sql-admin"
+	Monitoring               shared.API = "monitoring"
+	ArtifactRegistry         shared.API = "artifact-registry"
+	Dataform                 shared.API = "dataform"
+	Storage                  shared.API = "storage"
+	ServiceDirectory         shared.API = "service-directory"
+	DNS                      shared.API = "dns"
+	CloudBilling             shared.API = "cloud-billing"
+	EssentialContacts        shared.API = "essential-contacts"
+	Logging                  shared.API = "logging"
+	NetworkConnectivity      shared.API = "network-connectivity"
+	VPCAccess                shared.API = "vpc-access"
+	SecretManager            shared.API = "secret-manager"
+	Spanner                  shared.API = "spanner"
+	AppEngine                shared.API = "app-engine"
+	CloudFunctions           shared.API = "cloud-functions"
+	Eventarc                 shared.API = "eventarc"                   // Added for Eventarc triggers
+	OrgPolicy                shared.API = "orgpolicy"                  // Added for Org Policy (orgpolicy.googleapis.com)
+	Dataproc                 shared.API = "dataproc"                   // Added for Dataproc (dataproc.googleapis.com)
+	Redis                    shared.API = "redis"                      // Added for Redis (redis.googleapis.com)
+	SecurityCenterManagement shared.API = "security-center-management" // Added for Security Center Management (securitycentermanagement.googleapis.com)
 )
 
 // Resources
@@ -164,4 +165,5 @@ const (
 	ExternalVpnGateway           shared.Resource = "external-vpn-gateway"
 	TransferConfig               shared.Resource = "transfer-config"
 	DataSource                   shared.Resource = "data-source"
+	SecurityCenterService        shared.Resource = "security-center-service" // Used by Security Center Management
 )
