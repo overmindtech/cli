@@ -5,14 +5,14 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-type registerableAdapter struct { //nolint:unused
+type registerableAdapter struct {
 	sdpType          shared.ItemType
 	meta             gcpshared.AdapterMeta
 	blastPropagation map[string]*gcpshared.Impact
 	terraformMapping gcpshared.TerraformMapping
 }
 
-func (d registerableAdapter) Register() registerableAdapter { //nolint:unused
+func (d registerableAdapter) Register() registerableAdapter {
 	gcpshared.SDPAssetTypeToAdapterMeta[d.sdpType] = d.meta
 	gcpshared.BlastPropagations[d.sdpType] = d.blastPropagation
 	gcpshared.SDPAssetTypeToTerraformMappings[d.sdpType] = d.terraformMapping
