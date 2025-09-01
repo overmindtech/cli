@@ -45,6 +45,8 @@ const (
 	Dataproc                 shared.API = "dataproc"                   // Added for Dataproc (dataproc.googleapis.com)
 	Redis                    shared.API = "redis"                      // Added for Redis (redis.googleapis.com)
 	SecurityCenterManagement shared.API = "security-center-management" // Added for Security Center Management (securitycentermanagement.googleapis.com)
+	File                     shared.API = "file"                       // Added for File (file.googleapis.com)
+
 )
 
 // Resources

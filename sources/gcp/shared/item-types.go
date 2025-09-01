@@ -138,4 +138,6 @@ var (
 	ComputeExternalVpnGateway                     = shared.NewItemType(GCP, Compute, ExternalVpnGateway)
 	RedisInstance                                 = shared.NewItemType(GCP, Redis, Instance)                                 // https://cloud.google.com/memorystore/docs/redis/reference/rest/v1/projects.locations.instances/get
 	SecurityCenterManagementSecurityCenterService = shared.NewItemType(GCP, SecurityCenterManagement, SecurityCenterService) // https://cloud.google.com/security-command-center/docs/reference/security-center-management/rest/v1/projects.locations.securityCenterServices/get
+	FileInstance                                  = shared.NewItemType(GCP, File, Instance)
+	FileBackup                                    = shared.NewItemType(GCP, File, Backup)
 )
