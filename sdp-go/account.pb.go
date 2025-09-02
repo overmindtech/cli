@@ -94,6 +94,57 @@ func (SourceStatus) EnumDescriptor() ([]byte, []int) {
 	return file_account_proto_rawDescGZIP(), []int{0}
 }
 
+type RepositoryStatus int32
+
+const (
+	RepositoryStatus_REPOSITORY_STATUS_UNSPECIFIED RepositoryStatus = 0
+	// Repository has had changes within the defined activity window
+	RepositoryStatus_REPOSITORY_STATUS_ACTIVE RepositoryStatus = 1
+	// Repository has not had changes within the defined activity window
+	RepositoryStatus_REPOSITORY_STATUS_INACTIVE RepositoryStatus = 2
+)
+
+// Enum value maps for RepositoryStatus.
+var (
+	RepositoryStatus_name = map[int32]string{
+		0: "REPOSITORY_STATUS_UNSPECIFIED",
+		1: "REPOSITORY_STATUS_ACTIVE",
+		2: "REPOSITORY_STATUS_INACTIVE",
+	}
+	RepositoryStatus_value = map[string]int32{
+		"REPOSITORY_STATUS_UNSPECIFIED": 0,
+		"REPOSITORY_STATUS_ACTIVE":      1,
+		"REPOSITORY_STATUS_INACTIVE":    2,
+	}
+)
+
+func (x RepositoryStatus) Enum() *RepositoryStatus {
+	p := new(RepositoryStatus)
+	*p = x
+	return p
+}
+
+func (x RepositoryStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RepositoryStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_account_proto_enumTypes[1].Descriptor()
+}
+
+func (RepositoryStatus) Type() protoreflect.EnumType {
+	return &file_account_proto_enumTypes[1]
+}
+
+func (x RepositoryStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RepositoryStatus.Descriptor instead.
+func (RepositoryStatus) EnumDescriptor() ([]byte, []int) {
+	return file_account_proto_rawDescGZIP(), []int{1}
+}
+
 // Whether the source is managed by srcman or was created by the user locally
 type SourceManaged int32
 
@@ -125,11 +176,11 @@ func (x SourceManaged) String() string {
 }
 
 func (SourceManaged) Descriptor() protoreflect.EnumDescriptor {
-	return file_account_proto_enumTypes[1].Descriptor()
+	return file_account_proto_enumTypes[2].Descriptor()
 }
 
 func (SourceManaged) Type() protoreflect.EnumType {
-	return &file_account_proto_enumTypes[1]
+	return &file_account_proto_enumTypes[2]
 }
 
 func (x SourceManaged) Number() protoreflect.EnumNumber {
@@ -138,7 +189,7 @@ func (x SourceManaged) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use SourceManaged.Descriptor instead.
 func (SourceManaged) EnumDescriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{1}
+	return file_account_proto_rawDescGZIP(), []int{2}
 }
 
 type AdapterCategory int32
@@ -233,11 +284,11 @@ func (x AdapterCategory) String() string {
 }
 
 func (AdapterCategory) Descriptor() protoreflect.EnumDescriptor {
-	return file_account_proto_enumTypes[2].Descriptor()
+	return file_account_proto_enumTypes[3].Descriptor()
 }
 
 func (AdapterCategory) Type() protoreflect.EnumType {
-	return &file_account_proto_enumTypes[2]
+	return &file_account_proto_enumTypes[3]
 }
 
 func (x AdapterCategory) Number() protoreflect.EnumNumber {
@@ -246,7 +297,7 @@ func (x AdapterCategory) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use AdapterCategory.Descriptor instead.
 func (AdapterCategory) EnumDescriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{2}
+	return file_account_proto_rawDescGZIP(), []int{3}
 }
 
 type ListAccountsRequest struct {
@@ -1322,9 +1373,15 @@ func (x *Account) GetProperties() *AccountProperties {
 type AccountMetadata struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The public Nkey which signs all NATS "user" tokens
-	PublicNkey    string `protobuf:"bytes,2,opt,name=PublicNkey,proto3" json:"PublicNkey,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	PublicNkey string `protobuf:"bytes,2,opt,name=PublicNkey,proto3" json:"PublicNkey,omitempty"`
+	// Repositories that have been used in this account
+	Repositories []*Repository `protobuf:"bytes,3,rep,name=repositories,proto3" json:"repositories,omitempty"`
+	// The total number of repositories associated with this account
+	TotalRepositories uint32 `protobuf:"varint,4,opt,name=totalRepositories,proto3" json:"totalRepositories,omitempty"`
+	// The number of active repositories (for billing purposes)
+	ActiveRepositories uint32 `protobuf:"varint,5,opt,name=activeRepositories,proto3" json:"activeRepositories,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *AccountMetadata) Reset() {
@@ -1364,6 +1421,100 @@ func (x *AccountMetadata) GetPublicNkey() string {
 	return ""
 }
 
+func (x *AccountMetadata) GetRepositories() []*Repository {
+	if x != nil {
+		return x.Repositories
+	}
+	return nil
+}
+
+func (x *AccountMetadata) GetTotalRepositories() uint32 {
+	if x != nil {
+		return x.TotalRepositories
+	}
+	return 0
+}
+
+func (x *AccountMetadata) GetActiveRepositories() uint32 {
+	if x != nil {
+		return x.ActiveRepositories
+	}
+	return 0
+}
+
+type Repository struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Repository identifier; can be a URL, name, or any string identifier. Not necessarily a URL. CLI attempts auto-population, but users can override.
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// The number of changes that have been recorded in this repository
+	NumChanges int64 `protobuf:"varint,2,opt,name=numChanges,proto3" json:"numChanges,omitempty"`
+	// The last time a change was recorded in this repository
+	LastChangeAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=lastChangeAt,proto3" json:"lastChangeAt,omitempty"`
+	// The status of the repository (active or inactive). This is determined
+	// based on the last change that was recorded.
+	Status        RepositoryStatus `protobuf:"varint,4,opt,name=status,proto3,enum=account.RepositoryStatus" json:"status,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Repository) Reset() {
+	*x = Repository{}
+	mi := &file_account_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Repository) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Repository) ProtoMessage() {}
+
+func (x *Repository) ProtoReflect() protoreflect.Message {
+	mi := &file_account_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Repository.ProtoReflect.Descriptor instead.
+func (*Repository) Descriptor() ([]byte, []int) {
+	return file_account_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *Repository) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Repository) GetNumChanges() int64 {
+	if x != nil {
+		return x.NumChanges
+	}
+	return 0
+}
+
+func (x *Repository) GetLastChangeAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastChangeAt
+	}
+	return nil
+}
+
+func (x *Repository) GetStatus() RepositoryStatus {
+	if x != nil {
+		return x.Status
+	}
+	return RepositoryStatus_REPOSITORY_STATUS_UNSPECIFIED
+}
+
 type AccountProperties struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The name of the account
@@ -1376,7 +1527,7 @@ type AccountProperties struct {
 
 func (x *AccountProperties) Reset() {
 	*x = AccountProperties{}
-	mi := &file_account_proto_msgTypes[22]
+	mi := &file_account_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1388,7 +1539,7 @@ func (x *AccountProperties) String() string {
 func (*AccountProperties) ProtoMessage() {}
 
 func (x *AccountProperties) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[22]
+	mi := &file_account_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1401,7 +1552,7 @@ func (x *AccountProperties) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccountProperties.ProtoReflect.Descriptor instead.
 func (*AccountProperties) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{22}
+	return file_account_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *AccountProperties) GetName() string {
@@ -1426,7 +1577,7 @@ type GetAccountRequest struct {
 
 func (x *GetAccountRequest) Reset() {
 	*x = GetAccountRequest{}
-	mi := &file_account_proto_msgTypes[23]
+	mi := &file_account_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1438,7 +1589,7 @@ func (x *GetAccountRequest) String() string {
 func (*GetAccountRequest) ProtoMessage() {}
 
 func (x *GetAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[23]
+	mi := &file_account_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1451,7 +1602,7 @@ func (x *GetAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAccountRequest.ProtoReflect.Descriptor instead.
 func (*GetAccountRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{23}
+	return file_account_proto_rawDescGZIP(), []int{24}
 }
 
 type GetAccountResponse struct {
@@ -1463,7 +1614,7 @@ type GetAccountResponse struct {
 
 func (x *GetAccountResponse) Reset() {
 	*x = GetAccountResponse{}
-	mi := &file_account_proto_msgTypes[24]
+	mi := &file_account_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1475,7 +1626,7 @@ func (x *GetAccountResponse) String() string {
 func (*GetAccountResponse) ProtoMessage() {}
 
 func (x *GetAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[24]
+	mi := &file_account_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1488,7 +1639,7 @@ func (x *GetAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAccountResponse.ProtoReflect.Descriptor instead.
 func (*GetAccountResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{24}
+	return file_account_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *GetAccountResponse) GetAccount() *Account {
@@ -1509,7 +1660,7 @@ type DeleteAccountRequest struct {
 
 func (x *DeleteAccountRequest) Reset() {
 	*x = DeleteAccountRequest{}
-	mi := &file_account_proto_msgTypes[25]
+	mi := &file_account_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1521,7 +1672,7 @@ func (x *DeleteAccountRequest) String() string {
 func (*DeleteAccountRequest) ProtoMessage() {}
 
 func (x *DeleteAccountRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[25]
+	mi := &file_account_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1534,7 +1685,7 @@ func (x *DeleteAccountRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAccountRequest.ProtoReflect.Descriptor instead.
 func (*DeleteAccountRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{25}
+	return file_account_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *DeleteAccountRequest) GetIAmSure() bool {
@@ -1552,7 +1703,7 @@ type DeleteAccountResponse struct {
 
 func (x *DeleteAccountResponse) Reset() {
 	*x = DeleteAccountResponse{}
-	mi := &file_account_proto_msgTypes[26]
+	mi := &file_account_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1564,7 +1715,7 @@ func (x *DeleteAccountResponse) String() string {
 func (*DeleteAccountResponse) ProtoMessage() {}
 
 func (x *DeleteAccountResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[26]
+	mi := &file_account_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1577,7 +1728,7 @@ func (x *DeleteAccountResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAccountResponse.ProtoReflect.Descriptor instead.
 func (*DeleteAccountResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{26}
+	return file_account_proto_rawDescGZIP(), []int{27}
 }
 
 type ListSourcesRequest struct {
@@ -1588,7 +1739,7 @@ type ListSourcesRequest struct {
 
 func (x *ListSourcesRequest) Reset() {
 	*x = ListSourcesRequest{}
-	mi := &file_account_proto_msgTypes[27]
+	mi := &file_account_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1600,7 +1751,7 @@ func (x *ListSourcesRequest) String() string {
 func (*ListSourcesRequest) ProtoMessage() {}
 
 func (x *ListSourcesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[27]
+	mi := &file_account_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1613,7 +1764,7 @@ func (x *ListSourcesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSourcesRequest.ProtoReflect.Descriptor instead.
 func (*ListSourcesRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{27}
+	return file_account_proto_rawDescGZIP(), []int{28}
 }
 
 type ListSourcesResponse struct {
@@ -1625,7 +1776,7 @@ type ListSourcesResponse struct {
 
 func (x *ListSourcesResponse) Reset() {
 	*x = ListSourcesResponse{}
-	mi := &file_account_proto_msgTypes[28]
+	mi := &file_account_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1637,7 +1788,7 @@ func (x *ListSourcesResponse) String() string {
 func (*ListSourcesResponse) ProtoMessage() {}
 
 func (x *ListSourcesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[28]
+	mi := &file_account_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1650,7 +1801,7 @@ func (x *ListSourcesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListSourcesResponse.ProtoReflect.Descriptor instead.
 func (*ListSourcesResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{28}
+	return file_account_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *ListSourcesResponse) GetSources() []*Source {
@@ -1669,7 +1820,7 @@ type CreateSourceRequest struct {
 
 func (x *CreateSourceRequest) Reset() {
 	*x = CreateSourceRequest{}
-	mi := &file_account_proto_msgTypes[29]
+	mi := &file_account_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1681,7 +1832,7 @@ func (x *CreateSourceRequest) String() string {
 func (*CreateSourceRequest) ProtoMessage() {}
 
 func (x *CreateSourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[29]
+	mi := &file_account_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1694,7 +1845,7 @@ func (x *CreateSourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateSourceRequest.ProtoReflect.Descriptor instead.
 func (*CreateSourceRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{29}
+	return file_account_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *CreateSourceRequest) GetProperties() *SourceProperties {
@@ -1713,7 +1864,7 @@ type CreateSourceResponse struct {
 
 func (x *CreateSourceResponse) Reset() {
 	*x = CreateSourceResponse{}
-	mi := &file_account_proto_msgTypes[30]
+	mi := &file_account_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1725,7 +1876,7 @@ func (x *CreateSourceResponse) String() string {
 func (*CreateSourceResponse) ProtoMessage() {}
 
 func (x *CreateSourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[30]
+	mi := &file_account_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1738,7 +1889,7 @@ func (x *CreateSourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateSourceResponse.ProtoReflect.Descriptor instead.
 func (*CreateSourceResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{30}
+	return file_account_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *CreateSourceResponse) GetSource() *Source {
@@ -1757,7 +1908,7 @@ type GetSourceRequest struct {
 
 func (x *GetSourceRequest) Reset() {
 	*x = GetSourceRequest{}
-	mi := &file_account_proto_msgTypes[31]
+	mi := &file_account_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1769,7 +1920,7 @@ func (x *GetSourceRequest) String() string {
 func (*GetSourceRequest) ProtoMessage() {}
 
 func (x *GetSourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[31]
+	mi := &file_account_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1782,7 +1933,7 @@ func (x *GetSourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSourceRequest.ProtoReflect.Descriptor instead.
 func (*GetSourceRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{31}
+	return file_account_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *GetSourceRequest) GetUUID() []byte {
@@ -1801,7 +1952,7 @@ type GetSourceResponse struct {
 
 func (x *GetSourceResponse) Reset() {
 	*x = GetSourceResponse{}
-	mi := &file_account_proto_msgTypes[32]
+	mi := &file_account_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1813,7 +1964,7 @@ func (x *GetSourceResponse) String() string {
 func (*GetSourceResponse) ProtoMessage() {}
 
 func (x *GetSourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[32]
+	mi := &file_account_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1826,7 +1977,7 @@ func (x *GetSourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSourceResponse.ProtoReflect.Descriptor instead.
 func (*GetSourceResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{32}
+	return file_account_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *GetSourceResponse) GetSource() *Source {
@@ -1848,7 +1999,7 @@ type UpdateSourceRequest struct {
 
 func (x *UpdateSourceRequest) Reset() {
 	*x = UpdateSourceRequest{}
-	mi := &file_account_proto_msgTypes[33]
+	mi := &file_account_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1860,7 +2011,7 @@ func (x *UpdateSourceRequest) String() string {
 func (*UpdateSourceRequest) ProtoMessage() {}
 
 func (x *UpdateSourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[33]
+	mi := &file_account_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1873,7 +2024,7 @@ func (x *UpdateSourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateSourceRequest.ProtoReflect.Descriptor instead.
 func (*UpdateSourceRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{33}
+	return file_account_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *UpdateSourceRequest) GetUUID() []byte {
@@ -1899,7 +2050,7 @@ type UpdateSourceResponse struct {
 
 func (x *UpdateSourceResponse) Reset() {
 	*x = UpdateSourceResponse{}
-	mi := &file_account_proto_msgTypes[34]
+	mi := &file_account_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1911,7 +2062,7 @@ func (x *UpdateSourceResponse) String() string {
 func (*UpdateSourceResponse) ProtoMessage() {}
 
 func (x *UpdateSourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[34]
+	mi := &file_account_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1924,7 +2075,7 @@ func (x *UpdateSourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateSourceResponse.ProtoReflect.Descriptor instead.
 func (*UpdateSourceResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{34}
+	return file_account_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *UpdateSourceResponse) GetSource() *Source {
@@ -1944,7 +2095,7 @@ type DeleteSourceRequest struct {
 
 func (x *DeleteSourceRequest) Reset() {
 	*x = DeleteSourceRequest{}
-	mi := &file_account_proto_msgTypes[35]
+	mi := &file_account_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1956,7 +2107,7 @@ func (x *DeleteSourceRequest) String() string {
 func (*DeleteSourceRequest) ProtoMessage() {}
 
 func (x *DeleteSourceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[35]
+	mi := &file_account_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1969,7 +2120,7 @@ func (x *DeleteSourceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSourceRequest.ProtoReflect.Descriptor instead.
 func (*DeleteSourceRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{35}
+	return file_account_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *DeleteSourceRequest) GetUUID() []byte {
@@ -1987,7 +2138,7 @@ type DeleteSourceResponse struct {
 
 func (x *DeleteSourceResponse) Reset() {
 	*x = DeleteSourceResponse{}
-	mi := &file_account_proto_msgTypes[36]
+	mi := &file_account_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1999,7 +2150,7 @@ func (x *DeleteSourceResponse) String() string {
 func (*DeleteSourceResponse) ProtoMessage() {}
 
 func (x *DeleteSourceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[36]
+	mi := &file_account_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2012,7 +2163,7 @@ func (x *DeleteSourceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSourceResponse.ProtoReflect.Descriptor instead.
 func (*DeleteSourceResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{36}
+	return file_account_proto_rawDescGZIP(), []int{37}
 }
 
 type SourceKeepaliveResult struct {
@@ -2029,7 +2180,7 @@ type SourceKeepaliveResult struct {
 
 func (x *SourceKeepaliveResult) Reset() {
 	*x = SourceKeepaliveResult{}
-	mi := &file_account_proto_msgTypes[37]
+	mi := &file_account_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2041,7 +2192,7 @@ func (x *SourceKeepaliveResult) String() string {
 func (*SourceKeepaliveResult) ProtoMessage() {}
 
 func (x *SourceKeepaliveResult) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[37]
+	mi := &file_account_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2054,7 +2205,7 @@ func (x *SourceKeepaliveResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SourceKeepaliveResult.ProtoReflect.Descriptor instead.
 func (*SourceKeepaliveResult) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{37}
+	return file_account_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *SourceKeepaliveResult) GetUUID() []byte {
@@ -2086,7 +2237,7 @@ type ListAllSourcesStatusRequest struct {
 
 func (x *ListAllSourcesStatusRequest) Reset() {
 	*x = ListAllSourcesStatusRequest{}
-	mi := &file_account_proto_msgTypes[38]
+	mi := &file_account_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2098,7 +2249,7 @@ func (x *ListAllSourcesStatusRequest) String() string {
 func (*ListAllSourcesStatusRequest) ProtoMessage() {}
 
 func (x *ListAllSourcesStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[38]
+	mi := &file_account_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2111,7 +2262,7 @@ func (x *ListAllSourcesStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAllSourcesStatusRequest.ProtoReflect.Descriptor instead.
 func (*ListAllSourcesStatusRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{38}
+	return file_account_proto_rawDescGZIP(), []int{39}
 }
 
 type SourceHealth struct {
@@ -2148,7 +2299,7 @@ type SourceHealth struct {
 
 func (x *SourceHealth) Reset() {
 	*x = SourceHealth{}
-	mi := &file_account_proto_msgTypes[39]
+	mi := &file_account_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2160,7 +2311,7 @@ func (x *SourceHealth) String() string {
 func (*SourceHealth) ProtoMessage() {}
 
 func (x *SourceHealth) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[39]
+	mi := &file_account_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2173,7 +2324,7 @@ func (x *SourceHealth) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SourceHealth.ProtoReflect.Descriptor instead.
 func (*SourceHealth) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{39}
+	return file_account_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *SourceHealth) GetUUID() []byte {
@@ -2276,7 +2427,7 @@ type ListAllSourcesStatusResponse struct {
 
 func (x *ListAllSourcesStatusResponse) Reset() {
 	*x = ListAllSourcesStatusResponse{}
-	mi := &file_account_proto_msgTypes[40]
+	mi := &file_account_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2288,7 +2439,7 @@ func (x *ListAllSourcesStatusResponse) String() string {
 func (*ListAllSourcesStatusResponse) ProtoMessage() {}
 
 func (x *ListAllSourcesStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[40]
+	mi := &file_account_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2301,7 +2452,7 @@ func (x *ListAllSourcesStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAllSourcesStatusResponse.ProtoReflect.Descriptor instead.
 func (*ListAllSourcesStatusResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{40}
+	return file_account_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *ListAllSourcesStatusResponse) GetSources() []*SourceHealth {
@@ -2338,7 +2489,7 @@ type SubmitSourceHeartbeatRequest struct {
 
 func (x *SubmitSourceHeartbeatRequest) Reset() {
 	*x = SubmitSourceHeartbeatRequest{}
-	mi := &file_account_proto_msgTypes[41]
+	mi := &file_account_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2350,7 +2501,7 @@ func (x *SubmitSourceHeartbeatRequest) String() string {
 func (*SubmitSourceHeartbeatRequest) ProtoMessage() {}
 
 func (x *SubmitSourceHeartbeatRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[41]
+	mi := &file_account_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2363,7 +2514,7 @@ func (x *SubmitSourceHeartbeatRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitSourceHeartbeatRequest.ProtoReflect.Descriptor instead.
 func (*SubmitSourceHeartbeatRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{41}
+	return file_account_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *SubmitSourceHeartbeatRequest) GetUUID() []byte {
@@ -2451,7 +2602,7 @@ type AdapterMetadata struct {
 
 func (x *AdapterMetadata) Reset() {
 	*x = AdapterMetadata{}
-	mi := &file_account_proto_msgTypes[42]
+	mi := &file_account_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2463,7 +2614,7 @@ func (x *AdapterMetadata) String() string {
 func (*AdapterMetadata) ProtoMessage() {}
 
 func (x *AdapterMetadata) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[42]
+	mi := &file_account_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2476,7 +2627,7 @@ func (x *AdapterMetadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdapterMetadata.ProtoReflect.Descriptor instead.
 func (*AdapterMetadata) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{42}
+	return file_account_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *AdapterMetadata) GetType() string {
@@ -2543,7 +2694,7 @@ type AdapterSupportedQueryMethods struct {
 
 func (x *AdapterSupportedQueryMethods) Reset() {
 	*x = AdapterSupportedQueryMethods{}
-	mi := &file_account_proto_msgTypes[43]
+	mi := &file_account_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2555,7 +2706,7 @@ func (x *AdapterSupportedQueryMethods) String() string {
 func (*AdapterSupportedQueryMethods) ProtoMessage() {}
 
 func (x *AdapterSupportedQueryMethods) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[43]
+	mi := &file_account_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2568,7 +2719,7 @@ func (x *AdapterSupportedQueryMethods) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdapterSupportedQueryMethods.ProtoReflect.Descriptor instead.
 func (*AdapterSupportedQueryMethods) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{43}
+	return file_account_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *AdapterSupportedQueryMethods) GetGet() bool {
@@ -2640,7 +2791,7 @@ type TerraformMapping struct {
 
 func (x *TerraformMapping) Reset() {
 	*x = TerraformMapping{}
-	mi := &file_account_proto_msgTypes[44]
+	mi := &file_account_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2652,7 +2803,7 @@ func (x *TerraformMapping) String() string {
 func (*TerraformMapping) ProtoMessage() {}
 
 func (x *TerraformMapping) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[44]
+	mi := &file_account_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2665,7 +2816,7 @@ func (x *TerraformMapping) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TerraformMapping.ProtoReflect.Descriptor instead.
 func (*TerraformMapping) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{44}
+	return file_account_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *TerraformMapping) GetTerraformMethod() QueryMethod {
@@ -2690,7 +2841,7 @@ type SubmitSourceHeartbeatResponse struct {
 
 func (x *SubmitSourceHeartbeatResponse) Reset() {
 	*x = SubmitSourceHeartbeatResponse{}
-	mi := &file_account_proto_msgTypes[45]
+	mi := &file_account_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2702,7 +2853,7 @@ func (x *SubmitSourceHeartbeatResponse) String() string {
 func (*SubmitSourceHeartbeatResponse) ProtoMessage() {}
 
 func (x *SubmitSourceHeartbeatResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[45]
+	mi := &file_account_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2715,7 +2866,7 @@ func (x *SubmitSourceHeartbeatResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubmitSourceHeartbeatResponse.ProtoReflect.Descriptor instead.
 func (*SubmitSourceHeartbeatResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{45}
+	return file_account_proto_rawDescGZIP(), []int{46}
 }
 
 type KeepaliveSourcesRequest struct {
@@ -2733,7 +2884,7 @@ type KeepaliveSourcesRequest struct {
 
 func (x *KeepaliveSourcesRequest) Reset() {
 	*x = KeepaliveSourcesRequest{}
-	mi := &file_account_proto_msgTypes[46]
+	mi := &file_account_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2745,7 +2896,7 @@ func (x *KeepaliveSourcesRequest) String() string {
 func (*KeepaliveSourcesRequest) ProtoMessage() {}
 
 func (x *KeepaliveSourcesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[46]
+	mi := &file_account_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2758,7 +2909,7 @@ func (x *KeepaliveSourcesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeepaliveSourcesRequest.ProtoReflect.Descriptor instead.
 func (*KeepaliveSourcesRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{46}
+	return file_account_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *KeepaliveSourcesRequest) GetWaitForHealthy() bool {
@@ -2795,7 +2946,7 @@ type KeepaliveSourcesResponse struct {
 
 func (x *KeepaliveSourcesResponse) Reset() {
 	*x = KeepaliveSourcesResponse{}
-	mi := &file_account_proto_msgTypes[47]
+	mi := &file_account_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2807,7 +2958,7 @@ func (x *KeepaliveSourcesResponse) String() string {
 func (*KeepaliveSourcesResponse) ProtoMessage() {}
 
 func (x *KeepaliveSourcesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[47]
+	mi := &file_account_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2820,7 +2971,7 @@ func (x *KeepaliveSourcesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KeepaliveSourcesResponse.ProtoReflect.Descriptor instead.
 func (*KeepaliveSourcesResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{47}
+	return file_account_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *KeepaliveSourcesResponse) GetSources() []*SourceKeepaliveResult {
@@ -2856,7 +3007,7 @@ type CreateTokenRequest struct {
 
 func (x *CreateTokenRequest) Reset() {
 	*x = CreateTokenRequest{}
-	mi := &file_account_proto_msgTypes[48]
+	mi := &file_account_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2868,7 +3019,7 @@ func (x *CreateTokenRequest) String() string {
 func (*CreateTokenRequest) ProtoMessage() {}
 
 func (x *CreateTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[48]
+	mi := &file_account_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2881,7 +3032,7 @@ func (x *CreateTokenRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTokenRequest.ProtoReflect.Descriptor instead.
 func (*CreateTokenRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{48}
+	return file_account_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *CreateTokenRequest) GetUserPublicNkey() string {
@@ -2908,7 +3059,7 @@ type CreateTokenResponse struct {
 
 func (x *CreateTokenResponse) Reset() {
 	*x = CreateTokenResponse{}
-	mi := &file_account_proto_msgTypes[49]
+	mi := &file_account_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2920,7 +3071,7 @@ func (x *CreateTokenResponse) String() string {
 func (*CreateTokenResponse) ProtoMessage() {}
 
 func (x *CreateTokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[49]
+	mi := &file_account_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2933,7 +3084,7 @@ func (x *CreateTokenResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTokenResponse.ProtoReflect.Descriptor instead.
 func (*CreateTokenResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{49}
+	return file_account_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *CreateTokenResponse) GetToken() string {
@@ -2951,7 +3102,7 @@ type RevlinkWarmupRequest struct {
 
 func (x *RevlinkWarmupRequest) Reset() {
 	*x = RevlinkWarmupRequest{}
-	mi := &file_account_proto_msgTypes[50]
+	mi := &file_account_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2963,7 +3114,7 @@ func (x *RevlinkWarmupRequest) String() string {
 func (*RevlinkWarmupRequest) ProtoMessage() {}
 
 func (x *RevlinkWarmupRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[50]
+	mi := &file_account_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2976,7 +3127,7 @@ func (x *RevlinkWarmupRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevlinkWarmupRequest.ProtoReflect.Descriptor instead.
 func (*RevlinkWarmupRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{50}
+	return file_account_proto_rawDescGZIP(), []int{51}
 }
 
 type RevlinkWarmupResponse struct {
@@ -2990,7 +3141,7 @@ type RevlinkWarmupResponse struct {
 
 func (x *RevlinkWarmupResponse) Reset() {
 	*x = RevlinkWarmupResponse{}
-	mi := &file_account_proto_msgTypes[51]
+	mi := &file_account_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3002,7 +3153,7 @@ func (x *RevlinkWarmupResponse) String() string {
 func (*RevlinkWarmupResponse) ProtoMessage() {}
 
 func (x *RevlinkWarmupResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[51]
+	mi := &file_account_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3015,7 +3166,7 @@ func (x *RevlinkWarmupResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevlinkWarmupResponse.ProtoReflect.Descriptor instead.
 func (*RevlinkWarmupResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{51}
+	return file_account_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *RevlinkWarmupResponse) GetStatus() string {
@@ -3047,7 +3198,7 @@ type GetTrialEndRequest struct {
 
 func (x *GetTrialEndRequest) Reset() {
 	*x = GetTrialEndRequest{}
-	mi := &file_account_proto_msgTypes[52]
+	mi := &file_account_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3059,7 +3210,7 @@ func (x *GetTrialEndRequest) String() string {
 func (*GetTrialEndRequest) ProtoMessage() {}
 
 func (x *GetTrialEndRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[52]
+	mi := &file_account_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3072,7 +3223,7 @@ func (x *GetTrialEndRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTrialEndRequest.ProtoReflect.Descriptor instead.
 func (*GetTrialEndRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{52}
+	return file_account_proto_rawDescGZIP(), []int{53}
 }
 
 type GetTrialEndResponse struct {
@@ -3084,7 +3235,7 @@ type GetTrialEndResponse struct {
 
 func (x *GetTrialEndResponse) Reset() {
 	*x = GetTrialEndResponse{}
-	mi := &file_account_proto_msgTypes[53]
+	mi := &file_account_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3096,7 +3247,7 @@ func (x *GetTrialEndResponse) String() string {
 func (*GetTrialEndResponse) ProtoMessage() {}
 
 func (x *GetTrialEndResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[53]
+	mi := &file_account_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3109,7 +3260,7 @@ func (x *GetTrialEndResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTrialEndResponse.ProtoReflect.Descriptor instead.
 func (*GetTrialEndResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{53}
+	return file_account_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *GetTrialEndResponse) GetEndsAt() *timestamppb.Timestamp {
@@ -3136,7 +3287,7 @@ type AvailableItemType struct {
 
 func (x *AvailableItemType) Reset() {
 	*x = AvailableItemType{}
-	mi := &file_account_proto_msgTypes[54]
+	mi := &file_account_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3148,7 +3299,7 @@ func (x *AvailableItemType) String() string {
 func (*AvailableItemType) ProtoMessage() {}
 
 func (x *AvailableItemType) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[54]
+	mi := &file_account_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3161,7 +3312,7 @@ func (x *AvailableItemType) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AvailableItemType.ProtoReflect.Descriptor instead.
 func (*AvailableItemType) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{54}
+	return file_account_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *AvailableItemType) GetType() string {
@@ -3200,7 +3351,7 @@ type ListAvailableItemTypesRequest struct {
 
 func (x *ListAvailableItemTypesRequest) Reset() {
 	*x = ListAvailableItemTypesRequest{}
-	mi := &file_account_proto_msgTypes[55]
+	mi := &file_account_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3212,7 +3363,7 @@ func (x *ListAvailableItemTypesRequest) String() string {
 func (*ListAvailableItemTypesRequest) ProtoMessage() {}
 
 func (x *ListAvailableItemTypesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[55]
+	mi := &file_account_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3225,7 +3376,7 @@ func (x *ListAvailableItemTypesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAvailableItemTypesRequest.ProtoReflect.Descriptor instead.
 func (*ListAvailableItemTypesRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{55}
+	return file_account_proto_rawDescGZIP(), []int{56}
 }
 
 type ListAvailableItemTypesResponse struct {
@@ -3237,7 +3388,7 @@ type ListAvailableItemTypesResponse struct {
 
 func (x *ListAvailableItemTypesResponse) Reset() {
 	*x = ListAvailableItemTypesResponse{}
-	mi := &file_account_proto_msgTypes[56]
+	mi := &file_account_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3249,7 +3400,7 @@ func (x *ListAvailableItemTypesResponse) String() string {
 func (*ListAvailableItemTypesResponse) ProtoMessage() {}
 
 func (x *ListAvailableItemTypesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[56]
+	mi := &file_account_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3262,7 +3413,7 @@ func (x *ListAvailableItemTypesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAvailableItemTypesResponse.ProtoReflect.Descriptor instead.
 func (*ListAvailableItemTypesResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{56}
+	return file_account_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *ListAvailableItemTypesResponse) GetTypes() []*AvailableItemType {
@@ -3282,7 +3433,7 @@ type GetSourceStatusRequest struct {
 
 func (x *GetSourceStatusRequest) Reset() {
 	*x = GetSourceStatusRequest{}
-	mi := &file_account_proto_msgTypes[57]
+	mi := &file_account_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3294,7 +3445,7 @@ func (x *GetSourceStatusRequest) String() string {
 func (*GetSourceStatusRequest) ProtoMessage() {}
 
 func (x *GetSourceStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[57]
+	mi := &file_account_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3307,7 +3458,7 @@ func (x *GetSourceStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSourceStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetSourceStatusRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{57}
+	return file_account_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *GetSourceStatusRequest) GetSourceUuid() []byte {
@@ -3326,7 +3477,7 @@ type GetSourceStatusResponse struct {
 
 func (x *GetSourceStatusResponse) Reset() {
 	*x = GetSourceStatusResponse{}
-	mi := &file_account_proto_msgTypes[58]
+	mi := &file_account_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3338,7 +3489,7 @@ func (x *GetSourceStatusResponse) String() string {
 func (*GetSourceStatusResponse) ProtoMessage() {}
 
 func (x *GetSourceStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[58]
+	mi := &file_account_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3351,7 +3502,7 @@ func (x *GetSourceStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSourceStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetSourceStatusResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{58}
+	return file_account_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *GetSourceStatusResponse) GetSource() *SourceHealth {
@@ -3434,11 +3585,22 @@ const file_account_proto_rawDesc = "" +
 	"\bmetadata\x18\x01 \x01(\v2\x18.account.AccountMetadataR\bmetadata\x12:\n" +
 	"\n" +
 	"properties\x18\x02 \x01(\v2\x1a.account.AccountPropertiesR\n" +
-	"properties\"1\n" +
+	"properties\"\xc8\x01\n" +
 	"\x0fAccountMetadata\x12\x1e\n" +
 	"\n" +
 	"PublicNkey\x18\x02 \x01(\tR\n" +
-	"PublicNkey\"S\n" +
+	"PublicNkey\x127\n" +
+	"\frepositories\x18\x03 \x03(\v2\x13.account.RepositoryR\frepositories\x12,\n" +
+	"\x11totalRepositories\x18\x04 \x01(\rR\x11totalRepositories\x12.\n" +
+	"\x12activeRepositories\x18\x05 \x01(\rR\x12activeRepositories\"\xbd\x01\n" +
+	"\n" +
+	"Repository\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1e\n" +
+	"\n" +
+	"numChanges\x18\x02 \x01(\x03R\n" +
+	"numChanges\x12>\n" +
+	"\flastChangeAt\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\flastChangeAt\x12;\n" +
+	"\x06status\x18\x04 \x01(\x0e2\x19.account.RepositoryStatusB\b\xbaH\x05\x82\x01\x02\x10\x01R\x06status\"S\n" +
 	"\x11AccountProperties\x12\x12\n" +
 	"\x04Name\x18\x01 \x01(\tR\x04Name\x12*\n" +
 	"\x10StripeCustomerID\x18\x02 \x01(\tR\x10StripeCustomerID\"\x13\n" +
@@ -3570,7 +3732,11 @@ const file_account_proto_rawDesc = "" +
 	"\x0eSTATUS_HEALTHY\x10\x02\x12\x14\n" +
 	"\x10STATUS_UNHEALTHY\x10\x03\x12\x13\n" +
 	"\x0fSTATUS_SLEEPING\x10\x04\x12\x17\n" +
-	"\x13STATUS_DISCONNECTED\x10\x05*'\n" +
+	"\x13STATUS_DISCONNECTED\x10\x05*s\n" +
+	"\x10RepositoryStatus\x12!\n" +
+	"\x1dREPOSITORY_STATUS_UNSPECIFIED\x10\x00\x12\x1c\n" +
+	"\x18REPOSITORY_STATUS_ACTIVE\x10\x01\x12\x1e\n" +
+	"\x1aREPOSITORY_STATUS_INACTIVE\x10\x02*'\n" +
 	"\rSourceManaged\x12\t\n" +
 	"\x05LOCAL\x10\x00\x12\v\n" +
 	"\aMANAGED\x10\x01*\xb2\x02\n" +
@@ -3630,188 +3796,193 @@ func file_account_proto_rawDescGZIP() []byte {
 	return file_account_proto_rawDescData
 }
 
-var file_account_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_account_proto_msgTypes = make([]protoimpl.MessageInfo, 59)
+var file_account_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_account_proto_msgTypes = make([]protoimpl.MessageInfo, 60)
 var file_account_proto_goTypes = []any{
 	(SourceStatus)(0),                      // 0: account.SourceStatus
-	(SourceManaged)(0),                     // 1: account.SourceManaged
-	(AdapterCategory)(0),                   // 2: account.AdapterCategory
-	(*ListAccountsRequest)(nil),            // 3: account.ListAccountsRequest
-	(*ListAccountsResponse)(nil),           // 4: account.ListAccountsResponse
-	(*CreateAccountRequest)(nil),           // 5: account.CreateAccountRequest
-	(*CreateAccountResponse)(nil),          // 6: account.CreateAccountResponse
-	(*UpdateAccountRequest)(nil),           // 7: account.UpdateAccountRequest
-	(*UpdateAccountResponse)(nil),          // 8: account.UpdateAccountResponse
-	(*AdminUpdateAccountRequest)(nil),      // 9: account.AdminUpdateAccountRequest
-	(*AdminGetAccountRequest)(nil),         // 10: account.AdminGetAccountRequest
-	(*AdminDeleteAccountRequest)(nil),      // 11: account.AdminDeleteAccountRequest
-	(*AdminDeleteAccountResponse)(nil),     // 12: account.AdminDeleteAccountResponse
-	(*AdminListSourcesRequest)(nil),        // 13: account.AdminListSourcesRequest
-	(*AdminCreateSourceRequest)(nil),       // 14: account.AdminCreateSourceRequest
-	(*AdminGetSourceRequest)(nil),          // 15: account.AdminGetSourceRequest
-	(*AdminUpdateSourceRequest)(nil),       // 16: account.AdminUpdateSourceRequest
-	(*AdminDeleteSourceRequest)(nil),       // 17: account.AdminDeleteSourceRequest
-	(*AdminKeepaliveSourcesRequest)(nil),   // 18: account.AdminKeepaliveSourcesRequest
-	(*AdminCreateTokenRequest)(nil),        // 19: account.AdminCreateTokenRequest
-	(*Source)(nil),                         // 20: account.Source
-	(*SourceMetadata)(nil),                 // 21: account.SourceMetadata
-	(*SourceProperties)(nil),               // 22: account.SourceProperties
-	(*Account)(nil),                        // 23: account.Account
-	(*AccountMetadata)(nil),                // 24: account.AccountMetadata
-	(*AccountProperties)(nil),              // 25: account.AccountProperties
-	(*GetAccountRequest)(nil),              // 26: account.GetAccountRequest
-	(*GetAccountResponse)(nil),             // 27: account.GetAccountResponse
-	(*DeleteAccountRequest)(nil),           // 28: account.DeleteAccountRequest
-	(*DeleteAccountResponse)(nil),          // 29: account.DeleteAccountResponse
-	(*ListSourcesRequest)(nil),             // 30: account.ListSourcesRequest
-	(*ListSourcesResponse)(nil),            // 31: account.ListSourcesResponse
-	(*CreateSourceRequest)(nil),            // 32: account.CreateSourceRequest
-	(*CreateSourceResponse)(nil),           // 33: account.CreateSourceResponse
-	(*GetSourceRequest)(nil),               // 34: account.GetSourceRequest
-	(*GetSourceResponse)(nil),              // 35: account.GetSourceResponse
-	(*UpdateSourceRequest)(nil),            // 36: account.UpdateSourceRequest
-	(*UpdateSourceResponse)(nil),           // 37: account.UpdateSourceResponse
-	(*DeleteSourceRequest)(nil),            // 38: account.DeleteSourceRequest
-	(*DeleteSourceResponse)(nil),           // 39: account.DeleteSourceResponse
-	(*SourceKeepaliveResult)(nil),          // 40: account.SourceKeepaliveResult
-	(*ListAllSourcesStatusRequest)(nil),    // 41: account.ListAllSourcesStatusRequest
-	(*SourceHealth)(nil),                   // 42: account.SourceHealth
-	(*ListAllSourcesStatusResponse)(nil),   // 43: account.ListAllSourcesStatusResponse
-	(*SubmitSourceHeartbeatRequest)(nil),   // 44: account.SubmitSourceHeartbeatRequest
-	(*AdapterMetadata)(nil),                // 45: account.AdapterMetadata
-	(*AdapterSupportedQueryMethods)(nil),   // 46: account.AdapterSupportedQueryMethods
-	(*TerraformMapping)(nil),               // 47: account.TerraformMapping
-	(*SubmitSourceHeartbeatResponse)(nil),  // 48: account.SubmitSourceHeartbeatResponse
-	(*KeepaliveSourcesRequest)(nil),        // 49: account.KeepaliveSourcesRequest
-	(*KeepaliveSourcesResponse)(nil),       // 50: account.KeepaliveSourcesResponse
-	(*CreateTokenRequest)(nil),             // 51: account.CreateTokenRequest
-	(*CreateTokenResponse)(nil),            // 52: account.CreateTokenResponse
-	(*RevlinkWarmupRequest)(nil),           // 53: account.RevlinkWarmupRequest
-	(*RevlinkWarmupResponse)(nil),          // 54: account.RevlinkWarmupResponse
-	(*GetTrialEndRequest)(nil),             // 55: account.GetTrialEndRequest
-	(*GetTrialEndResponse)(nil),            // 56: account.GetTrialEndResponse
-	(*AvailableItemType)(nil),              // 57: account.AvailableItemType
-	(*ListAvailableItemTypesRequest)(nil),  // 58: account.ListAvailableItemTypesRequest
-	(*ListAvailableItemTypesResponse)(nil), // 59: account.ListAvailableItemTypesResponse
-	(*GetSourceStatusRequest)(nil),         // 60: account.GetSourceStatusRequest
-	(*GetSourceStatusResponse)(nil),        // 61: account.GetSourceStatusResponse
-	(*timestamppb.Timestamp)(nil),          // 62: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),                // 63: google.protobuf.Struct
-	(*durationpb.Duration)(nil),            // 64: google.protobuf.Duration
-	(QueryMethod)(0),                       // 65: QueryMethod
+	(RepositoryStatus)(0),                  // 1: account.RepositoryStatus
+	(SourceManaged)(0),                     // 2: account.SourceManaged
+	(AdapterCategory)(0),                   // 3: account.AdapterCategory
+	(*ListAccountsRequest)(nil),            // 4: account.ListAccountsRequest
+	(*ListAccountsResponse)(nil),           // 5: account.ListAccountsResponse
+	(*CreateAccountRequest)(nil),           // 6: account.CreateAccountRequest
+	(*CreateAccountResponse)(nil),          // 7: account.CreateAccountResponse
+	(*UpdateAccountRequest)(nil),           // 8: account.UpdateAccountRequest
+	(*UpdateAccountResponse)(nil),          // 9: account.UpdateAccountResponse
+	(*AdminUpdateAccountRequest)(nil),      // 10: account.AdminUpdateAccountRequest
+	(*AdminGetAccountRequest)(nil),         // 11: account.AdminGetAccountRequest
+	(*AdminDeleteAccountRequest)(nil),      // 12: account.AdminDeleteAccountRequest
+	(*AdminDeleteAccountResponse)(nil),     // 13: account.AdminDeleteAccountResponse
+	(*AdminListSourcesRequest)(nil),        // 14: account.AdminListSourcesRequest
+	(*AdminCreateSourceRequest)(nil),       // 15: account.AdminCreateSourceRequest
+	(*AdminGetSourceRequest)(nil),          // 16: account.AdminGetSourceRequest
+	(*AdminUpdateSourceRequest)(nil),       // 17: account.AdminUpdateSourceRequest
+	(*AdminDeleteSourceRequest)(nil),       // 18: account.AdminDeleteSourceRequest
+	(*AdminKeepaliveSourcesRequest)(nil),   // 19: account.AdminKeepaliveSourcesRequest
+	(*AdminCreateTokenRequest)(nil),        // 20: account.AdminCreateTokenRequest
+	(*Source)(nil),                         // 21: account.Source
+	(*SourceMetadata)(nil),                 // 22: account.SourceMetadata
+	(*SourceProperties)(nil),               // 23: account.SourceProperties
+	(*Account)(nil),                        // 24: account.Account
+	(*AccountMetadata)(nil),                // 25: account.AccountMetadata
+	(*Repository)(nil),                     // 26: account.Repository
+	(*AccountProperties)(nil),              // 27: account.AccountProperties
+	(*GetAccountRequest)(nil),              // 28: account.GetAccountRequest
+	(*GetAccountResponse)(nil),             // 29: account.GetAccountResponse
+	(*DeleteAccountRequest)(nil),           // 30: account.DeleteAccountRequest
+	(*DeleteAccountResponse)(nil),          // 31: account.DeleteAccountResponse
+	(*ListSourcesRequest)(nil),             // 32: account.ListSourcesRequest
+	(*ListSourcesResponse)(nil),            // 33: account.ListSourcesResponse
+	(*CreateSourceRequest)(nil),            // 34: account.CreateSourceRequest
+	(*CreateSourceResponse)(nil),           // 35: account.CreateSourceResponse
+	(*GetSourceRequest)(nil),               // 36: account.GetSourceRequest
+	(*GetSourceResponse)(nil),              // 37: account.GetSourceResponse
+	(*UpdateSourceRequest)(nil),            // 38: account.UpdateSourceRequest
+	(*UpdateSourceResponse)(nil),           // 39: account.UpdateSourceResponse
+	(*DeleteSourceRequest)(nil),            // 40: account.DeleteSourceRequest
+	(*DeleteSourceResponse)(nil),           // 41: account.DeleteSourceResponse
+	(*SourceKeepaliveResult)(nil),          // 42: account.SourceKeepaliveResult
+	(*ListAllSourcesStatusRequest)(nil),    // 43: account.ListAllSourcesStatusRequest
+	(*SourceHealth)(nil),                   // 44: account.SourceHealth
+	(*ListAllSourcesStatusResponse)(nil),   // 45: account.ListAllSourcesStatusResponse
+	(*SubmitSourceHeartbeatRequest)(nil),   // 46: account.SubmitSourceHeartbeatRequest
+	(*AdapterMetadata)(nil),                // 47: account.AdapterMetadata
+	(*AdapterSupportedQueryMethods)(nil),   // 48: account.AdapterSupportedQueryMethods
+	(*TerraformMapping)(nil),               // 49: account.TerraformMapping
+	(*SubmitSourceHeartbeatResponse)(nil),  // 50: account.SubmitSourceHeartbeatResponse
+	(*KeepaliveSourcesRequest)(nil),        // 51: account.KeepaliveSourcesRequest
+	(*KeepaliveSourcesResponse)(nil),       // 52: account.KeepaliveSourcesResponse
+	(*CreateTokenRequest)(nil),             // 53: account.CreateTokenRequest
+	(*CreateTokenResponse)(nil),            // 54: account.CreateTokenResponse
+	(*RevlinkWarmupRequest)(nil),           // 55: account.RevlinkWarmupRequest
+	(*RevlinkWarmupResponse)(nil),          // 56: account.RevlinkWarmupResponse
+	(*GetTrialEndRequest)(nil),             // 57: account.GetTrialEndRequest
+	(*GetTrialEndResponse)(nil),            // 58: account.GetTrialEndResponse
+	(*AvailableItemType)(nil),              // 59: account.AvailableItemType
+	(*ListAvailableItemTypesRequest)(nil),  // 60: account.ListAvailableItemTypesRequest
+	(*ListAvailableItemTypesResponse)(nil), // 61: account.ListAvailableItemTypesResponse
+	(*GetSourceStatusRequest)(nil),         // 62: account.GetSourceStatusRequest
+	(*GetSourceStatusResponse)(nil),        // 63: account.GetSourceStatusResponse
+	(*timestamppb.Timestamp)(nil),          // 64: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),                // 65: google.protobuf.Struct
+	(*durationpb.Duration)(nil),            // 66: google.protobuf.Duration
+	(QueryMethod)(0),                       // 67: QueryMethod
 }
 var file_account_proto_depIdxs = []int32{
-	23, // 0: account.ListAccountsResponse.accounts:type_name -> account.Account
-	25, // 1: account.CreateAccountRequest.properties:type_name -> account.AccountProperties
-	23, // 2: account.CreateAccountResponse.account:type_name -> account.Account
-	25, // 3: account.UpdateAccountRequest.properties:type_name -> account.AccountProperties
-	23, // 4: account.UpdateAccountResponse.account:type_name -> account.Account
-	7,  // 5: account.AdminUpdateAccountRequest.request:type_name -> account.UpdateAccountRequest
-	30, // 6: account.AdminListSourcesRequest.request:type_name -> account.ListSourcesRequest
-	32, // 7: account.AdminCreateSourceRequest.request:type_name -> account.CreateSourceRequest
-	34, // 8: account.AdminGetSourceRequest.request:type_name -> account.GetSourceRequest
-	36, // 9: account.AdminUpdateSourceRequest.request:type_name -> account.UpdateSourceRequest
-	38, // 10: account.AdminDeleteSourceRequest.request:type_name -> account.DeleteSourceRequest
-	49, // 11: account.AdminKeepaliveSourcesRequest.request:type_name -> account.KeepaliveSourcesRequest
-	51, // 12: account.AdminCreateTokenRequest.request:type_name -> account.CreateTokenRequest
-	21, // 13: account.Source.metadata:type_name -> account.SourceMetadata
-	22, // 14: account.Source.properties:type_name -> account.SourceProperties
-	62, // 15: account.SourceMetadata.TokenExpiry:type_name -> google.protobuf.Timestamp
+	24, // 0: account.ListAccountsResponse.accounts:type_name -> account.Account
+	27, // 1: account.CreateAccountRequest.properties:type_name -> account.AccountProperties
+	24, // 2: account.CreateAccountResponse.account:type_name -> account.Account
+	27, // 3: account.UpdateAccountRequest.properties:type_name -> account.AccountProperties
+	24, // 4: account.UpdateAccountResponse.account:type_name -> account.Account
+	8,  // 5: account.AdminUpdateAccountRequest.request:type_name -> account.UpdateAccountRequest
+	32, // 6: account.AdminListSourcesRequest.request:type_name -> account.ListSourcesRequest
+	34, // 7: account.AdminCreateSourceRequest.request:type_name -> account.CreateSourceRequest
+	36, // 8: account.AdminGetSourceRequest.request:type_name -> account.GetSourceRequest
+	38, // 9: account.AdminUpdateSourceRequest.request:type_name -> account.UpdateSourceRequest
+	40, // 10: account.AdminDeleteSourceRequest.request:type_name -> account.DeleteSourceRequest
+	51, // 11: account.AdminKeepaliveSourcesRequest.request:type_name -> account.KeepaliveSourcesRequest
+	53, // 12: account.AdminCreateTokenRequest.request:type_name -> account.CreateTokenRequest
+	22, // 13: account.Source.metadata:type_name -> account.SourceMetadata
+	23, // 14: account.Source.properties:type_name -> account.SourceProperties
+	64, // 15: account.SourceMetadata.TokenExpiry:type_name -> google.protobuf.Timestamp
 	0,  // 16: account.SourceMetadata.Status:type_name -> account.SourceStatus
-	63, // 17: account.SourceProperties.Config:type_name -> google.protobuf.Struct
-	63, // 18: account.SourceProperties.AdditionalConfig:type_name -> google.protobuf.Struct
-	24, // 19: account.Account.metadata:type_name -> account.AccountMetadata
-	25, // 20: account.Account.properties:type_name -> account.AccountProperties
-	23, // 21: account.GetAccountResponse.account:type_name -> account.Account
-	20, // 22: account.ListSourcesResponse.Sources:type_name -> account.Source
-	22, // 23: account.CreateSourceRequest.properties:type_name -> account.SourceProperties
-	20, // 24: account.CreateSourceResponse.source:type_name -> account.Source
-	20, // 25: account.GetSourceResponse.source:type_name -> account.Source
-	22, // 26: account.UpdateSourceRequest.properties:type_name -> account.SourceProperties
-	20, // 27: account.UpdateSourceResponse.source:type_name -> account.Source
-	0,  // 28: account.SourceKeepaliveResult.Status:type_name -> account.SourceStatus
-	0,  // 29: account.SourceHealth.status:type_name -> account.SourceStatus
-	62, // 30: account.SourceHealth.createdAt:type_name -> google.protobuf.Timestamp
-	62, // 31: account.SourceHealth.lastHeartbeat:type_name -> google.protobuf.Timestamp
-	62, // 32: account.SourceHealth.nextHeartbeat:type_name -> google.protobuf.Timestamp
-	1,  // 33: account.SourceHealth.managed:type_name -> account.SourceManaged
-	45, // 34: account.SourceHealth.adapterMetadata:type_name -> account.AdapterMetadata
-	42, // 35: account.ListAllSourcesStatusResponse.sources:type_name -> account.SourceHealth
-	64, // 36: account.SubmitSourceHeartbeatRequest.nextHeartbeatMax:type_name -> google.protobuf.Duration
-	1,  // 37: account.SubmitSourceHeartbeatRequest.managed:type_name -> account.SourceManaged
-	45, // 38: account.SubmitSourceHeartbeatRequest.adapterMetadata:type_name -> account.AdapterMetadata
-	2,  // 39: account.AdapterMetadata.category:type_name -> account.AdapterCategory
-	46, // 40: account.AdapterMetadata.supportedQueryMethods:type_name -> account.AdapterSupportedQueryMethods
-	47, // 41: account.AdapterMetadata.terraformMappings:type_name -> account.TerraformMapping
-	65, // 42: account.TerraformMapping.terraformMethod:type_name -> QueryMethod
-	64, // 43: account.KeepaliveSourcesRequest.timeout:type_name -> google.protobuf.Duration
-	40, // 44: account.KeepaliveSourcesResponse.sources:type_name -> account.SourceKeepaliveResult
-	62, // 45: account.GetTrialEndResponse.endsAt:type_name -> google.protobuf.Timestamp
-	2,  // 46: account.AvailableItemType.category:type_name -> account.AdapterCategory
-	46, // 47: account.AvailableItemType.supportedQueryMethods:type_name -> account.AdapterSupportedQueryMethods
-	57, // 48: account.ListAvailableItemTypesResponse.types:type_name -> account.AvailableItemType
-	42, // 49: account.GetSourceStatusResponse.source:type_name -> account.SourceHealth
-	3,  // 50: account.AdminService.ListAccounts:input_type -> account.ListAccountsRequest
-	5,  // 51: account.AdminService.CreateAccount:input_type -> account.CreateAccountRequest
-	9,  // 52: account.AdminService.UpdateAccount:input_type -> account.AdminUpdateAccountRequest
-	10, // 53: account.AdminService.GetAccount:input_type -> account.AdminGetAccountRequest
-	11, // 54: account.AdminService.DeleteAccount:input_type -> account.AdminDeleteAccountRequest
-	13, // 55: account.AdminService.ListSources:input_type -> account.AdminListSourcesRequest
-	14, // 56: account.AdminService.CreateSource:input_type -> account.AdminCreateSourceRequest
-	15, // 57: account.AdminService.GetSource:input_type -> account.AdminGetSourceRequest
-	16, // 58: account.AdminService.UpdateSource:input_type -> account.AdminUpdateSourceRequest
-	17, // 59: account.AdminService.DeleteSource:input_type -> account.AdminDeleteSourceRequest
-	18, // 60: account.AdminService.KeepaliveSources:input_type -> account.AdminKeepaliveSourcesRequest
-	19, // 61: account.AdminService.CreateToken:input_type -> account.AdminCreateTokenRequest
-	26, // 62: account.ManagementService.GetAccount:input_type -> account.GetAccountRequest
-	28, // 63: account.ManagementService.DeleteAccount:input_type -> account.DeleteAccountRequest
-	30, // 64: account.ManagementService.ListSources:input_type -> account.ListSourcesRequest
-	32, // 65: account.ManagementService.CreateSource:input_type -> account.CreateSourceRequest
-	34, // 66: account.ManagementService.GetSource:input_type -> account.GetSourceRequest
-	36, // 67: account.ManagementService.UpdateSource:input_type -> account.UpdateSourceRequest
-	38, // 68: account.ManagementService.DeleteSource:input_type -> account.DeleteSourceRequest
-	41, // 69: account.ManagementService.ListAllSourcesStatus:input_type -> account.ListAllSourcesStatusRequest
-	41, // 70: account.ManagementService.ListActiveSourcesStatus:input_type -> account.ListAllSourcesStatusRequest
-	44, // 71: account.ManagementService.SubmitSourceHeartbeat:input_type -> account.SubmitSourceHeartbeatRequest
-	49, // 72: account.ManagementService.KeepaliveSources:input_type -> account.KeepaliveSourcesRequest
-	51, // 73: account.ManagementService.CreateToken:input_type -> account.CreateTokenRequest
-	53, // 74: account.ManagementService.RevlinkWarmup:input_type -> account.RevlinkWarmupRequest
-	55, // 75: account.ManagementService.GetTrialEnd:input_type -> account.GetTrialEndRequest
-	58, // 76: account.ManagementService.ListAvailableItemTypes:input_type -> account.ListAvailableItemTypesRequest
-	60, // 77: account.ManagementService.GetSourceStatus:input_type -> account.GetSourceStatusRequest
-	4,  // 78: account.AdminService.ListAccounts:output_type -> account.ListAccountsResponse
-	6,  // 79: account.AdminService.CreateAccount:output_type -> account.CreateAccountResponse
-	8,  // 80: account.AdminService.UpdateAccount:output_type -> account.UpdateAccountResponse
-	27, // 81: account.AdminService.GetAccount:output_type -> account.GetAccountResponse
-	12, // 82: account.AdminService.DeleteAccount:output_type -> account.AdminDeleteAccountResponse
-	31, // 83: account.AdminService.ListSources:output_type -> account.ListSourcesResponse
-	33, // 84: account.AdminService.CreateSource:output_type -> account.CreateSourceResponse
-	35, // 85: account.AdminService.GetSource:output_type -> account.GetSourceResponse
-	37, // 86: account.AdminService.UpdateSource:output_type -> account.UpdateSourceResponse
-	39, // 87: account.AdminService.DeleteSource:output_type -> account.DeleteSourceResponse
-	50, // 88: account.AdminService.KeepaliveSources:output_type -> account.KeepaliveSourcesResponse
-	52, // 89: account.AdminService.CreateToken:output_type -> account.CreateTokenResponse
-	27, // 90: account.ManagementService.GetAccount:output_type -> account.GetAccountResponse
-	29, // 91: account.ManagementService.DeleteAccount:output_type -> account.DeleteAccountResponse
-	31, // 92: account.ManagementService.ListSources:output_type -> account.ListSourcesResponse
-	33, // 93: account.ManagementService.CreateSource:output_type -> account.CreateSourceResponse
-	35, // 94: account.ManagementService.GetSource:output_type -> account.GetSourceResponse
-	37, // 95: account.ManagementService.UpdateSource:output_type -> account.UpdateSourceResponse
-	39, // 96: account.ManagementService.DeleteSource:output_type -> account.DeleteSourceResponse
-	43, // 97: account.ManagementService.ListAllSourcesStatus:output_type -> account.ListAllSourcesStatusResponse
-	43, // 98: account.ManagementService.ListActiveSourcesStatus:output_type -> account.ListAllSourcesStatusResponse
-	48, // 99: account.ManagementService.SubmitSourceHeartbeat:output_type -> account.SubmitSourceHeartbeatResponse
-	50, // 100: account.ManagementService.KeepaliveSources:output_type -> account.KeepaliveSourcesResponse
-	52, // 101: account.ManagementService.CreateToken:output_type -> account.CreateTokenResponse
-	54, // 102: account.ManagementService.RevlinkWarmup:output_type -> account.RevlinkWarmupResponse
-	56, // 103: account.ManagementService.GetTrialEnd:output_type -> account.GetTrialEndResponse
-	59, // 104: account.ManagementService.ListAvailableItemTypes:output_type -> account.ListAvailableItemTypesResponse
-	61, // 105: account.ManagementService.GetSourceStatus:output_type -> account.GetSourceStatusResponse
-	78, // [78:106] is the sub-list for method output_type
-	50, // [50:78] is the sub-list for method input_type
-	50, // [50:50] is the sub-list for extension type_name
-	50, // [50:50] is the sub-list for extension extendee
-	0,  // [0:50] is the sub-list for field type_name
+	65, // 17: account.SourceProperties.Config:type_name -> google.protobuf.Struct
+	65, // 18: account.SourceProperties.AdditionalConfig:type_name -> google.protobuf.Struct
+	25, // 19: account.Account.metadata:type_name -> account.AccountMetadata
+	27, // 20: account.Account.properties:type_name -> account.AccountProperties
+	26, // 21: account.AccountMetadata.repositories:type_name -> account.Repository
+	64, // 22: account.Repository.lastChangeAt:type_name -> google.protobuf.Timestamp
+	1,  // 23: account.Repository.status:type_name -> account.RepositoryStatus
+	24, // 24: account.GetAccountResponse.account:type_name -> account.Account
+	21, // 25: account.ListSourcesResponse.Sources:type_name -> account.Source
+	23, // 26: account.CreateSourceRequest.properties:type_name -> account.SourceProperties
+	21, // 27: account.CreateSourceResponse.source:type_name -> account.Source
+	21, // 28: account.GetSourceResponse.source:type_name -> account.Source
+	23, // 29: account.UpdateSourceRequest.properties:type_name -> account.SourceProperties
+	21, // 30: account.UpdateSourceResponse.source:type_name -> account.Source
+	0,  // 31: account.SourceKeepaliveResult.Status:type_name -> account.SourceStatus
+	0,  // 32: account.SourceHealth.status:type_name -> account.SourceStatus
+	64, // 33: account.SourceHealth.createdAt:type_name -> google.protobuf.Timestamp
+	64, // 34: account.SourceHealth.lastHeartbeat:type_name -> google.protobuf.Timestamp
+	64, // 35: account.SourceHealth.nextHeartbeat:type_name -> google.protobuf.Timestamp
+	2,  // 36: account.SourceHealth.managed:type_name -> account.SourceManaged
+	47, // 37: account.SourceHealth.adapterMetadata:type_name -> account.AdapterMetadata
+	44, // 38: account.ListAllSourcesStatusResponse.sources:type_name -> account.SourceHealth
+	66, // 39: account.SubmitSourceHeartbeatRequest.nextHeartbeatMax:type_name -> google.protobuf.Duration
+	2,  // 40: account.SubmitSourceHeartbeatRequest.managed:type_name -> account.SourceManaged
+	47, // 41: account.SubmitSourceHeartbeatRequest.adapterMetadata:type_name -> account.AdapterMetadata
+	3,  // 42: account.AdapterMetadata.category:type_name -> account.AdapterCategory
+	48, // 43: account.AdapterMetadata.supportedQueryMethods:type_name -> account.AdapterSupportedQueryMethods
+	49, // 44: account.AdapterMetadata.terraformMappings:type_name -> account.TerraformMapping
+	67, // 45: account.TerraformMapping.terraformMethod:type_name -> QueryMethod
+	66, // 46: account.KeepaliveSourcesRequest.timeout:type_name -> google.protobuf.Duration
+	42, // 47: account.KeepaliveSourcesResponse.sources:type_name -> account.SourceKeepaliveResult
+	64, // 48: account.GetTrialEndResponse.endsAt:type_name -> google.protobuf.Timestamp
+	3,  // 49: account.AvailableItemType.category:type_name -> account.AdapterCategory
+	48, // 50: account.AvailableItemType.supportedQueryMethods:type_name -> account.AdapterSupportedQueryMethods
+	59, // 51: account.ListAvailableItemTypesResponse.types:type_name -> account.AvailableItemType
+	44, // 52: account.GetSourceStatusResponse.source:type_name -> account.SourceHealth
+	4,  // 53: account.AdminService.ListAccounts:input_type -> account.ListAccountsRequest
+	6,  // 54: account.AdminService.CreateAccount:input_type -> account.CreateAccountRequest
+	10, // 55: account.AdminService.UpdateAccount:input_type -> account.AdminUpdateAccountRequest
+	11, // 56: account.AdminService.GetAccount:input_type -> account.AdminGetAccountRequest
+	12, // 57: account.AdminService.DeleteAccount:input_type -> account.AdminDeleteAccountRequest
+	14, // 58: account.AdminService.ListSources:input_type -> account.AdminListSourcesRequest
+	15, // 59: account.AdminService.CreateSource:input_type -> account.AdminCreateSourceRequest
+	16, // 60: account.AdminService.GetSource:input_type -> account.AdminGetSourceRequest
+	17, // 61: account.AdminService.UpdateSource:input_type -> account.AdminUpdateSourceRequest
+	18, // 62: account.AdminService.DeleteSource:input_type -> account.AdminDeleteSourceRequest
+	19, // 63: account.AdminService.KeepaliveSources:input_type -> account.AdminKeepaliveSourcesRequest
+	20, // 64: account.AdminService.CreateToken:input_type -> account.AdminCreateTokenRequest
+	28, // 65: account.ManagementService.GetAccount:input_type -> account.GetAccountRequest
+	30, // 66: account.ManagementService.DeleteAccount:input_type -> account.DeleteAccountRequest
+	32, // 67: account.ManagementService.ListSources:input_type -> account.ListSourcesRequest
+	34, // 68: account.ManagementService.CreateSource:input_type -> account.CreateSourceRequest
+	36, // 69: account.ManagementService.GetSource:input_type -> account.GetSourceRequest
+	38, // 70: account.ManagementService.UpdateSource:input_type -> account.UpdateSourceRequest
+	40, // 71: account.ManagementService.DeleteSource:input_type -> account.DeleteSourceRequest
+	43, // 72: account.ManagementService.ListAllSourcesStatus:input_type -> account.ListAllSourcesStatusRequest
+	43, // 73: account.ManagementService.ListActiveSourcesStatus:input_type -> account.ListAllSourcesStatusRequest
+	46, // 74: account.ManagementService.SubmitSourceHeartbeat:input_type -> account.SubmitSourceHeartbeatRequest
+	51, // 75: account.ManagementService.KeepaliveSources:input_type -> account.KeepaliveSourcesRequest
+	53, // 76: account.ManagementService.CreateToken:input_type -> account.CreateTokenRequest
+	55, // 77: account.ManagementService.RevlinkWarmup:input_type -> account.RevlinkWarmupRequest
+	57, // 78: account.ManagementService.GetTrialEnd:input_type -> account.GetTrialEndRequest
+	60, // 79: account.ManagementService.ListAvailableItemTypes:input_type -> account.ListAvailableItemTypesRequest
+	62, // 80: account.ManagementService.GetSourceStatus:input_type -> account.GetSourceStatusRequest
+	5,  // 81: account.AdminService.ListAccounts:output_type -> account.ListAccountsResponse
+	7,  // 82: account.AdminService.CreateAccount:output_type -> account.CreateAccountResponse
+	9,  // 83: account.AdminService.UpdateAccount:output_type -> account.UpdateAccountResponse
+	29, // 84: account.AdminService.GetAccount:output_type -> account.GetAccountResponse
+	13, // 85: account.AdminService.DeleteAccount:output_type -> account.AdminDeleteAccountResponse
+	33, // 86: account.AdminService.ListSources:output_type -> account.ListSourcesResponse
+	35, // 87: account.AdminService.CreateSource:output_type -> account.CreateSourceResponse
+	37, // 88: account.AdminService.GetSource:output_type -> account.GetSourceResponse
+	39, // 89: account.AdminService.UpdateSource:output_type -> account.UpdateSourceResponse
+	41, // 90: account.AdminService.DeleteSource:output_type -> account.DeleteSourceResponse
+	52, // 91: account.AdminService.KeepaliveSources:output_type -> account.KeepaliveSourcesResponse
+	54, // 92: account.AdminService.CreateToken:output_type -> account.CreateTokenResponse
+	29, // 93: account.ManagementService.GetAccount:output_type -> account.GetAccountResponse
+	31, // 94: account.ManagementService.DeleteAccount:output_type -> account.DeleteAccountResponse
+	33, // 95: account.ManagementService.ListSources:output_type -> account.ListSourcesResponse
+	35, // 96: account.ManagementService.CreateSource:output_type -> account.CreateSourceResponse
+	37, // 97: account.ManagementService.GetSource:output_type -> account.GetSourceResponse
+	39, // 98: account.ManagementService.UpdateSource:output_type -> account.UpdateSourceResponse
+	41, // 99: account.ManagementService.DeleteSource:output_type -> account.DeleteSourceResponse
+	45, // 100: account.ManagementService.ListAllSourcesStatus:output_type -> account.ListAllSourcesStatusResponse
+	45, // 101: account.ManagementService.ListActiveSourcesStatus:output_type -> account.ListAllSourcesStatusResponse
+	50, // 102: account.ManagementService.SubmitSourceHeartbeat:output_type -> account.SubmitSourceHeartbeatResponse
+	52, // 103: account.ManagementService.KeepaliveSources:output_type -> account.KeepaliveSourcesResponse
+	54, // 104: account.ManagementService.CreateToken:output_type -> account.CreateTokenResponse
+	56, // 105: account.ManagementService.RevlinkWarmup:output_type -> account.RevlinkWarmupResponse
+	58, // 106: account.ManagementService.GetTrialEnd:output_type -> account.GetTrialEndResponse
+	61, // 107: account.ManagementService.ListAvailableItemTypes:output_type -> account.ListAvailableItemTypesResponse
+	63, // 108: account.ManagementService.GetSourceStatus:output_type -> account.GetSourceStatusResponse
+	81, // [81:109] is the sub-list for method output_type
+	53, // [53:81] is the sub-list for method input_type
+	53, // [53:53] is the sub-list for extension type_name
+	53, // [53:53] is the sub-list for extension extendee
+	0,  // [0:53] is the sub-list for field type_name
 }
 
 func init() { file_account_proto_init() }
@@ -3820,15 +3991,15 @@ func file_account_proto_init() {
 		return
 	}
 	file_items_proto_init()
-	file_account_proto_msgTypes[39].OneofWrappers = []any{}
-	file_account_proto_msgTypes[41].OneofWrappers = []any{}
+	file_account_proto_msgTypes[40].OneofWrappers = []any{}
+	file_account_proto_msgTypes[42].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_account_proto_rawDesc), len(file_account_proto_rawDesc)),
-			NumEnums:      3,
-			NumMessages:   59,
+			NumEnums:      4,
+			NumMessages:   60,
 			NumExtensions: 0,
 			NumServices:   2,
 		},
