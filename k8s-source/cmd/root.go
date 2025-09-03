@@ -66,7 +66,6 @@ func run(_ *cobra.Command, _ []string) int {
 		log.Info("Using in-cluster config")
 
 		restConfig, err = rest.InClusterConfig()
-
 		if err != nil {
 			sentry.CaptureException(err)
 			log.WithError(err).Error("Could not load in-cluster config")
@@ -76,7 +75,6 @@ func run(_ *cobra.Command, _ []string) int {
 	} else {
 		// Load kubernetes config from a file
 		restConfig, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-
 		if err != nil {
 			sentry.CaptureException(err)
 			log.WithError(err).Error("Could not load kubernetes config")
@@ -225,7 +223,6 @@ func run(_ *cobra.Command, _ []string) int {
 
 	// Get the initial starting point
 	list, err := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
-
 	if err != nil {
 		sentry.CaptureException(err)
 		log.WithError(err).Error("could not list namespaces")
@@ -237,7 +234,6 @@ func run(_ *cobra.Command, _ []string) int {
 	wi, err := clientSet.CoreV1().Namespaces().Watch(context.Background(), metav1.ListOptions{
 		ResourceVersion: list.ResourceVersion,
 	})
-
 	if err != nil {
 		sentry.CaptureException(err)
 		log.WithError(err).Error("could not start watching namespaces")
@@ -249,6 +245,8 @@ func run(_ *cobra.Command, _ []string) int {
 	defer watchCancel()
 
 	go func() {
+		defer tracing.LogRecoverToReturn(watchCtx, "Namespace watch")
+
 		attempts := 0
 		sleep := 1 * time.Second
 
@@ -256,18 +254,14 @@ func run(_ *cobra.Command, _ []string) int {
 			select {
 			case event, ok := <-wi.ResultChan():
 				if !ok {
-					// If the channel is closed then we need to restart the
-					// watch
-
-					log.Error("Namespace watch channel closed")
-					log.Info("Re-subscribing to namespace watch")
+					// When the channel is closed then we need to restart the
+					// watch. This happens regularly on EKS.
+					log.Debug("Namespace watch channel closed, re-subscribing")
 
 					wi, err = watchNamespaces(watchCtx, clientSet)
-
 					// Check for transient network errors
 					if err != nil {
 						var netErr *net.OpError
-
 						if errors.As(err, &netErr) {
 							// Mark a failure
 							attempts++
@@ -318,7 +312,6 @@ func run(_ *cobra.Command, _ []string) int {
 		// Query all namespaces
 		log.Info("Listing namespaces")
 		list, err := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
-
 		if err != nil {
 			return err
 		}
@@ -403,7 +396,6 @@ func run(_ *cobra.Command, _ []string) int {
 				log.Debug("Namespace modified, ignoring")
 			default:
 				err = stop()
-
 				if err != nil {
 					sentry.CaptureException(err)
 					log.WithError(err).Error("Could not stop engine")
@@ -412,7 +404,6 @@ func run(_ *cobra.Command, _ []string) int {
 				}
 
 				err = start()
-
 				if err != nil {
 					sentry.CaptureException(err)
 					log.WithError(err).Error("Could not start engine")
@@ -437,7 +428,6 @@ func Execute() {
 func watchNamespaces(ctx context.Context, clientSet *kubernetes.Clientset) (watch.Interface, error) {
 	// Get the initial starting point
 	list, err := clientSet.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
-
 	if err != nil {
 		return nil, err
 	}
@@ -446,7 +436,6 @@ func watchNamespaces(ctx context.Context, clientSet *kubernetes.Clientset) (watc
 	wi, err := clientSet.CoreV1().Namespaces().Watch(ctx, metav1.ListOptions{
 		ResourceVersion: list.ResourceVersion,
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -542,8 +531,7 @@ func (t TerminationLogHook) Levels() []log.Level {
 }
 
 func (t TerminationLogHook) Fire(e *log.Entry) error {
-	tLog, err := os.OpenFile("/dev/termination-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-
+	tLog, err := os.OpenFile("/dev/termination-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return err
 	}
