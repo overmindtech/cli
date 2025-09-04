@@ -96,7 +96,11 @@ func CreateSnapshot(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		log.WithContext(ctx).WithFields(lf).WithError(err).Warn("Failed to marshal query for logging")
 	} else {
-		log.WithContext(ctx).WithFields(lf).WithField("uuid", uuid.UUID(q.GetUUID())).Debugf("Query executed:\n%v", string(b))
+		log.WithContext(ctx).WithFields(lf).WithField(
+			"uuid", uuid.UUID(q.GetUUID()),
+		).WithField(
+			"query", string(b),
+		).Debug("Query executed")
 	}
 
 	// Wait for the query to complete

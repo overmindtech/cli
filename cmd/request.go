@@ -84,7 +84,7 @@ func (l *requestHandler) QueryStatus(ctx context.Context, status *sdp.QueryStatu
 	}
 	queryUuid := status.GetUUIDParsed()
 	if queryUuid == nil {
-		log.WithContext(ctx).WithFields(l.lf).WithFields(statusFields).Debugf("Received QueryStatus with nil UUID")
+		log.WithContext(ctx).WithFields(l.lf).WithFields(statusFields).Debug("Received QueryStatus with nil UUID")
 		return
 	}
 	statusFields["query"] = queryUuid
@@ -101,7 +101,7 @@ func (l *requestHandler) QueryStatus(ctx context.Context, status *sdp.QueryStatu
 		statusFields["unexpected_status"] = true
 	}
 
-	log.WithContext(ctx).WithFields(l.lf).WithFields(statusFields).Debugf("query status update")
+	log.WithContext(ctx).WithFields(l.lf).WithFields(statusFields).Debug("query status update")
 }
 
 // Waits for the next snapshot load result to be received.

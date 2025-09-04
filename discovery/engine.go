@@ -316,7 +316,7 @@ func (e *Engine) Start() error {
 
 	err := e.connect()
 	if err != nil {
-		return e.SendHeartbeat(e.backgroundJobContext, err)		
+		return e.SendHeartbeat(e.backgroundJobContext, err)
 	}
 
 	// Start background jobs
@@ -449,7 +449,9 @@ func (e *Engine) HandleCancelQuery(ctx context.Context, cancelQuery *sdp.CancelQ
 
 	rt, err := e.GetTrackedQuery(u)
 	if err != nil {
-		log.Debugf("Could not find tracked query %v. Possibly it has already finished", u.String())
+		log.WithFields(log.Fields{
+			"UUID": u.String(),
+		}).Debug("Received cancel query for unknown UUID")
 		return
 	}
 

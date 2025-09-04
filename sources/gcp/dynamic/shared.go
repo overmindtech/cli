@@ -238,7 +238,8 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 					"ovm.source.type":                "gcp",
 					"ovm.source.http.url-for-list":   currentURL,
 					"ovm.source.http.items-selector": itemsSelector,
-				}).Debugf("not found any items for %s: within %v", itemsSelector, result)
+					"ovm.source.http.result":         result,
+				}).Debug("not found any items in the result")
 				break
 			}
 		}
