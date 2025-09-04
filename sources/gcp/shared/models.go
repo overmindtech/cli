@@ -117,6 +117,8 @@ const (
 	Build                        shared.Resource = "build"
 	EntryGroup                   shared.Resource = "entry-group"
 	AspectType                   shared.Resource = "aspect-type"
+	DataScan                     shared.Resource = "data-scan"
+	Entity                       shared.Resource = "entity"
 	Service                      shared.Resource = "service"
 	Revision                     shared.Resource = "revision"
 	BackupRun                    shared.Resource = "backup-run"
