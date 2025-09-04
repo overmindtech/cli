@@ -22,6 +22,7 @@ var (
 	ComputeInstantSnapshot                        = shared.NewItemType(GCP, Compute, InstantSnapshot)
 	ComputeReservation                            = shared.NewItemType(GCP, Compute, Reservation)
 	ComputeHealthCheck                            = shared.NewItemType(GCP, Compute, HealthCheck)
+	ComputeHttpHealthCheck                        = shared.NewItemType(GCP, Compute, HttpHealthCheck)
 	ComputeNodeGroup                              = shared.NewItemType(GCP, Compute, NodeGroup)
 	ComputeNodeTemplate                           = shared.NewItemType(GCP, Compute, NodeTemplate)
 	ComputeBackendService                         = shared.NewItemType(GCP, Compute, BackendService)
