@@ -93,6 +93,7 @@ var (
 	AIPlatformModel                               = shared.NewItemType(GCP, AIPlatform, Model)
 	AIPlatformEndpoint                            = shared.NewItemType(GCP, AIPlatform, Endpoint)
 	AIPlatformModelDeploymentMonitoringJob        = shared.NewItemType(GCP, AIPlatform, ModelDeploymentMonitoringJob)
+	AIPlatformBatchPredictionJob                  = shared.NewItemType(GCP, AIPlatform, BatchPredictionJob)
 	BigQueryConnection                            = shared.NewItemType(GCP, BigQuery, Connection)
 	BigTableAdminCluster                          = shared.NewItemType(GCP, BigTableAdmin, Cluster)
 	CloudBuildTrigger                             = shared.NewItemType(GCP, CloudBuild, Trigger)

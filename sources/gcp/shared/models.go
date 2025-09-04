@@ -138,6 +138,7 @@ const (
 	ExperimentRun                shared.Resource = "experiment-run"
 	Model                        shared.Resource = "model"
 	ModelDeploymentMonitoringJob shared.Resource = "model-deployment-monitoring-job"
+	BatchPredictionJob           shared.Resource = "batch-prediction-job"
 	Connection                   shared.Resource = "connection"
 	Trigger                      shared.Resource = "trigger"
 	Connector                    shared.Resource = "connector"
