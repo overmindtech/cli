@@ -117,6 +117,12 @@ const (
 	// ManagementServiceGetSourceStatusProcedure is the fully-qualified name of the ManagementService's
 	// GetSourceStatus RPC.
 	ManagementServiceGetSourceStatusProcedure = "/account.ManagementService/GetSourceStatus"
+	// ManagementServiceGetUserOnboardingStatusProcedure is the fully-qualified name of the
+	// ManagementService's GetUserOnboardingStatus RPC.
+	ManagementServiceGetUserOnboardingStatusProcedure = "/account.ManagementService/GetUserOnboardingStatus"
+	// ManagementServiceSetUserOnboardingStatusProcedure is the fully-qualified name of the
+	// ManagementService's SetUserOnboardingStatus RPC.
+	ManagementServiceSetUserOnboardingStatusProcedure = "/account.ManagementService/SetUserOnboardingStatus"
 )
 
 // AdminServiceClient is a client for the account.AdminService service.
@@ -557,6 +563,9 @@ type ManagementServiceClient interface {
 	ListAvailableItemTypes(context.Context, *connect.Request[sdp_go.ListAvailableItemTypesRequest]) (*connect.Response[sdp_go.ListAvailableItemTypesResponse], error)
 	// Get status of a single source by UUID
 	GetSourceStatus(context.Context, *connect.Request[sdp_go.GetSourceStatusRequest]) (*connect.Response[sdp_go.GetSourceStatusResponse], error)
+	// Get and set onboarding status for users
+	GetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.GetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.GetUserOnboardingStatusResponse], error)
+	SetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error)
 }
 
 // NewManagementServiceClient constructs a client for the account.ManagementService service. By
@@ -666,6 +675,18 @@ func NewManagementServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(managementServiceMethods.ByName("GetSourceStatus")),
 			connect.WithClientOptions(opts...),
 		),
+		getUserOnboardingStatus: connect.NewClient[sdp_go.GetUserOnboardingStatusRequest, sdp_go.GetUserOnboardingStatusResponse](
+			httpClient,
+			baseURL+ManagementServiceGetUserOnboardingStatusProcedure,
+			connect.WithSchema(managementServiceMethods.ByName("GetUserOnboardingStatus")),
+			connect.WithClientOptions(opts...),
+		),
+		setUserOnboardingStatus: connect.NewClient[sdp_go.SetUserOnboardingStatusRequest, sdp_go.SetUserOnboardingStatusResponse](
+			httpClient,
+			baseURL+ManagementServiceSetUserOnboardingStatusProcedure,
+			connect.WithSchema(managementServiceMethods.ByName("SetUserOnboardingStatus")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -687,6 +708,8 @@ type managementServiceClient struct {
 	getTrialEnd             *connect.Client[sdp_go.GetTrialEndRequest, sdp_go.GetTrialEndResponse]
 	listAvailableItemTypes  *connect.Client[sdp_go.ListAvailableItemTypesRequest, sdp_go.ListAvailableItemTypesResponse]
 	getSourceStatus         *connect.Client[sdp_go.GetSourceStatusRequest, sdp_go.GetSourceStatusResponse]
+	getUserOnboardingStatus *connect.Client[sdp_go.GetUserOnboardingStatusRequest, sdp_go.GetUserOnboardingStatusResponse]
+	setUserOnboardingStatus *connect.Client[sdp_go.SetUserOnboardingStatusRequest, sdp_go.SetUserOnboardingStatusResponse]
 }
 
 // GetAccount calls account.ManagementService.GetAccount.
@@ -769,6 +792,16 @@ func (c *managementServiceClient) GetSourceStatus(ctx context.Context, req *conn
 	return c.getSourceStatus.CallUnary(ctx, req)
 }
 
+// GetUserOnboardingStatus calls account.ManagementService.GetUserOnboardingStatus.
+func (c *managementServiceClient) GetUserOnboardingStatus(ctx context.Context, req *connect.Request[sdp_go.GetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.GetUserOnboardingStatusResponse], error) {
+	return c.getUserOnboardingStatus.CallUnary(ctx, req)
+}
+
+// SetUserOnboardingStatus calls account.ManagementService.SetUserOnboardingStatus.
+func (c *managementServiceClient) SetUserOnboardingStatus(ctx context.Context, req *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error) {
+	return c.setUserOnboardingStatus.CallUnary(ctx, req)
+}
+
 // ManagementServiceHandler is an implementation of the account.ManagementService service.
 type ManagementServiceHandler interface {
 	// Get the details of the account that this user belongs to
@@ -817,6 +850,9 @@ type ManagementServiceHandler interface {
 	ListAvailableItemTypes(context.Context, *connect.Request[sdp_go.ListAvailableItemTypesRequest]) (*connect.Response[sdp_go.ListAvailableItemTypesResponse], error)
 	// Get status of a single source by UUID
 	GetSourceStatus(context.Context, *connect.Request[sdp_go.GetSourceStatusRequest]) (*connect.Response[sdp_go.GetSourceStatusResponse], error)
+	// Get and set onboarding status for users
+	GetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.GetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.GetUserOnboardingStatusResponse], error)
+	SetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error)
 }
 
 // NewManagementServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -922,6 +958,18 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 		connect.WithSchema(managementServiceMethods.ByName("GetSourceStatus")),
 		connect.WithHandlerOptions(opts...),
 	)
+	managementServiceGetUserOnboardingStatusHandler := connect.NewUnaryHandler(
+		ManagementServiceGetUserOnboardingStatusProcedure,
+		svc.GetUserOnboardingStatus,
+		connect.WithSchema(managementServiceMethods.ByName("GetUserOnboardingStatus")),
+		connect.WithHandlerOptions(opts...),
+	)
+	managementServiceSetUserOnboardingStatusHandler := connect.NewUnaryHandler(
+		ManagementServiceSetUserOnboardingStatusProcedure,
+		svc.SetUserOnboardingStatus,
+		connect.WithSchema(managementServiceMethods.ByName("SetUserOnboardingStatus")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/account.ManagementService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ManagementServiceGetAccountProcedure:
@@ -956,6 +1004,10 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 			managementServiceListAvailableItemTypesHandler.ServeHTTP(w, r)
 		case ManagementServiceGetSourceStatusProcedure:
 			managementServiceGetSourceStatusHandler.ServeHTTP(w, r)
+		case ManagementServiceGetUserOnboardingStatusProcedure:
+			managementServiceGetUserOnboardingStatusHandler.ServeHTTP(w, r)
+		case ManagementServiceSetUserOnboardingStatusProcedure:
+			managementServiceSetUserOnboardingStatusHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -1027,4 +1079,12 @@ func (UnimplementedManagementServiceHandler) ListAvailableItemTypes(context.Cont
 
 func (UnimplementedManagementServiceHandler) GetSourceStatus(context.Context, *connect.Request[sdp_go.GetSourceStatusRequest]) (*connect.Response[sdp_go.GetSourceStatusResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.GetSourceStatus is not implemented"))
+}
+
+func (UnimplementedManagementServiceHandler) GetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.GetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.GetUserOnboardingStatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.GetUserOnboardingStatus is not implemented"))
+}
+
+func (UnimplementedManagementServiceHandler) SetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.SetUserOnboardingStatus is not implemented"))
 }
