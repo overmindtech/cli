@@ -56,9 +56,6 @@ const (
 	// ChangesServiceGetChangeRisksProcedure is the fully-qualified name of the ChangesService's
 	// GetChangeRisks RPC.
 	ChangesServiceGetChangeRisksProcedure = "/changes.ChangesService/GetChangeRisks"
-	// ChangesServiceGetChangeArchiveProcedure is the fully-qualified name of the ChangesService's
-	// GetChangeArchive RPC.
-	ChangesServiceGetChangeArchiveProcedure = "/changes.ChangesService/GetChangeArchive"
 	// ChangesServiceUpdateChangeProcedure is the fully-qualified name of the ChangesService's
 	// UpdateChange RPC.
 	ChangesServiceUpdateChangeProcedure = "/changes.ChangesService/UpdateChange"
@@ -132,8 +129,6 @@ type ChangesServiceClient interface {
 	GetChangeTimelineV2(context.Context, *connect.Request[sdp_go.GetChangeTimelineV2Request]) (*connect.Response[sdp_go.GetChangeTimelineV2Response], error)
 	// This is used on the blast radius page to get the risks and status for a change.
 	GetChangeRisks(context.Context, *connect.Request[sdp_go.GetChangeRisksRequest]) (*connect.Response[sdp_go.GetChangeRisksResponse], error)
-	// Gets the all data of an existing change for archival
-	GetChangeArchive(context.Context, *connect.Request[sdp_go.GetChangeArchiveRequest]) (*connect.Response[sdp_go.GetChangeArchiveResponse], error)
 	// Updates an existing change
 	UpdateChange(context.Context, *connect.Request[sdp_go.UpdateChangeRequest]) (*connect.Response[sdp_go.UpdateChangeResponse], error)
 	// Deletes a change
@@ -221,12 +216,6 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(changesServiceMethods.ByName("GetChangeRisks")),
 			connect.WithClientOptions(opts...),
 		),
-		getChangeArchive: connect.NewClient[sdp_go.GetChangeArchiveRequest, sdp_go.GetChangeArchiveResponse](
-			httpClient,
-			baseURL+ChangesServiceGetChangeArchiveProcedure,
-			connect.WithSchema(changesServiceMethods.ByName("GetChangeArchive")),
-			connect.WithClientOptions(opts...),
-		),
 		updateChange: connect.NewClient[sdp_go.UpdateChangeRequest, sdp_go.UpdateChangeResponse](
 			httpClient,
 			baseURL+ChangesServiceUpdateChangeProcedure,
@@ -305,7 +294,6 @@ type changesServiceClient struct {
 	getChangeSummary          *connect.Client[sdp_go.GetChangeSummaryRequest, sdp_go.GetChangeSummaryResponse]
 	getChangeTimelineV2       *connect.Client[sdp_go.GetChangeTimelineV2Request, sdp_go.GetChangeTimelineV2Response]
 	getChangeRisks            *connect.Client[sdp_go.GetChangeRisksRequest, sdp_go.GetChangeRisksResponse]
-	getChangeArchive          *connect.Client[sdp_go.GetChangeArchiveRequest, sdp_go.GetChangeArchiveResponse]
 	updateChange              *connect.Client[sdp_go.UpdateChangeRequest, sdp_go.UpdateChangeResponse]
 	deleteChange              *connect.Client[sdp_go.DeleteChangeRequest, sdp_go.DeleteChangeResponse]
 	listChangesBySnapshotUUID *connect.Client[sdp_go.ListChangesBySnapshotUUIDRequest, sdp_go.ListChangesBySnapshotUUIDResponse]
@@ -352,11 +340,6 @@ func (c *changesServiceClient) GetChangeTimelineV2(ctx context.Context, req *con
 // GetChangeRisks calls changes.ChangesService.GetChangeRisks.
 func (c *changesServiceClient) GetChangeRisks(ctx context.Context, req *connect.Request[sdp_go.GetChangeRisksRequest]) (*connect.Response[sdp_go.GetChangeRisksResponse], error) {
 	return c.getChangeRisks.CallUnary(ctx, req)
-}
-
-// GetChangeArchive calls changes.ChangesService.GetChangeArchive.
-func (c *changesServiceClient) GetChangeArchive(ctx context.Context, req *connect.Request[sdp_go.GetChangeArchiveRequest]) (*connect.Response[sdp_go.GetChangeArchiveResponse], error) {
-	return c.getChangeArchive.CallUnary(ctx, req)
 }
 
 // UpdateChange calls changes.ChangesService.UpdateChange.
@@ -432,8 +415,6 @@ type ChangesServiceHandler interface {
 	GetChangeTimelineV2(context.Context, *connect.Request[sdp_go.GetChangeTimelineV2Request]) (*connect.Response[sdp_go.GetChangeTimelineV2Response], error)
 	// This is used on the blast radius page to get the risks and status for a change.
 	GetChangeRisks(context.Context, *connect.Request[sdp_go.GetChangeRisksRequest]) (*connect.Response[sdp_go.GetChangeRisksResponse], error)
-	// Gets the all data of an existing change for archival
-	GetChangeArchive(context.Context, *connect.Request[sdp_go.GetChangeArchiveRequest]) (*connect.Response[sdp_go.GetChangeArchiveResponse], error)
 	// Updates an existing change
 	UpdateChange(context.Context, *connect.Request[sdp_go.UpdateChangeRequest]) (*connect.Response[sdp_go.UpdateChangeResponse], error)
 	// Deletes a change
@@ -515,12 +496,6 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 		ChangesServiceGetChangeRisksProcedure,
 		svc.GetChangeRisks,
 		connect.WithSchema(changesServiceMethods.ByName("GetChangeRisks")),
-		connect.WithHandlerOptions(opts...),
-	)
-	changesServiceGetChangeArchiveHandler := connect.NewUnaryHandler(
-		ChangesServiceGetChangeArchiveProcedure,
-		svc.GetChangeArchive,
-		connect.WithSchema(changesServiceMethods.ByName("GetChangeArchive")),
 		connect.WithHandlerOptions(opts...),
 	)
 	changesServiceUpdateChangeHandler := connect.NewUnaryHandler(
@@ -605,8 +580,6 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 			changesServiceGetChangeTimelineV2Handler.ServeHTTP(w, r)
 		case ChangesServiceGetChangeRisksProcedure:
 			changesServiceGetChangeRisksHandler.ServeHTTP(w, r)
-		case ChangesServiceGetChangeArchiveProcedure:
-			changesServiceGetChangeArchiveHandler.ServeHTTP(w, r)
 		case ChangesServiceUpdateChangeProcedure:
 			changesServiceUpdateChangeHandler.ServeHTTP(w, r)
 		case ChangesServiceDeleteChangeProcedure:
@@ -664,10 +637,6 @@ func (UnimplementedChangesServiceHandler) GetChangeTimelineV2(context.Context, *
 
 func (UnimplementedChangesServiceHandler) GetChangeRisks(context.Context, *connect.Request[sdp_go.GetChangeRisksRequest]) (*connect.Response[sdp_go.GetChangeRisksResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetChangeRisks is not implemented"))
-}
-
-func (UnimplementedChangesServiceHandler) GetChangeArchive(context.Context, *connect.Request[sdp_go.GetChangeArchiveRequest]) (*connect.Response[sdp_go.GetChangeArchiveResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetChangeArchive is not implemented"))
 }
 
 func (UnimplementedChangesServiceHandler) UpdateChange(context.Context, *connect.Request[sdp_go.UpdateChangeRequest]) (*connect.Response[sdp_go.UpdateChangeResponse], error) {
