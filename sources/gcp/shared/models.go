@@ -29,6 +29,7 @@ const (
 	ArtifactRegistry         shared.API = "artifact-registry"
 	Dataform                 shared.API = "dataform"
 	Storage                  shared.API = "storage"
+	StorageTransfer          shared.API = "storage-transfer"
 	ServiceDirectory         shared.API = "service-directory"
 	DNS                      shared.API = "dns"
 	CloudBilling             shared.API = "cloud-billing"
@@ -171,5 +172,6 @@ const (
 	ExternalVpnGateway           shared.Resource = "external-vpn-gateway"
 	TransferConfig               shared.Resource = "transfer-config"
 	DataSource                   shared.Resource = "data-source"
+	TransferJob                  shared.Resource = "transfer-job"
 	SecurityCenterService        shared.Resource = "security-center-service" // Used by Security Center Management
 )
