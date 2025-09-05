@@ -165,7 +165,7 @@ func TestClient(t *testing.T) {
 		}()
 
 		// this will block until the above goroutine has injected the response
-		_, err = c.Query(ctx, q)
+		_, err = c.QueryOne(ctx, q)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -250,7 +250,7 @@ func TestClient(t *testing.T) {
 		}()
 
 		// this will block until the above goroutine has injected the response
-		_, err = c.Query(ctx, q)
+		_, err = c.QueryOne(ctx, q)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -463,7 +463,7 @@ func TestClient(t *testing.T) {
 			wg.Add(1)
 			go func(index int) {
 				defer wg.Done()
-				items, err := c.Query(ctx, queries[index])
+				items, err := c.QueryOne(ctx, queries[index])
 				results[index] = queryResult{
 					index: index,
 					items: items,
@@ -645,14 +645,14 @@ func TestClient(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			items, err := c.Query(ctx, query1)
+			items, err := c.QueryOne(ctx, query1)
 			results[0] = result{items: items, err: err}
 		}()
 
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			items, err := c.Query(ctx, query2)
+			items, err := c.QueryOne(ctx, query2)
 			results[1] = result{items: items, err: err}
 		}()
 
@@ -799,14 +799,14 @@ func TestClient(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			items, err := c.Query(ctx, queryA)
+			items, err := c.QueryOne(ctx, queryA)
 			resultsA[0] = result{items: items, err: err}
 		}()
 
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			items, err := c.Query(ctx, queryB)
+			items, err := c.QueryOne(ctx, queryB)
 			resultsB[0] = result{items: items, err: err}
 		}()
 

@@ -36,9 +36,9 @@ func (c *Client) SendQuery(ctx context.Context, q *sdp.Query) error {
 	return nil
 }
 
-// Run a query and wait for it to complete, returning all of the items that were
-// found.
-func (c *Client) Query(ctx context.Context, q *sdp.Query) ([]*sdp.Item, error) {
+// QueryOne runs a query and waits for it to complete, returning only the items
+// that were found as direct results to the top-level query.
+func (c *Client) QueryOne(ctx context.Context, q *sdp.Query) ([]*sdp.Item, error) {
 	if c.Closed() {
 		return nil, errors.New("client closed")
 	}
