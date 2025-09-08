@@ -52,10 +52,6 @@ type Client struct {
 	requestMap   map[uuid.UUID]chan *sdp.GatewayResponse
 	requestMapMu sync.RWMutex
 
-	activeMap     map[uuid.UUID]bool
-	activeMapCond *sync.Cond
-	activeMapMu   sync.Mutex
-
 	finishedRequestMap     map[uuid.UUID]bool
 	finishedRequestMapCond *sync.Cond
 	finishedRequestMapMu   sync.Mutex
@@ -116,11 +112,9 @@ func dialImpl(ctx context.Context, u string, httpClient *http.Client, handler Ga
 		conn:               conn,
 		handler:            handler,
 		requestMap:         make(map[uuid.UUID]chan *sdp.GatewayResponse),
-		activeMap:          make(map[uuid.UUID]bool),
 		finishedRequestMap: make(map[uuid.UUID]bool),
 	}
 	c.closedCond = sync.NewCond(&c.closedMu)
-	c.activeMapCond = sync.NewCond(&c.activeMapMu)
 	c.finishedRequestMapCond = sync.NewCond(&c.finishedRequestMapMu)
 
 	go c.receive(ctx)
@@ -264,11 +258,8 @@ func (c *Client) receive(ctx context.Context) {
 				c.postRequestChan(u, msg)
 			}
 
-			switch qs.GetStatus() { //nolint: exhaustive // ignore sdp.QueryStatus_UNSPECIFIED
-			case sdp.QueryStatus_STARTED:
-				c.markActive(u)
+			switch qs.GetStatus() { //nolint: exhaustive // ignore sdp.QueryStatus_UNSPECIFIED, sdp.QueryStatus_STARTED
 			case sdp.QueryStatus_FINISHED, sdp.QueryStatus_CANCELLED, sdp.QueryStatus_ERRORED:
-				c.unmarkActive(u)
 				c.finishRequestChan(u)
 			}
 
@@ -353,40 +344,6 @@ func (c *Client) Wait(ctx context.Context, reqIDs uuid.UUIDs) error {
 	}
 }
 
-// WaitAll blocks until all currently in-flight requests and everything that was
-// started during waiting has been finished. Waiting on a closed client returns
-// immediately with no error.
-func (c *Client) WaitAll(ctx context.Context) error {
-	for {
-		if c.Closed() {
-			return nil
-		}
-
-		// check for context cancellation
-		if ctx.Err() != nil {
-			return ctx.Err()
-		}
-
-		// wrap this in a function so defers can be called (otherwise the lock
-		// is held for all loop iterations)
-		finished := func() bool {
-			c.activeMapMu.Lock()
-			defer c.activeMapMu.Unlock()
-
-			if len(c.activeMap) == 0 {
-				return true
-			}
-
-			c.activeMapCond.Wait()
-			return false
-		}()
-
-		if finished {
-			return nil
-		}
-	}
-}
-
 // abort stores the specified error and closes the connection.
 func (c *Client) abort(ctx context.Context, err error) {
 	c.closedMu.Lock()
@@ -446,7 +403,6 @@ func (c *Client) Closed() bool {
 }
 
 func (c *Client) createRequestChan(u uuid.UUID) chan *sdp.GatewayResponse {
-	c.markActive(u)
 	r := make(chan *sdp.GatewayResponse, 1)
 	c.requestMapMu.Lock()
 	defer c.requestMapMu.Unlock()
@@ -490,16 +446,4 @@ func (c *Client) closeAllRequestChans() {
 	// clear the map
 	c.requestMap = map[uuid.UUID]chan *sdp.GatewayResponse{}
 	c.finishedRequestMapCond.Broadcast()
-}
-
-func (c *Client) markActive(u uuid.UUID) {
-	c.activeMapMu.Lock()
-	defer c.activeMapMu.Unlock()
-	c.activeMap[u] = true
-}
-
-func (c *Client) unmarkActive(u uuid.UUID) {
-	c.activeMapMu.Lock()
-	defer c.activeMapMu.Unlock()
-	delete(c.activeMap, u)
 }
