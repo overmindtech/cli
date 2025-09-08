@@ -29,7 +29,7 @@ var redisInstanceAdapter = registerableAdapter{ //nolint:unused
 		SearchEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://redis.googleapis.com/v1/projects/%s/locations/%s/instances",
 		),
-		SearchDescription:   "Search Redis instances in a location. Use the format \"location\" or \"projects/project_id/locations/location/instances/instance_name\" which is supported for terraform mappings.",
+		SearchDescription:   "Search Redis instances in a location. Use the format \"location\" or \"projects/[project_id]/locations/[location]/instances/[instance_name]\" which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "instances"},
 		IAMPermissions: []string{
 			"redis.instances.get",

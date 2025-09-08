@@ -26,7 +26,7 @@ var computeRouterAdapter = registerableAdapter{ //nolint:unused
 			}
 			return nil, nil // runtime will use GET with provided full name
 		},
-		SearchDescription:   "Search with full ID: projects/{project}/regions/{region}/routers/{router} (used for terraform mapping).",
+		SearchDescription:   "Search with full ID: projects/[project]/regions/[region]/routers/[router] (used for terraform mapping).",
 		UniqueAttributeKeys: []string{"routers"},
 		IAMPermissions:      []string{"compute.routers.get", "compute.routers.list"},
 	},

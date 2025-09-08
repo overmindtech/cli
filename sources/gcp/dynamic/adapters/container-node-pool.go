@@ -25,7 +25,7 @@ var containerNodePoolAdapter = registerableAdapter{ //nolint:unused
 		SearchEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://container.googleapis.com/v1/projects/%s/locations/%s/clusters/%s/nodePools",
 		),
-		SearchDescription:   "Search GKE Node Pools within a cluster. Use \"{location}|{cluster}\" or the full resource name supported by Terraform mappings: \"{project}/{location}/{cluster}/{node_pool_name}\"",
+		SearchDescription:   "Search GKE Node Pools within a cluster. Use \"[location]|[cluster]\" or the full resource name supported by Terraform mappings: \"[project]/[location]/[cluster]/[node_pool_name]\"",
 		UniqueAttributeKeys: []string{"locations", "clusters", "nodePools"},
 		IAMPermissions: []string{
 			"container.nodePools.get",

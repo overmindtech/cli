@@ -31,7 +31,7 @@ var monitoringAlertPolicyAdapter = registerableAdapter{ //nolint:unused
 			}
 			return nil, nil // runtime will use GET with provided full name
 		},
-		SearchDescription:   "Search by full resource name: projects/{project}/alertPolicies/{alert_policy_id} (used for terraform mapping).",
+		SearchDescription:   "Search by full resource name: projects/[project]/alertPolicies/[alert_policy_id] (used for terraform mapping).",
 		UniqueAttributeKeys: []string{"alertPolicies"},
 		IAMPermissions: []string{
 			"monitoring.alertPolicies.get",

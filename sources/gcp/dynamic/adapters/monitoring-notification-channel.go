@@ -30,7 +30,7 @@ var monitoringNotificationChannelAdapter = registerableAdapter{ //nolint:unused
 			}
 			return nil, nil // runtime will use GET with provided full name
 		},
-		SearchDescription:   "Search by full resource name: projects/{project}/notificationChannels/{notificationChannel} (used for terraform mapping).",
+		SearchDescription:   "Search by full resource name: projects/[project]/notificationChannels/[notificationChannel] (used for terraform mapping).",
 		UniqueAttributeKeys: []string{"notificationChannels"},
 		IAMPermissions: []string{
 			"monitoring.notificationChannels.get",

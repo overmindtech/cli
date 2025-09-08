@@ -21,7 +21,7 @@ var _ = registerableAdapter{
 		SearchEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://dataplex.googleapis.com/v1/projects/%s/locations/%s/dataScans",
 		),
-		SearchDescription:   "Search for Dataplex data scans in a location. Use the location name e.g., 'us-central1' or the format \"projects/project_id/locations/location/dataScans/data_scan_id\" which is supported for terraform mappings.",
+		SearchDescription:   "Search for Dataplex data scans in a location. Use the location name e.g., 'us-central1' or the format \"projects/[project_id]/locations/[location]/dataScans/[data_scan_id]\" which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "dataScans"},
 		IAMPermissions: []string{
 			"dataplex.dataScans.get",

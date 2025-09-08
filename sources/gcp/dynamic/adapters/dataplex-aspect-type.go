@@ -22,7 +22,7 @@ var dataplexAspectTypeAdapter = registerableAdapter{ //nolint:unused
 		SearchEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://dataplex.googleapis.com/v1/projects/%s/locations/%s/aspectTypes",
 		),
-		SearchDescription:   "Search for Dataplex aspect types in a location. Use the format \"location\" or \"projects/project_id/locations/location/aspectTypes/aspect_type_id\" which is supported for terraform mappings.",
+		SearchDescription:   "Search for Dataplex aspect types in a location. Use the format \"location\" or \"projects/[project_id]/locations/[location]/aspectTypes/[aspect_type_id]\" which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "aspectTypes"},
 		IAMPermissions: []string{
 			"dataplex.aspectTypes.get",

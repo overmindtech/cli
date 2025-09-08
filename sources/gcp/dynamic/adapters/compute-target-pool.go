@@ -30,7 +30,7 @@ var computeTargetPoolAdapter = registerableAdapter{ //nolint:unused
 			}
 			return nil, nil // runtime will use GET with provided full name
 		},
-		SearchDescription: "Search with full ID: projects/{project}/regions/{region}/targetPools/{name} (used for terraform mapping).",
+		SearchDescription: "Search with full ID: projects/[project]/regions/[region]/targetPools/[name] (used for terraform mapping).",
 		// The list response key for items is "targetPools".
 		UniqueAttributeKeys: []string{"targetPools"},
 		IAMPermissions: []string{

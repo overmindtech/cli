@@ -30,7 +30,7 @@ var orgPolicyPolicyAdapter = registerableAdapter{ //nolint:unused
 			}
 			return nil, nil // runtime will use GET with provided full name
 		},
-		SearchDescription:   "Search with the full policy name: projects/{project}/policies/{constraint} (used for terraform mapping).",
+		SearchDescription:   "Search with the full policy name: projects/[project]/policies/[constraint] (used for terraform mapping).",
 		UniqueAttributeKeys: []string{"policies"},
 		IAMPermissions: []string{
 			"orgpolicy.policy.get",
