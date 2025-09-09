@@ -16,6 +16,14 @@ func (a *ChangeMetadata) GetUUIDParsed() *uuid.UUID {
 	return &u
 }
 
+func (a *ChangeMetadata) GetNullUUID() uuid.NullUUID {
+	u := a.GetUUIDParsed()
+	if u == nil {
+		return uuid.NullUUID{Valid: false}
+	}
+	return uuid.NullUUID{UUID: *u, Valid: true}
+}
+
 func (a *ChangeProperties) GetChangingItemsBookmarkUUIDParsed() *uuid.UUID {
 	u, err := uuid.FromBytes(a.GetChangingItemsBookmarkUUID())
 	if err != nil {
