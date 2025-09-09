@@ -47,6 +47,9 @@ const (
 	// ChangesServiceGetChangeProcedure is the fully-qualified name of the ChangesService's GetChange
 	// RPC.
 	ChangesServiceGetChangeProcedure = "/changes.ChangesService/GetChange"
+	// ChangesServiceGetChangeByTicketLinkProcedure is the fully-qualified name of the ChangesService's
+	// GetChangeByTicketLink RPC.
+	ChangesServiceGetChangeByTicketLinkProcedure = "/changes.ChangesService/GetChangeByTicketLink"
 	// ChangesServiceGetChangeSummaryProcedure is the fully-qualified name of the ChangesService's
 	// GetChangeSummary RPC.
 	ChangesServiceGetChangeSummaryProcedure = "/changes.ChangesService/GetChangeSummary"
@@ -121,6 +124,8 @@ type ChangesServiceClient interface {
 	CreateChange(context.Context, *connect.Request[sdp_go.CreateChangeRequest]) (*connect.Response[sdp_go.CreateChangeResponse], error)
 	// Gets the details of an existing change
 	GetChange(context.Context, *connect.Request[sdp_go.GetChangeRequest]) (*connect.Response[sdp_go.GetChangeResponse], error)
+	// Get a change by the ticket link
+	GetChangeByTicketLink(context.Context, *connect.Request[sdp_go.GetChangeByTicketLinkRequest]) (*connect.Response[sdp_go.GetChangeResponse], error)
 	// Gets the details of an existing change in markdown format
 	GetChangeSummary(context.Context, *connect.Request[sdp_go.GetChangeSummaryRequest]) (*connect.Response[sdp_go.GetChangeSummaryResponse], error)
 	// Gets the full timeline for this change, this will send one response
@@ -196,6 +201,12 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			httpClient,
 			baseURL+ChangesServiceGetChangeProcedure,
 			connect.WithSchema(changesServiceMethods.ByName("GetChange")),
+			connect.WithClientOptions(opts...),
+		),
+		getChangeByTicketLink: connect.NewClient[sdp_go.GetChangeByTicketLinkRequest, sdp_go.GetChangeResponse](
+			httpClient,
+			baseURL+ChangesServiceGetChangeByTicketLinkProcedure,
+			connect.WithSchema(changesServiceMethods.ByName("GetChangeByTicketLink")),
 			connect.WithClientOptions(opts...),
 		),
 		getChangeSummary: connect.NewClient[sdp_go.GetChangeSummaryRequest, sdp_go.GetChangeSummaryResponse](
@@ -291,6 +302,7 @@ type changesServiceClient struct {
 	listChangesByStatus       *connect.Client[sdp_go.ListChangesByStatusRequest, sdp_go.ListChangesByStatusResponse]
 	createChange              *connect.Client[sdp_go.CreateChangeRequest, sdp_go.CreateChangeResponse]
 	getChange                 *connect.Client[sdp_go.GetChangeRequest, sdp_go.GetChangeResponse]
+	getChangeByTicketLink     *connect.Client[sdp_go.GetChangeByTicketLinkRequest, sdp_go.GetChangeResponse]
 	getChangeSummary          *connect.Client[sdp_go.GetChangeSummaryRequest, sdp_go.GetChangeSummaryResponse]
 	getChangeTimelineV2       *connect.Client[sdp_go.GetChangeTimelineV2Request, sdp_go.GetChangeTimelineV2Response]
 	getChangeRisks            *connect.Client[sdp_go.GetChangeRisksRequest, sdp_go.GetChangeRisksResponse]
@@ -325,6 +337,11 @@ func (c *changesServiceClient) CreateChange(ctx context.Context, req *connect.Re
 // GetChange calls changes.ChangesService.GetChange.
 func (c *changesServiceClient) GetChange(ctx context.Context, req *connect.Request[sdp_go.GetChangeRequest]) (*connect.Response[sdp_go.GetChangeResponse], error) {
 	return c.getChange.CallUnary(ctx, req)
+}
+
+// GetChangeByTicketLink calls changes.ChangesService.GetChangeByTicketLink.
+func (c *changesServiceClient) GetChangeByTicketLink(ctx context.Context, req *connect.Request[sdp_go.GetChangeByTicketLinkRequest]) (*connect.Response[sdp_go.GetChangeResponse], error) {
+	return c.getChangeByTicketLink.CallUnary(ctx, req)
 }
 
 // GetChangeSummary calls changes.ChangesService.GetChangeSummary.
@@ -407,6 +424,8 @@ type ChangesServiceHandler interface {
 	CreateChange(context.Context, *connect.Request[sdp_go.CreateChangeRequest]) (*connect.Response[sdp_go.CreateChangeResponse], error)
 	// Gets the details of an existing change
 	GetChange(context.Context, *connect.Request[sdp_go.GetChangeRequest]) (*connect.Response[sdp_go.GetChangeResponse], error)
+	// Get a change by the ticket link
+	GetChangeByTicketLink(context.Context, *connect.Request[sdp_go.GetChangeByTicketLinkRequest]) (*connect.Response[sdp_go.GetChangeResponse], error)
 	// Gets the details of an existing change in markdown format
 	GetChangeSummary(context.Context, *connect.Request[sdp_go.GetChangeSummaryRequest]) (*connect.Response[sdp_go.GetChangeSummaryResponse], error)
 	// Gets the full timeline for this change, this will send one response
@@ -478,6 +497,12 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 		ChangesServiceGetChangeProcedure,
 		svc.GetChange,
 		connect.WithSchema(changesServiceMethods.ByName("GetChange")),
+		connect.WithHandlerOptions(opts...),
+	)
+	changesServiceGetChangeByTicketLinkHandler := connect.NewUnaryHandler(
+		ChangesServiceGetChangeByTicketLinkProcedure,
+		svc.GetChangeByTicketLink,
+		connect.WithSchema(changesServiceMethods.ByName("GetChangeByTicketLink")),
 		connect.WithHandlerOptions(opts...),
 	)
 	changesServiceGetChangeSummaryHandler := connect.NewUnaryHandler(
@@ -574,6 +599,8 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 			changesServiceCreateChangeHandler.ServeHTTP(w, r)
 		case ChangesServiceGetChangeProcedure:
 			changesServiceGetChangeHandler.ServeHTTP(w, r)
+		case ChangesServiceGetChangeByTicketLinkProcedure:
+			changesServiceGetChangeByTicketLinkHandler.ServeHTTP(w, r)
 		case ChangesServiceGetChangeSummaryProcedure:
 			changesServiceGetChangeSummaryHandler.ServeHTTP(w, r)
 		case ChangesServiceGetChangeTimelineV2Procedure:
@@ -625,6 +652,10 @@ func (UnimplementedChangesServiceHandler) CreateChange(context.Context, *connect
 
 func (UnimplementedChangesServiceHandler) GetChange(context.Context, *connect.Request[sdp_go.GetChangeRequest]) (*connect.Response[sdp_go.GetChangeResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetChange is not implemented"))
+}
+
+func (UnimplementedChangesServiceHandler) GetChangeByTicketLink(context.Context, *connect.Request[sdp_go.GetChangeByTicketLinkRequest]) (*connect.Response[sdp_go.GetChangeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetChangeByTicketLink is not implemented"))
 }
 
 func (UnimplementedChangesServiceHandler) GetChangeSummary(context.Context, *connect.Request[sdp_go.GetChangeSummaryRequest]) (*connect.Response[sdp_go.GetChangeSummaryResponse], error) {

@@ -38,7 +38,7 @@ func SubmitSignal(cmd *cobra.Command, args []string) error {
 	if viper.GetString("description") == "" {
 		return flagError{"--description is required"}
 	}
-	changeUUID, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, viper.GetString("ticket-link"), true)
+	changeUUID, err := getChangeUUIDAndCheckStatus(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, viper.GetString("ticket-link"), true)
 	if err != nil {
 		return loggedError{
 			err:     err,

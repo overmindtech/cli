@@ -136,7 +136,7 @@ func TerraformApplyImpl(ctx context.Context, cmd *cobra.Command, oi sdp.Overmind
 			}
 		}
 
-		changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, true)
+		changeUuid, err := getChangeUUIDAndCheckStatus(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, true)
 		if err != nil {
 			return uuid.Nil, fmt.Errorf("failed to identify change: %w", err)
 		}

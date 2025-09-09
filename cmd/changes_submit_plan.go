@@ -135,7 +135,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	delete(lf, "file")
 
 	client := AuthenticatedChangesClient(ctx, oi)
-	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, viper.GetString("ticket-link"), false)
+	changeUuid, err := getChangeUUIDAndCheckStatus(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, viper.GetString("ticket-link"), false)
 	if err != nil {
 		return loggedError{
 			err:     err,

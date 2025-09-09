@@ -52,7 +52,7 @@ func GetChange(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus(sdp.ChangeStatus_value[viper.GetString("status")]), viper.GetString("ticket-link"), true)
+	changeUuid, err := getChangeUUIDAndCheckStatus(ctx, oi, sdp.ChangeStatus(sdp.ChangeStatus_value[viper.GetString("status")]), viper.GetString("ticket-link"), true)
 	if err != nil {
 		return loggedError{
 			err:     err,

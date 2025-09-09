@@ -218,7 +218,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	}
 
 	client := AuthenticatedChangesClient(ctx, oi)
-	changeUuid, err := getChangeUuid(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, false)
+	changeUuid, err := getChangeUUIDAndCheckStatus(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, ticketLink, false)
 	if err != nil {
 		uploadChangesSpinner.Fail(fmt.Sprintf("Uploading planned changes: failed searching for existing changes: %v", err))
 		return nil

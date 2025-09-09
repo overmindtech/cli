@@ -183,9 +183,9 @@ Then enter the code:
 	%v
 `
 
-// getChangeUuid returns the UUID of a change, as selected by --uuid or --change, or a change with the specified status and having --ticket-link
-func getChangeUuid(ctx context.Context, oi sdp.OvermindInstance, expectedStatus sdp.ChangeStatus, ticketLink string, errNotFound bool) (uuid.UUID, error) {
-	var changeUuid uuid.UUID
+// getChangeUUIDAndCheckStatus returns the UUID of a change, as selected by --uuid or --change, or a change with the specified status and having --ticket-link
+func getChangeUUIDAndCheckStatus(ctx context.Context, oi sdp.OvermindInstance, expectedStatus sdp.ChangeStatus, ticketLink string, errorOnNotFound bool) (uuid.UUID, error) {
+	var changeUUID uuid.UUID
 	var err error
 
 	uuidString := viper.GetString("uuid")
@@ -198,12 +198,12 @@ func getChangeUuid(ctx context.Context, oi sdp.OvermindInstance, expectedStatus 
 
 	// Check UUID first if more than one is set
 	if uuidString != "" {
-		changeUuid, err = uuid.Parse(uuidString)
+		changeUUID, err = uuid.Parse(uuidString)
 		if err != nil {
 			return uuid.Nil, fmt.Errorf("invalid --uuid value '%v', error: %w", uuidString, err)
 		}
 
-		return changeUuid, nil
+		return changeUUID, nil
 	}
 
 	// Then check for a change URL
@@ -211,34 +211,73 @@ func getChangeUuid(ctx context.Context, oi sdp.OvermindInstance, expectedStatus 
 		return parseChangeUrl(changeUrlString)
 	}
 
-	// Finally look through all open changes to find one with a matching ticket link
+	// Finally look up by ticket link with retry
+	changeUUID, err = getChangeByTicketLinkWithRetry(ctx, oi, ticketLink, expectedStatus, errorOnNotFound)
+	if errorOnNotFound && err != nil {
+		return uuid.Nil, err
+	}
+
+	return changeUUID, nil
+}
+
+// getChangeByTicketLinkWithRetry performs the GetChangeByTicketLink API call with retry logic,
+// retrying both on error and when the status does not match the expected status.
+// NB api-server will only return the latest change with this ticket link.
+func getChangeByTicketLinkWithRetry(ctx context.Context, oi sdp.OvermindInstance, ticketLink string, expectedStatus sdp.ChangeStatus, errorOnNotFound bool) (uuid.UUID, error) {
 	client := AuthenticatedChangesClient(ctx, oi)
 
-	changesList, err := client.ListChangesByStatus(ctx, &connect.Request[sdp.ListChangesByStatusRequest]{
-		Msg: &sdp.ListChangesByStatusRequest{
-			Status: expectedStatus,
-		},
-	})
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("failed to search for existing changes: %w", err)
+	var change *connect.Response[sdp.GetChangeResponse]
+	var currentStatus sdp.ChangeStatus
+	var err error
+	maxRetries := 3
+	if !errorOnNotFound {
+		// If not erroring on not found, only attempt once.
+		maxRetries = 1
 	}
+	retryDelay := 3 * time.Second
 
-	var maybeChangeUuid *uuid.UUID
-	for _, c := range changesList.Msg.GetChanges() {
-		if c.GetProperties().GetTicketLink() == ticketLink {
-			maybeChangeUuid = c.GetMetadata().GetUUIDParsed()
-			if maybeChangeUuid != nil {
-				changeUuid = *maybeChangeUuid
-				break
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		change, err = client.GetChangeByTicketLink(ctx, &connect.Request[sdp.GetChangeByTicketLinkRequest]{
+			Msg: &sdp.GetChangeByTicketLinkRequest{
+				TicketLink: ticketLink,
+			},
+		})
+		if err == nil {
+			// change found
+			var uuidPtr *uuid.UUID
+			if change != nil && change.Msg != nil && change.Msg.GetChange() != nil && change.Msg.GetChange().GetMetadata() != nil {
+				uuidPtr = change.Msg.GetChange().GetMetadata().GetUUIDParsed()
+				currentStatus = change.Msg.GetChange().GetMetadata().GetStatus()
+				if uuidPtr != nil && (currentStatus == expectedStatus) {
+					// Success: we have a UUID and status matches the expected status
+					return *uuidPtr, nil
+				}
 			}
 		}
+		// Log the error and retry if not the last attempt
+		if attempt < maxRetries {
+			logFields := log.Fields{
+				"ovm.change.ticketLink": ticketLink,
+				"expectedStatus":        expectedStatus.String(),
+				"attempt":               attempt,
+				"maxRetries":            maxRetries,
+				"currentStatus":         currentStatus.String(),
+			}
+			if err != nil {
+				logFields["error"] = err.Error()
+				log.WithContext(ctx).WithFields(logFields).Debug("failed to get change by ticket link, retrying")
+			} else {
+				log.WithContext(ctx).WithFields(logFields).Debug("change found but status does not match, retrying")
+			}
+			time.Sleep(retryDelay)
+		}
 	}
-
-	if errNotFound && changeUuid == uuid.Nil {
-		return uuid.Nil, fmt.Errorf("no change found with ticket link %v and status %v", ticketLink, expectedStatus.String())
+	if err != nil {
+		// Final attempt failed with an error
+		return uuid.Nil, fmt.Errorf("error looking up change with ticket link %v after %d attempts: %w", ticketLink, maxRetries, err)
 	}
-
-	return changeUuid, nil
+	// Final attempt found a change but status did not match
+	return uuid.Nil, fmt.Errorf("change %s found with ticket link %v. Change status %v does not match expected status %v after %d attempts", change.Msg.GetChange().GetMetadata().GetUUIDParsed(), ticketLink, currentStatus.String(), expectedStatus.String(), maxRetries)
 }
 
 func parseChangeUrl(changeUrlString string) (uuid.UUID, error) {
