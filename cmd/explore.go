@@ -48,7 +48,7 @@ For GCP, ensure you have appropriate permissions (roles/browser or equivalent) t
 // any query or request during the runtime of the CLI. for proper cleanup,
 // execute the returned function. The method returns once the sources are
 // started. Progress is reported into the provided multi printer.
-func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oauth2.Token, tfArgs []string, failOverToAws bool) (func(), error) {
+func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oauth2.Token, tfArgs []string, failOverToDefaultLoginCfg bool) (func(), error) {
 	var err error
 
 	multi := pterm.DefaultMultiPrinter
@@ -61,8 +61,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 	gcpSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting GCP source engine")
 	statusArea := pterm.DefaultParagraph.WithWriter(multi.NewWriter())
 
-	natsOptions := natsOptions(ctx, oi, token)
-	heartbeatOptions := heartbeatOptions(oi, token)
+	natsOpts := natsOptions(ctx, oi, token)
 
 	hostname, err := os.Hostname()
 	if err != nil {
@@ -79,9 +78,9 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			SourceUUID:            uuid.New(),
 			App:                   oi.ApiUrl.Host,
 			ApiKey:                token.AccessToken,
-			NATSOptions:           &natsOptions,
+			NATSOptions:           &natsOpts,
 			MaxParallelExecutions: 2_000,
-			HeartbeatOptions:      heartbeatOptions,
+			HeartbeatOptions:      heartbeatOptions(oi, token),
 		}
 		stdlibEngine, err := stdlibSource.InitializeEngine(
 			&ec,
@@ -131,7 +130,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			statusArea.Println(fmt.Sprintf("Using AWS provider in %s with %s.", p.FilePath, credentials.Source))
 			configs = append(configs, c)
 		}
-		if len(configs) == 0 && failOverToAws {
+		if len(configs) == 0 && failOverToDefaultLoginCfg {
 			userConfig, err := config.LoadDefaultConfig(ctx)
 			if err != nil {
 				awsSpinner.Fail("Failed to load default AWS config")
@@ -148,8 +147,8 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			App:                   oi.ApiUrl.Host,
 			ApiKey:                token.AccessToken,
 			MaxParallelExecutions: 2_000,
-			NATSOptions:           &natsOptions,
-			HeartbeatOptions:      heartbeatOptions,
+			NATSOptions:           &natsOpts,
+			HeartbeatOptions:      heartbeatOptions(oi, token),
 		}
 		awsEngine, err := proc.InitializeAwsSourceEngine(
 			ctx,
@@ -220,7 +219,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 		}
 
 		// Fallback to default GCP config if no terraform providers found
-		if len(gcpConfigs) == 0 {
+		if len(gcpConfigs) == 0 && failOverToDefaultLoginCfg {
 			statusArea.Println("No GCP terraform providers found. Attempting to use default GCP credentials.")
 			// Try to use Application Default Credentials by passing nil config
 			gcpConfigs = append(gcpConfigs, nil)
@@ -242,8 +241,8 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 				App:                   oi.ApiUrl.Host,
 				ApiKey:                token.AccessToken,
 				MaxParallelExecutions: 2_000,
-				NATSOptions:           &natsOptions,
-				HeartbeatOptions:      heartbeatOptions,
+				NATSOptions:           &natsOpts,
+				HeartbeatOptions:      heartbeatOptions(oi, token),
 			}
 
 			gcpEngine, err := gcpproc.Initialize(ctx, &ec, gcpConfig)

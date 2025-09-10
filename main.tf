@@ -37,6 +37,13 @@ provider "google" {
   zone    = "us-west1-a"
 }
 
+provider "google" {
+  alias = "dogfood"
+  project = "ovm-dogfood"
+  region  = "europe-west2"
+  zone    = "europe-west2-a"
+}
+
 variable "bucket_postfix" {
   type        = string
   description = "The prefix to apply to the bucket name."
