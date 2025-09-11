@@ -11,10 +11,8 @@ import (
 	"github.com/openrdap/rdap"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/stdlib-source/adapters/test"
 	log "github.com/sirupsen/logrus"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	_ "embed"
 )
@@ -54,27 +52,31 @@ func InitializeEngine(ec *discovery.EngineConfig, reverseDNS bool) (*discovery.E
 		&test.TestLocationAdapter{},
 		&test.TestPersonAdapter{},
 		&test.TestRegionAdapter{},
-		&RdapIPNetworkAdapter{
-			ClientFac: newRdapClient,
-			Cache:     sdpcache.NewCache(),
-			IPCache:   NewIPCache[*rdap.IPNetwork](),
-		},
-		&RdapASNAdapter{
-			ClientFac: newRdapClient,
-			Cache:     sdpcache.NewCache(),
-		},
-		&RdapDomainAdapter{
-			ClientFac: newRdapClient,
-			Cache:     sdpcache.NewCache(),
-		},
-		&RdapEntityAdapter{
-			ClientFac: newRdapClient,
-			Cache:     sdpcache.NewCache(),
-		},
-		&RdapNameserverAdapter{
-			ClientFac: newRdapClient,
-			Cache:     sdpcache.NewCache(),
-		},
+		// RDAP adapters are disabled because they return a large amount of data
+		// that isn't very helpful. We're keeping the code in place so we can
+		// decide later if it's worth re-enabling them. See Linear issue ENG-1390.
+		//
+		// &RdapIPNetworkAdapter{
+		// 	ClientFac: newRdapClient,
+		// 	Cache:     sdpcache.NewCache(),
+		// 	IPCache:   NewIPCache[*rdap.IPNetwork](),
+		// },
+		// &RdapASNAdapter{
+		// 	ClientFac: newRdapClient,
+		// 	Cache:     sdpcache.NewCache(),
+		// },
+		// &RdapDomainAdapter{
+		// 	ClientFac: newRdapClient,
+		// 	Cache:     sdpcache.NewCache(),
+		// },
+		// &RdapEntityAdapter{
+		// 	ClientFac: newRdapClient,
+		// 	Cache:     sdpcache.NewCache(),
+		// },
+		// &RdapNameserverAdapter{
+		// 	ClientFac: newRdapClient,
+		// 	Cache:     sdpcache.NewCache(),
+		// },
 	}
 
 	err = e.AddAdapters(adapters...)
@@ -83,11 +85,11 @@ func InitializeEngine(ec *discovery.EngineConfig, reverseDNS bool) (*discovery.E
 }
 
 // newRdapClient Creates a new RDAP client using otelhttp.DefaultClient. rdap is suspected to not be thread safe, so we create a new client for each request
-func newRdapClient() *rdap.Client {
-	return &rdap.Client{
-		HTTP: otelhttp.DefaultClient,
-	}
-}
+// func newRdapClient() *rdap.Client {
+// 	return &rdap.Client{
+// 		HTTP: otelhttp.DefaultClient,
+// 	}
+// }
 
 // Wraps an RDAP error in an SDP error, correctly checking for things like 404s
 func wrapRdapError(err error) error {
