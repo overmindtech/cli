@@ -50,7 +50,7 @@ func init() {
 		Metadata.Register(adapter.Metadata())
 	}
 
-	log.Info("Registered GCP source metadata", " with ", len(Metadata.AllAdapterMetadata()), " adapters")
+	log.Debug("Registered GCP source metadata", " with ", len(Metadata.AllAdapterMetadata()), " adapters")
 }
 
 func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig) (*discovery.Engine, error) {

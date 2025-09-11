@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"slices"
 
 	"atomicgo.dev/keyboard"
@@ -56,10 +57,6 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 	defer func() {
 		_, _ = multi.Stop()
 	}()
-	stdlibSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting stdlib source engine")
-	awsSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting AWS source engine")
-	gcpSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting GCP source engine")
-	statusArea := pterm.DefaultParagraph.WithWriter(multi.NewWriter())
 
 	natsOpts := natsOptions(ctx, oi, token)
 
@@ -69,6 +66,31 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 	}
 
 	p := pool.NewWithResults[[]*discovery.Engine]().WithErrors()
+
+	tfFiles, err := filepath.Glob(filepath.Join(".", "*.tf"))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(tfFiles) == 0 && !failOverToDefaultLoginCfg {
+		currentDir, _ := os.Getwd()
+		return nil, fmt.Errorf(`No Terraform configuration files found in %s
+
+The Overmind CLI requires access to Terraform configuration files (.tf files) to discover and authenticate with cloud providers. Without Terraform configuration, the CLI cannot determine which cloud resources to interrogate.
+
+To resolve this issue:
+- Ensure you're running the command from a directory containing Terraform files (.tf files)
+- Or create Terraform configuration files that define your cloud providers
+
+For more information about Terraform configuration, visit: https://developer.hashicorp.com/terraform/language`, currentDir)
+	}
+
+	stdlibSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting stdlib source engine")
+	awsSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting AWS source engine")
+	gcpSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting GCP source engine")
+	statusArea := pterm.DefaultParagraph.WithWriter(multi.NewWriter())
+
+	foundCloudProvider := false
 
 	p.Go(func() ([]*discovery.Engine, error) { //nolint:contextcheck // todo: pass in context with timeout to abort timely and allow Ctrl-C to work
 		ec := discovery.EngineConfig{
@@ -107,13 +129,19 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			return nil, fmt.Errorf("failed to load variables from the environment: %w", err)
 		}
 
-		providers, err := tfutils.ParseAWSProviders(".", tfEval)
+		awsProviders, err := tfutils.ParseAWSProviders(".", tfEval)
 		if err != nil {
-			awsSpinner.Fail("Failed to parse providers")
-			return nil, fmt.Errorf("failed to parse providers: %w", err)
+			awsSpinner.Fail("Failed to parse AWS providers")
+			return nil, fmt.Errorf("failed to parse AWS providers: %w", err)
 		}
+
+		if len(awsProviders) == 0 && !failOverToDefaultLoginCfg {
+			awsSpinner.Warning("No AWS terraform providers found, skipping AWS source initialization.")
+			return nil, nil // skip AWS if there are no awsProviders
+		}
+
 		configs := []aws.Config{}
-		for _, p := range providers {
+		for _, p := range awsProviders {
 			if p.Error != nil {
 				// skip providers that had errors. This allows us to use
 				// providers we _could_ detect, while still failing if there is
@@ -123,20 +151,24 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			}
 			c, err := tfutils.ConfigFromProvider(ctx, *p.Provider)
 			if err != nil {
-				awsSpinner.Fail("Error when converting provider to config")
-				return nil, fmt.Errorf("error when converting provider to config: %w", err)
+				awsSpinner.Fail("Error when converting AWS Terraform provider to config: ", err)
+				return nil, fmt.Errorf("error when converting AWS Terraform provider to config: %w", err)
 			}
 			credentials, _ := c.Credentials.Retrieve(ctx)
-			statusArea.Println(fmt.Sprintf("Using AWS provider in %s with %s.", p.FilePath, credentials.Source))
+			aliasInfo := ""
+			if p.Provider.Alias != "" {
+				aliasInfo = fmt.Sprintf(" (alias: %s)", p.Provider.Alias)
+			}
+			statusArea.Println(fmt.Sprintf("Using AWS provider %s%s in %s with %s.", p.Provider.Name, aliasInfo, p.FilePath, credentials.Source))
 			configs = append(configs, c)
 		}
 		if len(configs) == 0 && failOverToDefaultLoginCfg {
+			statusArea.Println("No AWS terraform providers found. Attempting to use AWS default credentials for configuration.")
 			userConfig, err := config.LoadDefaultConfig(ctx)
 			if err != nil {
-				awsSpinner.Fail("Failed to load default AWS config")
+				awsSpinner.Fail("Failed to load default AWS config: ", err)
 				return nil, fmt.Errorf("failed to load default AWS config: %w", err)
 			}
-			statusArea.Println("Using default AWS CLI config. No AWS terraform providers found.")
 			configs = append(configs, userConfig)
 		}
 		ec := discovery.EngineConfig{
@@ -173,6 +205,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 		}
 
 		awsSpinner.Success("AWS source engine started")
+		foundCloudProvider = true
 		return []*discovery.Engine{awsEngine}, nil
 	})
 
@@ -190,6 +223,11 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			return nil, fmt.Errorf("failed to parse GCP providers: %w", err)
 		}
 
+		if len(gcpProviders) == 0 && !failOverToDefaultLoginCfg {
+			gcpSpinner.Warning("No GCP terraform providers found, skipping GCP source initialization.")
+			return nil, nil // skip GCP if there are no providers
+		}
+
 		// Process GCP providers and extract configurations
 		gcpConfigs := []*gcpproc.GCPConfig{}
 
@@ -201,7 +239,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 
 			config, err := tfutils.ConfigFromGCPProvider(*p.Provider)
 			if err != nil {
-				statusArea.Println(fmt.Sprintf("Error configuring GCP provider in %s: %s", p.FilePath, err.Error()))
+				statusArea.Println(fmt.Sprintf("Error configuring GCP provider %s in %s: %s", p.Provider.Name, p.FilePath, err.Error()))
 				continue
 			}
 
@@ -215,12 +253,12 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			if config.Alias != "" {
 				aliasInfo = fmt.Sprintf(" (alias: %s)", config.Alias)
 			}
-			statusArea.Println(fmt.Sprintf("Using GCP provider in %s with project %s%s", p.FilePath, config.ProjectID, aliasInfo))
+			statusArea.Println(fmt.Sprintf("Using GCP provider in %s with project %s%s.", p.FilePath, config.ProjectID, aliasInfo))
 		}
 
 		// Fallback to default GCP config if no terraform providers found
 		if len(gcpConfigs) == 0 && failOverToDefaultLoginCfg {
-			statusArea.Println("No GCP terraform providers found. Attempting to use default GCP credentials.")
+			statusArea.Println("No GCP terraform providers found. Attempting to use GCP Application Default Credentials for configuration.")
 			// Try to use Application Default Credentials by passing nil config
 			gcpConfigs = append(gcpConfigs, nil)
 		}
@@ -280,6 +318,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			gcpSpinner.Success(fmt.Sprintf("%d GCP source engines started", len(gcpEngines)))
 		}
 
+		foundCloudProvider = true
 		return gcpEngines, nil
 	})
 
@@ -288,6 +327,19 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 		return func() {}, fmt.Errorf("error starting sources: %w", err)
 	}
 
+	if !foundCloudProvider {
+		statusArea.Println(`No cloud providers found in Terraform configuration.
+
+The Overmind CLI requires access to cloud provider configurations to interrogate resources. Without configured providers, the CLI cannot determine which cloud resources to query and as a result calculate a successful blast radius.
+
+To resolve this issue ensure your Terraform configuration files define at least one supported cloud provider (e.g., AWS, GCP)
+
+For more information about configuring cloud providers in Terraform, visit:
+- AWS: https://registry.terraform.io/providers/hashicorp/aws/latest/docs
+- GCP: https://registry.terraform.io/providers/hashicorp/google/latest/docs`)
+	}
+
+	// Return a cleanup function to stop all engines
 	return func() {
 		for _, e := range slices.Concat(engines...) {
 			err := e.Stop()
