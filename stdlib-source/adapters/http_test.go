@@ -47,7 +47,7 @@ func NewTestServer() (*TestHTTPServer, error) {
 	}))
 
 	sm.Handle("/301", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Location", "https://www.google.com")
+		w.Header().Add("Location", "https://www.google.com?foo=bar#baz")
 		w.WriteHeader(http.StatusMovedPermanently)
 	}))
 
@@ -232,8 +232,18 @@ func TestHTTPGet(t *testing.T) {
 			t.Errorf("expected status to be 301, got: %v", status)
 		}
 
-		if len(item.GetLinkedItemQueries()) == 0 {
-			t.Error("expected a linked item to redirected location, got none")
+		liqs := item.GetLinkedItemQueries()
+		if len(liqs) != 3 {
+			t.Errorf("expected linked items for redirected location, ip, and dns, got %v: %v", len(liqs), liqs)
+		}
+		for l := range liqs {
+			// Look for the linked item with the http query to the redirect
+			// location, check that the query and fragment have been stripped.
+			if liqs[l].GetQuery().GetType() == "http" {
+				if liqs[l].GetQuery().GetQuery() != "https://www.google.com" {
+					t.Errorf("expected linked item query to be https://www.google.com, got %v", liqs[l].GetQuery().GetQuery())
+				}
+			}
 		}
 
 		discovery.TestValidateItem(t, item)

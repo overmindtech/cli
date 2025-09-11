@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"runtime"
 	"strings"
 	"sync"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 const USER_AGENT_VERSION = "0.1"
@@ -271,19 +273,38 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 	// Detect redirect and add a linked item for the redirect target
 	if res.StatusCode >= 300 && res.StatusCode < 400 {
 		if loc := res.Header.Get("Location"); loc != "" {
-			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   "http",
-					Method: sdp.QueryMethod_GET,
-					Query:  loc,
-					Scope:  scope,
+			item.Attributes.AttrStruct.Fields["location"] = &structpb.Value{
+				Kind: &structpb.Value_StringValue{
+					StringValue: loc,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Redirects are tightly coupled
-					In:  true,
-					Out: true,
-				},
-			})
+			}
+			locU, err := url.Parse(loc)
+			if err != nil {
+				item.Attributes.AttrStruct.Fields["location-error"] = &structpb.Value{
+					Kind: &structpb.Value_StringValue{
+						StringValue: err.Error(),
+					},
+				}
+			} else {
+				// Don't include query string and fragment in the linked item.
+				// This leads to too many items, like auth redirect errors, that
+				// do not provide value.
+				locU.Fragment = ""
+				locU.RawQuery = ""
+				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   "http",
+						Method: sdp.QueryMethod_GET,
+						Query:  locU.String(),
+						Scope:  scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// Redirects are tightly coupled
+						In:  true,
+						Out: true,
+					},
+				})
+			}
 		}
 	}
 
