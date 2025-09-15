@@ -1,0 +1,270 @@
+# Dynamic Adapter Creation Rules
+
+## Overview
+
+When creating new GCP dynamic adapters in the Overmind codebase, follow these patterns and requirements to ensure consistency, correctness, and maintainability.
+
+## Core Principles
+
+- Always use the `registerableAdapter` struct pattern (NOT legacy `SDPAssetTypeToAdapterMeta`)
+- Implement proper scope detection (project/regional/zonal)
+- Include comprehensive blast propagation analysis
+- Add proper terraform mapping support
+- Follow naming conventions and IAM permissions
+- Research from official API documentation
+
+## Implementation Steps
+
+### 1. Resource Analysis
+
+#### Understand the Resource
+- **Add clear description**: What does this resource do? Add a descriptive comment at the top of the adapter
+- **Research the API**: Study the official GCP API documentation thoroughly
+- **Identify use cases**: How is this resource typically used in GCP infrastructure?
+
+#### Determine Scope
+- **Project-level**: URLs with `/global/` or no location parameters
+  - Examples: `compute-global-forwarding-rule.go`, `monitoring-alert-policy.go`
+- **Regional**: URLs with `/regions/{region}/`
+  - Examples: `dataproc-cluster.go`, `run-service.go`
+- **Zonal**: URLs with `/zones/{zone}/`
+  - Examples: Check existing zonal adapters in the directory
+
+#### Identify Unique Attributes
+- Usually the resource name in the URL path
+- Extract from API URL path segments
+- Consider multiple unique attributes for complex resources
+
+### 2. Adapter Structure
+
+Use the `registerableAdapter` struct pattern with these key components:
+
+```go
+var YourResourceAdapter = &registerableAdapter{
+    SDPItemType:      gcpshared.YourItemType,
+    Category:         sdp.AdapterCategory_ADAPTER_CATEGORY_YOUR_CATEGORY,
+    Scope:            gcpshared.ScopeYourScope,
+    UniqueAttributes: []string{"yourUniqueAttribute"},
+    IAMPermissions:   []string{"api.resource.get", "api.resource.list"},
+    TerraformResource: "google_your_resource",
+    // ... other fields
+}
+```
+
+#### Key Components to Determine:
+
+- **SDP Item Type**: Define in `gcpshared` package (follow existing naming patterns)
+- **Category**: Choose appropriate `sdp.AdapterCategory` - see `sdp-go/account.pb.go` for accurate category definitions and descriptions
+- **Scope**: `gcpshared.ScopeProject`, `gcpshared.ScopeRegional`, or `gcpshared.ScopeZonal`
+- **Unique Attributes**: Extract from API URL path segments
+- **IAM Permissions**: Research from official API documentation
+- **Terraform Resource**: Find correct resource name in Terraform registry
+
+### 3. Endpoint Functions
+
+Choose the appropriate endpoint function based on scope:
+
+#### Project-level Resources
+
+**Single Query Parameter:**
+```go
+GetFunc: ProjectLevelEndpointFuncWithSingleQuery(
+    "https://api.googleapis.com/v1/projects/{project}/resources/{resource}",
+    "resource",
+),
+ListFunc: ProjectLevelListFunc(
+    "https://api.googleapis.com/v1/projects/{project}/resources",
+),
+```
+
+**Two Query Parameters (location + resource):**
+```go
+GetFunc: ProjectLevelEndpointFuncWithTwoQueries(
+    "https://api.googleapis.com/v1/projects/{project}/locations/{location}/resources/{resource}",
+),
+SearchFunc: ProjectLevelEndpointFuncWithSingleQuery(
+    "https://api.googleapis.com/v1/projects/{project}/locations/{location}/resources",
+),
+UniqueAttributeKeys: []string{"locations", "resources"},
+```
+*Examples: `cloudfunctions-function.go`, `run-service.go`, `file-instance.go`, `dataplex-data-scan.go`*
+
+#### Regional Resources
+
+**Single Query Parameter:**
+```go
+GetFunc: RegionalLevelEndpointFuncWithSingleQuery(
+    "https://api.googleapis.com/v1/projects/{project}/regions/{region}/resources/{resource}",
+    "resource",
+),
+ListFunc: RegionLevelListFunc(
+    "https://api.googleapis.com/v1/projects/{project}/regions/{region}/resources",
+),
+```
+
+**Multiple Query Parameters:**
+```go
+GetFunc: RegionalLevelEndpointFuncWithTwoQueries(
+    "https://api.googleapis.com/v1/projects/{project}/regions/{region}/subresources/{subresource}/resources/{resource}",
+),
+UniqueAttributeKeys: []string{"subresources", "resources"},
+```
+
+#### Zonal Resources
+
+**Single Query Parameter:**
+```go
+GetFunc: ZoneLevelEndpointFuncWithSingleQuery(
+    "https://api.googleapis.com/v1/projects/{project}/zones/{zone}/resources/{resource}",
+    "resource",
+),
+ListFunc: ZoneLevelListFunc(
+    "https://api.googleapis.com/v1/projects/{project}/zones/{zone}/resources",
+),
+```
+
+**Multiple Query Parameters:**
+```go
+GetFunc: ZoneLevelEndpointFuncWithTwoQueries(
+    "https://api.googleapis.com/v1/projects/{project}/zones/{zone}/subresources/{subresource}/resources/{resource}",
+),
+UniqueAttributeKeys: []string{"subresources", "resources"},
+```
+
+### 4. List vs Search Decision
+
+#### Use List if:
+- No additional parameters needed to list all resources in scope
+- Simple resource listing without complex filtering
+
+#### Use Search if:
+- Additional parameters (like location) required
+- Multiple unique attributes
+- Complex filtering needed
+
+#### No-op Search if:
+- Terraform mapping needs SEARCH but adapter doesn't support it
+- See `orgpolicy-policy.go` for example
+
+### 5. Blast Propagation Analysis
+
+For each attribute that references another resource:
+
+#### Ask the Right Questions:
+- **IN**: "What happens if the linked resource is deleted/updated?"
+- **OUT**: "What happens to the linked resource if this resource is updated/deleted?"
+
+#### Implementation:
+```go
+blastPropagation: map[string]*gcpshared.Impact{
+    "network": {
+        In:  true,  // This resource is affected if network changes
+        Out: false, // Network is not affected if this resource changes
+    },
+    "subnet": {
+        In:  true,  // This resource is affected if subnet changes
+        Out: true,  // Subnet is affected if this resource changes
+    },
+},
+```
+
+#### Special Cases:
+- **Use dot notation**: `"config.networkUri"` for nested attributes
+- **If no adapter exists**: Create the SDP item type definition in `sources/gcp/shared/item-types.go` and `models.go` as if the adapter exists, then link to it
+- **Follow naming**: `gcp-<api>-<resource>` for new adapter types
+
+### 6. Special Considerations
+
+#### NameSelector
+- Use if resource doesn't have name attribute
+- See `dataproc-cluster.go` for example
+
+#### Health Status
+- Add TODO for status/state fields: `"TODO: https://linear.app/overmind/issue/ENG-631"`
+
+#### InDevelopment
+- **DO NOT USE**: This flag is reserved for human authors only
+- Agents should never set `InDevelopment: true`
+
+#### IAM Permissions
+- Research from official API documentation
+- Most APIs provide required permissions in their reference docs
+- Common patterns:
+  - `"api.resource.get"` for individual resource access
+  - `"api.resource.list"` for listing resources
+
+### 7. Terraform Mapping
+
+#### Research Requirements:
+- Find correct resource name in Terraform registry: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/
+- Determine if method should be GET or SEARCH
+- Match terraform mapping method to adapter capabilities
+
+#### Example:
+```go
+TerraformResource: "google_compute_global_forwarding_rule",
+TerraformMethod:   sdp.QueryMethod_GET,
+```
+
+## Reference Examples
+
+### Project-level Resources
+- `compute-global-forwarding-rule.go`
+- `monitoring-alert-policy.go`
+
+### Regional Resources
+- `dataproc-cluster.go`
+- `run-service.go`
+
+### Zonal Resources
+- Check existing zonal adapters in the directory
+
+### Special Patterns
+- **Multiple Unique Attributes**: Check adapters with complex URL structures
+- **No-op Search**: `orgpolicy-policy.go`
+- **NameSelector**: `dataproc-cluster.go`
+- **Complex Blast Propagation**: `dataproc-cluster.go`
+
+## Files to Create/Modify
+
+### Required Files
+- `sources/gcp/dynamic/adapters/{name}.go` (main adapter file)
+
+### Optional Files (if new SDP item type needed)
+- `sources/gcp/shared/item-types.go` (add new item type)
+- `sources/gcp/shared/models.go` (add new model)
+
+## Important Patterns
+
+### Always Use:
+- `registerableAdapter` struct, never legacy maps
+- Endpoint functions that match the exact API URL format
+- Clear and specific blast propagation descriptions
+- Terraform mapping method that matches adapter capabilities
+- IAM permissions that match the actual API requirements
+
+### Never Use:
+- Legacy `SDPAssetTypeToAdapterMeta` pattern
+- `InDevelopment: true` (reserved for human authors)
+- Assumptions about protobuf types or API structure
+
+## Validation Checklist
+
+- [ ] Adapter file compiles without errors
+- [ ] Proper scope detection and endpoint functions
+- [ ] Comprehensive blast propagation analysis
+- [ ] Valid terraform mapping with correct method (GET/SEARCH)
+- [ ] Appropriate IAM permissions defined
+- [ ] Clear resource description and comments
+- [ ] Follows existing adapter patterns
+- [ ] No legacy `SDPAssetTypeToAdapterMeta` usage
+- [ ] API URLs match official GCP documentation exactly
+- [ ] Blast propagation covers all linked resources
+- [ ] Terraform resource name verified in registry
+
+## Key Resources
+
+- **GCP API Documentation**: Always verify against official docs
+- **Terraform Registry**: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/
+- **Existing Adapters**: Study patterns in `sources/gcp/dynamic/adapters/`
+- **SDP Types**: Check `sources/gcp/shared/item-types.go` for existing types
