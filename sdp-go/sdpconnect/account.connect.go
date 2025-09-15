@@ -123,6 +123,12 @@ const (
 	// ManagementServiceSetUserOnboardingStatusProcedure is the fully-qualified name of the
 	// ManagementService's SetUserOnboardingStatus RPC.
 	ManagementServiceSetUserOnboardingStatusProcedure = "/account.ManagementService/SetUserOnboardingStatus"
+	// ManagementServiceSetGithubInstallationIDProcedure is the fully-qualified name of the
+	// ManagementService's SetGithubInstallationID RPC.
+	ManagementServiceSetGithubInstallationIDProcedure = "/account.ManagementService/SetGithubInstallationID"
+	// ManagementServiceUnsetGithubInstallationIDProcedure is the fully-qualified name of the
+	// ManagementService's UnsetGithubInstallationID RPC.
+	ManagementServiceUnsetGithubInstallationIDProcedure = "/account.ManagementService/UnsetGithubInstallationID"
 )
 
 // AdminServiceClient is a client for the account.AdminService service.
@@ -566,6 +572,11 @@ type ManagementServiceClient interface {
 	// Get and set onboarding status for users
 	GetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.GetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.GetUserOnboardingStatusResponse], error)
 	SetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error)
+	// Set github installation ID for the account
+	SetGithubInstallationID(context.Context, *connect.Request[sdp_go.SetGithubInstallationIDRequest]) (*connect.Response[sdp_go.SetGithubInstallationIDResponse], error)
+	// this will unset the github installation ID for the account, allowing the user to install the github app again
+	// it will also remove the organisation profile, so we no longer generate signals for that org
+	UnsetGithubInstallationID(context.Context, *connect.Request[sdp_go.UnsetGithubInstallationIDRequest]) (*connect.Response[sdp_go.UnsetGithubInstallationIDResponse], error)
 }
 
 // NewManagementServiceClient constructs a client for the account.ManagementService service. By
@@ -687,29 +698,43 @@ func NewManagementServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(managementServiceMethods.ByName("SetUserOnboardingStatus")),
 			connect.WithClientOptions(opts...),
 		),
+		setGithubInstallationID: connect.NewClient[sdp_go.SetGithubInstallationIDRequest, sdp_go.SetGithubInstallationIDResponse](
+			httpClient,
+			baseURL+ManagementServiceSetGithubInstallationIDProcedure,
+			connect.WithSchema(managementServiceMethods.ByName("SetGithubInstallationID")),
+			connect.WithClientOptions(opts...),
+		),
+		unsetGithubInstallationID: connect.NewClient[sdp_go.UnsetGithubInstallationIDRequest, sdp_go.UnsetGithubInstallationIDResponse](
+			httpClient,
+			baseURL+ManagementServiceUnsetGithubInstallationIDProcedure,
+			connect.WithSchema(managementServiceMethods.ByName("UnsetGithubInstallationID")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // managementServiceClient implements ManagementServiceClient.
 type managementServiceClient struct {
-	getAccount              *connect.Client[sdp_go.GetAccountRequest, sdp_go.GetAccountResponse]
-	deleteAccount           *connect.Client[sdp_go.DeleteAccountRequest, sdp_go.DeleteAccountResponse]
-	listSources             *connect.Client[sdp_go.ListSourcesRequest, sdp_go.ListSourcesResponse]
-	createSource            *connect.Client[sdp_go.CreateSourceRequest, sdp_go.CreateSourceResponse]
-	getSource               *connect.Client[sdp_go.GetSourceRequest, sdp_go.GetSourceResponse]
-	updateSource            *connect.Client[sdp_go.UpdateSourceRequest, sdp_go.UpdateSourceResponse]
-	deleteSource            *connect.Client[sdp_go.DeleteSourceRequest, sdp_go.DeleteSourceResponse]
-	listAllSourcesStatus    *connect.Client[sdp_go.ListAllSourcesStatusRequest, sdp_go.ListAllSourcesStatusResponse]
-	listActiveSourcesStatus *connect.Client[sdp_go.ListAllSourcesStatusRequest, sdp_go.ListAllSourcesStatusResponse]
-	submitSourceHeartbeat   *connect.Client[sdp_go.SubmitSourceHeartbeatRequest, sdp_go.SubmitSourceHeartbeatResponse]
-	keepaliveSources        *connect.Client[sdp_go.KeepaliveSourcesRequest, sdp_go.KeepaliveSourcesResponse]
-	createToken             *connect.Client[sdp_go.CreateTokenRequest, sdp_go.CreateTokenResponse]
-	revlinkWarmup           *connect.Client[sdp_go.RevlinkWarmupRequest, sdp_go.RevlinkWarmupResponse]
-	getTrialEnd             *connect.Client[sdp_go.GetTrialEndRequest, sdp_go.GetTrialEndResponse]
-	listAvailableItemTypes  *connect.Client[sdp_go.ListAvailableItemTypesRequest, sdp_go.ListAvailableItemTypesResponse]
-	getSourceStatus         *connect.Client[sdp_go.GetSourceStatusRequest, sdp_go.GetSourceStatusResponse]
-	getUserOnboardingStatus *connect.Client[sdp_go.GetUserOnboardingStatusRequest, sdp_go.GetUserOnboardingStatusResponse]
-	setUserOnboardingStatus *connect.Client[sdp_go.SetUserOnboardingStatusRequest, sdp_go.SetUserOnboardingStatusResponse]
+	getAccount                *connect.Client[sdp_go.GetAccountRequest, sdp_go.GetAccountResponse]
+	deleteAccount             *connect.Client[sdp_go.DeleteAccountRequest, sdp_go.DeleteAccountResponse]
+	listSources               *connect.Client[sdp_go.ListSourcesRequest, sdp_go.ListSourcesResponse]
+	createSource              *connect.Client[sdp_go.CreateSourceRequest, sdp_go.CreateSourceResponse]
+	getSource                 *connect.Client[sdp_go.GetSourceRequest, sdp_go.GetSourceResponse]
+	updateSource              *connect.Client[sdp_go.UpdateSourceRequest, sdp_go.UpdateSourceResponse]
+	deleteSource              *connect.Client[sdp_go.DeleteSourceRequest, sdp_go.DeleteSourceResponse]
+	listAllSourcesStatus      *connect.Client[sdp_go.ListAllSourcesStatusRequest, sdp_go.ListAllSourcesStatusResponse]
+	listActiveSourcesStatus   *connect.Client[sdp_go.ListAllSourcesStatusRequest, sdp_go.ListAllSourcesStatusResponse]
+	submitSourceHeartbeat     *connect.Client[sdp_go.SubmitSourceHeartbeatRequest, sdp_go.SubmitSourceHeartbeatResponse]
+	keepaliveSources          *connect.Client[sdp_go.KeepaliveSourcesRequest, sdp_go.KeepaliveSourcesResponse]
+	createToken               *connect.Client[sdp_go.CreateTokenRequest, sdp_go.CreateTokenResponse]
+	revlinkWarmup             *connect.Client[sdp_go.RevlinkWarmupRequest, sdp_go.RevlinkWarmupResponse]
+	getTrialEnd               *connect.Client[sdp_go.GetTrialEndRequest, sdp_go.GetTrialEndResponse]
+	listAvailableItemTypes    *connect.Client[sdp_go.ListAvailableItemTypesRequest, sdp_go.ListAvailableItemTypesResponse]
+	getSourceStatus           *connect.Client[sdp_go.GetSourceStatusRequest, sdp_go.GetSourceStatusResponse]
+	getUserOnboardingStatus   *connect.Client[sdp_go.GetUserOnboardingStatusRequest, sdp_go.GetUserOnboardingStatusResponse]
+	setUserOnboardingStatus   *connect.Client[sdp_go.SetUserOnboardingStatusRequest, sdp_go.SetUserOnboardingStatusResponse]
+	setGithubInstallationID   *connect.Client[sdp_go.SetGithubInstallationIDRequest, sdp_go.SetGithubInstallationIDResponse]
+	unsetGithubInstallationID *connect.Client[sdp_go.UnsetGithubInstallationIDRequest, sdp_go.UnsetGithubInstallationIDResponse]
 }
 
 // GetAccount calls account.ManagementService.GetAccount.
@@ -802,6 +827,16 @@ func (c *managementServiceClient) SetUserOnboardingStatus(ctx context.Context, r
 	return c.setUserOnboardingStatus.CallUnary(ctx, req)
 }
 
+// SetGithubInstallationID calls account.ManagementService.SetGithubInstallationID.
+func (c *managementServiceClient) SetGithubInstallationID(ctx context.Context, req *connect.Request[sdp_go.SetGithubInstallationIDRequest]) (*connect.Response[sdp_go.SetGithubInstallationIDResponse], error) {
+	return c.setGithubInstallationID.CallUnary(ctx, req)
+}
+
+// UnsetGithubInstallationID calls account.ManagementService.UnsetGithubInstallationID.
+func (c *managementServiceClient) UnsetGithubInstallationID(ctx context.Context, req *connect.Request[sdp_go.UnsetGithubInstallationIDRequest]) (*connect.Response[sdp_go.UnsetGithubInstallationIDResponse], error) {
+	return c.unsetGithubInstallationID.CallUnary(ctx, req)
+}
+
 // ManagementServiceHandler is an implementation of the account.ManagementService service.
 type ManagementServiceHandler interface {
 	// Get the details of the account that this user belongs to
@@ -853,6 +888,11 @@ type ManagementServiceHandler interface {
 	// Get and set onboarding status for users
 	GetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.GetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.GetUserOnboardingStatusResponse], error)
 	SetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error)
+	// Set github installation ID for the account
+	SetGithubInstallationID(context.Context, *connect.Request[sdp_go.SetGithubInstallationIDRequest]) (*connect.Response[sdp_go.SetGithubInstallationIDResponse], error)
+	// this will unset the github installation ID for the account, allowing the user to install the github app again
+	// it will also remove the organisation profile, so we no longer generate signals for that org
+	UnsetGithubInstallationID(context.Context, *connect.Request[sdp_go.UnsetGithubInstallationIDRequest]) (*connect.Response[sdp_go.UnsetGithubInstallationIDResponse], error)
 }
 
 // NewManagementServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -970,6 +1010,18 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 		connect.WithSchema(managementServiceMethods.ByName("SetUserOnboardingStatus")),
 		connect.WithHandlerOptions(opts...),
 	)
+	managementServiceSetGithubInstallationIDHandler := connect.NewUnaryHandler(
+		ManagementServiceSetGithubInstallationIDProcedure,
+		svc.SetGithubInstallationID,
+		connect.WithSchema(managementServiceMethods.ByName("SetGithubInstallationID")),
+		connect.WithHandlerOptions(opts...),
+	)
+	managementServiceUnsetGithubInstallationIDHandler := connect.NewUnaryHandler(
+		ManagementServiceUnsetGithubInstallationIDProcedure,
+		svc.UnsetGithubInstallationID,
+		connect.WithSchema(managementServiceMethods.ByName("UnsetGithubInstallationID")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/account.ManagementService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ManagementServiceGetAccountProcedure:
@@ -1008,6 +1060,10 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 			managementServiceGetUserOnboardingStatusHandler.ServeHTTP(w, r)
 		case ManagementServiceSetUserOnboardingStatusProcedure:
 			managementServiceSetUserOnboardingStatusHandler.ServeHTTP(w, r)
+		case ManagementServiceSetGithubInstallationIDProcedure:
+			managementServiceSetGithubInstallationIDHandler.ServeHTTP(w, r)
+		case ManagementServiceUnsetGithubInstallationIDProcedure:
+			managementServiceUnsetGithubInstallationIDHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -1087,4 +1143,12 @@ func (UnimplementedManagementServiceHandler) GetUserOnboardingStatus(context.Con
 
 func (UnimplementedManagementServiceHandler) SetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.SetUserOnboardingStatus is not implemented"))
+}
+
+func (UnimplementedManagementServiceHandler) SetGithubInstallationID(context.Context, *connect.Request[sdp_go.SetGithubInstallationIDRequest]) (*connect.Response[sdp_go.SetGithubInstallationIDResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.SetGithubInstallationID is not implemented"))
+}
+
+func (UnimplementedManagementServiceHandler) UnsetGithubInstallationID(context.Context, *connect.Request[sdp_go.UnsetGithubInstallationIDRequest]) (*connect.Response[sdp_go.UnsetGithubInstallationIDResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.UnsetGithubInstallationID is not implemented"))
 }
