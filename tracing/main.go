@@ -217,10 +217,13 @@ func InitTracer(component string, opts ...otlptracehttp.Option) error {
 		return fmt.Errorf("creating OTLP trace exporter: %w", err)
 	}
 
+	// Create unified sampler for health checks and otelpgx spans
+	overmindSampler := NewOvermindSampler()
+
 	tracerOpts := []sdktrace.TracerProviderOption{
 		sdktrace.WithBatcher(otlpExp),
 		sdktrace.WithResource(tracingResource(component)),
-		sdktrace.WithSampler(sdktrace.ParentBased(NewUserAgentSampler(200, "ELB-HealthChecker/2.0", "kube-probe/1.27+"))),
+		sdktrace.WithSampler(sdktrace.ParentBased(overmindSampler)),
 	}
 	if viper.GetBool("stdout-trace-dump") {
 		stdoutExp, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
@@ -258,48 +261,96 @@ func ShutdownTracer(ctx context.Context) {
 	log.WithContext(ctx).Trace("tracing has shut down")
 }
 
-type UserAgentSampler struct {
-	userAgents          []string
-	innerSampler        sdktrace.Sampler
-	sampleRateAttribute attribute.KeyValue
+// SamplingRule defines a single sampling rule with a rate and matching function
+type SamplingRule struct {
+	SampleRate   int
+	ShouldSample func(sdktrace.SamplingParameters) bool
+	Description  string
 }
 
-func NewUserAgentSampler(sampleRate int, userAgents ...string) *UserAgentSampler {
-	var innerSampler sdktrace.Sampler
-	switch {
-	case sampleRate <= 0:
-		innerSampler = sdktrace.NeverSample()
-	case sampleRate == 1:
-		innerSampler = sdktrace.AlwaysSample()
-	default:
-		innerSampler = sdktrace.TraceIDRatioBased(1.0 / float64(sampleRate))
+// OvermindSampler is a unified sampler that evaluates multiple sampling rules in order
+type OvermindSampler struct {
+	rules        []SamplingRule
+	ruleSamplers []sdktrace.Sampler
+}
+
+// NewOvermindSampler creates a new unified sampler with the default rules
+func NewOvermindSampler() *OvermindSampler {
+	rules := []SamplingRule{
+		{
+			SampleRate:   200,
+			ShouldSample: UserAgentMatcher("ELB-HealthChecker/2.0", "kube-probe/1.27+"),
+			Description:  "UserAgent-based sampling for health checks",
+		},
+		{
+			SampleRate:   10,
+			ShouldSample: SpanNameMatcher("pool.acquire"),
+			Description:  "Span name-based sampling for pool operations",
+		},
 	}
-	return &UserAgentSampler{
-		userAgents:          userAgents,
-		innerSampler:        innerSampler,
-		sampleRateAttribute: attribute.Int("SampleRate", sampleRate),
+
+	// Pre-allocate samplers for each rule
+	ruleSamplers := make([]sdktrace.Sampler, 0, len(rules))
+	for _, rule := range rules {
+		var sampler sdktrace.Sampler
+		switch {
+		case rule.SampleRate <= 0:
+			sampler = sdktrace.NeverSample()
+		case rule.SampleRate == 1:
+			sampler = sdktrace.AlwaysSample()
+		default:
+			sampler = sdktrace.TraceIDRatioBased(1.0 / float64(rule.SampleRate))
+		}
+		ruleSamplers = append(ruleSamplers, sampler)
+	}
+
+	return &OvermindSampler{
+		rules:        rules,
+		ruleSamplers: ruleSamplers,
 	}
 }
 
-// ShouldSample returns a SamplingResult based on a decision made from the
-// passed parameters.
-func (h *UserAgentSampler) ShouldSample(parameters sdktrace.SamplingParameters) sdktrace.SamplingResult {
-	for _, attr := range parameters.Attributes {
-		if (attr.Key == "http.user_agent" || attr.Key == "user_agent.original") && slices.Contains(h.userAgents, attr.Value.AsString()) {
-			result := h.innerSampler.ShouldSample(parameters)
+// UserAgentMatcher returns a function that matches specific user agents
+func UserAgentMatcher(userAgents ...string) func(sdktrace.SamplingParameters) bool {
+	return func(parameters sdktrace.SamplingParameters) bool {
+		for _, attr := range parameters.Attributes {
+			if (attr.Key == "http.user_agent" || attr.Key == "user_agent.original") &&
+				slices.Contains(userAgents, attr.Value.AsString()) {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+// SpanNameMatcher returns a function that matches specific span names
+func SpanNameMatcher(spanNames ...string) func(sdktrace.SamplingParameters) bool {
+	return func(parameters sdktrace.SamplingParameters) bool {
+		return slices.Contains(spanNames, parameters.Name)
+	}
+}
+
+// ShouldSample evaluates rules in order and returns the first matching decision
+func (o *OvermindSampler) ShouldSample(parameters sdktrace.SamplingParameters) sdktrace.SamplingResult {
+	for i, rule := range o.rules {
+		if rule.ShouldSample(parameters) {
+			// Use the pre-allocated sampler for this rule
+			result := o.ruleSamplers[i].ShouldSample(parameters)
 			if result.Decision == sdktrace.RecordAndSample {
-				result.Attributes = append(result.Attributes, h.sampleRateAttribute)
+				result.Attributes = append(result.Attributes,
+					attribute.Int("SampleRate", rule.SampleRate))
 			}
 			return result
 		}
 	}
 
+	// Default to AlwaysSample if no rules match
 	return sdktrace.AlwaysSample().ShouldSample(parameters)
 }
 
-// Description returns information describing the Sampler.
-func (h *UserAgentSampler) Description() string {
-	return "Simple Sampler based on the UserAgent of the request"
+// Description returns information describing the Sampler
+func (o *OvermindSampler) Description() string {
+	return "Unified Overmind sampler combining multiple sampling strategies"
 }
 
 // Version returns the version baked into the binary at build time.
