@@ -215,8 +215,11 @@ t.Run("Get", func(t *testing.T) {
         t.Errorf("Expected name field to be '%s', got %s", resourceName, val)
     }
 
-    // Include static tests
+    // Include static tests - MUST cover ALL blast propagation links
     t.Run("StaticTests", func(t *testing.T) {
+        // CRITICAL: Review the adapter's blast propagation configuration and to create
+        // test cases for EVERY linked resource defined in the adapter's blastPropagation map
+        // Check the adapter file (e.g., compute-global-address.go) for all blast propagation entries
         queryTests := shared.QueryTests{
             {
                 ExpectedType:   gcpshared.LinkedResourceType.String(),
@@ -310,6 +313,71 @@ func uint64Ptr(u uint64) *uint64 {
 4. **Incorrect HTTP URLs**: Match the exact API endpoint format from the adapter metadata
 5. **Missing Static Tests**: Always include blast propagation tests for linked resources
 6. **Missing Search Tests**: Include Search tests only if the adapter implements `SearchableAdapter` - use `t.Skipf()` if not supported
+
+
+## Blast Propagation Testing Requirements
+
+**CRITICAL**: Every adapter test SHOULD include comprehensive StaticTests that cover ALL blast propagation links defined in the adapter configuration.
+
+### Steps to Ensure Complete Coverage:
+1. **Review Adapter File**: Open the corresponding adapter file (e.g., `compute-global-address.go`) 
+2. **Find blastPropagation Map**: Locate the `blastPropagation` field in the adapter configuration
+3. **Create Test Cases**: Write a QueryTest for EVERY entry in the blastPropagation map
+4. **Handle TODOs**: Note any blast propagation entries marked with TODO comments - these may not work yet but should be documented in test comments
+
+### Example Complete StaticTests:
+```go
+t.Run("StaticTests", func(t *testing.T) {
+    queryTests := shared.QueryTests{
+        // Network link
+        {
+            ExpectedType:   gcpshared.ComputeNetwork.String(),
+            ExpectedMethod: sdp.QueryMethod_GET,
+            ExpectedQuery:  "default",
+            ExpectedScope:  projectID,
+            ExpectedBlastPropagation: &sdp.BlastPropagation{
+                In:  true,
+                Out: false,
+            },
+        },
+        // IP address link
+        {
+            ExpectedType:   "ip",
+            ExpectedMethod: sdp.QueryMethod_GET,
+            ExpectedQuery:  "203.0.113.1",
+            ExpectedScope:  "global",
+            ExpectedBlastPropagation: &sdp.BlastPropagation{
+                In:  true,
+                Out: true,
+            },
+        },
+        // Backend service link
+        {
+            ExpectedType:   gcpshared.ComputeBackendService.String(),
+            ExpectedMethod: sdp.QueryMethod_GET,
+            ExpectedQuery:  "test-backend-service",
+            ExpectedScope:  projectID,
+            ExpectedBlastPropagation: &sdp.BlastPropagation{
+                In:  true,
+                Out: true,
+            },
+        },
+        // Subnetwork link (note special scope format)
+        {
+            ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+            ExpectedMethod: sdp.QueryMethod_GET,
+            ExpectedQuery:  "test-subnet",
+            ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+            ExpectedBlastPropagation: &sdp.BlastPropagation{
+                In:  true,
+                Out: false,
+            },
+        },
+    }
+    shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+})
+```
+
 ## Validation Checklist
 - [ ] Package is `adapters_test`
 - [ ] All required imports are present
@@ -319,7 +387,9 @@ func uint64Ptr(u uint64) *uint64 {
 - [ ] List test validates item count (expect 2+ items) and properties
 - [ ] Search test validates item count (expect 2+ items) and properties (if adapter supports Search)
 - [ ] Multiple query parameter resources test combined query format (e.g., "location/resource")
-- [ ] Static tests include blast propagation for linked resources
+- [ ] **CRITICAL**: Static tests include blast propagation for ALL linked resources in the adapter's blastPropagation map
+- [ ] Static test queries use correct scope formats (especially for subnetworks: "projectID.region")
+- [ ] Static test queries use correct query formats (especially for KMS keys: use `shared.CompositeLookupKey()`)
 - [ ] Pointer helper functions are defined locally
 - [ ] Test compiles without errors
 - [ ] Test runs successfully

@@ -11,6 +11,8 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 // RunStaticTests runs static tests on the given adapter and item.
@@ -203,7 +205,15 @@ func (m *mockRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) 
 // mockHTTPResponse converts an input to an io.ReadCloser
 // for use in HTTP response mocking
 func mockHTTPResponse(input any) io.ReadCloser {
-	data, err := json.Marshal(input)
+	var data []byte
+	var err error
+	if msg, ok := input.(interface {
+		ProtoReflect() protoreflect.Message
+	}); ok {
+		data, err = protojson.Marshal(msg)
+	} else {
+		data, err = json.Marshal(input)
+	}
 	if err != nil {
 		// For test helpers, it's reasonable to panic on marshaling errors
 		panic(fmt.Sprintf("Failed to marshal instance input: %v", err))

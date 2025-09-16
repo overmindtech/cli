@@ -39,6 +39,7 @@ var _ = registerableAdapter{
 				In: true,
 			},
 		},
+		// TODO: https://linear.app/overmind/issue/ENG-1446/investigate-creating-a-manual-linker-for-cloud-storage
 		"inputConfig.gcsSource.uris": {
 			ToSDPItemType: gcpshared.StorageBucket,
 			Description:   "If the GCS source bucket is deleted or inaccessible: The batch prediction job will fail to read input data. If the batch prediction job is updated: The bucket remains unaffected.",
@@ -46,6 +47,9 @@ var _ = registerableAdapter{
 				In: true,
 			},
 		},
+		// TODO:
+		// BigQuery path. For example: bq://projectId.bqDatasetId.bqTableId.
+		// Related: https://linear.app/overmind/issue/ENG-1281/add-big-query-adapters-to-manual-links
 		"inputConfig.bigquerySource.inputUri": {
 			ToSDPItemType: gcpshared.BigQueryTable,
 			Description:   "If the BigQuery table is deleted or inaccessible: The batch prediction job will fail to read input data. If the batch prediction job is updated: The table remains unaffected.",
@@ -53,6 +57,7 @@ var _ = registerableAdapter{
 				In: true,
 			},
 		},
+		// TODO: https://linear.app/overmind/issue/ENG-1446/investigate-creating-a-manual-linker-for-cloud-storage
 		"outputConfig.gcsDestination.outputUriPrefix": {
 			ToSDPItemType: gcpshared.StorageBucket,
 			Description:   "If the output GCS bucket is deleted or inaccessible: The batch prediction job will fail to write results. If the batch prediction job is updated: The bucket remains unaffected.",
@@ -60,6 +65,9 @@ var _ = registerableAdapter{
 				In: true,
 			},
 		},
+		// TODO:
+		// BigQuery path. For example: bq://projectId.bqDatasetId.bqTableId.
+		// Related: https://linear.app/overmind/issue/ENG-1281/add-big-query-adapters-to-manual-links
 		"outputConfig.bigqueryDestination.outputUri": {
 			ToSDPItemType: gcpshared.BigQueryTable,
 			Description:   "If the BigQuery output table is deleted or inaccessible: The batch prediction job will fail to write results. If the batch prediction job is updated: The table remains unaffected.",

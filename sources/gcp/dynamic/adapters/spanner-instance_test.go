@@ -79,12 +79,12 @@ func TestSpannerInstance(t *testing.T) {
 		if val != fmt.Sprintf("projects/%s/instances/%s", projectID, instanceName) {
 			t.Errorf("Expected name field to be 'projects/%s/instances/%s', got %s", projectID, instanceName, val)
 		}
-		val, err = sdpItem.GetAttributes().Get("display_name")
+		val, err = sdpItem.GetAttributes().Get("displayName")
 		if err != nil {
-			t.Fatalf("Failed to get 'display_name' attribute: %v", err)
+			t.Fatalf("Failed to get 'displayName' attribute: %v", err)
 		}
 		if val != "Test Spanner Instance" {
-			t.Errorf("Expected display_name field to be 'Test Spanner Instance', got %s", val)
+			t.Errorf("Expected displayName field to be 'Test Spanner Instance', got %s", val)
 		}
 		val, err = sdpItem.GetAttributes().Get("config")
 		if err != nil {
@@ -93,27 +93,27 @@ func TestSpannerInstance(t *testing.T) {
 		if val != "projects/test-project/instanceConfigs/regional-us-central1" {
 			t.Errorf("Expected config field to be 'projects/test-project/instanceConfigs/regional-us-central1', got %s", val)
 		}
-		val, err = sdpItem.GetAttributes().Get("node_count")
+		val, err = sdpItem.GetAttributes().Get("nodeCount")
 		if err != nil {
-			t.Fatalf("Failed to get 'node_count' attribute: %v", err)
+			t.Fatalf("Failed to get 'nodeCount' attribute: %v", err)
 		}
 		converted, ok := val.(float64)
 		if !ok {
-			t.Fatalf("Expected node_count to be a float64, got %T", val)
+			t.Fatalf("Expected nodeCount to be a float64, got %T", val)
 		}
 		if converted != 3 {
-			t.Errorf("Expected node_count field to be '3', got %s", val)
+			t.Errorf("Expected nodeCount field to be '3', got %s", val)
 		}
 		val, err = sdpItem.GetAttributes().Get("state")
 		if err != nil {
 			t.Fatalf("Failed to get 'state' attribute: %v", err)
 		}
-		converted, ok = val.(float64)
+		stateValue, ok := val.(string)
 		if !ok {
-			t.Fatalf("Expected state to be a float64, got %T", val)
+			t.Fatalf("Expected state to be a string, got %T", val)
 		}
-		if instancepb.Instance_State(converted) != instancepb.Instance_READY {
-			t.Errorf("Expected state field to be 'READY', got %s", val)
+		if stateValue != "READY" {
+			t.Errorf("Expected state field to be 'READY', got %s", stateValue)
 		}
 
 		t.Run("StaticTests", func(t *testing.T) {

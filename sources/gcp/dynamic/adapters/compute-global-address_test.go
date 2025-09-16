@@ -121,12 +121,12 @@ func TestComputeGlobalAddress(t *testing.T) {
 		if val != "203.0.113.12" {
 			t.Errorf("Expected address field to be '203.0.113.12', got %s", val)
 		}
-		val, err = sdpItem.GetAttributes().Get("address_type")
+		val, err = sdpItem.GetAttributes().Get("addressType")
 		if err != nil {
-			t.Fatalf("Failed to get 'address_type' attribute: %v", err)
+			t.Fatalf("Failed to get 'addressType' attribute: %v", err)
 		}
 		if val != "EXTERNAL" {
-			t.Errorf("Expected address_type field to be 'EXTERNAL', got %s", val)
+			t.Errorf("Expected addressType field to be 'EXTERNAL', got %s", val)
 		}
 		val, err = sdpItem.GetAttributes().Get("status")
 		if err != nil {
@@ -142,12 +142,12 @@ func TestComputeGlobalAddress(t *testing.T) {
 		if val != "global/networks/test-network" {
 			t.Errorf("Expected network field to be 'global/networks/test-network', got %s", val)
 		}
-		val, err = sdpItem.GetAttributes().Get("network_tier")
+		val, err = sdpItem.GetAttributes().Get("networkTier")
 		if err != nil {
-			t.Fatalf("Failed to get 'network_tier' attribute: %v", err)
+			t.Fatalf("Failed to get 'networkTier' attribute: %v", err)
 		}
 		if val != "PREMIUM" {
-			t.Errorf("Expected network_tier field to be 'PREMIUM', got %s", val)
+			t.Errorf("Expected networkTier field to be 'PREMIUM', got %s", val)
 		}
 
 		t.Run("StaticTests", func(t *testing.T) {
