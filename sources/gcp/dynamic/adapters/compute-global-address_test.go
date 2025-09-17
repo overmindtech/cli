@@ -210,3 +210,7 @@ func stringPtr(s string) *string {
 func uint64Ptr(u uint64) *uint64 {
 	return &u
 }
+
+func boolPtr(b bool) *bool {
+	return &b
+}

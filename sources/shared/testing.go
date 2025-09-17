@@ -9,10 +9,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdp-go"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/reflect/protoreflect"
+
+	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdp-go"
 )
 
 // RunStaticTests runs static tests on the given adapter and item.

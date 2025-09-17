@@ -33,7 +33,7 @@ var computeGlobalForwardingRuleAdapter = registerableAdapter{ //nolint:unused
 	blastPropagation: map[string]*gcpshared.Impact{
 		// Network reference (global). If the network is changed it may impact the forwarding rule; forwarding rule updates don't impact the network.
 		"network":    gcpshared.ComputeNetworkImpactInOnly,
-		"subnetwork": gcpshared.ComputeNetworkImpactInOnly,
+		"subnetwork": gcpshared.ComputeSubnetworkImpactInOnly,
 		// IP address assigned to the forwarding rule (may be ephemeral or static).
 		"IPAddress": gcpshared.IPImpactBothWays,
 		// Backend service (global) tightly coupled for traffic delivery.

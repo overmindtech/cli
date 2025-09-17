@@ -55,6 +55,11 @@ var (
 		ToSDPItemType:    ComputeNetwork,
 		BlastPropagation: impactInOnly,
 	}
+	ComputeSubnetworkImpactInOnly = &Impact{
+		Description:      "If the Compute Subnetwork is updated: The source may lose connectivity or fail to run as expected. If the source is updated: The subnetwork remains unaffected.",
+		ToSDPItemType:    ComputeSubnetwork,
+		BlastPropagation: impactInOnly,
+	}
 )
 
 var BlastPropagations = map[shared.ItemType]map[string]*Impact{

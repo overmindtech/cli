@@ -11,7 +11,7 @@ import (
 // Reference: https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.aspectTypes/get
 // GET  https://dataplex.googleapis.com/v1/projects/{project}/locations/{location}/aspectTypes/{aspectType}
 // LIST https://dataplex.googleapis.com/v1/projects/{project}/locations/{location}/aspectTypes
-var dataplexAspectTypeAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.DataplexAspectType,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
