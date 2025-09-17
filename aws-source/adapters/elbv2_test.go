@@ -123,19 +123,19 @@ func TestActionToRequests(t *testing.T) {
 		},
 		{
 			ExpectedType:   "http",
-			ExpectedMethod: sdp.QueryMethod_GET,
+			ExpectedMethod: sdp.QueryMethod_SEARCH,
 			ExpectedQuery:  "https://auth.somewhere.com/app1",
 			ExpectedScope:  "global",
 		},
 		{
 			ExpectedType:   "http",
-			ExpectedMethod: sdp.QueryMethod_GET,
+			ExpectedMethod: sdp.QueryMethod_SEARCH,
 			ExpectedQuery:  "https://auth.somewhere.com/app1/tokens",
 			ExpectedScope:  "global",
 		},
 		{
 			ExpectedType:   "http",
-			ExpectedMethod: sdp.QueryMethod_GET,
+			ExpectedMethod: sdp.QueryMethod_SEARCH,
 			ExpectedQuery:  "https://auth.somewhere.com/app1/users",
 			ExpectedScope:  "global",
 		},
@@ -147,7 +147,7 @@ func TestActionToRequests(t *testing.T) {
 		},
 		{
 			ExpectedType:   "http",
-			ExpectedMethod: sdp.QueryMethod_GET,
+			ExpectedMethod: sdp.QueryMethod_SEARCH,
 			ExpectedQuery:  "https://somewhere.else.com:8080/login?foo=bar",
 			ExpectedScope:  "global",
 		},

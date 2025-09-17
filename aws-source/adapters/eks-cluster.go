@@ -146,7 +146,7 @@ func clusterGetFunc(ctx context.Context, client EKSClient, scope string, input *
 		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "http",
-				Method: sdp.QueryMethod_GET,
+				Method: sdp.QueryMethod_SEARCH,
 				Query:  *cluster.Endpoint,
 				Scope:  "global",
 			},

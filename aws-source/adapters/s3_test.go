@@ -85,7 +85,7 @@ func TestS3GetImpl(t *testing.T) {
 	tests := adapterhelpers.QueryTests{
 		{
 			ExpectedType:   "http",
-			ExpectedMethod: sdp.QueryMethod_GET,
+			ExpectedMethod: sdp.QueryMethod_SEARCH,
 			ExpectedQuery:  "https://hostname",
 			ExpectedScope:  "global",
 		},

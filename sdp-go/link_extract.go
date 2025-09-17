@@ -112,7 +112,7 @@ func extractLinksFromStringValue(val string) []*LinkedItemQuery {
 				{
 					Query: &Query{
 						Type:   "http",
-						Method: QueryMethod_GET,
+						Method: QueryMethod_SEARCH,
 						Query:  val,
 						Scope:  "global",
 					},

@@ -136,7 +136,7 @@ func TestClusterGetFunc(t *testing.T) {
 		},
 		{
 			ExpectedType:   "http",
-			ExpectedMethod: sdp.QueryMethod_GET,
+			ExpectedMethod: sdp.QueryMethod_SEARCH,
 			ExpectedQuery:  "https://00D3FF4CC48CBAA9BBC070DAA80BD251.gr7.eu-west-2.eks.amazonaws.com",
 			ExpectedScope:  "global",
 		},

@@ -144,7 +144,7 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "http",
-						Method: sdp.QueryMethod_GET,
+						Method: sdp.QueryMethod_SEARCH,
 						Query:  u.String(),
 						Scope:  "global",
 					},
@@ -161,7 +161,7 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "http",
-					Method: sdp.QueryMethod_GET,
+					Method: sdp.QueryMethod_SEARCH,
 					Query:  *function.Code.ImageUri,
 					Scope:  "global",
 				},
@@ -178,7 +178,7 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "http",
-					Method: sdp.QueryMethod_GET,
+					Method: sdp.QueryMethod_SEARCH,
 					Query:  *function.Code.ResolvedImageUri,
 					Scope:  "global",
 				},
@@ -451,7 +451,7 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "http",
-					Method: sdp.QueryMethod_GET,
+					Method: sdp.QueryMethod_SEARCH,
 					Query:  *config.FunctionUrl,
 					Scope:  "global",
 				},

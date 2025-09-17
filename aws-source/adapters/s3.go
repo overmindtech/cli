@@ -440,7 +440,7 @@ func getImpl(ctx context.Context, cache *sdpcache.Cache, client S3Client, scope 
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "http",
-					Method: sdp.QueryMethod_GET,
+					Method: sdp.QueryMethod_SEARCH,
 					Query:  url,
 					Scope:  "global",
 				},

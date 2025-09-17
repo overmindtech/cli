@@ -60,8 +60,10 @@ var httpMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	DescriptiveName: "HTTP Endpoint",
 	Type:            "http",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
-		Get:            true,
-		GetDescription: "A HTTP endpoint to run a `HEAD` request against",
+		Get:               true,
+		GetDescription:    "A HTTP endpoint to run a `HEAD` request against",
+		Search:            true,
+		SearchDescription: "A HTTP URL to search for. Query parameters and fragments will be stripped from the URL before processing.",
 	},
 	Category:       sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 	PotentialLinks: []string{"ip", "dns", "certificate", "http"},
@@ -86,6 +88,24 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOSCOPE,
 			ErrorString: "http is only supported in the 'global' scope",
+			Scope:       scope,
+		}
+	}
+
+	// Validate that the URL doesn't contain query parameters or fragments
+	parsedURL, err := url.Parse(query)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf("invalid URL: %v", err),
+			Scope:       scope,
+		}
+	}
+
+	if parsedURL.RawQuery != "" || parsedURL.Fragment != "" {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: "GET method requires clean URLs without query parameters or fragments. Use SEARCH method for URLs with query parameters or fragments.",
 			Scope:       scope,
 		}
 	}
@@ -278,7 +298,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 					StringValue: loc,
 				},
 			}
-			locU, err := url.Parse(loc)
+			locURL, err := url.Parse(loc)
 			if err != nil {
 				item.Attributes.AttrStruct.Fields["location-error"] = &structpb.Value{
 					Kind: &structpb.Value_StringValue{
@@ -286,16 +306,19 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 					},
 				}
 			} else {
+				// Resolve relative URLs against the original request URL
+				resolvedURL := parsedURL.ResolveReference(locURL)
+
 				// Don't include query string and fragment in the linked item.
 				// This leads to too many items, like auth redirect errors, that
 				// do not provide value.
-				locU.Fragment = ""
-				locU.RawQuery = ""
+				resolvedURL.Fragment = ""
+				resolvedURL.RawQuery = ""
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "http",
-						Method: sdp.QueryMethod_GET,
-						Query:  locU.String(),
+						Method: sdp.QueryMethod_SEARCH,
+						Query:  resolvedURL.String(),
 						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
@@ -311,6 +334,44 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 	s.cache.StoreItem(&item, httpCacheDuration, ck)
 
 	return &item, nil
+}
+
+// Search takes a URL, strips query parameters and fragments, and returns the HTTP item
+func (s *HTTPAdapter) Search(ctx context.Context, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
+	if scope != "global" {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: "http is only supported in the 'global' scope",
+			Scope:       scope,
+		}
+	}
+
+	// Parse the URL and strip query parameters and fragments
+	parsedURL, err := url.Parse(query)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf("invalid URL: %v", err),
+			Scope:       scope,
+		}
+	}
+
+	// Strip query parameters and fragments
+	parsedURL.RawQuery = ""
+	parsedURL.Fragment = ""
+	cleanURL := parsedURL.String()
+
+	// Use the existing Get method to retrieve the item
+	item, err := s.Get(ctx, scope, cleanURL, ignoreCache)
+	if err != nil {
+		return nil, err
+	}
+
+	if item == nil {
+		return []*sdp.Item{}, nil
+	}
+
+	return []*sdp.Item{item}, nil
 }
 
 // List is not implemented for HTTP as this would require scanning infinitely many

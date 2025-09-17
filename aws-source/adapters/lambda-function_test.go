@@ -184,19 +184,19 @@ func TestFunctionGetFunc(t *testing.T) {
 	tests := adapterhelpers.QueryTests{
 		{
 			ExpectedType:   "http",
-			ExpectedMethod: sdp.QueryMethod_GET,
+			ExpectedMethod: sdp.QueryMethod_SEARCH,
 			ExpectedQuery:  "https://awslambda-eu-west-2-tasks.s3.eu-west-2.amazonaws.com/snapshots/052392120703/aws-controltower-NotificationForwarder-bcea303b-7721-4cf0-b8db-7a0e6dca76dd?versionId=3Lk06tjGEoY451GYYupIohtTV96CkVKC",
 			ExpectedScope:  "global",
 		},
 		{
 			ExpectedType:   "http",
-			ExpectedMethod: sdp.QueryMethod_GET,
+			ExpectedMethod: sdp.QueryMethod_SEARCH,
 			ExpectedQuery:  "https://foo",
 			ExpectedScope:  "global",
 		},
 		{
 			ExpectedType:   "http",
-			ExpectedMethod: sdp.QueryMethod_GET,
+			ExpectedMethod: sdp.QueryMethod_SEARCH,
 			ExpectedQuery:  "https://foo",
 			ExpectedScope:  "global",
 		},

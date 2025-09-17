@@ -57,7 +57,7 @@ func getFunc(ctx context.Context, client sqsClient, scope string, input *sqs.Get
 			{
 				Query: &sdp.Query{
 					Type:   "http",
-					Method: sdp.QueryMethod_GET,
+					Method: sdp.QueryMethod_SEARCH,
 					Query:  *input.QueueUrl,
 					Scope:  "global",
 				},

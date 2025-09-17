@@ -89,7 +89,7 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 			requests = append(requests, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "http",
-					Method: sdp.QueryMethod_GET,
+					Method: sdp.QueryMethod_SEARCH,
 					Query:  *action.AuthenticateOidcConfig.AuthorizationEndpoint,
 					Scope:  "global",
 				},
@@ -106,7 +106,7 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 			requests = append(requests, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "http",
-					Method: sdp.QueryMethod_GET,
+					Method: sdp.QueryMethod_SEARCH,
 					Query:  *action.AuthenticateOidcConfig.TokenEndpoint,
 					Scope:  "global",
 				},
@@ -123,7 +123,7 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 			requests = append(requests, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "http",
-					Method: sdp.QueryMethod_GET,
+					Method: sdp.QueryMethod_SEARCH,
 					Query:  *action.AuthenticateOidcConfig.UserInfoEndpoint,
 					Scope:  "global",
 				},
@@ -191,7 +191,7 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 			requests = append(requests, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "http",
-					Method: sdp.QueryMethod_GET,
+					Method: sdp.QueryMethod_SEARCH,
 					Query:  u.String(),
 					Scope:  "global",
 				},
