@@ -2,9 +2,7 @@ package sdp
 
 import (
 	"fmt"
-	"maps"
 	"math"
-	"slices"
 	"strings"
 
 	"github.com/google/uuid"
@@ -82,61 +80,6 @@ func (a *AdapterMetadataList) Register(metadata *AdapterMetadata) *AdapterMetada
 	a.list = append(a.list, metadata)
 
 	return metadata
-}
-
-// flatten the data map, so that we can use it to compare the attributes of two
-// items. It will recursively flatten the map and return a new map with the
-// flattened data.
-func flatten(data map[string]any) map[string]any {
-	flattened := make(map[string]any)
-	for k, v := range data {
-		switch v := v.(type) {
-		case map[string]any:
-			for subK, subV := range flatten(v) {
-				flattened[k+"."+subK] = subV
-			}
-		default:
-			flattened[k] = v
-		}
-	}
-	return flattened
-}
-
-// RenderItemDiff generates a diff between two items
-func RenderItemDiff(before, after map[string]any) string {
-	flatB := flatten(before)
-	flatA := flatten(after)
-
-	allKeys := slices.Collect(maps.Keys(flatB))
-	allKeys = slices.AppendSeq(allKeys, maps.Keys(flatA))
-
-	slices.Sort(allKeys)
-	allKeys = slices.Compact(allKeys)
-
-	// allKeys now contains every attribute present in either the before or
-	// after, so we can iterate over it to generate the diff and append stats.
-	para := []string{}
-	for _, key := range allKeys {
-		beforeValue, beforeExists := flatB[key]
-		afterValue, afterExists := flatA[key]
-
-		beforeValueStr := fmt.Sprintf("%v", beforeValue)
-		afterValueStr := fmt.Sprintf("%v", afterValue)
-
-		if beforeExists && afterExists {
-			if beforeValueStr != afterValueStr {
-				// This is an update
-				para = append(para, fmt.Sprintf("- %s: %s\n+ %s: %s", key, beforeValueStr, key, afterValueStr))
-			}
-		} else if beforeExists && !afterExists {
-			// This is a deletion
-			para = append(para, fmt.Sprintf("- %s: %s", key, beforeValueStr))
-		} else if !beforeExists && afterExists {
-			// This is a creation
-			para = append(para, fmt.Sprintf("+ %s: %s", key, afterValueStr))
-		}
-	}
-	return strings.Join(para, "\n")
 }
 
 type RoutineRollUp struct {
