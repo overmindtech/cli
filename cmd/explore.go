@@ -256,6 +256,8 @@ For more information about Terraform configuration, visit: https://developer.has
 			statusArea.Println(fmt.Sprintf("Using GCP provider in %s with project %s%s.", p.FilePath, config.ProjectID, aliasInfo))
 		}
 
+		gcpConfigs = unifiedGCPConfigs(gcpConfigs)
+
 		// Fallback to default GCP config if no terraform providers found
 		if len(gcpConfigs) == 0 && failOverToDefaultLoginCfg {
 			statusArea.Println("No GCP terraform providers found. Attempting to use GCP Application Default Credentials for configuration.")
@@ -402,4 +404,39 @@ func init() {
 	rootCmd.AddCommand(exploreCmd)
 
 	addAPIFlags(exploreCmd)
+}
+
+// unifiedGCPConfigs collates the given GCP configs by project ID.
+// If there are multiple configs for the same project ID, the configs are merged.
+func unifiedGCPConfigs(gcpConfigs []*gcpproc.GCPConfig) []*gcpproc.GCPConfig {
+	unified := make(map[string]*gcpproc.GCPConfig)
+	for _, config := range gcpConfigs {
+		if _, ok := unified[config.ProjectID]; !ok {
+			unified[config.ProjectID] = config
+		} else {
+			unified[config.ProjectID].Regions = append(unified[config.ProjectID].Regions, config.Regions...)
+			unified[config.ProjectID].Zones = append(unified[config.ProjectID].Zones, config.Zones...)
+		}
+	}
+
+	unifiedConfigs := make([]*gcpproc.GCPConfig, 0, len(unified))
+	for _, config := range unified {
+		var deDuplicatedRegions []string
+		var deDuplicatedZones []string
+		for _, region := range config.Regions {
+			if !slices.Contains(deDuplicatedRegions, region) {
+				deDuplicatedRegions = append(deDuplicatedRegions, region)
+			}
+		}
+		for _, zone := range config.Zones {
+			if !slices.Contains(deDuplicatedZones, zone) {
+				deDuplicatedZones = append(deDuplicatedZones, zone)
+			}
+		}
+		config.Regions = deDuplicatedRegions
+		config.Zones = deDuplicatedZones
+		unifiedConfigs = append(unifiedConfigs, config)
+	}
+
+	return unifiedConfigs
 }
