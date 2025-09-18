@@ -13,7 +13,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 )
 
-func searchSync(adapter discovery.StreamingAdapter, ctx context.Context, scope, query string, ignoreCache bool) ([]*sdp.Item, error) {
+func searchSync(adapter discovery.SearchStreamableAdapter, ctx context.Context, scope, query string, ignoreCache bool) ([]*sdp.Item, error) {
 	stream := discovery.NewRecordingQueryResultStream()
 	adapter.SearchStream(ctx, scope, query, ignoreCache, stream)
 

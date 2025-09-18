@@ -432,9 +432,9 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 			stream.SendError(err)
 		}
 	case sdp.QueryMethod_LIST:
-		if streamingAdapter, ok := adapter.(StreamingAdapter); ok {
+		if listStreamingAdapter, ok := adapter.(ListStreamableAdapter); ok {
 			// Prefer the streaming methods if they are available
-			streamingAdapter.ListStream(ctx, q.GetScope(), q.GetIgnoreCache(), stream)
+			listStreamingAdapter.ListStream(ctx, q.GetScope(), q.GetIgnoreCache(), stream)
 		} else if listableAdapter, ok := adapter.(ListableAdapter); ok {
 			// Fall back to the non-streaming methods
 			resultItems, err := listableAdapter.List(ctx, q.GetScope(), q.GetIgnoreCache())
@@ -454,9 +454,9 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 			}).Warn("adapter is not listable")
 		}
 	case sdp.QueryMethod_SEARCH:
-		if streamingAdapter, ok := adapter.(StreamingAdapter); ok {
+		if searchStreamingAdapter, ok := adapter.(SearchStreamableAdapter); ok {
 			// Prefer the streaming methods if they are available
-			streamingAdapter.SearchStream(ctx, q.GetScope(), q.GetQuery(), q.GetIgnoreCache(), stream)
+			searchStreamingAdapter.SearchStream(ctx, q.GetScope(), q.GetQuery(), q.GetIgnoreCache(), stream)
 		} else if searchableAdapter, ok := adapter.(SearchableAdapter); ok {
 			// Fall back to the non-streaming methods
 			resultItems, err := searchableAdapter.Search(ctx, q.GetScope(), q.GetQuery(), q.GetIgnoreCache())

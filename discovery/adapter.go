@@ -48,20 +48,6 @@ type ListableAdapter interface {
 	List(ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error)
 }
 
-// An adapter that supports streaming responses for List and Search queries
-type StreamingAdapter interface {
-	Adapter
-
-	// List Lists all items in a given scope
-	ListStream(ctx context.Context, scope string, ignoreCache bool, stream QueryResultStream)
-
-	// Search executes a specific search and returns zero or many items as a
-	// result (and optionally an error). The specific format of the query that
-	// needs to be provided to Search is dependant on the adapter itself as each
-	// adapter will respond to searches differently
-	SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream QueryResultStream)
-}
-
 // ListStreamableAdapter supports streaming for the List queries.
 type ListStreamableAdapter interface {
 	Adapter

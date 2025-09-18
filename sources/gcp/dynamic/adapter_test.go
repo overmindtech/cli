@@ -711,7 +711,7 @@ func TestAdapter(t *testing.T) {
 
 			streaming, ok := adapter.(SearchStreamAdapter)
 			if !ok {
-				t.Fatalf("Adapter for %s does not implement StreamingAdapter", sdpItemType)
+				t.Fatalf("Adapter for %s does not implement SearchStreamableAdapter", sdpItemType)
 			}
 
 			expectedItemCount := sizeOfFirstPage + sizeOfLastPage

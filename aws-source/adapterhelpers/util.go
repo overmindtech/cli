@@ -266,7 +266,7 @@ func (e E2ETest) Run(t *testing.T) {
 				var err error
 				if searchSrc, ok := e.Adapter.(discovery.SearchableAdapter); ok {
 					items, err = searchSrc.Search(ctx, scope, *e.GoodSearchQuery, false)
-				} else if streamSrc, ok := e.Adapter.(discovery.StreamingAdapter); ok {
+				} else if streamSrc, ok := e.Adapter.(discovery.SearchStreamableAdapter); ok {
 					stream := discovery.NewRecordingQueryResultStream()
 					streamSrc.SearchStream(context.Background(), scope, *e.GoodSearchQuery, false, stream)
 
@@ -310,7 +310,7 @@ func (e E2ETest) Run(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), e.Timeout)
 			defer cancel()
 
-			if streamingAdapter, ok := e.Adapter.(discovery.StreamingAdapter); ok {
+			if streamingAdapter, ok := e.Adapter.(discovery.ListStreamableAdapter); ok {
 				stream := discovery.NewRecordingQueryResultStream()
 				streamingAdapter.ListStream(context.Background(), scope, false, stream)
 				items = stream.GetItems()

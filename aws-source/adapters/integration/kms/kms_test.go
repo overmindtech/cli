@@ -13,7 +13,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 )
 
-func searchSync(adapter discovery.StreamingAdapter, ctx context.Context, scope, query string, ignoreCache bool) ([]*sdp.Item, error) {
+func searchSync(adapter discovery.SearchStreamableAdapter, ctx context.Context, scope, query string, ignoreCache bool) ([]*sdp.Item, error) {
 	stream := discovery.NewRecordingQueryResultStream()
 	adapter.SearchStream(ctx, scope, query, ignoreCache, stream)
 
@@ -25,7 +25,7 @@ func searchSync(adapter discovery.StreamingAdapter, ctx context.Context, scope, 
 	return stream.GetItems(), nil
 }
 
-func listSync(adapter discovery.StreamingAdapter, ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error) {
+func listSync(adapter discovery.ListStreamableAdapter, ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error) {
 	stream := discovery.NewRecordingQueryResultStream()
 	adapter.ListStream(ctx, scope, ignoreCache, stream)
 
