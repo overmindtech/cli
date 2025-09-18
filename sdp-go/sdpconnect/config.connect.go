@@ -54,6 +54,12 @@ const (
 	// ConfigurationServiceUpdateSignalConfigProcedure is the fully-qualified name of the
 	// ConfigurationService's UpdateSignalConfig RPC.
 	ConfigurationServiceUpdateSignalConfigProcedure = "/config.ConfigurationService/UpdateSignalConfig"
+	// ConfigurationServiceGetGithubAppInformationProcedure is the fully-qualified name of the
+	// ConfigurationService's GetGithubAppInformation RPC.
+	ConfigurationServiceGetGithubAppInformationProcedure = "/config.ConfigurationService/GetGithubAppInformation"
+	// ConfigurationServiceRegenerateGithubAppProfileProcedure is the fully-qualified name of the
+	// ConfigurationService's RegenerateGithubAppProfile RPC.
+	ConfigurationServiceRegenerateGithubAppProfileProcedure = "/config.ConfigurationService/RegenerateGithubAppProfile"
 )
 
 // ConfigurationServiceClient is a client for the config.ConfigurationService service.
@@ -74,6 +80,11 @@ type ConfigurationServiceClient interface {
 	GetSignalConfig(context.Context, *connect.Request[sdp_go.GetSignalConfigRequest]) (*connect.Response[sdp_go.GetSignalConfigResponse], error)
 	// Update the signal config for the account
 	UpdateSignalConfig(context.Context, *connect.Request[sdp_go.UpdateSignalConfigRequest]) (*connect.Response[sdp_go.UpdateSignalConfigResponse], error)
+	// Github app
+	// we will be displaying app installation information for this account on the github integrations page
+	GetGithubAppInformation(context.Context, *connect.Request[sdp_go.GetGithubAppInformationRequest]) (*connect.Response[sdp_go.GetGithubAppInformationResponse], error)
+	// regenerate the github app profile, this information is used for signal processing
+	RegenerateGithubAppProfile(context.Context, *connect.Request[sdp_go.RegenerateGithubAppProfileRequest]) (*connect.Response[sdp_go.RegenerateGithubAppProfileResponse], error)
 }
 
 // NewConfigurationServiceClient constructs a client for the config.ConfigurationService service. By
@@ -129,18 +140,32 @@ func NewConfigurationServiceClient(httpClient connect.HTTPClient, baseURL string
 			connect.WithSchema(configurationServiceMethods.ByName("UpdateSignalConfig")),
 			connect.WithClientOptions(opts...),
 		),
+		getGithubAppInformation: connect.NewClient[sdp_go.GetGithubAppInformationRequest, sdp_go.GetGithubAppInformationResponse](
+			httpClient,
+			baseURL+ConfigurationServiceGetGithubAppInformationProcedure,
+			connect.WithSchema(configurationServiceMethods.ByName("GetGithubAppInformation")),
+			connect.WithClientOptions(opts...),
+		),
+		regenerateGithubAppProfile: connect.NewClient[sdp_go.RegenerateGithubAppProfileRequest, sdp_go.RegenerateGithubAppProfileResponse](
+			httpClient,
+			baseURL+ConfigurationServiceRegenerateGithubAppProfileProcedure,
+			connect.WithSchema(configurationServiceMethods.ByName("RegenerateGithubAppProfile")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // configurationServiceClient implements ConfigurationServiceClient.
 type configurationServiceClient struct {
-	getAccountConfig    *connect.Client[sdp_go.GetAccountConfigRequest, sdp_go.GetAccountConfigResponse]
-	updateAccountConfig *connect.Client[sdp_go.UpdateAccountConfigRequest, sdp_go.UpdateAccountConfigResponse]
-	createHcpConfig     *connect.Client[sdp_go.CreateHcpConfigRequest, sdp_go.CreateHcpConfigResponse]
-	getHcpConfig        *connect.Client[sdp_go.GetHcpConfigRequest, sdp_go.GetHcpConfigResponse]
-	deleteHcpConfig     *connect.Client[sdp_go.DeleteHcpConfigRequest, sdp_go.DeleteHcpConfigResponse]
-	getSignalConfig     *connect.Client[sdp_go.GetSignalConfigRequest, sdp_go.GetSignalConfigResponse]
-	updateSignalConfig  *connect.Client[sdp_go.UpdateSignalConfigRequest, sdp_go.UpdateSignalConfigResponse]
+	getAccountConfig           *connect.Client[sdp_go.GetAccountConfigRequest, sdp_go.GetAccountConfigResponse]
+	updateAccountConfig        *connect.Client[sdp_go.UpdateAccountConfigRequest, sdp_go.UpdateAccountConfigResponse]
+	createHcpConfig            *connect.Client[sdp_go.CreateHcpConfigRequest, sdp_go.CreateHcpConfigResponse]
+	getHcpConfig               *connect.Client[sdp_go.GetHcpConfigRequest, sdp_go.GetHcpConfigResponse]
+	deleteHcpConfig            *connect.Client[sdp_go.DeleteHcpConfigRequest, sdp_go.DeleteHcpConfigResponse]
+	getSignalConfig            *connect.Client[sdp_go.GetSignalConfigRequest, sdp_go.GetSignalConfigResponse]
+	updateSignalConfig         *connect.Client[sdp_go.UpdateSignalConfigRequest, sdp_go.UpdateSignalConfigResponse]
+	getGithubAppInformation    *connect.Client[sdp_go.GetGithubAppInformationRequest, sdp_go.GetGithubAppInformationResponse]
+	regenerateGithubAppProfile *connect.Client[sdp_go.RegenerateGithubAppProfileRequest, sdp_go.RegenerateGithubAppProfileResponse]
 }
 
 // GetAccountConfig calls config.ConfigurationService.GetAccountConfig.
@@ -178,6 +203,16 @@ func (c *configurationServiceClient) UpdateSignalConfig(ctx context.Context, req
 	return c.updateSignalConfig.CallUnary(ctx, req)
 }
 
+// GetGithubAppInformation calls config.ConfigurationService.GetGithubAppInformation.
+func (c *configurationServiceClient) GetGithubAppInformation(ctx context.Context, req *connect.Request[sdp_go.GetGithubAppInformationRequest]) (*connect.Response[sdp_go.GetGithubAppInformationResponse], error) {
+	return c.getGithubAppInformation.CallUnary(ctx, req)
+}
+
+// RegenerateGithubAppProfile calls config.ConfigurationService.RegenerateGithubAppProfile.
+func (c *configurationServiceClient) RegenerateGithubAppProfile(ctx context.Context, req *connect.Request[sdp_go.RegenerateGithubAppProfileRequest]) (*connect.Response[sdp_go.RegenerateGithubAppProfileResponse], error) {
+	return c.regenerateGithubAppProfile.CallUnary(ctx, req)
+}
+
 // ConfigurationServiceHandler is an implementation of the config.ConfigurationService service.
 type ConfigurationServiceHandler interface {
 	// Get the account config for the user's account
@@ -196,6 +231,11 @@ type ConfigurationServiceHandler interface {
 	GetSignalConfig(context.Context, *connect.Request[sdp_go.GetSignalConfigRequest]) (*connect.Response[sdp_go.GetSignalConfigResponse], error)
 	// Update the signal config for the account
 	UpdateSignalConfig(context.Context, *connect.Request[sdp_go.UpdateSignalConfigRequest]) (*connect.Response[sdp_go.UpdateSignalConfigResponse], error)
+	// Github app
+	// we will be displaying app installation information for this account on the github integrations page
+	GetGithubAppInformation(context.Context, *connect.Request[sdp_go.GetGithubAppInformationRequest]) (*connect.Response[sdp_go.GetGithubAppInformationResponse], error)
+	// regenerate the github app profile, this information is used for signal processing
+	RegenerateGithubAppProfile(context.Context, *connect.Request[sdp_go.RegenerateGithubAppProfileRequest]) (*connect.Response[sdp_go.RegenerateGithubAppProfileResponse], error)
 }
 
 // NewConfigurationServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -247,6 +287,18 @@ func NewConfigurationServiceHandler(svc ConfigurationServiceHandler, opts ...con
 		connect.WithSchema(configurationServiceMethods.ByName("UpdateSignalConfig")),
 		connect.WithHandlerOptions(opts...),
 	)
+	configurationServiceGetGithubAppInformationHandler := connect.NewUnaryHandler(
+		ConfigurationServiceGetGithubAppInformationProcedure,
+		svc.GetGithubAppInformation,
+		connect.WithSchema(configurationServiceMethods.ByName("GetGithubAppInformation")),
+		connect.WithHandlerOptions(opts...),
+	)
+	configurationServiceRegenerateGithubAppProfileHandler := connect.NewUnaryHandler(
+		ConfigurationServiceRegenerateGithubAppProfileProcedure,
+		svc.RegenerateGithubAppProfile,
+		connect.WithSchema(configurationServiceMethods.ByName("RegenerateGithubAppProfile")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/config.ConfigurationService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ConfigurationServiceGetAccountConfigProcedure:
@@ -263,6 +315,10 @@ func NewConfigurationServiceHandler(svc ConfigurationServiceHandler, opts ...con
 			configurationServiceGetSignalConfigHandler.ServeHTTP(w, r)
 		case ConfigurationServiceUpdateSignalConfigProcedure:
 			configurationServiceUpdateSignalConfigHandler.ServeHTTP(w, r)
+		case ConfigurationServiceGetGithubAppInformationProcedure:
+			configurationServiceGetGithubAppInformationHandler.ServeHTTP(w, r)
+		case ConfigurationServiceRegenerateGithubAppProfileProcedure:
+			configurationServiceRegenerateGithubAppProfileHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -298,4 +354,12 @@ func (UnimplementedConfigurationServiceHandler) GetSignalConfig(context.Context,
 
 func (UnimplementedConfigurationServiceHandler) UpdateSignalConfig(context.Context, *connect.Request[sdp_go.UpdateSignalConfigRequest]) (*connect.Response[sdp_go.UpdateSignalConfigResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.ConfigurationService.UpdateSignalConfig is not implemented"))
+}
+
+func (UnimplementedConfigurationServiceHandler) GetGithubAppInformation(context.Context, *connect.Request[sdp_go.GetGithubAppInformationRequest]) (*connect.Response[sdp_go.GetGithubAppInformationResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.ConfigurationService.GetGithubAppInformation is not implemented"))
+}
+
+func (UnimplementedConfigurationServiceHandler) RegenerateGithubAppProfile(context.Context, *connect.Request[sdp_go.RegenerateGithubAppProfileRequest]) (*connect.Response[sdp_go.RegenerateGithubAppProfileResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.ConfigurationService.RegenerateGithubAppProfile is not implemented"))
 }
