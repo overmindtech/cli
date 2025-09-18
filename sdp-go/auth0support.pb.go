@@ -41,7 +41,9 @@ type Auth0CreateUserRequest struct {
 	// The user's last name
 	LastName string `protobuf:"bytes,6,opt,name=last_name,json=lastName,proto3" json:"last_name,omitempty"`
 	// The user's connection id
-	ConnectionId  string `protobuf:"bytes,7,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	ConnectionId string `protobuf:"bytes,7,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	// The user's profile picture URL
+	PictureUrl    string `protobuf:"bytes,8,opt,name=picture_url,json=pictureUrl,proto3" json:"picture_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -125,6 +127,13 @@ func (x *Auth0CreateUserRequest) GetConnectionId() string {
 	return ""
 }
 
+func (x *Auth0CreateUserRequest) GetPictureUrl() string {
+	if x != nil {
+		return x.PictureUrl
+	}
+	return ""
+}
+
 type Auth0CreateUserResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	OrgId         string                 `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
@@ -173,7 +182,7 @@ var File_auth0support_proto protoreflect.FileDescriptor
 
 const file_auth0support_proto_rawDesc = "" +
 	"\n" +
-	"\x12auth0support.proto\x12\fauth0support\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\raccount.proto\"\xe3\x01\n" +
+	"\x12auth0support.proto\x12\fauth0support\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\raccount.proto\"\x84\x02\n" +
 	"\x16Auth0CreateUserRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
@@ -182,7 +191,9 @@ const file_auth0support_proto_rawDesc = "" +
 	"\n" +
 	"first_name\x18\x05 \x01(\tR\tfirstName\x12\x1b\n" +
 	"\tlast_name\x18\x06 \x01(\tR\blastName\x12#\n" +
-	"\rconnection_id\x18\a \x01(\tR\fconnectionId\"0\n" +
+	"\rconnection_id\x18\a \x01(\tR\fconnectionId\x12\x1f\n" +
+	"\vpicture_url\x18\b \x01(\tR\n" +
+	"pictureUrl\"0\n" +
 	"\x17Auth0CreateUserResponse\x12\x15\n" +
 	"\x06org_id\x18\x01 \x01(\tR\x05orgId2\xc7\x01\n" +
 	"\fAuth0Support\x12Y\n" +
