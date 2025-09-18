@@ -218,7 +218,13 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 
 		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockIterator)
 
-		sdpItems, err := adapter.List(ctx, wrapper.Scopes()[0], true)
+		// Check if adapter supports listing
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		sdpItems, err := listable.List(ctx, wrapper.Scopes()[0], true)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -235,6 +241,11 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 			if item.UniqueAttributeValue() != expectedName {
 				t.Fatalf("Expected name %s, got: %s", expectedName, item.UniqueAttributeValue())
 			}
+		}
+
+		_, ok = adapter.(discovery.SearchStreamableAdapter)
+		if ok {
+			t.Fatalf("Adapter should not support SearchStream operation")
 		}
 	})
 
@@ -258,7 +269,13 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 		mockErrorHandler := func(err error) { errs = append(errs, err) }
 
 		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
-		adapter.ListStream(ctx, wrapper.Scopes()[0], true, stream)
+		// Check if adapter supports list streaming
+		listStreamable, ok := adapter.(discovery.ListStreamableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support ListStream operation")
+		}
+
+		listStreamable.ListStream(ctx, wrapper.Scopes()[0], true, stream)
 		wg.Wait()
 
 		if len(errs) != 0 {
@@ -271,6 +288,11 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 			if item.Validate() != nil {
 				t.Fatalf("Expected no validation error, got: %v", item.Validate())
 			}
+		}
+
+		_, ok = adapter.(discovery.SearchStreamableAdapter)
+		if ok {
+			t.Fatalf("Adapter should not support SearchStream operation")
 		}
 	})
 }

@@ -126,7 +126,13 @@ func TestComputeNodeGroup(t *testing.T) {
 		// Mock the List method
 		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockComputeIterator)
 
-		sdpItems, err := adapter.List(ctx, wrapper.Scopes()[0], true)
+		// Check if adapter supports listing
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		sdpItems, err := listable.List(ctx, wrapper.Scopes()[0], true)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -167,7 +173,13 @@ func TestComputeNodeGroup(t *testing.T) {
 		mockErrorHandler := func(err error) { errs = append(errs, err) }
 
 		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
-		adapter.ListStream(ctx, wrapper.Scopes()[0], true, stream)
+		// Check if adapter supports list streaming
+		listStreamable, ok := adapter.(discovery.ListStreamableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support ListStream operation")
+		}
+
+		listStreamable.ListStream(ctx, wrapper.Scopes()[0], true, stream)
 		wg.Wait()
 
 		if len(errs) != 0 {
@@ -218,7 +230,13 @@ func TestComputeNodeGroup(t *testing.T) {
 		// [SPEC] Search filters by the node template URL. It will list and filter out
 		// any node groups that are not using the given URL.
 
-		sdpItems, err := adapter.Search(ctx, wrapper.Scopes()[0], testTemplateUrl, true)
+		// Check if adapter supports searching
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		sdpItems, err := searchable.Search(ctx, wrapper.Scopes()[0], testTemplateUrl, true)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -288,7 +306,13 @@ func TestComputeNodeGroup(t *testing.T) {
 		}
 
 		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
-		adapter.SearchStream(ctx, wrapper.Scopes()[0], testTemplateUrl, true, stream)
+		// Check if adapter supports search streaming
+		searchStreamable, ok := adapter.(discovery.SearchStreamableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support SearchStream operation")
+		}
+
+		searchStreamable.SearchStream(ctx, wrapper.Scopes()[0], testTemplateUrl, true, stream)
 		wg.Wait()
 
 		if len(errs) > 0 {

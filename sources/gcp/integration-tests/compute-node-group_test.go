@@ -15,6 +15,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -126,7 +127,14 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 
 		// [SPEC] The LIST operation for node groups will list all node groups in a given
 		// scope.
-		sdpItems, err := nodeGroupAdapter.List(ctx, scope, true)
+
+		// Check if adapter supports listing
+		listable, ok := nodeGroupAdapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		sdpItems, err := listable.List(ctx, scope, true)
 		if err != nil {
 			t.Fatalf("Failed to list compute node groups: %v", err)
 		}
@@ -220,7 +228,14 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 
 		// [SPEC] The LIST operation for node templates will list all node groups in a given
 		// scope.
-		sdpItems, err := nodeTemplateAdapter.List(ctx, scope, true)
+
+		// Check if adapter supports listing
+		listable, ok := nodeTemplateAdapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		sdpItems, err := listable.List(ctx, scope, true)
 		if err != nil {
 			t.Fatalf("Failed to list compute node templates: %v", err)
 		}

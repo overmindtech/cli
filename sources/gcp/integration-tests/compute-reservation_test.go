@@ -14,6 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -56,7 +57,14 @@ func TestComputeReservationIntegration(t *testing.T) {
 		scope := reservationsWrapper.Scopes()[0]
 
 		reservationsAdapter := sources.WrapperToAdapter(reservationsWrapper)
-		sdpItems, err := reservationsAdapter.List(ctx, scope, true)
+
+		// Check if adapter supports listing
+		listable, ok := reservationsAdapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		sdpItems, err := listable.List(ctx, scope, true)
 		if err != nil {
 			t.Fatalf("Failed to list compute reservations: %v", err)
 		}

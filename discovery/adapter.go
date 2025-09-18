@@ -62,6 +62,18 @@ type StreamingAdapter interface {
 	SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream QueryResultStream)
 }
 
+// ListStreamableAdapter supports streaming for the List queries.
+type ListStreamableAdapter interface {
+	Adapter
+	ListStream(ctx context.Context, scope string, ignoreCache bool, stream QueryResultStream)
+}
+
+// SearchStreamableAdapter supports streaming for the Search queries.
+type SearchStreamableAdapter interface {
+	Adapter
+	SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream QueryResultStream)
+}
+
 // CachingAdapter Is an adapter of items that supports caching
 type CachingAdapter interface {
 	Adapter

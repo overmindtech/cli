@@ -78,46 +78,117 @@ type SearchableListableWrapper interface {
 type StandardAdapter interface {
 	Validate() error
 	discovery.Adapter
-	discovery.ListableAdapter
-	discovery.StreamingAdapter
-	discovery.SearchableAdapter
-	discovery.CachingAdapter
 }
 
 // WrapperToAdapter converts a Wrapper to a StandardAdapter.
 func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
-	a := &standardAdapterImpl{
+	core := standardAdapterCore{
 		wrapper: wrapper,
 	}
 
-	a.sourceType = "unknown"
+	core.sourceType = "unknown"
 
 	it, ok := wrapper.ItemType().(shared.ItemTypeInstance)
 	if ok {
-		a.sourceType = string(it.Source)
+		core.sourceType = string(it.Source)
 	}
 
 	// initialize cache
-	a.cache = sdpcache.NewCache()
+	core.cache = sdpcache.NewCache()
 
-	// Check if the wrapper supports ListableWrapper
-	if listable, ok := wrapper.(ListableWrapper); ok {
-		a.listable = listable
+	// Check if wrapper supports both List and Search - if so, return standardSearchableListableAdapterImpl
+	if listable, listOk := wrapper.(ListableWrapper); listOk {
+		if searchable, searchOk := wrapper.(SearchableWrapper); searchOk {
+			listableImpl := &standardListableAdapterImpl{
+				listable: listable,
+			}
+
+			searchableImpl := &standardSearchableAdapterImpl{
+				searchable: searchable,
+			}
+
+			// Check for streaming capabilities
+			if listStreamable, ok := wrapper.(ListStreamableWrapper); ok {
+				listableImpl.listStreamable = listStreamable
+			}
+
+			if searchStreamable, ok := wrapper.(SearchStreamableWrapper); ok {
+				searchableImpl.searchStreamable = searchStreamable
+			}
+
+			// Set the core for delegate implementations
+			listableImpl.standardAdapterCore = core
+			searchableImpl.standardAdapterCore = core
+
+			a := &standardSearchableListableAdapterImpl{
+				listableImpl:        listableImpl,
+				searchableImpl:      searchableImpl,
+				standardAdapterCore: core,
+			}
+
+			if err := a.Validate(); err != nil {
+				panic(fmt.Sprintf("failed to validate adapter: %v", err))
+			}
+
+			if iamPerms := wrapper.IAMPermissions(); len(iamPerms) > 0 {
+				for _, perm := range iamPerms {
+					gcpshared.IAMPermissions[perm] = true
+				}
+			}
+
+			return a
+		}
+
+		// Listable only
+		a := &standardListableAdapterImpl{
+			standardAdapterCore: core,
+			listable:            listable,
+		}
+
+		if listStreamable, ok := wrapper.(ListStreamableWrapper); ok {
+			a.listStreamable = listStreamable
+		}
+
+		if err := a.Validate(); err != nil {
+			panic(fmt.Sprintf("failed to validate adapter: %v", err))
+		}
+
+		if iamPerms := wrapper.IAMPermissions(); len(iamPerms) > 0 {
+			for _, perm := range iamPerms {
+				gcpshared.IAMPermissions[perm] = true
+			}
+		}
+
+		return a
 	}
 
-	// Check if the wrapper supports ListableStreamableWrapper
-	if listStreamable, ok := wrapper.(ListStreamableWrapper); ok {
-		a.listStreamable = listStreamable
-	}
-
-	// Check if the wrapper supports SearchableWrapper
+	// Check if wrapper is searchable only - return standardSearchableAdapterImpl
 	if searchable, ok := wrapper.(SearchableWrapper); ok {
-		a.searchable = searchable
+		a := &standardSearchableAdapterImpl{
+			standardAdapterCore: core,
+			searchable:          searchable,
+		}
+
+		if searchStreamable, ok := wrapper.(SearchStreamableWrapper); ok {
+			a.searchStreamable = searchStreamable
+		}
+
+		if err := a.Validate(); err != nil {
+			panic(fmt.Sprintf("failed to validate adapter: %v", err))
+		}
+
+		if iamPerms := wrapper.IAMPermissions(); len(iamPerms) > 0 {
+			for _, perm := range iamPerms {
+				gcpshared.IAMPermissions[perm] = true
+			}
+		}
+
+		return a
 	}
 
-	// Check if the wrapper supports SearchableStreamableWrapper
-	if searchStreamable, ok := wrapper.(SearchStreamableWrapper); ok {
-		a.searchStreamable = searchStreamable
+	// For non-listable, non-searchable wrappers, return standardAdapterImpl
+	a := &standardAdapterImpl{
+		standardAdapterCore: core,
 	}
 
 	if err := a.Validate(); err != nil {
@@ -133,33 +204,72 @@ func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
 	return a
 }
 
+type standardAdapterCore struct {
+	wrapper    Wrapper
+	sourceType string
+	cache      *sdpcache.Cache
+}
+
 type standardAdapterImpl struct {
-	wrapper          Wrapper
-	listable         ListableWrapper
-	listStreamable   ListStreamableWrapper
+	standardAdapterCore
+}
+
+type standardListableAdapterImpl struct {
+	listable       ListableWrapper
+	listStreamable ListStreamableWrapper
+	standardAdapterCore
+}
+
+type standardSearchableAdapterImpl struct {
 	searchable       SearchableWrapper
 	searchStreamable SearchStreamableWrapper
-	cache            *sdpcache.Cache
-	sourceType       string
+	standardAdapterCore
+}
+
+type standardSearchableListableAdapterImpl struct {
+	listableImpl   *standardListableAdapterImpl
+	searchableImpl *standardSearchableAdapterImpl
+	standardAdapterCore
+}
+
+// Standard Adapter Core methods
+// *****************************
+
+// Cache returns the cache of the adapter.
+func (s *standardAdapterCore) Cache() *sdpcache.Cache {
+	return s.cache
 }
 
 // Type returns the type of the adapter.
-func (s *standardAdapterImpl) Type() string {
+func (s *standardAdapterCore) Type() string {
 	return s.wrapper.Type()
 }
 
 // Name returns the name of the adapter.
-func (s *standardAdapterImpl) Name() string {
+func (s *standardAdapterCore) Name() string {
 	return s.wrapper.Name()
 }
 
 // Scopes returns the scopes of the adapter.
-func (s *standardAdapterImpl) Scopes() []string {
+func (s *standardAdapterCore) Scopes() []string {
 	return s.wrapper.Scopes()
 }
 
+func (s *standardAdapterCore) validateScopes(scope string) error {
+	for _, expectedScope := range s.Scopes() {
+		if scope == expectedScope {
+			return nil
+		}
+	}
+
+	return &sdp.QueryError{
+		ErrorType:   sdp.QueryError_NOSCOPE,
+		ErrorString: fmt.Sprintf("requested scope %v does not match any adapter scope %v", scope, s.Scopes()),
+	}
+}
+
 // Get retrieves a single item with a given scope and query.
-func (s *standardAdapterImpl) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
+func (s *standardAdapterCore) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
 	if err := s.validateScopes(scope); err != nil {
 		return nil, err
 	}
@@ -209,8 +319,56 @@ func (s *standardAdapterImpl) Get(ctx context.Context, scope string, query strin
 	return item, nil
 }
 
+// Standard Adapter Implementation
+// *******************************
+
+// Metadata returns the metadata of the adapter.
+// It uses the wrapper's metadata if available, otherwise constructs it based on the wrapper's type and capabilities.
+func (s *standardAdapterImpl) Metadata() *sdp.AdapterMetadata {
+	if s.wrapper.AdapterMetadata() != nil {
+		return s.wrapper.AdapterMetadata()
+	}
+
+	supportedQueryMethods := &sdp.AdapterSupportedQueryMethods{
+		Get: true,
+		GetDescription: fmt.Sprintf(
+			"Get %s by \"%s\"",
+			s.wrapper.ItemType().Readable(),
+			s.wrapper.GetLookups().ReadableFormat(),
+		),
+	}
+
+	a := &sdp.AdapterMetadata{
+		Type:                  s.wrapper.Type(),
+		Category:              s.wrapper.Category(),
+		DescriptiveName:       s.wrapper.ItemType().Readable(),
+		TerraformMappings:     s.wrapper.TerraformMappings(),
+		SupportedQueryMethods: supportedQueryMethods,
+	}
+
+	if s.wrapper.PotentialLinks() != nil {
+		for link := range s.wrapper.PotentialLinks() {
+			a.PotentialLinks = append(a.PotentialLinks, link.String())
+		}
+	}
+
+	return a
+}
+
+// Validate checks if the adapter is valid.
+func (s *standardAdapterImpl) Validate() error {
+	if s.cache == nil {
+		return fmt.Errorf("cache is not initialized")
+	}
+
+	return protovalidate.Validate(s.Metadata())
+}
+
+// Listable Adapter Implementation
+// ******************************
+
 // List retrieves all items in a given scope.
-func (s *standardAdapterImpl) List(ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error) {
+func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error) {
 	if err := s.validateScopes(scope); err != nil {
 		return nil, err
 	}
@@ -258,7 +416,7 @@ func (s *standardAdapterImpl) List(ctx context.Context, scope string, ignoreCach
 	return items, nil
 }
 
-func (s *standardAdapterImpl) ListStream(ctx context.Context, scope string, ignoreCache bool, stream discovery.QueryResultStream) {
+func (s *standardListableAdapterImpl) ListStream(ctx context.Context, scope string, ignoreCache bool, stream discovery.QueryResultStream) {
 	if err := s.validateScopes(scope); err != nil {
 		stream.SendError(err)
 		return
@@ -298,8 +456,54 @@ func (s *standardAdapterImpl) ListStream(ctx context.Context, scope string, igno
 	s.listStreamable.ListStream(ctx, stream, s.cache, ck)
 }
 
+// Metadata returns the metadata of the listable adapter.
+func (s *standardListableAdapterImpl) Metadata() *sdp.AdapterMetadata {
+	if s.wrapper.AdapterMetadata() != nil {
+		return s.wrapper.AdapterMetadata()
+	}
+
+	a := &sdp.AdapterMetadata{
+		Type:              s.wrapper.Type(),
+		Category:          s.wrapper.Category(),
+		DescriptiveName:   s.wrapper.ItemType().Readable(),
+		TerraformMappings: s.wrapper.TerraformMappings(),
+		SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
+			Get: true,
+			GetDescription: fmt.Sprintf(
+				"Get %s by \"%s\"",
+				s.wrapper.ItemType().Readable(),
+				s.wrapper.GetLookups().ReadableFormat(),
+			),
+			List: true,
+			ListDescription: fmt.Sprintf(
+				"List all %s items", s.wrapper.ItemType().Readable(),
+			),
+		},
+	}
+
+	if s.wrapper.PotentialLinks() != nil {
+		for link := range s.wrapper.PotentialLinks() {
+			a.PotentialLinks = append(a.PotentialLinks, link.String())
+		}
+	}
+
+	return a
+}
+
+// Validate checks if the listable adapter is valid.
+func (s *standardListableAdapterImpl) Validate() error {
+	if s.cache == nil {
+		return fmt.Errorf("cache is not initialized")
+	}
+
+	return protovalidate.Validate(s.Metadata())
+}
+
+// Searchable Adapter Implementation
+// *********************************
+
 // Search retrieves items based on a search query.
-func (s *standardAdapterImpl) Search(ctx context.Context, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
+func (s *standardSearchableAdapterImpl) Search(ctx context.Context, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
 	if err := s.validateScopes(scope); err != nil {
 		return nil, err
 	}
@@ -368,7 +572,7 @@ func (s *standardAdapterImpl) Search(ctx context.Context, scope string, query st
 	return items, nil
 }
 
-func (s *standardAdapterImpl) SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
+func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
 	if err := s.validateScopes(scope); err != nil {
 		stream.SendError(err)
 		return
@@ -465,16 +669,57 @@ func (s *standardAdapterImpl) SearchStream(ctx context.Context, scope string, qu
 	s.searchStreamable.SearchStream(ctx, stream, s.cache, ck, queryParts...)
 }
 
-// Cache returns the cache of the adapter.
-func (s *standardAdapterImpl) Cache() *sdpcache.Cache {
-	return s.cache
+// Metadata returns the metadata of the searchable adapter.
+func (s *standardSearchableAdapterImpl) Metadata() *sdp.AdapterMetadata {
+	if s.wrapper.AdapterMetadata() != nil {
+		return s.wrapper.AdapterMetadata()
+	}
+
+	a := &sdp.AdapterMetadata{
+		Type:              s.wrapper.Type(),
+		Category:          s.wrapper.Category(),
+		DescriptiveName:   s.wrapper.ItemType().Readable(),
+		TerraformMappings: s.wrapper.TerraformMappings(),
+		SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
+			Get: true,
+			GetDescription: fmt.Sprintf(
+				"Get %s by \"%s\"",
+				s.wrapper.ItemType().Readable(),
+				s.wrapper.GetLookups().ReadableFormat(),
+			),
+			Search: true,
+			SearchDescription: fmt.Sprintf(
+				"Search for %s by \"%s\"",
+				s.wrapper.ItemType().Readable(),
+				expectedSearchQueryFormat(s.searchable.SearchLookups()),
+			),
+		},
+	}
+
+	if s.wrapper.PotentialLinks() != nil {
+		for link := range s.wrapper.PotentialLinks() {
+			a.PotentialLinks = append(a.PotentialLinks, link.String())
+		}
+	}
+
+	return a
 }
 
-// Metadata returns the metadata of the adapter.
-// It uses the wrapper's metadata if available, otherwise constructs it based on the wrapper's type and capabilities.
-func (s *standardAdapterImpl) Metadata() *sdp.AdapterMetadata {
-	if s.wrapper.AdapterMetadata() != nil {
+// Validate checks if the searchable adapter is valid.
+func (s *standardSearchableAdapterImpl) Validate() error {
+	if s.cache == nil {
+		return fmt.Errorf("cache is not initialized")
+	}
 
+	return protovalidate.Validate(s.Metadata())
+}
+
+// Searchable and Listable Adapter Implementation
+// **********************************************
+
+// Metadata returns the metadata of the searchable+listable adapter.
+func (s *standardSearchableListableAdapterImpl) Metadata() *sdp.AdapterMetadata {
+	if s.wrapper.AdapterMetadata() != nil {
 		return s.wrapper.AdapterMetadata()
 	}
 
@@ -485,21 +730,15 @@ func (s *standardAdapterImpl) Metadata() *sdp.AdapterMetadata {
 			s.wrapper.ItemType().Readable(),
 			s.wrapper.GetLookups().ReadableFormat(),
 		),
-	}
-
-	if s.listable != nil {
-		supportedQueryMethods.List = true
-		supportedQueryMethods.ListDescription = fmt.Sprintf(
-			"List all %s items", s.wrapper.ItemType().Readable())
-	}
-
-	if s.searchable != nil {
-		supportedQueryMethods.Search = true
-		supportedQueryMethods.SearchDescription = fmt.Sprintf(
+		List: true,
+		ListDescription: fmt.Sprintf(
+			"List all %s items", s.wrapper.ItemType().Readable()),
+		Search: true,
+		SearchDescription: fmt.Sprintf(
 			"Search for %s by \"%s\"",
 			s.wrapper.ItemType().Readable(),
-			expectedSearchQueryFormat(s.searchable.SearchLookups()),
-		)
+			expectedSearchQueryFormat(s.searchableImpl.searchable.SearchLookups()),
+		),
 	}
 
 	a := &sdp.AdapterMetadata{
@@ -519,8 +758,8 @@ func (s *standardAdapterImpl) Metadata() *sdp.AdapterMetadata {
 	return a
 }
 
-// Validate checks if the adapter is valid.
-func (s *standardAdapterImpl) Validate() error {
+// Validate checks if the searchable+listable adapter is valid.
+func (s *standardSearchableListableAdapterImpl) Validate() error {
 	if s.cache == nil {
 		return fmt.Errorf("cache is not initialized")
 	}
@@ -528,17 +767,24 @@ func (s *standardAdapterImpl) Validate() error {
 	return protovalidate.Validate(s.Metadata())
 }
 
-func (s *standardAdapterImpl) validateScopes(scope string) error {
-	for _, expectedScope := range s.Scopes() {
-		if scope == expectedScope {
-			return nil
-		}
-	}
+// List delegates to the listable implementation.
+func (s *standardSearchableListableAdapterImpl) List(ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error) {
+	return s.listableImpl.List(ctx, scope, ignoreCache)
+}
 
-	return &sdp.QueryError{
-		ErrorType:   sdp.QueryError_NOSCOPE,
-		ErrorString: fmt.Sprintf("requested scope %v does not match any adapter scope %v", scope, s.Scopes()),
-	}
+// ListStream delegates to the listable implementation.
+func (s *standardSearchableListableAdapterImpl) ListStream(ctx context.Context, scope string, ignoreCache bool, stream discovery.QueryResultStream) {
+	s.listableImpl.ListStream(ctx, scope, ignoreCache, stream)
+}
+
+// Search delegates to the searchable implementation.
+func (s *standardSearchableListableAdapterImpl) Search(ctx context.Context, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
+	return s.searchableImpl.Search(ctx, scope, query, ignoreCache)
+}
+
+// SearchStream delegates to the searchable implementation.
+func (s *standardSearchableListableAdapterImpl) SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
+	s.searchableImpl.SearchStream(ctx, scope, query, ignoreCache, stream)
 }
 
 // expectedSearchQueryFormat generates a readable format for the search query.

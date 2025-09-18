@@ -7,6 +7,7 @@ import (
 	bigquery "cloud.google.com/go/bigquery"
 	"go.uber.org/mock/gomock"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -78,12 +79,34 @@ func TestBigQueryModel(t *testing.T) {
 
 		adapter := sources.WrapperToAdapter(wrapper)
 
-		sdpItems, qErr := adapter.Search(ctx, wrapper.Scopes()[0], datasetID, true)
+		// Check if adapter supports searching
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		sdpItems, qErr := searchable.Search(ctx, wrapper.Scopes()[0], datasetID, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)
 		}
 		if len(sdpItems) != 1 {
 			t.Fatalf("Expected 1 items, got: %d", len(sdpItems))
+		}
+
+		_, ok = adapter.(discovery.ListStreamableAdapter)
+		if ok {
+			t.Fatalf("Adapter should not support ListStream operation")
+		}
+	})
+
+	t.Run("List_Unsupported", func(t *testing.T) {
+		wrapper := manual.NewBigQueryModel(mockClient, projectID)
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		// Check if adapter supports list - it should not
+		_, ok := adapter.(discovery.ListableAdapter)
+		if ok {
+			t.Fatalf("Expected adapter to not support List operation, but it does")
 		}
 	})
 }

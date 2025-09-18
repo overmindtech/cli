@@ -14,6 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	"github.com/overmindtech/cli/sources/gcp/shared"
@@ -75,7 +76,13 @@ func TestComputeAddressIntegration(t *testing.T) {
 			t.Fatalf("Expected unique attribute value to be %s, got %s", addressName, uniqueAttrValue)
 		}
 
-		sdpItems, err := addressAdapter.List(ctx, scope, true)
+		// Check if adapter supports listing
+		listable, ok := addressAdapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		sdpItems, err := listable.List(ctx, scope, true)
 		if err != nil {
 			t.Fatalf("Failed to list compute addresses: %v", err)
 		}

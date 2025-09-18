@@ -121,7 +121,13 @@ func TestComputeBackendService(t *testing.T) {
 
 		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockBackendServiceIterator)
 
-		sdpItems, err := adapter.List(ctx, wrapper.Scopes()[0], true)
+		// Check if adapter supports listing
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		sdpItems, err := listable.List(ctx, wrapper.Scopes()[0], true)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -134,6 +140,11 @@ func TestComputeBackendService(t *testing.T) {
 			if item.Validate() != nil {
 				t.Fatalf("Expected no validation error, got: %v", item.Validate())
 			}
+		}
+
+		_, ok = adapter.(discovery.SearchStreamableAdapter)
+		if ok {
+			t.Fatalf("Adapter should not support SearchStream operation")
 		}
 	})
 
@@ -167,7 +178,13 @@ func TestComputeBackendService(t *testing.T) {
 		}
 
 		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
-		adapter.ListStream(ctx, wrapper.Scopes()[0], true, stream)
+		// Check if adapter supports list streaming
+		listStreamable, ok := adapter.(discovery.ListStreamableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support ListStream operation")
+		}
+
+		listStreamable.ListStream(ctx, wrapper.Scopes()[0], true, stream)
 		wg.Wait()
 
 		if len(errs) != 0 {
@@ -176,6 +193,11 @@ func TestComputeBackendService(t *testing.T) {
 
 		if len(items) != 2 {
 			t.Fatalf("Expected 2 items, got: %d", len(items))
+		}
+
+		_, ok = adapter.(discovery.SearchStreamableAdapter)
+		if ok {
+			t.Fatalf("Adapter should not support SearchStream operation")
 		}
 	})
 }

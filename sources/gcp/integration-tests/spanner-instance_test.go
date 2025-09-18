@@ -13,6 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	"github.com/overmindtech/cli/sources/gcp/shared"
 )
@@ -68,7 +69,13 @@ func TestSpannerInstance(t *testing.T) {
 			t.Fatalf("Expected unique attribute value to be %s, got %s", instanceName, uniqueAttrValue)
 		}
 
-		sdpItems, err := adapter.(dynamic.ListableAdapter).List(ctx, projectID, true)
+		// Check if adapter supports listing
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		sdpItems, err := listable.List(ctx, projectID, true)
 		if err != nil {
 			t.Fatalf("Failed to list compute instances: %v", err)
 		}

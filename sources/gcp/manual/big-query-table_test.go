@@ -8,6 +8,7 @@ import (
 	"cloud.google.com/go/bigquery"
 	"go.uber.org/mock/gomock"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -162,7 +163,13 @@ func TestBigQueryTable(t *testing.T) {
 			return items, nil
 		})
 
-		sdpItems, err := adapter.Search(ctx, wrapper.Scopes()[0], datasetID, true)
+		// Check if adapter supports searching
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		sdpItems, err := searchable.Search(ctx, wrapper.Scopes()[0], datasetID, true)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -194,7 +201,13 @@ func TestBigQueryTable(t *testing.T) {
 			), nil)
 
 		terraformMapping := fmt.Sprintf("projects/%s/datasets/%s/tables/%s", projectID, datasetID, tableID)
-		sdpItems, err := adapter.Search(ctx, wrapper.Scopes()[0], terraformMapping, true)
+		// Check if adapter supports searching
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		sdpItems, err := searchable.Search(ctx, wrapper.Scopes()[0], terraformMapping, true)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -207,6 +220,23 @@ func TestBigQueryTable(t *testing.T) {
 
 		if err := sdpItems[0].Validate(); err != nil {
 			t.Fatalf("Expected no validation error, got: %v", err)
+		}
+	})
+
+	t.Run("List_Unsupported", func(t *testing.T) {
+		wrapper := manual.NewBigQueryTable(mockClient, projectID)
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		// Check if adapter supports list - it should not
+		_, ok := adapter.(discovery.ListableAdapter)
+		if ok {
+			t.Fatalf("Expected adapter to not support List operation, but it does")
+		}
+
+		// Check if adapter supports ListStream - it should not
+		_, ok = adapter.(discovery.ListStreamableAdapter)
+		if ok {
+			t.Fatalf("Adapter should not support ListStream operation")
 		}
 	})
 }

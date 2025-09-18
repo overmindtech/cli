@@ -7,6 +7,7 @@ import (
 	"cloud.google.com/go/bigquery"
 	"go.uber.org/mock/gomock"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -92,7 +93,13 @@ func TestBigQueryDataset(t *testing.T) {
 			{},
 		}, nil)
 
-		sdpItems, err := adapter.List(ctx, wrapper.Scopes()[0], true)
+		// Check if adapter supports listing
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		sdpItems, err := listable.List(ctx, wrapper.Scopes()[0], true)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -103,6 +110,15 @@ func TestBigQueryDataset(t *testing.T) {
 			t.Fatalf("Expected %d items, got: %d", expectedCount, actualCount)
 		}
 
+		_, ok = adapter.(discovery.SearchableAdapter)
+		if ok {
+			t.Fatalf("Expected adapter to not support Search operation, but it does")
+		}
+
+		_, ok = adapter.(discovery.SearchStreamableAdapter)
+		if ok {
+			t.Fatalf("Adapter should not support SearchStream operation")
+		}
 	})
 }
 

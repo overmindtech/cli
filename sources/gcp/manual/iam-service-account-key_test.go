@@ -67,7 +67,13 @@ func TestIAMServiceAccountKey(t *testing.T) {
 			},
 		}, nil)
 
-		sdpItems, err := adapter.Search(ctx, wrapper.Scopes()[0], testServiceAccount, true)
+		// Check if adapter supports searching
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		sdpItems, err := searchable.Search(ctx, wrapper.Scopes()[0], testServiceAccount, true)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -95,7 +101,13 @@ func TestIAMServiceAccountKey(t *testing.T) {
 		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
 		terraformResourceID := fmt.Sprintf("projects/%s/serviceAccounts/%s/keys/%s", projectID, testServiceAccount, testKeyName)
 
-		sdpItems, err := adapter.Search(ctx, wrapper.Scopes()[0], terraformResourceID, true)
+		// Check if adapter supports searching
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		sdpItems, err := searchable.Search(ctx, wrapper.Scopes()[0], terraformResourceID, true)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -135,7 +147,13 @@ func TestIAMServiceAccountKey(t *testing.T) {
 		}
 
 		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
-		adapter.SearchStream(ctx, wrapper.Scopes()[0], testServiceAccount, true, stream)
+		// Check if adapter supports search streaming
+		searchStreamable, ok := adapter.(discovery.SearchStreamableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support SearchStream operation")
+		}
+
+		searchStreamable.SearchStream(ctx, wrapper.Scopes()[0], testServiceAccount, true, stream)
 		wg.Wait()
 
 		if len(errs) > 0 {
@@ -148,6 +166,22 @@ func TestIAMServiceAccountKey(t *testing.T) {
 			if err := item.Validate(); err != nil {
 				t.Fatalf("Expected no validation error, got: %v", err)
 			}
+		}
+
+		_, ok = adapter.(discovery.ListStreamableAdapter)
+		if ok {
+			t.Fatalf("Adapter should not support ListStream operation")
+		}
+	})
+
+	t.Run("List_Unsupported", func(t *testing.T) {
+		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		// Check if adapter supports list - it should not
+		_, ok := adapter.(discovery.ListableAdapter)
+		if ok {
+			t.Fatalf("Expected adapter to not support List operation, but it does")
 		}
 	})
 }

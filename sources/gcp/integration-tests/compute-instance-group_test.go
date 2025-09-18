@@ -14,6 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -55,7 +56,14 @@ func TestComputeInstanceGroupIntegration(t *testing.T) {
 		scope := instanceGroupWrapper.Scopes()[0]
 
 		adapter := sources.WrapperToAdapter(instanceGroupWrapper)
-		sdpItems, err := adapter.List(ctx, scope, true)
+
+		// Check if adapter supports listing
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		sdpItems, err := listable.List(ctx, scope, true)
 		if err != nil {
 			t.Fatalf("Failed to list instance groups: %v", err)
 		}

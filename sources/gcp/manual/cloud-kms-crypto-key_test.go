@@ -129,7 +129,13 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 
 		// [SPEC] Search filters by the key ring. It will list all crypto keys
 		// any crypto keys that are not using the given key ring.
-		sdpItems, err := adapter.Search(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey("location", "key-ring"), true)
+		// Check if adapter supports searching
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		sdpItems, err := searchable.Search(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey("location", "key-ring"), true)
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -191,7 +197,13 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 		}
 
 		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
-		adapter.SearchStream(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey("global", "test-key-ring"), true, stream)
+		// Check if adapter supports search streaming
+		searchStreamable, ok := adapter.(discovery.SearchStreamableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support SearchStream operation")
+		}
+
+		searchStreamable.SearchStream(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey("global", "test-key-ring"), true, stream)
 		wg.Wait()
 
 		if len(errs) != 0 {
@@ -200,6 +212,22 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 
 		if len(items) != 2 {
 			t.Fatalf("Expected 2 items, got: %d", len(items))
+		}
+
+		_, ok = adapter.(discovery.ListStreamableAdapter)
+		if ok {
+			t.Fatalf("Adapter should not support ListStream operation")
+		}
+	})
+
+	t.Run("List_Unsupported", func(t *testing.T) {
+		wrapper := manual.NewCloudKMSCryptoKey(mockClient, projectID)
+		adapter := sources.WrapperToAdapter(wrapper)
+
+		// Check if adapter supports list - it should not
+		_, ok := adapter.(discovery.ListableAdapter)
+		if ok {
+			t.Fatalf("Expected adapter to not support List operation, but it does")
 		}
 	})
 }

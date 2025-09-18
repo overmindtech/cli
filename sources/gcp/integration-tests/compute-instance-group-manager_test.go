@@ -14,6 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -105,7 +106,13 @@ func TestComputeInstanceGroupManagerIntegration(t *testing.T) {
 			}
 		}
 
-		sdpItems, err := instanceGroupManagerAdapter.List(ctx, scope, true)
+		// Check if adapter supports listing
+		listable, ok := instanceGroupManagerAdapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		sdpItems, err := listable.List(ctx, scope, true)
 		if err != nil {
 			t.Fatalf("Failed to list instance group managers: %v", err)
 		}
