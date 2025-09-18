@@ -1,3 +1,9 @@
+---
+description: "GCP Dynamic Adapter development patterns and standards"
+globs: **/*.go
+alwaysApply: false
+---
+
 # Dynamic Adapter Creation Rules
 
 ## Overview

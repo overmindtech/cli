@@ -1,3 +1,8 @@
+---
+description: "GCP Dynamic Adapter unit testing patterns and standards"
+globs: **/*_test.go
+---
+
 # Dynamic Adapter Unit Testing Rules
 ## Overview
 
