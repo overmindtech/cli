@@ -980,8 +980,10 @@ type SignalConfig struct {
 	AggregationConfig *AggregationConfig `protobuf:"bytes,1,opt,name=aggregationConfig,proto3" json:"aggregationConfig,omitempty"`
 	// Config for routine changes, such as events per day and duration
 	RoutineChangesConfig *RoutineChangesConfig `protobuf:"bytes,2,opt,name=routineChangesConfig,proto3" json:"routineChangesConfig,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	// Config for Github app profile, such as primary branch name
+	GithubOrganisationProfile *GithubOrganisationProfile `protobuf:"bytes,3,opt,name=githubOrganisationProfile,proto3,oneof" json:"githubOrganisationProfile,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
 }
 
 func (x *SignalConfig) Reset() {
@@ -1024,6 +1026,13 @@ func (x *SignalConfig) GetAggregationConfig() *AggregationConfig {
 func (x *SignalConfig) GetRoutineChangesConfig() *RoutineChangesConfig {
 	if x != nil {
 		return x.RoutineChangesConfig
+	}
+	return nil
+}
+
+func (x *SignalConfig) GetGithubOrganisationProfile() *GithubOrganisationProfile {
+	if x != nil {
+		return x.GithubOrganisationProfile
 	}
 	return nil
 }
@@ -1390,9 +1399,10 @@ func (*RegenerateGithubAppProfileRequest) Descriptor() ([]byte, []int) {
 type GithubOrganisationProfile struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	PrimaryBranchName string                 `protobuf:"bytes,1,opt,name=primaryBranchName,proto3" json:"primaryBranchName,omitempty"`
-	HourlyScores      []float64              `protobuf:"fixed64,2,rep,packed,name=hourlyScores,proto3" json:"hourlyScores,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	// signal scores that will be given for each hour of the day, 0-23, from -5.0 to 5.0
+	HourlyScores  []float64 `protobuf:"fixed64,2,rep,packed,name=hourlyScores,proto3" json:"hourlyScores,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GithubOrganisationProfile) Reset() {
@@ -1483,6 +1493,80 @@ func (x *RegenerateGithubAppProfileResponse) GetGithubOrganisationProfile() *Git
 	return nil
 }
 
+// no parameters required, we will look up the installation ID from the account ID
+type DeleteGithubAppProfileAndGithubInstallationIDRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteGithubAppProfileAndGithubInstallationIDRequest) Reset() {
+	*x = DeleteGithubAppProfileAndGithubInstallationIDRequest{}
+	mi := &file_config_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteGithubAppProfileAndGithubInstallationIDRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteGithubAppProfileAndGithubInstallationIDRequest) ProtoMessage() {}
+
+func (x *DeleteGithubAppProfileAndGithubInstallationIDRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_config_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteGithubAppProfileAndGithubInstallationIDRequest.ProtoReflect.Descriptor instead.
+func (*DeleteGithubAppProfileAndGithubInstallationIDRequest) Descriptor() ([]byte, []int) {
+	return file_config_proto_rawDescGZIP(), []int{26}
+}
+
+// status codes to indicate if the deletion was successful
+type DeleteGithubAppProfileAndGithubInstallationIDResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteGithubAppProfileAndGithubInstallationIDResponse) Reset() {
+	*x = DeleteGithubAppProfileAndGithubInstallationIDResponse{}
+	mi := &file_config_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteGithubAppProfileAndGithubInstallationIDResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteGithubAppProfileAndGithubInstallationIDResponse) ProtoMessage() {}
+
+func (x *DeleteGithubAppProfileAndGithubInstallationIDResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_config_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteGithubAppProfileAndGithubInstallationIDResponse.ProtoReflect.Descriptor instead.
+func (*DeleteGithubAppProfileAndGithubInstallationIDResponse) Descriptor() ([]byte, []int) {
+	return file_config_proto_rawDescGZIP(), []int{27}
+}
+
 var File_config_proto protoreflect.FileDescriptor
 
 const file_config_proto_rawDesc = "" +
@@ -1533,10 +1617,12 @@ const file_config_proto_rawDesc = "" +
 	"\x19UpdateSignalConfigRequest\x12,\n" +
 	"\x06config\x18\x01 \x01(\v2\x14.config.SignalConfigR\x06config\"J\n" +
 	"\x1aUpdateSignalConfigResponse\x12,\n" +
-	"\x06config\x18\x01 \x01(\v2\x14.config.SignalConfigR\x06config\"\xa9\x01\n" +
+	"\x06config\x18\x01 \x01(\v2\x14.config.SignalConfigR\x06config\"\xad\x02\n" +
 	"\fSignalConfig\x12G\n" +
 	"\x11aggregationConfig\x18\x01 \x01(\v2\x19.config.AggregationConfigR\x11aggregationConfig\x12P\n" +
-	"\x14routineChangesConfig\x18\x02 \x01(\v2\x1c.config.RoutineChangesConfigR\x14routineChangesConfig\"5\n" +
+	"\x14routineChangesConfig\x18\x02 \x01(\v2\x1c.config.RoutineChangesConfigR\x14routineChangesConfig\x12d\n" +
+	"\x19githubOrganisationProfile\x18\x03 \x01(\v2!.config.GithubOrganisationProfileH\x00R\x19githubOrganisationProfile\x88\x01\x01B\x1c\n" +
+	"\x1a_githubOrganisationProfile\"5\n" +
 	"\x11AggregationConfig\x12 \n" +
 	"\x05alpha\x18\x01 \x01(\x02B\n" +
 	"\xbaH\a\n" +
@@ -1565,12 +1651,14 @@ const file_config_proto_rawDesc = "" +
 	"\x16averageCommitFrequency\x18\t \x01(\tR\x16averageCommitFrequency\"s\n" +
 	"\x1fGetGithubAppInformationResponse\x12P\n" +
 	"\x14githubAppInformation\x18\x01 \x01(\v2\x1c.config.GithubAppInformationR\x14githubAppInformation\"#\n" +
-	"!RegenerateGithubAppProfileRequest\"m\n" +
+	"!RegenerateGithubAppProfileRequest\"\x8f\x01\n" +
 	"\x19GithubOrganisationProfile\x12,\n" +
-	"\x11primaryBranchName\x18\x01 \x01(\tR\x11primaryBranchName\x12\"\n" +
-	"\fhourlyScores\x18\x02 \x03(\x01R\fhourlyScores\"\x85\x01\n" +
+	"\x11primaryBranchName\x18\x01 \x01(\tR\x11primaryBranchName\x12D\n" +
+	"\fhourlyScores\x18\x02 \x03(\x01B \xbaH\x1d\x92\x01\x1a\b\x18\x10\x18\"\x14\x12\x12\x19\x00\x00\x00\x00\x00\x00\x14@)\x00\x00\x00\x00\x00\x00\x14\xc0R\fhourlyScores\"\x85\x01\n" +
 	"\"RegenerateGithubAppProfileResponse\x12_\n" +
-	"\x19githubOrganisationProfile\x18\x01 \x01(\v2!.config.GithubOrganisationProfileR\x19githubOrganisationProfile2\xd2\x06\n" +
+	"\x19githubOrganisationProfile\x18\x01 \x01(\v2!.config.GithubOrganisationProfileR\x19githubOrganisationProfile\"6\n" +
+	"4DeleteGithubAppProfileAndGithubInstallationIDRequest\"7\n" +
+	"5DeleteGithubAppProfileAndGithubInstallationIDResponse2\x81\b\n" +
 	"\x14ConfigurationService\x12U\n" +
 	"\x10GetAccountConfig\x12\x1f.config.GetAccountConfigRequest\x1a .config.GetAccountConfigResponse\x12^\n" +
 	"\x13UpdateAccountConfig\x12\".config.UpdateAccountConfigRequest\x1a#.config.UpdateAccountConfigResponse\x12R\n" +
@@ -1580,7 +1668,8 @@ const file_config_proto_rawDesc = "" +
 	"\x0fGetSignalConfig\x12\x1e.config.GetSignalConfigRequest\x1a\x1f.config.GetSignalConfigResponse\x12[\n" +
 	"\x12UpdateSignalConfig\x12!.config.UpdateSignalConfigRequest\x1a\".config.UpdateSignalConfigResponse\x12j\n" +
 	"\x17GetGithubAppInformation\x12&.config.GetGithubAppInformationRequest\x1a'.config.GetGithubAppInformationResponse\x12s\n" +
-	"\x1aRegenerateGithubAppProfile\x12).config.RegenerateGithubAppProfileRequest\x1a*.config.RegenerateGithubAppProfileResponseB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
+	"\x1aRegenerateGithubAppProfile\x12).config.RegenerateGithubAppProfileRequest\x1a*.config.RegenerateGithubAppProfileResponse\x12\xac\x01\n" +
+	"-DeleteGithubAppProfileAndGithubInstallationID\x12<.config.DeleteGithubAppProfileAndGithubInstallationIDRequest\x1a=.config.DeleteGithubAppProfileAndGithubInstallationIDResponseB.Z,github.com/overmindtech/workspace/sdp-go;sdpb\x06proto3"
 
 var (
 	file_config_proto_rawDescOnce sync.Once
@@ -1595,39 +1684,41 @@ func file_config_proto_rawDescGZIP() []byte {
 }
 
 var file_config_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_config_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
+var file_config_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_config_proto_goTypes = []any{
-	(AccountConfig_BlastRadiusPreset)(0),       // 0: config.AccountConfig.BlastRadiusPreset
-	(GetHcpConfigResponse_Status)(0),           // 1: config.GetHcpConfigResponse.Status
-	(RoutineChangesConfig_DurationUnit)(0),     // 2: config.RoutineChangesConfig.DurationUnit
-	(*BlastRadiusConfig)(nil),                  // 3: config.BlastRadiusConfig
-	(*AccountConfig)(nil),                      // 4: config.AccountConfig
-	(*GetAccountConfigRequest)(nil),            // 5: config.GetAccountConfigRequest
-	(*GetAccountConfigResponse)(nil),           // 6: config.GetAccountConfigResponse
-	(*UpdateAccountConfigRequest)(nil),         // 7: config.UpdateAccountConfigRequest
-	(*UpdateAccountConfigResponse)(nil),        // 8: config.UpdateAccountConfigResponse
-	(*CreateHcpConfigRequest)(nil),             // 9: config.CreateHcpConfigRequest
-	(*CreateHcpConfigResponse)(nil),            // 10: config.CreateHcpConfigResponse
-	(*HcpConfig)(nil),                          // 11: config.HcpConfig
-	(*GetHcpConfigRequest)(nil),                // 12: config.GetHcpConfigRequest
-	(*GetHcpConfigResponse)(nil),               // 13: config.GetHcpConfigResponse
-	(*DeleteHcpConfigRequest)(nil),             // 14: config.DeleteHcpConfigRequest
-	(*DeleteHcpConfigResponse)(nil),            // 15: config.DeleteHcpConfigResponse
-	(*GetSignalConfigRequest)(nil),             // 16: config.GetSignalConfigRequest
-	(*GetSignalConfigResponse)(nil),            // 17: config.GetSignalConfigResponse
-	(*UpdateSignalConfigRequest)(nil),          // 18: config.UpdateSignalConfigRequest
-	(*UpdateSignalConfigResponse)(nil),         // 19: config.UpdateSignalConfigResponse
-	(*SignalConfig)(nil),                       // 20: config.SignalConfig
-	(*AggregationConfig)(nil),                  // 21: config.AggregationConfig
-	(*RoutineChangesConfig)(nil),               // 22: config.RoutineChangesConfig
-	(*GetGithubAppInformationRequest)(nil),     // 23: config.GetGithubAppInformationRequest
-	(*GithubAppInformation)(nil),               // 24: config.GithubAppInformation
-	(*GetGithubAppInformationResponse)(nil),    // 25: config.GetGithubAppInformationResponse
-	(*RegenerateGithubAppProfileRequest)(nil),  // 26: config.RegenerateGithubAppProfileRequest
-	(*GithubOrganisationProfile)(nil),          // 27: config.GithubOrganisationProfile
-	(*RegenerateGithubAppProfileResponse)(nil), // 28: config.RegenerateGithubAppProfileResponse
-	(*CreateAPIKeyResponse)(nil),               // 29: apikeys.CreateAPIKeyResponse
-	(*timestamppb.Timestamp)(nil),              // 30: google.protobuf.Timestamp
+	(AccountConfig_BlastRadiusPreset)(0),                          // 0: config.AccountConfig.BlastRadiusPreset
+	(GetHcpConfigResponse_Status)(0),                              // 1: config.GetHcpConfigResponse.Status
+	(RoutineChangesConfig_DurationUnit)(0),                        // 2: config.RoutineChangesConfig.DurationUnit
+	(*BlastRadiusConfig)(nil),                                     // 3: config.BlastRadiusConfig
+	(*AccountConfig)(nil),                                         // 4: config.AccountConfig
+	(*GetAccountConfigRequest)(nil),                               // 5: config.GetAccountConfigRequest
+	(*GetAccountConfigResponse)(nil),                              // 6: config.GetAccountConfigResponse
+	(*UpdateAccountConfigRequest)(nil),                            // 7: config.UpdateAccountConfigRequest
+	(*UpdateAccountConfigResponse)(nil),                           // 8: config.UpdateAccountConfigResponse
+	(*CreateHcpConfigRequest)(nil),                                // 9: config.CreateHcpConfigRequest
+	(*CreateHcpConfigResponse)(nil),                               // 10: config.CreateHcpConfigResponse
+	(*HcpConfig)(nil),                                             // 11: config.HcpConfig
+	(*GetHcpConfigRequest)(nil),                                   // 12: config.GetHcpConfigRequest
+	(*GetHcpConfigResponse)(nil),                                  // 13: config.GetHcpConfigResponse
+	(*DeleteHcpConfigRequest)(nil),                                // 14: config.DeleteHcpConfigRequest
+	(*DeleteHcpConfigResponse)(nil),                               // 15: config.DeleteHcpConfigResponse
+	(*GetSignalConfigRequest)(nil),                                // 16: config.GetSignalConfigRequest
+	(*GetSignalConfigResponse)(nil),                               // 17: config.GetSignalConfigResponse
+	(*UpdateSignalConfigRequest)(nil),                             // 18: config.UpdateSignalConfigRequest
+	(*UpdateSignalConfigResponse)(nil),                            // 19: config.UpdateSignalConfigResponse
+	(*SignalConfig)(nil),                                          // 20: config.SignalConfig
+	(*AggregationConfig)(nil),                                     // 21: config.AggregationConfig
+	(*RoutineChangesConfig)(nil),                                  // 22: config.RoutineChangesConfig
+	(*GetGithubAppInformationRequest)(nil),                        // 23: config.GetGithubAppInformationRequest
+	(*GithubAppInformation)(nil),                                  // 24: config.GithubAppInformation
+	(*GetGithubAppInformationResponse)(nil),                       // 25: config.GetGithubAppInformationResponse
+	(*RegenerateGithubAppProfileRequest)(nil),                     // 26: config.RegenerateGithubAppProfileRequest
+	(*GithubOrganisationProfile)(nil),                             // 27: config.GithubOrganisationProfile
+	(*RegenerateGithubAppProfileResponse)(nil),                    // 28: config.RegenerateGithubAppProfileResponse
+	(*DeleteGithubAppProfileAndGithubInstallationIDRequest)(nil),  // 29: config.DeleteGithubAppProfileAndGithubInstallationIDRequest
+	(*DeleteGithubAppProfileAndGithubInstallationIDResponse)(nil), // 30: config.DeleteGithubAppProfileAndGithubInstallationIDResponse
+	(*CreateAPIKeyResponse)(nil),                                  // 31: apikeys.CreateAPIKeyResponse
+	(*timestamppb.Timestamp)(nil),                                 // 32: google.protobuf.Timestamp
 }
 var file_config_proto_depIdxs = []int32{
 	0,  // 0: config.AccountConfig.blastRadiusPreset:type_name -> config.AccountConfig.BlastRadiusPreset
@@ -1636,7 +1727,7 @@ var file_config_proto_depIdxs = []int32{
 	4,  // 3: config.UpdateAccountConfigRequest.config:type_name -> config.AccountConfig
 	4,  // 4: config.UpdateAccountConfigResponse.config:type_name -> config.AccountConfig
 	11, // 5: config.CreateHcpConfigResponse.config:type_name -> config.HcpConfig
-	29, // 6: config.CreateHcpConfigResponse.apiKey:type_name -> apikeys.CreateAPIKeyResponse
+	31, // 6: config.CreateHcpConfigResponse.apiKey:type_name -> apikeys.CreateAPIKeyResponse
 	11, // 7: config.GetHcpConfigResponse.config:type_name -> config.HcpConfig
 	1,  // 8: config.GetHcpConfigResponse.status:type_name -> config.GetHcpConfigResponse.Status
 	20, // 9: config.GetSignalConfigResponse.config:type_name -> config.SignalConfig
@@ -1644,34 +1735,37 @@ var file_config_proto_depIdxs = []int32{
 	20, // 11: config.UpdateSignalConfigResponse.config:type_name -> config.SignalConfig
 	21, // 12: config.SignalConfig.aggregationConfig:type_name -> config.AggregationConfig
 	22, // 13: config.SignalConfig.routineChangesConfig:type_name -> config.RoutineChangesConfig
-	2,  // 14: config.RoutineChangesConfig.eventsPerUnit:type_name -> config.RoutineChangesConfig.DurationUnit
-	2,  // 15: config.RoutineChangesConfig.durationUnit:type_name -> config.RoutineChangesConfig.DurationUnit
-	30, // 16: config.GithubAppInformation.installedAt:type_name -> google.protobuf.Timestamp
-	24, // 17: config.GetGithubAppInformationResponse.githubAppInformation:type_name -> config.GithubAppInformation
-	27, // 18: config.RegenerateGithubAppProfileResponse.githubOrganisationProfile:type_name -> config.GithubOrganisationProfile
-	5,  // 19: config.ConfigurationService.GetAccountConfig:input_type -> config.GetAccountConfigRequest
-	7,  // 20: config.ConfigurationService.UpdateAccountConfig:input_type -> config.UpdateAccountConfigRequest
-	9,  // 21: config.ConfigurationService.CreateHcpConfig:input_type -> config.CreateHcpConfigRequest
-	12, // 22: config.ConfigurationService.GetHcpConfig:input_type -> config.GetHcpConfigRequest
-	14, // 23: config.ConfigurationService.DeleteHcpConfig:input_type -> config.DeleteHcpConfigRequest
-	16, // 24: config.ConfigurationService.GetSignalConfig:input_type -> config.GetSignalConfigRequest
-	18, // 25: config.ConfigurationService.UpdateSignalConfig:input_type -> config.UpdateSignalConfigRequest
-	23, // 26: config.ConfigurationService.GetGithubAppInformation:input_type -> config.GetGithubAppInformationRequest
-	26, // 27: config.ConfigurationService.RegenerateGithubAppProfile:input_type -> config.RegenerateGithubAppProfileRequest
-	6,  // 28: config.ConfigurationService.GetAccountConfig:output_type -> config.GetAccountConfigResponse
-	8,  // 29: config.ConfigurationService.UpdateAccountConfig:output_type -> config.UpdateAccountConfigResponse
-	10, // 30: config.ConfigurationService.CreateHcpConfig:output_type -> config.CreateHcpConfigResponse
-	13, // 31: config.ConfigurationService.GetHcpConfig:output_type -> config.GetHcpConfigResponse
-	15, // 32: config.ConfigurationService.DeleteHcpConfig:output_type -> config.DeleteHcpConfigResponse
-	17, // 33: config.ConfigurationService.GetSignalConfig:output_type -> config.GetSignalConfigResponse
-	19, // 34: config.ConfigurationService.UpdateSignalConfig:output_type -> config.UpdateSignalConfigResponse
-	25, // 35: config.ConfigurationService.GetGithubAppInformation:output_type -> config.GetGithubAppInformationResponse
-	28, // 36: config.ConfigurationService.RegenerateGithubAppProfile:output_type -> config.RegenerateGithubAppProfileResponse
-	28, // [28:37] is the sub-list for method output_type
-	19, // [19:28] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	27, // 14: config.SignalConfig.githubOrganisationProfile:type_name -> config.GithubOrganisationProfile
+	2,  // 15: config.RoutineChangesConfig.eventsPerUnit:type_name -> config.RoutineChangesConfig.DurationUnit
+	2,  // 16: config.RoutineChangesConfig.durationUnit:type_name -> config.RoutineChangesConfig.DurationUnit
+	32, // 17: config.GithubAppInformation.installedAt:type_name -> google.protobuf.Timestamp
+	24, // 18: config.GetGithubAppInformationResponse.githubAppInformation:type_name -> config.GithubAppInformation
+	27, // 19: config.RegenerateGithubAppProfileResponse.githubOrganisationProfile:type_name -> config.GithubOrganisationProfile
+	5,  // 20: config.ConfigurationService.GetAccountConfig:input_type -> config.GetAccountConfigRequest
+	7,  // 21: config.ConfigurationService.UpdateAccountConfig:input_type -> config.UpdateAccountConfigRequest
+	9,  // 22: config.ConfigurationService.CreateHcpConfig:input_type -> config.CreateHcpConfigRequest
+	12, // 23: config.ConfigurationService.GetHcpConfig:input_type -> config.GetHcpConfigRequest
+	14, // 24: config.ConfigurationService.DeleteHcpConfig:input_type -> config.DeleteHcpConfigRequest
+	16, // 25: config.ConfigurationService.GetSignalConfig:input_type -> config.GetSignalConfigRequest
+	18, // 26: config.ConfigurationService.UpdateSignalConfig:input_type -> config.UpdateSignalConfigRequest
+	23, // 27: config.ConfigurationService.GetGithubAppInformation:input_type -> config.GetGithubAppInformationRequest
+	26, // 28: config.ConfigurationService.RegenerateGithubAppProfile:input_type -> config.RegenerateGithubAppProfileRequest
+	29, // 29: config.ConfigurationService.DeleteGithubAppProfileAndGithubInstallationID:input_type -> config.DeleteGithubAppProfileAndGithubInstallationIDRequest
+	6,  // 30: config.ConfigurationService.GetAccountConfig:output_type -> config.GetAccountConfigResponse
+	8,  // 31: config.ConfigurationService.UpdateAccountConfig:output_type -> config.UpdateAccountConfigResponse
+	10, // 32: config.ConfigurationService.CreateHcpConfig:output_type -> config.CreateHcpConfigResponse
+	13, // 33: config.ConfigurationService.GetHcpConfig:output_type -> config.GetHcpConfigResponse
+	15, // 34: config.ConfigurationService.DeleteHcpConfig:output_type -> config.DeleteHcpConfigResponse
+	17, // 35: config.ConfigurationService.GetSignalConfig:output_type -> config.GetSignalConfigResponse
+	19, // 36: config.ConfigurationService.UpdateSignalConfig:output_type -> config.UpdateSignalConfigResponse
+	25, // 37: config.ConfigurationService.GetGithubAppInformation:output_type -> config.GetGithubAppInformationResponse
+	28, // 38: config.ConfigurationService.RegenerateGithubAppProfile:output_type -> config.RegenerateGithubAppProfileResponse
+	30, // 39: config.ConfigurationService.DeleteGithubAppProfileAndGithubInstallationID:output_type -> config.DeleteGithubAppProfileAndGithubInstallationIDResponse
+	30, // [30:40] is the sub-list for method output_type
+	20, // [20:30] is the sub-list for method input_type
+	20, // [20:20] is the sub-list for extension type_name
+	20, // [20:20] is the sub-list for extension extendee
+	0,  // [0:20] is the sub-list for field type_name
 }
 
 func init() { file_config_proto_init() }
@@ -1681,13 +1775,14 @@ func file_config_proto_init() {
 	}
 	file_apikeys_proto_init()
 	file_config_proto_msgTypes[1].OneofWrappers = []any{}
+	file_config_proto_msgTypes[17].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_config_proto_rawDesc), len(file_config_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   26,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
