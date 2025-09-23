@@ -171,7 +171,6 @@ func Execute() {
 }
 
 func init() {
-	log.SetFormatter(&log.JSONFormatter{})
 	cobra.OnInitialize(initConfig)
 
 	// Here you will define your flags and configuration settings.
@@ -196,6 +195,8 @@ func init() {
 	rootCmd.PersistentFlags().String("sentry-dsn", "", "If specified, configures sentry libraries to capture errors")
 	cobra.CheckErr(viper.BindEnv("sentry-dsn", "STDLIB_SENTRY_DSN", "SENTRY_DSN")) // fallback to global config
 	rootCmd.PersistentFlags().String("run-mode", "release", "Set the run mode for this service, 'release', 'debug' or 'test'. Defaults to 'release'.")
+	rootCmd.PersistentFlags().Bool("json-log", true, "Set to false to emit logs as text for easier reading in development.")
+	cobra.CheckErr(viper.BindEnv("json-log", "STDLIB_SOURCE_JSON_LOG", "JSON_LOG")) // fallback to global config
 
 	// Bind these to viper
 	err := viper.BindPFlags(rootCmd.PersistentFlags())
@@ -230,6 +231,10 @@ func init() {
 				}
 			}
 		})
+
+		if viper.GetBool("json-log") {
+			log.SetFormatter(&log.JSONFormatter{})
+		}
 
 		if err := tracing.InitTracerWithUpstreams("stdlib-source", viper.GetString("honeycomb-api-key"), viper.GetString("sentry-dsn")); err != nil {
 			log.Fatal(err)
