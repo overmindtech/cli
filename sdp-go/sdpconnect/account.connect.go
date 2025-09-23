@@ -123,6 +123,9 @@ const (
 	// ManagementServiceSetUserOnboardingStatusProcedure is the fully-qualified name of the
 	// ManagementService's SetUserOnboardingStatus RPC.
 	ManagementServiceSetUserOnboardingStatusProcedure = "/account.ManagementService/SetUserOnboardingStatus"
+	// ManagementServiceListTeamMembersProcedure is the fully-qualified name of the ManagementService's
+	// ListTeamMembers RPC.
+	ManagementServiceListTeamMembersProcedure = "/account.ManagementService/ListTeamMembers"
 	// ManagementServiceSetGithubInstallationIDProcedure is the fully-qualified name of the
 	// ManagementService's SetGithubInstallationID RPC.
 	ManagementServiceSetGithubInstallationIDProcedure = "/account.ManagementService/SetGithubInstallationID"
@@ -572,6 +575,8 @@ type ManagementServiceClient interface {
 	// Get and set onboarding status for users
 	GetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.GetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.GetUserOnboardingStatusResponse], error)
 	SetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error)
+	// List team members in the current user's account (excludes the active user)
+	ListTeamMembers(context.Context, *connect.Request[sdp_go.ListTeamMembersRequest]) (*connect.Response[sdp_go.ListTeamMembersResponse], error)
 	// Set github installation ID for the account
 	SetGithubInstallationID(context.Context, *connect.Request[sdp_go.SetGithubInstallationIDRequest]) (*connect.Response[sdp_go.SetGithubInstallationIDResponse], error)
 	// this will unset the github installation ID for the account, allowing the user to install the github app again
@@ -698,6 +703,12 @@ func NewManagementServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(managementServiceMethods.ByName("SetUserOnboardingStatus")),
 			connect.WithClientOptions(opts...),
 		),
+		listTeamMembers: connect.NewClient[sdp_go.ListTeamMembersRequest, sdp_go.ListTeamMembersResponse](
+			httpClient,
+			baseURL+ManagementServiceListTeamMembersProcedure,
+			connect.WithSchema(managementServiceMethods.ByName("ListTeamMembers")),
+			connect.WithClientOptions(opts...),
+		),
 		setGithubInstallationID: connect.NewClient[sdp_go.SetGithubInstallationIDRequest, sdp_go.SetGithubInstallationIDResponse](
 			httpClient,
 			baseURL+ManagementServiceSetGithubInstallationIDProcedure,
@@ -733,6 +744,7 @@ type managementServiceClient struct {
 	getSourceStatus           *connect.Client[sdp_go.GetSourceStatusRequest, sdp_go.GetSourceStatusResponse]
 	getUserOnboardingStatus   *connect.Client[sdp_go.GetUserOnboardingStatusRequest, sdp_go.GetUserOnboardingStatusResponse]
 	setUserOnboardingStatus   *connect.Client[sdp_go.SetUserOnboardingStatusRequest, sdp_go.SetUserOnboardingStatusResponse]
+	listTeamMembers           *connect.Client[sdp_go.ListTeamMembersRequest, sdp_go.ListTeamMembersResponse]
 	setGithubInstallationID   *connect.Client[sdp_go.SetGithubInstallationIDRequest, sdp_go.SetGithubInstallationIDResponse]
 	unsetGithubInstallationID *connect.Client[sdp_go.UnsetGithubInstallationIDRequest, sdp_go.UnsetGithubInstallationIDResponse]
 }
@@ -827,6 +839,11 @@ func (c *managementServiceClient) SetUserOnboardingStatus(ctx context.Context, r
 	return c.setUserOnboardingStatus.CallUnary(ctx, req)
 }
 
+// ListTeamMembers calls account.ManagementService.ListTeamMembers.
+func (c *managementServiceClient) ListTeamMembers(ctx context.Context, req *connect.Request[sdp_go.ListTeamMembersRequest]) (*connect.Response[sdp_go.ListTeamMembersResponse], error) {
+	return c.listTeamMembers.CallUnary(ctx, req)
+}
+
 // SetGithubInstallationID calls account.ManagementService.SetGithubInstallationID.
 func (c *managementServiceClient) SetGithubInstallationID(ctx context.Context, req *connect.Request[sdp_go.SetGithubInstallationIDRequest]) (*connect.Response[sdp_go.SetGithubInstallationIDResponse], error) {
 	return c.setGithubInstallationID.CallUnary(ctx, req)
@@ -888,6 +905,8 @@ type ManagementServiceHandler interface {
 	// Get and set onboarding status for users
 	GetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.GetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.GetUserOnboardingStatusResponse], error)
 	SetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error)
+	// List team members in the current user's account (excludes the active user)
+	ListTeamMembers(context.Context, *connect.Request[sdp_go.ListTeamMembersRequest]) (*connect.Response[sdp_go.ListTeamMembersResponse], error)
 	// Set github installation ID for the account
 	SetGithubInstallationID(context.Context, *connect.Request[sdp_go.SetGithubInstallationIDRequest]) (*connect.Response[sdp_go.SetGithubInstallationIDResponse], error)
 	// this will unset the github installation ID for the account, allowing the user to install the github app again
@@ -1010,6 +1029,12 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 		connect.WithSchema(managementServiceMethods.ByName("SetUserOnboardingStatus")),
 		connect.WithHandlerOptions(opts...),
 	)
+	managementServiceListTeamMembersHandler := connect.NewUnaryHandler(
+		ManagementServiceListTeamMembersProcedure,
+		svc.ListTeamMembers,
+		connect.WithSchema(managementServiceMethods.ByName("ListTeamMembers")),
+		connect.WithHandlerOptions(opts...),
+	)
 	managementServiceSetGithubInstallationIDHandler := connect.NewUnaryHandler(
 		ManagementServiceSetGithubInstallationIDProcedure,
 		svc.SetGithubInstallationID,
@@ -1060,6 +1085,8 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 			managementServiceGetUserOnboardingStatusHandler.ServeHTTP(w, r)
 		case ManagementServiceSetUserOnboardingStatusProcedure:
 			managementServiceSetUserOnboardingStatusHandler.ServeHTTP(w, r)
+		case ManagementServiceListTeamMembersProcedure:
+			managementServiceListTeamMembersHandler.ServeHTTP(w, r)
 		case ManagementServiceSetGithubInstallationIDProcedure:
 			managementServiceSetGithubInstallationIDHandler.ServeHTTP(w, r)
 		case ManagementServiceUnsetGithubInstallationIDProcedure:
@@ -1143,6 +1170,10 @@ func (UnimplementedManagementServiceHandler) GetUserOnboardingStatus(context.Con
 
 func (UnimplementedManagementServiceHandler) SetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.SetUserOnboardingStatus is not implemented"))
+}
+
+func (UnimplementedManagementServiceHandler) ListTeamMembers(context.Context, *connect.Request[sdp_go.ListTeamMembersRequest]) (*connect.Response[sdp_go.ListTeamMembersResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.ListTeamMembers is not implemented"))
 }
 
 func (UnimplementedManagementServiceHandler) SetGithubInstallationID(context.Context, *connect.Request[sdp_go.SetGithubInstallationIDRequest]) (*connect.Response[sdp_go.SetGithubInstallationIDResponse], error) {
