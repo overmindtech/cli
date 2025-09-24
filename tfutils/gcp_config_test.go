@@ -82,7 +82,7 @@ provider "azurerm" {
 			}
 
 			// Parse providers
-			results, err := ParseGCPProviders(tmpDir, &hcl.EvalContext{})
+			results, err := ParseGCPProviders(tmpDir, &hcl.EvalContext{}, false)
 			if err != nil {
 				t.Fatalf("ParseGCPProviders failed: %v", err)
 			}

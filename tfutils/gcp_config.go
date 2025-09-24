@@ -3,7 +3,6 @@ package tfutils
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
@@ -39,10 +38,12 @@ type GCPProviderResult struct {
 	FilePath string
 }
 
-// ParseGCPProviders parses GCP provider config from all terraform files in the given directory,
-// similar to ParseAWSProviders but for GCP providers (google and google-beta)
-func ParseGCPProviders(terraformDir string, evalContext *hcl.EvalContext) ([]GCPProviderResult, error) {
-	files, err := filepath.Glob(filepath.Join(terraformDir, "*.tf"))
+// ParseGCPProviders scans for .tf files and extracts GCP provider configurations
+// (google and google-beta). When recursive is false, only the provided directory
+// is scanned; when true, the directory is walked recursively while skipping
+// dot-directories (e.g., .terraform).
+func ParseGCPProviders(terraformDir string, evalContext *hcl.EvalContext, recursive bool) ([]GCPProviderResult, error) {
+	files, err := FindTerraformFiles(terraformDir, recursive)
 	if err != nil {
 		return nil, err
 	}

@@ -472,17 +472,12 @@ type ProviderResult struct {
 	FilePath string
 }
 
-// Parses AWS provider config from all terraform files in the given directory,
-// without recursion as we don't yet support providers in submodules. Returns a
-// list of AWS providers and a list of files that were parsed. This will return
-// an error only if there was an error loading the files. ProviderResults will
-// be returned for:
-//
-// * Files that could not be parsed at all (just an error)
-// * Files that contained an AWS provider that we couldn't fully evaluate (with an error)
-// * Files that contained an AWS provider that we could fully evaluate (with no error)
-func ParseAWSProviders(terraformDir string, evalContext *hcl.EvalContext) ([]ProviderResult, error) {
-	files, err := filepath.Glob(filepath.Join(terraformDir, "*.tf"))
+// ParseAWSProviders scans for .tf files and extracts AWS provider configurations.
+// The search behavior is controlled by the recursive flag: when false, only the
+// provided directory is scanned via a simple glob; when true, the directory is
+// walked recursively while skipping dot-directories (e.g., .terraform).
+func ParseAWSProviders(terraformDir string, evalContext *hcl.EvalContext, recursive bool) ([]ProviderResult, error) {
+	files, err := FindTerraformFiles(terraformDir, recursive)
 	if err != nil {
 		return nil, err
 	}
@@ -547,6 +542,38 @@ func ParseAWSProviders(terraformDir string, evalContext *hcl.EvalContext) ([]Pro
 	}
 
 	return results, nil
+}
+
+// FindTerraformFiles returns a list of Terraform files under terraformDir.
+// When recursive is false, it uses a simple glob for "*.tf" in the directory.
+// When recursive is true, it walks the directory tree and collects .tf files,
+// skipping any dot-prefixed subdirectories (e.g., .terraform).
+func FindTerraformFiles(terraformDir string, recursive bool) ([]string, error) {
+	if !recursive {
+		return filepath.Glob(filepath.Join(terraformDir, "*.tf"))
+	}
+	files := []string{}
+	err := filepath.Walk(terraformDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// If this is a subdirectory starting with a dot, skip it entirely
+		if info.IsDir() && path != terraformDir && strings.HasPrefix(filepath.Base(path), ".") {
+			return filepath.SkipDir
+		}
+		if info.IsDir() {
+			return nil
+		}
+		// Only include .tf files
+		if strings.HasSuffix(path, ".tf") {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error walking directory %s: %w", terraformDir, err)
+	}
+	return files, nil
 }
 
 // ConfigFromProvider creates an aws.Config from an AWSProvider that uses the

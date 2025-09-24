@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"slices"
+	"strings"
 
 	"atomicgo.dev/keyboard"
 	"atomicgo.dev/keyboard/keys"
@@ -24,6 +25,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 )
 
@@ -52,6 +54,9 @@ For GCP, ensure you have appropriate permissions (roles/browser or equivalent) t
 func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oauth2.Token, tfArgs []string, failOverToDefaultLoginCfg bool) (func(), error) {
 	var err error
 
+	// Default to recursive search unless --no-recursion is set
+	tfRecursive := !viper.GetBool("no-recursion")
+
 	multi := pterm.DefaultMultiPrinter
 	_, _ = multi.Start()
 	defer func() {
@@ -67,22 +72,31 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 
 	p := pool.NewWithResults[[]*discovery.Engine]().WithErrors()
 
-	tfFiles, err := filepath.Glob(filepath.Join(".", "*.tf"))
+	// find all the terraform files
+	tfFiles, err := tfutils.FindTerraformFiles(".", tfRecursive)
 	if err != nil {
+		// we only error if there is a filesystem error, 0 files is handled below
 		return nil, err
 	}
 
+	// if no terraform files are found, return an error
 	if len(tfFiles) == 0 && !failOverToDefaultLoginCfg {
 		currentDir, _ := os.Getwd()
-		return nil, fmt.Errorf(`No Terraform configuration files found in %s
-
-The Overmind CLI requires access to Terraform configuration files (.tf files) to discover and authenticate with cloud providers. Without Terraform configuration, the CLI cannot determine which cloud resources to interrogate.
-
-To resolve this issue:
-- Ensure you're running the command from a directory containing Terraform files (.tf files)
-- Or create Terraform configuration files that define your cloud providers
-
-For more information about Terraform configuration, visit: https://developer.hashicorp.com/terraform/language`, currentDir)
+		msgLines := []string{
+			fmt.Sprintf("No Terraform configuration files found in %s", currentDir),
+			"",
+			"The Overmind CLI requires access to Terraform configuration files (.tf files) to discover and authenticate with cloud providers. Without Terraform configuration, the CLI cannot determine which cloud resources to interrogate.",
+			"",
+			"To resolve this issue:",
+			"- Ensure you're running the command from a directory containing Terraform files (.tf files)",
+			"- Or create Terraform configuration files that define your cloud providers",
+			"",
+		}
+		if !tfRecursive {
+			msgLines = append(msgLines, "- Or remove --no-recursion to scan subdirectories for Terraform stacks")
+		}
+		msgLines = append(msgLines, "For more information about Terraform configuration, visit: https://developer.hashicorp.com/terraform/language")
+		return nil, errors.New(strings.Join(msgLines, "\n"))
 	}
 
 	stdlibSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting stdlib source engine")
@@ -129,7 +143,7 @@ For more information about Terraform configuration, visit: https://developer.has
 			return nil, fmt.Errorf("failed to load variables from the environment: %w", err)
 		}
 
-		awsProviders, err := tfutils.ParseAWSProviders(".", tfEval)
+		awsProviders, err := tfutils.ParseAWSProviders(".", tfEval, tfRecursive)
 		if err != nil {
 			awsSpinner.Fail("Failed to parse AWS providers")
 			return nil, fmt.Errorf("failed to parse AWS providers: %w", err)
@@ -217,7 +231,7 @@ For more information about Terraform configuration, visit: https://developer.has
 			return nil, fmt.Errorf("failed to load variables from the environment for GCP: %w", err)
 		}
 
-		gcpProviders, err := tfutils.ParseGCPProviders(".", tfEval)
+		gcpProviders, err := tfutils.ParseGCPProviders(".", tfEval, tfRecursive)
 		if err != nil {
 			gcpSpinner.Fail("Failed to parse GCP providers")
 			return nil, fmt.Errorf("failed to parse GCP providers: %w", err)
@@ -404,6 +418,8 @@ func init() {
 	rootCmd.AddCommand(exploreCmd)
 
 	addAPIFlags(exploreCmd)
+	// flag to opt-out of recursion and only scan the current folder for *.tf files
+	exploreCmd.PersistentFlags().Bool("no-recursion", false, "Only scan the current directory for Terraform files (non-recursive).")
 }
 
 // unifiedGCPConfigs collates the given GCP configs by project ID.
