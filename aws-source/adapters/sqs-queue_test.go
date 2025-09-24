@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
+	"github.com/overmindtech/cli/sdp-go"
 )
 
 type testClient struct{}
@@ -61,6 +62,32 @@ func TestGetFunc(t *testing.T) {
 
 	if err = item.Validate(); err != nil {
 		t.Error(err)
+	}
+
+	// Test linked item queries
+	if len(item.GetLinkedItemQueries()) != 2 {
+		t.Errorf("Expected 2 linked item queries, got %d", len(item.GetLinkedItemQueries()))
+	}
+
+	// Test HTTP link
+	httpLink := item.GetLinkedItemQueries()[0]
+	if httpLink.GetQuery().GetType() != "http" {
+		t.Errorf("Expected first link type to be 'http', got %s", httpLink.GetQuery().GetType())
+	}
+	if httpLink.GetQuery().GetMethod() != sdp.QueryMethod_SEARCH {
+		t.Errorf("Expected HTTP link method to be SEARCH, got %v", httpLink.GetQuery().GetMethod())
+	}
+
+	// Test Lambda Event Source Mapping link
+	lambdaLink := item.GetLinkedItemQueries()[1]
+	if lambdaLink.GetQuery().GetType() != "lambda-event-source-mapping" {
+		t.Errorf("Expected second link type to be 'lambda-event-source-mapping', got %s", lambdaLink.GetQuery().GetType())
+	}
+	if lambdaLink.GetQuery().GetMethod() != sdp.QueryMethod_SEARCH {
+		t.Errorf("Expected Lambda link method to be SEARCH, got %v", lambdaLink.GetQuery().GetMethod())
+	}
+	if lambdaLink.GetQuery().GetQuery() != "arn:aws:sqs:us-west-2:123456789012:MyQueue" {
+		t.Errorf("Expected Lambda link query to be the Queue ARN, got %s", lambdaLink.GetQuery().GetQuery())
 	}
 }
 

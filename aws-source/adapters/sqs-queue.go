@@ -47,26 +47,46 @@ func getFunc(ctx context.Context, client sqsClient, scope string, input *sqs.Get
 		}
 	}
 
-	return &sdp.Item{
-		Type:            "sqs-queue",
-		UniqueAttribute: "QueueURL",
-		Attributes:      attributes,
-		Scope:           scope,
-		Tags:            resourceTags,
-		LinkedItemQueries: []*sdp.LinkedItemQuery{
-			{
-				Query: &sdp.Query{
-					Type:   "http",
-					Method: sdp.QueryMethod_SEARCH,
-					Query:  *input.QueueUrl,
-					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
+	linkedItemQueries := []*sdp.LinkedItemQuery{
+		{
+			Query: &sdp.Query{
+				Type:   "http",
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  *input.QueueUrl,
+				Scope:  "global",
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
 			},
 		},
+	}
+
+	// Get the Queue ARN for linking
+	if arn, exists := output.Attributes["QueueArn"]; exists {
+		linkedItemQueries = append(linkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "lambda-event-source-mapping",
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  arn,
+				Scope:  scope,
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// If the SQS queue is updated, event source mappings will be affected
+				In: true,
+				// If event source mappings change, it doesn't affect the queue itself
+				Out: false,
+			},
+		})
+	}
+
+	return &sdp.Item{
+		Type:              "sqs-queue",
+		UniqueAttribute:   "QueueURL",
+		Attributes:        attributes,
+		Scope:             scope,
+		Tags:              resourceTags,
+		LinkedItemQueries: linkedItemQueries,
 	}, nil
 }
 
@@ -115,6 +135,10 @@ var sqsQueueAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{TerraformQueryMap: "aws_sqs_queue.id"},
+	},
+	PotentialLinks: []string{
+		"http",
+		"lambda-event-source-mapping",
 	},
 	Category: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 })

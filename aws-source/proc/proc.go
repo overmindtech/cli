@@ -392,6 +392,7 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 						adapters.NewLambdaFunctionAdapter(lambdaClient, *callerID.Account, cfg.Region),
 						adapters.NewLambdaLayerAdapter(lambdaClient, *callerID.Account, cfg.Region),
 						adapters.NewLambdaLayerVersionAdapter(lambdaClient, *callerID.Account, cfg.Region),
+						adapters.NewLambdaEventSourceMappingAdapter(lambdaClient, *callerID.Account, cfg.Region),
 
 						// ECS
 						adapters.NewECSCapacityProviderAdapter(ecsClient, *callerID.Account, cfg.Region),
