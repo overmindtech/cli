@@ -443,7 +443,7 @@ func (c *Client) closeAllRequestChans() {
 		close(v)
 		c.finishedRequestMap[k] = true
 	}
-	// clear the map
+	// clear the map to free up memory
 	c.requestMap = map[uuid.UUID]chan *sdp.GatewayResponse{}
 	c.finishedRequestMapCond.Broadcast()
 }
