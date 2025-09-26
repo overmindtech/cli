@@ -72,10 +72,10 @@ func getFunc(ctx context.Context, client sqsClient, scope string, input *sqs.Get
 				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
-				// If the SQS queue is updated, event source mappings will be affected
-				In: true,
 				// If event source mappings change, it doesn't affect the queue itself
-				Out: false,
+				In: false,
+				// If the SQS queue is updated, event source mappings will be affected
+				Out: true,
 			},
 		})
 	}

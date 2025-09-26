@@ -77,6 +77,13 @@ func TestGetFunc(t *testing.T) {
 	if httpLink.GetQuery().GetMethod() != sdp.QueryMethod_SEARCH {
 		t.Errorf("Expected HTTP link method to be SEARCH, got %v", httpLink.GetQuery().GetMethod())
 	}
+	// Test HTTP link blast propagation (bidirectional)
+	if httpLink.GetBlastPropagation().GetIn() != true {
+		t.Errorf("Expected HTTP link blast propagation In to be true, got %v", httpLink.GetBlastPropagation().GetIn())
+	}
+	if httpLink.GetBlastPropagation().GetOut() != true {
+		t.Errorf("Expected HTTP link blast propagation Out to be true, got %v", httpLink.GetBlastPropagation().GetOut())
+	}
 
 	// Test Lambda Event Source Mapping link
 	lambdaLink := item.GetLinkedItemQueries()[1]
@@ -88,6 +95,13 @@ func TestGetFunc(t *testing.T) {
 	}
 	if lambdaLink.GetQuery().GetQuery() != "arn:aws:sqs:us-west-2:123456789012:MyQueue" {
 		t.Errorf("Expected Lambda link query to be the Queue ARN, got %s", lambdaLink.GetQuery().GetQuery())
+	}
+	// Test Lambda Event Source Mapping link blast propagation (outgoing only)
+	if lambdaLink.GetBlastPropagation().GetIn() != false {
+		t.Errorf("Expected Lambda link blast propagation In to be false, got %v", lambdaLink.GetBlastPropagation().GetIn())
+	}
+	if lambdaLink.GetBlastPropagation().GetOut() != true {
+		t.Errorf("Expected Lambda link blast propagation Out to be true, got %v", lambdaLink.GetBlastPropagation().GetOut())
 	}
 }
 
