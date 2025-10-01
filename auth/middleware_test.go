@@ -400,11 +400,19 @@ func TestNewAuthMiddleware(t *testing.T) {
 					return
 				}
 
-				claims := ctx.Value(CustomClaimsContextKey{}).(*CustomClaims)
-
 				if ctx.Value(ScopeCheckBypassedContextKey{}) == true {
 					// If we are bypassing auth then we don't want to check the account
 				} else {
+					claims, ok := ctx.Value(CustomClaimsContextKey{}).(*CustomClaims)
+					if !ok {
+						w.WriteHeader(http.StatusUnauthorized)
+						_, err := fmt.Fprintf(w, "expected *CustomClaims in context, got %T", ctx.Value(CustomClaimsContextKey{}))
+						if err != nil {
+							t.Error(err)
+						}
+						return
+					}
+
 					if claims.AccountName != "test" {
 						w.WriteHeader(http.StatusUnauthorized)
 						_, err := fmt.Fprintf(w, "expected account to be 'test', but was '%s'", claims.AccountName)
