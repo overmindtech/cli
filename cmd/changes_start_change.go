@@ -42,7 +42,6 @@ func StartChange(cmd *cobra.Command, args []string) error {
 		"ticket-link": viper.GetString("ticket-link"),
 	}
 
-	// snapClient := AuthenticatedSnapshotsClient(ctx)
 	client := AuthenticatedChangesClient(ctx, oi)
 	stream, err := client.StartChange(ctx, &connect.Request[sdp.StartChangeRequest]{
 		Msg: &sdp.StartChangeRequest{

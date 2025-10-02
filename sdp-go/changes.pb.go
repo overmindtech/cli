@@ -192,17 +192,17 @@ func (ChangeOutputFormat) EnumDescriptor() ([]byte, []int) {
 type ChangeStatus int32
 
 const (
-	// The change has been created, but the blast radius has not yet been
-	// calculated. The blast radius can be calculated using the
-	// `UpdatePlannedChanges` RPC.
+	// Reserved for truly unspecified states. Should not be used for newly created changes.
 	ChangeStatus_CHANGE_STATUS_UNSPECIFIED ChangeStatus = 0
-	// The blast radius has been calculated, but the change has not yet started.
-	// The change can be started using the `StartChange` RPC.
+	// The change has been created and is ready for change analysis to be started.
+	// Or change analysis is in progress.
+	// Or change analysis is complete and the change is ready to be started.
 	ChangeStatus_CHANGE_STATUS_DEFINING ChangeStatus = 1
-	// The change is in progress. The change can be ended using the `EndChange`
+	// The change is in progress or deployment is in progress. The change can be ended using the `EndChange`
 	// RPC.
 	ChangeStatus_CHANGE_STATUS_HAPPENING ChangeStatus = 2
-	// The change has been ended, but the results have not yet been processed.
+	// This is no longer used in the api-server, but is still present in the proto file for backwards compatibility.
+	// it will be removed as part of https://linear.app/overmind/issue/ENG-1520/change-status-processing-is-no-longer-used-in-a-meaningful-way
 	ChangeStatus_CHANGE_STATUS_PROCESSING ChangeStatus = 3
 	// The change has been ended and the results have been processed.
 	ChangeStatus_CHANGE_STATUS_DONE ChangeStatus = 4

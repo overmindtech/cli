@@ -153,7 +153,7 @@ func init() {
 	addAPIFlags(getChangeCmd)
 
 	addChangeUuidFlags(getChangeCmd)
-	getChangeCmd.PersistentFlags().String("status", "CHANGE_STATUS_DEFINING", "The expected status of the change. Use this with --ticket-link to get the first change with that status for a given ticket link. Allowed values: CHANGE_STATUS_UNSPECIFIED, CHANGE_STATUS_DEFINING, CHANGE_STATUS_HAPPENING, CHANGE_STATUS_PROCESSING, CHANGE_STATUS_DONE")
+	getChangeCmd.PersistentFlags().String("status", "CHANGE_STATUS_DEFINING", "The expected status of the change. Use this with --ticket-link to get the first change with that status for a given ticket link. Allowed values: CHANGE_STATUS_DEFINING (ready for analysis/analysis in progress), CHANGE_STATUS_HAPPENING (deployment in progress), CHANGE_STATUS_DONE (deployment completed)")
 
 	getChangeCmd.PersistentFlags().String("frontend", "", "The frontend base URL")
 	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.") // MarkDeprecated only errors if the flag doesn't exist, we fall back to using app
