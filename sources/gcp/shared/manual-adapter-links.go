@@ -250,4 +250,114 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 		}
 		return nil
 	},
+	BigQueryDataset: func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		// Supported formats:
+		// 1) datasetId (e.g., "my_dataset")
+		// 2) projects/{project}/datasets/{dataset}
+		// 3) project:dataset (BigQuery FullID style)
+		if query == "" {
+			return nil
+		}
+
+		if strings.HasPrefix(query, "project/") {
+			// Try path-style first
+			values := ExtractPathParams(query, "projects", "datasets")
+			if len(values) == 2 && values[0] != "" && values[1] != "" {
+				parsedProject := values[0]
+				dataset := values[1]
+				scope := parsedProject
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   BigQueryDataset.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  dataset,
+						Scope:  scope,
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		}
+
+		// Try fullID style: project:dataset
+		if strings.HasPrefix(query, "project:") {
+			parts := strings.Split(query, ":")
+			if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   BigQueryDataset.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  parts[1], // dataset ID
+						Scope:  parts[0], // project ID
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		}
+
+		if strings.Contains(query, ":") || strings.Contains(query, "/") {
+			// At this point we don't recognize the pattern.
+			return nil
+		}
+
+		// Fallback: treat as datasetId in current project
+		if projectID != "" {
+			return &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   BigQueryDataset.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  query, // dataset ID
+					Scope:  projectID,
+				},
+				BlastPropagation: blastPropagation,
+			}
+		}
+		return nil
+	},
+	BigQueryModel: func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		// Supported format:
+		// projects/{project}/datasets/{dataset}/models/{model}
+		if query == "" {
+			return nil
+		}
+
+		if strings.HasPrefix(query, "projects/") {
+			// Path-style
+			values := ExtractPathParams(query, "projects", "datasets", "models")
+			if len(values) == 3 && values[0] != "" && values[1] != "" && values[2] != "" {
+				parsedProject := values[0]
+				dataset := values[1]
+				model := values[2]
+				scope := parsedProject
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   BigQueryModel.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  shared.CompositeLookupKey(dataset, model),
+						Scope:  scope,
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		}
+
+		if strings.HasPrefix(query, "datasets/") {
+			values := ExtractPathParams(query, "datasets", "models")
+			if len(values) == 2 && values[0] != "" && values[1] != "" {
+				scope := projectID
+				dataset := values[0]
+				model := values[1]
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   BigQueryModel.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  shared.CompositeLookupKey(dataset, model),
+						Scope:  scope,
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		}
+
+		return nil
+	},
 }

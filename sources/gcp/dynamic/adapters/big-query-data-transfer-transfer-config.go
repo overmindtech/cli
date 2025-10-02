@@ -7,7 +7,7 @@ import (
 
 // BigQuery Data Transfer transfer config adapter
 // Manages scheduled queries and data transfer configurations for BigQuery
-var bigQueryDataTransferTransferConfigAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.BigQueryDataTransferTransferConfig,
 	meta: gcpshared.AdapterMeta{
 		// Reference: https://cloud.google.com/bigquery/docs/reference/datatransfer/rest/v1/projects.transferConfigs/get
