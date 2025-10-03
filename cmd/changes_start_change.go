@@ -71,7 +71,7 @@ func StartChange(cmd *cobra.Command, args []string) error {
 	}
 	if stream.Err() != nil {
 		return loggedError{
-			err:     err,
+			err:     stream.Err(),
 			fields:  lf,
 			message: "failed to process start change",
 		}

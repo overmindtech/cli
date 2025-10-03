@@ -202,13 +202,22 @@ func getChangeUUIDAndCheckStatus(ctx context.Context, oi sdp.OvermindInstance, e
 		if err != nil {
 			return uuid.Nil, fmt.Errorf("invalid --uuid value '%v', error: %w", uuidString, err)
 		}
-
+		trace.SpanFromContext(ctx).SetAttributes(
+			attribute.String("ovm.change.uuid", changeUUID.String()),
+		)
 		return changeUUID, nil
 	}
 
 	// Then check for a change URL
 	if changeUrlString != "" {
-		return parseChangeUrl(changeUrlString)
+		uuidFromChangeURL, err := parseChangeUrl(changeUrlString)
+		if err != nil {
+			return uuidFromChangeURL, err
+		}
+		trace.SpanFromContext(ctx).SetAttributes(
+			attribute.String("ovm.change.uuid", uuidFromChangeURL.String()),
+		)
+		return uuidFromChangeURL, nil
 	}
 
 	// Finally look up by ticket link with retry
@@ -216,7 +225,10 @@ func getChangeUUIDAndCheckStatus(ctx context.Context, oi sdp.OvermindInstance, e
 	if errorOnNotFound && err != nil {
 		return uuid.Nil, err
 	}
-
+	// this could be uuid.Nil if the change is not found and errorOnNotFound is false
+	trace.SpanFromContext(ctx).SetAttributes(
+		attribute.String("ovm.change.uuid", changeUUID.String()),
+	)
 	return changeUUID, nil
 }
 
