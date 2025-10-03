@@ -212,6 +212,37 @@ TerraformResource: "google_compute_global_forwarding_rule",
 TerraformMethod:   sdp.QueryMethod_GET,
 ```
 
+### 8. API Service Enablement
+
+#### Ensure Required APIs Are Enabled:
+- **CRITICAL**: All GCP APIs used by the adapter must be enabled in the deployment configuration
+- Check if the API service is already included in `deploy/modules/ovm-services/gke.tf`
+- If the API is missing, add it to the `google_project_service` resource
+
+#### Process:
+1. **Identify API Service**: Extract the API service name from the adapter's endpoint URLs
+   - Example: `https://bigquerydatatransfer.googleapis.com/v1/...` → `bigquerydatatransfer.googleapis.com`
+2. **Check Current APIs**: Review the list in `deploy/modules/ovm-services/gke.tf`
+3. **Add Missing APIs**: If not present, add the API to the `overmind_apis` resource
+4. **Follow Naming Convention**: Use the full API endpoint URL format
+5. **Add Descriptive Comments**: Include a clear comment explaining what the API is for
+
+#### Example:
+```hcl
+resource "google_project_service" "overmind_apis" {
+  for_each = toset([
+    "bigquerydatatransfer.googleapis.com",      # BigQuery Data Transfer API
+    "new-api.googleapis.com",                   # New API for your adapter
+    // ... other APIs
+  ])
+}
+```
+
+#### Verification:
+- Ensure all IAM permissions used in the adapter have their corresponding APIs enabled
+- Verify against the `PredefinedRoles` map in `sources/gcp/shared/predefined-roles.go`
+- All APIs referenced in predefined roles should be enabled in the deployment
+
 ## Reference Examples
 
 ### Project-level Resources
@@ -267,6 +298,7 @@ TerraformMethod:   sdp.QueryMethod_GET,
 - [ ] API URLs match official GCP documentation exactly
 - [ ] Blast propagation covers all linked resources
 - [ ] Terraform resource name verified in registry
+- [ ] **Required APIs enabled in deployment**: All APIs used by the adapter are included in `deploy/modules/ovm-services/gke.tf`
 
 ## Key Resources
 
@@ -274,3 +306,5 @@ TerraformMethod:   sdp.QueryMethod_GET,
 - **Terraform Registry**: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/
 - **Existing Adapters**: Study patterns in `sources/gcp/dynamic/adapters/`
 - **SDP Types**: Check `sources/gcp/shared/item-types.go` for existing types
+- **Deployment Configuration**: Check `deploy/modules/ovm-services/gke.tf` for enabled APIs
+- **Predefined Roles**: Review `sources/gcp/shared/predefined-roles.go` for IAM permissions
