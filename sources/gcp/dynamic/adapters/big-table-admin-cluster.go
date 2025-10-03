@@ -17,6 +17,7 @@ var bigTableAdminClusterAdapter = registerableAdapter{ //nolint:unused
 		SearchEndpointFunc:  gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters"),
 		UniqueAttributeKeys: []string{"instances", "clusters"},
 		IAMPermissions:      []string{"bigtable.clusters.get", "bigtable.clusters.list"},
+		PredefinedRole:      "roles/bigtable.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.clusters#State
 	},

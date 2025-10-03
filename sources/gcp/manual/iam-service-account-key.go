@@ -40,6 +40,10 @@ func (c iamServiceAccountKeyWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c iamServiceAccountKeyWrapper) PredefinedRole() string {
+	return "roles/iam.serviceAccountViewer"
+}
+
 // PotentialLinks returns the potential links for the iam service account wrapper
 func (c iamServiceAccountKeyWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

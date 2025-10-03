@@ -23,6 +23,7 @@ var aiPlatformModelAdapter = registerableAdapter{ //nolint:unused
 		),
 		UniqueAttributeKeys: []string{"models"},
 		IAMPermissions:      []string{"aiplatform.models.get", "aiplatform.models.list"},
+		PredefinedRole:      "roles/aiplatform.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"encryptionSpec.kmsKeyName": gcpshared.CryptoKeyImpactInOnly,

@@ -26,6 +26,7 @@ var _ = registerableAdapter{
 			"compute.httpHealthChecks.get",
 			"compute.httpHealthChecks.list",
 		},
+		PredefinedRole: "roles/compute.viewer",
 	},
 	// HTTP health checks are referenced by backend services and target pools for health monitoring.
 	// Updates to health checks can affect traffic distribution and service availability.

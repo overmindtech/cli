@@ -17,6 +17,7 @@ var bigTableAdminInstanceAdapter = registerableAdapter{ //nolint:unused
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://bigtableadmin.googleapis.com/v2/projects/%s/instances"),
 		UniqueAttributeKeys: []string{"instances"},
 		IAMPermissions:      []string{"bigtable.instances.get", "bigtable.instances.list"},
+		PredefinedRole:      "roles/bigtable.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// state: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances#State
 	},

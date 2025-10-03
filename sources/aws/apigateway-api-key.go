@@ -25,6 +25,11 @@ type apiGatewayKeyWrapper struct {
 	*Base
 }
 
+func (d *apiGatewayKeyWrapper) PredefinedRole() string {
+	// TODO: https://linear.app/overmind/issue/ENG-1526/ensure-the-manual-adapter-framework-is-cloud-provider-agnostic
+	return ""
+}
+
 // NewApiGatewayAPIKey creates a new apiGatewayKeyWrapper for AWS API Gateway API Key
 func NewApiGatewayAPIKey(client *apigateway.Client, accountID, region string) sources.SearchableListableWrapper {
 	return &apiGatewayKeyWrapper{

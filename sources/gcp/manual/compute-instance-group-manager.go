@@ -46,6 +46,10 @@ func (c computeInstanceGroupManagerWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c computeInstanceGroupManagerWrapper) PredefinedRole() string {
+	return "roles/compute.viewer"
+}
+
 // PotentialLinks returns the potential links for the compute instance group manager wrapper
 func (c computeInstanceGroupManagerWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

@@ -26,6 +26,7 @@ var computeNetworkEndpointGroupAdapter = registerableAdapter{ //nolint:unused
 			"compute.networkEndpointGroups.get",
 			"compute.networkEndpointGroups.list",
 		},
+		PredefinedRole: "roles/compute.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		// Parent VPC network reference (changes to network can impact NEG reachability; NEG changes do not impact network)

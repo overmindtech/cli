@@ -25,6 +25,7 @@ var computeTargetHttpsProxyAdapter = registerableAdapter{ //nolint:unused
 			"compute.targetHttpsProxies.get",
 			"compute.targetHttpsProxies.list",
 		},
+		PredefinedRole: "roles/compute.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"urlMap": {

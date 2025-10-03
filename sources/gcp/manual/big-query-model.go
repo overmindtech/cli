@@ -35,6 +35,18 @@ func NewBigQueryModel(client gcpshared.BigQueryModelClient, projectID string) so
 	}
 }
 
+func (m BigQueryModelWrapper) IAMPermissions() []string {
+	return []string{
+		"bigquery.models.getMetadata",
+		"bigquery.models.list",
+	}
+}
+
+func (m BigQueryModelWrapper) PredefinedRole() string {
+	// https://cloud.google.com/iam/docs/roles-permissions/bigquery#bigquery.metadataViewer
+	return "roles/bigquery.metadataViewer"
+}
+
 func (m BigQueryModelWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		BigQueryDatasetLookupByID,

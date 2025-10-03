@@ -122,7 +122,7 @@ Write unit tests for the `+"`%s`"+` dynamic adapter.
 - `+"`sources/gcp/dynamic/adapters/%s_test.go`"+`
 
 ## Instructions
-Follow the dynamic adapter testing rules in `+"`.cursor/rules/dynamic-adapter-testing.md`"+` for comprehensive test implementation.`,
+Follow the dynamic adapter testing rules in `+"`.cursor/rules/dynamic-adapter-testing.mdc`"+` for comprehensive test implementation.`,
 		info.Name,
 		info.Name,
 		info.Name,
@@ -140,8 +140,8 @@ func generateLinearURL(adapterName string) string {
 func copyToClipboard(text string) error {
 	// Define allowed clipboard commands for security
 	allowedCommands := map[string][]string{
-		"pbcopy": {},
-		"xclip":  {"-selection", "clipboard"},
+		"pbcopy":  {},
+		"xclip":   {"-selection", "clipboard"},
 		"wl-copy": {},
 	}
 

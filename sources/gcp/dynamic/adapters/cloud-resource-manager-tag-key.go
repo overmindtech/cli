@@ -36,6 +36,7 @@ var cloudResourceManagerTagKeyAdapter = registerableAdapter{ //nolint:unused
 			"resourcemanager.tagKeys.get",
 			"resourcemanager.tagKeys.list",
 		},
+		PredefinedRole: "roles/resourcemanager.tagViewer",
 	},
 	// No blast propagation yet. TagValue already links back to TagKey via parent attribute.
 	blastPropagation: map[string]*gcpshared.Impact{},

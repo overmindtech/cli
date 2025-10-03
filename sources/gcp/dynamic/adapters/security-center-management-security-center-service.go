@@ -27,6 +27,7 @@ var _ = registerableAdapter{
 			"securitycentermanagement.securityCenterServices.get",
 			"securitycentermanagement.securityCenterServices.list",
 		},
+		PredefinedRole: "roles/securitycentermanagement.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631 - check if SecurityCenterService has status/state attribute
 	},
 	blastPropagation: map[string]*gcpshared.Impact{

@@ -187,3 +187,14 @@ func (d *computeInstanceWrapper) mapper(externalItems []*ExternalType) ([]*sdp.I
 
 	return sdpItems, nil
 }
+
+func (d *computeInstanceWrapper) IAMPermissions() []string {
+	return []string{
+		"compute.instances.get",
+		"compute.instances.list",
+	}
+}
+
+func (d *computeInstanceWrapper) PredefinedRole() string {
+	return "roles/compute.viewer"
+}

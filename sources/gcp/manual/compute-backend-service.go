@@ -43,6 +43,10 @@ func (c computeBackendServiceWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c computeBackendServiceWrapper) PredefinedRole() string {
+	return "roles/compute.viewer"
+}
+
 func (computeBackendServiceWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeNetwork,

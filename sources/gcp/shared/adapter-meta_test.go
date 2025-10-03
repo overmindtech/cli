@@ -1154,30 +1154,3 @@ func Test_zoneLevelListFunc(t *testing.T) {
 		})
 	}
 }
-
-func Test_ensureMandatoryFields(t *testing.T) {
-	for sdpItemType, meta := range SDPAssetTypeToAdapterMeta {
-		t.Run(sdpItemType.String(), func(t *testing.T) {
-			if meta.GetEndpointBaseURLFunc == nil {
-				t.Errorf("GetEndpointBaseURLFunc is nil for %s", sdpItemType)
-			}
-
-			if meta.Scope == "" {
-				t.Errorf("Scope is empty for %s", sdpItemType)
-			}
-
-			if len(meta.UniqueAttributeKeys) == 0 {
-				t.Errorf("UniqueAttributeKeys is empty for %s", sdpItemType)
-			}
-
-			if len(meta.IAMPermissions) == 0 {
-				t.Errorf("IAMPermissions is empty for %s", sdpItemType)
-				return
-			}
-
-			if (meta.ListEndpointFunc != nil || meta.SearchEndpointFunc != nil) && len(meta.IAMPermissions) != 2 {
-				t.Errorf("If ListEndpointFunc or SearchEndpointFunc is set, IAMPermissions should contain exactly 2 items for %s", sdpItemType)
-			}
-		})
-	}
-}

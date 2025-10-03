@@ -27,6 +27,7 @@ var aiPlatformModelDeploymentMonitoringJobAdapter = registerableAdapter{ //nolin
 			"aiplatform.modelDeploymentMonitoringJobs.get",
 			"aiplatform.modelDeploymentMonitoringJobs.list",
 		},
+		PredefinedRole: "roles/aiplatform.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.modelDeploymentMonitoringJobs#JobState
 	},

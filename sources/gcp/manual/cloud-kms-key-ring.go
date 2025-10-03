@@ -47,6 +47,10 @@ func (c cloudKMSKeyRingWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c cloudKMSKeyRingWrapper) PredefinedRole() string {
+	return "roles/cloudkms.viewer"
+}
+
 // PotentialLinks returns the potential links for the kms key ring
 func (c cloudKMSKeyRingWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

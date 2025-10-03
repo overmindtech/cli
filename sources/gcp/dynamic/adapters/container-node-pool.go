@@ -28,9 +28,10 @@ var containerNodePoolAdapter = registerableAdapter{ //nolint:unused
 		SearchDescription:   "Search GKE Node Pools within a cluster. Use \"[location]|[cluster]\" or the full resource name supported by Terraform mappings: \"[project]/[location]/[cluster]/[node_pool_name]\"",
 		UniqueAttributeKeys: []string{"locations", "clusters", "nodePools"},
 		IAMPermissions: []string{
-			"container.nodePools.get",
-			"container.nodePools.list",
+			"container.clusters.get",
+			"container.clusters.list",
 		},
+		PredefinedRole: "roles/container.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.locations.clusters.nodePools#NodePool.Status
 	},

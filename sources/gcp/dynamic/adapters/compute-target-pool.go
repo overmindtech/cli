@@ -37,6 +37,7 @@ var computeTargetPoolAdapter = registerableAdapter{ //nolint:unused
 			"compute.targetPools.get",
 			"compute.targetPools.list",
 		},
+		PredefinedRole: "roles/compute.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"instances": {

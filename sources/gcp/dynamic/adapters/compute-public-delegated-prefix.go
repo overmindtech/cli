@@ -36,6 +36,7 @@ var computePublicDelegatedPrefixAdapter = registerableAdapter{ //nolint:unused
 			"compute.publicDelegatedPrefixes.get",
 			"compute.publicDelegatedPrefixes.list",
 		},
+		PredefinedRole: "roles/compute.viewer",
 		// HEALTH: status (e.g., LIVE/TO_BE_DELETED) may be present on the resource
 		// TODO: https://linear.app/overmind/issue/ENG-631
 	},

@@ -43,6 +43,10 @@ func (c computeInstantSnapshotWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c computeInstantSnapshotWrapper) PredefinedRole() string {
+	return "roles/compute.viewer"
+}
+
 // PotentialLinks returns the potential links for the compute snapshot wrapper
 func (c computeInstantSnapshotWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

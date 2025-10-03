@@ -26,6 +26,7 @@ var computeVpnTunnelAdapter = registerableAdapter{ //nolint:unused
 			"compute.vpnTunnels.get",
 			"compute.vpnTunnels.list",
 		},
+		PredefinedRole: "roles/compute.viewer",
 		// HEALTH: https://cloud.google.com/compute/docs/reference/rest/v1/vpnTunnels#Status => status
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},

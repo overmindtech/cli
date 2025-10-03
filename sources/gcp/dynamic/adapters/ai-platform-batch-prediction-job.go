@@ -27,6 +27,7 @@ var _ = registerableAdapter{
 			"aiplatform.batchPredictionJobs.get",
 			"aiplatform.batchPredictionJobs.list",
 		},
+		PredefinedRole: "roles/aiplatform.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631 state
 		// https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.batchPredictionJobs#JobState
 	},

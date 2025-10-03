@@ -26,6 +26,7 @@ var _ = registerableAdapter{
 			"run.services.get",
 			"run.services.list",
 		},
+		PredefinedRole: "roles/run.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631 - status field for health monitoring
 	},
 	blastPropagation: map[string]*gcpshared.Impact{

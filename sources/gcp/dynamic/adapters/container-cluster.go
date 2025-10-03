@@ -30,6 +30,7 @@ var _ = registerableAdapter{
 			"container.clusters.get",
 			"container.clusters.list",
 		},
+		PredefinedRole: "roles/container.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"network":                  gcpshared.ComputeNetworkImpactInOnly,

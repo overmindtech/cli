@@ -45,6 +45,10 @@ func (c computeInstanceWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c computeInstanceWrapper) PredefinedRole() string {
+	return "roles/compute.viewer"
+}
+
 // PotentialLinks returns the potential links for the compute instance wrapper
 func (c computeInstanceWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

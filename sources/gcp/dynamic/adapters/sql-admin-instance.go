@@ -27,6 +27,7 @@ var sqlAdminInstanceAdapter = registerableAdapter{ //nolint:unused
 			"cloudsql.instances.get",
 			"cloudsql.instances.list",
 		},
+		PredefinedRole: "roles/cloudsql.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/instances#SqlInstanceState
 	},

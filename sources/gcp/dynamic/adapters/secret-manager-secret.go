@@ -30,6 +30,7 @@ var secretManagerSecretAdapter = registerableAdapter{ //nolint:unused
 			"secretmanager.secrets.get",
 			"secretmanager.secrets.list",
 		},
+		PredefinedRole: "roles/secretmanager.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		// CMEK used with Automatic replication

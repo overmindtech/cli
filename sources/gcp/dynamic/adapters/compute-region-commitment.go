@@ -18,6 +18,7 @@ var computeRegionCommitmentAdapter = registerableAdapter{ //nolint:unused
 		ListEndpointFunc:    gcpshared.RegionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/commitments"),
 		UniqueAttributeKeys: []string{"commitments"},
 		IAMPermissions:      []string{"compute.commitments.get", "compute.commitments.list"},
+		PredefinedRole:      "roles/compute.viewer",
 		// HEALTH: https://cloud.google.com/compute/docs/reference/rest/v1/regionCommitments#Status
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},

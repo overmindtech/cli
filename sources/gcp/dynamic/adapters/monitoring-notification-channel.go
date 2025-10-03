@@ -36,6 +36,7 @@ var monitoringNotificationChannelAdapter = registerableAdapter{ //nolint:unused
 			"monitoring.notificationChannels.get",
 			"monitoring.notificationChannels.list",
 		},
+		PredefinedRole: "roles/monitoring.viewer",
 	},
 	// No blast propagation defined for this adapter
 	blastPropagation: map[string]*gcpshared.Impact{},

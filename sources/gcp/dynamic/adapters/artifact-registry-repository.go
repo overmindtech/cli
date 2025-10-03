@@ -18,6 +18,7 @@ var artifactRegistryRepositoryAdapter = registerableAdapter{ //nolint:unused
 		SearchEndpointFunc:  gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://artifactregistry.googleapis.com/v1/projects/%s/locations/%s/repositories"),
 		UniqueAttributeKeys: []string{"locations", "repositories"},
 		IAMPermissions:      []string{"artifactregistry.repositories.get", "artifactregistry.repositories.list"},
+		PredefinedRole:      "roles/artifactregistry.reader",
 		// HEALTH: Not currently exposed on the Repository resource (no status field providing operational state)
 	},
 	blastPropagation: map[string]*gcpshared.Impact{

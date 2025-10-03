@@ -41,6 +41,7 @@ type Wrapper interface {
 	PotentialLinks() map[shared.ItemType]bool
 	AdapterMetadata() *sdp.AdapterMetadata
 	IAMPermissions() []string
+	PredefinedRole() string
 }
 
 // ListableWrapper defines an optional interface for resources that support listing.
@@ -361,6 +362,13 @@ func (s *standardAdapterImpl) Validate() error {
 		return fmt.Errorf("cache is not initialized")
 	}
 
+	if s.sourceType == string(gcpshared.GCP) {
+		// Validate predefined role and IAM permissions consistency
+		if err := validatePredefinedRole(s.wrapper); err != nil {
+			return err
+		}
+	}
+
 	return protovalidate.Validate(s.Metadata())
 }
 
@@ -494,6 +502,13 @@ func (s *standardListableAdapterImpl) Metadata() *sdp.AdapterMetadata {
 func (s *standardListableAdapterImpl) Validate() error {
 	if s.cache == nil {
 		return fmt.Errorf("cache is not initialized")
+	}
+
+	if s.sourceType == string(gcpshared.GCP) {
+		// Validate predefined role and IAM permissions consistency
+		if err := validatePredefinedRole(s.wrapper); err != nil {
+			return err
+		}
 	}
 
 	return protovalidate.Validate(s.Metadata())
@@ -710,6 +725,12 @@ func (s *standardSearchableAdapterImpl) Validate() error {
 	if s.cache == nil {
 		return fmt.Errorf("cache is not initialized")
 	}
+	if s.sourceType == string(gcpshared.GCP) {
+		// Validate predefined role and IAM permissions consistency
+		if err := validatePredefinedRole(s.wrapper); err != nil {
+			return err
+		}
+	}
 
 	return protovalidate.Validate(s.Metadata())
 }
@@ -763,6 +784,12 @@ func (s *standardSearchableListableAdapterImpl) Validate() error {
 	if s.cache == nil {
 		return fmt.Errorf("cache is not initialized")
 	}
+	if s.sourceType == string(gcpshared.GCP) {
+		// Validate predefined role and IAM permissions consistency
+		if err := validatePredefinedRole(s.wrapper); err != nil {
+			return err
+		}
+	}
 
 	return protovalidate.Validate(s.Metadata())
 }
@@ -795,4 +822,37 @@ func expectedSearchQueryFormat(keywords []ItemTypeLookups) string {
 	}
 
 	return strings.Join(readableKeywords, "\" or \"")
+}
+
+// validatePredefinedRole validates that the wrapper's predefined role and IAM permissions are consistent
+func validatePredefinedRole(wrapper Wrapper) error {
+	predefinedRole := wrapper.PredefinedRole()
+	iamPermissions := wrapper.IAMPermissions()
+
+	// Predefined role must be specified
+	if predefinedRole == "" {
+		return fmt.Errorf("wrapper %s must specify a predefined role", wrapper.Type())
+	}
+
+	// Check if the predefined role exists in the map
+	role, exists := gcpshared.PredefinedRoles[predefinedRole]
+	if !exists {
+		return fmt.Errorf("predefined role %s is not found in PredefinedRoles map", predefinedRole)
+	}
+
+	// Check if all IAM permissions from the wrapper exist in the predefined role's IAMPermissions
+	for _, perm := range iamPermissions {
+		found := false
+		for _, rolePerm := range role.IAMPermissions {
+			if perm == rolePerm {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("IAM permission %s from wrapper is not included in predefined role %s IAMPermissions", perm, predefinedRole)
+		}
+	}
+
+	return nil
 }

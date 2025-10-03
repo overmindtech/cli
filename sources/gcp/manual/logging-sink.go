@@ -39,6 +39,10 @@ func (l loggingSinkWrapper) IAMPermissions() []string {
 	}
 }
 
+func (l loggingSinkWrapper) PredefinedRole() string {
+	return "roles/logging.viewer"
+}
+
 type loggingSinkWrapper struct {
 	client gcpshared.LoggingConfigClient
 

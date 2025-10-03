@@ -26,6 +26,7 @@ var dataprocAutoScalingPolicyAdapter = registerableAdapter{ //nolint:unused
 			"dataproc.autoscalingPolicies.get",
 			"dataproc.autoscalingPolicies.list",
 		},
+		PredefinedRole: "roles/dataproc.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		// AutoscalingPolicies don't directly reference other resources,

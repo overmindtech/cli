@@ -27,6 +27,7 @@ var eventarcTriggerAdapter = registerableAdapter{ //nolint:unused
 			"eventarc.triggers.get",
 			"eventarc.triggers.list",
 		},
+		PredefinedRole: "roles/eventarc.viewer",
 	},
 	// No blast propagation yet. TODO: Evaluate targets (Cloud Run service, GKE, etc.) for links.
 	blastPropagation: map[string]*gcpshared.Impact{},

@@ -42,6 +42,10 @@ func (c computeMachineImageWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c computeMachineImageWrapper) PredefinedRole() string {
+	return "roles/compute.viewer"
+}
+
 func (c computeMachineImageWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeNetwork,

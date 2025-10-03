@@ -35,6 +35,7 @@ var computeUrlMapAdapter = registerableAdapter{ //nolint:unused
 			"compute.urlMaps.get",
 			"compute.urlMaps.list",
 		},
+		PredefinedRole: "roles/compute.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"defaultService": computeBackendImpact,

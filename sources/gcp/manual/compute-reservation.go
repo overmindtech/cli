@@ -43,6 +43,10 @@ func (c computeReservationWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c computeReservationWrapper) PredefinedRole() string {
+	return "roles/compute.viewer"
+}
+
 // PotentialLinks returns the potential links for the compute reservation wrapper
 func (c computeReservationWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

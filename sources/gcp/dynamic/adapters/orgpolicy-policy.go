@@ -34,8 +34,9 @@ var orgPolicyPolicyAdapter = registerableAdapter{ //nolint:unused
 		UniqueAttributeKeys: []string{"policies"},
 		IAMPermissions: []string{
 			"orgpolicy.policy.get",
-			"orgpolicy.policy.list",
+			"orgpolicy.policies.list",
 		},
+		PredefinedRole: "roles/orgpolicy.policyViewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{},
 	terraformMapping: gcpshared.TerraformMapping{

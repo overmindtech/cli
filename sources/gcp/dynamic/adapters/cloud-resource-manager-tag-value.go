@@ -45,6 +45,7 @@ var cloudResourceManagerTagValueAdapter = registerableAdapter{ //nolint:unused
 			"resourcemanager.tagValues.get",
 			"resourcemanager.tagValues.list",
 		},
+		PredefinedRole: "roles/resourcemanager.tagViewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"parent": {

@@ -17,6 +17,8 @@ var spannerInstanceAdapter = registerableAdapter{ //nolint:unused
 		// https://spanner.googleapis.com/v1/projects/*/instances
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://spanner.googleapis.com/v1/projects/%s/instances"),
 		UniqueAttributeKeys: []string{"instances"},
+		IAMPermissions:      []string{"spanner.instances.get", "spanner.instances.list"},
+		PredefinedRole:      "roles/spanner.viewer",
 		// HEALTH: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances#State
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},

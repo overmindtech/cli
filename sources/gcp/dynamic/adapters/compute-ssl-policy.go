@@ -25,6 +25,7 @@ var _ = registerableAdapter{
 			"compute.sslPolicies.get",
 			"compute.sslPolicies.list",
 		},
+		PredefinedRole: "roles/compute.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		// SSL Policies are configuration-only resources that define TLS/SSL parameters

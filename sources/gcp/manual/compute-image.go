@@ -42,6 +42,10 @@ func (c computeImageWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c computeImageWrapper) PredefinedRole() string {
+	return "roles/compute.viewer"
+}
+
 // TerraformMappings returns the Terraform mappings for the compute image wrapper
 func (c computeImageWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{

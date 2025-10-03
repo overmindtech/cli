@@ -26,6 +26,7 @@ var computeVpnGatewayAdapter = registerableAdapter{ //nolint:unused
 			"compute.vpnGateways.get",
 			"compute.vpnGateways.list",
 		},
+		PredefinedRole: "roles/compute.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		// Network associated with the VPN gateway.

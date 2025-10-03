@@ -26,7 +26,8 @@ var dataprocClusterAdapter = registerableAdapter{ //nolint:unused
 			"dataproc.clusters.get",
 			"dataproc.clusters.list",
 		},
-		NameSelector: "clusterName", // https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#resource:-cluster
+		PredefinedRole: "roles/dataproc.viewer",
+		NameSelector:   "clusterName", // https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#resource:-cluster
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#clusterstatus
 	},

@@ -43,6 +43,10 @@ func (c computeNodeTemplateWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c computeNodeTemplateWrapper) PredefinedRole() string {
+	return "roles/compute.viewer"
+}
+
 func (c computeNodeTemplateWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeNodeGroup,

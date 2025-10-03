@@ -43,6 +43,10 @@ func (c computeSecurityPolicyWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c computeSecurityPolicyWrapper) PredefinedRole() string {
+	return "roles/compute.viewer"
+}
+
 // PotentialLinks returns the potential links for the compute forwarding rule wrapper
 func (c computeSecurityPolicyWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

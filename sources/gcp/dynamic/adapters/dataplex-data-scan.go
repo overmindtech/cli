@@ -27,6 +27,7 @@ var _ = registerableAdapter{
 			"dataplex.dataScans.get",
 			"dataplex.dataScans.list",
 		},
+		PredefinedRole: "roles/dataplex.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631 state
 		// https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.dataScans#DataScan
 	},

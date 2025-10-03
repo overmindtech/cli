@@ -213,3 +213,8 @@ func convertGetStageOutputToStage(output *apigateway.GetStageOutput) types.Stage
 		Tags:                 output.Tags,
 	}
 }
+
+func (d *apiGatewayStageWrapper) PredefinedRole() string {
+	// TODO: https://linear.app/overmind/issue/ENG-1526/ensure-the-manual-adapter-framework-is-cloud-provider-agnostic
+	return ""
+}

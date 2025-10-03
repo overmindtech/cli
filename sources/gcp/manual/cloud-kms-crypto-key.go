@@ -44,6 +44,10 @@ func (c cloudKMSCryptoKeyWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c cloudKMSCryptoKeyWrapper) PredefinedRole() string {
+	return "roles/cloudkms.viewer"
+}
+
 // PotentialLinks returns the potential links for the CryptoKey wrapper.
 func (c cloudKMSCryptoKeyWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

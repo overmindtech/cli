@@ -28,6 +28,7 @@ var _ = registerableAdapter{
 			"dataplex.aspectTypes.get",
 			"dataplex.aspectTypes.list",
 		},
+		PredefinedRole: "roles/dataplex.catalogViewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		// Based on the AspectType structure from the API documentation,

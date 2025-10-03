@@ -25,6 +25,7 @@ var aiPlatformEndpointAdapter = registerableAdapter{ //nolint:unused
 		),
 		UniqueAttributeKeys: []string{"endpoints"},
 		IAMPermissions:      []string{"aiplatform.endpoints.get", "aiplatform.endpoints.list"},
+		PredefinedRole:      "roles/aiplatform.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"encryptionSpec.kmsKeyName": gcpshared.CryptoKeyImpactInOnly,

@@ -27,6 +27,7 @@ var computeGlobalForwardingRuleAdapter = registerableAdapter{ //nolint:unused
 			"compute.forwardingRules.get",
 			"compute.forwardingRules.list",
 		},
+		PredefinedRole: "roles/compute.viewer",
 		// HEALTH: https://cloud.google.com/compute/docs/reference/rest/v1/globalForwardingRules#Status => pscConnectionStatus
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},

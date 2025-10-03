@@ -31,7 +31,7 @@ Create a new dynamic adapter for GCP {{NAME}} resource.
 - ` + "`sources/gcp/shared/models.go`" + ` (if new SDP item type needed)
 
 ## Instructions
-Follow the dynamic adapter creation rules in ` + "`.cursor/rules/dynamic-adapter-creation.md`" + ` for comprehensive implementation guidance.`
+Follow the dynamic adapter creation rules in ` + "`.cursor/rules/dynamic-adapter-creation.mdc`" + ` for comprehensive implementation guidance.`
 
 func main() {
 	name := flag.String("name", "", "(required) adapter name, e.g. monitoring-alert-policy")
@@ -144,8 +144,8 @@ func generateLinearURL(adapterName string) string {
 func copyToClipboard(text string) error {
 	// Define allowed clipboard commands for security
 	allowedCommands := map[string][]string{
-		"pbcopy": {},
-		"xclip":  {"-selection", "clipboard"},
+		"pbcopy":  {},
+		"xclip":   {"-selection", "clipboard"},
 		"wl-copy": {},
 	}
 

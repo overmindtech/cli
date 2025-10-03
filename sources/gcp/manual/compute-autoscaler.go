@@ -44,6 +44,10 @@ func (c computeAutoscalerWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c computeAutoscalerWrapper) PredefinedRole() string {
+	return "roles/compute.viewer"
+}
+
 func (c computeAutoscalerWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeInstanceGroupManager,

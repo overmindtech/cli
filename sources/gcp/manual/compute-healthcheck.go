@@ -42,6 +42,10 @@ func (c computeHealthCheckWrapper) IAMPermissions() []string {
 	}
 }
 
+func (c computeHealthCheckWrapper) PredefinedRole() string {
+	return "roles/compute.viewer"
+}
+
 func (c computeHealthCheckWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{

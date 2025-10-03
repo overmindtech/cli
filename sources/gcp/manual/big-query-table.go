@@ -44,6 +44,10 @@ func (b BigQueryTableWrapper) IAMPermissions() []string {
 	}
 }
 
+func (b BigQueryTableWrapper) PredefinedRole() string {
+	return "roles/bigquery.metadataViewer"
+}
+
 // PotentialLinks returns the potential links for the BigQuery dataset wrapper
 func (b BigQueryTableWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(

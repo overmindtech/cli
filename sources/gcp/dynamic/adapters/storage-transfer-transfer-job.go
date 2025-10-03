@@ -35,6 +35,7 @@ var _ = registerableAdapter{
 			"storagetransfer.jobs.get",
 			"storagetransfer.jobs.list",
 		},
+		PredefinedRole: "roles/storagetransfer.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631 status
 		// https://cloud.google.com/storage-transfer/docs/reference/rest/v1/transferJobs#TransferJob.status
 	},

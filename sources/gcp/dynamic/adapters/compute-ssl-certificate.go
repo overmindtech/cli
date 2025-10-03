@@ -18,6 +18,7 @@ var computeSSLCertificateAdapter = registerableAdapter{ //nolint:unused
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/sslCertificates"),
 		UniqueAttributeKeys: []string{"sslCertificates"},
 		IAMPermissions:      []string{"compute.sslCertificates.get", "compute.sslCertificates.list"},
+		PredefinedRole:      "roles/compute.viewer",
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_ssl_certificate",

@@ -2,8 +2,11 @@ package proc
 
 import (
 	"context"
+	"fmt"
+	"sort"
 	"testing"
 
+	_ "github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
@@ -59,4 +62,66 @@ func Test_adapters(t *testing.T) {
 	}
 
 	t.Logf("GCP Adapters found: %v", len(discoveryAdapters))
+}
+
+func Test_ensureMandatoryFieldsInDynamicAdapters(t *testing.T) {
+	predefinedRoles := make(map[string]bool, len(gcpshared.SDPAssetTypeToAdapterMeta))
+	for sdpItemType, meta := range gcpshared.SDPAssetTypeToAdapterMeta {
+		t.Run(sdpItemType.String(), func(t *testing.T) {
+			if meta.InDevelopment == true {
+				t.Skipf("InDevelopment is true for %s", sdpItemType.String())
+			}
+
+			if meta.GetEndpointBaseURLFunc == nil {
+				t.Errorf("GetEndpointBaseURLFunc is nil for %s", sdpItemType)
+			}
+
+			if meta.Scope == "" {
+				t.Errorf("Scope is empty for %s", sdpItemType)
+			}
+
+			if len(meta.UniqueAttributeKeys) == 0 {
+				t.Errorf("UniqueAttributeKeys is empty for %s", sdpItemType)
+			}
+
+			if len(meta.IAMPermissions) == 0 {
+				t.Errorf("IAMPermissions is empty for %s", sdpItemType)
+			}
+
+			if len(meta.PredefinedRole) == 0 {
+				t.Errorf("PredefinedRoles is empty for %s", sdpItemType)
+			}
+
+			role, ok := gcpshared.PredefinedRoles[meta.PredefinedRole]
+			if !ok {
+				t.Errorf("PredefinedRole %s is not in the PredefinedRoles map", meta.PredefinedRole)
+			}
+
+			foundPerm := false
+			for _, perm := range role.IAMPermissions {
+				for _, iamPerm := range meta.IAMPermissions {
+					if perm == iamPerm {
+						foundPerm = true
+						break
+					}
+				}
+			}
+
+			if !foundPerm {
+				t.Errorf("IAMPermissions %s is not in the PredefinedRole %s", meta.IAMPermissions, meta.PredefinedRole)
+			}
+
+			predefinedRoles[meta.PredefinedRole] = true
+		})
+	}
+
+	roles := make([]string, 0, len(predefinedRoles))
+	for r := range predefinedRoles {
+		roles = append(roles, r)
+	}
+	sort.Strings(roles)
+
+	for _, r := range roles {
+		fmt.Println("\"" + r + "\"")
+	}
 }

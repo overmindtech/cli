@@ -35,6 +35,7 @@ var redisInstanceAdapter = registerableAdapter{ //nolint:unused
 			"redis.instances.get",
 			"redis.instances.list",
 		},
+		PredefinedRole: "roles/redis.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// https://cloud.google.com/memorystore/docs/redis/reference/rest/v1/projects.locations.instances#Instance.State
 	},

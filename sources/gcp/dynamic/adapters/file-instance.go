@@ -31,6 +31,7 @@ var _ = registerableAdapter{
 			"file.instances.get",
 			"file.instances.list",
 		},
+		PredefinedRole: "roles/file.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631 => state
 	},
 	blastPropagation: map[string]*gcpshared.Impact{

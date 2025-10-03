@@ -28,6 +28,7 @@ var runWorkerPoolAdapter = registerableAdapter{ //nolint:unused
 			"run.workerPools.get",
 			"run.workerPools.list",
 		},
+		PredefinedRole: "roles/run.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{},
 }.Register()

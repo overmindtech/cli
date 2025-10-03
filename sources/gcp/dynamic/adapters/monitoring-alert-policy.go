@@ -37,6 +37,7 @@ var monitoringAlertPolicyAdapter = registerableAdapter{ //nolint:unused
 			"monitoring.alertPolicies.get",
 			"monitoring.alertPolicies.list",
 		},
+		PredefinedRole: "roles/monitoring.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"notificationChannels": {

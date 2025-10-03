@@ -25,6 +25,7 @@ var computeExternalVpnGatewayAdapter = registerableAdapter{ //nolint:unused
 			"compute.externalVpnGateways.get",
 			"compute.externalVpnGateways.list",
 		},
+		PredefinedRole: "roles/compute.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"interfaces.ipAddress":   gcpshared.IPImpactBothWays,
