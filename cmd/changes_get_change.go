@@ -27,6 +27,12 @@ func GetChange(cmd *cobra.Command, args []string) error {
 
 	app := viper.GetString("app")
 
+	// Validate status flag
+	status, err := validateChangeStatus(viper.GetString("status"))
+	if err != nil {
+		return err
+	}
+
 	riskLevels := []sdp.Risk_Severity{}
 	for _, level := range viper.GetStringSlice("risk-levels") {
 		switch level {
@@ -52,7 +58,7 @@ func GetChange(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	changeUuid, err := getChangeUUIDAndCheckStatus(ctx, oi, sdp.ChangeStatus(sdp.ChangeStatus_value[viper.GetString("status")]), viper.GetString("ticket-link"), true)
+	changeUuid, err := getChangeUUIDAndCheckStatus(ctx, oi, status, viper.GetString("ticket-link"), true)
 	if err != nil {
 		return loggedError{
 			err:     err,
@@ -146,6 +152,30 @@ fetch:
 	fmt.Println(changeRes.Msg.GetChange())
 
 	return nil
+}
+
+// validateChangeStatus validates that the provided status string is a valid ChangeStatus
+func validateChangeStatus(statusStr string) (sdp.ChangeStatus, error) {
+	// Define valid status values (excluding UNSPECIFIED and PROCESSING as they are not typically used)
+	validStatuses := map[string]sdp.ChangeStatus{
+		"CHANGE_STATUS_DEFINING":  sdp.ChangeStatus_CHANGE_STATUS_DEFINING,
+		"CHANGE_STATUS_HAPPENING": sdp.ChangeStatus_CHANGE_STATUS_HAPPENING,
+		"CHANGE_STATUS_DONE":      sdp.ChangeStatus_CHANGE_STATUS_DONE,
+	}
+
+	if status, exists := validStatuses[statusStr]; exists {
+		return status, nil
+	}
+
+	// Build list of valid status names for error message
+	validNames := make([]string, 0, len(validStatuses))
+	for name := range validStatuses {
+		validNames = append(validNames, name)
+	}
+
+	return sdp.ChangeStatus_CHANGE_STATUS_UNSPECIFIED, flagError{
+		fmt.Sprintf("invalid --status value '%s', allowed values are: %s", statusStr, strings.Join(validNames, ", ")),
+	}
 }
 
 func init() {
