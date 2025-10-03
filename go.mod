@@ -1,20 +1,23 @@
 module github.com/overmindtech/cli
 
-go 1.24.0
-
-toolchain go1.24.3
+go 1.25.1
 
 require (
 	atomicgo.dev/keyboard v0.2.9
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250425153114-8976f5be98c1.1
 	buf.build/go/protovalidate v0.12.0
+	cloud.google.com/go/aiplatform v1.86.0
 	cloud.google.com/go/auth v0.16.1
 	cloud.google.com/go/bigquery v1.67.0
+	cloud.google.com/go/bigtable v1.37.0
 	cloud.google.com/go/compute v1.37.0
+	cloud.google.com/go/dataplex v1.25.2
+	cloud.google.com/go/functions v1.19.6
 	cloud.google.com/go/iam v1.5.2
 	cloud.google.com/go/kms v1.21.2
 	cloud.google.com/go/logging v1.13.0
 	cloud.google.com/go/networksecurity v0.10.6
+	cloud.google.com/go/resourcemanager v1.10.6
 	cloud.google.com/go/spanner v1.81.0
 	connectrpc.com/connect v1.18.1
 	github.com/MrAlias/otel-schema-utils v0.4.0-alpha
@@ -98,6 +101,7 @@ require (
 	golang.org/x/text v0.25.0
 	gonum.org/v1/gonum v0.16.0
 	google.golang.org/api v0.233.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250512202823-5a2f75b736a9
 	google.golang.org/grpc v1.72.1
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/ini.v1 v1.67.0
@@ -232,7 +236,6 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto v0.0.0-20250512202823-5a2f75b736a9 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250512202823-5a2f75b736a9 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250512202823-5a2f75b736a9 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
