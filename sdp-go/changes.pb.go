@@ -201,8 +201,11 @@ const (
 	// The change is in progress or deployment is in progress. The change can be ended using the `EndChange`
 	// RPC.
 	ChangeStatus_CHANGE_STATUS_HAPPENING ChangeStatus = 2
-	// This is no longer used in the api-server, but is still present in the proto file for backwards compatibility.
-	// it will be removed as part of https://linear.app/overmind/issue/ENG-1520/change-status-processing-is-no-longer-used-in-a-meaningful-way
+	// DEPRECATED: This status is no longer used and should not be used in new code.
+	// It will be removed in a future version. Use other appropriate status values instead.
+	// Deprecated as part of https://linear.app/overmind/issue/ENG-1520/change-status-processing-is-no-longer-used-in-a-meaningful-way
+	//
+	// Deprecated: Marked as deprecated in changes.proto.
 	ChangeStatus_CHANGE_STATUS_PROCESSING ChangeStatus = 3
 	// The change has been ended and the results have been processed.
 	ChangeStatus_CHANGE_STATUS_DONE ChangeStatus = 4
@@ -5606,12 +5609,12 @@ const file_changes_proto_rawDesc = "" +
 	"\x12ChangeOutputFormat\x12$\n" +
 	" CHANGE_OUTPUT_FORMAT_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19CHANGE_OUTPUT_FORMAT_JSON\x10\x01\x12!\n" +
-	"\x1dCHANGE_OUTPUT_FORMAT_MARKDOWN\x10\x02*\x9c\x01\n" +
+	"\x1dCHANGE_OUTPUT_FORMAT_MARKDOWN\x10\x02*\xa0\x01\n" +
 	"\fChangeStatus\x12\x1d\n" +
 	"\x19CHANGE_STATUS_UNSPECIFIED\x10\x00\x12\x1a\n" +
 	"\x16CHANGE_STATUS_DEFINING\x10\x01\x12\x1b\n" +
-	"\x17CHANGE_STATUS_HAPPENING\x10\x02\x12\x1c\n" +
-	"\x18CHANGE_STATUS_PROCESSING\x10\x03\x12\x16\n" +
+	"\x17CHANGE_STATUS_HAPPENING\x10\x02\x12 \n" +
+	"\x18CHANGE_STATUS_PROCESSING\x10\x03\x1a\x02\b\x01\x12\x16\n" +
 	"\x12CHANGE_STATUS_DONE\x10\x042\xf3\f\n" +
 	"\x0eChangesService\x12H\n" +
 	"\vListChanges\x12\x1b.changes.ListChangesRequest\x1a\x1c.changes.ListChangesResponse\x12`\n" +

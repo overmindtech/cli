@@ -51,12 +51,6 @@ func TestValidateChangeStatus(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name:        "invalid status - processing",
-			statusStr:   "CHANGE_STATUS_PROCESSING",
-			expected:    sdp.ChangeStatus_CHANGE_STATUS_UNSPECIFIED,
-			expectError: true,
-		},
-		{
 			name:        "invalid status - lowercase",
 			statusStr:   "change_status_defining",
 			expected:    sdp.ChangeStatus_CHANGE_STATUS_UNSPECIFIED,
