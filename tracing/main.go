@@ -240,10 +240,12 @@ func InitTracer(component string, opts ...otlptracehttp.Option) error {
 	}
 	tp = sdktrace.NewTracerProvider(tracerOpts...)
 
+	// Set the default tracer provider for all the libraries
+	otel.SetTracerProvider(tp)
+
 	tracerOpts = append(tracerOpts, sdktrace.WithSampler(sdktrace.ParentBased(sdktrace.TraceIDRatioBased((0.1)))))
 	healthTp = sdktrace.NewTracerProvider(tracerOpts...)
 
-	otel.SetTracerProvider(tp)
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	return nil
 }
@@ -271,7 +273,6 @@ func ShutdownTracer(ctx context.Context) {
 type SamplingRule struct {
 	SampleRate   int
 	ShouldSample func(sdktrace.SamplingParameters) bool
-	Description  string
 }
 
 // OvermindSampler is a unified sampler that evaluates multiple sampling rules in order
@@ -286,12 +287,10 @@ func NewOvermindSampler() *OvermindSampler {
 		{
 			SampleRate:   200,
 			ShouldSample: UserAgentMatcher("ELB-HealthChecker/2.0", "kube-probe/1.27+"),
-			Description:  "UserAgent-based sampling for health checks",
 		},
 		{
 			SampleRate:   10,
 			ShouldSample: SpanNameMatcher("pool.acquire"),
-			Description:  "Span name-based sampling for pool operations",
 		},
 	}
 
