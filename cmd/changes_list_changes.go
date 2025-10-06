@@ -46,7 +46,7 @@ func ListChanges(cmd *cobra.Command, args []string) error {
 	for _, change := range response.Msg.GetChanges() {
 		changeUuid := uuid.UUID(change.GetMetadata().GetUUID())
 		log.WithContext(ctx).WithFields(log.Fields{
-			"change-uuid":        changeUuid,
+			"ovm.change.uuid":    changeUuid,
 			"change-created":     change.GetMetadata().GetCreatedAt().AsTime(),
 			"change-status":      change.GetMetadata().GetStatus().String(),
 			"change-name":        change.GetProperties().GetTitle(),
@@ -80,7 +80,7 @@ func ListChanges(cmd *cobra.Command, args []string) error {
 						return loggedError{
 							err: err,
 							fields: log.Fields{
-								"change-uuid":         changeUuid,
+								"ovm.change.uuid":     changeUuid,
 								"changing-items-uuid": ciUuid.String(),
 							},
 							message: "failed to get ChangingItemsBookmark",
@@ -92,7 +92,7 @@ func ListChanges(cmd *cobra.Command, args []string) error {
 						return loggedError{
 							err: err,
 							fields: log.Fields{
-								"change-uuid":         changeUuid,
+								"ovm.change.uuid":     changeUuid,
 								"changing-items-uuid": ciUuid.String(),
 							},
 							message: "Error rendering changing items bookmark",
@@ -119,7 +119,7 @@ func ListChanges(cmd *cobra.Command, args []string) error {
 						return loggedError{
 							err: err,
 							fields: log.Fields{
-								"change-uuid":       changeUuid,
+								"ovm.change.uuid":   changeUuid,
 								"blast-radius-uuid": brUuid.String(),
 							},
 							message: "failed to get BlastRadiusSnapshot",
@@ -131,7 +131,7 @@ func ListChanges(cmd *cobra.Command, args []string) error {
 						return loggedError{
 							err: err,
 							fields: log.Fields{
-								"change-uuid":       changeUuid,
+								"ovm.change.uuid":   changeUuid,
 								"blast-radius-uuid": brUuid.String(),
 							},
 							message: "Error rendering blast radius snapshot",
@@ -158,7 +158,7 @@ func ListChanges(cmd *cobra.Command, args []string) error {
 						return loggedError{
 							err: err,
 							fields: log.Fields{
-								"change-uuid":        changeUuid,
+								"ovm.change.uuid":    changeUuid,
 								"system-before-uuid": sbsUuid.String(),
 							},
 							message: "failed to get SystemBeforeSnapshot",
@@ -170,7 +170,7 @@ func ListChanges(cmd *cobra.Command, args []string) error {
 						return loggedError{
 							err: err,
 							fields: log.Fields{
-								"change-uuid":        changeUuid,
+								"ovm.change.uuid":    changeUuid,
 								"system-before-uuid": sbsUuid.String(),
 							},
 							message: "Error rendering system before snapshot",
@@ -197,7 +197,7 @@ func ListChanges(cmd *cobra.Command, args []string) error {
 						return loggedError{
 							err: err,
 							fields: log.Fields{
-								"change-uuid":       changeUuid,
+								"ovm.change.uuid":   changeUuid,
 								"system-after-uuid": sasUuid.String(),
 							},
 							message: "failed to get SystemAfterSnapshot",
@@ -209,7 +209,7 @@ func ListChanges(cmd *cobra.Command, args []string) error {
 						return loggedError{
 							err: err,
 							fields: log.Fields{
-								"change-uuid":       changeUuid,
+								"ovm.change.uuid":   changeUuid,
 								"system-after-uuid": sasUuid.String(),
 							},
 							message: "Error rendering system after snapshot",

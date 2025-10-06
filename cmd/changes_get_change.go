@@ -146,7 +146,7 @@ fetch:
 		}
 	}
 	log.WithContext(ctx).WithFields(log.Fields{
-		"change-uuid": changeUuid.String(),
+		"ovm.change.uuid": changeUuid.String(),
 	}).Info("found change")
 
 	fmt.Println(changeRes.Msg.GetChange())
