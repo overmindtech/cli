@@ -176,9 +176,15 @@ func HealthCheckTracer() trace.Tracer {
 func InitTracerWithUpstreams(component, honeycombApiKey, sentryDSN string, opts ...otlptracehttp.Option) error {
 	if sentryDSN != "" {
 		var environment string
-		if viper.GetString("run-mode") == "release" {
+		switch viper.GetString("run-mode") {
+		case "release":
 			environment = "prod"
-		} else {
+		case "test":
+			environment = "dogfood"
+		case "debug":
+			environment = "local"
+		default:
+			// Fallback to dev for backward compatibility
 			environment = "dev"
 		}
 		err := sentry.Init(sentry.ClientOptions{
