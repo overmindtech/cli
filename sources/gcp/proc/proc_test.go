@@ -116,7 +116,7 @@ func Test_ensureMandatoryFieldsInDynamicAdapters(t *testing.T) {
 	}
 
 	roles := make([]string, 0, len(predefinedRoles))
-	for r := range predefinedRoles {
+	for r := range gcpshared.PredefinedRoles {
 		roles = append(roles, r)
 	}
 	sort.Strings(roles)

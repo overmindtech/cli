@@ -199,6 +199,40 @@ blastPropagation: map[string]*gcpshared.Impact{
   - `"api.resource.get"` for individual resource access
   - `"api.resource.list"` for listing resources
 
+#### Custom Role for Additional Permissions
+When creating adapters that require permissions not available in GCP predefined roles with limited read-only access, you may need to update the Overmind custom role.
+
+**Current Custom Role Permissions:**
+```hcl
+resource "google_project_iam_custom_role" "overmind_custom_role" {
+  role_id     = "overmindCustomRole"
+  title       = "Overmind Custom Role"
+  description = "Custom role for Overmind service account with additional BigQuery and Spanner permissions"
+  permissions = [
+    "bigquery.transfers.get",        # BigQuery transfer configuration discovery
+    "spanner.databases.get",         # Spanner database detail discovery
+    "spanner.databases.list",        # Spanner database enumeration
+  ]
+}
+```
+
+**When to Update the Custom Role:**
+- If you cannot find a suitable predefined role that provides read-only access to your resource
+- If the existing predefined roles have overly broad permissions (e.g., include data access)
+- If you need specific permissions that are not included in any predefined role
+
+**Process for Adding New Permissions:**
+1. Research the exact IAM permissions needed for your adapter from GCP API documentation
+2. Verify that no predefined role exists with the required permissions
+3. Add the new permissions to the custom role in these locations:
+   - `deploy/sources.tf` (infrastructure configuration)
+   - `docs.overmind.tech/docs/sources/gcp/configuration.md` (documentation)
+   - `frontend/src/features/settings/sources/details/gcp-scripts.ts` (customer scripts)
+4. Update the roles reference table in documentation
+5. Test the permissions work correctly with your adapter
+
+**Note:** The custom role is assigned separately from predefined roles to avoid Terraform `for_each` issues with apply-time computed values. Each service account gets both predefined roles (via `for_each`) and the custom role (via individual resource blocks).
+
 ### 7. Terraform Mapping
 
 #### Research Requirements:
@@ -292,6 +326,7 @@ resource "google_project_service" "overmind_apis" {
 - [ ] Comprehensive blast propagation analysis
 - [ ] Valid terraform mapping with correct method (GET/SEARCH)
 - [ ] Appropriate IAM permissions defined
+- [ ] Custom role updated if new permissions required (see Custom Role section)
 - [ ] Clear resource description and comments
 - [ ] Follows existing adapter patterns
 - [ ] No legacy `SDPAssetTypeToAdapterMeta` usage

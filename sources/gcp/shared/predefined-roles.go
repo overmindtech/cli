@@ -38,14 +38,15 @@ var PredefinedRoles = map[string]role{
 			"artifactregistry.repositories.list",
 		},
 	},
-	"roles/bigquery.user": {
-		Role: "roles/bigquery.user",
-		// TODO: Confirm with the team
-		// It has too much permissions, but this is the only role that is used for BigQuery Data Transfer transfer config adapter.
-		// When granted on a project, this role also provides the ability to run jobs, including queries, within the project. A principal with this role can enumerate their own jobs, cancel their own jobs, and enumerate datasets within a project. Additionally, allows the creation of new datasets within the project;
-		Link: "https://cloud.google.com/iam/docs/roles-permissions/bigquery#bigquery.user",
+	"overmind_custom_role": {
+		// This is a custom role for Overmind service account with additional BigQuery and Spanner permissions
+		// It is created in deploy/sources.tf
+		Role: "overmind_custom_role",
+		Link: "deploy/sources.tf",
 		IAMPermissions: []string{
 			"bigquery.transfers.get",
+			"spanner.databases.get",
+			"spanner.databases.list",
 		},
 	},
 	"roles/bigquery.metadataViewer": {
@@ -259,12 +260,8 @@ var PredefinedRoles = map[string]role{
 				- View all Spanner instances (but cannot modify instances).
 				- View all Spanner databases (but cannot modify or read from databases).
 		*/
-		// TODO: Validate if spanner.databases.list is enough for the spanner instance adapter.
-		// Because, spanner.databases.get is only available on roles that can read data from the database.
-		// https://linear.app/overmind/issue/ENG-1468/validate-gcp-predefined-role-for-spanner-database-adapter
 		Link: "https://cloud.google.com/iam/docs/roles-permissions/spanner#spanner.viewer",
 		IAMPermissions: []string{
-			"spanner.databases.list",
 			"spanner.instanceConfigs.get",
 			"spanner.instanceConfigs.list",
 			"spanner.instances.get",

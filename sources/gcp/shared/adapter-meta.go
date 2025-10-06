@@ -865,11 +865,7 @@ var SDPAssetTypeToAdapterMeta = map[shared.ItemType]AdapterMeta{
 		// HEALTH: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.databases#state
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		IAMPermissions: []string{"spanner.databases.get", "spanner.databases.list"},
-		// TODO: Validate if spanner.databases.list is enough for the spanner database adapter.
-		// https://linear.app/overmind/issue/ENG-1468/validate-gcp-predefined-role-for-spanner-database-adapter
-		// roles/spanner.viewer does not come with spanner.databases.get permission.
-		// spanner.databases.get is only available on roles that can read data from the database.
-		PredefinedRole: "roles/spanner.viewer",
+		PredefinedRole: "overmind_custom_role",
 	},
 	SpannerInstanceConfig: {
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,

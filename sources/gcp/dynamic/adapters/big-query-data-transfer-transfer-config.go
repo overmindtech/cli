@@ -21,7 +21,7 @@ var _ = registerableAdapter{
 		SearchDescription:   "Search for BigQuery Data Transfer transfer configs in a location. Use the format \"location\" or \"projects/project_id/locations/location/transferConfigs/transfer_config_id\" which is supported for terraform mappings.",
 		UniqueAttributeKeys: []string{"locations", "transferConfigs"},
 		IAMPermissions:      []string{"bigquery.transfers.get"},
-		PredefinedRole:      "roles/bigquery.user",
+		PredefinedRole:      "overmind_custom_role",
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// state: https://cloud.google.com/bigquery/docs/reference/datatransfer/rest/v1/projects.locations.transferConfigs#TransferState
 	},
