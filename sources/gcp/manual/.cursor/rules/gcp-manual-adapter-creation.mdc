@@ -1,0 +1,719 @@
+---
+description: "GCP Manual Adapter development patterns and standards"
+globs: **/*.go
+alwaysApply: false
+---
+
+# GCP Manual Adapter Creation Rules
+
+This document provides comprehensive rules and patterns for creating GCP manual adapters in the Overmind platform. Follow these guidelines to ensure consistency, maintainability, and proper integration with the SDP (State Description Protocol) framework.
+
+## Table of Contents
+1. [Adapter Structure and Naming](#adapter-structure-and-naming)
+2. [Wrapper Type Selection](#wrapper-type-selection)
+3. [Base Struct Selection](#base-struct-selection)
+4. [Required Methods Implementation](#required-methods-implementation)
+5. [Terraform Mappings](#terraform-mappings)
+6. [Get and Search Lookups](#get-and-search-lookups)
+7. [Linked Item Queries](#linked-item-queries)
+8. [Error Handling](#error-handling)
+9. [Testing Patterns](#testing-patterns)
+10. [Client Interface Patterns](#client-interface-patterns)
+11. [Common Gotchas and Best Practices](#common-gotchas-and-best-practices)
+
+## Adapter Structure and Naming
+
+### File Naming Convention
+- Use kebab-case for file names: `compute-instance.go`, `big-query-table.go`, `cloud-kms-crypto-key.go`
+- Test files should follow the same pattern with `_test.go` suffix: `compute-instance_test.go`
+
+### Package and Import Structure
+```go
+package manual
+
+import (
+    "context"
+    "errors" // if using iterator.Done
+    "fmt"    // if using string formatting
+    "strings" // if parsing paths or URLs
+
+    "cloud.google.com/go/compute/apiv1/computepb" // Use specific protobuf imports
+    "google.golang.org/api/iterator" // For handling GCP iterators
+
+    "github.com/overmindtech/cli/discovery"
+    "github.com/overmindtech/cli/sdp-go"
+    "github.com/overmindtech/cli/sdpcache"
+    "github.com/overmindtech/cli/sources"
+    gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+    "github.com/overmindtech/cli/sources/shared"
+    "github.com/overmindtech/cli/sources/stdlib" // Only if linking to stdlib resources
+)
+```
+
+### Struct Naming
+- Wrapper struct: `{resourceName}Wrapper` (e.g., `computeInstanceWrapper`, `bigQueryTableWrapper`)
+- Use camelCase with first letter lowercase for private structs
+- Constructor function: `New{ResourceName}` (e.g., `NewComputeInstance`, `NewBigQueryTable`)
+
+## Wrapper Type Selection
+
+Choose the appropriate wrapper interface based on GCP API capabilities:
+
+### `Wrapper` (GET only)
+Use when the GCP API only supports individual resource retrieval:
+- IAM Service Account Keys
+- Compute Snapshots (individual retrieval)
+- Resources without list/search endpoints
+
+### `ListableWrapper` (GET + LIST)
+Use when the GCP API supports listing all resources in a scope:
+- Compute Instances (per zone)
+- Compute Disks (per zone)
+- IAM Service Accounts (per project)
+- BigQuery Datasets (per project)
+
+### `SearchableWrapper` (GET + SEARCH)
+Use when the GCP API supports filtering/searching resources:
+- BigQuery Tables (search within datasets)
+- KMS Crypto Keys (search within key rings)
+- KMS Key Rings (search within locations)
+
+### `SearchableListableWrapper` (GET + LIST + SEARCH)
+Use when the GCP API supports both listing and searching:
+- Currently not used in existing adapters, but available for complex resources
+
+## Base Struct Selection
+
+Choose the appropriate base struct based on GCP resource scope:
+
+### `ZoneBase` - Zonal Resources
+For resources scoped to a specific zone:
+```go
+type computeInstanceWrapper struct {
+    client gcpshared.ComputeInstanceClient
+    *gcpshared.ZoneBase
+}
+
+func NewComputeInstance(client gcpshared.ComputeInstanceClient, projectID, zone string) sources.ListableWrapper {
+    return &computeInstanceWrapper{
+        client: client,
+        ZoneBase: gcpshared.NewZoneBase(
+            projectID,
+            zone,
+            sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+            gcpshared.ComputeInstance,
+        ),
+    }
+}
+```
+
+**Examples:** Compute Instances, Compute Disks, Compute Snapshots, Compute Images
+
+### `RegionBase` - Regional Resources
+For resources scoped to a specific region:
+```go
+type computeAddressWrapper struct {
+    client gcpshared.ComputeAddressClient
+    *gcpshared.RegionBase
+}
+
+func NewComputeAddress(client gcpshared.ComputeAddressClient, projectID, region string) sources.ListableWrapper {
+    return &computeAddressWrapper{
+        client: client,
+        RegionBase: gcpshared.NewRegionBase(
+            projectID,
+            region,
+            sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+            gcpshared.ComputeAddress,
+        ),
+    }
+}
+```
+
+**Examples:** Compute Addresses, Compute Reservations, Compute Resource Policies
+
+### `ProjectBase` - Project-Level Resources
+For resources scoped to the entire project:
+```go
+type iamServiceAccountWrapper struct {
+    client gcpshared.IAMServiceAccountClient
+    *gcpshared.ProjectBase
+}
+
+func NewIAMServiceAccount(client gcpshared.IAMServiceAccountClient, projectID string) sources.ListableWrapper {
+    return &iamServiceAccountWrapper{
+        client: client,
+        ProjectBase: gcpshared.NewProjectBase(
+            projectID,
+            sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
+            gcpshared.IAMServiceAccount,
+        ),
+    }
+}
+```
+
+**Examples:** IAM Service Accounts, BigQuery Datasets, KMS Key Rings, Logging Sinks
+
+## Required Methods Implementation
+
+### IAM Permissions
+Always implement with specific GCP API permissions:
+```go
+func (c computeInstanceWrapper) IAMPermissions() []string {
+    return []string{
+        "compute.instances.get",
+        "compute.instances.list",
+    }
+}
+```
+
+### Predefined Role
+Always implement with the most restrictive GCP predefined role:
+```go
+func (c computeInstanceWrapper) PredefinedRole() string {
+    return "roles/compute.viewer"
+}
+```
+
+### Potential Links
+Document all possible linked resources:
+```go
+func (c computeInstanceWrapper) PotentialLinks() map[shared.ItemType]bool {
+    return shared.NewItemTypesSet(
+        stdlib.NetworkIP,
+        gcpshared.ComputeDisk,
+        gcpshared.ComputeSubnetwork,
+        gcpshared.ComputeNetwork,
+        gcpshared.ComputeResourcePolicy,
+    )
+}
+```
+
+## Terraform Mappings
+
+### GET Method (Direct ID Match)
+Use when Terraform resource has a unique identifier that directly matches your adapter's unique attribute:
+```go
+func (c computeInstanceWrapper) TerraformMappings() []*sdp.TerraformMapping {
+    return []*sdp.TerraformMapping{
+        {
+            TerraformMethod: sdp.QueryMethod_GET,
+            // https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#argument-reference
+            TerraformQueryMap: "google_compute_instance.name",
+        },
+    }
+}
+```
+
+### SEARCH Method (Multiple Parameters)
+Use when Terraform resource requires multiple parameters or different ID format:
+```go
+func (b BigQueryTableWrapper) TerraformMappings() []*sdp.TerraformMapping {
+    return []*sdp.TerraformMapping{
+        {
+            TerraformMethod: sdp.QueryMethod_SEARCH,
+            // https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_table
+            // Terraform uses: projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
+            // Our adapter uses: dataset_id + table_id as separate parameters
+            TerraformQueryMap: "google_bigquery_table.id",
+        },
+    }
+}
+```
+
+### Multiple Terraform Mappings
+For resources that can be referenced in multiple ways:
+```go
+func (c iamServiceAccountWrapper) TerraformMappings() []*sdp.TerraformMapping {
+    return []*sdp.TerraformMapping{
+        {
+            TerraformMethod: sdp.QueryMethod_GET,
+            TerraformQueryMap: "google_service_account.email",
+        },
+        {
+            TerraformMethod: sdp.QueryMethod_GET,
+            TerraformQueryMap: "google_service_account.unique_id",
+        },
+    }
+}
+```
+
+## Get and Search Lookups
+
+### Single Key Lookup
+For resources with a single unique identifier:
+```go
+var ComputeInstanceLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeInstance)
+
+func (c computeInstanceWrapper) GetLookups() sources.ItemTypeLookups {
+    return sources.ItemTypeLookups{
+        ComputeInstanceLookupByName,
+    }
+}
+```
+
+### Multiple Keys Lookup (Order Matters)
+The order of lookups determines the order of `queryParts` in the `Get` method:
+```go
+var (
+    BigQueryDatasetLookupByID = shared.NewItemTypeLookup("id", gcpshared.BigQueryDataset)
+    BigQueryTableLookupByID   = shared.NewItemTypeLookup("id", gcpshared.BigQueryTable)
+)
+
+func (b BigQueryTableWrapper) GetLookups() sources.ItemTypeLookups {
+    return sources.ItemTypeLookups{
+        BigQueryDatasetLookupByID,  // First key: dataset ID (queryParts[0])
+        BigQueryTableLookupByID,    // Second key: table ID (queryParts[1])
+    }
+}
+
+func (b BigQueryTableWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+    datasetID := queryParts[0]  // From BigQueryDatasetLookupByID
+    tableID := queryParts[1]    // From BigQueryTableLookupByID
+    // ... implementation
+}
+```
+
+### Multiple Keys with Composite Lookup
+For complex hierarchical resources:
+```go
+var (
+    CloudKMSCryptoKeyRingLookupByLocation = shared.NewItemTypeLookup("location", gcpshared.CloudKMSKeyRing)
+    CloudKMSCryptoKeyRingLookupByName     = shared.NewItemTypeLookup("name", gcpshared.CloudKMSKeyRing)
+    CloudKMSCryptoKeyLookupByName         = shared.NewItemTypeLookup("name", gcpshared.CloudKMSCryptoKey)
+)
+
+func (c cloudKMSCryptoKeyWrapper) GetLookups() sources.ItemTypeLookups {
+    return sources.ItemTypeLookups{
+        CloudKMSCryptoKeyRingLookupByLocation,  // First key: location
+        CloudKMSCryptoKeyRingLookupByName,      // Second key: key ring name
+        CloudKMSCryptoKeyLookupByName,          // Third key: crypto key name
+    }
+}
+```
+
+### Search Lookups
+Define search parameters for SearchableWrapper:
+```go
+// Single search lookup
+func (b BigQueryTableWrapper) SearchLookups() []sources.ItemTypeLookups {
+    return []sources.ItemTypeLookups{
+        {
+            BigQueryDatasetLookupByID,  // Search within a specific dataset
+        },
+    }
+}
+
+// Multiple search lookups (different search patterns)
+func (c cloudKMSCryptoKeyWrapper) SearchLookups() []sources.ItemTypeLookups {
+    return []sources.ItemTypeLookups{
+        {
+            CloudKMSCryptoKeyRingLookupByLocation,  // Search by location only
+        },
+        {
+            CloudKMSCryptoKeyRingLookupByLocation,  // Search within specific key ring
+            CloudKMSCryptoKeyRingLookupByName,
+        },
+    }
+}
+```
+
+## Linked Item Queries
+
+### Basic Pattern
+Always use this pattern for creating linked item queries:
+```go
+sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+    Query: &sdp.Query{
+        Type:   gcpshared.TargetResourceType.String(),
+        Method: sdp.QueryMethod_GET, // or SEARCH
+        Query:  "resource-identifier",
+        Scope:  "appropriate-scope",
+    },
+    BlastPropagation: &sdp.BlastPropagation{
+        In:  true,  // This resource affected if linked resource changes
+        Out: true,  // Linked resource affected if this resource changes
+    },
+})
+```
+
+### Path Parameter Extraction
+Use helper functions for extracting parameters from GCP resource URLs:
+```go
+// Extract parameters with their key names
+// key: projects/my-project/locations/my-location/keyRings/my-key-ring/cryptoKeys/my-crypto-key
+values := gcpshared.ExtractPathParams(
+    cryptoKey.GetName(),
+    "locations", "keyRings", "cryptoKeys"
+)
+```
+
+### Composite Lookup Keys
+Use for multi-parameter queries:
+```go
+Query: shared.CompositeLookupKey(location, keyRing, cryptoKey)
+```
+
+### Blast Propagation Rules
+- **In: true, Out: true** - Tightly coupled resources (parent-child relationships)
+- **In: true, Out: false** - This resource depends on linked resource (e.g., disk depends on image)
+- **In: false, Out: true** - Linked resource depends on this resource (e.g., instance depends on disk)
+
+### Common Linked Resource Patterns
+
+#### Network Resources
+```go
+// Extract network name from full URL
+if network := instance.GetNetwork(); network != "" {
+    if strings.Contains(network, "/") {
+        networkNameParts := strings.Split(network, "/")
+        networkName := networkNameParts[len(networkNameParts)-1]
+        sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+            Query: &sdp.Query{
+                Type:   gcpshared.ComputeNetwork.String(),
+                Method: sdp.QueryMethod_GET,
+                Query:  networkName,
+                Scope:  c.ProjectID(), // Networks are global
+            },
+            BlastPropagation: &sdp.BlastPropagation{
+                In:  true,
+                Out: false,
+            },
+        })
+    }
+}
+```
+
+#### KMS Resources
+```go
+// Extract KMS key version parameters
+if keyName := encryptionKey.GetKmsKeyName(); keyName != "" {
+    location := gcpshared.ExtractPathParam("locations", keyName)
+    keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
+    cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
+    cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
+
+    if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
+        sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+            Query: &sdp.Query{
+                Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+                Method: sdp.QueryMethod_GET,
+                Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
+                Scope:  c.ProjectID(),
+            },
+            BlastPropagation: &sdp.BlastPropagation{
+                In:  true,
+                Out: false,
+            },
+        })
+    }
+}
+```
+
+## Error Handling
+
+### Standard Error Pattern
+Always use source-specific error wrapping:
+```go
+if err != nil {
+    return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+}
+```
+
+### Iterator Pattern
+Handle GCP API iterators consistently:
+```go
+for {
+    item, err := it.Next()
+    if errors.Is(err, iterator.Done) {
+        break
+    }
+    if err != nil {
+        return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+    }
+    // Process item...
+}
+```
+
+### Stream Error Handling
+For streaming operations:
+```go
+if err != nil {
+    stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+    return
+}
+
+// For item processing errors, continue with next item
+if sdpErr != nil {
+    stream.SendError(sdpErr)
+    continue
+}
+```
+
+## Testing Patterns
+
+### Test Structure
+Follow this exact pattern for all adapter tests:
+```go
+func TestComputeInstance(t *testing.T) {
+    ctx := context.Background()
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockClient := mocks.NewMockComputeInstanceClient(ctrl)
+    projectID := "test-project-id"
+    zone := "us-central1-a"
+
+    t.Run("Get", func(t *testing.T) {
+        wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+        mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeInstance("test-instance", computepb.Instance_RUNNING), nil)
+
+        adapter := sources.WrapperToAdapter(wrapper)
+        sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance", true)
+        if qErr != nil {
+            t.Fatalf("Expected no error, got: %v", qErr)
+        }
+
+        t.Run("StaticTests", func(t *testing.T) {
+            queryTests := shared.QueryTests{
+                {
+                    ExpectedType:   gcpshared.ComputeDisk.String(),
+                    ExpectedMethod: sdp.QueryMethod_GET,
+                    ExpectedQuery:  "test-instance",
+                    ExpectedScope:  "test-project-id.us-central1-a",
+                    ExpectedBlastPropagation: &sdp.BlastPropagation{
+                        In:  true,
+                        Out: true,
+                    },
+                },
+                // ... more test cases
+            }
+            shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+        })
+    })
+
+    t.Run("List", func(t *testing.T) {
+        // Test list functionality
+    })
+
+    t.Run("Search", func(t *testing.T) {
+        // Test search functionality (if applicable)
+    })
+}
+```
+
+### Required Test Cases
+- **Get method**: Test successful retrieval and error cases
+- **StaticTests**: Test linked item queries using `shared.RunStaticTests`
+- **HealthCheck**: Test health status mapping (if applicable)
+- **List method**: Test the List method (for ListableWrapper)
+- **Search method**: Test the Search method (for SearchableWrapper)
+- **Interface compliance**: Verify adapter implements correct interfaces
+
+### Test Helper Functions
+Create helper functions for test data:
+```go
+func createComputeInstance(instanceName string, status computepb.Instance_Status) *computepb.Instance {
+    return &computepb.Instance{
+        Name:   ptr.To(instanceName),
+        Labels: map[string]string{"env": "test"},
+        Status: ptr.To(status.String()),
+        // ... other fields
+    }
+}
+```
+
+### Mock Expectations
+Use gomock for client mocking:
+```go
+mockClient := mocks.NewMockComputeInstanceClient(ctrl)
+mockClient.EXPECT().Get(ctx, gomock.Any()).Return(expectedResult, nil)
+```
+
+## Client Interface Patterns
+
+### Typed Client Interfaces
+Define typed client interfaces in the shared package:
+```go
+// In sources/gcp/shared/compute-clients.go
+type ComputeInstanceClient interface {
+    Get(ctx context.Context, req *computepb.GetInstanceRequest, opts ...gax.CallOption) (*computepb.Instance, error)
+    List(ctx context.Context, req *computepb.ListInstancesRequest, opts ...gax.CallOption) *compute.InstanceIterator
+}
+
+// Constructor function
+func NewComputeInstanceClient(client *compute.InstancesClient) ComputeInstanceClient {
+    return &computeInstanceClientImpl{client: client}
+}
+```
+
+### Client Implementation
+Implement the interface with proper error handling:
+```go
+type computeInstanceClientImpl struct {
+    client *compute.InstancesClient
+}
+
+func (c *computeInstanceClientImpl) Get(ctx context.Context, req *computepb.GetInstanceRequest, opts ...gax.CallOption) (*computepb.Instance, error) {
+    return c.client.Get(ctx, req, opts...)
+}
+
+func (c *computeInstanceClientImpl) List(ctx context.Context, req *computepb.ListInstancesRequest, opts ...gax.CallOption) *compute.InstanceIterator {
+    return c.client.List(ctx, req, opts...)
+}
+```
+
+## Common Gotchas and Best Practices
+
+### 1. Unique Attribute Consistency
+Ensure the `UniqueAttribute` in the SDP item matches the lookup key:
+```go
+// If using composite lookup key
+err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(values...))
+sdpItem := &sdp.Item{
+    Type:            gcpshared.CloudKMSCryptoKey.String(),
+    UniqueAttribute: "uniqueAttr", // Must match the attribute name above
+    // ...
+}
+```
+
+### 2. Scope Handling
+Use appropriate scope helper functions:
+```go
+// For zonal resources
+scope := gcpshared.ZonalScope(projectID, zone)
+
+// For regional resources
+scope := gcpshared.RegionalScope(projectID, region)
+
+// For project-level resources
+scope := gcpshared.ProjectScope(projectID)
+```
+
+### 3. Attributes and Tags
+Use `ToAttributesWithExclude` to convert protobuf to attributes:
+```go
+attributes, err := shared.ToAttributesWithExclude(instance, "labels")
+tags := instance.GetLabels() // Use labels as tags
+```
+
+### 4. Health Status Mapping
+Map GCP resource statuses to SDP health statuses:
+```go
+switch disk.GetStatus() {
+case computepb.Disk_UNDEFINED_STATUS.String():
+    sdpItem.Health = sdp.Health_HEALTH_UNKNOWN.Enum()
+case computepb.Disk_CREATING.String(), computepb.Disk_RESTORING.String():
+    sdpItem.Health = sdp.Health_HEALTH_PENDING.Enum()
+case computepb.Disk_FAILED.String(), computepb.Disk_UNAVAILABLE.String():
+    sdpItem.Health = sdp.Health_HEALTH_ERROR.Enum()
+case computepb.Disk_READY.String():
+    sdpItem.Health = sdp.Health_HEALTH_OK.Enum()
+}
+```
+
+### 5. Multiple Query Parameters
+For resources requiring multiple parameters:
+```go
+func (b BigQueryTableWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+    datasetID := queryParts[0]  // First parameter
+    tableID := queryParts[1]    // Second parameter
+    // ... implementation
+}
+```
+
+### 6. Conditional Linked Queries
+Only create linked queries when the referenced resource exists:
+```go
+if metadata.EncryptionConfig != nil && metadata.EncryptionConfig.KMSKeyName != "" {
+    // Create KMS key linked query
+}
+```
+
+### 7. Path Validation
+Always validate extracted path parameters:
+```go
+values := gcpshared.ExtractPathParams(keyName, "locations", "keyRings", "cryptoKeys")
+if len(values) == 3 && values[0] != "" && values[1] != "" && values[2] != "" {
+    // Use the extracted values
+}
+```
+
+### 8. Adapter Registration
+Register adapters in the main adapters file with proper scoping:
+```go
+// Register zonal adapters
+for _, zone := range zones {
+    adapters = append(adapters,
+        sources.WrapperToAdapter(NewComputeInstance(
+            shared.NewComputeInstanceClient(instanceCli),
+            projectID,
+            zone,
+        )),
+    )
+}
+
+// Register project-level adapters
+adapters = append(adapters,
+    sources.WrapperToAdapter(NewIAMServiceAccount(
+        shared.NewIAMServiceAccountClient(iamCli),
+        projectID,
+    )),
+)
+```
+
+### 9. Documentation Comments
+Always include GCP API documentation URLs in comments:
+```go
+// The resource URL for the disk type associated with this disk.
+// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/diskTypes/{diskType}
+// https://cloud.google.com/compute/docs/reference/rest/v1/diskTypes/get
+```
+
+### 10. Error Message Consistency
+Use consistent error messages and include context:
+```go
+return nil, &sdp.QueryError{
+    ErrorType:   sdp.QueryError_OTHER,
+    ErrorString: fmt.Sprintf("invalid CryptoKey name: %s", cryptoKey.GetName()),
+}
+```
+
+## Validation Checklist
+
+Before submitting a new adapter, ensure:
+
+- [ ] File follows naming convention (`{resource-name}.go`)
+- [ ] Imports are properly organized and minimal
+- [ ] Wrapper type matches GCP API capabilities
+- [ ] Base struct matches resource scope (Zone/Region/Project)
+- [ ] All required methods implemented (IAMPermissions, PredefinedRole, PotentialLinks)
+- [ ] Terraform mappings are correct and include documentation URLs
+- [ ] Get/Search lookups match the resource's query parameters
+- [ ] Linked item queries use proper blast propagation
+- [ ] Error handling uses `gcpshared.QueryError`
+- [ ] Iterator pattern is correctly implemented
+- [ ] Health status mapping is implemented (if applicable)
+- [ ] Test file covers all required test cases
+- [ ] Static tests validate linked item queries
+- [ ] Client interface is properly defined in shared package
+- [ ] Adapter is registered in the main adapters file
+- [ ] Documentation comments include GCP API URLs
+- [ ] Unique attribute consistency is maintained
+- [ ] Scope handling uses appropriate helper functions
+- [ ] Path parameter extraction is validated
+- [ ] Conditional linked queries are properly implemented
+
+## Examples Reference
+
+For complete examples, refer to these existing adapters:
+
+- **Simple ListableWrapper**: `sources/gcp/manual/compute-instance.go`
+- **Complex ListableWrapper**: `sources/gcp/manual/compute-disk.go`
+- **SearchableWrapper with Multiple Keys**: `sources/gcp/manual/big-query-table.go`
+- **SearchableWrapper with Composite Lookup**: `sources/gcp/manual/cloud-kms-crypto-key.go`
+- **Project-level Resource**: `sources/gcp/manual/iam-service-account.go`
+- **Regional Resource**: `sources/gcp/manual/compute-address.go`
+- **Complex Linked Queries**: `sources/gcp/manual/compute-backend-service.go`
+
+These examples demonstrate all the patterns and best practices outlined in this document.

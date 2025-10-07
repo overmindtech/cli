@@ -1,4 +1,4 @@
-# Further Information for GCG Adapter Creation
+# Further Information for GCP Adapter Creation
 
 Please refer to the [generic adapter creation documentation](../README.md) to learn about the generic adapter framework.
 
@@ -71,7 +71,7 @@ When defining a relation between two adapters, we need to answer the following q
 In the following example, we define a relation between the `ComputeInstance` and `ComputeSubnetwork` adapters.
 - We identify the `ComputeSubnetwork` adapter as the related item.
 - We use the `sdp.QueryMethod_GET` method to get the related item. Because the attribute `subnetwork_name` can be used to get the `ComputeSubnetwork` resource. If it was an attribute that can be used for searching, we would use the `sdp.QueryMethod_SEARCH` method. By the time we are developing the adapter, the linked adapter may not be present. In that case, we have to research the linked adapter and make the correct judgement.
-- We use the `subnetworkName` as the query string to pass to the `GET` method. Because its [SDK documentation](https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks/get) states that we need to pass its `name` to get the resource. 
+- We use the `subnetworkName` as the query string to pass to the `GET` method. Because its [SDK documentation](https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks/get) states that we need to pass its `name` to get the resource.
 - We define the scope as `region` via the `gcpshared.RegionalScope(c.ProjectID(), region)` helper function. Because the `ComputeSubnetwork` resource is a regional resource. It requires the `project_id` and `region` along with its `name` to get the resource.
 - We define the relation as `BlastPropagation` with `In: true` and `Out: false`. Because the adapter we define is the `ComputeInstance` adapter, we want to propagate the blast radius from the `ComputeInstance` to the `ComputeSubnetwork`. This means that if the `ComputeSubnetwork` is deleted, the `ComputeInstance` will be affected by that (`in:true`). But if the `ComputeInstance` is deleted, the `ComputeSubnetwork` will not be affected (`out:false`). The relation might not be that clear all the time. In this case we should err on to `true` side.
 ```go
