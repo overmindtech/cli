@@ -99,13 +99,37 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 		return
 	}
 
+	qMethod := sdp.QueryMethod_GET
+	keysToExtract := toSDPItemMeta.UniqueAttributeKeys
+	if impact.IsParentToChild {
+		// This is a link from parent to child.
+		// In these cases, we remove the child source identifier from the query string.
+		// I.e., for a link from spanner instance to all its databases:
+		// The query should look like: "my-instance"
+		// However, the `toSDPItemMeta.UniqueAttributeKeys` which is used for deciding what keys to be extracted from
+		// the passed `toItemGCPResourceName` is for the database, because the link is for the spanner databases.
+		// We need to remove the identifier for spanner database, because the parent source, `instance`,
+		// does not have this information at all.
+		// So, the unique attribute keys will become ["instances"] instead of ["instances", "databases"].
+
+		if len(keysToExtract) < 1 {
+			log.WithContext(ctx).WithFields(lf).Errorf(
+				"failed to construct a SEARCH linked item query from parent to child source",
+			)
+			return
+		}
+
+		keysToExtract = keysToExtract[0 : len(keysToExtract)-1] // remove the last element, i.e., "databases"
+		qMethod = sdp.QueryMethod_SEARCH                        // method will be SEARCH, because we are linking multiple sources.
+	}
+
 	var scope string
 	var query string
 	switch toSDPItemMeta.Scope {
 	case ScopeProject:
 		scope = projectID
-		values := ExtractPathParams(toItemGCPResourceName, toSDPItemMeta.UniqueAttributeKeys...)
-		if len(values) != len(toSDPItemMeta.UniqueAttributeKeys) {
+		values := ExtractPathParams(toItemGCPResourceName, keysToExtract...)
+		if len(values) != len(keysToExtract) {
 			log.WithContext(ctx).WithFields(lf).Warnf(
 				"resource name is in unexpected format for project item",
 			)
@@ -113,7 +137,7 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 		}
 		query = strings.Join(values, shared.QuerySeparator)
 	case ScopeRegional:
-		keysToExtract := append(toSDPItemMeta.UniqueAttributeKeys, "regions")
+		keysToExtract = append(keysToExtract, "regions")
 		values := ExtractPathParams(toItemGCPResourceName, keysToExtract...)
 		if len(values) != len(keysToExtract) {
 			log.WithContext(ctx).WithFields(lf).Warnf(
@@ -124,7 +148,7 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 		scope = fmt.Sprintf("%s.%s", projectID, values[len(values)-1])      // e.g., "my-project.my-region"
 		query = strings.Join(values[:len(values)-1], shared.QuerySeparator) // e.g., "my-instance" or "my-network"
 	case ScopeZonal:
-		keysToExtract := append(toSDPItemMeta.UniqueAttributeKeys, "zones")
+		keysToExtract = append(keysToExtract, "zones")
 		values := ExtractPathParams(toItemGCPResourceName, keysToExtract...)
 		if len(values) != len(keysToExtract) {
 			log.WithContext(ctx).WithFields(lf).Warnf(
@@ -143,7 +167,7 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 	fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
 			Type:   impact.ToSDPItemType.String(),
-			Method: sdp.QueryMethod_GET,
+			Method: qMethod,
 			Query:  query,
 			Scope:  scope,
 		},

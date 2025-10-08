@@ -73,6 +73,17 @@ var sqlAdminInstanceAdapter = registerableAdapter{ //nolint:unused
 			ToSDPItemType:    stdlib.NetworkDNS,
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 		},
+		// Forward link from parent to child via SEARCH
+		// Link to all backup runs for this instance
+		"name": {
+			ToSDPItemType:    gcpshared.SQLAdminBackupRun,
+			Description:      "If the Cloud SQL Instance is deleted or updated: All associated Backup Runs may become invalid or inaccessible. If a Backup Run is updated: The instance remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+			  In:false,
+			  Out: true,
+			},
+			IsParentToChild:  true,
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/sql_database_instance",

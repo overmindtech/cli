@@ -51,6 +51,17 @@ var _ = registerableAdapter{
 		"userManagedKeysConfig.serviceAccountVerificationKeys": gcpshared.CryptoKeyVersionImpactInOnly,
 		"userManagedKeysConfig.controlPlaneDiskEncryptionKey":  gcpshared.CryptoKeyImpactInOnly,
 		"userManagedKeysConfig.gkeopsEtcdBackupEncryptionKey":  gcpshared.CryptoKeyImpactInOnly,
+		// Forward link from parent to child via SEARCH
+		// Link to all node pools in this cluster
+		"name": {
+			ToSDPItemType:    gcpshared.ContainerNodePool,
+			Description:      "If the Container Cluster is deleted or updated: All associated Node Pools may become invalid or inaccessible. If a Node Pool is updated: The cluster remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+			  In: false,
+			  Out: true,
+			 },
+			IsParentToChild:  true,
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/container_cluster",

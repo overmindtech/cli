@@ -179,6 +179,151 @@ blastPropagation: map[string]*gcpshared.Impact{
 - **If no adapter exists**: Create the SDP item type definition in `sources/gcp/shared/item-types.go` and `models.go` as if the adapter exists, then link to it
 - **Follow naming**: `gcp-<api>-<resource>` for new adapter types
 
+#### Creating Backlinks from Child to Parent Resources
+
+When a resource name contains hierarchical information (e.g., a database name includes its parent instance), you can create a backlink using the `name` field. The framework will automatically extract the parent resource identifier and create the appropriate linked item query.
+
+**Use Case**: Child resources that reference their parent in their name structure.
+
+**Example: Spanner Database to Instance Backlink**
+
+A Spanner database name has the format: `projects/{project}/instances/{instance}/databases/{database}`
+
+To create a backlink from the database to its parent instance:
+
+```go
+// In sources/gcp/shared/blast-propagations.go
+SpannerDatabase: {
+    // ... other blast propagations ...
+
+    // This is a backlink to instance.
+    // Framework will extract the instance name and create the linked item query with GET
+    "name": {
+        Description:      "If the Spanner Instance is deleted or updated: The Database may become invalid or inaccessible. If the Database is updated: The instance remains unaffected.",
+        ToSDPItemType:    SpannerInstance,
+        BlastPropagation: impactInOnly,
+    },
+}
+```
+
+**How It Works:**
+1. The framework reads the `name` field value (e.g., `projects/my-project/instances/test-instance/databases/my-db`)
+2. It extracts the parent instance identifier (`test-instance`)
+3. It creates a GET query for the parent SpannerInstance
+4. The linked item query will have:
+   - Type: `gcp-spanner-instance`
+   - Method: GET
+   - Query: `test-instance` (extracted from database name)
+   - Scope: Same project as the database
+
+**Testing the Backlink:**
+
+When adding backlink blast propagations, verify they work correctly in tests:
+
+```go
+// In adapter_test.go
+{
+    // name field creates a backlink to the Spanner instance
+    ExpectedType:   gcpshared.SpannerInstance.String(),
+    ExpectedMethod: sdp.QueryMethod_GET,
+    ExpectedQuery:  instanceName,
+    ExpectedScope:  projectID,
+    ExpectedBlastPropagation: &sdp.BlastPropagation{
+        In:  true,
+        Out: false,
+    },
+}
+```
+
+**When to Use This Pattern:**
+- Child resources with hierarchical naming (database → instance, subnet → network)
+- Parent resource is part of the child's name/path
+- Relationship is one-way (child depends on parent, but parent doesn't depend on specific child)
+- Use `impactInOnly` blast propagation (parent changes affect child, but not vice versa)
+
+#### Creating Forward Links from Parent to Child Resources
+
+When a parent resource needs to link to all its child resources, you can use the `IsParentToChild` flag to create a forward link using SEARCH. This is the inverse pattern of the backlink described above.
+
+**Use Case**: Parent resources that need to discover and link to all their child resources (e.g., instance → all databases).
+
+**Example: Spanner Instance to Databases Forward Link**
+
+A Spanner instance needs to link to all databases that belong to it. Since the instance doesn't have the database names, we use SEARCH to find all databases for that instance.
+
+To create a forward link from the instance to its databases:
+
+```go
+// In the adapter file (e.g., spanner-instance.go)
+var spannerInstanceAdapter = registerableAdapter{
+    // ... other fields ...
+
+    blastPropagation: map[string]*gcpshared.Impact{
+        // This a link from parent to child via SEARCH
+        // We need to make sure that the linked item supports `SEARCH` method for the `instance` name.
+        "name": {
+            ToSDPItemType: gcpshared.SpannerDatabase,
+            Description:   "If the Spanner Instance is deleted or updated: All associated databases may become invalid or inaccessible. If a database is updated: The instance remains unaffected.",
+            BlastPropagation: &sdp.BlastPropagation{
+                In: false,
+                Out: true,
+            },
+            IsParentToChild: true,
+        },
+    },
+}
+```
+
+**How It Works:**
+1. The framework detects `IsParentToChild: true` on the blast propagation
+2. It modifies the unique attribute keys by removing the last element (the child identifier)
+   - For databases: `["instances", "databases"]` becomes `["instances"]`
+3. It extracts only the parent identifier from the resource name (e.g., `test-instance`)
+4. It creates a SEARCH query (not GET) to find all child resources
+5. The linked item query will have:
+   - Type: `gcp-spanner-database`
+   - Method: SEARCH
+   - Query: `test-instance` (the instance name)
+   - Scope: Same project as the instance
+
+**Testing the Forward Link:**
+
+When adding parent-to-child blast propagations, verify they work correctly in tests:
+
+```go
+// In adapter_test.go (e.g., spanner-instance_test.go)
+{
+    ExpectedType:   gcpshared.SpannerDatabase.String(),
+    ExpectedMethod: sdp.QueryMethod_SEARCH,
+    ExpectedQuery:  instanceName,
+    ExpectedScope:  projectID,
+    ExpectedBlastPropagation: &sdp.BlastPropagation{
+        In: false,
+        Out: true,
+    },
+}
+```
+
+**Critical Requirements:**
+- **Child adapter must support SEARCH**: The child resource type must implement the SEARCH method
+- **Query parameter must match**: The child's SEARCH method must accept the parent identifier as a search parameter
+- **Set `IsParentToChild: true`**: This flag triggers the special SEARCH behavior
+
+**When to Use This Pattern:**
+- Parent resources that need to discover all their children (instance → databases, network → subnets)
+- The parent's name/identifier is sufficient to search for children
+- The child adapter supports SEARCH method
+
+**Comparison: Backlink vs Forward Link**
+
+| Aspect | Backlink (Child → Parent) | Forward Link (Parent → Child) |
+|--------|---------------------------|------------------------------|
+| Direction | Child points to parent | Parent discovers children |
+| Method | GET | SEARCH |
+| Flag | No special flag | `IsParentToChild: true` |
+| Use Case | Database → Instance | Instance → All Databases |
+| Query | Single parent identifier | Parent identifier searches all children |
+
 ### 6. Special Considerations
 
 #### NameSelector

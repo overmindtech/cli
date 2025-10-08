@@ -11,10 +11,11 @@ type Impact struct {
 	ToSDPItemType    shared.ItemType
 	Description      string
 	BlastPropagation *sdp.BlastPropagation
+	IsParentToChild  bool
 }
 
 var (
-	impactInOnly   = &sdp.BlastPropagation{In: true}
+	ImpactInOnly   = &sdp.BlastPropagation{In: true}
 	impactOutOnly  = &sdp.BlastPropagation{Out: true}
 	impactBothWays = &sdp.BlastPropagation{In: true, Out: true}
 )
@@ -28,37 +29,37 @@ var (
 	SecurityPolicyImpactInOnly = &Impact{
 		Description:      "Any change on the security policy impacts the source, but not the other way around.",
 		ToSDPItemType:    ComputeSecurityPolicy,
-		BlastPropagation: impactInOnly,
+		BlastPropagation: ImpactInOnly,
 	}
 	CryptoKeyImpactInOnly = &Impact{
 		Description:      "If the crypto key is updated: The source may not be able to access encrypted data. If the source is updated: The crypto key remains unaffected.",
 		ToSDPItemType:    CloudKMSCryptoKey,
-		BlastPropagation: impactInOnly,
+		BlastPropagation: ImpactInOnly,
 	}
 	CryptoKeyVersionImpactInOnly = &Impact{
 		Description:      "If the crypto key version is updated: The source may not be able to access encrypted data. If the source is updated: The crypto key version remains unaffected.",
 		ToSDPItemType:    CloudKMSCryptoKeyVersion,
-		BlastPropagation: impactInOnly,
+		BlastPropagation: ImpactInOnly,
 	}
 	IAMServiceAccountImpactInOnly = &Impact{
 		Description:      "If the service account is updated: The source may not be able to access encrypted data. If the source is updated: The service account remains unaffected.",
 		ToSDPItemType:    IAMServiceAccount,
-		BlastPropagation: impactInOnly,
+		BlastPropagation: ImpactInOnly,
 	}
 	ResourcePolicyImpactInOnly = &Impact{
 		Description:      "If the resource policy is updated: The source may not be able to access the resource as expected. If the source is updated: The resource policy remains unaffected.",
 		ToSDPItemType:    ComputeResourcePolicy,
-		BlastPropagation: impactInOnly,
+		BlastPropagation: ImpactInOnly,
 	}
 	ComputeNetworkImpactInOnly = &Impact{
 		Description:      "If the Compute Network is updated: The source may lose connectivity or fail to run as expected. If the source is updated: The network remains unaffected.",
 		ToSDPItemType:    ComputeNetwork,
-		BlastPropagation: impactInOnly,
+		BlastPropagation: ImpactInOnly,
 	}
 	ComputeSubnetworkImpactInOnly = &Impact{
 		Description:      "If the Compute Subnetwork is updated: The source may lose connectivity or fail to run as expected. If the source is updated: The subnetwork remains unaffected.",
 		ToSDPItemType:    ComputeSubnetwork,
-		BlastPropagation: impactInOnly,
+		BlastPropagation: ImpactInOnly,
 	}
 )
 
@@ -68,49 +69,49 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"encryptionSpec.kmsKeyName": {
 			Description:      "If the Cloud KMS CryptoKey is updated: The CustomJob may not be able to access encrypted output artifacts. If the CustomJob is updated: The CryptoKey remains unaffected.",
 			ToSDPItemType:    CloudKMSCryptoKey,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// The full name of the network to which the job should be peered.
 		"jobSpec.network": {
 			Description:      "If the Compute Network is deleted or updated: The CustomJob may lose connectivity or fail to run as expected. If the CustomJob is updated: The network remains unaffected.",
 			ToSDPItemType:    ComputeNetwork,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// The service account that the job runs as.
 		"jobSpec.serviceAccount": {
 			Description:      "If the IAM Service Account is deleted or updated: The CustomJob may fail to run or lose permissions. If the CustomJob is updated: The service account remains unaffected.",
 			ToSDPItemType:    IAMServiceAccount,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// The Cloud Storage location to store the output of this CustomJob.
 		"jobSpec.baseOutputDirectory.gcsOutputDirectory": {
 			Description:      "If the Storage Bucket is deleted or updated: The CustomJob may fail to write outputs. If the CustomJob is updated: The bucket remains unaffected.",
 			ToSDPItemType:    StorageBucket,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// Optional. The name of a Vertex AI Tensorboard resource to which this CustomJob will upload Tensorboard logs.
 		"jobSpec.tensorboard": {
 			Description:      "If the Vertex AI Tensorboard is deleted or updated: The CustomJob may fail to upload logs or lose access to previous logs. If the CustomJob is updated: The tensorboard remains unaffected.",
 			ToSDPItemType:    AIPlatformTensorBoard,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// Optional. The name of an experiment to associate with the CustomJob.
 		"jobSpec.experiment": {
 			Description:      "If the Vertex AI Experiment is deleted or updated: The CustomJob may lose experiment tracking or association. If the CustomJob is updated: The experiment remains unaffected.",
 			ToSDPItemType:    AIPlatformExperiment,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// Optional. The name of an experiment run to associate with the CustomJob.
 		"jobSpec.experimentRun": {
 			Description:      "If the Vertex AI ExperimentRun is deleted or updated: The CustomJob may lose run tracking or association. If the CustomJob is updated: The experiment run remains unaffected.",
 			ToSDPItemType:    AIPlatformExperimentRun,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// Optional. The name of a model to upload the trained Model to upon job completion.
 		"jobSpec.models": {
 			Description:      "If the Vertex AI Model is deleted or updated: The CustomJob may fail to upload or associate the trained model. If the CustomJob is updated: The model remains unaffected.",
 			ToSDPItemType:    AIPlatformModel,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 	},
 	AIPlatformPipelineJob: {
@@ -118,25 +119,25 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"serviceAccount": {
 			Description:      "If the IAM Service Account is deleted or updated: The PipelineJob may fail to run or lose permissions. If the PipelineJob is updated: The service account remains unaffected.",
 			ToSDPItemType:    IAMServiceAccount,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// The full name of the network to which the job should be peered (root-level).
 		"network": {
 			Description:      "If the Compute Network is deleted or updated: The PipelineJob may lose connectivity or fail to run as expected. If the PipelineJob is updated: The network remains unaffected.",
 			ToSDPItemType:    ComputeNetwork,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// The Cloud KMS key used to encrypt PipelineJob outputs.
 		"encryptionSpec.kmsKeyName": {
 			Description:      "If the Cloud KMS CryptoKey is updated: The PipelineJob may not be able to access encrypted output artifacts. If the PipelineJob is updated: The CryptoKey remains unaffected.",
 			ToSDPItemType:    CloudKMSCryptoKey,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// The Cloud Storage location to store the output of this PipelineJob.
 		"runtimeConfig.gcsOutputDirectory": {
 			Description:      "If the Storage Bucket is deleted or updated: The PipelineJob may fail to write outputs. If the PipelineJob is updated: The bucket remains unaffected.",
 			ToSDPItemType:    StorageBucket,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 	},
 	ArtifactRegistryDockerImage: {
@@ -145,41 +146,41 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"name": {
 			ToSDPItemType:    ArtifactRegistryRepository,
 			Description:      "If the Artifact Registry Repository is deleted or updated: The Docker Image may become invalid or inaccessible. If the Docker Image is updated: The repository remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 	},
 	BigTableAdminAppProfile: {
 		"name": {
 			ToSDPItemType:    BigTableAdminInstance,
 			Description:      "If the BigTableAdmin Instance is deleted or updated: The AppProfile may become invalid or inaccessible. If the AppProfile is updated: The instance remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"multiClusterRoutingUseAny.clusterIds": {
 			ToSDPItemType:    BigTableAdminCluster,
 			Description:      "If the BigTableAdmin Cluster is deleted or updated: The AppProfile may lose routing capabilities or fail to access data. If the AppProfile is updated: The cluster remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"singleClusterRouting.clusterId": {
 			ToSDPItemType:    BigTableAdminCluster,
 			Description:      "If the BigTableAdmin Cluster is deleted or updated: The AppProfile may lose routing capabilities or fail to access data. If the AppProfile is updated: The cluster remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 	},
 	BigTableAdminBackup: {
 		"name": {
 			ToSDPItemType:    BigTableAdminCluster,
 			Description:      "If the BigTableAdmin Cluster is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The cluster remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"sourceTable": {
 			ToSDPItemType:    BigTableAdminTable,
 			Description:      "If the BigTableAdmin Table is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The table remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"sourceBackup": {
 			ToSDPItemType:    BigTableAdminBackup,
 			Description:      "If the source Backup is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The source backup remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"encryptionInfo.kmsKeyVersion": CryptoKeyVersionImpactInOnly,
 	},
@@ -187,25 +188,25 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"name": {
 			ToSDPItemType:    BigTableAdminInstance,
 			Description:      "If the BigTableAdmin Instance is deleted or updated: The Table may become invalid or inaccessible. If the Table is updated: The instance remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// If this table was restored from another data source (e.g. a backup), this field, restoreInfo, will be populated with information about the restore.
 		"restoreInfo.backupInfo.sourceTable": {
 			ToSDPItemType:    BigTableAdminTable,
 			Description:      "If the source BigTableAdmin Table is deleted or updated: The restored table may become invalid or inaccessible. If the restored table is updated: The source table remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"restoreInfo.backupInfo.sourceBackup": {
 			ToSDPItemType:    BigTableAdminBackup,
 			Description:      "If the source BigTableAdmin Backup is deleted or updated: The restored table may become invalid or inaccessible. If the restored table is updated: The source backup remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 	},
 	CloudBillingBillingInfo: {
 		"projectId": {
 			ToSDPItemType:    CloudResourceManagerProject,
 			Description:      "If the Cloud Resource Manager Project is deleted or updated: The billing information may become invalid or inaccessible. If the billing info is updated: The project remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"billingAccountName": {
 			ToSDPItemType:    CloudBillingBillingAccount,
@@ -217,12 +218,12 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"source.storageSource.bucket": {
 			ToSDPItemType:    StorageBucket,
 			Description:      "If the Storage Bucket is deleted or updated: The Cloud Build may fail to access source files. If the Cloud Build is updated: The bucket remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"steps.name": {
 			ToSDPItemType:    ArtifactRegistryDockerImage,
 			Description:      "If the Artifact Registry Docker Image is deleted or updated: The Cloud Build may fail to pull the image. If the Cloud Build is updated: The Docker image remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"results.images": {
 			ToSDPItemType:    ArtifactRegistryDockerImage,
@@ -237,14 +238,14 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"logsBucket": {
 			ToSDPItemType:    LoggingBucket,
 			Description:      "If the Logging Bucket is deleted or updated: The Cloud Build may fail to write logs. If the Cloud Build is updated: The bucket remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"serviceAccount": IAMServiceAccountImpactInOnly,
 		"buildTriggerId": {
 			// The ID of the BuildTrigger that triggered this build, if it was triggered automatically.
 			ToSDPItemType:    CloudBuildTrigger,
 			Description:      "If the Cloud Build Trigger is deleted or updated: The Cloud Build may not be retriggered as expected. If the Cloud Build is updated: The trigger remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 	},
 	CloudResourceManagerProject: {
@@ -268,17 +269,17 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"properties.machineType": {
 			Description:      "If the Compute Machine Type is deleted: The instance template becomes partially invalid. If the template is updated: Machine type itself is not affected.",
 			ToSDPItemType:    ComputeMachineType,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"properties.networkInterfaces.network": {
 			Description:      "If the network is deleted: Resources may experience connectivity changes or disruptions. If the template is deleted: Network itself is not affected.",
 			ToSDPItemType:    ComputeNetwork,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"properties.networkInterfaces.subnetwork": {
 			Description:      "If the (sub)network is deleted: Resources may experience connectivity changes or disruptions. If the template is updated: Subnetwork itself is not affected.",
 			ToSDPItemType:    ComputeSubnetwork,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"properties.networkInterfaces.networkIP": {
 			Description:      "IP address are always tightly coupled with the Compute Instance Template.",
@@ -305,19 +306,19 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"properties.disks.initializeParams.sourceImage": {
 			Description:      "If the Compute Image is updated: Instances created from this template may not boot correctly. If the template is updated: Image is not affected.",
 			ToSDPItemType:    ComputeImage,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"properties.disks.initializeParams.diskType": {
 			Description:      "If the Compute Disk Type is updated: New instances may fail to provision disks properly. If the template is updated: Disk type is not affected.",
 			ToSDPItemType:    ComputeDiskType,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"properties.disks.initializeParams.sourceImageEncryptionKey.kmsKeyName":           CryptoKeyImpactInOnly,
 		"properties.disks.initializeParams.sourceImageEncryptionKey.kmsKeyServiceAccount": IAMServiceAccountImpactInOnly,
 		"properties.disks.initializeParams.sourceSnapshot": {
 			Description:      "If the Compute Snapshot is updated: The template may reference an invalid or incompatible snapshot. If the template is updated: no impact on snapshots.",
 			ToSDPItemType:    ComputeSnapshot,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"properties.disks.initializeParams.sourceSnapshotEncryptionKey.kmsKeyName":           CryptoKeyImpactInOnly,
 		"properties.disks.initializeParams.sourceSnapshotEncryptionKey.kmsKeyServiceAccount": IAMServiceAccountImpactInOnly,
@@ -325,44 +326,44 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"properties.disks.initializeParams.storagePool": {
 			Description:      "If the Compute Storage Pool is deleted: Disk provisioning for new instances may fail. If the template is updated: Pool is not affected.",
 			ToSDPItemType:    ComputeStoragePool,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"properties.disks.diskEncryptionKey.kmsKeyName":           CryptoKeyImpactInOnly,
 		"properties.disks.diskEncryptionKey.kmsKeyServiceAccount": IAMServiceAccountImpactInOnly,
 		"properties.guestAccelerators.acceleratorType": {
 			Description:      "If the Compute Accelerator Type is updated: New instances may misconfigure or fail hardware initialization. If the template is updated: Accelerator is not affected.",
 			ToSDPItemType:    ComputeAcceleratorType,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"sourceInstance": {
 			Description:      "If the Compute Instance is updated: The template may reference an invalid or incompatible instance. If the template is deleted: The instance remains unaffected.",
 			ToSDPItemType:    ComputeInstance,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"sourceInstanceParams.diskConfigs.customImage": {
 			Description:      "If the Compute Image is updated: Instances created from this template may not boot correctly. If the template is updated: Image is not affected.",
 			ToSDPItemType:    ComputeImage,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"properties.networkInterfaces.networkAttachment": {
 			Description:      "If the Compute Network Attachment is updated: Instances using the template may lose access to the network services. If the template is deleted: Attachment is not affected.",
 			ToSDPItemType:    ComputeNetworkAttachment,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"properties.disks.initializeParams.licenses": {
 			Description:      "If the Compute License is updated: New instances may violate license agreements or lose functionality. If the template is updated: License remains unaffected.",
 			ToSDPItemType:    ComputeLicense,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"properties.disks.licenses": {
 			Description:      "If the Compute License is updated: New instances may violate license agreements or lose functionality. If the template is updated: License remains unaffected.",
 			ToSDPItemType:    ComputeLicense,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"properties.reservationAffinity.values": {
 			Description:      "If the Compute Reservation is updated: new instances created using it may fail to launch. If the template is updated: no impacts on reservation.",
 			ToSDPItemType:    ComputeReservation,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"properties.scheduling.nodeAffinities.values": {
 			Description:      "If the Compute Node Group is updated: Placement policies may break for new VMs. If the template is updated: Node affinity rules may change. Changing the affinity might cause new VMs to stop using that Node Group",
@@ -385,7 +386,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"firewallPolicy": {
 			Description:      "If the Compute Firewall Policy is updated: The network's security posture may change. If the network is updated: The firewall policy remains unaffected, but its application to the network may change.",
 			ToSDPItemType:    ComputeFirewallPolicy,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 	},
 	ComputeProject: {
@@ -425,7 +426,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"nextHopInstance": {
 			Description:      "If the Compute Instance is updated: Routes using it as a next hop may break or change behavior. If the route is deleted: The instance remains unaffected but traffic that was previously using that route will be impacted.",
 			ToSDPItemType:    ComputeInstance,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"nextHopVpnTunnel": {
 			Description:      "If the VPN Tunnel is updated: The route may no longer forward traffic properly. If the route is updated: The VPN tunnel remains unaffected but traffic routed through it may be affected.",
@@ -435,7 +436,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"nextHopGateway": {
 			Description:      "If the Compute Gateway is updated: The route may no longer forward traffic properly. If the route is updated: The gateway remains unaffected but traffic routed through it may be affected.",
 			ToSDPItemType:    ComputeGateway,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"nextHopHub": {
 			// https://cloud.google.com/network-connectivity/docs/reference/networkconnectivity/rest/v1/projects.locations.global.hubs/get
@@ -457,13 +458,13 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"gitRemoteSettings.authenticationTokenSecretVersion": {
 			ToSDPItemType:    SecretManagerSecret,
 			Description:      "If the Secret Manager Secret is deleted or updated: The Dataform Repository may fail to authenticate with the Git remote. If the Dataform Repository is updated: The secret remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// The name of the Secret Manager secret version to use as a ssh private key for Git operations. Must be in the format projects/*/secrets/*/versions/*.
 		"gitRemoteSettings.sshAuthenticationConfig.userPrivateKeySecretVersion": {
 			ToSDPItemType:    SecretManagerSecret,
 			Description:      "If the Secret Manager Secret is deleted or updated: The Dataform Repository may fail to authenticate with the Git remote. If the Dataform Repository is updated: The secret remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// The service account to run workflow invocations under.
 		"serviceAccount": IAMServiceAccountImpactInOnly,
@@ -501,7 +502,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"serviceDirectoryConfig.namespace.namespaceUrl": {
 			ToSDPItemType:    ServiceDirectoryNamespace,
 			Description:      "If the Service Directory Namespace is deleted or updated: The DNS Managed Zone may lose its association or fail to resolve names. If the DNS Managed Zone is updated: The namespace remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 	},
 	EssentialContactsContact: {
@@ -511,7 +512,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"name": {
 			ToSDPItemType:    LoggingBucket,
 			Description:      "If the Logging Bucket is deleted or updated: The Logging Link may lose its association or fail to function as expected. If the Logging Link is updated: The bucket remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"bigqueryDataset.datasetId": {
 			Description:      "They are tightly coupled with the Logging Link.",
@@ -537,19 +538,19 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"topic": {
 			ToSDPItemType:    PubSubTopic,
 			Description:      "If the Pub/Sub Topic is deleted or updated: The Subscription may fail to receive messages. If the Subscription is updated: The topic remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"bigqueryConfig.table": {
 			// The name of the table to which to write data, of the form {projectId}.{datasetId}.{tableId}
 			// We have a manual adapter for this.
 			ToSDPItemType:    BigQueryTable,
 			Description:      "If the BigQuery Table is deleted or updated: The Subscription may fail to write data. If the Subscription is updated: The table remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"cloudStorageConfig.bucket": {
 			ToSDPItemType:    StorageBucket,
 			Description:      "If the Cloud Storage Bucket is deleted or updated: The Subscription may fail to write data. If the Subscription is updated: The bucket remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"analyticsHubSubscriptionInfo.subscription": {
 			ToSDPItemType:    PubSubSubscription,
@@ -563,62 +564,62 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"ingestionDataSourceSettings.cloudStorage.bucket": {
 			ToSDPItemType:    StorageBucket,
 			Description:      "If the Cloud Storage Bucket is deleted or updated: The Pub/Sub Topic may fail to receive data. If the Topic is updated: The bucket remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"ingestionDataSourceSettings.awsKinesis.streamAr": {
 			ToSDPItemType:    aws.KinesisStream,
 			Description:      "The Kinesis stream ARN to ingest data from.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"ingestionDataSourceSettings.awsKinesis.consumerArn": {
 			ToSDPItemType:    aws.KinesisStreamConsumer,
 			Description:      "The Kinesis consumer ARN to used for ingestion in Enhanced Fan-Out mode. The consumer must be already created and ready to be used.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"ingestionDataSourceSettings.awsKinesis.awsRoleArn": {
 			ToSDPItemType:    aws.IAMRole,
 			Description:      "AWS role to be used for Federated Identity authentication with Kinesis.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 	},
 	RunRevision: {
 		"service": {
 			ToSDPItemType:    RunService,
 			Description:      "If the Run Service is deleted or updated: The Revision may lose its association or fail to run. If the Revision is updated: The service remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"vpcAccess.networkInterfaces.network": {
 			ToSDPItemType:    ComputeNetwork,
 			Description:      "If the Compute Network is deleted or updated: The Revision may lose connectivity or fail to run as expected. If the Revision is updated: The network remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"vpcAccess.networkInterfaces.subnetwork": {
 			ToSDPItemType:    ComputeSubnetwork,
 			Description:      "If the Compute Subnetwork is deleted or updated: The Revision may lose connectivity or fail to run as expected. If the Revision is updated: The subnetwork remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"vpcAccess.connector": {
 			ToSDPItemType:    VPCAccessConnector,
 			Description:      "If the VPC Access Connector is deleted or updated: The Revision may lose connectivity or fail to run as expected. If the Revision is updated: The connector remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"serviceAccount": IAMServiceAccountImpactInOnly,
 		"containers.image": {
 			ToSDPItemType:    ArtifactRegistryDockerImage,
 			Description:      "If the Artifact Registry Docker Image is deleted or updated: The Revision may fail to pull the image. If the Revision is updated: The Docker image remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"volumes.cloudSqlInstance.instances": {
 			// Format: {project}:{location}:{instance}
 			// We need a manual adapter link for this.
 			ToSDPItemType:    SQLAdminInstance,
 			Description:      "If the Cloud SQL Instance is deleted or updated: The Revision may fail to access the database. If the Revision is updated: The instance remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"volumes.gcs.bucket": {
 			ToSDPItemType:    StorageBucket,
 			Description:      "If the Cloud Storage Bucket is deleted or updated: The Revision may fail to access the GCS volume. If the Revision is updated: The bucket remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"encryptionKey": CryptoKeyImpactInOnly,
 	},
@@ -626,7 +627,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"name": {
 			ToSDPItemType:    ServiceDirectoryService,
 			Description:      "If the Service Directory Service is deleted or updated: The Endpoint may lose its association or fail to resolve names. If the Endpoint is updated: The service remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		// An IPv4 or IPv6 address.
 		"address": IPImpactBothWays,
@@ -644,8 +645,18 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 			// To use Google Cloud Pub/Sub as the channel, this must be the name of a Cloud Pub/Sub topic
 			ToSDPItemType:    PubSubTopic,
 			Description:      "If the Pub/Sub Topic is deleted or updated: The Service Usage Service may fail to send notifications. If the Service Usage Service is updated: The topic remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
+	},
+	SpannerBackup: {
+		// This is a backlink to instance.
+		// Framework will extract the instance name and create the linked item query with GET
+		"name": {
+			Description:      "If the Spanner Instance is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The instance remains unaffected.",
+			ToSDPItemType:    SpannerInstance,
+			BlastPropagation: ImpactInOnly,
+		},
+		"encryptionInfo.kmsKeyVersion": CryptoKeyVersionImpactInOnly,
 	},
 	SpannerDatabase: {
 		// The Cloud KMS key used to encrypt the database.
@@ -654,9 +665,16 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"restoreInfo.backupInfo.backup": {
 			Description:      "If the Spanner Backup is deleted or updated: The Database may become invalid or inaccessible. If the Database is updated: The backup remains unaffected.",
 			ToSDPItemType:    SpannerBackup,
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 		"encryptionInfo.kmsKeyVersion": CryptoKeyVersionImpactInOnly,
+		// This is a backlink to instance.
+		// Framework will extract the instance name and create the linked item query with GET
+		"name": {
+			Description:      "If the Spanner Instance is deleted or updated: The Database may become invalid or inaccessible. If the Database is updated: The instance remains unaffected.",
+			ToSDPItemType:    SpannerInstance,
+			BlastPropagation: ImpactInOnly,
+		},
 	},
 	SQLAdminBackup: {
 		"instance": {
@@ -690,7 +708,7 @@ var BlastPropagations = map[shared.ItemType]map[string]*Impact{
 		"logging.logBucket": {
 			ToSDPItemType:    LoggingBucket,
 			Description:      "If the Logging Bucket is deleted or updated: The Storage Bucket may fail to write logs. If the Storage Bucket is updated: The Logging Bucket remains unaffected.",
-			BlastPropagation: impactInOnly,
+			BlastPropagation: ImpactInOnly,
 		},
 	},
 }

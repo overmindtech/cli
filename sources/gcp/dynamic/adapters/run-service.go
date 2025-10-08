@@ -87,6 +87,17 @@ var _ = registerableAdapter{
 			Description:      "If the Cloud Run Service is deleted or updated: Traffic allocation to revisions will be lost. If revisions are updated: The service traffic configuration may need updates.",
 			BlastPropagation: &sdp.BlastPropagation{Out: true},
 		},
+		// Forward link from parent to child via SEARCH
+		// Link to all revisions in this service
+		"name": {
+			ToSDPItemType:    gcpshared.RunRevision,
+			Description:      "If the Cloud Run Service is deleted or updated: All associated Revisions may become invalid or inaccessible. If a Revision is updated: The service remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+			  In:false,
+			  Out: true,
+			},
+			IsParentToChild:  true,
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/cloud_run_v2_service",

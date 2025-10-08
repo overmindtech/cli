@@ -842,6 +842,17 @@ func TestAdapter(t *testing.T) {
 							Out: false,
 						},
 					},
+					{
+						// name field creates a backlink to the Spanner instance
+						ExpectedType:   gcpshared.SpannerInstance.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  instanceName,
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
 				}
 
 				shared.RunStaticTests(t, adapter, sdpItem, queryTests)

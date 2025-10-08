@@ -176,6 +176,17 @@ func TestBigTableAdminCluster(t *testing.T) {
 						Out: false,
 					},
 				},
+				{
+					// name field creates a backlink to the BigTable instance
+					ExpectedType:   gcpshared.BigTableAdminInstance.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  instanceName,
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

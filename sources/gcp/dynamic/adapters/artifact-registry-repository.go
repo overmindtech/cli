@@ -23,6 +23,17 @@ var artifactRegistryRepositoryAdapter = registerableAdapter{ //nolint:unused
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
+		// Forward link from parent to child via SEARCH
+		// Link to all docker images in this repository
+		"name": {
+			ToSDPItemType: gcpshared.ArtifactRegistryDockerImage,
+			Description:   "If the Artifact Registry Repository is deleted or updated: All associated Docker Images may become invalid or inaccessible. If a Docker Image is updated: The repository remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+			    In: false,
+				Out: true,
+			},
+			IsParentToChild: true,
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository#attributes-reference",

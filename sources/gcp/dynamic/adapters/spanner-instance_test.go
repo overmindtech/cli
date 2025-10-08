@@ -128,6 +128,15 @@ func TestSpannerInstance(t *testing.T) {
 						Out: false,
 					},
 				},
+				{
+					ExpectedType:   gcpshared.SpannerDatabase.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  instanceName,
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						Out: true,
+					},
+				},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

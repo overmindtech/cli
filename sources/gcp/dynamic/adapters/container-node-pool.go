@@ -36,6 +36,13 @@ var containerNodePoolAdapter = registerableAdapter{ //nolint:unused
 		// https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.locations.clusters.nodePools#NodePool.Status
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
+		// This is a backlink to cluster.
+		// Framework will extract the cluster name and create the linked item query with GET
+		"name": {
+			ToSDPItemType:    gcpshared.ContainerCluster,
+			Description:      "If the Container Cluster is deleted or updated: The Node Pool may become invalid or inaccessible. If the Node Pool is updated: The cluster remains unaffected.",
+			BlastPropagation: gcpshared.ImpactInOnly,
+		},
 		"config.bootDiskKmsKey": gcpshared.CryptoKeyImpactInOnly,
 		"config.serviceAccount": gcpshared.IAMServiceAccountImpactInOnly,
 		"config.nodeGroup": {

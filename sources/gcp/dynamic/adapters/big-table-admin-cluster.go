@@ -24,6 +24,18 @@ var bigTableAdminClusterAdapter = registerableAdapter{ //nolint:unused
 	blastPropagation: map[string]*gcpshared.Impact{
 		// Customer-managed encryption key protecting data in this cluster.
 		"encryptionConfig.kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
+		// This is a backlink to instance.
+		// Framework will extract the instance name and create the linked item query with GET
+		// NOTE: We prioritize the backlink over a forward link to BigTableAdminBackup
+		// because the backlink is more critical for understanding the cluster's dependencies.
+		"name": {
+			ToSDPItemType: gcpshared.BigTableAdminInstance,
+			Description:   "If the BigTableAdmin Instance is deleted or updated: The Cluster may become invalid or inaccessible. If the Cluster is updated: The instance remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
+		},
 	},
 	// No Terraform mapping
 }.Register()

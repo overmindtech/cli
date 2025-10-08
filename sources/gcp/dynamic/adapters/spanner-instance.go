@@ -31,6 +31,17 @@ var spannerInstanceAdapter = registerableAdapter{ //nolint:unused
 				Out: false,
 			},
 		},
+		// This is a link from parent to child via SEARCH
+		// We need to make sure that the linked item supports `SEARCH` method for the `instance` name.
+		"name": {
+			ToSDPItemType: gcpshared.SpannerDatabase,
+			Description:   "If the Spanner Instance is deleted or updated: All associated databases may become invalid or inaccessible. If a database is updated: The instance remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+			    In: false,
+				Out: true,
+			},
+			IsParentToChild: true,
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/spanner_instance",

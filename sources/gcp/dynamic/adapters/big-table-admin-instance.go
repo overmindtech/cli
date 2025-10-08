@@ -21,8 +21,19 @@ var bigTableAdminInstanceAdapter = registerableAdapter{ //nolint:unused
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// state: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances#State
 	},
-	// The Bigtable Instance does not contain any fields that would cause blast propagation.
-	blastPropagation: map[string]*gcpshared.Impact{},
+	blastPropagation: map[string]*gcpshared.Impact{
+		// Forward link from parent to child via SEARCH
+		// Link to all clusters in this instance (most fundamental infrastructure component)
+		"name": {
+			ToSDPItemType: gcpshared.BigTableAdminCluster,
+			Description:   "If the BigTableAdmin Instance is deleted or updated: All associated Clusters may become invalid or inaccessible. If a Cluster is updated: The instance remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+			    In: false,
+				Out: true,
+			},
+			IsParentToChild: true,
+		},
+	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigtable_instance",
 		Mappings: []*sdp.TerraformMapping{
