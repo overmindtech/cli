@@ -1,5 +1,9 @@
 package shared
 
+type WithPredefinedRole interface {
+	PredefinedRole() string
+}
+
 type role struct {
 	Role           string
 	Link           string

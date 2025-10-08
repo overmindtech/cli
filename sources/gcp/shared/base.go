@@ -11,8 +11,8 @@ import (
 // It adds the project ID and zone to the base struct
 // and makes them available to concrete wrapper implementations.
 type ZoneBase struct {
-	projectID string
-	zone      string
+	GCPBase
+	zone string
 
 	*shared.Base
 }
@@ -25,19 +25,16 @@ func NewZoneBase(
 	item shared.ItemType,
 ) *ZoneBase {
 	return &ZoneBase{
-		projectID: projectID,
-		zone:      zone,
+		GCPBase: GCPBase{
+			projectID: projectID,
+		},
+		zone: zone,
 		Base: shared.NewBase(
 			category,
 			item,
 			[]string{fmt.Sprintf("%s.%s", projectID, zone)},
 		),
 	}
-}
-
-// ProjectID returns the project ID
-func (m *ZoneBase) ProjectID() string {
-	return m.projectID
 }
 
 // Zone returns the zone
@@ -55,8 +52,8 @@ func (m *ZoneBase) DefaultScope() string {
 // It adds the project ID and region to the base struct
 // and makes them available to concrete wrapper implementations.
 type RegionBase struct {
-	projectID string
-	region    string
+	GCPBase
+	region string
 
 	*shared.Base
 }
@@ -69,19 +66,16 @@ func NewRegionBase(
 	item shared.ItemType,
 ) *RegionBase {
 	return &RegionBase{
-		projectID: projectID,
-		region:    region,
+		GCPBase: GCPBase{
+			projectID: projectID,
+		},
+		region: region,
 		Base: shared.NewBase(
 			category,
 			item,
 			[]string{fmt.Sprintf("%s.%s", projectID, region)},
 		),
 	}
-}
-
-// ProjectID returns the project ID
-func (m *RegionBase) ProjectID() string {
-	return m.projectID
 }
 
 // Region returns the region
@@ -99,7 +93,7 @@ func (m *RegionBase) DefaultScope() string {
 // It adds the project ID to the base struct
 // and makes them available to concrete wrapper implementations.
 type ProjectBase struct {
-	projectID string
+	GCPBase
 
 	*shared.Base
 }
@@ -111,7 +105,9 @@ func NewProjectBase(
 	item shared.ItemType,
 ) *ProjectBase {
 	return &ProjectBase{
-		projectID: projectID,
+		GCPBase: GCPBase{
+			projectID: projectID,
+		},
 		Base: shared.NewBase(
 			category,
 			item,
@@ -120,13 +116,20 @@ func NewProjectBase(
 	}
 }
 
-// ProjectID returns the project ID
-func (m *ProjectBase) ProjectID() string {
-	return m.projectID
-}
-
 // DefaultScope returns the default scope
 // Project ID is used to create the default scope.
 func (m *ProjectBase) DefaultScope() string {
 	return m.Scopes()[0]
+}
+
+type GCPBase struct {
+	projectID string
+}
+
+func (g *GCPBase) PredefinedRole() string {
+	panic("Predefined role not implemented")
+}
+
+func (g *GCPBase) ProjectID() string {
+	return g.projectID
 }

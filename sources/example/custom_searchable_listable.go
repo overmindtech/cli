@@ -173,7 +173,3 @@ func (d *customComputeInstanceWrapper) IAMPermissions() []string {
 		"compute.instances.list",
 	}
 }
-
-func (d *customComputeInstanceWrapper) PredefinedRole() string {
-	return "roles/compute.viewer"
-}
