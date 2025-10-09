@@ -126,6 +126,9 @@ const (
 	// ManagementServiceListTeamMembersProcedure is the fully-qualified name of the ManagementService's
 	// ListTeamMembers RPC.
 	ManagementServiceListTeamMembersProcedure = "/account.ManagementService/ListTeamMembers"
+	// ManagementServiceGetWelcomeScreenInformationProcedure is the fully-qualified name of the
+	// ManagementService's GetWelcomeScreenInformation RPC.
+	ManagementServiceGetWelcomeScreenInformationProcedure = "/account.ManagementService/GetWelcomeScreenInformation"
 	// ManagementServiceSetGithubInstallationIDProcedure is the fully-qualified name of the
 	// ManagementService's SetGithubInstallationID RPC.
 	ManagementServiceSetGithubInstallationIDProcedure = "/account.ManagementService/SetGithubInstallationID"
@@ -577,6 +580,8 @@ type ManagementServiceClient interface {
 	SetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error)
 	// List team members in the current user's account (excludes the active user)
 	ListTeamMembers(context.Context, *connect.Request[sdp_go.ListTeamMembersRequest]) (*connect.Response[sdp_go.ListTeamMembersResponse], error)
+	// Get welcome information for the current user
+	GetWelcomeScreenInformation(context.Context, *connect.Request[sdp_go.GetWelcomeScreenInformationRequest]) (*connect.Response[sdp_go.GetWelcomeScreenInformationResponse], error)
 	// Set github installation ID for the account
 	SetGithubInstallationID(context.Context, *connect.Request[sdp_go.SetGithubInstallationIDRequest]) (*connect.Response[sdp_go.SetGithubInstallationIDResponse], error)
 	// this will unset the github installation ID for the account, allowing the user to install the github app again
@@ -709,6 +714,12 @@ func NewManagementServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(managementServiceMethods.ByName("ListTeamMembers")),
 			connect.WithClientOptions(opts...),
 		),
+		getWelcomeScreenInformation: connect.NewClient[sdp_go.GetWelcomeScreenInformationRequest, sdp_go.GetWelcomeScreenInformationResponse](
+			httpClient,
+			baseURL+ManagementServiceGetWelcomeScreenInformationProcedure,
+			connect.WithSchema(managementServiceMethods.ByName("GetWelcomeScreenInformation")),
+			connect.WithClientOptions(opts...),
+		),
 		setGithubInstallationID: connect.NewClient[sdp_go.SetGithubInstallationIDRequest, sdp_go.SetGithubInstallationIDResponse](
 			httpClient,
 			baseURL+ManagementServiceSetGithubInstallationIDProcedure,
@@ -726,27 +737,28 @@ func NewManagementServiceClient(httpClient connect.HTTPClient, baseURL string, o
 
 // managementServiceClient implements ManagementServiceClient.
 type managementServiceClient struct {
-	getAccount                *connect.Client[sdp_go.GetAccountRequest, sdp_go.GetAccountResponse]
-	deleteAccount             *connect.Client[sdp_go.DeleteAccountRequest, sdp_go.DeleteAccountResponse]
-	listSources               *connect.Client[sdp_go.ListSourcesRequest, sdp_go.ListSourcesResponse]
-	createSource              *connect.Client[sdp_go.CreateSourceRequest, sdp_go.CreateSourceResponse]
-	getSource                 *connect.Client[sdp_go.GetSourceRequest, sdp_go.GetSourceResponse]
-	updateSource              *connect.Client[sdp_go.UpdateSourceRequest, sdp_go.UpdateSourceResponse]
-	deleteSource              *connect.Client[sdp_go.DeleteSourceRequest, sdp_go.DeleteSourceResponse]
-	listAllSourcesStatus      *connect.Client[sdp_go.ListAllSourcesStatusRequest, sdp_go.ListAllSourcesStatusResponse]
-	listActiveSourcesStatus   *connect.Client[sdp_go.ListAllSourcesStatusRequest, sdp_go.ListAllSourcesStatusResponse]
-	submitSourceHeartbeat     *connect.Client[sdp_go.SubmitSourceHeartbeatRequest, sdp_go.SubmitSourceHeartbeatResponse]
-	keepaliveSources          *connect.Client[sdp_go.KeepaliveSourcesRequest, sdp_go.KeepaliveSourcesResponse]
-	createToken               *connect.Client[sdp_go.CreateTokenRequest, sdp_go.CreateTokenResponse]
-	revlinkWarmup             *connect.Client[sdp_go.RevlinkWarmupRequest, sdp_go.RevlinkWarmupResponse]
-	getTrialEnd               *connect.Client[sdp_go.GetTrialEndRequest, sdp_go.GetTrialEndResponse]
-	listAvailableItemTypes    *connect.Client[sdp_go.ListAvailableItemTypesRequest, sdp_go.ListAvailableItemTypesResponse]
-	getSourceStatus           *connect.Client[sdp_go.GetSourceStatusRequest, sdp_go.GetSourceStatusResponse]
-	getUserOnboardingStatus   *connect.Client[sdp_go.GetUserOnboardingStatusRequest, sdp_go.GetUserOnboardingStatusResponse]
-	setUserOnboardingStatus   *connect.Client[sdp_go.SetUserOnboardingStatusRequest, sdp_go.SetUserOnboardingStatusResponse]
-	listTeamMembers           *connect.Client[sdp_go.ListTeamMembersRequest, sdp_go.ListTeamMembersResponse]
-	setGithubInstallationID   *connect.Client[sdp_go.SetGithubInstallationIDRequest, sdp_go.SetGithubInstallationIDResponse]
-	unsetGithubInstallationID *connect.Client[sdp_go.UnsetGithubInstallationIDRequest, sdp_go.UnsetGithubInstallationIDResponse]
+	getAccount                  *connect.Client[sdp_go.GetAccountRequest, sdp_go.GetAccountResponse]
+	deleteAccount               *connect.Client[sdp_go.DeleteAccountRequest, sdp_go.DeleteAccountResponse]
+	listSources                 *connect.Client[sdp_go.ListSourcesRequest, sdp_go.ListSourcesResponse]
+	createSource                *connect.Client[sdp_go.CreateSourceRequest, sdp_go.CreateSourceResponse]
+	getSource                   *connect.Client[sdp_go.GetSourceRequest, sdp_go.GetSourceResponse]
+	updateSource                *connect.Client[sdp_go.UpdateSourceRequest, sdp_go.UpdateSourceResponse]
+	deleteSource                *connect.Client[sdp_go.DeleteSourceRequest, sdp_go.DeleteSourceResponse]
+	listAllSourcesStatus        *connect.Client[sdp_go.ListAllSourcesStatusRequest, sdp_go.ListAllSourcesStatusResponse]
+	listActiveSourcesStatus     *connect.Client[sdp_go.ListAllSourcesStatusRequest, sdp_go.ListAllSourcesStatusResponse]
+	submitSourceHeartbeat       *connect.Client[sdp_go.SubmitSourceHeartbeatRequest, sdp_go.SubmitSourceHeartbeatResponse]
+	keepaliveSources            *connect.Client[sdp_go.KeepaliveSourcesRequest, sdp_go.KeepaliveSourcesResponse]
+	createToken                 *connect.Client[sdp_go.CreateTokenRequest, sdp_go.CreateTokenResponse]
+	revlinkWarmup               *connect.Client[sdp_go.RevlinkWarmupRequest, sdp_go.RevlinkWarmupResponse]
+	getTrialEnd                 *connect.Client[sdp_go.GetTrialEndRequest, sdp_go.GetTrialEndResponse]
+	listAvailableItemTypes      *connect.Client[sdp_go.ListAvailableItemTypesRequest, sdp_go.ListAvailableItemTypesResponse]
+	getSourceStatus             *connect.Client[sdp_go.GetSourceStatusRequest, sdp_go.GetSourceStatusResponse]
+	getUserOnboardingStatus     *connect.Client[sdp_go.GetUserOnboardingStatusRequest, sdp_go.GetUserOnboardingStatusResponse]
+	setUserOnboardingStatus     *connect.Client[sdp_go.SetUserOnboardingStatusRequest, sdp_go.SetUserOnboardingStatusResponse]
+	listTeamMembers             *connect.Client[sdp_go.ListTeamMembersRequest, sdp_go.ListTeamMembersResponse]
+	getWelcomeScreenInformation *connect.Client[sdp_go.GetWelcomeScreenInformationRequest, sdp_go.GetWelcomeScreenInformationResponse]
+	setGithubInstallationID     *connect.Client[sdp_go.SetGithubInstallationIDRequest, sdp_go.SetGithubInstallationIDResponse]
+	unsetGithubInstallationID   *connect.Client[sdp_go.UnsetGithubInstallationIDRequest, sdp_go.UnsetGithubInstallationIDResponse]
 }
 
 // GetAccount calls account.ManagementService.GetAccount.
@@ -844,6 +856,11 @@ func (c *managementServiceClient) ListTeamMembers(ctx context.Context, req *conn
 	return c.listTeamMembers.CallUnary(ctx, req)
 }
 
+// GetWelcomeScreenInformation calls account.ManagementService.GetWelcomeScreenInformation.
+func (c *managementServiceClient) GetWelcomeScreenInformation(ctx context.Context, req *connect.Request[sdp_go.GetWelcomeScreenInformationRequest]) (*connect.Response[sdp_go.GetWelcomeScreenInformationResponse], error) {
+	return c.getWelcomeScreenInformation.CallUnary(ctx, req)
+}
+
 // SetGithubInstallationID calls account.ManagementService.SetGithubInstallationID.
 func (c *managementServiceClient) SetGithubInstallationID(ctx context.Context, req *connect.Request[sdp_go.SetGithubInstallationIDRequest]) (*connect.Response[sdp_go.SetGithubInstallationIDResponse], error) {
 	return c.setGithubInstallationID.CallUnary(ctx, req)
@@ -907,6 +924,8 @@ type ManagementServiceHandler interface {
 	SetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error)
 	// List team members in the current user's account (excludes the active user)
 	ListTeamMembers(context.Context, *connect.Request[sdp_go.ListTeamMembersRequest]) (*connect.Response[sdp_go.ListTeamMembersResponse], error)
+	// Get welcome information for the current user
+	GetWelcomeScreenInformation(context.Context, *connect.Request[sdp_go.GetWelcomeScreenInformationRequest]) (*connect.Response[sdp_go.GetWelcomeScreenInformationResponse], error)
 	// Set github installation ID for the account
 	SetGithubInstallationID(context.Context, *connect.Request[sdp_go.SetGithubInstallationIDRequest]) (*connect.Response[sdp_go.SetGithubInstallationIDResponse], error)
 	// this will unset the github installation ID for the account, allowing the user to install the github app again
@@ -1035,6 +1054,12 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 		connect.WithSchema(managementServiceMethods.ByName("ListTeamMembers")),
 		connect.WithHandlerOptions(opts...),
 	)
+	managementServiceGetWelcomeScreenInformationHandler := connect.NewUnaryHandler(
+		ManagementServiceGetWelcomeScreenInformationProcedure,
+		svc.GetWelcomeScreenInformation,
+		connect.WithSchema(managementServiceMethods.ByName("GetWelcomeScreenInformation")),
+		connect.WithHandlerOptions(opts...),
+	)
 	managementServiceSetGithubInstallationIDHandler := connect.NewUnaryHandler(
 		ManagementServiceSetGithubInstallationIDProcedure,
 		svc.SetGithubInstallationID,
@@ -1087,6 +1112,8 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 			managementServiceSetUserOnboardingStatusHandler.ServeHTTP(w, r)
 		case ManagementServiceListTeamMembersProcedure:
 			managementServiceListTeamMembersHandler.ServeHTTP(w, r)
+		case ManagementServiceGetWelcomeScreenInformationProcedure:
+			managementServiceGetWelcomeScreenInformationHandler.ServeHTTP(w, r)
 		case ManagementServiceSetGithubInstallationIDProcedure:
 			managementServiceSetGithubInstallationIDHandler.ServeHTTP(w, r)
 		case ManagementServiceUnsetGithubInstallationIDProcedure:
@@ -1174,6 +1201,10 @@ func (UnimplementedManagementServiceHandler) SetUserOnboardingStatus(context.Con
 
 func (UnimplementedManagementServiceHandler) ListTeamMembers(context.Context, *connect.Request[sdp_go.ListTeamMembersRequest]) (*connect.Response[sdp_go.ListTeamMembersResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.ListTeamMembers is not implemented"))
+}
+
+func (UnimplementedManagementServiceHandler) GetWelcomeScreenInformation(context.Context, *connect.Request[sdp_go.GetWelcomeScreenInformationRequest]) (*connect.Response[sdp_go.GetWelcomeScreenInformationResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.GetWelcomeScreenInformation is not implemented"))
 }
 
 func (UnimplementedManagementServiceHandler) SetGithubInstallationID(context.Context, *connect.Request[sdp_go.SetGithubInstallationIDRequest]) (*connect.Response[sdp_go.SetGithubInstallationIDResponse], error) {
