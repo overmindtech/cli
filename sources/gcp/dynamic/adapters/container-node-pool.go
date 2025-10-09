@@ -13,7 +13,7 @@ import (
 //   - LIST (per-cluster): https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.locations.clusters.nodePools/list
 //
 // Scope: Project-level (uses locations path parameter; unique attributes include location+cluster+nodePool).
-var containerNodePoolAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.ContainerNodePool,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,

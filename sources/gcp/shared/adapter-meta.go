@@ -34,6 +34,10 @@ type AdapterMeta struct {
 	IAMPermissions      []string // List of IAM permissions required to access this resource.
 	PredefinedRole      string   // Predefined role required to access this resource.
 	NameSelector        string   // By default, it is `name`, but can be overridden for outlier cases
+	// By default, we use the last item of the UniqueAttributeKeys.
+	// However, there is an exception: https://cloud.google.com/dataproc/docs/reference/rest/v1/ListAutoscalingPoliciesResponse
+	// Expected: `autoscalingPolicies` by convention, but the API returns `policies`
+	ListResponseSelector string
 }
 
 // We have group of functions that are similar in nature, however they cannot simplified into a generic function because

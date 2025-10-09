@@ -10,7 +10,7 @@ import (
 // API List: https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.autoscalingPolicies/list
 // GET  https://dataproc.googleapis.com/v1/projects/{project}/regions/{region}/autoscalingPolicies/{autoscalingPolicyId}
 // LIST https://dataproc.googleapis.com/v1/projects/{project}/regions/{region}/autoscalingPolicies
-var dataprocAutoScalingPolicyAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.DataprocAutoscalingPolicy,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
@@ -21,7 +21,8 @@ var dataprocAutoScalingPolicyAdapter = registerableAdapter{ //nolint:unused
 		ListEndpointFunc: gcpshared.RegionLevelListFunc(
 			"https://dataproc.googleapis.com/v1/projects/%s/regions/%s/autoscalingPolicies",
 		),
-		UniqueAttributeKeys: []string{"autoscalingPolicies"},
+		UniqueAttributeKeys:  []string{"autoscalingPolicies"},
+		ListResponseSelector: "policies",
 		IAMPermissions: []string{
 			"dataproc.autoscalingPolicies.get",
 			"dataproc.autoscalingPolicies.list",

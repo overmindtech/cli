@@ -66,7 +66,7 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 
 	impact, ok := impacts[key]
 	if !ok {
-		if strings.Contains(toItemGCPResourceName, "/") {
+		if strings.Contains(toItemGCPResourceName, "/") && key != "name" {
 			// There is a high chance that the item type is not recognized, so we log a warning.
 			log.WithContext(ctx).WithFields(lf).Warnf("possible missing link")
 		}

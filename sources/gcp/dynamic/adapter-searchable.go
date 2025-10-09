@@ -24,19 +24,20 @@ type SearchableAdapter struct {
 // NewSearchableAdapter creates a new GCP dynamic adapter.
 func NewSearchableAdapter(searchEndpointFunc gcpshared.EndpointFunc, config *AdapterConfig, customSearchMethodDesc string) (discovery.SearchableAdapter, error) {
 	a := Adapter{
-		projectID:           config.ProjectID,
-		scope:               config.Scope,
-		httpCli:             config.HTTPClient,
-		cache:               sdpcache.NewCache(),
-		getURLFunc:          config.GetURLFunc,
-		sdpAssetType:        config.SDPAssetType,
-		sdpAdapterCategory:  config.SDPAdapterCategory,
-		terraformMappings:   config.TerraformMappings,
-		linker:              config.Linker,
-		potentialLinks:      potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
-		uniqueAttributeKeys: config.UniqueAttributeKeys,
-		iamPermissions:      config.IAMPermissions,
-		nameSelector:        config.NameSelector,
+		projectID:            config.ProjectID,
+		scope:                config.Scope,
+		httpCli:              config.HTTPClient,
+		cache:                sdpcache.NewCache(),
+		getURLFunc:           config.GetURLFunc,
+		sdpAssetType:         config.SDPAssetType,
+		sdpAdapterCategory:   config.SDPAdapterCategory,
+		terraformMappings:    config.TerraformMappings,
+		linker:               config.Linker,
+		potentialLinks:       potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
+		uniqueAttributeKeys:  config.UniqueAttributeKeys,
+		iamPermissions:       config.IAMPermissions,
+		nameSelector:         config.NameSelector,
+		listResponseSelector: config.ListResponseSelector,
 	}
 
 	if a.httpCli == nil {

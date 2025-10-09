@@ -37,7 +37,7 @@ var spannerInstanceAdapter = registerableAdapter{ //nolint:unused
 			ToSDPItemType: gcpshared.SpannerDatabase,
 			Description:   "If the Spanner Instance is deleted or updated: All associated databases may become invalid or inaccessible. If a database is updated: The instance remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
-			    In: false,
+				In:  false,
 				Out: true,
 			},
 			IsParentToChild: true,

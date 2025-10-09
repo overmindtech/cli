@@ -9,7 +9,7 @@ import (
 // Reference: https://cloud.google.com/compute/docs/reference/rest/v1/targetHttpProxies/get
 // GET:  https://compute.googleapis.com/compute/v1/projects/{project}/global/targetHttpProxies/{targetHttpProxy}
 // LIST: https://compute.googleapis.com/compute/v1/projects/{project}/global/targetHttpProxies
-var computeTargetHttpProxyAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeTargetHttpProxy,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,

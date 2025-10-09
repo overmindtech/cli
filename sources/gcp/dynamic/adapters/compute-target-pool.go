@@ -11,7 +11,7 @@ import (
 // Reference: https://cloud.google.com/compute/docs/reference/rest/v1/targetPools/get
 // GET:  https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/targetPools/{targetPool}
 // LIST: https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/targetPools
-var computeTargetPoolAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeTargetPool,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,

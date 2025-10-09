@@ -5,7 +5,7 @@ import (
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
-var bigTableAdminInstanceAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.BigTableAdminInstance,
 	meta: gcpshared.AdapterMeta{
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances/get
@@ -28,7 +28,7 @@ var bigTableAdminInstanceAdapter = registerableAdapter{ //nolint:unused
 			ToSDPItemType: gcpshared.BigTableAdminCluster,
 			Description:   "If the BigTableAdmin Instance is deleted or updated: All associated Clusters may become invalid or inaccessible. If a Cluster is updated: The instance remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
-			    In: false,
+				In:  false,
 				Out: true,
 			},
 			IsParentToChild: true,

@@ -12,7 +12,7 @@ import (
 // GCP Ref (Schema): https://cloud.google.com/monitoring/api/ref_v3/rest/v3/projects.notificationChannels#NotificationChannel
 // GET  https://monitoring.googleapis.com/v3/projects/{project}/notificationChannels/{notificationChannel}
 // LIST https://monitoring.googleapis.com/v3/projects/{project}/notificationChannels
-var monitoringNotificationChannelAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.MonitoringNotificationChannel,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,

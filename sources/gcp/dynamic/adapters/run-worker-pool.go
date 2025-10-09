@@ -9,7 +9,7 @@ import (
 // Reference: https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.workerPools/get
 // GET:  https://run.googleapis.com/v2/projects/{project}/locations/{location}/workerPools/{workerPool}
 // LIST: https://run.googleapis.com/v2/projects/{project}/locations/{location}/workerPools
-var runWorkerPoolAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.RunWorkerPool,
 	meta: gcpshared.AdapterMeta{
 		InDevelopment:      true,

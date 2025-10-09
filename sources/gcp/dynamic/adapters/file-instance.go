@@ -38,7 +38,6 @@ var _ = registerableAdapter{
 		"networks.network":     gcpshared.ComputeNetworkImpactInOnly,
 		"networks.ipAddresses": gcpshared.IPImpactBothWays,
 		"kmsKeyName":           gcpshared.CryptoKeyImpactInOnly,
-
 		"fileShares.sourceBackup": {
 			ToSDPItemType:    gcpshared.FileBackup,
 			Description:      "If the referenced Backup is deleted or updated: Restores or incremental backups may fail. If the File instance is updated: The backup remains unaffected.",

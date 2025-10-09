@@ -29,19 +29,20 @@ type SearchableListableAdapter struct {
 // NewSearchableListableAdapter creates a new GCP dynamic adapter.
 func NewSearchableListableAdapter(searchURLFunc gcpshared.EndpointFunc, listEndpoint string, config *AdapterConfig, customSearchMethodDesc string) (SearchableListableDiscoveryAdapter, error) {
 	a := Adapter{
-		projectID:           config.ProjectID,
-		scope:               config.Scope,
-		httpCli:             config.HTTPClient,
-		cache:               sdpcache.NewCache(),
-		getURLFunc:          config.GetURLFunc,
-		sdpAssetType:        config.SDPAssetType,
-		sdpAdapterCategory:  config.SDPAdapterCategory,
-		terraformMappings:   config.TerraformMappings,
-		linker:              config.Linker,
-		potentialLinks:      potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
-		uniqueAttributeKeys: config.UniqueAttributeKeys,
-		iamPermissions:      config.IAMPermissions,
-		nameSelector:        config.NameSelector,
+		projectID:            config.ProjectID,
+		scope:                config.Scope,
+		httpCli:              config.HTTPClient,
+		cache:                sdpcache.NewCache(),
+		getURLFunc:           config.GetURLFunc,
+		sdpAssetType:         config.SDPAssetType,
+		sdpAdapterCategory:   config.SDPAdapterCategory,
+		terraformMappings:    config.TerraformMappings,
+		linker:               config.Linker,
+		potentialLinks:       potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
+		uniqueAttributeKeys:  config.UniqueAttributeKeys,
+		iamPermissions:       config.IAMPermissions,
+		nameSelector:         config.NameSelector,
+		listResponseSelector: config.ListResponseSelector,
 	}
 
 	if a.httpCli == nil {

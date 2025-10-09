@@ -127,17 +127,18 @@ func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli 
 	}
 
 	cfg := &AdapterConfig{
-		ProjectID:           opts[0],
-		Scope:               scope,
-		GetURLFunc:          getEndpointBaseURL,
-		SDPAssetType:        sdpItemType,
-		SDPAdapterCategory:  meta.SDPAdapterCategory,
-		TerraformMappings:   gcpshared.SDPAssetTypeToTerraformMappings[sdpItemType].Mappings,
-		Linker:              linker,
-		HTTPClient:          httpCli,
-		UniqueAttributeKeys: meta.UniqueAttributeKeys,
-		IAMPermissions:      meta.IAMPermissions,
-		NameSelector:        meta.NameSelector,
+		ProjectID:            opts[0],
+		Scope:                scope,
+		GetURLFunc:           getEndpointBaseURL,
+		SDPAssetType:         sdpItemType,
+		SDPAdapterCategory:   meta.SDPAdapterCategory,
+		TerraformMappings:    gcpshared.SDPAssetTypeToTerraformMappings[sdpItemType].Mappings,
+		Linker:               linker,
+		HTTPClient:           httpCli,
+		UniqueAttributeKeys:  meta.UniqueAttributeKeys,
+		IAMPermissions:       meta.IAMPermissions,
+		NameSelector:         meta.NameSelector,
+		ListResponseSelector: meta.ListResponseSelector,
 	}
 
 	// Add IAM permissions to the global map

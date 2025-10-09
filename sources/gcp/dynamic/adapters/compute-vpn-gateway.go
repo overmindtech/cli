@@ -9,7 +9,7 @@ import (
 // Reference: https://cloud.google.com/compute/docs/reference/rest/v1/vpnGateways/get
 // GET:  https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/vpnGateways/{vpnGateway}
 // LIST: https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/vpnGateways
-var computeVpnGatewayAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeVpnGateway,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,

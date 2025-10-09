@@ -9,7 +9,7 @@ import (
 // Reference: https://cloud.google.com/compute/docs/reference/rest/v1/vpnTunnels/get
 // GET:  https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/vpnTunnels/{vpnTunnel}
 // LIST: https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/vpnTunnels
-var computeVpnTunnelAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeVpnTunnel,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,

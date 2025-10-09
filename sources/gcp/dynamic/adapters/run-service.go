@@ -72,7 +72,7 @@ var _ = registerableAdapter{
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"template.encryptionKey": gcpshared.CryptoKeyImpactInOnly,
-		"latestCreatedRevisionName": {
+		"latestCreatedRevision": {
 			ToSDPItemType:    gcpshared.RunRevision,
 			Description:      "If the Cloud Run Service is deleted or updated: Associated revisions may become orphaned or be deleted. If revisions are updated: The service status may reflect the changes.",
 			BlastPropagation: &sdp.BlastPropagation{Out: true},
@@ -90,13 +90,13 @@ var _ = registerableAdapter{
 		// Forward link from parent to child via SEARCH
 		// Link to all revisions in this service
 		"name": {
-			ToSDPItemType:    gcpshared.RunRevision,
-			Description:      "If the Cloud Run Service is deleted or updated: All associated Revisions may become invalid or inaccessible. If a Revision is updated: The service remains unaffected.",
+			ToSDPItemType: gcpshared.RunRevision,
+			Description:   "If the Cloud Run Service is deleted or updated: All associated Revisions may become invalid or inaccessible. If a Revision is updated: The service remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
-			  In:false,
-			  Out: true,
+				In:  false,
+				Out: true,
 			},
-			IsParentToChild:  true,
+			IsParentToChild: true,
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

@@ -13,7 +13,7 @@ import (
 // LIST https://monitoring.googleapis.com/v3/projects/{project}/alertPolicies
 // NOTE: Search is only implemented to support Terraform mapping where the full name
 // (projects/{project}/alertPolicies/{policy_id}) may be provided.
-var monitoringAlertPolicyAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.MonitoringAlertPolicy,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,

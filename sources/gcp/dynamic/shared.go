@@ -309,6 +309,10 @@ func aggregateSDPItems(ctx context.Context, a Adapter, url string) ([]*sdp.Item,
 	var items []*sdp.Item
 	itemsSelector := a.uniqueAttributeKeys[len(a.uniqueAttributeKeys)-1] // Use the last key as the item selector
 
+	if a.listResponseSelector != "" {
+		itemsSelector = a.listResponseSelector
+	}
+
 	out := make(chan map[string]interface{})
 	p := pool.New().WithErrors().WithContext(ctx)
 	p.Go(func(ctx context.Context) error {

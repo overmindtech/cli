@@ -17,34 +17,36 @@ import (
 
 // AdapterConfig holds the configuration for a GCP dynamic adapter.
 type AdapterConfig struct {
-	ProjectID           string
-	Scope               string
-	GetURLFunc          gcpshared.EndpointFunc
-	SDPAssetType        shared.ItemType
-	SDPAdapterCategory  sdp.AdapterCategory
-	TerraformMappings   []*sdp.TerraformMapping
-	Linker              *gcpshared.Linker
-	HTTPClient          *http.Client
-	UniqueAttributeKeys []string
-	IAMPermissions      []string // List of IAM permissions required by the adapter
-	NameSelector        string   // By default, it is `name`, but can be overridden for outlier cases
+	ProjectID            string
+	Scope                string
+	GetURLFunc           gcpshared.EndpointFunc
+	SDPAssetType         shared.ItemType
+	SDPAdapterCategory   sdp.AdapterCategory
+	TerraformMappings    []*sdp.TerraformMapping
+	Linker               *gcpshared.Linker
+	HTTPClient           *http.Client
+	UniqueAttributeKeys  []string
+	IAMPermissions       []string // List of IAM permissions required by the adapter
+	NameSelector         string   // By default, it is `name`, but can be overridden for outlier cases
+	ListResponseSelector string
 }
 
 // Adapter implements discovery.ListableAdapter for GCP dynamic adapters.
 type Adapter struct {
-	projectID           string
-	httpCli             *http.Client
-	cache               *sdpcache.Cache
-	getURLFunc          gcpshared.EndpointFunc
-	scope               string
-	sdpAssetType        shared.ItemType
-	sdpAdapterCategory  sdp.AdapterCategory
-	terraformMappings   []*sdp.TerraformMapping
-	potentialLinks      []string
-	linker              *gcpshared.Linker
-	uniqueAttributeKeys []string
-	iamPermissions      []string
-	nameSelector        string // By default, it is `name`, but can be overridden for outlier cases
+	projectID            string
+	httpCli              *http.Client
+	cache                *sdpcache.Cache
+	getURLFunc           gcpshared.EndpointFunc
+	scope                string
+	sdpAssetType         shared.ItemType
+	sdpAdapterCategory   sdp.AdapterCategory
+	terraformMappings    []*sdp.TerraformMapping
+	potentialLinks       []string
+	linker               *gcpshared.Linker
+	uniqueAttributeKeys  []string
+	iamPermissions       []string
+	nameSelector         string // By default, it is `name`, but can be overridden for outlier cases
+	listResponseSelector string
 }
 
 // NewAdapter creates a new GCP dynamic adapter.

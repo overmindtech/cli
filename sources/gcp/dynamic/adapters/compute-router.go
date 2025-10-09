@@ -7,7 +7,7 @@ import (
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
-var computeRouterAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeRouter,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
@@ -42,15 +42,15 @@ var computeRouterAdapter = registerableAdapter{ //nolint:unused
 			},
 		},
 		"interfaces.privateIpAddress":     gcpshared.IPImpactBothWays,
-		"interfaces.subnetwork":           gcpshared.ComputeNetworkImpactInOnly,
+		"interfaces.subnetwork":           gcpshared.ComputeSubnetworkImpactInOnly,
 		"bgpPeers.peerIpAddress":          gcpshared.IPImpactBothWays,
 		"bgpPeers.ipAddress":              gcpshared.IPImpactBothWays,
 		"bgpPeers.ipv4NexthopAddress":     gcpshared.IPImpactBothWays,
 		"bgpPeers.peerIpv4NexthopAddress": gcpshared.IPImpactBothWays,
 		"nats.natIps":                     gcpshared.IPImpactBothWays,
 		"nats.drainNatIps":                gcpshared.IPImpactBothWays,
-		"nats.subnetworks.name":           gcpshared.ComputeNetworkImpactInOnly,
-		"nats.nat64Subnetworks.name":      gcpshared.ComputeNetworkImpactInOnly,
+		"nats.subnetworks.name":           gcpshared.ComputeSubnetworkImpactInOnly,
+		"nats.nat64Subnetworks.name":      gcpshared.ComputeSubnetworkImpactInOnly,
 		"interfaces.linkedVpnTunnel": {
 			ToSDPItemType: gcpshared.ComputeVpnTunnel,
 			Description:   "They are tightly coupled.",

@@ -33,11 +33,11 @@ var _ = registerableAdapter{
 		PredefinedRole: "roles/container.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
-		"network":                  gcpshared.ComputeNetworkImpactInOnly,
-		"subnetwork":               gcpshared.ComputeNetworkImpactInOnly,
-		"nodePools.serviceAccount": gcpshared.IAMServiceAccountImpactInOnly,
-		"nodePools.bootDiskKmsKey": gcpshared.CryptoKeyImpactInOnly,
-		"nodePools.nodeGroup": {
+		"network":                         gcpshared.ComputeNetworkImpactInOnly,
+		"subnetwork":                      gcpshared.ComputeSubnetworkImpactInOnly,
+		"nodePools.config.serviceAccount": gcpshared.IAMServiceAccountImpactInOnly,
+		"nodePools.config.bootDiskKmsKey": gcpshared.CryptoKeyImpactInOnly,
+		"nodePools.config.nodeGroup": {
 			ToSDPItemType:    gcpshared.ComputeNodeGroup,
 			Description:      "If the referenced Node Group is deleted or updated: Node pools backed by it may fail to create or manage nodes. Updates to the node pool will not affect the node group.",
 			BlastPropagation: &sdp.BlastPropagation{In: true},
@@ -47,20 +47,25 @@ var _ = registerableAdapter{
 			Description:      "If the referenced Pub/Sub topic is deleted or updated: Notifications may fail to be sent. Updates to the cluster will not affect the topic.",
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
-		"userManagedKeysConfig.serviceAccountSigningKeys":      gcpshared.CryptoKeyVersionImpactInOnly,
+		// The Cloud KMS cryptoKeyVersions to use for signing service account JWTs issued by this cluster.
+		// Format: projects/{project}/locations/{location}/keyRings/{keyring}/cryptoKeys/{cryptoKey}/cryptoKeyVersions/{cryptoKeyVersion}
+		"userManagedKeysConfig.serviceAccountSigningKeys": gcpshared.CryptoKeyVersionImpactInOnly,
+		// The Cloud KMS cryptoKeyVersions to use for verifying service account JWTs issued by this cluster.
 		"userManagedKeysConfig.serviceAccountVerificationKeys": gcpshared.CryptoKeyVersionImpactInOnly,
-		"userManagedKeysConfig.controlPlaneDiskEncryptionKey":  gcpshared.CryptoKeyImpactInOnly,
-		"userManagedKeysConfig.gkeopsEtcdBackupEncryptionKey":  gcpshared.CryptoKeyImpactInOnly,
+		// The Cloud KMS cryptoKey to use for Confidential Hyperdisk on the control plane nodes.
+		"userManagedKeysConfig.controlPlaneDiskEncryptionKey": gcpshared.CryptoKeyImpactInOnly,
+		// Resource path of the Cloud KMS cryptoKey to use for encryption of internal etcd backups.
+		"userManagedKeysConfig.gkeopsEtcdBackupEncryptionKey": gcpshared.CryptoKeyImpactInOnly,
 		// Forward link from parent to child via SEARCH
 		// Link to all node pools in this cluster
 		"name": {
-			ToSDPItemType:    gcpshared.ContainerNodePool,
-			Description:      "If the Container Cluster is deleted or updated: All associated Node Pools may become invalid or inaccessible. If a Node Pool is updated: The cluster remains unaffected.",
+			ToSDPItemType: gcpshared.ContainerNodePool,
+			Description:   "If the Container Cluster is deleted or updated: All associated Node Pools may become invalid or inaccessible. If a Node Pool is updated: The cluster remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
-			  In: false,
-			  Out: true,
-			 },
-			IsParentToChild:  true,
+				In:  false,
+				Out: true,
+			},
+			IsParentToChild: true,
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

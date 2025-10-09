@@ -10,7 +10,7 @@ import (
 // GET  https://aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/models/{model}
 // LIST https://aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/models
 // NOTE: We use "global" for the location in the URL, because we use the global service endpoint.
-var aiPlatformModelAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.AIPlatformModel,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_AI,

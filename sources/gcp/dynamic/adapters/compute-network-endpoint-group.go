@@ -9,7 +9,7 @@ import (
 // Reference: https://cloud.google.com/compute/docs/reference/rest/v1/networkEndpointGroups/get
 // GET:  https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/networkEndpointGroups/{networkEndpointGroup}
 // LIST: https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/networkEndpointGroups
-var computeNetworkEndpointGroupAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeNetworkEndpointGroup,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,

@@ -90,9 +90,11 @@ var _ = registerableAdapter{
 		// TODO: Investigate whether we can/should support multiple items for a given key.
 		// In this case, the eventStream can be an AWS SQS ARN in the form 'arn:aws:sqs:region:account_id:queue_name'
 		// https://linear.app/overmind/issue/ENG-1348/investigate-supporting-multiple-items-in-blast-propagations
+		// Required. Specifies a unique name of the resource such as AWS SQS ARN in the form 'arn:aws:sqs:region:account_id:queue_name',
+		// or Pub/Sub subscription resource name in the form 'projects/{project}/subscriptions/{sub}'.
 		"eventStream.name": {
-			ToSDPItemType: gcpshared.PubSubTopic,
-			Description:   "If the Pub/Sub Topic for event streaming is deleted: Transfer job events will not be published. If the transfer job is updated: The Pub/Sub topic remains unaffected.",
+			ToSDPItemType: gcpshared.PubSubSubscription,
+			Description:   "If the Pub/Sub Subscription for event streaming is deleted: Transfer job events will not be consumed. If the transfer job is updated: The Pub/Sub subscription remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In: true,
 			},

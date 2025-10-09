@@ -12,7 +12,7 @@ import (
 // GET  https://aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/endpoints/{endpoint}
 // LIST https://aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/endpoints
 // NOTE: We use "global" for the location in the URL, because we use the global service endpoint.
-var aiPlatformEndpointAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.AIPlatformEndpoint,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_AI,
@@ -54,7 +54,7 @@ var aiPlatformEndpointAdapter = registerableAdapter{ //nolint:unused
 				Out: true,
 			},
 		},
-		"predictRequestResponseLoggingConfig.bigqueryDestination": {
+		"predictRequestResponseLoggingConfig.bigqueryDestination.outputUri": {
 			ToSDPItemType: gcpshared.BigQueryTable,
 			Description:   "If the BigQuery Table is deleted or updated, the Endpoint's logging configuration may be affected.",
 			BlastPropagation: &sdp.BlastPropagation{

@@ -10,7 +10,7 @@ import (
 // GCP Ref (Schema): https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.modelDeploymentMonitoringJobs#ModelDeploymentMonitoringJob
 // GET  https://aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/modelDeploymentMonitoringJobs/{modelDeploymentMonitoringJob}
 // LIST https://aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/modelDeploymentMonitoringJobs
-var aiPlatformModelDeploymentMonitoringJobAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.AIPlatformModelDeploymentMonitoringJob,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_AI,

@@ -5,7 +5,7 @@ import (
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
-var computeBackendImpact = &gcpshared.Impact{ //nolint:unused
+var computeBackendImpact = &gcpshared.Impact{
 	ToSDPItemType: gcpshared.ComputeBackendService,
 	Description:   "If the Backend Service is updated or deleted: The URL Map's routing behavior may change or break. If the URL Map changes: The backend service remains structurally unaffected.",
 	BlastPropagation: &sdp.BlastPropagation{
@@ -18,7 +18,7 @@ var computeBackendImpact = &gcpshared.Impact{ //nolint:unused
 // Reference: https://cloud.google.com/compute/docs/reference/rest/v1/urlMaps/get
 // GET:  https://compute.googleapis.com/compute/v1/projects/{project}/global/urlMaps/{urlMap}
 // LIST: https://compute.googleapis.com/compute/v1/projects/{project}/global/urlMaps
-var computeUrlMapAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeUrlMap,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,

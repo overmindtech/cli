@@ -14,7 +14,7 @@ import (
 //   - LIST: https://cloud.google.com/memorystore/docs/redis/reference/rest/v1/projects.locations.instances/list
 //
 // Scope: Project-level (uses locations path parameter; unique attributes include location+instance).
-var redisInstanceAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.RedisInstance,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,

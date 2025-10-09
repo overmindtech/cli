@@ -10,7 +10,7 @@ import (
 // API List: https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters/list
 // GET  https://dataproc.googleapis.com/v1/projects/{project}/regions/{region}/clusters/{cluster}
 // LIST https://dataproc.googleapis.com/v1/projects/{project}/regions/{region}/clusters
-var dataprocClusterAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.DataprocCluster,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
@@ -33,7 +33,7 @@ var dataprocClusterAdapter = registerableAdapter{ //nolint:unused
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"config.gceClusterConfig.networkUri":      gcpshared.ComputeNetworkImpactInOnly,
-		"config.gceClusterConfig.subnetworkUri":   gcpshared.ComputeNetworkImpactInOnly,
+		"config.gceClusterConfig.subnetworkUri":   gcpshared.ComputeSubnetworkImpactInOnly,
 		"config.gceClusterConfig.serviceAccount":  gcpshared.IAMServiceAccountImpactInOnly,
 		"config.encryptionConfig.gcePdKmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		"config.encryptionConfig.kmsKey":          gcpshared.CryptoKeyImpactInOnly,
@@ -52,7 +52,7 @@ var dataprocClusterAdapter = registerableAdapter{ //nolint:unused
 			Description:      "If the Instance Group Manager is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
-		"config.masterConfig.accelerators": {
+		"config.masterConfig.accelerators.acceleratorTypeUri": {
 			ToSDPItemType:    gcpshared.ComputeAcceleratorType,
 			Description:      "If the Accelerator Type is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true},
@@ -72,7 +72,7 @@ var dataprocClusterAdapter = registerableAdapter{ //nolint:unused
 			Description:      "If the Instance Group Manager is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
-		"config.workerConfig.accelerators": {
+		"config.workerConfig.accelerators.acceleratorTypeUri": {
 			ToSDPItemType:    gcpshared.ComputeAcceleratorType,
 			Description:      "If the Accelerator Type is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true},
@@ -92,7 +92,7 @@ var dataprocClusterAdapter = registerableAdapter{ //nolint:unused
 			Description:      "If the Instance Group Manager is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
-		"config.secondaryWorkerConfig.accelerators": {
+		"config.secondaryWorkerConfig.accelerators.acceleratorTypeUri": {
 			ToSDPItemType:    gcpshared.ComputeAcceleratorType,
 			Description:      "If the Accelerator Type is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true},

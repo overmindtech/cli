@@ -211,6 +211,10 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 	BigQueryTable: func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
 		// expected query format: {projectId}.{datasetId}.{tableId}
 		// See: https://cloud.google.com/pubsub/docs/reference/rest/v1/projects.subscriptions#bigqueryconfig
+		//
+		// Also: bq://projectId or bq://projectId.bqDatasetId or bq://projectId.bqDatasetId.bqTableId.
+		// See: https://cloud.google.com/vertex-ai/docs/reference/rest/v1/BigQueryDestination
+		query = strings.TrimPrefix(query, "bq://")
 		parts := strings.Split(query, ".")
 		if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
 			return &sdp.LinkedItemQuery{
@@ -229,25 +233,56 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 	aws.KinesisStream:         AWSLinkByARN("kinesis-stream"),
 	aws.KinesisStreamConsumer: AWSLinkByARN("kinesis-stream-consumer"),
 	aws.IAMRole:               AWSLinkByARN("iam-role"),
-	SQLAdminInstance: func(_, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
-		// expected query format: {project}:{location}:{instance}
-		// See: https://cloud.google.com/run/docs/reference/rest/v2/Volume#cloudsqlinstance
+	SQLAdminInstance: func(projectID, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		// Supported formats:
+		// 1) {project}:{location}:{instance} (Cloud Run format)
+		//    See: https://cloud.google.com/run/docs/reference/rest/v2/Volume#cloudsqlinstance
+		// 2) projects/{project}/instances/{instance} (full resource name)
+		// 3) {instance} (simple instance name, uses projectID from context)
+
+		// Try colon separator first
 		parts := strings.Split(query, ":")
 		if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-			// It will be a project level adapter
-			// https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/instances/get
-			projectID := parts[0]
-			instance := parts[2]
 			return &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   SQLAdminInstance.String(),
 					Method: sdp.QueryMethod_GET,
-					Query:  instance,
+					Query:  parts[2],
+					Scope:  parts[0],
+				},
+				BlastPropagation: blastPropagation,
+			}
+		}
+
+		// Try slash separator (full resource name)
+		if strings.Contains(query, "/") {
+			values := ExtractPathParams(query, "projects", "instances")
+			if len(values) == 2 && values[0] != "" && values[1] != "" {
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   SQLAdminInstance.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  values[1],
+						Scope:  values[0],
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		}
+
+		// Single word (simple instance name) - use projectID from context
+		if !strings.Contains(query, ":") && !strings.Contains(query, "/") && query != "" {
+			return &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   SQLAdminInstance.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  query,
 					Scope:  projectID,
 				},
 				BlastPropagation: blastPropagation,
 			}
 		}
+
 		return nil
 	},
 	BigQueryDataset: func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {

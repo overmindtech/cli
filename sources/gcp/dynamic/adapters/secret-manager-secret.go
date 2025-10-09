@@ -14,7 +14,7 @@ import (
 //   - Type:       https://cloud.google.com/secret-manager/docs/reference/rest/v1/projects.secrets#Secret
 //
 // Scope: Project-level (no locations segment in the resource path).
-var secretManagerSecretAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.SecretManagerSecret,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,

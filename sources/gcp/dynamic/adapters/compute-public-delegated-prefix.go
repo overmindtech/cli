@@ -11,7 +11,7 @@ import (
 // Reference: https://cloud.google.com/compute/docs/reference/rest/v1/publicDelegatedPrefixes/get
 // GET:  https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/publicDelegatedPrefixes/{publicDelegatedPrefix}
 // LIST: https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/publicDelegatedPrefixes
-var computePublicDelegatedPrefixAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.ComputePublicDelegatedPrefix,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,

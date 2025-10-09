@@ -10,7 +10,7 @@ import (
 // Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/instances/get
 // GET:  https://sqladmin.googleapis.com/sql/v1/projects/{project}/instances/{instance}
 // LIST: https://sqladmin.googleapis.com/sql/v1/projects/{project}/instances
-var sqlAdminInstanceAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.SQLAdminInstance,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
@@ -76,13 +76,13 @@ var sqlAdminInstanceAdapter = registerableAdapter{ //nolint:unused
 		// Forward link from parent to child via SEARCH
 		// Link to all backup runs for this instance
 		"name": {
-			ToSDPItemType:    gcpshared.SQLAdminBackupRun,
-			Description:      "If the Cloud SQL Instance is deleted or updated: All associated Backup Runs may become invalid or inaccessible. If a Backup Run is updated: The instance remains unaffected.",
+			ToSDPItemType: gcpshared.SQLAdminBackupRun,
+			Description:   "If the Cloud SQL Instance is deleted or updated: All associated Backup Runs may become invalid or inaccessible. If a Backup Run is updated: The instance remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
-			  In:false,
-			  Out: true,
+				In:  false,
+				Out: true,
 			},
-			IsParentToChild:  true,
+			IsParentToChild: true,
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

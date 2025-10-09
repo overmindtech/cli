@@ -17,7 +17,13 @@ When writing unit tests for GCP dynamic adapters in the Overmind codebase, follo
       "net/http"
       "testing"
 
-      "cloud.google.com/go/compute/apiv1/computepb" // or relevant protobuf package
+      // IMPORTANT: Import the correct protobuf package that matches the adapter's API endpoint
+      // Examples:
+      //   "cloud.google.com/go/compute/apiv1/computepb"           // Compute API v1
+      //   "cloud.google.com/go/functions/apiv2/functionspb"       // Cloud Functions v2
+      //   "cloud.google.com/go/aiplatform/apiv1/aiplatformpb"     // AI Platform v1
+      //   "cloud.google.com/go/bigtable/admin/apiv2/adminpb"      // BigTable Admin v2
+      "cloud.google.com/go/yourservice/apiv1/yourservicepb"       // Replace with actual service
 
       "github.com/overmindtech/cli/discovery"
       "github.com/overmindtech/cli/sdp-go"
@@ -28,14 +34,25 @@ When writing unit tests for GCP dynamic adapters in the Overmind codebase, follo
   )
   ```
 ## Protobuf Types
-- **CRITICAL: Match API Version**: Always use the same protobuf API version as specified in the adapter's Get function endpoint
+- **CRITICAL: Match API Version and Package**: Always use the correct protobuf package and API version that matches the adapter's endpoint
   - **Step 1**: Check the adapter file (e.g., `cloudfunctions-function.go`) for the API endpoint URL
-  - **Step 2**: Extract the API version from the URL (e.g., `/v2/` means use `apiv2`)
-  - **Step 3**: Import the matching protobuf package (e.g., `cloud.google.com/go/functions/apiv2/functionspb`)
+  - **Step 2**: Extract the API service and version from the URL:
+    - `https://compute.googleapis.com/compute/v1/...` → `cloud.google.com/go/compute/apiv1/computepb`
+    - `https://cloudfunctions.googleapis.com/v2/...` → `cloud.google.com/go/functions/apiv2/functionspb`
+    - `https://aiplatform.googleapis.com/v1/...` → `cloud.google.com/go/aiplatform/apiv1/aiplatformpb`
+    - `https://bigtableadmin.googleapis.com/v2/...` → `cloud.google.com/go/bigtable/admin/apiv2/adminpb`
+  - **Step 3**: Import the matching protobuf package and use its types (NOT generic `computepb`)
   - **Example**: If adapter uses `https://cloudfunctions.googleapis.com/v2/...`, use `apiv2/functionspb`, NOT `apiv1` or `apiv2beta`
-- **Verify Types**: Check available types with `go doc cloud.google.com/go/compute/apiv1/computepb | grep -i "type.*YourResource"`
-- **Common Mistake**: Use `computepb.Address` and `computepb.AddressList` (NOT `GlobalAddress`)
-- **Always verify**: Don't assume protobuf types exist - check the actual API
+- **Verify Types**: Check available types with `go doc <protobuf-package> | grep -i "type.*YourResource"`
+  - Example: `go doc cloud.google.com/go/compute/apiv1/computepb | grep -i "type.*Address"`
+- **Verify List Response Structure**: Check the actual list response type - field names vary by service
+  - Example: `computepb.AddressList` has `.Items` field
+  - Example: `aiplatformpb.ListModelDeploymentMonitoringJobsResponse` has `.ModelDeploymentMonitoringJobs` field
+- **Common Mistakes**:
+  - Using `computepb` for non-Compute resources (use service-specific package)
+  - Assuming `GlobalAddress` exists (use `Address` instead)
+  - Not verifying the list response field name (it's not always `.Items`)
+- **Always verify**: Don't assume protobuf types or field names exist - check the actual API package
 ## Test Structure Template
 
 ### Single Query Parameter Resources
@@ -46,22 +63,33 @@ func TestYourResource(t *testing.T) {
     linker := gcpshared.NewLinker()
     resourceName := "test-resource"
 
-    // Create mock protobuf object
-    resource := &computepb.YourResource{
+    // IMPORTANT: Use the correct protobuf package that matches your adapter's API endpoint
+    // Examples:
+    //   - Compute API v1: computepb.Address
+    //   - Functions API v2: functionspb.Function
+    //   - AI Platform v1: aiplatformpb.Model
+    // Check the adapter file for the API endpoint URL and match the protobuf version!
+
+    // Create mock protobuf object (replace YourServicepb with actual service package)
+    resource := &YourServicepb.YourResource{
         Name: &resourceName,
         // ... other fields using pointer helpers
     }
 
     // Create second resource for list testing
     resourceName2 := "test-resource-2"
-    resource2 := &computepb.YourResource{
+    resource2 := &YourServicepb.YourResource{
         Name: &resourceName2,
         // ... other fields using pointer helpers
     }
 
     // Create list response with multiple items
-    resourceList := &computepb.YourResourceList{
-        Items: []*computepb.YourResource{resource, resource2},
+    // IMPORTANT: List response structure varies by service - verify the actual type and field names!
+    // Examples:
+    //   - computepb.AddressList has .Items field
+    //   - aiplatformpb.ListModelsResponse has .Models field
+    resourceList := &YourServicepb.YourResourceList{
+        Items: []*YourServicepb.YourResource{resource, resource2},  // Field name may vary!
     }
 
     sdpItemType := gcpshared.YourItemType
@@ -106,22 +134,26 @@ func TestLocationBasedResource(t *testing.T) {
     location := "us-central1"
     resourceName := "test-resource"
 
-    // Create mock protobuf object
-    resource := &computepb.YourResource{
+    // IMPORTANT: Use the correct protobuf package that matches your adapter's API endpoint
+    // Check the adapter file for the API endpoint URL and match the service and version!
+
+    // Create mock protobuf object (replace YourServicepb with actual service package)
+    resource := &YourServicepb.YourResource{
         Name: &resourceName,
         // ... other fields using pointer helpers
     }
 
     // Create second resource for list testing
     resourceName2 := "test-resource-2"
-    resource2 := &computepb.YourResource{
+    resource2 := &YourServicepb.YourResource{
         Name: &resourceName2,
         // ... other fields using pointer helpers
     }
 
     // Create list response with multiple items
-    resourceList := &computepb.YourResourceList{
-        Items: []*computepb.YourResource{resource, resource2},
+    // IMPORTANT: List response structure varies - verify the actual type and field names!
+    resourceList := &YourServicepb.YourResourceList{
+        Items: []*YourServicepb.YourResource{resource, resource2},  // Field name may vary!
     }
 
     sdpItemType := gcpshared.YourItemType
@@ -253,6 +285,8 @@ t.Run("Get", func(t *testing.T) {
         // CRITICAL: Review the adapter's blast propagation configuration and to create
         // test cases for EVERY linked resource defined in the adapter's blastPropagation map
         // Check the adapter file (e.g., compute-global-address.go) for all blast propagation entries
+        // IMPORTANT: Always use Item types with .String() for ExpectedType (e.g., gcpshared.ComputeNetwork.String())
+        // NEVER use pure strings (e.g., "gcp-compute-network") for ExpectedType
         queryTests := shared.QueryTests{
             {
                 ExpectedType:   gcpshared.LinkedResourceType.String(),
@@ -394,11 +428,15 @@ func uint64Ptr(u uint64) *uint64 {
 ```
 ## Common Mistakes to Avoid
 1. **Wrong Package**: Don't use `package main` or `package adapters`
-2. **Wrong Protobuf Types**: Check actual available types, don't assume `GlobalAddress` exists
-3. **Missing Pointer Helpers**: Always define local pointer helper functions
-4. **Incorrect HTTP URLs**: Match the exact API endpoint format from the adapter metadata
-5. **Missing Static Tests**: Always include blast propagation tests for linked resources
-6. **Missing Search Tests**: Include Search tests only if the adapter implements `SearchableAdapter` - use `t.Skipf()` if not supported
+2. **Wrong Protobuf Package**: Using `computepb` for non-Compute resources (e.g., using `computepb.Function` instead of `functionspb.Function`)
+3. **Wrong Protobuf API Version**: Not matching the adapter's endpoint version (e.g., using `apiv1` when adapter uses `/v2/`)
+4. **Wrong Protobuf Types**: Assuming types exist without verification (e.g., `GlobalAddress` doesn't exist, use `Address`)
+5. **Wrong List Response Structure**: Assuming all list responses have `.Items` field (field names vary by service - verify with `go doc`)
+6. **Missing Pointer Helpers**: Always define local pointer helper functions
+7. **Incorrect HTTP URLs**: Match the exact API endpoint format from the adapter metadata
+8. **Missing Static Tests**: Always include blast propagation tests for linked resources
+9. **Missing Search Tests**: Include Search tests only if the adapter implements `SearchableAdapter` - use `t.Skipf()` if not supported
+10. **Using Pure Strings for ExpectedType**: Always use Item types with `.String()` (e.g., `gcpshared.ComputeNetwork.String()` or `stdlib.NetworkIP.String()`), never pure strings like `"gcp-compute-network"` or `"ip"`
 
 
 ## Blast Propagation Testing Requirements
@@ -428,7 +466,7 @@ t.Run("StaticTests", func(t *testing.T) {
         },
         // IP address link
         {
-            ExpectedType:   "ip",
+            ExpectedType:   stdlib.NetworkIP.String(),
             ExpectedMethod: sdp.QueryMethod_GET,
             ExpectedQuery:  "203.0.113.1",
             ExpectedScope:  "global",
@@ -467,8 +505,10 @@ t.Run("StaticTests", func(t *testing.T) {
 ## Validation Checklist
 - [ ] Package is `adapters_test`
 - [ ] All required imports are present
-- [ ] **CRITICAL**: Protobuf API version matches the adapter's Get function endpoint (e.g., `/v2/` → `apiv2/functionspb`)
-- [ ] Protobuf types are correct and available
+- [ ] **CRITICAL**: Protobuf package matches the adapter's service (e.g., `aiplatformpb` for AI Platform, NOT `computepb`)
+- [ ] **CRITICAL**: Protobuf API version matches the adapter's endpoint (e.g., `/v2/` → `apiv2/functionspb`, `/v1/` → `apiv1/aiplatformpb`)
+- [ ] Protobuf types verified with `go doc` command and confirmed to exist
+- [ ] List response structure verified (field name like `.Items`, `.Models`, etc. varies by service)
 - [ ] Mock HTTP responses match actual API endpoints
 - [ ] Get test validates all SDP item properties
 - [ ] List test validates item count (expect 2+ items) and properties

@@ -5,7 +5,7 @@ import (
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 
-var artifactRegistryRepositoryAdapter = registerableAdapter{ //nolint:unused
+var _ = registerableAdapter{
 	sdpType: gcpshared.ArtifactRegistryRepository,
 	meta: gcpshared.AdapterMeta{
 		// Reference: https://cloud.google.com/artifact-registry/docs/reference/rest/v1/projects.locations.repositories/get?rep_location=global
@@ -29,7 +29,7 @@ var artifactRegistryRepositoryAdapter = registerableAdapter{ //nolint:unused
 			ToSDPItemType: gcpshared.ArtifactRegistryDockerImage,
 			Description:   "If the Artifact Registry Repository is deleted or updated: All associated Docker Images may become invalid or inaccessible. If a Docker Image is updated: The repository remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
-			    In: false,
+				In:  false,
 				Out: true,
 			},
 			IsParentToChild: true,
