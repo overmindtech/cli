@@ -47,6 +47,9 @@ const (
 	// SignalServiceGetItemSignalsV2Procedure is the fully-qualified name of the SignalService's
 	// GetItemSignalsV2 RPC.
 	SignalServiceGetItemSignalsV2Procedure = "/signal.SignalService/GetItemSignalsV2"
+	// SignalServiceGetCustomSignalsByCategoryProcedure is the fully-qualified name of the
+	// SignalService's GetCustomSignalsByCategory RPC.
+	SignalServiceGetCustomSignalsByCategoryProcedure = "/signal.SignalService/GetCustomSignalsByCategory"
 	// SignalServiceGetItemSignalDetailsProcedure is the fully-qualified name of the SignalService's
 	// GetItemSignalDetails RPC.
 	SignalServiceGetItemSignalDetailsProcedure = "/signal.SignalService/GetItemSignalDetails"
@@ -78,6 +81,10 @@ type SignalServiceClient interface {
 	// - a slice of signals for the item, sorted by the signal value, ascending.
 	// - the status of the item, e.g. "added", "modified", "deleted".
 	GetItemSignalsV2(context.Context, *connect.Request[sdp_go.GetItemSignalsRequestV2]) (*connect.Response[sdp_go.GetItemSignalsResponseV2], error)
+	// Get all custom signals for a change by its external ID and category. They are NOT associated with any item.
+	// There is no score aggregation or description aggregation at this level. They are aggregated at the GetChangeOverviewSignals level.
+	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
+	GetCustomSignalsByCategory(context.Context, *connect.Request[sdp_go.GetCustomSignalsByCategoryRequest]) (*connect.Response[sdp_go.GetCustomSignalsByCategoryResponse], error)
 	// Get all signals for attributes/modifications of an item. This will only be used for routineness to start with.
 	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
 	GetItemSignalDetails(context.Context, *connect.Request[sdp_go.GetItemSignalDetailsRequest]) (*connect.Response[sdp_go.GetItemSignalDetailsResponse], error)
@@ -124,6 +131,12 @@ func NewSignalServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(signalServiceMethods.ByName("GetItemSignalsV2")),
 			connect.WithClientOptions(opts...),
 		),
+		getCustomSignalsByCategory: connect.NewClient[sdp_go.GetCustomSignalsByCategoryRequest, sdp_go.GetCustomSignalsByCategoryResponse](
+			httpClient,
+			baseURL+SignalServiceGetCustomSignalsByCategoryProcedure,
+			connect.WithSchema(signalServiceMethods.ByName("GetCustomSignalsByCategory")),
+			connect.WithClientOptions(opts...),
+		),
 		getItemSignalDetails: connect.NewClient[sdp_go.GetItemSignalDetailsRequest, sdp_go.GetItemSignalDetailsResponse](
 			httpClient,
 			baseURL+SignalServiceGetItemSignalDetailsProcedure,
@@ -140,6 +153,7 @@ type signalServiceClient struct {
 	getChangeOverviewSignals     *connect.Client[sdp_go.GetChangeOverviewSignalsRequest, sdp_go.GetChangeOverviewSignalsResponse]
 	getItemSignals               *connect.Client[sdp_go.GetItemSignalsRequest, sdp_go.GetItemSignalsResponse]
 	getItemSignalsV2             *connect.Client[sdp_go.GetItemSignalsRequestV2, sdp_go.GetItemSignalsResponseV2]
+	getCustomSignalsByCategory   *connect.Client[sdp_go.GetCustomSignalsByCategoryRequest, sdp_go.GetCustomSignalsByCategoryResponse]
 	getItemSignalDetails         *connect.Client[sdp_go.GetItemSignalDetailsRequest, sdp_go.GetItemSignalDetailsResponse]
 }
 
@@ -166,6 +180,11 @@ func (c *signalServiceClient) GetItemSignals(ctx context.Context, req *connect.R
 // GetItemSignalsV2 calls signal.SignalService.GetItemSignalsV2.
 func (c *signalServiceClient) GetItemSignalsV2(ctx context.Context, req *connect.Request[sdp_go.GetItemSignalsRequestV2]) (*connect.Response[sdp_go.GetItemSignalsResponseV2], error) {
 	return c.getItemSignalsV2.CallUnary(ctx, req)
+}
+
+// GetCustomSignalsByCategory calls signal.SignalService.GetCustomSignalsByCategory.
+func (c *signalServiceClient) GetCustomSignalsByCategory(ctx context.Context, req *connect.Request[sdp_go.GetCustomSignalsByCategoryRequest]) (*connect.Response[sdp_go.GetCustomSignalsByCategoryResponse], error) {
+	return c.getCustomSignalsByCategory.CallUnary(ctx, req)
 }
 
 // GetItemSignalDetails calls signal.SignalService.GetItemSignalDetails.
@@ -199,6 +218,10 @@ type SignalServiceHandler interface {
 	// - a slice of signals for the item, sorted by the signal value, ascending.
 	// - the status of the item, e.g. "added", "modified", "deleted".
 	GetItemSignalsV2(context.Context, *connect.Request[sdp_go.GetItemSignalsRequestV2]) (*connect.Response[sdp_go.GetItemSignalsResponseV2], error)
+	// Get all custom signals for a change by its external ID and category. They are NOT associated with any item.
+	// There is no score aggregation or description aggregation at this level. They are aggregated at the GetChangeOverviewSignals level.
+	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
+	GetCustomSignalsByCategory(context.Context, *connect.Request[sdp_go.GetCustomSignalsByCategoryRequest]) (*connect.Response[sdp_go.GetCustomSignalsByCategoryResponse], error)
 	// Get all signals for attributes/modifications of an item. This will only be used for routineness to start with.
 	// They are sorted by the signal value, ascending. From minus 5 to plus 5.
 	GetItemSignalDetails(context.Context, *connect.Request[sdp_go.GetItemSignalDetailsRequest]) (*connect.Response[sdp_go.GetItemSignalDetailsResponse], error)
@@ -241,6 +264,12 @@ func NewSignalServiceHandler(svc SignalServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(signalServiceMethods.ByName("GetItemSignalsV2")),
 		connect.WithHandlerOptions(opts...),
 	)
+	signalServiceGetCustomSignalsByCategoryHandler := connect.NewUnaryHandler(
+		SignalServiceGetCustomSignalsByCategoryProcedure,
+		svc.GetCustomSignalsByCategory,
+		connect.WithSchema(signalServiceMethods.ByName("GetCustomSignalsByCategory")),
+		connect.WithHandlerOptions(opts...),
+	)
 	signalServiceGetItemSignalDetailsHandler := connect.NewUnaryHandler(
 		SignalServiceGetItemSignalDetailsProcedure,
 		svc.GetItemSignalDetails,
@@ -259,6 +288,8 @@ func NewSignalServiceHandler(svc SignalServiceHandler, opts ...connect.HandlerOp
 			signalServiceGetItemSignalsHandler.ServeHTTP(w, r)
 		case SignalServiceGetItemSignalsV2Procedure:
 			signalServiceGetItemSignalsV2Handler.ServeHTTP(w, r)
+		case SignalServiceGetCustomSignalsByCategoryProcedure:
+			signalServiceGetCustomSignalsByCategoryHandler.ServeHTTP(w, r)
 		case SignalServiceGetItemSignalDetailsProcedure:
 			signalServiceGetItemSignalDetailsHandler.ServeHTTP(w, r)
 		default:
@@ -288,6 +319,10 @@ func (UnimplementedSignalServiceHandler) GetItemSignals(context.Context, *connec
 
 func (UnimplementedSignalServiceHandler) GetItemSignalsV2(context.Context, *connect.Request[sdp_go.GetItemSignalsRequestV2]) (*connect.Response[sdp_go.GetItemSignalsResponseV2], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("signal.SignalService.GetItemSignalsV2 is not implemented"))
+}
+
+func (UnimplementedSignalServiceHandler) GetCustomSignalsByCategory(context.Context, *connect.Request[sdp_go.GetCustomSignalsByCategoryRequest]) (*connect.Response[sdp_go.GetCustomSignalsByCategoryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("signal.SignalService.GetCustomSignalsByCategory is not implemented"))
 }
 
 func (UnimplementedSignalServiceHandler) GetItemSignalDetails(context.Context, *connect.Request[sdp_go.GetItemSignalDetailsRequest]) (*connect.Response[sdp_go.GetItemSignalDetailsResponse], error) {
