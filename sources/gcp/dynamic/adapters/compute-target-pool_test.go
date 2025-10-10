@@ -171,6 +171,41 @@ func TestComputeTargetPool(t *testing.T) {
 		}
 	})
 
+	t.Run("Search with Terraform format", func(t *testing.T) {
+		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID, region)
+		if err != nil {
+			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
+		}
+
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Skipf("Adapter for %s does not implement SearchableAdapter", sdpItemType)
+		}
+
+		// Test Terraform format: projects/[project]/regions/[region]/targetPools/[name]
+		terraformQuery := fmt.Sprintf("projects/%s/regions/%s/targetPools/%s", projectID, region, poolName)
+		sdpItems, err := searchable.Search(ctx, fmt.Sprintf("%s.%s", projectID, region), terraformQuery, true)
+		if err != nil {
+			t.Fatalf("Failed to search resources with Terraform format: %v", err)
+		}
+
+		// The search should return only the specific resource matching the Terraform format
+		if len(sdpItems) != 1 {
+			t.Errorf("Expected 1 resource, got %d", len(sdpItems))
+			return
+		}
+
+		// Verify the single item returned
+		firstItem := sdpItems[0]
+		if firstItem.GetType() != sdpItemType.String() {
+			t.Errorf("Expected first item type %s, got %s", sdpItemType.String(), firstItem.GetType())
+		}
+		if firstItem.GetScope() != fmt.Sprintf("%s.%s", projectID, region) {
+			t.Errorf("Expected first item scope '%s.%s', got %s", projectID, region, firstItem.GetScope())
+		}
+	})
+
 	t.Run("ErrorHandling", func(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/targetPools/%s", projectID, region, poolName): {

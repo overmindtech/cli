@@ -75,21 +75,6 @@ func TestSDPAssetTypeToAdapterMeta_GetEndpointBaseURLFunc(t *testing.T) {
 			query:     "mytopic",
 			expectErr: true,
 		},
-		{
-			name:        "ComputeInstance valid",
-			assetType:   ComputeInstance,
-			params:      []string{"proj", "zone"},
-			query:       "inst",
-			expectedURL: "https://compute.googleapis.com/compute/v1/projects/proj/zones/zone/instances/inst",
-			expectErr:   false,
-		},
-		{
-			name:      "ComputeInstance missing zone",
-			assetType: ComputeInstance,
-			params:    []string{"proj", ""},
-			query:     "inst",
-			expectErr: true,
-		},
 	}
 
 	for _, tt := range tests {
@@ -175,19 +160,6 @@ func TestSDPAssetTypeToAdapterMeta_ListEndpointFunc(t *testing.T) {
 			name:      "PubSubTopic missing param",
 			assetType: PubSubTopic,
 			params:    []string{""},
-			expectErr: true,
-		},
-		{
-			name:        "ComputeInstance valid",
-			assetType:   ComputeInstance,
-			params:      []string{"proj", "zone"},
-			expectedURL: "https://compute.googleapis.com/compute/v1/projects/proj/zones/zone/instances",
-			expectErr:   false,
-		},
-		{
-			name:      "ComputeInstance missing zone",
-			assetType: ComputeInstance,
-			params:    []string{"proj", ""},
 			expectErr: true,
 		},
 	}

@@ -69,8 +69,8 @@ func Test_addAdapter(t *testing.T) {
 	testCases := []testCase{
 		{
 			name:     "Listable adapter",
-			sdpType:  gcpshared.ComputeInstance,
-			opts:     []string{"my-project", "us-central1-a"},
+			sdpType:  gcpshared.ComputeFirewall,
+			opts:     []string{"my-project"},
 			listable: true,
 		},
 		{
