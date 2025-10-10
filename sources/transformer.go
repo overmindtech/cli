@@ -130,12 +130,6 @@ func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
 				panic(fmt.Sprintf("failed to validate adapter: %v", err))
 			}
 
-			if iamPerms := wrapper.IAMPermissions(); len(iamPerms) > 0 {
-				for _, perm := range iamPerms {
-					gcpshared.IAMPermissions[perm] = true
-				}
-			}
-
 			return a
 		}
 
@@ -151,12 +145,6 @@ func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
 
 		if err := a.Validate(); err != nil {
 			panic(fmt.Sprintf("failed to validate adapter: %v", err))
-		}
-
-		if iamPerms := wrapper.IAMPermissions(); len(iamPerms) > 0 {
-			for _, perm := range iamPerms {
-				gcpshared.IAMPermissions[perm] = true
-			}
 		}
 
 		return a
@@ -177,12 +165,6 @@ func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
 			panic(fmt.Sprintf("failed to validate adapter: %v", err))
 		}
 
-		if iamPerms := wrapper.IAMPermissions(); len(iamPerms) > 0 {
-			for _, perm := range iamPerms {
-				gcpshared.IAMPermissions[perm] = true
-			}
-		}
-
 		return a
 	}
 
@@ -193,12 +175,6 @@ func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
 
 	if err := a.Validate(); err != nil {
 		panic(fmt.Sprintf("failed to validate adapter: %v", err))
-	}
-
-	if iamPerms := wrapper.IAMPermissions(); len(iamPerms) > 0 {
-		for _, perm := range iamPerms {
-			gcpshared.IAMPermissions[perm] = true
-		}
 	}
 
 	return a

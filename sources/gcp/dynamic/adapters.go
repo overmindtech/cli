@@ -141,11 +141,6 @@ func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli 
 		ListResponseSelector: meta.ListResponseSelector,
 	}
 
-	// Add IAM permissions to the global map
-	for _, perm := range meta.IAMPermissions {
-		gcpshared.IAMPermissions[perm] = true
-	}
-
 	switch adapterType(meta) {
 	case SearchableListable:
 		searchEndpointFunc, err := meta.SearchEndpointFunc(opts...)
