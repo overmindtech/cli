@@ -107,14 +107,18 @@ func (r *PlanMappingResult) numStatus(status MapStatus) int {
 }
 
 func MappedItemDiffsFromPlanFile(ctx context.Context, fileName string, scope string, lf log.Fields) (*PlanMappingResult, error) {
-	// read results from `terraform show -json ${tfplan file}`
-	planJSON, err := os.ReadFile(fileName)
+	planData, err := os.ReadFile(fileName)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(lf).Error("Failed to read terraform plan")
 		return nil, err
 	}
 
-	return MappedItemDiffsFromPlan(ctx, planJSON, fileName, scope, lf)
+	// Check if this is a JSON plan file
+	if !isJSONPlanFile(planData) {
+		return nil, fmt.Errorf("plan file '%s' appears to be in binary format, but Overmind only supports JSON plan files.\n\nTo fix this, convert your binary plan to JSON format:\n  1. Using OpenTofu: tofu show -json %s > plan.json\n  2. Using Terraform: terraform show -json %s > plan.json\n  3. Then run: overmind changes submit-plan plan.json", fileName, fileName, fileName)
+	}
+
+	return MappedItemDiffsFromPlan(ctx, planData, fileName, scope, lf)
 }
 
 type TfMapData struct {
@@ -341,6 +345,20 @@ func mapResourceToQuery(itemDiff *sdp.ItemDiff, terraformResource *Resource, map
 			},
 		},
 	}
+}
+
+// isJSONPlanFile checks if the supplied bytes are valid JSON that could be a plan file.
+// This is used to determine if we need to convert a binary plan or if it's already JSON.
+func isJSONPlanFile(bytes []byte) bool {
+	var jsonValue interface{}
+
+	err := json.Unmarshal(bytes, &jsonValue)
+	if err != nil {
+		return false
+	}
+
+	// If it's valid JSON, we can try to parse it as a plan
+	return true
 }
 
 // Checks if the supplied JSON bytes are a state file. It's a common  mistake to

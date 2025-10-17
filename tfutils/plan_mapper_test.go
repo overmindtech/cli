@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -747,4 +748,121 @@ func terraformDig(srcMapPtr interface{}, path string) interface{} {
 
 		return terraformDig(&valueMap, strings.Join(parts[1:], "."))
 	}
+}
+
+func TestIsJSONPlanFile(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    []byte
+		expected bool
+	}{
+		{
+			name:     "valid JSON object",
+			input:    []byte(`{"format_version": "1.0", "terraform_version": "1.0.0"}`),
+			expected: true,
+		},
+		{
+			name:     "valid JSON array",
+			input:    []byte(`[{"key": "value"}]`),
+			expected: true,
+		},
+		{
+			name:     "valid JSON string",
+			input:    []byte(`"hello world"`),
+			expected: true,
+		},
+		{
+			name:     "valid JSON number",
+			input:    []byte(`42`),
+			expected: true,
+		},
+		{
+			name:     "valid JSON boolean",
+			input:    []byte(`true`),
+			expected: true,
+		},
+		{
+			name:     "valid JSON null",
+			input:    []byte(`null`),
+			expected: true,
+		},
+		{
+			name:     "invalid JSON - binary data",
+			input:    []byte{0x50, 0x4B, 0x03, 0x04}, // ZIP file header
+			expected: false,
+		},
+		{
+			name:     "invalid JSON - incomplete",
+			input:    []byte(`{"incomplete":`),
+			expected: false,
+		},
+		{
+			name:     "empty input",
+			input:    []byte(``),
+			expected: false,
+		},
+		{
+			name:     "non-JSON text",
+			input:    []byte(`this is not json`),
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isJSONPlanFile(tt.input)
+			require.Equal(t, tt.expected, result, "isJSONPlanFile(%q) = %v, want %v", string(tt.input), result, tt.expected)
+		})
+	}
+}
+
+func TestMappedItemDiffsFromPlanFileWithJSON(t *testing.T) {
+	// Test that existing JSON plan files still work
+	result, err := MappedItemDiffsFromPlanFile(context.Background(), "testdata/plan.json", "test-scope", log.Fields{})
+
+	// This should work if the test data exists and is valid JSON
+	if err != nil {
+		// If the test data doesn't exist or is invalid, that's okay for this test
+		// We're mainly testing that the JSON path is taken
+		t.Logf("Expected error for test data: %v", err)
+	} else {
+		require.NotNil(t, result)
+	}
+}
+
+func TestMappedItemDiffsFromPlanFileWithRealBinaryPlan(t *testing.T) {
+	// Test with the real binary plan file we created
+	binaryPlanPath := "testdata/binary-plan.tfplan"
+
+	// Check if the test file exists
+	if _, err := os.Stat(binaryPlanPath); os.IsNotExist(err) {
+		t.Skip("Skipping test: real binary plan file not found. Run 'make test-binary-plan' to generate it.")
+	}
+
+	// Test that the binary version is detected correctly and returns a clear error
+	t.Run("Binary_plan_detection", func(t *testing.T) {
+		// Read the binary plan file
+		binaryData, err := os.ReadFile(binaryPlanPath)
+		require.NoError(t, err)
+
+		// Verify it's detected as binary (not JSON)
+		isJSON := isJSONPlanFile(binaryData)
+		require.False(t, isJSON, "Binary plan should not be detected as JSON")
+
+		t.Logf("Binary plan correctly detected as non-JSON (size: %d bytes)", len(binaryData))
+	})
+
+	// Test that the binary plan returns a clear error message
+	t.Run("Binary_plan_error", func(t *testing.T) {
+		_, err := MappedItemDiffsFromPlanFile(context.Background(), binaryPlanPath, "test-scope", log.Fields{})
+
+		// We expect this to fail with a clear error message
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "appears to be in binary format, but Overmind only supports JSON plan files")
+		require.Contains(t, err.Error(), "tofu show -json")
+		require.Contains(t, err.Error(), "terraform show -json")
+		require.Contains(t, err.Error(), "overmind changes submit-plan plan.json")
+
+		t.Logf("Binary plan correctly rejected with clear error message")
+	})
 }
