@@ -7,7 +7,7 @@ metadata:
 data:
   LOG: {{ .Values.source.log }}
   MAX_PARALLEL: {{ .Values.source.maxParallel | quote }}
-  SOURCE_NAME: {{ .Chart.Name }}
+  SOURCE_NAME: {{ include "overmind-kube-source.fullname" . }}
   RATE_LIMIT_QPS: {{ .Values.source.rateLimitQPS | quote }}
   RATE_LIMIT_BURST: {{ .Values.source.rateLimitBurst | quote }}
 {{- if .Values.source.clusterName }}
