@@ -49,7 +49,7 @@ func TestEngineConfigFromViper(t *testing.T) {
 			expectedApiServerURL:          "https://api.app.overmind.tech",
 			expectedNATSUrl:               "wss://messages.app.overmind.tech",
 			expectedApiKey:                "api-key",
-			expectedMaxParallel:           runtime.NumCPU(),
+			expectedMaxParallel:           runtime.NumCPU() * 100,
 			expectError:                   false,
 		},
 		{
@@ -185,7 +185,7 @@ func TestEngineConfigFromViper(t *testing.T) {
 			engineType:            "test-engine",
 			version:               "1.0",
 			expectError:           false,
-			expectedMaxParallel:   runtime.NumCPU(),
+			expectedMaxParallel:   runtime.NumCPU() * 100,
 			expectedSourceName:    "custom-source",
 			expectedApp:           "https://app.overmind.tech",
 			expectedApiServerURL:  "https://api.app.overmind.tech",

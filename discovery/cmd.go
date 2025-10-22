@@ -175,7 +175,7 @@ func EngineConfigFromViper(engineType, version string) (*EngineConfig, error) {
 
 	maxParallelExecutions := viper.GetInt("max-parallel")
 	if maxParallelExecutions == 0 {
-		maxParallelExecutions = runtime.NumCPU()
+		maxParallelExecutions = runtime.NumCPU() * 100 // we expect most source interactions to be waiting on external services, so adding more parallelism can help
 	}
 
 	return &EngineConfig{
