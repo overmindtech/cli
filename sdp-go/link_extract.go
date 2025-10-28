@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -78,8 +79,9 @@ func extractLinksFromListValue(list *structpb.ListValue) []*LinkedItemQuery {
 }
 
 // A regex that matches the ARN format and extracts the service, region, account
-// id and resource
-var awsARNRegex = regexp.MustCompile(`^arn:[\w-]+:([\w-]+):([\w-]*):([\w-]+):([\w-]+)`)
+// id and resource. Uses a capture group for the full resource portion after
+// the account-id (which may include slashes for resource types).
+var awsARNRegex = regexp.MustCompile(`^arn:[\w-]+:([\w-]+):([\w-]*):([\w-]*):(.+)`)
 
 // This function does all the heavy lifting for extracting linked item queries
 // from strings. It will be called once for every string value in the item so
@@ -157,23 +159,52 @@ func extractLinksFromStringValue(val string) []*LinkedItemQuery {
 			// If it looks like an ARN then we can construct a SEARCH query to try
 			// and find it. We can rely on the conventions in the AWS source here
 
-			// Validate that we have enough data to construct a query
-			if len(matches) != 5 || matches[1] == "" || matches[3] == "" || matches[4] == "" {
+			// Basic validation
+			if len(matches) != 5 || matches[1] == "" {
 				return nil
 			}
 
-			// By convention the scope is {accountID}.{region} unless region is
-			// blank in which case it's just {accountID}
-			var scope string
-			if matches[2] == "" {
-				scope = matches[3]
-			} else {
-				scope = matches[3] + "." + matches[2]
+			// Parsed ARN parts
+			service := matches[1]   // e.g. "ec2", "iam", "s3"
+			region := matches[2]    // may be empty for global services (iam, cloudfront)
+			accountID := matches[3] // may be empty (e.g. s3, route53)
+			resource := matches[4]  // full resource segment (may contain ":" or "/")
+
+			// Extract resource type from the resource field (everything before first "/" or ":" if present)
+			resourceType := resource
+			if idx := strings.IndexAny(resource, "/:"); idx != -1 {
+				resourceType = resource[:idx]
 			}
 
-			// By convention the type is the service name, plus the resource name,
-			// we can extract this from the ARN also
-			queryType := matches[1] + "-" + matches[4]
+			// Determine scope using a simple rule:
+			// - No account → wildcard scope
+			// - Account, no region → account-only
+			// - Account and region → account.region
+			var scope string
+			if accountID == "" {
+				scope = WILDCARD
+			} else if region == "" {
+				scope = accountID
+			} else {
+				scope = accountID + "." + region
+			}
+
+			// Determine type using a consistent rule. Default to service-resourceType if available.
+			queryType := service
+			if resourceType != "" {
+				queryType = service + "-" + resourceType
+			}
+			// Special-case S3 ARNs that omit account and region → treat as bucket references
+			if service == "s3" && accountID == "" && region == "" {
+				queryType = "s3-bucket"
+
+				// If this is an S3 object ARN (contains /), extract just the bucket
+				if strings.Contains(resource, "/") {
+					bucketName := strings.SplitN(resource, "/", 2)[0]
+					// Construct a bucket-only ARN for the query
+					val = "arn:aws:s3:::" + bucketName
+				}
+			}
 
 			return []*LinkedItemQuery{
 				{
