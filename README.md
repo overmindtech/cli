@@ -173,6 +173,17 @@ Then install the CLI:
 apk add overmind-cli
 ```
 
+### Container / Docker
+
+You can use the CLI via Docker which includes both OpenTofu and the CLI:
+
+```shell
+docker pull ghcr.io/overmindtech/cli:latest
+docker run --rm ghcr.io/overmindtech/cli:latest overmind terraform plan
+```
+
+This is useful for CI/CD environments where you need a reproducible Terraform execution environment.
+
 ### Arch
 
 Packages for Arch are available on the [releases page](https://github.com/overmindtech/cli/releases/latest) for manual download and installation.
