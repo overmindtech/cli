@@ -13,6 +13,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout
@@ -34,7 +35,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: depot/use-action@main
+      - uses: depot/use-action@v1
         with:
           project: xnsnw3m20t
 
