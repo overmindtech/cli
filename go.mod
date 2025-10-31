@@ -6,19 +6,29 @@ require (
 	atomicgo.dev/keyboard v0.2.9
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250425153114-8976f5be98c1.1
 	buf.build/go/protovalidate v0.12.0
-	cloud.google.com/go/aiplatform v1.86.0
-	cloud.google.com/go/auth v0.16.1
-	cloud.google.com/go/bigquery v1.67.0
+	cloud.google.com/go/aiplatform v1.89.0
+	cloud.google.com/go/auth v0.16.4
+	cloud.google.com/go/bigquery v1.69.0
 	cloud.google.com/go/bigtable v1.37.0
-	cloud.google.com/go/compute v1.37.0
-	cloud.google.com/go/dataplex v1.25.2
+	cloud.google.com/go/compute v1.38.0
+	cloud.google.com/go/container v1.43.0
+	cloud.google.com/go/dataplex v1.25.3
+	cloud.google.com/go/dataproc v1.12.0
+	cloud.google.com/go/filestore v1.10.2
 	cloud.google.com/go/functions v1.19.6
 	cloud.google.com/go/iam v1.5.2
-	cloud.google.com/go/kms v1.21.2
+	cloud.google.com/go/kms v1.22.0
 	cloud.google.com/go/logging v1.13.0
+	cloud.google.com/go/monitoring v1.24.2
 	cloud.google.com/go/networksecurity v0.10.6
+	cloud.google.com/go/orgpolicy v1.15.0
+	cloud.google.com/go/redis v1.18.2
 	cloud.google.com/go/resourcemanager v1.10.6
-	cloud.google.com/go/spanner v1.81.0
+	cloud.google.com/go/run v1.10.0
+	cloud.google.com/go/secretmanager v1.14.7
+	cloud.google.com/go/securitycentermanagement v1.1.6
+	cloud.google.com/go/spanner v1.82.0
+	cloud.google.com/go/storagetransfer v1.13.0
 	connectrpc.com/connect v1.18.1
 	github.com/MrAlias/otel-schema-utils v0.4.0-alpha
 	github.com/auth0/go-jwt-middleware/v2 v2.3.0
@@ -59,8 +69,9 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.0
 	github.com/google/btree v1.1.3
 	github.com/google/uuid v1.6.0
-	github.com/googleapis/gax-go/v2 v2.14.2
+	github.com/googleapis/gax-go/v2 v2.15.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
+	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/hcl/v2 v2.23.0
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20250401063509-d2d12f9a63bb
 	github.com/jedib0t/go-pretty/v6 v6.6.7
@@ -86,7 +97,7 @@ require (
 	github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b
 	github.com/zclconf/go-cty v1.16.2
 	go.opentelemetry.io/contrib/detectors/aws/ec2/v2 v2.0.0
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.60.0
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.35.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.35.0
@@ -96,14 +107,14 @@ require (
 	go.uber.org/automaxprocs v1.6.0
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.5.2
-	golang.org/x/net v0.40.0
+	golang.org/x/net v0.43.0
 	golang.org/x/oauth2 v0.30.0
-	golang.org/x/text v0.25.0
+	golang.org/x/text v0.28.0
 	gonum.org/v1/gonum v0.16.0
-	google.golang.org/api v0.233.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250512202823-5a2f75b736a9
-	google.golang.org/grpc v1.72.1
-	google.golang.org/protobuf v1.36.6
+	google.golang.org/api v0.247.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c
+	google.golang.org/grpc v1.74.2
+	google.golang.org/protobuf v1.36.7
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.33.0
@@ -117,9 +128,9 @@ require (
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
 	cel.dev/expr v0.24.0 // indirect
-	cloud.google.com/go v0.121.0 // indirect
+	cloud.google.com/go v0.121.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
-	cloud.google.com/go/compute/metadata v0.7.0 // indirect
+	cloud.google.com/go/compute/metadata v0.8.0 // indirect
 	cloud.google.com/go/longrunning v0.6.7 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/Masterminds/semver/v3 v3.3.1 // indirect
@@ -179,6 +190,7 @@ require (
 	github.com/gookit/color v1.5.4 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.26.3 // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -219,23 +231,23 @@ require (
 	github.com/yuin/goldmark-emoji v1.0.6 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.60.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.61.0 // indirect
 	go.opentelemetry.io/otel/log v0.11.0 // indirect
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.opentelemetry.io/otel/schema v0.0.12 // indirect
 	go.opentelemetry.io/proto/otlp v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.38.0 // indirect
+	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/exp v0.0.0-20250506013437-ce4c2cf36ca6 // indirect
-	golang.org/x/mod v0.24.0 // indirect
-	golang.org/x/sync v0.14.0 // indirect
+	golang.org/x/mod v0.26.0 // indirect
+	golang.org/x/sync v0.16.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
-	golang.org/x/term v0.32.0 // indirect
-	golang.org/x/time v0.11.0 // indirect
-	golang.org/x/tools v0.33.0 // indirect
+	golang.org/x/term v0.34.0 // indirect
+	golang.org/x/time v0.12.0 // indirect
+	golang.org/x/tools v0.35.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	google.golang.org/genproto v0.0.0-20250512202823-5a2f75b736a9 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250512202823-5a2f75b736a9 // indirect
+	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250818200422-3122310a409c // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
