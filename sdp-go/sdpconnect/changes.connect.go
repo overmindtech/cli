@@ -25,6 +25,8 @@ const (
 	ChangesServiceName = "changes.ChangesService"
 	// AutoTaggingServiceName is the fully-qualified name of the AutoTaggingService service.
 	AutoTaggingServiceName = "changes.AutoTaggingService"
+	// LabelServiceName is the fully-qualified name of the LabelService service.
+	LabelServiceName = "changes.LabelService"
 )
 
 // These constants are the fully-qualified names of the RPCs defined in this package. They're
@@ -112,6 +114,27 @@ const (
 	// AutoTaggingServiceTestRuleProcedure is the fully-qualified name of the AutoTaggingService's
 	// TestRule RPC.
 	AutoTaggingServiceTestRuleProcedure = "/changes.AutoTaggingService/TestRule"
+	// LabelServiceListLabelRulesProcedure is the fully-qualified name of the LabelService's
+	// ListLabelRules RPC.
+	LabelServiceListLabelRulesProcedure = "/changes.LabelService/ListLabelRules"
+	// LabelServiceCreateLabelRuleProcedure is the fully-qualified name of the LabelService's
+	// CreateLabelRule RPC.
+	LabelServiceCreateLabelRuleProcedure = "/changes.LabelService/CreateLabelRule"
+	// LabelServiceGetLabelRuleProcedure is the fully-qualified name of the LabelService's GetLabelRule
+	// RPC.
+	LabelServiceGetLabelRuleProcedure = "/changes.LabelService/GetLabelRule"
+	// LabelServiceUpdateLabelRuleProcedure is the fully-qualified name of the LabelService's
+	// UpdateLabelRule RPC.
+	LabelServiceUpdateLabelRuleProcedure = "/changes.LabelService/UpdateLabelRule"
+	// LabelServiceDeleteLabelRuleProcedure is the fully-qualified name of the LabelService's
+	// DeleteLabelRule RPC.
+	LabelServiceDeleteLabelRuleProcedure = "/changes.LabelService/DeleteLabelRule"
+	// LabelServiceTestLabelRuleProcedure is the fully-qualified name of the LabelService's
+	// TestLabelRule RPC.
+	LabelServiceTestLabelRuleProcedure = "/changes.LabelService/TestLabelRule"
+	// LabelServiceReapplyLabelRuleInTimeRangeProcedure is the fully-qualified name of the
+	// LabelService's ReapplyLabelRuleInTimeRange RPC.
+	LabelServiceReapplyLabelRuleInTimeRangeProcedure = "/changes.LabelService/ReapplyLabelRuleInTimeRange"
 )
 
 // ChangesServiceClient is a client for the changes.ChangesService service.
@@ -966,4 +989,250 @@ func (UnimplementedAutoTaggingServiceHandler) ExportRule(context.Context, *conne
 
 func (UnimplementedAutoTaggingServiceHandler) TestRule(context.Context, *connect.Request[sdp_go.TestRuleRequest], *connect.ServerStream[sdp_go.TestRuleResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("changes.AutoTaggingService.TestRule is not implemented"))
+}
+
+// LabelServiceClient is a client for the changes.LabelService service.
+type LabelServiceClient interface {
+	// Lists all label rules for an account
+	ListLabelRules(context.Context, *connect.Request[sdp_go.ListLabelRulesRequest]) (*connect.Response[sdp_go.ListLabelRulesResponse], error)
+	// Creates a new label rule
+	CreateLabelRule(context.Context, *connect.Request[sdp_go.CreateLabelRuleRequest]) (*connect.Response[sdp_go.CreateLabelRuleResponse], error)
+	// Gets the details of a label rule
+	GetLabelRule(context.Context, *connect.Request[sdp_go.GetLabelRuleRequest]) (*connect.Response[sdp_go.GetLabelRuleResponse], error)
+	// Updates a label rule
+	UpdateLabelRule(context.Context, *connect.Request[sdp_go.UpdateLabelRuleRequest]) (*connect.Response[sdp_go.UpdateLabelRuleResponse], error)
+	// Deletes a label rule
+	// this also removes the label from all changes that are currently labelled with this rule
+	DeleteLabelRule(context.Context, *connect.Request[sdp_go.DeleteLabelRuleRequest]) (*connect.Response[sdp_go.DeleteLabelRuleResponse], error)
+	// Test a label rule against a list of changes, this does not apply the label to the changes, it only tests if the label should be applied
+	TestLabelRule(context.Context, *connect.Request[sdp_go.TestLabelRuleRequest]) (*connect.ServerStreamForClient[sdp_go.TestLabelRuleResponse], error)
+	// Re-apply a label rule across all changes within a specified time window:
+	// 1. Removes the label from all relevant changes in the period that match this rule
+	// 2. Applies (or re-applies) the label to eligible changes in the period
+	ReapplyLabelRuleInTimeRange(context.Context, *connect.Request[sdp_go.ReapplyLabelRuleInTimeRangeRequest]) (*connect.Response[sdp_go.ReapplyLabelRuleInTimeRangeResponse], error)
+}
+
+// NewLabelServiceClient constructs a client for the changes.LabelService service. By default, it
+// uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and sends
+// uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC() or
+// connect.WithGRPCWeb() options.
+//
+// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
+// http://api.acme.com or https://acme.com/grpc).
+func NewLabelServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) LabelServiceClient {
+	baseURL = strings.TrimRight(baseURL, "/")
+	labelServiceMethods := sdp_go.File_changes_proto.Services().ByName("LabelService").Methods()
+	return &labelServiceClient{
+		listLabelRules: connect.NewClient[sdp_go.ListLabelRulesRequest, sdp_go.ListLabelRulesResponse](
+			httpClient,
+			baseURL+LabelServiceListLabelRulesProcedure,
+			connect.WithSchema(labelServiceMethods.ByName("ListLabelRules")),
+			connect.WithClientOptions(opts...),
+		),
+		createLabelRule: connect.NewClient[sdp_go.CreateLabelRuleRequest, sdp_go.CreateLabelRuleResponse](
+			httpClient,
+			baseURL+LabelServiceCreateLabelRuleProcedure,
+			connect.WithSchema(labelServiceMethods.ByName("CreateLabelRule")),
+			connect.WithClientOptions(opts...),
+		),
+		getLabelRule: connect.NewClient[sdp_go.GetLabelRuleRequest, sdp_go.GetLabelRuleResponse](
+			httpClient,
+			baseURL+LabelServiceGetLabelRuleProcedure,
+			connect.WithSchema(labelServiceMethods.ByName("GetLabelRule")),
+			connect.WithClientOptions(opts...),
+		),
+		updateLabelRule: connect.NewClient[sdp_go.UpdateLabelRuleRequest, sdp_go.UpdateLabelRuleResponse](
+			httpClient,
+			baseURL+LabelServiceUpdateLabelRuleProcedure,
+			connect.WithSchema(labelServiceMethods.ByName("UpdateLabelRule")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteLabelRule: connect.NewClient[sdp_go.DeleteLabelRuleRequest, sdp_go.DeleteLabelRuleResponse](
+			httpClient,
+			baseURL+LabelServiceDeleteLabelRuleProcedure,
+			connect.WithSchema(labelServiceMethods.ByName("DeleteLabelRule")),
+			connect.WithClientOptions(opts...),
+		),
+		testLabelRule: connect.NewClient[sdp_go.TestLabelRuleRequest, sdp_go.TestLabelRuleResponse](
+			httpClient,
+			baseURL+LabelServiceTestLabelRuleProcedure,
+			connect.WithSchema(labelServiceMethods.ByName("TestLabelRule")),
+			connect.WithClientOptions(opts...),
+		),
+		reapplyLabelRuleInTimeRange: connect.NewClient[sdp_go.ReapplyLabelRuleInTimeRangeRequest, sdp_go.ReapplyLabelRuleInTimeRangeResponse](
+			httpClient,
+			baseURL+LabelServiceReapplyLabelRuleInTimeRangeProcedure,
+			connect.WithSchema(labelServiceMethods.ByName("ReapplyLabelRuleInTimeRange")),
+			connect.WithClientOptions(opts...),
+		),
+	}
+}
+
+// labelServiceClient implements LabelServiceClient.
+type labelServiceClient struct {
+	listLabelRules              *connect.Client[sdp_go.ListLabelRulesRequest, sdp_go.ListLabelRulesResponse]
+	createLabelRule             *connect.Client[sdp_go.CreateLabelRuleRequest, sdp_go.CreateLabelRuleResponse]
+	getLabelRule                *connect.Client[sdp_go.GetLabelRuleRequest, sdp_go.GetLabelRuleResponse]
+	updateLabelRule             *connect.Client[sdp_go.UpdateLabelRuleRequest, sdp_go.UpdateLabelRuleResponse]
+	deleteLabelRule             *connect.Client[sdp_go.DeleteLabelRuleRequest, sdp_go.DeleteLabelRuleResponse]
+	testLabelRule               *connect.Client[sdp_go.TestLabelRuleRequest, sdp_go.TestLabelRuleResponse]
+	reapplyLabelRuleInTimeRange *connect.Client[sdp_go.ReapplyLabelRuleInTimeRangeRequest, sdp_go.ReapplyLabelRuleInTimeRangeResponse]
+}
+
+// ListLabelRules calls changes.LabelService.ListLabelRules.
+func (c *labelServiceClient) ListLabelRules(ctx context.Context, req *connect.Request[sdp_go.ListLabelRulesRequest]) (*connect.Response[sdp_go.ListLabelRulesResponse], error) {
+	return c.listLabelRules.CallUnary(ctx, req)
+}
+
+// CreateLabelRule calls changes.LabelService.CreateLabelRule.
+func (c *labelServiceClient) CreateLabelRule(ctx context.Context, req *connect.Request[sdp_go.CreateLabelRuleRequest]) (*connect.Response[sdp_go.CreateLabelRuleResponse], error) {
+	return c.createLabelRule.CallUnary(ctx, req)
+}
+
+// GetLabelRule calls changes.LabelService.GetLabelRule.
+func (c *labelServiceClient) GetLabelRule(ctx context.Context, req *connect.Request[sdp_go.GetLabelRuleRequest]) (*connect.Response[sdp_go.GetLabelRuleResponse], error) {
+	return c.getLabelRule.CallUnary(ctx, req)
+}
+
+// UpdateLabelRule calls changes.LabelService.UpdateLabelRule.
+func (c *labelServiceClient) UpdateLabelRule(ctx context.Context, req *connect.Request[sdp_go.UpdateLabelRuleRequest]) (*connect.Response[sdp_go.UpdateLabelRuleResponse], error) {
+	return c.updateLabelRule.CallUnary(ctx, req)
+}
+
+// DeleteLabelRule calls changes.LabelService.DeleteLabelRule.
+func (c *labelServiceClient) DeleteLabelRule(ctx context.Context, req *connect.Request[sdp_go.DeleteLabelRuleRequest]) (*connect.Response[sdp_go.DeleteLabelRuleResponse], error) {
+	return c.deleteLabelRule.CallUnary(ctx, req)
+}
+
+// TestLabelRule calls changes.LabelService.TestLabelRule.
+func (c *labelServiceClient) TestLabelRule(ctx context.Context, req *connect.Request[sdp_go.TestLabelRuleRequest]) (*connect.ServerStreamForClient[sdp_go.TestLabelRuleResponse], error) {
+	return c.testLabelRule.CallServerStream(ctx, req)
+}
+
+// ReapplyLabelRuleInTimeRange calls changes.LabelService.ReapplyLabelRuleInTimeRange.
+func (c *labelServiceClient) ReapplyLabelRuleInTimeRange(ctx context.Context, req *connect.Request[sdp_go.ReapplyLabelRuleInTimeRangeRequest]) (*connect.Response[sdp_go.ReapplyLabelRuleInTimeRangeResponse], error) {
+	return c.reapplyLabelRuleInTimeRange.CallUnary(ctx, req)
+}
+
+// LabelServiceHandler is an implementation of the changes.LabelService service.
+type LabelServiceHandler interface {
+	// Lists all label rules for an account
+	ListLabelRules(context.Context, *connect.Request[sdp_go.ListLabelRulesRequest]) (*connect.Response[sdp_go.ListLabelRulesResponse], error)
+	// Creates a new label rule
+	CreateLabelRule(context.Context, *connect.Request[sdp_go.CreateLabelRuleRequest]) (*connect.Response[sdp_go.CreateLabelRuleResponse], error)
+	// Gets the details of a label rule
+	GetLabelRule(context.Context, *connect.Request[sdp_go.GetLabelRuleRequest]) (*connect.Response[sdp_go.GetLabelRuleResponse], error)
+	// Updates a label rule
+	UpdateLabelRule(context.Context, *connect.Request[sdp_go.UpdateLabelRuleRequest]) (*connect.Response[sdp_go.UpdateLabelRuleResponse], error)
+	// Deletes a label rule
+	// this also removes the label from all changes that are currently labelled with this rule
+	DeleteLabelRule(context.Context, *connect.Request[sdp_go.DeleteLabelRuleRequest]) (*connect.Response[sdp_go.DeleteLabelRuleResponse], error)
+	// Test a label rule against a list of changes, this does not apply the label to the changes, it only tests if the label should be applied
+	TestLabelRule(context.Context, *connect.Request[sdp_go.TestLabelRuleRequest], *connect.ServerStream[sdp_go.TestLabelRuleResponse]) error
+	// Re-apply a label rule across all changes within a specified time window:
+	// 1. Removes the label from all relevant changes in the period that match this rule
+	// 2. Applies (or re-applies) the label to eligible changes in the period
+	ReapplyLabelRuleInTimeRange(context.Context, *connect.Request[sdp_go.ReapplyLabelRuleInTimeRangeRequest]) (*connect.Response[sdp_go.ReapplyLabelRuleInTimeRangeResponse], error)
+}
+
+// NewLabelServiceHandler builds an HTTP handler from the service implementation. It returns the
+// path on which to mount the handler and the handler itself.
+//
+// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
+// and JSON codecs. They also support gzip compression.
+func NewLabelServiceHandler(svc LabelServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	labelServiceMethods := sdp_go.File_changes_proto.Services().ByName("LabelService").Methods()
+	labelServiceListLabelRulesHandler := connect.NewUnaryHandler(
+		LabelServiceListLabelRulesProcedure,
+		svc.ListLabelRules,
+		connect.WithSchema(labelServiceMethods.ByName("ListLabelRules")),
+		connect.WithHandlerOptions(opts...),
+	)
+	labelServiceCreateLabelRuleHandler := connect.NewUnaryHandler(
+		LabelServiceCreateLabelRuleProcedure,
+		svc.CreateLabelRule,
+		connect.WithSchema(labelServiceMethods.ByName("CreateLabelRule")),
+		connect.WithHandlerOptions(opts...),
+	)
+	labelServiceGetLabelRuleHandler := connect.NewUnaryHandler(
+		LabelServiceGetLabelRuleProcedure,
+		svc.GetLabelRule,
+		connect.WithSchema(labelServiceMethods.ByName("GetLabelRule")),
+		connect.WithHandlerOptions(opts...),
+	)
+	labelServiceUpdateLabelRuleHandler := connect.NewUnaryHandler(
+		LabelServiceUpdateLabelRuleProcedure,
+		svc.UpdateLabelRule,
+		connect.WithSchema(labelServiceMethods.ByName("UpdateLabelRule")),
+		connect.WithHandlerOptions(opts...),
+	)
+	labelServiceDeleteLabelRuleHandler := connect.NewUnaryHandler(
+		LabelServiceDeleteLabelRuleProcedure,
+		svc.DeleteLabelRule,
+		connect.WithSchema(labelServiceMethods.ByName("DeleteLabelRule")),
+		connect.WithHandlerOptions(opts...),
+	)
+	labelServiceTestLabelRuleHandler := connect.NewServerStreamHandler(
+		LabelServiceTestLabelRuleProcedure,
+		svc.TestLabelRule,
+		connect.WithSchema(labelServiceMethods.ByName("TestLabelRule")),
+		connect.WithHandlerOptions(opts...),
+	)
+	labelServiceReapplyLabelRuleInTimeRangeHandler := connect.NewUnaryHandler(
+		LabelServiceReapplyLabelRuleInTimeRangeProcedure,
+		svc.ReapplyLabelRuleInTimeRange,
+		connect.WithSchema(labelServiceMethods.ByName("ReapplyLabelRuleInTimeRange")),
+		connect.WithHandlerOptions(opts...),
+	)
+	return "/changes.LabelService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case LabelServiceListLabelRulesProcedure:
+			labelServiceListLabelRulesHandler.ServeHTTP(w, r)
+		case LabelServiceCreateLabelRuleProcedure:
+			labelServiceCreateLabelRuleHandler.ServeHTTP(w, r)
+		case LabelServiceGetLabelRuleProcedure:
+			labelServiceGetLabelRuleHandler.ServeHTTP(w, r)
+		case LabelServiceUpdateLabelRuleProcedure:
+			labelServiceUpdateLabelRuleHandler.ServeHTTP(w, r)
+		case LabelServiceDeleteLabelRuleProcedure:
+			labelServiceDeleteLabelRuleHandler.ServeHTTP(w, r)
+		case LabelServiceTestLabelRuleProcedure:
+			labelServiceTestLabelRuleHandler.ServeHTTP(w, r)
+		case LabelServiceReapplyLabelRuleInTimeRangeProcedure:
+			labelServiceReapplyLabelRuleInTimeRangeHandler.ServeHTTP(w, r)
+		default:
+			http.NotFound(w, r)
+		}
+	})
+}
+
+// UnimplementedLabelServiceHandler returns CodeUnimplemented from all methods.
+type UnimplementedLabelServiceHandler struct{}
+
+func (UnimplementedLabelServiceHandler) ListLabelRules(context.Context, *connect.Request[sdp_go.ListLabelRulesRequest]) (*connect.Response[sdp_go.ListLabelRulesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.LabelService.ListLabelRules is not implemented"))
+}
+
+func (UnimplementedLabelServiceHandler) CreateLabelRule(context.Context, *connect.Request[sdp_go.CreateLabelRuleRequest]) (*connect.Response[sdp_go.CreateLabelRuleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.LabelService.CreateLabelRule is not implemented"))
+}
+
+func (UnimplementedLabelServiceHandler) GetLabelRule(context.Context, *connect.Request[sdp_go.GetLabelRuleRequest]) (*connect.Response[sdp_go.GetLabelRuleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.LabelService.GetLabelRule is not implemented"))
+}
+
+func (UnimplementedLabelServiceHandler) UpdateLabelRule(context.Context, *connect.Request[sdp_go.UpdateLabelRuleRequest]) (*connect.Response[sdp_go.UpdateLabelRuleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.LabelService.UpdateLabelRule is not implemented"))
+}
+
+func (UnimplementedLabelServiceHandler) DeleteLabelRule(context.Context, *connect.Request[sdp_go.DeleteLabelRuleRequest]) (*connect.Response[sdp_go.DeleteLabelRuleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.LabelService.DeleteLabelRule is not implemented"))
+}
+
+func (UnimplementedLabelServiceHandler) TestLabelRule(context.Context, *connect.Request[sdp_go.TestLabelRuleRequest], *connect.ServerStream[sdp_go.TestLabelRuleResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("changes.LabelService.TestLabelRule is not implemented"))
+}
+
+func (UnimplementedLabelServiceHandler) ReapplyLabelRuleInTimeRange(context.Context, *connect.Request[sdp_go.ReapplyLabelRuleInTimeRangeRequest]) (*connect.Response[sdp_go.ReapplyLabelRuleInTimeRangeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.LabelService.ReapplyLabelRuleInTimeRange is not implemented"))
 }
