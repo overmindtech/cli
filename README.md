@@ -1,7 +1,7 @@
 <p align="center">
-  <picture width="260px" align="center">
-      <source media="(prefers-color-scheme: dark)" srcset="https://assets-global.website-files.com/6241e92445c21f9c1245a940/6582c2b96d741b023f1afabf_ov-lite-icon-p-500.png">
-      <img alt="Overmind" src="https://assets-global.website-files.com/6241e92445c21f9c1245a940/6582c2b96d741b023f1afabf_ov-lite-icon-p-500.png" width="260px" align="center">
+  <picture width="120px" align="center">
+      <source media="(prefers-color-scheme: dark)" srcset="https://cdn.prod.website-files.com/6241e92445c21f9c1245a940/69047fa84e22dce67b16f483_logo.png">
+      <img alt="Overmind" src="https://cdn.prod.website-files.com/6241e92445c21f9c1245a940/69047fa84e22dce67b16f483_logo.png" width="120px" align="center">
     </picture>
   <h1 align="center">Overmind CLI</h1>
 
@@ -20,16 +20,14 @@ Overmind is a **tribal knowledge database** that empowers your team to manage in
 ### Signs your team needs Overmind
 
 - **Blocked Experts & Slow Onboarding**
-
   - Expert team members spend too much time on approvals, reducing overall productivity.
   - Newer staff face a steep learning curve, delaying their effectiveness.
 
 - **Limited Dependency Visibility**
-
   - Tools like Terraform show intended changes but don't reveal underlying dependencies.
   - Difficulty in assessing whether changes will disrupt existing applications.
-- **Complex Outage Troubleshooting**
 
+- **Complex Outage Troubleshooting**
   - Pinpointing issues during outages is challenging due to hidden dependencies.
   - Outages often result from intricate, unforeseen relationships rather than simple cause-and-effect.
 
@@ -53,7 +51,7 @@ Run a terraform plan:
 overmind terraform plan
 ```
 
-![Running 'overmind terraform plan' and viewing in the app](https://uploads-ssl.webflow.com/6241e92445c21f9c1245a940/666039f90a7a42bebcfaf692_overmind_cli_demo%20(1).gif)
+![Running 'overmind terraform plan' and viewing in the app](<https://uploads-ssl.webflow.com/6241e92445c21f9c1245a940/666039f90a7a42bebcfaf692_overmind_cli_demo%20(1).gif>)
 
 <details>
 <summary>Install on other platforms</summary>
@@ -217,20 +215,20 @@ overmind --version
 
 - `overmind explore`
 
-    Overmind Assistant is a chat assistant that has real-time access to all your
-    AWS, GCP and K8S infrastructure. It alleviates the mental exhaustion of
-    manual troubleshooting, simplifies incident resolution by easily accessing
-    historical data, and automates time-consuming tasks such as documentation
-    and Terraform code generation. You can access the assistant by running
-    `overmind explore`.
+  Overmind Assistant is a chat assistant that has real-time access to all your
+  AWS, GCP and K8S infrastructure. It alleviates the mental exhaustion of
+  manual troubleshooting, simplifies incident resolution by easily accessing
+  historical data, and automates time-consuming tasks such as documentation
+  and Terraform code generation. You can access the assistant by running
+  `overmind explore`.
 
 - `overmind terraform plan / apply`
 
-    Overmind can identify the blast radius and uncover potential risks with
-    `overmind terraform plan` before they harm your infrastructure, allowing
-    anyone to make changes with confidence. It can also track the impact of the
-    changes you make with `overmind terraform apply`, so that you can be sure
-    that your changes haven't had any unexpected downstream impact.
+  Overmind can identify the blast radius and uncover potential risks with
+  `overmind terraform plan` before they harm your infrastructure, allowing
+  anyone to make changes with confidence. It can also track the impact of the
+  changes you make with `overmind terraform apply`, so that you can be sure
+  that your changes haven't had any unexpected downstream impact.
 
 ## Cloud Provider Support
 
