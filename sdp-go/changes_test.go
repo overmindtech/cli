@@ -2,6 +2,7 @@ package sdp
 
 import (
 	reflect "reflect"
+	"strings"
 	"testing"
 )
 
@@ -135,84 +136,6 @@ func TestYamlStringToRuleProperties(t *testing.T) {
 	}
 }
 
-func TestYamlStringToRoutineChangesConfig(t *testing.T) {
-	t.Parallel()
-	tests := []struct {
-		name       string
-		yamlString string
-		want       *RoutineChangesConfig
-		wantErr    bool
-	}{
-		{
-			name:       "valid yaml, typical values",
-			yamlString: "sensitivity: 2.5\nduration_in_days: 10\nevents_per_day: 3",
-			want: &RoutineChangesConfig{
-				Sensitivity:   2.5,
-				EventsPer:     3.0,
-				EventsPerUnit: RoutineChangesConfig_DAYS,
-				Duration:      10.0,
-				DurationUnit:  RoutineChangesConfig_DAYS,
-			},
-			wantErr: false,
-		},
-		{
-			name:       "invalid yaml, zero values (events_per_day and duration_in_days too low)",
-			yamlString: "sensitivity: 0\nduration_in_days: 0\nevents_per_day: 0",
-			want:       nil,
-			wantErr:    true,
-		},
-		{
-			name:       "invalid yaml",
-			yamlString: "not_yaml",
-			want:       nil,
-			wantErr:    true,
-		},
-		{
-			name:       "invalid yaml, missing fields (events_per_day and duration_in_days too low)",
-			yamlString: "sensitivity: 1.2",
-			want:       nil,
-			wantErr:    true,
-		},
-		{
-			name:       "empty yaml (all values too low)",
-			yamlString: "",
-			want:       nil,
-			wantErr:    true,
-		},
-		{
-			name:       "invalid sensitivity (negative)",
-			yamlString: "sensitivity: -1\nduration_in_days: 10\nevents_per_day: 3",
-			want:       nil,
-			wantErr:    true,
-		},
-		{
-			name:       "invalid events_per_day (too low)",
-			yamlString: "sensitivity: 1\nduration_in_days: 10\nevents_per_day: 0",
-			want:       nil,
-			wantErr:    true,
-		},
-		{
-			name:       "invalid duration_in_days (too low)",
-			yamlString: "sensitivity: 1\nduration_in_days: 0\nevents_per_day: 3",
-			want:       nil,
-			wantErr:    true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := YamlStringToRoutineChangesConfig(tt.yamlString)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("YamlStringToRoutineChangesConfig() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !tt.wantErr && !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("YamlStringToRoutineChangesConfig()\ngot\n%#v\nwant\n%#v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestFindInProgressEntry(t *testing.T) {
 	t.Parallel()
 
@@ -333,6 +256,204 @@ func TestFindInProgressEntry(t *testing.T) {
 
 			if status != tt.expectedStatus {
 				t.Errorf("Expected status %s, got %s", tt.expectedStatus, status)
+			}
+		})
+	}
+}
+
+func TestValidateRoutineChangesConfig(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		config      *RoutineChangesYAML
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name: "valid config",
+			config: &RoutineChangesYAML{
+				EventsPerDay:   10.0,
+				DurationInDays: 7.0,
+				Sensitivity:    0.5,
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid config with minimum values",
+			config: &RoutineChangesYAML{
+				EventsPerDay:   1.0,
+				DurationInDays: 1.0,
+				Sensitivity:    0.0,
+			},
+			wantErr: false,
+		},
+		{
+			name: "events_per_day less than 1",
+			config: &RoutineChangesYAML{
+				EventsPerDay:   0.5,
+				DurationInDays: 7.0,
+				Sensitivity:    0.5,
+			},
+			wantErr:     true,
+			errContains: "events_per_day must be greater than 1",
+		},
+		{
+			name: "events_per_day equals 0",
+			config: &RoutineChangesYAML{
+				EventsPerDay:   0.0,
+				DurationInDays: 7.0,
+				Sensitivity:    0.5,
+			},
+			wantErr:     true,
+			errContains: "events_per_day must be greater than 1",
+		},
+		{
+			name: "events_per_day negative",
+			config: &RoutineChangesYAML{
+				EventsPerDay:   -1.0,
+				DurationInDays: 7.0,
+				Sensitivity:    0.5,
+			},
+			wantErr:     true,
+			errContains: "events_per_day must be greater than 1",
+		},
+		{
+			name: "duration_in_days less than 1",
+			config: &RoutineChangesYAML{
+				EventsPerDay:   10.0,
+				DurationInDays: 0.5,
+				Sensitivity:    0.5,
+			},
+			wantErr:     true,
+			errContains: "duration_in_days must be greater than 1",
+		},
+		{
+			name: "duration_in_days equals 0",
+			config: &RoutineChangesYAML{
+				EventsPerDay:   10.0,
+				DurationInDays: 0.0,
+				Sensitivity:    0.5,
+			},
+			wantErr:     true,
+			errContains: "duration_in_days must be greater than 1",
+		},
+		{
+			name: "duration_in_days negative",
+			config: &RoutineChangesYAML{
+				EventsPerDay:   10.0,
+				DurationInDays: -1.0,
+				Sensitivity:    0.5,
+			},
+			wantErr:     true,
+			errContains: "duration_in_days must be greater than 1",
+		},
+		{
+			name: "sensitivity negative",
+			config: &RoutineChangesYAML{
+				EventsPerDay:   10.0,
+				DurationInDays: 7.0,
+				Sensitivity:    -0.1,
+			},
+			wantErr:     true,
+			errContains: "sensitivity must be 0 or higher",
+		},
+		{
+			name: "multiple invalid fields - events_per_day checked first",
+			config: &RoutineChangesYAML{
+				EventsPerDay:   0.0,
+				DurationInDays: 0.0,
+				Sensitivity:    -1.0,
+			},
+			wantErr:     true,
+			errContains: "events_per_day must be greater than 1",
+		},
+		{
+			name: "multiple invalid fields - duration_in_days checked second",
+			config: &RoutineChangesYAML{
+				EventsPerDay:   10.0,
+				DurationInDays: 0.0,
+				Sensitivity:    -1.0,
+			},
+			wantErr:     true,
+			errContains: "duration_in_days must be greater than 1",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateRoutineChangesConfig(tt.config)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateRoutineChangesConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr && tt.errContains != "" {
+				if err == nil {
+					t.Errorf("validateRoutineChangesConfig() expected error containing %q, got nil", tt.errContains)
+				} else if !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("validateRoutineChangesConfig() error = %v, want error containing %q", err, tt.errContains)
+				}
+			}
+		})
+	}
+}
+
+func TestYamlStringToSignalConfig_NilCombinations(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		yamlString  string
+		wantErr     bool
+		wantRoutine bool
+		wantGithub  bool
+	}{
+		{
+			name:        "both nil -> error",
+			yamlString:  "{}\n",
+			wantErr:     true,
+			wantRoutine: false,
+			wantGithub:  false,
+		},
+		{
+			name:        "only routine present",
+			yamlString:  "routine_changes_config:\n  sensitivity: 0\n  duration_in_days: 1\n  events_per_day: 1\n",
+			wantErr:     false,
+			wantRoutine: true,
+			wantGithub:  false,
+		},
+		{
+			name:        "only github present",
+			yamlString:  "github_organisation_profile:\n  primary_branch_name: main\n",
+			wantErr:     false,
+			wantRoutine: false,
+			wantGithub:  true,
+		},
+		{
+			name:        "both present",
+			yamlString:  "routine_changes_config:\n  sensitivity: 0\n  duration_in_days: 1\n  events_per_day: 1\ngithub_organisation_profile:\n  primary_branch_name: main\n",
+			wantErr:     false,
+			wantRoutine: true,
+			wantGithub:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := YamlStringToSignalConfig(tt.yamlString)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("YamlStringToSignalConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr {
+				return
+			}
+
+			if (got.RoutineChangesConfig != nil) != tt.wantRoutine {
+				t.Errorf("RoutineChangesConfig presence = %v, want %v", got.RoutineChangesConfig != nil, tt.wantRoutine)
+			}
+			if (got.GithubOrganisationProfile != nil) != tt.wantGithub {
+				t.Errorf("GithubOrganisationProfile presence = %v, want %v", got.GithubOrganisationProfile != nil, tt.wantGithub)
 			}
 		})
 	}

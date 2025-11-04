@@ -3238,8 +3238,10 @@ type StartChangeAnalysisRequest struct {
 	// The routine config that should be used for this change. If this is empty
 	// the routine config that has been configured in the UI will be used
 	RoutineChangesConfigOverride *RoutineChangesConfig `protobuf:"bytes,5,opt,name=routineChangesConfigOverride,proto3,oneof" json:"routineChangesConfigOverride,omitempty"`
-	unknownFields                protoimpl.UnknownFields
-	sizeCache                    protoimpl.SizeCache
+	// github organisation profile to use for this change
+	GithubOrganisationProfileOverride *GithubOrganisationProfile `protobuf:"bytes,6,opt,name=githubOrganisationProfileOverride,proto3,oneof" json:"githubOrganisationProfileOverride,omitempty"`
+	unknownFields                     protoimpl.UnknownFields
+	sizeCache                         protoimpl.SizeCache
 }
 
 func (x *StartChangeAnalysisRequest) Reset() {
@@ -3303,6 +3305,13 @@ func (x *StartChangeAnalysisRequest) GetAutoTaggingRulesOverride() []*RuleProper
 func (x *StartChangeAnalysisRequest) GetRoutineChangesConfigOverride() *RoutineChangesConfig {
 	if x != nil {
 		return x.RoutineChangesConfigOverride
+	}
+	return nil
+}
+
+func (x *StartChangeAnalysisRequest) GetGithubOrganisationProfileOverride() *GithubOrganisationProfile {
+	if x != nil {
+		return x.GithubOrganisationProfileOverride
 	}
 	return nil
 }
@@ -6375,7 +6384,7 @@ const file_changes_proto_rawDesc = "" +
 	"\fmappingQuery\x18\x02 \x01(\v2\x06.QueryH\x00R\fmappingQuery\x88\x01\x01\x124\n" +
 	"\fmappingError\x18\x03 \x01(\v2\v.QueryErrorH\x01R\fmappingError\x88\x01\x01B\x0f\n" +
 	"\r_mappingQueryB\x0f\n" +
-	"\r_mappingError\"\xd4\x03\n" +
+	"\r_mappingError\"\xf0\x04\n" +
 	"\x1aStartChangeAnalysisRequest\x12\x1e\n" +
 	"\n" +
 	"changeUUID\x18\x01 \x01(\fR\n" +
@@ -6383,9 +6392,11 @@ const file_changes_proto_rawDesc = "" +
 	"\rchangingItems\x18\x02 \x03(\v2\x17.changes.MappedItemDiffR\rchangingItems\x12\\\n" +
 	"\x19blastRadiusConfigOverride\x18\x03 \x01(\v2\x19.config.BlastRadiusConfigH\x00R\x19blastRadiusConfigOverride\x88\x01\x01\x12S\n" +
 	"\x18autoTaggingRulesOverride\x18\x04 \x03(\v2\x17.changes.RulePropertiesR\x18autoTaggingRulesOverride\x12e\n" +
-	"\x1croutineChangesConfigOverride\x18\x05 \x01(\v2\x1c.config.RoutineChangesConfigH\x01R\x1croutineChangesConfigOverride\x88\x01\x01B\x1c\n" +
+	"\x1croutineChangesConfigOverride\x18\x05 \x01(\v2\x1c.config.RoutineChangesConfigH\x01R\x1croutineChangesConfigOverride\x88\x01\x01\x12t\n" +
+	"!githubOrganisationProfileOverride\x18\x06 \x01(\v2!.config.GithubOrganisationProfileH\x02R!githubOrganisationProfileOverride\x88\x01\x01B\x1c\n" +
 	"\x1a_blastRadiusConfigOverrideB\x1f\n" +
-	"\x1d_routineChangesConfigOverride\"\x1d\n" +
+	"\x1d_routineChangesConfigOverrideB$\n" +
+	"\"_githubOrganisationProfileOverride\"\x1d\n" +
 	"\x1bStartChangeAnalysisResponse\"\x96\x01\n" +
 	"\x16ListHomeChangesRequest\x122\n" +
 	"\n" +
@@ -6846,12 +6857,13 @@ var file_changes_proto_goTypes = []any{
 	(*QueryError)(nil),                          // 115: QueryError
 	(*BlastRadiusConfig)(nil),                   // 116: config.BlastRadiusConfig
 	(*RoutineChangesConfig)(nil),                // 117: config.RoutineChangesConfig
-	(*PaginationRequest)(nil),                   // 118: PaginationRequest
-	(SortOrder)(0),                              // 119: SortOrder
-	(*PaginationResponse)(nil),                  // 120: PaginationResponse
-	(*Reference)(nil),                           // 121: Reference
-	(Health)(0),                                 // 122: Health
-	(*Item)(nil),                                // 123: Item
+	(*GithubOrganisationProfile)(nil),           // 118: config.GithubOrganisationProfile
+	(*PaginationRequest)(nil),                   // 119: PaginationRequest
+	(SortOrder)(0),                              // 120: SortOrder
+	(*PaginationResponse)(nil),                  // 121: PaginationResponse
+	(*Reference)(nil),                           // 122: Reference
+	(Health)(0),                                 // 123: Health
+	(*Item)(nil),                                // 124: Item
 }
 var file_changes_proto_depIdxs = []int32{
 	11,  // 0: changes.LabelRule.metadata:type_name -> changes.LabelRuleMetadata
@@ -6906,139 +6918,140 @@ var file_changes_proto_depIdxs = []int32{
 	116, // 49: changes.StartChangeAnalysisRequest.blastRadiusConfigOverride:type_name -> config.BlastRadiusConfig
 	27,  // 50: changes.StartChangeAnalysisRequest.autoTaggingRulesOverride:type_name -> changes.RuleProperties
 	117, // 51: changes.StartChangeAnalysisRequest.routineChangesConfigOverride:type_name -> config.RoutineChangesConfig
-	118, // 52: changes.ListHomeChangesRequest.pagination:type_name -> PaginationRequest
-	62,  // 53: changes.ListHomeChangesRequest.filters:type_name -> changes.ChangeFiltersRequest
-	106, // 54: changes.ChangeFiltersRequest.tags:type_name -> changes.ChangeFiltersRequest.TagsEntry
-	8,   // 55: changes.ChangeFiltersRequest.risks:type_name -> changes.Risk.Severity
-	4,   // 56: changes.ChangeFiltersRequest.statuses:type_name -> changes.ChangeStatus
-	119, // 57: changes.ChangeFiltersRequest.sortOrder:type_name -> SortOrder
-	73,  // 58: changes.ListHomeChangesResponse.changes:type_name -> changes.ChangeSummary
-	120, // 59: changes.ListHomeChangesResponse.pagination:type_name -> PaginationResponse
-	121, // 60: changes.ItemDiffSummary.item:type_name -> Reference
-	1,   // 61: changes.ItemDiffSummary.status:type_name -> changes.ItemDiffStatus
-	122, // 62: changes.ItemDiffSummary.healthAfter:type_name -> Health
-	121, // 63: changes.ItemDiff.item:type_name -> Reference
-	1,   // 64: changes.ItemDiff.status:type_name -> changes.ItemDiffStatus
-	123, // 65: changes.ItemDiff.before:type_name -> Item
-	123, // 66: changes.ItemDiff.after:type_name -> Item
-	107, // 67: changes.EnrichedTags.tagValue:type_name -> changes.EnrichedTags.TagValueEntry
-	70,  // 68: changes.TagValue.userTagValue:type_name -> changes.UserTagValue
-	71,  // 69: changes.TagValue.autoTagValue:type_name -> changes.AutoTagValue
-	3,   // 70: changes.Label.type:type_name -> changes.LabelType
-	4,   // 71: changes.ChangeSummary.status:type_name -> changes.ChangeStatus
-	112, // 72: changes.ChangeSummary.createdAt:type_name -> google.protobuf.Timestamp
-	108, // 73: changes.ChangeSummary.tags:type_name -> changes.ChangeSummary.TagsEntry
-	68,  // 74: changes.ChangeSummary.enrichedTags:type_name -> changes.EnrichedTags
-	72,  // 75: changes.ChangeSummary.labels:type_name -> changes.Label
-	75,  // 76: changes.Change.metadata:type_name -> changes.ChangeMetadata
-	76,  // 77: changes.Change.properties:type_name -> changes.ChangeProperties
-	112, // 78: changes.ChangeMetadata.createdAt:type_name -> google.protobuf.Timestamp
-	112, // 79: changes.ChangeMetadata.updatedAt:type_name -> google.protobuf.Timestamp
-	4,   // 80: changes.ChangeMetadata.status:type_name -> changes.ChangeStatus
-	109, // 81: changes.ChangeMetadata.UnknownHealthChange:type_name -> changes.ChangeMetadata.HealthChange
-	109, // 82: changes.ChangeMetadata.OkHealthChange:type_name -> changes.ChangeMetadata.HealthChange
-	109, // 83: changes.ChangeMetadata.WarningHealthChange:type_name -> changes.ChangeMetadata.HealthChange
-	109, // 84: changes.ChangeMetadata.ErrorHealthChange:type_name -> changes.ChangeMetadata.HealthChange
-	109, // 85: changes.ChangeMetadata.PendingHealthChange:type_name -> changes.ChangeMetadata.HealthChange
-	67,  // 86: changes.ChangeProperties.plannedChanges:type_name -> changes.ItemDiff
-	110, // 87: changes.ChangeProperties.tags:type_name -> changes.ChangeProperties.TagsEntry
-	68,  // 88: changes.ChangeProperties.enrichedTags:type_name -> changes.EnrichedTags
-	111, // 89: changes.ChangeProperties.skippedAutoTags:type_name -> changes.ChangeProperties.SkippedAutoTagsEntry
-	5,   // 90: changes.ChangeProperties.autoTaggingRuleSource:type_name -> changes.ChangeProperties.AutoTaggingRuleSource
-	72,  // 91: changes.ChangeProperties.labels:type_name -> changes.Label
-	74,  // 92: changes.ListChangesResponse.changes:type_name -> changes.Change
-	4,   // 93: changes.ListChangesByStatusRequest.status:type_name -> changes.ChangeStatus
-	74,  // 94: changes.ListChangesByStatusResponse.changes:type_name -> changes.Change
-	76,  // 95: changes.CreateChangeRequest.properties:type_name -> changes.ChangeProperties
-	74,  // 96: changes.CreateChangeResponse.change:type_name -> changes.Change
-	2,   // 97: changes.GetChangeSummaryRequest.changeOutputFormat:type_name -> changes.ChangeOutputFormat
-	8,   // 98: changes.GetChangeSummaryRequest.riskSeverityFilter:type_name -> changes.Risk.Severity
-	74,  // 99: changes.GetChangeResponse.change:type_name -> changes.Change
-	104, // 100: changes.ChangeRiskMetadata.changeAnalysisStatus:type_name -> changes.ChangeAnalysisStatus
-	103, // 101: changes.ChangeRiskMetadata.risks:type_name -> changes.Risk
-	89,  // 102: changes.GetChangeRisksResponse.changeRiskMetadata:type_name -> changes.ChangeRiskMetadata
-	76,  // 103: changes.UpdateChangeRequest.properties:type_name -> changes.ChangeProperties
-	74,  // 104: changes.UpdateChangeResponse.change:type_name -> changes.Change
-	74,  // 105: changes.ListChangesBySnapshotUUIDResponse.changes:type_name -> changes.Change
-	6,   // 106: changes.StartChangeResponse.state:type_name -> changes.StartChangeResponse.State
-	7,   // 107: changes.EndChangeResponse.state:type_name -> changes.EndChangeResponse.State
-	8,   // 108: changes.Risk.severity:type_name -> changes.Risk.Severity
-	121, // 109: changes.Risk.relatedItems:type_name -> Reference
-	9,   // 110: changes.ChangeAnalysisStatus.status:type_name -> changes.ChangeAnalysisStatus.Status
-	43,  // 111: changes.AutoTaggingTimelineEntry.AutoTagResultsEntry.value:type_name -> changes.TestRuleResponse
-	69,  // 112: changes.EnrichedTags.TagValueEntry.value:type_name -> changes.TagValue
-	71,  // 113: changes.ChangeProperties.SkippedAutoTagsEntry.value:type_name -> changes.AutoTagValue
-	77,  // 114: changes.ChangesService.ListChanges:input_type -> changes.ListChangesRequest
-	79,  // 115: changes.ChangesService.ListChangesByStatus:input_type -> changes.ListChangesByStatusRequest
-	81,  // 116: changes.ChangesService.CreateChange:input_type -> changes.CreateChangeRequest
-	83,  // 117: changes.ChangesService.GetChange:input_type -> changes.GetChangeRequest
-	84,  // 118: changes.ChangesService.GetChangeByTicketLink:input_type -> changes.GetChangeByTicketLinkRequest
-	85,  // 119: changes.ChangesService.GetChangeSummary:input_type -> changes.GetChangeSummaryRequest
-	44,  // 120: changes.ChangesService.GetChangeTimelineV2:input_type -> changes.GetChangeTimelineV2Request
-	88,  // 121: changes.ChangesService.GetChangeRisks:input_type -> changes.GetChangeRisksRequest
-	91,  // 122: changes.ChangesService.UpdateChange:input_type -> changes.UpdateChangeRequest
-	93,  // 123: changes.ChangesService.DeleteChange:input_type -> changes.DeleteChangeRequest
-	94,  // 124: changes.ChangesService.ListChangesBySnapshotUUID:input_type -> changes.ListChangesBySnapshotUUIDRequest
-	97,  // 125: changes.ChangesService.RefreshState:input_type -> changes.RefreshStateRequest
-	99,  // 126: changes.ChangesService.StartChange:input_type -> changes.StartChangeRequest
-	101, // 127: changes.ChangesService.EndChange:input_type -> changes.EndChangeRequest
-	61,  // 128: changes.ChangesService.ListHomeChanges:input_type -> changes.ListHomeChangesRequest
-	59,  // 129: changes.ChangesService.StartChangeAnalysis:input_type -> changes.StartChangeAnalysisRequest
-	56,  // 130: changes.ChangesService.ListChangingItemsSummary:input_type -> changes.ListChangingItemsSummaryRequest
-	54,  // 131: changes.ChangesService.GetDiff:input_type -> changes.GetDiffRequest
-	64,  // 132: changes.ChangesService.PopulateChangeFilters:input_type -> changes.PopulateChangeFiltersRequest
-	30,  // 133: changes.AutoTaggingService.ListRules:input_type -> changes.ListRulesRequest
-	32,  // 134: changes.AutoTaggingService.CreateRule:input_type -> changes.CreateRuleRequest
-	34,  // 135: changes.AutoTaggingService.GetRule:input_type -> changes.GetRuleRequest
-	36,  // 136: changes.AutoTaggingService.UpdateRule:input_type -> changes.UpdateRuleRequest
-	38,  // 137: changes.AutoTaggingService.DeleteRule:input_type -> changes.DeleteRuleRequest
-	40,  // 138: changes.AutoTaggingService.ExportRule:input_type -> changes.ExportRuleRequest
-	42,  // 139: changes.AutoTaggingService.TestRule:input_type -> changes.TestRuleRequest
-	13,  // 140: changes.LabelService.ListLabelRules:input_type -> changes.ListLabelRulesRequest
-	15,  // 141: changes.LabelService.CreateLabelRule:input_type -> changes.CreateLabelRuleRequest
-	17,  // 142: changes.LabelService.GetLabelRule:input_type -> changes.GetLabelRuleRequest
-	19,  // 143: changes.LabelService.UpdateLabelRule:input_type -> changes.UpdateLabelRuleRequest
-	21,  // 144: changes.LabelService.DeleteLabelRule:input_type -> changes.DeleteLabelRuleRequest
-	23,  // 145: changes.LabelService.TestLabelRule:input_type -> changes.TestLabelRuleRequest
-	25,  // 146: changes.LabelService.ReapplyLabelRuleInTimeRange:input_type -> changes.ReapplyLabelRuleInTimeRangeRequest
-	78,  // 147: changes.ChangesService.ListChanges:output_type -> changes.ListChangesResponse
-	80,  // 148: changes.ChangesService.ListChangesByStatus:output_type -> changes.ListChangesByStatusResponse
-	82,  // 149: changes.ChangesService.CreateChange:output_type -> changes.CreateChangeResponse
-	87,  // 150: changes.ChangesService.GetChange:output_type -> changes.GetChangeResponse
-	87,  // 151: changes.ChangesService.GetChangeByTicketLink:output_type -> changes.GetChangeResponse
-	86,  // 152: changes.ChangesService.GetChangeSummary:output_type -> changes.GetChangeSummaryResponse
-	45,  // 153: changes.ChangesService.GetChangeTimelineV2:output_type -> changes.GetChangeTimelineV2Response
-	90,  // 154: changes.ChangesService.GetChangeRisks:output_type -> changes.GetChangeRisksResponse
-	92,  // 155: changes.ChangesService.UpdateChange:output_type -> changes.UpdateChangeResponse
-	96,  // 156: changes.ChangesService.DeleteChange:output_type -> changes.DeleteChangeResponse
-	95,  // 157: changes.ChangesService.ListChangesBySnapshotUUID:output_type -> changes.ListChangesBySnapshotUUIDResponse
-	98,  // 158: changes.ChangesService.RefreshState:output_type -> changes.RefreshStateResponse
-	100, // 159: changes.ChangesService.StartChange:output_type -> changes.StartChangeResponse
-	102, // 160: changes.ChangesService.EndChange:output_type -> changes.EndChangeResponse
-	63,  // 161: changes.ChangesService.ListHomeChanges:output_type -> changes.ListHomeChangesResponse
-	60,  // 162: changes.ChangesService.StartChangeAnalysis:output_type -> changes.StartChangeAnalysisResponse
-	57,  // 163: changes.ChangesService.ListChangingItemsSummary:output_type -> changes.ListChangingItemsSummaryResponse
-	55,  // 164: changes.ChangesService.GetDiff:output_type -> changes.GetDiffResponse
-	65,  // 165: changes.ChangesService.PopulateChangeFilters:output_type -> changes.PopulateChangeFiltersResponse
-	31,  // 166: changes.AutoTaggingService.ListRules:output_type -> changes.ListRulesResponse
-	33,  // 167: changes.AutoTaggingService.CreateRule:output_type -> changes.CreateRuleResponse
-	35,  // 168: changes.AutoTaggingService.GetRule:output_type -> changes.GetRuleResponse
-	37,  // 169: changes.AutoTaggingService.UpdateRule:output_type -> changes.UpdateRuleResponse
-	39,  // 170: changes.AutoTaggingService.DeleteRule:output_type -> changes.DeleteRuleResponse
-	41,  // 171: changes.AutoTaggingService.ExportRule:output_type -> changes.ExportRuleResponse
-	43,  // 172: changes.AutoTaggingService.TestRule:output_type -> changes.TestRuleResponse
-	14,  // 173: changes.LabelService.ListLabelRules:output_type -> changes.ListLabelRulesResponse
-	16,  // 174: changes.LabelService.CreateLabelRule:output_type -> changes.CreateLabelRuleResponse
-	18,  // 175: changes.LabelService.GetLabelRule:output_type -> changes.GetLabelRuleResponse
-	20,  // 176: changes.LabelService.UpdateLabelRule:output_type -> changes.UpdateLabelRuleResponse
-	22,  // 177: changes.LabelService.DeleteLabelRule:output_type -> changes.DeleteLabelRuleResponse
-	24,  // 178: changes.LabelService.TestLabelRule:output_type -> changes.TestLabelRuleResponse
-	26,  // 179: changes.LabelService.ReapplyLabelRuleInTimeRange:output_type -> changes.ReapplyLabelRuleInTimeRangeResponse
-	147, // [147:180] is the sub-list for method output_type
-	114, // [114:147] is the sub-list for method input_type
-	114, // [114:114] is the sub-list for extension type_name
-	114, // [114:114] is the sub-list for extension extendee
-	0,   // [0:114] is the sub-list for field type_name
+	118, // 52: changes.StartChangeAnalysisRequest.githubOrganisationProfileOverride:type_name -> config.GithubOrganisationProfile
+	119, // 53: changes.ListHomeChangesRequest.pagination:type_name -> PaginationRequest
+	62,  // 54: changes.ListHomeChangesRequest.filters:type_name -> changes.ChangeFiltersRequest
+	106, // 55: changes.ChangeFiltersRequest.tags:type_name -> changes.ChangeFiltersRequest.TagsEntry
+	8,   // 56: changes.ChangeFiltersRequest.risks:type_name -> changes.Risk.Severity
+	4,   // 57: changes.ChangeFiltersRequest.statuses:type_name -> changes.ChangeStatus
+	120, // 58: changes.ChangeFiltersRequest.sortOrder:type_name -> SortOrder
+	73,  // 59: changes.ListHomeChangesResponse.changes:type_name -> changes.ChangeSummary
+	121, // 60: changes.ListHomeChangesResponse.pagination:type_name -> PaginationResponse
+	122, // 61: changes.ItemDiffSummary.item:type_name -> Reference
+	1,   // 62: changes.ItemDiffSummary.status:type_name -> changes.ItemDiffStatus
+	123, // 63: changes.ItemDiffSummary.healthAfter:type_name -> Health
+	122, // 64: changes.ItemDiff.item:type_name -> Reference
+	1,   // 65: changes.ItemDiff.status:type_name -> changes.ItemDiffStatus
+	124, // 66: changes.ItemDiff.before:type_name -> Item
+	124, // 67: changes.ItemDiff.after:type_name -> Item
+	107, // 68: changes.EnrichedTags.tagValue:type_name -> changes.EnrichedTags.TagValueEntry
+	70,  // 69: changes.TagValue.userTagValue:type_name -> changes.UserTagValue
+	71,  // 70: changes.TagValue.autoTagValue:type_name -> changes.AutoTagValue
+	3,   // 71: changes.Label.type:type_name -> changes.LabelType
+	4,   // 72: changes.ChangeSummary.status:type_name -> changes.ChangeStatus
+	112, // 73: changes.ChangeSummary.createdAt:type_name -> google.protobuf.Timestamp
+	108, // 74: changes.ChangeSummary.tags:type_name -> changes.ChangeSummary.TagsEntry
+	68,  // 75: changes.ChangeSummary.enrichedTags:type_name -> changes.EnrichedTags
+	72,  // 76: changes.ChangeSummary.labels:type_name -> changes.Label
+	75,  // 77: changes.Change.metadata:type_name -> changes.ChangeMetadata
+	76,  // 78: changes.Change.properties:type_name -> changes.ChangeProperties
+	112, // 79: changes.ChangeMetadata.createdAt:type_name -> google.protobuf.Timestamp
+	112, // 80: changes.ChangeMetadata.updatedAt:type_name -> google.protobuf.Timestamp
+	4,   // 81: changes.ChangeMetadata.status:type_name -> changes.ChangeStatus
+	109, // 82: changes.ChangeMetadata.UnknownHealthChange:type_name -> changes.ChangeMetadata.HealthChange
+	109, // 83: changes.ChangeMetadata.OkHealthChange:type_name -> changes.ChangeMetadata.HealthChange
+	109, // 84: changes.ChangeMetadata.WarningHealthChange:type_name -> changes.ChangeMetadata.HealthChange
+	109, // 85: changes.ChangeMetadata.ErrorHealthChange:type_name -> changes.ChangeMetadata.HealthChange
+	109, // 86: changes.ChangeMetadata.PendingHealthChange:type_name -> changes.ChangeMetadata.HealthChange
+	67,  // 87: changes.ChangeProperties.plannedChanges:type_name -> changes.ItemDiff
+	110, // 88: changes.ChangeProperties.tags:type_name -> changes.ChangeProperties.TagsEntry
+	68,  // 89: changes.ChangeProperties.enrichedTags:type_name -> changes.EnrichedTags
+	111, // 90: changes.ChangeProperties.skippedAutoTags:type_name -> changes.ChangeProperties.SkippedAutoTagsEntry
+	5,   // 91: changes.ChangeProperties.autoTaggingRuleSource:type_name -> changes.ChangeProperties.AutoTaggingRuleSource
+	72,  // 92: changes.ChangeProperties.labels:type_name -> changes.Label
+	74,  // 93: changes.ListChangesResponse.changes:type_name -> changes.Change
+	4,   // 94: changes.ListChangesByStatusRequest.status:type_name -> changes.ChangeStatus
+	74,  // 95: changes.ListChangesByStatusResponse.changes:type_name -> changes.Change
+	76,  // 96: changes.CreateChangeRequest.properties:type_name -> changes.ChangeProperties
+	74,  // 97: changes.CreateChangeResponse.change:type_name -> changes.Change
+	2,   // 98: changes.GetChangeSummaryRequest.changeOutputFormat:type_name -> changes.ChangeOutputFormat
+	8,   // 99: changes.GetChangeSummaryRequest.riskSeverityFilter:type_name -> changes.Risk.Severity
+	74,  // 100: changes.GetChangeResponse.change:type_name -> changes.Change
+	104, // 101: changes.ChangeRiskMetadata.changeAnalysisStatus:type_name -> changes.ChangeAnalysisStatus
+	103, // 102: changes.ChangeRiskMetadata.risks:type_name -> changes.Risk
+	89,  // 103: changes.GetChangeRisksResponse.changeRiskMetadata:type_name -> changes.ChangeRiskMetadata
+	76,  // 104: changes.UpdateChangeRequest.properties:type_name -> changes.ChangeProperties
+	74,  // 105: changes.UpdateChangeResponse.change:type_name -> changes.Change
+	74,  // 106: changes.ListChangesBySnapshotUUIDResponse.changes:type_name -> changes.Change
+	6,   // 107: changes.StartChangeResponse.state:type_name -> changes.StartChangeResponse.State
+	7,   // 108: changes.EndChangeResponse.state:type_name -> changes.EndChangeResponse.State
+	8,   // 109: changes.Risk.severity:type_name -> changes.Risk.Severity
+	122, // 110: changes.Risk.relatedItems:type_name -> Reference
+	9,   // 111: changes.ChangeAnalysisStatus.status:type_name -> changes.ChangeAnalysisStatus.Status
+	43,  // 112: changes.AutoTaggingTimelineEntry.AutoTagResultsEntry.value:type_name -> changes.TestRuleResponse
+	69,  // 113: changes.EnrichedTags.TagValueEntry.value:type_name -> changes.TagValue
+	71,  // 114: changes.ChangeProperties.SkippedAutoTagsEntry.value:type_name -> changes.AutoTagValue
+	77,  // 115: changes.ChangesService.ListChanges:input_type -> changes.ListChangesRequest
+	79,  // 116: changes.ChangesService.ListChangesByStatus:input_type -> changes.ListChangesByStatusRequest
+	81,  // 117: changes.ChangesService.CreateChange:input_type -> changes.CreateChangeRequest
+	83,  // 118: changes.ChangesService.GetChange:input_type -> changes.GetChangeRequest
+	84,  // 119: changes.ChangesService.GetChangeByTicketLink:input_type -> changes.GetChangeByTicketLinkRequest
+	85,  // 120: changes.ChangesService.GetChangeSummary:input_type -> changes.GetChangeSummaryRequest
+	44,  // 121: changes.ChangesService.GetChangeTimelineV2:input_type -> changes.GetChangeTimelineV2Request
+	88,  // 122: changes.ChangesService.GetChangeRisks:input_type -> changes.GetChangeRisksRequest
+	91,  // 123: changes.ChangesService.UpdateChange:input_type -> changes.UpdateChangeRequest
+	93,  // 124: changes.ChangesService.DeleteChange:input_type -> changes.DeleteChangeRequest
+	94,  // 125: changes.ChangesService.ListChangesBySnapshotUUID:input_type -> changes.ListChangesBySnapshotUUIDRequest
+	97,  // 126: changes.ChangesService.RefreshState:input_type -> changes.RefreshStateRequest
+	99,  // 127: changes.ChangesService.StartChange:input_type -> changes.StartChangeRequest
+	101, // 128: changes.ChangesService.EndChange:input_type -> changes.EndChangeRequest
+	61,  // 129: changes.ChangesService.ListHomeChanges:input_type -> changes.ListHomeChangesRequest
+	59,  // 130: changes.ChangesService.StartChangeAnalysis:input_type -> changes.StartChangeAnalysisRequest
+	56,  // 131: changes.ChangesService.ListChangingItemsSummary:input_type -> changes.ListChangingItemsSummaryRequest
+	54,  // 132: changes.ChangesService.GetDiff:input_type -> changes.GetDiffRequest
+	64,  // 133: changes.ChangesService.PopulateChangeFilters:input_type -> changes.PopulateChangeFiltersRequest
+	30,  // 134: changes.AutoTaggingService.ListRules:input_type -> changes.ListRulesRequest
+	32,  // 135: changes.AutoTaggingService.CreateRule:input_type -> changes.CreateRuleRequest
+	34,  // 136: changes.AutoTaggingService.GetRule:input_type -> changes.GetRuleRequest
+	36,  // 137: changes.AutoTaggingService.UpdateRule:input_type -> changes.UpdateRuleRequest
+	38,  // 138: changes.AutoTaggingService.DeleteRule:input_type -> changes.DeleteRuleRequest
+	40,  // 139: changes.AutoTaggingService.ExportRule:input_type -> changes.ExportRuleRequest
+	42,  // 140: changes.AutoTaggingService.TestRule:input_type -> changes.TestRuleRequest
+	13,  // 141: changes.LabelService.ListLabelRules:input_type -> changes.ListLabelRulesRequest
+	15,  // 142: changes.LabelService.CreateLabelRule:input_type -> changes.CreateLabelRuleRequest
+	17,  // 143: changes.LabelService.GetLabelRule:input_type -> changes.GetLabelRuleRequest
+	19,  // 144: changes.LabelService.UpdateLabelRule:input_type -> changes.UpdateLabelRuleRequest
+	21,  // 145: changes.LabelService.DeleteLabelRule:input_type -> changes.DeleteLabelRuleRequest
+	23,  // 146: changes.LabelService.TestLabelRule:input_type -> changes.TestLabelRuleRequest
+	25,  // 147: changes.LabelService.ReapplyLabelRuleInTimeRange:input_type -> changes.ReapplyLabelRuleInTimeRangeRequest
+	78,  // 148: changes.ChangesService.ListChanges:output_type -> changes.ListChangesResponse
+	80,  // 149: changes.ChangesService.ListChangesByStatus:output_type -> changes.ListChangesByStatusResponse
+	82,  // 150: changes.ChangesService.CreateChange:output_type -> changes.CreateChangeResponse
+	87,  // 151: changes.ChangesService.GetChange:output_type -> changes.GetChangeResponse
+	87,  // 152: changes.ChangesService.GetChangeByTicketLink:output_type -> changes.GetChangeResponse
+	86,  // 153: changes.ChangesService.GetChangeSummary:output_type -> changes.GetChangeSummaryResponse
+	45,  // 154: changes.ChangesService.GetChangeTimelineV2:output_type -> changes.GetChangeTimelineV2Response
+	90,  // 155: changes.ChangesService.GetChangeRisks:output_type -> changes.GetChangeRisksResponse
+	92,  // 156: changes.ChangesService.UpdateChange:output_type -> changes.UpdateChangeResponse
+	96,  // 157: changes.ChangesService.DeleteChange:output_type -> changes.DeleteChangeResponse
+	95,  // 158: changes.ChangesService.ListChangesBySnapshotUUID:output_type -> changes.ListChangesBySnapshotUUIDResponse
+	98,  // 159: changes.ChangesService.RefreshState:output_type -> changes.RefreshStateResponse
+	100, // 160: changes.ChangesService.StartChange:output_type -> changes.StartChangeResponse
+	102, // 161: changes.ChangesService.EndChange:output_type -> changes.EndChangeResponse
+	63,  // 162: changes.ChangesService.ListHomeChanges:output_type -> changes.ListHomeChangesResponse
+	60,  // 163: changes.ChangesService.StartChangeAnalysis:output_type -> changes.StartChangeAnalysisResponse
+	57,  // 164: changes.ChangesService.ListChangingItemsSummary:output_type -> changes.ListChangingItemsSummaryResponse
+	55,  // 165: changes.ChangesService.GetDiff:output_type -> changes.GetDiffResponse
+	65,  // 166: changes.ChangesService.PopulateChangeFilters:output_type -> changes.PopulateChangeFiltersResponse
+	31,  // 167: changes.AutoTaggingService.ListRules:output_type -> changes.ListRulesResponse
+	33,  // 168: changes.AutoTaggingService.CreateRule:output_type -> changes.CreateRuleResponse
+	35,  // 169: changes.AutoTaggingService.GetRule:output_type -> changes.GetRuleResponse
+	37,  // 170: changes.AutoTaggingService.UpdateRule:output_type -> changes.UpdateRuleResponse
+	39,  // 171: changes.AutoTaggingService.DeleteRule:output_type -> changes.DeleteRuleResponse
+	41,  // 172: changes.AutoTaggingService.ExportRule:output_type -> changes.ExportRuleResponse
+	43,  // 173: changes.AutoTaggingService.TestRule:output_type -> changes.TestRuleResponse
+	14,  // 174: changes.LabelService.ListLabelRules:output_type -> changes.ListLabelRulesResponse
+	16,  // 175: changes.LabelService.CreateLabelRule:output_type -> changes.CreateLabelRuleResponse
+	18,  // 176: changes.LabelService.GetLabelRule:output_type -> changes.GetLabelRuleResponse
+	20,  // 177: changes.LabelService.UpdateLabelRule:output_type -> changes.UpdateLabelRuleResponse
+	22,  // 178: changes.LabelService.DeleteLabelRule:output_type -> changes.DeleteLabelRuleResponse
+	24,  // 179: changes.LabelService.TestLabelRule:output_type -> changes.TestLabelRuleResponse
+	26,  // 180: changes.LabelService.ReapplyLabelRuleInTimeRange:output_type -> changes.ReapplyLabelRuleInTimeRangeResponse
+	148, // [148:181] is the sub-list for method output_type
+	115, // [115:148] is the sub-list for method input_type
+	115, // [115:115] is the sub-list for extension type_name
+	115, // [115:115] is the sub-list for extension extendee
+	0,   // [0:115] is the sub-list for field type_name
 }
 
 func init() { file_changes_proto_init() }

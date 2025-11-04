@@ -338,12 +338,6 @@ type AutoTaggingRuleYAML struct {
 	ValidValues  []string `yaml:"valid_values"`
 }
 
-type RoutineChangesConfigYAML struct {
-	Sensitivity    float32 `yaml:"sensitivity"`
-	DurationInDays float32 `yaml:"duration_in_days"`
-	EventsPerDay   float32 `yaml:"events_per_day"`
-}
-
 // YamlStringToRuleProperties converts a yaml string to a slice of RuleProperties
 func YamlStringToRuleProperties(yamlString string) ([]*RuleProperties, error) {
 	var rulesYaml AutoTaggingRulesYaml
@@ -370,30 +364,115 @@ func YamlStringToRuleProperties(yamlString string) ([]*RuleProperties, error) {
 	return rules, nil
 }
 
-// YamlStringToRoutineChangesConfig converts a yaml string to RoutineChangesConfig
-func YamlStringToRoutineChangesConfig(yamlString string) (*RoutineChangesConfig, error) {
-	var routineChangesConfigYAML RoutineChangesConfigYAML
-	err := yaml.Unmarshal([]byte(yamlString), &routineChangesConfigYAML)
+// RoutineChangesYAML represents the YAML structure for routine changes configuration.
+// It defines parameters for detecting routine changes in infrastructure:
+// - Sensitivity: Threshold for determining what constitutes a routine change (0 or higher)
+// - DurationInDays: Time window in days to analyze for routine patterns (must be >= 1)
+// - EventsPerDay: Expected number of change events per day for routine detection (must be >= 1)
+type RoutineChangesYAML struct {
+	Sensitivity    float32 `yaml:"sensitivity"`
+	DurationInDays float32 `yaml:"duration_in_days"`
+	EventsPerDay   float32 `yaml:"events_per_day"`
+}
+
+// GithubOrganisationYAML represents the YAML structure for GitHub organization profile configuration.
+// It contains organization-specific settings such as the primary branch name used for
+// change detection and analysis.
+type GithubOrganisationYAML struct {
+	PrimaryBranchName string `yaml:"primary_branch_name"`
+}
+
+// SignalConfigYAML represents the root YAML structure for signal configuration files.
+// It can contain either or both of:
+// - RoutineChangesConfig: Configuration for routine change detection
+// - GithubOrganisationProfile: GitHub organization-specific settings
+// At least one section must be provided in the YAML file.
+type SignalConfigYAML struct {
+	RoutineChangesConfig      *RoutineChangesYAML     `yaml:"routine_changes_config,omitempty"`
+	GithubOrganisationProfile *GithubOrganisationYAML `yaml:"github_organisation_profile,omitempty"`
+}
+
+// SignalConfigFile represents the internal, parsed signal configuration structure.
+// This is the converted form of SignalConfigYAML, where YAML-specific types are
+// transformed into their corresponding protocol buffer types for use in the application.
+type SignalConfigFile struct {
+	RoutineChangesConfig      *RoutineChangesConfig
+	GithubOrganisationProfile *GithubOrganisationProfile
+}
+
+// YamlStringToSignalConfig parses a YAML string containing signal configuration and converts it
+// into a SignalConfigFile. It validates that at least one configuration section is provided
+// and performs validation on the routine changes configuration if present.
+//
+// The function handles conversion from YAML-friendly types (e.g., float32 for durations)
+// to the internal protocol buffer types (e.g., RoutineChangesConfig with unit specifications).
+//
+// Returns an error if:
+// - The YAML is invalid or cannot be unmarshaled
+// - No configuration sections are provided
+// - Routine changes configuration validation fails
+func YamlStringToSignalConfig(yamlString string) (*SignalConfigFile, error) {
+	var signalConfigYAML SignalConfigYAML
+	err := yaml.Unmarshal([]byte(yamlString), &signalConfigYAML)
 	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling yaml to routine changes config: %w", err)
+		return nil, fmt.Errorf("error unmarshalling yaml to signal config: %w", err)
 	}
+
+	// check that at least one section is provided
+	if signalConfigYAML.RoutineChangesConfig == nil && signalConfigYAML.GithubOrganisationProfile == nil {
+		return nil, fmt.Errorf("signal config file must contain at least one of: routine_changes_config or github_organisation_profile")
+	}
+
+	// validate the routine changes config
+	if signalConfigYAML.RoutineChangesConfig != nil {
+		if err := validateRoutineChangesConfig(signalConfigYAML.RoutineChangesConfig); err != nil {
+			return nil, err
+		}
+	}
+
+	var routineCfg *RoutineChangesConfig
+	if signalConfigYAML.RoutineChangesConfig != nil {
+		routineCfg = &RoutineChangesConfig{
+			Sensitivity:   signalConfigYAML.RoutineChangesConfig.Sensitivity,
+			EventsPer:     signalConfigYAML.RoutineChangesConfig.EventsPerDay,
+			EventsPerUnit: RoutineChangesConfig_DAYS,
+			Duration:      signalConfigYAML.RoutineChangesConfig.DurationInDays,
+			DurationUnit:  RoutineChangesConfig_DAYS,
+		}
+	}
+
+	var githubProfile *GithubOrganisationProfile
+	if signalConfigYAML.GithubOrganisationProfile != nil {
+		githubProfile = &GithubOrganisationProfile{
+			PrimaryBranchName: signalConfigYAML.GithubOrganisationProfile.PrimaryBranchName,
+		}
+	}
+
+	signalConfigFile := &SignalConfigFile{
+		RoutineChangesConfig:      routineCfg,
+		GithubOrganisationProfile: githubProfile,
+	}
+	return signalConfigFile, nil
+}
+
+// validateRoutineChangesConfig validates the routine changes configuration values.
+// It ensures that:
+// - EventsPerDay is at least 1
+// - DurationInDays is at least 1
+// - Sensitivity is 0 or higher
+//
+// Returns an error with a descriptive message if any validation fails.
+func validateRoutineChangesConfig(routineChangesConfigYAML *RoutineChangesYAML) error {
 	if routineChangesConfigYAML.EventsPerDay < 1 {
-		return nil, fmt.Errorf("events_per_day must be greater than 1, got %v", routineChangesConfigYAML.EventsPerDay)
+		return fmt.Errorf("events_per_day must be greater than 1, got %v", routineChangesConfigYAML.EventsPerDay)
 	}
 	if routineChangesConfigYAML.DurationInDays < 1 {
-		return nil, fmt.Errorf("duration_in_days must be greater than 1, got %v", routineChangesConfigYAML.DurationInDays)
+		return fmt.Errorf("duration_in_days must be greater than 1, got %v", routineChangesConfigYAML.DurationInDays)
 	}
 	if routineChangesConfigYAML.Sensitivity < 0 {
-		return nil, fmt.Errorf("sensitivity must be 0 or higher, got %v", routineChangesConfigYAML.Sensitivity)
+		return fmt.Errorf("sensitivity must be 0 or higher, got %v", routineChangesConfigYAML.Sensitivity)
 	}
-	routineChangesConfig := &RoutineChangesConfig{
-		Sensitivity:   routineChangesConfigYAML.Sensitivity,
-		EventsPer:     routineChangesConfigYAML.EventsPerDay,
-		EventsPerUnit: RoutineChangesConfig_DAYS,
-		Duration:      routineChangesConfigYAML.DurationInDays,
-		DurationUnit:  RoutineChangesConfig_DAYS,
-	}
-	return routineChangesConfig, nil
+	return nil
 }
 
 // TimelineFindInProgressEntry returns the current running entry in the list of entries

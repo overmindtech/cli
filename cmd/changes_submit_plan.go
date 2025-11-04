@@ -135,7 +135,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	delete(lf, "file")
 
 	client := AuthenticatedChangesClient(ctx, oi)
-	changeUuid, err := getChangeUUIDAndCheckStatus(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, viper.GetString("ticket-link"), false)
+	changeUUID, err := getChangeUUIDAndCheckStatus(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_DEFINING, viper.GetString("ticket-link"), false)
 	if err != nil {
 		return loggedError{
 			err:     err,
@@ -168,7 +168,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		EnrichedTags: enrichedTags,
 	}
 
-	if changeUuid == uuid.Nil {
+	if changeUUID == uuid.Nil {
 		log.WithContext(ctx).WithFields(lf).Debug("Creating a new change")
 
 		createResponse, err := client.CreateChange(ctx, &connect.Request[sdp.CreateChangeRequest]{
@@ -193,16 +193,16 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		changeUuid = *maybeChangeUuid
-		lf["change"] = changeUuid
+		changeUUID = *maybeChangeUuid
+		lf["change"] = changeUUID
 		log.WithContext(ctx).WithFields(lf).Info("Created a new change")
 	} else {
-		lf["change"] = changeUuid
+		lf["change"] = changeUUID
 		log.WithContext(ctx).WithFields(lf).Debug("Updating an existing change")
 
 		_, err := client.UpdateChange(ctx, &connect.Request[sdp.UpdateChangeRequest]{
 			Msg: &sdp.UpdateChangeRequest{
-				UUID:       changeUuid[:],
+				UUID:       changeUUID[:],
 				Properties: properties,
 			},
 		})
@@ -240,25 +240,33 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// setup the routine config if specified, or found in the default location
+	// setup the signal config if specified, or found in the default location
 	// order of precedence: flag > default config file
-	routineChangesConfigPath := viper.GetString("routine-changes-config")
-	routineChangesConfigOverride, err := checkForAndLoadRoutineChangesConfigFile(ctx, lf, routineChangesConfigPath)
+	signalConfigPath := viper.GetString("signal-config")
+	signalConfigOverride, err := checkForAndLoadSignalConfigFile(ctx, lf, signalConfigPath)
 	if err != nil {
 		return loggedError{
 			err:     err,
 			fields:  lf,
-			message: "Failed to load routine config",
+			message: "Failed to load signal config",
 		}
+	}
+
+	var githubOrganisationProfileOverride *sdp.GithubOrganisationProfile
+	var routineChangesConfigOverride *sdp.RoutineChangesConfig
+	if signalConfigOverride != nil {
+		githubOrganisationProfileOverride = signalConfigOverride.GithubOrganisationProfile
+		routineChangesConfigOverride = signalConfigOverride.RoutineChangesConfig
 	}
 
 	_, err = client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
 		Msg: &sdp.StartChangeAnalysisRequest{
-			ChangeUUID:                   changeUuid[:],
-			ChangingItems:                plannedChanges,
-			BlastRadiusConfigOverride:    blastRadiusConfigOverride,
-			AutoTaggingRulesOverride:     autoTaggingRulesOverride,
-			RoutineChangesConfigOverride: routineChangesConfigOverride,
+			ChangeUUID:                        changeUUID[:],
+			ChangingItems:                     plannedChanges,
+			BlastRadiusConfigOverride:         blastRadiusConfigOverride,
+			AutoTaggingRulesOverride:          autoTaggingRulesOverride,
+			RoutineChangesConfigOverride:      routineChangesConfigOverride,
+			GithubOrganisationProfileOverride: githubOrganisationProfileOverride,
 		},
 	})
 	if err != nil {
@@ -270,7 +278,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	}
 
 	app, _ = strings.CutSuffix(app, "/")
-	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", app, changeUuid)
+	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", app, changeUUID)
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("Change ready")
 	fmt.Println(changeUrl)
 
@@ -346,27 +354,29 @@ func checkForAndLoadAutoTagRulesFile(ctx context.Context, lf log.Fields, manualP
 	return nil, nil
 }
 
-func loadRoutineChangesConfigFile(routineChangesConfigPath string) (*sdp.RoutineChangesConfig, error) {
+func loadSignalConfigFile(signalConfigPath string) (*sdp.SignalConfigFile, error) {
 	// check if the file exists
-	_, err := os.Stat(routineChangesConfigPath)
+	_, err := os.Stat(signalConfigPath)
 	if err != nil {
-		return nil, fmt.Errorf("routine config file %q does not exist: %w", routineChangesConfigPath, err)
-	}
-	// read the file
-	routineChangesConfig, err := os.ReadFile(routineChangesConfigPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read routine config file %q: %w", routineChangesConfigPath, err)
-	}
-	routineChangesConfigOverride, err := sdp.YamlStringToRoutineChangesConfig(string(routineChangesConfig))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse routine config file %q: %w", routineChangesConfigPath, err)
+		return nil, fmt.Errorf("signal config file %q does not exist: %w", signalConfigPath, err)
 	}
 
-	return routineChangesConfigOverride, nil
+	// read the file
+	signalConfig, err := os.ReadFile(signalConfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read signal config file %q: %w", signalConfigPath, err)
+	}
+
+	signalConfigOverride, err := sdp.YamlStringToSignalConfig(string(signalConfig))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse signal config file %q: %w", signalConfigPath, err)
+	}
+
+	return signalConfigOverride, nil
 }
 
 // order of precedence: flag > default config file
-func checkForAndLoadRoutineChangesConfigFile(ctx context.Context, lf log.Fields, manualPath string) (*sdp.RoutineChangesConfig, error) {
+func checkForAndLoadSignalConfigFile(ctx context.Context, lf log.Fields, manualPath string) (*sdp.SignalConfigFile, error) {
 	foundPath := ""
 	if manualPath != "" {
 		_, err := os.Stat(manualPath)
@@ -376,38 +386,38 @@ func checkForAndLoadRoutineChangesConfigFile(ctx context.Context, lf log.Fields,
 		} else {
 			// the specified file does not exist
 			// hard fail
-			lf["routineChangesConfig"] = manualPath
-			err = fmt.Errorf("routine config file does not exist: %w", err)
+			lf["signalConfig"] = manualPath
+			err = fmt.Errorf("signal config file does not exist: %w", err)
 			return nil, err
 		}
 	}
 	// let's look for the default files
 	// yaml
 	if foundPath == "" {
-		_, err := os.Stat(".overmind/routine-changes-config.yaml")
+		_, err := os.Stat(".overmind/signal-config.yaml")
 		if err == nil {
 			// we found the file
-			foundPath = ".overmind/routine-changes-config.yaml"
+			foundPath = ".overmind/signal-config.yaml"
 		}
 	}
 	// yml
 	if foundPath == "" {
-		_, err := os.Stat(".overmind/routine-changes-config.yml")
+		_, err := os.Stat(".overmind/signal-config.yml")
 		if err == nil {
 			// we found the file
-			foundPath = ".overmind/routine-changes-config.yml"
+			foundPath = ".overmind/signal-config.yml"
 		}
 	}
 
 	if foundPath != "" {
 		// we found a file, load it
-		lf["routineChangesConfig"] = foundPath
-		log.WithContext(ctx).WithFields(lf).Info("Loading routine changes config")
-		routineChangesConfigOverride, err := loadRoutineChangesConfigFile(foundPath)
+		lf["signalConfig"] = foundPath
+		log.WithContext(ctx).WithFields(lf).Info("Loading signal config")
+		signalConfigOverride, err := loadSignalConfigFile(foundPath)
 		if err != nil {
 			return nil, err
 		}
-		return routineChangesConfigOverride, nil
+		return signalConfigOverride, nil
 	}
 	// we didn't find any files, thats ok
 	return nil, nil
@@ -425,5 +435,5 @@ func init() {
 	submitPlanCmd.PersistentFlags().Int32("blast-radius-link-depth", 0, "Used in combination with '--blast-radius-max-items' to customise how many levels are traversed when calculating the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
 	submitPlanCmd.PersistentFlags().Int32("blast-radius-max-items", 0, "Used in combination with '--blast-radius-link-depth' to customise how many items are included in the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
 	submitPlanCmd.PersistentFlags().String("auto-tag-rules", "", "The path to the auto-tag rules file. If not provided, it will check the default location which is '.overmind/auto-tag-rules.yaml'. If no rules are found locally, the rules configured through the UI are used.")
-	submitPlanCmd.PersistentFlags().String("routine-changes-config", "", "The path to the routine changes config file. If not provided, it will check the default location which is '.overmind/routine-changes-config.yaml'. If no config is found locally, the config configured through the UI is used.")
+	submitPlanCmd.PersistentFlags().String("signal-config", "", "The path to the signal config file. If not provided, it will check the default location which is '.overmind/signal-config.yaml'. If no config is found locally, the config configured through the UI is used.")
 }
