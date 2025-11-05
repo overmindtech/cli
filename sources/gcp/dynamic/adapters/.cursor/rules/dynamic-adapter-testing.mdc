@@ -4,12 +4,16 @@ globs: **/*_test.go
 ---
 
 # Dynamic Adapter Unit Testing Rules
+
 ## Overview
 
 When writing unit tests for GCP dynamic adapters in the Overmind codebase, follow these patterns and requirements to ensure consistency and correctness.
+
 ## Package and Imports
+
 - **Package**: Always use `package adapters_test` (never `package adapters` or `package main`)
 - **Required Imports**:
+
   ```go
   import (
       "context"
@@ -33,7 +37,9 @@ When writing unit tests for GCP dynamic adapters in the Overmind codebase, follo
       "github.com/overmindtech/cli/sources/stdlib"
   )
   ```
+
 ## Protobuf Types
+
 - **CRITICAL: Match API Version and Package**: Always use the correct protobuf package and API version that matches the adapter's endpoint
   - **Step 1**: Check the adapter file (e.g., `cloudfunctions-function.go`) for the API endpoint URL
   - **Step 2**: Extract the API service and version from the URL:
@@ -53,9 +59,11 @@ When writing unit tests for GCP dynamic adapters in the Overmind codebase, follo
   - Assuming `GlobalAddress` exists (use `Address` instead)
   - Not verifying the list response field name (it's not always `.Items`)
 - **Always verify**: Don't assume protobuf types or field names exist - check the actual API package
+
 ## Test Structure Template
 
 ### Single Query Parameter Resources
+
 ```go
 func TestYourResource(t *testing.T) {
     ctx := context.Background()
@@ -126,6 +134,7 @@ func TestYourResource(t *testing.T) {
 ```
 
 ### Multiple Query Parameter Resources (e.g., location + resource)
+
 ```go
 func TestLocationBasedResource(t *testing.T) {
     ctx := context.Background()
@@ -177,7 +186,7 @@ func TestLocationBasedResource(t *testing.T) {
     // Test Get with location + resource name
     t.Run("Get", func(t *testing.T) {
         httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-        adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+        adapter, err := dynamic.MakeAdapter( sdpItemType, linker, httpCli, projectID)
         if err != nil {
             t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
         }
@@ -201,7 +210,7 @@ func TestLocationBasedResource(t *testing.T) {
     // Test Search (location-based resources typically use Search instead of List)
     t.Run("Search", func(t *testing.T) {
         httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-        adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+        adapter, err := dynamic.MakeAdapter( sdpItemType, linker, httpCli, projectID)
         if err != nil {
             t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
         }
@@ -232,7 +241,7 @@ func TestLocationBasedResource(t *testing.T) {
         }
 
         httpCli := shared.NewMockHTTPClientProvider(errorResponses)
-        adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+        adapter, err := dynamic.MakeAdapter( sdpItemType, linker, httpCli, projectID)
         if err != nil {
             t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
         }
@@ -245,12 +254,15 @@ func TestLocationBasedResource(t *testing.T) {
     })
 }
 ```
+
 ## Required Test Functions (Limit to These 3 Only)
+
 ### 1. Get Test (MUST include StaticTests)
+
 ```go
 t.Run("Get", func(t *testing.T) {
     httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-    adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+    adapter, err := dynamic.MakeAdapter( sdpItemType, linker, httpCli, projectID)
     if err != nil {
         t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
     }
@@ -303,12 +315,14 @@ t.Run("Get", func(t *testing.T) {
     })
 })
 ```
+
 ### 2. List or Search Test (Choose based on adapter type)
+
 ```go
 // For location-based resources (use Search)
 t.Run("Search", func(t *testing.T) {
     httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-    adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+    adapter, err := dynamic.MakeAdapter( sdpItemType, linker, httpCli, projectID)
     if err != nil {
         t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
     }
@@ -331,7 +345,7 @@ t.Run("Search", func(t *testing.T) {
 // OR for project-level resources (use List)
 t.Run("List", func(t *testing.T) {
     httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-    adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+    adapter, err := dynamic.MakeAdapter( sdpItemType, linker, httpCli, projectID)
     if err != nil {
         t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
     }
@@ -353,6 +367,7 @@ t.Run("List", func(t *testing.T) {
 ```
 
 ### 3. ErrorHandling Test
+
 ```go
 t.Run("ErrorHandling", func(t *testing.T) {
     // Test with error responses to simulate API errors
@@ -364,7 +379,7 @@ t.Run("ErrorHandling", func(t *testing.T) {
     }
 
     httpCli := shared.NewMockHTTPClientProvider(errorResponses)
-    adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+    adapter, err := dynamic.MakeAdapter( sdpItemType, linker, httpCli, projectID)
     if err != nil {
         t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
     }
@@ -377,10 +392,11 @@ t.Run("ErrorHandling", func(t *testing.T) {
 ```
 
 ### 4. Search with Terraform Format Test (if adapter has terraform mappings with Search method)
+
 ```go
 t.Run("Search with Terraform format", func(t *testing.T) {
     httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-    adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+    adapter, err := dynamic.MakeAdapter( sdpItemType, linker, httpCli, projectID)
     if err != nil {
         t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
     }
@@ -416,7 +432,9 @@ t.Run("Search with Terraform format", func(t *testing.T) {
 ```
 
 ## Pointer Helper Functions
+
 Always define local helper functions for creating pointers:
+
 ```go
 func stringPtr(s string) *string {
     return &s
@@ -426,7 +444,9 @@ func uint64Ptr(u uint64) *uint64 {
     return &u
 }
 ```
+
 ## Common Mistakes to Avoid
+
 1. **Wrong Package**: Don't use `package main` or `package adapters`
 2. **Wrong Protobuf Package**: Using `computepb` for non-Compute resources (e.g., using `computepb.Function` instead of `functionspb.Function`)
 3. **Wrong Protobuf API Version**: Not matching the adapter's endpoint version (e.g., using `apiv1` when adapter uses `/v2/`)
@@ -438,18 +458,19 @@ func uint64Ptr(u uint64) *uint64 {
 9. **Missing Search Tests**: Include Search tests only if the adapter implements `SearchableAdapter` - use `t.Skipf()` if not supported
 10. **Using Pure Strings for ExpectedType**: Always use Item types with `.String()` (e.g., `gcpshared.ComputeNetwork.String()` or `stdlib.NetworkIP.String()`), never pure strings like `"gcp-compute-network"` or `"ip"`
 
-
 ## Blast Propagation Testing Requirements
 
 **CRITICAL**: Every adapter test SHOULD include comprehensive StaticTests that cover ALL blast propagation links defined in the adapter configuration.
 
-### Steps to Ensure Complete Coverage:
+### Steps to Ensure Complete Coverage
+
 1. **Review Adapter File**: Open the corresponding adapter file (e.g., `compute-global-address.go`)
 2. **Find blastPropagation Map**: Locate the `blastPropagation` field in the adapter configuration
 3. **Create Test Cases**: Write a QueryTest for EVERY entry in the blastPropagation map
 4. **Handle TODOs**: Note any blast propagation entries marked with TODO comments - these may not work yet but should be documented in test comments
 
-### Example Complete StaticTests:
+### Example Complete StaticTests
+
 ```go
 t.Run("StaticTests", func(t *testing.T) {
     queryTests := shared.QueryTests{
@@ -503,6 +524,7 @@ t.Run("StaticTests", func(t *testing.T) {
 ```
 
 ## Validation Checklist
+
 - [ ] Package is `adapters_test`
 - [ ] All required imports are present
 - [ ] **CRITICAL**: Protobuf package matches the adapter's service (e.g., `aiplatformpb` for AI Platform, NOT `computepb`)
@@ -523,7 +545,9 @@ t.Run("StaticTests", func(t *testing.T) {
 - [ ] Pointer helper functions are defined locally
 - [ ] Test compiles without errors
 - [ ] Test runs successfully
+
 ## Key Patterns
+
 - **SIMPLIFIED TEST STRUCTURE**: Only 3-4 test cases - Get (with StaticTests), List/Search, Search with Terraform format (if applicable), ErrorHandling
 - Use `dynamic.MakeAdapter()` to create adapters
 - Always validate SDP item type, scope, and unique attribute
@@ -538,6 +562,7 @@ t.Run("StaticTests", func(t *testing.T) {
 After completing the adapter and test implementation, you MUST run the following validation steps:
 
 ### 1. Run golangci-lint
+
 Execute golangci-lint on the sources/gcp directory to check for code quality issues:
 
 ```bash
@@ -545,6 +570,7 @@ golangci-lint run ./sources/gcp/...
 ```
 
 **If golangci-lint fails:**
+
 - Analyze the reported issues carefully
 - Fix all linting errors and warnings
 - Common issues include:
@@ -555,6 +581,7 @@ golangci-lint run ./sources/gcp/...
 - Re-run golangci-lint until all issues are resolved
 
 ### 2. Run Unit Tests
+
 Execute the full test suite for the sources/gcp directory:
 
 ```bash
@@ -562,6 +589,7 @@ go test -race ./sources/gcp/... -v
 ```
 
 **If tests fail:**
+
 - Analyze the test failures and error messages
 - Common issues include:
   - Missing mock responses for HTTP calls
@@ -573,20 +601,26 @@ go test -race ./sources/gcp/... -v
 - Re-run tests until all tests pass
 
 ### 3. Automatic Issue Resolution
+
 When either golangci-lint or tests fail:
+
 1. **Analyze the root cause** of each failure
 2. **Fix the issues systematically** - don't just suppress warnings
 3. **Verify the fix** by re-running the failing command
 4. **Repeat until both commands pass successfully**
 
 ### 4. Final Validation
+
 Both commands must pass before considering the implementation complete:
+
 - ✅ `golangci-lint run ./sources/gcp/...` (no errors or warnings)
 - ✅ `go test -race ./sources/gcp/... -v` (all tests pass)
 
 **Do not proceed** with any pull request or consider the task complete until both validation steps pass successfully.
+
 ## Test Structure Summary
-```
+
+```go
 TestYourAdapter(t *testing.T) {
     // Setup mock data and responses
 

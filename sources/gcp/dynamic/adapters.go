@@ -153,23 +153,23 @@ func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli 
 			return nil, err
 		}
 
-		return NewSearchableListableAdapter(searchEndpointFunc, listEndpoint, cfg, meta.SearchDescription)
+		return NewSearchableListableAdapter(searchEndpointFunc, listEndpoint, cfg, meta.SearchDescription), nil
 	case Searchable:
 		searchEndpointFunc, err := meta.SearchEndpointFunc(opts...)
 		if err != nil {
 			return nil, err
 		}
 
-		return NewSearchableAdapter(searchEndpointFunc, cfg, meta.SearchDescription)
+		return NewSearchableAdapter(searchEndpointFunc, cfg, meta.SearchDescription), nil
 	case Listable:
 		listEndpoint, err := meta.ListEndpointFunc(opts...)
 		if err != nil {
 			return nil, err
 		}
 
-		return NewListableAdapter(listEndpoint, cfg)
+		return NewListableAdapter(listEndpoint, cfg), nil
 	case Standard:
-		return NewAdapter(cfg)
+		return NewAdapter(cfg), nil
 	default:
 		return nil, fmt.Errorf("unknown adapter type %s", adapterType(meta))
 	}

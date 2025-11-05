@@ -17,6 +17,7 @@ func Test_adapters(t *testing.T) {
 		"project",
 		[]string{"region"},
 		[]string{"zone"},
+		"",
 		nil,
 		false,
 	)

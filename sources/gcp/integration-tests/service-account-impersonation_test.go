@@ -44,10 +44,8 @@ func TestServiceAccountImpersonationIntegration(t *testing.T) {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
 	}
 
-	ctx := context.Background()
-
 	// Initialize Cloud Resource Manager service
-	crmService, err := cloudresourcemanager.NewService(ctx)
+	crmService, err := cloudresourcemanager.NewService(t.Context())
 	if err != nil {
 		t.Fatalf("Failed to create Cloud Resource Manager service: %v", err)
 	}
@@ -57,7 +55,7 @@ func TestServiceAccountImpersonationIntegration(t *testing.T) {
 	}
 
 	// Initialize IAM service using Application Default Credentials
-	iamService, err := iam.NewService(ctx)
+	iamService, err := iam.NewService(t.Context())
 	if err != nil {
 		t.Fatalf("Failed to create IAM service: %v", err)
 	}
@@ -72,25 +70,25 @@ func TestServiceAccountImpersonationIntegration(t *testing.T) {
 	state.customerServiceAccountID = fmt.Sprintf("ovm-test-cust-%s", strings.ReplaceAll(customerSAUUID[:8], "-", ""))
 
 	t.Run("Setup", func(t *testing.T) {
-		setupTest(t, ctx, iamService, crmService, state)
+		setupTest(t, t.Context(), iamService, crmService, state)
 	})
 
 	t.Run("Run", func(t *testing.T) {
 		t.Run("Test1_OurServiceAccountDirectAuth", func(t *testing.T) {
-			testOurServiceAccountDirectAuth(t, ctx, state)
+			testOurServiceAccountDirectAuth(t, t.Context(), state)
 		})
 
 		t.Run("Test2_CustomerServiceAccountDirectAuth", func(t *testing.T) {
-			testCustomerServiceAccountDirectAuth(t, ctx, state)
+			testCustomerServiceAccountDirectAuth(t, t.Context(), state)
 		})
 
 		t.Run("Test3_Impersonation", func(t *testing.T) {
-			testImpersonation(t, ctx, state)
+			testImpersonation(t, t.Context(), state)
 		})
 	})
 
 	t.Run("Teardown", func(t *testing.T) {
-		teardownTest(t, ctx, iamService, crmService, state)
+		teardownTest(t, t.Context(), iamService, crmService, state)
 	})
 }
 

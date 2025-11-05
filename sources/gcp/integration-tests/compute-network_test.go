@@ -1,7 +1,6 @@
 package integrationtests
 
 import (
-	"context"
 	"os"
 	"testing"
 
@@ -16,7 +15,7 @@ func TestComputeNetworkIntegration(t *testing.T) {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
 	}
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	networkName := "default" // Use an existing network for testing
 
@@ -29,7 +28,7 @@ func TestComputeNetworkIntegration(t *testing.T) {
 
 		sdpItemType := gcpshared.ComputeNetwork
 
-		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
+		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel(ctx, "")
 		if err != nil {
 			t.Fatalf("Failed to create GCP HTTP client: %v", err)
 		}

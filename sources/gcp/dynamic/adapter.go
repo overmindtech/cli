@@ -50,8 +50,8 @@ type Adapter struct {
 }
 
 // NewAdapter creates a new GCP dynamic adapter.
-func NewAdapter(config *AdapterConfig) (discovery.Adapter, error) {
-	a := Adapter{
+func NewAdapter(config *AdapterConfig) discovery.Adapter {
+	return Adapter{
 		projectID:           config.ProjectID,
 		scope:               config.Scope,
 		httpCli:             config.HTTPClient,
@@ -66,17 +66,6 @@ func NewAdapter(config *AdapterConfig) (discovery.Adapter, error) {
 		iamPermissions:      config.IAMPermissions,
 		nameSelector:        config.NameSelector,
 	}
-
-	if a.httpCli == nil {
-		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
-		if err != nil {
-			return nil, err
-		}
-
-		a.httpCli = gcpHTTPCliWithOtel
-	}
-
-	return a, nil
 }
 
 func (g Adapter) Type() string {

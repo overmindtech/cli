@@ -9,6 +9,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"golang.org/x/oauth2"
+	"google.golang.org/api/impersonate"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -26,6 +28,8 @@ type GCPConfig struct {
 	ProjectID string
 	Regions   []string
 	Zones     []string
+
+	ImpersonationServiceAccountEmail string // leave empty for direct access using Application Default Credentials
 }
 
 func init() {
@@ -39,6 +43,7 @@ func init() {
 		"project",
 		[]string{"region"},
 		[]string{"zone"},
+		"",
 		nil,
 		false,
 	)
@@ -97,10 +102,11 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 
 		}
 		log.WithFields(log.Fields{
-			"ovm.source.type":       "gcp",
-			"ovm.source.project_id": cfg.ProjectID,
-			"ovm.source.regions":    cfg.Regions,
-			"ovm.source.zones":      cfg.Zones,
+			"ovm.source.type":                                "gcp",
+			"ovm.source.project_id":                          cfg.ProjectID,
+			"ovm.source.regions":                             cfg.Regions,
+			"ovm.source.zones":                               cfg.Zones,
+			"ovm.source.impersonation-service-account-email": cfg.ImpersonationServiceAccountEmail,
 		}).Info(logmsg)
 
 		// If still no regions/zones this is no valid config.
@@ -110,7 +116,7 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 
 		linker := gcpshared.NewLinker()
 
-		discoveryAdapters, err := adapters(ctx, cfg.ProjectID, cfg.Regions, cfg.Zones, linker, true)
+		discoveryAdapters, err := adapters(ctx, cfg.ProjectID, cfg.Regions, cfg.Zones, cfg.ImpersonationServiceAccountEmail, linker, true)
 		if err != nil {
 			return fmt.Errorf("error creating discovery adapters: %w", err)
 		}
@@ -203,7 +209,8 @@ func readConfig() (*GCPConfig, error) {
 	}
 
 	l := &GCPConfig{
-		ProjectID: projectID,
+		ProjectID:                        projectID,
+		ImpersonationServiceAccountEmail: viper.GetString("gcp-impersonation-service-account-email"),
 	}
 
 	// TODO: In the future, we will try to get the zones via Search API
@@ -249,10 +256,26 @@ func adapters(
 	projectID string,
 	regions []string,
 	zones []string,
+	impersonationServiceAccountEmail string,
 	linker *gcpshared.Linker,
 	initGCPClients bool,
 ) ([]discovery.Adapter, error) {
 	discoveryAdapters := make([]discovery.Adapter, 0)
+
+	var tokenSource *oauth2.TokenSource
+	if impersonationServiceAccountEmail != "" {
+		// Base credentials sourced from ADC
+		ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
+			TargetPrincipal: impersonationServiceAccountEmail,
+			// Broad access to all GCP resources
+			// It is restricted by the IAM permissions of the service account
+			Scopes: []string{"https://www.googleapis.com/auth/cloud-platform"},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create token source: %w", err)
+		}
+		tokenSource = &ts
+	}
 
 	// Add manual adapters
 	manualAdapters, err := manual.Adapters(
@@ -260,6 +283,7 @@ func adapters(
 		projectID,
 		regions,
 		zones,
+		tokenSource,
 		initGCPClients,
 	)
 	if err != nil {
@@ -276,7 +300,7 @@ func adapters(
 	httpClient := http.DefaultClient
 	if initGCPClients {
 		var errCli error
-		httpClient, errCli = gcpshared.GCPHTTPClientWithOtel()
+		httpClient, errCli = gcpshared.GCPHTTPClientWithOtel(ctx, impersonationServiceAccountEmail)
 		if errCli != nil {
 			return nil, fmt.Errorf("error creating GCP HTTP client: %w", errCli)
 		}

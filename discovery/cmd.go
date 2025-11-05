@@ -44,7 +44,7 @@ func AddEngineFlags(command *cobra.Command) {
 	cobra.CheckErr(viper.BindEnv("nats-service-port", "NATS_SERVICE_PORT"))
 
 	command.PersistentFlags().Bool("overmind-managed-source", false, "If you are running the source yourself or if it is managed by Overmind")
-	_ = command.Flags().MarkHidden("overmind-managed-source")
+	cobra.CheckErr(command.Flags().MarkHidden("overmind-managed-source"))
 	cobra.CheckErr(viper.BindEnv("overmind-managed-source", "OVERMIND_MANAGED_SOURCE"))
 
 	command.PersistentFlags().String("app", defaultApp, "The URL of the Overmind app to use")

@@ -139,4 +139,3 @@ func TestComputeSubnetwork(t *testing.T) {
 		}
 	})
 }
-

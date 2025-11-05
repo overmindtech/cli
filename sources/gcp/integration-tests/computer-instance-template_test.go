@@ -1,7 +1,6 @@
 package integrationtests
 
 import (
-	"context"
 	"os"
 	"testing"
 
@@ -16,7 +15,7 @@ func TestComputeInstanceTemplateIntegration(t *testing.T) {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
 	}
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	t.Run("Setup", func(t *testing.T) {
 		t.Logf("We will test existing instance templates in project '%s'", projectID)
@@ -27,7 +26,7 @@ func TestComputeInstanceTemplateIntegration(t *testing.T) {
 
 		sdpItemType := gcpshared.ComputeInstanceTemplate
 
-		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
+		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel(ctx, "")
 		if err != nil {
 			t.Fatalf("Failed to create GCP HTTP client: %v", err)
 		}

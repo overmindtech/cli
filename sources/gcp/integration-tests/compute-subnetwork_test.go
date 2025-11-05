@@ -1,7 +1,6 @@
 package integrationtests
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -23,7 +22,7 @@ func TestComputeSubnetworkIntegration(t *testing.T) {
 		t.Logf("GCP_REGION environment variable not set, using default: %s", region)
 	}
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// We'll use the default subnetwork for testing
 	subnetworkName := "default" // Default subnetworks are created for default networks
@@ -38,7 +37,7 @@ func TestComputeSubnetworkIntegration(t *testing.T) {
 
 		sdpItemType := gcpshared.ComputeSubnetwork
 
-		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
+		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel(ctx, "")
 		if err != nil {
 			t.Fatalf("Failed to create GCP HTTP client: %v", err)
 		}

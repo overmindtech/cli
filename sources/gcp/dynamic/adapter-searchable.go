@@ -22,38 +22,28 @@ type SearchableAdapter struct {
 }
 
 // NewSearchableAdapter creates a new GCP dynamic adapter.
-func NewSearchableAdapter(searchEndpointFunc gcpshared.EndpointFunc, config *AdapterConfig, customSearchMethodDesc string) (discovery.SearchableAdapter, error) {
-	a := Adapter{
-		projectID:            config.ProjectID,
-		scope:                config.Scope,
-		httpCli:              config.HTTPClient,
-		cache:                sdpcache.NewCache(),
-		getURLFunc:           config.GetURLFunc,
-		sdpAssetType:         config.SDPAssetType,
-		sdpAdapterCategory:   config.SDPAdapterCategory,
-		terraformMappings:    config.TerraformMappings,
-		linker:               config.Linker,
-		potentialLinks:       potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
-		uniqueAttributeKeys:  config.UniqueAttributeKeys,
-		iamPermissions:       config.IAMPermissions,
-		nameSelector:         config.NameSelector,
-		listResponseSelector: config.ListResponseSelector,
-	}
-
-	if a.httpCli == nil {
-		gcpHTTPCliWithOtel, err := gcpshared.GCPHTTPClientWithOtel()
-		if err != nil {
-			return nil, err
-		}
-
-		a.httpCli = gcpHTTPCliWithOtel
-	}
-
+func NewSearchableAdapter(searchEndpointFunc gcpshared.EndpointFunc, config *AdapterConfig, customSearchMethodDesc string) discovery.SearchableAdapter {
 	return SearchableAdapter{
 		customSearchMethodDesc: customSearchMethodDesc,
 		searchEndpointFunc:     searchEndpointFunc,
-		Adapter:                a,
-	}, nil
+
+		Adapter: Adapter{
+			projectID:            config.ProjectID,
+			scope:                config.Scope,
+			httpCli:              config.HTTPClient,
+			cache:                sdpcache.NewCache(),
+			getURLFunc:           config.GetURLFunc,
+			sdpAssetType:         config.SDPAssetType,
+			sdpAdapterCategory:   config.SDPAdapterCategory,
+			terraformMappings:    config.TerraformMappings,
+			linker:               config.Linker,
+			potentialLinks:       potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
+			uniqueAttributeKeys:  config.UniqueAttributeKeys,
+			iamPermissions:       config.IAMPermissions,
+			nameSelector:         config.NameSelector,
+			listResponseSelector: config.ListResponseSelector,
+		},
+	}
 }
 
 func (g SearchableAdapter) Metadata() *sdp.AdapterMetadata {

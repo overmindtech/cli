@@ -26,7 +26,7 @@ func TestSpannerInstance(t *testing.T) {
 
 	instanceName := "integration-test-instance"
 
-	ctx := context.Background()
+	ctx := t.Context()
 
 	// Create a new Admin Database client
 	client, err := instance.NewInstanceAdminClient(ctx)
@@ -45,7 +45,7 @@ func TestSpannerInstance(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		linker := shared.NewLinker()
 
-		gcpHTTPCliWithOtel, err := shared.GCPHTTPClientWithOtel()
+		gcpHTTPCliWithOtel, err := shared.GCPHTTPClientWithOtel(ctx, "")
 		if err != nil {
 			t.Fatalf("Failed to create gcp http client with otel")
 		}

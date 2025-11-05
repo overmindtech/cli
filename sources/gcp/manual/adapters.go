@@ -6,9 +6,11 @@ import (
 
 	"cloud.google.com/go/bigquery"
 	compute "cloud.google.com/go/compute/apiv1"
-	iam "cloud.google.com/go/iam/admin/apiv1"
+	iamAdmin "cloud.google.com/go/iam/admin/apiv1"
 	kms "cloud.google.com/go/kms/apiv1"
 	logging "cloud.google.com/go/logging/apiv2"
+	"golang.org/x/oauth2"
+	"google.golang.org/api/option"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sources"
@@ -18,7 +20,7 @@ import (
 // Adapters returns a slice of discovery.Adapter instances for GCP Source.
 // It initializes GCP clients if initGCPClients is true, and creates adapters for the specified project ID, regions, and zones.
 // Otherwise, it uses nil clients, which is useful for enumerating adapters for documentation purposes.
-func Adapters(ctx context.Context, projectID string, regions []string, zones []string, initGCPClients bool) ([]discovery.Adapter, error) {
+func Adapters(ctx context.Context, projectID string, regions []string, zones []string, tokenSource *oauth2.TokenSource, initGCPClients bool) ([]discovery.Adapter, error) {
 	var err error
 	var (
 		instanceCli               *compute.InstancesClient
@@ -36,8 +38,8 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		instanceGroupCli          *compute.InstanceGroupsClient
 		instanceGroupManagerCli   *compute.InstanceGroupManagersClient
 		diskCli                   *compute.DisksClient
-		iamServiceAccountKeyCli   *iam.IamClient
-		iamServiceAccountCli      *iam.IamClient
+		iamServiceAccountKeyCli   *iamAdmin.IamClient
+		iamServiceAccountCli      *iamAdmin.IamClient
 		kmsKeyRingCli             *kms.KeyManagementClient
 		kmsCryptoKeyCli           *kms.KeyManagementClient
 		bigQueryDatasetCli        *bigquery.Client
@@ -47,119 +49,124 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 	)
 
 	if initGCPClients {
-		instanceCli, err = compute.NewInstancesRESTClient(ctx)
+		opts := []option.ClientOption{}
+		if tokenSource != nil {
+			opts = append(opts, option.WithTokenSource(*tokenSource))
+		}
+
+		instanceCli, err = compute.NewInstancesRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute instances client: %w", err)
 		}
 
-		addressCli, err = compute.NewAddressesRESTClient(ctx)
+		addressCli, err = compute.NewAddressesRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute addresses client: %w", err)
 		}
 
-		autoscalerCli, err = compute.NewAutoscalersRESTClient(ctx)
+		autoscalerCli, err = compute.NewAutoscalersRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute autoscalers client: %w", err)
 		}
 
-		computeImagesCli, err = compute.NewImagesRESTClient(ctx)
+		computeImagesCli, err = compute.NewImagesRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute images client: %w", err)
 		}
 
-		computeForwardingCli, err = compute.NewForwardingRulesRESTClient(ctx)
+		computeForwardingCli, err = compute.NewForwardingRulesRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute forwarding rules client: %w", err)
 		}
 
-		computeHealthCheckCli, err = compute.NewHealthChecksRESTClient(ctx)
+		computeHealthCheckCli, err = compute.NewHealthChecksRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute health checks client: %w", err)
 		}
 
-		computeReservationCli, err = compute.NewReservationsRESTClient(ctx)
+		computeReservationCli, err = compute.NewReservationsRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute reservations client: %w", err)
 		}
 
-		computeSecurityPolicyCli, err = compute.NewSecurityPoliciesRESTClient(ctx)
+		computeSecurityPolicyCli, err = compute.NewSecurityPoliciesRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute security policies client: %w", err)
 		}
 
-		computeSnapshotCli, err = compute.NewSnapshotsRESTClient(ctx)
+		computeSnapshotCli, err = compute.NewSnapshotsRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute snapshots client: %w", err)
 		}
 
-		computeInstantSnapshotCli, err = compute.NewInstantSnapshotsRESTClient(ctx)
+		computeInstantSnapshotCli, err = compute.NewInstantSnapshotsRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute instant snapshots client: %w", err)
 		}
 
-		computeMachineImageCli, err = compute.NewMachineImagesRESTClient(ctx)
+		computeMachineImageCli, err = compute.NewMachineImagesRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute machine images client: %w", err)
 		}
 
-		backendServiceCli, err = compute.NewBackendServicesRESTClient(ctx)
+		backendServiceCli, err = compute.NewBackendServicesRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute backend services client: %w", err)
 		}
 
-		instanceGroupCli, err = compute.NewInstanceGroupsRESTClient(ctx)
+		instanceGroupCli, err = compute.NewInstanceGroupsRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute instance groups client: %w", err)
 		}
 
-		instanceGroupManagerCli, err = compute.NewInstanceGroupManagersRESTClient(ctx)
+		instanceGroupManagerCli, err = compute.NewInstanceGroupManagersRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute instance group managers client: %w", err)
 		}
 
-		diskCli, err = compute.NewDisksRESTClient(ctx)
+		diskCli, err = compute.NewDisksRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute disks client: %w", err)
 		}
 
 		//IAM
-		iamServiceAccountKeyCli, err = iam.NewIamClient(ctx)
+		iamServiceAccountKeyCli, err = iamAdmin.NewIamClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create IAM service account key client: %w", err)
 		}
 
-		iamServiceAccountCli, err = iam.NewIamClient(ctx)
+		iamServiceAccountCli, err = iamAdmin.NewIamClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create IAM service account client: %w", err)
 		}
 
 		//KMS
-		kmsKeyRingCli, err = kms.NewKeyManagementClient(ctx)
+		kmsKeyRingCli, err = kms.NewKeyManagementClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create KMS key ring client: %w", err)
 		}
 
-		kmsCryptoKeyCli, err = kms.NewKeyManagementClient(ctx)
+		kmsCryptoKeyCli, err = kms.NewKeyManagementClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create KMS crypto key client: %w", err)
 		}
 
-		bigQueryDatasetCli, err = bigquery.NewClient(ctx, projectID)
+		bigQueryDatasetCli, err = bigquery.NewClient(ctx, projectID, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create bigquery client: %w", err)
 		}
 
-		loggingConfigCli, err = logging.NewConfigClient(ctx)
+		loggingConfigCli, err = logging.NewConfigClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create logging config client: %w", err)
 		}
 
-		nodeGroupCli, err = compute.NewNodeGroupsRESTClient(ctx)
+		nodeGroupCli, err = compute.NewNodeGroupsRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute node groups client: %w", err)
 		}
 
-		regionBackendServiceCli, err = compute.NewRegionBackendServicesRESTClient(ctx)
+		regionBackendServiceCli, err = compute.NewRegionBackendServicesRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute region backend services client: %w", err)
 		}

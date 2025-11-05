@@ -156,4 +156,3 @@ func TestComputeNetwork(t *testing.T) {
 		}
 	})
 }
-
