@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"slices"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"atomicgo.dev/keyboard"
 	"atomicgo.dev/keyboard/keys"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/google/uuid"
 	"github.com/overmindtech/pterm"
@@ -178,7 +180,14 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 		}
 		if len(configs) == 0 && failOverToDefaultLoginCfg {
 			statusArea.Println("No AWS terraform providers found. Attempting to use AWS default credentials for configuration.")
-			userConfig, err := config.LoadDefaultConfig(ctx)
+			// Configure HTTP client to respect proxy environment variables
+			httpClient := awshttp.NewBuildableClient()
+			httpClient.WithTransportOptions(func(t *http.Transport) {
+				t.Proxy = http.ProxyFromEnvironment
+			})
+			userConfig, err := config.LoadDefaultConfig(ctx,
+				config.WithHTTPClient(httpClient),
+			)
 			if err != nil {
 				awsSpinner.Fail("Failed to load default AWS config: ", err)
 				return nil, fmt.Errorf("failed to load default AWS config: %w", err)
