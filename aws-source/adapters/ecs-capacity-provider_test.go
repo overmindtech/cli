@@ -127,7 +127,7 @@ func TestCapacityProviderAdapter(t *testing.T) {
 	adapter := NewECSCapacityProviderAdapter(&ecsTestClient{}, "", "")
 
 	stream := discovery.NewRecordingQueryResultStream()
-	adapter.ListStream(context.Background(), "", false, stream)
+	adapter.ListStream(context.Background(), "*", false, stream)
 
 	errs := stream.GetErrors()
 	if len(errs) > 0 {

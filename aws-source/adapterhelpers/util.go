@@ -25,8 +25,14 @@ import (
 )
 
 // FormatScope Formats an account ID and region into the corresponding Overmind
-// scope. This will be in the format {accountID}.{region}
+// scope. This will be in the format {accountID}.{region}. If both accountID and
+// region are empty, returns sdp.WILDCARD (for resources like S3 buckets that
+// don't include account/region in their ARNs).
 func FormatScope(accountID, region string) string {
+	if accountID == "" && region == "" {
+		return sdp.WILDCARD
+	}
+
 	if region == "" {
 		return accountID
 	}

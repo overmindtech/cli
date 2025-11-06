@@ -667,11 +667,16 @@ func searchImpl(ctx context.Context, cache *sdpcache.Cache, client S3Client, sco
 		return nil, sdp.NewQueryError(err)
 	}
 
-	if arnScope := adapterhelpers.FormatScope(a.AccountID, a.Region); arnScope != scope {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: fmt.Sprintf("ARN scope %v does not match adapters scope %v", arnScope, scope),
-			Scope:       scope,
+	// For S3 bucket ARNs, account ID and region are empty, so we skip scope validation
+	// and use the adapter's scope (which is account-scoped)
+	// If the ARN does have an account ID, validate it matches the adapter scope
+	if a.AccountID != "" {
+		if arnScope := adapterhelpers.FormatScope(a.AccountID, a.Region); arnScope != scope {
+			return nil, &sdp.QueryError{
+				ErrorType:   sdp.QueryError_NOSCOPE,
+				ErrorString: fmt.Sprintf("ARN scope %v does not match adapters scope %v", arnScope, scope),
+				Scope:       scope,
+			}
 		}
 	}
 

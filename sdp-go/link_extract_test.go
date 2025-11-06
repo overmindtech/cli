@@ -60,7 +60,7 @@ spec:
         - name: NATS_CA_FILE
           value: /etc/srcman/certs/ca.pem
         - name: S3_BUCKET_ARN
-          value: arn:aws:s3:::harness-sample-two-qa-us-west-2-20251022145624819400000001
+          value: arn:aws:s3:::example-bucket-name
         - name: S3_OBJECT_ARN
           value: arn:aws:s3:::my-test-bucket/data/key
         - name: IAM_ROLE_ARN
@@ -455,7 +455,7 @@ func TestExtractLinksFromAttributes(t *testing.T) {
 		// ARN edge cases - these should work after the fix
 		{
 			ExpectedType:  "s3-bucket",
-			ExpectedQuery: "arn:aws:s3:::harness-sample-two-qa-us-west-2-20251022145624819400000001",
+			ExpectedQuery: "arn:aws:s3:::example-bucket-name",
 			ExpectedScope: "*", // S3 buckets don't have region/account in ARN, use wildcard
 		},
 		{
@@ -669,6 +669,125 @@ func TestExtractLinksFrom(t *testing.T) {
 			for i, query := range queries {
 				if query.GetQuery().GetQuery() != test.ExpectedQueries[i] {
 					t.Errorf("expected query %s, got %s", test.ExpectedQueries[i], query.GetQuery().GetQuery())
+				}
+			}
+		})
+	}
+}
+
+func TestExtractLinksFromConfigMapData(t *testing.T) {
+	// Test ConfigMap data with S3 bucket ARN
+	configMapData := map[string]interface{}{
+		"data": map[string]interface{}{
+			"S3_BUCKET_ARN":  "arn:aws:s3:::example-bucket-name",
+			"S3_BUCKET_NAME": "example-bucket-name",
+		},
+	}
+
+	queries, err := ExtractLinksFrom(configMapData)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Find the S3 bucket query
+	found := false
+	for _, query := range queries {
+		if query.GetQuery().GetType() == "s3-bucket" &&
+			query.GetQuery().GetQuery() == "arn:aws:s3:::example-bucket-name" {
+			found = true
+			if query.GetQuery().GetScope() != WILDCARD {
+				t.Errorf("expected scope to be WILDCARD (%s), got %s", WILDCARD, query.GetQuery().GetScope())
+			}
+			if query.GetQuery().GetMethod() != QueryMethod_SEARCH {
+				t.Errorf("expected method to be SEARCH, got %v", query.GetQuery().GetMethod())
+			}
+			break
+		}
+	}
+
+	if !found {
+		t.Errorf("expected to find s3-bucket query for ARN arn:aws:s3:::example-bucket-name")
+		t.Logf("Found %d queries:", len(queries))
+		for _, q := range queries {
+			t.Logf("  Type: %s, Query: %s, Scope: %s", q.GetQuery().GetType(), q.GetQuery().GetQuery(), q.GetQuery().GetScope())
+		}
+	}
+}
+
+func TestS3BucketARNTypeDetection(t *testing.T) {
+	tests := []struct {
+		name          string
+		arn           string
+		expectedType  string
+		expectedQuery string
+		expectedScope string
+	}{
+		{
+			name:          "S3 bucket ARN without account/region",
+			arn:           "arn:aws:s3:::example-bucket-name",
+			expectedType:  "s3-bucket",
+			expectedQuery: "arn:aws:s3:::example-bucket-name",
+			expectedScope: WILDCARD,
+		},
+		{
+			name:          "S3 bucket ARN with short name",
+			arn:           "arn:aws:s3:::my-bucket",
+			expectedType:  "s3-bucket",
+			expectedQuery: "arn:aws:s3:::my-bucket",
+			expectedScope: WILDCARD,
+		},
+		{
+			name:          "S3 object ARN (should extract bucket)",
+			arn:           "arn:aws:s3:::my-bucket/path/to/object",
+			expectedType:  "s3-bucket",
+			expectedQuery: "arn:aws:s3:::my-bucket",
+			expectedScope: WILDCARD,
+		},
+		{
+			name:          "S3 object ARN with nested path",
+			arn:           "arn:aws:s3:::my-bucket/folder/subfolder/file.txt",
+			expectedType:  "s3-bucket",
+			expectedQuery: "arn:aws:s3:::my-bucket",
+			expectedScope: WILDCARD,
+		},
+		{
+			name:          "S3 bucket ARN with hyphens in name",
+			arn:           "arn:aws:s3:::my-test-bucket-name",
+			expectedType:  "s3-bucket",
+			expectedQuery: "arn:aws:s3:::my-test-bucket-name",
+			expectedScope: WILDCARD,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			queries, err := ExtractLinksFrom(map[string]interface{}{
+				"arn": tt.arn,
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			found := false
+			for _, query := range queries {
+				if query.GetQuery().GetType() == tt.expectedType &&
+					query.GetQuery().GetQuery() == tt.expectedQuery {
+					found = true
+					if query.GetQuery().GetScope() != tt.expectedScope {
+						t.Errorf("expected scope %s, got %s", tt.expectedScope, query.GetQuery().GetScope())
+					}
+					if query.GetQuery().GetMethod() != QueryMethod_SEARCH {
+						t.Errorf("expected method SEARCH, got %v", query.GetQuery().GetMethod())
+					}
+					break
+				}
+			}
+
+			if !found {
+				t.Errorf("expected to find query with type %s and query %s", tt.expectedType, tt.expectedQuery)
+				t.Logf("Found %d queries:", len(queries))
+				for _, q := range queries {
+					t.Logf("  Type: %s, Query: %s, Scope: %s", q.GetQuery().GetType(), q.GetQuery().GetQuery(), q.GetQuery().GetScope())
 				}
 			}
 		})
