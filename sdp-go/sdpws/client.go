@@ -125,10 +125,44 @@ func dialImpl(ctx context.Context, u string, httpClient *http.Client, handler Ga
 func (c *Client) receive(ctx context.Context) {
 	defer tracing.LogRecoverToReturn(ctx, "sdpws.Client.receive")
 	for {
+		// Check if context is cancelled before attempting to read
+		// This prevents lock acquisition failures when context is cancelled during Close()
+		if ctx.Err() != nil {
+			// Context is cancelled - exit gracefully without calling abort
+			// This prevents "failed to acquire lock" errors when Close() is called
+			// with a cancelled context. The abort() will be called by Close() itself.
+			return
+		}
+
+		// Check if client is already closed before attempting to read
+		// This prevents errors when Close() is called from another goroutine
+		if c.Closed() {
+			return
+		}
+
 		msg := &sdp.GatewayResponse{}
 
 		typ, r, err := c.conn.Reader(ctx)
 		if err != nil {
+			// If context is cancelled, this is expected during Close() and we should
+			// exit gracefully without calling abort to avoid lock contention.
+			// The abort() will be called by Close() itself.
+			if ctx.Err() != nil {
+				// Context cancelled - exit gracefully
+				// Don't call abort() here as it may already be closing, which could
+				// cause "failed to acquire lock" errors
+				return
+			}
+			// Check if this is a normal closure from the remote side
+			var ce websocket.CloseError
+			if errors.As(err, &ce) && ce.Code == websocket.StatusNormalClosure {
+				// Normal closure from remote - exit gracefully
+				// Call abort() with nil to properly set the closed state
+				// abort() will handle normal closure gracefully (no error logged)
+				c.abort(ctx, nil)
+				return
+			}
+			// For other errors, abort normally
 			c.abort(ctx, fmt.Errorf("failed to initialise websocket reader: %w", err))
 			return
 		}
