@@ -14,6 +14,7 @@ const (
 	ChangeTimelineEntryV2NameCalculatedBlastRadius ChangeTimelineEntryV2Name = "Calculated Blast Radius"
 	ChangeTimelineEntryV2NameCalculatedRoutineness ChangeTimelineEntryV2Name = "Calculated Routineness"
 	ChangeTimelineEntryV2NameCalculatedRisks       ChangeTimelineEntryV2Name = "Calculated Risks"
+	ChangeTimelineEntryV2NameCalculatedLabels      ChangeTimelineEntryV2Name = "Calculated Labels"
 	ChangeTimelineEntryV2NameAutoTagging           ChangeTimelineEntryV2Name = "Auto Tagging"
 	ChangeTimelineEntryV2NameChangeValidation      ChangeTimelineEntryV2Name = "Change Validation"
 	ChangeTimelineEntryV2NameChangeStarted         ChangeTimelineEntryV2Name = "Change Started"
