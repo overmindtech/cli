@@ -115,6 +115,24 @@ func resourceRecordSetItemMapper(_, scope string, awsItem *types.ResourceRecordS
 		Scope:           scope,
 	}
 
+	if awsItem.Name != nil {
+		recordName := strings.TrimSuffix(*awsItem.Name, ".")
+		if recordName != "" {
+			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "dns",
+					Method: sdp.QueryMethod_SEARCH,
+					Query:  recordName,
+					Scope:  "global",
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: true,
+				},
+			})
+		}
+	}
+
 	if awsItem.AliasTarget != nil {
 		if awsItem.AliasTarget.DNSName != nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{

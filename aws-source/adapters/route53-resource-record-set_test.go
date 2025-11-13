@@ -75,6 +75,12 @@ func TestResourceRecordSetItemMapper(t *testing.T) {
 		{
 			ExpectedType:   "dns",
 			ExpectedMethod: sdp.QueryMethod_SEARCH,
+			ExpectedQuery:  "overmind-demo.com",
+			ExpectedScope:  "global",
+		},
+		{
+			ExpectedType:   "dns",
+			ExpectedMethod: sdp.QueryMethod_SEARCH,
 			ExpectedQuery:  "foo.bar.com",
 			ExpectedScope:  "global",
 		},
