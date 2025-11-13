@@ -4,11 +4,43 @@ Integration tests are defined in an individual file for each resource.
 Test names follow the pattern `Test<API><RESOURCE>Integration`, where `<API>` is the API name and `<RESOURCE>` is the resource name.
 For example, `TestComputeInstanceIntegration` tests the Compute API's Instance resource.
 
-Integration tests are using Google Cloud Client Libraries and Google API Client Libraries to interact with GCP resources.
-These libraries require setting up the Application Default Credentials (ADC) to authenticate with GCP.
-See [here](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment) for how to set up the ADC for local development environment.
+## Setup your local environment for testing
+
+1. Create your Google Cloud account here, `https://console.cloud.google.com/`
+2. Use your brex credit card information
+3. You can see the other overmind projects, it will be under projects -> all.
+4. Login to gcloud `gcloud auth login` on the terminal.
+5. To run the **integration tests in debug mode** you need to set the following environment variables. `~/.config/Cursor/User/settings.json`
+
+    ```json
+    {
+        "window.commandCenter": true,
+        "workbench.activityBar.orientation": "vertical",
+        "go.testEnvVars": {
+            "RUN_GCP_INTEGRATION_TESTS": "true",
+            "GCP_PROJECT_ID": "tokyo-country-478115-v2",
+        }
+    }
+    ```
+
+    > **Note:** Replace `"tokyo-country-478115-v2"` with your own GCP project ID.
+   Or you can run them in the CLI by using:
+
+   ```bash
+    export RUN_GCP_INTEGRATION_TESTS=true
+    # For GCP
+    export GCP_PROJECT_ID="tokyo-country-478115-v2" # use your own project id here
+    export GCP_ZONE="us-central1-c"                 # not all tests need a zone
+    export GCP_REGION="us-central1"                 # not all tests need a region
+   ```
+
+6. Integration tests are using Google Cloud Client Libraries and Google API Client Libraries to interact with GCP resources. These libraries require setting up the Application Default Credentials (ADC) to authenticate with GCP. See the [official documentation](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment) for how to set up the ADC for your local development environment.
+    Login `gcloud auth application-default login`
+7. **optional** You may need to set the quota project `gcloud auth application-default set-quota-project tokyo-country-478115-v2`. Use your own project id here.
+8. You can now run integration tests.
 
 Each test has `Setup`, `Run`, and `Teardown` methods.
+
 - `Setup` is used to create any resources needed for the test.
 - `Run` is where the actual test logic is implemented.
 - `Teardown` is used to clean up any resources created during the test.
@@ -20,16 +52,19 @@ We can easily run all `Setup` tests to create resources, then run all `Run` test
 From the `sources/gcp/integration-tests` directory:
 
 For building up the infra for the Compute API resources.
+
 ```bash
-go test ./integration-tests -run "TestCompute.*/Setup" -v 
+go test ./integration-tests -run "TestCompute.*/Setup" -v
 ```
 
 For running the actual tests for the Compute API resources.
+
 ```bash
-go test ./integration-tests -run "TestCompute.*/Run" -v 
+go test ./integration-tests -run "TestCompute.*/Run" -v
 ```
 
 For tearing down the infra for the Compute API resources.
+
 ```bash
-go test ./integration-tests -run "TestCompute.*/Teardown" -v 
+go test ./integration-tests -run "TestCompute.*/Teardown" -v
 ```
