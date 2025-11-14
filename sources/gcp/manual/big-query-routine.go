@@ -74,7 +74,7 @@ func (b BigQueryRoutineWrapper) SearchLookups() []sources.ItemTypeLookups {
 	return []sources.ItemTypeLookups{
 
 		{
-			BigQueryDatasetLookupByID,
+			BigQueryRoutineLookupByID,
 		},
 	}
 }

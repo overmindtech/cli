@@ -54,6 +54,9 @@ func (b BigQueryDatasetWrapper) PotentialLinks() map[shared.ItemType]bool {
 		gcpshared.CloudKMSCryptoKey,
 		gcpshared.BigQueryDataset,
 		gcpshared.BigQueryConnection,
+		gcpshared.BigQueryModel,
+		gcpshared.BigQueryRoutine,
+		gcpshared.BigQueryTable,
 	)
 }
 
@@ -127,6 +130,48 @@ func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, me
 		Scope:           b.DefaultScope(),
 		Tags:            metadata.Labels,
 	}
+
+	// Link to contained models.
+	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   gcpshared.BigQueryModel.String(),
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  parts[1],
+			Scope:  b.DefaultScope(),
+		},
+		BlastPropagation: &sdp.BlastPropagation{
+			In:  true,
+			Out: false,
+		},
+	})
+
+	// Link to contained tables.
+	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   gcpshared.BigQueryTable.String(),
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  parts[1],
+			Scope:  b.DefaultScope(),
+		},
+		BlastPropagation: &sdp.BlastPropagation{
+			In:  true,
+			Out: true,
+		},
+	})
+
+	// Link to contained routines.
+	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   gcpshared.BigQueryRoutine.String(),
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  parts[1],
+			Scope:  b.DefaultScope(),
+		},
+		BlastPropagation: &sdp.BlastPropagation{
+			In:  true,
+			Out: true,
+		},
+	})
 
 	for _, access := range metadata.Access {
 		if access.EntityType == bigquery.GroupEmailEntity ||
