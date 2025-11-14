@@ -172,6 +172,7 @@ const (
 	ExternalVpnGateway           shared.Resource = "external-vpn-gateway"
 	TransferConfig               shared.Resource = "transfer-config"
 	DataSource                   shared.Resource = "data-source"
+	Routine                      shared.Resource = "routine"
 	TransferJob                  shared.Resource = "transfer-job"
 	SecurityCenterService        shared.Resource = "security-center-service" // Used by Security Center Management
 )

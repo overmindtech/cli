@@ -46,6 +46,7 @@ var (
 	BigQueryDataset                               = shared.NewItemType(GCP, BigQuery, Dataset)
 	BigQueryDataTransferTransferConfig            = shared.NewItemType(GCP, BigQueryDataTransfer, TransferConfig)
 	BigQueryDataTransferDataSource                = shared.NewItemType(GCP, BigQueryDataTransfer, DataSource)
+	BigQueryRoutine                               = shared.NewItemType(GCP, BigQuery, Routine)
 	StorageTransferTransferJob                    = shared.NewItemType(GCP, StorageTransfer, TransferJob)
 	PubSubSubscription                            = shared.NewItemType(GCP, PubSub, Subscription)
 	PubSubTopic                                   = shared.NewItemType(GCP, PubSub, Topic)

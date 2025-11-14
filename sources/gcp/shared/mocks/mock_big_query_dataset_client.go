@@ -19,6 +19,60 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
+// MockBigQueryRoutineClient is a mock of BigQueryRoutineClient interface.
+type MockBigQueryRoutineClient struct {
+	ctrl     *gomock.Controller
+	recorder *MockBigQueryRoutineClientMockRecorder
+	isgomock struct{}
+}
+
+// MockBigQueryRoutineClientMockRecorder is the mock recorder for MockBigQueryRoutineClient.
+type MockBigQueryRoutineClientMockRecorder struct {
+	mock *MockBigQueryRoutineClient
+}
+
+// NewMockBigQueryRoutineClient creates a new mock instance.
+func NewMockBigQueryRoutineClient(ctrl *gomock.Controller) *MockBigQueryRoutineClient {
+	mock := &MockBigQueryRoutineClient{ctrl: ctrl}
+	mock.recorder = &MockBigQueryRoutineClientMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockBigQueryRoutineClient) EXPECT() *MockBigQueryRoutineClientMockRecorder {
+	return m.recorder
+}
+
+// Get mocks base method.
+func (m *MockBigQueryRoutineClient) Get(ctx context.Context, projectID, datasetID, routineID string) (*bigquery.RoutineMetadata, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Get", ctx, projectID, datasetID, routineID)
+	ret0, _ := ret[0].(*bigquery.RoutineMetadata)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Get indicates an expected call of Get.
+func (mr *MockBigQueryRoutineClientMockRecorder) Get(ctx, projectID, datasetID, routineID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockBigQueryRoutineClient)(nil).Get), ctx, projectID, datasetID, routineID)
+}
+
+// List mocks base method.
+func (m *MockBigQueryRoutineClient) List(ctx context.Context, projectID, datasetID string, toSDPItem func(*bigquery.RoutineMetadata, string, string) (*sdp.Item, *sdp.QueryError)) ([]*sdp.Item, *sdp.QueryError) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "List", ctx, projectID, datasetID, toSDPItem)
+	ret0, _ := ret[0].([]*sdp.Item)
+	ret1, _ := ret[1].(*sdp.QueryError)
+	return ret0, ret1
+}
+
+// List indicates an expected call of List.
+func (mr *MockBigQueryRoutineClientMockRecorder) List(ctx, projectID, datasetID, toSDPItem any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockBigQueryRoutineClient)(nil).List), ctx, projectID, datasetID, toSDPItem)
+}
+
 // MockBigQueryDatasetClient is a mock of BigQueryDatasetClient interface.
 type MockBigQueryDatasetClient struct {
 	ctrl     *gomock.Controller

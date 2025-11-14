@@ -62,6 +62,8 @@ var PredefinedRoles = map[string]role{
 			"bigquery.models.list",
 			"bigquery.tables.get",
 			"bigquery.tables.list",
+			"bigquery.routines.get",
+			"bigquery.routines.list",
 		},
 	},
 	"roles/bigtable.viewer": {

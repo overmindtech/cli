@@ -12,6 +12,69 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 )
 
+type BigQueryRoutineClient interface {
+	Get(ctx context.Context, projectID, datasetID, routineID string) (*bigquery.RoutineMetadata, error)
+	List(ctx context.Context, projectID, datasetID string, toSDPItem func(routine *bigquery.RoutineMetadata, datasetID, routineID string) (*sdp.Item, *sdp.QueryError)) ([]*sdp.Item, *sdp.QueryError)
+}
+
+type bigQueryRoutineClient struct {
+	client *bigquery.Client
+}
+
+func (b bigQueryRoutineClient) Get(ctx context.Context, projectID, datasetID, routineID string) (*bigquery.RoutineMetadata, error) {
+	routine := b.client.DatasetInProject(projectID, datasetID).Routine(routineID)
+
+	meta, err := routine.Metadata(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error getting metadata for routine %s: %w", routineID, err)
+	}
+
+	return meta, nil
+}
+
+func (b bigQueryRoutineClient) List(ctx context.Context, projectID string, datasetID string, toSDPItem func(routine *bigquery.RoutineMetadata, datasetID, routineID string) (*sdp.Item, *sdp.QueryError)) ([]*sdp.Item, *sdp.QueryError) {
+	ds := b.client.DatasetInProject(projectID, datasetID)
+	if ds == nil {
+		return nil, QueryError(fmt.Errorf("dataset %s not found in project %s", datasetID, projectID), projectID, BigQueryRoutine.String())
+	}
+
+	routineIterator := ds.Routines(ctx)
+	if routineIterator == nil {
+		return nil, QueryError(fmt.Errorf("failed to create routine iterator for dataset %s in project %s", datasetID, projectID), projectID, BigQueryRoutine.String())
+	}
+
+	var items []*sdp.Item
+	for {
+		routine, err := routineIterator.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			return nil, QueryError(fmt.Errorf("error iterating routines: %w", err), projectID, BigQueryRoutine.String())
+		}
+
+		meta, err := routine.Metadata(ctx)
+		if err != nil {
+			return nil, QueryError(fmt.Errorf("error getting metadata for routine %s: %w", routine.RoutineID, err), projectID, BigQueryRoutine.String())
+		}
+
+		item, sdpErr := toSDPItem(meta, routine.DatasetID, routine.RoutineID)
+		if sdpErr != nil {
+			return nil, sdpErr
+		}
+
+		items = append(items, item)
+	}
+
+	return items, nil
+}
+
+func NewBigQueryRoutineClient(client *bigquery.Client) BigQueryRoutineClient {
+	return &bigQueryRoutineClient{
+		client: client,
+	}
+}
+
 //go:generate mockgen -destination=./mocks/mock_big_query_dataset_client.go -package=mocks -source=big-query-clients.go -imports=sdp=github.com/overmindtech/cli/sdp-go
 type BigQueryDatasetClient interface {
 	Get(ctx context.Context, projectID, datasetID string) (*bigquery.DatasetMetadata, error)

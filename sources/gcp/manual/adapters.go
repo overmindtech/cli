@@ -211,6 +211,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 		sources.WrapperToAdapter(NewBigQueryTable(shared.NewBigQueryTableClient(bigQueryDatasetCli), projectID)),
 		sources.WrapperToAdapter(NewBigQueryModel(shared.NewBigQueryModelClient(bigQueryDatasetCli), projectID)),
 		sources.WrapperToAdapter(NewLoggingSink(shared.NewLoggingConfigClient(loggingConfigCli), projectID)),
+		sources.WrapperToAdapter(NewBigQueryRoutine(shared.NewBigQueryRoutineClient(bigQueryDatasetCli), projectID)),
 	)
 
 	return adapters, nil

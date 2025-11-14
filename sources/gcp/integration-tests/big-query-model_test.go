@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+	"github.com/overmindtech/cli/sources/shared"
 )
 
 func TestBigQueryModel(t *testing.T) {
@@ -21,6 +22,7 @@ func TestBigQueryModel(t *testing.T) {
 
 	dataSet := "test_dataset"
 	model := "test_model"
+	routine := "test_routine"
 
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
@@ -70,6 +72,26 @@ func TestBigQueryModel(t *testing.T) {
 			t.Fatalf("Failed to create model: %v", err)
 		}
 		t.Logf("Model created: %s", modelMetadata.Name)
+
+		routineQuery := "CREATE OR REPLACE FUNCTION `" + projectID + "." + dataSet + "." + routine + "`(input INT64)\n" +
+			"RETURNS INT64\n" +
+			"AS (\n" +
+			"  input + 1\n" +
+			");"
+
+		routineOp, err := client.Query(routineQuery).Run(ctx)
+		if err != nil {
+			t.Fatalf("Failed to create routine: %v", err)
+		}
+		if _, err := routineOp.Wait(ctx); err != nil {
+			t.Fatalf("Failed to wait for routine creation: %v", err)
+		}
+
+		routineItem := client.Dataset(dataSet).Routine(routine)
+		if _, err := routineItem.Metadata(ctx); err != nil {
+			t.Fatalf("Failed to retrieve routine metadata: %v", err)
+		}
+		t.Logf("Routine created: %s", routine)
 	})
 	t.Run("Get", func(t *testing.T) {
 		bigqueryClient := gcpshared.NewBigQueryModelClient(client)
@@ -110,6 +132,49 @@ func TestBigQueryModel(t *testing.T) {
 
 		if !found {
 			t.Fatalf("Expected to find model %s in the list of dataset models", model)
+		}
+	})
+	t.Run("GetRoutine", func(t *testing.T) {
+		routineClient := gcpshared.NewBigQueryRoutineClient(client)
+		adapter := manual.NewBigQueryRoutine(routineClient, projectID)
+
+		sdpItem, err := adapter.Get(ctx, dataSet, routine)
+		if err != nil {
+			t.Fatalf("Failed to get routine: %v", err)
+		}
+		if sdpItem == nil {
+			t.Fatal("Expected a routine item, got nil")
+		}
+
+		uniqueAttrKey := sdpItem.GetUniqueAttribute()
+		uniqueAttrValue, attrErr := sdpItem.GetAttributes().Get(uniqueAttrKey)
+		if attrErr != nil {
+			t.Fatalf("Failed to get routine unique attribute: %v", attrErr)
+		}
+
+		expectedUniqueAttrValue := shared.CompositeLookupKey(dataSet, routine)
+		if uniqueAttrValue != expectedUniqueAttrValue {
+			t.Fatalf("Expected routine unique attribute value to be %s, got %v", expectedUniqueAttrValue, uniqueAttrValue)
+		}
+
+		sdpItems, err := adapter.Search(ctx, dataSet)
+		if err != nil {
+			t.Fatalf("Failed to search routines: %v", err)
+		}
+		if len(sdpItems) < 1 {
+			t.Fatalf("Expected at least one routine in dataset, got %d", len(sdpItems))
+		}
+
+		var found bool
+		for _, item := range sdpItems {
+			if v, err := item.GetAttributes().Get(uniqueAttrKey); err == nil && v == expectedUniqueAttrValue {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			t.Fatalf("Expected to find routine %s in the list of dataset routines", routine)
 		}
 	})
 	t.Run("Teardown", func(t *testing.T) {
