@@ -411,7 +411,17 @@ func (e *Engine) IsNATSConnected() bool {
 func (e *Engine) HealthCheck(ctx context.Context) error {
 	span := trace.SpanFromContext(ctx)
 
-	natsConnected := e.IsNATSConnected()
+	e.natsConnectionMutex.Lock()
+	var (
+		encodedConn = e.natsConnection
+		underlying  *nats.Conn
+	)
+	if encodedConn != nil {
+		underlying = encodedConn.Underlying()
+	}
+	e.natsConnectionMutex.Unlock()
+
+	natsConnected := underlying != nil && underlying.IsConnected()
 
 	span.SetAttributes(
 		attribute.String("ovm.engine.name", e.EngineConfig.SourceName),
@@ -420,12 +430,11 @@ func (e *Engine) HealthCheck(ctx context.Context) error {
 		attribute.Int("ovm.discovery.getExecutionPoolCount", int(getExecutionPoolCount.Load())),
 	)
 
-	if e.natsConnection.Underlying() != nil {
-		u := e.natsConnection.Underlying()
+	if underlying != nil {
 		span.SetAttributes(
-			attribute.String("ovm.nats.serverId", u.ConnectedServerId()),
-			attribute.String("ovm.nats.url", u.ConnectedUrl()),
-			attribute.Int64("ovm.nats.reconnects", int64(u.Reconnects)), //nolint:gosec // Reconnects is always a small positive number
+			attribute.String("ovm.nats.serverId", underlying.ConnectedServerId()),
+			attribute.String("ovm.nats.url", underlying.ConnectedUrl()),
+			attribute.Int64("ovm.nats.reconnects", int64(underlying.Reconnects)), //nolint:gosec // Reconnects is always a small positive number
 		)
 	}
 

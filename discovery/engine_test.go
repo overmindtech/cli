@@ -706,6 +706,40 @@ func TestSetupMaxQueryTimeout(t *testing.T) {
 	})
 }
 
+func TestEngineHealthCheckHandlesNilConnection(t *testing.T) {
+	t.Parallel()
+
+	t.Run("without connection", func(t *testing.T) {
+		t.Parallel()
+		e := newEngine(t, "TestEngineHealthCheckHandlesNilConnection_NoConn", &auth.NATSOptions{}, nil)
+
+		assertHealthCheckDoesNotPanic(t, e)
+	})
+
+	t.Run("with dropped underlying connection", func(t *testing.T) {
+		t.Parallel()
+		e := newEngine(t, "TestEngineHealthCheckHandlesNilConnection_Dropped", &auth.NATSOptions{}, nil)
+		e.natsConnection = &sdp.EncodedConnectionImpl{}
+
+		assertHealthCheckDoesNotPanic(t, e)
+	})
+}
+
+func assertHealthCheckDoesNotPanic(t *testing.T, e *Engine) {
+	t.Helper()
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("HealthCheck panic: %v", r)
+		}
+	}()
+
+	ctx := context.Background()
+	if err := e.HealthCheck(ctx); err == nil {
+		t.Fatalf("expected HealthCheck to report disconnected NATS")
+	}
+}
+
 var (
 	testTokenSource   oauth2.TokenSource
 	testTokenSourceMu sync.Mutex
