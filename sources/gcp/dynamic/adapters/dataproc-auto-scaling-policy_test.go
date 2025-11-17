@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	"cloud.google.com/go/dataproc/apiv1/dataprocpb"
+	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/overmindtech/cli/discovery"

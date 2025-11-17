@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	"cloud.google.com/go/dataproc/apiv1/dataprocpb"
+	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
