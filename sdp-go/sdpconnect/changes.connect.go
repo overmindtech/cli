@@ -93,6 +93,9 @@ const (
 	// ChangesServicePopulateChangeFiltersProcedure is the fully-qualified name of the ChangesService's
 	// PopulateChangeFilters RPC.
 	ChangesServicePopulateChangeFiltersProcedure = "/changes.ChangesService/PopulateChangeFilters"
+	// ChangesServiceGenerateRiskFixProcedure is the fully-qualified name of the ChangesService's
+	// GenerateRiskFix RPC.
+	ChangesServiceGenerateRiskFixProcedure = "/changes.ChangesService/GenerateRiskFix"
 	// AutoTaggingServiceListRulesProcedure is the fully-qualified name of the AutoTaggingService's
 	// ListRules RPC.
 	AutoTaggingServiceListRulesProcedure = "/changes.AutoTaggingService/ListRules"
@@ -189,6 +192,8 @@ type ChangesServiceClient interface {
 	GetDiff(context.Context, *connect.Request[sdp_go.GetDiffRequest]) (*connect.Response[sdp_go.GetDiffResponse], error)
 	// List all the available repos, authors and statuses that can be used to populate the dropdown filters
 	PopulateChangeFilters(context.Context, *connect.Request[sdp_go.PopulateChangeFiltersRequest]) (*connect.Response[sdp_go.PopulateChangeFiltersResponse], error)
+	// Generates an AI-powered fix suggestion for a specific risk
+	GenerateRiskFix(context.Context, *connect.Request[sdp_go.GenerateRiskFixRequest]) (*connect.Response[sdp_go.GenerateRiskFixResponse], error)
 }
 
 // NewChangesServiceClient constructs a client for the changes.ChangesService service. By default,
@@ -316,6 +321,12 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(changesServiceMethods.ByName("PopulateChangeFilters")),
 			connect.WithClientOptions(opts...),
 		),
+		generateRiskFix: connect.NewClient[sdp_go.GenerateRiskFixRequest, sdp_go.GenerateRiskFixResponse](
+			httpClient,
+			baseURL+ChangesServiceGenerateRiskFixProcedure,
+			connect.WithSchema(changesServiceMethods.ByName("GenerateRiskFix")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -340,6 +351,7 @@ type changesServiceClient struct {
 	listChangingItemsSummary  *connect.Client[sdp_go.ListChangingItemsSummaryRequest, sdp_go.ListChangingItemsSummaryResponse]
 	getDiff                   *connect.Client[sdp_go.GetDiffRequest, sdp_go.GetDiffResponse]
 	populateChangeFilters     *connect.Client[sdp_go.PopulateChangeFiltersRequest, sdp_go.PopulateChangeFiltersResponse]
+	generateRiskFix           *connect.Client[sdp_go.GenerateRiskFixRequest, sdp_go.GenerateRiskFixResponse]
 }
 
 // ListChanges calls changes.ChangesService.ListChanges.
@@ -437,6 +449,11 @@ func (c *changesServiceClient) PopulateChangeFilters(ctx context.Context, req *c
 	return c.populateChangeFilters.CallUnary(ctx, req)
 }
 
+// GenerateRiskFix calls changes.ChangesService.GenerateRiskFix.
+func (c *changesServiceClient) GenerateRiskFix(ctx context.Context, req *connect.Request[sdp_go.GenerateRiskFixRequest]) (*connect.Response[sdp_go.GenerateRiskFixResponse], error) {
+	return c.generateRiskFix.CallUnary(ctx, req)
+}
+
 // ChangesServiceHandler is an implementation of the changes.ChangesService service.
 type ChangesServiceHandler interface {
 	// Lists all changes
@@ -489,6 +506,8 @@ type ChangesServiceHandler interface {
 	GetDiff(context.Context, *connect.Request[sdp_go.GetDiffRequest]) (*connect.Response[sdp_go.GetDiffResponse], error)
 	// List all the available repos, authors and statuses that can be used to populate the dropdown filters
 	PopulateChangeFilters(context.Context, *connect.Request[sdp_go.PopulateChangeFiltersRequest]) (*connect.Response[sdp_go.PopulateChangeFiltersResponse], error)
+	// Generates an AI-powered fix suggestion for a specific risk
+	GenerateRiskFix(context.Context, *connect.Request[sdp_go.GenerateRiskFixRequest]) (*connect.Response[sdp_go.GenerateRiskFixResponse], error)
 }
 
 // NewChangesServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -612,6 +631,12 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 		connect.WithSchema(changesServiceMethods.ByName("PopulateChangeFilters")),
 		connect.WithHandlerOptions(opts...),
 	)
+	changesServiceGenerateRiskFixHandler := connect.NewUnaryHandler(
+		ChangesServiceGenerateRiskFixProcedure,
+		svc.GenerateRiskFix,
+		connect.WithSchema(changesServiceMethods.ByName("GenerateRiskFix")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/changes.ChangesService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ChangesServiceListChangesProcedure:
@@ -652,6 +677,8 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 			changesServiceGetDiffHandler.ServeHTTP(w, r)
 		case ChangesServicePopulateChangeFiltersProcedure:
 			changesServicePopulateChangeFiltersHandler.ServeHTTP(w, r)
+		case ChangesServiceGenerateRiskFixProcedure:
+			changesServiceGenerateRiskFixHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -735,6 +762,10 @@ func (UnimplementedChangesServiceHandler) GetDiff(context.Context, *connect.Requ
 
 func (UnimplementedChangesServiceHandler) PopulateChangeFilters(context.Context, *connect.Request[sdp_go.PopulateChangeFiltersRequest]) (*connect.Response[sdp_go.PopulateChangeFiltersResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.PopulateChangeFilters is not implemented"))
+}
+
+func (UnimplementedChangesServiceHandler) GenerateRiskFix(context.Context, *connect.Request[sdp_go.GenerateRiskFixRequest]) (*connect.Response[sdp_go.GenerateRiskFixResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GenerateRiskFix is not implemented"))
 }
 
 // AutoTaggingServiceClient is a client for the changes.AutoTaggingService service.
