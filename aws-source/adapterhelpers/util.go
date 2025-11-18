@@ -176,6 +176,25 @@ func ParseARN(arnString string) (*ARN, error) {
 	}, nil
 }
 
+// GetPartitionDNSSuffix returns the DNS suffix for a given AWS partition.
+// This is used to construct service URLs that work across all AWS partitions.
+func GetPartitionDNSSuffix(partition string) string {
+	switch partition {
+	case "aws-cn":
+		return "amazonaws.com.cn"
+	case "aws-iso":
+		return "c2s.ic.gov"
+	case "aws-iso-b":
+		return "sc2s.sgov.gov"
+	case "aws-eu":
+		return "amazonaws.eu"
+	case "aws", "aws-us-gov":
+		return "amazonaws.com"
+	default:
+		return "amazonaws.com" // Default to commercial partition
+	}
+}
+
 // WrapAWSError Wraps an AWS error in the appropriate SDP error
 func WrapAWSError(err error) *sdp.QueryError {
 	var responseErr *awsHttp.ResponseError

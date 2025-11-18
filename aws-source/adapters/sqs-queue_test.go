@@ -105,6 +105,62 @@ func TestGetFunc(t *testing.T) {
 	}
 }
 
+func TestSqsQueueSearchInputMapper(t *testing.T) {
+	tests := []struct {
+		name        string
+		arn         string
+		expectedURL string
+	}{
+		{
+			name:        "aws partition",
+			arn:         "arn:aws:sqs:eu-west-2:540044833068:-tfc-notifications-from-s3",
+			expectedURL: "https://sqs.eu-west-2.amazonaws.com/540044833068/-tfc-notifications-from-s3",
+		},
+		{
+			name:        "aws-cn partition",
+			arn:         "arn:aws-cn:sqs:cn-north-1:540044833068:my-queue",
+			expectedURL: "https://sqs.cn-north-1.amazonaws.com.cn/540044833068/my-queue",
+		},
+		{
+			name:        "aws-us-gov partition",
+			arn:         "arn:aws-us-gov:sqs:us-gov-west-1:540044833068:gov-queue",
+			expectedURL: "https://sqs.us-gov-west-1.amazonaws.com/540044833068/gov-queue",
+		},
+		{
+			name:        "aws-iso partition",
+			arn:         "arn:aws-iso:sqs:us-iso-east-1:540044833068:iso-queue",
+			expectedURL: "https://sqs.us-iso-east-1.c2s.ic.gov/540044833068/iso-queue",
+		},
+		{
+			name:        "aws-iso-b partition",
+			arn:         "arn:aws-iso-b:sqs:us-isob-east-1:540044833068:isob-queue",
+			expectedURL: "https://sqs.us-isob-east-1.sc2s.sgov.gov/540044833068/isob-queue",
+		},
+		{
+			name:        "aws-eu partition",
+			arn:         "arn:aws-eu:sqs:eu-central-1:540044833068:eu-queue",
+			expectedURL: "https://sqs.eu-central-1.amazonaws.eu/540044833068/eu-queue",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inputs, err := sqsQueueSearchInputMapper("scope", tt.arn)
+			if err != nil {
+				t.Fatalf("sqsQueueSearchInputMapper() error = %v", err)
+			}
+
+			if inputs.QueueUrl == nil {
+				t.Fatal("QueueUrl is nil")
+			}
+
+			if *inputs.QueueUrl != tt.expectedURL {
+				t.Errorf("Expected QueueUrl to be %s, got %s", tt.expectedURL, *inputs.QueueUrl)
+			}
+		})
+	}
+}
+
 func TestNewQueueAdapter(t *testing.T) {
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 	client := sqs.NewFromConfig(config)

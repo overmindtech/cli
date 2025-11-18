@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
@@ -90,6 +91,25 @@ func getFunc(ctx context.Context, client sqsClient, scope string, input *sqs.Get
 	}, nil
 }
 
+func sqsQueueSearchInputMapper(scope string, query string) (*sqs.GetQueueAttributesInput, error) {
+	arn, err := adapterhelpers.ParseARN(query)
+	if err != nil {
+		return nil, err
+	}
+
+	if arn.Service != "sqs" {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOTFOUND,
+			ErrorString: "ARN is not a valid SQS ARN",
+		}
+	}
+
+	return &sqs.GetQueueAttributesInput{
+		QueueUrl:       adapterhelpers.PtrString(fmt.Sprintf("https://sqs.%s.%s/%s/%s", arn.Region, adapterhelpers.GetPartitionDNSSuffix(arn.Partition), arn.AccountID, arn.Resource)),
+		AttributeNames: []types.QueueAttributeName{"All"},
+	}, nil
+}
+
 func NewSQSQueueAdapter(client sqsClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*sqs.ListQueuesInput, *sqs.ListQueuesOutput, *sqs.GetQueueAttributesInput, *sqs.GetQueueAttributesOutput, sqsClient, *sqs.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*sqs.ListQueuesInput, *sqs.ListQueuesOutput, *sqs.GetQueueAttributesInput, *sqs.GetQueueAttributesOutput, sqsClient, *sqs.Options]{
 		ItemType:        "sqs-queue",
@@ -118,7 +138,8 @@ func NewSQSQueueAdapter(client sqsClient, accountID string, region string) *adap
 			}
 			return inputs, nil
 		},
-		GetFunc: getFunc,
+		SearchGetInputMapper: sqsQueueSearchInputMapper,
+		GetFunc:              getFunc,
 	}
 }
 

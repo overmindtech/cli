@@ -256,3 +256,56 @@ func TestIAMWildcardMatches(t *testing.T) {
 		})
 	}
 }
+
+func TestGetPartitionDNSSuffix(t *testing.T) {
+	tests := []struct {
+		name     string
+		partition string
+		expected string
+	}{
+		{
+			name:     "aws partition",
+			partition: "aws",
+			expected: "amazonaws.com",
+		},
+		{
+			name:     "aws-cn partition",
+			partition: "aws-cn",
+			expected: "amazonaws.com.cn",
+		},
+		{
+			name:     "aws-us-gov partition",
+			partition: "aws-us-gov",
+			expected: "amazonaws.com",
+		},
+		{
+			name:     "aws-iso partition",
+			partition: "aws-iso",
+			expected: "c2s.ic.gov",
+		},
+		{
+			name:     "aws-iso-b partition",
+			partition: "aws-iso-b",
+			expected: "sc2s.sgov.gov",
+		},
+		{
+			name:     "aws-eu partition",
+			partition: "aws-eu",
+			expected: "amazonaws.eu",
+		},
+		{
+			name:     "unknown partition defaults to amazonaws.com",
+			partition: "unknown-partition",
+			expected: "amazonaws.com",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := GetPartitionDNSSuffix(tt.partition)
+			if result != tt.expected {
+				t.Errorf("GetPartitionDNSSuffix(%q) = %q, want %q", tt.partition, result, tt.expected)
+			}
+		})
+	}
+}
