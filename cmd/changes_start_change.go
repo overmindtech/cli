@@ -42,7 +42,62 @@ func StartChange(cmd *cobra.Command, args []string) error {
 		"ticket-link": viper.GetString("ticket-link"),
 	}
 
+	// poll the timeline for the Calculated Blast Radius to be complete
 	client := AuthenticatedChangesClient(ctx, oi)
+fetch:
+	for {
+		rawTimeLine, timelineErr := client.GetChangeTimelineV2(ctx, &connect.Request[sdp.GetChangeTimelineV2Request]{
+			Msg: &sdp.GetChangeTimelineV2Request{
+				ChangeUUID: changeUuid[:],
+			},
+		})
+		if timelineErr != nil || rawTimeLine.Msg == nil {
+			return loggedError{
+				err:     timelineErr,
+				fields:  lf,
+				message: "failed to get timeline",
+			}
+		}
+		timeLine := rawTimeLine.Msg
+		for _, entry := range timeLine.GetEntries() {
+			if entry.GetName() == string(sdp.ChangeTimelineEntryV2NameCalculatedBlastRadius) {
+				if entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
+					break fetch
+				}
+				if entry.GetStatus() == sdp.ChangeTimelineEntryStatus_ERROR {
+					// the api server will retry the blast radius calculation, so lets wait for the retry
+					log.WithContext(ctx).WithFields(lf).Warn("Blast radius calculation failed, waiting for retry")
+					break
+				}
+			}
+		}
+		// display the running entry
+		runningEntry, status, err := sdp.TimelineFindInProgressEntry(timeLine.GetEntries())
+		if err != nil {
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "failed to find running entry",
+			}
+		}
+		// log progress while waiting for blast radius calculation
+		log.WithContext(ctx).WithFields(log.Fields{
+			"status":  status.String(),
+			"running": runningEntry,
+		}).Info("Waiting for blast radius to be calculated")
+		// retry
+		time.Sleep(3 * time.Second)
+
+		// check if the context is cancelled
+		if ctx.Err() != nil {
+			return loggedError{
+				err:     ctx.Err(),
+				fields:  lf,
+				message: "context cancelled",
+			}
+		}
+	}
+
 	stream, err := client.StartChange(ctx, &connect.Request[sdp.StartChangeRequest]{
 		Msg: &sdp.StartChangeRequest{
 			ChangeUUID: changeUuid[:],
