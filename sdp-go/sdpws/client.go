@@ -59,9 +59,8 @@ type Client struct {
 	err   error
 	errMu sync.Mutex
 
-	closed     bool
-	closedCond *sync.Cond
-	closedMu   sync.Mutex
+	closed   bool
+	closedMu sync.Mutex
 }
 
 // Dial connects to the given URL and returns a new Client. Pass nil as handler
@@ -114,7 +113,6 @@ func dialImpl(ctx context.Context, u string, httpClient *http.Client, handler Ga
 		requestMap:         make(map[uuid.UUID]chan *sdp.GatewayResponse),
 		finishedRequestMap: make(map[uuid.UUID]bool),
 	}
-	c.closedCond = sync.NewCond(&c.closedMu)
 	c.finishedRequestMapCond = sync.NewCond(&c.finishedRequestMapMu)
 
 	go c.receive(ctx)
@@ -385,6 +383,7 @@ func (c *Client) abort(ctx context.Context, err error) {
 		c.closedMu.Unlock()
 		return
 	}
+	c.closed = true
 	c.closedMu.Unlock()
 
 	isNormalClosure := false
@@ -408,15 +407,6 @@ func (c *Client) abort(ctx context.Context, err error) {
 	c.errMu.Lock()
 	c.err = errors.Join(c.err, err)
 	c.errMu.Unlock()
-
-	c.closedMu.Lock()
-	if c.closed {
-		c.closedMu.Unlock()
-		return
-	}
-	c.closed = true
-	c.closedCond.Broadcast()
-	c.closedMu.Unlock()
 
 	c.closeAllRequestChans()
 }
