@@ -56,6 +56,8 @@ func domainNameOutputMapper(_, scope string, awsItem *types.DomainName) (*sdp.It
 		types.DomainNameStatusPendingCertificateReimport,
 		types.DomainNameStatusPendingOwnershipVerification:
 		item.Health = sdp.Health_HEALTH_PENDING.Enum()
+	case types.DomainNameStatusFailed:
+		item.Health = sdp.Health_HEALTH_ERROR.Enum()
 	default:
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
