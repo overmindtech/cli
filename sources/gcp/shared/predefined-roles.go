@@ -194,6 +194,8 @@ var PredefinedRoles = map[string]role{
 			"compute.vpnGateways.list",
 			"compute.vpnTunnels.get",
 			"compute.vpnTunnels.list",
+			"compute.machineTypes.get",
+			"compute.machineTypes.list",
 		},
 	},
 	"roles/container.viewer": {
