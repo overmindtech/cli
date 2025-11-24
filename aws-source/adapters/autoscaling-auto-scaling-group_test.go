@@ -224,3 +224,80 @@ func TestAutoScalingGroupOutputMapper(t *testing.T) {
 
 	tests.Execute(t, item)
 }
+
+func TestAutoScalingGroupInputMapperSearch(t *testing.T) {
+	t.Parallel()
+
+	adapter := NewAutoScalingGroupAdapter(&autoscaling.Client{}, "123456789012", "us-east-1")
+
+	tests := []struct {
+		name          string
+		query         string
+		expectedNames []string
+		expectError   bool
+	}{
+		{
+			name:          "Valid AutoScaling Group ARN",
+			query:         "arn:aws:autoscaling:eu-west-2:123456789012:autoScalingGroup:1cbb0e22-818f-4d8b-8662-77f73d3713ca:autoScalingGroupName/eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c",
+			expectedNames: []string{"eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"},
+			expectError:   false,
+		},
+		{
+			name:          "Valid AutoScaling Group ARN with hyphenated name",
+			query:         "arn:aws:autoscaling:us-east-1:123456789012:autoScalingGroup:abcd1234-5678-90ab-cdef-1234567890ab:autoScalingGroupName/CodeDeploy_sis_imports_adp_worker_d-MUAZOWH2E",
+			expectedNames: []string{"CodeDeploy_sis_imports_adp_worker_d-MUAZOWH2E"},
+			expectError:   false,
+		},
+		{
+			name:        "Invalid ARN - not autoscaling service",
+			query:       "arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0",
+			expectError: true,
+		},
+		{
+			name:        "Invalid ARN - malformed",
+			query:       "not-an-arn/malformed",
+			expectError: true,
+		},
+		{
+			name:        "Invalid ARN - missing autoScalingGroupName",
+			query:       "arn:aws:autoscaling:us-east-1:123456789012:autoScalingGroup:abcd1234-5678-90ab-cdef-1234567890ab",
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			input, err := adapter.InputMapperSearch(context.Background(), &autoscaling.Client{}, "123456789012.us-east-1", tt.query)
+
+			if tt.expectError {
+				if err == nil {
+					t.Errorf("Expected error for query %s, but got none", tt.query)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("Unexpected error for query %s: %v", tt.query, err)
+				return
+			}
+
+			if input == nil {
+				t.Errorf("Expected non-nil input for query %s", tt.query)
+				return
+			}
+
+			if len(input.AutoScalingGroupNames) != len(tt.expectedNames) {
+				t.Errorf("Expected %d AutoScalingGroupNames, got %d. Expected: %v, Actual: %v", len(tt.expectedNames), len(input.AutoScalingGroupNames), tt.expectedNames, input.AutoScalingGroupNames)
+				return
+			}
+
+			for i, expectedName := range tt.expectedNames {
+				if input.AutoScalingGroupNames[i] != expectedName {
+					t.Errorf("Expected AutoScalingGroupName %s at index %d, got %s", expectedName, i, input.AutoScalingGroupNames[i])
+				}
+			}
+		})
+	}
+}

@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"context"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 
@@ -219,6 +220,43 @@ func NewAutoScalingGroupAdapter(client *autoscaling.Client, accountID string, re
 		},
 		InputMapperList: func(scope string) (*autoscaling.DescribeAutoScalingGroupsInput, error) {
 			return &autoscaling.DescribeAutoScalingGroupsInput{}, nil
+		},
+		InputMapperSearch: func(ctx context.Context, client *autoscaling.Client, scope, query string) (*autoscaling.DescribeAutoScalingGroupsInput, error) {
+			// Parse the ARN to extract the AutoScaling Group name
+			// AutoScaling Group ARNs have the format:
+			// arn:aws:autoscaling:region:account-id:autoScalingGroup:uuid:autoScalingGroupName/name
+			arn, err := adapterhelpers.ParseARN(query)
+			if err != nil {
+				return nil, &sdp.QueryError{
+					ErrorType:   sdp.QueryError_NOTFOUND,
+					ErrorString: "invalid ARN format for autoscaling-auto-scaling-group",
+				}
+			}
+
+			// Check if it's an autoscaling ARN
+			if arn.Service != "autoscaling" {
+				return nil, &sdp.QueryError{
+					ErrorType:   sdp.QueryError_NOTFOUND,
+					ErrorString: "ARN is not for autoscaling service",
+				}
+			}
+
+			// The resource part looks like: autoScalingGroup:uuid:autoScalingGroupName/actual-name
+			// We need to extract just the "actual-name" part
+			if strings.Contains(arn.Resource, "autoScalingGroupName/") {
+				parts := strings.Split(arn.Resource, "autoScalingGroupName/")
+				if len(parts) == 2 {
+					asgName := parts[1]
+					return &autoscaling.DescribeAutoScalingGroupsInput{
+						AutoScalingGroupNames: []string{asgName},
+					}, nil
+				}
+			}
+
+			return nil, &sdp.QueryError{
+				ErrorType:   sdp.QueryError_NOTFOUND,
+				ErrorString: "could not extract AutoScaling Group name from ARN",
+			}
 		},
 		PaginatorBuilder: func(client *autoscaling.Client, params *autoscaling.DescribeAutoScalingGroupsInput) adapterhelpers.Paginator[*autoscaling.DescribeAutoScalingGroupsOutput, *autoscaling.Options] {
 			return autoscaling.NewDescribeAutoScalingGroupsPaginator(client, params)
