@@ -14,7 +14,10 @@ import (
 	"github.com/overmindtech/cli/sdpcache"
 )
 
-const DefaultCacheDuration = 1 * time.Hour
+// relatively short cache duration to cover a single Change Analysis run.
+// Previously this was 1 hour and we had issues with stale data where customers
+// were able to create resources that were not visible to them.
+const DefaultCacheDuration = 5 * time.Minute
 
 // DescribeOnlyAdapter Generates a adapter for AWS APIs that only use a `Describe`
 // function for both List and Get operations. EC2 is a good example of this,
