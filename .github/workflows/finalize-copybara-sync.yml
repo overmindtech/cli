@@ -49,18 +49,18 @@ jobs:
       - name: Run tests
         run: go test ./...
 
-      - name: Merge to main
+      # TODO: Remove no-op mode after testing
+      - name: "[NO-OP] Would merge to main"
         run: |
-          git checkout main
-          git merge --ff-only ${{ github.ref_name }}
-          git push origin main
+          echo "Would run: git checkout main"
+          echo "Would run: git merge --ff-only ${{ github.ref_name }}"
+          echo "Would run: git push origin main"
 
-      - name: Create and push tag
+      - name: "[NO-OP] Would create and push tag"
         run: |
-          git tag ${{ steps.version.outputs.version }}
-          git push origin ${{ steps.version.outputs.version }}
+          echo "Would run: git tag ${{ steps.version.outputs.version }}"
+          echo "Would run: git push origin ${{ steps.version.outputs.version }}"
 
-      - name: Clean up staging branch
+      - name: "[NO-OP] Would clean up staging branch"
         run: |
-          git push origin --delete ${{ github.ref_name }}
-
+          echo "Would run: git push origin --delete ${{ github.ref_name }}"
