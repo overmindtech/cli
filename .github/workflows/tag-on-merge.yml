@@ -1,0 +1,54 @@
+name: Tag Release on Merge
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  tag-release:
+    # Only run if the PR was merged (not just closed) and came from a copybara branch
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'copybara/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Extract version from branch name
+        id: version
+        run: |
+          # Extract v1.2.3 from copybara/v1.2.3
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          VERSION=$(echo "$BRANCH" | sed 's|copybara/||')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+      - name: Create and push tag
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          echo "Creating tag: $VERSION"
+          git tag "$VERSION"
+          git push origin "$VERSION"
+          echo "Successfully pushed tag $VERSION"
+
+      - name: Delete copybara branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          echo "Deleting branch: $BRANCH"
+          git push origin --delete "$BRANCH" || echo "Branch may have already been deleted"
+
