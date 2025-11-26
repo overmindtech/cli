@@ -29,6 +29,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          token: ${{ secrets.RELEASE_PAT }}
 
       - name: Configure Git
         run: |
