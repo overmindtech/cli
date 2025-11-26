@@ -1,0 +1,703 @@
+---
+description: "Azure Manual Adapter development patterns and standards"
+globs: **/*.go
+alwaysApply: false
+---
+
+# Azure Manual Adapter Creation Rules
+
+This document provides comprehensive rules and patterns for creating Azure manual adapters in the Overmind platform. Follow these guidelines to ensure consistency, maintainability, and proper integration with the SDP (State Description Protocol) framework.
+
+## Table of Contents
+1. [Adapter Structure and Naming](#adapter-structure-and-naming)
+2. [Wrapper Type Selection](#wrapper-type-selection)
+3. [Base Struct Selection](#base-struct-selection)
+4. [Required Methods Implementation](#required-methods-implementation)
+5. [Terraform Mappings](#terraform-mappings)
+6. [Get and Search Lookups](#get-and-search-lookups)
+7. [Linked Item Queries](#linked-item-queries)
+8. [Error Handling](#error-handling)
+9. [Testing Patterns](#testing-patterns)
+10. [Client Interface Patterns](#client-interface-patterns)
+11. [Common Gotchas and Best Practices](#common-gotchas-and-best-practices)
+
+## Adapter Structure and Naming
+
+### File Naming Convention
+- Use kebab-case for file names: `compute-instance.go`, `big-query-table.go`, `cloud-kms-crypto-key.go`
+- Test files should follow the same pattern with `_test.go` suffix: `compute-instance_test.go`
+
+### Package and Import Structure
+```go
+package manual
+
+import (
+    "context"
+    "fmt"    // if using string formatting
+    "strings" // if parsing paths or URLs
+
+    "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute" // Use specific Azure SDK imports
+
+    "github.com/overmindtech/cli/discovery"
+    "github.com/overmindtech/cli/sdp-go"
+    "github.com/overmindtech/cli/sdpcache"
+    "github.com/overmindtech/cli/sources"
+    azureshared "github.com/overmindtech/cli/sources/azure/shared"
+    "github.com/overmindtech/cli/sources/shared"
+    "github.com/overmindtech/cli/sources/stdlib" // Only if linking to stdlib resources
+)
+```
+
+### Struct Naming
+- Wrapper struct: `{resourceName}Wrapper` (e.g., `computeInstanceWrapper`, `bigQueryTableWrapper`)
+- Use camelCase with first letter lowercase for private structs
+- Constructor function: `New{ResourceName}` (e.g., `NewComputeInstance`, `NewBigQueryTable`)
+
+## Wrapper Type Selection
+
+Choose the appropriate wrapper interface based on Azure API capabilities:
+
+### `Wrapper` (GET only)
+Use when the Azure API only supports individual resource retrieval:
+- Resources without list endpoints
+- Resources that require specific identifiers for retrieval
+
+### `ListableWrapper` (GET + LIST)
+Use when the Azure API supports listing all resources in a scope:
+- Compute Virtual Machines (per resource group)
+- Compute Disks (per resource group)
+- Network Interfaces (per resource group)
+- Resources scoped to resource groups or subscriptions
+
+### `SearchableWrapper` (GET + SEARCH)
+Use when the Azure API supports filtering/searching resources:
+- Resources that can be queried with filters
+- Resources that support tag-based or property-based searches
+
+### `SearchableListableWrapper` (GET + LIST + SEARCH)
+Use when the Azure API supports both listing and searching:
+- Currently not used in existing adapters, but available for complex resources
+
+## Base Struct Selection
+
+Choose the appropriate base struct based on Azure resource scope:
+
+### `ResourceGroupBase` - Resource Group Scoped Resources
+For resources scoped to a specific resource group:
+```go
+type computeVirtualMachineWrapper struct {
+    client clients.VirtualMachinesClient
+    *azureshared.ResourceGroupBase
+}
+
+func NewComputeVirtualMachine(client clients.VirtualMachinesClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+    return &computeVirtualMachineWrapper{
+        client: client,
+        ResourceGroupBase: azureshared.NewResourceGroupBase(
+            subscriptionID,
+            resourceGroup,
+            sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
+            azureshared.ComputeVirtualMachine,
+        ),
+    }
+}
+```
+
+**Examples:** Compute Virtual Machines, Compute Disks, Network Interfaces, Network Security Groups
+
+### `SubscriptionBase` - Subscription-Level Resources
+For resources scoped to the entire subscription:
+```go
+type subscriptionWrapper struct {
+    client clients.SubscriptionClient
+    *azureshared.SubscriptionBase
+}
+
+func NewSubscription(client clients.SubscriptionClient, subscriptionID string) sources.ListableWrapper {
+    return &subscriptionWrapper{
+        client: client,
+        SubscriptionBase: azureshared.NewSubscriptionBase(
+            subscriptionID,
+            sdp.AdapterCategory_ADAPTER_CATEGORY_GENERAL,
+            azureshared.Subscription,
+        ),
+    }
+}
+```
+
+**Examples:** Subscriptions, Resource Groups, Management Groups
+
+## Required Methods Implementation
+
+### IAM Permissions
+Always implement with specific Azure RBAC permissions:
+```go
+func (c computeVirtualMachineWrapper) IAMPermissions() []string {
+    return []string{
+        "Microsoft.Compute/virtualMachines/read",
+    }
+}
+```
+
+### Predefined Role
+Always implement with the most restrictive Azure built-in role:
+```go
+func (c computeVirtualMachineWrapper) PredefinedRole() string {
+    return "Reader" // or more specific role like "Virtual Machine Contributor" if write access needed
+}
+```
+
+### Potential Links
+Document all possible linked resources:
+```go
+func (c computeVirtualMachineWrapper) PotentialLinks() map[shared.ItemType]bool {
+    return shared.NewItemTypesSet(
+        stdlib.NetworkIP,
+        azureshared.ComputeDisk,
+        azureshared.NetworkNetworkInterface,
+        azureshared.NetworkVirtualNetwork,
+        azureshared.NetworkSubnet,
+        azureshared.ComputeAvailabilitySet,
+    )
+}
+```
+
+## Terraform Mappings
+
+### GET Method (Direct ID Match)
+Use when Terraform resource has a unique identifier that directly matches your adapter's unique attribute:
+```go
+func (c computeVirtualMachineWrapper) TerraformMappings() []*sdp.TerraformMapping {
+    return []*sdp.TerraformMapping{
+        {
+            TerraformMethod: sdp.QueryMethod_GET,
+            // https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_machine
+            TerraformQueryMap: "azurerm_virtual_machine.name",
+        },
+        {
+            TerraformMethod: sdp.QueryMethod_GET,
+            // https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine
+            TerraformQueryMap: "azurerm_linux_virtual_machine.name",
+        },
+        {
+            TerraformMethod: sdp.QueryMethod_GET,
+            // https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine
+            TerraformQueryMap: "azurerm_windows_virtual_machine.name",
+        },
+    }
+}
+```
+
+### SEARCH Method (Multiple Parameters)
+Use when Terraform resource requires multiple parameters or different ID format:
+```go
+func (b resourceWrapper) TerraformMappings() []*sdp.TerraformMapping {
+    return []*sdp.TerraformMapping{
+        {
+            TerraformMethod: sdp.QueryMethod_SEARCH,
+            // https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/example
+            // Terraform uses: /subscriptions/{{subscription}}/resourceGroups/{{resourceGroup}}/providers/.../{{name}}
+            // Our adapter uses: resourceGroup + name as separate parameters
+            TerraformQueryMap: "azurerm_example.id",
+        },
+    }
+}
+```
+
+### Multiple Terraform Mappings
+For resources that can be referenced in multiple ways:
+```go
+func (c resourceWrapper) TerraformMappings() []*sdp.TerraformMapping {
+    return []*sdp.TerraformMapping{
+        {
+            TerraformMethod: sdp.QueryMethod_GET,
+            TerraformQueryMap: "azurerm_resource.name",
+        },
+        {
+            TerraformMethod: sdp.QueryMethod_GET,
+            TerraformQueryMap: "azurerm_resource.resource_id",
+        },
+    }
+}
+```
+
+## Get and Search Lookups
+
+### Single Key Lookup
+For resources with a single unique identifier:
+```go
+var ComputeVirtualMachineLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeVirtualMachine)
+
+func (c computeVirtualMachineWrapper) GetLookups() sources.ItemTypeLookups {
+    return sources.ItemTypeLookups{
+        ComputeVirtualMachineLookupByName,
+    }
+}
+```
+
+### Multiple Keys Lookup (Order Matters)
+The order of lookups determines the order of `queryParts` in the `Get` method:
+```go
+var (
+    ResourceGroupLookupByName = shared.NewItemTypeLookup("name", azureshared.ResourceGroup)
+    VirtualNetworkLookupByName = shared.NewItemTypeLookup("name", azureshared.NetworkVirtualNetwork)
+)
+
+func (b subnetWrapper) GetLookups() sources.ItemTypeLookups {
+    return sources.ItemTypeLookups{
+        ResourceGroupLookupByName,      // First key: resource group (queryParts[0])
+        VirtualNetworkLookupByName,    // Second key: virtual network (queryParts[1])
+        SubnetLookupByName,            // Third key: subnet (queryParts[2])
+    }
+}
+
+func (b subnetWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+    resourceGroup := queryParts[0]  // From ResourceGroupLookupByName
+    vnetName := queryParts[1]       // From VirtualNetworkLookupByName
+    subnetName := queryParts[2]     // From SubnetLookupByName
+    // ... implementation
+}
+```
+
+### Multiple Keys with Composite Lookup
+For complex hierarchical resources:
+```go
+var (
+    SubscriptionLookupByID = shared.NewItemTypeLookup("id", azureshared.Subscription)
+    ResourceGroupLookupByName = shared.NewItemTypeLookup("name", azureshared.ResourceGroup)
+    ResourceLookupByName = shared.NewItemTypeLookup("name", azureshared.Resource)
+)
+
+func (c resourceWrapper) GetLookups() sources.ItemTypeLookups {
+    return sources.ItemTypeLookups{
+        SubscriptionLookupByID,        // First key: subscription ID
+        ResourceGroupLookupByName,      // Second key: resource group name
+        ResourceLookupByName,           // Third key: resource name
+    }
+}
+```
+
+### Search Lookups
+Define search parameters for SearchableWrapper:
+```go
+// Single search lookup
+func (b resourceWrapper) SearchLookups() []sources.ItemTypeLookups {
+    return []sources.ItemTypeLookups{
+        {
+            ResourceGroupLookupByName,  // Search within a specific resource group
+        },
+    }
+}
+
+// Multiple search lookups (different search patterns)
+func (c resourceWrapper) SearchLookups() []sources.ItemTypeLookups {
+    return []sources.ItemTypeLookups{
+        {
+            SubscriptionLookupByID,  // Search by subscription only
+        },
+        {
+            SubscriptionLookupByID,  // Search within specific resource group
+            ResourceGroupLookupByName,
+        },
+    }
+}
+```
+
+## Linked Item Queries
+
+### Basic Pattern
+Always use this pattern for creating linked item queries:
+```go
+sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+    Query: &sdp.Query{
+        Type:   azureshared.TargetResourceType.String(),
+        Method: sdp.QueryMethod_GET, // or SEARCH
+        Query:  "resource-identifier",
+        Scope:  "appropriate-scope",
+    },
+    BlastPropagation: &sdp.BlastPropagation{
+        In:  true,  // This resource affected if linked resource changes
+        Out: true,  // Linked resource affected if this resource changes
+    },
+})
+```
+
+### Resource ID Extraction
+Use helper functions for extracting parameters from Azure resource IDs:
+```go
+// Extract resource name from Azure resource ID
+// ID: /subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}
+diskName := azureshared.ExtractResourceName(*vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID)
+```
+
+### Composite Lookup Keys
+Use for multi-parameter queries:
+```go
+Query: shared.CompositeLookupKey(resourceGroup, resourceName)
+```
+
+### Blast Propagation Rules
+- **In: true, Out: true** - Tightly coupled resources (parent-child relationships)
+- **In: true, Out: false** - This resource depends on linked resource (e.g., disk depends on image)
+- **In: false, Out: true** - Linked resource depends on this resource (e.g., instance depends on disk)
+
+### Common Linked Resource Patterns
+
+#### Network Resources
+```go
+// Extract network interface name from Azure resource ID
+if vm.Properties.NetworkProfile != nil && len(vm.Properties.NetworkProfile.NetworkInterfaces) > 0 {
+    for _, nicRef := range vm.Properties.NetworkProfile.NetworkInterfaces {
+        if nicRef.ID != nil {
+            nicName := azureshared.ExtractResourceName(*nicRef.ID)
+            sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+                Query: &sdp.Query{
+                    Type:   azureshared.NetworkNetworkInterface.String(),
+                    Method: sdp.QueryMethod_GET,
+                    Query:  nicName,
+                    Scope:  c.DefaultScope(), // Network interfaces are scoped to resource group
+                },
+                BlastPropagation: &sdp.BlastPropagation{
+                    In:  true,
+                    Out: false,
+                },
+            })
+        }
+    }
+}
+```
+
+#### Disk Resources
+```go
+// Extract disk name from Azure resource ID
+if vm.Properties.StorageProfile != nil && vm.Properties.StorageProfile.OSDisk != nil {
+    if vm.Properties.StorageProfile.OSDisk.ManagedDisk != nil && vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID != nil {
+        diskName := azureshared.ExtractResourceName(*vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID)
+        sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+            Query: &sdp.Query{
+                Type:   azureshared.ComputeDisk.String(),
+                Method: sdp.QueryMethod_GET,
+                Query:  diskName,
+                Scope:  c.DefaultScope(),
+            },
+            BlastPropagation: &sdp.BlastPropagation{
+                In:  true,
+                Out: false,
+            },
+        })
+    }
+}
+```
+
+## Error Handling
+
+### Standard Error Pattern
+Always use source-specific error wrapping:
+```go
+if err != nil {
+    return nil, azureshared.QueryError(err, c.DefaultScope(), c.Type())
+}
+```
+
+### Pager Pattern
+Handle Azure SDK pagers consistently:
+```go
+pager := c.client.NewListPager(c.ResourceGroup(), nil)
+for pager.More() {
+    page, err := pager.NextPage(ctx)
+    if err != nil {
+        return nil, azureshared.QueryError(err, c.DefaultScope(), c.Type())
+    }
+    for _, item := range page.Value {
+        // Process item...
+    }
+}
+```
+
+### Stream Error Handling
+For streaming operations:
+```go
+if err != nil {
+    stream.SendError(azureshared.QueryError(err, c.DefaultScope(), c.Type()))
+    return
+}
+
+// For item processing errors, continue with next item
+if sdpErr != nil {
+    stream.SendError(sdpErr)
+    continue
+}
+```
+
+## Testing Patterns
+
+### Test Structure
+Follow this exact pattern for all adapter tests:
+```go
+func TestComputeVirtualMachine(t *testing.T) {
+    ctx := context.Background()
+    ctrl := gomock.NewController(t)
+    defer ctrl.Finish()
+
+    mockClient := mocks.NewMockVirtualMachinesClient(ctrl)
+    subscriptionID := "test-subscription-id"
+    resourceGroup := "test-resource-group"
+
+    t.Run("Get", func(t *testing.T) {
+        wrapper := manual.NewComputeVirtualMachine(mockClient, subscriptionID, resourceGroup)
+        vm := createAzureVirtualMachine("test-vm", "Succeeded")
+        mockClient.EXPECT().Get(ctx, resourceGroup, "test-vm", nil).Return(armcompute.VirtualMachinesClientGetResponse{
+            VirtualMachine: *vm,
+        }, nil)
+
+        adapter := sources.WrapperToAdapter(wrapper)
+        sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-vm", true)
+        if qErr != nil {
+            t.Fatalf("Expected no error, got: %v", qErr)
+        }
+
+        t.Run("StaticTests", func(t *testing.T) {
+            queryTests := shared.QueryTests{
+                {
+                    ExpectedType:   azureshared.ComputeDisk.String(),
+                    ExpectedMethod: sdp.QueryMethod_GET,
+                    ExpectedQuery:  "test-disk",
+                    ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
+                    ExpectedBlastPropagation: &sdp.BlastPropagation{
+                        In:  true,
+                        Out: true,
+                    },
+                },
+                // ... more test cases
+            }
+            shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+        })
+    })
+
+    t.Run("List", func(t *testing.T) {
+        // Test list functionality
+    })
+
+    t.Run("Search", func(t *testing.T) {
+        // Test search functionality (if applicable)
+    })
+}
+```
+
+### Required Test Cases
+- **Get method**: Test successful retrieval and error cases
+- **StaticTests**: Test linked item queries using `shared.RunStaticTests`
+- **HealthCheck**: Test health status mapping (if applicable)
+- **List method**: Test the List method (for ListableWrapper)
+- **Search method**: Test the Search method (for SearchableWrapper)
+- **Interface compliance**: Verify adapter implements correct interfaces
+
+### Test Helper Functions
+Create helper functions for test data:
+```go
+func createAzureVirtualMachine(vmName string, provisioningState string) *armcompute.VirtualMachine {
+    return &armcompute.VirtualMachine{
+        Name: ptr.To(vmName),
+        Tags: map[string]*string{
+            "env": ptr.To("test"),
+        },
+        Properties: &armcompute.VirtualMachineProperties{
+            ProvisioningState: ptr.To(provisioningState),
+            // ... other fields
+        },
+    }
+}
+```
+
+### Mock Expectations
+Use gomock for client mocking:
+```go
+mockClient := mocks.NewMockVirtualMachinesClient(ctrl)
+mockClient.EXPECT().Get(ctx, resourceGroup, vmName, nil).Return(expectedResult, nil)
+```
+
+## Client Interface Patterns
+
+### Typed Client Interfaces
+Define typed client interfaces in the clients package:
+```go
+// In sources/azure/clients/virtual-machines-client.go
+type VirtualMachinesClient interface {
+    Get(ctx context.Context, resourceGroupName string, vmName string, options *armcompute.VirtualMachinesClientGetOptions) (armcompute.VirtualMachinesClientGetResponse, error)
+    NewListPager(resourceGroupName string, options *armcompute.VirtualMachinesClientListOptions) *runtime.Pager[armcompute.VirtualMachinesClientListResponse]
+}
+
+// Constructor function
+func NewVirtualMachinesClient(client *armcompute.VirtualMachinesClient) VirtualMachinesClient {
+    return &virtualMachinesClientAdapter{client: client}
+}
+```
+
+### Client Implementation
+Implement the interface with proper error handling:
+```go
+type virtualMachinesClientAdapter struct {
+    client *armcompute.VirtualMachinesClient
+}
+
+func (c *virtualMachinesClientAdapter) Get(ctx context.Context, resourceGroupName string, vmName string, options *armcompute.VirtualMachinesClientGetOptions) (armcompute.VirtualMachinesClientGetResponse, error) {
+    return c.client.Get(ctx, resourceGroupName, vmName, options)
+}
+
+func (c *virtualMachinesClientAdapter) NewListPager(resourceGroupName string, options *armcompute.VirtualMachinesClientListOptions) *runtime.Pager[armcompute.VirtualMachinesClientListResponse] {
+    return c.client.NewListPager(resourceGroupName, options)
+}
+```
+
+## Common Gotchas and Best Practices
+
+### 1. Unique Attribute Consistency
+Ensure the `UniqueAttribute` in the SDP item matches the lookup key:
+```go
+// If using composite lookup key
+err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(values...))
+sdpItem := &sdp.Item{
+    Type:            azureshared.ComputeVirtualMachine.String(),
+    UniqueAttribute: "uniqueAttr", // Must match the attribute name above
+    // ...
+}
+```
+
+### 2. Scope Handling
+Use appropriate scope helper functions:
+```go
+// For resource group scoped resources
+scope := fmt.Sprintf("%s.%s", subscriptionID, resourceGroup)
+
+// For subscription-level resources
+scope := subscriptionID
+```
+
+### 3. Attributes and Tags
+Convert Azure SDK structs to attributes and tags:
+```go
+attributes, err := shared.ToAttributesWithExclude(vm, "tags")
+tags := convertAzureTags(vm.Tags) // Convert map[string]*string to map[string]string
+```
+
+### 4. Health Status Mapping
+Map Azure resource provisioning states to SDP health statuses:
+```go
+switch *vm.Properties.ProvisioningState {
+case "Succeeded":
+    sdpItem.Health = sdp.Health_HEALTH_OK.Enum()
+case "Creating", "Updating", "Deleting":
+    sdpItem.Health = sdp.Health_HEALTH_PENDING.Enum()
+case "Failed", "Canceled":
+    sdpItem.Health = sdp.Health_HEALTH_ERROR.Enum()
+default:
+    sdpItem.Health = sdp.Health_HEALTH_UNKNOWN.Enum()
+}
+```
+
+### 5. Multiple Query Parameters
+For resources requiring multiple parameters:
+```go
+func (b resourceWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+    resourceGroup := queryParts[0]  // First parameter
+    resourceName := queryParts[1]   // Second parameter
+    // ... implementation
+}
+```
+
+### 6. Conditional Linked Queries
+Only create linked queries when the referenced resource exists:
+```go
+if vm.Properties.StorageProfile != nil && vm.Properties.StorageProfile.OSDisk != nil {
+    if vm.Properties.StorageProfile.OSDisk.ManagedDisk != nil && vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID != nil {
+        // Create disk linked query
+    }
+}
+```
+
+### 7. Resource ID Validation
+Always validate extracted resource IDs:
+```go
+if resourceID != nil && *resourceID != "" {
+    resourceName := azureshared.ExtractResourceName(*resourceID)
+    if resourceName != "" {
+        // Use the extracted resource name
+    }
+}
+```
+
+### 8. Adapter Registration
+Register adapters in the main adapters file with proper scoping:
+```go
+// Register resource group scoped adapters
+for _, resourceGroup := range resourceGroups {
+    adapters = append(adapters,
+        sources.WrapperToAdapter(NewComputeVirtualMachine(
+            clients.NewVirtualMachinesClient(vmClient),
+            subscriptionID,
+            resourceGroup,
+        )),
+    )
+}
+
+// Register subscription-level adapters
+adapters = append(adapters,
+    sources.WrapperToAdapter(NewSubscription(
+        clients.NewSubscriptionClient(subClient),
+        subscriptionID,
+    )),
+)
+```
+
+### 9. Documentation Comments
+Always include Azure REST API documentation URLs in comments:
+```go
+// Get retrieves a virtual machine by its name
+// Reference: https://learn.microsoft.com/en-us/rest/api/compute/virtual-machines/get
+// GET /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/virtualMachines/{vmName}
+```
+
+### 10. Error Message Consistency
+Use consistent error messages and include context:
+```go
+return nil, &sdp.QueryError{
+    ErrorType:   sdp.QueryError_OTHER,
+    ErrorString: fmt.Sprintf("invalid virtual machine name: %s", vmName),
+}
+```
+
+## Validation Checklist
+
+Before submitting a new adapter, ensure:
+
+- [ ] File follows naming convention (`{resource-name}.go`)
+- [ ] Imports are properly organized and minimal
+- [ ] Wrapper type matches Azure API capabilities
+- [ ] Base struct matches resource scope (ResourceGroup/Subscription)
+- [ ] All required methods implemented (IAMPermissions, PredefinedRole, PotentialLinks)
+- [ ] Terraform mappings are correct and include documentation URLs
+- [ ] Get/Search lookups match the resource's query parameters
+- [ ] Linked item queries use proper blast propagation
+- [ ] Error handling uses `azureshared.QueryError`
+- [ ] Pager pattern is correctly implemented for list operations
+- [ ] Health status mapping is implemented (if applicable)
+- [ ] Test file covers all required test cases
+- [ ] Static tests validate linked item queries
+- [ ] Client interface is properly defined in clients package
+- [ ] Adapter is registered in the main adapters file
+- [ ] Documentation comments include Azure REST API URLs
+- [ ] Unique attribute consistency is maintained
+- [ ] Scope handling uses appropriate helper functions
+- [ ] Resource ID extraction is validated
+- [ ] Conditional linked queries are properly implemented
+
+## Examples Reference
+
+For complete examples, refer to these existing adapters:
+
+- **Simple ListableWrapper**: `sources/azure/manual/compute-virtual-machine.go`
+- **Resource Group Scoped Resource**: `sources/azure/manual/compute-virtual-machine.go`
+- **Subscription-level Resource**: (to be added)
+- **Complex Linked Queries**: (to be added)
+
+These examples demonstrate all the patterns and best practices outlined in this document.
