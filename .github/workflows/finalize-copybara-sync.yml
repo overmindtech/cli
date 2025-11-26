@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
       - name: Extract version from branch name
@@ -37,30 +38,80 @@ jobs:
       - name: Run go mod tidy
         run: go mod tidy
 
-      - name: Commit go mod tidy changes
+      - name: Commit and push go mod tidy changes
         run: |
           if ! git diff --quiet go.mod go.sum; then
             git add go.mod go.sum
             git commit -m "Run go mod tidy"
+            git push origin ${{ github.ref_name }}
           else
             echo "No changes from go mod tidy"
           fi
 
-      - name: Run tests
-        run: go test ./...
-
-      # TODO: Remove no-op mode after testing
-      - name: "[NO-OP] Would merge to main"
+      - name: Extract original commit author
+        id: author
         run: |
-          echo "Would run: git checkout main"
-          echo "Would run: git merge --ff-only ${{ github.ref_name }}"
-          echo "Would run: git push origin main"
+          # Get the GitHub username from the most recent non-bot commit
+          # Copybara preserves the original author via pass_thru
+          AUTHOR_EMAIL=$(git log -1 --format='%ae' --author='^(?!.*actions@github.com)' --perl-regexp 2>/dev/null || git log -1 --format='%ae')
+          AUTHOR_NAME=$(git log -1 --format='%an' --author='^(?!.*actions@github.com)' --perl-regexp 2>/dev/null || git log -1 --format='%an')
+          echo "email=$AUTHOR_EMAIL" >> $GITHUB_OUTPUT
+          echo "name=$AUTHOR_NAME" >> $GITHUB_OUTPUT
 
-      - name: "[NO-OP] Would create and push tag"
-        run: |
-          echo "Would run: git tag ${{ steps.version.outputs.version }}"
-          echo "Would run: git push origin ${{ steps.version.outputs.version }}"
+          # Try to find GitHub username from email (works for users with public email)
+          # Format: username@users.noreply.github.com or regular email
+          if [[ "$AUTHOR_EMAIL" =~ ^([^@]+)@users\.noreply\.github\.com$ ]]; then
+            # Extract username from noreply email (handles 12345678+username format)
+            GITHUB_USER=$(echo "${BASH_REMATCH[1]}" | sed 's/^[0-9]*+//')
+            echo "github_user=$GITHUB_USER" >> $GITHUB_OUTPUT
+          else
+            echo "github_user=" >> $GITHUB_OUTPUT
+          fi
 
-      - name: "[NO-OP] Would clean up staging branch"
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          AUTHOR_NAME: ${{ steps.author.outputs.name }}
+          AUTHOR_EMAIL: ${{ steps.author.outputs.email }}
+          GITHUB_USER: ${{ steps.author.outputs.github_user }}
         run: |
-          echo "Would run: git push origin --delete ${{ github.ref_name }}"
+          # Build PR body
+          PR_BODY="## Copybara Sync - Release ${VERSION}
+
+          This PR was automatically created by Copybara, syncing changes from the [overmindtech/workspace](https://github.com/overmindtech/workspace) monorepo.
+
+          **Original author:** ${AUTHOR_NAME} (${AUTHOR_EMAIL})
+
+          ### What happens when this PR is merged?
+
+          1. The \`tag-on-merge\` workflow will automatically create the \`${VERSION}\` tag on main
+          2. This tag will trigger the release workflow, which will:
+             - Run tests
+             - Build and publish release binaries via GoReleaser
+             - Upload packages to Cloudsmith
+
+          ### Review Checklist
+
+          - [ ] Changes look correct and match the expected monorepo sync
+          - [ ] Tests pass (see CI checks below)
+          "
+
+          # Create the PR
+          PR_URL=$(gh pr create \
+            --base main \
+            --head "${{ github.ref_name }}" \
+            --title "Release ${VERSION}" \
+            --body "$PR_BODY")
+
+          echo "Created PR: $PR_URL"
+
+          # Try to assign reviewer - prefer original author, fall back to Engineering team
+          if [ -n "$GITHUB_USER" ]; then
+            echo "Requesting review from original author: $GITHUB_USER"
+            gh pr edit "$PR_URL" --add-reviewer "$GITHUB_USER" || true
+          fi
+
+          # Always add Engineering team as reviewer
+          echo "Requesting review from Engineering team"
+          gh pr edit "$PR_URL" --add-reviewer "overmindtech/Engineering" || true
