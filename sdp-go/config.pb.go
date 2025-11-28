@@ -10,7 +10,7 @@ import (
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	_ "google.golang.org/protobuf/types/known/durationpb"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
@@ -194,9 +194,14 @@ type BlastRadiusConfig struct {
 	// requests will be cancelled and the blast radius returned as-is
 	MaxItems int32 `protobuf:"varint,1,opt,name=maxItems,proto3" json:"maxItems,omitempty"`
 	// How deeply to link when calculating the blast radius for a change
-	LinkDepth     int32 `protobuf:"varint,2,opt,name=linkDepth,proto3" json:"linkDepth,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	LinkDepth int32 `protobuf:"varint,2,opt,name=linkDepth,proto3" json:"linkDepth,omitempty"`
+	// Maximum time duration for blast radius calculation. When this time limit
+	// is reached, the analysis gracefully continues with risks identified up to
+	// that point. If not specified, defaults to 10 minutes for backward compatibility.
+	// Minimum recommended: 1 minute, Maximum recommended: 30 minutes.
+	MaxBlastRadiusTime *durationpb.Duration `protobuf:"bytes,3,opt,name=maxBlastRadiusTime,proto3,oneof" json:"maxBlastRadiusTime,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *BlastRadiusConfig) Reset() {
@@ -241,6 +246,13 @@ func (x *BlastRadiusConfig) GetLinkDepth() int32 {
 		return x.LinkDepth
 	}
 	return 0
+}
+
+func (x *BlastRadiusConfig) GetMaxBlastRadiusTime() *durationpb.Duration {
+	if x != nil {
+		return x.MaxBlastRadiusTime
+	}
+	return nil
 }
 
 // This account config is stored in the `kv.Store` protobuf key-value store in
@@ -1571,10 +1583,12 @@ var File_config_proto protoreflect.FileDescriptor
 
 const file_config_proto_rawDesc = "" +
 	"\n" +
-	"\fconfig.proto\x12\x06config\x1a\rapikeys.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"M\n" +
+	"\fconfig.proto\x12\x06config\x1a\rapikeys.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb4\x01\n" +
 	"\x11BlastRadiusConfig\x12\x1a\n" +
 	"\bmaxItems\x18\x01 \x01(\x05R\bmaxItems\x12\x1c\n" +
-	"\tlinkDepth\x18\x02 \x01(\x05R\tlinkDepth\"\xbe\x02\n" +
+	"\tlinkDepth\x18\x02 \x01(\x05R\tlinkDepth\x12N\n" +
+	"\x12maxBlastRadiusTime\x18\x03 \x01(\v2\x19.google.protobuf.DurationH\x00R\x12maxBlastRadiusTime\x88\x01\x01B\x15\n" +
+	"\x13_maxBlastRadiusTime\"\xbe\x02\n" +
 	"\rAccountConfig\x12U\n" +
 	"\x11blastRadiusPreset\x18\x02 \x01(\x0e2'.config.AccountConfig.BlastRadiusPresetR\x11blastRadiusPreset\x12@\n" +
 	"\vblastRadius\x18\x01 \x01(\v2\x19.config.BlastRadiusConfigH\x00R\vblastRadius\x88\x01\x01\x12@\n" +
@@ -1717,55 +1731,57 @@ var file_config_proto_goTypes = []any{
 	(*RegenerateGithubAppProfileResponse)(nil),                    // 28: config.RegenerateGithubAppProfileResponse
 	(*DeleteGithubAppProfileAndGithubInstallationIDRequest)(nil),  // 29: config.DeleteGithubAppProfileAndGithubInstallationIDRequest
 	(*DeleteGithubAppProfileAndGithubInstallationIDResponse)(nil), // 30: config.DeleteGithubAppProfileAndGithubInstallationIDResponse
-	(*CreateAPIKeyResponse)(nil),                                  // 31: apikeys.CreateAPIKeyResponse
-	(*timestamppb.Timestamp)(nil),                                 // 32: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),                                   // 31: google.protobuf.Duration
+	(*CreateAPIKeyResponse)(nil),                                  // 32: apikeys.CreateAPIKeyResponse
+	(*timestamppb.Timestamp)(nil),                                 // 33: google.protobuf.Timestamp
 }
 var file_config_proto_depIdxs = []int32{
-	0,  // 0: config.AccountConfig.blastRadiusPreset:type_name -> config.AccountConfig.BlastRadiusPreset
-	3,  // 1: config.AccountConfig.blastRadius:type_name -> config.BlastRadiusConfig
-	4,  // 2: config.GetAccountConfigResponse.config:type_name -> config.AccountConfig
-	4,  // 3: config.UpdateAccountConfigRequest.config:type_name -> config.AccountConfig
-	4,  // 4: config.UpdateAccountConfigResponse.config:type_name -> config.AccountConfig
-	11, // 5: config.CreateHcpConfigResponse.config:type_name -> config.HcpConfig
-	31, // 6: config.CreateHcpConfigResponse.apiKey:type_name -> apikeys.CreateAPIKeyResponse
-	11, // 7: config.GetHcpConfigResponse.config:type_name -> config.HcpConfig
-	1,  // 8: config.GetHcpConfigResponse.status:type_name -> config.GetHcpConfigResponse.Status
-	20, // 9: config.GetSignalConfigResponse.config:type_name -> config.SignalConfig
-	20, // 10: config.UpdateSignalConfigRequest.config:type_name -> config.SignalConfig
-	20, // 11: config.UpdateSignalConfigResponse.config:type_name -> config.SignalConfig
-	21, // 12: config.SignalConfig.aggregationConfig:type_name -> config.AggregationConfig
-	22, // 13: config.SignalConfig.routineChangesConfig:type_name -> config.RoutineChangesConfig
-	27, // 14: config.SignalConfig.githubOrganisationProfile:type_name -> config.GithubOrganisationProfile
-	2,  // 15: config.RoutineChangesConfig.eventsPerUnit:type_name -> config.RoutineChangesConfig.DurationUnit
-	2,  // 16: config.RoutineChangesConfig.durationUnit:type_name -> config.RoutineChangesConfig.DurationUnit
-	32, // 17: config.GithubAppInformation.installedAt:type_name -> google.protobuf.Timestamp
-	24, // 18: config.GetGithubAppInformationResponse.githubAppInformation:type_name -> config.GithubAppInformation
-	27, // 19: config.RegenerateGithubAppProfileResponse.githubOrganisationProfile:type_name -> config.GithubOrganisationProfile
-	5,  // 20: config.ConfigurationService.GetAccountConfig:input_type -> config.GetAccountConfigRequest
-	7,  // 21: config.ConfigurationService.UpdateAccountConfig:input_type -> config.UpdateAccountConfigRequest
-	9,  // 22: config.ConfigurationService.CreateHcpConfig:input_type -> config.CreateHcpConfigRequest
-	12, // 23: config.ConfigurationService.GetHcpConfig:input_type -> config.GetHcpConfigRequest
-	14, // 24: config.ConfigurationService.DeleteHcpConfig:input_type -> config.DeleteHcpConfigRequest
-	16, // 25: config.ConfigurationService.GetSignalConfig:input_type -> config.GetSignalConfigRequest
-	18, // 26: config.ConfigurationService.UpdateSignalConfig:input_type -> config.UpdateSignalConfigRequest
-	23, // 27: config.ConfigurationService.GetGithubAppInformation:input_type -> config.GetGithubAppInformationRequest
-	26, // 28: config.ConfigurationService.RegenerateGithubAppProfile:input_type -> config.RegenerateGithubAppProfileRequest
-	29, // 29: config.ConfigurationService.DeleteGithubAppProfileAndGithubInstallationID:input_type -> config.DeleteGithubAppProfileAndGithubInstallationIDRequest
-	6,  // 30: config.ConfigurationService.GetAccountConfig:output_type -> config.GetAccountConfigResponse
-	8,  // 31: config.ConfigurationService.UpdateAccountConfig:output_type -> config.UpdateAccountConfigResponse
-	10, // 32: config.ConfigurationService.CreateHcpConfig:output_type -> config.CreateHcpConfigResponse
-	13, // 33: config.ConfigurationService.GetHcpConfig:output_type -> config.GetHcpConfigResponse
-	15, // 34: config.ConfigurationService.DeleteHcpConfig:output_type -> config.DeleteHcpConfigResponse
-	17, // 35: config.ConfigurationService.GetSignalConfig:output_type -> config.GetSignalConfigResponse
-	19, // 36: config.ConfigurationService.UpdateSignalConfig:output_type -> config.UpdateSignalConfigResponse
-	25, // 37: config.ConfigurationService.GetGithubAppInformation:output_type -> config.GetGithubAppInformationResponse
-	28, // 38: config.ConfigurationService.RegenerateGithubAppProfile:output_type -> config.RegenerateGithubAppProfileResponse
-	30, // 39: config.ConfigurationService.DeleteGithubAppProfileAndGithubInstallationID:output_type -> config.DeleteGithubAppProfileAndGithubInstallationIDResponse
-	30, // [30:40] is the sub-list for method output_type
-	20, // [20:30] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	31, // 0: config.BlastRadiusConfig.maxBlastRadiusTime:type_name -> google.protobuf.Duration
+	0,  // 1: config.AccountConfig.blastRadiusPreset:type_name -> config.AccountConfig.BlastRadiusPreset
+	3,  // 2: config.AccountConfig.blastRadius:type_name -> config.BlastRadiusConfig
+	4,  // 3: config.GetAccountConfigResponse.config:type_name -> config.AccountConfig
+	4,  // 4: config.UpdateAccountConfigRequest.config:type_name -> config.AccountConfig
+	4,  // 5: config.UpdateAccountConfigResponse.config:type_name -> config.AccountConfig
+	11, // 6: config.CreateHcpConfigResponse.config:type_name -> config.HcpConfig
+	32, // 7: config.CreateHcpConfigResponse.apiKey:type_name -> apikeys.CreateAPIKeyResponse
+	11, // 8: config.GetHcpConfigResponse.config:type_name -> config.HcpConfig
+	1,  // 9: config.GetHcpConfigResponse.status:type_name -> config.GetHcpConfigResponse.Status
+	20, // 10: config.GetSignalConfigResponse.config:type_name -> config.SignalConfig
+	20, // 11: config.UpdateSignalConfigRequest.config:type_name -> config.SignalConfig
+	20, // 12: config.UpdateSignalConfigResponse.config:type_name -> config.SignalConfig
+	21, // 13: config.SignalConfig.aggregationConfig:type_name -> config.AggregationConfig
+	22, // 14: config.SignalConfig.routineChangesConfig:type_name -> config.RoutineChangesConfig
+	27, // 15: config.SignalConfig.githubOrganisationProfile:type_name -> config.GithubOrganisationProfile
+	2,  // 16: config.RoutineChangesConfig.eventsPerUnit:type_name -> config.RoutineChangesConfig.DurationUnit
+	2,  // 17: config.RoutineChangesConfig.durationUnit:type_name -> config.RoutineChangesConfig.DurationUnit
+	33, // 18: config.GithubAppInformation.installedAt:type_name -> google.protobuf.Timestamp
+	24, // 19: config.GetGithubAppInformationResponse.githubAppInformation:type_name -> config.GithubAppInformation
+	27, // 20: config.RegenerateGithubAppProfileResponse.githubOrganisationProfile:type_name -> config.GithubOrganisationProfile
+	5,  // 21: config.ConfigurationService.GetAccountConfig:input_type -> config.GetAccountConfigRequest
+	7,  // 22: config.ConfigurationService.UpdateAccountConfig:input_type -> config.UpdateAccountConfigRequest
+	9,  // 23: config.ConfigurationService.CreateHcpConfig:input_type -> config.CreateHcpConfigRequest
+	12, // 24: config.ConfigurationService.GetHcpConfig:input_type -> config.GetHcpConfigRequest
+	14, // 25: config.ConfigurationService.DeleteHcpConfig:input_type -> config.DeleteHcpConfigRequest
+	16, // 26: config.ConfigurationService.GetSignalConfig:input_type -> config.GetSignalConfigRequest
+	18, // 27: config.ConfigurationService.UpdateSignalConfig:input_type -> config.UpdateSignalConfigRequest
+	23, // 28: config.ConfigurationService.GetGithubAppInformation:input_type -> config.GetGithubAppInformationRequest
+	26, // 29: config.ConfigurationService.RegenerateGithubAppProfile:input_type -> config.RegenerateGithubAppProfileRequest
+	29, // 30: config.ConfigurationService.DeleteGithubAppProfileAndGithubInstallationID:input_type -> config.DeleteGithubAppProfileAndGithubInstallationIDRequest
+	6,  // 31: config.ConfigurationService.GetAccountConfig:output_type -> config.GetAccountConfigResponse
+	8,  // 32: config.ConfigurationService.UpdateAccountConfig:output_type -> config.UpdateAccountConfigResponse
+	10, // 33: config.ConfigurationService.CreateHcpConfig:output_type -> config.CreateHcpConfigResponse
+	13, // 34: config.ConfigurationService.GetHcpConfig:output_type -> config.GetHcpConfigResponse
+	15, // 35: config.ConfigurationService.DeleteHcpConfig:output_type -> config.DeleteHcpConfigResponse
+	17, // 36: config.ConfigurationService.GetSignalConfig:output_type -> config.GetSignalConfigResponse
+	19, // 37: config.ConfigurationService.UpdateSignalConfig:output_type -> config.UpdateSignalConfigResponse
+	25, // 38: config.ConfigurationService.GetGithubAppInformation:output_type -> config.GetGithubAppInformationResponse
+	28, // 39: config.ConfigurationService.RegenerateGithubAppProfile:output_type -> config.RegenerateGithubAppProfileResponse
+	30, // 40: config.ConfigurationService.DeleteGithubAppProfileAndGithubInstallationID:output_type -> config.DeleteGithubAppProfileAndGithubInstallationIDResponse
+	31, // [31:41] is the sub-list for method output_type
+	21, // [21:31] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_config_proto_init() }
@@ -1774,6 +1790,7 @@ func file_config_proto_init() {
 		return
 	}
 	file_apikeys_proto_init()
+	file_config_proto_msgTypes[0].OneofWrappers = []any{}
 	file_config_proto_msgTypes[1].OneofWrappers = []any{}
 	file_config_proto_msgTypes[17].OneofWrappers = []any{}
 	type x struct{}
