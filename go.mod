@@ -48,45 +48,45 @@ require (
 	github.com/auth0/go-auth0/v2 v2.2.0
 	github.com/auth0/go-jwt-middleware/v2 v2.3.1
 	github.com/aws/aws-sdk-go-v2 v1.40.0
-	github.com/aws/aws-sdk-go-v2/config v1.32.0
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.0
+	github.com/aws/aws-sdk-go-v2/config v1.32.2
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.2
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.14
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.37.1
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.62.0
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.57.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.52.4
-	github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.6
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.53.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.273.0
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.69.0
-	github.com/aws/aws-sdk-go-v2/service/efs v1.41.5
-	github.com/aws/aws-sdk-go-v2/service/eks v1.74.10
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.14
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.0
-	github.com/aws/aws-sdk-go-v2/service/iam v1.52.1
-	github.com/aws/aws-sdk-go-v2/service/kms v1.48.3
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.82.1
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.58.1
-	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.41.0
-	github.com/aws/aws-sdk-go-v2/service/rds v1.110.0
-	github.com/aws/aws-sdk-go-v2/service/route53 v1.60.1
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.92.0
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.54.5
-	github.com/aws/aws-sdk-go-v2/service/sns v1.39.6
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.16
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.67.3
-	github.com/aws/aws-sdk-go-v2/service/sts v1.41.1
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.38.1
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.62.1
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.58.1
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.52.5
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.7
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.53.2
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.275.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.69.1
+	github.com/aws/aws-sdk-go-v2/service/efs v1.41.6
+	github.com/aws/aws-sdk-go-v2/service/eks v1.75.1
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.15
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.2
+	github.com/aws/aws-sdk-go-v2/service/iam v1.52.2
+	github.com/aws/aws-sdk-go-v2/service/kms v1.49.1
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.83.1
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.59.0
+	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.41.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.111.1
+	github.com/aws/aws-sdk-go-v2/service/route53 v1.61.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.92.1
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.55.1
+	github.com/aws/aws-sdk-go-v2/service/sns v1.39.7
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.17
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.67.4
+	github.com/aws/aws-sdk-go-v2/service/sts v1.41.2
 	github.com/aws/smithy-go v1.23.2
 	github.com/bombsimon/logrusr/v4 v4.1.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.17.0
-	github.com/brianvoe/gofakeit/v7 v7.9.0
+	github.com/brianvoe/gofakeit/v7 v7.11.0
 	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/charmbracelet/glamour v0.10.0
 	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.3
 	github.com/coder/websocket v1.8.14
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/exaring/otelpgx v0.9.3
-	github.com/getsentry/sentry-go v0.38.0
+	github.com/getsentry/sentry-go v0.40.0
 	github.com/go-jose/go-jose/v4 v4.1.3
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
 	github.com/google/btree v1.1.3
@@ -95,7 +95,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.15.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/mux v1.8.1
-	github.com/harness/harness-go-sdk v0.6.3
+	github.com/harness/harness-go-sdk v0.6.5
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20250828155816-225c06ed5fd9
@@ -115,7 +115,7 @@ require (
 	github.com/nats-io/jwt/v2 v2.8.0
 	github.com/nats-io/nats-server/v2 v2.12.2
 	github.com/nats-io/nats.go v1.47.0
-	github.com/nats-io/nkeys v0.4.11
+	github.com/nats-io/nkeys v0.4.12
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
 	github.com/onsi/ginkgo/v2 v2.27.2
 	github.com/onsi/gomega v1.38.2
@@ -124,12 +124,12 @@ require (
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
 	github.com/pborman/ansi v1.0.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/posthog/posthog-go v1.6.12
-	github.com/projectdiscovery/subfinder/v2 v2.10.0
+	github.com/posthog/posthog-go v1.6.13
+	github.com/projectdiscovery/subfinder/v2 v2.10.1
 	github.com/qhenkart/anthropic-tokenizer-go v0.0.0-20231011194518-5519949e0faf
-	github.com/riverqueue/river v0.27.0
-	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.27.0
-	github.com/riverqueue/river/rivertype v0.27.0
+	github.com/riverqueue/river v0.28.0
+	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.28.0
+	github.com/riverqueue/river/rivertype v0.28.0
 	github.com/rs/cors v1.11.1
 	github.com/sashabaranov/go-openai v1.41.2
 	github.com/serpapi/serpapi-golang v0.0.0-20251124132232-a523a2179b23
@@ -187,8 +187,8 @@ require (
 	cloud.google.com/go v0.121.6 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/longrunning v0.6.7 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.17.0
-	github.com/Azure/azure-sdk-for-go/sdk/internal v1.10.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.20.0
+	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.2 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/Mzack9999/gcache v0.0.0-20230410081825-519e28eab057 // indirect
@@ -217,9 +217,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.11.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.14 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.14 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.0.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.30.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.8 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.0.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.30.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.10 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
@@ -361,8 +361,8 @@ require (
 	github.com/refraction-networking/utls v1.7.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/riverqueue/apiframe v0.0.0-20250408034821-b206bbbd0fb4 // indirect
-	github.com/riverqueue/river/riverdriver v0.27.0 // indirect
-	github.com/riverqueue/river/rivershared v0.27.0 // indirect
+	github.com/riverqueue/river/riverdriver v0.28.0 // indirect
+	github.com/riverqueue/river/rivershared v0.28.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
@@ -421,7 +421,7 @@ require (
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
 	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/exp v0.0.0-20250813145105-42675adae3e6 // indirect
-	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/mod v0.30.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/telemetry v0.0.0-20251008203120-078029d740a8 // indirect
