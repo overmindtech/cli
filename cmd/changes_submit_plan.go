@@ -16,6 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 // submitPlanCmd represents the submit-plan command
@@ -220,11 +221,16 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	// Set up the blast radius preset if specified
 	maxDepth := viper.GetInt32("blast-radius-link-depth")
 	maxItems := viper.GetInt32("blast-radius-max-items")
+	maxTime := viper.GetDuration("blast-radius-max-time")
 	var blastRadiusConfigOverride *sdp.BlastRadiusConfig
-	if maxDepth > 0 || maxItems > 0 {
+	if maxDepth > 0 || maxItems > 0 || maxTime > 0 {
 		blastRadiusConfigOverride = &sdp.BlastRadiusConfig{
 			MaxItems:  maxItems,
 			LinkDepth: maxDepth,
+		}
+		// Add maxBlastRadiusTime if specified
+		if maxTime > 0 {
+			blastRadiusConfigOverride.MaxBlastRadiusTime = durationpb.New(maxTime)
 		}
 	}
 
@@ -434,6 +440,7 @@ func init() {
 
 	submitPlanCmd.PersistentFlags().Int32("blast-radius-link-depth", 0, "Used in combination with '--blast-radius-max-items' to customise how many levels are traversed when calculating the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
 	submitPlanCmd.PersistentFlags().Int32("blast-radius-max-items", 0, "Used in combination with '--blast-radius-link-depth' to customise how many items are included in the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
+	submitPlanCmd.PersistentFlags().Duration("blast-radius-max-time", 0, "Maximum time duration for blast radius calculation (e.g., '5m', '15m', '30m'). When the time limit is reached, the analysis continues with risks identified up to that point. Defaults to 10 minutes if not specified. Valid range: 1m to 30m.")
 	submitPlanCmd.PersistentFlags().String("auto-tag-rules", "", "The path to the auto-tag rules file. If not provided, it will check the default location which is '.overmind/auto-tag-rules.yaml'. If no rules are found locally, the rules configured through the UI are used.")
 	submitPlanCmd.PersistentFlags().String("signal-config", "", "The path to the signal config file. If not provided, it will check the default location which is '.overmind/signal-config.yaml'. If no config is found locally, the config configured through the UI is used.")
 }
