@@ -132,7 +132,7 @@ require (
 	github.com/riverqueue/river/rivertype v0.27.0
 	github.com/rs/cors v1.11.1
 	github.com/sashabaranov/go-openai v1.41.2
-	github.com/serpapi/serpapi-golang v0.0.0-20250619150544-f1bfb86616c7
+	github.com/serpapi/serpapi-golang v0.0.0-20251124132232-a523a2179b23
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8
 	github.com/spf13/cobra v1.10.1
