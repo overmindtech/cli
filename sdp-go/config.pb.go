@@ -193,7 +193,9 @@ type BlastRadiusConfig struct {
 	// request. Once a request has hit this limit, all currently running
 	// requests will be cancelled and the blast radius returned as-is
 	MaxItems int32 `protobuf:"varint,1,opt,name=maxItems,proto3" json:"maxItems,omitempty"`
-	// How deeply to link when calculating the blast radius for a change
+	// How deeply to link when calculating the blast radius for a change. This
+	// is the maximum number of levels of links to traverse from the root item.
+	// Different implementations may differ in how they handle this.
 	LinkDepth int32 `protobuf:"varint,2,opt,name=linkDepth,proto3" json:"linkDepth,omitempty"`
 	// Maximum time duration for blast radius calculation. When this time limit
 	// is reached, the analysis gracefully continues with risks identified up to
