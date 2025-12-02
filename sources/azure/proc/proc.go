@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
@@ -16,8 +18,7 @@ import (
 	// "github.com/overmindtech/cli/sources/azure/dynamic"
 	// _ "github.com/overmindtech/cli/sources/azure/dynamic/adapters" // Import all adapters to register them
 	"github.com/overmindtech/cli/sources/azure/manual"
-	// TODO: Uncomment when azureshared.Linker is implemented
-	// azureshared "github.com/overmindtech/cli/sources/azure/shared"
+	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 )
 
 // Metadata contains the metadata for the Azure source
@@ -43,6 +44,7 @@ func init() {
 		"tenant",
 		"client",
 		[]string{"region"},
+		nil, // No credentials needed for metadata registration
 		nil,
 		false,
 	)
@@ -113,20 +115,23 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *AzureConfi
 			return fmt.Errorf("Azure source must specify subscription ID")
 		}
 
-		// TODO: Implement linker when Azure dynamic adapters are available in https://linear.app/overmind/issue/ENG-1830/authenticate-to-azure-using-federated-credentials
+		// Initialize Azure credentials
+		cred, err := azureshared.NewAzureCredential(ctx)
+		if err != nil {
+			return fmt.Errorf("error creating Azure credentials: %w", err)
+		}
+
+		// TODO: Implement linker when Azure dynamic adapters are available
 		var linker interface{} = nil
 
-		discoveryAdapters, err := adapters(ctx, cfg.SubscriptionID, cfg.TenantID, cfg.ClientID, cfg.Regions, linker, true)
+		discoveryAdapters, err := adapters(ctx, cfg.SubscriptionID, cfg.TenantID, cfg.ClientID, cfg.Regions, cred, linker, true)
 		if err != nil {
 			return fmt.Errorf("error creating discovery adapters: %w", err)
 		}
 
-		// TODO: Add permission check for Azure subscription access in https://linear.app/overmind/issue/ENG-1830/authenticate-to-azure-using-federated-credentials
-		// This would verify that the credentials can access the subscription
+		// Set up permission check that verifies subscription access
 		permissionCheck = func() error {
-			// For now, we'll skip the permission check until we have a subscription adapter
-			// In the future, we can add a check similar to GCP's project check
-			return nil
+			return checkSubscriptionAccess(ctx, cfg.SubscriptionID, cred)
 		}
 
 		err = permissionCheck()
@@ -201,19 +206,18 @@ func adapters(
 	tenantID string,
 	clientID string,
 	regions []string,
-	linker interface{}, // TODO: Use *azureshared.Linker when azureshared package is fully implemented in https://linear.app/overmind/issue/ENG-1830/authenticate-to-azure-using-federated-credentials
+	cred *azidentity.DefaultAzureCredential,
+	linker interface{}, // TODO: Use *azureshared.Linker when azureshared package is fully implemented
 	initAzureClients bool,
 ) ([]discovery.Adapter, error) {
 	discoveryAdapters := make([]discovery.Adapter, 0)
 
 	// Add manual adapters
-	// Note: manual.Adapters currently uses projectID parameter name but accepts subscriptionID
 	manualAdapters, err := manual.Adapters(
 		ctx,
-		subscriptionID, // passed as projectID parameter (will be updated in manual.Adapters)
+		subscriptionID,
 		regions,
-		nil, // zones not used in Azure
-		nil, // tokenSource not used with federated credentials
+		cred,
 		initAzureClients,
 	)
 	if err != nil {
@@ -226,11 +230,6 @@ func adapters(
 	}
 
 	discoveryAdapters = append(discoveryAdapters, manualAdapters...)
-
-	// Azure SDK handles authentication automatically via federated credentials
-	// when running in Kubernetes/EKS with workload identity
-	// For local development, Azure SDK will use Azure CLI or environment variables
-	_ = initAzureClients // TODO: Use this when implementing Azure client initialization in https://linear.app/overmind/issue/ENG-1830/authenticate-to-azure-using-federated-credentials
 
 	// TODO: Add dynamic adapters when Azure dynamic adapter framework is implemented
 	// dynamicAdapters, err := dynamic.Adapters(
@@ -247,5 +246,34 @@ func adapters(
 	// }
 	// discoveryAdapters = append(discoveryAdapters, dynamicAdapters...)
 
+	_ = tenantID // Used for metadata/logging
+	_ = clientID // Used for metadata/logging
+
 	return discoveryAdapters, nil
+}
+
+// checkSubscriptionAccess verifies that the credentials have access to the specified subscription
+func checkSubscriptionAccess(ctx context.Context, subscriptionID string, cred *azidentity.DefaultAzureCredential) error {
+	// Create a resource groups client to test subscription access
+	client, err := armresources.NewResourceGroupsClient(subscriptionID, cred, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create resource groups client: %w", err)
+	}
+
+	// Try to list resource groups to verify access
+	pager := client.NewListPager(nil)
+	if !pager.More() {
+		// No resource groups, but that's okay - we just want to verify we can access the subscription
+		log.WithField("ovm.source.subscription_id", subscriptionID).Info("Successfully verified subscription access (no resource groups found)")
+		return nil
+	}
+
+	// Try to get the first page to verify we have access
+	_, err = pager.NextPage(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to verify subscription access: %w", err)
+	}
+
+	log.WithField("ovm.source.subscription_id", subscriptionID).Info("Successfully verified subscription access")
+	return nil
 }
