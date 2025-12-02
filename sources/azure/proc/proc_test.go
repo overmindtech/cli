@@ -17,6 +17,7 @@ func Test_adapters(t *testing.T) {
 		"tenant",
 		"client",
 		[]string{"region"},
+		nil, // No credentials needed for metadata registration
 		nil,
 		false,
 	)
