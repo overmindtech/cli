@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -291,15 +292,18 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 }
 
 func potentialLinksFromBlasts(itemType shared.ItemType, blasts map[shared.ItemType]map[string]*gcpshared.Impact) []string {
-	var potentialLinks []string
 	var potentialLinksMap = make(map[string]bool)
 	for _, impact := range blasts[itemType] {
 		potentialLinksMap[impact.ToSDPItemType.String()] = true
 	}
 
+	potentialLinks := make([]string, 0, len(potentialLinksMap))
 	for it := range potentialLinksMap {
 		potentialLinks = append(potentialLinks, it)
 	}
+
+	// Sort to ensure deterministic ordering
+	slices.Sort(potentialLinks)
 
 	return potentialLinks
 }
