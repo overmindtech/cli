@@ -244,6 +244,12 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 		return nil
 	}
 
+	labels, err := parseLabelsArgument()
+	if err != nil {
+		uploadChangesSpinner.Fail(fmt.Sprintf("Uploading planned changes: failed to parse labels: %v", err))
+		return nil
+	}
+
 	properties := &sdp.ChangeProperties{
 		Title:        title,
 		Description:  viper.GetString("description"),
@@ -253,6 +259,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 		CodeChanges:  codeChangesOutput,
 		Repo:         repoUrl,
 		EnrichedTags: enrichedTags,
+		Labels:       labels,
 	}
 
 	if changeUuid == uuid.Nil {

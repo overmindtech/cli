@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/overmindtech/cli/sdp-go"
@@ -30,6 +31,7 @@ func addChangeCreationFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().String("terraform-plan-output", "", "Filename of cached terraform plan output for this change.")
 	cmd.PersistentFlags().String("code-changes-diff", "", "Filename of the code diff of this change.")
 	cmd.PersistentFlags().StringSlice("tags", []string{}, "Tags to apply to this change, these should be specified in key=value format. Multiple tags can be specified by repeating the flag or using a comma separated list.")
+	cmd.PersistentFlags().StringSlice("labels", []string{}, "Labels to apply to this change, these should be specified in name=color format where color is a hex code (e.g., FF0000 or #FF0000). Multiple labels can be specified by repeating the flag or using a comma separated list.")
 }
 
 func parseTagsArgument() (*sdp.EnrichedTags, error) {
@@ -56,6 +58,45 @@ func parseTagsArgument() (*sdp.EnrichedTags, error) {
 		}
 	}
 	return enrichedTags, nil
+}
+
+func parseLabelsArgument() ([]*sdp.Label, error) {
+	labels := make([]*sdp.Label, 0)
+	for _, label := range viper.GetStringSlice("labels") {
+		parts := strings.SplitN(label, "=", 2)
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid label format: %s (expected name=color)", label)
+		}
+		if parts[0] == "" {
+			return nil, fmt.Errorf("invalid label format: %s (label name cannot be empty)", label)
+		}
+
+		// Normalise colour: strip leading # if present, validate, then add # back
+		colour := strings.TrimPrefix(parts[1], "#")
+		if colour == "" {
+			return nil, fmt.Errorf("invalid colour format: %s (colour cannot be empty)", parts[1])
+		}
+
+		// Validate it's exactly 6 hex digits
+		if len(colour) != 6 {
+			return nil, fmt.Errorf("invalid colour format: %s (must be 6 hex digits, got %d)", parts[1], len(colour))
+		}
+
+		// Validate all characters are valid hex digits
+		if _, err := strconv.ParseUint(colour, 16, 64); err != nil {
+			return nil, fmt.Errorf("invalid colour format: %s (must be valid hex digits)", parts[1])
+		}
+
+		// Normalise to canonical form: always #rrggbb
+		normalisedColour := "#" + strings.ToUpper(colour)
+
+		labels = append(labels, &sdp.Label{
+			Name:   parts[0],
+			Colour: normalisedColour,
+			Type:   sdp.LabelType_LABEL_TYPE_USER,
+		})
+	}
+	return labels, nil
 }
 
 // Adds common flags to API commands e.g. timeout
