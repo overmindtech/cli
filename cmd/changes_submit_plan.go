@@ -158,6 +158,14 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	labels, err := parseLabelsArgument()
+	if err != nil {
+		return loggedError{
+			err:     err,
+			fields:  lf,
+			message: "Failed to parse labels",
+		}
+	}
 	properties := &sdp.ChangeProperties{
 		Title:        title,
 		Description:  viper.GetString("description"),
@@ -167,6 +175,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		CodeChanges:  codeChangesOutput,
 		Repo:         repoUrl,
 		EnrichedTags: enrichedTags,
+		Labels:       labels,
 	}
 
 	if changeUUID == uuid.Nil {
