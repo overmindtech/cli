@@ -212,9 +212,12 @@ func InitTracerWithUpstreams(component, honeycombApiKey, sentryDSN string, opts 
 			otlptracehttp.WithHeaders(map[string]string{"x-honeycomb-team": honeycombApiKey}),
 		)
 	} else {
-		// If no Honeycomb API key is provided, use the hardcoded OTLP collector endpoint
+		// If no Honeycomb API key is provided, use the hardcoded OTLP collector
+		// endpoint, which is provided by the otel-collector service in the otel
+		// namespace. Since this a node-local service, it does not use TLS.
 		opts = append(opts,
 			otlptracehttp.WithEndpoint("otelcol-node-opentelemetry-collector.otel.svc.cluster.local:4318"),
+			otlptracehttp.WithInsecure(),
 		)
 	}
 
