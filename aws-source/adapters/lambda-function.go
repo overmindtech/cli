@@ -204,6 +204,14 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 			item.Health = nil
 		case types.StateFailed:
 			item.Health = sdp.Health_HEALTH_ERROR.Enum()
+		case types.StateDeactivating:
+			item.Health = sdp.Health_HEALTH_PENDING.Enum()
+		case types.StateDeactivated:
+			item.Health = nil
+		case types.StateActiveNonInvocable:
+			item.Health = sdp.Health_HEALTH_ERROR.Enum()
+		case types.StateDeleting:
+			item.Health = sdp.Health_HEALTH_PENDING.Enum()
 		}
 
 		if function.Configuration.Role != nil {

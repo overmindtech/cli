@@ -17,4 +17,7 @@ var (
 	NetworkNetworkInterface     = shared.NewItemType(Azure, Network, NetworkInterface)
 	NetworkPublicIPAddress      = shared.NewItemType(Azure, Network, PublicIPAddress)
 	NetworkNetworkSecurityGroup = shared.NewItemType(Azure, Network, NetworkSecurityGroup)
+	//Storage item types
+	StorageAccount       = shared.NewItemType(Azure, Storage, Account)
+	StorageBlobContainer = shared.NewItemType(Azure, Storage, BlobContainer)
 )

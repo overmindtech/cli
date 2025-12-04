@@ -16,6 +16,9 @@ const (
 
 	// Networking
 	Network shared.API = "network" // Microsoft.Network
+
+	// Storage
+	Storage shared.API = "storage" // Microsoft.Storage
 )
 
 // Resources
@@ -32,4 +35,9 @@ const (
 	NetworkInterface     shared.Resource = "network-interface"
 	PublicIPAddress      shared.Resource = "public-ip-address"
 	NetworkSecurityGroup shared.Resource = "network-security-group"
+
+	// Storage resources
+	Account       shared.Resource = "account"
+	BlobContainer shared.Resource = "blob-container"
+	Blob          shared.Resource = "blob"
 )

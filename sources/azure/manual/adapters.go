@@ -7,6 +7,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/overmindtech/cli/discovery"
@@ -53,7 +54,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 		}
 
 		log.WithFields(log.Fields{
-			"ovm.source.subscription_id":   subscriptionID,
+			"ovm.source.subscription_id":      subscriptionID,
 			"ovm.source.resource_group_count": len(resourceGroups),
 		}).Info("Discovered resource groups")
 
@@ -63,12 +64,26 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create virtual machines client: %w", err)
 		}
 
+		blobContainersClient, err := armstorage.NewBlobContainersClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create blob containers client: %w", err)
+		}
+
 		// Create adapters for each resource group
 		for _, resourceGroup := range resourceGroups {
 			// Add Compute Virtual Machine adapter for this resource group
 			adapters = append(adapters,
 				sources.WrapperToAdapter(NewComputeVirtualMachine(
 					clients.NewVirtualMachinesClient(vmClient),
+					subscriptionID,
+					resourceGroup,
+				)),
+			)
+
+			// Add Storage Blob Container adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewStorageBlobContainer(
+					clients.NewBlobContainersClient(blobContainersClient),
 					subscriptionID,
 					resourceGroup,
 				)),
@@ -86,6 +101,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 		// Create placeholder adapters with nil clients for metadata registration
 		adapters = append(adapters,
 			sources.WrapperToAdapter(NewComputeVirtualMachine(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			)),
+			sources.WrapperToAdapter(NewStorageBlobContainer(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
