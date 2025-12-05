@@ -94,7 +94,7 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.3
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
 	github.com/google/btree v1.1.3
-	github.com/google/go-github/v79 v79.0.0
+	github.com/google/go-github/v80 v80.0.0
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.15.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
@@ -143,7 +143,7 @@ require (
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
-	github.com/stripe/stripe-go/v83 v83.2.1
+	github.com/stripe/stripe-go/v84 v84.0.0
 	github.com/tiktoken-go/tokenizer v0.7.0
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.2
