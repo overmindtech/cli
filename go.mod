@@ -12,11 +12,11 @@ require (
 	atomicgo.dev/keyboard v0.2.9
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.10-20250912141014-52f32327d4b0.1
 	buf.build/go/protovalidate v1.0.1
-	cloud.google.com/go/aiplatform v1.109.0
+	cloud.google.com/go/aiplatform v1.110.0
 	cloud.google.com/go/auth v0.17.0
 	cloud.google.com/go/bigquery v1.72.0
 	cloud.google.com/go/bigtable v1.40.1
-	cloud.google.com/go/compute v1.49.1
+	cloud.google.com/go/compute v1.50.0
 	cloud.google.com/go/compute/metadata v0.9.0
 	cloud.google.com/go/container v1.45.0
 	cloud.google.com/go/dataplex v1.28.0
@@ -24,7 +24,7 @@ require (
 	cloud.google.com/go/iam v1.5.3
 	cloud.google.com/go/kms v1.23.2
 	cloud.google.com/go/logging v1.13.1
-	cloud.google.com/go/networksecurity v0.10.7
+	cloud.google.com/go/networksecurity v0.11.0
 	cloud.google.com/go/resourcemanager v1.10.7
 	cloud.google.com/go/spanner v1.86.1
 	connectrpc.com/connect v1.18.1 // v1.19.0 was faulty, wait until it is above this version
@@ -55,7 +55,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.3
 	github.com/aws/aws-sdk-go-v2/service/iam v1.52.3
 	github.com/aws/aws-sdk-go-v2/service/kms v1.49.2
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.85.0
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.86.0
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.59.1
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/rds v1.112.0
@@ -76,7 +76,7 @@ require (
 	github.com/coder/websocket v1.8.14
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/exaring/otelpgx v0.9.3
-	github.com/getsentry/sentry-go v0.38.0
+	github.com/getsentry/sentry-go v0.40.0
 	github.com/go-jose/go-jose/v4 v4.1.3
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
 	github.com/google/btree v1.1.3
@@ -85,7 +85,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.15.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/mux v1.8.1
-	github.com/harness/harness-go-sdk v0.6.3
+	github.com/harness/harness-go-sdk v0.6.5
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20250828155816-225c06ed5fd9
@@ -105,25 +105,25 @@ require (
 	github.com/nats-io/jwt/v2 v2.8.0
 	github.com/nats-io/nats-server/v2 v2.12.2
 	github.com/nats-io/nats.go v1.47.0
-	github.com/nats-io/nkeys v0.4.11
+	github.com/nats-io/nkeys v0.4.12
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
 	github.com/onsi/ginkgo/v2 v2.27.2
 	github.com/onsi/gomega v1.38.2
-	github.com/openai/openai-go/v3 v3.8.1
+	github.com/openai/openai-go/v3 v3.10.0
 	github.com/openrdap/rdap v0.9.2-0.20240517203139-eb57b3a8dedd
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
 	github.com/pborman/ansi v1.0.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/posthog/posthog-go v1.6.12
+	github.com/posthog/posthog-go v1.6.13
 	github.com/qhenkart/anthropic-tokenizer-go v0.0.0-20231011194518-5519949e0faf
-	github.com/riverqueue/river v0.27.0
-	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.27.0
-	github.com/riverqueue/river/rivertype v0.27.0
+	github.com/riverqueue/river v0.28.0
+	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.28.0
+	github.com/riverqueue/river/rivertype v0.28.0
 	github.com/rs/cors v1.11.1
 	github.com/sashabaranov/go-openai v1.41.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
@@ -149,7 +149,7 @@ require (
 	golang.org/x/oauth2 v0.33.0
 	golang.org/x/text v0.31.0
 	gonum.org/v1/gonum v0.16.0
-	google.golang.org/api v0.256.0
+	google.golang.org/api v0.257.0
 	google.golang.org/grpc v1.77.0
 	google.golang.org/protobuf v1.36.10
 	gopkg.in/ini.v1 v1.67.0
@@ -164,7 +164,7 @@ require (
 )
 
 require (
-	github.com/projectdiscovery/subfinder/v2 v2.10.0
+	github.com/projectdiscovery/subfinder/v2 v2.10.1
 	github.com/serpapi/serpapi-golang v0.0.0-20251124132232-a523a2179b23
 	modernc.org/sqlite v1.40.1
 	riverqueue.com/riverui v0.13.0
@@ -172,7 +172,7 @@ require (
 
 require (
 	aead.dev/minisign v0.2.0 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.19.1
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.20.0
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.2 // indirect
 	github.com/Mzack9999/gcache v0.0.0-20230410081825-519e28eab057 // indirect
 	github.com/Mzack9999/go-http-digest-auth-client v0.6.1-0.20220414142836-eb8883508809 // indirect
@@ -269,9 +269,9 @@ require (
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
 	cel.dev/expr v0.24.0 // indirect
-	cloud.google.com/go v0.121.6 // indirect
+	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
-	cloud.google.com/go/longrunning v0.6.7 // indirect
+	cloud.google.com/go/longrunning v0.7.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/PuerkitoBio/rehttp v1.4.0 // indirect
@@ -382,8 +382,8 @@ require (
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.63.0 // indirect
 	github.com/prometheus/procfs v0.16.0 // indirect
-	github.com/riverqueue/river/riverdriver v0.27.0 // indirect
-	github.com/riverqueue/river/rivershared v0.27.0 // indirect
+	github.com/riverqueue/river/riverdriver v0.28.0 // indirect
+	github.com/riverqueue/river/rivershared v0.28.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
@@ -419,7 +419,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/exp v0.0.0-20250813145105-42675adae3e6 // indirect
-	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/mod v0.30.0 // indirect
 	golang.org/x/sync v0.18.0
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/term v0.37.0 // indirect
@@ -428,7 +428,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20251022142026-3a174f9686a8 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20251111163417-95abcf5c77ba // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
@@ -454,7 +454,7 @@ require (
 	cloud.google.com/go/secretmanager v1.16.0
 	cloud.google.com/go/securitycentermanagement v1.1.6
 	cloud.google.com/go/storagetransfer v1.13.1
-	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.10.1
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork v1.1.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.2.0
 )
