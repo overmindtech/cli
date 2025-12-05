@@ -24,12 +24,13 @@ import (
 )
 
 const (
-	integrationTestResourceGroup = "overmind-integration-tests"
-	integrationTestLocation      = "westus2"
-	integrationTestVMName        = "ovm-integ-test-vm"
-	integrationTestNICName       = "ovm-integ-test-nic"
-	integrationTestVNetName      = "ovm-integ-test-vnet"
-	integrationTestSubnetName    = "default"
+	integrationTestVMName     = "ovm-integ-test-vm"
+	integrationTestNICName    = "ovm-integ-test-nic"
+	integrationTestVNetName   = "ovm-integ-test-vnet"
+	integrationTestSubnetName = "default"
+
+	defaultMaxPollAttempts = 20
+	defaultPollInterval    = 10 * time.Second
 )
 
 func TestComputeVirtualMachineIntegration(t *testing.T) {
@@ -276,31 +277,6 @@ func TestComputeVirtualMachineIntegration(t *testing.T) {
 	})
 }
 
-// createResourceGroup creates an Azure resource group if it doesn't already exist (idempotent)
-func createResourceGroup(ctx context.Context, client *armresources.ResourceGroupsClient, resourceGroupName, location string) error {
-	// Check if resource group already exists
-	_, err := client.Get(ctx, resourceGroupName, nil)
-	if err == nil {
-		log.Printf("Resource group %s already exists, skipping creation", resourceGroupName)
-		return nil
-	}
-
-	// Create the resource group
-	_, err = client.CreateOrUpdate(ctx, resourceGroupName, armresources.ResourceGroup{
-		Location: ptr.To(location),
-		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"managed": ptr.To("true"),
-		},
-	}, nil)
-	if err != nil {
-		return fmt.Errorf("failed to create resource group: %w", err)
-	}
-
-	log.Printf("Resource group %s created successfully in location %s", resourceGroupName, location)
-	return nil
-}
-
 // createVirtualNetwork creates an Azure virtual network with a default subnet (idempotent)
 func createVirtualNetwork(ctx context.Context, client *armnetwork.VirtualNetworksClient, resourceGroupName, vnetName, location string) error {
 	// Check if VNet already exists
@@ -485,8 +461,8 @@ func createVirtualMachine(ctx context.Context, client *armcompute.VirtualMachine
 // waitForVMAvailable polls until the VM is available via the Get API
 // This is needed because even after creation succeeds, there can be a delay before the VM is queryable
 func waitForVMAvailable(ctx context.Context, client *armcompute.VirtualMachinesClient, resourceGroupName, vmName string) error {
-	maxAttempts := 20
-	pollInterval := 10 * time.Second
+	maxAttempts := defaultMaxPollAttempts
+	pollInterval := defaultPollInterval
 
 	log.Printf("Waiting for VM %s to be available via API...", vmName)
 
