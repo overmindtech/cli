@@ -39,5 +39,4 @@ const (
 	// Storage resources
 	Account       shared.Resource = "account"
 	BlobContainer shared.Resource = "blob-container"
-	Blob          shared.Resource = "blob"
 )
