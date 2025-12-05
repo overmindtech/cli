@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -24,12 +25,13 @@ import (
 // Metadata contains the metadata for the Azure source
 var Metadata = sdp.AdapterMetadataList{}
 
-// AzureConfig holds configuration for Azure source
+// AzureConfig holds configuration for Azure source.
+// The YAML tags match the keys used in the source.yaml config file.
 type AzureConfig struct {
-	SubscriptionID string
-	TenantID       string
-	ClientID       string
-	Regions        []string
+	SubscriptionID string   `yaml:"azure-subscription-id"`
+	TenantID       string   `yaml:"azure-tenant-id"`
+	ClientID       string   `yaml:"azure-client-id"`
+	Regions        []string `yaml:"azure-regions"`
 }
 
 func init() {
@@ -113,6 +115,23 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *AzureConfi
 		// Regions are optional for Azure, but subscription ID is required
 		if cfg.SubscriptionID == "" {
 			return fmt.Errorf("Azure source must specify subscription ID")
+		}
+
+		// Set Azure SDK environment variables from viper config if not already set.
+		// The Azure SDK's DefaultAzureCredential reads AZURE_CLIENT_ID and AZURE_TENANT_ID
+		// directly from environment variables for federated authentication.
+		//
+		// When using Azure Workload Identity webhook, these env vars are already injected
+		// by the webhook, so we only set them if they're not present. This supports both:
+		// 1. Azure Workload Identity webhook (env vars already injected)
+		// 2. Manual configuration (env vars set from viper config)
+		//
+		// Reference: https://azure.github.io/azure-workload-identity/docs/
+		if os.Getenv("AZURE_CLIENT_ID") == "" && cfg.ClientID != "" {
+			os.Setenv("AZURE_CLIENT_ID", cfg.ClientID)
+		}
+		if os.Getenv("AZURE_TENANT_ID") == "" && cfg.TenantID != "" {
+			os.Setenv("AZURE_TENANT_ID", cfg.TenantID)
 		}
 
 		// Initialize Azure credentials
