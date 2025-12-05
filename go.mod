@@ -165,7 +165,7 @@ require (
 
 require (
 	github.com/projectdiscovery/subfinder/v2 v2.10.0
-	github.com/serpapi/serpapi-golang v0.0.0-20250619150544-f1bfb86616c7
+	github.com/serpapi/serpapi-golang v0.0.0-20251124132232-a523a2179b23
 	modernc.org/sqlite v1.40.1
 	riverqueue.com/riverui v0.13.0
 )
