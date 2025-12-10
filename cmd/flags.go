@@ -31,7 +31,8 @@ func addChangeCreationFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().String("terraform-plan-output", "", "Filename of cached terraform plan output for this change.")
 	cmd.PersistentFlags().String("code-changes-diff", "", "Filename of the code diff of this change.")
 	cmd.PersistentFlags().StringSlice("tags", []string{}, "Tags to apply to this change, these should be specified in key=value format. Multiple tags can be specified by repeating the flag or using a comma separated list.")
-	cmd.PersistentFlags().StringSlice("labels", []string{}, "Labels to apply to this change, these should be specified in name=color format where color is a hex code (e.g., FF0000 or #FF0000). Multiple labels can be specified by repeating the flag or using a comma separated list.")
+	// ENG-1985, disabled until we decide how manual labels and manual tags should be handled.
+	// cmd.PersistentFlags().StringSlice("labels", []string{}, "Labels to apply to this change, these should be specified in name=color format where color is a hex code (e.g., FF0000 or #FF0000). Multiple labels can be specified by repeating the flag or using a comma separated list.")
 }
 
 func parseTagsArgument() (*sdp.EnrichedTags, error) {
