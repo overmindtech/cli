@@ -69,6 +69,21 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 							Out: true,
 						},
 					},
+					{
+						Query: &sdp.Query{
+							// Get CloudWatch metrics for this instance
+							Type:   "cloudwatch-instance-metric",
+							Method: sdp.QueryMethod_GET,
+							Query:  *instance.InstanceId,
+							Scope:  scope,
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							// Metrics inform decisions about the instance
+							In: true,
+							// Instance changes don't affect historical metrics
+							Out: false,
+						},
+					},
 				},
 			}
 
@@ -484,7 +499,7 @@ func NewEC2InstanceAdapter(client *ec2.Client, accountID string, region string) 
 var ec2InstanceAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:            "ec2-instance",
 	DescriptiveName: "EC2 Instance",
-	PotentialLinks:  []string{"ec2-instance-status", "iam-instance-profile", "ec2-capacity-reservation", "ec2-elastic-gpu", "elastic-inference-accelerator", "license-manager-license-configuration", "outposts-outpost", "ec2-spot-instance-request", "ec2-image", "ec2-key-pair", "ec2-placement-group", "ip", "ec2-subnet", "ec2-vpc", "dns", "ec2-security-group", "ec2-volume"},
+	PotentialLinks:  []string{"ec2-instance-status", "cloudwatch-instance-metric", "iam-instance-profile", "ec2-capacity-reservation", "ec2-elastic-gpu", "elastic-inference-accelerator", "license-manager-license-configuration", "outposts-outpost", "ec2-spot-instance-request", "ec2-image", "ec2-key-pair", "ec2-placement-group", "ip", "ec2-subnet", "ec2-vpc", "dns", "ec2-security-group", "ec2-volume"},
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
 		Get:               true,
 		List:              true,
