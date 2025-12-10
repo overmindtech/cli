@@ -8,11 +8,9 @@ import (
 
 //go:generate mockgen -destination=../shared/mocks/mock_blob_containers_client.go -package=mocks -source=blob-containers-client.go
 
-// BlobContainersPager is an interface for paging through blob container results
-type BlobContainersPager interface {
-	More() bool
-	NextPage(ctx context.Context) (armstorage.BlobContainersClientListResponse, error)
-}
+// BlobContainersPager is a type alias for the generic Pager interface with blob container response type.
+// This uses the generic Pager[T] interface to avoid code duplication.
+type BlobContainersPager = Pager[armstorage.BlobContainersClientListResponse]
 
 // BlobContainersClient is an interface for interacting with Azure blob containers
 type BlobContainersClient interface {

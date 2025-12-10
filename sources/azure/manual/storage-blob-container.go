@@ -2,7 +2,6 @@ package manual
 
 import (
 	"context"
-	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
 	"github.com/overmindtech/cli/sdp-go"
@@ -132,7 +131,7 @@ func (s storageBlobContainerWrapper) azureBlobContainerToSDPItem(container *arms
 		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
 	}
 
-	err = attributes.Set("id", strings.Join([]string{storageAccountName, containerName}, shared.QuerySeparator))
+	err = attributes.Set("id", shared.CompositeLookupKey(storageAccountName, containerName))
 	if err != nil {
 		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
 	}
