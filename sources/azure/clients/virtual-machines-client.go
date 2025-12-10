@@ -8,11 +8,9 @@ import (
 
 //go:generate mockgen -destination=../shared/mocks/mock_virtual_machines_client.go -package=mocks -source=virtual-machines-client.go
 
-// VirtualMachinesPager is an interface for paging through virtual machine results
-type VirtualMachinesPager interface {
-	More() bool
-	NextPage(ctx context.Context) (armcompute.VirtualMachinesClientListResponse, error)
-}
+// VirtualMachinesPager is a type alias for the generic Pager interface with virtual machine response type.
+// This uses the generic Pager[T] interface to avoid code duplication.
+type VirtualMachinesPager = Pager[armcompute.VirtualMachinesClientListResponse]
 
 // VirtualMachinesClient is an interface for interacting with Azure virtual machines
 type VirtualMachinesClient interface {

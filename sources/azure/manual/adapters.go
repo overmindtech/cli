@@ -64,9 +64,19 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create virtual machines client: %w", err)
 		}
 
+		storageAccountsClient, err := armstorage.NewAccountsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create storage accounts client: %w", err)
+		}
+
 		blobContainersClient, err := armstorage.NewBlobContainersClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create blob containers client: %w", err)
+		}
+
+		fileSharesClient, err := armstorage.NewFileSharesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create file shares client: %w", err)
 		}
 
 		// Create adapters for each resource group
@@ -80,10 +90,27 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				)),
 			)
 
+			// Add Storage Account adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewStorageAccount(
+					clients.NewStorageAccountsClient(storageAccountsClient),
+					subscriptionID,
+					resourceGroup,
+				)),
+			)
 			// Add Storage Blob Container adapter for this resource group
 			adapters = append(adapters,
 				sources.WrapperToAdapter(NewStorageBlobContainer(
 					clients.NewBlobContainersClient(blobContainersClient),
+					subscriptionID,
+					resourceGroup,
+				)),
+			)
+
+			// Add Storage File Share adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewStorageFileShare(
+					clients.NewFileSharesClient(fileSharesClient),
 					subscriptionID,
 					resourceGroup,
 				)),
@@ -105,7 +132,17 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				subscriptionID,
 				"placeholder-resource-group",
 			)),
+			sources.WrapperToAdapter(NewStorageAccount(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			)),
 			sources.WrapperToAdapter(NewStorageBlobContainer(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			)),
+			sources.WrapperToAdapter(NewStorageFileShare(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",

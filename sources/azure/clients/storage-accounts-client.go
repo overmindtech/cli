@@ -8,11 +8,9 @@ import (
 
 //go:generate mockgen -destination=../shared/mocks/mock_storage_accounts_client.go -package=mocks -source=storage-accounts-client.go
 
-// StorageAccountsPager is an interface for paging through storage account results
-type StorageAccountsPager interface {
-	More() bool
-	NextPage(ctx context.Context) (armstorage.AccountsClientListByResourceGroupResponse, error)
-}
+// StorageAccountsPager is a type alias for the generic Pager interface with storage account response type.
+// This uses the generic Pager[T] interface to avoid code duplication.
+type StorageAccountsPager = Pager[armstorage.AccountsClientListByResourceGroupResponse]
 
 // StorageAccountsClient is an interface for interacting with Azure storage accounts
 type StorageAccountsClient interface {
