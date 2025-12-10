@@ -387,6 +387,7 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 
 						// Cloudwatch
 						adapters.NewCloudwatchAlarmAdapter(cloudwatchClient, *callerID.Account, cfg.Region),
+						adapters.NewCloudwatchInstanceMetricAdapter(cloudwatchClient, *callerID.Account, cfg.Region),
 
 						// Lambda
 						adapters.NewLambdaFunctionAdapter(lambdaClient, *callerID.Account, cfg.Region),
