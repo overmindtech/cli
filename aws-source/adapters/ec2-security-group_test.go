@@ -102,6 +102,12 @@ func TestSecurityGroupOutputMapper(t *testing.T) {
 			ExpectedScope:  item.GetScope(),
 		},
 		{
+			ExpectedType:   "ec2-network-interface",
+			ExpectedMethod: sdp.QueryMethod_SEARCH,
+			ExpectedQuery:  "sg-094e151c9fc5da181",
+			ExpectedScope:  item.GetScope(),
+		},
+		{
 			ExpectedType:   "ec2-security-group",
 			ExpectedMethod: sdp.QueryMethod_GET,
 			ExpectedQuery:  "sg-094e151c9fc5da181",

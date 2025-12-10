@@ -2,8 +2,11 @@ package adapters
 
 import (
 	"context"
+	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
@@ -19,6 +22,45 @@ func networkInterfaceInputMapperGet(scope string, query string) (*ec2.DescribeNe
 
 func networkInterfaceInputMapperList(scope string) (*ec2.DescribeNetworkInterfacesInput, error) {
 	return &ec2.DescribeNetworkInterfacesInput{}, nil
+}
+
+func networkInterfaceInputMapperSearch(_ context.Context, _ *ec2.Client, scope, query string) (*ec2.DescribeNetworkInterfacesInput, error) {
+	// If query looks like a security group ID, filter by it
+	// This enables security groups to discover their attached network interfaces
+	if strings.HasPrefix(query, "sg-") {
+		return &ec2.DescribeNetworkInterfacesInput{
+			Filters: []types.Filter{
+				{
+					Name:   aws.String("group-id"),
+					Values: []string{query},
+				},
+			},
+		}, nil
+	}
+
+	// Otherwise try to parse as an ARN
+	arn, err := adapterhelpers.ParseARN(query)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOTFOUND,
+			ErrorString: "query must be a security group ID (sg-*) or a valid ARN",
+			Scope:       scope,
+		}
+	}
+
+	// Extract network interface ID from ARN
+	// ARN format: arn:aws:ec2:region:account:network-interface/eni-xxx
+	if arn.Type() == "network-interface" {
+		return &ec2.DescribeNetworkInterfacesInput{
+			NetworkInterfaceIds: []string{arn.ResourceID()},
+		}, nil
+	}
+
+	return nil, &sdp.QueryError{
+		ErrorType:   sdp.QueryError_NOTFOUND,
+		ErrorString: "unsupported ARN type for network interface search",
+		Scope:       scope,
+	}
 }
 
 func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.DescribeNetworkInterfacesInput, output *ec2.DescribeNetworkInterfacesOutput) ([]*sdp.Item, error) {
@@ -252,8 +294,9 @@ func NewEC2NetworkInterfaceAdapter(client *ec2.Client, accountID string, region 
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) (*ec2.DescribeNetworkInterfacesOutput, error) {
 			return client.DescribeNetworkInterfaces(ctx, input)
 		},
-		InputMapperGet:  networkInterfaceInputMapperGet,
-		InputMapperList: networkInterfaceInputMapperList,
+		InputMapperGet:    networkInterfaceInputMapperGet,
+		InputMapperList:   networkInterfaceInputMapperList,
+		InputMapperSearch: networkInterfaceInputMapperSearch,
 		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeNetworkInterfacesInput) adapterhelpers.Paginator[*ec2.DescribeNetworkInterfacesOutput, *ec2.Options] {
 			return ec2.NewDescribeNetworkInterfacesPaginator(client, params)
 		},
@@ -270,7 +313,7 @@ var networkInterfaceAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 		Search:            true,
 		GetDescription:    "Get a network interface by ID",
 		ListDescription:   "List all network interfaces",
-		SearchDescription: "Search network interfaces by ARN",
+		SearchDescription: "Search network interfaces by ARN or security group ID (sg-*)",
 	},
 	PotentialLinks: []string{"ec2-instance", "ec2-security-group", "ip", "dns", "ec2-subnet", "ec2-vpc"},
 	TerraformMappings: []*sdp.TerraformMapping{

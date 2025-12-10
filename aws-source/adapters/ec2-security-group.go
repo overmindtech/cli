@@ -64,6 +64,27 @@ func securityGroupOutputMapper(_ context.Context, _ *ec2.Client, scope string, _
 			})
 		}
 
+		// Network Interfaces using this security group
+		// This enables blast radius propagation from security groups to
+		// instances via their network interfaces
+		if securityGroup.GroupId != nil {
+			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   "ec2-network-interface",
+					Method: sdp.QueryMethod_SEARCH,
+					Query:  *securityGroup.GroupId,
+					Scope:  scope,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Network interfaces don't affect the security group
+					In: false,
+					// Changes to the security group affect network interfaces
+					// (and through them, EC2 instances)
+					Out: true,
+				},
+			})
+		}
+
 		item.LinkedItemQueries = append(item.LinkedItemQueries, extractLinkedSecurityGroups(securityGroup.IpPermissions, scope)...)
 		item.LinkedItemQueries = append(item.LinkedItemQueries, extractLinkedSecurityGroups(securityGroup.IpPermissionsEgress, scope)...)
 
@@ -108,7 +129,7 @@ var securityGroupAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 		ListDescription:   "List all security groups",
 		SearchDescription: "Search for security groups by ARN",
 	},
-	PotentialLinks: []string{"ec2-vpc"},
+	PotentialLinks: []string{"ec2-vpc", "ec2-network-interface"},
 	TerraformMappings: []*sdp.TerraformMapping{
 		{TerraformQueryMap: "aws_security_group.id"},
 		{TerraformQueryMap: "aws_security_group_rule.security_group_id"},
