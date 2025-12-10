@@ -20,4 +20,7 @@ var (
 	//Storage item types
 	StorageAccount       = shared.NewItemType(Azure, Storage, Account)
 	StorageBlobContainer = shared.NewItemType(Azure, Storage, BlobContainer)
+	StorageFileShare     = shared.NewItemType(Azure, Storage, FileShare)
+	StorageTable         = shared.NewItemType(Azure, Storage, Table)
+	StorageQueue         = shared.NewItemType(Azure, Storage, Queue)
 )
