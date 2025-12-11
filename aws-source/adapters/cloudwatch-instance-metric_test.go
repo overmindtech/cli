@@ -215,14 +215,14 @@ func TestMetricOutputMapper(t *testing.T) {
 	if attrMap["CPUUtilization"].(float64) != 45.5 {
 		t.Errorf("expected CPUUtilization 45.5, got %v", attrMap["CPUUtilization"])
 	}
-	if attrMap["CPUUtilization_Formatted"] != "45.50% (avg over 15 min)" {
-		t.Errorf("expected CPUUtilization_Formatted '45.50%% (avg over 15 min)', got %v", attrMap["CPUUtilization_Formatted"])
+	if attrMap["CPUUtilization_Formatted"] != "45.50%" {
+		t.Errorf("expected CPUUtilization_Formatted '45.50%%', got %v", attrMap["CPUUtilization_Formatted"])
 	}
 	if attrMap["NetworkIn"].(float64) != 1024.0 {
 		t.Errorf("expected NetworkIn 1024.0, got %v", attrMap["NetworkIn"])
 	}
-	if attrMap["NetworkIn_Formatted"] != "1.00 KB/s (avg over 15 min)" {
-		t.Errorf("expected NetworkIn_Formatted '1.00 KB/s (avg over 15 min)', got %v", attrMap["NetworkIn_Formatted"])
+	if attrMap["NetworkIn_Formatted"] != "1.00 KB/s" {
+		t.Errorf("expected NetworkIn_Formatted '1.00 KB/s', got %v", attrMap["NetworkIn_Formatted"])
 	}
 
 	// Verify metadata about the averaging period
