@@ -237,8 +237,6 @@ func (cp *ChangeProperties) ToMap() map[string]any {
 		"codeChanges":               cp.GetCodeChanges(),
 		"repo":                      cp.GetRepo(),
 		"tags":                      cp.GetEnrichedTags(),
-		"autoTaggingRuleSource":     cp.GetAutoTaggingRuleSource().ToMessage(),
-		"skippedAutoTags":           cp.GetSkippedAutoTags(),
 	}
 }
 
@@ -280,88 +278,6 @@ func (s EndChangeResponse_State) ToMessage() string {
 	default:
 		return "unknown"
 	}
-}
-
-func (s ChangeProperties_AutoTaggingRuleSource) ToMessage() string {
-	switch s {
-	case ChangeProperties_AUTO_TAGGING_RULE_SOURCE_UNSPECIFIED:
-		return "unknown"
-	case ChangeProperties_AUTO_TAGGING_RULE_SOURCE_FILE:
-		return "file"
-	case ChangeProperties_AUTO_TAGGING_RULE_SOURCE_UI:
-		return "ui"
-	default:
-		return "unknown"
-	}
-}
-
-// allow custom auto tag rules to be passed on the cli, via a yaml file
-//
-// rules:
-//   - name: Rule1
-//     tag_key: "tag1"
-//     enabled: true
-//     instructions: "This is the instruction for Rule1"
-//     valid_values: ["value1 with a space ", "value2"]
-//   - name: Rule2
-//     tag_key: "tag2"
-//     enabled: false
-//     instructions: "This is the instruction for Rule2"
-//     valid_values: []
-//   - name: "Rule3 with spaces"
-//     tag_key: "tag3"
-//     enabled: true
-//     instructions: "This is the instruction for Rule3"
-//     valid_values: ["value3", "value4", "value5"]
-//   - name: "Rule4"
-//     tag_key: "tag4"
-//     enabled: true
-//     instructions: "This is the instruction for Rule4"
-//     valid_values:
-//     ____- "value6"
-//     ____- "value7"
-//     ____- "value8"
-//
-// ____ are spaces above ^ formatter doesn't like spaces in the comment
-// NB - the valid_values yaml is valid for a []strings or entries with a single string
-// this is used by the cli for unmarshalling a file to rule properties
-// and by the api server to marshal the rules from the database to yaml on export
-type AutoTaggingRulesYaml struct {
-	Rules []AutoTaggingRuleYAML `yaml:"rules"`
-}
-
-type AutoTaggingRuleYAML struct {
-	Name         string   `yaml:"name"`
-	TagKey       string   `yaml:"tag_key"`
-	Enabled      bool     `yaml:"enabled"`
-	Instructions string   `yaml:"instructions"`
-	ValidValues  []string `yaml:"valid_values"`
-}
-
-// YamlStringToRuleProperties converts a yaml string to a slice of RuleProperties
-func YamlStringToRuleProperties(yamlString string) ([]*RuleProperties, error) {
-	var rulesYaml AutoTaggingRulesYaml
-	err := yaml.Unmarshal([]byte(yamlString), &rulesYaml)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling yaml to rules: %w", err)
-	}
-	if len(rulesYaml.Rules) == 0 {
-		return nil, errors.New("no rules found in yaml")
-	}
-
-	var rules []*RuleProperties
-	for _, ruleYaml := range rulesYaml.Rules {
-		rule := &RuleProperties{
-			Name:         ruleYaml.Name,
-			TagKey:       ruleYaml.TagKey,
-			Enabled:      ruleYaml.Enabled,
-			Instructions: ruleYaml.Instructions,
-			ValidValues:  ruleYaml.ValidValues,
-		}
-		rules = append(rules, rule)
-	}
-
-	return rules, nil
 }
 
 // RoutineChangesYAML represents the YAML structure for routine changes configuration.
