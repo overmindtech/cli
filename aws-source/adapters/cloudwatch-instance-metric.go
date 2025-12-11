@@ -99,10 +99,10 @@ func formatOpsPerSecond(opsPerSec float64) string {
 func formatMetricValue(metricName string, value float64) string {
 	switch metricName {
 	case "CPUUtilization":
-		return fmt.Sprintf("%.2f%% (avg over 15 min)", value)
+		return fmt.Sprintf("%.2f%%", value)
 	case "NetworkIn", "NetworkOut":
 		// These are average bytes per second over the 15-minute period
-		return formatBytesPerSecond(value) + " (avg over 15 min)"
+		return formatBytesPerSecond(value)
 	case "StatusCheckFailed":
 		// This is a count (0 or 1), show as boolean-like
 		if value == 0 {
@@ -111,12 +111,12 @@ func formatMetricValue(metricName string, value float64) string {
 		return "Failed"
 	case "CPUCreditBalance", "CPUCreditUsage":
 		// These are counts of credits
-		return fmt.Sprintf("%.2f credits (avg over 15 min)", value)
+		return fmt.Sprintf("%.2f credits", value)
 	case "DiskReadOps", "DiskWriteOps":
 		// These are average operations per second over the 15-minute period
-		return formatOpsPerSecond(value) + " (avg over 15 min)"
+		return formatOpsPerSecond(value)
 	default:
-		return fmt.Sprintf("%.2f (avg over 15 min)", value)
+		return fmt.Sprintf("%.2f", value)
 	}
 }
 
