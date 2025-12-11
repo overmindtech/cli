@@ -89,6 +89,7 @@ fetch:
 		}
 		timeLine = rawTimeLine.Msg
 		for _, entry := range timeLine.GetEntries() {
+			// ENG-1993: This is temporary to still track the auto tagging entry in the timeline. this is to prevent the cli from hanging
 			if entry.GetName() == string(sdp.ChangeTimelineEntryV2NameAutoTagging) && entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
 				break fetch
 			}

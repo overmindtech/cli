@@ -374,6 +374,7 @@ retryLoop:
 				milestoneSpinners[i].Fail(fmt.Sprintf("Unknown status: %v", entry.GetStatus()))
 			}
 
+			// ENG-1993: This is temporary to still track the auto tagging entry in the timeline. this is to prevent the cli from hanging
 			// check if change analysis is done
 			if entry.GetName() == string(sdp.ChangeTimelineEntryV2NameAutoTagging) && entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
 				changeAnalysisSpinner.Success()
