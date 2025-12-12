@@ -97,6 +97,12 @@ func PreRunSetup(cmd *cobra.Command, args []string) {
 		attribute.String("ovm.config", fmt.Sprintf("%v", tracedSettings())),
 	))
 	cmd.SetContext(ctx)
+
+	// Check for CLI version updates (non-blocking with timeout)
+	// Run in goroutine to avoid blocking command execution
+	// Use command context so the check is cancelled when command completes
+	currentVersion := tracing.Version()
+	go displayVersionWarning(ctx, currentVersion)
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
