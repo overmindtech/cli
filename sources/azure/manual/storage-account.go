@@ -87,7 +87,7 @@ func (s storageAccountWrapper) Get(ctx context.Context, queryParts ...string) (*
 }
 
 func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.Account, accountName string) (*sdp.Item, *sdp.QueryError) {
-	attributes, err := shared.ToAttributesWithExclude(account)
+	attributes, err := shared.ToAttributesWithExclude(account, "tags")
 	if err != nil {
 		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
 	}

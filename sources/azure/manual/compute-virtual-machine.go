@@ -51,6 +51,8 @@ func (c computeVirtualMachineWrapper) PotentialLinks() map[shared.ItemType]bool 
 		azureshared.NetworkPublicIPAddress,
 		azureshared.NetworkNetworkSecurityGroup,
 		azureshared.ComputeAvailabilitySet,
+		azureshared.ComputeVirtualMachineExtension,
+		azureshared.ComputeVirtualMachineRunCommand,
 	)
 }
 
@@ -263,6 +265,45 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 				},
 			})
 		}
+	}
+
+	// Link to extensions
+	// Reference: https://learn.microsoft.com/en-us/rest/api/compute/virtual-machine-extensions/list
+	if vm.Resources != nil {
+		for _, extension := range vm.Resources {
+			if extension.Name != nil {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   azureshared.ComputeVirtualMachineExtension.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  shared.CompositeLookupKey(*vm.Name, *extension.Name),
+						Scope:  c.DefaultScope(),
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  false, //If Extensions are deleted → VM remains functional (In: false)
+						Out: true,  //If VM is deleted → Extensions become invalid/unusable (Out: true)
+					},
+				})
+			}
+		}
+	}
+
+	// Link to run commands
+	//Reference: https://learn.microsoft.com/en-us/rest/api/compute/virtual-machine-run-commands/list-by-virtual-machine?view=rest-compute-2025-04-01&tabs=HTTP
+	// GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/virtualMachines/{vmName}/runCommands?api-version=2025-04-01
+	if vm.Name != nil {
+		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   azureshared.ComputeVirtualMachineRunCommand.String(),
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  *vm.Name,
+				Scope:  c.DefaultScope(),
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  false, //If Run Commands are deleted → VM remains functional (In: false)
+				Out: true,  //If VM is deleted → Run Commands become invalid/unusable (Out: true)
+			},
+		})
 	}
 
 	// Map provisioning state to health status

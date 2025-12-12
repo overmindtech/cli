@@ -17,6 +17,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -218,19 +219,48 @@ func TestComputeVirtualMachineIntegration(t *testing.T) {
 				t.Fatalf("Expected no error, got: %v", qErr)
 			}
 
-			// Verify that linked items exist (OS disk and NIC should be linked)
+			// Verify that linked items exist (OS disk, NIC, run commands should be linked)
 			linkedQueries := sdpItem.GetLinkedItemQueries()
 			if len(linkedQueries) == 0 {
 				t.Fatalf("Expected linked item queries, but got none")
 			}
 
-			var hasDiskLink, hasNICLink bool
+			var hasDiskLink, hasNICLink, hasRunCommandLink bool
 			for _, liq := range linkedQueries {
 				switch liq.GetQuery().GetType() {
 				case azureshared.ComputeDisk.String():
 					hasDiskLink = true
 				case azureshared.NetworkNetworkInterface.String():
 					hasNICLink = true
+				case azureshared.ComputeVirtualMachineRunCommand.String():
+					hasRunCommandLink = true
+					// Verify run command link properties
+					if liq.GetQuery().GetMethod() != sdp.QueryMethod_SEARCH {
+						t.Errorf("Expected run command link method to be SEARCH, got %s", liq.GetQuery().GetMethod())
+					}
+					if liq.GetQuery().GetQuery() != integrationTestVMName {
+						t.Errorf("Expected run command link query to be %s, got %s", integrationTestVMName, liq.GetQuery().GetQuery())
+					}
+					// Verify blast propagation (In: false, Out: true)
+					if liq.GetBlastPropagation().GetIn() != false {
+						t.Error("Expected run command blast propagation In=false, got true")
+					}
+					if liq.GetBlastPropagation().GetOut() != true {
+						t.Error("Expected run command blast propagation Out=true, got false")
+					}
+				case azureshared.ComputeVirtualMachineExtension.String():
+					// Extensions may or may not be present depending on VM setup
+					// Verify extension link properties if present
+					if liq.GetQuery().GetMethod() != sdp.QueryMethod_GET {
+						t.Errorf("Expected extension link method to be GET, got %s", liq.GetQuery().GetMethod())
+					}
+					// Verify blast propagation (In: false, Out: true)
+					if liq.GetBlastPropagation().GetIn() != false {
+						t.Error("Expected extension blast propagation In=false, got true")
+					}
+					if liq.GetBlastPropagation().GetOut() != true {
+						t.Error("Expected extension blast propagation Out=true, got false")
+					}
 				}
 			}
 
@@ -240,6 +270,11 @@ func TestComputeVirtualMachineIntegration(t *testing.T) {
 
 			if !hasNICLink {
 				t.Error("Expected linked query to network interface, but didn't find one")
+			}
+
+			// Run commands link should always be present (even if no run commands exist)
+			if !hasRunCommandLink {
+				t.Error("Expected linked query to run commands, but didn't find one")
 			}
 
 			log.Printf("Verified %d linked item queries for VM %s", len(linkedQueries), integrationTestVMName)

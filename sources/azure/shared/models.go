@@ -25,9 +25,11 @@ const (
 // These represent the actual resource types within each Azure resource provider
 const (
 	// Compute resources
-	VirtualMachine  shared.Resource = "virtual-machine"
-	Disk            shared.Resource = "disk"
-	AvailabilitySet shared.Resource = "availability-set"
+	VirtualMachine           shared.Resource = "virtual-machine"
+	Disk                     shared.Resource = "disk"
+	AvailabilitySet          shared.Resource = "availability-set"
+	VirtualMachineExtension  shared.Resource = "virtual-machine-extension"
+	VirtualMachineRunCommand shared.Resource = "virtual-machine-run-command"
 
 	// Network resources
 	VirtualNetwork       shared.Resource = "virtual-network"

@@ -111,6 +111,28 @@ func TestComputeVirtualMachine(t *testing.T) {
 						Out: false,
 					},
 				},
+				{
+					// Resources[0] (VM Extension) - uses composite lookup key
+					ExpectedType:   azureshared.ComputeVirtualMachineExtension.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  shared.CompositeLookupKey(vmName, "CustomScriptExtension"),
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  false,
+						Out: true,
+					},
+				},
+				{
+					// Run commands - always linked via SEARCH
+					ExpectedType:   azureshared.ComputeVirtualMachineRunCommand.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  vmName,
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  false,
+						Out: true,
+					},
+				},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -354,6 +376,13 @@ func createAzureVirtualMachine(vmName, provisioningState string) *armcompute.Vir
 			},
 			AvailabilitySet: &armcompute.SubResource{
 				ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/availabilitySets/test-avset"),
+			},
+		},
+		// Add VM extensions to Resources
+		Resources: []*armcompute.VirtualMachineExtension{
+			{
+				Name: to.Ptr("CustomScriptExtension"),
+				Type: to.Ptr("Microsoft.Compute/virtualMachines/extensions"),
 			},
 		},
 	}
