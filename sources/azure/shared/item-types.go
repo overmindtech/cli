@@ -7,9 +7,11 @@ import "github.com/overmindtech/cli/sources/shared"
 // to create unique item type identifiers following the pattern: azure-{api}-{resource}
 var (
 	// Compute item types
-	ComputeVirtualMachine  = shared.NewItemType(Azure, Compute, VirtualMachine)
-	ComputeDisk            = shared.NewItemType(Azure, Compute, Disk)
-	ComputeAvailabilitySet = shared.NewItemType(Azure, Compute, AvailabilitySet)
+	ComputeVirtualMachine           = shared.NewItemType(Azure, Compute, VirtualMachine)
+	ComputeDisk                     = shared.NewItemType(Azure, Compute, Disk)
+	ComputeAvailabilitySet          = shared.NewItemType(Azure, Compute, AvailabilitySet)
+	ComputeVirtualMachineExtension  = shared.NewItemType(Azure, Compute, VirtualMachineExtension)
+	ComputeVirtualMachineRunCommand = shared.NewItemType(Azure, Compute, VirtualMachineRunCommand)
 
 	// Network item types
 	NetworkVirtualNetwork       = shared.NewItemType(Azure, Network, VirtualNetwork)
