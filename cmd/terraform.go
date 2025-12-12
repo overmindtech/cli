@@ -32,6 +32,10 @@ func init() {
 	rootCmd.AddCommand(terraformCmd)
 
 	addChangeCreationFlags(terraformCmd)
+
+	// hidden flag to enable Azure preview support
+	terraformCmd.PersistentFlags().Bool("enable-azure-preview", false, "Enable Azure source support (preview feature).")
+	terraformCmd.PersistentFlags().MarkHidden("enable-azure-preview") //nolint:errcheck // not possible to error
 }
 
 var applyOnlyArgs = []string{

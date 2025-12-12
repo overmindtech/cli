@@ -20,6 +20,7 @@ import (
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	azureproc "github.com/overmindtech/cli/sources/azure/proc"
 	gcpproc "github.com/overmindtech/cli/sources/gcp/proc"
 	stdlibSource "github.com/overmindtech/cli/stdlib-source/adapters"
 	"github.com/overmindtech/cli/tracing"
@@ -43,6 +44,7 @@ The CLI automatically discovers and uses:
 - Falls back to default cloud provider credentials if no Terraform providers are found
 
 For GCP, ensure you have appropriate permissions (roles/browser or equivalent) to access project metadata.`,
+
 	PreRun: PreRunSetup,
 	RunE:   Explore,
 
@@ -53,7 +55,8 @@ For GCP, ensure you have appropriate permissions (roles/browser or equivalent) t
 // any query or request during the runtime of the CLI. for proper cleanup,
 // execute the returned function. The method returns once the sources are
 // started. Progress is reported into the provided multi printer.
-func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oauth2.Token, tfArgs []string, failOverToDefaultLoginCfg bool) (func(), error) {
+// If enableAzurePreview is true, Azure source support is enabled (preview feature).
+func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oauth2.Token, tfArgs []string, failOverToDefaultLoginCfg bool, enableAzurePreview bool) (func(), error) {
 	var err error
 
 	// Default to recursive search unless --no-recursion is set
@@ -104,6 +107,10 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 	stdlibSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting stdlib source engine")
 	awsSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting AWS source engine")
 	gcpSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting GCP source engine")
+	var azureSpinner *pterm.SpinnerPrinter
+	if enableAzurePreview {
+		azureSpinner, _ = pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting Azure source engine")
+	}
 	statusArea := pterm.DefaultParagraph.WithWriter(multi.NewWriter())
 
 	foundCloudProvider := false
@@ -347,13 +354,149 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 		return gcpEngines, nil
 	})
 
+	if enableAzurePreview {
+		p.Go(func() ([]*discovery.Engine, error) {
+			// Parse Azure providers from Terraform configuration
+			tfEval, err := tfutils.LoadEvalContext(tfArgs, os.Environ())
+			if err != nil {
+				azureSpinner.Fail("Failed to load variables from the environment for Azure")
+				return nil, fmt.Errorf("failed to load variables from the environment for Azure: %w", err)
+			}
+
+			azureProviders, err := tfutils.ParseAzureProviders(".", tfEval, tfRecursive)
+			if err != nil {
+				azureSpinner.Fail("Failed to parse Azure providers")
+				return nil, fmt.Errorf("failed to parse Azure providers: %w", err)
+			}
+
+			if len(azureProviders) == 0 && !failOverToDefaultLoginCfg {
+				azureSpinner.Warning("No Azure terraform providers found, skipping Azure source initialization.")
+				return nil, nil // skip Azure if there are no providers
+			}
+
+			// Process Azure providers and extract configurations
+			azureConfigs := []*azureproc.AzureConfig{}
+
+			for _, p := range azureProviders {
+				if p.Error != nil {
+					statusArea.Println(fmt.Sprintf("Skipping Azure provider in %s: %s", p.FilePath, p.Error.Error()))
+					continue
+				}
+
+				config, err := tfutils.ConfigFromAzureProvider(*p.Provider)
+				if err != nil {
+					statusArea.Println(fmt.Sprintf("Error configuring Azure provider in %s: %s", p.FilePath, err.Error()))
+					continue
+				}
+
+				azureConfigs = append(azureConfigs, &azureproc.AzureConfig{
+					SubscriptionID: config.SubscriptionID,
+					TenantID:       config.TenantID,
+					ClientID:       config.ClientID,
+				})
+
+				aliasInfo := ""
+				if config.Alias != "" {
+					aliasInfo = fmt.Sprintf(" (alias: %s)", config.Alias)
+				}
+				statusArea.Println(fmt.Sprintf("Using Azure provider in %s with subscription %s%s.", p.FilePath, config.SubscriptionID, aliasInfo))
+			}
+
+			azureConfigs = unifiedAzureConfigs(azureConfigs)
+
+			// Fallback to environment variables if no terraform providers found
+			// Azure requires subscription_id at minimum, unlike GCP which can discover project from ADC
+			// Check ARM_* first (Terraform Azure provider convention), then AZURE_* (Azure SDK convention)
+			if len(azureConfigs) == 0 && failOverToDefaultLoginCfg {
+				azureSubscriptionID := os.Getenv("ARM_SUBSCRIPTION_ID")
+				if azureSubscriptionID == "" {
+					azureSubscriptionID = os.Getenv("AZURE_SUBSCRIPTION_ID")
+				}
+				if azureSubscriptionID == "" {
+					azureSpinner.Warning("No Azure terraform providers found and ARM_SUBSCRIPTION_ID/AZURE_SUBSCRIPTION_ID not set, skipping Azure source initialization.")
+					return nil, nil
+				}
+
+				azureTenantID := os.Getenv("ARM_TENANT_ID")
+				if azureTenantID == "" {
+					azureTenantID = os.Getenv("AZURE_TENANT_ID")
+				}
+				azureClientID := os.Getenv("ARM_CLIENT_ID")
+				if azureClientID == "" {
+					azureClientID = os.Getenv("AZURE_CLIENT_ID")
+				}
+
+				statusArea.Println("No Azure terraform providers found. Using Azure credentials from environment (az login or environment variables).")
+				azureConfigs = append(azureConfigs, &azureproc.AzureConfig{
+					SubscriptionID: azureSubscriptionID,
+					TenantID:       azureTenantID,
+					ClientID:       azureClientID,
+				})
+			}
+
+			if len(azureConfigs) == 0 {
+				azureSpinner.Warning("No valid Azure terraform providers found, skipping Azure source initialization.")
+				return nil, nil // skip Azure if there are no valid configurations
+			}
+
+			// Start multiple Azure engines for each configuration
+			azureEngines := []*discovery.Engine{}
+			for i, azureConfig := range azureConfigs {
+				engineSuffix := ""
+				if len(azureConfigs) > 1 {
+					engineSuffix = fmt.Sprintf("-%d", i)
+				}
+
+				ec := discovery.EngineConfig{
+					EngineType:            "cli-azure",
+					Version:               fmt.Sprintf("cli-%v", tracing.Version()),
+					SourceName:            fmt.Sprintf("azure-source-%v%s", hostname, engineSuffix),
+					SourceUUID:            uuid.New(),
+					App:                   oi.ApiUrl.Host,
+					ApiKey:                token.AccessToken,
+					MaxParallelExecutions: 2_000,
+					NATSOptions:           &natsOpts,
+					HeartbeatOptions:      heartbeatOptions(oi, token),
+				}
+
+				azureEngine, err := azureproc.Initialize(ctx, &ec, azureConfig)
+				if err != nil {
+					statusArea.Println(fmt.Sprintf("Failed to initialize Azure source for subscription %s: %s", azureConfig.SubscriptionID, err.Error()))
+					continue // Skip this engine but continue with others
+				}
+
+				err = azureEngine.Start() //nolint:contextcheck
+				if err != nil {
+					statusArea.Println(fmt.Sprintf("Failed to start Azure source for subscription %s: %s", azureConfig.SubscriptionID, err.Error()))
+					continue // Skip this engine but continue with others
+				}
+
+				azureEngines = append(azureEngines, azureEngine)
+			}
+
+			if len(azureEngines) == 0 {
+				azureSpinner.Fail("Failed to initialize any Azure source engines")
+				return nil, nil // skip Azure if there are no valid configurations
+			}
+
+			if len(azureEngines) == 1 {
+				azureSpinner.Success("Azure source engine started")
+			} else {
+				azureSpinner.Success(fmt.Sprintf("%d Azure source engines started", len(azureEngines)))
+			}
+
+			foundCloudProvider = true
+			return azureEngines, nil
+		})
+	}
+
 	engines, err := p.Wait()
 	if err != nil {
 		return func() {}, fmt.Errorf("error starting sources: %w", err)
 	}
 
 	if !foundCloudProvider {
-		statusArea.Println(`No cloud providers found in Terraform configuration.
+		noCloudProviderMsg := `No cloud providers found in Terraform configuration.
 
 The Overmind CLI requires access to cloud provider configurations to interrogate resources. Without configured providers, the CLI cannot determine which cloud resources to query and as a result calculate a successful blast radius.
 
@@ -361,7 +504,21 @@ To resolve this issue ensure your Terraform configuration files define at least 
 
 For more information about configuring cloud providers in Terraform, visit:
 - AWS: https://registry.terraform.io/providers/hashicorp/aws/latest/docs
-- GCP: https://registry.terraform.io/providers/hashicorp/google/latest/docs`)
+- GCP: https://registry.terraform.io/providers/hashicorp/google/latest/docs`
+
+		if enableAzurePreview {
+			noCloudProviderMsg = `No cloud providers found in Terraform configuration.
+
+The Overmind CLI requires access to cloud provider configurations to interrogate resources. Without configured providers, the CLI cannot determine which cloud resources to query and as a result calculate a successful blast radius.
+
+To resolve this issue ensure your Terraform configuration files define at least one supported cloud provider (e.g., AWS, GCP, Azure)
+
+For more information about configuring cloud providers in Terraform, visit:
+- AWS: https://registry.terraform.io/providers/hashicorp/aws/latest/docs
+- Azure: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs
+- GCP: https://registry.terraform.io/providers/hashicorp/google/latest/docs`
+		}
+		statusArea.Println(noCloudProviderMsg)
 	}
 
 	// Return a cleanup function to stop all engines
@@ -391,7 +548,8 @@ func Explore(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cleanup, err := StartLocalSources(ctx, oi, token, args, true)
+	enableAzurePreview := viper.GetBool("enable-azure-preview")
+	cleanup, err := StartLocalSources(ctx, oi, token, args, true, enableAzurePreview)
 	if err != nil {
 		return err
 	}
@@ -429,6 +587,10 @@ func init() {
 	addAPIFlags(exploreCmd)
 	// flag to opt-out of recursion and only scan the current folder for *.tf files
 	exploreCmd.PersistentFlags().Bool("no-recursion", false, "Only scan the current directory for Terraform files (non-recursive).")
+
+	// hidden flag to enable Azure preview support
+	exploreCmd.PersistentFlags().Bool("enable-azure-preview", false, "Enable Azure source support (preview feature).")
+	exploreCmd.PersistentFlags().MarkHidden("enable-azure-preview") //nolint:errcheck // not possible to error
 }
 
 // unifiedGCPConfigs collates the given GCP configs by project ID.
@@ -460,6 +622,27 @@ func unifiedGCPConfigs(gcpConfigs []*gcpproc.GCPConfig) []*gcpproc.GCPConfig {
 		}
 		config.Regions = deDuplicatedRegions
 		config.Zones = deDuplicatedZones
+		unifiedConfigs = append(unifiedConfigs, config)
+	}
+
+	return unifiedConfigs
+}
+
+// unifiedAzureConfigs collates the given Azure configs by subscription ID.
+// If there are multiple configs for the same subscription ID, only the first is used
+// since Azure configs don't have regions/zones to merge.
+func unifiedAzureConfigs(azureConfigs []*azureproc.AzureConfig) []*azureproc.AzureConfig {
+	unified := make(map[string]*azureproc.AzureConfig)
+	for _, config := range azureConfigs {
+		if _, ok := unified[config.SubscriptionID]; !ok {
+			unified[config.SubscriptionID] = config
+		}
+		// For Azure, we don't merge configs - just use the first one for each subscription
+		// since there are no regions/zones to merge
+	}
+
+	unifiedConfigs := make([]*azureproc.AzureConfig, 0, len(unified))
+	for _, config := range unified {
 		unifiedConfigs = append(unifiedConfigs, config)
 	}
 
