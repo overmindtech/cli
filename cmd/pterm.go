@@ -78,7 +78,8 @@ func StartSources(ctx context.Context, cmd *cobra.Command, args []string) (conte
 	if viper.GetBool("only-use-managed-sources") {
 		return ctx, oi, token, nil, nil
 	}
-	cleanup, err := StartLocalSources(ctx, oi, token, args, false)
+	enableAzurePreview := viper.GetBool("enable-azure-preview")
+	cleanup, err := StartLocalSources(ctx, oi, token, args, false, enableAzurePreview)
 	if err != nil {
 		return ctx, sdp.OvermindInstance{}, nil, nil, err
 	}

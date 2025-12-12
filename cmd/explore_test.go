@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	azureproc "github.com/overmindtech/cli/sources/azure/proc"
 	gcpproc "github.com/overmindtech/cli/sources/gcp/proc"
 )
 
@@ -224,6 +225,151 @@ func TestUnifiedGCPConfigs(t *testing.T) {
 
 		if !reflect.DeepEqual(unifiedConfig.Zones, expectedZones) {
 			t.Fatalf("Unified zones don't match. Expected %v, got %v", expectedZones, unifiedConfig.Zones)
+		}
+	})
+}
+
+func TestUnifiedAzureConfigs(t *testing.T) {
+	t.Run("Multiple configs with different subscription IDs - no unification", func(t *testing.T) {
+		configs := []*azureproc.AzureConfig{
+			{
+				SubscriptionID: "00000000-0000-0000-0000-000000000001",
+				TenantID:       "tenant-1",
+				ClientID:       "client-1",
+			},
+			{
+				SubscriptionID: "00000000-0000-0000-0000-000000000002",
+				TenantID:       "tenant-2",
+				ClientID:       "client-2",
+			},
+			{
+				SubscriptionID: "00000000-0000-0000-0000-000000000003",
+				TenantID:       "tenant-3",
+				ClientID:       "client-3",
+			},
+		}
+
+		result := unifiedAzureConfigs(configs)
+
+		// Should have 3 configs (no unification since all subscription IDs are different)
+		if len(result) != 3 {
+			t.Fatalf("Expected 3 configs, got %d", len(result))
+		}
+
+		// Verify each subscription ID appears exactly once
+		subscriptionIDs := make(map[string]int)
+		for _, config := range result {
+			subscriptionIDs[config.SubscriptionID]++
+		}
+
+		expectedSubscriptions := []string{
+			"00000000-0000-0000-0000-000000000001",
+			"00000000-0000-0000-0000-000000000002",
+			"00000000-0000-0000-0000-000000000003",
+		}
+		for _, subID := range expectedSubscriptions {
+			if count, exists := subscriptionIDs[subID]; !exists || count != 1 {
+				t.Fatalf("Expected subscription %s to appear exactly once, got %d", subID, count)
+			}
+		}
+	})
+
+	t.Run("Same subscription ID multiple times - uses first config", func(t *testing.T) {
+		configs := []*azureproc.AzureConfig{
+			{
+				SubscriptionID: "00000000-0000-0000-0000-000000000001",
+				TenantID:       "tenant-first",
+				ClientID:       "client-first",
+			},
+			{
+				SubscriptionID: "00000000-0000-0000-0000-000000000001",
+				TenantID:       "tenant-second",
+				ClientID:       "client-second",
+			},
+			{
+				SubscriptionID: "00000000-0000-0000-0000-000000000002",
+				TenantID:       "tenant-different",
+				ClientID:       "client-different",
+			},
+		}
+
+		result := unifiedAzureConfigs(configs)
+
+		// Should have 2 configs (duplicate subscription ID removed)
+		if len(result) != 2 {
+			t.Fatalf("Expected 2 configs, got %d", len(result))
+		}
+
+		// Find the config for the duplicated subscription
+		var unifiedConfig *azureproc.AzureConfig
+		var differentConfig *azureproc.AzureConfig
+
+		for _, config := range result {
+			switch config.SubscriptionID {
+			case "00000000-0000-0000-0000-000000000001":
+				unifiedConfig = config
+			case "00000000-0000-0000-0000-000000000002":
+				differentConfig = config
+			}
+		}
+
+		if unifiedConfig == nil {
+			t.Fatal("Could not find config for subscription 00000000-0000-0000-0000-000000000001 in result")
+		}
+		if differentConfig == nil {
+			t.Fatal("Could not find config for subscription 00000000-0000-0000-0000-000000000002 in result")
+		}
+
+		// Verify the first config was kept (tenant-first, client-first)
+		if unifiedConfig.TenantID != "tenant-first" {
+			t.Fatalf("Expected tenant_id 'tenant-first', got %s", unifiedConfig.TenantID)
+		}
+		if unifiedConfig.ClientID != "client-first" {
+			t.Fatalf("Expected client_id 'client-first', got %s", unifiedConfig.ClientID)
+		}
+
+		// Verify the different subscription config is unchanged
+		if differentConfig.TenantID != "tenant-different" {
+			t.Fatalf("Expected tenant_id 'tenant-different', got %s", differentConfig.TenantID)
+		}
+		if differentConfig.ClientID != "client-different" {
+			t.Fatalf("Expected client_id 'client-different', got %s", differentConfig.ClientID)
+		}
+	})
+
+	t.Run("Empty configs", func(t *testing.T) {
+		configs := []*azureproc.AzureConfig{}
+
+		result := unifiedAzureConfigs(configs)
+
+		if len(result) != 0 {
+			t.Fatalf("Expected 0 configs, got %d", len(result))
+		}
+	})
+
+	t.Run("Single config", func(t *testing.T) {
+		configs := []*azureproc.AzureConfig{
+			{
+				SubscriptionID: "00000000-0000-0000-0000-000000000001",
+				TenantID:       "tenant-1",
+				ClientID:       "client-1",
+			},
+		}
+
+		result := unifiedAzureConfigs(configs)
+
+		if len(result) != 1 {
+			t.Fatalf("Expected 1 config, got %d", len(result))
+		}
+
+		if result[0].SubscriptionID != "00000000-0000-0000-0000-000000000001" {
+			t.Fatalf("Expected subscription_id '00000000-0000-0000-0000-000000000001', got %s", result[0].SubscriptionID)
+		}
+		if result[0].TenantID != "tenant-1" {
+			t.Fatalf("Expected tenant_id 'tenant-1', got %s", result[0].TenantID)
+		}
+		if result[0].ClientID != "client-1" {
+			t.Fatalf("Expected client_id 'client-1', got %s", result[0].ClientID)
 		}
 	})
 }
