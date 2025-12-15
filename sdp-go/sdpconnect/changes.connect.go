@@ -94,6 +94,9 @@ const (
 	// ChangesServiceGenerateRiskFixProcedure is the fully-qualified name of the ChangesService's
 	// GenerateRiskFix RPC.
 	ChangesServiceGenerateRiskFixProcedure = "/changes.ChangesService/GenerateRiskFix"
+	// ChangesServiceGetHypothesesDetailsProcedure is the fully-qualified name of the ChangesService's
+	// GetHypothesesDetails RPC.
+	ChangesServiceGetHypothesesDetailsProcedure = "/changes.ChangesService/GetHypothesesDetails"
 	// LabelServiceListLabelRulesProcedure is the fully-qualified name of the LabelService's
 	// ListLabelRules RPC.
 	LabelServiceListLabelRulesProcedure = "/changes.LabelService/ListLabelRules"
@@ -171,6 +174,9 @@ type ChangesServiceClient interface {
 	PopulateChangeFilters(context.Context, *connect.Request[sdp_go.PopulateChangeFiltersRequest]) (*connect.Response[sdp_go.PopulateChangeFiltersResponse], error)
 	// Generates an AI-powered fix suggestion for a specific risk
 	GenerateRiskFix(context.Context, *connect.Request[sdp_go.GenerateRiskFixRequest]) (*connect.Response[sdp_go.GenerateRiskFixResponse], error)
+	// The full details of all of the hypotheses that were considered or are being
+	// considered as part of this change.
+	GetHypothesesDetails(context.Context, *connect.Request[sdp_go.GetHypothesesDetailsRequest]) (*connect.Response[sdp_go.GetHypothesesDetailsResponse], error)
 }
 
 // NewChangesServiceClient constructs a client for the changes.ChangesService service. By default,
@@ -304,6 +310,12 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(changesServiceMethods.ByName("GenerateRiskFix")),
 			connect.WithClientOptions(opts...),
 		),
+		getHypothesesDetails: connect.NewClient[sdp_go.GetHypothesesDetailsRequest, sdp_go.GetHypothesesDetailsResponse](
+			httpClient,
+			baseURL+ChangesServiceGetHypothesesDetailsProcedure,
+			connect.WithSchema(changesServiceMethods.ByName("GetHypothesesDetails")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -329,6 +341,7 @@ type changesServiceClient struct {
 	getDiff                   *connect.Client[sdp_go.GetDiffRequest, sdp_go.GetDiffResponse]
 	populateChangeFilters     *connect.Client[sdp_go.PopulateChangeFiltersRequest, sdp_go.PopulateChangeFiltersResponse]
 	generateRiskFix           *connect.Client[sdp_go.GenerateRiskFixRequest, sdp_go.GenerateRiskFixResponse]
+	getHypothesesDetails      *connect.Client[sdp_go.GetHypothesesDetailsRequest, sdp_go.GetHypothesesDetailsResponse]
 }
 
 // ListChanges calls changes.ChangesService.ListChanges.
@@ -431,6 +444,11 @@ func (c *changesServiceClient) GenerateRiskFix(ctx context.Context, req *connect
 	return c.generateRiskFix.CallUnary(ctx, req)
 }
 
+// GetHypothesesDetails calls changes.ChangesService.GetHypothesesDetails.
+func (c *changesServiceClient) GetHypothesesDetails(ctx context.Context, req *connect.Request[sdp_go.GetHypothesesDetailsRequest]) (*connect.Response[sdp_go.GetHypothesesDetailsResponse], error) {
+	return c.getHypothesesDetails.CallUnary(ctx, req)
+}
+
 // ChangesServiceHandler is an implementation of the changes.ChangesService service.
 type ChangesServiceHandler interface {
 	// Lists all changes
@@ -485,6 +503,9 @@ type ChangesServiceHandler interface {
 	PopulateChangeFilters(context.Context, *connect.Request[sdp_go.PopulateChangeFiltersRequest]) (*connect.Response[sdp_go.PopulateChangeFiltersResponse], error)
 	// Generates an AI-powered fix suggestion for a specific risk
 	GenerateRiskFix(context.Context, *connect.Request[sdp_go.GenerateRiskFixRequest]) (*connect.Response[sdp_go.GenerateRiskFixResponse], error)
+	// The full details of all of the hypotheses that were considered or are being
+	// considered as part of this change.
+	GetHypothesesDetails(context.Context, *connect.Request[sdp_go.GetHypothesesDetailsRequest]) (*connect.Response[sdp_go.GetHypothesesDetailsResponse], error)
 }
 
 // NewChangesServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -614,6 +635,12 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 		connect.WithSchema(changesServiceMethods.ByName("GenerateRiskFix")),
 		connect.WithHandlerOptions(opts...),
 	)
+	changesServiceGetHypothesesDetailsHandler := connect.NewUnaryHandler(
+		ChangesServiceGetHypothesesDetailsProcedure,
+		svc.GetHypothesesDetails,
+		connect.WithSchema(changesServiceMethods.ByName("GetHypothesesDetails")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/changes.ChangesService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ChangesServiceListChangesProcedure:
@@ -656,6 +683,8 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 			changesServicePopulateChangeFiltersHandler.ServeHTTP(w, r)
 		case ChangesServiceGenerateRiskFixProcedure:
 			changesServiceGenerateRiskFixHandler.ServeHTTP(w, r)
+		case ChangesServiceGetHypothesesDetailsProcedure:
+			changesServiceGetHypothesesDetailsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -743,6 +772,10 @@ func (UnimplementedChangesServiceHandler) PopulateChangeFilters(context.Context,
 
 func (UnimplementedChangesServiceHandler) GenerateRiskFix(context.Context, *connect.Request[sdp_go.GenerateRiskFixRequest]) (*connect.Response[sdp_go.GenerateRiskFixResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GenerateRiskFix is not implemented"))
+}
+
+func (UnimplementedChangesServiceHandler) GetHypothesesDetails(context.Context, *connect.Request[sdp_go.GetHypothesesDetailsRequest]) (*connect.Response[sdp_go.GetHypothesesDetailsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetHypothesesDetails is not implemented"))
 }
 
 // LabelServiceClient is a client for the changes.LabelService service.
