@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -151,6 +152,67 @@ func TestAlarmOutputMapper(t *testing.T) {
 	}
 
 	tests.Execute(t, item)
+}
+
+// testCloudwatchClientWithTagError returns an error when fetching tags
+// to simulate scenarios where tag access is denied but alarm data is available
+type testCloudwatchClientWithTagError struct{}
+
+func (c testCloudwatchClientWithTagError) ListTagsForResource(ctx context.Context, params *cloudwatch.ListTagsForResourceInput, optFns ...func(*cloudwatch.Options)) (*cloudwatch.ListTagsForResourceOutput, error) {
+	return nil, fmt.Errorf("access denied: cannot list tags for resource")
+}
+
+func (c testCloudwatchClientWithTagError) DescribeAlarms(ctx context.Context, params *cloudwatch.DescribeAlarmsInput, optFns ...func(*cloudwatch.Options)) (*cloudwatch.DescribeAlarmsOutput, error) {
+	return nil, nil
+}
+
+func (c testCloudwatchClientWithTagError) DescribeAlarmsForMetric(ctx context.Context, params *cloudwatch.DescribeAlarmsForMetricInput, optFns ...func(*cloudwatch.Options)) (*cloudwatch.DescribeAlarmsForMetricOutput, error) {
+	return nil, nil
+}
+
+// TestAlarmOutputMapperWithTagError tests that items are still returned when
+// tag fetching fails. This is a regression test for a bug where a leftover
+// error check caused the mapper to return nil items when ListTagsForResource
+// failed, even though the alarm data was successfully retrieved.
+func TestAlarmOutputMapperWithTagError(t *testing.T) {
+	output := &cloudwatch.DescribeAlarmsOutput{
+		MetricAlarms: []types.MetricAlarm{
+			{
+				AlarmName:       adapterhelpers.PtrString("api-51c748b4-cpu-credits-low"),
+				AlarmArn:        adapterhelpers.PtrString("arn:aws:cloudwatch:eu-west-2:052392120703:alarm:api-51c748b4-cpu-credits-low"),
+				AlarmDescription: adapterhelpers.PtrString("CPU credits low alarm"),
+				StateValue:       types.StateValueOk,
+				MetricName:       adapterhelpers.PtrString("CPUCreditBalance"),
+				Namespace:        adapterhelpers.PtrString("AWS/EC2"),
+			},
+		},
+	}
+
+	scope := "123456789012.eu-west-2"
+	// Use the client that returns an error when fetching tags
+	items, err := alarmOutputMapper(context.Background(), testCloudwatchClientWithTagError{}, scope, &cloudwatch.DescribeAlarmsInput{}, output)
+
+	if err != nil {
+		t.Errorf("Expected no error when tag fetching fails, but got: %v", err)
+	}
+
+	if len(items) != 1 {
+		t.Fatalf("Expected 1 item to be returned even when tag fetching fails, got %d", len(items))
+	}
+
+	item := items[0]
+	if err = item.Validate(); err != nil {
+		t.Error(err)
+	}
+
+	// Verify the alarm name is correct
+	alarmName, err := item.GetAttributes().Get("AlarmName")
+	if err != nil {
+		t.Errorf("Failed to get AlarmName: %v", err)
+	}
+	if alarmName != "api-51c748b4-cpu-credits-low" {
+		t.Errorf("Expected AlarmName to be 'api-51c748b4-cpu-credits-low', got %v", alarmName)
+	}
 }
 
 func TestNewCloudwatchAlarmAdapter(t *testing.T) {
