@@ -99,10 +99,6 @@ func alarmOutputMapper(ctx context.Context, client CloudwatchClient, scope strin
 			tags = adapterhelpers.HandleTagsError(ctx, err)
 		}
 
-		if err != nil {
-			return nil, err
-		}
-
 		item := sdp.Item{
 			Type:            "cloudwatch-alarm",
 			UniqueAttribute: "AlarmName",
