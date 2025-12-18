@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"regexp"
 	"time"
 
 	"connectrpc.com/connect"
@@ -59,8 +60,10 @@ fetch:
 			}
 		}
 		timeLine := rawTimeLine.Msg
+		// Use a case-insensitive regex to match any entry containing "blast radius"
+		blastRadiusRegex := regexp.MustCompile(`(?i)blast\s+radius`)
 		for _, entry := range timeLine.GetEntries() {
-			if entry.GetName() == string(sdp.ChangeTimelineEntryV2NameCalculatedBlastRadius) {
+			if blastRadiusRegex.MatchString(entry.GetName()) {
 				if entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
 					break fetch
 				}

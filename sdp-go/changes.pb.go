@@ -4006,8 +4006,12 @@ type ChangeMetadata struct {
 	// Github change information
 	// contains information about the author from github
 	GithubChangeInfo *GithubChangeInfo `protobuf:"bytes,20,opt,name=githubChangeInfo,proto3" json:"githubChangeInfo,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// The total number of observations recorded for this change during blast radius analysis.
+	// This is null/undefined for legacy changes where observations were not tracked.
+	// This count increments immediately as observations are added, providing fast feedback.
+	TotalObservations *uint32 `protobuf:"varint,21,opt,name=total_observations,json=totalObservations,proto3,oneof" json:"total_observations,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *ChangeMetadata) Reset() {
@@ -4171,6 +4175,13 @@ func (x *ChangeMetadata) GetGithubChangeInfo() *GithubChangeInfo {
 		return x.GithubChangeInfo
 	}
 	return nil
+}
+
+func (x *ChangeMetadata) GetTotalObservations() uint32 {
+	if x != nil && x.TotalObservations != nil {
+		return *x.TotalObservations
+	}
+	return 0
 }
 
 // user-supplied properties of this change
@@ -6236,7 +6247,7 @@ const file_changes_proto_rawDesc = "" +
 	"\bmetadata\x18\x01 \x01(\v2\x17.changes.ChangeMetadataR\bmetadata\x129\n" +
 	"\n" +
 	"properties\x18\x02 \x01(\v2\x19.changes.ChangePropertiesR\n" +
-	"properties\"\x94\t\n" +
+	"properties\"\xdf\t\n" +
 	"\x0eChangeMetadata\x12\x12\n" +
 	"\x04UUID\x18\x01 \x01(\fR\x04UUID\x128\n" +
 	"\tcreatedAt\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x128\n" +
@@ -6257,13 +6268,15 @@ const file_changes_proto_rawDesc = "" +
 	"\x13WarningHealthChange\x18\x0e \x01(\v2$.changes.ChangeMetadata.HealthChangeR\x13WarningHealthChange\x12R\n" +
 	"\x11ErrorHealthChange\x18\x0f \x01(\v2$.changes.ChangeMetadata.HealthChangeR\x11ErrorHealthChange\x12V\n" +
 	"\x13PendingHealthChange\x18\x10 \x01(\v2$.changes.ChangeMetadata.HealthChangeR\x13PendingHealthChange\x12E\n" +
-	"\x10githubChangeInfo\x18\x14 \x01(\v2\x19.changes.GithubChangeInfoR\x10githubChangeInfo\x1a^\n" +
+	"\x10githubChangeInfo\x18\x14 \x01(\v2\x19.changes.GithubChangeInfoR\x10githubChangeInfo\x122\n" +
+	"\x12total_observations\x18\x15 \x01(\rH\x00R\x11totalObservations\x88\x01\x01\x1a^\n" +
 	"\fHealthChange\x12\x14\n" +
 	"\x05added\x18\x01 \x01(\x05R\x05added\x12\x18\n" +
 	"\aremoved\x18\x02 \x01(\x05R\aremoved\x12\x1e\n" +
 	"\n" +
 	"finalTotal\x18\x03 \x01(\x05R\n" +
-	"finalTotalJ\x04\b\x06\x10\a\"\x8c\x06\n" +
+	"finalTotalB\x15\n" +
+	"\x13_total_observationsJ\x04\b\x06\x10\a\"\x8c\x06\n" +
 	"\x10ChangeProperties\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1e\n" +
@@ -6798,6 +6811,7 @@ func file_changes_proto_init() {
 		(*TagValue_UserTagValue)(nil),
 		(*TagValue_AutoTagValue)(nil),
 	}
+	file_changes_proto_msgTypes[55].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

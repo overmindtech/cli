@@ -376,7 +376,7 @@ retryLoop:
 
 			// ENG-1993: This is temporary to still track the auto tagging entry in the timeline. this is to prevent the cli from hanging
 			// check if change analysis is done
-			if entry.GetName() == string(sdp.ChangeTimelineEntryV2NameAutoTagging) && entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
+			if entry.GetName() == sdp.ChangeTimelineEntryV2IDAutoTagging.Name && entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
 				changeAnalysisSpinner.Success()
 				break retryLoop
 			}
@@ -386,7 +386,7 @@ retryLoop:
 	}
 	var calculateRiskStep *sdp.ChangeTimelineEntryV2
 	for _, entry := range timeLine.GetEntries() {
-		if entry.GetName() == string(sdp.ChangeTimelineEntryV2NameCalculatedRisks) {
+		if entry.GetName() == sdp.ChangeTimelineEntryV2IDCalculatedRisks.Name {
 			calculateRiskStep = entry
 			break
 		}

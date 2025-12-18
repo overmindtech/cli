@@ -1,23 +1,92 @@
 package sdp
 
-type ChangeTimelineEntryV2Name string
-
 // If you add/delete/move an entry here, make sure to update/check the following:
 // - the PopulateChangeTimelineV2 function
 // - GetChangeTimelineV2 in api-server/server/changesservice.go
 // - resetChangeAnalysisTables in api-server/server/changeanalysis/shared.go
 // - the cli tool if we are waiting for a change analysis to finish
 // - frontend/src/features/changes-v2/change-timeline/ChangeTimeline.tsx - also update the entryNames object as this is used for comparing entry names
-const (
-	ChangeTimelineEntryV2NameChangeCreated         ChangeTimelineEntryV2Name = "Change Created"
-	ChangeTimelineEntryV2NameMappedResources       ChangeTimelineEntryV2Name = "Mapped Resources"
-	ChangeTimelineEntryV2NameCalculatedBlastRadius ChangeTimelineEntryV2Name = "Calculated Blast Radius"
-	ChangeTimelineEntryV2NameCalculatedRoutineness ChangeTimelineEntryV2Name = "Calculated Routineness"
-	ChangeTimelineEntryV2NameCalculatedRisks       ChangeTimelineEntryV2Name = "Calculated Risks"
-	ChangeTimelineEntryV2NameCalculatedLabels      ChangeTimelineEntryV2Name = "Calculated Labels"
-	// ENG-1993: This is temporary to still track the auto tagging entry in the timeline. this is to prevent the cli from hanging
-	ChangeTimelineEntryV2NameAutoTagging      ChangeTimelineEntryV2Name = "Auto Tagging"
-	ChangeTimelineEntryV2NameChangeValidation ChangeTimelineEntryV2Name = "Change Validation"
-	ChangeTimelineEntryV2NameChangeStarted    ChangeTimelineEntryV2Name = "Change Started"
-	ChangeTimelineEntryV2NameChangeFinished   ChangeTimelineEntryV2Name = "Change Finished"
+// All timeline entries are now defined using ChangeTimelineEntryV2ID variables below.
+// Use the .Label field for database lookups and the .Name field for user-facing display.
+
+type ChangeTimelineEntryV2ID struct {
+	// The internal label for the entry, this is used to identify the entry in
+	// the database and tell whether two entries are the same type of thing.
+	// This means that if we want to change the way an entry behaves, we can
+	// create a new label and keep the old one for backwards compatibility.
+	Label string
+	// The name of the entry, this is the user facing name of the entry and can
+	// be changed safely. This is stored in both the code and the database, the
+	// reason we store it in the code is so that we know what value to populate
+	// in the database when we create the timeline entries in the first place,
+	// when returning the timeline to the user we use the name from the database
+	// which means that old changes will still show the old name.
+	Name string
+}
+
+var (
+	// This is the entry that is created when a change is created
+	ChangeTimelineEntryV2IDChangeCreated = ChangeTimelineEntryV2ID{
+		Label: "change_created",
+		Name:  "Change Created",
+	}
+	// This is the entry that is created when we map the resources for a change,
+	// this happens before we start blast radius simulation, it involves taking
+	// the mapping queries that were sent up, and running them against the
+	// gateway to see whether any of them resolve into real items.
+	ChangeTimelineEntryV2IDMapResources = ChangeTimelineEntryV2ID{
+		Label: "mapped_resources",
+		Name:  "Map Resources",
+	}
+	// This is the entry that is created when we calculate the blast radius for a
+	// change, this happens after we map the resources for a change, it involves
+	// taking the mapped resources and running them through the blast radius
+	// simulation to see how many items are in the blast radius.
+	ChangeTimelineEntryV2IDCalculatedBlastRadius = ChangeTimelineEntryV2ID{
+		Label: "calculated_blast_radius",
+		Name:  "Calculated Blast Radius",
+	}
+	// This is the entry tracks the calculation of routine signals for all of
+	// the modifications within this change
+	ChangeTimelineEntryV2IDAnalyzedSignals = ChangeTimelineEntryV2ID{
+		Label: "calculated_routineness",
+		Name:  "Analyze Signals",
+	}
+	// This is the entry that tracks the calculation of risks and returns them
+	// in the timeline. At the time of writing this has been replaced and we are
+	// no longer showing risks directly in the timeline. The risk calculation
+	// still happens, but the timeline focuses on Observations -> Hypotheses ->
+	// Investigations instead. This means that this step will be no longer used
+	// after Dec '25
+	ChangeTimelineEntryV2IDCalculatedRisks = ChangeTimelineEntryV2ID{
+		Label: "calculated_risks",
+		Name:  "Calculated Risks",
+	}
+	// Tracks the application of auto-label rules for a change
+	ChangeTimelineEntryV2IDCalculatedLabels = ChangeTimelineEntryV2ID{
+		Label: "calculated_labels",
+		Name:  "Calculated Labels",
+	}
+	// Tracks the calculation of auto tags for a change. This has been replaced
+	// by auto labels and will not be run on new changes anymore after Jan '26
+	ChangeTimelineEntryV2IDAutoTagging = ChangeTimelineEntryV2ID{
+		Label: "auto_tagging",
+		Name:  "Auto Tagging",
+	}
+	// Tracks the validation of a change. This happens after the change is
+	// complete and at time of writing is not generally available
+	ChangeTimelineEntryV2IDChangeValidation = ChangeTimelineEntryV2ID{
+		Label: "change_validation",
+		Name:  "Change Validation",
+	}
+	// When the changes was marked as started and we took the snapshot
+	ChangeTimelineEntryV2IDChangeStarted = ChangeTimelineEntryV2ID{
+		Label: "change_started",
+		Name:  "Change Started",
+	}
+	// When the changes was marked as finished and we took the snapshot
+	ChangeTimelineEntryV2IDChangeFinished = ChangeTimelineEntryV2ID{
+		Label: "change_finished",
+		Name:  "Change Finished",
+	}
 )
