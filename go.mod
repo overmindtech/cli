@@ -170,7 +170,7 @@ require (
 	k8s.io/apimachinery v0.34.2
 	k8s.io/client-go v0.34.2
 	k8s.io/component-base v0.34.2
-	k8s.io/utils v0.0.0-20251218160917-61b37f7a4624
+	k8s.io/utils v0.0.0-20251219084037-98d557b7f1e7
 	modernc.org/sqlite v1.40.1
 	riverqueue.com/riverui v0.13.0
 	sigs.k8s.io/controller-runtime v0.22.4
