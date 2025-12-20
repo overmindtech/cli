@@ -89,4 +89,19 @@ var (
 		Label: "change_finished",
 		Name:  "Change Finished",
 	}
+	// This is the entry that tracks observations being recorded during blast radius simulation
+	ChangeTimelineEntryV2IDRecordObservations = ChangeTimelineEntryV2ID{
+		Label: "record_observations",
+		Name:  "Record Observations",
+	}
+	// This is the entry that tracks hypotheses being formed from observations via batch processing
+	ChangeTimelineEntryV2IDFormHypotheses = ChangeTimelineEntryV2ID{
+		Label: "form_hypotheses",
+		Name:  "Form Hypotheses",
+	}
+	// This is the entry that tracks investigation of hypotheses via one-shot analysis
+	ChangeTimelineEntryV2IDInvestigateHypotheses = ChangeTimelineEntryV2ID{
+		Label: "investigate_hypotheses",
+		Name:  "Investigate Hypotheses",
+	}
 )
