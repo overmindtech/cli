@@ -140,10 +140,7 @@ func run(_ *cobra.Command, _ []string) int {
 	if clusterName == "" {
 		clusterName = k8sURL.Host
 	}
-	if engineConfig.HeartbeatOptions == nil {
-		engineConfig.HeartbeatOptions = &discovery.HeartbeatOptions{}
-	}
-	engineConfig.HeartbeatOptions.HealthCheck = func(ctx context.Context) error {
+	healthCheck := func(ctx context.Context) error {
 		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
 		// Make sure we can list nodes in the cluster
@@ -155,6 +152,10 @@ func run(_ *cobra.Command, _ []string) int {
 		}
 		return nil
 	}
+	if engineConfig.HeartbeatOptions == nil {
+		engineConfig.HeartbeatOptions = &discovery.HeartbeatOptions{}
+	}
+	engineConfig.HeartbeatOptions.HealthCheck = healthCheck
 
 	e, err := discovery.NewEngine(engineConfig)
 	if err != nil {
@@ -168,23 +169,6 @@ func run(_ *cobra.Command, _ []string) int {
 	healthCheckPort := viper.GetInt("health-check-port")
 	healthCheckPath := "/healthz"
 
-	http.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
-		ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck")
-		defer span.End()
-
-		err := e.HealthCheck(ctx)
-		if err != nil {
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if e.IsNATSConnected() {
-			fmt.Fprint(rw, "ok")
-		} else {
-			http.Error(rw, "NATS not connected", http.StatusInternalServerError)
-		}
-	})
-
 	log.WithFields(log.Fields{
 		"port": healthCheckPort,
 		"path": healthCheckPath,
@@ -193,18 +177,24 @@ func run(_ *cobra.Command, _ []string) int {
 	go func() {
 		defer sentry.Recover()
 
+		mux := http.NewServeMux()
+		mux.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
+			ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck")
+			defer span.End()
+
+			// Check engine status
+			err := e.HealthCheck(ctx)
+			if err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			fmt.Fprint(rw, "ok")
+		})
+
 		server := &http.Server{
-			Addr: fmt.Sprintf(":%v", healthCheckPort),
-			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				// Check NATS connections
-				if e.IsNATSConnected() {
-					// Return 200
-					w.WriteHeader(http.StatusOK)
-				} else {
-					// Return 500 including the error
-					http.Error(w, "NATS not connected", http.StatusInternalServerError)
-				}
-			}),
+			Addr:         fmt.Sprintf(":%v", healthCheckPort),
+			Handler:      mux,
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 		}

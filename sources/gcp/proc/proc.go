@@ -68,21 +68,22 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 
 	var startupErrorMutex sync.Mutex
 	startupError := errors.New("source is starting")
-	if ec.HeartbeatOptions != nil {
-		ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
-			startupErrorMutex.Lock()
-			defer startupErrorMutex.Unlock()
-			if startupError != nil {
-				// If there is a startup error, return it
-				return startupError
-			}
-
-			if permissionCheck != nil {
-				// If the permission check is set, run it
-				return permissionCheck()
-			}
-			return nil
+	if ec.HeartbeatOptions == nil {
+		ec.HeartbeatOptions = &discovery.HeartbeatOptions{}
+	}
+	ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
+		startupErrorMutex.Lock()
+		defer startupErrorMutex.Unlock()
+		if startupError != nil {
+			// If there is a startup error, return it
+			return startupError
 		}
+
+		if permissionCheck != nil {
+			// If the permission check is set, run it
+			return permissionCheck()
+		}
+		return nil
 	}
 
 	engine.StartSendingHeartbeats(ctx)

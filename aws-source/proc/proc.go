@@ -206,12 +206,13 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 
 	var startupErrorMutex sync.Mutex
 	startupError := errors.New("source is starting")
-	if ec.HeartbeatOptions != nil {
-		ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
-			startupErrorMutex.Lock()
-			defer startupErrorMutex.Unlock()
-			return startupError
-		}
+	if ec.HeartbeatOptions == nil {
+		ec.HeartbeatOptions = &discovery.HeartbeatOptions{}
+	}
+	ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
+		startupErrorMutex.Lock()
+		defer startupErrorMutex.Unlock()
+		return startupError
 	}
 
 	e.StartSendingHeartbeats(ctx)

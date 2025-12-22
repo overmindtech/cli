@@ -205,14 +205,17 @@ func (e *Engine) connect() error {
 		// connection.
 		e.connectionWatcher = NATSWatcher{
 			Connection: e.natsConnection,
+			// If the connection stays disconnected for more than 5 minutes,
+			// force a reconnection attempt. This prevents the source from being
+			// stuck in RECONNECTING state indefinitely.
+			ReconnectionTimeout: 5 * time.Minute,
 			FailureHandler: func() {
 				go func() {
-					if err := e.disconnect(); err != nil {
-						log.Error(err)
-					}
+					log.Warn("NATSWatcher triggered failure handler, attempting to reconnect")
+					e.disconnect()
 
 					if err := e.connect(); err != nil {
-						log.Error(err)
+						log.WithError(err).Error("Error reconnecting during failure handler")
 					}
 				}()
 			},
@@ -283,20 +286,18 @@ func (e *Engine) connect() error {
 }
 
 // disconnect Disconnects the engine from the NATS network
-func (e *Engine) disconnect() error {
+func (e *Engine) disconnect() {
 	e.connectionWatcher.Stop()
 
 	e.natsConnectionMutex.Lock()
 	defer e.natsConnectionMutex.Unlock()
 
 	if e.natsConnection == nil {
-		return nil
+		return
 	}
 
 	e.natsConnection.Close()
 	e.natsConnection.Drop()
-
-	return nil
 }
 
 // Start performs all of the initialisation steps required for the engine to
@@ -357,10 +358,7 @@ func (e *Engine) subscribe(subject string, handler nats.MsgHandler) error {
 
 // Stop Stops the engine running and disconnects from NATS
 func (e *Engine) Stop() error {
-	err := e.disconnect()
-	if err != nil {
-		return err
-	}
+	e.disconnect()
 
 	// Stop purging and clear the cache
 	if e.backgroundJobCancel != nil {
@@ -440,6 +438,13 @@ func (e *Engine) HealthCheck(ctx context.Context) error {
 
 	if !natsConnected {
 		return errors.New("NATS connection is not connected")
+	}
+
+	if e.EngineConfig.HeartbeatOptions != nil && e.EngineConfig.HeartbeatOptions.HealthCheck != nil {
+		healthCheckError := e.EngineConfig.HeartbeatOptions.HealthCheck(ctx)
+		if healthCheckError != nil {
+			return fmt.Errorf("source heartbeat check failed: %w", healthCheckError)
+		}
 	}
 
 	return nil
