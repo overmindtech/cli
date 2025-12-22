@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_blob_containers_client.go -package=mocks -source=blob-containers-client.go
