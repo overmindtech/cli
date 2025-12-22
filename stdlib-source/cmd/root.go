@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -70,11 +69,10 @@ var rootCmd = &cobra.Command{
 		healthCheckDNSAdapter := adapters.DNSAdapter{}
 
 		// Set up the health check
-		healthCheck := func(ctx context.Context) error {
-			if !e.IsNATSConnected() {
-				return errors.New("NATS not connected")
-			}
-
+		if e.EngineConfig.HeartbeatOptions == nil {
+			e.EngineConfig.HeartbeatOptions = &discovery.HeartbeatOptions{}
+		}
+		e.EngineConfig.HeartbeatOptions.HealthCheck = func(ctx context.Context) error {
 			// We have seen some issues with DNS lookups within kube where the
 			// stdlib container will just start timing out on DNS requests. We
 			// should check that the DNS adapter is working so that the
@@ -88,20 +86,17 @@ var rootCmd = &cobra.Command{
 
 			return nil
 		}
-
-		if e.EngineConfig.HeartbeatOptions != nil {
-			e.EngineConfig.HeartbeatOptions.HealthCheck = healthCheck
-		}
 		http.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
 			ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck")
 			defer span.End()
 
-			err := healthCheck(ctx)
-			if err == nil {
-				fmt.Fprint(rw, "ok")
-			} else {
+			err := e.HealthCheck(ctx)
+			if err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
 			}
+
+			fmt.Fprint(rw, "ok")
 		})
 
 		log.WithFields(log.Fields{

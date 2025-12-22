@@ -27,6 +27,10 @@ func (e *Engine) SendHeartbeat(ctx context.Context, customErr error) error {
 		return ErrNoHealthcheckDefined
 	}
 
+	if e.EngineConfig.HeartbeatOptions.ManagementClient == nil {
+		return errors.New("management client is not set")
+	}
+
 	healthCheckError := e.EngineConfig.HeartbeatOptions.HealthCheck(ctx)
 	healthCheckError = errors.Join(healthCheckError, customErr)
 

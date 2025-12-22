@@ -30,11 +30,12 @@ func InitializeEngine(ec *discovery.EngineConfig, reverseDNS bool) (*discovery.E
 		}).Fatal("Error initializing Engine")
 	}
 
-	if ec.HeartbeatOptions != nil {
-		ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
-			// This can't fail, it's always healthy
-			return nil
-		}
+	if ec.HeartbeatOptions == nil {
+		ec.HeartbeatOptions = &discovery.HeartbeatOptions{}
+	}
+	ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
+		// This can't fail, it's always healthy
+		return nil
 	}
 
 	// Add the base adapters
