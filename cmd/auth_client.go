@@ -10,14 +10,14 @@ import (
 	"github.com/overmindtech/cli/auth"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdp-go/sdpconnect"
+	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // newRetryableHTTPClient creates a new HTTP client that uses standard retryablehttp settings
 func newRetryableHTTPClient() *http.Client {
 	retryableClient := &retryablehttp.Client{
-		HTTPClient:   otelhttp.DefaultClient,
+		HTTPClient:   tracing.HTTPClient(),
 		RetryWaitMin: 1 * time.Second,
 		RetryWaitMax: 10 * time.Second,
 		RetryMax:     5,
@@ -31,7 +31,7 @@ func newRetryableHTTPClient() *http.Client {
 // but no authentication. Can only be used for ExchangeKeyForToken
 func UnauthenticatedApiKeyClient(ctx context.Context, oi sdp.OvermindInstance) sdpconnect.ApiKeyServiceClient {
 	log.WithContext(ctx).WithField("apiUrl", oi.ApiUrl).Debug("Connecting to overmind apikeys API")
-	return sdpconnect.NewApiKeyServiceClient(otelhttp.DefaultClient, oi.ApiUrl.String())
+	return sdpconnect.NewApiKeyServiceClient(tracing.HTTPClient(), oi.ApiUrl.String())
 }
 
 // AuthenticatedBookmarkClient Returns a bookmark client that uses the auth

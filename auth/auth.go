@@ -16,6 +16,7 @@ import (
 	"github.com/nats-io/nkeys"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdp-go/sdpconnect"
+	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/codes"
@@ -99,7 +100,7 @@ func WithImpersonateAccount(account string) TokenSourceOptionsFunc {
 // or similar.
 func (flowConfig ClientCredentialsConfig) TokenSource(ctx context.Context, oAuthTokenURL, oAuthAudience string, opts ...TokenSourceOptionsFunc) oauth2.TokenSource {
 	// inject otel into oauth2
-	ctx = context.WithValue(ctx, oauth2.HTTPClient, otelhttp.DefaultClient)
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, tracing.HTTPClient())
 
 	conf := &clientcredentials.Config{
 		ClientID:     flowConfig.ClientID,
