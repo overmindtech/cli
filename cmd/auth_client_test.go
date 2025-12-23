@@ -15,7 +15,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/overmindtech/cli/auth"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"github.com/overmindtech/cli/tracing"
 )
 
 // testProxyServer is a simple HTTP proxy server for testing
@@ -353,7 +353,7 @@ func TestWebSocketDialerUsesProxy(t *testing.T) {
 
 	// Create HTTP client that should use proxy
 	// This is what sdpws.DialBatch uses - NewAuthenticatedClient with otelhttp.DefaultClient
-	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	httpClient := NewAuthenticatedClient(ctx, tracing.HTTPClient())
 
 	// Try to dial WebSocket - this should use HTTP CONNECT through proxy
 	// Note: We'll use the websocket package directly like sdpws does

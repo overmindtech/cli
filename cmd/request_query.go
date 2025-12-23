@@ -9,10 +9,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdp-go/sdpws"
+	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -45,7 +45,7 @@ func RequestQuery(cmd *cobra.Command, args []string) error {
 	gatewayUrl := oi.GatewayUrl()
 	lf["gateway-url"] = gatewayUrl
 	c, err := sdpws.DialBatch(ctx, gatewayUrl,
-		NewAuthenticatedClient(ctx, otelhttp.DefaultClient),
+		NewAuthenticatedClient(ctx, tracing.HTTPClient()),
 		handler,
 	)
 	if err != nil {

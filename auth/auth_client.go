@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/overmindtech/cli/sdp-go/sdpconnect"
+	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // AuthenticatedClient is a http.Client that will automatically add the required
@@ -55,7 +55,7 @@ func NewAuthenticatedClient(ctx context.Context, from *http.Client) *http.Client
 // AuthenticatedAdminClient Returns a bookmark client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedAdminClient(ctx context.Context, apiUrl string) sdpconnect.AdminServiceClient {
-	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	httpClient := NewAuthenticatedClient(ctx, tracing.HTTPClient())
 	log.WithContext(ctx).WithField("apiUrl", apiUrl).Debug("Connecting to overmind admin API (pre-authenticated)")
 	return sdpconnect.NewAdminServiceClient(httpClient, apiUrl)
 }
@@ -63,7 +63,7 @@ func AuthenticatedAdminClient(ctx context.Context, apiUrl string) sdpconnect.Adm
 // AuthenticatedApiKeyClient Returns an apikey client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedApiKeyClient(ctx context.Context, apiUrl string) sdpconnect.ApiKeyServiceClient {
-	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	httpClient := NewAuthenticatedClient(ctx, tracing.HTTPClient())
 	log.WithContext(ctx).WithField("apiUrl", apiUrl).Debug("Connecting to overmind apikeys API (pre-authenticated)")
 	return sdpconnect.NewApiKeyServiceClient(httpClient, apiUrl)
 }
@@ -72,13 +72,13 @@ func AuthenticatedApiKeyClient(ctx context.Context, apiUrl string) sdpconnect.Ap
 // but no authentication. Can only be used for ExchangeKeyForToken
 func UnauthenticatedApiKeyClient(ctx context.Context, apiUrl string) sdpconnect.ApiKeyServiceClient {
 	log.WithContext(ctx).WithField("apiUrl", apiUrl).Debug("Connecting to overmind apikeys API")
-	return sdpconnect.NewApiKeyServiceClient(otelhttp.DefaultClient, apiUrl)
+	return sdpconnect.NewApiKeyServiceClient(tracing.HTTPClient(), apiUrl)
 }
 
 // AuthenticatedBookmarkClient Returns a bookmark client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedBookmarkClient(ctx context.Context, apiUrl string) sdpconnect.BookmarksServiceClient {
-	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	httpClient := NewAuthenticatedClient(ctx, tracing.HTTPClient())
 	log.WithContext(ctx).WithField("apiUrl", apiUrl).Debug("Connecting to overmind bookmark API (pre-authenticated)")
 	return sdpconnect.NewBookmarksServiceClient(httpClient, apiUrl)
 }
@@ -86,7 +86,7 @@ func AuthenticatedBookmarkClient(ctx context.Context, apiUrl string) sdpconnect.
 // AuthenticatedChangesClient Returns a bookmark client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedChangesClient(ctx context.Context, apiUrl string) sdpconnect.ChangesServiceClient {
-	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	httpClient := NewAuthenticatedClient(ctx, tracing.HTTPClient())
 	log.WithContext(ctx).WithField("apiUrl", apiUrl).Debug("Connecting to overmind changes API (pre-authenticated)")
 	return sdpconnect.NewChangesServiceClient(httpClient, apiUrl)
 }
@@ -94,7 +94,7 @@ func AuthenticatedChangesClient(ctx context.Context, apiUrl string) sdpconnect.C
 // AuthenticatedConfigurationClient Returns a bookmark client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedConfigurationClient(ctx context.Context, apiUrl string) sdpconnect.ConfigurationServiceClient {
-	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	httpClient := NewAuthenticatedClient(ctx, tracing.HTTPClient())
 	log.WithContext(ctx).WithField("apiUrl", apiUrl).Debug("Connecting to overmind configuration API (pre-authenticated)")
 	return sdpconnect.NewConfigurationServiceClient(httpClient, apiUrl)
 }
@@ -102,7 +102,7 @@ func AuthenticatedConfigurationClient(ctx context.Context, apiUrl string) sdpcon
 // AuthenticatedManagementClient Returns a bookmark client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedManagementClient(ctx context.Context, apiUrl string) sdpconnect.ManagementServiceClient {
-	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	httpClient := NewAuthenticatedClient(ctx, tracing.HTTPClient())
 	log.WithContext(ctx).WithField("apiUrl", apiUrl).Debug("Connecting to overmind management API (pre-authenticated)")
 	return sdpconnect.NewManagementServiceClient(httpClient, apiUrl)
 }
@@ -110,7 +110,7 @@ func AuthenticatedManagementClient(ctx context.Context, apiUrl string) sdpconnec
 // AuthenticatedSnapshotsClient Returns a Snapshots client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedSnapshotsClient(ctx context.Context, apiUrl string) sdpconnect.SnapshotsServiceClient {
-	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	httpClient := NewAuthenticatedClient(ctx, tracing.HTTPClient())
 	log.WithContext(ctx).WithField("apiUrl", apiUrl).Debug("Connecting to overmind snapshot API (pre-authenticated)")
 	return sdpconnect.NewSnapshotsServiceClient(httpClient, apiUrl)
 }
@@ -118,7 +118,7 @@ func AuthenticatedSnapshotsClient(ctx context.Context, apiUrl string) sdpconnect
 // AuthenticatedInviteClient Returns a Invite client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedInviteClient(ctx context.Context, apiUrl string) sdpconnect.InviteServiceClient {
-	httpClient := NewAuthenticatedClient(ctx, otelhttp.DefaultClient)
+	httpClient := NewAuthenticatedClient(ctx, tracing.HTTPClient())
 	log.WithContext(ctx).WithField("apiUrl", apiUrl).Debug("Connecting to overmind invite API (pre-authenticated)")
 	return sdpconnect.NewInviteServiceClient(httpClient, apiUrl)
 }

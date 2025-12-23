@@ -14,7 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/overmindtech/cli/sdp-go"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"github.com/overmindtech/cli/tracing"
 )
 
 const (
@@ -100,7 +100,7 @@ func AWSSettings(ctx context.Context) (*AWSCfg, error) {
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRetryer(newRetryer),
 		config.WithClientLogMode(aws.LogRetries),
-		config.WithHTTPClient(otelhttp.DefaultClient),
+		config.WithHTTPClient(tracing.HTTPClient()),
 	)
 	if err != nil {
 		return nil, err

@@ -14,7 +14,6 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -87,7 +86,7 @@ func DialBatch(ctx context.Context, u string, httpClient *http.Client, handler G
 
 func dialImpl(ctx context.Context, u string, httpClient *http.Client, handler GatewayMessageHandler, interactive bool) (*Client, error) {
 	if httpClient == nil {
-		httpClient = otelhttp.DefaultClient
+		httpClient = tracing.HTTPClient()
 	}
 	options := &websocket.DialOptions{
 		HTTPClient: httpClient,

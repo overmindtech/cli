@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"github.com/overmindtech/cli/tracing"
 )
 
 // Information about a particular instance of Overmind. This is used to
@@ -58,7 +58,7 @@ func NewOvermindInstance(ctx context.Context, app string) (OvermindInstance, err
 	}
 
 	req = req.WithContext(ctx)
-	res, err := otelhttp.DefaultClient.Do(req)
+	res, err := tracing.HTTPClient().Do(req)
 	if err != nil {
 		return OvermindInstance{}, fmt.Errorf("could not fetch instance-data: %w", err)
 	}

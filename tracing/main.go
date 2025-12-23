@@ -3,6 +3,7 @@ package tracing
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"slices"
@@ -15,6 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/detectors/aws/ec2/v2"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
@@ -369,4 +371,13 @@ func (o *OvermindSampler) Description() string {
 // Version returns the version baked into the binary at build time.
 func Version() string {
 	return version
+}
+
+// HTTPClient returns an HTTP client with OpenTelemetry instrumentation.
+// This replaces the deprecated otelhttp.DefaultClient and should be used
+// throughout the codebase for HTTP requests that need tracing.
+func HTTPClient() *http.Client {
+	return &http.Client{
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
+	}
 }
