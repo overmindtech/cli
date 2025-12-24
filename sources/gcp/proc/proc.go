@@ -7,10 +7,14 @@ import (
 	"net/http"
 	"sync"
 
+	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
+	resourcemanagerpb "cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/impersonate"
+	"google.golang.org/api/iterator"
+	"google.golang.org/api/option"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -25,7 +29,7 @@ var Metadata = sdp.AdapterMetadataList{}
 
 // GCPConfig holds configuration for GCP source
 type GCPConfig struct {
-	ProjectID string
+	ProjectID string // Optional: If empty, will discover all accessible projects
 	Regions   []string
 	Zones     []string
 
@@ -102,9 +106,28 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 			logmsg = "Using config from viper"
 
 		}
+
+		// Discover projects if no project ID is specified
+		var projectIDs []string
+		if cfg.ProjectID == "" {
+			log.WithFields(log.Fields{
+				"ovm.source.type": "gcp",
+			}).Info("No project ID specified, discovering all accessible projects")
+
+			discoveredProjects, err := discoverProjects(ctx, cfg.ImpersonationServiceAccountEmail)
+			if err != nil {
+				return fmt.Errorf("error discovering projects: %w", err)
+			}
+
+			projectIDs = discoveredProjects
+		} else {
+			projectIDs = []string{cfg.ProjectID}
+		}
+
 		log.WithFields(log.Fields{
 			"ovm.source.type":                                "gcp",
 			"ovm.source.project_id":                          cfg.ProjectID,
+			"ovm.source.project_count":                       len(projectIDs),
 			"ovm.source.regions":                             cfg.Regions,
 			"ovm.source.zones":                               cfg.Zones,
 			"ovm.source.impersonation-service-account-email": cfg.ImpersonationServiceAccountEmail,
@@ -117,54 +140,76 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 
 		linker := gcpshared.NewLinker()
 
-		discoveryAdapters, err := adapters(ctx, cfg.ProjectID, cfg.Regions, cfg.Zones, cfg.ImpersonationServiceAccountEmail, linker, true)
-		if err != nil {
-			return fmt.Errorf("error creating discovery adapters: %w", err)
-		}
+		// Create adapters for all projects
+		var allAdapters []discovery.Adapter
+		cloudResourceManagerProjectAdapters := make(map[string]discovery.Adapter)
 
-		// find the cloud resource manager project adapter
-		var cloudResourceManagerProjectAdapter discovery.Adapter
-		for _, adapter := range discoveryAdapters {
-			if adapter.Type() == gcpshared.CloudResourceManagerProject.String() {
-				cloudResourceManagerProjectAdapter = adapter
-				break
+		for _, projectID := range projectIDs {
+			log.WithFields(log.Fields{
+				"ovm.source.type":       "gcp",
+				"ovm.source.project_id": projectID,
+			}).Debug("Creating adapters for project")
+
+			discoveryAdapters, err := adapters(ctx, projectID, cfg.Regions, cfg.Zones, cfg.ImpersonationServiceAccountEmail, linker, true)
+			if err != nil {
+				return fmt.Errorf("error creating discovery adapters for project %s: %w", projectID, err)
+			}
+
+			allAdapters = append(allAdapters, discoveryAdapters...)
+
+			// Collect cloud resource manager project adapters for health checks
+			for _, adapter := range discoveryAdapters {
+				if adapter.Type() == gcpshared.CloudResourceManagerProject.String() {
+					cloudResourceManagerProjectAdapters[projectID] = adapter
+				}
 			}
 		}
 
-		if cloudResourceManagerProjectAdapter == nil {
+		if len(cloudResourceManagerProjectAdapters) == 0 {
 			return fmt.Errorf("cloud resource manager project adapter not found")
 		}
 
+		// Verify we have an adapter for each project
+		for _, projectID := range projectIDs {
+			if _, exists := cloudResourceManagerProjectAdapters[projectID]; !exists {
+				return fmt.Errorf("cloud resource manager project adapter not found for project %s", projectID)
+			}
+		}
+
 		permissionCheck = func() error {
-			// Get the project from the cloud resource manager
-			// Giving this permission is mandatory for the GCP source health check
-			prj, err := cloudResourceManagerProjectAdapter.Get(ctx, cfg.ProjectID, cfg.ProjectID, false)
-			if err != nil {
-				// Check if this is a permission error and provide a simplified message
-				var permissionError *dynamic.PermissionError
-				if errors.As(err, &permissionError) {
-					return fmt.Errorf("insufficient permissions to access GCP project '%s'. "+
-						"Please ensure the service account has the 'resourcemanager.projects.get' permission via the 'roles/browser' predefined GCP role", cfg.ProjectID)
+			// Check permissions for all projects
+			for _, projectID := range projectIDs {
+				adapter := cloudResourceManagerProjectAdapters[projectID]
+				// Get the project from the cloud resource manager
+				// Giving this permission is mandatory for the GCP source health check
+				prj, err := adapter.Get(ctx, projectID, projectID, false)
+				if err != nil {
+					// Check if this is a permission error and provide a simplified message
+					var permissionError *dynamic.PermissionError
+					if errors.As(err, &permissionError) {
+						return fmt.Errorf("insufficient permissions to access GCP project '%s'. "+
+							"Please ensure the service account has the 'resourcemanager.projects.get' permission via the 'roles/browser' predefined GCP role", projectID)
+					}
+					return fmt.Errorf("error accessing project %s: %w", projectID, err)
 				}
-				return err
-			}
 
-			if prj == nil {
-				return fmt.Errorf("project %s not found in cloud resource manager", cfg.ProjectID)
-			}
+				if prj == nil {
+					return fmt.Errorf("project %s not found in cloud resource manager", projectID)
+				}
 
-			prjID, err := prj.GetAttributes().Get("projectId")
-			if err != nil {
-				return fmt.Errorf("error getting project ID from project: %w", err)
-			}
+				prjID, err := prj.GetAttributes().Get("projectId")
+				if err != nil {
+					return fmt.Errorf("error getting project ID from project %s: %w", projectID, err)
+				}
 
-			prjIDStr, ok := prjID.(string)
-			if !ok {
-				return fmt.Errorf("project ID is not a string: %v", prjID)
-			}
+				prjIDStr, ok := prjID.(string)
+				if !ok {
+					return fmt.Errorf("project ID is not a string for project %s: %v", projectID, prjID)
+				}
 
-			if prjIDStr != cfg.ProjectID {
-				return fmt.Errorf("project ID mismatch: expected %s, got %s", cfg.ProjectID, prjIDStr)
+				if prjIDStr != projectID {
+					return fmt.Errorf("project ID mismatch for project %s: expected %s, got %s", projectID, projectID, prjIDStr)
+				}
 			}
 
 			return nil
@@ -176,7 +221,7 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 		}
 
 		// Add the adapters to the engine
-		err = engine.AddAdapters(discoveryAdapters...)
+		err = engine.AddAdapters(allAdapters...)
 		if err != nil {
 			return fmt.Errorf("error adding adapters to engine: %w", err)
 		}
@@ -205,9 +250,7 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 
 func readConfig() (*GCPConfig, error) {
 	projectID := viper.GetString("gcp-project-id")
-	if projectID == "" {
-		return nil, fmt.Errorf("gcp-project-id not set")
-	}
+	// Project ID is now optional - if not provided, we'll discover all accessible projects
 
 	l := &GCPConfig{
 		ProjectID:                        projectID,
@@ -248,6 +291,164 @@ func readConfig() (*GCPConfig, error) {
 	}
 
 	return l, nil
+}
+
+// discoverProjects uses the Cloud Resource Manager API to discover all projects accessible to the service account
+// Requires the resourcemanager.projects.list permission (included in roles/browser)
+// It recursively traverses the organization/folder hierarchy since the API only returns direct children
+func discoverProjects(ctx context.Context, impersonationServiceAccountEmail string) ([]string, error) {
+	// Create client options
+	var clientOpts []option.ClientOption
+	if impersonationServiceAccountEmail != "" {
+		// Use impersonation credentials
+		ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
+			TargetPrincipal: impersonationServiceAccountEmail,
+			Scopes:          []string{"https://www.googleapis.com/auth/cloud-platform"},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create impersonated token source: %w", err)
+		}
+		clientOpts = append(clientOpts, option.WithTokenSource(ts))
+	}
+
+	// Create clients for organizations, folders, and projects
+	orgsClient, err := resourcemanager.NewOrganizationsClient(ctx, clientOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create organizations client: %w", err)
+	}
+	defer orgsClient.Close()
+
+	foldersClient, err := resourcemanager.NewFoldersClient(ctx, clientOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create folders client: %w", err)
+	}
+	defer foldersClient.Close()
+
+	projectsClient, err := resourcemanager.NewProjectsClient(ctx, clientOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create projects client: %w", err)
+	}
+	defer projectsClient.Close()
+
+	// Use a map to track discovered projects and avoid duplicates
+	projectSet := make(map[string]bool)
+
+	// Search for organizations (no parent needed)
+	var organizationParents []string
+	orgIt := orgsClient.SearchOrganizations(ctx, &resourcemanagerpb.SearchOrganizationsRequest{})
+	for {
+		org, err := orgIt.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			// Not all accounts have organizations (e.g., personal accounts), so this is not fatal
+			log.WithError(err).Debug("Error searching organizations, continuing without org-based discovery")
+			break
+		}
+		organizationParents = append(organizationParents, org.GetName())
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.source.type": "gcp",
+			"organization":    org.GetName(),
+		}).Debug("Discovered organization")
+	}
+
+	// Recursively discover projects under each organization
+	for _, orgParent := range organizationParents {
+		if err := discoverProjectsUnderParent(ctx, orgParent, projectsClient, foldersClient, projectSet); err != nil {
+			log.WithContext(ctx).WithError(err).WithField("parent", orgParent).Debug("Error discovering projects under organization, continuing")
+		}
+	}
+
+	// Convert map to slice
+	var projects []string
+	for projectID := range projectSet {
+		projects = append(projects, projectID)
+	}
+
+	if len(projects) == 0 {
+		if len(organizationParents) == 0 {
+			return nil, fmt.Errorf("no accessible projects found. If you're using a personal account without an organization, please specify --gcp-project-id explicitly")
+		}
+		return nil, fmt.Errorf("no accessible projects found. Please ensure the service account has the 'resourcemanager.projects.list' permission via the 'roles/browser' predefined GCP role")
+	}
+
+	log.WithContext(ctx).WithFields(log.Fields{
+		"ovm.source.type":          "gcp",
+		"ovm.source.project_count": len(projects),
+	}).Info("Successfully discovered projects")
+
+	return projects, nil
+}
+
+// discoverProjectsUnderParent recursively discovers all projects under a given parent (organization or folder)
+// It lists direct child projects and folders, then recursively processes each folder
+func discoverProjectsUnderParent(
+	ctx context.Context,
+	parent string,
+	projectsClient *resourcemanager.ProjectsClient,
+	foldersClient *resourcemanager.FoldersClient,
+	projectSet map[string]bool,
+) error {
+	// List direct projects under this parent
+	projectIt := projectsClient.ListProjects(ctx, &resourcemanagerpb.ListProjectsRequest{
+		Parent: parent,
+	})
+	for {
+		project, err := projectIt.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			// Log but continue - permission errors on individual parents shouldn't stop discovery
+			log.WithContext(ctx).WithError(err).WithField("parent", parent).Debug("Error listing projects under parent, continuing")
+			break
+		}
+
+		// Only include active projects
+		if project.GetState() == resourcemanagerpb.Project_ACTIVE && project.GetProjectId() != "" {
+			projectID := project.GetProjectId()
+			if !projectSet[projectID] {
+				projectSet[projectID] = true
+				log.WithContext(ctx).WithFields(log.Fields{
+					"ovm.source.type":         "gcp",
+					"ovm.source.project_id":   projectID,
+					"ovm.source.display_name": project.GetDisplayName(),
+					"parent":                  parent,
+				}).Debug("Discovered project")
+			}
+		}
+	}
+
+	// List direct folders under this parent
+	folderIt := foldersClient.ListFolders(ctx, &resourcemanagerpb.ListFoldersRequest{
+		Parent: parent,
+	})
+	for {
+		folder, err := folderIt.Next()
+		if errors.Is(err, iterator.Done) {
+			break
+		}
+		if err != nil {
+			// Log but continue - permission errors on individual folders shouldn't stop discovery
+			log.WithContext(ctx).WithError(err).WithField("parent", parent).Debug("Error listing folders under parent, continuing")
+			break
+		}
+
+		folderName := folder.GetName()
+		log.WithFields(log.Fields{
+			"ovm.source.type": "gcp",
+			"folder":          folderName,
+			"parent":          parent,
+		}).Debug("Discovered folder")
+
+		// Recursively discover projects under this folder
+		if err := discoverProjectsUnderParent(ctx, folderName, projectsClient, foldersClient, projectSet); err != nil {
+			log.WithContext(ctx).WithError(err).WithField("parent", folderName).Debug("Error discovering projects under folder, continuing")
+		}
+	}
+
+	return nil
 }
 
 // adapters returns a list of discovery adapters for GCP

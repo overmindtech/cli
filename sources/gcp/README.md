@@ -4,6 +4,52 @@ Please refer to the [generic adapter creation documentation](../README.md) to le
 
 This document is to highlight the specific implementation details for the GCP adapters.
 
+## Configuration
+
+### Multi-Project Discovery
+
+The GCP source supports automatic discovery of all accessible projects. This allows you to discover resources across your entire GCP organization without manually specifying each project.
+
+#### Single Project Mode (Legacy)
+
+To discover resources in a specific project:
+
+```bash
+gcp-source --gcp-project-id=my-project-id --gcp-regions=us-central1,us-east1
+```
+
+#### Multi-Project Mode (Automatic Discovery)
+
+To automatically discover and monitor all accessible projects:
+
+```bash
+gcp-source --gcp-regions=us-central1,us-east1
+```
+
+When no `--gcp-project-id` is specified, the source will:
+1. Call the Cloud Resource Manager API's `projects.list` endpoint
+2. Discover all ACTIVE projects the authenticated service account has access to
+3. Create adapters for each discovered project
+4. Monitor resources across all projects
+
+#### Required Permissions
+
+For multi-project discovery, the service account must have the following permission:
+- `resourcemanager.projects.list` (included in the `roles/browser` predefined role)
+
+For single-project mode, the service account needs:
+- `resourcemanager.projects.get` (included in the `roles/browser` predefined role)
+
+All other resource-specific permissions remain the same as documented in each adapter's metadata.
+
+### Service Account Impersonation
+
+Both single-project and multi-project modes support service account impersonation:
+
+```bash
+gcp-source --gcp-impersonation-service-account-email=sa@project.iam.gserviceaccount.com --gcp-regions=us-central1
+```
+
 ## Naming Conventions
 
 To construct the name of the adapter, we need to identify the following elements:
