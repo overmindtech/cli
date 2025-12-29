@@ -92,11 +92,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
 	}
 
-	err = attributes.Set("id", accountName)
-	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
-	}
-
 	sdpItem := &sdp.Item{
 		Type:            azureshared.StorageAccount.String(),
 		UniqueAttribute: "name",

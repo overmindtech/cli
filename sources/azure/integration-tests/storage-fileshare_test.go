@@ -117,8 +117,8 @@ func TestStorageFileShareIntegration(t *testing.T) {
 				t.Fatalf("Failed to get unique attribute: %v", err)
 			}
 
-			if uniqueAttrValue != integrationTestShareName {
-				t.Fatalf("Expected unique attribute value to be %s, got %s", integrationTestShareName, uniqueAttrValue)
+			if uniqueAttrValue != shared.CompositeLookupKey(storageAccountName, integrationTestShareName) {
+				t.Errorf("Expected unique attribute value %s, got %s", shared.CompositeLookupKey(storageAccountName, integrationTestShareName), uniqueAttrValue)
 			}
 
 			log.Printf("Successfully retrieved file share %s", integrationTestShareName)
@@ -156,7 +156,7 @@ func TestStorageFileShareIntegration(t *testing.T) {
 			var found bool
 			for _, item := range sdpItems {
 				uniqueAttrKey := item.GetUniqueAttribute()
-				if v, err := item.GetAttributes().Get(uniqueAttrKey); err == nil && v == integrationTestShareName {
+				if v, err := item.GetAttributes().Get(uniqueAttrKey); err == nil && v == shared.CompositeLookupKey(storageAccountName, integrationTestShareName) {
 					found = true
 					break
 				}
