@@ -12,8 +12,7 @@ import (
 )
 
 var (
-	StorageBlobContainerLookupByStorageAccountName = shared.NewItemTypeLookup("storage-account-name", azureshared.StorageAccount)
-	StorageBlobContainerLookupByName               = shared.NewItemTypeLookup("name", azureshared.StorageBlobContainer)
+	StorageBlobContainerLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageBlobContainer)
 )
 
 type storageBlobContainerWrapper struct {
@@ -105,7 +104,7 @@ func (s storageBlobContainerWrapper) Search(ctx context.Context, queryParts ...s
 
 func (s storageBlobContainerWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
-		StorageBlobContainerLookupByStorageAccountName,
+		StorageAccountLookupByName,
 		StorageBlobContainerLookupByName,
 	}
 }
@@ -113,7 +112,7 @@ func (s storageBlobContainerWrapper) GetLookups() sources.ItemTypeLookups {
 func (s storageBlobContainerWrapper) SearchLookups() []sources.ItemTypeLookups {
 	return []sources.ItemTypeLookups{
 		{
-			StorageBlobContainerLookupByStorageAccountName, // Search by storage account name
+			StorageAccountLookupByName, // Search by storage account name
 		},
 	}
 }

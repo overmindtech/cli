@@ -11,6 +11,7 @@ import (
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
+	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -526,6 +527,45 @@ func (s *standardSearchableAdapterImpl) Search(ctx context.Context, scope string
 		return []*sdp.Item{item}, nil
 	}
 
+	if s.sourceType == string(azureshared.Azure) && strings.HasPrefix(query, "/subscriptions/") {
+		// This must be a terraform query in Azure resource ID format:
+		// /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/queueServices/default/queues/{queue}
+		//
+		// Extract the relevant parts from the resource ID based on the resource type
+		pathKeys := azureshared.GetResourceIDPathKeys(s.wrapper.Type())
+		if pathKeys == nil {
+			return nil, &sdp.QueryError{
+				ErrorType: sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf(
+					"no path keys defined for resource type %s to extract from terraform query %s",
+					s.wrapper.Type(),
+					query,
+				),
+			}
+		}
+
+		queryParts = azureshared.ExtractPathParamsFromResourceID(query, pathKeys)
+		if len(queryParts) != len(s.wrapper.GetLookups()) {
+			return nil, &sdp.QueryError{
+				ErrorType: sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf(
+					"failed to handle terraform mapping from query %s for %s: extracted %d parts, expected %d",
+					query,
+					s.wrapper.ItemType().Readable(),
+					len(queryParts),
+					len(s.wrapper.GetLookups()),
+				),
+			}
+		}
+
+		item, err := s.Get(ctx, scope, shared.CompositeLookupKey(queryParts...), ignoreCache)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get item from terraform mapping: %w", err)
+		}
+
+		return []*sdp.Item{item}, nil
+	}
+
 	if s.searchable == nil {
 		log.WithField("adapter", s.Name()).Debug("search operation not supported")
 
@@ -611,6 +651,51 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 					"failed to handle terraform mapping from query %s for %s",
 					query,
 					s.wrapper.ItemType().Readable(),
+				),
+			})
+			return
+		}
+
+		item, err := s.Get(ctx, scope, shared.CompositeLookupKey(queryParts...), ignoreCache)
+		if err != nil {
+			stream.SendError(fmt.Errorf("failed to get item from terraform mapping: %w", err))
+			return
+		}
+
+		s.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
+
+		stream.SendItem(item)
+		return
+	}
+
+	if s.sourceType == string(azureshared.Azure) && strings.HasPrefix(query, "/subscriptions/") {
+		// This must be a terraform query in Azure resource ID format:
+		// /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/queueServices/default/queues/{queue}
+		//
+		// Extract the relevant parts from the resource ID based on the resource type
+		pathKeys := azureshared.GetResourceIDPathKeys(s.wrapper.Type())
+		if pathKeys == nil {
+			stream.SendError(&sdp.QueryError{
+				ErrorType: sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf(
+					"no path keys defined for resource type %s to extract from terraform query %s",
+					s.wrapper.Type(),
+					query,
+				),
+			})
+			return
+		}
+
+		queryParts = azureshared.ExtractPathParamsFromResourceID(query, pathKeys)
+		if len(queryParts) != len(s.wrapper.GetLookups()) {
+			stream.SendError(&sdp.QueryError{
+				ErrorType: sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf(
+					"failed to handle terraform mapping from query %s for %s: extracted %d parts, expected %d",
+					query,
+					s.wrapper.ItemType().Readable(),
+					len(queryParts),
+					len(s.wrapper.GetLookups()),
 				),
 			})
 			return

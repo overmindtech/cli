@@ -12,8 +12,7 @@ import (
 )
 
 var (
-	StorageFileShareLookupByStorageAccountName = shared.NewItemTypeLookup("storage-account-name", azureshared.StorageAccount)
-	StorageFileShareLookupByName               = shared.NewItemTypeLookup("name", azureshared.StorageFileShare)
+	StorageFileShareLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageFileShare)
 )
 
 type storageFileShareWrapper struct {
@@ -63,7 +62,7 @@ func (s storageFileShareWrapper) Get(ctx context.Context, queryParts ...string) 
 
 func (s storageFileShareWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
-		StorageFileShareLookupByStorageAccountName,
+		StorageAccountLookupByName,
 		StorageFileShareLookupByName,
 	}
 }
@@ -114,7 +113,7 @@ func (s storageFileShareWrapper) Search(ctx context.Context, queryParts ...strin
 func (s storageFileShareWrapper) SearchLookups() []sources.ItemTypeLookups {
 	return []sources.ItemTypeLookups{
 		{
-			StorageFileShareLookupByStorageAccountName,
+			StorageAccountLookupByName,
 		},
 	}
 }
@@ -138,7 +137,7 @@ func (s storageFileShareWrapper) azureFileShareToSDPItem(fileShare *armstorage.F
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.StorageFileShare.String(),
-		UniqueAttribute: "name",
+		UniqueAttribute: "id",
 		Attributes:      attributes,
 		Scope:           s.DefaultScope(),
 	}

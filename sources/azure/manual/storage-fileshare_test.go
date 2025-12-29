@@ -83,7 +83,7 @@ func TestStorageFileShare(t *testing.T) {
 		adapter := sources.WrapperToAdapter(wrapper)
 
 		// Get requires storageAccountName and shareName as query parts
-		query := storageAccountName + shared.QuerySeparator + shareName
+		query := shared.CompositeLookupKey(storageAccountName, shareName)
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], query, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)
@@ -93,12 +93,12 @@ func TestStorageFileShare(t *testing.T) {
 			t.Errorf("Expected type %s, got %s", azureshared.StorageFileShare, sdpItem.GetType())
 		}
 
-		if sdpItem.GetUniqueAttribute() != "name" {
-			t.Errorf("Expected unique attribute 'name', got %s", sdpItem.GetUniqueAttribute())
+		if sdpItem.GetUniqueAttribute() != "id" {
+			t.Errorf("Expected unique attribute 'id', got %s", sdpItem.GetUniqueAttribute())
 		}
 
-		if sdpItem.UniqueAttributeValue() != shareName {
-			t.Errorf("Expected unique attribute value %s, got %s", shareName, sdpItem.UniqueAttributeValue())
+		if sdpItem.UniqueAttributeValue() != shared.CompositeLookupKey(storageAccountName, shareName) {
+			t.Errorf("Expected unique attribute value %s, got %s", shared.CompositeLookupKey(storageAccountName, shareName), sdpItem.UniqueAttributeValue())
 		}
 
 		if sdpItem.GetScope() != subscriptionID+"."+resourceGroup {
@@ -279,8 +279,8 @@ func TestStorageFileShare(t *testing.T) {
 			t.Fatalf("Expected 1 item, got: %d", len(sdpItems))
 		}
 
-		if sdpItems[0].UniqueAttributeValue() != "valid-share" {
-			t.Errorf("Expected share name 'valid-share', got %s", sdpItems[0].UniqueAttributeValue())
+		if sdpItems[0].UniqueAttributeValue() != shared.CompositeLookupKey(storageAccountName, "valid-share") {
+			t.Errorf("Expected share name 'teststorageaccount|valid-share', got %s", sdpItems[0].UniqueAttributeValue())
 		}
 	})
 
