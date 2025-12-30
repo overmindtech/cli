@@ -93,8 +93,8 @@ func TestStorageFileShare(t *testing.T) {
 			t.Errorf("Expected type %s, got %s", azureshared.StorageFileShare, sdpItem.GetType())
 		}
 
-		if sdpItem.GetUniqueAttribute() != "id" {
-			t.Errorf("Expected unique attribute 'id', got %s", sdpItem.GetUniqueAttribute())
+		if sdpItem.GetUniqueAttribute() != "uniqueAttr" {
+			t.Errorf("Expected unique attribute 'uniqueAttr', got %s", sdpItem.GetUniqueAttribute())
 		}
 
 		if sdpItem.UniqueAttributeValue() != shared.CompositeLookupKey(storageAccountName, shareName) {

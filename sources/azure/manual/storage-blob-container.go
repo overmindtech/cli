@@ -130,14 +130,14 @@ func (s storageBlobContainerWrapper) azureBlobContainerToSDPItem(container *arms
 		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
 	}
 
-	err = attributes.Set("id", shared.CompositeLookupKey(storageAccountName, containerName))
+	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(storageAccountName, containerName))
 	if err != nil {
 		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.StorageBlobContainer.String(),
-		UniqueAttribute: "name",
+		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
 		Scope:           s.DefaultScope(),
 	}

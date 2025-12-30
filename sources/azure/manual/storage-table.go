@@ -64,14 +64,14 @@ func (s storageTablesWrapper) azureTableToSDPItem(table *armstorage.Table, stora
 		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
 	}
 
-	err = attributes.Set("id", shared.CompositeLookupKey(storageAccountName, tableName))
+	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(storageAccountName, tableName))
 	if err != nil {
 		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.StorageTable.String(),
-		UniqueAttribute: "id",
+		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
 		Scope:           s.DefaultScope(),
 	}

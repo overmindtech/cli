@@ -59,14 +59,14 @@ func (s storageQueuesWrapper) azureQueueToSDPItem(queue *armstorage.Queue, stora
 		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
 	}
 
-	err = attributes.Set("id", shared.CompositeLookupKey(storageAccountName, queueName))
+	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(storageAccountName, queueName))
 	if err != nil {
 		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.StorageQueue.String(),
-		UniqueAttribute: "id",
+		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
 		Scope:           s.DefaultScope(),
 	}

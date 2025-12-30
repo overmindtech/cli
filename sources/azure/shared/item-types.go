@@ -14,11 +14,12 @@ var (
 	ComputeVirtualMachineRunCommand = shared.NewItemType(Azure, Compute, VirtualMachineRunCommand)
 
 	// Network item types
-	NetworkVirtualNetwork       = shared.NewItemType(Azure, Network, VirtualNetwork)
-	NetworkSubnet               = shared.NewItemType(Azure, Network, Subnet)
-	NetworkNetworkInterface     = shared.NewItemType(Azure, Network, NetworkInterface)
-	NetworkPublicIPAddress      = shared.NewItemType(Azure, Network, PublicIPAddress)
-	NetworkNetworkSecurityGroup = shared.NewItemType(Azure, Network, NetworkSecurityGroup)
+	NetworkVirtualNetwork        = shared.NewItemType(Azure, Network, VirtualNetwork)
+	NetworkSubnet                = shared.NewItemType(Azure, Network, Subnet)
+	NetworkNetworkInterface      = shared.NewItemType(Azure, Network, NetworkInterface)
+	NetworkPublicIPAddress       = shared.NewItemType(Azure, Network, PublicIPAddress)
+	NetworkNetworkSecurityGroup  = shared.NewItemType(Azure, Network, NetworkSecurityGroup)
+	NetworkVirtualNetworkPeering = shared.NewItemType(Azure, Network, VirtualNetworkPeering)
 	//Storage item types
 	StorageAccount       = shared.NewItemType(Azure, Storage, Account)
 	StorageBlobContainer = shared.NewItemType(Azure, Storage, BlobContainer)
