@@ -61,7 +61,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.10
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.53.5
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.278.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.279.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.70.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.9
 	github.com/aws/aws-sdk-go-v2/service/eks v1.76.3
@@ -74,7 +74,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.41.3
 	github.com/aws/aws-sdk-go-v2/service/rds v1.113.1
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.62.0
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.94.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.95.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.59.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.10
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.20
@@ -83,7 +83,7 @@ require (
 	github.com/aws/smithy-go v1.24.0
 	github.com/bombsimon/logrusr/v4 v4.1.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.17.0
-	github.com/brianvoe/gofakeit/v7 v7.12.1
+	github.com/brianvoe/gofakeit/v7 v7.14.0
 	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/charmbracelet/glamour v0.10.0
 	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.3
@@ -99,13 +99,13 @@ require (
 	github.com/googleapis/gax-go/v2 v2.16.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/mux v1.8.1
-	github.com/harness/harness-go-sdk v0.6.8
+	github.com/harness/harness-go-sdk v0.6.9
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20250828155816-225c06ed5fd9
 	github.com/invopop/jsonschema v0.13.0
-	github.com/jackc/pgx/v5 v5.7.6
-	github.com/jedib0t/go-pretty/v6 v6.7.7
+	github.com/jackc/pgx/v5 v5.8.0
+	github.com/jedib0t/go-pretty/v6 v6.7.8
 	github.com/jxskiss/base62 v1.1.0
 	github.com/kaptinlin/jsonrepair v0.2.6
 	github.com/manifoldco/promptui v0.9.0
@@ -128,12 +128,12 @@ require (
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
 	github.com/pborman/ansi v1.0.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/posthog/posthog-go v1.6.13
+	github.com/posthog/posthog-go v1.8.2
 	github.com/projectdiscovery/subfinder/v2 v2.11.0
 	github.com/qhenkart/anthropic-tokenizer-go v0.0.0-20231011194518-5519949e0faf
-	github.com/riverqueue/river v0.28.0
-	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.28.0
-	github.com/riverqueue/river/rivertype v0.28.0
+	github.com/riverqueue/river v0.29.0
+	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.29.0
+	github.com/riverqueue/river/rivertype v0.29.0
 	github.com/rs/cors v1.11.1
 	github.com/sashabaranov/go-openai v1.41.2
 	github.com/serpapi/serpapi-golang v0.0.0-20251209060603-5a12868f380a
@@ -166,7 +166,7 @@ require (
 	golang.org/x/text v0.32.0
 	gonum.org/v1/gonum v0.16.0
 	google.golang.org/api v0.258.0
-	google.golang.org/grpc v1.77.0
+	google.golang.org/grpc v1.78.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -175,7 +175,7 @@ require (
 	k8s.io/client-go v0.35.0
 	k8s.io/component-base v0.35.0
 	k8s.io/utils v0.0.0-20251219084037-98d557b7f1e7
-	modernc.org/sqlite v1.41.0
+	modernc.org/sqlite v1.42.2
 	riverqueue.com/riverui v0.13.0
 	sigs.k8s.io/controller-runtime v0.22.4
 	sigs.k8s.io/kind v0.31.0
@@ -367,8 +367,8 @@ require (
 	github.com/refraction-networking/utls v1.7.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/riverqueue/apiframe v0.0.0-20250408034821-b206bbbd0fb4 // indirect
-	github.com/riverqueue/river/riverdriver v0.28.0 // indirect
-	github.com/riverqueue/river/rivershared v0.28.0 // indirect
+	github.com/riverqueue/river/riverdriver v0.29.0 // indirect
+	github.com/riverqueue/river/rivershared v0.29.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
@@ -427,7 +427,7 @@ require (
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/exp v0.0.0-20250813145105-42675adae3e6 // indirect
-	golang.org/x/mod v0.30.0 // indirect
+	golang.org/x/mod v0.31.0 // indirect
 	golang.org/x/sync v0.19.0
 	golang.org/x/sys v0.39.0 // indirect
 	golang.org/x/telemetry v0.0.0-20251111182119-bc8e575c7b54 // indirect
@@ -455,9 +455,4 @@ require (
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
-)
-
-require (
-	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources v1.2.0
-	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage v1.8.1
 )
