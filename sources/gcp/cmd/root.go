@@ -150,7 +150,8 @@ func init() {
 
 	// Custom flags for this source
 	rootCmd.PersistentFlags().IntP("health-check-port", "", 8080, "The port that the health check should run on")
-	rootCmd.PersistentFlags().String("gcp-project-id", "", "(Optional) GCP Project ID that this source should operate in. If not specified, all accessible projects will be discovered automatically using the Cloud Resource Manager API. Requires 'resourcemanager.projects.list' permission (included in 'roles/browser' role).")
+	rootCmd.PersistentFlags().String("gcp-parent", "", "GCP parent resource to discover from. Can be an organization (organizations/{org_id}), folder (folders/{folder_id}), or project (project-id or projects/{project_id}). If not specified, all accessible projects will be discovered automatically. Format examples: 'organizations/123456789012', 'folders/123456789012', 'my-project-id', 'projects/my-project-id'")
+	rootCmd.PersistentFlags().String("gcp-project-id", "", "(Deprecated: use --gcp-parent instead) GCP Project ID that this source should operate in. If not specified, all accessible projects will be discovered automatically using the Cloud Resource Manager API. Requires 'resourcemanager.projects.list' permission (included in 'roles/browser' role).")
 	rootCmd.PersistentFlags().String("gcp-regions", "", "Comma-separated list of GCP regions that this source should operate in")
 	rootCmd.PersistentFlags().String("gcp-zones", "", "Comma-separated list of GCP zones that this source should operate in")
 	rootCmd.PersistentFlags().String("gcp-impersonation-service-account-email", "", "The email of the service account to impersonate. Leave empty for direct access using Application Default Credentials.")
