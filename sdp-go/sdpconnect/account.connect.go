@@ -108,9 +108,6 @@ const (
 	// ManagementServiceRevlinkWarmupProcedure is the fully-qualified name of the ManagementService's
 	// RevlinkWarmup RPC.
 	ManagementServiceRevlinkWarmupProcedure = "/account.ManagementService/RevlinkWarmup"
-	// ManagementServiceGetTrialEndProcedure is the fully-qualified name of the ManagementService's
-	// GetTrialEnd RPC.
-	ManagementServiceGetTrialEndProcedure = "/account.ManagementService/GetTrialEnd"
 	// ManagementServiceListAvailableItemTypesProcedure is the fully-qualified name of the
 	// ManagementService's ListAvailableItemTypes RPC.
 	ManagementServiceListAvailableItemTypesProcedure = "/account.ManagementService/ListAvailableItemTypes"
@@ -570,7 +567,6 @@ type ManagementServiceClient interface {
 	// Ensure that all reverse links are populated. This does internal debouncing
 	// so the actual logic does only run when required.
 	RevlinkWarmup(context.Context, *connect.Request[sdp_go.RevlinkWarmupRequest]) (*connect.ServerStreamForClient[sdp_go.RevlinkWarmupResponse], error)
-	GetTrialEnd(context.Context, *connect.Request[sdp_go.GetTrialEndRequest]) (*connect.Response[sdp_go.GetTrialEndResponse], error)
 	// Lists all the available item types that can be discovered by sources that are running and healthy
 	ListAvailableItemTypes(context.Context, *connect.Request[sdp_go.ListAvailableItemTypesRequest]) (*connect.Response[sdp_go.ListAvailableItemTypesResponse], error)
 	// Get status of a single source by UUID
@@ -678,12 +674,6 @@ func NewManagementServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(managementServiceMethods.ByName("RevlinkWarmup")),
 			connect.WithClientOptions(opts...),
 		),
-		getTrialEnd: connect.NewClient[sdp_go.GetTrialEndRequest, sdp_go.GetTrialEndResponse](
-			httpClient,
-			baseURL+ManagementServiceGetTrialEndProcedure,
-			connect.WithSchema(managementServiceMethods.ByName("GetTrialEnd")),
-			connect.WithClientOptions(opts...),
-		),
 		listAvailableItemTypes: connect.NewClient[sdp_go.ListAvailableItemTypesRequest, sdp_go.ListAvailableItemTypesResponse](
 			httpClient,
 			baseURL+ManagementServiceListAvailableItemTypesProcedure,
@@ -750,7 +740,6 @@ type managementServiceClient struct {
 	keepaliveSources            *connect.Client[sdp_go.KeepaliveSourcesRequest, sdp_go.KeepaliveSourcesResponse]
 	createToken                 *connect.Client[sdp_go.CreateTokenRequest, sdp_go.CreateTokenResponse]
 	revlinkWarmup               *connect.Client[sdp_go.RevlinkWarmupRequest, sdp_go.RevlinkWarmupResponse]
-	getTrialEnd                 *connect.Client[sdp_go.GetTrialEndRequest, sdp_go.GetTrialEndResponse]
 	listAvailableItemTypes      *connect.Client[sdp_go.ListAvailableItemTypesRequest, sdp_go.ListAvailableItemTypesResponse]
 	getSourceStatus             *connect.Client[sdp_go.GetSourceStatusRequest, sdp_go.GetSourceStatusResponse]
 	getUserOnboardingStatus     *connect.Client[sdp_go.GetUserOnboardingStatusRequest, sdp_go.GetUserOnboardingStatusResponse]
@@ -824,11 +813,6 @@ func (c *managementServiceClient) CreateToken(ctx context.Context, req *connect.
 // RevlinkWarmup calls account.ManagementService.RevlinkWarmup.
 func (c *managementServiceClient) RevlinkWarmup(ctx context.Context, req *connect.Request[sdp_go.RevlinkWarmupRequest]) (*connect.ServerStreamForClient[sdp_go.RevlinkWarmupResponse], error) {
 	return c.revlinkWarmup.CallServerStream(ctx, req)
-}
-
-// GetTrialEnd calls account.ManagementService.GetTrialEnd.
-func (c *managementServiceClient) GetTrialEnd(ctx context.Context, req *connect.Request[sdp_go.GetTrialEndRequest]) (*connect.Response[sdp_go.GetTrialEndResponse], error) {
-	return c.getTrialEnd.CallUnary(ctx, req)
 }
 
 // ListAvailableItemTypes calls account.ManagementService.ListAvailableItemTypes.
@@ -914,7 +898,6 @@ type ManagementServiceHandler interface {
 	// Ensure that all reverse links are populated. This does internal debouncing
 	// so the actual logic does only run when required.
 	RevlinkWarmup(context.Context, *connect.Request[sdp_go.RevlinkWarmupRequest], *connect.ServerStream[sdp_go.RevlinkWarmupResponse]) error
-	GetTrialEnd(context.Context, *connect.Request[sdp_go.GetTrialEndRequest]) (*connect.Response[sdp_go.GetTrialEndResponse], error)
 	// Lists all the available item types that can be discovered by sources that are running and healthy
 	ListAvailableItemTypes(context.Context, *connect.Request[sdp_go.ListAvailableItemTypesRequest]) (*connect.Response[sdp_go.ListAvailableItemTypesResponse], error)
 	// Get status of a single source by UUID
@@ -1018,12 +1001,6 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 		connect.WithSchema(managementServiceMethods.ByName("RevlinkWarmup")),
 		connect.WithHandlerOptions(opts...),
 	)
-	managementServiceGetTrialEndHandler := connect.NewUnaryHandler(
-		ManagementServiceGetTrialEndProcedure,
-		svc.GetTrialEnd,
-		connect.WithSchema(managementServiceMethods.ByName("GetTrialEnd")),
-		connect.WithHandlerOptions(opts...),
-	)
 	managementServiceListAvailableItemTypesHandler := connect.NewUnaryHandler(
 		ManagementServiceListAvailableItemTypesProcedure,
 		svc.ListAvailableItemTypes,
@@ -1100,8 +1077,6 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 			managementServiceCreateTokenHandler.ServeHTTP(w, r)
 		case ManagementServiceRevlinkWarmupProcedure:
 			managementServiceRevlinkWarmupHandler.ServeHTTP(w, r)
-		case ManagementServiceGetTrialEndProcedure:
-			managementServiceGetTrialEndHandler.ServeHTTP(w, r)
 		case ManagementServiceListAvailableItemTypesProcedure:
 			managementServiceListAvailableItemTypesHandler.ServeHTTP(w, r)
 		case ManagementServiceGetSourceStatusProcedure:
@@ -1177,10 +1152,6 @@ func (UnimplementedManagementServiceHandler) CreateToken(context.Context, *conne
 
 func (UnimplementedManagementServiceHandler) RevlinkWarmup(context.Context, *connect.Request[sdp_go.RevlinkWarmupRequest], *connect.ServerStream[sdp_go.RevlinkWarmupResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.RevlinkWarmup is not implemented"))
-}
-
-func (UnimplementedManagementServiceHandler) GetTrialEnd(context.Context, *connect.Request[sdp_go.GetTrialEndRequest]) (*connect.Response[sdp_go.GetTrialEndResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.GetTrialEnd is not implemented"))
 }
 
 func (UnimplementedManagementServiceHandler) ListAvailableItemTypes(context.Context, *connect.Request[sdp_go.ListAvailableItemTypesRequest]) (*connect.Response[sdp_go.ListAvailableItemTypesResponse], error) {
