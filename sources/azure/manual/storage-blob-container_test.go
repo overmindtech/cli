@@ -93,12 +93,12 @@ func TestStorageBlobContainer(t *testing.T) {
 			t.Errorf("Expected type %s, got %s", azureshared.StorageBlobContainer, sdpItem.GetType())
 		}
 
-		if sdpItem.GetUniqueAttribute() != "name" {
-			t.Errorf("Expected unique attribute 'name', got %s", sdpItem.GetUniqueAttribute())
+		if sdpItem.GetUniqueAttribute() != "uniqueAttr" {
+			t.Errorf("Expected unique attribute 'uniqueAttr', got %s", sdpItem.GetUniqueAttribute())
 		}
 
-		if sdpItem.UniqueAttributeValue() != containerName {
-			t.Errorf("Expected unique attribute value %s, got %s", containerName, sdpItem.UniqueAttributeValue())
+		if sdpItem.UniqueAttributeValue() != shared.CompositeLookupKey(storageAccountName, containerName) {
+			t.Errorf("Expected unique attribute value %s, got %s", shared.CompositeLookupKey(storageAccountName, containerName), sdpItem.UniqueAttributeValue())
 		}
 
 		if sdpItem.GetScope() != subscriptionID+"."+resourceGroup {
@@ -279,8 +279,8 @@ func TestStorageBlobContainer(t *testing.T) {
 			t.Fatalf("Expected 1 item, got: %d", len(sdpItems))
 		}
 
-		if sdpItems[0].UniqueAttributeValue() != "valid-container" {
-			t.Errorf("Expected container name 'valid-container', got %s", sdpItems[0].UniqueAttributeValue())
+		if sdpItems[0].UniqueAttributeValue() != shared.CompositeLookupKey(storageAccountName, "valid-container") {
+			t.Errorf("Expected unique attribute value '%s', got %s", shared.CompositeLookupKey(storageAccountName, "valid-container"), sdpItems[0].UniqueAttributeValue())
 		}
 	})
 

@@ -93,8 +93,8 @@ func TestStorageTables(t *testing.T) {
 			t.Errorf("Expected type %s, got %s", azureshared.StorageTable, sdpItem.GetType())
 		}
 
-		if sdpItem.GetUniqueAttribute() != "id" {
-			t.Errorf("Expected unique attribute 'id', got %s", sdpItem.GetUniqueAttribute())
+		if sdpItem.GetUniqueAttribute() != "uniqueAttr" {
+			t.Errorf("Expected unique attribute 'uniqueAttr', got %s", sdpItem.GetUniqueAttribute())
 		}
 
 		expectedID := shared.CompositeLookupKey(storageAccountName, tableName)

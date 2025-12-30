@@ -130,14 +130,14 @@ func (s storageFileShareWrapper) azureFileShareToSDPItem(fileShare *armstorage.F
 		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
 	}
 
-	err = attributes.Set("id", shared.CompositeLookupKey(storageAccountName, shareName))
+	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(storageAccountName, shareName))
 	if err != nil {
 		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.StorageFileShare.String(),
-		UniqueAttribute: "id",
+		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
 		Scope:           s.DefaultScope(),
 	}
