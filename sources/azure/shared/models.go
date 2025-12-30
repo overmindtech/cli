@@ -32,12 +32,13 @@ const (
 	VirtualMachineRunCommand shared.Resource = "virtual-machine-run-command"
 
 	// Network resources
-	VirtualNetwork        shared.Resource = "virtual-network"
-	Subnet                shared.Resource = "subnet"
-	NetworkInterface      shared.Resource = "network-interface"
-	PublicIPAddress       shared.Resource = "public-ip-address"
-	NetworkSecurityGroup  shared.Resource = "network-security-group"
-	VirtualNetworkPeering shared.Resource = "virtual-network-peering"
+	VirtualNetwork                  shared.Resource = "virtual-network"
+	Subnet                          shared.Resource = "subnet"
+	NetworkInterface                shared.Resource = "network-interface"
+	PublicIPAddress                 shared.Resource = "public-ip-address"
+	NetworkSecurityGroup            shared.Resource = "network-security-group"
+	VirtualNetworkPeering           shared.Resource = "virtual-network-peering"
+	NetworkInterfaceIPConfiguration shared.Resource = "network-interface-ip-configuration"
 
 	// Storage resources
 	Account       shared.Resource = "account"
