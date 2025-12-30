@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
@@ -29,11 +30,97 @@ var Metadata = sdp.AdapterMetadataList{}
 
 // GCPConfig holds configuration for GCP source
 type GCPConfig struct {
-	ProjectID string // Optional: If empty, will discover all accessible projects
+	Parent    string // Optional: Can be organization, folder, or project. If empty, will discover all accessible projects
+	ProjectID string // Deprecated: Use Parent instead. Optional: If empty, will discover all accessible projects
 	Regions   []string
 	Zones     []string
 
 	ImpersonationServiceAccountEmail string // leave empty for direct access using Application Default Credentials
+}
+
+// ParentType represents the type of GCP parent resource
+type ParentType int
+
+const (
+	ParentTypeUnknown ParentType = iota
+	ParentTypeOrganization
+	ParentTypeFolder
+	ParentTypeProject
+)
+
+// detectParentType determines the type of parent resource based on its format
+func detectParentType(parent string) (ParentType, error) {
+	if parent == "" {
+		return ParentTypeUnknown, fmt.Errorf("parent is empty")
+	}
+
+	// Check for organization format
+	if len(parent) >= len("organizations/") && parent[:len("organizations/")] == "organizations/" {
+		return ParentTypeOrganization, nil
+	}
+
+	// Check for folder format
+	if len(parent) >= len("folders/") && parent[:len("folders/")] == "folders/" {
+		return ParentTypeFolder, nil
+	}
+
+	// Check for explicit project format
+	if len(parent) >= len("projects/") && parent[:len("projects/")] == "projects/" {
+		return ParentTypeProject, nil
+	}
+
+	// If none of the above, assume it's a project ID
+	// GCP project IDs must:
+	// - Start with a lowercase letter
+	// - Contain only lowercase letters, digits, and hyphens
+	// - Be between 6 and 30 characters
+	// This is a simplified check - we'll let the API validate the actual format
+	if len(parent) >= 6 && len(parent) <= 30 {
+		return ParentTypeProject, nil
+	}
+
+	return ParentTypeUnknown, fmt.Errorf("unable to determine parent type from: %s. Expected formats: 'organizations/{org_id}', 'folders/{folder_id}', or project ID", parent)
+}
+
+// normalizeParent converts a parent string to its canonical format
+// For projects, it converts "projects/{project_id}" to just the project ID
+// For organizations and folders, it ensures the format is correct
+func normalizeParent(parent string, parentType ParentType) (string, error) {
+	switch parentType {
+	case ParentTypeOrganization:
+		// Organizations should be in format "organizations/{org_id}"
+		// Validate that there's an ID after the prefix
+		prefix := "organizations/"
+		if !strings.HasPrefix(parent, prefix) || len(parent) <= len(prefix) {
+			return "", fmt.Errorf("invalid organization format: %s. Expected 'organizations/{org_id}'", parent)
+		}
+		return parent, nil
+	case ParentTypeFolder:
+		// Folders should be in format "folders/{folder_id}"
+		// Validate that there's an ID after the prefix
+		prefix := "folders/"
+		if !strings.HasPrefix(parent, prefix) || len(parent) <= len(prefix) {
+			return "", fmt.Errorf("invalid folder format: %s. Expected 'folders/{folder_id}'", parent)
+		}
+		return parent, nil
+	case ParentTypeProject:
+		// Extract project ID from "projects/{project_id}" format if present
+		var projectID string
+		if strings.HasPrefix(parent, "projects/") {
+			projectID = parent[len("projects/"):]
+		} else {
+			projectID = parent
+		}
+		// Validate that the project ID is not empty
+		if projectID == "" {
+			return "", fmt.Errorf("invalid project format: %s. Expected 'projects/{project_id}' or a valid project ID", parent)
+		}
+		return projectID, nil
+	case ParentTypeUnknown:
+		return "", fmt.Errorf("unknown parent type")
+	default:
+		return "", fmt.Errorf("unknown parent type")
+	}
 }
 
 func init() {
@@ -107,12 +194,13 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 
 		}
 
-		// Discover projects if no project ID is specified
+		// Determine which projects to use based on the parent configuration
 		var projectIDs []string
-		if cfg.ProjectID == "" {
+		if cfg.Parent == "" {
+			// No parent specified - discover all accessible projects
 			log.WithFields(log.Fields{
 				"ovm.source.type": "gcp",
-			}).Info("No project ID specified, discovering all accessible projects")
+			}).Info("No parent specified, discovering all accessible projects")
 
 			discoveredProjects, err := discoverProjects(ctx, cfg.ImpersonationServiceAccountEmail)
 			if err != nil {
@@ -121,17 +209,68 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 
 			projectIDs = discoveredProjects
 		} else {
-			projectIDs = []string{cfg.ProjectID}
+			// Parent is specified - determine its type and discover accordingly
+			parentType, err := detectParentType(cfg.Parent)
+			if err != nil {
+				return fmt.Errorf("error detecting parent type: %w", err)
+			}
+
+			normalizedParent, err := normalizeParent(cfg.Parent, parentType)
+			if err != nil {
+				return fmt.Errorf("error normalizing parent: %w", err)
+			}
+
+			switch parentType {
+			case ParentTypeProject:
+				// Single project - no discovery needed
+				log.WithFields(log.Fields{
+					"ovm.source.type":       "gcp",
+					"ovm.source.parent":     cfg.Parent,
+					"ovm.source.project_id": normalizedParent,
+				}).Info("Using specified project")
+				projectIDs = []string{normalizedParent}
+
+			case ParentTypeOrganization, ParentTypeFolder:
+				// Organization or folder - discover all projects within it
+				log.WithFields(log.Fields{
+					"ovm.source.type":   "gcp",
+					"ovm.source.parent": cfg.Parent,
+					"parent_type":       parentType,
+				}).Info("Discovering projects under parent")
+
+				discoveredProjects, err := discoverProjectsUnderSpecificParent(ctx, cfg.Parent, cfg.ImpersonationServiceAccountEmail)
+				if err != nil {
+					return fmt.Errorf("error discovering projects under parent %s: %w", cfg.Parent, err)
+				}
+
+				if len(discoveredProjects) == 0 {
+					return fmt.Errorf("no accessible projects found under parent %s. Please ensure the service account has the 'resourcemanager.projects.list' permission via the 'roles/browser' predefined GCP role", cfg.Parent)
+				}
+
+				projectIDs = discoveredProjects
+
+			case ParentTypeUnknown:
+				return fmt.Errorf("unknown parent type for parent: %s", cfg.Parent)
+
+			default:
+				return fmt.Errorf("unknown parent type for parent: %s", cfg.Parent)
+			}
 		}
 
-		log.WithFields(log.Fields{
+		logFields := log.Fields{
 			"ovm.source.type":                                "gcp",
-			"ovm.source.project_id":                          cfg.ProjectID,
 			"ovm.source.project_count":                       len(projectIDs),
 			"ovm.source.regions":                             cfg.Regions,
 			"ovm.source.zones":                               cfg.Zones,
 			"ovm.source.impersonation-service-account-email": cfg.ImpersonationServiceAccountEmail,
-		}).Info(logmsg)
+		}
+		if cfg.Parent != "" {
+			logFields["ovm.source.parent"] = cfg.Parent
+		}
+		if cfg.ProjectID != "" {
+			logFields["ovm.source.project_id"] = cfg.ProjectID
+		}
+		log.WithFields(logFields).Info(logmsg)
 
 		// If still no regions/zones this is no valid config.
 		if len(cfg.Regions) == 0 && len(cfg.Zones) == 0 {
@@ -249,11 +388,27 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 }
 
 func readConfig() (*GCPConfig, error) {
+	parent := viper.GetString("gcp-parent")
 	projectID := viper.GetString("gcp-project-id")
-	// Project ID is now optional - if not provided, we'll discover all accessible projects
+
+	// Handle backwards compatibility
+	// If both are specified, parent takes precedence (with a warning)
+	// If only project-id is specified, convert it to parent format for internal use
+	if parent != "" && projectID != "" {
+		log.WithFields(log.Fields{
+			"ovm.source.type": "gcp",
+		}).Warn("Both --gcp-parent and --gcp-project-id are specified. Using --gcp-parent. Note: --gcp-project-id is deprecated, please use --gcp-parent instead.")
+	} else if projectID != "" {
+		log.WithFields(log.Fields{
+			"ovm.source.type": "gcp",
+		}).Warn("Using deprecated --gcp-project-id flag. Please use --gcp-parent instead for future compatibility.")
+		// Convert project ID to parent format for internal consistency
+		parent = projectID
+	}
 
 	l := &GCPConfig{
-		ProjectID:                        projectID,
+		Parent:                           parent,
+		ProjectID:                        projectID, // Keep for backwards compatibility in logging/debugging
 		ImpersonationServiceAccountEmail: viper.GetString("gcp-impersonation-service-account-email"),
 	}
 
@@ -449,6 +604,63 @@ func discoverProjectsUnderParent(
 	}
 
 	return nil
+}
+
+// discoverProjectsUnderSpecificParent discovers all projects under a specific parent (organization or folder)
+// This is similar to discoverProjects but starts from a specific parent instead of searching for all organizations
+func discoverProjectsUnderSpecificParent(ctx context.Context, parent string, impersonationServiceAccountEmail string) ([]string, error) {
+	// Create client options
+	var clientOpts []option.ClientOption
+	if impersonationServiceAccountEmail != "" {
+		// Use impersonation credentials
+		ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
+			TargetPrincipal: impersonationServiceAccountEmail,
+			Scopes:          []string{"https://www.googleapis.com/auth/cloud-platform"},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create impersonated token source: %w", err)
+		}
+		clientOpts = append(clientOpts, option.WithTokenSource(ts))
+	}
+
+	// Create clients for folders and projects
+	foldersClient, err := resourcemanager.NewFoldersClient(ctx, clientOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create folders client: %w", err)
+	}
+	defer foldersClient.Close()
+
+	projectsClient, err := resourcemanager.NewProjectsClient(ctx, clientOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create projects client: %w", err)
+	}
+	defer projectsClient.Close()
+
+	// Use a map to track discovered projects and avoid duplicates
+	projectSet := make(map[string]bool)
+
+	// Recursively discover projects under the specified parent
+	if err := discoverProjectsUnderParent(ctx, parent, projectsClient, foldersClient, projectSet); err != nil {
+		return nil, fmt.Errorf("error discovering projects under parent %s: %w", parent, err)
+	}
+
+	// Convert map to slice
+	var projects []string
+	for projectID := range projectSet {
+		projects = append(projects, projectID)
+	}
+
+	// Return the list even if empty - let the caller handle the empty case
+	// with a more informative error message
+	if len(projects) > 0 {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.source.type":          "gcp",
+			"ovm.source.parent":        parent,
+			"ovm.source.project_count": len(projects),
+		}).Info("Successfully discovered projects under parent")
+	}
+
+	return projects, nil
 }
 
 // adapters returns a list of discovery adapters for GCP
