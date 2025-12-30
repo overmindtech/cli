@@ -90,7 +90,7 @@ func (s storageQueuesWrapper) azureQueueToSDPItem(queue *armstorage.Queue, stora
 func (s storageQueuesWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_SEARCH,
 			// https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_queue
 			// Terraform uses: /subscriptions/{{subscription}}/resourceGroups/{{resourceGroup}}/providers/Microsoft.Storage/storageAccounts/{{storageAccountName}}/queueServices/default/queues/{{queueName}}
 			TerraformQueryMap: "azurerm_storage_queue.id",

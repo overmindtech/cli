@@ -19,47 +19,47 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-// mockQueuesPager is a simple mock implementation of QueuesPager
-type mockQueuesPager struct {
-	pages []armstorage.QueueClientListResponse
+// mockTablesPager is a simple mock implementation of TablesPager
+type mockTablesPager struct {
+	pages []armstorage.TableClientListResponse
 	index int
 }
 
-func (m *mockQueuesPager) More() bool {
+func (m *mockTablesPager) More() bool {
 	return m.index < len(m.pages)
 }
 
-func (m *mockQueuesPager) NextPage(ctx context.Context) (armstorage.QueueClientListResponse, error) {
+func (m *mockTablesPager) NextPage(ctx context.Context) (armstorage.TableClientListResponse, error) {
 	if m.index >= len(m.pages) {
-		return armstorage.QueueClientListResponse{}, errors.New("no more pages")
+		return armstorage.TableClientListResponse{}, errors.New("no more pages")
 	}
 	page := m.pages[m.index]
 	m.index++
 	return page, nil
 }
 
-// errorQueuesPager is a mock pager that always returns an error
-type errorQueuesPager struct{}
+// errorTablesPager is a mock pager that always returns an error
+type errorTablesPager struct{}
 
-func (e *errorQueuesPager) More() bool {
+func (e *errorTablesPager) More() bool {
 	return true // Always return true so NextPage will be called
 }
 
-func (e *errorQueuesPager) NextPage(ctx context.Context) (armstorage.QueueClientListResponse, error) {
-	return armstorage.QueueClientListResponse{}, errors.New("pager error")
+func (e *errorTablesPager) NextPage(ctx context.Context) (armstorage.TableClientListResponse, error) {
+	return armstorage.TableClientListResponse{}, errors.New("pager error")
 }
 
-// testQueuesClient wraps the mock to implement the correct interface
-type testQueuesClient struct {
-	*mocks.MockQueuesClient
-	pager clients.QueuesPager
+// testTablesClient wraps the mock to implement the correct interface
+type testTablesClient struct {
+	*mocks.MockTablesClient
+	pager clients.TablesPager
 }
 
-func (t *testQueuesClient) List(ctx context.Context, resourceGroupName, accountName string) clients.QueuesPager {
+func (t *testTablesClient) List(ctx context.Context, resourceGroupName, accountName string) clients.TablesPager {
 	return t.pager
 }
 
-func TestStorageQueues(t *testing.T) {
+func TestStorageTables(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -67,37 +67,37 @@ func TestStorageQueues(t *testing.T) {
 	subscriptionID := "test-subscription"
 	resourceGroup := "test-rg"
 	storageAccountName := "teststorageaccount"
-	queueName := "test-queue"
+	tableName := "test-table"
 
 	t.Run("Get", func(t *testing.T) {
-		queue := createAzureQueue(queueName)
+		table := createAzureTable(tableName)
 
-		mockClient := mocks.NewMockQueuesClient(ctrl)
-		mockClient.EXPECT().Get(ctx, resourceGroup, storageAccountName, queueName).Return(
-			armstorage.QueueClientGetResponse{
-				Queue: *queue,
+		mockClient := mocks.NewMockTablesClient(ctrl)
+		mockClient.EXPECT().Get(ctx, resourceGroup, storageAccountName, tableName).Return(
+			armstorage.TableClientGetResponse{
+				Table: *table,
 			}, nil)
 
-		testClient := &testQueuesClient{MockQueuesClient: mockClient}
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		testClient := &testTablesClient{MockTablesClient: mockClient}
+		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
 		adapter := sources.WrapperToAdapter(wrapper)
 
-		// Get requires storageAccountName and queueName as query parts
-		query := storageAccountName + shared.QuerySeparator + queueName
+		// Get requires storageAccountName and tableName as query parts
+		query := storageAccountName + shared.QuerySeparator + tableName
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], query, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)
 		}
 
-		if sdpItem.GetType() != azureshared.StorageQueue.String() {
-			t.Errorf("Expected type %s, got %s", azureshared.StorageQueue, sdpItem.GetType())
+		if sdpItem.GetType() != azureshared.StorageTable.String() {
+			t.Errorf("Expected type %s, got %s", azureshared.StorageTable, sdpItem.GetType())
 		}
 
 		if sdpItem.GetUniqueAttribute() != "id" {
 			t.Errorf("Expected unique attribute 'id', got %s", sdpItem.GetUniqueAttribute())
 		}
 
-		expectedID := shared.CompositeLookupKey(storageAccountName, queueName)
+		expectedID := shared.CompositeLookupKey(storageAccountName, tableName)
 		if sdpItem.UniqueAttributeValue() != expectedID {
 			t.Errorf("Expected unique attribute value %s, got %s", expectedID, sdpItem.UniqueAttributeValue())
 		}
@@ -138,10 +138,10 @@ func TestStorageQueues(t *testing.T) {
 	})
 
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
-		mockClient := mocks.NewMockQueuesClient(ctrl)
-		testClient := &testQueuesClient{MockQueuesClient: mockClient}
+		mockClient := mocks.NewMockTablesClient(ctrl)
+		testClient := &testTablesClient{MockTablesClient: mockClient}
 
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
 		adapter := sources.WrapperToAdapter(wrapper)
 
 		// Test with insufficient query parts (only storage account name)
@@ -152,30 +152,26 @@ func TestStorageQueues(t *testing.T) {
 	})
 
 	t.Run("Search", func(t *testing.T) {
-		queue1 := createAzureQueue("queue-1")
-		queue2 := createAzureQueue("queue-2")
+		table1 := createAzureTable("table-1")
+		table2 := createAzureTable("table-2")
 
-		mockClient := mocks.NewMockQueuesClient(ctrl)
-		mockPager := &mockQueuesPager{
-			pages: []armstorage.QueueClientListResponse{
+		mockClient := mocks.NewMockTablesClient(ctrl)
+		mockPager := &mockTablesPager{
+			pages: []armstorage.TableClientListResponse{
 				{
-					ListQueueResource: armstorage.ListQueueResource{
-						Value: []*armstorage.ListQueue{
+					ListTableResource: armstorage.ListTableResource{
+						Value: []*armstorage.Table{
 							{
-								ID:   queue1.ID,
-								Name: queue1.Name,
-								Type: queue1.Type,
-								QueueProperties: &armstorage.ListQueueProperties{
-									Metadata: queue1.QueueProperties.Metadata,
-								},
+								ID:              table1.ID,
+								Name:            table1.Name,
+								Type:            table1.Type,
+								TableProperties: table1.TableProperties,
 							},
 							{
-								ID:   queue2.ID,
-								Name: queue2.Name,
-								Type: queue2.Type,
-								QueueProperties: &armstorage.ListQueueProperties{
-									Metadata: queue2.QueueProperties.Metadata,
-								},
+								ID:              table2.ID,
+								Name:            table2.Name,
+								Type:            table2.Type,
+								TableProperties: table2.TableProperties,
 							},
 						},
 					},
@@ -183,12 +179,12 @@ func TestStorageQueues(t *testing.T) {
 			},
 		}
 
-		testClient := &testQueuesClient{
-			MockQueuesClient: mockClient,
+		testClient := &testTablesClient{
+			MockTablesClient: mockClient,
 			pager:            mockPager,
 		}
 
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
 		adapter := sources.WrapperToAdapter(wrapper)
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -210,8 +206,8 @@ func TestStorageQueues(t *testing.T) {
 				t.Fatalf("Expected no validation error, got: %v", err)
 			}
 
-			if item.GetType() != azureshared.StorageQueue.String() {
-				t.Errorf("Expected type %s, got %s", azureshared.StorageQueue, item.GetType())
+			if item.GetType() != azureshared.StorageTable.String() {
+				t.Errorf("Expected type %s, got %s", azureshared.StorageTable, item.GetType())
 			}
 		}
 	})
@@ -219,10 +215,10 @@ func TestStorageQueues(t *testing.T) {
 	t.Run("Search_InvalidQueryParts", func(t *testing.T) {
 		// This test verifies that the wrapper's Search method validates query parts
 		// We test it directly on the wrapper since the adapter may handle empty queries differently
-		mockClient := mocks.NewMockQueuesClient(ctrl)
-		testClient := &testQueuesClient{MockQueuesClient: mockClient}
+		mockClient := mocks.NewMockTablesClient(ctrl)
+		testClient := &testTablesClient{MockTablesClient: mockClient}
 
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
 
 		// Test Search directly with no query parts - should return error before calling List
 		_, qErr := wrapper.Search(ctx)
@@ -231,25 +227,23 @@ func TestStorageQueues(t *testing.T) {
 		}
 	})
 
-	t.Run("Search_QueueWithNilName", func(t *testing.T) {
-		validQueue := createAzureQueue("valid-queue")
-		mockClient := mocks.NewMockQueuesClient(ctrl)
-		mockPager := &mockQueuesPager{
-			pages: []armstorage.QueueClientListResponse{
+	t.Run("Search_TableWithNilName", func(t *testing.T) {
+		validTable := createAzureTable("valid-table")
+		mockClient := mocks.NewMockTablesClient(ctrl)
+		mockPager := &mockTablesPager{
+			pages: []armstorage.TableClientListResponse{
 				{
-					ListQueueResource: armstorage.ListQueueResource{
-						Value: []*armstorage.ListQueue{
+					ListTableResource: armstorage.ListTableResource{
+						Value: []*armstorage.Table{
 							{
-								// Queue with nil name should be skipped
+								// Table with nil name should be skipped
 								Name: nil,
 							},
 							{
-								ID:   validQueue.ID,
-								Name: validQueue.Name,
-								Type: validQueue.Type,
-								QueueProperties: &armstorage.ListQueueProperties{
-									Metadata: validQueue.QueueProperties.Metadata,
-								},
+								ID:              validTable.ID,
+								Name:            validTable.Name,
+								Type:            validTable.Type,
+								TableProperties: validTable.TableProperties,
 							},
 						},
 					},
@@ -257,12 +251,12 @@ func TestStorageQueues(t *testing.T) {
 			},
 		}
 
-		testClient := &testQueuesClient{
-			MockQueuesClient: mockClient,
+		testClient := &testTablesClient{
+			MockTablesClient: mockClient,
 			pager:            mockPager,
 		}
 
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
 		adapter := sources.WrapperToAdapter(wrapper)
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -280,41 +274,41 @@ func TestStorageQueues(t *testing.T) {
 			t.Fatalf("Expected 1 item, got: %d", len(sdpItems))
 		}
 
-		expectedID := shared.CompositeLookupKey(storageAccountName, "valid-queue")
+		expectedID := shared.CompositeLookupKey(storageAccountName, "valid-table")
 		if sdpItems[0].UniqueAttributeValue() != expectedID {
-			t.Errorf("Expected queue ID %s, got %s", expectedID, sdpItems[0].UniqueAttributeValue())
+			t.Errorf("Expected table ID %s, got %s", expectedID, sdpItems[0].UniqueAttributeValue())
 		}
 	})
 
 	t.Run("ErrorHandling_Get", func(t *testing.T) {
-		expectedErr := errors.New("queue not found")
+		expectedErr := errors.New("table not found")
 
-		mockClient := mocks.NewMockQueuesClient(ctrl)
-		mockClient.EXPECT().Get(ctx, resourceGroup, storageAccountName, "nonexistent-queue").Return(
-			armstorage.QueueClientGetResponse{}, expectedErr)
+		mockClient := mocks.NewMockTablesClient(ctrl)
+		mockClient.EXPECT().Get(ctx, resourceGroup, storageAccountName, "nonexistent-table").Return(
+			armstorage.TableClientGetResponse{}, expectedErr)
 
-		testClient := &testQueuesClient{MockQueuesClient: mockClient}
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		testClient := &testTablesClient{MockTablesClient: mockClient}
+		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
 		adapter := sources.WrapperToAdapter(wrapper)
 
-		query := storageAccountName + shared.QuerySeparator + "nonexistent-queue"
+		query := storageAccountName + shared.QuerySeparator + "nonexistent-table"
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], query, true)
 		if qErr == nil {
-			t.Error("Expected error when getting non-existent queue, but got nil")
+			t.Error("Expected error when getting non-existent table, but got nil")
 		}
 	})
 
 	t.Run("ErrorHandling_Search", func(t *testing.T) {
-		mockClient := mocks.NewMockQueuesClient(ctrl)
+		mockClient := mocks.NewMockTablesClient(ctrl)
 		// Create a pager that returns an error when NextPage is called
-		errorPager := &errorQueuesPager{}
+		errorPager := &errorTablesPager{}
 
-		testClient := &testQueuesClient{
-			MockQueuesClient: mockClient,
+		testClient := &testTablesClient{
+			MockTablesClient: mockClient,
 			pager:            errorPager,
 		}
 
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
 		adapter := sources.WrapperToAdapter(wrapper)
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -331,9 +325,9 @@ func TestStorageQueues(t *testing.T) {
 	})
 
 	t.Run("InterfaceCompliance", func(t *testing.T) {
-		mockClient := mocks.NewMockQueuesClient(ctrl)
-		testClient := &testQueuesClient{MockQueuesClient: mockClient}
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		mockClient := mocks.NewMockTablesClient(ctrl)
+		testClient := &testTablesClient{MockTablesClient: mockClient}
+		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
 
 		// Verify wrapper implements SearchableWrapper (it's returned as this type)
 		if wrapper == nil {
@@ -349,9 +343,9 @@ func TestStorageQueues(t *testing.T) {
 	})
 
 	t.Run("PotentialLinks", func(t *testing.T) {
-		mockClient := mocks.NewMockQueuesClient(ctrl)
-		testClient := &testQueuesClient{MockQueuesClient: mockClient}
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		mockClient := mocks.NewMockTablesClient(ctrl)
+		testClient := &testTablesClient{MockTablesClient: mockClient}
+		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
 
 		links := wrapper.PotentialLinks()
 		if len(links) == 0 {
@@ -364,19 +358,19 @@ func TestStorageQueues(t *testing.T) {
 	})
 
 	t.Run("TerraformMappings", func(t *testing.T) {
-		mockClient := mocks.NewMockQueuesClient(ctrl)
-		testClient := &testQueuesClient{MockQueuesClient: mockClient}
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		mockClient := mocks.NewMockTablesClient(ctrl)
+		testClient := &testTablesClient{MockTablesClient: mockClient}
+		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
 
 		mappings := wrapper.TerraformMappings()
 		if len(mappings) == 0 {
 			t.Fatal("Expected TerraformMappings to be defined")
 		}
 
-		// Verify we have the correct mapping for azurerm_storage_queue.id
+		// Verify we have the correct mapping for azurerm_storage_table.id
 		foundIDMapping := false
 		for _, mapping := range mappings {
-			if mapping.GetTerraformQueryMap() == "azurerm_storage_queue.id" {
+			if mapping.GetTerraformQueryMap() == "azurerm_storage_table.id" {
 				foundIDMapping = true
 				if mapping.GetTerraformMethod() != sdp.QueryMethod_SEARCH {
 					t.Errorf("Expected TerraformMethod to be SEARCH for id mapping, got %s", mapping.GetTerraformMethod())
@@ -385,7 +379,7 @@ func TestStorageQueues(t *testing.T) {
 		}
 
 		if !foundIDMapping {
-			t.Error("Expected TerraformMappings to include 'azurerm_storage_queue.id' mapping")
+			t.Error("Expected TerraformMappings to include 'azurerm_storage_table.id' mapping")
 		}
 
 		// Verify we only have one mapping (the id mapping)
@@ -393,19 +387,38 @@ func TestStorageQueues(t *testing.T) {
 			t.Errorf("Expected 1 TerraformMapping, got %d", len(mappings))
 		}
 	})
+
+	t.Run("IAMPermissions", func(t *testing.T) {
+		mockClient := mocks.NewMockTablesClient(ctrl)
+		testClient := &testTablesClient{MockTablesClient: mockClient}
+		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
+
+		permissions := wrapper.IAMPermissions()
+		if len(permissions) == 0 {
+			t.Error("Expected IAMPermissions to be defined")
+		}
+
+		expectedPermission := "Microsoft.Storage/storageAccounts/tableServices/tables/read"
+		found := false
+		for _, perm := range permissions {
+			if perm == expectedPermission {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("Expected IAMPermissions to include %s", expectedPermission)
+		}
+	})
+
 }
 
-// createAzureQueue creates a mock Azure queue for testing
-func createAzureQueue(queueName string) *armstorage.Queue {
-	return &armstorage.Queue{
-		ID:   to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/queueServices/default/queues/" + queueName),
-		Name: to.Ptr(queueName),
-		Type: to.Ptr("Microsoft.Storage/storageAccounts/queueServices/queues"),
-		QueueProperties: &armstorage.QueueProperties{
-			Metadata: map[string]*string{
-				"env":     to.Ptr("test"),
-				"project": to.Ptr("testing"),
-			},
-		},
+// createAzureTable creates a mock Azure table for testing
+func createAzureTable(tableName string) *armstorage.Table {
+	return &armstorage.Table{
+		ID:              to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/tableServices/default/tables/" + tableName),
+		Name:            to.Ptr(tableName),
+		Type:            to.Ptr("Microsoft.Storage/storageAccounts/tableServices/tables"),
+		TableProperties: &armstorage.TableProperties{},
 	}
 }

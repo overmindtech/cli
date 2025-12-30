@@ -79,6 +79,16 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create file shares client: %w", err)
 		}
 
+		queuesClient, err := armstorage.NewQueueClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create queues client: %w", err)
+		}
+
+		tablesClient, err := armstorage.NewTableClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create tables client: %w", err)
+		}
+
 		// Create adapters for each resource group
 		for _, resourceGroup := range resourceGroups {
 			// Add Compute Virtual Machine adapter for this resource group
@@ -115,6 +125,23 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					resourceGroup,
 				)),
 			)
+
+			// Add Storage Queue adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewStorageQueues(
+					clients.NewQueuesClient(queuesClient),
+					subscriptionID,
+					resourceGroup,
+				)),
+			)
+			// Add Storage Table adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewStorageTable(
+					clients.NewTablesClient(tablesClient),
+					subscriptionID,
+					resourceGroup,
+				)),
+			)
 		}
 
 		log.WithFields(log.Fields{
@@ -143,6 +170,16 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				"placeholder-resource-group",
 			)),
 			sources.WrapperToAdapter(NewStorageFileShare(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			)),
+			sources.WrapperToAdapter(NewStorageQueues(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			)),
+			sources.WrapperToAdapter(NewStorageTable(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
