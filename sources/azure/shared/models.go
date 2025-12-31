@@ -75,7 +75,8 @@ const (
 	PrivateEndpoint shared.Resource = "private-endpoint"
 
 	// KeyVault resources
-	Vault shared.Resource = "vault"
+	Vault      shared.Resource = "vault"
+	ManagedHSM shared.Resource = "managed-hsm"
 
 	// ManagedIdentity resources
 	UserAssignedIdentity shared.Resource = "user-assigned-identity"

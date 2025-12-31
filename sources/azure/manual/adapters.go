@@ -7,6 +7,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
@@ -112,6 +113,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create document db database accounts client: %w", err)
 		}
 
+		keyVaultsClient, err := armkeyvault.NewVaultsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create key vaults client: %w", err)
+		}
+
 		// Create adapters for each resource group
 		for _, resourceGroup := range resourceGroups {
 			// Add Compute Virtual Machine adapter for this resource group
@@ -201,6 +207,15 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					resourceGroup,
 				)),
 			)
+
+			// Add Key Vault Vault adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewKeyVaultVault(
+					clients.NewVaultsClient(keyVaultsClient),
+					subscriptionID,
+					resourceGroup,
+				)),
+			)
 		}
 
 		log.WithFields(log.Fields{
@@ -259,6 +274,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				"placeholder-resource-group",
 			)),
 			sources.WrapperToAdapter(NewDocumentDBDatabaseAccounts(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			)),
+			sources.WrapperToAdapter(NewKeyVaultVault(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
