@@ -35,6 +35,9 @@ For example, `TestComputeVirtualMachineIntegration` tests the Compute API's Virt
     export AZURE_TENANT_ID="your-tenant-id"              # your Azure AD tenant ID
     export AZURE_CLIENT_ID="your-client-id"             # your Azure application/client ID
     export AZURE_REGIONS="eastus,westus2"                # optional: comma-separated list of regions
+    # For SQL Database integration tests
+    export AZURE_SQL_SERVER_ADMIN_LOGIN="sqladmin"       # SQL server administrator login
+    export AZURE_SQL_SERVER_ADMIN_PASSWORD="your-secure-password"  # SQL server administrator password
    ```
 
 6. Integration tests are using Azure SDK for Go to interact with Azure resources. For local development, you can authenticate using:

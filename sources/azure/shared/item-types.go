@@ -27,4 +27,12 @@ var (
 	StorageFileShare     = shared.NewItemType(Azure, Storage, FileShare)
 	StorageTable         = shared.NewItemType(Azure, Storage, Table)
 	StorageQueue         = shared.NewItemType(Azure, Storage, Queue)
+
+	// SQL item types
+	SQLDatabase                      = shared.NewItemType(Azure, SQL, Database)
+	SQLRecoverableDatabase           = shared.NewItemType(Azure, SQL, RecoverableDatabase)
+	SQLRecoveryServicesRecoveryPoint = shared.NewItemType(Azure, SQL, RecoveryServicesRecoveryPoint)
+	SQLRestorableDroppedDatabase     = shared.NewItemType(Azure, SQL, RestorableDroppedDatabase)
+	SQLServer                        = shared.NewItemType(Azure, SQL, Server)
+	SQLElasticPool                   = shared.NewItemType(Azure, SQL, ElasticPool)
 )

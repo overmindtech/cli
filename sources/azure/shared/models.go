@@ -19,6 +19,9 @@ const (
 
 	// Storage
 	Storage shared.API = "storage" // Microsoft.Storage
+
+	// SQL
+	SQL shared.API = "sql" // Microsoft.Sql
 )
 
 // Resources
@@ -46,4 +49,12 @@ const (
 	FileShare     shared.Resource = "file-share"
 	Table         shared.Resource = "table"
 	Queue         shared.Resource = "queue"
+
+	// SQL resources
+	Database                      shared.Resource = "database"
+	RecoverableDatabase           shared.Resource = "recoverable-database"
+	RestorableDroppedDatabase     shared.Resource = "restorable-dropped-database"
+	RecoveryServicesRecoveryPoint shared.Resource = "recovery-services-recovery-point"
+	Server                        shared.Resource = "server"
+	ElasticPool                   shared.Resource = "elastic-pool"
 )

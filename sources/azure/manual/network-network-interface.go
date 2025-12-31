@@ -62,10 +62,7 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 
 	attributes, err := shared.ToAttributesWithExclude(networkInterface, "tags")
 	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_OTHER,
-			ErrorString: err.Error(),
-		}
+		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
 	}
 
 	sdpItem := &sdp.Item{
