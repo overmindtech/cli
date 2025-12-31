@@ -111,13 +111,16 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 	}
 
 	if database.Properties != nil && database.Properties.RecoverableDatabaseID != nil {
-		recoverableDatabaseName := azureshared.ExtractResourceName(*database.Properties.RecoverableDatabaseID)
-		if recoverableDatabaseName != "" {
+		// Extract server name and database name from RecoverableDatabaseID resource ID
+		// This handles cross-server scenarios where geo-replicated backups exist on different servers
+		// RecoverableDatabaseID format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/servers/{serverName}/recoverableDatabases/{databaseName}
+		recoverableServerName, recoverableDatabaseName := azureshared.ExtractSQLRecoverableDatabaseInfoFromResourceID(*database.Properties.RecoverableDatabaseID)
+		if recoverableServerName != "" && recoverableDatabaseName != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.SQLRecoverableDatabase.String(),
 					Method: sdp.QueryMethod_GET,
-					Query:  shared.CompositeLookupKey(serverName, recoverableDatabaseName),
+					Query:  shared.CompositeLookupKey(recoverableServerName, recoverableDatabaseName),
 					Scope:  s.DefaultScope(),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
@@ -129,13 +132,16 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 	}
 
 	if database.Properties != nil && database.Properties.RestorableDroppedDatabaseID != nil {
-		restorableDroppedDatabaseName := azureshared.ExtractResourceName(*database.Properties.RestorableDroppedDatabaseID)
-		if restorableDroppedDatabaseName != "" {
+		// Extract server name and database name from RestorableDroppedDatabaseID resource ID
+		// This handles cross-server scenarios where dropped databases may be on different servers
+		// RestorableDroppedDatabaseID format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/servers/{serverName}/restorableDroppedDatabases/{databaseName}
+		restorableDroppedServerName, restorableDroppedDatabaseName := azureshared.ExtractSQLRestorableDroppedDatabaseInfoFromResourceID(*database.Properties.RestorableDroppedDatabaseID)
+		if restorableDroppedServerName != "" && restorableDroppedDatabaseName != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.SQLRestorableDroppedDatabase.String(),
 					Method: sdp.QueryMethod_GET,
-					Query:  shared.CompositeLookupKey(serverName, restorableDroppedDatabaseName),
+					Query:  shared.CompositeLookupKey(restorableDroppedServerName, restorableDroppedDatabaseName),
 					Scope:  s.DefaultScope(),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
@@ -162,13 +168,15 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 	}
 
 	if database.Properties != nil && database.Properties.SourceDatabaseID != nil {
-		sourceDatabaseName := azureshared.ExtractResourceName(*database.Properties.SourceDatabaseID)
-		if sourceDatabaseName != "" {
+		// Extract server name and database name from SourceDatabaseID resource ID
+		// This handles cross-server copy scenarios where the source database may be on a different server
+		sourceServerName, sourceDatabaseName := azureshared.ExtractSQLDatabaseInfoFromResourceID(*database.Properties.SourceDatabaseID)
+		if sourceServerName != "" && sourceDatabaseName != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.SQLDatabase.String(),
 					Method: sdp.QueryMethod_GET,
-					Query:  shared.CompositeLookupKey(serverName, sourceDatabaseName),
+					Query:  shared.CompositeLookupKey(sourceServerName, sourceDatabaseName),
 					Scope:  s.DefaultScope(),
 				},
 				BlastPropagation: &sdp.BlastPropagation{

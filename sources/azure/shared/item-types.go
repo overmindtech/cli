@@ -21,6 +21,7 @@ var (
 	NetworkNetworkSecurityGroup            = shared.NewItemType(Azure, Network, NetworkSecurityGroup)
 	NetworkVirtualNetworkPeering           = shared.NewItemType(Azure, Network, VirtualNetworkPeering)
 	NetworkNetworkInterfaceIPConfiguration = shared.NewItemType(Azure, Network, NetworkInterfaceIPConfiguration)
+	NetworkPrivateEndpoint                 = shared.NewItemType(Azure, Network, PrivateEndpoint)
 	//Storage item types
 	StorageAccount       = shared.NewItemType(Azure, Storage, Account)
 	StorageBlobContainer = shared.NewItemType(Azure, Storage, BlobContainer)
@@ -35,4 +36,14 @@ var (
 	SQLRestorableDroppedDatabase     = shared.NewItemType(Azure, SQL, RestorableDroppedDatabase)
 	SQLServer                        = shared.NewItemType(Azure, SQL, Server)
 	SQLElasticPool                   = shared.NewItemType(Azure, SQL, ElasticPool)
+
+	// DocumentDB item types
+	DocumentDBDatabaseAccounts          = shared.NewItemType(Azure, DocumentDB, DatabaseAccounts)
+	DocumentDBPrivateEndpointConnection = shared.NewItemType(Azure, DocumentDB, PrivateEndpointConnection)
+
+	// KeyVault item types
+	KeyVaultVault = shared.NewItemType(Azure, KeyVault, Vault)
+
+	// ManagedIdentity item types
+	ManagedIdentityUserAssignedIdentity = shared.NewItemType(Azure, ManagedIdentity, UserAssignedIdentity)
 )

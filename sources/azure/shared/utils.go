@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"net/url"
 	"strings"
 )
 
@@ -134,6 +135,40 @@ func ExtractSQLDatabaseInfoFromResourceID(resourceID string) (serverName, databa
 	return "", ""
 }
 
+// ExtractSQLRecoverableDatabaseInfoFromResourceID extracts SQL server name and database name from a recoverable database resource ID.
+// Azure SQL recoverable database IDs follow the format:
+// /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Sql/servers/{serverName}/recoverableDatabases/{databaseName}
+// Returns serverName and databaseName if the resource ID is a recoverable database, otherwise returns empty strings.
+func ExtractSQLRecoverableDatabaseInfoFromResourceID(resourceID string) (serverName, databaseName string) {
+	if resourceID == "" {
+		return "", ""
+	}
+
+	params := ExtractPathParamsFromResourceID(resourceID, []string{"servers", "recoverableDatabases"})
+	if len(params) >= 2 {
+		return params[0], params[1]
+	}
+
+	return "", ""
+}
+
+// ExtractSQLRestorableDroppedDatabaseInfoFromResourceID extracts SQL server name and database name from a restorable dropped database resource ID.
+// Azure SQL restorable dropped database IDs follow the format:
+// /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Sql/servers/{serverName}/restorableDroppedDatabases/{databaseName}
+// Returns serverName and databaseName if the resource ID is a restorable dropped database, otherwise returns empty strings.
+func ExtractSQLRestorableDroppedDatabaseInfoFromResourceID(resourceID string) (serverName, databaseName string) {
+	if resourceID == "" {
+		return "", ""
+	}
+
+	params := ExtractPathParamsFromResourceID(resourceID, []string{"servers", "restorableDroppedDatabases"})
+	if len(params) >= 2 {
+		return params[0], params[1]
+	}
+
+	return "", ""
+}
+
 // ExtractSQLElasticPoolInfoFromResourceID extracts SQL server name and elastic pool name from a SQL elastic pool resource ID.
 // Azure SQL elastic pool IDs follow the format:
 // /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Sql/servers/{serverName}/elasticPools/{elasticPoolName}
@@ -208,4 +243,22 @@ func ConvertAzureTags(azureTags map[string]*string) map[string]string {
 		}
 	}
 	return tags
+}
+
+// ExtractVaultNameFromURI extracts the vault name from a Key Vault URI
+// Format: https://{vaultName}.vault.azure.net/keys/{keyName}/{version}
+func ExtractVaultNameFromURI(uri string) string {
+	parsedURL, err := url.Parse(uri)
+	if err != nil {
+		return ""
+	}
+
+	host := parsedURL.Host
+	// Extract vault name from hostname: {vaultName}.vault.azure.net
+	parts := strings.Split(host, ".")
+	if len(parts) > 0 {
+		return parts[0]
+	}
+
+	return ""
 }
