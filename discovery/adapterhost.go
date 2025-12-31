@@ -20,12 +20,15 @@ import (
 type AdapterHost struct {
 	// Map of types to all adapters for that type
 	adapters []Adapter
-	mutex    sync.RWMutex
+	// Index for O(1) duplicate detection: map[type]map[scope]exists
+	adapterIndex map[string]map[string]bool
+	mutex        sync.RWMutex
 }
 
 func NewAdapterHost() *AdapterHost {
 	sh := &AdapterHost{
-		adapters: make([]Adapter, 0),
+		adapters:     make([]Adapter, 0),
+		adapterIndex: make(map[string]map[string]bool),
 	}
 
 	return sh
@@ -39,31 +42,33 @@ func (sh *AdapterHost) AddAdapters(adapters ...Adapter) error {
 	defer sh.mutex.Unlock()
 
 	for _, newAdapter := range adapters {
-		for _, existingAdapter := range sh.adapters {
-			if existingAdapter.Type() == newAdapter.Type() && scopesOverlap(existingAdapter.Scopes(), newAdapter.Scopes()) {
-				log.Errorf("Error: Adapter with type %s and overlapping scopes already exists. Existing adapter scopes: %v, New adapter scopes: %v",
-					existingAdapter.Type(), existingAdapter.Scopes(), newAdapter.Scopes())
-				return fmt.Errorf("adapter with type %s and overlapping scopes already exists", newAdapter.Type())
+		newType := newAdapter.Type()
+		newScopes := newAdapter.Scopes()
+
+		// Check for overlapping scopes using O(1) index lookup instead of O(n) scan
+		if scopeMap, exists := sh.adapterIndex[newType]; exists {
+			for _, newScope := range newScopes {
+				if scopeMap[newScope] {
+					log.Errorf("Error: Adapter with type %s and overlapping scope %s already exists",
+						newType, newScope)
+					return fmt.Errorf("adapter with type %s and overlapping scopes already exists", newType)
+				}
 			}
 		}
+
+		// Add to index
+		if sh.adapterIndex[newType] == nil {
+			sh.adapterIndex[newType] = make(map[string]bool)
+		}
+		for _, scope := range newScopes {
+			sh.adapterIndex[newType][scope] = true
+		}
+
+		// Add to adapters list
 		sh.adapters = append(sh.adapters, newAdapter)
 	}
 
 	return nil
-}
-
-// scopesOverlap checks if there is any overlap between two slices of scopes
-func scopesOverlap(scopes1, scopes2 []string) bool {
-	scopeSet := make(map[string]struct{}, len(scopes1))
-	for _, scope := range scopes1 {
-		scopeSet[scope] = struct{}{}
-	}
-	for _, scope := range scopes2 {
-		if _, exists := scopeSet[scope]; exists {
-			return true
-		}
-	}
-	return false
 }
 
 // Adapters Returns a slice of all known adapters
@@ -178,6 +183,7 @@ func (sh *AdapterHost) ExpandQuery(q *sdp.Query) map[*sdp.Query]Adapter {
 func (sh *AdapterHost) ClearAllAdapters() {
 	sh.mutex.Lock()
 	sh.adapters = make([]Adapter, 0)
+	sh.adapterIndex = make(map[string]map[string]bool)
 	sh.mutex.Unlock()
 }
 
