@@ -22,6 +22,15 @@ const (
 
 	// SQL
 	SQL shared.API = "sql" // Microsoft.Sql
+
+	// DocumentDB
+	DocumentDB shared.API = "documentdb" // Microsoft.DocumentDB
+
+	// KeyVault
+	KeyVault shared.API = "keyvault" // Microsoft.KeyVault
+
+	// ManagedIdentity
+	ManagedIdentity shared.API = "managedidentity" // Microsoft.ManagedIdentity
 )
 
 // Resources
@@ -57,4 +66,17 @@ const (
 	RecoveryServicesRecoveryPoint shared.Resource = "recovery-services-recovery-point"
 	Server                        shared.Resource = "server"
 	ElasticPool                   shared.Resource = "elastic-pool"
+
+	// DocumentDB resources
+	DatabaseAccounts          shared.Resource = "database-accounts"
+	PrivateEndpointConnection shared.Resource = "private-endpoint-connection"
+
+	// Network resources (additional)
+	PrivateEndpoint shared.Resource = "private-endpoint"
+
+	// KeyVault resources
+	Vault shared.Resource = "vault"
+
+	// ManagedIdentity resources
+	UserAssignedIdentity shared.Resource = "user-assigned-identity"
 )
