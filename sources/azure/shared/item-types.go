@@ -42,7 +42,8 @@ var (
 	DocumentDBPrivateEndpointConnection = shared.NewItemType(Azure, DocumentDB, PrivateEndpointConnection)
 
 	// KeyVault item types
-	KeyVaultVault = shared.NewItemType(Azure, KeyVault, Vault)
+	KeyVaultVault    = shared.NewItemType(Azure, KeyVault, Vault)
+	KeyVaultManagedHSM = shared.NewItemType(Azure, KeyVault, ManagedHSM)
 
 	// ManagedIdentity item types
 	ManagedIdentityUserAssignedIdentity = shared.NewItemType(Azure, ManagedIdentity, UserAssignedIdentity)
