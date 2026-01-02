@@ -67,14 +67,14 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *AzureConfi
 		return nil, fmt.Errorf("error initializing Engine: %w", err)
 	}
 
-	var permissionCheck func() error
+	var permissionCheck func(context.Context) error
 
 	var startupErrorMutex sync.Mutex
 	startupError := errors.New("source is starting")
 	if ec.HeartbeatOptions == nil {
 		ec.HeartbeatOptions = &discovery.HeartbeatOptions{}
 	}
-	ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
+	ec.HeartbeatOptions.HealthCheck = func(ctx context.Context) error {
 		startupErrorMutex.Lock()
 		defer startupErrorMutex.Unlock()
 		if startupError != nil {
@@ -84,7 +84,7 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *AzureConfi
 
 		if permissionCheck != nil {
 			// If the permission check is set, run it
-			return permissionCheck()
+			return permissionCheck(ctx)
 		}
 		return nil
 	}
@@ -150,11 +150,11 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *AzureConfi
 		}
 
 		// Set up permission check that verifies subscription access
-		permissionCheck = func() error {
+		permissionCheck = func(ctx context.Context) error {
 			return checkSubscriptionAccess(ctx, cfg.SubscriptionID, cred)
 		}
 
-		err = permissionCheck()
+		err = permissionCheck(ctx)
 		if err != nil {
 			return fmt.Errorf("error checking permissions: %w", err)
 		}

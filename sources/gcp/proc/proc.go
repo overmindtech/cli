@@ -7,10 +7,12 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	resourcemanager "cloud.google.com/go/resourcemanager/apiv3"
 	resourcemanagerpb "cloud.google.com/go/resourcemanager/apiv3/resourcemanagerpb"
 	log "github.com/sirupsen/logrus"
+	"github.com/sourcegraph/conc/iter"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/impersonate"
@@ -38,6 +40,36 @@ type GCPConfig struct {
 	ImpersonationServiceAccountEmail string // leave empty for direct access using Application Default Credentials
 }
 
+// ProjectPermissionCheckResult contains detailed results from checking project permissions
+type ProjectPermissionCheckResult struct {
+	SuccessCount  int
+	FailureCount  int
+	ProjectErrors map[string]error
+}
+
+// FormatError generates a detailed error message from the permission check results
+func (r *ProjectPermissionCheckResult) FormatError() error {
+	if r.FailureCount == 0 {
+		return nil
+	}
+
+	totalProjects := r.SuccessCount + r.FailureCount
+	failurePercentage := (float64(r.FailureCount) / float64(totalProjects)) * 100
+
+	// Build error message
+	var errMsg strings.Builder
+	errMsg.WriteString(fmt.Sprintf("%d out of %d projects (%.1f%%) failed permission checks\n\n",
+		r.FailureCount, totalProjects, failurePercentage))
+
+	// List failed projects with their errors
+	errMsg.WriteString("Failed projects:\n")
+	for projectID, err := range r.ProjectErrors {
+		errMsg.WriteString(fmt.Sprintf("  - %s: %v\n", projectID, err))
+	}
+
+	return errors.New(errMsg.String())
+}
+
 // ParentType represents the type of GCP parent resource
 type ParentType int
 
@@ -47,6 +79,158 @@ const (
 	ParentTypeFolder
 	ParentTypeProject
 )
+
+// projectCheckResult holds the result of checking a single project's permissions
+type projectCheckResult struct {
+	ProjectID string
+	Error     error
+}
+
+// ProjectHealthChecker manages permission checks for GCP projects with caching support
+type ProjectHealthChecker struct {
+	projectIDs    []string
+	adapters      map[string]discovery.Adapter
+	cacheDuration time.Duration
+	cachedResult  *ProjectPermissionCheckResult
+	cacheTime     time.Time
+	mu            sync.RWMutex
+}
+
+// NewProjectHealthChecker creates a new ProjectHealthChecker with the given configuration
+func NewProjectHealthChecker(
+	projectIDs []string,
+	adapters map[string]discovery.Adapter,
+	cacheDuration time.Duration,
+) *ProjectHealthChecker {
+	return &ProjectHealthChecker{
+		projectIDs:    projectIDs,
+		adapters:      adapters,
+		cacheDuration: cacheDuration,
+	}
+}
+
+// Check runs the permission check, using cached results if available and valid
+func (c *ProjectHealthChecker) Check(ctx context.Context) (*ProjectPermissionCheckResult, error) {
+	// Fast path: check cache with read lock
+	c.mu.RLock()
+	if c.cachedResult != nil && time.Since(c.cacheTime) < c.cacheDuration {
+		result := c.cachedResult
+		c.mu.RUnlock()
+		return result, result.FormatError()
+	}
+	c.mu.RUnlock()
+
+	// Slow path: need to run check, acquire write lock
+	c.mu.Lock()
+	// Double-check in case another goroutine just populated the cache
+	if c.cachedResult != nil && time.Since(c.cacheTime) < c.cacheDuration {
+		result := c.cachedResult
+		c.mu.Unlock()
+		return result, result.FormatError()
+	}
+
+	// Run the actual check while holding the lock
+	result, err := c.runCheck(ctx)
+	c.cachedResult = result
+	c.cacheTime = time.Now()
+	c.mu.Unlock()
+
+	return result, err
+}
+
+// runCheck performs the actual permission check without caching
+func (c *ProjectHealthChecker) runCheck(ctx context.Context) (*ProjectPermissionCheckResult, error) {
+	// Map over project IDs and check permissions in parallel
+	mapper := iter.Mapper[string, projectCheckResult]{
+		MaxGoroutines: 20,
+	}
+
+	checkResults, _ := mapper.MapErr(c.projectIDs, func(projectID *string) (projectCheckResult, error) {
+		adapter, exists := c.adapters[*projectID]
+		if !exists {
+			return projectCheckResult{
+				ProjectID: *projectID,
+				Error:     fmt.Errorf("adapter not found for project"),
+			}, nil
+		}
+
+		// Get the project from the cloud resource manager
+		// Giving this permission is mandatory for the GCP source health check
+		prj, err := adapter.Get(ctx, *projectID, *projectID, false)
+		if err != nil {
+			// Check if this is a permission error and provide a simplified message
+			var permissionError *dynamic.PermissionError
+			if errors.As(err, &permissionError) {
+				err = fmt.Errorf("insufficient permissions to access GCP project '%s'. "+
+					"Please ensure the service account has the 'resourcemanager.projects.get' permission via the 'roles/browser' predefined GCP role", *projectID)
+			} else {
+				err = fmt.Errorf("error accessing project %s: %w", *projectID, err)
+			}
+
+			return projectCheckResult{
+				ProjectID: *projectID,
+				Error:     err,
+			}, nil
+		}
+
+		if prj == nil {
+			return projectCheckResult{
+				ProjectID: *projectID,
+				Error:     fmt.Errorf("project %s not found in cloud resource manager", *projectID),
+			}, nil
+		}
+
+		prjID, err := prj.GetAttributes().Get("projectId")
+		if err != nil {
+			return projectCheckResult{
+				ProjectID: *projectID,
+				Error:     fmt.Errorf("error getting project ID from project %s: %w", *projectID, err),
+			}, nil
+		}
+
+		prjIDStr, ok := prjID.(string)
+		if !ok {
+			return projectCheckResult{
+				ProjectID: *projectID,
+				Error:     fmt.Errorf("project ID is not a string for project %s: %v", *projectID, prjID),
+			}, nil
+		}
+
+		if prjIDStr != *projectID {
+			return projectCheckResult{
+				ProjectID: *projectID,
+				Error:     fmt.Errorf("project ID mismatch for project %s: expected %s, got %s", *projectID, *projectID, prjIDStr),
+			}, nil
+		}
+
+		// Success
+		return projectCheckResult{
+			ProjectID: *projectID,
+			Error:     nil,
+		}, nil
+	})
+
+	// Aggregate results into final structure
+	result := &ProjectPermissionCheckResult{
+		ProjectErrors: make(map[string]error),
+	}
+
+	for _, check := range checkResults {
+		if check.Error != nil {
+			result.FailureCount++
+			result.ProjectErrors[check.ProjectID] = check.Error
+		} else {
+			result.SuccessCount++
+		}
+	}
+
+	// Generate formatted error if there were failures
+	if result.FailureCount > 0 {
+		return result, result.FormatError()
+	}
+
+	return result, nil
+}
 
 // detectParentType determines the type of parent resource based on its format
 func detectParentType(parent string) (ParentType, error) {
@@ -155,14 +339,14 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 		return nil, fmt.Errorf("error initializing Engine: %w", err)
 	}
 
-	var permissionCheck func() error
+	var healthChecker *ProjectHealthChecker
 
 	var startupErrorMutex sync.Mutex
 	startupError := errors.New("source is starting")
 	if ec.HeartbeatOptions == nil {
 		ec.HeartbeatOptions = &discovery.HeartbeatOptions{}
 	}
-	ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
+	ec.HeartbeatOptions.HealthCheck = func(ctx context.Context) error {
 		startupErrorMutex.Lock()
 		defer startupErrorMutex.Unlock()
 		if startupError != nil {
@@ -170,9 +354,13 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 			return startupError
 		}
 
-		if permissionCheck != nil {
-			// If the permission check is set, run it
-			return permissionCheck()
+		if healthChecker != nil {
+			// Run the health check to verify we can still access all configured projects.
+			// This is called periodically by the heartbeat system to detect permission
+			// changes or other issues. Uses cached results (5 minute TTL) to avoid
+			// excessive API calls to GCP.
+			_, err := healthChecker.Check(ctx)
+			return err
 		}
 		return nil
 	}
@@ -315,49 +503,34 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 			}
 		}
 
-		permissionCheck = func() error {
-			// Check permissions for all projects
-			for _, projectID := range projectIDs {
-				adapter := cloudResourceManagerProjectAdapters[projectID]
-				// Get the project from the cloud resource manager
-				// Giving this permission is mandatory for the GCP source health check
-				prj, err := adapter.Get(ctx, projectID, projectID, false)
-				if err != nil {
-					// Check if this is a permission error and provide a simplified message
-					var permissionError *dynamic.PermissionError
-					if errors.As(err, &permissionError) {
-						return fmt.Errorf("insufficient permissions to access GCP project '%s'. "+
-							"Please ensure the service account has the 'resourcemanager.projects.get' permission via the 'roles/browser' predefined GCP role", projectID)
-					}
-					return fmt.Errorf("error accessing project %s: %w", projectID, err)
-				}
+		// Create health checker with 5 minute cache duration
+		healthChecker = NewProjectHealthChecker(
+			projectIDs,
+			cloudResourceManagerProjectAdapters,
+			5*time.Minute,
+		)
 
-				if prj == nil {
-					return fmt.Errorf("project %s not found in cloud resource manager", projectID)
-				}
-
-				prjID, err := prj.GetAttributes().Get("projectId")
-				if err != nil {
-					return fmt.Errorf("error getting project ID from project %s: %w", projectID, err)
-				}
-
-				prjIDStr, ok := prjID.(string)
-				if !ok {
-					return fmt.Errorf("project ID is not a string for project %s: %v", projectID, prjID)
-				}
-
-				if prjIDStr != projectID {
-					return fmt.Errorf("project ID mismatch for project %s: expected %s, got %s", projectID, projectID, prjIDStr)
-				}
-			}
-
-			return nil
-		}
-
-		err = permissionCheck()
+		// Run initial permission check before starting the source to fail fast if
+		// we don't have the required permissions. This validates that we can access
+		// the Cloud Resource Manager API for all configured projects.
+		result, err := healthChecker.Check(ctx)
 		if err != nil {
+			// Log detailed results even on failure
+			log.WithFields(log.Fields{
+				"ovm.source.type":          "gcp",
+				"ovm.source.success_count": result.SuccessCount,
+				"ovm.source.failure_count": result.FailureCount,
+				"ovm.source.project_count": len(projectIDs),
+			}).Error("Permission check failed for some projects")
 			return fmt.Errorf("error checking permissions: %w", err)
 		}
+
+		// Log successful permission check
+		log.WithFields(log.Fields{
+			"ovm.source.type":          "gcp",
+			"ovm.source.success_count": result.SuccessCount,
+			"ovm.source.project_count": len(projectIDs),
+		}).Info("All projects passed permission checks")
 
 		// Add the adapters to the engine
 		err = engine.AddAdapters(allAdapters...)
