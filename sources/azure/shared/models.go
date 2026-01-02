@@ -47,17 +47,25 @@ const (
 	VirtualMachineRunCommand shared.Resource = "virtual-machine-run-command"
 
 	// Network resources
-	VirtualNetwork                  shared.Resource = "virtual-network"
-	Subnet                          shared.Resource = "subnet"
-	NetworkInterface                shared.Resource = "network-interface"
-	PublicIPAddress                 shared.Resource = "public-ip-address"
+	VirtualNetwork                      shared.Resource = "virtual-network"
+	Subnet                              shared.Resource = "subnet"
+	NetworkInterface                    shared.Resource = "network-interface"
+	PublicIPAddress                     shared.Resource = "public-ip-address"
+	NetworkSecurityGroup                shared.Resource = "network-security-group"
+	VirtualNetworkPeering               shared.Resource = "virtual-network-peering"
+	NetworkInterfaceIPConfiguration     shared.Resource = "network-interface-ip-configuration"
+	PrivateEndpoint                     shared.Resource = "private-endpoint"
+	LoadBalancer                        shared.Resource = "load-balancer"
+	LoadBalancerFrontendIPConfiguration shared.Resource = "load-balancer-frontend-ip-configuration"
+	LoadBalancerBackendAddressPool      shared.Resource = "load-balancer-backend-address-pool"
+	LoadBalancerInboundNatRule          shared.Resource = "load-balancer-inbound-nat-rule"
+	LoadBalancerLoadBalancingRule       shared.Resource = "load-balancer-load-balancing-rule"
+	LoadBalancerProbe                   shared.Resource = "load-balancer-probe"
+	LoadBalancerOutboundRule            shared.Resource = "load-balancer-outbound-rule"
+	LoadBalancerInboundNatPool          shared.Resource = "load-balancer-inbound-nat-pool"
 	PublicIPPrefix                  shared.Resource = "public-ip-prefix"
 	NatGateway                      shared.Resource = "nat-gateway"
 	DdosProtectionPlan              shared.Resource = "ddos-protection-plan"
-	LoadBalancer                    shared.Resource = "load-balancer"
-	NetworkSecurityGroup            shared.Resource = "network-security-group"
-	VirtualNetworkPeering           shared.Resource = "virtual-network-peering"
-	NetworkInterfaceIPConfiguration shared.Resource = "network-interface-ip-configuration"
 
 	// Storage resources
 	Account       shared.Resource = "account"
@@ -80,9 +88,6 @@ const (
 	// DocumentDB resources
 	DatabaseAccounts          shared.Resource = "database-accounts"
 	PrivateEndpointConnection shared.Resource = "private-endpoint-connection"
-
-	// Network resources (additional)
-	PrivateEndpoint shared.Resource = "private-endpoint"
 
 	// KeyVault resources
 	Vault      shared.Resource = "vault"
