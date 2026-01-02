@@ -38,6 +38,9 @@ For example, `TestComputeVirtualMachineIntegration` tests the Compute API's Virt
     # For SQL Database integration tests
     export AZURE_SQL_SERVER_ADMIN_LOGIN="sqladmin"       # SQL server administrator login
     export AZURE_SQL_SERVER_ADMIN_PASSWORD="your-secure-password"  # SQL server administrator password
+    # For PostgreSQL Flexible Server integration tests
+    export AZURE_POSTGRESQL_SERVER_ADMIN_LOGIN="pgadmin"       # PostgreSQL Flexible Server administrator login
+    export AZURE_POSTGRESQL_SERVER_ADMIN_PASSWORD="your-secure-password"  # PostgreSQL Flexible Server administrator password
    ```
 
 6. Integration tests are using Azure SDK for Go to interact with Azure resources. For local development, you can authenticate using:

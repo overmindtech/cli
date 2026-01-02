@@ -16,11 +16,12 @@ import (
 func GetResourceIDPathKeys(resourceType string) []string {
 	// Map of resource types to their path keys in the order they appear in GetLookups()
 	pathKeysMap := map[string][]string{
-		"azure-storage-queue":          {"storageAccounts", "queues"},
-		"azure-storage-blob-container": {"storageAccounts", "containers"},
-		"azure-storage-file-share":     {"storageAccounts", "shares"},
-		"azure-storage-table":          {"storageAccounts", "tables"},
-		"azure-sql-database":           {"servers", "databases"}, // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-SQL-SouthEastAsia/providers/Microsoft.Sql/servers/testsvr/databases/testdb",
+		"azure-storage-queue":            {"storageAccounts", "queues"},
+		"azure-storage-blob-container":   {"storageAccounts", "containers"},
+		"azure-storage-file-share":       {"storageAccounts", "shares"},
+		"azure-storage-table":            {"storageAccounts", "tables"},
+		"azure-sql-database":             {"servers", "databases"},         // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-SQL-SouthEastAsia/providers/Microsoft.Sql/servers/testsvr/databases/testdb",
+		"azure-dbforpostgresql-database": {"flexibleServers", "databases"}, // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-PostgreSQL-SouthEastAsia/providers/Microsoft.DBforPostgreSQL/flexibleServers/testsvr/databases/testdb",
 	}
 
 	if keys, ok := pathKeysMap[resourceType]; ok {
