@@ -31,6 +31,9 @@ const (
 
 	// ManagedIdentity
 	ManagedIdentity shared.API = "managedidentity" // Microsoft.ManagedIdentity
+
+	// DBforPostgreSQL
+	DBforPostgreSQL shared.API = "dbforpostgresql" // Microsoft.DBforPostgreSQL
 )
 
 // Resources
@@ -66,6 +69,9 @@ const (
 	RecoveryServicesRecoveryPoint shared.Resource = "recovery-services-recovery-point"
 	Server                        shared.Resource = "server"
 	ElasticPool                   shared.Resource = "elastic-pool"
+
+	// DBforPostgreSQL resources
+	FlexibleServer shared.Resource = "flexible-server"
 
 	// DocumentDB resources
 	DatabaseAccounts          shared.Resource = "database-accounts"

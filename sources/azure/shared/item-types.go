@@ -37,12 +37,16 @@ var (
 	SQLServer                        = shared.NewItemType(Azure, SQL, Server)
 	SQLElasticPool                   = shared.NewItemType(Azure, SQL, ElasticPool)
 
+	// DBforPostgreSQL item types
+	DBforPostgreSQLFlexibleServer = shared.NewItemType(Azure, DBforPostgreSQL, FlexibleServer)
+	DBforPostgreSQLDatabase       = shared.NewItemType(Azure, DBforPostgreSQL, Database)
+
 	// DocumentDB item types
 	DocumentDBDatabaseAccounts          = shared.NewItemType(Azure, DocumentDB, DatabaseAccounts)
 	DocumentDBPrivateEndpointConnection = shared.NewItemType(Azure, DocumentDB, PrivateEndpointConnection)
 
 	// KeyVault item types
-	KeyVaultVault    = shared.NewItemType(Azure, KeyVault, Vault)
+	KeyVaultVault      = shared.NewItemType(Azure, KeyVault, Vault)
 	KeyVaultManagedHSM = shared.NewItemType(Azure, KeyVault, ManagedHSM)
 
 	// ManagedIdentity item types
