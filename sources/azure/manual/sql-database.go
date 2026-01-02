@@ -286,11 +286,11 @@ func (s sqlDatabaseWrapper) SearchLookups() []sources.ItemTypeLookups {
 
 func (s sqlDatabaseWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
-		azureshared.SQLServer:                        false, //todo: create sql server adapter
-		azureshared.SQLElasticPool:                   false, //todo: create elastic pool adapter
-		azureshared.SQLRecoverableDatabase:           false, //todo: create recoverable database adapter
-		azureshared.SQLRestorableDroppedDatabase:     false, //todo: create restorable dropped database adapter
-		azureshared.SQLRecoveryServicesRecoveryPoint: false, //todo: create recovery services recovery point adapter
+		azureshared.SQLServer:                        true,
+		azureshared.SQLElasticPool:                   true,
+		azureshared.SQLRecoverableDatabase:           true,
+		azureshared.SQLRestorableDroppedDatabase:     true,
+		azureshared.SQLRecoveryServicesRecoveryPoint: true,
 	}
 }
 

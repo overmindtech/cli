@@ -132,12 +132,7 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 
 func (n networkNetworkInterfaceWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) != 1 {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_OTHER,
-			ErrorString: "query must be a network interface name",
-			Scope:       n.DefaultScope(),
-			ItemType:    n.Type(),
-		}
+		return nil, azureshared.QueryError(errors.New("query must be exactly one part and be a network interface name"), n.DefaultScope(), n.Type())
 	}
 	networkInterfaceName := queryParts[0]
 
@@ -159,8 +154,8 @@ func (n networkNetworkInterfaceWrapper) PotentialLinks() map[shared.ItemType]boo
 	return map[shared.ItemType]bool{
 		azureshared.NetworkVirtualNetwork:                  true,
 		azureshared.ComputeVirtualMachine:                  true,
-		azureshared.NetworkNetworkSecurityGroup:            false, //TODO: Create adapter for network security groups
-		azureshared.NetworkNetworkInterfaceIPConfiguration: false, //TODO: Create adapter for network interface IP configurations
+		azureshared.NetworkNetworkSecurityGroup:            true,
+		azureshared.NetworkNetworkInterfaceIPConfiguration: true,
 	}
 }
 

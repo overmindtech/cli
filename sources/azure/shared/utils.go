@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 )
@@ -259,6 +260,41 @@ func ExtractVaultNameFromURI(uri string) string {
 	parts := strings.Split(host, ".")
 	if len(parts) > 0 {
 		return parts[0]
+	}
+
+	return ""
+}
+
+// ExtractScopeFromResourceID extracts the scope (subscription.resourceGroup) from an Azure resource ID
+// Azure resource IDs follow the format:
+// /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/...
+// This function returns the scope in the format: "{subscriptionId}.{resourceGroupName}"
+// Returns empty string if the resource ID doesn't contain both subscription and resource group
+func ExtractScopeFromResourceID(resourceID string) string {
+	if resourceID == "" {
+		return ""
+	}
+
+	parts := strings.Split(strings.Trim(resourceID, "/"), "/")
+	if len(parts) < 4 {
+		return ""
+	}
+
+	// Find subscription ID (should be at index 1 after splitting)
+	subscriptionID := ""
+	resourceGroupName := ""
+
+	for i, part := range parts {
+		if part == "subscriptions" && i+1 < len(parts) {
+			subscriptionID = parts[i+1]
+		}
+		if part == "resourceGroups" && i+1 < len(parts) {
+			resourceGroupName = parts[i+1]
+		}
+	}
+
+	if subscriptionID != "" && resourceGroupName != "" {
+		return fmt.Sprintf("%s.%s", subscriptionID, resourceGroupName)
 	}
 
 	return ""
