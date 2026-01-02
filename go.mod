@@ -44,7 +44,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2 v2.1.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2 v2.0.0
 	github.com/MrAlias/otel-schema-utils v0.4.0-alpha
-	github.com/a-h/templ v0.3.960
+	github.com/a-h/templ v0.3.977
 	github.com/adrg/strutil v0.3.1
 	github.com/akedrou/textdiff v0.1.0
 	github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.4
@@ -99,7 +99,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.16.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/mux v1.8.1
-	github.com/harness/harness-go-sdk v0.6.9
+	github.com/harness/harness-go-sdk v0.6.10
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20250828155816-225c06ed5fd9
