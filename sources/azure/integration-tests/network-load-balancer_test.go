@@ -23,6 +23,7 @@ import (
 
 const (
 	integrationTestLBName            = "ovm-integ-test-lb"
+	integrationTestLBInternalName    = "ovm-integ-test-lb-internal"
 	integrationTestVNetNameForLB     = "ovm-integ-test-vnet-for-lb"
 	integrationTestSubnetNameForLB   = "default"
 	integrationTestPublicIPNameForLB = "ovm-integ-test-public-ip-for-lb"
@@ -99,13 +100,19 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 			t.Fatalf("Failed to get public IP address: %v", err)
 		}
 
-		// Create load balancer
-		err = createLoadBalancer(ctx, lbClient, integrationTestResourceGroup, integrationTestLBName, integrationTestLocation, *subnetResp.ID, *publicIPResp.ID)
+		// Create public load balancer (with PublicIPAddress)
+		err = createPublicLoadBalancer(ctx, lbClient, integrationTestResourceGroup, integrationTestLBName, integrationTestLocation, *publicIPResp.ID)
 		if err != nil {
-			t.Fatalf("Failed to create load balancer: %v", err)
+			t.Fatalf("Failed to create public load balancer: %v", err)
 		}
 
-		log.Printf("Setup completed: Load balancer %s created", integrationTestLBName)
+		// Create internal load balancer (with Subnet)
+		err = createInternalLoadBalancer(ctx, lbClient, integrationTestResourceGroup, integrationTestLBInternalName, integrationTestLocation, *subnetResp.ID)
+		if err != nil {
+			t.Fatalf("Failed to create internal load balancer: %v", err)
+		}
+
+		log.Printf("Setup completed: Load balancers %s (public) and %s (internal) created", integrationTestLBName, integrationTestLBInternalName)
 	})
 
 	t.Run("Run", func(t *testing.T) {
@@ -173,25 +180,36 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 				t.Fatalf("Expected no error, got: %v", err)
 			}
 
-			if len(sdpItems) == 0 {
-				t.Fatalf("Expected at least 1 load balancer, got: %d", len(sdpItems))
+			if len(sdpItems) < 2 {
+				t.Fatalf("Expected at least 2 load balancers, got: %d", len(sdpItems))
 			}
 
-			// Find our test load balancer
-			var found bool
+			// Find our test load balancers
+			foundPublic := false
+			foundInternal := false
 			for _, item := range sdpItems {
 				uniqueAttrKey := item.GetUniqueAttribute()
-				if v, err := item.GetAttributes().Get(uniqueAttrKey); err == nil && v == integrationTestLBName {
-					found = true
-					if item.GetType() != azureshared.NetworkLoadBalancer.String() {
-						t.Errorf("Expected type %s, got %s", azureshared.NetworkLoadBalancer, item.GetType())
+				if v, err := item.GetAttributes().Get(uniqueAttrKey); err == nil {
+					switch v {
+					case integrationTestLBName:
+						foundPublic = true
+						if item.GetType() != azureshared.NetworkLoadBalancer.String() {
+							t.Errorf("Expected type %s, got %s", azureshared.NetworkLoadBalancer, item.GetType())
+						}
+					case integrationTestLBInternalName:
+						foundInternal = true
+						if item.GetType() != azureshared.NetworkLoadBalancer.String() {
+							t.Errorf("Expected type %s, got %s", azureshared.NetworkLoadBalancer, item.GetType())
+						}
 					}
-					break
 				}
 			}
 
-			if !found {
+			if !foundPublic {
 				t.Fatalf("Expected to find load balancer %s in list, but didn't", integrationTestLBName)
+			}
+			if !foundInternal {
+				t.Fatalf("Expected to find load balancer %s in list, but didn't", integrationTestLBInternalName)
 			}
 
 			log.Printf("Successfully listed %d load balancers", len(sdpItems))
@@ -242,82 +260,133 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 			)
 			scope := lbWrapper.Scopes()[0]
 
-			lbAdapter := sources.WrapperToAdapter(lbWrapper)
-			sdpItem, qErr := lbAdapter.Get(ctx, scope, integrationTestLBName, true)
-			if qErr != nil {
-				t.Fatalf("Expected no error, got: %v", qErr)
-			}
+			// Test public load balancer (should have PublicIPAddress link)
+			t.Run("PublicLoadBalancer", func(t *testing.T) {
+				lbAdapter := sources.WrapperToAdapter(lbWrapper)
+				sdpItem, qErr := lbAdapter.Get(ctx, scope, integrationTestLBName, true)
+				if qErr != nil {
+					t.Fatalf("Expected no error, got: %v", qErr)
+				}
 
-			// Verify that linked items exist
-			linkedQueries := sdpItem.GetLinkedItemQueries()
-			if len(linkedQueries) == 0 {
-				t.Fatalf("Expected linked item queries, but got none")
-			}
+				linkedQueries := sdpItem.GetLinkedItemQueries()
+				if len(linkedQueries) == 0 {
+					t.Fatalf("Expected linked item queries, but got none")
+				}
 
-			// Verify expected linked item types
-			expectedLinkedTypes := map[string]bool{
-				azureshared.NetworkLoadBalancerFrontendIPConfiguration.String(): false,
-				azureshared.NetworkPublicIPAddress.String():                    false,
-				azureshared.NetworkSubnet.String():                              false,
-			}
+				// Verify expected linked item types for public load balancer
+				expectedLinkedTypes := map[string]bool{
+					azureshared.NetworkLoadBalancerFrontendIPConfiguration.String(): false,
+					azureshared.NetworkPublicIPAddress.String():                     false,
+				}
 
-			for _, liq := range linkedQueries {
-				linkedType := liq.GetQuery().GetType()
-				if _, exists := expectedLinkedTypes[linkedType]; exists {
-					expectedLinkedTypes[linkedType] = true
+				for _, liq := range linkedQueries {
+					linkedType := liq.GetQuery().GetType()
+					if _, exists := expectedLinkedTypes[linkedType]; exists {
+						expectedLinkedTypes[linkedType] = true
 
-					// Verify blast propagation based on resource type
-					if liq.GetBlastPropagation() == nil {
-						t.Errorf("Expected blast propagation to be set for linked type %s", linkedType)
-					} else {
-						switch linkedType {
-						case azureshared.NetworkLoadBalancerFrontendIPConfiguration.String():
-							// Child resource: bidirectional dependency
-							if liq.GetBlastPropagation().GetIn() != true {
-								t.Errorf("Expected FrontendIPConfiguration blast propagation In=true, got false")
-							}
-							if liq.GetBlastPropagation().GetOut() != true {
-								t.Errorf("Expected FrontendIPConfiguration blast propagation Out=true, got false")
-							}
-						case azureshared.NetworkPublicIPAddress.String():
-							// External resource: Public IP affects LB, but LB doesn't affect Public IP
-							if liq.GetBlastPropagation().GetIn() != true {
-								t.Errorf("Expected PublicIPAddress blast propagation In=true, got false")
-							}
-							if liq.GetBlastPropagation().GetOut() != false {
-								t.Errorf("Expected PublicIPAddress blast propagation Out=false, got true")
-							}
-						case azureshared.NetworkSubnet.String():
-							// External resource: Subnet affects LB, but LB doesn't affect Subnet
-							if liq.GetBlastPropagation().GetIn() != true {
-								t.Errorf("Expected Subnet blast propagation In=true, got false")
-							}
-							if liq.GetBlastPropagation().GetOut() != false {
-								t.Errorf("Expected Subnet blast propagation Out=false, got true")
+						if liq.GetBlastPropagation() == nil {
+							t.Errorf("Expected blast propagation to be set for linked type %s", linkedType)
+						} else {
+							switch linkedType {
+							case azureshared.NetworkLoadBalancerFrontendIPConfiguration.String():
+								if liq.GetBlastPropagation().GetIn() != true {
+									t.Errorf("Expected FrontendIPConfiguration blast propagation In=true, got false")
+								}
+								if liq.GetBlastPropagation().GetOut() != true {
+									t.Errorf("Expected FrontendIPConfiguration blast propagation Out=true, got false")
+								}
+							case azureshared.NetworkPublicIPAddress.String():
+								if liq.GetBlastPropagation().GetIn() != true {
+									t.Errorf("Expected PublicIPAddress blast propagation In=true, got false")
+								}
+								if liq.GetBlastPropagation().GetOut() != false {
+									t.Errorf("Expected PublicIPAddress blast propagation Out=false, got true")
+								}
 							}
 						}
 					}
 				}
-			}
 
-			// Verify all expected linked types were found
-			for linkedType, found := range expectedLinkedTypes {
-				if !found {
-					t.Errorf("Expected linked query to %s, but didn't find one", linkedType)
+				for linkedType, found := range expectedLinkedTypes {
+					if !found {
+						t.Errorf("Expected linked query to %s, but didn't find one", linkedType)
+					}
 				}
-			}
 
-			log.Printf("Verified %d linked item queries for load balancer %s", len(linkedQueries), integrationTestLBName)
+				log.Printf("Verified %d linked item queries for public load balancer %s", len(linkedQueries), integrationTestLBName)
+			})
+
+			// Test internal load balancer (should have Subnet link)
+			t.Run("InternalLoadBalancer", func(t *testing.T) {
+				lbAdapter := sources.WrapperToAdapter(lbWrapper)
+				sdpItem, qErr := lbAdapter.Get(ctx, scope, integrationTestLBInternalName, true)
+				if qErr != nil {
+					t.Fatalf("Expected no error, got: %v", qErr)
+				}
+
+				linkedQueries := sdpItem.GetLinkedItemQueries()
+				if len(linkedQueries) == 0 {
+					t.Fatalf("Expected linked item queries, but got none")
+				}
+
+				// Verify expected linked item types for internal load balancer
+				expectedLinkedTypes := map[string]bool{
+					azureshared.NetworkLoadBalancerFrontendIPConfiguration.String(): false,
+					azureshared.NetworkSubnet.String():                              false,
+				}
+
+				for _, liq := range linkedQueries {
+					linkedType := liq.GetQuery().GetType()
+					if _, exists := expectedLinkedTypes[linkedType]; exists {
+						expectedLinkedTypes[linkedType] = true
+
+						if liq.GetBlastPropagation() == nil {
+							t.Errorf("Expected blast propagation to be set for linked type %s", linkedType)
+						} else {
+							switch linkedType {
+							case azureshared.NetworkLoadBalancerFrontendIPConfiguration.String():
+								if liq.GetBlastPropagation().GetIn() != true {
+									t.Errorf("Expected FrontendIPConfiguration blast propagation In=true, got false")
+								}
+								if liq.GetBlastPropagation().GetOut() != true {
+									t.Errorf("Expected FrontendIPConfiguration blast propagation Out=true, got false")
+								}
+							case azureshared.NetworkSubnet.String():
+								if liq.GetBlastPropagation().GetIn() != true {
+									t.Errorf("Expected Subnet blast propagation In=true, got false")
+								}
+								if liq.GetBlastPropagation().GetOut() != false {
+									t.Errorf("Expected Subnet blast propagation Out=false, got true")
+								}
+							}
+						}
+					}
+				}
+
+				for linkedType, found := range expectedLinkedTypes {
+					if !found {
+						t.Errorf("Expected linked query to %s, but didn't find one", linkedType)
+					}
+				}
+
+				log.Printf("Verified %d linked item queries for internal load balancer %s", len(linkedQueries), integrationTestLBInternalName)
+			})
 		})
 	})
 
 	t.Run("Teardown", func(t *testing.T) {
 		ctx := t.Context()
 
-		// Delete load balancer
+		// Delete public load balancer
 		err := deleteLoadBalancer(ctx, lbClient, integrationTestResourceGroup, integrationTestLBName)
 		if err != nil {
-			t.Fatalf("Failed to delete load balancer: %v", err)
+			t.Fatalf("Failed to delete public load balancer: %v", err)
+		}
+
+		// Delete internal load balancer
+		err = deleteLoadBalancer(ctx, lbClient, integrationTestResourceGroup, integrationTestLBInternalName)
+		if err != nil {
+			t.Fatalf("Failed to delete internal load balancer: %v", err)
 		}
 
 		// Delete public IP address
@@ -411,7 +480,7 @@ func createPublicIPForLB(ctx context.Context, client *armnetwork.PublicIPAddress
 		Location: ptr.To(location),
 		Properties: &armnetwork.PublicIPAddressPropertiesFormat{
 			PublicIPAllocationMethod: ptr.To(armnetwork.IPAllocationMethodStatic),
-			PublicIPAddressVersion:    ptr.To(armnetwork.IPVersionIPv4),
+			PublicIPAddressVersion:   ptr.To(armnetwork.IPVersionIPv4),
 		},
 		SKU: &armnetwork.PublicIPAddressSKU{
 			Name: ptr.To(armnetwork.PublicIPAddressSKUNameStandard),
@@ -454,8 +523,8 @@ func deletePublicIPForLB(ctx context.Context, client *armnetwork.PublicIPAddress
 	return nil
 }
 
-// createLoadBalancer creates an Azure load balancer (idempotent)
-func createLoadBalancer(ctx context.Context, client *armnetwork.LoadBalancersClient, resourceGroupName, lbName, location, subnetID, publicIPID string) error {
+// createPublicLoadBalancer creates an Azure load balancer with public IP (idempotent)
+func createPublicLoadBalancer(ctx context.Context, client *armnetwork.LoadBalancersClient, resourceGroupName, lbName, location, publicIPID string) error {
 	// Check if load balancer already exists
 	_, err := client.Get(ctx, resourceGroupName, lbName, nil)
 	if err == nil {
@@ -463,20 +532,17 @@ func createLoadBalancer(ctx context.Context, client *armnetwork.LoadBalancersCli
 		return nil
 	}
 
-	// Create the load balancer
+	// Create the public load balancer
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, lbName, armnetwork.LoadBalancer{
 		Location: ptr.To(location),
 		Properties: &armnetwork.LoadBalancerPropertiesFormat{
 			FrontendIPConfigurations: []*armnetwork.FrontendIPConfiguration{
 				{
-					Name: ptr.To("frontend-ip-config"),
+					Name: ptr.To("frontend-ip-config-public"),
 					Properties: &armnetwork.FrontendIPConfigurationPropertiesFormat{
 						PublicIPAddress: &armnetwork.PublicIPAddress{
 							ID: ptr.To(publicIPID),
 						},
-						// Note: Frontend IP configurations must be either public (with PublicIPAddress)
-						// or internal (with Subnet), but not both. Since we're using a public IP,
-						// we don't include the Subnet here.
 					},
 				},
 			},
@@ -490,15 +556,84 @@ func createLoadBalancer(ctx context.Context, client *armnetwork.LoadBalancersCli
 					Name: ptr.To("lb-rule"),
 					Properties: &armnetwork.LoadBalancingRulePropertiesFormat{
 						FrontendIPConfiguration: &armnetwork.SubResource{
-							ID: ptr.To(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/loadBalancers/%s/frontendIPConfigurations/frontend-ip-config", os.Getenv("AZURE_SUBSCRIPTION_ID"), resourceGroupName, lbName)),
+							ID: ptr.To(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/loadBalancers/%s/frontendIPConfigurations/frontend-ip-config-public", os.Getenv("AZURE_SUBSCRIPTION_ID"), resourceGroupName, lbName)),
 						},
 						BackendAddressPool: &armnetwork.SubResource{
 							ID: ptr.To(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/loadBalancers/%s/backendAddressPools/backend-pool", os.Getenv("AZURE_SUBSCRIPTION_ID"), resourceGroupName, lbName)),
 						},
-						Protocol:           ptr.To(armnetwork.TransportProtocolTCP),
-						FrontendPort:       ptr.To[int32](80),
-						BackendPort:        ptr.To[int32](80),
-						EnableFloatingIP:   ptr.To(false),
+						Protocol:             ptr.To(armnetwork.TransportProtocolTCP),
+						FrontendPort:         ptr.To[int32](80),
+						BackendPort:          ptr.To[int32](80),
+						EnableFloatingIP:     ptr.To(false),
+						IdleTimeoutInMinutes: ptr.To[int32](4),
+					},
+				},
+			},
+		},
+		SKU: &armnetwork.LoadBalancerSKU{
+			Name: ptr.To(armnetwork.LoadBalancerSKUNameStandard),
+		},
+		Tags: map[string]*string{
+			"purpose": ptr.To("overmind-integration-tests"),
+		},
+	}, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin creating load balancer: %w", err)
+	}
+
+	_, err = poller.PollUntilDone(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create load balancer: %w", err)
+	}
+
+	log.Printf("Load balancer %s created successfully", lbName)
+	return nil
+}
+
+// createInternalLoadBalancer creates an Azure load balancer with subnet (idempotent)
+func createInternalLoadBalancer(ctx context.Context, client *armnetwork.LoadBalancersClient, resourceGroupName, lbName, location, subnetID string) error {
+	// Check if load balancer already exists
+	_, err := client.Get(ctx, resourceGroupName, lbName, nil)
+	if err == nil {
+		log.Printf("Load balancer %s already exists, skipping creation", lbName)
+		return nil
+	}
+
+	// Create the internal load balancer
+	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, lbName, armnetwork.LoadBalancer{
+		Location: ptr.To(location),
+		Properties: &armnetwork.LoadBalancerPropertiesFormat{
+			FrontendIPConfigurations: []*armnetwork.FrontendIPConfiguration{
+				{
+					Name: ptr.To("frontend-ip-config-internal"),
+					Properties: &armnetwork.FrontendIPConfigurationPropertiesFormat{
+						Subnet: &armnetwork.Subnet{
+							ID: ptr.To(subnetID),
+						},
+						PrivateIPAddress:          ptr.To("10.2.0.5"),
+						PrivateIPAllocationMethod: ptr.To(armnetwork.IPAllocationMethodStatic),
+					},
+				},
+			},
+			BackendAddressPools: []*armnetwork.BackendAddressPool{
+				{
+					Name: ptr.To("backend-pool"),
+				},
+			},
+			LoadBalancingRules: []*armnetwork.LoadBalancingRule{
+				{
+					Name: ptr.To("lb-rule"),
+					Properties: &armnetwork.LoadBalancingRulePropertiesFormat{
+						FrontendIPConfiguration: &armnetwork.SubResource{
+							ID: ptr.To(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/loadBalancers/%s/frontendIPConfigurations/frontend-ip-config-internal", os.Getenv("AZURE_SUBSCRIPTION_ID"), resourceGroupName, lbName)),
+						},
+						BackendAddressPool: &armnetwork.SubResource{
+							ID: ptr.To(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/loadBalancers/%s/backendAddressPools/backend-pool", os.Getenv("AZURE_SUBSCRIPTION_ID"), resourceGroupName, lbName)),
+						},
+						Protocol:             ptr.To(armnetwork.TransportProtocolTCP),
+						FrontendPort:         ptr.To[int32](80),
+						BackendPort:          ptr.To[int32](80),
+						EnableFloatingIP:     ptr.To(false),
 						IdleTimeoutInMinutes: ptr.To[int32](4),
 					},
 				},
@@ -544,4 +679,3 @@ func deleteLoadBalancer(ctx context.Context, client *armnetwork.LoadBalancersCli
 	log.Printf("Load balancer %s deleted successfully", lbName)
 	return nil
 }
-
