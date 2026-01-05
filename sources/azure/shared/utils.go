@@ -299,3 +299,31 @@ func ExtractScopeFromResourceID(resourceID string) string {
 
 	return ""
 }
+
+// ExtractDNSFromURL extracts the DNS name from a URL
+// Example: https://account.blob.core.windows.net/ -> account.blob.core.windows.net
+func ExtractDNSFromURL(urlStr string) string {
+	if urlStr == "" {
+		return ""
+	}
+	// Remove protocol prefix (http:// or https://)
+	if idx := len("https://"); len(urlStr) > idx && urlStr[:idx] == "https://" {
+		urlStr = urlStr[idx:]
+	} else if idx := len("http://"); len(urlStr) > idx && urlStr[:idx] == "http://" {
+		urlStr = urlStr[idx:]
+	}
+	// Remove trailing slash and path
+	if idx := len(urlStr); idx > 0 && urlStr[idx-1] == '/' {
+		urlStr = urlStr[:idx-1]
+	}
+	// Extract hostname (everything before the first /)
+	if idx := len(urlStr); idx > 0 {
+		for i := range idx {
+			if urlStr[i] == '/' {
+				urlStr = urlStr[:i]
+				break
+			}
+		}
+	}
+	return urlStr
+}
