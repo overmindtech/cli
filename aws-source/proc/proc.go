@@ -62,6 +62,22 @@ type AwsAuthConfig struct {
 	Regions []string
 }
 
+// wrapRegionError wraps misleading AWS errors with more helpful context
+func wrapRegionError(err error, region string) error {
+	if err == nil {
+		return nil
+	}
+
+	errMsg := err.Error()
+
+	// Check for OIDC-related errors which often indicate disabled opt-in regions
+	if strings.Contains(errMsg, "No OpenIDConnect provider found") {
+		return fmt.Errorf("%w. This error often occurs when region '%s' is not enabled in the target AWS account", err, region)
+	}
+
+	return err
+}
+
 func (c AwsAuthConfig) GetAWSConfig(region string) (aws.Config, error) {
 	// Validate inputs
 	if region == "" {
@@ -267,8 +283,12 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 						lf := log.Fields{
 							"region": cfg.Region,
 						}
-						log.WithError(err).WithFields(lf).Error("Error retrieving account information")
-						return fmt.Errorf("error getting caller identity for region %v: %w", cfg.Region, err)
+
+						// Wrap misleading OIDC errors with helpful region enablement context
+						wrappedErr := wrapRegionError(err, cfg.Region)
+
+						log.WithError(wrappedErr).WithFields(lf).Error("Error retrieving account information")
+						return fmt.Errorf("error getting caller identity for region %v: %w", cfg.Region, wrappedErr)
 					}
 
 					// Create shared clients for each API
