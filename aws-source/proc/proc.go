@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"path"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -37,18 +36,14 @@ import (
 	"github.com/sourcegraph/conc/pool"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	stscredsv2 "github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-	"github.com/micahhausler/aws-iam-policy/policy"
 	"github.com/overmindtech/cli/aws-source/adapters"
 	"github.com/overmindtech/cli/discovery"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // This package contains a few functions needed by the CLI to load this in-proc.
@@ -199,123 +194,6 @@ func CreateAWSConfigs(awsAuthConfig AwsAuthConfig) ([]aws.Config, error) {
 	return configs, nil
 }
 
-// extractRoleNameFromARN extracts the IAM role name from either a direct role ARN
-// (arn:aws:iam::account:role/role-name) or an assumed-role ARN
-// (arn:aws:sts::account:assumed-role/role-name/session).
-func extractRoleNameFromARN(arnStr string) (string, error) {
-	roleArnParsed, err := arn.Parse(arnStr)
-	if err != nil {
-		return "", fmt.Errorf("invalid ARN: %w", err)
-	}
-
-	resource := roleArnParsed.Resource
-
-	// Handle assumed-role ARNs: arn:aws:sts::account:assumed-role/role-name/session
-	if roleArnParsed.Service == "sts" && strings.HasPrefix(resource, "assumed-role/") {
-		// Extract role name from assumed-role/role-name/session
-		parts := strings.SplitN(strings.TrimPrefix(resource, "assumed-role/"), "/", 2)
-		if len(parts) == 0 || parts[0] == "" {
-			return "", fmt.Errorf("invalid assumed-role ARN format: missing role name")
-		}
-		return parts[0], nil
-	}
-
-	// Handle direct role ARNs: arn:aws:iam::account:role/role-name
-	if strings.HasPrefix(resource, "role/") {
-		rolePath := strings.TrimPrefix(resource, "role/")
-		if rolePath == "" {
-			return "", fmt.Errorf("invalid role ARN format: missing role name")
-		}
-		parts := strings.Split(rolePath, "/")
-		roleName := parts[len(parts)-1]
-		if roleName == "" {
-			return "", fmt.Errorf("invalid role ARN format: missing role name")
-		}
-		return roleName, nil
-	}
-
-	return "", fmt.Errorf("ARN is not a role ARN or assumed-role ARN: %s", arnStr)
-}
-
-// actionMatchesSTSTagSession checks if an IAM action pattern matches
-// sts:TagSession, honoring IAM-style wildcards (e.g., sts:Tag*, sts:*Session).
-// Matching is case-insensitive to align with AWS IAM semantics.
-func actionMatchesSTSTagSession(action string) bool {
-	action = strings.ToLower(strings.TrimSpace(action))
-	if action == "" {
-		return false
-	}
-
-	const target = "sts:tagsession"
-
-	// path.Match implements shell-style globbing, which aligns with IAM "*" usage.
-	match, err := path.Match(action, target)
-	if err != nil {
-		return false
-	}
-
-	return match
-}
-
-// checkSTSTagSessionPermission checks if the role's trust policy includes the
-// sts:TagSession permission by reading the role's trust policy document.
-// This permission is required for Pod Identity in AWS EKS.
-func checkSTSTagSessionPermission(ctx context.Context, cfg aws.Config, roleARN string) (bool, error) {
-	if roleARN == "" {
-		stsClient := sts.NewFromConfig(cfg)
-		callerID, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{})
-		if err != nil {
-			return false, fmt.Errorf("unable to get caller identity to determine role ARN: %w", err)
-		}
-		if callerID.Arn == nil {
-			return false, fmt.Errorf("sts:TagSession permission check requires a role ARN, but caller identity has no ARN")
-		}
-		roleARN = *callerID.Arn
-	}
-
-	roleName, err := extractRoleNameFromARN(roleARN)
-	if err != nil {
-		return false, fmt.Errorf("unable to extract role name from ARN: %w", err)
-	}
-
-	iamClient := awsiam.NewFromConfig(cfg)
-	roleOutput, err := iamClient.GetRole(ctx, &awsiam.GetRoleInput{
-		RoleName: aws.String(roleName),
-	})
-	if err != nil {
-		return false, fmt.Errorf("unable to get role to check trust policy: %w", err)
-	}
-
-	if roleOutput.Role == nil || roleOutput.Role.AssumeRolePolicyDocument == nil {
-		return false, fmt.Errorf("role or trust policy document not found")
-	}
-
-	trustPolicy, err := adapters.ParsePolicyDocument(*roleOutput.Role.AssumeRolePolicyDocument)
-	if err != nil {
-		return false, fmt.Errorf("unable to parse trust policy document: %w", err)
-	}
-
-	if trustPolicy.Statements == nil {
-		return false, nil
-	}
-
-	for _, statement := range trustPolicy.Statements.Values() {
-		if statement.Effect != policy.EffectAllow {
-			continue
-		}
-		if statement.Action == nil {
-			continue
-		}
-		for _, action := range statement.Action.Values() {
-			if actionMatchesSTSTagSession(action) {
-				return true, nil
-			}
-		}
-	}
-
-	return false, nil
-}
-
 // InitializeAwsSourceEngine initializes an Engine with AWS sources, returns the
 // engine, and an error if any. The context provided will be used for the rate
 // limit buckets and should not be cancelled until the source is shut down. AWS
@@ -387,49 +265,6 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 						log.WithError(err).WithFields(lf).Error("Error retrieving account information")
 						return fmt.Errorf("error getting caller identity for region %v: %w", cfg.Region, err)
 					}
-
-					// NOTE: This check is non-blocking - Check permissions and send results via OpenTelemetry.
-					// Use a context that is independent of the pool context so it is not cancelled when
-					// the calling goroutine returns.
-					permissionBase := context.WithoutCancel(ctx)
-					permissionCtx, permissionCancel := context.WithTimeout(permissionBase, 30*time.Second)
-					go func(ctx context.Context, cancel context.CancelFunc) {
-						defer cancel()
-
-						span := trace.SpanFromContext(ctx)
-
-						accountID := ""
-						if callerID.Account != nil {
-							accountID = *callerID.Account
-						} else {
-							log.WithField("region", cfg.Region).Warn("caller identity did not include account ID")
-						}
-
-						span.SetAttributes(
-							attribute.String("ovm.aws.region", cfg.Region),
-							attribute.String("ovm.aws.account_id", accountID),
-						)
-
-						var roleARN string
-						if callerID.Arn != nil {
-							roleARN = *callerID.Arn
-						}
-
-						hasSTSTagSession, stsErr := checkSTSTagSessionPermission(ctx, cfg, roleARN)
-						if stsErr != nil {
-							log.WithError(stsErr).Error("Error checking STS tag session permission")
-						}
-
-						span.SetAttributes(
-							attribute.Bool("ovm.aws.permission.sts_tag_session", hasSTSTagSession),
-						)
-						log.WithFields(log.Fields{
-							"region":              cfg.Region,
-							"account_id":          accountID,
-							"role_arn":            roleARN,
-							"has_sts_tag_session": hasSTSTagSession,
-						}).Debug("AWS Source permissions checked")
-					}(permissionCtx, permissionCancel)
 
 					// Create shared clients for each API
 					autoscalingClient := awsautoscaling.NewFromConfig(cfg, func(o *awsautoscaling.Options) {
