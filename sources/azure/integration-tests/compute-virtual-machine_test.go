@@ -31,7 +31,7 @@ const (
 	integrationTestSubnetName = "default"
 
 	defaultMaxPollAttempts = 20
-	defaultPollInterval    = 10 * time.Second
+	defaultPollInterval    = 15 * time.Second
 )
 
 func TestComputeVirtualMachineIntegration(t *testing.T) {
