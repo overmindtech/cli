@@ -121,7 +121,6 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 	ComputeInstanceGroupManager: ZoneBaseLinkedItemQueryByName(ComputeInstanceGroupManager),
 	ComputeAutoscaler:           ZoneBaseLinkedItemQueryByName(ComputeAutoscaler),
 	ComputeDisk:                 ZoneBaseLinkedItemQueryByName(ComputeDisk),
-	ComputeMachineType:          ZoneBaseLinkedItemQueryByName(ComputeMachineType),
 	ComputeReservation:          ZoneBaseLinkedItemQueryByName(ComputeReservation),
 	ComputeNodeGroup:            ZoneBaseLinkedItemQueryByName(ComputeNodeGroup),
 	ComputeInstantSnapshot:      ZoneBaseLinkedItemQueryByName(ComputeInstantSnapshot),

@@ -53,16 +53,6 @@ func TestComputeReservation(t *testing.T) {
 					},
 				},
 				{
-					ExpectedType:   gcpshared.ComputeMachineType.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "n1-standard-1",
-					ExpectedScope:  "test-project-id.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
 					ExpectedType:   gcpshared.ComputeAcceleratorType.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "nvidia-tesla-k80",

@@ -22,11 +22,6 @@ var _ = registerableAdapter{
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		// https://cloud.google.com/compute/docs/reference/rest/v1/instanceTemplates/get
-		"properties.machineType": {
-			Description:      "If the Compute Machine Type is deleted: The instance template becomes partially invalid. If the template is updated: Machine type itself is not affected.",
-			ToSDPItemType:    gcpshared.ComputeMachineType,
-			BlastPropagation: gcpshared.ImpactInOnly,
-		},
 		"properties.networkInterfaces.network": {
 			Description:      "If the network is deleted: Resources may experience connectivity changes or disruptions. If the template is deleted: Network itself is not affected.",
 			ToSDPItemType:    gcpshared.ComputeNetwork,
