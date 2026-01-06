@@ -140,6 +140,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create batch accounts client: %w", err)
 		}
 
+		virtualMachineScaleSetsClient, err := armcompute.NewVirtualMachineScaleSetsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create virtual machine scale sets client: %w", err)
+		}
+
 		// Create adapters for each resource group
 		for _, resourceGroup := range resourceGroups {
 			// Add Compute Virtual Machine adapter for this resource group
@@ -273,6 +278,14 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					resourceGroup,
 				)),
 			)
+			// Add Virtual Machine Scale Set adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewComputeVirtualMachineScaleSet(
+					clients.NewVirtualMachineScaleSetsClient(virtualMachineScaleSetsClient),
+					subscriptionID,
+					resourceGroup,
+				)),
+			)
 		}
 
 		log.WithFields(log.Fields{
@@ -356,6 +369,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				"placeholder-resource-group",
 			)),
 			sources.WrapperToAdapter(NewBatchAccount(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			)),
+			sources.WrapperToAdapter(NewComputeVirtualMachineScaleSet(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
