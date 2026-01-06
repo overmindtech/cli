@@ -30,9 +30,9 @@ var (
 	NetworkLoadBalancerProbe                   = shared.NewItemType(Azure, Network, LoadBalancerProbe)
 	NetworkLoadBalancerOutboundRule            = shared.NewItemType(Azure, Network, LoadBalancerOutboundRule)
 	NetworkLoadBalancerInboundNatPool          = shared.NewItemType(Azure, Network, LoadBalancerInboundNatPool)
-	NetworkPublicIPPrefix                 = shared.NewItemType(Azure, Network, PublicIPPrefix)
-	NetworkNatGateway                     = shared.NewItemType(Azure, Network, NatGateway)
-	NetworkDdosProtectionPlan             = shared.NewItemType(Azure, Network, DdosProtectionPlan)
+	NetworkPublicIPPrefix                      = shared.NewItemType(Azure, Network, PublicIPPrefix)
+	NetworkNatGateway                          = shared.NewItemType(Azure, Network, NatGateway)
+	NetworkDdosProtectionPlan                  = shared.NewItemType(Azure, Network, DdosProtectionPlan)
 
 	//Storage item types
 	StorageAccount       = shared.NewItemType(Azure, Storage, Account)
@@ -63,4 +63,14 @@ var (
 
 	// ManagedIdentity item types
 	ManagedIdentityUserAssignedIdentity = shared.NewItemType(Azure, ManagedIdentity, UserAssignedIdentity)
+
+	// Batch item types
+	BatchBatchAccount                   = shared.NewItemType(Azure, Batch, BatchAccount)
+	BatchBatchApplication               = shared.NewItemType(Azure, Batch, BatchApplication)
+	BatchBatchApplicationPackage        = shared.NewItemType(Azure, Batch, BatchApplicationPackage)
+	BatchBatchPool                      = shared.NewItemType(Azure, Batch, BatchPool)
+	BatchBatchCertificate               = shared.NewItemType(Azure, Batch, BatchCertificate)
+	BatchBatchPrivateEndpointConnection = shared.NewItemType(Azure, Batch, BatchPrivateEndpointConnection)
+	BatchBatchPrivateLinkResource       = shared.NewItemType(Azure, Batch, BatchPrivateLinkResource)
+	BatchBatchDetector                  = shared.NewItemType(Azure, Batch, BatchDetector)
 )

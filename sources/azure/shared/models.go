@@ -32,6 +32,9 @@ const (
 	// ManagedIdentity
 	ManagedIdentity shared.API = "managedidentity" // Microsoft.ManagedIdentity
 
+	// Batch
+	Batch shared.API = "batch" // Microsoft.Batch
+
 	// DBforPostgreSQL
 	DBforPostgreSQL shared.API = "dbforpostgresql" // Microsoft.DBforPostgreSQL
 )
@@ -63,9 +66,9 @@ const (
 	LoadBalancerProbe                   shared.Resource = "load-balancer-probe"
 	LoadBalancerOutboundRule            shared.Resource = "load-balancer-outbound-rule"
 	LoadBalancerInboundNatPool          shared.Resource = "load-balancer-inbound-nat-pool"
-	PublicIPPrefix                  shared.Resource = "public-ip-prefix"
-	NatGateway                      shared.Resource = "nat-gateway"
-	DdosProtectionPlan              shared.Resource = "ddos-protection-plan"
+	PublicIPPrefix                      shared.Resource = "public-ip-prefix"
+	NatGateway                          shared.Resource = "nat-gateway"
+	DdosProtectionPlan                  shared.Resource = "ddos-protection-plan"
 
 	// Storage resources
 	Account       shared.Resource = "account"
@@ -95,4 +98,14 @@ const (
 
 	// ManagedIdentity resources
 	UserAssignedIdentity shared.Resource = "user-assigned-identity"
+
+	// Batch resources
+	BatchAccount                  shared.Resource = "batch-account"
+	BatchApplication              shared.Resource = "batch-application"
+	BatchApplicationPackage       shared.Resource = "batch-application-package"
+	BatchPool                     shared.Resource = "batch-pool"
+	BatchCertificate              shared.Resource = "batch-certificate"
+	BatchPrivateEndpointConnection shared.Resource = "batch-private-endpoint-connection"
+	BatchPrivateLinkResource      shared.Resource = "batch-private-link-resource"
+	BatchDetector                 shared.Resource = "batch-detector"
 )
