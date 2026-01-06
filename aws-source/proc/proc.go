@@ -243,6 +243,11 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 				return nil, err
 			}
 
+			// Clear any adapters from previous retry attempts to avoid
+			// duplicate registration errors
+			e.ClearAdapters()
+			globalDone.Store(false)
+
 			p := pool.New().WithContext(ctx)
 
 			for _, cfg := range configs {
