@@ -35,7 +35,6 @@ var (
 	ComputeUrlMap                                 = shared.NewItemType(GCP, Compute, UrlMap)
 	ComputeTargetPool                             = shared.NewItemType(GCP, Compute, TargetPool)
 	ComputeLicense                                = shared.NewItemType(GCP, Compute, License)
-	ComputeMachineType                            = shared.NewItemType(GCP, Compute, MachineType)
 	CloudKMSCryptoKeyVersion                      = shared.NewItemType(GCP, CloudKMS, CryptoKeyVersion)
 	ComputeRegionCommitment                       = shared.NewItemType(GCP, Compute, RegionCommitment)
 	ComputeAcceleratorType                        = shared.NewItemType(GCP, Compute, AcceleratorType)

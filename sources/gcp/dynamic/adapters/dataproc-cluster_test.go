@@ -156,17 +156,6 @@ func TestDataprocCluster(t *testing.T) {
 						Out: false,
 					},
 				},
-				// Master machine type
-				{
-					ExpectedType:   gcpshared.ComputeMachineType.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "n1-standard-4",
-					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
 				// Master accelerator
 				{
 					ExpectedType:   gcpshared.ComputeAcceleratorType.String(),
@@ -189,32 +178,12 @@ func TestDataprocCluster(t *testing.T) {
 						Out: false,
 					},
 				},
-				{
-					ExpectedType:   gcpshared.ComputeMachineType.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "n1-standard-8",
-					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
 				// Secondary worker config
 				{
 					ExpectedType:   gcpshared.ComputeImage.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "secondary-dataproc-image",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					ExpectedType:   gcpshared.ComputeMachineType.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "n1-standard-2",
-					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: false,

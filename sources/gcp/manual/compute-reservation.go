@@ -51,7 +51,6 @@ func (c computeReservationWrapper) PredefinedRole() string {
 func (c computeReservationWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeRegionCommitment,
-		gcpshared.ComputeMachineType,
 		gcpshared.ComputeAcceleratorType,
 		gcpshared.ComputeResourcePolicy,
 	)
@@ -197,34 +196,6 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *c
 
 	// Reservations are used to guarantee availability of resources in a specific zone,
 	// and are defined in terms of machine types and other instance properties.
-	// MachineTypes describe the hardware configuration (vCPUs, memory) for VM instances.
-	// A reservation must specify a MachineType or equivalent custom configuration.
-	// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/machineTypes/{machineType}
-	// https://cloud.google.com/compute/docs/reference/rest/v1/machineTypes/get
-	if reservation.GetSpecificReservation() != nil && reservation.GetSpecificReservation().GetInstanceProperties() != nil {
-		if machineType := reservation.GetSpecificReservation().GetInstanceProperties().GetMachineType(); machineType != "" {
-			machineTypeName := gcpshared.LastPathComponent(machineType)
-			if machineTypeName != "" {
-				zone := gcpshared.ExtractPathParam("zones", machineType)
-				if zone != "" {
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   gcpshared.ComputeMachineType.String(),
-							Method: sdp.QueryMethod_GET,
-							Query:  machineTypeName,
-							Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
-						},
-						//Not too sure about this one; while deleting a machine type doesn't necessarily delete the reservation,
-						// it seems like deprecration of a machine type may make existing reservations unusable. Will set In: true for now to be sure.
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
-					})
-				}
-			}
-		}
-	}
 
 	// Accelerators are a type of resource the reservation optionally targets.
 	// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/acceleratorTypes/{acceleratorType}

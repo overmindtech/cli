@@ -42,11 +42,6 @@ var _ = registerableAdapter{
 			Description:      "If the Image is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
-		"config.masterConfig.machineTypeUri": {
-			ToSDPItemType:    gcpshared.ComputeMachineType,
-			Description:      "If the Machine Type is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
-		},
 		"config.masterConfig.managedGroupConfig.instanceGroupManagerUri": {
 			ToSDPItemType:    gcpshared.ComputeInstanceGroupManager,
 			Description:      "If the Instance Group Manager is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
@@ -62,11 +57,6 @@ var _ = registerableAdapter{
 			Description:      "If the Image is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
-		"config.workerConfig.machineTypeUri": {
-			ToSDPItemType:    gcpshared.ComputeMachineType,
-			Description:      "If the Machine Type is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
-		},
 		"config.workerConfig.managedGroupConfig.instanceGroupManagerUri": {
 			ToSDPItemType:    gcpshared.ComputeInstanceGroupManager,
 			Description:      "If the Instance Group Manager is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
@@ -80,11 +70,6 @@ var _ = registerableAdapter{
 		"config.secondaryWorkerConfig.imageUri": {
 			ToSDPItemType:    gcpshared.ComputeImage,
 			Description:      "If the Image is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
-		},
-		"config.secondaryWorkerConfig.machineTypeUri": {
-			ToSDPItemType:    gcpshared.ComputeMachineType,
-			Description:      "If the Machine Type is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.secondaryWorkerConfig.managedGroupConfig.instanceGroupManagerUri": {

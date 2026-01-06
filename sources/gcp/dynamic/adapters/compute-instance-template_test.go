@@ -162,16 +162,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   gcpshared.ComputeMachineType.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "e2-medium",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
 					ExpectedType:   gcpshared.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
