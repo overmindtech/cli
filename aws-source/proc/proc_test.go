@@ -2,6 +2,8 @@ package proc
 
 import (
 	"context"
+	"errors"
+	"strings"
 	"testing"
 
 	"github.com/overmindtech/cli/discovery"
@@ -95,4 +97,80 @@ func TestInitializeAwsSourceEngine_RetryClearsAdapters(t *testing.T) {
 	// Verify adapter was added again
 	scopes, _ = engine.GetAvailableScopesAndMetadata()
 	assert.Contains(t, scopes, "123456789012.us-east-1", "Scope should be present after re-adding")
+}
+
+func TestWrapRegionError(t *testing.T) {
+	tests := []struct {
+		name         string
+		err          error
+		region       string
+		shouldWrap   bool
+		expectedText string
+	}{
+		{
+			name:         "nil error returns nil",
+			err:          nil,
+			region:       "us-east-1",
+			shouldWrap:   false,
+			expectedText: "",
+		},
+		{
+			name:         "OIDC provider error gets wrapped",
+			err:          errors.New("InvalidIdentityToken: No OpenIDConnect provider found in your account"),
+			region:       "eu-central-2",
+			shouldWrap:   true,
+			expectedText: "region 'eu-central-2' is not enabled",
+		},
+		{
+			name:         "InvalidIdentityToken error without OIDC text not wrapped",
+			err:          errors.New("InvalidIdentityToken: some other message"),
+			region:       "ap-south-2",
+			shouldWrap:   false,
+			expectedText: "",
+		},
+		{
+			name:         "AssumeRoleWithWebIdentity exceeded attempts not wrapped",
+			err:          errors.New("operation error STS: AssumeRoleWithWebIdentity, exceeded maximum number of attempts"),
+			region:       "me-central-1",
+			shouldWrap:   false,
+			expectedText: "",
+		},
+		{
+			name:         "unrelated error not wrapped",
+			err:          errors.New("some other AWS error"),
+			region:       "us-west-2",
+			shouldWrap:   false,
+			expectedText: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := wrapRegionError(tt.err, tt.region)
+
+			if tt.err == nil {
+				if result != nil {
+					t.Errorf("expected nil, got %v", result)
+				}
+				return
+			}
+
+			if result == nil {
+				t.Errorf("expected error, got nil")
+				return
+			}
+
+			resultMsg := result.Error()
+
+			if tt.shouldWrap {
+				if !strings.Contains(resultMsg, tt.expectedText) {
+					t.Errorf("expected wrapped error to contain '%s', got: %v", tt.expectedText, resultMsg)
+				}
+			} else {
+				if strings.Contains(resultMsg, "region") && strings.Contains(resultMsg, "not enabled") {
+					t.Errorf("expected error not to be wrapped, but it was: %v", resultMsg)
+				}
+			}
+		})
+	}
 }
