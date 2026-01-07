@@ -145,6 +145,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create virtual machine scale sets client: %w", err)
 		}
 
+		availabilitySetsClient, err := armcompute.NewAvailabilitySetsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create availability sets client: %w", err)
+		}
+
 		// Create adapters for each resource group
 		for _, resourceGroup := range resourceGroups {
 			// Add Compute Virtual Machine adapter for this resource group
@@ -286,6 +291,14 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					resourceGroup,
 				)),
 			)
+			// Add Availability Set adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewComputeAvailabilitySet(
+					clients.NewAvailabilitySetsClient(availabilitySetsClient),
+					subscriptionID,
+					resourceGroup,
+				)),
+			)
 		}
 
 		log.WithFields(log.Fields{
@@ -374,6 +387,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				"placeholder-resource-group",
 			)),
 			sources.WrapperToAdapter(NewComputeVirtualMachineScaleSet(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			)),
+			sources.WrapperToAdapter(NewComputeAvailabilitySet(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
