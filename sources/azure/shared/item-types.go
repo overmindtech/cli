@@ -18,6 +18,8 @@ var (
 	ComputeDedicatedHostGroup              = shared.NewItemType(Azure, Compute, DedicatedHostGroup)
 	ComputeCapacityReservationGroup        = shared.NewItemType(Azure, Compute, CapacityReservationGroup)
 	ComputeImage                           = shared.NewItemType(Azure, Compute, Image)
+	ComputeSnapshot                        = shared.NewItemType(Azure, Compute, Snapshot)
+	ComputeDiskAccess                      = shared.NewItemType(Azure, Compute, DiskAccess)
 	ComputeSharedGalleryImage              = shared.NewItemType(Azure, Compute, SharedGalleryImage)
 	ComputeCommunityGalleryImage           = shared.NewItemType(Azure, Compute, CommunityGalleryImage)
 	ComputeSharedGalleryApplicationVersion = shared.NewItemType(Azure, Compute, SharedGalleryApplicationVersion)
@@ -71,6 +73,8 @@ var (
 
 	// KeyVault item types
 	KeyVaultVault      = shared.NewItemType(Azure, KeyVault, Vault)
+	KeyVaultSecret     = shared.NewItemType(Azure, KeyVault, Secret)
+	KeyVaultKey        = shared.NewItemType(Azure, KeyVault, Key)
 	KeyVaultManagedHSM = shared.NewItemType(Azure, KeyVault, ManagedHSM)
 
 	// ManagedIdentity item types
@@ -85,4 +89,7 @@ var (
 	BatchBatchPrivateEndpointConnection = shared.NewItemType(Azure, Batch, BatchPrivateEndpointConnection)
 	BatchBatchPrivateLinkResource       = shared.NewItemType(Azure, Batch, BatchPrivateLinkResource)
 	BatchBatchDetector                  = shared.NewItemType(Azure, Batch, BatchDetector)
+
+	// ElasticSAN item types
+	ElasticSanVolumeSnapshot = shared.NewItemType(Azure, ElasticSAN, VolumeSnapshot)
 )
