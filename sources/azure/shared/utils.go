@@ -265,6 +265,42 @@ func ExtractVaultNameFromURI(uri string) string {
 	return ""
 }
 
+// ExtractKeyNameFromURI extracts the key name from a Key Vault key URI
+// Format: https://{vaultName}.vault.azure.net/keys/{keyName}/{version}
+func ExtractKeyNameFromURI(uri string) string {
+	parsedURL, err := url.Parse(uri)
+	if err != nil {
+		return ""
+	}
+
+	path := strings.Trim(parsedURL.Path, "/")
+	parts := strings.Split(path, "/")
+	// Path format: keys/{keyName}/{version}
+	if len(parts) >= 2 && parts[0] == "keys" {
+		return parts[1]
+	}
+
+	return ""
+}
+
+// ExtractSecretNameFromURI extracts the secret name from a Key Vault secret URI
+// Format: https://{vaultName}.vault.azure.net/secrets/{secretName}/{version}
+func ExtractSecretNameFromURI(uri string) string {
+	parsedURL, err := url.Parse(uri)
+	if err != nil {
+		return ""
+	}
+
+	path := strings.Trim(parsedURL.Path, "/")
+	parts := strings.Split(path, "/")
+	// Path format: secrets/{secretName}/{version}
+	if len(parts) >= 2 && parts[0] == "secrets" {
+		return parts[1]
+	}
+
+	return ""
+}
+
 // ExtractScopeFromResourceID extracts the scope (subscription.resourceGroup) from an Azure resource ID
 // Azure resource IDs follow the format:
 // /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/...

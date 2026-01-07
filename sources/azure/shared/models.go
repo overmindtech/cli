@@ -37,6 +37,9 @@ const (
 
 	// DBforPostgreSQL
 	DBforPostgreSQL shared.API = "dbforpostgresql" // Microsoft.DBforPostgreSQL
+
+	// ElasticSAN
+	ElasticSAN shared.API = "elasticsan" // Microsoft.ElasticSan
 )
 
 // Resources
@@ -54,6 +57,8 @@ const (
 	DedicatedHostGroup              shared.Resource = "dedicated-host-group"
 	CapacityReservationGroup       shared.Resource = "capacity-reservation-group"
 	Image                           shared.Resource = "image"
+	Snapshot                        shared.Resource = "snapshot"
+	DiskAccess                      shared.Resource = "disk-access"
 	SharedGalleryImage              shared.Resource = "shared-gallery-image"
 	CommunityGalleryImage           shared.Resource = "community-gallery-image"
 	SharedGalleryApplicationVersion shared.Resource = "shared-gallery-application-version"
@@ -106,6 +111,8 @@ const (
 
 	// KeyVault resources
 	Vault      shared.Resource = "vault"
+	Secret     shared.Resource = "secret"
+	Key        shared.Resource = "key"
 	ManagedHSM shared.Resource = "managed-hsm"
 
 	// ManagedIdentity resources
@@ -120,4 +127,7 @@ const (
 	BatchPrivateEndpointConnection shared.Resource = "batch-private-endpoint-connection"
 	BatchPrivateLinkResource       shared.Resource = "batch-private-link-resource"
 	BatchDetector                  shared.Resource = "batch-detector"
+
+	// ElasticSAN resources
+	VolumeSnapshot shared.Resource = "elastic-san-volume-snapshot"
 )
