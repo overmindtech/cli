@@ -249,6 +249,17 @@ func TestComputeDisk(t *testing.T) {
 					},
 				},
 				{
+					// Properties.EncryptionSettingsCollection.EncryptionSettings[0].DiskEncryptionKey.SecretURL - DNS name
+					ExpectedType:   "dns",
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "test-keyvault.vault.azure.net",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
 					// Properties.EncryptionSettingsCollection.EncryptionSettings[0].KeyEncryptionKey.SourceVault.ID - Key Vault
 					ExpectedType:   azureshared.KeyVaultVault.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -268,6 +279,17 @@ func TestComputeDisk(t *testing.T) {
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: false,
+					},
+				},
+				{
+					// Properties.EncryptionSettingsCollection.EncryptionSettings[0].KeyEncryptionKey.KeyURL - DNS name
+					ExpectedType:   "dns",
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "test-keyvault-2.vault.azure.net",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
 					},
 				},
 			}
@@ -618,8 +640,8 @@ func createAzureDiskWithAllLinks(diskName, subscriptionID, resourceGroup string)
 					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/images/test-image"),
 				},
 				GalleryImageReference: &armcompute.ImageDiskReference{
-					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/galleries/test-gallery/images/test-gallery-image/versions/1.0.0"),
-					SharedGalleryImageID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/galleries/test-gallery-2/images/test-gallery-image-2/versions/2.0.0"),
+					ID:                      to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/galleries/test-gallery/images/test-gallery-image/versions/1.0.0"),
+					SharedGalleryImageID:    to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/galleries/test-gallery-2/images/test-gallery-image-2/versions/2.0.0"),
 					CommunityGalleryImageID: to.Ptr("/CommunityGalleries/test-community-gallery/Images/test-community-image/Versions/1.0.0"),
 				},
 				ElasticSanResourceID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.ElasticSan/elasticSans/test-elastic-san/volumegroups/test-volume-group/snapshots/test-snapshot"),
@@ -687,10 +709,10 @@ func createAzureDiskWithCrossResourceGroupLinks(diskName, subscriptionID, resour
 
 // mockDisksPager is a simple mock implementation of the Pager interface for testing
 type mockDisksPager struct {
-	ctrl     *gomock.Controller
-	items    []*armcompute.Disk
-	index    int
-	more     bool
+	ctrl  *gomock.Controller
+	items []*armcompute.Disk
+	index int
+	more  bool
 }
 
 func newMockDisksPager(ctrl *gomock.Controller, items []*armcompute.Disk) clients.DisksPager {
@@ -743,4 +765,3 @@ func (e *errorDisksPager) More() bool {
 func (e *errorDisksPager) NextPage(ctx context.Context) (armcompute.DisksClientListByResourceGroupResponse, error) {
 	return armcompute.DisksClientListByResourceGroupResponse{}, errors.New("pager error")
 }
-

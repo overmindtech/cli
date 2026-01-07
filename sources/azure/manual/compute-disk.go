@@ -13,6 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 var ComputeDiskLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeDisk)
@@ -532,8 +533,9 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk) (*sdp.Item
 
 			// Link to Key Vault Secret from DiskEncryptionKey.SecretURL
 			if encryptionSetting.DiskEncryptionKey != nil && encryptionSetting.DiskEncryptionKey.SecretURL != nil && *encryptionSetting.DiskEncryptionKey.SecretURL != "" {
-				vaultName := azureshared.ExtractVaultNameFromURI(*encryptionSetting.DiskEncryptionKey.SecretURL)
-				secretName := azureshared.ExtractSecretNameFromURI(*encryptionSetting.DiskEncryptionKey.SecretURL)
+				secretURL := *encryptionSetting.DiskEncryptionKey.SecretURL
+				vaultName := azureshared.ExtractVaultNameFromURI(secretURL)
+				secretName := azureshared.ExtractSecretNameFromURI(secretURL)
 				if vaultName != "" && secretName != "" {
 					// Key Vault URI doesn't contain resource group, use disk's scope as best effort
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -546,6 +548,24 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk) (*sdp.Item
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If Key Vault Secret is deleted/modified → disk encryption key is affected (In: true)
 							Out: false, // If disk is deleted → Key Vault Secret remains (Out: false)
+						},
+					})
+				}
+
+				// Link to DNS name (standard library) from SecretURL
+				dnsName := azureshared.ExtractDNSFromURL(secretURL)
+				if dnsName != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   "dns",
+							Method: sdp.QueryMethod_SEARCH,
+							Query:  dnsName,
+							Scope:  "global",
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							// DNS names are always linked
+							In:  true,
+							Out: true,
 						},
 					})
 				}
@@ -576,8 +596,9 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk) (*sdp.Item
 
 			// Link to Key Vault Key from KeyEncryptionKey.KeyURL
 			if encryptionSetting.KeyEncryptionKey != nil && encryptionSetting.KeyEncryptionKey.KeyURL != nil && *encryptionSetting.KeyEncryptionKey.KeyURL != "" {
-				vaultName := azureshared.ExtractVaultNameFromURI(*encryptionSetting.KeyEncryptionKey.KeyURL)
-				keyName := azureshared.ExtractKeyNameFromURI(*encryptionSetting.KeyEncryptionKey.KeyURL)
+				keyURL := *encryptionSetting.KeyEncryptionKey.KeyURL
+				vaultName := azureshared.ExtractVaultNameFromURI(keyURL)
+				keyName := azureshared.ExtractKeyNameFromURI(keyURL)
 				if vaultName != "" && keyName != "" {
 					// Key Vault URI doesn't contain resource group, use disk's scope as best effort
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -590,6 +611,24 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk) (*sdp.Item
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If Key Vault Key is deleted/modified → key encryption key is affected (In: true)
 							Out: false, // If disk is deleted → Key Vault Key remains (Out: false)
+						},
+					})
+				}
+
+				// Link to DNS name (standard library) from KeyURL
+				dnsName := azureshared.ExtractDNSFromURL(keyURL)
+				if dnsName != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   "dns",
+							Method: sdp.QueryMethod_SEARCH,
+							Query:  dnsName,
+							Scope:  "global",
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							// DNS names are always linked
+							In:  true,
+							Out: true,
 						},
 					})
 				}
@@ -621,6 +660,7 @@ func (c computeDiskWrapper) PotentialLinks() map[shared.ItemType]bool {
 		azureshared.KeyVaultVault,
 		azureshared.KeyVaultSecret,
 		azureshared.KeyVaultKey,
+		stdlib.NetworkDNS,
 	)
 }
 
