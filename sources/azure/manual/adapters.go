@@ -154,6 +154,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 		if err != nil {
 			return nil, fmt.Errorf("failed to create disks client: %w", err)
 		}
+		networkSecurityGroupsClient, err := armnetwork.NewSecurityGroupsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create network security groups client: %w", err)
+		}
 
 		// Create adapters for each resource group
 		for _, resourceGroup := range resourceGroups {
@@ -312,6 +316,14 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					resourceGroup,
 				)),
 			)
+			// Add Network Security Group adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewNetworkNetworkSecurityGroup(
+					clients.NewNetworkSecurityGroupsClient(networkSecurityGroupsClient),
+					subscriptionID,
+					resourceGroup,
+				)),
+			)
 		}
 
 		log.WithFields(log.Fields{
@@ -410,6 +422,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				"placeholder-resource-group",
 			)),
 			sources.WrapperToAdapter(NewComputeDisk(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			)),
+			sources.WrapperToAdapter(NewNetworkNetworkSecurityGroup(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",

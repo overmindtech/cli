@@ -86,6 +86,9 @@ const (
 	ApplicationGateway                   shared.Resource = "application-gateway"
 	ApplicationGatewayBackendAddressPool shared.Resource = "application-gateway-backend-address-pool"
 	ApplicationSecurityGroup             shared.Resource = "application-security-group"
+	SecurityRule                         shared.Resource = "security-rule"
+	DefaultSecurityRule                  shared.Resource = "default-security-rule"
+	IPGroup                              shared.Resource = "ip-group"
 
 	// Storage resources
 	Account       shared.Resource = "account"

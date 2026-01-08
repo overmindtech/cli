@@ -47,6 +47,9 @@ var (
 	NetworkApplicationGateway                   = shared.NewItemType(Azure, Network, ApplicationGateway)
 	NetworkApplicationGatewayBackendAddressPool = shared.NewItemType(Azure, Network, ApplicationGatewayBackendAddressPool)
 	NetworkApplicationSecurityGroup             = shared.NewItemType(Azure, Network, ApplicationSecurityGroup)
+	NetworkSecurityRule                         = shared.NewItemType(Azure, Network, SecurityRule)
+	NetworkDefaultSecurityRule                  = shared.NewItemType(Azure, Network, DefaultSecurityRule)
+	NetworkIPGroup                              = shared.NewItemType(Azure, Network, IPGroup)
 
 	//Storage item types
 	StorageAccount       = shared.NewItemType(Azure, Storage, Account)
