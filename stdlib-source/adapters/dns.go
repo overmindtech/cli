@@ -187,17 +187,47 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 		}
 	}
 
+	// Check cache before making query
+	d.ensureCache()
+	cacheHit, _, cachedItems, qErr := d.cache.Lookup(ctx, d.Name(), sdp.QueryMethod_SEARCH, scope, d.Type(), query, ignoreCache)
+	if qErr != nil {
+		return nil, qErr
+	}
+	if cacheHit {
+		return cachedItems, nil
+	}
+	ck := sdpcache.CacheKeyFromParts(d.Name(), sdp.QueryMethod_SEARCH, scope, d.Type(), query)
+
 	if net.ParseIP(query) != nil {
 		if d.ReverseLookup {
 			// If it's an IP then we want to run a reverse lookup
-			return d.MakeReverseQuery(ctx, query)
+			items, err := d.MakeReverseQuery(ctx, query)
+			if err != nil {
+				d.cache.StoreError(err, dnsCacheDuration, ck)
+				return nil, err
+			}
+
+			if len(items) == 0 {
+				// Cache NOTFOUND error for empty results to avoid repeated network calls
+				notFoundErr := &sdp.QueryError{
+					ErrorType: sdp.QueryError_NOTFOUND,
+					Scope:     "global",
+				}
+				d.cache.StoreError(notFoundErr, dnsCacheDuration, ck)
+				return nil, notFoundErr
+			}
+
+			for _, item := range items {
+				d.cache.StoreItem(item, dnsCacheDuration, ck)
+			}
+
+			return items, nil
 		} else {
-			// If disabled, return nothing
+			// If disabled, return nothing. This does not need caching, as no
+			// lookups are performed.
 			return []*sdp.Item{}, nil
 		}
 	}
-
-	ck := sdpcache.CacheKeyFromParts(d.Name(), sdp.QueryMethod_SEARCH, scope, d.Type(), query)
 
 	items, err := d.MakeQuery(ctx, query)
 	if err != nil {
