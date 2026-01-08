@@ -102,7 +102,7 @@ func parseLabelsArgument() ([]*sdp.Label, error) {
 
 // Adds common flags to API commands e.g. timeout
 func addAPIFlags(cmd *cobra.Command) {
-	cmd.PersistentFlags().String("timeout", "10m", "How long to wait for responses")
+	cmd.PersistentFlags().String("timeout", "31m", "How long to wait for responses")
 	cmd.PersistentFlags().String("app", "https://app.overmind.tech", "The overmind instance to connect to.")
 }
 
