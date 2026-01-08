@@ -55,7 +55,7 @@ const (
 	DiskEncryptionSet               shared.Resource = "disk-encryption-set"
 	ProximityPlacementGroup         shared.Resource = "proximity-placement-group"
 	DedicatedHostGroup              shared.Resource = "dedicated-host-group"
-	CapacityReservationGroup       shared.Resource = "capacity-reservation-group"
+	CapacityReservationGroup        shared.Resource = "capacity-reservation-group"
 	Image                           shared.Resource = "image"
 	Snapshot                        shared.Resource = "snapshot"
 	DiskAccess                      shared.Resource = "disk-access"
@@ -89,6 +89,9 @@ const (
 	SecurityRule                         shared.Resource = "security-rule"
 	DefaultSecurityRule                  shared.Resource = "default-security-rule"
 	IPGroup                              shared.Resource = "ip-group"
+	RouteTable                           shared.Resource = "route-table"
+	Route                                shared.Resource = "route"
+	VirtualNetworkGateway                shared.Resource = "virtual-network-gateway"
 
 	// Storage resources
 	Account       shared.Resource = "account"
