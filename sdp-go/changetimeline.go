@@ -25,11 +25,6 @@ type ChangeTimelineEntryV2ID struct {
 }
 
 var (
-	// This is the entry that is created when a change is created
-	ChangeTimelineEntryV2IDChangeCreated = ChangeTimelineEntryV2ID{
-		Label: "change_created",
-		Name:  "Change Created",
-	}
 	// This is the entry that is created when we map the resources for a change,
 	// this happens before we start blast radius simulation, it involves taking
 	// the mapping queries that were sent up, and running them against the
@@ -78,16 +73,6 @@ var (
 	ChangeTimelineEntryV2IDChangeValidation = ChangeTimelineEntryV2ID{
 		Label: "change_validation",
 		Name:  "Change Validation",
-	}
-	// When the changes was marked as started and we took the snapshot
-	ChangeTimelineEntryV2IDChangeStarted = ChangeTimelineEntryV2ID{
-		Label: "change_started",
-		Name:  "Change Started",
-	}
-	// When the changes was marked as finished and we took the snapshot
-	ChangeTimelineEntryV2IDChangeFinished = ChangeTimelineEntryV2ID{
-		Label: "change_finished",
-		Name:  "Change Finished",
 	}
 	// This is the entry that tracks observations being recorded during blast radius simulation
 	ChangeTimelineEntryV2IDRecordObservations = ChangeTimelineEntryV2ID{
