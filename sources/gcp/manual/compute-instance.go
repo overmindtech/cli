@@ -157,7 +157,7 @@ func (c computeInstanceWrapper) ListStream(ctx context.Context, stream discovery
 			continue
 		}
 
-		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

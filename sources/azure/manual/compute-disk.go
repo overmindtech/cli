@@ -75,7 +75,7 @@ func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.Que
 				stream.SendError(sdpErr)
 				continue
 			}
-			cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 			stream.SendItem(item)
 		}
 	}

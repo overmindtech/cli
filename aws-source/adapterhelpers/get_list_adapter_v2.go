@@ -188,7 +188,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 	if err != nil {
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
-			s.cache.StoreError(err, s.cacheDuration(), ck)
+			s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
 		}
 		return nil, err
 	}
@@ -207,7 +207,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 		}
 	}
 
-	s.cache.StoreItem(item, s.cacheDuration(), ck)
+	s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 
 	return item, nil
 }
@@ -280,7 +280,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 			}
 
 			stream.SendItem(item)
-			s.cache.StoreItem(item, s.cacheDuration(), ck)
+			s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 		}
 	}
 

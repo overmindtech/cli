@@ -191,7 +191,7 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) Get(ctx context.Context, scope
 			ErrorType:   sdp.QueryError_NOSCOPE,
 			ErrorString: err.Error(),
 		}
-		s.cache.StoreError(err, s.cacheDuration(), ck)
+		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
@@ -206,17 +206,17 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) Get(ctx context.Context, scope
 			}
 		}
 
-		s.cache.StoreError(err, s.cacheDuration(), ck)
+		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
 	item, err := s.resourceToItem(resource)
 	if err != nil {
-		s.cache.StoreError(err, s.cacheDuration(), ck)
+		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
-	s.cache.StoreItem(item, s.cacheDuration(), ck)
+	s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 	return item, nil
 }
 
@@ -232,12 +232,12 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) List(ctx context.Context, scop
 
 	items, err := s.listWithOptions(ctx, scope, metav1.ListOptions{})
 	if err != nil {
-		s.cache.StoreError(err, s.cacheDuration(), ck)
+		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
 	for _, item := range items {
-		s.cache.StoreItem(item, s.cacheDuration(), ck)
+		s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 	}
 
 	return items, nil
@@ -281,12 +281,12 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) Search(ctx context.Context, sc
 
 	items, err := s.listWithOptions(ctx, scope, opts)
 	if err != nil {
-		s.cache.StoreError(err, s.cacheDuration(), ck)
+		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
 	for _, item := range items {
-		s.cache.StoreItem(item, s.cacheDuration(), ck)
+		s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 	}
 
 	return items, nil

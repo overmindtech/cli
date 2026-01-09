@@ -163,7 +163,7 @@ func (c computeNodeGroupWrapper) ListStream(ctx context.Context, stream discover
 			continue
 		}
 
-		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }
@@ -230,7 +230,7 @@ func (c computeNodeGroupWrapper) SearchStream(ctx context.Context, stream discov
 			continue
 		}
 
-		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

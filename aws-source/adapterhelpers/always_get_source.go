@@ -187,12 +187,12 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 	if err != nil {
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
-			s.cache.StoreError(err, s.cacheDuration(), ck)
+			s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
 		}
 		return nil, err
 	}
 
-	s.cache.StoreItem(item, s.cacheDuration(), ck)
+	s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 	return item, nil
 }
 
@@ -251,7 +251,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		if err != nil {
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
-				s.cache.StoreError(err, s.cacheDuration(), ck)
+				s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
 			}
 			stream.SendError(err)
 			return
@@ -261,7 +261,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		if err != nil {
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
-				s.cache.StoreError(err, s.cacheDuration(), ck)
+				s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
 			}
 			stream.SendError(err)
 			return
@@ -278,7 +278,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 					stream.SendError(WrapAWSError(err))
 				}
 				if item != nil {
-					s.cache.StoreItem(item, s.cacheDuration(), ck)
+					s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 					stream.SendItem(item)
 				}
 
@@ -356,14 +356,14 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		if err != nil {
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
-				s.cache.StoreError(err, s.cacheDuration(), ck)
+				s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
 			}
 			stream.SendError(err)
 			return
 		}
 
 		if item != nil {
-			s.cache.StoreItem(item, s.cacheDuration(), ck)
+			s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 			stream.SendItem(item)
 		}
 	} else {

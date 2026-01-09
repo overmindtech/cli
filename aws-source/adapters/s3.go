@@ -231,7 +231,7 @@ func getImpl(ctx context.Context, cache *sdpcache.Cache, client S3Client, scope 
 
 	if err != nil {
 		err = adapterhelpers.WrapAWSError(err)
-		cache.StoreError(err, CacheDuration, ck)
+		cache.StoreError(ctx, err, CacheDuration, ck)
 		return nil, err
 	}
 
@@ -403,7 +403,7 @@ func getImpl(ctx context.Context, cache *sdpcache.Cache, client S3Client, scope 
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		cache.StoreError(err, CacheDuration, ck)
+		cache.StoreError(ctx, err, CacheDuration, ck)
 		return nil, err
 	}
 
@@ -587,7 +587,7 @@ func getImpl(ctx context.Context, cache *sdpcache.Cache, client S3Client, scope 
 		}
 	}
 
-	cache.StoreItem(&item, CacheDuration, ck)
+	cache.StoreItem(ctx, &item, CacheDuration, ck)
 
 	return &item, nil
 }
@@ -625,7 +625,7 @@ func listImpl(ctx context.Context, cache *sdpcache.Cache, client S3Client, scope
 
 	if err != nil {
 		err = sdp.NewQueryError(err)
-		cache.StoreError(err, CacheDuration, ck)
+		cache.StoreError(ctx, err, CacheDuration, ck)
 		return nil, err
 	}
 
@@ -640,7 +640,7 @@ func listImpl(ctx context.Context, cache *sdpcache.Cache, client S3Client, scope
 	}
 
 	for _, item := range items {
-		cache.StoreItem(item, CacheDuration, ck)
+		cache.StoreItem(ctx, item, CacheDuration, ck)
 	}
 	return items, nil
 }

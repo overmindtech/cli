@@ -115,7 +115,7 @@ func (g SearchableAdapter) Search(ctx context.Context, scope, query string, igno
 	}
 
 	for _, item := range items {
-		g.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
+		g.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 	}
 
 	return items, nil
@@ -170,7 +170,7 @@ func (g SearchableAdapter) SearchStream(ctx context.Context, scope, query string
 			return
 		}
 
-		g.cache.StoreItem(items[0], shared.DefaultCacheDuration, ck)
+		g.cache.StoreItem(ctx, items[0], shared.DefaultCacheDuration, ck)
 
 		// There should only be one item in the result, so we can send it directly
 		stream.SendItem(items[0])

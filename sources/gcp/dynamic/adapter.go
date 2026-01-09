@@ -147,7 +147,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		return nil, err
 	}
 
-	g.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
+	g.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 
 	return item, nil
 }

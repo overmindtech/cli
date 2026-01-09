@@ -161,7 +161,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Get(ctx context.Context
 	if err != nil {
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
-			s.cache.StoreError(err, s.cacheDuration(), ck)
+			s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
 		}
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Get(ctx context.Context
 		}
 	}
 
-	s.cache.StoreItem(item, s.cacheDuration(), ck)
+	s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 
 	return item, nil
 }
@@ -228,7 +228,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) List(ctx context.Contex
 		}
 
 		items = append(items, item)
-		s.cache.StoreItem(item, s.cacheDuration(), ck)
+		s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 	}
 
 	return items, nil
@@ -307,7 +307,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchCustom(ctx contex
 	awsItems, err := s.SearchFunc(ctx, s.Client, scope, query)
 	if err != nil {
 		err = WrapAWSError(err)
-		s.cache.StoreError(err, s.cacheDuration(), ck)
+		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
@@ -321,7 +321,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchCustom(ctx contex
 		}
 
 		items = append(items, item)
-		s.cache.StoreItem(item, s.cacheDuration(), ck)
+		s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 	}
 
 	return items, nil

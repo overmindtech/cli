@@ -116,7 +116,7 @@ func (s *RdapNameserverAdapter) Search(ctx context.Context, scope string, query 
 	if err != nil {
 		err = wrapRdapError(err)
 
-		s.Cache.StoreError(err, RdapCacheDuration, ck)
+		s.Cache.StoreError(ctx, err, RdapCacheDuration, ck)
 
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (s *RdapNameserverAdapter) Search(ctx context.Context, scope string, query 
 		}
 	}
 
-	s.Cache.StoreItem(item, RdapCacheDuration, ck)
+	s.Cache.StoreItem(ctx, item, RdapCacheDuration, ck)
 
 	return []*sdp.Item{item}, nil
 }

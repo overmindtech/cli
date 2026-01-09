@@ -144,7 +144,7 @@ func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discove
 			continue
 		}
 
-		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

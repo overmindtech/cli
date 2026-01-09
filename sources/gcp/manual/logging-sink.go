@@ -132,7 +132,7 @@ func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.Que
 			continue
 		}
 
-		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

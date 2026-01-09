@@ -143,7 +143,7 @@ func (c computeNodeTemplateWrapper) ListStream(ctx context.Context, stream disco
 			continue
 		}
 
-		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

@@ -290,7 +290,7 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 
 	// Store in cache after successful get
 	if s.cache != nil {
-		s.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
+		s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 	}
 
 	return item, nil
@@ -393,7 +393,7 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 
 	for _, item := range items {
 		if s.cache != nil {
-			s.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
+			s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 		}
 	}
 
@@ -662,7 +662,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 			return
 		}
 
-		s.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
+		s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 
 		stream.SendItem(item)
 		return
@@ -707,7 +707,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 			return
 		}
 
-		s.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
+		s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 
 		stream.SendItem(item)
 		return
