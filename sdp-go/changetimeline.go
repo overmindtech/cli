@@ -31,7 +31,7 @@ var (
 	// gateway to see whether any of them resolve into real items.
 	ChangeTimelineEntryV2IDMapResources = ChangeTimelineEntryV2ID{
 		Label: "mapped_resources",
-		Name:  "Map Resources",
+		Name:  "Mapping resources...",
 	}
 	// This is the entry that is created when we calculate the blast radius for a
 	// change, this happens after we map the resources for a change, it involves
@@ -39,13 +39,14 @@ var (
 	// simulation to see how many items are in the blast radius.
 	ChangeTimelineEntryV2IDCalculatedBlastRadius = ChangeTimelineEntryV2ID{
 		Label: "calculated_blast_radius",
-		Name:  "Calculated Blast Radius",
+		Name:  "Simulating blast radius...",
 	}
+	// we do not show this entry in the timeline anymore
 	// This is the entry tracks the calculation of routine signals for all of
 	// the modifications within this change
 	ChangeTimelineEntryV2IDAnalyzedSignals = ChangeTimelineEntryV2ID{
 		Label: "calculated_routineness",
-		Name:  "Analyze Signals",
+		Name:  "Calculating routine signals...",
 	}
 	// This is the entry that tracks the calculation of risks and returns them
 	// in the timeline. At the time of writing this has been replaced and we are
@@ -60,10 +61,9 @@ var (
 	// Tracks the application of auto-label rules for a change
 	ChangeTimelineEntryV2IDCalculatedLabels = ChangeTimelineEntryV2ID{
 		Label: "calculated_labels",
-		Name:  "Calculated Labels",
+		Name:  "Applying auto labels...",
 	}
-	// Tracks the calculation of auto tags for a change. This has been replaced
-	// by auto labels and will not be run on new changes anymore after Jan '26
+	// Tracks the application of auto tags for a change
 	ChangeTimelineEntryV2IDAutoTagging = ChangeTimelineEntryV2ID{
 		Label: "auto_tagging",
 		Name:  "Auto Tagging",
@@ -77,16 +77,16 @@ var (
 	// This is the entry that tracks observations being recorded during blast radius simulation
 	ChangeTimelineEntryV2IDRecordObservations = ChangeTimelineEntryV2ID{
 		Label: "record_observations",
-		Name:  "Record Observations",
+		Name:  "Recording observations...",
 	}
 	// This is the entry that tracks hypotheses being formed from observations via batch processing
 	ChangeTimelineEntryV2IDFormHypotheses = ChangeTimelineEntryV2ID{
 		Label: "form_hypotheses",
-		Name:  "Form Hypotheses",
+		Name:  "Forming hypotheses...",
 	}
 	// This is the entry that tracks investigation of hypotheses via one-shot analysis
 	ChangeTimelineEntryV2IDInvestigateHypotheses = ChangeTimelineEntryV2ID{
 		Label: "investigate_hypotheses",
-		Name:  "Investigate Hypotheses",
+		Name:  "Investigating hypotheses...",
 	}
 )
