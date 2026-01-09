@@ -279,7 +279,7 @@ overmind terraform plan -- -var-file=production.tfvars -parallelism=20 -auto-app
 
 ## Reporting Bugs
 
-- Want to report a bug or request a feature? [Open an issue](https://github.com/overmindtech/cli/issues/new)
+- Want to report a bug or request a feature? [Open an issue](https://github.com/overmindtech/cli/issues/new) or ask on <a href="https://discord.com/invite/5UKsqAkPWG" rel="nofollow">Discord</a>.
 
 ## Development
 
