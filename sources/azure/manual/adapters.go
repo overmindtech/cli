@@ -169,6 +169,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create application gateways client: %w", err)
 		}
 
+		managedHSMsClient, err := armkeyvault.NewManagedHsmsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create managed hsms client: %w", err)
+		}
+
 		// Create adapters for each resource group
 		for _, resourceGroup := range resourceGroups {
 			// Add Compute Virtual Machine adapter for this resource group
@@ -268,6 +273,14 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				)),
 			)
 
+			// Add Key Vault Managed HSM adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewKeyVaultManagedHSM(
+					clients.NewManagedHSMsClient(managedHSMsClient),
+					subscriptionID,
+					resourceGroup,
+				)),
+			)
 			// Add PostgreSQL Database adapter for this resource group
 			adapters = append(adapters,
 				sources.WrapperToAdapter(NewDBforPostgreSQLDatabase(
@@ -464,6 +477,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				"placeholder-resource-group",
 			)),
 			sources.WrapperToAdapter(NewNetworkApplicationGateway(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			)),
+			sources.WrapperToAdapter(NewKeyVaultManagedHSM(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
