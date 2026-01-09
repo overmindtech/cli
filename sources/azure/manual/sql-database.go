@@ -11,10 +11,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	SQLServerLookupByName   = shared.NewItemTypeLookup("name", azureshared.SQLServer) //todo: move to sql server adapter when made
-	SQLDatabaseLookupByName = shared.NewItemTypeLookup("name", azureshared.SQLDatabase)
-)
+var SQLDatabaseLookupByName = shared.NewItemTypeLookup("name", azureshared.SQLDatabase)
 
 type sqlDatabaseWrapper struct {
 	client clients.SqlDatabasesClient
