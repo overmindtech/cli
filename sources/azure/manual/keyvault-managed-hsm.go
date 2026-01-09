@@ -84,7 +84,7 @@ func (k keyvaultManagedHSMsWrapper) ListStream(ctx context.Context, stream disco
 				stream.SendError(sdpErr)
 				continue
 			}
-			cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 			stream.SendItem(item)
 		}
 	}
