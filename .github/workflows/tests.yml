@@ -3,7 +3,10 @@ on: push
 jobs:
   test:
     name: Run Tests
-    runs-on: depot-ubuntu-22.04-4
+    runs-on: depot-ubuntu-24.04-4
+    concurrency:
+      group: cli-tests-${{ github.ref }}
+      cancel-in-progress: true # we only need test results from the latest commit
 
     steps:
       - name: Checkout
@@ -21,4 +24,4 @@ jobs:
       - name: Go Test
         run: |
           go run main.go --version
-          go test -race -v -timeout 5m github.com/overmindtech/cli github.com/overmindtech/cli/tfutils
+          go test -race -v -timeout 5m ./...
