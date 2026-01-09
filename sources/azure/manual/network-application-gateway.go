@@ -493,6 +493,47 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 					},
 				})
 			}
+
+			// Link to Key Vault Secret from KeyVaultSecretID
+			// Reference: https://learn.microsoft.com/en-us/rest/api/keyvault/keyvault/vaults/secrets/get-secret?view=rest-keyvault-keyvault-2024-11-01&tabs=HTTP
+			if sslCert.Properties != nil && sslCert.Properties.KeyVaultSecretID != nil && *sslCert.Properties.KeyVaultSecretID != "" {
+				secretID := *sslCert.Properties.KeyVaultSecretID
+				vaultName := azureshared.ExtractVaultNameFromURI(secretID)
+				secretName := azureshared.ExtractSecretNameFromURI(secretID)
+				if vaultName != "" && secretName != "" {
+					// Key Vault URI doesn't contain resource group, use gateway's scope as best effort
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   azureshared.KeyVaultSecret.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  shared.CompositeLookupKey(vaultName, secretName),
+							Scope:  n.DefaultScope(), // Limitation: Key Vault URI doesn't contain resource group info
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,  // If Key Vault Secret is deleted/modified → SSL certificate access is affected (In: true)
+							Out: false, // If Application Gateway is deleted → Key Vault Secret remains (Out: false)
+						},
+					})
+				}
+
+				// Link to DNS name (standard library) from KeyVaultSecretID
+				dnsName := azureshared.ExtractDNSFromURL(secretID)
+				if dnsName != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   stdlib.NetworkDNS.String(),
+							Method: sdp.QueryMethod_SEARCH,
+							Query:  dnsName,
+							Scope:  "global",
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							// DNS names are always linked bidirectionally
+							In:  true,
+							Out: true,
+						},
+					})
+				}
+			}
 		}
 	}
 
@@ -556,6 +597,47 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 					},
 				})
 			}
+
+			// Link to Key Vault Secret from KeyVaultSecretID
+			// Reference: https://learn.microsoft.com/en-us/rest/api/keyvault/keyvault/vaults/secrets/get-secret?view=rest-keyvault-keyvault-2024-11-01&tabs=HTTP
+			if trustedRootCert.Properties != nil && trustedRootCert.Properties.KeyVaultSecretID != nil && *trustedRootCert.Properties.KeyVaultSecretID != "" {
+				secretID := *trustedRootCert.Properties.KeyVaultSecretID
+				vaultName := azureshared.ExtractVaultNameFromURI(secretID)
+				secretName := azureshared.ExtractSecretNameFromURI(secretID)
+				if vaultName != "" && secretName != "" {
+					// Key Vault URI doesn't contain resource group, use gateway's scope as best effort
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   azureshared.KeyVaultSecret.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  shared.CompositeLookupKey(vaultName, secretName),
+							Scope:  n.DefaultScope(), // Limitation: Key Vault URI doesn't contain resource group info
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,  // If Key Vault Secret is deleted/modified → TrustedRootCertificate access is affected (In: true)
+							Out: false, // If Application Gateway is deleted → Key Vault Secret remains (Out: false)
+						},
+					})
+				}
+
+				// Link to DNS name (standard library) from KeyVaultSecretID
+				dnsName := azureshared.ExtractDNSFromURL(secretID)
+				if dnsName != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   stdlib.NetworkDNS.String(),
+							Method: sdp.QueryMethod_SEARCH,
+							Query:  dnsName,
+							Scope:  "global",
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							// DNS names are always linked bidirectionally
+							In:  true,
+							Out: true,
+						},
+					})
+				}
+			}
 		}
 	}
 
@@ -597,6 +679,26 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Out: true, // Application Gateway changes (like deletion) affect the redirect configuration
 					},
 				})
+			}
+
+			// Link to DNS name (standard library) if target URL is configured
+			// Reference: https://learn.microsoft.com/en-us/rest/api/application-gateway/application-gateway-redirect-configurations/get
+			if redirectConfig.Properties != nil && redirectConfig.Properties.TargetURL != nil && *redirectConfig.Properties.TargetURL != "" {
+				dnsName := azureshared.ExtractDNSFromURL(*redirectConfig.Properties.TargetURL)
+				if dnsName != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   stdlib.NetworkDNS.String(),
+							Method: sdp.QueryMethod_SEARCH,
+							Query:  dnsName,
+							Scope:  "global",
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true, // DNS name changes affect redirect target availability
+							Out: true, // DNS names are always linked bidirectionally
+						},
+					})
+				}
 			}
 		}
 	}
@@ -700,6 +802,7 @@ func (n networkApplicationGatewayWrapper) PotentialLinks() map[shared.ItemType]b
 		azureshared.NetworkPublicIPAddress,
 		azureshared.NetworkApplicationGatewayWebApplicationFirewallPolicy,
 		azureshared.ManagedIdentityUserAssignedIdentity,
+		azureshared.KeyVaultSecret,
 		// Standard library types
 		stdlib.NetworkIP,
 		stdlib.NetworkDNS,

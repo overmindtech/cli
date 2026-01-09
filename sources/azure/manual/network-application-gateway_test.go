@@ -209,6 +209,28 @@ func TestNetworkApplicationGateway(t *testing.T) {
 					},
 				},
 				{
+					// Key Vault Secret from SSLCertificate KeyVaultSecretID
+					ExpectedType:   azureshared.KeyVaultSecret.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  shared.CompositeLookupKey("test-keyvault", "test-secret"),
+					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					// DNS name from SSLCertificate KeyVaultSecretID
+					ExpectedType:   stdlib.NetworkDNS.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "test-keyvault.vault.azure.net",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
 					// URLPathMap child resource
 					ExpectedType:   azureshared.NetworkApplicationGatewayURLPathMap.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -236,6 +258,28 @@ func TestNetworkApplicationGateway(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "trusted-root-cert"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					// Key Vault Secret from TrustedRootCertificate KeyVaultSecretID
+					ExpectedType:   azureshared.KeyVaultSecret.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  shared.CompositeLookupKey("test-trusted-keyvault", "test-trusted-secret"),
+					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					// DNS name from TrustedRootCertificate KeyVaultSecretID
+					ExpectedType:   stdlib.NetworkDNS.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "test-trusted-keyvault.vault.azure.net",
+					ExpectedScope:  "global",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: true,
@@ -553,6 +597,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 			azureshared.NetworkPublicIPAddress,
 			azureshared.NetworkApplicationGatewayWebApplicationFirewallPolicy,
 			azureshared.ManagedIdentityUserAssignedIdentity,
+			azureshared.KeyVaultSecret,
 			stdlib.NetworkIP,
 			stdlib.NetworkDNS,
 		}
@@ -709,6 +754,9 @@ func createAzureApplicationGateway(agName, subscriptionID, resourceGroup string)
 			SSLCertificates: []*armnetwork.ApplicationGatewaySSLCertificate{
 				{
 					Name: to.Ptr("ssl-cert"),
+					Properties: &armnetwork.ApplicationGatewaySSLCertificatePropertiesFormat{
+						KeyVaultSecretID: to.Ptr("https://test-keyvault.vault.azure.net/secrets/test-secret/version"),
+					},
 				},
 			},
 			// URLPathMaps (Child Resource)
@@ -727,6 +775,9 @@ func createAzureApplicationGateway(agName, subscriptionID, resourceGroup string)
 			TrustedRootCertificates: []*armnetwork.ApplicationGatewayTrustedRootCertificate{
 				{
 					Name: to.Ptr("trusted-root-cert"),
+					Properties: &armnetwork.ApplicationGatewayTrustedRootCertificatePropertiesFormat{
+						KeyVaultSecretID: to.Ptr("https://test-trusted-keyvault.vault.azure.net/secrets/test-trusted-secret/version"),
+					},
 				},
 			},
 			// RewriteRuleSets (Child Resource)
