@@ -146,7 +146,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		s.cache.StoreError(err, httpCacheDuration, ck)
+		s.cache.StoreError(ctx, err, httpCacheDuration, ck)
 		return nil, err
 	}
 
@@ -163,7 +163,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		s.cache.StoreError(err, httpCacheDuration, ck)
+		s.cache.StoreError(ctx, err, httpCacheDuration, ck)
 		return nil, err
 	}
 
@@ -195,7 +195,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		s.cache.StoreError(err, httpCacheDuration, ck)
+		s.cache.StoreError(ctx, err, httpCacheDuration, ck)
 		return nil, err
 	}
 
@@ -331,7 +331,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 		}
 	}
 
-	s.cache.StoreItem(&item, httpCacheDuration, ck)
+	s.cache.StoreItem(ctx, &item, httpCacheDuration, ck)
 
 	return &item, nil
 }

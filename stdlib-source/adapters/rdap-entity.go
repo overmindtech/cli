@@ -126,7 +126,7 @@ func (s *RdapEntityAdapter) runEntityRequest(ctx context.Context, query string, 
 	if err != nil {
 		err = wrapRdapError(err)
 
-		s.Cache.StoreError(err, RdapCacheDuration, cacheKey)
+		s.Cache.StoreError(ctx, err, RdapCacheDuration, cacheKey)
 
 		return nil, err
 	}
@@ -201,7 +201,7 @@ func (s *RdapEntityAdapter) runEntityRequest(ctx context.Context, query string, 
 		})
 	}
 
-	s.Cache.StoreItem(item, RdapCacheDuration, cacheKey)
+	s.Cache.StoreItem(ctx, item, RdapCacheDuration, cacheKey)
 
 	return item, nil
 }

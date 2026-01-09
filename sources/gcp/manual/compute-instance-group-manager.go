@@ -155,7 +155,7 @@ func (c computeInstanceGroupManagerWrapper) ListStream(ctx context.Context, stre
 			continue
 		}
 
-		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

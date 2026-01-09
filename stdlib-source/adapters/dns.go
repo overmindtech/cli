@@ -155,7 +155,7 @@ func (d *DNSAdapter) Get(ctx context.Context, scope string, query string, ignore
 		}
 	}
 
-	d.cache.StoreItem(items[0], dnsCacheDuration, ck)
+	d.cache.StoreItem(ctx, items[0], dnsCacheDuration, ck)
 	return items[0], nil
 }
 
@@ -203,7 +203,7 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 			// If it's an IP then we want to run a reverse lookup
 			items, err := d.MakeReverseQuery(ctx, query)
 			if err != nil {
-				d.cache.StoreError(err, dnsCacheDuration, ck)
+				d.cache.StoreError(ctx, err, dnsCacheDuration, ck)
 				return nil, err
 			}
 
@@ -213,12 +213,12 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 					ErrorType: sdp.QueryError_NOTFOUND,
 					Scope:     "global",
 				}
-				d.cache.StoreError(notFoundErr, dnsCacheDuration, ck)
+				d.cache.StoreError(ctx, notFoundErr, dnsCacheDuration, ck)
 				return nil, notFoundErr
 			}
 
 			for _, item := range items {
-				d.cache.StoreItem(item, dnsCacheDuration, ck)
+				d.cache.StoreItem(ctx, item, dnsCacheDuration, ck)
 			}
 
 			return items, nil
@@ -231,12 +231,12 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 
 	items, err := d.MakeQuery(ctx, query)
 	if err != nil {
-		d.cache.StoreError(err, dnsCacheDuration, ck)
+		d.cache.StoreError(ctx, err, dnsCacheDuration, ck)
 		return nil, err
 	}
 
 	for _, item := range items {
-		d.cache.StoreItem(item, dnsCacheDuration, ck)
+		d.cache.StoreItem(ctx, item, dnsCacheDuration, ck)
 	}
 
 	return items, nil

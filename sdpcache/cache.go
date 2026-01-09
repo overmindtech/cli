@@ -477,7 +477,7 @@ func (c *Cache) getResults(ck CacheKey) []*CachedResult {
 
 // StoreItem Stores an item in the cache. Note that this item must be fully
 // populated (including metadata) for indexing to work correctly
-func (c *Cache) StoreItem(item *sdp.Item, duration time.Duration, ck CacheKey) {
+func (c *Cache) StoreItem(ctx context.Context, item *sdp.Item, duration time.Duration, ck CacheKey) {
 	if item == nil || c == nil {
 		return
 	}
@@ -502,11 +502,11 @@ func (c *Cache) StoreItem(item *sdp.Item, duration time.Duration, ck CacheKey) {
 
 	res.IndexValues.SSTHash = ck.SST.Hash()
 
-	c.storeResult(res)
+	c.storeResult(ctx, res)
 }
 
 // StoreError Stores an error for the given duration.
-func (c *Cache) StoreError(err error, duration time.Duration, cacheQuery CacheKey) {
+func (c *Cache) StoreError(ctx context.Context, err error, duration time.Duration, cacheQuery CacheKey) {
 	if c == nil || err == nil {
 		return
 	}
@@ -518,7 +518,7 @@ func (c *Cache) StoreError(err error, duration time.Duration, cacheQuery CacheKe
 		IndexValues: cacheQuery.ToIndexValues(),
 	}
 
-	c.storeResult(res)
+	c.storeResult(ctx, res)
 }
 
 // Clear Delete all data in cache
@@ -534,7 +534,7 @@ func (c *Cache) Clear() {
 	c.expiryIndex = newExpiryIndex()
 }
 
-func (c *Cache) storeResult(res CachedResult) {
+func (c *Cache) storeResult(ctx context.Context, res CachedResult) {
 	c.indexMutex.Lock()
 	defer c.indexMutex.Unlock()
 
@@ -546,10 +546,56 @@ func (c *Cache) storeResult(res CachedResult) {
 		c.indexes[res.IndexValues.SSTHash] = indexes
 	}
 
-	// Add the item to the indexes
-	indexes.methodIndex.ReplaceOrInsert(&res)
+	// Add the item to the indexes and check if we're overwriting an unexpired entry
+	// We only need to check one index since they all reference the same CachedResult
+	oldResult, replaced := indexes.methodIndex.ReplaceOrInsert(&res)
 	indexes.queryIndex.ReplaceOrInsert(&res)
 	indexes.uniqueAttributeValueIndex.ReplaceOrInsert(&res)
+
+	// Get the current span to add attributes
+	span := trace.SpanFromContext(ctx)
+
+	// Check if we overwrote an entry that hasn't expired yet
+	// This indicates potential thundering-herd issues where multiple identical
+	// queries are executed concurrently instead of waiting for the first result
+	overwritten := false
+	if replaced && oldResult != nil {
+		now := time.Now()
+		if oldResult.Expiry.After(now) {
+			overwritten = true
+			timeUntilExpiry := oldResult.Expiry.Sub(now)
+
+			// Build attributes for the overwrite event
+			attrs := []attribute.KeyValue{
+				attribute.Bool("ovm.cache.unexpired_overwrite", true),
+				attribute.String("ovm.cache.time_until_expiry", timeUntilExpiry.String()),
+				attribute.String("ovm.cache.source_name", string(res.IndexValues.SSTHash)),
+				attribute.String("ovm.cache.query_method", res.IndexValues.Method.String()),
+			}
+
+			if res.Item != nil {
+				attrs = append(attrs,
+					attribute.String("ovm.cache.item_type", res.Item.GetType()),
+					attribute.String("ovm.cache.item_scope", res.Item.GetScope()),
+				)
+			}
+
+			if res.IndexValues.Query != "" {
+				attrs = append(attrs, attribute.String("ovm.cache.query", res.IndexValues.Query))
+			}
+
+			if res.IndexValues.UniqueAttributeValue != "" {
+				attrs = append(attrs, attribute.String("ovm.cache.unique_attribute", res.IndexValues.UniqueAttributeValue))
+			}
+
+			span.SetAttributes(attrs...)
+		}
+	}
+
+	// Always set the overwrite attribute, even if false, for consistent tracking
+	if !overwritten {
+		span.SetAttributes(attribute.Bool("ovm.cache.unexpired_overwrite", false))
+	}
 
 	// Add the item to the expiry index
 	c.expiryIndex.ReplaceOrInsert(&res)

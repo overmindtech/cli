@@ -171,7 +171,7 @@ func (s *TestAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		s.cache.StoreError(err, s.DefaultCacheDuration(), ck)
+		s.cache.StoreError(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{
@@ -181,7 +181,7 @@ func (s *TestAdapter) Get(ctx context.Context, scope string, query string, ignor
 		}
 	default:
 		item := s.NewTestItem(scope, query)
-		s.cache.StoreItem(item, s.DefaultCacheDuration(), ck)
+		s.cache.StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
 		return item, nil
 	}
 }
@@ -208,7 +208,7 @@ func (s *TestAdapter) List(ctx context.Context, scope string, ignoreCache bool) 
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		s.cache.StoreError(err, s.DefaultCacheDuration(), ck)
+		s.cache.StoreError(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{
@@ -218,7 +218,7 @@ func (s *TestAdapter) List(ctx context.Context, scope string, ignoreCache bool) 
 		}
 	default:
 		item := s.NewTestItem(scope, "Dylan")
-		s.cache.StoreItem(item, s.DefaultCacheDuration(), ck)
+		s.cache.StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
 		return []*sdp.Item{item}, nil
 	}
 }
@@ -245,7 +245,7 @@ func (s *TestAdapter) Search(ctx context.Context, scope string, query string, ig
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		s.cache.StoreError(err, s.DefaultCacheDuration(), ck)
+		s.cache.StoreError(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{
@@ -255,7 +255,7 @@ func (s *TestAdapter) Search(ctx context.Context, scope string, query string, ig
 		}
 	default:
 		item := s.NewTestItem(scope, "Dylan")
-		s.cache.StoreItem(item, s.DefaultCacheDuration(), ck)
+		s.cache.StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
 		return []*sdp.Item{item}, nil
 	}
 }

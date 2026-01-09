@@ -222,7 +222,7 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 			return nil, err
 		}
 
-		s.Cache.StoreItem(item, RdapCacheDuration, ck)
+		s.Cache.StoreItem(ctx, item, RdapCacheDuration, ck)
 
 		return []*sdp.Item{item}, nil
 	}
@@ -233,7 +233,7 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 		ErrorString: fmt.Sprintf("No domain found for %s", query),
 	}
 
-	s.Cache.StoreError(err, RdapCacheDuration, ck)
+	s.Cache.StoreError(ctx, err, RdapCacheDuration, ck)
 
 	return nil, err
 }

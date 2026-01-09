@@ -95,7 +95,7 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 	}
 
 	for _, item := range items {
-		g.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
+		g.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 	}
 
 	return items, nil

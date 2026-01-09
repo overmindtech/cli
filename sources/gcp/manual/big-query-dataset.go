@@ -100,7 +100,7 @@ func (b BigQueryDatasetWrapper) ListStream(ctx context.Context, stream discovery
 	b.client.ListStream(ctx, b.ProjectID(), stream, func(ctx context.Context, md *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError) {
 		item, qerr := b.GCPBigQueryDatasetToItem(ctx, md)
 		if qerr == nil && item != nil {
-			cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		}
 		return item, qerr
 	})

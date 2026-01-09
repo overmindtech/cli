@@ -209,20 +209,20 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 	// Get the input object
 	input, err = s.InputMapperGet(scope, query)
 	if err != nil {
-		err = s.processError(err, ck)
+		err = s.processError(ctx, err, ck)
 		return nil, err
 	}
 
 	// Call the API using the object
 	output, err = s.DescribeFunc(ctx, s.Client, input)
 	if err != nil {
-		err = s.processError(err, ck)
+		err = s.processError(ctx, err, ck)
 		return nil, err
 	}
 
 	items, err = s.OutputMapper(ctx, s.Client, scope, input, output)
 	if err != nil {
-		err = s.processError(err, ck)
+		err = s.processError(ctx, err, ck)
 		return nil, err
 	}
 
@@ -253,7 +253,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf("Request returned > 1 item for a GET request. Items: %v", strings.Join(itemNames, ", ")),
 		}
-		s.cache.StoreError(qErr, s.cacheDuration(), ck)
+		s.cache.StoreError(ctx, qErr, s.cacheDuration(), ck)
 
 		return nil, qErr
 	case numItems == 0:
@@ -261,11 +261,11 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: fmt.Sprintf("%v %v not found", s.Type(), query),
 		}
-		s.cache.StoreError(qErr, s.cacheDuration(), ck)
+		s.cache.StoreError(ctx, qErr, s.cacheDuration(), ck)
 		return nil, qErr
 	}
 
-	s.cache.StoreItem(items[0], s.cacheDuration(), ck)
+	s.cache.StoreItem(ctx, items[0], s.cacheDuration(), ck)
 	return items[0], nil
 }
 
@@ -308,7 +308,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) ListStream(c
 
 	input, err := s.InputMapperList(scope)
 	if err != nil {
-		err = s.processError(err, ck)
+		err = s.processError(ctx, err, ck)
 		stream.SendError(err)
 		return
 	}
@@ -398,7 +398,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchCustom
 // Processes an error returned by the AWS API so that it can be handled by
 // Overmind. This includes extracting the correct error type, wrapping in an SDP
 // error, and caching that error if it is non-transient (like a 404)
-func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) processError(err error, cacheKey sdpcache.CacheKey) error {
+func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) processError(ctx context.Context, err error, cacheKey sdpcache.CacheKey) error {
 	var sdpErr *sdp.QueryError
 
 	if err != nil {
@@ -406,7 +406,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) processError
 
 		// Only cache the error if is something that won't be fixed by retrying
 		if sdpErr.GetErrorType() == sdp.QueryError_NOTFOUND || sdpErr.GetErrorType() == sdp.QueryError_NOSCOPE {
-			s.cache.StoreError(sdpErr, s.cacheDuration(), cacheKey)
+			s.cache.StoreError(ctx, sdpErr, s.cacheDuration(), cacheKey)
 		}
 	}
 
@@ -423,52 +423,52 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) describe(ctx
 		for paginator.HasMorePages() {
 			output, err := paginator.NextPage(ctx)
 			if err != nil {
-				stream.SendError(s.processError(err, ck))
+				stream.SendError(s.processError(ctx, err, ck))
 				return
 			}
 
 			items, err := s.OutputMapper(ctx, s.Client, scope, input, output)
 			if err != nil {
-				stream.SendError(s.processError(err, ck))
+				stream.SendError(s.processError(ctx, err, ck))
 				return
 			}
 
 			if query != nil && s.PostSearchFilter != nil {
 				items, err = s.PostSearchFilter(ctx, *query, items)
 				if err != nil {
-					stream.SendError(s.processError(err, ck))
+					stream.SendError(s.processError(ctx, err, ck))
 					return
 				}
 			}
 
 			for _, item := range items {
-				s.cache.StoreItem(item, s.cacheDuration(), ck)
+				s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 				stream.SendItem(item)
 			}
 		}
 	} else {
 		output, err := s.DescribeFunc(ctx, s.Client, input)
 		if err != nil {
-			stream.SendError(s.processError(err, ck))
+			stream.SendError(s.processError(ctx, err, ck))
 			return
 		}
 
 		items, err := s.OutputMapper(ctx, s.Client, scope, input, output)
 		if err != nil {
-			stream.SendError(s.processError(err, ck))
+			stream.SendError(s.processError(ctx, err, ck))
 			return
 		}
 
 		if query != nil && s.PostSearchFilter != nil {
 			items, err = s.PostSearchFilter(ctx, *query, items)
 			if err != nil {
-				stream.SendError(s.processError(err, ck))
+				stream.SendError(s.processError(ctx, err, ck))
 				return
 			}
 		}
 
 		for _, item := range items {
-			s.cache.StoreItem(item, s.cacheDuration(), ck)
+			s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 			stream.SendItem(item)
 		}
 	}

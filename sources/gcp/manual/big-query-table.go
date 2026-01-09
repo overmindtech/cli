@@ -112,7 +112,7 @@ func (b BigQueryTableWrapper) SearchStream(ctx context.Context, stream discovery
 	b.client.ListStream(ctx, b.ProjectID(), queryParts[0], stream, func(md *bigquery.TableMetadata) (*sdp.Item, *sdp.QueryError) {
 		item, qerr := b.GCPBigQueryTableToItem(md)
 		if qerr == nil && item != nil {
-			cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		}
 		return item, qerr
 	})

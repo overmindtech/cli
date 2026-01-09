@@ -146,7 +146,7 @@ func (c iamServiceAccountKeyWrapper) SearchStream(ctx context.Context, stream di
 			continue
 		}
 		if item != nil {
-			cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		}
 		stream.SendItem(item)
 	}

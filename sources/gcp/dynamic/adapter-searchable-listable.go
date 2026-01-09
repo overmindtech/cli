@@ -123,7 +123,7 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 	}
 
 	for _, item := range items {
-		g.cache.StoreItem(item, shared.DefaultCacheDuration, ck)
+		g.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 	}
 
 	return items, nil
@@ -178,7 +178,7 @@ func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, quer
 			return
 		}
 
-		g.cache.StoreItem(items[0], shared.DefaultCacheDuration, ck)
+		g.cache.StoreItem(ctx, items[0], shared.DefaultCacheDuration, ck)
 
 		// There should only be one item in the result, so we can send it directly
 		stream.SendItem(items[0])

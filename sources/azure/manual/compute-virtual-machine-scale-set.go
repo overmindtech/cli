@@ -72,7 +72,7 @@ func (c computeVirtualMachineScaleSetWrapper) ListStream(ctx context.Context, st
 				stream.SendError(sdpErr)
 				continue
 			}
-			cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 			stream.SendItem(item)
 		}
 	}
