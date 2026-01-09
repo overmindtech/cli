@@ -1,6 +1,7 @@
 package sdpcache
 
 import (
+	"context"
 	"math/rand"
 	"testing"
 	"time"
@@ -12,7 +13,7 @@ const CacheDuration = 10 * time.Second
 
 // NewPopulatedCache Returns a newly populated cache and the CacheQuery that
 // matches a randomly selected item in that cache
-func NewPopulatedCache(numberItems int) (*Cache, CacheKey) {
+func NewPopulatedCache(ctx context.Context, numberItems int) (*Cache, CacheKey) {
 	// Populate the cache
 	c := NewCache()
 
@@ -28,14 +29,14 @@ func NewPopulatedCache(numberItems int) (*Cache, CacheKey) {
 			exampleCk = ck
 		}
 
-		c.StoreItem(item, CacheDuration, ck)
+		c.StoreItem(ctx, item, CacheDuration, ck)
 	}
 
 	return c, exampleCk
 }
 
 func BenchmarkCache1SingleItem(b *testing.B) {
-	c, query := NewPopulatedCache(1)
+	c, query := NewPopulatedCache(b.Context(), 1)
 
 	var err error
 
@@ -52,7 +53,7 @@ func BenchmarkCache1SingleItem(b *testing.B) {
 }
 
 func BenchmarkCache10SingleItem(b *testing.B) {
-	c, query := NewPopulatedCache(10)
+	c, query := NewPopulatedCache(b.Context(), 10)
 
 	var err error
 
@@ -69,7 +70,7 @@ func BenchmarkCache10SingleItem(b *testing.B) {
 }
 
 func BenchmarkCache100SingleItem(b *testing.B) {
-	c, query := NewPopulatedCache(100)
+	c, query := NewPopulatedCache(b.Context(), 100)
 
 	var err error
 
@@ -86,7 +87,7 @@ func BenchmarkCache100SingleItem(b *testing.B) {
 }
 
 func BenchmarkCache1000SingleItem(b *testing.B) {
-	c, query := NewPopulatedCache(1000)
+	c, query := NewPopulatedCache(b.Context(), 1000)
 
 	var err error
 
@@ -103,7 +104,7 @@ func BenchmarkCache1000SingleItem(b *testing.B) {
 }
 
 func BenchmarkCache10_000SingleItem(b *testing.B) {
-	c, query := NewPopulatedCache(10_000)
+	c, query := NewPopulatedCache(b.Context(), 10_000)
 
 	var err error
 

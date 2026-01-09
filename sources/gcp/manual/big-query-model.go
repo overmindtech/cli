@@ -158,7 +158,7 @@ func (m BigQueryModelWrapper) SearchStream(ctx context.Context, stream discovery
 	m.client.ListStream(ctx, m.ProjectBase.ProjectID(), queryParts[0], stream, func(datasetID string, md *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
 		item, qerr := m.GCPBigQueryMetadataToItem(datasetID, md)
 		if qerr == nil && item != nil {
-			cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		}
 		return item, qerr
 	})

@@ -17,7 +17,7 @@ func TestStoreItem(t *testing.T) {
 	t.Run("one match", func(t *testing.T) {
 		item := GenerateRandomItem()
 		ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
-		cache.StoreItem(item, 10*time.Second, ck)
+		cache.StoreItem(t.Context(), item, 10*time.Second, ck)
 
 		results, err := cache.Search(ck)
 		if err != nil {
@@ -33,7 +33,7 @@ func TestStoreItem(t *testing.T) {
 		item := GenerateRandomItem()
 		ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
-		cache.StoreItem(item, 10*time.Second, ck)
+		cache.StoreItem(t.Context(), item, 10*time.Second, ck)
 
 		results, err := cache.Search(ck)
 		if err != nil {
@@ -49,7 +49,7 @@ func TestStoreItem(t *testing.T) {
 		item := GenerateRandomItem()
 		ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
-		cache.StoreItem(item, 10*time.Second, ck)
+		cache.StoreItem(t.Context(), item, 10*time.Second, ck)
 
 		ck.SST.Scope = fmt.Sprintf("new scope %v", ck.SST.Scope)
 
@@ -80,7 +80,7 @@ func TestStoreError(t *testing.T) {
 
 		uav := "foo"
 
-		cache.StoreError(errors.New("arse"), 10*time.Second, CacheKey{
+		cache.StoreError(t.Context(), errors.New("arse"), 10*time.Second, CacheKey{
 			SST:    sst,
 			Method: sdp.QueryMethod_GET.Enum(),
 			Query:  &uav,
@@ -132,7 +132,7 @@ func TestStoreError(t *testing.T) {
 
 		uav := "foo"
 
-		cache.StoreError(errors.New("nope"), 10*time.Second, CacheKey{
+		cache.StoreError(t.Context(), errors.New("nope"), 10*time.Second, CacheKey{
 			SST:    sst,
 			Method: sdp.QueryMethod_GET.Enum(),
 			Query:  &uav,
@@ -189,7 +189,7 @@ func TestPurge(t *testing.T) {
 
 	for _, i := range cachedItems {
 		ck := CacheKeyFromQuery(i.Item.GetMetadata().GetSourceQuery(), i.Item.GetMetadata().GetSourceName())
-		cache.StoreItem(i.Item, time.Until(i.Expiry), ck)
+		cache.StoreItem(t.Context(), i.Item, time.Until(i.Expiry), ck)
 	}
 
 	// Make sure all the items are in the cache
@@ -242,6 +242,7 @@ func TestPurge(t *testing.T) {
 }
 
 func TestStartPurge(t *testing.T) {
+	ctx := t.Context()
 	cache := NewCache()
 	cache.MinWaitTime = 100 * time.Millisecond
 
@@ -261,10 +262,10 @@ func TestStartPurge(t *testing.T) {
 
 	for _, i := range cachedItems {
 		ck := CacheKeyFromQuery(i.Item.GetMetadata().GetSourceQuery(), i.Item.GetMetadata().GetSourceName())
-		cache.StoreItem(i.Item, time.Until(i.Expiry), ck)
+		cache.StoreItem(ctx, i.Item, time.Until(i.Expiry), ck)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	err := cache.StartPurger(ctx)
@@ -298,7 +299,7 @@ func TestStartPurge(t *testing.T) {
 	// Adding a new item should kick off the purging again
 	for _, i := range cachedItems {
 		ck := CacheKeyFromQuery(i.Item.GetMetadata().GetSourceQuery(), i.Item.GetMetadata().GetSourceName())
-		cache.StoreItem(i.Item, 100*time.Millisecond, ck)
+		cache.StoreItem(ctx, i.Item, 100*time.Millisecond, ck)
 	}
 
 	time.Sleep(200 * time.Millisecond)
@@ -319,7 +320,7 @@ func TestStopPurge(t *testing.T) {
 	cache := NewCache()
 	cache.MinWaitTime = 1 * time.Millisecond
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 
 	err := cache.StartPurger(ctx)
 	if err != nil {
@@ -333,7 +334,7 @@ func TestStopPurge(t *testing.T) {
 	item := GenerateRandomItem()
 	ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
-	cache.StoreItem(item, time.Millisecond, ck)
+	cache.StoreItem(ctx, item, time.Millisecond, ck)
 	sst := SST{
 		SourceName: item.GetMetadata().GetSourceName(),
 		Scope:      item.GetScope(),
@@ -362,7 +363,7 @@ func TestDelete(t *testing.T) {
 	item := GenerateRandomItem()
 	ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
-	cache.StoreItem(item, time.Millisecond, ck)
+	cache.StoreItem(t.Context(), item, time.Millisecond, ck)
 	sst := SST{
 		SourceName: item.GetMetadata().GetSourceName(),
 		Scope:      item.GetScope(),
@@ -408,7 +409,7 @@ func TestConcurrent(t *testing.T) {
 	// Run the purger super fast to generate a worst-case scenario
 	cache.MinWaitTime = 1 * time.Millisecond
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
 	err := cache.StartPurger(ctx)
 	if err != nil {
@@ -426,7 +427,7 @@ func TestConcurrent(t *testing.T) {
 			item := GenerateRandomItem()
 			ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
-			cache.StoreItem(item, 100*time.Millisecond, ck)
+			cache.StoreItem(ctx, item, 100*time.Millisecond, ck)
 
 			wg.Add(1)
 			// Create a goroutine to also delete in parallel
@@ -446,7 +447,7 @@ func TestPointers(t *testing.T) {
 	item := GenerateRandomItem()
 	ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
-	cache.StoreItem(item, time.Minute, ck)
+	cache.StoreItem(t.Context(), item, time.Minute, ck)
 
 	item.Type = "bad"
 
@@ -466,6 +467,7 @@ func TestPointers(t *testing.T) {
 }
 
 func TestCacheClear(t *testing.T) {
+	ctx := t.Context()
 	cache := NewCache()
 
 	cache.Clear()
@@ -474,10 +476,10 @@ func TestCacheClear(t *testing.T) {
 	item := GenerateRandomItem()
 	ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
-	cache.StoreItem(item, 500*time.Millisecond, ck)
+	cache.StoreItem(ctx, item, 500*time.Millisecond, ck)
 
 	// Start purging just to make sure it doesn't break
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	err := cache.StartPurger(ctx)
 	if err != nil {
@@ -502,7 +504,7 @@ func TestCacheClear(t *testing.T) {
 	}
 
 	// Make sure we can populate it again
-	cache.StoreItem(item, 500*time.Millisecond, ck)
+	cache.StoreItem(ctx, item, 500*time.Millisecond, ck)
 	_, err = cache.Search(ck)
 
 	if err != nil {
@@ -558,13 +560,13 @@ func TestToIndexValues(t *testing.T) {
 }
 
 func TestLookup(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	cache := NewCache()
 
 	item := GenerateRandomItem()
 	ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
-	cache.StoreItem(item, 10*time.Second, ck)
+	cache.StoreItem(ctx, item, 10*time.Second, ck)
 
 	// ignore the cache
 	cacheHit, _, cachedItems, err := cache.Lookup(ctx, item.GetMetadata().GetSourceName(), sdp.QueryMethod_GET, item.GetScope(), item.GetType(), item.UniqueAttributeValue(), true)
@@ -623,14 +625,14 @@ func TestLookup(t *testing.T) {
 }
 
 func TestStoreSearch(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	cache := NewCache()
 
 	item := GenerateRandomItem()
 	item.Metadata.SourceQuery.Method = sdp.QueryMethod_SEARCH
 	ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
-	cache.StoreItem(item, 10*time.Second, ck)
+	cache.StoreItem(ctx, item, 10*time.Second, ck)
 
 	// Lookup the item as GET request
 	cacheHit, _, cachedItems, err := cache.Lookup(ctx, item.GetMetadata().GetSourceName(), sdp.QueryMethod_GET, item.GetScope(), item.GetType(), item.UniqueAttributeValue(), false)
@@ -649,4 +651,85 @@ func TestStoreSearch(t *testing.T) {
 	if cachedItems[0].GetType() != item.GetType() {
 		t.Errorf("expected type %v, got %v", item.GetType(), cachedItems[0].GetType())
 	}
+}
+
+func TestUnexpiredOverwriteLogging(t *testing.T) {
+	cache := NewCache()
+
+	t.Run("overwriting unexpired entry increments counter", func(t *testing.T) {
+		ctx := t.Context()
+		// Create an item and cache key
+		item := GenerateRandomItem()
+		ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
+
+		// Store the item with a long TTL (10 seconds)
+		cache.StoreItem(ctx, item, 10*time.Second, ck)
+
+		// Store the same item again before it expires (overwrite will be tracked via span attributes)
+		cache.StoreItem(ctx, item, 10*time.Second, ck)
+
+		// Store it again
+		cache.StoreItem(ctx, item, 10*time.Second, ck)
+	})
+
+	t.Run("overwriting expired entry does not increment counter", func(t *testing.T) {
+		ctx := t.Context()
+		// Create a new cache for this test
+		cache := NewCache()
+
+		item := GenerateRandomItem()
+		ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
+
+		// Store the item with a very short TTL
+		cache.StoreItem(ctx, item, 1*time.Millisecond, ck)
+
+		// Wait for it to expire
+		time.Sleep(10 * time.Millisecond)
+
+		// Store the same item again after it expired (overwrite tracking via span attributes)
+		cache.StoreItem(ctx, item, 10*time.Second, ck)
+	})
+
+	t.Run("overwriting different items does not increment counter", func(t *testing.T) {
+		ctx := t.Context()
+		// Create a new cache for this test
+		cache := NewCache()
+
+		item1 := GenerateRandomItem()
+		item2 := GenerateRandomItem()
+
+		ck1 := CacheKeyFromQuery(item1.GetMetadata().GetSourceQuery(), item1.GetMetadata().GetSourceName())
+		ck2 := CacheKeyFromQuery(item2.GetMetadata().GetSourceQuery(), item2.GetMetadata().GetSourceName())
+
+		// Store two different items (no overwrites, just new items)
+		cache.StoreItem(ctx, item1, 10*time.Second, ck1)
+		cache.StoreItem(ctx, item2, 10*time.Second, ck2)
+	})
+
+	t.Run("overwriting error entries increments counter", func(t *testing.T) {
+		ctx := t.Context()
+		// Create a new cache for this test
+		cache := NewCache()
+
+		sst := SST{
+			SourceName: "test-source",
+			Scope:      "test-scope",
+			Type:       "test-type",
+		}
+
+		method := sdp.QueryMethod_LIST
+		query := "test-query"
+
+		ck := CacheKey{
+			SST:    sst,
+			Method: &method,
+			Query:  &query,
+		}
+
+		// Store an error
+		cache.StoreError(ctx, errors.New("test error"), 10*time.Second, ck)
+
+		// Store the same error again before it expires (overwrite will be tracked via span attributes)
+		cache.StoreError(ctx, errors.New("another error"), 10*time.Second, ck)
+	})
 }

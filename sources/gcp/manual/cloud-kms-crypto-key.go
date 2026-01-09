@@ -175,7 +175,7 @@ func (c cloudKMSCryptoKeyWrapper) SearchStream(ctx context.Context, stream disco
 			stream.SendError(sdpErr)
 		}
 
-		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

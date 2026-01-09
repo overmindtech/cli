@@ -121,7 +121,7 @@ func (s *RdapIPNetworkAdapter) Search(ctx context.Context, scope string, query s
 		if err != nil {
 			err = wrapRdapError(err)
 
-			s.Cache.StoreError(err, RdapCacheDuration, ck)
+			s.Cache.StoreError(ctx, err, RdapCacheDuration, ck)
 
 			return nil, err
 		}
@@ -187,7 +187,7 @@ func (s *RdapIPNetworkAdapter) Search(ctx context.Context, scope string, query s
 	// Loop over the entities and create linkedin item queries
 	item.LinkedItemQueries = extractEntityLinks(ipNetwork.Entities)
 
-	s.Cache.StoreItem(item, RdapCacheDuration, ck)
+	s.Cache.StoreItem(ctx, item, RdapCacheDuration, ck)
 
 	return []*sdp.Item{item}, nil
 }

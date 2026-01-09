@@ -145,7 +145,7 @@ func (c computeReservationWrapper) ListStream(ctx context.Context, stream discov
 			continue
 		}
 
-		cache.StoreItem(item, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
 }

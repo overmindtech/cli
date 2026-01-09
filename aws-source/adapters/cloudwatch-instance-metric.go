@@ -305,7 +305,7 @@ func (a *CloudwatchInstanceMetricAdapter) Get(ctx context.Context, scope string,
 			Scope:       scope,
 		}
 		// Cache the error
-		a.cache.StoreError(qErr, a.cacheDuration(), ck)
+		a.cache.StoreError(ctx, qErr, a.cacheDuration(), ck)
 		return nil, qErr
 	}
 
@@ -317,12 +317,12 @@ func (a *CloudwatchInstanceMetricAdapter) Get(ctx context.Context, scope string,
 			Scope:       scope,
 		}
 		// Cache the error
-		a.cache.StoreError(qErr, a.cacheDuration(), ck)
+		a.cache.StoreError(ctx, qErr, a.cacheDuration(), ck)
 		return nil, qErr
 	}
 
 	// Store in cache
-	a.cache.StoreItem(item, a.cacheDuration(), ck)
+	a.cache.StoreItem(ctx, item, a.cacheDuration(), ck)
 	return item, nil
 }
 
