@@ -318,7 +318,6 @@ func ensureValidTokenHandler(config AuthConfig, next http.Handler) http.Handler 
 
 	errorHandler := func(w http.ResponseWriter, r *http.Request, err error) {
 		// copied from auth0's DefaultErrorHandler, but with some extra logging and reporting
-		w.Header().Set("Content-Type", "application/json")
 		span := trace.SpanFromContext(r.Context())
 		span.SetAttributes(
 			attribute.String("ovm.auth.error", err.Error()),
@@ -327,6 +326,24 @@ func ensureValidTokenHandler(config AuthConfig, next http.Handler) http.Handler 
 			attribute.String("ovm.auth.expectedIssuer", issuerURL.String()),
 		)
 
+		// Check if this is a Connect/gRPC request by looking at the Content-Type header
+		// Connect requests use content types like:
+		// - application/connect+proto
+		// - application/connect+json
+		// - application/grpc (base type without suffix)
+		// - application/grpc+proto
+		// - application/grpc+json
+		// For these requests, we should not set Content-Type: application/json
+		// as it will cause content-type mismatch errors on the client side
+		contentType := r.Header.Get("Content-Type")
+		isConnectRequest := strings.HasPrefix(contentType, "application/connect+") ||
+			strings.HasPrefix(contentType, "application/grpc")
+
+		// Only set JSON content-type for non-Connect requests
+		if !isConnectRequest {
+			w.Header().Set("Content-Type", "application/json")
+		}
+
 		switch {
 		case errors.Is(err, jwtmiddleware.ErrJWTMissing):
 			// since connectrpc would translate the original `BadRequest` to a
@@ -334,16 +351,22 @@ func ensureValidTokenHandler(config AuthConfig, next http.Handler) http.Handler 
 			// return StatusUnauthorized here, to provide the correct status
 			// code to the client.
 			w.WriteHeader(http.StatusUnauthorized)
-			_, _ = w.Write([]byte(`{"message":"JWT is missing."}`))
+			if !isConnectRequest {
+				_, _ = w.Write([]byte(`{"message":"JWT is missing."}`))
+			}
 		case errors.Is(err, jwtmiddleware.ErrJWTInvalid):
 			w.WriteHeader(http.StatusUnauthorized)
-			_, _ = w.Write([]byte(`{"message":"JWT is invalid."}`))
+			if !isConnectRequest {
+				_, _ = w.Write([]byte(`{"message":"JWT is invalid."}`))
+			}
 		default:
 			span.SetStatus(codes.Error, "Something went wrong while checking the JWT")
 			sentry.CaptureException(err)
 
 			w.WriteHeader(http.StatusInternalServerError)
-			_, _ = w.Write([]byte(`{"message":"Something went wrong while checking the JWT."}`))
+			if !isConnectRequest {
+				_, _ = w.Write([]byte(`{"message":"Something went wrong while checking the JWT."}`))
+			}
 		}
 	}
 
