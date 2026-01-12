@@ -691,3 +691,102 @@ func (s *TestJWTServer) Start(ctx context.Context) string {
 
 	return s.server.URL
 }
+
+func TestConnectErrorHandling(t *testing.T) {
+	// Create a test JWT server
+	server, err := NewTestJWTServer()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	jwksURL := server.Start(ctx)
+
+	// Create the middleware
+	handler := NewAuthMiddleware(AuthConfig{
+		Auth0Domain:   "",
+		Auth0Audience: "test",
+		IssuerURL:     jwksURL,
+	}, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	tests := []struct {
+		Name               string
+		ContentType        string
+		ExpectJSONResponse bool
+		ExpectContentType  string
+	}{
+		{
+			Name:               "Regular JSON request without auth",
+			ContentType:        "application/json",
+			ExpectJSONResponse: true,
+			ExpectContentType:  "application/json",
+		},
+		{
+			Name:               "Connect proto request without auth",
+			ContentType:        "application/connect+proto",
+			ExpectJSONResponse: false,
+			ExpectContentType:  "",
+		},
+		{
+			Name:               "Connect json request without auth",
+			ContentType:        "application/connect+json",
+			ExpectJSONResponse: false,
+			ExpectContentType:  "",
+		},
+		{
+			Name:               "gRPC base request without auth",
+			ContentType:        "application/grpc",
+			ExpectJSONResponse: false,
+			ExpectContentType:  "",
+		},
+		{
+			Name:               "gRPC proto request without auth",
+			ContentType:        "application/grpc+proto",
+			ExpectJSONResponse: false,
+			ExpectContentType:  "",
+		},
+		{
+			Name:               "gRPC json request without auth",
+			ContentType:        "application/grpc+json",
+			ExpectJSONResponse: false,
+			ExpectContentType:  "",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, "/test", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			// Set the Content-Type header
+			req.Header.Set("Content-Type", test.ContentType)
+
+			// Don't set any auth token, so it will fail auth
+			handler.ServeHTTP(rr, req)
+
+			// Should return 401 Unauthorized
+			if rr.Code != http.StatusUnauthorized {
+				t.Errorf("expected status code %d, but got %d", http.StatusUnauthorized, rr.Code)
+			}
+
+			// Check Content-Type header
+			contentType := rr.Header().Get("Content-Type")
+			if test.ExpectContentType != contentType {
+				t.Errorf("expected Content-Type header to be '%s', but got '%s'", test.ExpectContentType, contentType)
+			}
+
+			// Check if response has JSON body
+			hasJSONBody := len(rr.Body.Bytes()) > 0 && contentType == "application/json"
+			if test.ExpectJSONResponse != hasJSONBody {
+				t.Errorf("expected JSON response: %v, but got: %v (body length: %d)", test.ExpectJSONResponse, hasJSONBody, len(rr.Body.Bytes()))
+			}
+		})
+	}
+}
