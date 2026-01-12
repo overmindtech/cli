@@ -67,6 +67,16 @@ func (e *Engine) SendHeartbeat(ctx context.Context, customErr error) error {
 		},
 	})
 
+	// Update heartbeat status tracking
+	e.heartbeatStatusMutex.Lock()
+	if err != nil {
+		e.lastHeartbeatError = err
+	} else {
+		e.lastSuccessfulHeartbeat = time.Now()
+		e.lastHeartbeatError = nil
+	}
+	e.heartbeatStatusMutex.Unlock()
+
 	return err
 }
 
