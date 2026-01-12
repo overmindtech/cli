@@ -141,6 +141,11 @@ type Engine struct {
 	backgroundJobContext context.Context
 	backgroundJobCancel  context.CancelFunc
 	heartbeatCancel      context.CancelFunc
+
+	// Heartbeat status tracking for healthz checks
+	lastSuccessfulHeartbeat time.Time
+	lastHeartbeatError       error
+	heartbeatStatusMutex     sync.RWMutex
 }
 
 func NewEngine(engineConfig *EngineConfig) (*Engine, error) {
@@ -444,6 +449,29 @@ func (e *Engine) HealthCheck(ctx context.Context) error {
 		healthCheckError := e.EngineConfig.HeartbeatOptions.HealthCheck(ctx)
 		if healthCheckError != nil {
 			return fmt.Errorf("source heartbeat check failed: %w", healthCheckError)
+		}
+	}
+
+	// Check if heartbeats are failing to submit to api-server
+	// This fails healthz faster than api-server marks sources as DISCONNECTED,
+	// allowing seamless pod recycling without customer-visible downtime
+	if e.EngineConfig.HeartbeatOptions != nil && e.EngineConfig.HeartbeatOptions.Frequency > 0 {
+		e.heartbeatStatusMutex.RLock()
+		lastSuccessfulHeartbeat := e.lastSuccessfulHeartbeat
+		lastHeartbeatError := e.lastHeartbeatError
+		e.heartbeatStatusMutex.RUnlock()
+
+		// Only check if we've had at least one successful heartbeat
+		// This allows initial startup grace period
+		if !lastSuccessfulHeartbeat.IsZero() {
+			// Healthz fails at 2.0x frequency, api-server marks DISCONNECTED at 2.5x
+			// This 0.5x buffer allows time for pod recycling
+			healthzFailureThreshold := lastSuccessfulHeartbeat.Add(time.Duration(float64(e.EngineConfig.HeartbeatOptions.Frequency) * 2.0))
+			now := time.Now()
+
+			if now.After(healthzFailureThreshold) && lastHeartbeatError != nil {
+				return fmt.Errorf("heartbeat submission to api-server has been failing: %w (last successful heartbeat: %v, threshold: %v)", lastHeartbeatError, lastSuccessfulHeartbeat, healthzFailureThreshold)
+			}
 		}
 	}
 
