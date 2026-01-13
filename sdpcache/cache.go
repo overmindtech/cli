@@ -208,7 +208,7 @@ type Cache interface {
 
 	// StartPurger starts a background goroutine that automatically purges expired items.
 	// The purger will stop when the context is cancelled.
-	StartPurger(ctx context.Context) error
+	StartPurger(ctx context.Context)
 }
 
 // NoOpCache is a cache implementation that does nothing.
@@ -263,8 +263,7 @@ func (n *NoOpCache) GetMinWaitTime() time.Duration {
 }
 
 // StartPurger does nothing
-func (n *NoOpCache) StartPurger(ctx context.Context) error {
-	return nil
+func (n *NoOpCache) StartPurger(ctx context.Context) {
 }
 
 type MemoryCache struct {
@@ -302,8 +301,9 @@ func NewMemoryCache() *MemoryCache {
 }
 
 // NewCache creates a new cache. This function returns a Cache interface.
-// Currently, it returns a memory-based implementation.
-func NewCache() Cache {
+// Currently, it returns a file-based implementation. The passed context will be
+// used to start the purger.
+func NewCache(ctx context.Context) Cache {
 	tmpFile, err := os.CreateTemp("", "sdpcache-*.db")
 	// close the file so bbolt can open it, but keep the file on disk. We don't
 	// need to check for errors since we're not using the file
@@ -312,7 +312,9 @@ func NewCache() Cache {
 	if err != nil {
 		sentry.CaptureException(err)
 		log.WithError(err).Error("Failed to create temporary file for BoltCache, using memory cache instead")
-		return NewMemoryCache()
+		cache := NewMemoryCache()
+		cache.StartPurger(ctx)
+		return cache
 	}
 	cache, err := NewBoltCache(
 		tmpFile.Name(),
@@ -324,8 +326,11 @@ func NewCache() Cache {
 		sentry.CaptureException(err)
 		log.WithError(err).Error("Failed to create BoltCache, using memory cache instead")
 		_ = os.Remove(tmpFile.Name())
-		return NewMemoryCache()
+		cache := NewMemoryCache()
+		cache.StartPurger(ctx)
+		return cache
 	}
+	cache.StartPurger(ctx)
 	return cache
 }
 
@@ -845,9 +850,9 @@ func (c *MemoryCache) GetMinWaitTime() time.Duration {
 // StartPurger Starts the purge process in the background, it will be cancelled
 // when the context is cancelled. The cache will be purged initially, at which
 // point the process will sleep until the next time an item expires
-func (c *MemoryCache) StartPurger(ctx context.Context) error {
+func (c *MemoryCache) StartPurger(ctx context.Context) {
 	if c == nil {
-		return nil
+		return
 	}
 
 	c.purgeMutex.Lock()
@@ -857,7 +862,7 @@ func (c *MemoryCache) StartPurger(ctx context.Context) error {
 	} else {
 		c.purgeMutex.Unlock()
 		log.WithContext(ctx).Info("Purger already running")
-		return nil // the purger is already running, so we don't need to start it again
+		return // the purger is already running, so we don't need to start it again
 	}
 
 	go func(ctx context.Context) {
@@ -877,8 +882,6 @@ func (c *MemoryCache) StartPurger(ctx context.Context) error {
 			}
 		}
 	}(ctx)
-
-	return nil
 }
 
 // setNextPurgeFromStats Sets when the next purge should run based on the stats of the

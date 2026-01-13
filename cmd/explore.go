@@ -115,7 +115,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 
 	foundCloudProvider := false
 
-	p.Go(func() ([]*discovery.Engine, error) { //nolint:contextcheck // todo: pass in context with timeout to abort timely and allow Ctrl-C to work
+	p.Go(func() ([]*discovery.Engine, error) {
 		ec := discovery.EngineConfig{
 			Version:               fmt.Sprintf("cli-%v", tracing.Version()),
 			EngineType:            "cli-stdlib",
@@ -128,6 +128,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			HeartbeatOptions:      heartbeatOptions(oi, token),
 		}
 		stdlibEngine, err := stdlibSource.InitializeEngine(
+			ctx,
 			&ec,
 			true,
 		)
@@ -136,7 +137,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			return nil, fmt.Errorf("failed to initialize stdlib source engine: %w", err)
 		}
 		// todo: pass in context with timeout to abort timely and allow Ctrl-C to work
-		err = stdlibEngine.Start()
+		err = stdlibEngine.Start(ctx)
 		if err != nil {
 			stdlibSpinner.Fail("Failed to start stdlib source engine")
 			return nil, fmt.Errorf("failed to start stdlib source engine: %w", err)
@@ -228,7 +229,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			return nil, fmt.Errorf("failed to initialize AWS source engine: %w", err)
 		}
 
-		err = awsEngine.Start() //nolint:contextcheck // todo: pass in context with timeout to abort timely and allow Ctrl-C to work
+		err = awsEngine.Start(ctx)
 		if err != nil {
 			awsSpinner.Fail("Failed to start AWS source engine")
 			return nil, fmt.Errorf("failed to start AWS source engine: %w", err)
@@ -326,7 +327,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 				continue // Skip this engine but continue with others
 			}
 
-			err = gcpEngine.Start() //nolint:contextcheck
+			err = gcpEngine.Start(ctx)
 			if err != nil {
 				if gcpConfig == nil {
 					statusArea.Println(fmt.Sprintf("Failed to start GCP source with default credentials: %s", err.Error()))
@@ -465,7 +466,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 					continue // Skip this engine but continue with others
 				}
 
-				err = azureEngine.Start() //nolint:contextcheck
+				err = azureEngine.Start(ctx)
 				if err != nil {
 					statusArea.Println(fmt.Sprintf("Failed to start Azure source for subscription %s: %s", azureConfig.SubscriptionID, err.Error()))
 					continue // Skip this engine but continue with others

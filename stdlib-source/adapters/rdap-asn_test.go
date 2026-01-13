@@ -13,7 +13,7 @@ func TestASNAdapterGet(t *testing.T) {
 
 	src := &RdapASNAdapter{
 		ClientFac: func() *rdap.Client { return testRdapClient(t) },
-		Cache:     sdpcache.NewCache(),
+		Cache:     sdpcache.NewCache(t.Context()),
 	}
 
 	item, err := src.Get(context.Background(), "global", "AS15169", false)

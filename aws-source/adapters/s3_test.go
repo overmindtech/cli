@@ -14,7 +14,7 @@ import (
 )
 
 func TestS3SearchImpl(t *testing.T) {
-	cache := sdpcache.NewCache()
+	cache := sdpcache.NewCache(t.Context())
 
 	t.Run("with S3 bucket ARN format (empty account ID and region)", func(t *testing.T) {
 		// This test verifies that S3 bucket ARNs with empty account ID and region work correctly
@@ -62,7 +62,7 @@ func TestS3SearchImpl(t *testing.T) {
 }
 
 func TestS3ListImpl(t *testing.T) {
-	cache := sdpcache.NewCache()
+	cache := sdpcache.NewCache(t.Context())
 	items, err := listImpl(context.Background(), cache, TestS3Client{}, "foo", false)
 
 	if err != nil {
@@ -74,7 +74,7 @@ func TestS3ListImpl(t *testing.T) {
 }
 
 func TestS3GetImpl(t *testing.T) {
-	cache := sdpcache.NewCache()
+	cache := sdpcache.NewCache(t.Context())
 	item, err := getImpl(context.Background(), cache, TestS3Client{}, "foo", "bar", false)
 
 	if err != nil {
@@ -130,7 +130,7 @@ func TestS3GetImpl(t *testing.T) {
 }
 
 func TestS3SourceCaching(t *testing.T) {
-	cache := sdpcache.NewCache()
+	cache := sdpcache.NewCache(t.Context())
 	first, err := getImpl(context.Background(), cache, TestS3Client{}, "foo", "bar", false)
 	if err != nil {
 		t.Fatal(err)

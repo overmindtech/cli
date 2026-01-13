@@ -145,7 +145,7 @@ func TimeQueries(t *testing.T, numQueries int, linkDepth int, numParallel int) T
 	if err != nil {
 		t.Fatalf("Error adding adapter: %v", err)
 	}
-	err = e.Start()
+	err = e.Start(t.Context())
 	if err != nil {
 		t.Fatalf("Error starting Engine: %v", err)
 	}

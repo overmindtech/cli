@@ -370,7 +370,7 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 	engine.StartSendingHeartbeats(ctx)
 
 	// Create a shared cache for all adapters in this source
-	sharedCache := sdpcache.NewCache()
+	sharedCache := sdpcache.NewCache(ctx)
 
 	err = func() error {
 		var logmsg string

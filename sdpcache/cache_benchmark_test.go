@@ -15,7 +15,7 @@ const CacheDuration = 10 * time.Second
 // matches a randomly selected item in that cache
 func NewPopulatedCache(ctx context.Context, numberItems int) (Cache, CacheKey) {
 	// Populate the cache
-	c := NewCache()
+	c := NewCache(ctx)
 
 	var item *sdp.Item
 	var exampleCk CacheKey

@@ -62,7 +62,7 @@ func newStartedEngine(t *testing.T, name string, no *auth.NATSOptions, eConn sdp
 
 	e := newEngine(t, name, no, eConn, adapters...)
 
-	err := e.Start()
+	err := e.Start(t.Context())
 	if err != nil {
 		t.Fatalf("Error starting Engine: %v", err)
 	}
@@ -227,7 +227,7 @@ func TestNats(t *testing.T) {
 	}
 
 	t.Run("Starting", func(t *testing.T) {
-		err := e.Start()
+		err := e.Start(t.Context())
 		if err != nil {
 			t.Error(err)
 		}
@@ -243,7 +243,7 @@ func TestNats(t *testing.T) {
 			t.Error(err)
 		}
 
-		err = e.Start()
+		err = e.Start(t.Context())
 		if err != nil {
 			t.Error(err)
 		}
@@ -319,7 +319,7 @@ func TestNatsCancel(t *testing.T) {
 	}
 
 	t.Run("Starting", func(t *testing.T) {
-		err := e.Start()
+		err := e.Start(t.Context())
 		if err != nil {
 			t.Error(err)
 		}
@@ -392,7 +392,7 @@ func TestNatsConnections(t *testing.T) {
 			t.Fatalf("Error initializing Engine: %v", err)
 		}
 
-		err = e.Start()
+		err = e.Start(t.Context())
 
 		if err == nil {
 			t.Error("expected error but got nil")
@@ -436,7 +436,7 @@ func TestNatsConnections(t *testing.T) {
 			t.Fatalf("Error initializing Engine: %v", err)
 		}
 
-		err = e.Start()
+		err = e.Start(t.Context())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -518,7 +518,7 @@ func TestNatsConnections(t *testing.T) {
 			})
 		}()
 
-		err = e.Start()
+		err = e.Start(t.Context())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -559,7 +559,7 @@ func TestNATSFailureRestart(t *testing.T) {
 	e.ConnectionWatchInterval = 1 * time.Second
 
 	// Connect successfully
-	err = e.Start()
+	err = e.Start(t.Context())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -635,7 +635,7 @@ func TestNatsAuth(t *testing.T) {
 	}
 
 	t.Run("Starting", func(t *testing.T) {
-		err := e.Start()
+		err := e.Start(t.Context())
 		if err != nil {
 			t.Fatal(err)
 		}

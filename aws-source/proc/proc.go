@@ -222,7 +222,7 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 	}
 
 	// Create a shared cache for all adapters in this source
-	sharedCache := sdpcache.NewCache()
+	sharedCache := sdpcache.NewCache(ctx)
 
 	var startupErrorMutex sync.Mutex
 	startupError := errors.New("source is starting")

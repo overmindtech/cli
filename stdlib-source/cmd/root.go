@@ -32,6 +32,8 @@ var rootCmd = &cobra.Command{
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
+		ctx, cancel := context.WithCancel(ctx)
+		defer cancel()
 		defer tracing.LogRecoverToReturn(ctx, "stdlib-source.root")
 
 		// get engine config
@@ -54,6 +56,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		e, err := adapters.InitializeEngine(
+			ctx,
 			engineConfig,
 			reverseDNS,
 		)
@@ -123,7 +126,7 @@ var rootCmd = &cobra.Command{
 			}).Error("Could not start HTTP server for /healthz health checks")
 		}()
 
-		err = e.Start()
+		err = e.Start(ctx)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err,
