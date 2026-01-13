@@ -5,10 +5,12 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/google/btree"
 	"github.com/overmindtech/cli/sdp-go"
 	log "github.com/sirupsen/logrus"
@@ -302,7 +304,29 @@ func NewMemoryCache() *MemoryCache {
 // NewCache creates a new cache. This function returns a Cache interface.
 // Currently, it returns a memory-based implementation.
 func NewCache() Cache {
-	return NewMemoryCache()
+	tmpFile, err := os.CreateTemp("", "sdpcache-*.db")
+	// close the file so bbolt can open it, but keep the file on disk. We don't
+	// need to check for errors since we're not using the file
+	_ = tmpFile.Close()
+
+	if err != nil {
+		sentry.CaptureException(err)
+		log.WithError(err).Error("Failed to create temporary file for BoltCache, using memory cache instead")
+		return NewMemoryCache()
+	}
+	cache, err := NewBoltCache(
+		tmpFile.Name(),
+		WithMinWaitTime(30*time.Second),
+		// allocate 2GB of disk space for the cache
+		WithCompactThreshold(2*1024*1024*1024),
+	)
+	if err != nil {
+		sentry.CaptureException(err)
+		log.WithError(err).Error("Failed to create BoltCache, using memory cache instead")
+		_ = os.Remove(tmpFile.Name())
+		return NewMemoryCache()
+	}
+	return cache
 }
 
 func newExpiryIndex() *btree.BTreeG[*CachedResult] {
