@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
@@ -13,8 +13,7 @@ import (
 )
 
 var (
-	DBforPostgreSQLFlexibleServerLookupByName = shared.NewItemTypeLookup("name", azureshared.DBforPostgreSQLFlexibleServer) //todo: move to postgresql flexible server adapter when made
-	DBforPostgreSQLDatabaseLookupByName       = shared.NewItemTypeLookup("name", azureshared.DBforPostgreSQLDatabase)
+	DBforPostgreSQLDatabaseLookupByName = shared.NewItemTypeLookup("name", azureshared.DBforPostgreSQLDatabase)
 )
 
 type dbforPostgreSQLDatabaseWrapper struct {

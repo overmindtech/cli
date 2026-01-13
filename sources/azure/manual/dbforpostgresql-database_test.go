@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/discovery"
@@ -153,7 +153,7 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 		mockPager := &mockPostgreSQLDatabasesPager{
 			pages: []armpostgresqlflexibleservers.DatabasesClientListByServerResponse{
 				{
-					DatabaseListResult: armpostgresqlflexibleservers.DatabaseListResult{
+					DatabaseList: armpostgresqlflexibleservers.DatabaseList{
 						Value: []*armpostgresqlflexibleservers.Database{database1, database2},
 					},
 				},
@@ -207,7 +207,7 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 		mockPager := &mockPostgreSQLDatabasesPager{
 			pages: []armpostgresqlflexibleservers.DatabasesClientListByServerResponse{
 				{
-					DatabaseListResult: armpostgresqlflexibleservers.DatabaseListResult{
+					DatabaseList: armpostgresqlflexibleservers.DatabaseList{
 						Value: []*armpostgresqlflexibleservers.Database{database1, database2},
 					},
 				},

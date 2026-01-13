@@ -105,6 +105,7 @@ const (
 	RouteTable                                     shared.Resource = "route-table"
 	Route                                          shared.Resource = "route"
 	VirtualNetworkGateway                          shared.Resource = "virtual-network-gateway"
+	PrivateDNSZone                                 shared.Resource = "private-dns-zone"
 
 	// Storage resources
 	Account       shared.Resource = "account"
@@ -146,7 +147,16 @@ const (
 	ServerPrivateLinkResource             shared.Resource = "server-private-link-resource"
 
 	// DBforPostgreSQL resources
-	FlexibleServer shared.Resource = "flexible-server"
+	FlexibleServer                          shared.Resource = "flexible-server"
+	FlexibleServerFirewallRule              shared.Resource = "flexible-server-firewall-rule"
+	FlexibleServerConfiguration             shared.Resource = "flexible-server-configuration"
+	FlexibleServerAdministrator             shared.Resource = "flexible-server-administrator"
+	FlexibleServerPrivateEndpointConnection shared.Resource = "flexible-server-private-endpoint-connection"
+	FlexibleServerPrivateLinkResource       shared.Resource = "flexible-server-private-link-resource"
+	FlexibleServerReplica                   shared.Resource = "flexible-server-replica"
+	FlexibleServerMigration                 shared.Resource = "flexible-server-migration"
+	FlexibleServerBackup                    shared.Resource = "flexible-server-backup"
+	FlexibleServerVirtualEndpoint           shared.Resource = "flexible-server-virtual-endpoint"
 
 	// DocumentDB resources
 	DatabaseAccounts          shared.Resource = "database-accounts"

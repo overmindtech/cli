@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	armpostgresqlflexibleservers "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers"
+	armpostgresqlflexibleservers "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
 	clients "github.com/overmindtech/cli/sources/azure/clients"
 	gomock "go.uber.org/mock/gomock"
 )
