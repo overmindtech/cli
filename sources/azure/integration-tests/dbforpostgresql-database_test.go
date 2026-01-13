@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/utils/ptr"
@@ -323,16 +323,16 @@ func createPostgreSQLFlexibleServer(ctx context.Context, client *armpostgresqlfl
 
 	// Create the PostgreSQL Flexible Server
 	// Using Burstable tier for cost-effective testing
-	poller, err := client.BeginCreate(ctx, resourceGroupName, serverName, armpostgresqlflexibleservers.Server{
+	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, serverName, armpostgresqlflexibleservers.Server{
 		Location: ptr.To(location),
 		Properties: &armpostgresqlflexibleservers.ServerProperties{
 			AdministratorLogin:         ptr.To(adminLogin),
 			AdministratorLoginPassword: ptr.To(adminPassword),
-			Version:                    ptr.To(armpostgresqlflexibleservers.ServerVersionFourteen),
+			Version:                    ptr.To(armpostgresqlflexibleservers.PostgresMajorVersion("14")),
 			Storage:                    &armpostgresqlflexibleservers.Storage{StorageSizeGB: ptr.To[int32](32)},
-			Backup:                     &armpostgresqlflexibleservers.Backup{BackupRetentionDays: ptr.To[int32](7), GeoRedundantBackup: ptr.To(armpostgresqlflexibleservers.GeoRedundantBackupEnumDisabled)},
+			Backup:                     &armpostgresqlflexibleservers.Backup{BackupRetentionDays: ptr.To[int32](7), GeoRedundantBackup: ptr.To(armpostgresqlflexibleservers.GeographicallyRedundantBackupDisabled)},
 			Network:                    &armpostgresqlflexibleservers.Network{PublicNetworkAccess: ptr.To(armpostgresqlflexibleservers.ServerPublicNetworkAccessStateEnabled)},
-			HighAvailability:           &armpostgresqlflexibleservers.HighAvailability{Mode: ptr.To(armpostgresqlflexibleservers.HighAvailabilityModeDisabled)},
+			HighAvailability:           nil, // High availability disabled by not setting it
 		},
 		SKU: &armpostgresqlflexibleservers.SKU{
 			Name: ptr.To("Standard_B1ms"), // Burstable tier, 1 vCore, 2GB RAM

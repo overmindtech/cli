@@ -10,7 +10,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
@@ -178,6 +178,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 		sqlServersClient, err := armsql.NewServersClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create sql servers client: %w", err)
+		}
+
+		postgresqlFlexibleServersClient, err := armpostgresqlflexibleservers.NewServersClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create postgresql flexible servers client: %w", err)
 		}
 
 		// Create adapters for each resource group
@@ -379,6 +384,16 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					resourceGroup,
 				), cache),
 			)
+
+			// Add PostgreSQL Flexible Server adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServer(
+					clients.NewPostgreSQLFlexibleServersClient(postgresqlFlexibleServersClient),
+					subscriptionID,
+					resourceGroup,
+				), cache),
+			)
+
 		}
 
 		log.WithFields(log.Fields{
@@ -502,6 +517,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				"placeholder-resource-group",
 			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewSqlServer(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
+			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServer(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",

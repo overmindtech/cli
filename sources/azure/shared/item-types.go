@@ -66,6 +66,7 @@ var (
 	NetworkRouteTable                                     = shared.NewItemType(Azure, Network, RouteTable)
 	NetworkRoute                                          = shared.NewItemType(Azure, Network, Route)
 	NetworkVirtualNetworkGateway                          = shared.NewItemType(Azure, Network, VirtualNetworkGateway)
+	NetworkPrivateDNSZone                                 = shared.NewItemType(Azure, Network, PrivateDNSZone)
 
 	//Storage item types
 	StorageAccount       = shared.NewItemType(Azure, Storage, Account)
@@ -107,8 +108,17 @@ var (
 	SQLServerPrivateLinkResource             = shared.NewItemType(Azure, SQL, ServerPrivateLinkResource)
 
 	// DBforPostgreSQL item types
-	DBforPostgreSQLFlexibleServer = shared.NewItemType(Azure, DBforPostgreSQL, FlexibleServer)
-	DBforPostgreSQLDatabase       = shared.NewItemType(Azure, DBforPostgreSQL, Database)
+	DBforPostgreSQLFlexibleServer                          = shared.NewItemType(Azure, DBforPostgreSQL, FlexibleServer)
+	DBforPostgreSQLDatabase                                = shared.NewItemType(Azure, DBforPostgreSQL, Database)
+	DBforPostgreSQLFlexibleServerFirewallRule              = shared.NewItemType(Azure, DBforPostgreSQL, FlexibleServerFirewallRule)
+	DBforPostgreSQLFlexibleServerConfiguration             = shared.NewItemType(Azure, DBforPostgreSQL, FlexibleServerConfiguration)
+	DBforPostgreSQLFlexibleServerAdministrator             = shared.NewItemType(Azure, DBforPostgreSQL, FlexibleServerAdministrator)
+	DBforPostgreSQLFlexibleServerPrivateEndpointConnection = shared.NewItemType(Azure, DBforPostgreSQL, FlexibleServerPrivateEndpointConnection)
+	DBforPostgreSQLFlexibleServerPrivateLinkResource       = shared.NewItemType(Azure, DBforPostgreSQL, FlexibleServerPrivateLinkResource)
+	DBforPostgreSQLFlexibleServerReplica                   = shared.NewItemType(Azure, DBforPostgreSQL, FlexibleServerReplica)
+	DBforPostgreSQLFlexibleServerMigration                 = shared.NewItemType(Azure, DBforPostgreSQL, FlexibleServerMigration)
+	DBforPostgreSQLFlexibleServerBackup                    = shared.NewItemType(Azure, DBforPostgreSQL, FlexibleServerBackup)
+	DBforPostgreSQLFlexibleServerVirtualEndpoint           = shared.NewItemType(Azure, DBforPostgreSQL, FlexibleServerVirtualEndpoint)
 
 	// DocumentDB item types
 	DocumentDBDatabaseAccounts          = shared.NewItemType(Azure, DocumentDB, DatabaseAccounts)
