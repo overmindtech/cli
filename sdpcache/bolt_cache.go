@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/overmindtech/cli/sdp-go"
+	log "github.com/sirupsen/logrus"
 	"go.etcd.io/bbolt"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -1046,7 +1047,8 @@ func (c *BoltCache) StartPurger(ctx context.Context) error {
 		c.purgeMutex.Unlock()
 	} else {
 		c.purgeMutex.Unlock()
-		return errors.New("purger already running")
+		log.WithContext(ctx).Info("Purger already running")
+		return nil // the purger is already running, so we don't need to start it again
 	}
 
 	go func(ctx context.Context) {
