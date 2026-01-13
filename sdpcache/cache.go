@@ -201,7 +201,7 @@ type Cache interface {
 
 	// Purge removes all expired items from the cache.
 	// Returns statistics about the purge operation.
-	Purge(before time.Time) PurgeStats
+	Purge(ctx context.Context, before time.Time) PurgeStats
 
 	// GetMinWaitTime returns the minimum time between purge operations
 	GetMinWaitTime() time.Duration
@@ -253,7 +253,7 @@ func (n *NoOpCache) Clear() {
 }
 
 // Purge returns empty stats
-func (n *NoOpCache) Purge(before time.Time) PurgeStats {
+func (n *NoOpCache) Purge(ctx context.Context, before time.Time) PurgeStats {
 	return PurgeStats{}
 }
 
@@ -788,7 +788,7 @@ func (c *MemoryCache) deleteResults(results []*CachedResult) {
 // Purge Purges all expired items from the cache. The user must pass in the
 // `before` time. All items that expired before this will be purged. Usually
 // this would be just `time.Now()` however it could be overridden for testing
-func (c *MemoryCache) Purge(before time.Time) PurgeStats {
+func (c *MemoryCache) Purge(ctx context.Context, before time.Time) PurgeStats {
 	if c == nil {
 		return PurgeStats{}
 	}
@@ -864,7 +864,7 @@ func (c *MemoryCache) StartPurger(ctx context.Context) error {
 		for {
 			select {
 			case <-c.purgeTimer.C:
-				stats := c.Purge(time.Now())
+				stats := c.Purge(ctx, time.Now())
 
 				c.setNextPurgeFromStats(stats)
 			case <-ctx.Done():

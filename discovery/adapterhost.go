@@ -202,12 +202,12 @@ func (sh *AdapterHost) StartPurger(ctx context.Context) {
 	}
 }
 
-func (sh *AdapterHost) Purge() {
+func (sh *AdapterHost) Purge(ctx context.Context) {
 	for _, s := range sh.Adapters() {
 		if c, ok := s.(CachingAdapter); ok {
 			cache := c.Cache()
 			if cache != nil {
-				cache.Purge(time.Now())
+				cache.Purge(ctx, time.Now())
 			}
 		}
 	}
