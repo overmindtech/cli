@@ -1252,7 +1252,6 @@ func (c *BoltCache) compact(ctx context.Context) error {
 				return handleDiskFull(compactErr, "compaction after cleanup")
 			}
 			// Success on retry, continue with dstDB2
-			dstDB.Close()
 			dstDB = dstDB2
 		} else {
 			return fmt.Errorf("compaction failed: %w", err)
