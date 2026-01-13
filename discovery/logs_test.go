@@ -125,7 +125,7 @@ func TestLogAdapter_HappyPath(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = e.Start()
+	err = e.Start(t.Context())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -217,7 +217,7 @@ func TestLogAdapter_Validation_Scope(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = e.Start()
+	err = e.Start(t.Context())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -286,7 +286,7 @@ func TestLogAdapter_Validation_Empty(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = e.Start()
+	err = e.Start(t.Context())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -355,7 +355,7 @@ func TestLogAdapter_Validation_NoReplyTo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = e.Start()
+	err = e.Start(t.Context())
 	if err != nil {
 		t.Fatal(err)
 	}

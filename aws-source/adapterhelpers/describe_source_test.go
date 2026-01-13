@@ -682,7 +682,7 @@ func TestDescribeOnlySourceCaching(t *testing.T) {
 		MaxResultsPerPage: 1,
 		Region:            "eu-west-2",
 		AccountID:         "foo",
-		SDPCache:          sdpcache.NewCache(),
+		SDPCache:          sdpcache.NewCache(ctx),
 		InputMapperGet: func(scope, query string) (string, error) {
 			return "input", nil
 		},

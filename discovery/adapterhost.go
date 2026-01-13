@@ -8,7 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/cli/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
@@ -185,21 +184,6 @@ func (sh *AdapterHost) ClearAllAdapters() {
 	sh.adapters = make([]Adapter, 0)
 	sh.adapterIndex = make(map[string]map[string]bool)
 	sh.mutex.Unlock()
-}
-
-// StartPurger Starts the purger for all caching adapters
-func (sh *AdapterHost) StartPurger(ctx context.Context) {
-	for _, s := range sh.Adapters() {
-		if c, ok := s.(CachingAdapter); ok {
-			cache := c.Cache()
-			if cache != nil {
-				err := cache.StartPurger(ctx)
-				if err != nil {
-					sentry.CaptureException(fmt.Errorf("failed to start purger for adapter %s: %w", s.Name(), err))
-				}
-			}
-		}
-	}
 }
 
 func (sh *AdapterHost) Purge(ctx context.Context) {

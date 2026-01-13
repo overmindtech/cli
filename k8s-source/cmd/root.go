@@ -300,9 +300,11 @@ func run(_ *cobra.Command, _ []string) int {
 	}()
 
 	start := func() error {
+		ctx := context.Background()
+
 		// Query all namespaces
 		log.Info("Listing namespaces")
-		list, err := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+		list, err := clientSet.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			return err
 		}
@@ -316,7 +318,7 @@ func run(_ *cobra.Command, _ []string) int {
 		log.Infof("got %v namespaces", len(namespaces))
 
 		// Create a shared cache for all adapters in this source
-		sharedCache := sdpcache.NewCache()
+		sharedCache := sdpcache.NewCache(ctx)
 
 		// Create the adapter list
 		adapterList := adapters.LoadAllAdapters(clientSet, clusterName, namespaces, sharedCache)
@@ -328,7 +330,7 @@ func run(_ *cobra.Command, _ []string) int {
 		}
 
 		// Start the engine
-		err = e.Start()
+		err = e.Start(ctx)
 
 		return err
 	}

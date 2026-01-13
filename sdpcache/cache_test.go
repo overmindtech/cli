@@ -232,7 +232,7 @@ func TestPurge(t *testing.T) {
 			}
 
 			// Purge just the first one
-			stats := cache.Purge(t.Context(), cachedItems[0].Expiry.Add(500 * time.Millisecond))
+			stats := cache.Purge(t.Context(), cachedItems[0].Expiry.Add(500*time.Millisecond))
 
 			if stats.NumPurged != 1 {
 				t.Errorf("expected 1 item purged, got %v", stats.NumPurged)
@@ -249,14 +249,14 @@ func TestPurge(t *testing.T) {
 			}
 
 			// Purge all but the last one
-			stats = cache.Purge(t.Context(), cachedItems[4].Expiry.Add(500 * time.Millisecond))
+			stats = cache.Purge(t.Context(), cachedItems[4].Expiry.Add(500*time.Millisecond))
 
 			if stats.NumPurged != 4 {
 				t.Errorf("expected 4 item purged, got %v", stats.NumPurged)
 			}
 
 			// Purge the last one
-			stats = cache.Purge(t.Context(), cachedItems[5].Expiry.Add(500 * time.Millisecond))
+			stats = cache.Purge(t.Context(), cachedItems[5].Expiry.Add(500*time.Millisecond))
 
 			if stats.NumPurged != 1 {
 				t.Errorf("expected 1 item purged, got %v", stats.NumPurged)
@@ -371,14 +371,10 @@ func TestCacheClear(t *testing.T) {
 			// Start purging just to make sure it doesn't break
 			ctx, cancel := context.WithCancel(ctx)
 			defer cancel()
-			err := cache.StartPurger(ctx)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
+			cache.StartPurger(ctx)
 
 			// Make sure the cache is populated
-			_, err = cache.Search(ck)
-
+			_, err := cache.Search(ck)
 			if err != nil {
 				t.Error(err)
 			}
@@ -454,7 +450,7 @@ func TestLookup(t *testing.T) {
 				t.Error("expected tags to be set")
 			}
 
-			stats := cache.Purge(ctx, time.Now().Add(1 * time.Hour))
+			stats := cache.Purge(ctx, time.Now().Add(1*time.Hour))
 			if stats.NumPurged != 1 {
 				t.Errorf("expected 1 item purged, got %v", stats.NumPurged)
 			}
@@ -919,10 +915,7 @@ func TestMemoryCacheStartPurge(t *testing.T) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	err := cache.StartPurger(ctx)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	cache.StartPurger(ctx)
 
 	// Wait for everything to be purged
 	time.Sleep(200 * time.Millisecond)
@@ -974,10 +967,7 @@ func TestMemoryCacheStopPurge(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(t.Context())
 
-	err := cache.StartPurger(ctx)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	cache.StartPurger(ctx)
 
 	// Stop the purger
 	cancel()
@@ -1018,10 +1008,7 @@ func TestMemoryCacheConcurrent(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
-	err := cache.StartPurger(ctx)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	cache.StartPurger(ctx)
 	var wg sync.WaitGroup
 
 	numParallel := 1_000
@@ -1096,7 +1083,7 @@ func TestToIndexValues(t *testing.T) {
 }
 
 func TestUnexpiredOverwriteLogging(t *testing.T) {
-	cache := NewCache()
+	cache := NewCache(t.Context())
 
 	t.Run("overwriting unexpired entry increments counter", func(t *testing.T) {
 		ctx := t.Context()
@@ -1117,7 +1104,7 @@ func TestUnexpiredOverwriteLogging(t *testing.T) {
 	t.Run("overwriting expired entry does not increment counter", func(t *testing.T) {
 		ctx := t.Context()
 		// Create a new cache for this test
-		cache := NewCache()
+		cache := NewCache(ctx)
 
 		item := GenerateRandomItem()
 		ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
@@ -1135,7 +1122,7 @@ func TestUnexpiredOverwriteLogging(t *testing.T) {
 	t.Run("overwriting different items does not increment counter", func(t *testing.T) {
 		ctx := t.Context()
 		// Create a new cache for this test
-		cache := NewCache()
+		cache := NewCache(ctx)
 
 		item1 := GenerateRandomItem()
 		item2 := GenerateRandomItem()
@@ -1151,7 +1138,7 @@ func TestUnexpiredOverwriteLogging(t *testing.T) {
 	t.Run("overwriting error entries increments counter", func(t *testing.T) {
 		ctx := t.Context()
 		// Create a new cache for this test
-		cache := NewCache()
+		cache := NewCache(ctx)
 
 		sst := SST{
 			SourceName: "test-source",
@@ -1337,8 +1324,8 @@ func TestBoltCacheDeleteOnDiskFull(t *testing.T) {
 	}
 
 	// Verify the cache file is gone
-	if _, err := os.Stat(cachePath); !os.IsNotExist(err) {
-		t.Error("cache file should be deleted")
+	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
+		t.Error("cache file should be recreated")
 	}
 
 	// Verify the database is closed (can't search anymore)
@@ -1374,8 +1361,8 @@ func TestBoltCacheDiskFullDuringCompact(t *testing.T) {
 	cache.addDeletedBytes(cache.CompactThreshold)
 
 	// Trigger purge which should trigger compaction
-	stats := cache.Purge(ctx, time.Now().Add(-1 * time.Hour)) // Purge items from an hour ago (none should exist)
-	_ = stats                                            // Use stats to avoid unused variable
+	stats := cache.Purge(ctx, time.Now().Add(-1*time.Hour)) // Purge items from an hour ago (none should exist)
+	_ = stats                                               // Use stats to avoid unused variable
 
 	// Verify cache still works after compaction attempt
 	item := GenerateRandomItem()

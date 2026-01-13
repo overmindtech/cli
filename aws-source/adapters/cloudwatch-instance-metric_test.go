@@ -407,12 +407,13 @@ func TestNewCloudwatchInstanceMetricAdapter(t *testing.T) {
 }
 
 func TestCloudwatchInstanceMetricAdapterCaching(t *testing.T) {
+	ctx := t.Context()
 	client := &testCloudwatchMetricClientWithCallCount{}
 	adapter := &CloudwatchInstanceMetricAdapter{
 		Client:    client,
 		AccountID: "123456789012",
 		Region:    "eu-west-2",
-		SDPCache:  sdpcache.NewCache(),
+		SDPCache:  sdpcache.NewCache(ctx),
 	}
 
 	scope := "123456789012.eu-west-2"

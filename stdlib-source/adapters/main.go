@@ -23,7 +23,7 @@ var Metadata = sdp.AdapterMetadataList{}
 // Cache duration for RDAP adapters, these things shouldn't change very often
 const RdapCacheDuration = 30 * time.Minute
 
-func InitializeEngine(ec *discovery.EngineConfig, reverseDNS bool) (*discovery.Engine, error) {
+func InitializeEngine(ctx context.Context, ec *discovery.EngineConfig, reverseDNS bool) (*discovery.Engine, error) {
 	e, err := discovery.NewEngine(ec)
 	if err != nil {
 		log.WithFields(log.Fields{
@@ -40,7 +40,7 @@ func InitializeEngine(ec *discovery.EngineConfig, reverseDNS bool) (*discovery.E
 	}
 
 	// Create a shared cache for all adapters in this source
-	sharedCache := sdpcache.NewCache()
+	sharedCache := sdpcache.NewCache(ctx)
 
 	// Add the base adapters
 	adapters := []discovery.Adapter{

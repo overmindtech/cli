@@ -13,7 +13,7 @@ func TestIpNetworkAdapterSearch(t *testing.T) {
 
 	src := &RdapIPNetworkAdapter{
 		ClientFac: func() *rdap.Client { return testRdapClient(t) },
-		Cache:     sdpcache.NewCache(),
+		Cache:     sdpcache.NewCache(t.Context()),
 		IPCache:   NewIPCache[*rdap.IPNetwork](),
 	}
 

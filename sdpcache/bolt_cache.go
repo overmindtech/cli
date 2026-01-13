@@ -192,7 +192,14 @@ type BoltCache struct {
 	// Track deleted bytes for compaction
 	deletedBytes int64
 	deletedMu    sync.Mutex
+
+	// Ensures that compaction operations aren't running concurrently
+	// Read operations use RLock, write operations and compaction use Lock
+	compactMutex sync.RWMutex
 }
+
+// assert interface
+var _ Cache = (*BoltCache)(nil)
 
 // BoltCacheOption is a functional option for configuring BoltCache
 type BoltCacheOption func(*BoltCache)
@@ -380,9 +387,13 @@ func (c *BoltCache) setDiskUsageAttributes(span trace.Span) {
 
 // Close closes the database
 func (c *BoltCache) Close() error {
-	if c == nil || c.db == nil {
+	if c == nil {
 		return nil
 	}
+	// Acquire write lock to prevent compaction from interfering
+	c.compactMutex.Lock()
+	defer c.compactMutex.Unlock()
+
 	return c.db.Close()
 }
 
@@ -400,14 +411,20 @@ func (c *BoltCache) deleteCacheFile(ctx context.Context) error {
 	))
 	defer span.End()
 
+	// Acquire write lock to prevent compaction from interfering
+	c.compactMutex.Lock()
+	defer c.compactMutex.Unlock()
+
+	return c.deleteCacheFileLocked(ctx, span)
+}
+
+// deleteCacheFileLocked is the internal version that assumes the caller already holds compactMutex.Lock()
+func (c *BoltCache) deleteCacheFileLocked(ctx context.Context, span trace.Span) error {
 	// Close the database if it's open
-	if c.db != nil {
-		if err := c.db.Close(); err != nil {
-			span.RecordError(err)
-			sentry.CaptureException(err)
-			log.WithContext(ctx).WithError(err).Error("Failed to close database during cache file deletion")
-		}
-		c.db = nil
+	if err := c.db.Close(); err != nil {
+		span.RecordError(err)
+		sentry.CaptureException(err)
+		log.WithContext(ctx).WithError(err).Error("Failed to close database during cache file deletion")
 	}
 
 	// Remove the cache file
@@ -423,6 +440,22 @@ func (c *BoltCache) deleteCacheFile(ctx context.Context) error {
 
 	// Reset internal state
 	c.resetDeletedBytes()
+
+	// Reopen the database
+	db, err := bbolt.Open(c.path, 0600, &bbolt.Options{Timeout: 5 * time.Second})
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to reopen database")
+		return fmt.Errorf("failed to reopen database: %w", err)
+	}
+
+	c.db = db
+
+	// Initialize buckets
+	if err := c.initBuckets(); err != nil {
+		_ = db.Close()
+		return fmt.Errorf("failed to initialize buckets after cache file deletion: %w", err)
+	}
 
 	return nil
 }
@@ -447,7 +480,7 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 	// Set disk usage metrics
 	c.setDiskUsageAttributes(span)
 
-	if c == nil || c.db == nil {
+	if c == nil {
 		span.SetAttributes(
 			attribute.String("ovm.cache.result", "cache not initialised"),
 			attribute.Bool("ovm.cache.hit", false),
@@ -469,6 +502,7 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 		return false, ck, nil, nil
 	}
 
+	// Search already has RLock, so we don't need to add another one here
 	items, err := c.Search(ck)
 
 	if err != nil {
@@ -524,6 +558,7 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 				attribute.Int("ovm.cache.numItems", len(items)),
 				attribute.Bool("ovm.cache.hit", false),
 			)
+			// Delete already has Lock(), so we can call it directly
 			c.Delete(ck)
 			return false, ck, nil, nil
 		}
@@ -535,14 +570,19 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 		attribute.Bool("ovm.cache.hit", true),
 	)
 
+	// RLock already released above
 	return true, ck, items, nil
 }
 
 // Search performs a lower-level search using a CacheKey.
 func (c *BoltCache) Search(ck CacheKey) ([]*sdp.Item, error) {
-	if c == nil || c.db == nil {
+	if c == nil {
 		return nil, nil
 	}
+
+	// Acquire read lock to prevent compaction from closing the database, but do not lock out other bbolt operations
+	c.compactMutex.RLock()
+	defer c.compactMutex.RUnlock()
 
 	results := make([]*CachedResult, 0)
 
@@ -619,9 +659,13 @@ func (c *BoltCache) Search(ck CacheKey) ([]*sdp.Item, error) {
 
 // StoreItem stores an item in the cache with the specified duration.
 func (c *BoltCache) StoreItem(ctx context.Context, item *sdp.Item, duration time.Duration, ck CacheKey) {
-	if item == nil || c == nil || c.db == nil {
+	if item == nil || c == nil {
 		return
 	}
+
+	// Acquire read lock to prevent compaction from closing the database, but do not lock out other bbolt operations
+	c.compactMutex.RLock()
+	defer c.compactMutex.RUnlock()
 
 	methodStr := ""
 	if ck.Method != nil {
@@ -676,9 +720,13 @@ func (c *BoltCache) StoreItem(ctx context.Context, item *sdp.Item, duration time
 
 // StoreError stores an error in the cache with the specified duration.
 func (c *BoltCache) StoreError(ctx context.Context, err error, duration time.Duration, ck CacheKey) {
-	if c == nil || c.db == nil || err == nil {
+	if c == nil || err == nil {
 		return
 	}
+
+	// Acquire read lock to prevent compaction from closing the database, but do not lock out other bbolt operations
+	c.compactMutex.RLock()
+	defer c.compactMutex.RUnlock()
 
 	methodStr := ""
 	if ck.Method != nil {
@@ -816,19 +864,39 @@ func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
 	err = performUpdate()
 
 	// Handle disk full errors
+	// Note: storeResult is called from StoreItem/StoreError which already holds compactMutex.RLock()
+	// so we use the locked versions to avoid deadlock
 	if err != nil && isDiskFullError(err) {
-		// Attempt cleanup by purging expired items
-		c.Purge(ctx, time.Now())
+		// Attempt cleanup by purging expired items - needs to happen in a
+		// goroutine to avoid deadlocks and get a fresh write lock
+		go func() {
+			// we need a fresh write lock to block concurrent compaction and
+			// deleteCacheFileLocked operations. Retrying performUpdate under
+			// the write lock will ensure that only one instance of this
+			// goroutine will actually perform the deleteCacheFileLocked.
+			c.compactMutex.Lock()
+			defer c.compactMutex.Unlock()
 
-		// Retry the write operation once
-		err = performUpdate()
+			ctx, purgeSpan := tracing.Tracer().Start(ctx, "BoltCache.purgeLocked")
+			defer purgeSpan.End()
+			c.purgeLocked(ctx, time.Now())
 
-		// If still failing with disk full, delete the cache entirely
-		if err != nil && isDiskFullError(err) {
-			_ = c.deleteCacheFile(ctx)
-			// After deleting the cache, we can't store the result, so just return
-			return
-		}
+			// Retry the write operation once
+			err = performUpdate()
+
+			// If still failing with disk full, delete the cache entirely - use locked version
+			if err != nil && isDiskFullError(err) {
+				deleteCtx, deleteSpan := tracing.Tracer().Start(ctx, "BoltCache.deleteCacheFileLocked", trace.WithAttributes(
+					attribute.String("ovm.cache.path", c.path),
+				))
+				defer deleteSpan.End()
+				_ = c.deleteCacheFileLocked(deleteCtx, deleteSpan)
+				// After deleting the cache, we can't store the result, so just return
+				return
+			}
+		}()
+		// now return to release the read lock and allow the goroutine above to run
+		return
 	}
 
 	if err != nil {
@@ -836,11 +904,6 @@ func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
 		span.SetStatus(codes.Error, "failed to store result")
 		// Update disk usage metrics even on error
 		c.setDiskUsageAttributes(span)
-		return
-	}
-
-	// Check if db is still valid (might have been deleted in error handling)
-	if c.db == nil {
 		return
 	}
 
@@ -860,9 +923,13 @@ func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
 
 // Delete removes all entries matching the given cache key.
 func (c *BoltCache) Delete(ck CacheKey) {
-	if c == nil || c.db == nil {
+	if c == nil {
 		return
 	}
+
+	// Acquire read lock to prevent compaction from closing the database, but do not lock out other bbolt operations
+	c.compactMutex.RLock()
+	defer c.compactMutex.RUnlock()
 
 	var totalDeleted int64
 
@@ -923,9 +990,13 @@ func (c *BoltCache) Delete(ck CacheKey) {
 
 // Clear removes all entries from the cache.
 func (c *BoltCache) Clear() {
-	if c == nil || c.db == nil {
+	if c == nil {
 		return
 	}
+
+	// Acquire read lock to prevent compaction from closing the database, but do not lock out other bbolt operations
+	c.compactMutex.RLock()
+	defer c.compactMutex.RUnlock()
 
 	_ = c.db.Update(func(tx *bbolt.Tx) error {
 		// Delete and recreate buckets
@@ -950,7 +1021,7 @@ func (c *BoltCache) Clear() {
 
 // Purge removes all expired items from the cache.
 func (c *BoltCache) Purge(ctx context.Context, before time.Time) PurgeStats {
-	if c == nil || c.db == nil {
+	if c == nil {
 		return PurgeStats{}
 	}
 
@@ -960,6 +1031,41 @@ func (c *BoltCache) Purge(ctx context.Context, before time.Time) PurgeStats {
 		),
 	)
 	defer span.End()
+
+	stats := func() PurgeStats {
+		// Acquire read lock to prevent compaction from closing the database, but do not lock out other bbolt operations
+		c.compactMutex.RLock()
+		defer c.compactMutex.RUnlock()
+
+		return c.purgeLocked(ctx, before)
+	}()
+
+	// Check if compaction is needed
+	deletedBytesBeforeCompact := c.getDeletedBytes()
+	compactionTriggered := deletedBytesBeforeCompact >= c.CompactThreshold
+
+	if compactionTriggered {
+		span.SetAttributes(
+			attribute.Bool("ovm.boltdb.compactionTriggered", true),
+			attribute.Int64("ovm.boltdb.deletedBytesBeforeCompact", deletedBytesBeforeCompact),
+		)
+		if err := c.compact(ctx); err == nil {
+			span.SetAttributes(attribute.Bool("ovm.boltdb.compactionSuccess", true))
+		} else {
+			span.RecordError(err)
+			span.SetAttributes(attribute.Bool("ovm.boltdb.compactionSuccess", false))
+		}
+	} else {
+		span.SetAttributes(attribute.Bool("ovm.boltdb.compactionTriggered", false))
+	}
+
+	return stats
+}
+
+// purgeLocked is the internal version that assumes the caller already holds compactMutex.Lock()
+// It performs the actual purging work and returns the stats, but does not handle compaction.
+func (c *BoltCache) purgeLocked(ctx context.Context, before time.Time) PurgeStats {
+	span := trace.SpanFromContext(ctx)
 
 	// Set initial disk usage metrics
 	c.setDiskUsageAttributes(span)
@@ -1057,29 +1163,6 @@ func (c *BoltCache) Purge(ctx context.Context, before time.Time) PurgeStats {
 		})
 	}
 
-	// Check if compaction is needed
-	deletedBytesBeforeCompact := c.getDeletedBytes()
-	compactionTriggered := deletedBytesBeforeCompact >= c.CompactThreshold
-	if compactionTriggered {
-		span.SetAttributes(
-			attribute.Bool("ovm.boltdb.compactionTriggered", true),
-			attribute.Int64("ovm.boltdb.deletedBytesBeforeCompact", deletedBytesBeforeCompact),
-		)
-		if err := c.compact(ctx); err == nil {
-			c.resetDeletedBytes()
-			// Save reset state
-			_ = c.db.Update(func(tx *bbolt.Tx) error {
-				return c.saveDeletedBytes(tx)
-			})
-			span.SetAttributes(attribute.Bool("ovm.boltdb.compactionSuccess", true))
-		} else {
-			span.RecordError(err)
-			span.SetAttributes(attribute.Bool("ovm.boltdb.compactionSuccess", false))
-		}
-	} else {
-		span.SetAttributes(attribute.Bool("ovm.boltdb.compactionTriggered", false))
-	}
-
 	// Update final disk usage metrics
 	c.setDiskUsageAttributes(span)
 
@@ -1100,6 +1183,10 @@ func (c *BoltCache) Purge(ctx context.Context, before time.Time) PurgeStats {
 
 // compact performs database compaction to reclaim disk space
 func (c *BoltCache) compact(ctx context.Context) error {
+	// Acquire global lock to prevent any concurrent bbolt operations
+	c.compactMutex.Lock()
+	defer c.compactMutex.Unlock()
+
 	ctx, span := tracing.Tracer().Start(ctx, "BoltCache.compact")
 	defer span.End()
 
@@ -1115,12 +1202,17 @@ func (c *BoltCache) compact(ctx context.Context) error {
 	tempPath := c.path + ".compact"
 
 	// Helper to handle disk full errors during file operations
+	// Note: We already hold compactMutex.Lock(), so we use the locked versions
 	handleDiskFull := func(err error, operation string) error {
 		if isDiskFullError(err) {
-			// Attempt cleanup first
-			c.Purge(ctx, time.Now())
-			// If cleanup didn't help, delete the cache
-			_ = c.deleteCacheFile(ctx)
+			// Attempt cleanup first - use locked version since we already hold the lock
+			c.purgeLocked(ctx, time.Now())
+			// If cleanup didn't help, delete the cache - use locked version
+			deleteCtx, deleteSpan := tracing.Tracer().Start(ctx, "BoltCache.deleteCacheFileLocked", trace.WithAttributes(
+				attribute.String("ovm.cache.path", c.path),
+			))
+			defer deleteSpan.End()
+			_ = c.deleteCacheFileLocked(deleteCtx, deleteSpan)
 			return fmt.Errorf("disk full during %s, cache deleted: %w", operation, err)
 		}
 		return err
@@ -1130,8 +1222,8 @@ func (c *BoltCache) compact(ctx context.Context) error {
 	dstDB, err := bbolt.Open(tempPath, 0600, &bbolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
 		if isDiskFullError(err) {
-			// Attempt cleanup first
-			c.Purge(ctx, time.Now())
+			// Attempt cleanup first - use locked version since we already hold the lock
+			c.purgeLocked(ctx, time.Now())
 			// Try again
 			dstDB, err = bbolt.Open(tempPath, 0600, &bbolt.Options{Timeout: 5 * time.Second})
 			if err != nil {
@@ -1147,8 +1239,8 @@ func (c *BoltCache) compact(ctx context.Context) error {
 		dstDB.Close()
 		os.Remove(tempPath)
 		if isDiskFullError(err) {
-			// Attempt cleanup first
-			c.Purge(ctx, time.Now())
+			// Attempt cleanup first - use locked version since we already hold the lock
+			c.purgeLocked(ctx, time.Now())
 			// Try compaction again
 			dstDB2, retryErr := bbolt.Open(tempPath, 0600, &bbolt.Options{Timeout: 5 * time.Second})
 			if retryErr != nil {
@@ -1206,6 +1298,12 @@ func (c *BoltCache) compact(ctx context.Context) error {
 	)
 	c.setDiskUsageAttributes(span)
 
+	// update deleted bytes after compaction
+	c.resetDeletedBytes()
+	_ = c.db.Update(func(tx *bbolt.Tx) error {
+		return c.saveDeletedBytes(tx)
+	})
+
 	return nil
 }
 
@@ -1223,9 +1321,9 @@ func (c *BoltCache) GetMinWaitTime() time.Duration {
 }
 
 // StartPurger starts a background goroutine that automatically purges expired items.
-func (c *BoltCache) StartPurger(ctx context.Context) error {
-	if c == nil || c.db == nil {
-		return nil
+func (c *BoltCache) StartPurger(ctx context.Context) {
+	if c == nil {
+		return
 	}
 
 	c.purgeMutex.Lock()
@@ -1235,7 +1333,7 @@ func (c *BoltCache) StartPurger(ctx context.Context) error {
 	} else {
 		c.purgeMutex.Unlock()
 		log.WithContext(ctx).Info("Purger already running")
-		return nil // the purger is already running, so we don't need to start it again
+		return // the purger is already running, so we don't need to start it again
 	}
 
 	go func(ctx context.Context) {
@@ -1254,8 +1352,6 @@ func (c *BoltCache) StartPurger(ctx context.Context) error {
 			}
 		}
 	}(ctx)
-
-	return nil
 }
 
 // setNextPurgeFromStats sets when the next purge should run based on the stats

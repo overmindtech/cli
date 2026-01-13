@@ -309,25 +309,24 @@ func (e *Engine) disconnect() {
 // work. Note that this creates NATS subscriptions for all available adapters so
 // modifying the Adapters value after an engine has been started will not have
 // any effect until the engine is restarted
-func (e *Engine) Start() error {
+func (e *Engine) Start(ctx context.Context) error {
 	e.listExecutionPool = pool.New().WithMaxGoroutines(e.EngineConfig.MaxParallelExecutions)
 	e.getExecutionPool = pool.New().WithMaxGoroutines(e.EngineConfig.MaxParallelExecutions)
 
-	e.backgroundJobContext, e.backgroundJobCancel = context.WithCancel(context.Background())
+	e.backgroundJobContext, e.backgroundJobCancel = context.WithCancel(ctx)
 
 	// Decide your own UUID if not provided
 	if e.EngineConfig.SourceUUID == uuid.Nil {
 		e.EngineConfig.SourceUUID = uuid.New()
 	}
 
-	err := e.connect()
+	err := e.connect() //nolint:contextcheck // context is passed in through backgroundJobContext
 	if err != nil {
-		return e.SendHeartbeat(e.backgroundJobContext, err)
+		return e.SendHeartbeat(e.backgroundJobContext, err) //nolint:contextcheck
 	}
 
 	// Start background jobs
-	e.sh.StartPurger(e.backgroundJobContext)
-	e.StartSendingHeartbeats(e.backgroundJobContext)
+	e.StartSendingHeartbeats(e.backgroundJobContext) //nolint:contextcheck
 	return nil
 }
 
@@ -380,7 +379,7 @@ func (e *Engine) Stop() error {
 
 // Restart Restarts the engine. If called in parallel, subsequent calls are
 // ignored until the restart is completed
-func (e *Engine) Restart() error {
+func (e *Engine) Restart(ctx context.Context) error {
 	e.restartMutex.Lock()
 	defer e.restartMutex.Unlock()
 
@@ -389,7 +388,7 @@ func (e *Engine) Restart() error {
 		return fmt.Errorf("Restart.Stop: %w", err)
 	}
 
-	err = e.Start()
+	err = e.Start(ctx)
 	return fmt.Errorf("Restart.Start: %w", err)
 }
 

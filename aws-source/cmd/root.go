@@ -126,7 +126,7 @@ var rootCmd = &cobra.Command{
 			}).Error("Could not start HTTP server for /healthz health checks")
 		}()
 
-		err = e.Start()
+		err = e.Start(ctx)
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err,

@@ -45,10 +45,6 @@ func TestCoreNetworkItemMapper(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err != nil {
-		t.Error(err)
-	}
-
 	// Ensure unique attribute
 	err = item.Validate()
 	if err != nil {

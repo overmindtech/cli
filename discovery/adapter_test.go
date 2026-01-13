@@ -36,7 +36,7 @@ func TestGet(t *testing.T) {
 			"test",
 			"empty",
 		},
-		cacheField: sdpcache.NewCache(),
+		cacheField: sdpcache.NewCache(t.Context()),
 	}
 
 	e := newStartedEngine(t, "TestGet", nil, nil, &adapter)
@@ -307,7 +307,7 @@ func TestListSearchCaching(t *testing.T) {
 			"empty",
 			"error",
 		},
-		cacheField: sdpcache.NewCache(),
+		cacheField: sdpcache.NewCache(t.Context()),
 	}
 
 	e := newStartedEngine(t, "TestListSearchCaching", nil, nil, &adapter)
@@ -619,7 +619,7 @@ func TestSearchGetCaching(t *testing.T) {
 		ReturnScopes: []string{
 			"test",
 		},
-		cacheField: sdpcache.NewCache(),
+		cacheField: sdpcache.NewCache(t.Context()),
 	}
 
 	e := newStartedEngine(t, "TestSearchGetCaching", nil, nil, &adapter)
