@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
@@ -33,7 +34,7 @@ func TestComputeNetworkIntegration(t *testing.T) {
 			t.Fatalf("Failed to create GCP HTTP client: %v", err)
 		}
 
-		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

@@ -137,7 +137,7 @@ func (c iamServiceAccountWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Q
 }
 
 // ListStream lists IAM ServiceAccounts and sends them as sdp.Items to the stream.
-func (c iamServiceAccountWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c iamServiceAccountWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	req := &adminpb.ListServiceAccountsRequest{
 		Name: "projects/" + c.ProjectID(),
 	}

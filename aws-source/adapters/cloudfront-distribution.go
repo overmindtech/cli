@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var s3DnsRegex = regexp.MustCompile(`([^\.]+)\.s3\.([^\.]+)\.amazonaws\.com`)
@@ -631,12 +632,13 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 	return &item, nil
 }
 
-func NewCloudfrontDistributionAdapter(client CloudFrontClient, accountID string) *adapterhelpers.AlwaysGetAdapter[*cloudfront.ListDistributionsInput, *cloudfront.ListDistributionsOutput, *cloudfront.GetDistributionInput, *cloudfront.GetDistributionOutput, CloudFrontClient, *cloudfront.Options] {
+func NewCloudfrontDistributionAdapter(client CloudFrontClient, accountID string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*cloudfront.ListDistributionsInput, *cloudfront.ListDistributionsOutput, *cloudfront.GetDistributionInput, *cloudfront.GetDistributionOutput, CloudFrontClient, *cloudfront.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*cloudfront.ListDistributionsInput, *cloudfront.ListDistributionsOutput, *cloudfront.GetDistributionInput, *cloudfront.GetDistributionOutput, CloudFrontClient, *cloudfront.Options]{
 		ItemType:        "cloudfront-distribution",
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: distributionAdapterMetadata,
+		SDPCache:        cache,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		ListInput:       &cloudfront.ListDistributionsInput{},
 		ListFuncPaginatorBuilder: func(client CloudFrontClient, input *cloudfront.ListDistributionsInput) adapterhelpers.Paginator[*cloudfront.ListDistributionsOutput, *cloudfront.Options] {

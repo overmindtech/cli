@@ -140,7 +140,7 @@ func TestUserGetFunc(t *testing.T) {
 }
 
 func TestUserListFunc(t *testing.T) {
-	adapter := NewIAMUserAdapter(&TestIAMClient{}, "foo")
+	adapter := NewIAMUserAdapter(&TestIAMClient{}, "foo", nil)
 
 	stream := discovery.NewRecordingQueryResultStream()
 	adapter.ListStream(context.Background(), "foo", false, stream)
@@ -228,7 +228,7 @@ func TestNewIAMUserAdapter(t *testing.T) {
 		o.RetryMaxAttempts = 10
 	})
 
-	adapter := NewIAMUserAdapter(client, account)
+	adapter := NewIAMUserAdapter(client, account, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

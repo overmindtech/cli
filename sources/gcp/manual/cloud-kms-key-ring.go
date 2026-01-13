@@ -146,7 +146,7 @@ func (c cloudKMSKeyRingWrapper) Search(ctx context.Context, queryParts ...string
 }
 
 // SearchStream streams the search results for KMS KeyRings.
-func (c cloudKMSKeyRingWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
+func (c cloudKMSKeyRingWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
 	parent := fmt.Sprintf("projects/%s/locations/%s", c.ProjectID(), queryParts[0])
 
 	it := c.client.Search(ctx, &kmspb.ListKeyRingsRequest{

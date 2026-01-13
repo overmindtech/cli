@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -70,7 +71,7 @@ func TestNetworkVirtualNetworkIntegration(t *testing.T) {
 			)
 			scope := vnetWrapper.Scopes()[0]
 
-			vnetAdapter := sources.WrapperToAdapter(vnetWrapper)
+			vnetAdapter := sources.WrapperToAdapter(vnetWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := vnetAdapter.Get(ctx, scope, integrationTestVNetName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -106,7 +107,7 @@ func TestNetworkVirtualNetworkIntegration(t *testing.T) {
 			)
 			scope := vnetWrapper.Scopes()[0]
 
-			vnetAdapter := sources.WrapperToAdapter(vnetWrapper)
+			vnetAdapter := sources.WrapperToAdapter(vnetWrapper, sdpcache.NewNoOpCache())
 			listable, ok := vnetAdapter.(discovery.ListableAdapter)
 			if !ok {
 				t.Fatalf("Adapter does not support List operation")
@@ -148,7 +149,7 @@ func TestNetworkVirtualNetworkIntegration(t *testing.T) {
 			)
 			scope := vnetWrapper.Scopes()[0]
 
-			vnetAdapter := sources.WrapperToAdapter(vnetWrapper)
+			vnetAdapter := sources.WrapperToAdapter(vnetWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := vnetAdapter.Get(ctx, scope, integrationTestVNetName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)

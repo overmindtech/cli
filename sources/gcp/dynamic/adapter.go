@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"buf.build/go/protovalidate"
 	log "github.com/sirupsen/logrus"
@@ -35,7 +36,7 @@ type AdapterConfig struct {
 type Adapter struct {
 	projectID            string
 	httpCli              *http.Client
-	cache                *sdpcache.Cache
+	Cache                sdpcache.Cache
 	getURLFunc           gcpshared.EndpointFunc
 	scope                string
 	sdpAssetType         shared.ItemType
@@ -50,12 +51,12 @@ type Adapter struct {
 }
 
 // NewAdapter creates a new GCP dynamic adapter.
-func NewAdapter(config *AdapterConfig) discovery.Adapter {
+func NewAdapter(config *AdapterConfig, cache sdpcache.Cache) discovery.Adapter {
 	return Adapter{
 		projectID:           config.ProjectID,
 		scope:               config.Scope,
 		httpCli:             config.HTTPClient,
-		cache:               sdpcache.NewCache(),
+		Cache:               cache,
 		getURLFunc:          config.GetURLFunc,
 		sdpAssetType:        config.SDPAssetType,
 		sdpAdapterCategory:  config.SDPAdapterCategory,
@@ -94,6 +95,21 @@ func (g Adapter) Scopes() []string {
 	return []string{g.scope}
 }
 
+var (
+	noOpCacheGCPOnce sync.Once
+	noOpCacheGCP     sdpcache.Cache
+)
+
+func (g Adapter) GetCache() sdpcache.Cache {
+	if g.Cache == nil {
+		noOpCacheGCPOnce.Do(func() {
+			noOpCacheGCP = sdpcache.NewNoOpCache()
+		})
+		return noOpCacheGCP
+	}
+	return g.Cache
+}
+
 func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
 	if scope != g.scope {
 		return nil, &sdp.QueryError{
@@ -102,7 +118,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		}
 	}
 
-	cacheHit, ck, cachedItem, qErr := g.cache.Lookup(
+	cacheHit, ck, cachedItem, qErr := g.GetCache().Lookup(
 		ctx,
 		g.Name(),
 		sdp.QueryMethod_GET,
@@ -147,15 +163,11 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		return nil, err
 	}
 
-	g.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
+	g.GetCache().StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 
 	return item, nil
 }
 
 func (g Adapter) Validate() error {
-	if g.cache == nil {
-		return fmt.Errorf("cache is not initialized")
-	}
-
 	return protovalidate.Validate(g.Metadata())
 }

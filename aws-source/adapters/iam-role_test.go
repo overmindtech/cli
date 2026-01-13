@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/micahhausler/aws-iam-policy/policy"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -142,7 +141,7 @@ func TestRoleGetFunc(t *testing.T) {
 }
 
 func TestRoleListFunc(t *testing.T) {
-	adapter := NewIAMRoleAdapter(&TestIAMClient{}, "foo")
+	adapter := NewIAMRoleAdapter(&TestIAMClient{}, "foo", nil)
 
 	stream := discovery.NewRecordingQueryResultStream()
 	adapter.ListStream(context.Background(), "foo", false, stream)
@@ -255,7 +254,7 @@ func TestNewIAMRoleAdapter(t *testing.T) {
 		o.RetryMaxAttempts = 10
 	})
 
-	adapter := NewIAMRoleAdapter(client, account)
+	adapter := NewIAMRoleAdapter(client, account, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

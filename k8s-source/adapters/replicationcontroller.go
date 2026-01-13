@@ -3,6 +3,7 @@ package adapters
 import (
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -33,10 +34,11 @@ func replicationControllerExtractor(resource *v1.ReplicationController, scope st
 	return queries, nil
 }
 
-func newReplicationControllerAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newReplicationControllerAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.ReplicationController, *v1.ReplicationControllerList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,
+		cacheField:       cache,
 		TypeName:         "ReplicationController",
 		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.ReplicationController, *v1.ReplicationControllerList] {

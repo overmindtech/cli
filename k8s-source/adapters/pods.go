@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -324,13 +325,14 @@ func PodExtractor(resource *v1.Pod, scope string) ([]*sdp.LinkedItemQuery, error
 	return queries, nil
 }
 
-func newPodAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newPodAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Pod, *v1.PodList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,
 		TypeName:         "Pod",
 		CacheDuration:    10 * time.Minute, // somewhat low since pods are replaced a lot
 		AutoQueryExtract: true,
+		cacheField:       cache,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Pod, *v1.PodList] {
 			return cs.CoreV1().Pods(namespace)
 		},

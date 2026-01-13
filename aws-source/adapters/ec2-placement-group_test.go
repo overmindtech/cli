@@ -75,7 +75,7 @@ func TestPlacementGroupOutputMapper(t *testing.T) {
 func TestNewEC2PlacementGroupAdapter(t *testing.T) {
 	client, account, region := ec2GetAutoConfig(t)
 
-	adapter := NewEC2PlacementGroupAdapter(client, account, region)
+	adapter := NewEC2PlacementGroupAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

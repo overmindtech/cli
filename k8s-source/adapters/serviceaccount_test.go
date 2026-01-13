@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var serviceAccountYAML = `
@@ -40,7 +41,7 @@ func TestServiceAccountAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newServiceAccountAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newServiceAccountAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

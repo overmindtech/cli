@@ -58,7 +58,7 @@ func (c computeVirtualMachineScaleSetWrapper) List(ctx context.Context) ([]*sdp.
 	return items, nil
 }
 
-func (c computeVirtualMachineScaleSetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeVirtualMachineScaleSetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	pager := c.client.NewListPager(c.ResourceGroup(), nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)

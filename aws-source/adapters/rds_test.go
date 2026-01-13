@@ -1,10 +1,9 @@
 package adapters
 
 import (
-	"testing"
-
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
+	"testing"
 )
 
 func rdsGetAutoConfig(t *testing.T) (*rds.Client, string, string) {

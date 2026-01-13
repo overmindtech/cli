@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -80,7 +81,7 @@ func TestStorageFileShare(t *testing.T) {
 
 		testClient := &testFileSharesClient{MockFileSharesClient: mockClient}
 		wrapper := manual.NewStorageFileShare(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Get requires storageAccountName and shareName as query parts
 		query := shared.CompositeLookupKey(storageAccountName, shareName)
@@ -141,7 +142,7 @@ func TestStorageFileShare(t *testing.T) {
 		testClient := &testFileSharesClient{MockFileSharesClient: mockClient}
 
 		wrapper := manual.NewStorageFileShare(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (only storage account name)
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], storageAccountName, true)
@@ -192,7 +193,7 @@ func TestStorageFileShare(t *testing.T) {
 		}
 
 		wrapper := manual.NewStorageFileShare(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
@@ -262,7 +263,7 @@ func TestStorageFileShare(t *testing.T) {
 		}
 
 		wrapper := manual.NewStorageFileShare(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
@@ -293,7 +294,7 @@ func TestStorageFileShare(t *testing.T) {
 
 		testClient := &testFileSharesClient{MockFileSharesClient: mockClient}
 		wrapper := manual.NewStorageFileShare(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := storageAccountName + shared.QuerySeparator + "nonexistent-share"
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], query, true)
@@ -313,7 +314,7 @@ func TestStorageFileShare(t *testing.T) {
 		}
 
 		wrapper := manual.NewStorageFileShare(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {

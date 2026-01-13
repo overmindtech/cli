@@ -65,7 +65,7 @@ func TestNewSNSTopicAdapter(t *testing.T) {
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 	client := sns.NewFromConfig(config)
 
-	adapter := NewSNSTopicAdapter(client, account, region)
+	adapter := NewSNSTopicAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

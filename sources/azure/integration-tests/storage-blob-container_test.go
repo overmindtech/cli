@@ -18,6 +18,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -103,7 +104,7 @@ func TestStorageBlobContainerIntegration(t *testing.T) {
 			)
 			scope := bcWrapper.Scopes()[0]
 
-			bcAdapter := sources.WrapperToAdapter(bcWrapper)
+			bcAdapter := sources.WrapperToAdapter(bcWrapper, sdpcache.NewNoOpCache())
 			// Get requires storageAccountName and containerName as query parts
 			query := storageAccountName + shared.QuerySeparator + integrationTestContainerName
 			sdpItem, qErr := bcAdapter.Get(ctx, scope, query, true)
@@ -140,7 +141,7 @@ func TestStorageBlobContainerIntegration(t *testing.T) {
 			)
 			scope := bcWrapper.Scopes()[0]
 
-			bcAdapter := sources.WrapperToAdapter(bcWrapper)
+			bcAdapter := sources.WrapperToAdapter(bcWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports search
 			searchable, ok := bcAdapter.(discovery.SearchableAdapter)
@@ -185,7 +186,7 @@ func TestStorageBlobContainerIntegration(t *testing.T) {
 			)
 			scope := bcWrapper.Scopes()[0]
 
-			bcAdapter := sources.WrapperToAdapter(bcWrapper)
+			bcAdapter := sources.WrapperToAdapter(bcWrapper, sdpcache.NewNoOpCache())
 			query := storageAccountName + shared.QuerySeparator + integrationTestContainerName
 			sdpItem, qErr := bcAdapter.Get(ctx, scope, query, true)
 			if qErr != nil {

@@ -54,7 +54,7 @@ func EC2(t *testing.T) {
 
 	t.Log("Running EC2 integration test")
 
-	instanceAdapter := adapters.NewEC2InstanceAdapter(testClient, accountID, testAWSConfig.Region)
+	instanceAdapter := adapters.NewEC2InstanceAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
 	err = instanceAdapter.Validate()
 	if err != nil {

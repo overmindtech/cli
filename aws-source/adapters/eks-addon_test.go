@@ -50,7 +50,7 @@ func TestAddonGetFunc(t *testing.T) {
 func TestNewEKSAddonAdapter(t *testing.T) {
 	client, account, region := eksGetAutoConfig(t)
 
-	adapter := NewEKSAddonAdapter(client, account, region)
+	adapter := NewEKSAddonAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter:           adapter,

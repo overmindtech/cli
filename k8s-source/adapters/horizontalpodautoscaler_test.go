@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var horizontalPodAutoscalerYAML = `
@@ -53,7 +54,7 @@ func TestHorizontalPodAutoscalerAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newHorizontalPodAutoscalerAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newHorizontalPodAutoscalerAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

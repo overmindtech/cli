@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func vpcAttachmentGetFunc(ctx context.Context, client *networkmanager.Client, _, query string) (*types.VpcAttachment, error) {
@@ -58,13 +59,14 @@ func vpcAttachmentItemMapper(_, scope string, awsItem *types.VpcAttachment) (*sd
 	return &item, nil
 }
 
-func NewNetworkManagerVPCAttachmentAdapter(client *networkmanager.Client, accountID, region string) *adapterhelpers.GetListAdapter[*types.VpcAttachment, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerVPCAttachmentAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.VpcAttachment, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.GetListAdapter[*types.VpcAttachment, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		Region:          region,
 		AccountID:       accountID,
 		ItemType:        "networkmanager-vpc-attachment",
 		AdapterMetadata: vpcAttachmentAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *networkmanager.Client, scope string, query string) (*types.VpcAttachment, error) {
 			return vpcAttachmentGetFunc(ctx, client, scope, query)
 		},

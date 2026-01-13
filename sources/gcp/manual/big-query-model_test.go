@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -31,7 +32,7 @@ func TestBigQueryModel(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, projectID, datasetID, modelName).Return(createDatasetModel(projectID, modelName), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := shared.CompositeLookupKey(datasetID, modelName)
 
@@ -77,7 +78,7 @@ func TestBigQueryModel(t *testing.T) {
 			{},
 		}, nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports searching
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -101,7 +102,7 @@ func TestBigQueryModel(t *testing.T) {
 
 	t.Run("List_Unsupported", func(t *testing.T) {
 		wrapper := manual.NewBigQueryModel(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports list - it should not
 		_, ok := adapter.(discovery.ListableAdapter)

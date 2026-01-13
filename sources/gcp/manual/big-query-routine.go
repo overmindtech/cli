@@ -99,7 +99,7 @@ func (b BigQueryRoutineWrapper) Search(ctx context.Context, queryParts ...string
 	return items, nil
 }
 
-func (b BigQueryRoutineWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
+func (b BigQueryRoutineWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
 }
 
 func (b BigQueryRoutineWrapper) GCPBigQueryRoutineToItem(metadata *bigquery.RoutineMetadata, datasetID, routineID string) (*sdp.Item, *sdp.QueryError) {

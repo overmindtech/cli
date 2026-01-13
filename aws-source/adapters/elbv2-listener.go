@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func listenerOutputMapper(ctx context.Context, client elbv2Client, scope string, _ *elbv2.DescribeListenersInput, output *elbv2.DescribeListenersOutput) ([]*sdp.Item, error) {
@@ -133,13 +134,14 @@ func listenerOutputMapper(ctx context.Context, client elbv2Client, scope string,
 	return items, nil
 }
 
-func NewELBv2ListenerAdapter(client elbv2Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeListenersInput, *elbv2.DescribeListenersOutput, elbv2Client, *elbv2.Options] {
+func NewELBv2ListenerAdapter(client elbv2Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeListenersInput, *elbv2.DescribeListenersOutput, elbv2Client, *elbv2.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeListenersInput, *elbv2.DescribeListenersOutput, elbv2Client, *elbv2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "elbv2-listener",
 		AdapterMetadata: elbv2ListenerAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client elbv2Client, input *elbv2.DescribeListenersInput) (*elbv2.DescribeListenersOutput, error) {
 			return client.DescribeListeners(ctx, input)
 		},

@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -56,7 +57,7 @@ func TestComputeReservationIntegration(t *testing.T) {
 		reservationsWrapper := manual.NewComputeReservation(gcpshared.NewComputeReservationClient(client), projectID, zone)
 		scope := reservationsWrapper.Scopes()[0]
 
-		reservationsAdapter := sources.WrapperToAdapter(reservationsWrapper)
+		reservationsAdapter := sources.WrapperToAdapter(reservationsWrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports listing
 		listable, ok := reservationsAdapter.(discovery.ListableAdapter)
@@ -95,7 +96,7 @@ func TestComputeReservationIntegration(t *testing.T) {
 		reservationsWrapper := manual.NewComputeReservation(gcpshared.NewComputeReservationClient(client), projectID, zone)
 		scope := reservationsWrapper.Scopes()[0]
 
-		reservationsAdapter := sources.WrapperToAdapter(reservationsWrapper)
+		reservationsAdapter := sources.WrapperToAdapter(reservationsWrapper, sdpcache.NewNoOpCache())
 		sdpItem, qErr := reservationsAdapter.Get(ctx, scope, reservationName, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)

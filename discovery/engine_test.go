@@ -771,7 +771,8 @@ func GetTestOAuthTokenClient(t *testing.T, account string) auth.TokenClient {
 
 	exchangeURL, err := GetWorkingTokenExchange()
 	if err != nil {
-		t.Fatal(err)
+		t.Skipf("Token exchange API server not available: %v", err)
+		return nil
 	}
 
 	testTokenSourceMu.Lock()

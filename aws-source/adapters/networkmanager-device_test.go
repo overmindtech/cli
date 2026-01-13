@@ -89,7 +89,7 @@ func TestDeviceOutputMapper(t *testing.T) {
 }
 
 func TestDeviceInputMapperSearch(t *testing.T) {
-	adapter := NewNetworkManagerDeviceAdapter(&networkmanager.Client{}, "123456789012")
+	adapter := NewNetworkManagerDeviceAdapter(&networkmanager.Client{}, "123456789012", nil)
 
 	tests := []struct {
 		name          string

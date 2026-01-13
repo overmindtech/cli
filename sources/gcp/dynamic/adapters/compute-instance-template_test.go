@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -140,7 +141,7 @@ func TestComputeInstanceTemplate(t *testing.T) {
 	}
 
 	t.Run("Get", func(t *testing.T) {
-		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), projectID)
+		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for ComputeInstanceTemplate: %v", err)
 		}
@@ -473,7 +474,7 @@ func TestComputeInstanceTemplate(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), projectID)
+		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for ComputeInstanceTemplate: %v", err)
 		}
@@ -495,7 +496,7 @@ func TestComputeInstanceTemplate(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), projectID)
+		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for ComputeInstanceTemplate: %v", err)
 		}

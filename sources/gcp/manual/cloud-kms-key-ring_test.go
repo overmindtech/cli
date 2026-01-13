@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -33,7 +34,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createKeyRing(projectID, location, keyRingName), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey(location, keyRingName), true)
 		if qErr != nil {
@@ -70,7 +71,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 
 	t.Run("Search", func(t *testing.T) {
 		wrapper := manual.NewCloudKMSKeyRing(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
 
@@ -105,7 +106,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 
 	t.Run("SearchStream", func(t *testing.T) {
 		wrapper := manual.NewCloudKMSKeyRing(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
 
@@ -158,7 +159,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 
 	t.Run("List_Unsupported", func(t *testing.T) {
 		wrapper := manual.NewCloudKMSKeyRing(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports list - it should not
 		_, ok := adapter.(discovery.ListableAdapter)

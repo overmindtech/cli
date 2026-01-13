@@ -16,6 +16,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -114,7 +115,7 @@ func TestKeyVaultManagedHSMIntegration(t *testing.T) {
 			)
 			scope := hsmWrapper.Scopes()[0]
 
-			hsmAdapter := sources.WrapperToAdapter(hsmWrapper)
+			hsmAdapter := sources.WrapperToAdapter(hsmWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := hsmAdapter.Get(ctx, scope, integrationTestManagedHSMName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -155,7 +156,7 @@ func TestKeyVaultManagedHSMIntegration(t *testing.T) {
 			)
 			scope := hsmWrapper.Scopes()[0]
 
-			hsmAdapter := sources.WrapperToAdapter(hsmWrapper)
+			hsmAdapter := sources.WrapperToAdapter(hsmWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports listing
 			listable, ok := hsmAdapter.(discovery.ListableAdapter)
@@ -199,7 +200,7 @@ func TestKeyVaultManagedHSMIntegration(t *testing.T) {
 			)
 			scope := hsmWrapper.Scopes()[0]
 
-			hsmAdapter := sources.WrapperToAdapter(hsmWrapper)
+			hsmAdapter := sources.WrapperToAdapter(hsmWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := hsmAdapter.Get(ctx, scope, integrationTestManagedHSMName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -245,7 +246,7 @@ func TestKeyVaultManagedHSMIntegration(t *testing.T) {
 			)
 			scope := hsmWrapper.Scopes()[0]
 
-			hsmAdapter := sources.WrapperToAdapter(hsmWrapper)
+			hsmAdapter := sources.WrapperToAdapter(hsmWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := hsmAdapter.Get(ctx, scope, integrationTestManagedHSMName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)

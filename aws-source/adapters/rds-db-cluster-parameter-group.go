@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type ClusterParameterGroup struct {
@@ -34,13 +35,14 @@ func dBClusterParameterGroupItemMapper(_, scope string, awsItem *ClusterParamete
 	return &item, nil
 }
 
-func NewRDSDBClusterParameterGroupAdapter(client rdsClient, accountID string, region string) *adapterhelpers.GetListAdapter[*ClusterParameterGroup, rdsClient, *rds.Options] {
+func NewRDSDBClusterParameterGroupAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*ClusterParameterGroup, rdsClient, *rds.Options] {
 	return &adapterhelpers.GetListAdapter[*ClusterParameterGroup, rdsClient, *rds.Options]{
 		ItemType:        "rds-db-cluster-parameter-group",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: dbClusterParameterGroupAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client rdsClient, scope, query string) (*ClusterParameterGroup, error) {
 			out, err := client.DescribeDBClusterParameterGroups(ctx, &rds.DescribeDBClusterParameterGroupsInput{
 				DBClusterParameterGroupName: &query,

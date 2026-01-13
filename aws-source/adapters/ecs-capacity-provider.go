@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var CapacityProviderIncludeFields = []types.CapacityProviderField{
@@ -59,13 +60,14 @@ func capacityProviderOutputMapper(_ context.Context, _ ECSClient, scope string, 
 	return items, nil
 }
 
-func NewECSCapacityProviderAdapter(client ECSClient, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*ecs.DescribeCapacityProvidersInput, *ecs.DescribeCapacityProvidersOutput, ECSClient, *ecs.Options] {
+func NewECSCapacityProviderAdapter(client ECSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ecs.DescribeCapacityProvidersInput, *ecs.DescribeCapacityProvidersOutput, ECSClient, *ecs.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*ecs.DescribeCapacityProvidersInput, *ecs.DescribeCapacityProvidersOutput, ECSClient, *ecs.Options]{
 		ItemType:        "ecs-capacity-provider",
 		Region:          region,
 		AccountID:       accountID,
 		Client:          client,
 		AdapterMetadata: capacityProviderAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client ECSClient, input *ecs.DescribeCapacityProvidersInput) (*ecs.DescribeCapacityProvidersOutput, error) {
 			return client.DescribeCapacityProviders(ctx, input)
 		},

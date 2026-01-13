@@ -3,6 +3,7 @@ package adapters
 import (
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/policy/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -30,10 +31,11 @@ func podDisruptionBudgetExtractor(resource *v1.PodDisruptionBudget, scope string
 	return queries, nil
 }
 
-func newPodDisruptionBudgetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newPodDisruptionBudgetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
+		cacheField:  cache,
 		TypeName:    "PodDisruptionBudget",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList] {
 			return cs.PolicyV1().PodDisruptionBudgets(namespace)

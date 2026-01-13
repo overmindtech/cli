@@ -96,7 +96,7 @@ func (b BigQueryDatasetWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Que
 	return items, nil
 }
 
-func (b BigQueryDatasetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (b BigQueryDatasetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	b.client.ListStream(ctx, b.ProjectID(), stream, func(ctx context.Context, md *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError) {
 		item, qerr := b.GCPBigQueryDatasetToItem(ctx, md)
 		if qerr == nil && item != nil {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/apps/v1"
 
 	"k8s.io/client-go/kubernetes"
@@ -12,12 +13,13 @@ import (
 
 var replicaSetProgressedRegex = regexp.MustCompile(`ReplicaSet "([^"]+)" has successfully progressed`)
 
-func newDeploymentAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newDeploymentAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Deployment, *v1.DeploymentList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,
 		TypeName:         "Deployment",
 		AutoQueryExtract: true,
+		cacheField:       cache,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Deployment, *v1.DeploymentList] {
 			return cs.AppsV1().Deployments(namespace)
 		},

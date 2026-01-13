@@ -128,7 +128,7 @@ func (c iamServiceAccountKeyWrapper) Search(ctx context.Context, queryParts ...s
 }
 
 // SearchStream streams the search results for Service Account Keys.
-func (c iamServiceAccountKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
+func (c iamServiceAccountKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
 	serviceAccountIdentifier := queryParts[0]
 
 	it, err := c.client.Search(ctx, &adminpb.ListServiceAccountKeysRequest{

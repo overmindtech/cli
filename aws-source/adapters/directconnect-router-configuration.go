@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func routerConfigurationOutputMapper(_ context.Context, _ *directconnect.Client, scope string, _ *directconnect.DescribeRouterConfigurationInput, output *directconnect.DescribeRouterConfigurationOutput) ([]*sdp.Item, error) {
@@ -47,13 +48,14 @@ func routerConfigurationOutputMapper(_ context.Context, _ *directconnect.Client,
 	}, nil
 }
 
-func NewDirectConnectRouterConfigurationAdapter(client *directconnect.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeRouterConfigurationInput, *directconnect.DescribeRouterConfigurationOutput, *directconnect.Client, *directconnect.Options] {
+func NewDirectConnectRouterConfigurationAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeRouterConfigurationInput, *directconnect.DescribeRouterConfigurationOutput, *directconnect.Client, *directconnect.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeRouterConfigurationInput, *directconnect.DescribeRouterConfigurationOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-router-configuration",
 		AdapterMetadata: routerConfigurationAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeRouterConfigurationInput) (*directconnect.DescribeRouterConfigurationOutput, error) {
 			return client.DescribeRouterConfiguration(ctx, input)
 		},

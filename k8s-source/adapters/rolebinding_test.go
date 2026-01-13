@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var roleBindingYAML = `
@@ -72,7 +73,7 @@ func TestRoleBindingAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newRoleBindingAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newRoleBindingAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	t.Run("With a Role", func(t *testing.T) {
 		st := AdapterTests{

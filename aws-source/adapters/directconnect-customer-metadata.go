@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func customerMetadataOutputMapper(_ context.Context, _ *directconnect.Client, scope string, _ *directconnect.DescribeCustomerMetadataInput, output *directconnect.DescribeCustomerMetadataOutput) ([]*sdp.Item, error) {
@@ -31,13 +32,14 @@ func customerMetadataOutputMapper(_ context.Context, _ *directconnect.Client, sc
 	return items, nil
 }
 
-func NewDirectConnectCustomerMetadataAdapter(client *directconnect.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeCustomerMetadataInput, *directconnect.DescribeCustomerMetadataOutput, *directconnect.Client, *directconnect.Options] {
+func NewDirectConnectCustomerMetadataAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeCustomerMetadataInput, *directconnect.DescribeCustomerMetadataOutput, *directconnect.Client, *directconnect.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeCustomerMetadataInput, *directconnect.DescribeCustomerMetadataOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-customer-metadata",
 		AdapterMetadata: customerMetadataAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeCustomerMetadataInput) (*directconnect.DescribeCustomerMetadataOutput, error) {
 			return client.DescribeCustomerMetadata(ctx, input)
 		},

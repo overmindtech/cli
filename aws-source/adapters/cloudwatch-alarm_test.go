@@ -178,8 +178,8 @@ func TestAlarmOutputMapperWithTagError(t *testing.T) {
 	output := &cloudwatch.DescribeAlarmsOutput{
 		MetricAlarms: []types.MetricAlarm{
 			{
-				AlarmName:       adapterhelpers.PtrString("api-51c748b4-cpu-credits-low"),
-				AlarmArn:        adapterhelpers.PtrString("arn:aws:cloudwatch:eu-west-2:052392120703:alarm:api-51c748b4-cpu-credits-low"),
+				AlarmName:        adapterhelpers.PtrString("api-51c748b4-cpu-credits-low"),
+				AlarmArn:         adapterhelpers.PtrString("arn:aws:cloudwatch:eu-west-2:052392120703:alarm:api-51c748b4-cpu-credits-low"),
 				AlarmDescription: adapterhelpers.PtrString("CPU credits low alarm"),
 				StateValue:       types.StateValueOk,
 				MetricName:       adapterhelpers.PtrString("CPUCreditBalance"),
@@ -219,7 +219,7 @@ func TestNewCloudwatchAlarmAdapter(t *testing.T) {
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 	client := cloudwatch.NewFromConfig(config)
 
-	adapter := NewCloudwatchAlarmAdapter(client, account, region)
+	adapter := NewCloudwatchAlarmAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

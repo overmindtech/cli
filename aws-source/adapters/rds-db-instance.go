@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func statusToHealth(status string) *sdp.Health {
@@ -476,13 +477,14 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 	return items, nil
 }
 
-func NewRDSDBInstanceAdapter(client rdsClient, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBInstancesInput, *rds.DescribeDBInstancesOutput, rdsClient, *rds.Options] {
+func NewRDSDBInstanceAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBInstancesInput, *rds.DescribeDBInstancesOutput, rdsClient, *rds.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBInstancesInput, *rds.DescribeDBInstancesOutput, rdsClient, *rds.Options]{
 		ItemType:        "rds-db-instance",
 		Region:          region,
 		AccountID:       accountID,
 		Client:          client,
 		AdapterMetadata: dbInstanceAdapterMetadata,
+		SDPCache:        cache,
 		PaginatorBuilder: func(client rdsClient, params *rds.DescribeDBInstancesInput) adapterhelpers.Paginator[*rds.DescribeDBInstancesOutput, *rds.Options] {
 			return rds.NewDescribeDBInstancesPaginator(client, params)
 		},

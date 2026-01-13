@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func aliasOutputMapper(_ context.Context, _ *kms.Client, scope string, _ *kms.ListAliasesInput, output *kms.ListAliasesOutput) ([]*sdp.Item, error) {
@@ -79,13 +80,14 @@ func aliasOutputMapper(_ context.Context, _ *kms.Client, scope string, _ *kms.Li
 	return items, nil
 }
 
-func NewKMSAliasAdapter(client *kms.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*kms.ListAliasesInput, *kms.ListAliasesOutput, *kms.Client, *kms.Options] {
+func NewKMSAliasAdapter(client *kms.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*kms.ListAliasesInput, *kms.ListAliasesOutput, *kms.Client, *kms.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*kms.ListAliasesInput, *kms.ListAliasesOutput, *kms.Client, *kms.Options]{
 		ItemType:        "kms-alias",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: kmsAliasAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *kms.Client, input *kms.ListAliasesInput) (*kms.ListAliasesOutput, error) {
 			return client.ListAliases(ctx, input)
 		},

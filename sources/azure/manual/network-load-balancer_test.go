@@ -13,6 +13,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/manual"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -39,7 +40,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], lbName, true)
 		if qErr != nil {
@@ -195,7 +196,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 		mockClient := mocks.NewMockLoadBalancersClient(ctrl)
 
 		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name - the wrapper validates this before calling the client
 		// So the client.Get should not be called
@@ -227,7 +228,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 		mockClient.EXPECT().List(resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -288,7 +289,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 		mockClient.EXPECT().List(resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -318,7 +319,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 			armnetwork.LoadBalancersClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-lb", true)
 		if qErr == nil {
@@ -342,7 +343,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 		mockClient.EXPECT().List(resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -451,7 +452,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], lbName, true)
 		if qErr != nil {
@@ -487,7 +488,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], lbName, true)
 		if qErr != nil {

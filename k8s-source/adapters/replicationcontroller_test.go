@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var replicationControllerYAML = `
@@ -35,7 +36,7 @@ func TestReplicationControllerAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newReplicationControllerAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newReplicationControllerAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -50,7 +51,7 @@ func TestComputeHealthCheckIntegration(t *testing.T) {
 		healthCheckWrapper := manual.NewComputeHealthCheck(gcpshared.NewComputeHealthCheckClient(client), projectID)
 		scope := healthCheckWrapper.Scopes()[0]
 
-		healthCheckAdapter := sources.WrapperToAdapter(healthCheckWrapper)
+		healthCheckAdapter := sources.WrapperToAdapter(healthCheckWrapper, sdpcache.NewNoOpCache())
 
 		// [SPEC] GET against a valid resource name will return an SDP item wrapping the
 		// available resource.

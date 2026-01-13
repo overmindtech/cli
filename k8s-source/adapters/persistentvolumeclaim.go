@@ -5,6 +5,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -37,10 +38,11 @@ func PersistentVolumeClaimExtractor(resource *v1.PersistentVolumeClaim, scope st
 	return links, nil
 }
 
-func newPersistentVolumeClaimAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newPersistentVolumeClaimAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.PersistentVolumeClaim, *v1.PersistentVolumeClaimList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
+		cacheField:  cache,
 		TypeName:    "PersistentVolumeClaim",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.PersistentVolumeClaim, *v1.PersistentVolumeClaimList] {
 			return cs.CoreV1().PersistentVolumeClaims(namespace)

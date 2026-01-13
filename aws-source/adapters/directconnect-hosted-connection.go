@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func hostedConnectionOutputMapper(_ context.Context, _ *directconnect.Client, scope string, _ *directconnect.DescribeHostedConnectionsInput, output *directconnect.DescribeHostedConnectionsOutput) ([]*sdp.Item, error) {
@@ -98,13 +99,14 @@ func hostedConnectionOutputMapper(_ context.Context, _ *directconnect.Client, sc
 	return items, nil
 }
 
-func NewDirectConnectHostedConnectionAdapter(client *directconnect.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeHostedConnectionsInput, *directconnect.DescribeHostedConnectionsOutput, *directconnect.Client, *directconnect.Options] {
+func NewDirectConnectHostedConnectionAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeHostedConnectionsInput, *directconnect.DescribeHostedConnectionsOutput, *directconnect.Client, *directconnect.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeHostedConnectionsInput, *directconnect.DescribeHostedConnectionsOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-hosted-connection",
 		AdapterMetadata: hostedConnectionAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeHostedConnectionsInput) (*directconnect.DescribeHostedConnectionsOutput, error) {
 			return client.DescribeHostedConnections(ctx, input)
 		},

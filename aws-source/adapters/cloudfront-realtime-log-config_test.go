@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -60,7 +59,7 @@ func TestRealtimeLogConfigsItemMapper(t *testing.T) {
 func TestNewCloudfrontRealtimeLogConfigsAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontRealtimeLogConfigsAdapter(client, account)
+	adapter := NewCloudfrontRealtimeLogConfigsAdapter(client, account, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

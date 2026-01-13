@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -80,7 +81,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
 		if qErr != nil {
@@ -203,7 +204,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 		mockClient := mocks.NewMockDocumentDBDatabaseAccountsClient(ctrl)
 
 		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty name
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
@@ -227,7 +228,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
 		if qErr == nil {
@@ -245,7 +246,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
 		if qErr != nil {
@@ -281,7 +282,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 		}
 
 		wrapper := manual.NewDocumentDBDatabaseAccounts(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -316,7 +317,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 			armcosmos.DatabaseAccountsClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-account", true)
 		if qErr == nil {
@@ -336,7 +337,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 		mockClient.EXPECT().ListByResourceGroup(resourceGroup).Return(errorPager)
 
 		wrapper := manual.NewDocumentDBDatabaseAccounts(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -360,7 +361,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
 		if qErr != nil {

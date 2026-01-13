@@ -13,6 +13,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/manual"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -40,7 +41,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], agName, true)
 		if qErr != nil {
@@ -351,7 +352,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 		mockClient := mocks.NewMockApplicationGatewaysClient(ctrl)
 
 		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name - validation happens before client.Get is called
 		// so no mock expectation is needed
@@ -377,7 +378,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-ag", true)
 		if qErr == nil {
@@ -391,7 +392,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 			armnetwork.ApplicationGatewaysClientGetResponse{}, errors.New("not found"))
 
 		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-ag", true)
 		if qErr == nil {
@@ -421,7 +422,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 		mockClient.EXPECT().List(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -480,7 +481,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 		mockClient.EXPECT().List(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -511,7 +512,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 		mockClient.EXPECT().List(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -535,7 +536,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], agName, true)
 		if qErr != nil {
@@ -562,7 +563,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 	t.Run("InterfaceCompliance", func(t *testing.T) {
 		mockClient := mocks.NewMockApplicationGatewaysClient(ctrl)
 		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Verify adapter implements ListableAdapter interface
 		_, ok := adapter.(discovery.ListableAdapter)

@@ -121,7 +121,7 @@ func (c computeNodeTemplateWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp
 	return items, nil
 }
 
-func (c computeNodeTemplateWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeNodeTemplateWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListNodeTemplatesRequest{
 		Project: c.ProjectID(),
 		Region:  c.Region(),

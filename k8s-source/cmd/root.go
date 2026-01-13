@@ -18,6 +18,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/k8s-source/adapters"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -314,8 +315,11 @@ func run(_ *cobra.Command, _ []string) int {
 
 		log.Infof("got %v namespaces", len(namespaces))
 
+		// Create a shared cache for all adapters in this source
+		sharedCache := sdpcache.NewCache()
+
 		// Create the adapter list
-		adapterList := adapters.LoadAllAdapters(clientSet, clusterName, namespaces)
+		adapterList := adapters.LoadAllAdapters(clientSet, clusterName, namespaces, sharedCache)
 
 		// Add adapters to the engine
 		err = e.AddAdapters(adapterList...)

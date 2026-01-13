@@ -58,7 +58,7 @@ func (c computeDiskWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryEr
 	return items, nil
 }
 
-func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	pager := c.client.NewListByResourceGroupPager(c.ResourceGroup(), nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)

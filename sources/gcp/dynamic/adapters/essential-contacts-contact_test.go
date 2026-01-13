@@ -9,6 +9,7 @@ import (
 	"google.golang.org/api/essentialcontacts/v1"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -44,7 +45,7 @@ func TestEssentialContactsContact(t *testing.T) {
 
 	t.Run("Get", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}
@@ -61,7 +62,7 @@ func TestEssentialContactsContact(t *testing.T) {
 
 	t.Run("List", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}
@@ -83,7 +84,7 @@ func TestEssentialContactsContact(t *testing.T) {
 
 	t.Run("Search with Terraform format", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}
@@ -125,7 +126,7 @@ func TestEssentialContactsContact(t *testing.T) {
 		}
 
 		httpCli := shared.NewMockHTTPClientProvider(errorResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

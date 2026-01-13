@@ -14,6 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -98,7 +99,7 @@ func TestStorageQueuesIntegration(t *testing.T) {
 			)
 			scope := queueWrapper.Scopes()[0]
 
-			queueAdapter := sources.WrapperToAdapter(queueWrapper)
+			queueAdapter := sources.WrapperToAdapter(queueWrapper, sdpcache.NewNoOpCache())
 			// Get requires storageAccountName and queueName as query parts
 			query := shared.CompositeLookupKey(storageAccountName, integrationTestQueueName)
 			sdpItem, qErr := queueAdapter.Get(ctx, scope, query, true)
@@ -136,7 +137,7 @@ func TestStorageQueuesIntegration(t *testing.T) {
 			)
 			scope := queueWrapper.Scopes()[0]
 
-			queueAdapter := sources.WrapperToAdapter(queueWrapper)
+			queueAdapter := sources.WrapperToAdapter(queueWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports search
 			searchable, ok := queueAdapter.(discovery.SearchableAdapter)
@@ -182,7 +183,7 @@ func TestStorageQueuesIntegration(t *testing.T) {
 			)
 			scope := queueWrapper.Scopes()[0]
 
-			queueAdapter := sources.WrapperToAdapter(queueWrapper)
+			queueAdapter := sources.WrapperToAdapter(queueWrapper, sdpcache.NewNoOpCache())
 			query := shared.CompositeLookupKey(storageAccountName, integrationTestQueueName)
 			sdpItem, qErr := queueAdapter.Get(ctx, scope, query, true)
 			if qErr != nil {
@@ -225,7 +226,7 @@ func TestStorageQueuesIntegration(t *testing.T) {
 			)
 			scope := queueWrapper.Scopes()[0]
 
-			queueAdapter := sources.WrapperToAdapter(queueWrapper)
+			queueAdapter := sources.WrapperToAdapter(queueWrapper, sdpcache.NewNoOpCache())
 			query := shared.CompositeLookupKey(storageAccountName, integrationTestQueueName)
 			sdpItem, qErr := queueAdapter.Get(ctx, scope, query, true)
 			if qErr != nil {

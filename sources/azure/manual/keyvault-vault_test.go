@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -80,7 +81,7 @@ func TestKeyVaultVault(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vaultName, true)
 		if qErr != nil {
@@ -170,7 +171,7 @@ func TestKeyVaultVault(t *testing.T) {
 		mockClient := mocks.NewMockVaultsClient(ctrl)
 
 		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty name
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
@@ -194,7 +195,7 @@ func TestKeyVaultVault(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vaultName, true)
 		if qErr == nil {
@@ -212,7 +213,7 @@ func TestKeyVaultVault(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vaultName, true)
 		if qErr != nil {
@@ -248,7 +249,7 @@ func TestKeyVaultVault(t *testing.T) {
 		}
 
 		wrapper := manual.NewKeyVaultVault(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -287,7 +288,7 @@ func TestKeyVaultVault(t *testing.T) {
 		}
 
 		wrapper := manual.NewKeyVaultVault(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -307,7 +308,7 @@ func TestKeyVaultVault(t *testing.T) {
 			errors.New("client error"))
 
 		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vaultName, true)
 		if qErr == nil {
@@ -326,7 +327,7 @@ func TestKeyVaultVault(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vaultName, true)
 		if qErr != nil {

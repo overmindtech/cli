@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -62,7 +61,7 @@ func TestContinuousDeploymentPolicyItemMapper(t *testing.T) {
 func TestNewCloudfrontContinuousDeploymentPolicyAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontContinuousDeploymentPolicyAdapter(client, account)
+	adapter := NewCloudfrontContinuousDeploymentPolicyAdapter(client, account, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

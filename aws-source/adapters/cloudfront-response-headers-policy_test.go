@@ -90,7 +90,7 @@ func TestResponseHeadersPolicyItemMapper(t *testing.T) {
 func TestNewCloudfrontResponseHeadersPolicyAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontResponseHeadersPolicyAdapter(client, account)
+	adapter := NewCloudfrontResponseHeadersPolicyAdapter(client, account, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

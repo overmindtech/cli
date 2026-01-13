@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -104,7 +105,7 @@ func TestNetworkNetworkInterfaceIntegration(t *testing.T) {
 			)
 			scope := nicWrapper.Scopes()[0]
 
-			nicAdapter := sources.WrapperToAdapter(nicWrapper)
+			nicAdapter := sources.WrapperToAdapter(nicWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := nicAdapter.Get(ctx, scope, integrationTestNICNameForTest, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -140,7 +141,7 @@ func TestNetworkNetworkInterfaceIntegration(t *testing.T) {
 			)
 			scope := nicWrapper.Scopes()[0]
 
-			nicAdapter := sources.WrapperToAdapter(nicWrapper)
+			nicAdapter := sources.WrapperToAdapter(nicWrapper, sdpcache.NewNoOpCache())
 			listable, ok := nicAdapter.(discovery.ListableAdapter)
 			if !ok {
 				t.Fatalf("Adapter does not support List operation")
@@ -182,7 +183,7 @@ func TestNetworkNetworkInterfaceIntegration(t *testing.T) {
 			)
 			scope := nicWrapper.Scopes()[0]
 
-			nicAdapter := sources.WrapperToAdapter(nicWrapper)
+			nicAdapter := sources.WrapperToAdapter(nicWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := nicAdapter.Get(ctx, scope, integrationTestNICNameForTest, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)

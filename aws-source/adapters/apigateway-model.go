@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func convertGetModelOutputToModel(output *apigateway.GetModelOutput) *types.Model {
@@ -59,13 +60,14 @@ func modelOutputMapper(query, scope string, awsItem *types.Model) (*sdp.Item, er
 	return &item, nil
 }
 
-func NewAPIGatewayModelAdapter(client *apigateway.Client, accountID string, region string) *adapterhelpers.GetListAdapter[*types.Model, *apigateway.Client, *apigateway.Options] {
+func NewAPIGatewayModelAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.Model, *apigateway.Client, *apigateway.Options] {
 	return &adapterhelpers.GetListAdapter[*types.Model, *apigateway.Client, *apigateway.Options]{
 		ItemType:        "apigateway-model",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: modelAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.Model, error) {
 			f := strings.Split(query, "/")
 			if len(f) != 2 {

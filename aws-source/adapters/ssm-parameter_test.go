@@ -69,7 +69,7 @@ func (m *mockSSMClient) GetParameter(ctx context.Context, input *ssm.GetParamete
 }
 
 func TestSSMParameterAdapter(t *testing.T) {
-	adapter := NewSSMParameterAdapter(&mockSSMClient{}, "123456789", "us-east-1")
+	adapter := NewSSMParameterAdapter(&mockSSMClient{}, "123456789", "us-east-1", nil)
 
 	t.Run("Get", func(t *testing.T) {
 		item, err := adapter.Get(context.Background(), "123456789.us-east-1", "test", false)
@@ -123,7 +123,7 @@ func TestSSMParameterAdapterE2E(t *testing.T) {
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 	client := ssm.NewFromConfig(config)
 
-	adapter := NewSSMParameterAdapter(client, account, region)
+	adapter := NewSSMParameterAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 // InstanceHealthName Structured representation of an instance health's unique
@@ -87,13 +88,14 @@ func instanceHealthOutputMapper(_ context.Context, _ *elb.Client, scope string, 
 	return items, nil
 }
 
-func NewELBInstanceHealthAdapter(client *elb.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*elb.DescribeInstanceHealthInput, *elb.DescribeInstanceHealthOutput, *elb.Client, *elb.Options] {
+func NewELBInstanceHealthAdapter(client *elb.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*elb.DescribeInstanceHealthInput, *elb.DescribeInstanceHealthOutput, *elb.Client, *elb.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*elb.DescribeInstanceHealthInput, *elb.DescribeInstanceHealthOutput, *elb.Client, *elb.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "elb-instance-health",
 		AdapterMetadata: instanceHealthAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *elb.Client, input *elb.DescribeInstanceHealthInput) (*elb.DescribeInstanceHealthOutput, error) {
 			return client.DescribeInstanceHealth(ctx, input)
 		},

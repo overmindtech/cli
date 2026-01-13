@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func capacityReservationFleetOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.DescribeCapacityReservationFleetsInput, output *ec2.DescribeCapacityReservationFleetsOutput) ([]*sdp.Item, error) {
@@ -74,13 +75,14 @@ func capacityReservationFleetOutputMapper(_ context.Context, _ *ec2.Client, scop
 	return items, nil
 }
 
-func NewEC2CapacityReservationFleetAdapter(client *ec2.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeCapacityReservationFleetsInput, *ec2.DescribeCapacityReservationFleetsOutput, *ec2.Client, *ec2.Options] {
+func NewEC2CapacityReservationFleetAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeCapacityReservationFleetsInput, *ec2.DescribeCapacityReservationFleetsOutput, *ec2.Client, *ec2.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeCapacityReservationFleetsInput, *ec2.DescribeCapacityReservationFleetsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-capacity-reservation-fleet",
 		AdapterMetadata: capacityReservationFleetAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeCapacityReservationFleetsInput) (*ec2.DescribeCapacityReservationFleetsOutput, error) {
 			return client.DescribeCapacityReservationFleets(ctx, input)
 		},

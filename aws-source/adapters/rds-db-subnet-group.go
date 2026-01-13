@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func dBSubnetGroupOutputMapper(ctx context.Context, client rdsClient, scope string, _ *rds.DescribeDBSubnetGroupsInput, output *rds.DescribeDBSubnetGroupsOutput) ([]*sdp.Item, error) {
@@ -105,13 +106,14 @@ func dBSubnetGroupOutputMapper(ctx context.Context, client rdsClient, scope stri
 	return items, nil
 }
 
-func NewRDSDBSubnetGroupAdapter(client rdsClient, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBSubnetGroupsInput, *rds.DescribeDBSubnetGroupsOutput, rdsClient, *rds.Options] {
+func NewRDSDBSubnetGroupAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBSubnetGroupsInput, *rds.DescribeDBSubnetGroupsOutput, rdsClient, *rds.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBSubnetGroupsInput, *rds.DescribeDBSubnetGroupsOutput, rdsClient, *rds.Options]{
 		ItemType:        "rds-db-subnet-group",
 		Region:          region,
 		AccountID:       accountID,
 		Client:          client,
 		AdapterMetadata: dbSubnetGroupAdapterMetadata,
+		SDPCache:        cache,
 		PaginatorBuilder: func(client rdsClient, params *rds.DescribeDBSubnetGroupsInput) adapterhelpers.Paginator[*rds.DescribeDBSubnetGroupsOutput, *rds.Options] {
 			return rds.NewDescribeDBSubnetGroupsPaginator(client, params)
 		},

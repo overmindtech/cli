@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -69,7 +68,7 @@ func TestFargateProfileGetFunc(t *testing.T) {
 func TestNewEKSFargateProfileAdapter(t *testing.T) {
 	client, account, region := eksGetAutoConfig(t)
 
-	adapter := NewEKSFargateProfileAdapter(client, account, region)
+	adapter := NewEKSFargateProfileAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter:           adapter,

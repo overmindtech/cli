@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -124,7 +123,7 @@ func TestCapacityProviderOutputMapper(t *testing.T) {
 }
 
 func TestCapacityProviderAdapter(t *testing.T) {
-	adapter := NewECSCapacityProviderAdapter(&ecsTestClient{}, "", "")
+	adapter := NewECSCapacityProviderAdapter(&ecsTestClient{}, "", "", nil)
 
 	stream := discovery.NewRecordingQueryResultStream()
 	adapter.ListStream(context.Background(), "*", false, stream)
@@ -144,7 +143,7 @@ func TestNewECSCapacityProviderAdapter(t *testing.T) {
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 	client := ecs.NewFromConfig(config)
 
-	adapter := NewECSCapacityProviderAdapter(client, account, region)
+	adapter := NewECSCapacityProviderAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var NetworkPolicyYAML = `
@@ -34,7 +35,7 @@ func TestNetworkPolicyAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newNetworkPolicyAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newNetworkPolicyAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

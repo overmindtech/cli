@@ -2,6 +2,8 @@ package adapters
 
 import (
 	"testing"
+
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var daemonSetYAML = `
@@ -32,7 +34,7 @@ func TestDaemonSetSource(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newDaemonSetAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newDaemonSetAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

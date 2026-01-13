@@ -6,6 +6,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -98,7 +99,7 @@ func Test_addAdapter(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			meta := gcpshared.SDPAssetTypeToAdapterMeta[tc.sdpType]
 
-			adapter, err := MakeAdapter(tc.sdpType, linker, http.DefaultClient, tc.opts...)
+			adapter, err := MakeAdapter(tc.sdpType, linker, http.DefaultClient, sdpcache.NewNoOpCache(), tc.opts...)
 			if err != nil {
 				t.Errorf("MakeAdapter() error = %v", err)
 			}
@@ -182,6 +183,7 @@ func TestAdapters(t *testing.T) {
 		gcpshared.NewLinker(),
 		http.DefaultClient,
 		nil,
+		sdpcache.NewNoOpCache(),
 	)
 	if err != nil {
 		t.Fatalf("Adapters() error = %v", err)

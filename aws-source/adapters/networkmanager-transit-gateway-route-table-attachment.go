@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func getTransitGatewayRouteTableAttachmentGetFunc(ctx context.Context, client *networkmanager.Client, _, query string) (*types.TransitGatewayRouteTableAttachment, error) {
@@ -91,13 +92,14 @@ func transitGatewayRouteTableAttachmentItemMapper(_, scope string, awsItem *type
 	return &item, nil
 }
 
-func NewNetworkManagerTransitGatewayRouteTableAttachmentAdapter(client *networkmanager.Client, accountID, region string) *adapterhelpers.GetListAdapter[*types.TransitGatewayRouteTableAttachment, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerTransitGatewayRouteTableAttachmentAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.TransitGatewayRouteTableAttachment, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.GetListAdapter[*types.TransitGatewayRouteTableAttachment, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-transit-gateway-route-table-attachment",
 		AdapterMetadata: transitGatewayRouteTableAttachmentAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *networkmanager.Client, scope string, query string) (*types.TransitGatewayRouteTableAttachment, error) {
 			return getTransitGatewayRouteTableAttachmentGetFunc(ctx, client, scope, query)
 		},

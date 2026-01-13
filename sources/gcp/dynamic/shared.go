@@ -347,7 +347,7 @@ func aggregateSDPItems(ctx context.Context, a Adapter, url string) ([]*sdp.Item,
 }
 
 // streamSDPItems retrieves items from an external API and streams them as SDP items.
-func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	itemsSelector := a.uniqueAttributeKeys[len(a.uniqueAttributeKeys)-1] // Use the last key as the item selector
 
 	out := make(chan map[string]interface{})
@@ -379,7 +379,7 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery
 	}
 }
 
-func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) ([]*sdp.Item, error) {
+func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) ([]*sdp.Item, error) {
 	// query is in the format of:
 	// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
 	// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}

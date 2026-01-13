@@ -60,7 +60,7 @@ func TestNewKMSCustomKeyStoreAdapter(t *testing.T) {
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 	client := kms.NewFromConfig(config)
 
-	adapter := NewKMSCustomKeyStoreAdapter(client, account, region)
+	adapter := NewKMSCustomKeyStoreAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

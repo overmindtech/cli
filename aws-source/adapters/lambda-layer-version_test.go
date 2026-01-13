@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -117,7 +116,7 @@ func TestLayerVersionGetFunc(t *testing.T) {
 func TestNewLambdaLayerVersionAdapter(t *testing.T) {
 	client, account, region := lambdaGetAutoConfig(t)
 
-	adapter := NewLambdaLayerVersionAdapter(client, account, region)
+	adapter := NewLambdaLayerVersionAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

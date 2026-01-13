@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type dataProtectionPolicyClient interface {
@@ -64,7 +65,7 @@ func getDataProtectionPolicyFunc(ctx context.Context, client dataProtectionPolic
 	return item, nil
 }
 
-func NewSNSDataProtectionPolicyAdapter(client dataProtectionPolicyClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[any, any, *sns.GetDataProtectionPolicyInput, *sns.GetDataProtectionPolicyOutput, dataProtectionPolicyClient, *sns.Options] {
+func NewSNSDataProtectionPolicyAdapter(client dataProtectionPolicyClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[any, any, *sns.GetDataProtectionPolicyInput, *sns.GetDataProtectionPolicyOutput, dataProtectionPolicyClient, *sns.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[any, any, *sns.GetDataProtectionPolicyInput, *sns.GetDataProtectionPolicyOutput, dataProtectionPolicyClient, *sns.Options]{
 		ItemType:        "sns-data-protection-policy",
 		Client:          client,
@@ -72,6 +73,7 @@ func NewSNSDataProtectionPolicyAdapter(client dataProtectionPolicyClient, accoun
 		Region:          region,
 		DisableList:     true,
 		AdapterMetadata: dataProtectionPolicyAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *sns.GetDataProtectionPolicyInput {
 			return &sns.GetDataProtectionPolicyInput{
 				ResourceArn: &query,

@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type UserDetails struct {
@@ -135,7 +136,7 @@ func userListTagsFunc(ctx context.Context, u *UserDetails, client IAMClient) (ma
 	return tags, nil
 }
 
-func NewIAMUserAdapter(client IAMClient, accountID string) *adapterhelpers.GetListAdapterV2[*iam.ListUsersInput, *iam.ListUsersOutput, *UserDetails, IAMClient, *iam.Options] {
+func NewIAMUserAdapter(client IAMClient, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapterV2[*iam.ListUsersInput, *iam.ListUsersOutput, *UserDetails, IAMClient, *iam.Options] {
 	return &adapterhelpers.GetListAdapterV2[*iam.ListUsersInput, *iam.ListUsersOutput, *UserDetails, IAMClient, *iam.Options]{
 		ItemType:      "iam-user",
 		Client:        client,

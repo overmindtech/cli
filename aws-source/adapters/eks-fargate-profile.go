@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func fargateProfileGetFunc(ctx context.Context, client EKSClient, scope string, input *eks.DescribeFargateProfileInput) (*sdp.Item, error) {
@@ -81,7 +82,7 @@ func fargateProfileGetFunc(ctx context.Context, client EKSClient, scope string, 
 	return &item, nil
 }
 
-func NewEKSFargateProfileAdapter(client EKSClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*eks.ListFargateProfilesInput, *eks.ListFargateProfilesOutput, *eks.DescribeFargateProfileInput, *eks.DescribeFargateProfileOutput, EKSClient, *eks.Options] {
+func NewEKSFargateProfileAdapter(client EKSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*eks.ListFargateProfilesInput, *eks.ListFargateProfilesOutput, *eks.DescribeFargateProfileInput, *eks.DescribeFargateProfileOutput, EKSClient, *eks.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*eks.ListFargateProfilesInput, *eks.ListFargateProfilesOutput, *eks.DescribeFargateProfileInput, *eks.DescribeFargateProfileOutput, EKSClient, *eks.Options]{
 		ItemType:         "eks-fargate-profile",
 		Client:           client,
@@ -90,6 +91,7 @@ func NewEKSFargateProfileAdapter(client EKSClient, accountID string, region stri
 		DisableList:      true,
 		AlwaysSearchARNs: true,
 		AdapterMetadata:  fargateProfileAdapterMetadata,
+		SDPCache:         cache,
 		SearchInputMapper: func(scope, query string) (*eks.ListFargateProfilesInput, error) {
 			return &eks.ListFargateProfilesInput{
 				ClusterName: &query,

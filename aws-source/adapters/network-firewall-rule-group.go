@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type unifiedRuleGroup struct {
@@ -108,7 +109,7 @@ func ruleGroupGetFunc(ctx context.Context, client networkFirewallClient, scope s
 	return &item, nil
 }
 
-func NewNetworkFirewallRuleGroupAdapter(client networkFirewallClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*networkfirewall.ListRuleGroupsInput, *networkfirewall.ListRuleGroupsOutput, *networkfirewall.DescribeRuleGroupInput, *networkfirewall.DescribeRuleGroupOutput, networkFirewallClient, *networkfirewall.Options] {
+func NewNetworkFirewallRuleGroupAdapter(client networkFirewallClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*networkfirewall.ListRuleGroupsInput, *networkfirewall.ListRuleGroupsOutput, *networkfirewall.DescribeRuleGroupInput, *networkfirewall.DescribeRuleGroupOutput, networkFirewallClient, *networkfirewall.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*networkfirewall.ListRuleGroupsInput, *networkfirewall.ListRuleGroupsOutput, *networkfirewall.DescribeRuleGroupInput, *networkfirewall.DescribeRuleGroupOutput, networkFirewallClient, *networkfirewall.Options]{
 		ItemType:        "network-firewall-rule-group",
 		Client:          client,
@@ -116,6 +117,7 @@ func NewNetworkFirewallRuleGroupAdapter(client networkFirewallClient, accountID 
 		Region:          region,
 		ListInput:       &networkfirewall.ListRuleGroupsInput{},
 		AdapterMetadata: ruleGroupAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *networkfirewall.DescribeRuleGroupInput {
 			return &networkfirewall.DescribeRuleGroupInput{
 				RuleGroupName: &query,

@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -80,7 +81,7 @@ func TestStorageQueues(t *testing.T) {
 
 		testClient := &testQueuesClient{MockQueuesClient: mockClient}
 		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Get requires storageAccountName and queueName as query parts
 		query := storageAccountName + shared.QuerySeparator + queueName
@@ -142,7 +143,7 @@ func TestStorageQueues(t *testing.T) {
 		testClient := &testQueuesClient{MockQueuesClient: mockClient}
 
 		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (only storage account name)
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], storageAccountName, true)
@@ -189,7 +190,7 @@ func TestStorageQueues(t *testing.T) {
 		}
 
 		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
@@ -263,7 +264,7 @@ func TestStorageQueues(t *testing.T) {
 		}
 
 		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
@@ -295,7 +296,7 @@ func TestStorageQueues(t *testing.T) {
 
 		testClient := &testQueuesClient{MockQueuesClient: mockClient}
 		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := storageAccountName + shared.QuerySeparator + "nonexistent-queue"
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], query, true)
@@ -315,7 +316,7 @@ func TestStorageQueues(t *testing.T) {
 		}
 
 		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
@@ -341,7 +342,7 @@ func TestStorageQueues(t *testing.T) {
 		}
 
 		// Verify adapter implements SearchableAdapter
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 		_, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
 			t.Error("Adapter should implement SearchableAdapter interface")

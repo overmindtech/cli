@@ -14,6 +14,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -98,7 +99,7 @@ func TestStorageTableIntegration(t *testing.T) {
 			)
 			scope := tableWrapper.Scopes()[0]
 
-			tableAdapter := sources.WrapperToAdapter(tableWrapper)
+			tableAdapter := sources.WrapperToAdapter(tableWrapper, sdpcache.NewNoOpCache())
 			// Get requires storageAccountName and tableName as query parts
 			query := shared.CompositeLookupKey(storageAccountName, integrationTestTableName)
 			sdpItem, qErr := tableAdapter.Get(ctx, scope, query, true)
@@ -136,7 +137,7 @@ func TestStorageTableIntegration(t *testing.T) {
 			)
 			scope := tableWrapper.Scopes()[0]
 
-			tableAdapter := sources.WrapperToAdapter(tableWrapper)
+			tableAdapter := sources.WrapperToAdapter(tableWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports search
 			searchable, ok := tableAdapter.(discovery.SearchableAdapter)
@@ -182,7 +183,7 @@ func TestStorageTableIntegration(t *testing.T) {
 			)
 			scope := tableWrapper.Scopes()[0]
 
-			tableAdapter := sources.WrapperToAdapter(tableWrapper)
+			tableAdapter := sources.WrapperToAdapter(tableWrapper, sdpcache.NewNoOpCache())
 			query := shared.CompositeLookupKey(storageAccountName, integrationTestTableName)
 			sdpItem, qErr := tableAdapter.Get(ctx, scope, query, true)
 			if qErr != nil {
@@ -225,7 +226,7 @@ func TestStorageTableIntegration(t *testing.T) {
 			)
 			scope := tableWrapper.Scopes()[0]
 
-			tableAdapter := sources.WrapperToAdapter(tableWrapper)
+			tableAdapter := sources.WrapperToAdapter(tableWrapper, sdpcache.NewNoOpCache())
 			query := shared.CompositeLookupKey(storageAccountName, integrationTestTableName)
 			sdpItem, qErr := tableAdapter.Get(ctx, scope, query, true)
 			if qErr != nil {
@@ -338,4 +339,3 @@ func deleteTable(ctx context.Context, client *armstorage.TableClient, resourceGr
 	log.Printf("Table %s deleted successfully", tableName)
 	return nil
 }
-

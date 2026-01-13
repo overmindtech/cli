@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/manual"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -39,7 +40,7 @@ func TestNetworkRouteTable(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], routeTableName, true)
 		if qErr != nil {
@@ -107,7 +108,7 @@ func TestNetworkRouteTable(t *testing.T) {
 		mockClient := mocks.NewMockRouteTablesClient(ctrl)
 
 		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name - validation happens before client.Get is called
 		// so no mock expectation is needed
@@ -133,7 +134,7 @@ func TestNetworkRouteTable(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-route-table", true)
 		if qErr == nil {
@@ -163,7 +164,7 @@ func TestNetworkRouteTable(t *testing.T) {
 		mockClient.EXPECT().List(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -223,7 +224,7 @@ func TestNetworkRouteTable(t *testing.T) {
 		mockClient.EXPECT().List(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -257,7 +258,7 @@ func TestNetworkRouteTable(t *testing.T) {
 		mockClient.EXPECT().List(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -278,7 +279,7 @@ func TestNetworkRouteTable(t *testing.T) {
 			armnetwork.RouteTablesClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-route-table", true)
 		if qErr == nil {
@@ -314,7 +315,7 @@ func TestNetworkRouteTable(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], routeTableName, true)
 		if qErr != nil {
@@ -367,7 +368,7 @@ func TestNetworkRouteTable(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], routeTableName, true)
 		if qErr != nil {
@@ -422,7 +423,7 @@ func TestNetworkRouteTable(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], routeTableName, true)
 		if qErr != nil {

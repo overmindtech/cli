@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 // ClusterIncludeFields Fields that we want included by default
@@ -204,7 +205,7 @@ func ecsClusterGetFunc(ctx context.Context, client ECSClient, scope string, inpu
 	return &item, nil
 }
 
-func NewECSClusterAdapter(client ECSClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*ecs.ListClustersInput, *ecs.ListClustersOutput, *ecs.DescribeClustersInput, *ecs.DescribeClustersOutput, ECSClient, *ecs.Options] {
+func NewECSClusterAdapter(client ECSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*ecs.ListClustersInput, *ecs.ListClustersOutput, *ecs.DescribeClustersInput, *ecs.DescribeClustersOutput, ECSClient, *ecs.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*ecs.ListClustersInput, *ecs.ListClustersOutput, *ecs.DescribeClustersInput, *ecs.DescribeClustersOutput, ECSClient, *ecs.Options]{
 		ItemType:        "ecs-cluster",
 		Client:          client,
@@ -212,6 +213,7 @@ func NewECSClusterAdapter(client ECSClient, accountID string, region string) *ad
 		Region:          region,
 		GetFunc:         ecsClusterGetFunc,
 		AdapterMetadata: ecsClusterAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *ecs.DescribeClustersInput {
 			return &ecs.DescribeClustersInput{
 				Clusters: []string{

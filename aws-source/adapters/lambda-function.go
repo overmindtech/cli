@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type FunctionDetails struct {
@@ -635,7 +636,7 @@ func GetEventLinkedItem(destinationARN string) (*sdp.LinkedItemQuery, error) {
 	return nil, errors.New("could not find matching request")
 }
 
-func NewLambdaFunctionAdapter(client LambdaClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*lambda.ListFunctionsInput, *lambda.ListFunctionsOutput, *lambda.GetFunctionInput, *lambda.GetFunctionOutput, LambdaClient, *lambda.Options] {
+func NewLambdaFunctionAdapter(client LambdaClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*lambda.ListFunctionsInput, *lambda.ListFunctionsOutput, *lambda.GetFunctionInput, *lambda.GetFunctionOutput, LambdaClient, *lambda.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*lambda.ListFunctionsInput, *lambda.ListFunctionsOutput, *lambda.GetFunctionInput, *lambda.GetFunctionOutput, LambdaClient, *lambda.Options]{
 		ItemType:        "lambda-function",
 		Client:          client,
@@ -644,6 +645,7 @@ func NewLambdaFunctionAdapter(client LambdaClient, accountID string, region stri
 		ListInput:       &lambda.ListFunctionsInput{},
 		GetFunc:         functionGetFunc,
 		AdapterMetadata: lambdaFunctionAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *lambda.GetFunctionInput {
 			return &lambda.GetFunctionInput{
 				FunctionName: &query,

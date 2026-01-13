@@ -13,6 +13,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -37,7 +38,7 @@ func TestComputeNodeGroup(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeNodeGroup("test-node-group", testTemplateUrl, computepb.NodeGroup_READY), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-node-group", true)
 		if qErr != nil {
@@ -95,7 +96,7 @@ func TestComputeNodeGroup(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
-				adapter := sources.WrapperToAdapter(wrapper)
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeNodeGroup("test-ng", "test-temp", tc.input), nil)
 
@@ -114,7 +115,7 @@ func TestComputeNodeGroup(t *testing.T) {
 	t.Run("List", func(t *testing.T) {
 		wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeNodeGroupIterator(ctrl)
 
@@ -155,7 +156,7 @@ func TestComputeNodeGroup(t *testing.T) {
 
 	t.Run("ListStream", func(t *testing.T) {
 		wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeNodeGroupIterator(ctrl)
 		mockComputeIterator.EXPECT().Next().Return(createComputeNodeGroup("test-node-group-1", testTemplateUrl, computepb.NodeGroup_READY), nil)
@@ -197,7 +198,7 @@ func TestComputeNodeGroup(t *testing.T) {
 
 	t.Run("Search", func(t *testing.T) {
 		wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		filterBy := testTemplateUrl
 
@@ -265,7 +266,7 @@ func TestComputeNodeGroup(t *testing.T) {
 
 	t.Run("SearchStream", func(t *testing.T) {
 		wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		filterBy := testTemplateUrl
 

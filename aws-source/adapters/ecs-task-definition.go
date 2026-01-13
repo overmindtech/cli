@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 // TaskDefinitionIncludeFields Fields that we want included by default
@@ -174,7 +175,7 @@ func getSecretLinkedItem(secret types.Secret) *sdp.LinkedItemQuery {
 	return nil
 }
 
-func NewECSTaskDefinitionAdapter(client ECSClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*ecs.ListTaskDefinitionsInput, *ecs.ListTaskDefinitionsOutput, *ecs.DescribeTaskDefinitionInput, *ecs.DescribeTaskDefinitionOutput, ECSClient, *ecs.Options] {
+func NewECSTaskDefinitionAdapter(client ECSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*ecs.ListTaskDefinitionsInput, *ecs.ListTaskDefinitionsOutput, *ecs.DescribeTaskDefinitionInput, *ecs.DescribeTaskDefinitionOutput, ECSClient, *ecs.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*ecs.ListTaskDefinitionsInput, *ecs.ListTaskDefinitionsOutput, *ecs.DescribeTaskDefinitionInput, *ecs.DescribeTaskDefinitionOutput, ECSClient, *ecs.Options]{
 		ItemType:        "ecs-task-definition",
 		Client:          client,
@@ -183,6 +184,7 @@ func NewECSTaskDefinitionAdapter(client ECSClient, accountID string, region stri
 		GetFunc:         taskDefinitionGetFunc,
 		ListInput:       &ecs.ListTaskDefinitionsInput{},
 		AdapterMetadata: taskDefinitionAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *ecs.DescribeTaskDefinitionInput {
 			// AWS actually supports "family:revision" format as an input here
 			// so we can just push it in directly

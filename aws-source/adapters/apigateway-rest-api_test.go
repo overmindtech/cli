@@ -121,7 +121,7 @@ func TestNewAPIGatewayRestApiAdapter(t *testing.T) {
 
 	client := apigateway.NewFromConfig(config)
 
-	adapter := NewAPIGatewayRestApiAdapter(client, account, region)
+	adapter := NewAPIGatewayRestApiAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

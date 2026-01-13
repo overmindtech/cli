@@ -133,7 +133,7 @@ func (c computeAddressWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Quer
 }
 
 // ListStream lists compute addresses and sends them as items to the stream.
-func (c computeAddressWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeAddressWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListAddressesRequest{
 		Project: c.ProjectID(),
 		Region:  c.Region(),

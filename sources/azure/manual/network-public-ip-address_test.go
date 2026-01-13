@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/manual"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -39,7 +40,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], publicIPName, true)
 		if qErr != nil {
@@ -137,7 +138,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], publicIPName, true)
 		if qErr != nil {
@@ -170,7 +171,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], publicIPName, true)
 		if qErr != nil {
@@ -206,7 +207,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], publicIPName, true)
 		if qErr != nil {
@@ -234,7 +235,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 		mockClient := mocks.NewMockPublicIPAddressesClient(ctrl)
 
 		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty name - Get will still be called with empty string
 		// and Azure will return an error
@@ -269,7 +270,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 		mockClient.EXPECT().List(ctx, resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -332,7 +333,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 		mockClient.EXPECT().List(ctx, resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -361,7 +362,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 			armnetwork.PublicIPAddressesClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-ip", true)
 		if qErr == nil {
@@ -385,7 +386,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 		mockClient.EXPECT().List(ctx, resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {

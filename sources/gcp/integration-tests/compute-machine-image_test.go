@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -72,7 +73,7 @@ func TestComputeMachineImageIntegration(t *testing.T) {
 		machineImagesWrapper := manual.NewComputeMachineImage(gcpshared.NewComputeMachineImageClient(client), projectID)
 		scope := machineImagesWrapper.Scopes()[0]
 
-		machineImagesAdapter := sources.WrapperToAdapter(machineImagesWrapper)
+		machineImagesAdapter := sources.WrapperToAdapter(machineImagesWrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports listing
 		listable, ok := machineImagesAdapter.(discovery.ListableAdapter)
@@ -111,7 +112,7 @@ func TestComputeMachineImageIntegration(t *testing.T) {
 		machineImagesWrapper := manual.NewComputeMachineImage(gcpshared.NewComputeMachineImageClient(client), projectID)
 		scope := machineImagesWrapper.Scopes()[0]
 
-		machineImagesAdapter := sources.WrapperToAdapter(machineImagesWrapper)
+		machineImagesAdapter := sources.WrapperToAdapter(machineImagesWrapper, sdpcache.NewNoOpCache())
 		sdpItem, qErr := machineImagesAdapter.Get(ctx, scope, machineImageName, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)

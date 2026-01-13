@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
@@ -24,7 +23,7 @@ func TestCloudwatchInstanceMetricIntegration(t *testing.T) {
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 	client := cloudwatch.NewFromConfig(config)
 
-	adapter := NewCloudwatchInstanceMetricAdapter(client, account, region)
+	adapter := NewCloudwatchInstanceMetricAdapter(client, account, region, nil)
 	scope := adapterhelpers.FormatScope(account, region)
 
 	// Query is just the instance ID

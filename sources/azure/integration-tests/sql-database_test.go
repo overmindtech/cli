@@ -19,6 +19,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -110,7 +111,7 @@ func TestSQLDatabaseIntegration(t *testing.T) {
 			)
 			scope := sqlDbWrapper.Scopes()[0]
 
-			sqlDbAdapter := sources.WrapperToAdapter(sqlDbWrapper)
+			sqlDbAdapter := sources.WrapperToAdapter(sqlDbWrapper, sdpcache.NewNoOpCache())
 			// Get requires serverName and databaseName as query parts
 			query := sqlServerName + shared.QuerySeparator + integrationTestSQLDatabaseName
 			sdpItem, qErr := sqlDbAdapter.Get(ctx, scope, query, true)
@@ -164,7 +165,7 @@ func TestSQLDatabaseIntegration(t *testing.T) {
 			)
 			scope := sqlDbWrapper.Scopes()[0]
 
-			sqlDbAdapter := sources.WrapperToAdapter(sqlDbWrapper)
+			sqlDbAdapter := sources.WrapperToAdapter(sqlDbWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports search
 			searchable, ok := sqlDbAdapter.(discovery.SearchableAdapter)
@@ -212,7 +213,7 @@ func TestSQLDatabaseIntegration(t *testing.T) {
 			)
 			scope := sqlDbWrapper.Scopes()[0]
 
-			sqlDbAdapter := sources.WrapperToAdapter(sqlDbWrapper)
+			sqlDbAdapter := sources.WrapperToAdapter(sqlDbWrapper, sdpcache.NewNoOpCache())
 			query := sqlServerName + shared.QuerySeparator + integrationTestSQLDatabaseName
 			sdpItem, qErr := sqlDbAdapter.Get(ctx, scope, query, true)
 			if qErr != nil {

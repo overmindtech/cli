@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func directConnectGatewayOutputMapper(ctx context.Context, cli *directconnect.Client, scope string, _ *directconnect.DescribeDirectConnectGatewaysInput, output *directconnect.DescribeDirectConnectGatewaysOutput) ([]*sdp.Item, error) {
@@ -74,13 +75,14 @@ func directconnectARN(region, accountID, gatewayID string) string {
 	return fmt.Sprintf("arn:aws:directconnect:%s:%s:dx-gateway/%s", region, accountID, gatewayID)
 }
 
-func NewDirectConnectGatewayAdapter(client *directconnect.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewaysInput, *directconnect.DescribeDirectConnectGatewaysOutput, *directconnect.Client, *directconnect.Options] {
+func NewDirectConnectGatewayAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewaysInput, *directconnect.DescribeDirectConnectGatewaysOutput, *directconnect.Client, *directconnect.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewaysInput, *directconnect.DescribeDirectConnectGatewaysOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-direct-connect-gateway",
 		AdapterMetadata: directConnectGatewayAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeDirectConnectGatewaysInput) (*directconnect.DescribeDirectConnectGatewaysOutput, error) {
 			return client.DescribeDirectConnectGateways(ctx, input)
 		},

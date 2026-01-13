@@ -144,7 +144,6 @@ func createAdapter(namespaced bool) *KubeTypeAdapter[*v1.Pod, *v1.PodList] {
 			return PodClient{}
 		}
 	}
-
 	return &KubeTypeAdapter[*v1.Pod, *v1.PodList]{
 		ClusterInterfaceBuilder:    clusterInterfaceBuilder,
 		NamespacedInterfaceBuilder: namespacedInterfaceBuilder,

@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func originRequestPolicyItemMapper(_, scope string, awsItem *types.OriginRequestPolicy) (*sdp.Item, error) {
@@ -27,13 +28,14 @@ func originRequestPolicyItemMapper(_, scope string, awsItem *types.OriginRequest
 	return &item, nil
 }
 
-func NewCloudfrontOriginRequestPolicyAdapter(client *cloudfront.Client, accountID string) *adapterhelpers.GetListAdapter[*types.OriginRequestPolicy, *cloudfront.Client, *cloudfront.Options] {
+func NewCloudfrontOriginRequestPolicyAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.OriginRequestPolicy, *cloudfront.Client, *cloudfront.Options] {
 	return &adapterhelpers.GetListAdapter[*types.OriginRequestPolicy, *cloudfront.Client, *cloudfront.Options]{
 		ItemType:        "cloudfront-origin-request-policy",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata: originRequestPolicyAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *cloudfront.Client, scope, query string) (*types.OriginRequestPolicy, error) {
 			out, err := client.GetOriginRequestPolicy(ctx, &cloudfront.GetOriginRequestPolicyInput{
 				Id: &query,

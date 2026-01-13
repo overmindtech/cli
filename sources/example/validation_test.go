@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 )
 
@@ -20,8 +21,8 @@ func TestAdaptersValidation(t *testing.T) {
 
 	var adapters []discovery.Adapter
 	adapters = append(adapters,
-		sources.WrapperToAdapter(NewStandardSearchableListable(nil, projectID, zone)),
-		sources.WrapperToAdapter(NewCustomSearchableListable(nil, projectID, zone)),
+		sources.WrapperToAdapter(NewStandardSearchableListable(nil, projectID, zone), sdpcache.NewNoOpCache()),
+		sources.WrapperToAdapter(NewCustomSearchableListable(nil, projectID, zone), sdpcache.NewNoOpCache()),
 	)
 
 	for _, adapter := range adapters {

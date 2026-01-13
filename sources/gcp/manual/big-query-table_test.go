@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -32,7 +33,7 @@ func TestBigQueryTable(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, projectID, datasetID, tableID).Return(createTableMetadata(projectID, datasetID, tableID, projectID+".us;test-connection"), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey(datasetID, tableID), true)
 		if qErr != nil {
@@ -85,7 +86,7 @@ func TestBigQueryTable(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, projectID, datasetID, tableID).Return(createTableMetadata(projectID, datasetID, tableID, fmt.Sprintf("projects/%s/locations/us/connections/test-connection", projectID)), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey(datasetID, tableID), true)
 		if qErr != nil {
@@ -135,7 +136,7 @@ func TestBigQueryTable(t *testing.T) {
 
 	t.Run("Search", func(t *testing.T) {
 		wrapper := manual.NewBigQueryTable(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Mock the List function to call the converter with each table
 		mockClient.EXPECT().List(
@@ -189,7 +190,7 @@ func TestBigQueryTable(t *testing.T) {
 
 	t.Run("SearchWithTerraformMapping", func(t *testing.T) {
 		wrapper := manual.NewBigQueryTable(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Mock the List function to call the converter with each table
 		mockClient.EXPECT().Get(ctx, projectID, datasetID, tableID).
@@ -225,7 +226,7 @@ func TestBigQueryTable(t *testing.T) {
 
 	t.Run("List_Unsupported", func(t *testing.T) {
 		wrapper := manual.NewBigQueryTable(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports list - it should not
 		_, ok := adapter.(discovery.ListableAdapter)

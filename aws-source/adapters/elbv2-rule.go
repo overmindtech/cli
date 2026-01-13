@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func ruleOutputMapper(ctx context.Context, client elbv2Client, scope string, _ *elbv2.DescribeRulesInput, output *elbv2.DescribeRulesOutput) ([]*sdp.Item, error) {
@@ -76,13 +77,14 @@ func ruleOutputMapper(ctx context.Context, client elbv2Client, scope string, _ *
 	return items, nil
 }
 
-func NewELBv2RuleAdapter(client elbv2Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeRulesInput, *elbv2.DescribeRulesOutput, elbv2Client, *elbv2.Options] {
+func NewELBv2RuleAdapter(client elbv2Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeRulesInput, *elbv2.DescribeRulesOutput, elbv2Client, *elbv2.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeRulesInput, *elbv2.DescribeRulesOutput, elbv2Client, *elbv2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "elbv2-rule",
 		AdapterMetadata: ruleAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client elbv2Client, input *elbv2.DescribeRulesInput) (*elbv2.DescribeRulesOutput, error) {
 			return client.DescribeRules(ctx, input)
 		},

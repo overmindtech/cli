@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func ResponseHeadersPolicyItemMapper(_, scope string, awsItem *types.ResponseHeadersPolicy) (*sdp.Item, error) {
@@ -27,13 +28,14 @@ func ResponseHeadersPolicyItemMapper(_, scope string, awsItem *types.ResponseHea
 	return &item, nil
 }
 
-func NewCloudfrontResponseHeadersPolicyAdapter(client *cloudfront.Client, accountID string) *adapterhelpers.GetListAdapter[*types.ResponseHeadersPolicy, *cloudfront.Client, *cloudfront.Options] {
+func NewCloudfrontResponseHeadersPolicyAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.ResponseHeadersPolicy, *cloudfront.Client, *cloudfront.Options] {
 	return &adapterhelpers.GetListAdapter[*types.ResponseHeadersPolicy, *cloudfront.Client, *cloudfront.Options]{
 		ItemType:        "cloudfront-response-headers-policy",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata: responseHeadersPolicyAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *cloudfront.Client, scope, query string) (*types.ResponseHeadersPolicy, error) {
 			out, err := client.GetResponseHeadersPolicy(ctx, &cloudfront.GetResponseHeadersPolicyInput{
 				Id: &query,

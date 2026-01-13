@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type elbClient interface {
@@ -177,13 +178,14 @@ func elbLoadBalancerOutputMapper(ctx context.Context, client elbClient, scope st
 	return items, nil
 }
 
-func NewELBLoadBalancerAdapter(client elbClient, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*elb.DescribeLoadBalancersInput, *elb.DescribeLoadBalancersOutput, elbClient, *elb.Options] {
+func NewELBLoadBalancerAdapter(client elbClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*elb.DescribeLoadBalancersInput, *elb.DescribeLoadBalancersOutput, elbClient, *elb.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*elb.DescribeLoadBalancersInput, *elb.DescribeLoadBalancersOutput, elbClient, *elb.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "elb-load-balancer",
 		AdapterMetadata: elbLoadBalancerAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client elbClient, input *elb.DescribeLoadBalancersInput) (*elb.DescribeLoadBalancersOutput, error) {
 			return client.DescribeLoadBalancers(ctx, input)
 		},

@@ -65,7 +65,7 @@ func (k keyvaultManagedHSMsWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp
 	return items, nil
 }
 
-func (k keyvaultManagedHSMsWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (k keyvaultManagedHSMsWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	pager := k.client.NewListByResourceGroupPager(k.ResourceGroup(), nil)
 
 	for pager.More() {

@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -30,7 +31,7 @@ func TestBigQueryDataset(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, projectID, datasetID).Return(createDataset(projectID, datasetID), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], datasetID, true)
 		if qErr != nil {
@@ -116,7 +117,7 @@ func TestBigQueryDataset(t *testing.T) {
 
 	t.Run("List", func(t *testing.T) {
 		wrapper := manual.NewBigQueryDataset(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockClient.EXPECT().List(ctx, projectID, gomock.Any()).Return([]*sdp.Item{
 			{},

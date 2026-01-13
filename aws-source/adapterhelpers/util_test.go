@@ -259,44 +259,44 @@ func TestIAMWildcardMatches(t *testing.T) {
 
 func TestGetPartitionDNSSuffix(t *testing.T) {
 	tests := []struct {
-		name     string
+		name      string
 		partition string
-		expected string
+		expected  string
 	}{
 		{
-			name:     "aws partition",
+			name:      "aws partition",
 			partition: "aws",
-			expected: "amazonaws.com",
+			expected:  "amazonaws.com",
 		},
 		{
-			name:     "aws-cn partition",
+			name:      "aws-cn partition",
 			partition: "aws-cn",
-			expected: "amazonaws.com.cn",
+			expected:  "amazonaws.com.cn",
 		},
 		{
-			name:     "aws-us-gov partition",
+			name:      "aws-us-gov partition",
 			partition: "aws-us-gov",
-			expected: "amazonaws.com",
+			expected:  "amazonaws.com",
 		},
 		{
-			name:     "aws-iso partition",
+			name:      "aws-iso partition",
 			partition: "aws-iso",
-			expected: "c2s.ic.gov",
+			expected:  "c2s.ic.gov",
 		},
 		{
-			name:     "aws-iso-b partition",
+			name:      "aws-iso-b partition",
 			partition: "aws-iso-b",
-			expected: "sc2s.sgov.gov",
+			expected:  "sc2s.sgov.gov",
 		},
 		{
-			name:     "aws-eu partition",
+			name:      "aws-eu partition",
 			partition: "aws-eu",
-			expected: "amazonaws.eu",
+			expected:  "amazonaws.eu",
 		},
 		{
-			name:     "unknown partition defaults to amazonaws.com",
+			name:      "unknown partition defaults to amazonaws.com",
 			partition: "unknown-partition",
-			expected: "amazonaws.com",
+			expected:  "amazonaws.com",
 		},
 	}
 

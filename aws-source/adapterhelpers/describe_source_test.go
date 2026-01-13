@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -681,6 +682,7 @@ func TestDescribeOnlySourceCaching(t *testing.T) {
 		MaxResultsPerPage: 1,
 		Region:            "eu-west-2",
 		AccountID:         "foo",
+		SDPCache:          sdpcache.NewCache(),
 		InputMapperGet: func(scope, query string) (string, error) {
 			return "input", nil
 		},

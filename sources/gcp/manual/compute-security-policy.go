@@ -120,7 +120,7 @@ func (c computeSecurityPolicyWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 }
 
 // ListStream lists compute security policies and sends them as items to the stream.
-func (c computeSecurityPolicyWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeSecurityPolicyWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListSecurityPoliciesRequest{
 		Project: c.ProjectID(),
 	})

@@ -22,9 +22,8 @@ type GetListAdapter[AWSItem AWSItemType, ClientStruct ClientStructType, Options 
 	SupportGlobalResources bool         // If true, this will also support resources in the "aws" scope which are global
 	AdapterMetadata        *sdp.AdapterMetadata
 
-	CacheDuration time.Duration   // How long to cache items for
-	cache         *sdpcache.Cache // The sdpcache of this adapter
-	cacheInitMu   sync.Mutex      // Mutex to ensure cache is only initialised once
+	CacheDuration time.Duration  // How long to cache items for
+	SDPCache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 
 	// Disables List(), meaning all calls will return empty results. This does
 	// not affect Search()
@@ -57,18 +56,19 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) cacheDuration() time.Du
 	return s.CacheDuration
 }
 
-func (s *GetListAdapter[AWSItem, ClientStruct, Options]) ensureCache() {
-	s.cacheInitMu.Lock()
-	defer s.cacheInitMu.Unlock()
+var (
+	noOpCacheOnce sync.Once
+	noOpCache     sdpcache.Cache
+)
 
-	if s.cache == nil {
-		s.cache = sdpcache.NewCache()
+func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Cache() sdpcache.Cache {
+	if s.SDPCache == nil {
+		noOpCacheOnce.Do(func() {
+			noOpCache = sdpcache.NewNoOpCache()
+		})
+		return noOpCache
 	}
-}
-
-func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Cache() *sdpcache.Cache {
-	s.ensureCache()
-	return s.cache
+	return s.SDPCache
 }
 
 // Validate Checks that the adapter has been set up correctly
@@ -144,8 +144,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Get(ctx context.Context
 		}
 	}
 
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -161,7 +160,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Get(ctx context.Context
 	if err != nil {
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
-			s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+			s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
 		}
 		return nil, err
 	}
@@ -180,7 +179,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Get(ctx context.Context
 		}
 	}
 
-	s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
+	s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 
 	return item, nil
 }
@@ -199,8 +198,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) List(ctx context.Contex
 		return []*sdp.Item{}, nil
 	}
 
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -228,7 +226,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) List(ctx context.Contex
 		}
 
 		items = append(items, item)
-		s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
+		s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 	}
 
 	return items, nil
@@ -298,9 +296,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchARN(ctx context.C
 // Custom search function that can be used to search for items in a different,
 // adapter-specific way
 func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchCustom(ctx context.Context, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
-	// We need to cache here since this is the only place it'll be called
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -311,7 +307,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchCustom(ctx contex
 	awsItems, err := s.SearchFunc(ctx, s.Client, scope, query)
 	if err != nil {
 		err = WrapAWSError(err)
-		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+		s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
@@ -325,7 +321,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchCustom(ctx contex
 		}
 
 		items = append(items, item)
-		s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
+		s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 	}
 
 	return items, nil

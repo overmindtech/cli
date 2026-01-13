@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func deviceOutputMapper(_ context.Context, _ *networkmanager.Client, scope string, _ *networkmanager.GetDevicesInput, output *networkmanager.GetDevicesOutput) ([]*sdp.Item, error) {
@@ -126,7 +127,7 @@ func deviceOutputMapper(_ context.Context, _ *networkmanager.Client, scope strin
 	return items, nil
 }
 
-func NewNetworkManagerDeviceAdapter(client *networkmanager.Client, accountID string) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetDevicesInput, *networkmanager.GetDevicesOutput, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerDeviceAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetDevicesInput, *networkmanager.GetDevicesOutput, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetDevicesInput, *networkmanager.GetDevicesOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:    client,
 		AccountID: accountID,
@@ -135,6 +136,7 @@ func NewNetworkManagerDeviceAdapter(client *networkmanager.Client, accountID str
 			return client.GetDevices(ctx, input)
 		},
 		AdapterMetadata: networkmanagerDeviceAdapterMetadata,
+		SDPCache:        cache,
 		InputMapperGet: func(scope, query string) (*networkmanager.GetDevicesInput, error) {
 			// We are using a custom id of {globalNetworkId}|{deviceId}
 			sections := strings.Split(query, "|")

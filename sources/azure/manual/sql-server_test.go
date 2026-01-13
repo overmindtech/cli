@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -81,7 +82,7 @@ func TestSqlServer(t *testing.T) {
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
 		if qErr != nil {
@@ -401,7 +402,7 @@ func TestSqlServer(t *testing.T) {
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
 		if qErr != nil {
@@ -461,7 +462,7 @@ func TestSqlServer(t *testing.T) {
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
 		if qErr != nil {
@@ -527,7 +528,7 @@ func TestSqlServer(t *testing.T) {
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
 		if qErr != nil {
@@ -593,7 +594,7 @@ func TestSqlServer(t *testing.T) {
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
 		if qErr != nil {
@@ -639,7 +640,7 @@ func TestSqlServer(t *testing.T) {
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
 		if qErr != nil {
@@ -678,7 +679,7 @@ func TestSqlServer(t *testing.T) {
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
 		if qErr != nil {
@@ -710,7 +711,7 @@ func TestSqlServer(t *testing.T) {
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
 
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (no server name)
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
@@ -740,7 +741,7 @@ func TestSqlServer(t *testing.T) {
 		}
 
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -801,7 +802,7 @@ func TestSqlServer(t *testing.T) {
 		}
 
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -844,7 +845,7 @@ func TestSqlServer(t *testing.T) {
 		}
 
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
 		wg.Add(2) // we added two items
@@ -895,7 +896,7 @@ func TestSqlServer(t *testing.T) {
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-server", true)
 		if qErr == nil {
@@ -914,7 +915,7 @@ func TestSqlServer(t *testing.T) {
 		}
 
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -939,7 +940,7 @@ func TestSqlServer(t *testing.T) {
 		}
 
 		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		var errs []error
 		mockErrorHandler := func(err error) {

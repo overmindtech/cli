@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type TargetHealthUniqueID struct {
@@ -212,13 +213,14 @@ func targetHealthOutputMapper(_ context.Context, _ *elbv2.Client, scope string, 
 	return items, nil
 }
 
-func NewELBv2TargetHealthAdapter(client *elbv2.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeTargetHealthInput, *elbv2.DescribeTargetHealthOutput, *elbv2.Client, *elbv2.Options] {
+func NewELBv2TargetHealthAdapter(client *elbv2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeTargetHealthInput, *elbv2.DescribeTargetHealthOutput, *elbv2.Client, *elbv2.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeTargetHealthInput, *elbv2.DescribeTargetHealthOutput, *elbv2.Client, *elbv2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "elbv2-target-health",
 		AdapterMetadata: targetHealthAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *elbv2.Client, input *elbv2.DescribeTargetHealthInput) (*elbv2.DescribeTargetHealthOutput, error) {
 			return client.DescribeTargetHealth(ctx, input)
 		},

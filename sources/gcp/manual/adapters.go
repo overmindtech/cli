@@ -13,6 +13,7 @@ import (
 	"google.golang.org/api/option"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/shared"
 )
@@ -20,7 +21,7 @@ import (
 // Adapters returns a slice of discovery.Adapter instances for GCP Source.
 // It initializes GCP clients if initGCPClients is true, and creates adapters for the specified project ID, regions, and zones.
 // Otherwise, it uses nil clients, which is useful for enumerating adapters for documentation purposes.
-func Adapters(ctx context.Context, projectID string, regions []string, zones []string, tokenSource *oauth2.TokenSource, initGCPClients bool) ([]discovery.Adapter, error) {
+func Adapters(ctx context.Context, projectID string, regions []string, zones []string, tokenSource *oauth2.TokenSource, initGCPClients bool, cache sdpcache.Cache) ([]discovery.Adapter, error) {
 	var err error
 	var (
 		instanceCli               *compute.InstancesClient
@@ -176,42 +177,42 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 
 	for _, region := range regions {
 		adapters = append(adapters,
-			sources.WrapperToAdapter(NewComputeAddress(shared.NewComputeAddressClient(addressCli), projectID, region)),
-			sources.WrapperToAdapter(NewComputeForwardingRule(shared.NewComputeForwardingRuleClient(computeForwardingCli), projectID, region)),
-			sources.WrapperToAdapter(NewComputeRegionBackendService(shared.NewComputeRegionBackendServiceClient(regionBackendServiceCli), projectID, region)),
+			sources.WrapperToAdapter(NewComputeAddress(shared.NewComputeAddressClient(addressCli), projectID, region), cache),
+			sources.WrapperToAdapter(NewComputeForwardingRule(shared.NewComputeForwardingRuleClient(computeForwardingCli), projectID, region), cache),
+			sources.WrapperToAdapter(NewComputeRegionBackendService(shared.NewComputeRegionBackendServiceClient(regionBackendServiceCli), projectID, region), cache),
 		)
 	}
 
 	for _, zone := range zones {
 		adapters = append(adapters,
-			sources.WrapperToAdapter(NewComputeInstance(shared.NewComputeInstanceClient(instanceCli), projectID, zone)),
-			sources.WrapperToAdapter(NewComputeAutoscaler(shared.NewComputeAutoscalerClient(autoscalerCli), projectID, zone)),
-			sources.WrapperToAdapter(NewComputeInstanceGroup(shared.NewComputeInstanceGroupsClient(instanceGroupCli), projectID, zone)),
-			sources.WrapperToAdapter(NewComputeInstanceGroupManager(shared.NewComputeInstanceGroupManagerClient(instanceGroupManagerCli), projectID, zone)),
-			sources.WrapperToAdapter(NewComputeReservation(shared.NewComputeReservationClient(computeReservationCli), projectID, zone)),
-			sources.WrapperToAdapter(NewComputeInstantSnapshot(shared.NewComputeInstantSnapshotsClient(computeInstantSnapshotCli), projectID, zone)),
-			sources.WrapperToAdapter(NewComputeDisk(shared.NewComputeDiskClient(diskCli), projectID, zone)),
-			sources.WrapperToAdapter(NewComputeNodeGroup(shared.NewComputeNodeGroupClient(nodeGroupCli), projectID, zone)),
+			sources.WrapperToAdapter(NewComputeInstance(shared.NewComputeInstanceClient(instanceCli), projectID, zone), cache),
+			sources.WrapperToAdapter(NewComputeAutoscaler(shared.NewComputeAutoscalerClient(autoscalerCli), projectID, zone), cache),
+			sources.WrapperToAdapter(NewComputeInstanceGroup(shared.NewComputeInstanceGroupsClient(instanceGroupCli), projectID, zone), cache),
+			sources.WrapperToAdapter(NewComputeInstanceGroupManager(shared.NewComputeInstanceGroupManagerClient(instanceGroupManagerCli), projectID, zone), cache),
+			sources.WrapperToAdapter(NewComputeReservation(shared.NewComputeReservationClient(computeReservationCli), projectID, zone), cache),
+			sources.WrapperToAdapter(NewComputeInstantSnapshot(shared.NewComputeInstantSnapshotsClient(computeInstantSnapshotCli), projectID, zone), cache),
+			sources.WrapperToAdapter(NewComputeDisk(shared.NewComputeDiskClient(diskCli), projectID, zone), cache),
+			sources.WrapperToAdapter(NewComputeNodeGroup(shared.NewComputeNodeGroupClient(nodeGroupCli), projectID, zone), cache),
 		)
 	}
 
 	// global - project level - adapters
 	adapters = append(adapters,
-		sources.WrapperToAdapter(NewComputeBackendService(shared.NewComputeBackendServiceClient(backendServiceCli), projectID)),
-		sources.WrapperToAdapter(NewComputeImage(shared.NewComputeImagesClient(computeImagesCli), projectID)),
-		sources.WrapperToAdapter(NewComputeHealthCheck(shared.NewComputeHealthCheckClient(computeHealthCheckCli), projectID)),
-		sources.WrapperToAdapter(NewComputeSecurityPolicy(shared.NewComputeSecurityPolicyClient(computeSecurityPolicyCli), projectID)),
-		sources.WrapperToAdapter(NewComputeMachineImage(shared.NewComputeMachineImageClient(computeMachineImageCli), projectID)),
-		sources.WrapperToAdapter(NewComputeSnapshot(shared.NewComputeSnapshotsClient(computeSnapshotCli), projectID)),
-		sources.WrapperToAdapter(NewIAMServiceAccountKey(shared.NewIAMServiceAccountKeyClient(iamServiceAccountKeyCli), projectID)),
-		sources.WrapperToAdapter(NewIAMServiceAccount(shared.NewIAMServiceAccountClient(iamServiceAccountCli), projectID)),
-		sources.WrapperToAdapter(NewCloudKMSKeyRing(shared.NewCloudKMSKeyRingClient(kmsKeyRingCli), projectID)),
-		sources.WrapperToAdapter(NewCloudKMSCryptoKey(shared.NewCloudKMSCryptoKeyClient(kmsCryptoKeyCli), projectID)),
-		sources.WrapperToAdapter(NewBigQueryDataset(shared.NewBigQueryDatasetClient(bigQueryDatasetCli), projectID)),
-		sources.WrapperToAdapter(NewBigQueryTable(shared.NewBigQueryTableClient(bigQueryDatasetCli), projectID)),
-		sources.WrapperToAdapter(NewBigQueryModel(shared.NewBigQueryModelClient(bigQueryDatasetCli), projectID)),
-		sources.WrapperToAdapter(NewLoggingSink(shared.NewLoggingConfigClient(loggingConfigCli), projectID)),
-		sources.WrapperToAdapter(NewBigQueryRoutine(shared.NewBigQueryRoutineClient(bigQueryDatasetCli), projectID)),
+		sources.WrapperToAdapter(NewComputeBackendService(shared.NewComputeBackendServiceClient(backendServiceCli), projectID), cache),
+		sources.WrapperToAdapter(NewComputeImage(shared.NewComputeImagesClient(computeImagesCli), projectID), cache),
+		sources.WrapperToAdapter(NewComputeHealthCheck(shared.NewComputeHealthCheckClient(computeHealthCheckCli), projectID), cache),
+		sources.WrapperToAdapter(NewComputeSecurityPolicy(shared.NewComputeSecurityPolicyClient(computeSecurityPolicyCli), projectID), cache),
+		sources.WrapperToAdapter(NewComputeMachineImage(shared.NewComputeMachineImageClient(computeMachineImageCli), projectID), cache),
+		sources.WrapperToAdapter(NewComputeSnapshot(shared.NewComputeSnapshotsClient(computeSnapshotCli), projectID), cache),
+		sources.WrapperToAdapter(NewIAMServiceAccountKey(shared.NewIAMServiceAccountKeyClient(iamServiceAccountKeyCli), projectID), cache),
+		sources.WrapperToAdapter(NewIAMServiceAccount(shared.NewIAMServiceAccountClient(iamServiceAccountCli), projectID), cache),
+		sources.WrapperToAdapter(NewCloudKMSKeyRing(shared.NewCloudKMSKeyRingClient(kmsKeyRingCli), projectID), cache),
+		sources.WrapperToAdapter(NewCloudKMSCryptoKey(shared.NewCloudKMSCryptoKeyClient(kmsCryptoKeyCli), projectID), cache),
+		sources.WrapperToAdapter(NewBigQueryDataset(shared.NewBigQueryDatasetClient(bigQueryDatasetCli), projectID), cache),
+		sources.WrapperToAdapter(NewBigQueryTable(shared.NewBigQueryTableClient(bigQueryDatasetCli), projectID), cache),
+		sources.WrapperToAdapter(NewBigQueryModel(shared.NewBigQueryModelClient(bigQueryDatasetCli), projectID), cache),
+		sources.WrapperToAdapter(NewLoggingSink(shared.NewLoggingConfigClient(loggingConfigCli), projectID), cache),
+		sources.WrapperToAdapter(NewBigQueryRoutine(shared.NewBigQueryRoutineClient(bigQueryDatasetCli), projectID), cache),
 	)
 
 	return adapters, nil

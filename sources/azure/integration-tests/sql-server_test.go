@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -79,7 +80,7 @@ func TestSQLServerIntegration(t *testing.T) {
 			)
 			scope := sqlServerWrapper.Scopes()[0]
 
-			sqlServerAdapter := sources.WrapperToAdapter(sqlServerWrapper)
+			sqlServerAdapter := sources.WrapperToAdapter(sqlServerWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := sqlServerAdapter.Get(ctx, scope, sqlServerName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -130,7 +131,7 @@ func TestSQLServerIntegration(t *testing.T) {
 			)
 			scope := sqlServerWrapper.Scopes()[0]
 
-			sqlServerAdapter := sources.WrapperToAdapter(sqlServerWrapper)
+			sqlServerAdapter := sources.WrapperToAdapter(sqlServerWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports list
 			listable, ok := sqlServerAdapter.(discovery.ListableAdapter)
@@ -177,7 +178,7 @@ func TestSQLServerIntegration(t *testing.T) {
 			)
 			scope := sqlServerWrapper.Scopes()[0]
 
-			sqlServerAdapter := sources.WrapperToAdapter(sqlServerWrapper)
+			sqlServerAdapter := sources.WrapperToAdapter(sqlServerWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := sqlServerAdapter.Get(ctx, scope, sqlServerName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -191,32 +192,32 @@ func TestSQLServerIntegration(t *testing.T) {
 
 			// Verify expected child resource links exist
 			expectedChildResources := map[string]bool{
-				azureshared.SQLDatabase.String():                        false,
-				azureshared.SQLElasticPool.String():                     false,
-				azureshared.SQLServerFirewallRule.String():              false,
-				azureshared.SQLServerVirtualNetworkRule.String():        false,
-				azureshared.SQLServerKey.String():                       false,
-				azureshared.SQLServerFailoverGroup.String():             false,
-				azureshared.SQLServerAdministrator.String():             false,
-				azureshared.SQLServerSyncGroup.String():                 false,
-				azureshared.SQLServerSyncAgent.String():                 false,
-				azureshared.SQLServerPrivateEndpointConnection.String(): false,
-				azureshared.SQLServerAuditingSetting.String():           false,
-				azureshared.SQLServerSecurityAlertPolicy.String():       false,
-				azureshared.SQLServerVulnerabilityAssessment.String():   false,
-				azureshared.SQLServerEncryptionProtector.String():       false,
-				azureshared.SQLServerBlobAuditingPolicy.String():        false,
-				azureshared.SQLServerAutomaticTuning.String():           false,
+				azureshared.SQLDatabase.String():                              false,
+				azureshared.SQLElasticPool.String():                           false,
+				azureshared.SQLServerFirewallRule.String():                    false,
+				azureshared.SQLServerVirtualNetworkRule.String():              false,
+				azureshared.SQLServerKey.String():                             false,
+				azureshared.SQLServerFailoverGroup.String():                   false,
+				azureshared.SQLServerAdministrator.String():                   false,
+				azureshared.SQLServerSyncGroup.String():                       false,
+				azureshared.SQLServerSyncAgent.String():                       false,
+				azureshared.SQLServerPrivateEndpointConnection.String():       false,
+				azureshared.SQLServerAuditingSetting.String():                 false,
+				azureshared.SQLServerSecurityAlertPolicy.String():             false,
+				azureshared.SQLServerVulnerabilityAssessment.String():         false,
+				azureshared.SQLServerEncryptionProtector.String():             false,
+				azureshared.SQLServerBlobAuditingPolicy.String():              false,
+				azureshared.SQLServerAutomaticTuning.String():                 false,
 				azureshared.SQLServerAdvancedThreatProtectionSetting.String(): false,
-				azureshared.SQLServerDnsAlias.String():                  false,
-				azureshared.SQLServerUsage.String():                     false,
-				azureshared.SQLServerOperation.String():                 false,
-				azureshared.SQLServerAdvisor.String():                   false,
-				azureshared.SQLServerBackupLongTermRetentionPolicy.String(): false,
-				azureshared.SQLServerDevOpsAuditSetting.String():        false,
-				azureshared.SQLServerTrustGroup.String():                false,
-				azureshared.SQLServerOutboundFirewallRule.String():      false,
-				azureshared.SQLServerPrivateLinkResource.String():       false,
+				azureshared.SQLServerDnsAlias.String():                        false,
+				azureshared.SQLServerUsage.String():                           false,
+				azureshared.SQLServerOperation.String():                       false,
+				azureshared.SQLServerAdvisor.String():                         false,
+				azureshared.SQLServerBackupLongTermRetentionPolicy.String():   false,
+				azureshared.SQLServerDevOpsAuditSetting.String():              false,
+				azureshared.SQLServerTrustGroup.String():                      false,
+				azureshared.SQLServerOutboundFirewallRule.String():            false,
+				azureshared.SQLServerPrivateLinkResource.String():             false,
 			}
 
 			for _, liq := range linkedQueries {
@@ -272,7 +273,7 @@ func TestSQLServerIntegration(t *testing.T) {
 			)
 			scope := sqlServerWrapper.Scopes()[0]
 
-			sqlServerAdapter := sources.WrapperToAdapter(sqlServerWrapper)
+			sqlServerAdapter := sources.WrapperToAdapter(sqlServerWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := sqlServerAdapter.Get(ctx, scope, sqlServerName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -286,33 +287,33 @@ func TestSQLServerIntegration(t *testing.T) {
 				out bool
 			}{
 				// Child resources that depend on server (In: true, Out: false)
-				azureshared.SQLDatabase.String():                        {in: true, out: false},
-				azureshared.SQLElasticPool.String():                     {in: true, out: false},
-				azureshared.SQLServerSyncGroup.String():                 {in: true, out: false},
-				azureshared.SQLServerSyncAgent.String():                 {in: true, out: false},
-				azureshared.SQLServerUsage.String():                     {in: true, out: false},
-				azureshared.SQLServerOperation.String():                 {in: true, out: false},
-				azureshared.SQLServerAdvisor.String():                   {in: true, out: false},
-				azureshared.SQLServerPrivateLinkResource.String():       {in: true, out: false},
+				azureshared.SQLDatabase.String():                  {in: true, out: false},
+				azureshared.SQLElasticPool.String():               {in: true, out: false},
+				azureshared.SQLServerSyncGroup.String():           {in: true, out: false},
+				azureshared.SQLServerSyncAgent.String():           {in: true, out: false},
+				azureshared.SQLServerUsage.String():               {in: true, out: false},
+				azureshared.SQLServerOperation.String():           {in: true, out: false},
+				azureshared.SQLServerAdvisor.String():             {in: true, out: false},
+				azureshared.SQLServerPrivateLinkResource.String(): {in: true, out: false},
 				// Child resources that affect server connectivity/security (In: true, Out: true)
-				azureshared.SQLServerFirewallRule.String():              {in: true, out: true},
-				azureshared.SQLServerVirtualNetworkRule.String():        {in: true, out: true},
-				azureshared.SQLServerKey.String():                       {in: true, out: true},
-				azureshared.SQLServerFailoverGroup.String():             {in: true, out: true},
-				azureshared.SQLServerAdministrator.String():             {in: true, out: true},
-				azureshared.SQLServerPrivateEndpointConnection.String(): {in: true, out: true},
-				azureshared.SQLServerAuditingSetting.String():           {in: true, out: true},
-				azureshared.SQLServerSecurityAlertPolicy.String():       {in: true, out: true},
-				azureshared.SQLServerVulnerabilityAssessment.String():   {in: true, out: true},
-				azureshared.SQLServerEncryptionProtector.String():       {in: true, out: true},
-				azureshared.SQLServerBlobAuditingPolicy.String():        {in: true, out: true},
-				azureshared.SQLServerAutomaticTuning.String():           {in: true, out: true},
+				azureshared.SQLServerFirewallRule.String():                    {in: true, out: true},
+				azureshared.SQLServerVirtualNetworkRule.String():              {in: true, out: true},
+				azureshared.SQLServerKey.String():                             {in: true, out: true},
+				azureshared.SQLServerFailoverGroup.String():                   {in: true, out: true},
+				azureshared.SQLServerAdministrator.String():                   {in: true, out: true},
+				azureshared.SQLServerPrivateEndpointConnection.String():       {in: true, out: true},
+				azureshared.SQLServerAuditingSetting.String():                 {in: true, out: true},
+				azureshared.SQLServerSecurityAlertPolicy.String():             {in: true, out: true},
+				azureshared.SQLServerVulnerabilityAssessment.String():         {in: true, out: true},
+				azureshared.SQLServerEncryptionProtector.String():             {in: true, out: true},
+				azureshared.SQLServerBlobAuditingPolicy.String():              {in: true, out: true},
+				azureshared.SQLServerAutomaticTuning.String():                 {in: true, out: true},
 				azureshared.SQLServerAdvancedThreatProtectionSetting.String(): {in: true, out: true},
-				azureshared.SQLServerDnsAlias.String():                  {in: true, out: true},
-				azureshared.SQLServerBackupLongTermRetentionPolicy.String(): {in: true, out: true},
-				azureshared.SQLServerDevOpsAuditSetting.String():        {in: true, out: true},
-				azureshared.SQLServerTrustGroup.String():                {in: true, out: true},
-				azureshared.SQLServerOutboundFirewallRule.String():      {in: true, out: true},
+				azureshared.SQLServerDnsAlias.String():                        {in: true, out: true},
+				azureshared.SQLServerBackupLongTermRetentionPolicy.String():   {in: true, out: true},
+				azureshared.SQLServerDevOpsAuditSetting.String():              {in: true, out: true},
+				azureshared.SQLServerTrustGroup.String():                      {in: true, out: true},
+				azureshared.SQLServerOutboundFirewallRule.String():            {in: true, out: true},
 			}
 
 			for _, liq := range linkedQueries {

@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -67,7 +68,7 @@ func TestComputeImageIntegration(t *testing.T) {
 		imagesWrapper := manual.NewComputeImage(gcpshared.NewComputeImagesClient(client), projectID)
 		scope := imagesWrapper.Scopes()[0]
 
-		imagesAdapter := sources.WrapperToAdapter(imagesWrapper)
+		imagesAdapter := sources.WrapperToAdapter(imagesWrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports listing
 		listable, ok := imagesAdapter.(discovery.ListableAdapter)
@@ -106,7 +107,7 @@ func TestComputeImageIntegration(t *testing.T) {
 		imagesWrapper := manual.NewComputeImage(gcpshared.NewComputeImagesClient(client), projectID)
 		scope := imagesWrapper.Scopes()[0]
 
-		imagesAdapter := sources.WrapperToAdapter(imagesWrapper)
+		imagesAdapter := sources.WrapperToAdapter(imagesWrapper, sdpcache.NewNoOpCache())
 		sdpItem, qErr := imagesAdapter.Get(ctx, scope, imageName, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)

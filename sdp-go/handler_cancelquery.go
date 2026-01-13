@@ -6,8 +6,8 @@ import (
 	"context"
 
 	"github.com/nats-io/nats.go"
-	"go.opentelemetry.io/otel/trace"
 	"github.com/overmindtech/cli/tracing"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func NewCancelQueryHandler(spanName string, h func(ctx context.Context, i *CancelQuery), spanOpts ...trace.SpanStartOption) nats.MsgHandler {

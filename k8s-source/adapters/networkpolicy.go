@@ -5,6 +5,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -66,10 +67,11 @@ func NetworkPolicyExtractor(resource *v1.NetworkPolicy, scope string) ([]*sdp.Li
 	return queries, nil
 }
 
-func newNetworkPolicyAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newNetworkPolicyAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.NetworkPolicy, *v1.NetworkPolicyList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
+		cacheField:  cache,
 		TypeName:    "NetworkPolicy",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.NetworkPolicy, *v1.NetworkPolicyList] {
 			return cs.NetworkingV1().NetworkPolicies(namespace)

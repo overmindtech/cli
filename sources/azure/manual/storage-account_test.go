@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/manual"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -37,7 +38,7 @@ func TestStorageAccount(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewStorageAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
 		if qErr != nil {
@@ -160,7 +161,7 @@ func TestStorageAccount(t *testing.T) {
 		mockClient := mocks.NewMockStorageAccountsClient(ctrl)
 
 		wrapper := manual.NewStorageAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (empty)
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
@@ -191,7 +192,7 @@ func TestStorageAccount(t *testing.T) {
 		mockClient.EXPECT().List(resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewStorageAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -254,7 +255,7 @@ func TestStorageAccount(t *testing.T) {
 		mockClient.EXPECT().List(resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewStorageAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -288,7 +289,7 @@ func TestStorageAccount(t *testing.T) {
 			armstorage.AccountsClientGetPropertiesResponse{}, expectedErr)
 
 		wrapper := manual.NewStorageAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-account", true)
 		if qErr == nil {
@@ -312,7 +313,7 @@ func TestStorageAccount(t *testing.T) {
 		mockClient.EXPECT().List(resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewStorageAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {

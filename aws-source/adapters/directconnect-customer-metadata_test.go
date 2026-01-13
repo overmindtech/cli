@@ -39,7 +39,7 @@ func TestCustomerMetadataOutputMapper(t *testing.T) {
 func TestNewDirectConnectCustomerMetadataAdapter(t *testing.T) {
 	client, account, region := directconnectGetAutoConfig(t)
 
-	adapter := NewDirectConnectCustomerMetadataAdapter(client, account, region)
+	adapter := NewDirectConnectCustomerMetadataAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

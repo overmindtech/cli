@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -80,7 +81,7 @@ func TestSqlDatabase(t *testing.T) {
 
 		testClient := &testSqlDatabasesClient{MockSqlDatabasesClient: mockClient}
 		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Get requires serverName and databaseName as query parts
 		query := shared.CompositeLookupKey(serverName, databaseName)
@@ -142,7 +143,7 @@ func TestSqlDatabase(t *testing.T) {
 
 		testClient := &testSqlDatabasesClient{MockSqlDatabasesClient: mockClient}
 		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := serverName + shared.QuerySeparator + databaseName
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], query, true)
@@ -185,7 +186,7 @@ func TestSqlDatabase(t *testing.T) {
 		testClient := &testSqlDatabasesClient{MockSqlDatabasesClient: mockClient}
 
 		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (only server name)
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
@@ -215,7 +216,7 @@ func TestSqlDatabase(t *testing.T) {
 		}
 
 		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
@@ -273,7 +274,7 @@ func TestSqlDatabase(t *testing.T) {
 		}
 
 		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
@@ -317,7 +318,7 @@ func TestSqlDatabase(t *testing.T) {
 
 		testClient := &testSqlDatabasesClient{MockSqlDatabasesClient: mockClient}
 		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := serverName + shared.QuerySeparator + "nonexistent-database"
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], query, true)
@@ -337,7 +338,7 @@ func TestSqlDatabase(t *testing.T) {
 		}
 
 		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {

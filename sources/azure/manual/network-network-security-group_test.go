@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/manual"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -38,7 +39,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], nsgName, true)
 		if qErr != nil {
@@ -150,7 +151,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 		mockClient := mocks.NewMockNetworkSecurityGroupsClient(ctrl)
 
 		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name - Get will still be called with empty string
 		// and Azure will return an error
@@ -179,7 +180,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-nsg", true)
 		if qErr == nil {
@@ -209,7 +210,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 		mockClient.EXPECT().List(ctx, resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -269,7 +270,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 		mockClient.EXPECT().List(ctx, resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -303,7 +304,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 		mockClient.EXPECT().List(ctx, resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -324,7 +325,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 			armnetwork.SecurityGroupsClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-nsg", true)
 		if qErr == nil {
@@ -365,7 +366,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], nsgName, true)
 		if qErr != nil {

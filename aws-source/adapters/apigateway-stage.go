@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func convertGetStageOutputToStage(output *apigateway.GetStageOutput) *types.Stage {
@@ -91,13 +92,14 @@ func stageOutputMapper(query, scope string, awsItem *types.Stage) (*sdp.Item, er
 	return &item, nil
 }
 
-func NewAPIGatewayStageAdapter(client *apigateway.Client, accountID string, region string) *adapterhelpers.GetListAdapter[*types.Stage, *apigateway.Client, *apigateway.Options] {
+func NewAPIGatewayStageAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.Stage, *apigateway.Client, *apigateway.Options] {
 	return &adapterhelpers.GetListAdapter[*types.Stage, *apigateway.Client, *apigateway.Options]{
 		ItemType:        "apigateway-stage",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: stageAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.Stage, error) {
 			f := strings.Split(query, "/")
 			if len(f) != 2 {

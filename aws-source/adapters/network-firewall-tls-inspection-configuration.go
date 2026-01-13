@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type unifiedTLSInspectionConfiguration struct {
@@ -156,7 +157,7 @@ func tlsInspectionConfigurationGetFunc(ctx context.Context, client networkFirewa
 	return &item, nil
 }
 
-func NewNetworkFirewallTLSInspectionConfigurationAdapter(client networkFirewallClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*networkfirewall.ListTLSInspectionConfigurationsInput, *networkfirewall.ListTLSInspectionConfigurationsOutput, *networkfirewall.DescribeTLSInspectionConfigurationInput, *networkfirewall.DescribeTLSInspectionConfigurationOutput, networkFirewallClient, *networkfirewall.Options] {
+func NewNetworkFirewallTLSInspectionConfigurationAdapter(client networkFirewallClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*networkfirewall.ListTLSInspectionConfigurationsInput, *networkfirewall.ListTLSInspectionConfigurationsOutput, *networkfirewall.DescribeTLSInspectionConfigurationInput, *networkfirewall.DescribeTLSInspectionConfigurationOutput, networkFirewallClient, *networkfirewall.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*networkfirewall.ListTLSInspectionConfigurationsInput, *networkfirewall.ListTLSInspectionConfigurationsOutput, *networkfirewall.DescribeTLSInspectionConfigurationInput, *networkfirewall.DescribeTLSInspectionConfigurationOutput, networkFirewallClient, *networkfirewall.Options]{
 		ItemType:        "network-firewall-tls-inspection-configuration",
 		Client:          client,
@@ -164,6 +165,7 @@ func NewNetworkFirewallTLSInspectionConfigurationAdapter(client networkFirewallC
 		Region:          region,
 		ListInput:       &networkfirewall.ListTLSInspectionConfigurationsInput{},
 		AdapterMetadata: tlsInspectionConfigurationAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *networkfirewall.DescribeTLSInspectionConfigurationInput {
 			return &networkfirewall.DescribeTLSInspectionConfigurationInput{
 				TLSInspectionConfigurationName: &query,

@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 // convertGetApiKeyOutputToApiKey converts a GetApiKeyOutput to an ApiKey
@@ -77,13 +78,14 @@ func apiKeyOutputMapper(scope string, awsItem *types.ApiKey) (*sdp.Item, error) 
 	return &item, nil
 }
 
-func NewAPIGatewayApiKeyAdapter(client *apigateway.Client, accountID string, region string) *adapterhelpers.GetListAdapter[*types.ApiKey, *apigateway.Client, *apigateway.Options] {
+func NewAPIGatewayApiKeyAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.ApiKey, *apigateway.Client, *apigateway.Options] {
 	return &adapterhelpers.GetListAdapter[*types.ApiKey, *apigateway.Client, *apigateway.Options]{
 		ItemType:        "apigateway-api-key",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: apiKeyAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.ApiKey, error) {
 			out, err := client.GetApiKey(ctx, &apigateway.GetApiKeyInput{
 				ApiKey: &query,

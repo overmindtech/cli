@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func realtimeLogConfigsItemMapper(_, scope string, awsItem *types.RealtimeLogConfig) (*sdp.Item, error) {
@@ -69,13 +70,14 @@ func realtimeLogConfigsItemMapper(_, scope string, awsItem *types.RealtimeLogCon
 	return &item, nil
 }
 
-func NewCloudfrontRealtimeLogConfigsAdapter(client *cloudfront.Client, accountID string) *adapterhelpers.GetListAdapter[*types.RealtimeLogConfig, *cloudfront.Client, *cloudfront.Options] {
+func NewCloudfrontRealtimeLogConfigsAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.RealtimeLogConfig, *cloudfront.Client, *cloudfront.Options] {
 	return &adapterhelpers.GetListAdapter[*types.RealtimeLogConfig, *cloudfront.Client, *cloudfront.Options]{
 		ItemType:        "cloudfront-realtime-log-config",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata: realtimeLogConfigsAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *cloudfront.Client, scope, query string) (*types.RealtimeLogConfig, error) {
 			out, err := client.GetRealtimeLogConfig(ctx, &cloudfront.GetRealtimeLogConfigInput{
 				Name: &query,

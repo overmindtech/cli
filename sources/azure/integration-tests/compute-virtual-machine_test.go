@@ -18,6 +18,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -132,7 +133,7 @@ func TestComputeVirtualMachineIntegration(t *testing.T) {
 			)
 			scope := vmWrapper.Scopes()[0]
 
-			vmAdapter := sources.WrapperToAdapter(vmWrapper)
+			vmAdapter := sources.WrapperToAdapter(vmWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := vmAdapter.Get(ctx, scope, integrationTestVMName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -168,7 +169,7 @@ func TestComputeVirtualMachineIntegration(t *testing.T) {
 			)
 			scope := vmWrapper.Scopes()[0]
 
-			vmAdapter := sources.WrapperToAdapter(vmWrapper)
+			vmAdapter := sources.WrapperToAdapter(vmWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports listing
 			listable, ok := vmAdapter.(discovery.ListableAdapter)
@@ -213,7 +214,7 @@ func TestComputeVirtualMachineIntegration(t *testing.T) {
 			)
 			scope := vmWrapper.Scopes()[0]
 
-			vmAdapter := sources.WrapperToAdapter(vmWrapper)
+			vmAdapter := sources.WrapperToAdapter(vmWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := vmAdapter.Get(ctx, scope, integrationTestVMName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)

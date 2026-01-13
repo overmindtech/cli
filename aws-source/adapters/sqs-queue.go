@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type sqsClient interface {
@@ -113,7 +114,7 @@ func sqsQueueSearchInputMapper(scope string, query string) (*sqs.GetQueueAttribu
 	}, nil
 }
 
-func NewSQSQueueAdapter(client sqsClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*sqs.ListQueuesInput, *sqs.ListQueuesOutput, *sqs.GetQueueAttributesInput, *sqs.GetQueueAttributesOutput, sqsClient, *sqs.Options] {
+func NewSQSQueueAdapter(client sqsClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*sqs.ListQueuesInput, *sqs.ListQueuesOutput, *sqs.GetQueueAttributesInput, *sqs.GetQueueAttributesOutput, sqsClient, *sqs.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*sqs.ListQueuesInput, *sqs.ListQueuesOutput, *sqs.GetQueueAttributesInput, *sqs.GetQueueAttributesOutput, sqsClient, *sqs.Options]{
 		ItemType:        "sqs-queue",
 		Client:          client,
@@ -121,6 +122,7 @@ func NewSQSQueueAdapter(client sqsClient, accountID string, region string) *adap
 		Region:          region,
 		ListInput:       &sqs.ListQueuesInput{},
 		AdapterMetadata: sqsQueueAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *sqs.GetQueueAttributesInput {
 			return &sqs.GetQueueAttributesInput{
 				QueueUrl: &query,

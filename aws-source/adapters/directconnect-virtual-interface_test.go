@@ -91,7 +91,7 @@ func TestVirtualInterfaceOutputMapper(t *testing.T) {
 func TestNewDirectConnectVirtualInterfaceAdapter(t *testing.T) {
 	client, account, region := directconnectGetAutoConfig(t)
 
-	adapter := NewDirectConnectVirtualInterfaceAdapter(client, account, region)
+	adapter := NewDirectConnectVirtualInterfaceAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

@@ -123,7 +123,7 @@ func (c computeReservationWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.
 }
 
 // ListStream lists compute reservations and sends them as items to the stream.
-func (c computeReservationWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeReservationWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListReservationsRequest{
 		Project: c.ProjectID(),
 		Zone:    c.Zone(),

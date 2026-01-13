@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func tableGetFunc(ctx context.Context, client Client, scope string, input *dynamodb.DescribeTableInput) (*sdp.Item, error) {
@@ -165,7 +166,7 @@ func tableGetFunc(ctx context.Context, client Client, scope string, input *dynam
 	return &item, nil
 }
 
-func NewDynamoDBTableAdapter(client Client, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*dynamodb.ListTablesInput, *dynamodb.ListTablesOutput, *dynamodb.DescribeTableInput, *dynamodb.DescribeTableOutput, Client, *dynamodb.Options] {
+func NewDynamoDBTableAdapter(client Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*dynamodb.ListTablesInput, *dynamodb.ListTablesOutput, *dynamodb.DescribeTableInput, *dynamodb.DescribeTableOutput, Client, *dynamodb.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*dynamodb.ListTablesInput, *dynamodb.ListTablesOutput, *dynamodb.DescribeTableInput, *dynamodb.DescribeTableOutput, Client, *dynamodb.Options]{
 		ItemType:        "dynamodb-table",
 		Client:          client,
@@ -174,6 +175,7 @@ func NewDynamoDBTableAdapter(client Client, accountID string, region string) *ad
 		GetFunc:         tableGetFunc,
 		ListInput:       &dynamodb.ListTablesInput{},
 		AdapterMetadata: dynamodbTableAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *dynamodb.DescribeTableInput {
 			return &dynamodb.DescribeTableInput{
 				TableName: &query,

@@ -17,6 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 )
@@ -24,7 +25,7 @@ import (
 // Adapters returns a slice of discovery.Adapter instances for Azure Source.
 // It initializes Azure clients if initAzureClients is true, and creates adapters for the specified subscription ID and regions.
 // Otherwise, it uses nil clients, which is useful for enumerating adapters for documentation purposes.
-func Adapters(ctx context.Context, subscriptionID string, regions []string, cred *azidentity.DefaultAzureCredential, initAzureClients bool) ([]discovery.Adapter, error) {
+func Adapters(ctx context.Context, subscriptionID string, regions []string, cred *azidentity.DefaultAzureCredential, initAzureClients bool, cache sdpcache.Cache) ([]discovery.Adapter, error) {
 	var adapters []discovery.Adapter
 
 	if initAzureClients {
@@ -187,7 +188,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewVirtualMachinesClient(vmClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 
 			// Add Storage Account adapter for this resource group
@@ -196,7 +197,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewStorageAccountsClient(storageAccountsClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 			// Add Storage Blob Container adapter for this resource group
 			adapters = append(adapters,
@@ -204,7 +205,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewBlobContainersClient(blobContainersClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 
 			// Add Storage File Share adapter for this resource group
@@ -213,7 +214,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewFileSharesClient(fileSharesClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 
 			// Add Storage Queue adapter for this resource group
@@ -222,7 +223,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewQueuesClient(queuesClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 			// Add Storage Table adapter for this resource group
 			adapters = append(adapters,
@@ -230,7 +231,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewTablesClient(tablesClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 
 			// Add Network Virtual Network adapter for this resource group
@@ -239,7 +240,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewVirtualNetworksClient(virtualNetworksClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 
 			// Add Network Network Interface adapter for this resource group
@@ -248,7 +249,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewNetworkInterfacesClient(networkInterfacesClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 
 			// Add SQL Database adapter for this resource group
@@ -257,7 +258,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewSqlDatabasesClient(sqlDatabasesClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 
 			// Add DocumentDB Database Account adapter for this resource group
@@ -266,7 +267,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewDocumentDBDatabaseAccountsClient(documentDBDatabaseAccountsClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 
 			// Add Key Vault Vault adapter for this resource group
@@ -275,7 +276,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewVaultsClient(keyVaultsClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 
 			// Add Key Vault Managed HSM adapter for this resource group
@@ -284,7 +285,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewManagedHSMsClient(managedHSMsClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 			// Add PostgreSQL Database adapter for this resource group
 			adapters = append(adapters,
@@ -292,7 +293,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewPostgreSQLDatabasesClient(postgreSQLDatabasesClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 
 			// Add Network Public IP Address adapter for this resource group
@@ -301,7 +302,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewPublicIPAddressesClient(publicIPAddressesClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 
 			// Add Network Load Balancer adapter for this resource group
@@ -310,7 +311,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewLoadBalancersClient(loadBalancersClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 			// Add Batch Account adapter for this resource group
 			adapters = append(adapters,
@@ -318,7 +319,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewBatchAccountsClient(batchAccountsClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 			// Add Virtual Machine Scale Set adapter for this resource group
 			adapters = append(adapters,
@@ -326,7 +327,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewVirtualMachineScaleSetsClient(virtualMachineScaleSetsClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 			// Add Availability Set adapter for this resource group
 			adapters = append(adapters,
@@ -334,7 +335,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewAvailabilitySetsClient(availabilitySetsClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 			// Add Disk adapter for this resource group
 			adapters = append(adapters,
@@ -342,7 +343,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewDisksClient(disksClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 			// Add Network Security Group adapter for this resource group
 			adapters = append(adapters,
@@ -350,7 +351,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewNetworkSecurityGroupsClient(networkSecurityGroupsClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 			// Add Network Route Table adapter for this resource group
 			adapters = append(adapters,
@@ -358,7 +359,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewRouteTablesClient(routeTablesClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 
 			// Add Network Application Gateway adapter for this resource group
@@ -367,7 +368,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewApplicationGatewaysClient(applicationGatewaysClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 
 			// Add SQL Server adapter for this resource group
@@ -376,7 +377,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewSqlServersClient(sqlServersClient),
 					subscriptionID,
 					resourceGroup,
-				)),
+				), cache),
 			)
 		}
 
@@ -394,117 +395,117 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewStorageAccount(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewStorageBlobContainer(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewStorageFileShare(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewStorageQueues(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewStorageTable(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewNetworkVirtualNetwork(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewNetworkNetworkInterface(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewSqlDatabase(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewDocumentDBDatabaseAccounts(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewKeyVaultVault(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewDBforPostgreSQLDatabase(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewNetworkPublicIPAddress(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewNetworkLoadBalancer(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewBatchAccount(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewComputeVirtualMachineScaleSet(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewComputeAvailabilitySet(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewComputeDisk(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewNetworkNetworkSecurityGroup(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewNetworkRouteTable(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewNetworkApplicationGateway(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewKeyVaultManagedHSM(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewSqlServer(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
-			)),
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 		)
 
 		_ = regions

@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -97,7 +98,7 @@ func TestNewLoggingSink(t *testing.T) {
 
 				mockClient.EXPECT().GetSink(ctx, gomock.Any()).Return(createLoggingSink("my-sink", tc.destination), nil)
 
-				adapter := sources.WrapperToAdapter(wrapper)
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "my-sink", true)
 				if qErr != nil {
@@ -133,7 +134,7 @@ func TestNewLoggingSink(t *testing.T) {
 
 		mockClient.EXPECT().ListSinks(ctx, gomock.Any()).Return(mockLoggingSinkIterator)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports listing
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -165,7 +166,7 @@ func TestNewLoggingSink(t *testing.T) {
 	t.Run("ListStream", func(t *testing.T) {
 		wrapper := manual.NewLoggingSink(mockClient, projectID)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockLoggingSinkIterator := mocks.NewMockLoggingSinkIterator(ctrl)
 

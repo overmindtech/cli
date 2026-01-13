@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -57,7 +58,7 @@ func TestComputeInstanceIntegration(t *testing.T) {
 		instanceWrapper := manual.NewComputeInstance(gcpshared.NewComputeInstanceClient(client), projectID, zone)
 		scope := instanceWrapper.Scopes()[0]
 
-		instanceAdapter := sources.WrapperToAdapter(instanceWrapper)
+		instanceAdapter := sources.WrapperToAdapter(instanceWrapper, sdpcache.NewNoOpCache())
 		sdpItem, qErr := instanceAdapter.Get(ctx, scope, instanceName, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)

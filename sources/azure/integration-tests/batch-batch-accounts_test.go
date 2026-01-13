@@ -20,6 +20,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -120,7 +121,7 @@ func TestBatchAccountIntegration(t *testing.T) {
 			)
 			scope := batchWrapper.Scopes()[0]
 
-			batchAdapter := sources.WrapperToAdapter(batchWrapper)
+			batchAdapter := sources.WrapperToAdapter(batchWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := batchAdapter.Get(ctx, scope, batchAccountName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -159,7 +160,7 @@ func TestBatchAccountIntegration(t *testing.T) {
 			)
 			scope := batchWrapper.Scopes()[0]
 
-			batchAdapter := sources.WrapperToAdapter(batchWrapper)
+			batchAdapter := sources.WrapperToAdapter(batchWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports list
 			listable, ok := batchAdapter.(discovery.ListableAdapter)
@@ -207,7 +208,7 @@ func TestBatchAccountIntegration(t *testing.T) {
 			)
 			scope := batchWrapper.Scopes()[0]
 
-			batchAdapter := sources.WrapperToAdapter(batchWrapper)
+			batchAdapter := sources.WrapperToAdapter(batchWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := batchAdapter.Get(ctx, scope, batchAccountName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -452,4 +453,3 @@ func deleteBatchAccount(ctx context.Context, client *armbatch.AccountClient, res
 	log.Printf("Batch account %s deleted successfully", accountName)
 	return nil
 }
-

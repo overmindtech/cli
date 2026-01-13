@@ -53,7 +53,7 @@ func TestOriginRequestPolicyItemMapper(t *testing.T) {
 func TestNewCloudfrontOriginRequestPolicyAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontOriginRequestPolicyAdapter(client, account)
+	adapter := NewCloudfrontOriginRequestPolicyAdapter(client, account, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

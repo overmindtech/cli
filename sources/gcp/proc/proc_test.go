@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	_ "github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -24,8 +25,9 @@ func Test_adapters(t *testing.T) {
 		[]string{"region"},
 		[]string{"zone"},
 		"",
-		nil,
+		gcpshared.NewLinker(),
 		false,
+		sdpcache.NewNoOpCache(),
 	)
 	if err != nil {
 		t.Fatalf("error creating adapters: %v", err)

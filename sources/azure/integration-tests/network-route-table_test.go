@@ -17,6 +17,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -104,7 +105,7 @@ func TestNetworkRouteTableIntegration(t *testing.T) {
 			)
 			scope := routeTableWrapper.Scopes()[0]
 
-			routeTableAdapter := sources.WrapperToAdapter(routeTableWrapper)
+			routeTableAdapter := sources.WrapperToAdapter(routeTableWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := routeTableAdapter.Get(ctx, scope, integrationTestRouteTableName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -140,7 +141,7 @@ func TestNetworkRouteTableIntegration(t *testing.T) {
 			)
 			scope := routeTableWrapper.Scopes()[0]
 
-			routeTableAdapter := sources.WrapperToAdapter(routeTableWrapper)
+			routeTableAdapter := sources.WrapperToAdapter(routeTableWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports listing
 			listable, ok := routeTableAdapter.(discovery.ListableAdapter)
@@ -185,7 +186,7 @@ func TestNetworkRouteTableIntegration(t *testing.T) {
 			)
 			scope := routeTableWrapper.Scopes()[0]
 
-			routeTableAdapter := sources.WrapperToAdapter(routeTableWrapper)
+			routeTableAdapter := sources.WrapperToAdapter(routeTableWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := routeTableAdapter.Get(ctx, scope, integrationTestRouteTableName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -227,7 +228,7 @@ func TestNetworkRouteTableIntegration(t *testing.T) {
 			)
 			scope := routeTableWrapper.Scopes()[0]
 
-			routeTableAdapter := sources.WrapperToAdapter(routeTableWrapper)
+			routeTableAdapter := sources.WrapperToAdapter(routeTableWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := routeTableAdapter.Get(ctx, scope, integrationTestRouteTableName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -351,7 +352,7 @@ func createRouteTable(ctx context.Context, client *armnetwork.RouteTablesClient,
 
 	// Create a basic route table
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, routeTableName, armnetwork.RouteTable{
-		Location: ptr.To(location),
+		Location:   ptr.To(location),
 		Properties: &armnetwork.RouteTablePropertiesFormat{
 			// Routes will be added separately as child resources
 		},
@@ -574,4 +575,3 @@ func deleteRouteTable(ctx context.Context, client *armnetwork.RouteTablesClient,
 	log.Printf("Route table %s deleted successfully", routeTableName)
 	return nil
 }
-

@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -474,6 +475,7 @@ func TestAlwaysGetSourceCaching(t *testing.T) {
 		Region:          "eu-west-2",
 		Client:          struct{}{},
 		ListInput:       "",
+		SDPCache:        sdpcache.NewCache(),
 		ListFuncPaginatorBuilder: func(client struct{}, input string) Paginator[string, struct{}] {
 			return &TestPaginator{
 				DataFunc: func() string {

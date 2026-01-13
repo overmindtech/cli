@@ -144,8 +144,8 @@ type Engine struct {
 
 	// Heartbeat status tracking for healthz checks
 	lastSuccessfulHeartbeat time.Time
-	lastHeartbeatError       error
-	heartbeatStatusMutex     sync.RWMutex
+	lastHeartbeatError      error
+	heartbeatStatusMutex    sync.RWMutex
 }
 
 func NewEngine(engineConfig *EngineConfig) (*Engine, error) {

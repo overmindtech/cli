@@ -21,24 +21,24 @@ import (
 const USER_AGENT_VERSION = "0.1"
 
 type HTTPAdapter struct {
-	cache       *sdpcache.Cache // The sdpcache of this adapter
-	cacheInitMu sync.Mutex      // Mutex to ensure cache is only initialised once
+	cacheField sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 }
 
 const httpCacheDuration = 5 * time.Minute
 
-func (s *HTTPAdapter) ensureCache() {
-	s.cacheInitMu.Lock()
-	defer s.cacheInitMu.Unlock()
+var (
+	noOpCacheHTTPOnce sync.Once
+	noOpCacheHTTP     sdpcache.Cache
+)
 
-	if s.cache == nil {
-		s.cache = sdpcache.NewCache()
+func (s *HTTPAdapter) Cache() sdpcache.Cache {
+	if s.cacheField == nil {
+		noOpCacheHTTPOnce.Do(func() {
+			noOpCacheHTTP = sdpcache.NewNoOpCache()
+		})
+		return noOpCacheHTTP
 	}
-}
-
-func (s *HTTPAdapter) Cache() *sdpcache.Cache {
-	s.ensureCache()
-	return s.cache
+	return s.cacheField
 }
 
 // Type The type of items that this adapter is capable of finding
@@ -110,8 +110,12 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 		}
 	}
 
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	var cacheHit bool
+	var ck sdpcache.CacheKey
+	var cachedItems []*sdp.Item
+	var qErr *sdp.QueryError
+
+	cacheHit, ck, cachedItems, qErr = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -146,7 +150,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		s.cache.StoreError(ctx, err, httpCacheDuration, ck)
+		s.Cache().StoreError(ctx, err, httpCacheDuration, ck)
 		return nil, err
 	}
 
@@ -163,7 +167,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		s.cache.StoreError(ctx, err, httpCacheDuration, ck)
+		s.Cache().StoreError(ctx, err, httpCacheDuration, ck)
 		return nil, err
 	}
 
@@ -195,7 +199,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		s.cache.StoreError(ctx, err, httpCacheDuration, ck)
+		s.Cache().StoreError(ctx, err, httpCacheDuration, ck)
 		return nil, err
 	}
 
@@ -330,9 +334,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			}
 		}
 	}
-
-	s.cache.StoreItem(ctx, &item, httpCacheDuration, ck)
-
+	s.Cache().StoreItem(ctx, &item, httpCacheDuration, ck)
 	return &item, nil
 }
 

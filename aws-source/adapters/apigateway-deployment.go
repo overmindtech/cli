@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 // convertGetDeploymentOutputToDeployment converts a GetDeploymentOutput to a Deployment
@@ -75,13 +76,14 @@ func deploymentOutputMapper(query, scope string, awsItem *types.Deployment) (*sd
 	return &item, nil
 }
 
-func NewAPIGatewayDeploymentAdapter(client *apigateway.Client, accountID string, region string) *adapterhelpers.GetListAdapter[*types.Deployment, *apigateway.Client, *apigateway.Options] {
+func NewAPIGatewayDeploymentAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.Deployment, *apigateway.Client, *apigateway.Options] {
 	return &adapterhelpers.GetListAdapter[*types.Deployment, *apigateway.Client, *apigateway.Options]{
 		ItemType:        "apigateway-deployment",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: deploymentAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.Deployment, error) {
 			f := strings.Split(query, "/")
 			if len(f) != 2 {

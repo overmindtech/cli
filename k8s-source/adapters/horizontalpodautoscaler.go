@@ -5,6 +5,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -29,10 +30,11 @@ func horizontalPodAutoscalerExtractor(resource *v2.HorizontalPodAutoscaler, scop
 	return queries, nil
 }
 
-func newHorizontalPodAutoscalerAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newHorizontalPodAutoscalerAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v2.HorizontalPodAutoscaler, *v2.HorizontalPodAutoscalerList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
+		cacheField:  cache,
 		TypeName:    "HorizontalPodAutoscaler",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v2.HorizontalPodAutoscaler, *v2.HorizontalPodAutoscalerList] {
 			return cs.AutoscalingV2().HorizontalPodAutoscalers(namespace)

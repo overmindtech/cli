@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func transitGatewayRegistrationOutputMapper(_ context.Context, _ *networkmanager.Client, scope string, _ *networkmanager.GetTransitGatewayRegistrationsInput, output *networkmanager.GetTransitGatewayRegistrationsOutput) ([]*sdp.Item, error) {
@@ -77,13 +78,14 @@ func transitGatewayRegistrationOutputMapper(_ context.Context, _ *networkmanager
 	return items, nil
 }
 
-func NewNetworkManagerTransitGatewayRegistrationAdapter(client *networkmanager.Client, accountID, region string) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetTransitGatewayRegistrationsInput, *networkmanager.GetTransitGatewayRegistrationsOutput, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerTransitGatewayRegistrationAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetTransitGatewayRegistrationsInput, *networkmanager.GetTransitGatewayRegistrationsOutput, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetTransitGatewayRegistrationsInput, *networkmanager.GetTransitGatewayRegistrationsOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-transit-gateway-registration",
 		AdapterMetadata: transitGatewayRegistrationAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.GetTransitGatewayRegistrationsInput) (*networkmanager.GetTransitGatewayRegistrationsOutput, error) {
 			return client.GetTransitGatewayRegistrations(ctx, input)
 		},

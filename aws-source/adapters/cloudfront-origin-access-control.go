@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func originAccessControlListFunc(ctx context.Context, client *cloudfront.Client, scope string) ([]*types.OriginAccessControl, error) {
@@ -55,13 +56,14 @@ func originAccessControlItemMapper(_, scope string, awsItem *types.OriginAccessC
 	return &item, nil
 }
 
-func NewCloudfrontOriginAccessControlAdapter(client *cloudfront.Client, accountID string) *adapterhelpers.GetListAdapter[*types.OriginAccessControl, *cloudfront.Client, *cloudfront.Options] {
+func NewCloudfrontOriginAccessControlAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.OriginAccessControl, *cloudfront.Client, *cloudfront.Options] {
 	return &adapterhelpers.GetListAdapter[*types.OriginAccessControl, *cloudfront.Client, *cloudfront.Options]{
 		ItemType:        "cloudfront-origin-access-control",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata: originAccessControlAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *cloudfront.Client, scope, query string) (*types.OriginAccessControl, error) {
 			out, err := client.GetOriginAccessControl(ctx, &cloudfront.GetOriginAccessControlInput{
 				Id: &query,

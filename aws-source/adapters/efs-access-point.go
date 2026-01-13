@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func AccessPointOutputMapper(_ context.Context, _ *efs.Client, scope string, input *efs.DescribeAccessPointsInput, output *efs.DescribeAccessPointsOutput) ([]*sdp.Item, error) {
@@ -55,13 +56,14 @@ func AccessPointOutputMapper(_ context.Context, _ *efs.Client, scope string, inp
 	return items, nil
 }
 
-func NewEFSAccessPointAdapter(client *efs.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*efs.DescribeAccessPointsInput, *efs.DescribeAccessPointsOutput, *efs.Client, *efs.Options] {
+func NewEFSAccessPointAdapter(client *efs.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*efs.DescribeAccessPointsInput, *efs.DescribeAccessPointsOutput, *efs.Client, *efs.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*efs.DescribeAccessPointsInput, *efs.DescribeAccessPointsOutput, *efs.Client, *efs.Options]{
 		ItemType:        "efs-access-point",
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: accessPointAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *efs.Client, input *efs.DescribeAccessPointsInput) (*efs.DescribeAccessPointsOutput, error) {
 			return client.DescribeAccessPoints(ctx, input)
 		},

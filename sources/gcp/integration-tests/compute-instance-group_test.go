@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -55,7 +56,7 @@ func TestComputeInstanceGroupIntegration(t *testing.T) {
 		instanceGroupWrapper := manual.NewComputeInstanceGroup(gcpshared.NewComputeInstanceGroupsClient(client), projectID, zone)
 		scope := instanceGroupWrapper.Scopes()[0]
 
-		adapter := sources.WrapperToAdapter(instanceGroupWrapper)
+		adapter := sources.WrapperToAdapter(instanceGroupWrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports listing
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -95,7 +96,7 @@ func TestComputeInstanceGroupIntegration(t *testing.T) {
 		instanceGroupWrapper := manual.NewComputeInstanceGroup(gcpshared.NewComputeInstanceGroupsClient(client), projectID, zone)
 		scope := instanceGroupWrapper.Scopes()[0]
 
-		adapter := sources.WrapperToAdapter(instanceGroupWrapper)
+		adapter := sources.WrapperToAdapter(instanceGroupWrapper, sdpcache.NewNoOpCache())
 		sdpItem, qErr := adapter.Get(ctx, scope, instanceGroupName, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)

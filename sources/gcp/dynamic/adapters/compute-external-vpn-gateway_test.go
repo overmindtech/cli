@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -60,7 +61,7 @@ func TestComputeExternalVpnGateway(t *testing.T) {
 
 	t.Run("Get", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}
@@ -96,7 +97,7 @@ func TestComputeExternalVpnGateway(t *testing.T) {
 
 	t.Run("List", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}
@@ -125,7 +126,7 @@ func TestComputeExternalVpnGateway(t *testing.T) {
 		}
 
 		httpCli := shared.NewMockHTTPClientProvider(errorResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

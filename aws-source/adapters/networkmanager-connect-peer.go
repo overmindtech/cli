@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope string, input *networkmanager.GetConnectPeerInput) (*sdp.Item, error) {
@@ -196,7 +197,7 @@ func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 	return &item, nil
 }
 
-func NewNetworkManagerConnectPeerAdapter(client NetworkManagerClient, accountID, region string) *adapterhelpers.AlwaysGetAdapter[*networkmanager.ListConnectPeersInput, *networkmanager.ListConnectPeersOutput, *networkmanager.GetConnectPeerInput, *networkmanager.GetConnectPeerOutput, NetworkManagerClient, *networkmanager.Options] {
+func NewNetworkManagerConnectPeerAdapter(client NetworkManagerClient, accountID, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*networkmanager.ListConnectPeersInput, *networkmanager.ListConnectPeersOutput, *networkmanager.GetConnectPeerInput, *networkmanager.GetConnectPeerOutput, NetworkManagerClient, *networkmanager.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*networkmanager.ListConnectPeersInput, *networkmanager.ListConnectPeersOutput, *networkmanager.GetConnectPeerInput, *networkmanager.GetConnectPeerOutput, NetworkManagerClient, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
@@ -204,6 +205,7 @@ func NewNetworkManagerConnectPeerAdapter(client NetworkManagerClient, accountID,
 		ItemType:        "networkmanager-connect-peer",
 		ListInput:       &networkmanager.ListConnectPeersInput{},
 		AdapterMetadata: connectPeerAdapterMetadata,
+		SDPCache:        cache,
 		SearchInputMapper: func(scope, query string) (*networkmanager.ListConnectPeersInput, error) {
 			// Search by CoreNetworkId
 			return &networkmanager.ListConnectPeersInput{

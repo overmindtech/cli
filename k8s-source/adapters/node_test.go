@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestNodeAdapter(t *testing.T) {
@@ -13,7 +14,7 @@ func TestNodeAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newNodeAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newNodeAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:  adapter,

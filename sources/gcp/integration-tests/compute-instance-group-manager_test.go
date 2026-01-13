@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -66,7 +67,7 @@ func TestComputeInstanceGroupManagerIntegration(t *testing.T) {
 		instanceGroupManagerWrapper := manual.NewComputeInstanceGroupManager(gcpshared.NewComputeInstanceGroupManagerClient(instanceGroupManagerClient), projectID, zone)
 		scope := instanceGroupManagerWrapper.Scopes()[0]
 
-		instanceGroupManagerAdapter := sources.WrapperToAdapter(instanceGroupManagerWrapper)
+		instanceGroupManagerAdapter := sources.WrapperToAdapter(instanceGroupManagerWrapper, sdpcache.NewNoOpCache())
 		sdpItem, qErr := instanceGroupManagerAdapter.Get(ctx, scope, instanceGroupManagerName, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)

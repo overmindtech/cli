@@ -14,6 +14,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 
 	// TODO: Uncomment when Azure dynamic adapters are implemented
 	// "github.com/overmindtech/cli/sources/azure/dynamic"
@@ -49,6 +50,7 @@ func init() {
 		nil, // No credentials needed for metadata registration
 		nil,
 		false,
+		sdpcache.NewNoOpCache(), // no-op cache for metadata registration
 	)
 	if err != nil {
 		panic(fmt.Errorf("error creating adapters: %w", err))
@@ -90,6 +92,9 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *AzureConfi
 	}
 
 	engine.StartSendingHeartbeats(ctx)
+
+	// Create a shared cache for all adapters in this source
+	sharedCache := sdpcache.NewCache()
 
 	err = func() error {
 		var logmsg string
@@ -144,7 +149,7 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *AzureConfi
 		// TODO: Implement linker when Azure dynamic adapters are available
 		var linker interface{} = nil
 
-		discoveryAdapters, err := adapters(ctx, cfg.SubscriptionID, cfg.TenantID, cfg.ClientID, cfg.Regions, cred, linker, true)
+		discoveryAdapters, err := adapters(ctx, cfg.SubscriptionID, cfg.TenantID, cfg.ClientID, cfg.Regions, cred, linker, true, sharedCache)
 		if err != nil {
 			return fmt.Errorf("error creating discovery adapters: %w", err)
 		}
@@ -229,6 +234,7 @@ func adapters(
 	cred *azidentity.DefaultAzureCredential,
 	linker interface{}, // TODO: Use *azureshared.Linker when azureshared package is fully implemented
 	initAzureClients bool,
+	cache sdpcache.Cache,
 ) ([]discovery.Adapter, error) {
 	discoveryAdapters := make([]discovery.Adapter, 0)
 
@@ -239,6 +245,7 @@ func adapters(
 		regions,
 		cred,
 		initAzureClients,
+		cache,
 	)
 	if err != nil {
 		return nil, err

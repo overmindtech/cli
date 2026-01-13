@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	"github.com/overmindtech/cli/sources/gcp/shared"
@@ -55,7 +56,7 @@ func TestComputeAddressIntegration(t *testing.T) {
 		addressWrapper := manual.NewComputeAddress(shared.NewComputeAddressClient(client), projectID, region)
 		scope := addressWrapper.Scopes()[0]
 
-		addressAdapter := sources.WrapperToAdapter(addressWrapper)
+		addressAdapter := sources.WrapperToAdapter(addressWrapper, sdpcache.NewNoOpCache())
 		sdpItem, qErr := addressAdapter.Get(ctx, scope, addressName, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)

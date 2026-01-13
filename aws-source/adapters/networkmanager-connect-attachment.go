@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func connectAttachmentGetFunc(ctx context.Context, client *networkmanager.Client, _, query string) (*types.ConnectAttachment, error) {
@@ -79,13 +80,14 @@ func connectAttachmentItemMapper(_, scope string, ca *types.ConnectAttachment) (
 	return &item, nil
 }
 
-func NewNetworkManagerConnectAttachmentAdapter(client *networkmanager.Client, accountID, region string) *adapterhelpers.GetListAdapter[*types.ConnectAttachment, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerConnectAttachmentAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.ConnectAttachment, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.GetListAdapter[*types.ConnectAttachment, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-connect-attachment",
 		AdapterMetadata: connectAttachmentAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *networkmanager.Client, scope string, query string) (*types.ConnectAttachment, error) {
 			return connectAttachmentGetFunc(ctx, client, scope, query)
 		},

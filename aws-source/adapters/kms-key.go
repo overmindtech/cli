@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type kmsClient interface {
@@ -120,7 +121,7 @@ func kmsKeyGetFunc(ctx context.Context, client kmsClient, scope string, input *k
 	return item, nil
 }
 
-func NewKMSKeyAdapter(client kmsClient, accountID, region string) *adapterhelpers.AlwaysGetAdapter[*kms.ListKeysInput, *kms.ListKeysOutput, *kms.DescribeKeyInput, *kms.DescribeKeyOutput, kmsClient, *kms.Options] {
+func NewKMSKeyAdapter(client kmsClient, accountID, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*kms.ListKeysInput, *kms.ListKeysOutput, *kms.DescribeKeyInput, *kms.DescribeKeyOutput, kmsClient, *kms.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*kms.ListKeysInput, *kms.ListKeysOutput, *kms.DescribeKeyInput, *kms.DescribeKeyOutput, kmsClient, *kms.Options]{
 		ItemType:        "kms-key",
 		Client:          client,
@@ -128,6 +129,7 @@ func NewKMSKeyAdapter(client kmsClient, accountID, region string) *adapterhelper
 		Region:          region,
 		ListInput:       &kms.ListKeysInput{},
 		AdapterMetadata: kmsKeyAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *kms.DescribeKeyInput {
 			return &kms.DescribeKeyInput{
 				KeyId: &query,

@@ -17,6 +17,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -80,7 +81,7 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 		nodeGroupWrapper := manual.NewComputeNodeGroup(gcpshared.NewComputeNodeGroupClient(client), projectID, zone)
 		scope := nodeGroupWrapper.Scopes()[0]
 
-		nodeGroupAdapter := sources.WrapperToAdapter(nodeGroupWrapper)
+		nodeGroupAdapter := sources.WrapperToAdapter(nodeGroupWrapper, sdpcache.NewNoOpCache())
 
 		// [SPEC] GET against a valid resource name will return an SDP item wrapping the
 		// available resource.
@@ -163,7 +164,7 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 		nodeTemplateWrapper := manual.NewComputeNodeTemplate(gcpshared.NewComputeNodeTemplateClient(ntClient), projectID, region)
 		scope := nodeTemplateWrapper.Scopes()[0]
 
-		nodeTemplateAdapter := sources.WrapperToAdapter(nodeTemplateWrapper)
+		nodeTemplateAdapter := sources.WrapperToAdapter(nodeTemplateWrapper, sdpcache.NewNoOpCache())
 
 		// [SPEC] GET against a valid resource name will return an SDP item wrapping the
 		// available resource.

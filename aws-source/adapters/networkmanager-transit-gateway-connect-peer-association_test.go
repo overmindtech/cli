@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
-
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"

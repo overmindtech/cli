@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type unifiedFirewallPolicy struct {
@@ -117,7 +118,7 @@ func firewallPolicyGetFunc(ctx context.Context, client networkFirewallClient, sc
 	return &item, nil
 }
 
-func NewNetworkFirewallFirewallPolicyAdapter(client networkFirewallClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*networkfirewall.ListFirewallPoliciesInput, *networkfirewall.ListFirewallPoliciesOutput, *networkfirewall.DescribeFirewallPolicyInput, *networkfirewall.DescribeFirewallPolicyOutput, networkFirewallClient, *networkfirewall.Options] {
+func NewNetworkFirewallFirewallPolicyAdapter(client networkFirewallClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*networkfirewall.ListFirewallPoliciesInput, *networkfirewall.ListFirewallPoliciesOutput, *networkfirewall.DescribeFirewallPolicyInput, *networkfirewall.DescribeFirewallPolicyOutput, networkFirewallClient, *networkfirewall.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*networkfirewall.ListFirewallPoliciesInput, *networkfirewall.ListFirewallPoliciesOutput, *networkfirewall.DescribeFirewallPolicyInput, *networkfirewall.DescribeFirewallPolicyOutput, networkFirewallClient, *networkfirewall.Options]{
 		ItemType:        "network-firewall-firewall-policy",
 		Client:          client,
@@ -125,6 +126,7 @@ func NewNetworkFirewallFirewallPolicyAdapter(client networkFirewallClient, accou
 		Region:          region,
 		ListInput:       &networkfirewall.ListFirewallPoliciesInput{},
 		AdapterMetadata: firewallPolicyAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *networkfirewall.DescribeFirewallPolicyInput {
 			return &networkfirewall.DescribeFirewallPolicyInput{
 				FirewallPolicyName: &query,

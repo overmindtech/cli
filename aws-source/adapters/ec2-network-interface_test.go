@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -44,14 +43,14 @@ func TestNetworkInterfaceInputMapperSearch(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name           string
-		query          string
-		expectFilter   bool
-		filterName     string
-		filterValue    string
-		expectENIId    bool
-		eniId          string
-		expectError    bool
+		name         string
+		query        string
+		expectFilter bool
+		filterName   string
+		filterValue  string
+		expectENIId  bool
+		eniId        string
+		expectError  bool
 	}{
 		{
 			name:         "Security group ID",
@@ -283,7 +282,7 @@ func TestNetworkInterfaceOutputMapper(t *testing.T) {
 func TestNewEC2NetworkInterfaceAdapter(t *testing.T) {
 	client, account, region := ec2GetAutoConfig(t)
 
-	adapter := NewEC2NetworkInterfaceAdapter(client, account, region)
+	adapter := NewEC2NetworkInterfaceAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

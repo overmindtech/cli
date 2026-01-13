@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func streamingDistributionGetFunc(ctx context.Context, client CloudFrontClient, scope string, input *cloudfront.GetStreamingDistributionInput) (*sdp.Item, error) {
@@ -156,13 +157,14 @@ func streamingDistributionGetFunc(ctx context.Context, client CloudFrontClient, 
 	return &item, nil
 }
 
-func NewCloudfrontStreamingDistributionAdapter(client CloudFrontClient, accountID string) *adapterhelpers.AlwaysGetAdapter[*cloudfront.ListStreamingDistributionsInput, *cloudfront.ListStreamingDistributionsOutput, *cloudfront.GetStreamingDistributionInput, *cloudfront.GetStreamingDistributionOutput, CloudFrontClient, *cloudfront.Options] {
+func NewCloudfrontStreamingDistributionAdapter(client CloudFrontClient, accountID string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*cloudfront.ListStreamingDistributionsInput, *cloudfront.ListStreamingDistributionsOutput, *cloudfront.GetStreamingDistributionInput, *cloudfront.GetStreamingDistributionOutput, CloudFrontClient, *cloudfront.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*cloudfront.ListStreamingDistributionsInput, *cloudfront.ListStreamingDistributionsOutput, *cloudfront.GetStreamingDistributionInput, *cloudfront.GetStreamingDistributionOutput, CloudFrontClient, *cloudfront.Options]{
 		ItemType:        "cloudfront-streaming-distribution",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata: streamingDistributionAdapterMetadata,
+		SDPCache:        cache,
 		ListInput:       &cloudfront.ListStreamingDistributionsInput{},
 		ListFuncPaginatorBuilder: func(client CloudFrontClient, input *cloudfront.ListStreamingDistributionsInput) adapterhelpers.Paginator[*cloudfront.ListStreamingDistributionsOutput, *cloudfront.Options] {
 			return cloudfront.NewListStreamingDistributionsPaginator(client, input)

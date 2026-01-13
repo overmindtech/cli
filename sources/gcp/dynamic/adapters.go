@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
@@ -19,7 +20,7 @@ const (
 )
 
 // Adapters returns a list of discovery.Adapters for the given project ID, regions, and zones.
-func Adapters(projectID string, regions []string, zones []string, linker *gcpshared.Linker, httpCli *http.Client, manualAdapters map[string]bool) ([]discovery.Adapter, error) {
+func Adapters(projectID string, regions []string, zones []string, linker *gcpshared.Linker, httpCli *http.Client, manualAdapters map[string]bool, cache sdpcache.Cache) ([]discovery.Adapter, error) {
 	var adapters []discovery.Adapter
 
 	adaptersByScope := make(map[gcpshared.Scope]map[shared.ItemType]gcpshared.AdapterMeta)
@@ -42,7 +43,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 			continue
 		}
 
-		adapter, err := MakeAdapter(sdpItemType, linker, httpCli, projectID)
+		adapter, err := MakeAdapter(sdpItemType, linker, httpCli, cache, projectID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add adapter for %s: %w", sdpItemType, err)
 		}
@@ -58,7 +59,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 				continue
 			}
 
-			adapter, err := MakeAdapter(sdpItemType, linker, httpCli, projectID, region)
+			adapter, err := MakeAdapter(sdpItemType, linker, httpCli, cache, projectID, region)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add adapter for %s in region %s: %w", sdpItemType, region, err)
 			}
@@ -75,7 +76,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 				continue
 			}
 
-			adapter, err := MakeAdapter(sdpItemType, linker, httpCli, projectID, zone)
+			adapter, err := MakeAdapter(sdpItemType, linker, httpCli, cache, projectID, zone)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add adapter for %s in zone %s: %w", sdpItemType, zone, err)
 			}
@@ -110,7 +111,7 @@ func adapterType(meta gcpshared.AdapterMeta) typeOfAdapter {
 // - For project scope: project ID
 // - For regional scope: project ID and region
 // - For zonal scope: project ID, region, and zone
-func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli *http.Client, opts ...string) (discovery.Adapter, error) {
+func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli *http.Client, cache sdpcache.Cache, opts ...string) (discovery.Adapter, error) {
 	meta, ok := gcpshared.SDPAssetTypeToAdapterMeta[sdpItemType]
 	if !ok {
 		return nil, fmt.Errorf("no adapter metadata found for item type %s", sdpItemType.String())
@@ -153,23 +154,23 @@ func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli 
 			return nil, err
 		}
 
-		return NewSearchableListableAdapter(searchEndpointFunc, listEndpoint, cfg, meta.SearchDescription), nil
+		return NewSearchableListableAdapter(searchEndpointFunc, listEndpoint, cfg, meta.SearchDescription, cache), nil
 	case Searchable:
 		searchEndpointFunc, err := meta.SearchEndpointFunc(opts...)
 		if err != nil {
 			return nil, err
 		}
 
-		return NewSearchableAdapter(searchEndpointFunc, cfg, meta.SearchDescription), nil
+		return NewSearchableAdapter(searchEndpointFunc, cfg, meta.SearchDescription, cache), nil
 	case Listable:
 		listEndpoint, err := meta.ListEndpointFunc(opts...)
 		if err != nil {
 			return nil, err
 		}
 
-		return NewListableAdapter(listEndpoint, cfg), nil
+		return NewListableAdapter(listEndpoint, cfg, cache), nil
 	case Standard:
-		return NewAdapter(cfg), nil
+		return NewAdapter(cfg, cache), nil
 	default:
 		return nil, fmt.Errorf("unknown adapter type %s", adapterType(meta))
 	}

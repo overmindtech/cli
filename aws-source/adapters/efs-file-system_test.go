@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/efs/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -95,7 +94,7 @@ func TestFileSystemOutputMapper(t *testing.T) {
 func TestNewEFSFileSystemAdapter(t *testing.T) {
 	client, account, region := efsGetAutoConfig(t)
 
-	adapter := NewEFSFileSystemAdapter(client, account, region)
+	adapter := NewEFSFileSystemAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

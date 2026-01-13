@@ -184,9 +184,8 @@ type CloudwatchInstanceMetricAdapter struct {
 	Client        CloudwatchMetricClient
 	AccountID     string
 	Region        string
-	CacheDuration time.Duration   // How long to cache items for
-	cache         *sdpcache.Cache // The sdpcache of this adapter
-	cacheInitMu   sync.Mutex      // Mutex to ensure cache is only initialised once
+	CacheDuration time.Duration  // How long to cache items for
+	SDPCache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 }
 
 // Default cache duration for metrics - matches the 15-minute period over which metrics are averaged
@@ -199,18 +198,19 @@ func (a *CloudwatchInstanceMetricAdapter) cacheDuration() time.Duration {
 	return a.CacheDuration
 }
 
-func (a *CloudwatchInstanceMetricAdapter) ensureCache() {
-	a.cacheInitMu.Lock()
-	defer a.cacheInitMu.Unlock()
+var (
+	noOpCacheCloudwatchOnce sync.Once
+	noOpCacheCloudwatch     sdpcache.Cache
+)
 
-	if a.cache == nil {
-		a.cache = sdpcache.NewCache()
+func (a *CloudwatchInstanceMetricAdapter) Cache() sdpcache.Cache {
+	if a.SDPCache == nil {
+		noOpCacheCloudwatchOnce.Do(func() {
+			noOpCacheCloudwatch = sdpcache.NewNoOpCache()
+		})
+		return noOpCacheCloudwatch
 	}
-}
-
-func (a *CloudwatchInstanceMetricAdapter) Cache() *sdpcache.Cache {
-	a.ensureCache()
-	return a.cache
+	return a.SDPCache
 }
 
 // Type returns the type of items this adapter returns
@@ -254,8 +254,12 @@ func (a *CloudwatchInstanceMetricAdapter) Get(ctx context.Context, scope string,
 	}
 
 	// Check cache first
-	a.ensureCache()
-	cacheHit, ck, cachedItems, qErr := a.cache.Lookup(ctx, a.Name(), sdp.QueryMethod_GET, scope, a.Type(), query, ignoreCache)
+	var cacheHit bool
+	var ck sdpcache.CacheKey
+	var cachedItems []*sdp.Item
+	var qErr *sdp.QueryError
+
+	cacheHit, ck, cachedItems, qErr = a.Cache().Lookup(ctx, a.Name(), sdp.QueryMethod_GET, scope, a.Type(), query, ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -305,7 +309,7 @@ func (a *CloudwatchInstanceMetricAdapter) Get(ctx context.Context, scope string,
 			Scope:       scope,
 		}
 		// Cache the error
-		a.cache.StoreError(ctx, qErr, a.cacheDuration(), ck)
+		a.Cache().StoreError(ctx, qErr, a.cacheDuration(), ck)
 		return nil, qErr
 	}
 
@@ -317,12 +321,12 @@ func (a *CloudwatchInstanceMetricAdapter) Get(ctx context.Context, scope string,
 			Scope:       scope,
 		}
 		// Cache the error
-		a.cache.StoreError(ctx, qErr, a.cacheDuration(), ck)
+		a.Cache().StoreError(ctx, qErr, a.cacheDuration(), ck)
 		return nil, qErr
 	}
 
 	// Store in cache
-	a.cache.StoreItem(ctx, item, a.cacheDuration(), ck)
+	a.Cache().StoreItem(ctx, item, a.cacheDuration(), ck)
 	return item, nil
 }
 
@@ -349,11 +353,12 @@ func (a *CloudwatchInstanceMetricAdapter) Weight() int {
 }
 
 // NewCloudwatchInstanceMetricAdapter creates a new CloudWatch instance metric adapter
-func NewCloudwatchInstanceMetricAdapter(client *cloudwatch.Client, accountID string, region string) *CloudwatchInstanceMetricAdapter {
+func NewCloudwatchInstanceMetricAdapter(client *cloudwatch.Client, accountID string, region string, cache sdpcache.Cache) *CloudwatchInstanceMetricAdapter {
 	return &CloudwatchInstanceMetricAdapter{
 		Client:    client,
 		AccountID: accountID,
 		Region:    region,
+		SDPCache:  cache,
 	}
 }
 

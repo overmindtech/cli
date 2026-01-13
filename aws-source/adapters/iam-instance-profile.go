@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func instanceProfileGetFunc(ctx context.Context, client *iam.Client, _, query string) (*types.InstanceProfile, error) {
@@ -102,13 +103,14 @@ func instanceProfileListTagsFunc(ctx context.Context, ip *types.InstanceProfile,
 	return tags
 }
 
-func NewIAMInstanceProfileAdapter(client *iam.Client, accountID string) *adapterhelpers.GetListAdapterV2[*iam.ListInstanceProfilesInput, *iam.ListInstanceProfilesOutput, *types.InstanceProfile, *iam.Client, *iam.Options] {
+func NewIAMInstanceProfileAdapter(client *iam.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapterV2[*iam.ListInstanceProfilesInput, *iam.ListInstanceProfilesOutput, *types.InstanceProfile, *iam.Client, *iam.Options] {
 	return &adapterhelpers.GetListAdapterV2[*iam.ListInstanceProfilesInput, *iam.ListInstanceProfilesOutput, *types.InstanceProfile, *iam.Client, *iam.Options]{
 		ItemType:        "iam-instance-profile",
 		Client:          client,
 		CacheDuration:   3 * time.Hour, // IAM has very low rate limits, we need to cache for a long time
 		AccountID:       accountID,
 		AdapterMetadata: instanceProfileAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *iam.Client, scope, query string) (*types.InstanceProfile, error) {
 			return instanceProfileGetFunc(ctx, client, scope, query)
 		},

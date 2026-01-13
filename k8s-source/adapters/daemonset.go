@@ -3,17 +3,19 @@ package adapters
 import (
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/apps/v1"
 
 	"k8s.io/client-go/kubernetes"
 )
 
-func newDaemonSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newDaemonSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.DaemonSet, *v1.DaemonSetList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,
 		TypeName:         "DaemonSet",
 		AutoQueryExtract: true,
+		cacheField:       cache,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.DaemonSet, *v1.DaemonSetList] {
 			return cs.AppsV1().DaemonSets(namespace)
 		},

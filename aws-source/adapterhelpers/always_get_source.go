@@ -79,9 +79,8 @@ type AlwaysGetAdapter[ListInput InputType, ListOutput OutputType, GetInput Input
 	// included in case it is required
 	ListFuncOutputMapper func(output ListOutput, input ListInput) ([]GetInput, error)
 
-	CacheDuration time.Duration   // How long to cache items for
-	cache         *sdpcache.Cache // The sdpcache of this adapter
-	cacheInitMu   sync.Mutex      // Mutex to ensure cache is only initialised once
+	CacheDuration time.Duration  // How long to cache items for
+	SDPCache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 }
 
 func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) cacheDuration() time.Duration {
@@ -92,18 +91,19 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 	return s.CacheDuration
 }
 
-func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) ensureCache() {
-	s.cacheInitMu.Lock()
-	defer s.cacheInitMu.Unlock()
+var (
+	noOpCacheAlwaysGetOnce sync.Once
+	noOpCacheAlwaysGet     sdpcache.Cache
+)
 
-	if s.cache == nil {
-		s.cache = sdpcache.NewCache()
+func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) Cache() sdpcache.Cache {
+	if s.SDPCache == nil {
+		noOpCacheAlwaysGetOnce.Do(func() {
+			noOpCacheAlwaysGet = sdpcache.NewNoOpCache()
+		})
+		return noOpCacheAlwaysGet
 	}
-}
-
-func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) Cache() *sdpcache.Cache {
-	s.ensureCache()
-	return s.cache
+	return s.SDPCache
 }
 
 // Validate Checks that the adapter has been set up correctly
@@ -168,8 +168,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		return nil, WrapAWSError(err)
 	}
 
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -187,12 +186,12 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 	if err != nil {
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
-			s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+			s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
 		}
 		return nil, err
 	}
 
-	s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
+	s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 	return item, nil
 }
 
@@ -218,8 +217,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		return
 	}
 
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
 	if qErr != nil {
 		stream.SendError(qErr)
 		return
@@ -251,7 +249,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		if err != nil {
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
-				s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+				s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
 			}
 			stream.SendError(err)
 			return
@@ -261,7 +259,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		if err != nil {
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
-				s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+				s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
 			}
 			stream.SendError(err)
 			return
@@ -278,7 +276,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 					stream.SendError(WrapAWSError(err))
 				}
 				if item != nil {
-					s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
+					s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 					stream.SendItem(item)
 				}
 
@@ -322,8 +320,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 // SearchCustom Searches using custom mapping logic. The SearchInputMapper is
 // used to create an input for ListFunc, at which point the usual logic is used
 func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) SearchCustom(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
 	if qErr != nil {
 		stream.SendError(qErr)
 		return
@@ -356,14 +353,14 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		if err != nil {
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
-				s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+				s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
 			}
 			stream.SendError(err)
 			return
 		}
 
 		if item != nil {
-			s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
+			s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 			stream.SendItem(item)
 		}
 	} else {

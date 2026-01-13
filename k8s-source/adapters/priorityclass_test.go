@@ -2,6 +2,8 @@ package adapters
 
 import (
 	"testing"
+
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var priorityClassYAML = `
@@ -20,7 +22,7 @@ func TestPriorityClassAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newPriorityClassAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newPriorityClassAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:       adapter,

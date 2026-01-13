@@ -1,10 +1,9 @@
 package adapters
 
 import (
-	"testing"
-
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
+	"testing"
 )
 
 func directconnectGetAutoConfig(t *testing.T) (*directconnect.Client, string, string) {

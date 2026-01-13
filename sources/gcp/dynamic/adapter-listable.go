@@ -20,14 +20,14 @@ type ListableAdapter struct {
 }
 
 // NewListableAdapter creates a new GCP dynamic adapter.
-func NewListableAdapter(listEndpoint string, config *AdapterConfig) discovery.ListableAdapter {
+func NewListableAdapter(listEndpoint string, config *AdapterConfig, cache sdpcache.Cache) discovery.ListableAdapter {
 	return ListableAdapter{
 		listEndpoint: listEndpoint,
 		Adapter: Adapter{
 			projectID:            config.ProjectID,
 			scope:                config.Scope,
 			httpCli:              config.HTTPClient,
-			cache:                sdpcache.NewCache(),
+			Cache:                cache,
 			getURLFunc:           config.GetURLFunc,
 			sdpAssetType:         config.SDPAssetType,
 			sdpAdapterCategory:   config.SDPAdapterCategory,
@@ -66,7 +66,7 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 		}
 	}
 
-	cacheHit, ck, cachedItems, qErr := g.cache.Lookup(
+	cacheHit, ck, cachedItems, qErr := g.GetCache().Lookup(
 		ctx,
 		g.Name(),
 		sdp.QueryMethod_LIST,
@@ -95,7 +95,7 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 	}
 
 	for _, item := range items {
-		g.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
+		g.GetCache().StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 	}
 
 	return items, nil
@@ -110,7 +110,7 @@ func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCac
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr := g.cache.Lookup(
+	cacheHit, ck, cachedItems, qErr := g.GetCache().Lookup(
 		ctx,
 		g.Name(),
 		sdp.QueryMethod_LIST,
@@ -137,5 +137,5 @@ func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCac
 		return
 	}
 
-	streamSDPItems(ctx, g.Adapter, g.listEndpoint, stream, g.cache, ck)
+	streamSDPItems(ctx, g.Adapter, g.listEndpoint, stream, g.GetCache(), ck)
 }

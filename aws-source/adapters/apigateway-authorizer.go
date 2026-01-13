@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 // convertGetAuthorizerOutputToAuthorizer converts a GetAuthorizerOutput to an Authorizer
@@ -58,13 +59,14 @@ func authorizerOutputMapper(query, scope string, awsItem *types.Authorizer) (*sd
 	return &item, nil
 }
 
-func NewAPIGatewayAuthorizerAdapter(client *apigateway.Client, accountID string, region string) *adapterhelpers.GetListAdapter[*types.Authorizer, *apigateway.Client, *apigateway.Options] {
+func NewAPIGatewayAuthorizerAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.Authorizer, *apigateway.Client, *apigateway.Options] {
 	return &adapterhelpers.GetListAdapter[*types.Authorizer, *apigateway.Client, *apigateway.Options]{
 		ItemType:        "apigateway-authorizer",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: authorizerAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.Authorizer, error) {
 			f := strings.Split(query, "/")
 			if len(f) != 2 {

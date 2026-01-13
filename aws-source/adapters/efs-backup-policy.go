@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func BackupPolicyOutputMapper(_ context.Context, _ *efs.Client, scope string, input *efs.DescribeBackupPolicyInput, output *efs.DescribeBackupPolicyOutput) ([]*sdp.Item, error) {
@@ -50,13 +51,14 @@ func BackupPolicyOutputMapper(_ context.Context, _ *efs.Client, scope string, in
 	return []*sdp.Item{&item}, nil
 }
 
-func NewEFSBackupPolicyAdapter(client *efs.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*efs.DescribeBackupPolicyInput, *efs.DescribeBackupPolicyOutput, *efs.Client, *efs.Options] {
+func NewEFSBackupPolicyAdapter(client *efs.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*efs.DescribeBackupPolicyInput, *efs.DescribeBackupPolicyOutput, *efs.Client, *efs.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*efs.DescribeBackupPolicyInput, *efs.DescribeBackupPolicyOutput, *efs.Client, *efs.Options]{
 		ItemType:        "efs-backup-policy",
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: backupPolicyAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *efs.Client, input *efs.DescribeBackupPolicyInput) (*efs.DescribeBackupPolicyOutput, error) {
 			return client.DescribeBackupPolicy(ctx, input)
 		},

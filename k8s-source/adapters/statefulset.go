@@ -6,6 +6,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -66,10 +67,11 @@ func statefulSetExtractor(resource *v1.StatefulSet, scope string) ([]*sdp.Linked
 	return queries, nil
 }
 
-func newStatefulSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newStatefulSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.StatefulSet, *v1.StatefulSetList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,
+		cacheField:       cache,
 		TypeName:         "StatefulSet",
 		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.StatefulSet, *v1.StatefulSetList] {

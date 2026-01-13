@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func connectPeerAssociationsOutputMapper(_ context.Context, _ *networkmanager.Client, scope string, _ *networkmanager.GetConnectPeerAssociationsInput, output *networkmanager.GetConnectPeerAssociationsOutput) ([]*sdp.Item, error) {
@@ -113,13 +114,14 @@ func connectPeerAssociationsOutputMapper(_ context.Context, _ *networkmanager.Cl
 	return items, nil
 }
 
-func NewNetworkManagerConnectPeerAssociationAdapter(client *networkmanager.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetConnectPeerAssociationsInput, *networkmanager.GetConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerConnectPeerAssociationAdapter(client *networkmanager.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetConnectPeerAssociationsInput, *networkmanager.GetConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetConnectPeerAssociationsInput, *networkmanager.GetConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-connect-peer-association",
 		AdapterMetadata: connectPeerAssociationAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.GetConnectPeerAssociationsInput) (*networkmanager.GetConnectPeerAssociationsOutput, error) {
 			return client.GetConnectPeerAssociations(ctx, input)
 		},

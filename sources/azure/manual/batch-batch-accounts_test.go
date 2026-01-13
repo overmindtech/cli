@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/manual"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -55,7 +56,7 @@ func TestBatchAccount(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
 		if qErr != nil {
@@ -211,7 +212,7 @@ func TestBatchAccount(t *testing.T) {
 		mockClient := mocks.NewMockBatchAccountsClient(ctrl)
 
 		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
 		if qErr == nil {
@@ -223,7 +224,7 @@ func TestBatchAccount(t *testing.T) {
 		mockClient := mocks.NewMockBatchAccountsClient(ctrl)
 
 		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with no query parts
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
@@ -241,7 +242,7 @@ func TestBatchAccount(t *testing.T) {
 			armbatch.AccountClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
 		if qErr == nil {
@@ -267,7 +268,7 @@ func TestBatchAccount(t *testing.T) {
 		mockClient.EXPECT().ListByResourceGroup(ctx, resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -313,7 +314,7 @@ func TestBatchAccount(t *testing.T) {
 		mockClient.EXPECT().ListByResourceGroup(ctx, resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -344,7 +345,7 @@ func TestBatchAccount(t *testing.T) {
 		mockClient.EXPECT().ListByResourceGroup(ctx, resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -466,7 +467,7 @@ func TestBatchAccount(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
 		if qErr != nil {

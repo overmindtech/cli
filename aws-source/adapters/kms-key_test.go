@@ -5,10 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
-
-	"github.com/aws/aws-sdk-go-v2/service/kms"
 )
 
 type kmsTestClient struct{}
@@ -89,11 +88,11 @@ func TestKMSGetFunc(t *testing.T) {
 }
 
 func TestNewKMSKeyAdapter(t *testing.T) {
-	t.Skip("This test is currently failing due to a key that none of us can read, even with admin permissions. I think we will need to speak with AWS support to work out how to delete it")
+	t.Skip("This test is currently failing due to a key that none of us can read, even with admin permissions. I think we will need to speak with AWS support to work out how to delete it", nil)
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 	client := kms.NewFromConfig(config)
 
-	adapter := NewKMSKeyAdapter(client, account, region)
+	adapter := NewKMSKeyAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

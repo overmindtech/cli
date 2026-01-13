@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func getSiteToSiteVpnAttachmentGetFunc(ctx context.Context, client *networkmanager.Client, _, query string) (*types.SiteToSiteVpnAttachment, error) {
@@ -87,13 +88,14 @@ func siteToSiteVpnAttachmentItemMapper(_, scope string, awsItem *types.SiteToSit
 	return &item, nil
 }
 
-func NewNetworkManagerSiteToSiteVpnAttachmentAdapter(client *networkmanager.Client, accountID, region string) *adapterhelpers.GetListAdapter[*types.SiteToSiteVpnAttachment, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerSiteToSiteVpnAttachmentAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.SiteToSiteVpnAttachment, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.GetListAdapter[*types.SiteToSiteVpnAttachment, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-site-to-site-vpn-attachment",
 		AdapterMetadata: siteToSiteVpnAttachmentAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *networkmanager.Client, scope string, query string) (*types.SiteToSiteVpnAttachment, error) {
 			return getSiteToSiteVpnAttachmentGetFunc(ctx, client, scope, query)
 		},

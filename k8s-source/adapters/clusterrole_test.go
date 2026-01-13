@@ -2,6 +2,8 @@ package adapters
 
 import (
 	"testing"
+
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var clusterRoleYAML = `
@@ -17,7 +19,7 @@ rules:
 `
 
 func TestClusterRoleAdapter(t *testing.T) {
-	adapter := newClusterRoleAdapter(CurrentCluster.ClientSet, CurrentCluster.Name, []string{})
+	adapter := newClusterRoleAdapter(CurrentCluster.ClientSet, CurrentCluster.Name, []string{}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:       adapter,

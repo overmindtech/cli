@@ -97,7 +97,7 @@ func TestReservedInstanceOutputMapper(t *testing.T) {
 func TestNewEC2ReservedInstanceAdapter(t *testing.T) {
 	client, account, region := ec2GetAutoConfig(t)
 
-	adapter := NewEC2ReservedInstanceAdapter(client, account, region)
+	adapter := NewEC2ReservedInstanceAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

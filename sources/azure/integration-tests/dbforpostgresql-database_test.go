@@ -19,6 +19,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -110,7 +111,7 @@ func TestDBforPostgreSQLDatabaseIntegration(t *testing.T) {
 			)
 			scope := pgDbWrapper.Scopes()[0]
 
-			pgDbAdapter := sources.WrapperToAdapter(pgDbWrapper)
+			pgDbAdapter := sources.WrapperToAdapter(pgDbWrapper, sdpcache.NewNoOpCache())
 			// Get requires serverName and databaseName as query parts
 			query := shared.CompositeLookupKey(postgreSQLServerName, integrationTestPostgreSQLDatabaseName)
 			sdpItem, qErr := pgDbAdapter.Get(ctx, scope, query, true)
@@ -164,7 +165,7 @@ func TestDBforPostgreSQLDatabaseIntegration(t *testing.T) {
 			)
 			scope := pgDbWrapper.Scopes()[0]
 
-			pgDbAdapter := sources.WrapperToAdapter(pgDbWrapper)
+			pgDbAdapter := sources.WrapperToAdapter(pgDbWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports search
 			searchable, ok := pgDbAdapter.(discovery.SearchableAdapter)
@@ -212,7 +213,7 @@ func TestDBforPostgreSQLDatabaseIntegration(t *testing.T) {
 			)
 			scope := pgDbWrapper.Scopes()[0]
 
-			pgDbAdapter := sources.WrapperToAdapter(pgDbWrapper)
+			pgDbAdapter := sources.WrapperToAdapter(pgDbWrapper, sdpcache.NewNoOpCache())
 			query := shared.CompositeLookupKey(postgreSQLServerName, integrationTestPostgreSQLDatabaseName)
 			sdpItem, qErr := pgDbAdapter.Get(ctx, scope, query, true)
 			if qErr != nil {
