@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func getTransitGatewayPeeringGetFunc(ctx context.Context, client *networkmanager.Client, _, query string) (*types.TransitGatewayPeering, error) {
@@ -103,13 +104,14 @@ func transitGatewayPeeringItemMapper(_, scope string, awsItem *types.TransitGate
 	return &item, nil
 }
 
-func NewNetworkManagerTransitGatewayPeeringAdapter(client *networkmanager.Client, accountID, region string) *adapterhelpers.GetListAdapter[*types.TransitGatewayPeering, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerTransitGatewayPeeringAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.TransitGatewayPeering, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.GetListAdapter[*types.TransitGatewayPeering, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-transit-gateway-peering",
 		AdapterMetadata: transitGatewayPeeringAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *networkmanager.Client, scope string, query string) (*types.TransitGatewayPeering, error) {
 			return getTransitGatewayPeeringGetFunc(ctx, client, scope, query)
 		},

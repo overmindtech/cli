@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func KeyGroupItemMapper(_, scope string, awsItem *types.KeyGroup) (*sdp.Item, error) {
@@ -27,13 +28,14 @@ func KeyGroupItemMapper(_, scope string, awsItem *types.KeyGroup) (*sdp.Item, er
 	return &item, nil
 }
 
-func NewCloudfrontKeyGroupAdapter(client *cloudfront.Client, accountID string) *adapterhelpers.GetListAdapter[*types.KeyGroup, *cloudfront.Client, *cloudfront.Options] {
+func NewCloudfrontKeyGroupAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.KeyGroup, *cloudfront.Client, *cloudfront.Options] {
 	return &adapterhelpers.GetListAdapter[*types.KeyGroup, *cloudfront.Client, *cloudfront.Options]{
 		ItemType:        "cloudfront-key-group",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata: keyGroupAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *cloudfront.Client, scope, query string) (*types.KeyGroup, error) {
 			out, err := client.GetKeyGroup(ctx, &cloudfront.GetKeyGroupInput{
 				Id: &query,

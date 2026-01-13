@@ -19,11 +19,12 @@ import (
 const CacheDuration = 10 * time.Minute
 
 // NewS3Source Creates a new S3 adapter
-func NewS3Adapter(config aws.Config, accountID string) *S3Source {
+func NewS3Adapter(config aws.Config, accountID string, cache sdpcache.Cache) *S3Source {
 	return &S3Source{
 		config:          config,
 		accountID:       accountID,
 		AdapterMetadata: s3Metadata,
+		SDPCache:        cache,
 	}
 }
 
@@ -80,23 +81,12 @@ type S3Source struct {
 	clientMutex     sync.Mutex
 	AdapterMetadata *sdp.AdapterMetadata
 
-	CacheDuration time.Duration   // How long to cache items for
-	cache         *sdpcache.Cache // The sdpcache of this adapter
-	cacheInitMu   sync.Mutex      // Mutex to ensure cache is only initialised once
+	CacheDuration time.Duration  // How long to cache items for
+	SDPCache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 }
 
-func (s *S3Source) ensureCache() {
-	s.cacheInitMu.Lock()
-	defer s.cacheInitMu.Unlock()
-
-	if s.cache == nil {
-		s.cache = sdpcache.NewCache()
-	}
-}
-
-func (s *S3Source) Cache() *sdpcache.Cache {
-	s.ensureCache()
-	return s.cache
+func (s *S3Source) Cache() sdpcache.Cache {
+	return s.SDPCache
 }
 
 func (s *S3Source) Client() *s3.Client {
@@ -202,12 +192,16 @@ func (s *S3Source) Get(ctx context.Context, scope string, query string, ignoreCa
 		}
 	}
 
-	s.ensureCache()
-	return getImpl(ctx, s.cache, s.Client(), scope, query, ignoreCache)
+	return getImpl(ctx, s.SDPCache, s.Client(), scope, query, ignoreCache)
 }
 
-func getImpl(ctx context.Context, cache *sdpcache.Cache, client S3Client, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
-	cacheHit, ck, cachedItems, qErr := cache.Lookup(ctx, "aws-s3-adapter", sdp.QueryMethod_GET, scope, "s3-bucket", query, ignoreCache)
+func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
+	var cacheHit bool
+	var ck sdpcache.CacheKey
+	var cachedItems []*sdp.Item
+	var qErr *sdp.QueryError
+
+	cacheHit, ck, cachedItems, qErr = cache.Lookup(ctx, "aws-s3-adapter", sdp.QueryMethod_GET, scope, "s3-bucket", query, ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -602,12 +596,16 @@ func (s *S3Source) List(ctx context.Context, scope string, ignoreCache bool) ([]
 		}
 	}
 
-	s.ensureCache()
-	return listImpl(ctx, s.cache, s.Client(), scope, ignoreCache)
+	return listImpl(ctx, s.SDPCache, s.Client(), scope, ignoreCache)
 }
 
-func listImpl(ctx context.Context, cache *sdpcache.Cache, client S3Client, scope string, ignoreCache bool) ([]*sdp.Item, error) {
-	cacheHit, ck, cachedItems, qErr := cache.Lookup(ctx, "aws-s3-adapter", sdp.QueryMethod_LIST, scope, "s3-bucket", "", ignoreCache)
+func listImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope string, ignoreCache bool) ([]*sdp.Item, error) {
+	var cacheHit bool
+	var ck sdpcache.CacheKey
+	var cachedItems []*sdp.Item
+	var qErr *sdp.QueryError
+
+	cacheHit, ck, cachedItems, qErr = cache.Lookup(ctx, "aws-s3-adapter", sdp.QueryMethod_LIST, scope, "s3-bucket", "", ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -655,11 +653,10 @@ func (s *S3Source) Search(ctx context.Context, scope string, query string, ignor
 		}
 	}
 
-	s.ensureCache()
-	return searchImpl(ctx, s.cache, s.Client(), scope, query, ignoreCache)
+	return searchImpl(ctx, s.SDPCache, s.Client(), scope, query, ignoreCache)
 }
 
-func searchImpl(ctx context.Context, cache *sdpcache.Cache, client S3Client, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
+func searchImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
 	// Parse the ARN
 	a, err := adapterhelpers.ParseARN(query)
 

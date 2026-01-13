@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/route53/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -74,7 +73,7 @@ func TestHealthCheckItemMapper(t *testing.T) {
 func TestNewRoute53HealthCheckAdapter(t *testing.T) {
 	client, account, region := route53GetAutoConfig(t)
 
-	adapter := NewRoute53HealthCheckAdapter(client, account, region)
+	adapter := NewRoute53HealthCheckAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

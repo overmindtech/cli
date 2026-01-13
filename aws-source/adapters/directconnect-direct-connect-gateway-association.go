@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 const (
@@ -79,13 +80,14 @@ func directConnectGatewayAssociationOutputMapper(_ context.Context, _ *directcon
 	return items, nil
 }
 
-func NewDirectConnectGatewayAssociationAdapter(client *directconnect.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationsInput, *directconnect.DescribeDirectConnectGatewayAssociationsOutput, *directconnect.Client, *directconnect.Options] {
+func NewDirectConnectGatewayAssociationAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationsInput, *directconnect.DescribeDirectConnectGatewayAssociationsOutput, *directconnect.Client, *directconnect.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationsInput, *directconnect.DescribeDirectConnectGatewayAssociationsOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-direct-connect-gateway-association",
 		AdapterMetadata: directConnectGatewayAssociationAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationsInput) (*directconnect.DescribeDirectConnectGatewayAssociationsOutput, error) {
 			return client.DescribeDirectConnectGatewayAssociations(ctx, input)
 		},

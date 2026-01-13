@@ -107,7 +107,7 @@ func (b BigQueryTableWrapper) Search(ctx context.Context, queryParts ...string) 
 	return items, nil
 }
 
-func (b BigQueryTableWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
+func (b BigQueryTableWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
 	// queryParts[0]: Dataset ID
 	b.client.ListStream(ctx, b.ProjectID(), queryParts[0], stream, func(md *bigquery.TableMetadata) (*sdp.Item, *sdp.QueryError) {
 		item, qerr := b.GCPBigQueryTableToItem(md)

@@ -19,6 +19,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -122,7 +123,7 @@ func TestComputeVirtualMachineScaleSetIntegration(t *testing.T) {
 			)
 			scope := vmssWrapper.Scopes()[0]
 
-			vmssAdapter := sources.WrapperToAdapter(vmssWrapper)
+			vmssAdapter := sources.WrapperToAdapter(vmssWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := vmssAdapter.Get(ctx, scope, integrationTestVMSSName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -162,7 +163,7 @@ func TestComputeVirtualMachineScaleSetIntegration(t *testing.T) {
 			)
 			scope := vmssWrapper.Scopes()[0]
 
-			vmssAdapter := sources.WrapperToAdapter(vmssWrapper)
+			vmssAdapter := sources.WrapperToAdapter(vmssWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports listing
 			listable, ok := vmssAdapter.(discovery.ListableAdapter)
@@ -210,7 +211,7 @@ func TestComputeVirtualMachineScaleSetIntegration(t *testing.T) {
 			)
 			scope := vmssWrapper.Scopes()[0]
 
-			vmssAdapter := sources.WrapperToAdapter(vmssWrapper)
+			vmssAdapter := sources.WrapperToAdapter(vmssWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := vmssAdapter.Get(ctx, scope, integrationTestVMSSName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -294,7 +295,7 @@ func TestComputeVirtualMachineScaleSetIntegration(t *testing.T) {
 			)
 			scope := vmssWrapper.Scopes()[0]
 
-			vmssAdapter := sources.WrapperToAdapter(vmssWrapper)
+			vmssAdapter := sources.WrapperToAdapter(vmssWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := vmssAdapter.Get(ctx, scope, integrationTestVMSSName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)

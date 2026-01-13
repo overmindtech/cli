@@ -31,4 +31,3 @@ func NewAzureCredential(ctx context.Context) (*azidentity.DefaultAzureCredential
 
 	return cred, nil
 }
-

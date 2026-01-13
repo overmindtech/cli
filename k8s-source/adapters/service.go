@@ -3,6 +3,7 @@ package adapters
 import (
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/core/v1"
 	metaV1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -128,11 +129,12 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 	return queries, nil
 }
 
-func newServiceAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newServiceAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Service, *v1.ServiceList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Service",
+		cacheField:  cache,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Service, *v1.ServiceList] {
 			return cs.CoreV1().Services(namespace)
 		},

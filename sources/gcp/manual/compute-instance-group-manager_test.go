@@ -13,6 +13,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -36,7 +37,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createInstanceGroupManager("test-instance-group-manager", true, instanceTemplateName), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance-group-manager", true)
 		if qErr != nil {
@@ -52,7 +53,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 				igm := createInstanceGroupManager("test-instance-group-manager", true, instanceTemplateName)
 
 				wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
-				adapter := sources.WrapperToAdapter(wrapper)
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(igm, nil)
 
 				sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance-group-manager", true)
@@ -111,7 +112,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 				igm := createInstanceGroupManager("test-instance-group-manager", true, regionalInstanceTemplateName)
 
 				wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
-				adapter := sources.WrapperToAdapter(wrapper)
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(igm, nil)
 
 				sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance-group-manager", true)
@@ -190,7 +191,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
-				adapter := sources.WrapperToAdapter(wrapper)
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createInstanceGroupManager("test-instance-group-manager", tc.isStable, instanceTemplateName), nil)
 
@@ -208,7 +209,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 
 	t.Run("List", func(t *testing.T) {
 		wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockComputeInstanceGroupManagerIterator(ctrl)
 
@@ -251,7 +252,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 
 	t.Run("ListStream", func(t *testing.T) {
 		wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockComputeInstanceGroupManagerIterator(ctrl)
 		mockIterator.EXPECT().Next().Return(createInstanceGroupManager("instance-group-manager-1", true, instanceTemplateName), nil)

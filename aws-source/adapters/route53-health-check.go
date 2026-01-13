@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type HealthCheck struct {
@@ -130,7 +131,7 @@ func healthCheckItemMapper(_, scope string, awsItem *HealthCheck) (*sdp.Item, er
 	return &item, nil
 }
 
-func NewRoute53HealthCheckAdapter(client *route53.Client, accountID string, region string) *adapterhelpers.GetListAdapter[*HealthCheck, *route53.Client, *route53.Options] {
+func NewRoute53HealthCheckAdapter(client *route53.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*HealthCheck, *route53.Client, *route53.Options] {
 	return &adapterhelpers.GetListAdapter[*HealthCheck, *route53.Client, *route53.Options]{
 		ItemType:        "route53-health-check",
 		Client:          client,
@@ -140,6 +141,7 @@ func NewRoute53HealthCheckAdapter(client *route53.Client, accountID string, regi
 		ListFunc:        healthCheckListFunc,
 		ItemMapper:      healthCheckItemMapper,
 		AdapterMetadata: healthCheckAdapterMetadata,
+		SDPCache:        cache,
 		ListTagsFunc: func(ctx context.Context, hc *HealthCheck, c *route53.Client) (map[string]string, error) {
 			if hc.Id == nil {
 				return nil, nil

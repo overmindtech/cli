@@ -63,7 +63,7 @@ type SearchStreamableAdapter interface {
 // CachingAdapter Is an adapter of items that supports caching
 type CachingAdapter interface {
 	Adapter
-	Cache() *sdpcache.Cache
+	Cache() sdpcache.Cache
 }
 
 // SearchableAdapter Is an adapter of items that supports searching

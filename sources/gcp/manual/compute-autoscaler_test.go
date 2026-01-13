@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -34,7 +35,7 @@ func TestComputeAutoscalerWrapper(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createAutoscalerApiFixture("test-autoscaler"), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-autoscaler", true)
 		if qErr != nil {
@@ -103,7 +104,7 @@ func TestComputeAutoscalerWrapper(t *testing.T) {
 	t.Run("List", func(t *testing.T) {
 		wrapper := manual.NewComputeAutoscaler(mockClient, projectID, zone)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeAutoscalerIter := mocks.NewMockComputeAutoscalerIterator(ctrl)
 
@@ -139,7 +140,7 @@ func TestComputeAutoscalerWrapper(t *testing.T) {
 
 	t.Run("ListStream", func(t *testing.T) {
 		wrapper := manual.NewComputeAutoscaler(mockClient, projectID, zone)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeAutoscalerIter := mocks.NewMockComputeAutoscalerIterator(ctrl)
 		mockComputeAutoscalerIter.EXPECT().Next().Return(createAutoscalerApiFixture("test-autoscaler-1"), nil)

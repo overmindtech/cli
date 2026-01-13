@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/sourcegraph/conc/iter"
 )
 
@@ -249,7 +250,7 @@ func roleListTagsFunc(ctx context.Context, r *RoleDetails, client IAMClient) (ma
 	return tags, nil
 }
 
-func NewIAMRoleAdapter(client IAMClient, accountID string) *adapterhelpers.GetListAdapterV2[*iam.ListRolesInput, *iam.ListRolesOutput, *RoleDetails, IAMClient, *iam.Options] {
+func NewIAMRoleAdapter(client IAMClient, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapterV2[*iam.ListRolesInput, *iam.ListRolesOutput, *RoleDetails, IAMClient, *iam.Options] {
 	return &adapterhelpers.GetListAdapterV2[*iam.ListRolesInput, *iam.ListRolesOutput, *RoleDetails, IAMClient, *iam.Options]{
 		ItemType:      "iam-role",
 		Client:        client,

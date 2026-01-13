@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func natGatewayInputMapperGet(scope string, query string) (*ec2.DescribeNatGatewaysInput, error) {
@@ -137,13 +138,14 @@ func natGatewayOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 	return items, nil
 }
 
-func NewEC2NatGatewayAdapter(client *ec2.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeNatGatewaysInput, *ec2.DescribeNatGatewaysOutput, *ec2.Client, *ec2.Options] {
+func NewEC2NatGatewayAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeNatGatewaysInput, *ec2.DescribeNatGatewaysOutput, *ec2.Client, *ec2.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeNatGatewaysInput, *ec2.DescribeNatGatewaysOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-nat-gateway",
 		AdapterMetadata: natGatewayAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeNatGatewaysInput) (*ec2.DescribeNatGatewaysOutput, error) {
 			return client.DescribeNatGateways(ctx, input)
 		},

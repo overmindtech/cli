@@ -148,7 +148,7 @@ func (c cloudKMSCryptoKeyWrapper) Search(ctx context.Context, queryParts ...stri
 	return items, nil
 }
 
-func (c cloudKMSCryptoKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
+func (c cloudKMSCryptoKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
 	location := queryParts[0]
 	keyRing := queryParts[1]
 

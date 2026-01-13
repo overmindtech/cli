@@ -13,6 +13,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -35,7 +36,7 @@ func TestComputeForwardingRule(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createForwardingRule("test-rule", projectID, region, "192.168.1.1"), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-rule", true)
 		if qErr != nil {
@@ -97,7 +98,7 @@ func TestComputeForwardingRule(t *testing.T) {
 	t.Run("List", func(t *testing.T) {
 		wrapper := manual.NewComputeForwardingRule(mockClient, projectID, region)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockForwardingRuleIterator(ctrl)
 
@@ -137,7 +138,7 @@ func TestComputeForwardingRule(t *testing.T) {
 	t.Run("ListStream", func(t *testing.T) {
 		wrapper := manual.NewComputeForwardingRule(mockClient, projectID, region)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockForwardingRuleIterator(ctrl)
 

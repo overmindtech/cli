@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func directConnectGatewayAssociationProposalOutputMapper(_ context.Context, _ *directconnect.Client, scope string, _ *directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, output *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput) ([]*sdp.Item, error) {
@@ -50,12 +51,13 @@ func directConnectGatewayAssociationProposalOutputMapper(_ context.Context, _ *d
 	return items, nil
 }
 
-func NewDirectConnectGatewayAssociationProposalAdapter(client *directconnect.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, *directconnect.Client, *directconnect.Options] {
+func NewDirectConnectGatewayAssociationProposalAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, *directconnect.Client, *directconnect.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: directConnectGatewayAssociationProposalAdapterMetadata,
+		SDPCache:        cache,
 		ItemType:        "directconnect-direct-connect-gateway-association-proposal",
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationProposalsInput) (*directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, error) {
 			return client.DescribeDirectConnectGatewayAssociationProposals(ctx, input)

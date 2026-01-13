@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func cachePolicyListFunc(ctx context.Context, client CloudFrontClient, scope string) ([]*types.CachePolicy, error) {
@@ -37,13 +38,14 @@ func cachePolicyListFunc(ctx context.Context, client CloudFrontClient, scope str
 	return policies, nil
 }
 
-func NewCloudfrontCachePolicyAdapter(client CloudFrontClient, accountID string) *adapterhelpers.GetListAdapter[*types.CachePolicy, CloudFrontClient, *cloudfront.Options] {
+func NewCloudfrontCachePolicyAdapter(client CloudFrontClient, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.CachePolicy, CloudFrontClient, *cloudfront.Options] {
 	return &adapterhelpers.GetListAdapter[*types.CachePolicy, CloudFrontClient, *cloudfront.Options]{
 		ItemType:               "cloudfront-cache-policy",
 		Client:                 client,
 		AccountID:              accountID,
 		Region:                 "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata:        cachePolicyAdapterMetadata,
+		SDPCache:               cache,
 		SupportGlobalResources: true, // Some policies are global
 		GetFunc: func(ctx context.Context, client CloudFrontClient, scope, query string) (*types.CachePolicy, error) {
 			out, err := client.GetCachePolicy(ctx, &cloudfront.GetCachePolicyInput{

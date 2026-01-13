@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -120,7 +119,7 @@ func TestDirectConnectGatewayAssociationOutputMapper_Health_Error(t *testing.T) 
 func TestNewDirectConnectGatewayAssociationAdapter(t *testing.T) {
 	client, account, region := directconnectGetAutoConfig(t)
 
-	adapter := NewDirectConnectGatewayAssociationAdapter(client, account, region)
+	adapter := NewDirectConnectGatewayAssociationAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter:  adapter,

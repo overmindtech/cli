@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func FileSystemOutputMapper(_ context.Context, _ *efs.Client, scope string, input *efs.DescribeFileSystemsInput, output *efs.DescribeFileSystemsOutput) ([]*sdp.Item, error) {
@@ -93,13 +94,14 @@ func FileSystemOutputMapper(_ context.Context, _ *efs.Client, scope string, inpu
 	return items, nil
 }
 
-func NewEFSFileSystemAdapter(client *efs.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*efs.DescribeFileSystemsInput, *efs.DescribeFileSystemsOutput, *efs.Client, *efs.Options] {
+func NewEFSFileSystemAdapter(client *efs.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*efs.DescribeFileSystemsInput, *efs.DescribeFileSystemsOutput, *efs.Client, *efs.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*efs.DescribeFileSystemsInput, *efs.DescribeFileSystemsOutput, *efs.Client, *efs.Options]{
 		ItemType:        "efs-file-system",
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: efsFileSystemAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *efs.Client, input *efs.DescribeFileSystemsInput) (*efs.DescribeFileSystemsOutput, error) {
 			return client.DescribeFileSystems(ctx, input)
 		},

@@ -2,6 +2,8 @@ package adapters
 
 import (
 	"testing"
+
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var storageClassYAML = `
@@ -21,7 +23,7 @@ func TestStorageClassAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newStorageClassAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newStorageClassAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

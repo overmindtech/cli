@@ -28,9 +28,8 @@ type DescribeOnlyAdapter[Input InputType, Output OutputType, ClientStruct Client
 	ItemType          string // The type of items that will be returned
 	AdapterMetadata   *sdp.AdapterMetadata
 
-	CacheDuration time.Duration   // How long to cache items for
-	cache         *sdpcache.Cache // The sdpcache of this adapter
-	cacheInitMu   sync.Mutex      // Mutex to ensure cache is only initialised once
+	CacheDuration time.Duration  // How long to cache items for
+	SDPCache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 
 	// The function that should be used to describe the resources that this
 	// adapter is related to
@@ -109,18 +108,19 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) cacheDuratio
 	return s.CacheDuration
 }
 
-func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) ensureCache() {
-	s.cacheInitMu.Lock()
-	defer s.cacheInitMu.Unlock()
+var (
+	noOpCacheDescribeOnce sync.Once
+	noOpCacheDescribe     sdpcache.Cache
+)
 
-	if s.cache == nil {
-		s.cache = sdpcache.NewCache()
+func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Cache() sdpcache.Cache {
+	if s.SDPCache == nil {
+		noOpCacheDescribeOnce.Do(func() {
+			noOpCacheDescribe = sdpcache.NewNoOpCache()
+		})
+		return noOpCacheDescribe
 	}
-}
-
-func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Cache() *sdpcache.Cache {
-	s.ensureCache()
-	return s.cache
+	return s.SDPCache
 }
 
 // Validate Checks that the adapter is correctly set up and returns an error if
@@ -193,8 +193,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 		return nil, WrapAWSError(err)
 	}
 
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -257,7 +256,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 			ItemType:      s.ItemType,
 			ResponderName: s.Name(),
 		}
-		s.cache.StoreError(ctx, qErr, s.cacheDuration(), ck)
+		s.Cache().StoreError(ctx, qErr, s.cacheDuration(), ck)
 
 		return nil, qErr
 	case numItems == 0:
@@ -269,11 +268,11 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 			ItemType:      s.ItemType,
 			ResponderName: s.Name(),
 		}
-		s.cache.StoreError(ctx, qErr, s.cacheDuration(), ck)
+		s.Cache().StoreError(ctx, qErr, s.cacheDuration(), ck)
 		return nil, qErr
 	}
 
-	s.cache.StoreItem(ctx, items[0], s.cacheDuration(), ck)
+	s.Cache().StoreItem(ctx, items[0], s.cacheDuration(), ck)
 	return items[0], nil
 }
 
@@ -309,8 +308,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) ListStream(c
 		return
 	}
 
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
 	if qErr != nil {
 		stream.SendError(qErr)
 		return
@@ -391,9 +389,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchARN(ct
 
 // searchCustom Runs custom search logic using the `InputMapperSearch` function
 func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchCustom(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
-	// We need to cache here since this is the only place it'll be called
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
 	if qErr != nil {
 		stream.SendError(qErr)
 		return
@@ -425,7 +421,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) processError
 
 		// Only cache the error if is something that won't be fixed by retrying
 		if sdpErr.GetErrorType() == sdp.QueryError_NOTFOUND || sdpErr.GetErrorType() == sdp.QueryError_NOSCOPE {
-			s.cache.StoreError(ctx, sdpErr, s.cacheDuration(), cacheKey)
+			s.Cache().StoreError(ctx, sdpErr, s.cacheDuration(), cacheKey)
 		}
 	}
 
@@ -461,7 +457,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) describe(ctx
 			}
 
 			for _, item := range items {
-				s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
+				s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 				stream.SendItem(item)
 			}
 		}
@@ -487,7 +483,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) describe(ctx
 		}
 
 		for _, item := range items {
-			s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
+			s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 			stream.SendItem(item)
 		}
 	}

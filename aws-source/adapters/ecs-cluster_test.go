@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -149,7 +148,7 @@ func TestECSClusterGetFunc(t *testing.T) {
 func TestECSNewECSClusterAdapter(t *testing.T) {
 	client, account, region := ecsGetAutoConfig(t)
 
-	adapter := NewECSClusterAdapter(client, account, region)
+	adapter := NewECSClusterAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

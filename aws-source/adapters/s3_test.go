@@ -3,16 +3,14 @@ package adapters
 import (
 	"context"
 	"errors"
-	"strings"
-	"testing"
-	"time"
-
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
+	"strings"
+	"testing"
+	"time"
 )
 
 func TestS3SearchImpl(t *testing.T) {
@@ -667,7 +665,7 @@ func (t TestS3FailClient) PutObject(ctx context.Context, params *s3.PutObjectInp
 func TestNewS3Adapter(t *testing.T) {
 	config, account, _ := adapterhelpers.GetAutoConfig(t)
 
-	adapter := NewS3Adapter(config, account)
+	adapter := NewS3Adapter(config, account, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,
@@ -686,7 +684,7 @@ func TestS3SearchWithARNFormat(t *testing.T) {
 	// CURRENT BEHAVIOR: Get works, Search fails with NOSCOPE error - THIS IS THE BUG
 	config, account, _ := adapterhelpers.GetAutoConfig(t)
 
-	adapter := NewS3Adapter(config, account)
+	adapter := NewS3Adapter(config, account, nil)
 	scope := adapter.Scopes()[0]
 
 	bucketName := "harness-sample-three-qa-us-west-2-20251022151048279100000001"

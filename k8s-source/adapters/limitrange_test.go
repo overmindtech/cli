@@ -2,6 +2,8 @@ package adapters
 
 import (
 	"testing"
+
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var limitRangeYAML = `
@@ -37,7 +39,7 @@ func TestLimitRangeAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newLimitRangeAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newLimitRangeAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:       adapter,

@@ -123,7 +123,7 @@ func TestNewAPIGatewayDomainNameAdapter(t *testing.T) {
 
 	client := apigateway.NewFromConfig(config)
 
-	adapter := NewAPIGatewayDomainNameAdapter(client, account, region)
+	adapter := NewAPIGatewayDomainNameAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

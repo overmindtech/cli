@@ -3,15 +3,17 @@ package adapters
 import (
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/rbac/v1"
 
 	"k8s.io/client-go/kubernetes"
 )
 
-func newClusterRoleAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newClusterRoleAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.ClusterRole, *v1.ClusterRoleList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
+		cacheField:  cache,
 		TypeName:    "ClusterRole",
 		ClusterInterfaceBuilder: func() ItemInterface[*v1.ClusterRole, *v1.ClusterRoleList] {
 			return cs.RbacV1().ClusterRoles()

@@ -111,7 +111,7 @@ func (l loggingSinkWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryEr
 	return items, nil
 }
 
-func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := l.client.ListSinks(ctx, &loggingpb.ListSinksRequest{
 		Parent: fmt.Sprintf("projects/%s", l.ProjectID()),
 	})

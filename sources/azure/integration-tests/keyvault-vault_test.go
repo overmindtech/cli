@@ -16,6 +16,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -91,7 +92,7 @@ func TestKeyVaultVaultIntegration(t *testing.T) {
 			)
 			scope := kvWrapper.Scopes()[0]
 
-			kvAdapter := sources.WrapperToAdapter(kvWrapper)
+			kvAdapter := sources.WrapperToAdapter(kvWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := kvAdapter.Get(ctx, scope, integrationTestKeyVaultName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -132,7 +133,7 @@ func TestKeyVaultVaultIntegration(t *testing.T) {
 			)
 			scope := kvWrapper.Scopes()[0]
 
-			kvAdapter := sources.WrapperToAdapter(kvWrapper)
+			kvAdapter := sources.WrapperToAdapter(kvWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports listing
 			listable, ok := kvAdapter.(discovery.ListableAdapter)

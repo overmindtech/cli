@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scope string, _ *autoscaling.DescribeAutoScalingGroupsInput, output *autoscaling.DescribeAutoScalingGroupsOutput) ([]*sdp.Item, error) {
@@ -206,13 +207,14 @@ func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scop
 
 //
 
-func NewAutoScalingGroupAdapter(client *autoscaling.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*autoscaling.DescribeAutoScalingGroupsInput, *autoscaling.DescribeAutoScalingGroupsOutput, *autoscaling.Client, *autoscaling.Options] {
+func NewAutoScalingGroupAdapter(client *autoscaling.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*autoscaling.DescribeAutoScalingGroupsInput, *autoscaling.DescribeAutoScalingGroupsOutput, *autoscaling.Client, *autoscaling.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*autoscaling.DescribeAutoScalingGroupsInput, *autoscaling.DescribeAutoScalingGroupsOutput, *autoscaling.Client, *autoscaling.Options]{
 		ItemType:        "autoscaling-auto-scaling-group",
 		AccountID:       accountID,
 		Region:          region,
 		Client:          client,
 		AdapterMetadata: autoScalingGroupAdapterMetadata,
+		SDPCache:        cache,
 		InputMapperGet: func(scope, query string) (*autoscaling.DescribeAutoScalingGroupsInput, error) {
 			return &autoscaling.DescribeAutoScalingGroupsInput{
 				AutoScalingGroupNames: []string{query},

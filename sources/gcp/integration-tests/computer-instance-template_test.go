@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
@@ -32,7 +33,7 @@ func TestComputeInstanceTemplateIntegration(t *testing.T) {
 		}
 
 		// Instance templates are global resources, no region needed
-		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

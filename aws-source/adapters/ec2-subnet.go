@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func subnetInputMapperGet(scope string, query string) (*ec2.DescribeSubnetsInput, error) {
@@ -68,13 +69,14 @@ func subnetOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.D
 	return items, nil
 }
 
-func NewEC2SubnetAdapter(client *ec2.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeSubnetsInput, *ec2.DescribeSubnetsOutput, *ec2.Client, *ec2.Options] {
+func NewEC2SubnetAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeSubnetsInput, *ec2.DescribeSubnetsOutput, *ec2.Client, *ec2.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeSubnetsInput, *ec2.DescribeSubnetsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-subnet",
 		AdapterMetadata: subnetAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error) {
 			return client.DescribeSubnets(ctx, input)
 		},

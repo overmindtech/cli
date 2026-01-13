@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	"github.com/overmindtech/cli/sources/gcp/shared"
 )
@@ -49,7 +50,7 @@ func TestSpannerInstance(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create gcp http client with otel")
 		}
-		adapter, err := dynamic.MakeAdapter(shared.SpannerInstance, linker, gcpHTTPCliWithOtel, projectID)
+		adapter, err := dynamic.MakeAdapter(shared.SpannerInstance, linker, gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to make adapter for spanner instance: %v", err)
 		}

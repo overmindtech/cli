@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 // TaskIncludeFields Fields that we want included by default
@@ -228,7 +229,7 @@ func tasksListFuncOutputMapper(output *ecs.ListTasksOutput, input *ecs.ListTasks
 	return inputs, nil
 }
 
-func NewECSTaskAdapter(client ECSClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*ecs.ListTasksInput, *ecs.ListTasksOutput, *ecs.DescribeTasksInput, *ecs.DescribeTasksOutput, ECSClient, *ecs.Options] {
+func NewECSTaskAdapter(client ECSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*ecs.ListTasksInput, *ecs.ListTasksOutput, *ecs.DescribeTasksInput, *ecs.DescribeTasksOutput, ECSClient, *ecs.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*ecs.ListTasksInput, *ecs.ListTasksOutput, *ecs.DescribeTasksInput, *ecs.DescribeTasksOutput, ECSClient, *ecs.Options]{
 		ItemType:        "ecs-task",
 		Client:          client,
@@ -236,6 +237,7 @@ func NewECSTaskAdapter(client ECSClient, accountID string, region string) *adapt
 		Region:          region,
 		GetFunc:         taskGetFunc,
 		AdapterMetadata: ecsTaskAdapterMetadata,
+		SDPCache:        cache,
 		ListInput:       &ecs.ListTasksInput{},
 		GetInputMapper:  taskGetInputMapper,
 		DisableList:     true,

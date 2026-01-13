@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func instanceStatusInputMapperGet(scope, query string) (*ec2.DescribeInstanceStatusInput, error) {
@@ -78,13 +79,14 @@ func instanceStatusOutputMapper(_ context.Context, _ *ec2.Client, scope string, 
 	return items, nil
 }
 
-func NewEC2InstanceStatusAdapter(client *ec2.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeInstanceStatusInput, *ec2.DescribeInstanceStatusOutput, *ec2.Client, *ec2.Options] {
+func NewEC2InstanceStatusAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeInstanceStatusInput, *ec2.DescribeInstanceStatusOutput, *ec2.Client, *ec2.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeInstanceStatusInput, *ec2.DescribeInstanceStatusOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-instance-status",
 		AdapterMetadata: instanceStatusAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeInstanceStatusInput) (*ec2.DescribeInstanceStatusOutput, error) {
 			return client.DescribeInstanceStatus(ctx, input)
 		},

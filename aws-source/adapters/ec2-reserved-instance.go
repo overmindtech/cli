@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func reservedInstanceInputMapperGet(scope, query string) (*ec2.DescribeReservedInstancesInput, error) {
@@ -49,13 +50,14 @@ func reservedInstanceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 	return items, nil
 }
 
-func NewEC2ReservedInstanceAdapter(client *ec2.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeReservedInstancesInput, *ec2.DescribeReservedInstancesOutput, *ec2.Client, *ec2.Options] {
+func NewEC2ReservedInstanceAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeReservedInstancesInput, *ec2.DescribeReservedInstancesOutput, *ec2.Client, *ec2.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeReservedInstancesInput, *ec2.DescribeReservedInstancesOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-reserved-instance",
 		AdapterMetadata: reservedInstanceAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeReservedInstancesInput) (*ec2.DescribeReservedInstancesOutput, error) {
 			return client.DescribeReservedInstances(ctx, input)
 		},

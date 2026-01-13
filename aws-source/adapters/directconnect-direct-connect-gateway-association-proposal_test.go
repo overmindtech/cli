@@ -76,7 +76,7 @@ func TestDirectConnectGatewayAssociationProposalOutputMapper(t *testing.T) {
 func TestNewDirectConnectGatewayAssociationProposalAdapter(t *testing.T) {
 	client, account, region := directconnectGetAutoConfig(t)
 
-	adapter := NewDirectConnectGatewayAssociationProposalAdapter(client, account, region)
+	adapter := NewDirectConnectGatewayAssociationProposalAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

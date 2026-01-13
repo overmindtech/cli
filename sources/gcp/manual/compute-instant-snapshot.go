@@ -124,7 +124,7 @@ func (c computeInstantSnapshotWrapper) List(ctx context.Context) ([]*sdp.Item, *
 }
 
 // ListStream lists compute instant snapshots and sends them to the stream.
-func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListInstantSnapshotsRequest{
 		Project: c.ProjectID(),
 		Zone:    c.Zone(),

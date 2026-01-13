@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func vpcInputMapperGet(scope string, query string) (*ec2.DescribeVpcsInput, error) {
@@ -51,13 +52,14 @@ func vpcOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.Desc
 	return items, nil
 }
 
-func NewEC2VpcAdapter(client *ec2.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeVpcsInput, *ec2.DescribeVpcsOutput, *ec2.Client, *ec2.Options] {
+func NewEC2VpcAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeVpcsInput, *ec2.DescribeVpcsOutput, *ec2.Client, *ec2.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeVpcsInput, *ec2.DescribeVpcsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-vpc",
 		AdapterMetadata: vpcAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error) {
 			return client.DescribeVpcs(ctx, input)
 		},

@@ -60,6 +60,24 @@ func SkipWithoutNatsAuth(t *testing.T) {
 	}
 }
 
+// SkipWithoutTokenExchange Skips a test if the token exchange API server is not available
+func SkipWithoutTokenExchange(t *testing.T) {
+	var err error
+
+	for _, url := range tokenExchangeURLs {
+		err = testURL(url)
+
+		if err == nil {
+			return
+		}
+	}
+
+	if err != nil {
+		t.Error(err)
+		t.Skip("Token exchange API server not available")
+	}
+}
+
 func GetWorkingTokenExchange() (string, error) {
 	var err error
 

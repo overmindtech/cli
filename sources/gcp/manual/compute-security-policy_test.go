@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -32,7 +33,7 @@ func TestComputeSecurityPolicy(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeSecurityPolicy("test-security-policy"), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-security-policy", true)
 		if qErr != nil {
@@ -64,7 +65,7 @@ func TestComputeSecurityPolicy(t *testing.T) {
 	t.Run("List", func(t *testing.T) {
 		wrapper := manual.NewComputeSecurityPolicy(mockClient, projectID)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeSecurityPolicyIterator(ctrl)
 
@@ -108,7 +109,7 @@ func TestComputeSecurityPolicy(t *testing.T) {
 	t.Run("ListStream", func(t *testing.T) {
 		wrapper := manual.NewComputeSecurityPolicy(mockClient, projectID)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeSecurityPolicyIterator(ctrl)
 

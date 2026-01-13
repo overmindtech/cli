@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -80,7 +81,7 @@ func TestStorageTables(t *testing.T) {
 
 		testClient := &testTablesClient{MockTablesClient: mockClient}
 		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Get requires storageAccountName and tableName as query parts
 		query := storageAccountName + shared.QuerySeparator + tableName
@@ -142,7 +143,7 @@ func TestStorageTables(t *testing.T) {
 		testClient := &testTablesClient{MockTablesClient: mockClient}
 
 		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (only storage account name)
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], storageAccountName, true)
@@ -185,7 +186,7 @@ func TestStorageTables(t *testing.T) {
 		}
 
 		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
@@ -257,7 +258,7 @@ func TestStorageTables(t *testing.T) {
 		}
 
 		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
@@ -289,7 +290,7 @@ func TestStorageTables(t *testing.T) {
 
 		testClient := &testTablesClient{MockTablesClient: mockClient}
 		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := storageAccountName + shared.QuerySeparator + "nonexistent-table"
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], query, true)
@@ -309,7 +310,7 @@ func TestStorageTables(t *testing.T) {
 		}
 
 		wrapper := manual.NewStorageTable(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
@@ -335,7 +336,7 @@ func TestStorageTables(t *testing.T) {
 		}
 
 		// Verify adapter implements SearchableAdapter
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 		_, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
 			t.Error("Adapter should implement SearchableAdapter interface")

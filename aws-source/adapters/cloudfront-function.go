@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func functionItemMapper(_, scope string, awsItem *types.FunctionSummary) (*sdp.Item, error) {
@@ -27,13 +28,14 @@ func functionItemMapper(_, scope string, awsItem *types.FunctionSummary) (*sdp.I
 	return &item, nil
 }
 
-func NewCloudfrontCloudfrontFunctionAdapter(client *cloudfront.Client, accountID string) *adapterhelpers.GetListAdapter[*types.FunctionSummary, *cloudfront.Client, *cloudfront.Options] {
+func NewCloudfrontCloudfrontFunctionAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.FunctionSummary, *cloudfront.Client, *cloudfront.Options] {
 	return &adapterhelpers.GetListAdapter[*types.FunctionSummary, *cloudfront.Client, *cloudfront.Options]{
 		ItemType:        "cloudfront-function",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata: cloudfrontFunctionAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *cloudfront.Client, scope, query string) (*types.FunctionSummary, error) {
 			out, err := client.DescribeFunction(ctx, &cloudfront.DescribeFunctionInput{
 				Name: &query,

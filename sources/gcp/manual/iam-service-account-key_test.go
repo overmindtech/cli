@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -35,7 +36,7 @@ func TestIAMServiceAccountKey(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createServiceAccountKey(testKeyFullName), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey(testServiceAccount, testKeyName), true)
 		if qErr != nil {
@@ -59,7 +60,7 @@ func TestIAMServiceAccountKey(t *testing.T) {
 
 	t.Run("Search", func(t *testing.T) {
 		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockClient.EXPECT().Search(ctx, gomock.Any()).Return(&adminpb.ListServiceAccountKeysResponse{
 			Keys: []*adminpb.ServiceAccountKey{
@@ -96,7 +97,7 @@ func TestIAMServiceAccountKey(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createServiceAccountKey(testKeyFullName), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
 		terraformResourceID := fmt.Sprintf("projects/%s/serviceAccounts/%s/keys/%s", projectID, testServiceAccount, testKeyName)
@@ -125,7 +126,7 @@ func TestIAMServiceAccountKey(t *testing.T) {
 
 	t.Run("SearchStream", func(t *testing.T) {
 		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockClient.EXPECT().Search(ctx, gomock.Any()).Return(&adminpb.ListServiceAccountKeysResponse{
 			Keys: []*adminpb.ServiceAccountKey{
@@ -176,7 +177,7 @@ func TestIAMServiceAccountKey(t *testing.T) {
 
 	t.Run("List_Unsupported", func(t *testing.T) {
 		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports list - it should not
 		_, ok := adapter.(discovery.ListableAdapter)

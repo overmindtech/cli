@@ -75,7 +75,7 @@ func TestSiteOutputMapper(t *testing.T) {
 }
 
 func TestSiteInputMapperSearch(t *testing.T) {
-	adapter := NewNetworkManagerSiteAdapter(&networkmanager.Client{}, "123456789012")
+	adapter := NewNetworkManagerSiteAdapter(&networkmanager.Client{}, "123456789012", nil)
 
 	tests := []struct {
 		name          string

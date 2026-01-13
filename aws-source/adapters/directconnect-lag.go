@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func lagOutputMapper(_ context.Context, _ *directconnect.Client, scope string, _ *directconnect.DescribeLagsInput, output *directconnect.DescribeLagsOutput) ([]*sdp.Item, error) {
@@ -105,13 +106,14 @@ func lagOutputMapper(_ context.Context, _ *directconnect.Client, scope string, _
 	return items, nil
 }
 
-func NewDirectConnectLagAdapter(client *directconnect.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeLagsInput, *directconnect.DescribeLagsOutput, *directconnect.Client, *directconnect.Options] {
+func NewDirectConnectLagAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeLagsInput, *directconnect.DescribeLagsOutput, *directconnect.Client, *directconnect.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeLagsInput, *directconnect.DescribeLagsOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-lag",
 		AdapterMetadata: lagAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeLagsInput) (*directconnect.DescribeLagsOutput, error) {
 			return client.DescribeLags(ctx, input)
 		},

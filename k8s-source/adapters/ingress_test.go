@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var ingressYAML = `
@@ -64,7 +65,7 @@ func TestIngressAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newIngressAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newIngressAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

@@ -59,7 +59,7 @@ func (c computeAvailabilitySetWrapper) List(ctx context.Context) ([]*sdp.Item, *
 	return items, nil
 }
 
-func (c computeAvailabilitySetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeAvailabilitySetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	pager := c.client.NewListPager(c.ResourceGroup(), nil)
 
 	for pager.More() {

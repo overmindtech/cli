@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -129,7 +130,7 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 			)
 			scope := lbWrapper.Scopes()[0]
 
-			lbAdapter := sources.WrapperToAdapter(lbWrapper)
+			lbAdapter := sources.WrapperToAdapter(lbWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := lbAdapter.Get(ctx, scope, integrationTestLBName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -169,7 +170,7 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 			)
 			scope := lbWrapper.Scopes()[0]
 
-			lbAdapter := sources.WrapperToAdapter(lbWrapper)
+			lbAdapter := sources.WrapperToAdapter(lbWrapper, sdpcache.NewNoOpCache())
 			listable, ok := lbAdapter.(discovery.ListableAdapter)
 			if !ok {
 				t.Fatalf("Adapter does not support List operation")
@@ -225,7 +226,7 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 			)
 			scope := lbWrapper.Scopes()[0]
 
-			lbAdapter := sources.WrapperToAdapter(lbWrapper)
+			lbAdapter := sources.WrapperToAdapter(lbWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := lbAdapter.Get(ctx, scope, integrationTestLBName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -262,7 +263,7 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 
 			// Test public load balancer (should have PublicIPAddress link)
 			t.Run("PublicLoadBalancer", func(t *testing.T) {
-				lbAdapter := sources.WrapperToAdapter(lbWrapper)
+				lbAdapter := sources.WrapperToAdapter(lbWrapper, sdpcache.NewNoOpCache())
 				sdpItem, qErr := lbAdapter.Get(ctx, scope, integrationTestLBName, true)
 				if qErr != nil {
 					t.Fatalf("Expected no error, got: %v", qErr)
@@ -318,7 +319,7 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 
 			// Test internal load balancer (should have Subnet link)
 			t.Run("InternalLoadBalancer", func(t *testing.T) {
-				lbAdapter := sources.WrapperToAdapter(lbWrapper)
+				lbAdapter := sources.WrapperToAdapter(lbWrapper, sdpcache.NewNoOpCache())
 				sdpItem, qErr := lbAdapter.Get(ctx, scope, integrationTestLBInternalName, true)
 				if qErr != nil {
 					t.Fatalf("Expected no error, got: %v", qErr)

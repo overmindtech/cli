@@ -5,6 +5,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -31,10 +32,11 @@ func replicaSetExtractor(resource *v1.ReplicaSet, scope string) ([]*sdp.LinkedIt
 	return queries, nil
 }
 
-func newReplicaSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newReplicaSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.ReplicaSet, *v1.ReplicaSetList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,
+		cacheField:       cache,
 		TypeName:         "ReplicaSet",
 		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.ReplicaSet, *v1.ReplicaSetList] {

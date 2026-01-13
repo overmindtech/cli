@@ -141,7 +141,7 @@ func (c computeNodeGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Qu
 }
 
 // ListStream lists compute node groups and sends them as items to the stream.
-func (c computeNodeGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeNodeGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListNodeGroupsRequest{
 		Project: c.ProjectID(),
 		Zone:    c.Zone(),
@@ -202,7 +202,7 @@ func (c computeNodeGroupWrapper) Search(ctx context.Context, queryParts ...strin
 	return items, nil
 }
 
-func (c computeNodeGroupWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
+func (c computeNodeGroupWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
 	// Supported search for now is by node template
 	nodeTemplate := queryParts[0]
 

@@ -14,7 +14,7 @@ func TestProtoCloneReplacesCustomCopy(t *testing.T) {
 	t.Run("Reference with all fields", func(t *testing.T) {
 		original := &Reference{
 			Type:                 "test",
-			UniqueAttributeValue: "value", 
+			UniqueAttributeValue: "value",
 			Scope:                "scope",
 			IsQuery:              true,
 			Method:               QueryMethod_SEARCH,
@@ -22,11 +22,11 @@ func TestProtoCloneReplacesCustomCopy(t *testing.T) {
 		}
 
 		cloned := proto.Clone(original).(*Reference)
-		
+
 		if !proto.Equal(original, cloned) {
 			t.Errorf("proto.Clone failed for Reference: %+v != %+v", original, cloned)
 		}
-		
+
 		// Specifically check the fields that Copy() was missing
 		if cloned.GetIsQuery() != original.GetIsQuery() {
 			t.Errorf("IsQuery field not cloned correctly: got %v, want %v", cloned.GetIsQuery(), original.GetIsQuery())
@@ -45,7 +45,7 @@ func TestProtoCloneReplacesCustomCopy(t *testing.T) {
 			Type:   "test",
 			Method: QueryMethod_GET,
 			Query:  "value",
-			Scope:  "scope", 
+			Scope:  "scope",
 			UUID:   u[:],
 			RecursionBehaviour: &Query_RecursionBehaviour{
 				LinkDepth:                  5,
@@ -56,7 +56,7 @@ func TestProtoCloneReplacesCustomCopy(t *testing.T) {
 		}
 
 		cloned := proto.Clone(original).(*Query)
-		
+
 		if !proto.Equal(original, cloned) {
 			t.Errorf("proto.Clone failed for Query: %+v != %+v", original, cloned)
 		}
@@ -90,7 +90,7 @@ func TestProtoCloneReplacesCustomCopy(t *testing.T) {
 		original.Attributes = attrs
 
 		cloned := proto.Clone(original).(*Item)
-		
+
 		if !proto.Equal(original, cloned) {
 			t.Errorf("proto.Clone failed for Item: %+v != %+v", original, cloned)
 		}

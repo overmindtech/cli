@@ -58,7 +58,7 @@ func TestNewIAMInstanceProfileAdapter(t *testing.T) {
 		o.RetryMaxAttempts = 10
 	})
 
-	adapter := NewIAMInstanceProfileAdapter(client, account)
+	adapter := NewIAMInstanceProfileAdapter(client, account, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

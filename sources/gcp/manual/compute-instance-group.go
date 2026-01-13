@@ -123,7 +123,7 @@ func (c computeInstanceGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sd
 }
 
 // ListStream lists compute instance groups and sends them as stream items.
-func (c computeInstanceGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeInstanceGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListInstanceGroupsRequest{
 		Project: c.ProjectID(),
 		Zone:    c.Zone(),

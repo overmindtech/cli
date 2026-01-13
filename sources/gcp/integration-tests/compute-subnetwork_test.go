@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
@@ -43,7 +44,7 @@ func TestComputeSubnetworkIntegration(t *testing.T) {
 		}
 
 		// For subnetworks, we need to include the region as an initialization parameter
-		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, projectID, region)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), projectID, region)
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

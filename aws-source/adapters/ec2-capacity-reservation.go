@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func capacityReservationOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.DescribeCapacityReservationsInput, output *ec2.DescribeCapacityReservationsOutput) ([]*sdp.Item, error) {
@@ -88,13 +89,14 @@ func capacityReservationOutputMapper(_ context.Context, _ *ec2.Client, scope str
 	return items, nil
 }
 
-func NewEC2CapacityReservationAdapter(client *ec2.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeCapacityReservationsInput, *ec2.DescribeCapacityReservationsOutput, *ec2.Client, *ec2.Options] {
+func NewEC2CapacityReservationAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeCapacityReservationsInput, *ec2.DescribeCapacityReservationsOutput, *ec2.Client, *ec2.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeCapacityReservationsInput, *ec2.DescribeCapacityReservationsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-capacity-reservation",
 		AdapterMetadata: capacityReservationAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeCapacityReservationsInput) (*ec2.DescribeCapacityReservationsOutput, error) {
 			return client.DescribeCapacityReservations(ctx, input)
 		},

@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func iamInstanceProfileAssociationOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.DescribeIamInstanceProfileAssociationsInput, output *ec2.DescribeIamInstanceProfileAssociationsOutput) ([]*sdp.Item, error) {
@@ -69,13 +70,14 @@ func iamInstanceProfileAssociationOutputMapper(_ context.Context, _ *ec2.Client,
 }
 
 // NewIamInstanceProfileAssociationAdapter Creates a new adapter for aws-IamInstanceProfileAssociation resources
-func NewEC2IamInstanceProfileAssociationAdapter(client *ec2.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeIamInstanceProfileAssociationsInput, *ec2.DescribeIamInstanceProfileAssociationsOutput, *ec2.Client, *ec2.Options] {
+func NewEC2IamInstanceProfileAssociationAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeIamInstanceProfileAssociationsInput, *ec2.DescribeIamInstanceProfileAssociationsOutput, *ec2.Client, *ec2.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeIamInstanceProfileAssociationsInput, *ec2.DescribeIamInstanceProfileAssociationsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-iam-instance-profile-association",
 		AdapterMetadata: iamInstanceProfileAssociationAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeIamInstanceProfileAssociationsInput) (*ec2.DescribeIamInstanceProfileAssociationsOutput, error) {
 			return client.DescribeIamInstanceProfileAssociations(ctx, input)
 		},

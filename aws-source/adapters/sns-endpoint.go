@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type endpointClient interface {
@@ -53,7 +54,7 @@ func getEndpointFunc(ctx context.Context, client endpointClient, scope string, i
 	return item, nil
 }
 
-func NewSNSEndpointAdapter(client endpointClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*sns.ListEndpointsByPlatformApplicationInput, *sns.ListEndpointsByPlatformApplicationOutput, *sns.GetEndpointAttributesInput, *sns.GetEndpointAttributesOutput, endpointClient, *sns.Options] {
+func NewSNSEndpointAdapter(client endpointClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*sns.ListEndpointsByPlatformApplicationInput, *sns.ListEndpointsByPlatformApplicationOutput, *sns.GetEndpointAttributesInput, *sns.GetEndpointAttributesOutput, endpointClient, *sns.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*sns.ListEndpointsByPlatformApplicationInput, *sns.ListEndpointsByPlatformApplicationOutput, *sns.GetEndpointAttributesInput, *sns.GetEndpointAttributesOutput, endpointClient, *sns.Options]{
 		ItemType:        "sns-endpoint",
 		Client:          client,
@@ -61,6 +62,7 @@ func NewSNSEndpointAdapter(client endpointClient, accountID string, region strin
 		Region:          region,
 		DisableList:     true, // This source only supports listing by platform application ARN
 		AdapterMetadata: snsEndpointAdapterMetadata,
+		SDPCache:        cache,
 		SearchInputMapper: func(scope, query string) (*sns.ListEndpointsByPlatformApplicationInput, error) {
 			return &sns.ListEndpointsByPlatformApplicationInput{
 				PlatformApplicationArn: &query,

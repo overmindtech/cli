@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func hostedZoneGetFunc(ctx context.Context, client *route53.Client, scope, query string) (*types.HostedZone, error) {
@@ -72,7 +73,7 @@ func hostedZoneItemMapper(_, scope string, awsItem *types.HostedZone) (*sdp.Item
 	return &item, nil
 }
 
-func NewRoute53HostedZoneAdapter(client *route53.Client, accountID string, region string) *adapterhelpers.GetListAdapter[*types.HostedZone, *route53.Client, *route53.Options] {
+func NewRoute53HostedZoneAdapter(client *route53.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.HostedZone, *route53.Client, *route53.Options] {
 	return &adapterhelpers.GetListAdapter[*types.HostedZone, *route53.Client, *route53.Options]{
 		ItemType:        "route53-hosted-zone",
 		Client:          client,
@@ -82,6 +83,7 @@ func NewRoute53HostedZoneAdapter(client *route53.Client, accountID string, regio
 		ListFunc:        hostedZoneListFunc,
 		ItemMapper:      hostedZoneItemMapper,
 		AdapterMetadata: hostedZoneAdapterMetadata,
+		SDPCache:        cache,
 		ListTagsFunc: func(ctx context.Context, hz *types.HostedZone, c *route53.Client) (map[string]string, error) {
 			if hz.Id == nil {
 				return nil, nil

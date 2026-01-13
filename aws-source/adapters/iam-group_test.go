@@ -38,7 +38,7 @@ func TestNewIAMGroupAdapter(t *testing.T) {
 		o.RetryMaxAttempts = 10
 	})
 
-	adapter := NewIAMGroupAdapter(client, account)
+	adapter := NewIAMGroupAdapter(client, account, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

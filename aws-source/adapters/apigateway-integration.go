@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type apiGatewayIntegrationGetter interface {
@@ -88,13 +89,14 @@ func apiGatewayIntegrationGetFunc(ctx context.Context, client apiGatewayIntegrat
 	return item, nil
 }
 
-func NewAPIGatewayIntegrationAdapter(client apiGatewayIntegrationGetter, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, *apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, apiGatewayIntegrationGetter, *apigateway.Options] {
+func NewAPIGatewayIntegrationAdapter(client apiGatewayIntegrationGetter, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, *apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, apiGatewayIntegrationGetter, *apigateway.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, *apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, apiGatewayIntegrationGetter, *apigateway.Options]{
 		ItemType:        "apigateway-integration",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: apiGatewayIntegrationAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc:         apiGatewayIntegrationGetFunc,
 		GetInputMapper: func(scope, query string) *apigateway.GetIntegrationInput {
 			// We are using a custom id of {rest-api-id}/{resource-id}/{http-method} e.g.

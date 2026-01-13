@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/manual"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -38,7 +39,7 @@ func TestComputeVirtualMachine(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewComputeVirtualMachine(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vmName, true)
 		if qErr != nil {
@@ -196,7 +197,7 @@ func TestComputeVirtualMachine(t *testing.T) {
 					}, nil)
 
 				wrapper := manual.NewComputeVirtualMachine(mockClient, subscriptionID, resourceGroup)
-				adapter := sources.WrapperToAdapter(wrapper)
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-vm", true)
 				if qErr != nil {
@@ -232,7 +233,7 @@ func TestComputeVirtualMachine(t *testing.T) {
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewComputeVirtualMachine(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -281,7 +282,7 @@ func TestComputeVirtualMachine(t *testing.T) {
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewComputeVirtualMachine(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
 		wg.Add(2) // we added two items
@@ -331,7 +332,7 @@ func TestComputeVirtualMachine(t *testing.T) {
 			armcompute.VirtualMachinesClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewComputeVirtualMachine(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-vm", true)
 		if qErr == nil {

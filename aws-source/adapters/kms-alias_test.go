@@ -5,11 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
-	"github.com/overmindtech/cli/sdp-go"
-
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/overmindtech/cli/aws-source/adapterhelpers"
+	"github.com/overmindtech/cli/sdp-go"
 )
 
 func TestAliasOutputMapper(t *testing.T) {
@@ -58,7 +57,7 @@ func TestNewKMSAliasAdapter(t *testing.T) {
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 	client := kms.NewFromConfig(config)
 
-	adapter := NewKMSAliasAdapter(client, account, region)
+	adapter := NewKMSAliasAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

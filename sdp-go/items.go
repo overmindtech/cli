@@ -18,15 +18,9 @@ import (
 
 const WILDCARD = "*"
 
-
-
 func (bp *BlastPropagation) IsEqual(other *BlastPropagation) bool {
 	return bp.GetIn() == other.GetIn() && bp.GetOut() == other.GetOut()
 }
-
-
-
-
 
 // UniqueAttributeValue returns the value of whatever the Unique Attribute is
 // for this item. This will then be converted to a string and returned
@@ -69,8 +63,6 @@ func (i *Item) GloballyUniqueName() string {
 		".",
 	)
 }
-
-
 
 // Hash Returns a 12 character hash for the item. This is likely but not
 // guaranteed to be unique. The hash is calculated using the GloballyUniqueName
@@ -155,8 +147,6 @@ func (r *Reference) IsEqual(other *Reference) bool {
 		r.GetQuery() == other.GetQuery()
 }
 
-
-
 func (r *Reference) ToQuery() *Query {
 	if !r.GetIsQuery() {
 		return &Query{
@@ -174,10 +164,6 @@ func (r *Reference) ToQuery() *Query {
 		Query:  r.GetQuery(),
 	}
 }
-
-
-
-
 
 // Get Returns the value of a given attribute by name. If the attribute is
 // a nested hash, nested values can be referenced using dot notation e.g.
@@ -233,10 +219,6 @@ func (a *ItemAttributes) Set(name string, value interface{}) error {
 	return nil
 }
 
-
-
-
-
 // IsSingle returns true if this query can only return a single item.
 func (q *Query) IsSingle() bool {
 	return q.GetMethod() == QueryMethod_GET && q.GetScope() != "*" && q.GetType() != "*"
@@ -264,7 +246,6 @@ func (q *Query) Reference() *Reference {
 func (q *Query) Subject() string {
 	return fmt.Sprintf("query.%v", q.GetUUIDParsed())
 }
-
 
 // TimeoutContext returns a context and cancel function representing the timeout
 // for this request

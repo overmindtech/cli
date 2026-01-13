@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client, scope string, _ *networkmanager.DescribeGlobalNetworksInput, output *networkmanager.DescribeGlobalNetworksOutput) ([]*sdp.Item, error) {
@@ -160,12 +161,13 @@ func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client,
 	return items, nil
 }
 
-func NewNetworkManagerGlobalNetworkAdapter(client *networkmanager.Client, accountID string) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.DescribeGlobalNetworksInput, *networkmanager.DescribeGlobalNetworksOutput, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerGlobalNetworkAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.DescribeGlobalNetworksInput, *networkmanager.DescribeGlobalNetworksOutput, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.DescribeGlobalNetworksInput, *networkmanager.DescribeGlobalNetworksOutput, *networkmanager.Client, *networkmanager.Options]{
 		ItemType:        "networkmanager-global-network",
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: globalNetworkAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.DescribeGlobalNetworksInput) (*networkmanager.DescribeGlobalNetworksOutput, error) {
 			return client.DescribeGlobalNetworks(ctx, input)
 		},

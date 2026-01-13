@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -85,7 +86,7 @@ func TestComputeAutoscalerIntegration(t *testing.T) {
 		autoscalerWrapper := manual.NewComputeAutoscaler(gcpshared.NewComputeAutoscalerClient(client), projectID, zone)
 		scope := autoscalerWrapper.Scopes()[0]
 
-		autoscalerAdapter := sources.WrapperToAdapter(autoscalerWrapper)
+		autoscalerAdapter := sources.WrapperToAdapter(autoscalerWrapper, sdpcache.NewNoOpCache())
 
 		// [SPEC] GET against a valid resource name will return an SDP item wrapping the
 		// available resource.

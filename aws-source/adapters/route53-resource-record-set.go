@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func resourceRecordSetGetFunc(ctx context.Context, client *route53.Client, scope, query string) (*types.ResourceRecordSet, error) {
@@ -188,7 +189,7 @@ func resourceRecordSetItemMapper(_, scope string, awsItem *types.ResourceRecordS
 	return &item, nil
 }
 
-func NewRoute53ResourceRecordSetAdapter(client *route53.Client, accountID string, region string) *adapterhelpers.GetListAdapter[*types.ResourceRecordSet, *route53.Client, *route53.Options] {
+func NewRoute53ResourceRecordSetAdapter(client *route53.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.ResourceRecordSet, *route53.Client, *route53.Options] {
 	return &adapterhelpers.GetListAdapter[*types.ResourceRecordSet, *route53.Client, *route53.Options]{
 		ItemType:        "route53-resource-record-set",
 		Client:          client,
@@ -199,7 +200,7 @@ func NewRoute53ResourceRecordSetAdapter(client *route53.Client, accountID string
 		ItemMapper:      resourceRecordSetItemMapper,
 		SearchFunc:      resourceRecordSetSearchFunc,
 		AdapterMetadata: resourceRecordSetAdapterMetadata,
-	}
+		SDPCache:        cache}
 }
 
 var resourceRecordSetAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{

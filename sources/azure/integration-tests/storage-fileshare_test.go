@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -99,7 +100,7 @@ func TestStorageFileShareIntegration(t *testing.T) {
 			)
 			scope := fsWrapper.Scopes()[0]
 
-			fsAdapter := sources.WrapperToAdapter(fsWrapper)
+			fsAdapter := sources.WrapperToAdapter(fsWrapper, sdpcache.NewNoOpCache())
 			// Get requires storageAccountName and shareName as query parts
 			query := storageAccountName + shared.QuerySeparator + integrationTestShareName
 			sdpItem, qErr := fsAdapter.Get(ctx, scope, query, true)
@@ -136,7 +137,7 @@ func TestStorageFileShareIntegration(t *testing.T) {
 			)
 			scope := fsWrapper.Scopes()[0]
 
-			fsAdapter := sources.WrapperToAdapter(fsWrapper)
+			fsAdapter := sources.WrapperToAdapter(fsWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports search
 			searchable, ok := fsAdapter.(discovery.SearchableAdapter)
@@ -181,7 +182,7 @@ func TestStorageFileShareIntegration(t *testing.T) {
 			)
 			scope := fsWrapper.Scopes()[0]
 
-			fsAdapter := sources.WrapperToAdapter(fsWrapper)
+			fsAdapter := sources.WrapperToAdapter(fsWrapper, sdpcache.NewNoOpCache())
 			query := storageAccountName + shared.QuerySeparator + integrationTestShareName
 			sdpItem, qErr := fsAdapter.Get(ctx, scope, query, true)
 			if qErr != nil {

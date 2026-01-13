@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var persistentVolumeClaimYAML = `
@@ -54,7 +55,7 @@ func TestPersistentVolumeClaimAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newPersistentVolumeClaimAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newPersistentVolumeClaimAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

@@ -128,7 +128,7 @@ func (c computeRegionBackendServiceWrapper) List(ctx context.Context) ([]*sdp.It
 }
 
 // ListStream lists all compute region backend services in the specified region and streams them to the provided stream
-func (c computeRegionBackendServiceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeRegionBackendServiceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListRegionBackendServicesRequest{
 		Project: c.ProjectID(),
 		Region:  c.Region(),

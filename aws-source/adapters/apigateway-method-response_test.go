@@ -60,7 +60,7 @@ func TestNewAPIGatewayMethodResponseAdapter(t *testing.T) {
 
 	client := apigateway.NewFromConfig(config)
 
-	adapter := NewAPIGatewayMethodResponseAdapter(client, account, region)
+	adapter := NewAPIGatewayMethodResponseAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter:  adapter,

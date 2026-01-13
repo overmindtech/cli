@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func linkOutputMapper(_ context.Context, _ *networkmanager.Client, scope string, _ *networkmanager.GetLinksInput, output *networkmanager.GetLinksOutput) ([]*sdp.Item, error) {
@@ -110,12 +111,13 @@ func linkOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 	return items, nil
 }
 
-func NewNetworkManagerLinkAdapter(client *networkmanager.Client, accountID string) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetLinksInput, *networkmanager.GetLinksOutput, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerLinkAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetLinksInput, *networkmanager.GetLinksOutput, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetLinksInput, *networkmanager.GetLinksOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "networkmanager-link",
 		AdapterMetadata: linkAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.GetLinksInput) (*networkmanager.GetLinksOutput, error) {
 			return client.GetLinks(ctx, input)
 		},

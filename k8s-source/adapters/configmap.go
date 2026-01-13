@@ -3,16 +3,18 @@ package adapters
 import (
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-func newConfigMapAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newConfigMapAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.ConfigMap, *v1.ConfigMapList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,
 		TypeName:         "ConfigMap",
 		AutoQueryExtract: true,
+		cacheField:       cache,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.ConfigMap, *v1.ConfigMapList] {
 			return cs.CoreV1().ConfigMaps(namespace)
 		},

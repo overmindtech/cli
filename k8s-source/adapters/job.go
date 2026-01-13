@@ -5,6 +5,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -31,10 +32,11 @@ func jobExtractor(resource *v1.Job, scope string) ([]*sdp.LinkedItemQuery, error
 	return queries, nil
 }
 
-func newJobAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newJobAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Job, *v1.JobList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,
+		cacheField:       cache,
 		TypeName:         "Job",
 		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Job, *v1.JobList] {

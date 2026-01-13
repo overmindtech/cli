@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -39,7 +40,7 @@ func TestComputeDisk(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], diskName, true)
 		if qErr != nil {
@@ -74,7 +75,7 @@ func TestComputeDisk(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], diskName, true)
 		if qErr != nil {
@@ -309,7 +310,7 @@ func TestComputeDisk(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], diskName, true)
 		if qErr != nil {
@@ -347,7 +348,7 @@ func TestComputeDisk(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], diskName, true)
 		if qErr != nil {
@@ -382,7 +383,7 @@ func TestComputeDisk(t *testing.T) {
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -419,7 +420,7 @@ func TestComputeDisk(t *testing.T) {
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
 		wg.Add(2) // we added two items
@@ -477,7 +478,7 @@ func TestComputeDisk(t *testing.T) {
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -503,7 +504,7 @@ func TestComputeDisk(t *testing.T) {
 			armcompute.DisksClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-disk", true)
 		if qErr == nil {
@@ -518,7 +519,7 @@ func TestComputeDisk(t *testing.T) {
 			armcompute.DisksClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
 		if qErr == nil {
@@ -544,7 +545,7 @@ func TestComputeDisk(t *testing.T) {
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(errorPager)
 
 		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -564,7 +565,7 @@ func TestComputeDisk(t *testing.T) {
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(errorPager)
 
 		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		var errs []error
 		mockErrorHandler := func(err error) {

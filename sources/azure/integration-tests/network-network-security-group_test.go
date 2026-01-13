@@ -17,6 +17,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -86,7 +87,7 @@ func TestNetworkNetworkSecurityGroupIntegration(t *testing.T) {
 			)
 			scope := nsgWrapper.Scopes()[0]
 
-			nsgAdapter := sources.WrapperToAdapter(nsgWrapper)
+			nsgAdapter := sources.WrapperToAdapter(nsgWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := nsgAdapter.Get(ctx, scope, integrationTestNSGName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -122,7 +123,7 @@ func TestNetworkNetworkSecurityGroupIntegration(t *testing.T) {
 			)
 			scope := nsgWrapper.Scopes()[0]
 
-			nsgAdapter := sources.WrapperToAdapter(nsgWrapper)
+			nsgAdapter := sources.WrapperToAdapter(nsgWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports listing
 			listable, ok := nsgAdapter.(discovery.ListableAdapter)
@@ -167,7 +168,7 @@ func TestNetworkNetworkSecurityGroupIntegration(t *testing.T) {
 			)
 			scope := nsgWrapper.Scopes()[0]
 
-			nsgAdapter := sources.WrapperToAdapter(nsgWrapper)
+			nsgAdapter := sources.WrapperToAdapter(nsgWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := nsgAdapter.Get(ctx, scope, integrationTestNSGName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -209,7 +210,7 @@ func TestNetworkNetworkSecurityGroupIntegration(t *testing.T) {
 			)
 			scope := nsgWrapper.Scopes()[0]
 
-			nsgAdapter := sources.WrapperToAdapter(nsgWrapper)
+			nsgAdapter := sources.WrapperToAdapter(nsgWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := nsgAdapter.Get(ctx, scope, integrationTestNSGName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)

@@ -173,7 +173,98 @@ type CachedResult struct {
 // SSTHash Represents the hash of `SourceName`, `Scope` and `Type`
 type SSTHash string
 
-type Cache struct {
+// Cache provides operations for caching SDP items and errors
+type Cache interface {
+	// Lookup performs a cache lookup for the given query parameters.
+	// Returns: (cache hit, cache key, items, query error)
+	Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError)
+
+	// Search performs a lower-level search using a CacheKey.
+	// Returns items that match the cache key, or ErrCacheNotFound if nothing found.
+	// If a cached error exists, it will be returned instead.
+	Search(ck CacheKey) ([]*sdp.Item, error)
+
+	// StoreItem stores an item in the cache with the specified duration.
+	StoreItem(ctx context.Context, item *sdp.Item, duration time.Duration, ck CacheKey)
+
+	// StoreError stores an error in the cache with the specified duration.
+	StoreError(ctx context.Context, err error, duration time.Duration, ck CacheKey)
+
+	// Delete removes all entries matching the given cache key.
+	Delete(ck CacheKey)
+
+	// Clear removes all entries from the cache.
+	Clear()
+
+	// Purge removes all expired items from the cache.
+	// Returns statistics about the purge operation.
+	Purge(before time.Time) PurgeStats
+
+	// GetMinWaitTime returns the minimum time between purge operations
+	GetMinWaitTime() time.Duration
+
+	// StartPurger starts a background goroutine that automatically purges expired items.
+	// The purger will stop when the context is cancelled.
+	StartPurger(ctx context.Context) error
+}
+
+// NoOpCache is a cache implementation that does nothing.
+// It can be used in tests or when caching is not desired, avoiding nil checks.
+type NoOpCache struct{}
+
+// NewNoOpCache creates a new no-op cache that implements the Cache interface
+// but performs no operations. Useful for testing or when caching is disabled.
+func NewNoOpCache() Cache {
+	return &NoOpCache{}
+}
+
+// Lookup always returns a cache miss
+func (n *NoOpCache) Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError) {
+	ck := CacheKeyFromParts(srcName, method, scope, typ, query)
+	return false, ck, nil, nil
+}
+
+// Search always returns ErrCacheNotFound
+func (n *NoOpCache) Search(ck CacheKey) ([]*sdp.Item, error) {
+	return nil, ErrCacheNotFound
+}
+
+// StoreItem does nothing
+func (n *NoOpCache) StoreItem(ctx context.Context, item *sdp.Item, duration time.Duration, ck CacheKey) {
+	// No-op
+}
+
+// StoreError does nothing
+func (n *NoOpCache) StoreError(ctx context.Context, err error, duration time.Duration, ck CacheKey) {
+	// No-op
+}
+
+// Delete does nothing
+func (n *NoOpCache) Delete(ck CacheKey) {
+	// No-op
+}
+
+// Clear does nothing
+func (n *NoOpCache) Clear() {
+	// No-op
+}
+
+// Purge returns empty stats
+func (n *NoOpCache) Purge(before time.Time) PurgeStats {
+	return PurgeStats{}
+}
+
+// GetMinWaitTime returns 0
+func (n *NoOpCache) GetMinWaitTime() time.Duration {
+	return 0
+}
+
+// StartPurger does nothing
+func (n *NoOpCache) StartPurger(ctx context.Context) error {
+	return nil
+}
+
+type MemoryCache struct {
 	// Minimum amount of time to wait between cache purges
 	MinWaitTime time.Duration
 
@@ -199,11 +290,18 @@ type Cache struct {
 	purgeMutex sync.Mutex
 }
 
-func NewCache() *Cache {
-	return &Cache{
+// NewMemoryCache creates a new in-memory cache implementation
+func NewMemoryCache() *MemoryCache {
+	return &MemoryCache{
 		indexes:     make(map[SSTHash]*indexSet),
 		expiryIndex: newExpiryIndex(),
 	}
+}
+
+// NewCache creates a new cache. This function returns a Cache interface.
+// Currently, it returns a memory-based implementation.
+func NewCache() Cache {
+	return NewMemoryCache()
 }
 
 func newExpiryIndex() *btree.BTreeG[*CachedResult] {
@@ -236,7 +334,7 @@ func newIndexSet() *indexSet {
 // query. If there are results, they will be returned as slice of `sdp.Item`s or
 // an `*sdp.QueryError`.
 // The CacheKey is always returned, even if the lookup otherwise fails or errors
-func (c *Cache) Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError) {
+func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError) {
 	span := trace.SpanFromContext(ctx)
 	ck := CacheKeyFromParts(srcName, method, scope, typ, query)
 
@@ -340,7 +438,7 @@ func (c *Cache) Lookup(ctx context.Context, srcName string, method sdp.QueryMeth
 // will be returned immediately, if nothing is found a ErrCacheNotFound will
 // be returned. Otherwise this will return items that match ALL of the given
 // query parameters
-func (c *Cache) Search(ck CacheKey) ([]*sdp.Item, error) {
+func (c *MemoryCache) Search(ck CacheKey) ([]*sdp.Item, error) {
 	if c == nil {
 		return nil, nil
 	}
@@ -353,12 +451,20 @@ func (c *Cache) Search(ck CacheKey) ([]*sdp.Item, error) {
 		return nil, ErrCacheNotFound
 	}
 
+	now := time.Now()
+
 	// If there is an error we want to return that, so we need to range over the
 	// results and separate items and errors. This is computationally less
 	// efficient than extracting errors inside of `getResults()` but logically
 	// it's a lot less complicated since `Delete()` uses the same method but
 	// applies different logic
 	for _, res := range results {
+		// Check if the cached result has expired
+		if res.Expiry.Before(now) {
+			// Skip expired results
+			continue
+		}
+
 		if res.Error != nil {
 			return nil, res.Error
 		}
@@ -370,11 +476,16 @@ func (c *Cache) Search(ck CacheKey) ([]*sdp.Item, error) {
 		items = append(items, itemCopy)
 	}
 
+	// If all results were expired, return cache not found
+	if len(items) == 0 {
+		return nil, ErrCacheNotFound
+	}
+
 	return items, nil
 }
 
 // Delete Deletes anything that matches the given cache query
-func (c *Cache) Delete(ck CacheKey) {
+func (c *MemoryCache) Delete(ck CacheKey) {
 	if c == nil {
 		return
 	}
@@ -384,7 +495,7 @@ func (c *Cache) Delete(ck CacheKey) {
 
 // getResults Searches indexes for cached results, doing no other logic. If
 // nothing is found an empty slice will be returned.
-func (c *Cache) getResults(ck CacheKey) []*CachedResult {
+func (c *MemoryCache) getResults(ck CacheKey) []*CachedResult {
 	c.indexMutex.RLock()
 	defer c.indexMutex.RUnlock()
 
@@ -477,7 +588,7 @@ func (c *Cache) getResults(ck CacheKey) []*CachedResult {
 
 // StoreItem Stores an item in the cache. Note that this item must be fully
 // populated (including metadata) for indexing to work correctly
-func (c *Cache) StoreItem(ctx context.Context, item *sdp.Item, duration time.Duration, ck CacheKey) {
+func (c *MemoryCache) StoreItem(ctx context.Context, item *sdp.Item, duration time.Duration, ck CacheKey) {
 	if item == nil || c == nil {
 		return
 	}
@@ -506,7 +617,7 @@ func (c *Cache) StoreItem(ctx context.Context, item *sdp.Item, duration time.Dur
 }
 
 // StoreError Stores an error for the given duration.
-func (c *Cache) StoreError(ctx context.Context, err error, duration time.Duration, cacheQuery CacheKey) {
+func (c *MemoryCache) StoreError(ctx context.Context, err error, duration time.Duration, cacheQuery CacheKey) {
 	if c == nil || err == nil {
 		return
 	}
@@ -522,7 +633,7 @@ func (c *Cache) StoreError(ctx context.Context, err error, duration time.Duratio
 }
 
 // Clear Delete all data in cache
-func (c *Cache) Clear() {
+func (c *MemoryCache) Clear() {
 	if c == nil {
 		return
 	}
@@ -534,7 +645,7 @@ func (c *Cache) Clear() {
 	c.expiryIndex = newExpiryIndex()
 }
 
-func (c *Cache) storeResult(ctx context.Context, res CachedResult) {
+func (c *MemoryCache) storeResult(ctx context.Context, res CachedResult) {
 	c.indexMutex.Lock()
 	defer c.indexMutex.Unlock()
 
@@ -627,7 +738,7 @@ type PurgeStats struct {
 }
 
 // deleteResults Deletes many cached results at once
-func (c *Cache) deleteResults(results []*CachedResult) {
+func (c *MemoryCache) deleteResults(results []*CachedResult) {
 	c.indexMutex.Lock()
 	defer c.indexMutex.Unlock()
 
@@ -652,7 +763,7 @@ func (c *Cache) deleteResults(results []*CachedResult) {
 // Purge Purges all expired items from the cache. The user must pass in the
 // `before` time. All items that expired before this will be purged. Usually
 // this would be just `time.Now()` however it could be overridden for testing
-func (c *Cache) Purge(before time.Time) PurgeStats {
+func (c *MemoryCache) Purge(before time.Time) PurgeStats {
 	if c == nil {
 		return PurgeStats{}
 	}
@@ -694,7 +805,7 @@ func (c *Cache) Purge(before time.Time) PurgeStats {
 const MinWaitDefault = (5 * time.Second)
 
 // GetMinWaitTime Returns the minimum wait time or the default if not set
-func (c *Cache) GetMinWaitTime() time.Duration {
+func (c *MemoryCache) GetMinWaitTime() time.Duration {
 	if c == nil {
 		return 0
 	}
@@ -709,7 +820,7 @@ func (c *Cache) GetMinWaitTime() time.Duration {
 // StartPurger Starts the purge process in the background, it will be cancelled
 // when the context is cancelled. The cache will be purged initially, at which
 // point the process will sleep until the next time an item expires
-func (c *Cache) StartPurger(ctx context.Context) error {
+func (c *MemoryCache) StartPurger(ctx context.Context) error {
 	if c == nil {
 		return nil
 	}
@@ -746,7 +857,7 @@ func (c *Cache) StartPurger(ctx context.Context) error {
 
 // setNextPurgeFromStats Sets when the next purge should run based on the stats of the
 // previous purge
-func (c *Cache) setNextPurgeFromStats(stats PurgeStats) {
+func (c *MemoryCache) setNextPurgeFromStats(stats PurgeStats) {
 	c.purgeMutex.Lock()
 	defer c.purgeMutex.Unlock()
 
@@ -770,7 +881,7 @@ func (c *Cache) setNextPurgeFromStats(stats PurgeStats) {
 // time is sooner than the current scheduled purge time. While the purger is
 // active this will be constantly updated, however if the purger is sleeping and
 // new items are added this method ensures that the purger is woken up
-func (c *Cache) setNextPurgeIfEarlier(t time.Time) {
+func (c *MemoryCache) setNextPurgeIfEarlier(t time.Time) {
 	c.purgeMutex.Lock()
 	defer c.purgeMutex.Unlock()
 

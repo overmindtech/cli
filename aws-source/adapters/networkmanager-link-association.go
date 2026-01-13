@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func linkAssociationOutputMapper(_ context.Context, _ *networkmanager.Client, scope string, _ *networkmanager.GetLinkAssociationsInput, output *networkmanager.GetLinkAssociationsOutput) ([]*sdp.Item, error) {
@@ -99,12 +100,13 @@ func linkAssociationOutputMapper(_ context.Context, _ *networkmanager.Client, sc
 	return items, nil
 }
 
-func NewNetworkManagerLinkAssociationAdapter(client *networkmanager.Client, accountID string) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetLinkAssociationsInput, *networkmanager.GetLinkAssociationsOutput, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerLinkAssociationAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetLinkAssociationsInput, *networkmanager.GetLinkAssociationsOutput, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetLinkAssociationsInput, *networkmanager.GetLinkAssociationsOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "networkmanager-link-association",
 		AdapterMetadata: linkAssociationAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.GetLinkAssociationsInput) (*networkmanager.GetLinkAssociationsOutput, error) {
 			return client.GetLinkAssociations(ctx, input)
 		},

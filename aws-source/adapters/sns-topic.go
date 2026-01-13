@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type topicClient interface {
@@ -66,7 +67,7 @@ func getTopicFunc(ctx context.Context, client topicClient, scope string, input *
 	return item, nil
 }
 
-func NewSNSTopicAdapter(client topicClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*sns.ListTopicsInput, *sns.ListTopicsOutput, *sns.GetTopicAttributesInput, *sns.GetTopicAttributesOutput, topicClient, *sns.Options] {
+func NewSNSTopicAdapter(client topicClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*sns.ListTopicsInput, *sns.ListTopicsOutput, *sns.GetTopicAttributesInput, *sns.GetTopicAttributesOutput, topicClient, *sns.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*sns.ListTopicsInput, *sns.ListTopicsOutput, *sns.GetTopicAttributesInput, *sns.GetTopicAttributesOutput, topicClient, *sns.Options]{
 		ItemType:        "sns-topic",
 		Client:          client,
@@ -74,6 +75,7 @@ func NewSNSTopicAdapter(client topicClient, accountID string, region string) *ad
 		Region:          region,
 		ListInput:       &sns.ListTopicsInput{},
 		AdapterMetadata: snsTopicAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *sns.GetTopicAttributesInput {
 			return &sns.GetTopicAttributesInput{
 				TopicArn: &query,

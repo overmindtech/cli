@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type CloudwatchClient interface {
@@ -182,13 +183,14 @@ func alarmOutputMapper(ctx context.Context, client CloudwatchClient, scope strin
 	return items, nil
 }
 
-func NewCloudwatchAlarmAdapter(client *cloudwatch.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*cloudwatch.DescribeAlarmsInput, *cloudwatch.DescribeAlarmsOutput, CloudwatchClient, *cloudwatch.Options] {
+func NewCloudwatchAlarmAdapter(client *cloudwatch.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*cloudwatch.DescribeAlarmsInput, *cloudwatch.DescribeAlarmsOutput, CloudwatchClient, *cloudwatch.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*cloudwatch.DescribeAlarmsInput, *cloudwatch.DescribeAlarmsOutput, CloudwatchClient, *cloudwatch.Options]{
 		ItemType:        "cloudwatch-alarm",
 		Client:          client,
 		Region:          region,
 		AccountID:       accountID,
 		AdapterMetadata: cloudwatchAlarmAdapterMetadata,
+		SDPCache:        cache,
 		PaginatorBuilder: func(client CloudwatchClient, params *cloudwatch.DescribeAlarmsInput) adapterhelpers.Paginator[*cloudwatch.DescribeAlarmsOutput, *cloudwatch.Options] {
 			return cloudwatch.NewDescribeAlarmsPaginator(client, params)
 		},

@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -313,7 +312,7 @@ func TestDBInstanceOutputMapper(t *testing.T) {
 func TestNewRDSDBInstanceAdapter(t *testing.T) {
 	client, account, region := rdsGetAutoConfig(t)
 
-	adapter := NewRDSDBInstanceAdapter(client, account, region)
+	adapter := NewRDSDBInstanceAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

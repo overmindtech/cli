@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func siteOutputMapper(_ context.Context, _ *networkmanager.Client, scope string, _ *networkmanager.GetSitesInput, output *networkmanager.GetSitesOutput) ([]*sdp.Item, error) {
@@ -95,12 +96,13 @@ func siteOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 	return items, nil
 }
 
-func NewNetworkManagerSiteAdapter(client *networkmanager.Client, accountID string) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetSitesInput, *networkmanager.GetSitesOutput, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerSiteAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetSitesInput, *networkmanager.GetSitesOutput, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetSitesInput, *networkmanager.GetSitesOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "networkmanager-site",
 		AdapterMetadata: siteAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.GetSitesInput) (*networkmanager.GetSitesOutput, error) {
 			return client.GetSites(ctx, input)
 		},

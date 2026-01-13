@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"buf.build/go/protovalidate"
 	log "github.com/sirupsen/logrus"
@@ -53,7 +54,7 @@ type ListableWrapper interface {
 // ListStreamableWrapper defines an interface for resources that support listing with streaming.
 type ListStreamableWrapper interface {
 	Wrapper
-	ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey)
+	ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey)
 }
 
 // SearchableWrapper defines an optional interface for resources that support searching.
@@ -66,7 +67,7 @@ type SearchableWrapper interface {
 // SearchStreamableWrapper defines an interface for resources that support searching with streaming.
 type SearchStreamableWrapper interface {
 	Wrapper
-	SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string)
+	SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string)
 }
 
 // SearchableListableWrapper defines an interface for resources that support both searching and listing.
@@ -82,9 +83,10 @@ type StandardAdapter interface {
 }
 
 // WrapperToAdapter converts a Wrapper to a StandardAdapter.
-func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
+func WrapperToAdapter(wrapper Wrapper, cache sdpcache.Cache) StandardAdapter {
 	core := standardAdapterCore{
-		wrapper: wrapper,
+		wrapper:    wrapper,
+		cacheField: cache,
 	}
 
 	core.sourceType = "unknown"
@@ -93,9 +95,6 @@ func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
 	if ok {
 		core.sourceType = string(it.Source)
 	}
-
-	// initialize cache
-	core.cache = sdpcache.NewCache()
 
 	// Check if wrapper supports both List and Search - if so, return standardSearchableListableAdapterImpl
 	if listable, listOk := wrapper.(ListableWrapper); listOk {
@@ -184,7 +183,7 @@ func WrapperToAdapter(wrapper Wrapper) StandardAdapter {
 type standardAdapterCore struct {
 	wrapper    Wrapper
 	sourceType string
-	cache      *sdpcache.Cache
+	cacheField sdpcache.Cache
 }
 
 type standardAdapterImpl struct {
@@ -212,9 +211,20 @@ type standardSearchableListableAdapterImpl struct {
 // Standard Adapter Core methods
 // *****************************
 
+var (
+	noOpCacheTransformerOnce sync.Once
+	noOpCacheTransformer     sdpcache.Cache
+)
+
 // Cache returns the cache of the adapter.
-func (s *standardAdapterCore) Cache() *sdpcache.Cache {
-	return s.cache
+func (s *standardAdapterCore) Cache() sdpcache.Cache {
+	if s.cacheField == nil {
+		noOpCacheTransformerOnce.Do(func() {
+			noOpCacheTransformer = sdpcache.NewNoOpCache()
+		})
+		return noOpCacheTransformer
+	}
+	return s.cacheField
 }
 
 // Type returns the type of the adapter.
@@ -251,7 +261,7 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 		return nil, err
 	}
 
-	cacheHit, ck, cachedItem, qErr := s.cache.Lookup(
+	cacheHit, ck, cachedItem, qErr := s.Cache().Lookup(
 		ctx,
 		s.Name(),
 		sdp.QueryMethod_GET,
@@ -289,10 +299,7 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 	}
 
 	// Store in cache after successful get
-	if s.cache != nil {
-		s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
-	}
-
+	s.Cache().StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 	return item, nil
 }
 
@@ -334,7 +341,7 @@ func (s *standardAdapterImpl) Metadata() *sdp.AdapterMetadata {
 
 // Validate checks if the adapter is valid.
 func (s *standardAdapterImpl) Validate() error {
-	if s.cache == nil {
+	if s.cacheField == nil {
 		return fmt.Errorf("cache is not initialized")
 	}
 
@@ -363,7 +370,7 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 		return nil, nil
 	}
 
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(
 		ctx,
 		s.Name(),
 		sdp.QueryMethod_LIST,
@@ -392,9 +399,7 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 	}
 
 	for _, item := range items {
-		if s.cache != nil {
-			s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
-		}
+		s.Cache().StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 	}
 
 	return items, nil
@@ -411,7 +416,7 @@ func (s *standardListableAdapterImpl) ListStream(ctx context.Context, scope stri
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(
 		ctx,
 		s.Name(),
 		sdp.QueryMethod_LIST,
@@ -437,7 +442,7 @@ func (s *standardListableAdapterImpl) ListStream(ctx context.Context, scope stri
 		return
 	}
 
-	s.listStreamable.ListStream(ctx, stream, s.cache, ck)
+	s.listStreamable.ListStream(ctx, stream, s.cacheField, ck)
 }
 
 // Metadata returns the metadata of the listable adapter.
@@ -476,7 +481,7 @@ func (s *standardListableAdapterImpl) Metadata() *sdp.AdapterMetadata {
 
 // Validate checks if the listable adapter is valid.
 func (s *standardListableAdapterImpl) Validate() error {
-	if s.cache == nil {
+	if s.cacheField == nil {
 		return fmt.Errorf("cache is not initialized")
 	}
 
@@ -608,7 +613,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(
 		ctx,
 		s.Name(),
 		sdp.QueryMethod_SEARCH,
@@ -662,7 +667,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 			return
 		}
 
-		s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
+		s.Cache().StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 
 		stream.SendItem(item)
 		return
@@ -707,7 +712,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 			return
 		}
 
-		s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
+		s.Cache().StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 
 		stream.SendItem(item)
 		return
@@ -741,7 +746,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 		return
 	}
 
-	s.searchStreamable.SearchStream(ctx, stream, s.cache, ck, queryParts...)
+	s.searchStreamable.SearchStream(ctx, stream, s.cacheField, ck, queryParts...)
 }
 
 // Metadata returns the metadata of the searchable adapter.
@@ -782,7 +787,7 @@ func (s *standardSearchableAdapterImpl) Metadata() *sdp.AdapterMetadata {
 
 // Validate checks if the searchable adapter is valid.
 func (s *standardSearchableAdapterImpl) Validate() error {
-	if s.cache == nil {
+	if s.cacheField == nil {
 		return fmt.Errorf("cache is not initialized")
 	}
 	if s.sourceType == string(gcpshared.GCP) {
@@ -841,7 +846,7 @@ func (s *standardSearchableListableAdapterImpl) Metadata() *sdp.AdapterMetadata 
 
 // Validate checks if the searchable+listable adapter is valid.
 func (s *standardSearchableListableAdapterImpl) Validate() error {
-	if s.cache == nil {
+	if s.cacheField == nil {
 		return fmt.Errorf("cache is not initialized")
 	}
 	if s.sourceType == string(gcpshared.GCP) {

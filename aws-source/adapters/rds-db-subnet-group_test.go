@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -87,7 +86,7 @@ func TestDBSubnetGroupOutputMapper(t *testing.T) {
 func TestNewRDSDBSubnetGroupAdapter(t *testing.T) {
 	client, account, region := rdsGetAutoConfig(t)
 
-	adapter := NewRDSDBSubnetGroupAdapter(client, account, region)
+	adapter := NewRDSDBSubnetGroupAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

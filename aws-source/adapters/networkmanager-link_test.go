@@ -83,7 +83,7 @@ func TestLinkOutputMapper(t *testing.T) {
 }
 
 func TestLinkInputMapperSearch(t *testing.T) {
-	adapter := NewNetworkManagerLinkAdapter(&networkmanager.Client{}, "123456789012")
+	adapter := NewNetworkManagerLinkAdapter(&networkmanager.Client{}, "123456789012", nil)
 
 	tests := []struct {
 		name          string

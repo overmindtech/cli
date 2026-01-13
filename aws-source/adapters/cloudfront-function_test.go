@@ -38,7 +38,7 @@ func TestFunctionItemMapper(t *testing.T) {
 func TestNewCloudfrontCloudfrontFunctionAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontCloudfrontFunctionAdapter(client, account)
+	adapter := NewCloudfrontCloudfrontFunctionAdapter(client, account, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

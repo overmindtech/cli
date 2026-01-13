@@ -76,9 +76,15 @@ type TestAdapter struct {
 	ReturnName   string // The name of the Adapter
 	mutex        sync.Mutex
 
-	CacheDuration time.Duration   // How long to cache items for
-	cache         *sdpcache.Cache // The sdpcache of this Adapter
-	cacheInitMu   sync.Mutex      // Mutex to ensure cache is only initialised once
+	CacheDuration time.Duration  // How long to cache items for
+	cacheField    sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+}
+
+// NewTestAdapter creates a new TestAdapter with cache initialized
+func NewTestAdapter() *TestAdapter {
+	return &TestAdapter{
+		cacheField: sdpcache.NewNoOpCache(), // Initialize with NoOpCache to avoid nil pointer dereferences
+	}
 }
 
 // assert interface implementation
@@ -92,7 +98,9 @@ func (s *TestAdapter) ClearCalls() {
 	s.ListCalls = make([][]string, 0)
 	s.SearchCalls = make([][]string, 0)
 	s.GetCalls = make([][]string, 0)
-	s.cache.Clear()
+	if s.cacheField != nil {
+		s.cacheField.Clear()
+	}
 }
 
 func (s *TestAdapter) Type() string {
@@ -118,19 +126,19 @@ func (s *TestAdapter) Metadata() *sdp.AdapterMetadata {
 	}
 }
 
-func (s *TestAdapter) ensureCache() {
-	s.cacheInitMu.Lock()
-	defer s.cacheInitMu.Unlock()
+var (
+	noOpCacheTestOnce sync.Once
+	noOpCacheTest     sdpcache.Cache
+)
 
-	if s.cache == nil {
-		s.cache = sdpcache.NewCache()
-		s.cache.MinWaitTime = 100 * time.Millisecond
+func (s *TestAdapter) Cache() sdpcache.Cache {
+	if s.cacheField == nil {
+		noOpCacheTestOnce.Do(func() {
+			noOpCacheTest = sdpcache.NewNoOpCache()
+		})
+		return noOpCacheTest
 	}
-}
-
-func (s *TestAdapter) Cache() *sdpcache.Cache {
-	s.ensureCache()
-	return s.cache
+	return s.cacheField
 }
 
 func (s *TestAdapter) Scopes() []string {
@@ -149,8 +157,12 @@ func (s *TestAdapter) Get(ctx context.Context, scope string, query string, ignor
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	var cacheHit bool
+	var ck sdpcache.CacheKey
+	var cachedItems []*sdp.Item
+	var qErr *sdp.QueryError
+
+	cacheHit, ck, cachedItems, qErr = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -171,7 +183,7 @@ func (s *TestAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		s.cache.StoreError(ctx, err, s.DefaultCacheDuration(), ck)
+		s.Cache().StoreError(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{
@@ -181,7 +193,7 @@ func (s *TestAdapter) Get(ctx context.Context, scope string, query string, ignor
 		}
 	default:
 		item := s.NewTestItem(scope, query)
-		s.cache.StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
+		s.Cache().StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
 		return item, nil
 	}
 }
@@ -190,8 +202,12 @@ func (s *TestAdapter) List(ctx context.Context, scope string, ignoreCache bool) 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.Type(), "", ignoreCache)
+	var cacheHit bool
+	var ck sdpcache.CacheKey
+	var cachedItems []*sdp.Item
+	var qErr *sdp.QueryError
+
+	cacheHit, ck, cachedItems, qErr = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.Type(), "", ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -208,7 +224,7 @@ func (s *TestAdapter) List(ctx context.Context, scope string, ignoreCache bool) 
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		s.cache.StoreError(ctx, err, s.DefaultCacheDuration(), ck)
+		s.Cache().StoreError(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{
@@ -218,7 +234,7 @@ func (s *TestAdapter) List(ctx context.Context, scope string, ignoreCache bool) 
 		}
 	default:
 		item := s.NewTestItem(scope, "Dylan")
-		s.cache.StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
+		s.Cache().StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
 		return []*sdp.Item{item}, nil
 	}
 }
@@ -227,8 +243,12 @@ func (s *TestAdapter) Search(ctx context.Context, scope string, query string, ig
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.Type(), query, ignoreCache)
+	var cacheHit bool
+	var ck sdpcache.CacheKey
+	var cachedItems []*sdp.Item
+	var qErr *sdp.QueryError
+
+	cacheHit, ck, cachedItems, qErr = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.Type(), query, ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -245,7 +265,7 @@ func (s *TestAdapter) Search(ctx context.Context, scope string, query string, ig
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		s.cache.StoreError(ctx, err, s.DefaultCacheDuration(), ck)
+		s.Cache().StoreError(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{
@@ -255,7 +275,7 @@ func (s *TestAdapter) Search(ctx context.Context, scope string, query string, ig
 		}
 	default:
 		item := s.NewTestItem(scope, "Dylan")
-		s.cache.StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
+		s.Cache().StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
 		return []*sdp.Item{item}, nil
 	}
 }

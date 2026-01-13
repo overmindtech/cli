@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func interconnectOutputMapper(_ context.Context, _ *directconnect.Client, scope string, _ *directconnect.DescribeInterconnectsInput, output *directconnect.DescribeInterconnectsOutput) ([]*sdp.Item, error) {
@@ -119,13 +120,14 @@ func interconnectOutputMapper(_ context.Context, _ *directconnect.Client, scope 
 	return items, nil
 }
 
-func NewDirectConnectInterconnectAdapter(client *directconnect.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeInterconnectsInput, *directconnect.DescribeInterconnectsOutput, *directconnect.Client, *directconnect.Options] {
+func NewDirectConnectInterconnectAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeInterconnectsInput, *directconnect.DescribeInterconnectsOutput, *directconnect.Client, *directconnect.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeInterconnectsInput, *directconnect.DescribeInterconnectsOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-interconnect",
 		AdapterMetadata: interconnectAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeInterconnectsInput) (*directconnect.DescribeInterconnectsOutput, error) {
 			return client.DescribeInterconnects(ctx, input)
 		},

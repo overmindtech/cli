@@ -5,10 +5,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
-
-	"github.com/aws/aws-sdk-go-v2/service/kms"
 )
 
 /*
@@ -110,7 +109,7 @@ func TestNewKMSKeyPolicyAdapter(t *testing.T) {
 
 	client := kms.NewFromConfig(config)
 
-	adapter := NewKMSKeyPolicyAdapter(client, account, region)
+	adapter := NewKMSKeyPolicyAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter:  adapter,

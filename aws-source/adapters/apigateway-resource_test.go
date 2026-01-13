@@ -167,7 +167,7 @@ func TestNewAPIGatewayResourceAdapter(t *testing.T) {
 
 	client := apigateway.NewFromConfig(config)
 
-	adapter := NewAPIGatewayResourceAdapter(client, account, region)
+	adapter := NewAPIGatewayResourceAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter:  adapter,

@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func targetGroupOutputMapper(ctx context.Context, client elbv2Client, scope string, _ *elbv2.DescribeTargetGroupsInput, output *elbv2.DescribeTargetGroupsOutput) ([]*sdp.Item, error) {
@@ -101,13 +102,14 @@ func targetGroupOutputMapper(ctx context.Context, client elbv2Client, scope stri
 	return items, nil
 }
 
-func NewELBv2TargetGroupAdapter(client elbv2Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeTargetGroupsInput, *elbv2.DescribeTargetGroupsOutput, elbv2Client, *elbv2.Options] {
+func NewELBv2TargetGroupAdapter(client elbv2Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeTargetGroupsInput, *elbv2.DescribeTargetGroupsOutput, elbv2Client, *elbv2.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeTargetGroupsInput, *elbv2.DescribeTargetGroupsOutput, elbv2Client, *elbv2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "elbv2-target-group",
 		AdapterMetadata: targetGroupAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client elbv2Client, input *elbv2.DescribeTargetGroupsInput) (*elbv2.DescribeTargetGroupsOutput, error) {
 			return client.DescribeTargetGroups(ctx, input)
 		},

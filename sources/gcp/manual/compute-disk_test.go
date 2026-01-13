@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -33,7 +34,7 @@ func TestComputeDisk(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeDisk("test-disk", computepb.Disk_READY), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-disk", true)
 		if qErr != nil {
@@ -167,7 +168,7 @@ func TestComputeDisk(t *testing.T) {
 				t.Run(tc.name, func(t *testing.T) {
 					disk := createComputeDiskWithSource("test-disk", computepb.Disk_READY, tc.sourceType, tc.sourceValue)
 					wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
-					adapter := sources.WrapperToAdapter(wrapper)
+					adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 					// Mock the Get call to return our disk
 					mockClient.EXPECT().Get(ctx, gomock.Any()).Return(disk, nil)
@@ -235,7 +236,7 @@ func TestComputeDisk(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
-				adapter := sources.WrapperToAdapter(wrapper)
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeDisk("test-disk", tc.input), nil)
 
@@ -253,7 +254,7 @@ func TestComputeDisk(t *testing.T) {
 
 	t.Run("List", func(t *testing.T) {
 		wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeDiskIterator(ctrl)
 
@@ -292,7 +293,7 @@ func TestComputeDisk(t *testing.T) {
 
 	t.Run("ListStream", func(t *testing.T) {
 		wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeDiskIterator(ctrl)
 		mockComputeIterator.EXPECT().Next().Return(createComputeDisk("test-disk-1", computepb.Disk_READY), nil)

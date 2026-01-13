@@ -3,11 +3,10 @@ package apigateway
 import (
 	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"log/slog"
 	"os"
 	"testing"
-
-	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 )

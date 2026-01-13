@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func ReplicationConfigurationOutputMapper(_ context.Context, _ *efs.Client, scope string, input *efs.DescribeReplicationConfigurationsInput, output *efs.DescribeReplicationConfigurationsOutput) ([]*sdp.Item, error) {
@@ -124,13 +125,14 @@ func ReplicationConfigurationOutputMapper(_ context.Context, _ *efs.Client, scop
 	return items, nil
 }
 
-func NewEFSReplicationConfigurationAdapter(client *efs.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*efs.DescribeReplicationConfigurationsInput, *efs.DescribeReplicationConfigurationsOutput, *efs.Client, *efs.Options] {
+func NewEFSReplicationConfigurationAdapter(client *efs.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*efs.DescribeReplicationConfigurationsInput, *efs.DescribeReplicationConfigurationsOutput, *efs.Client, *efs.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*efs.DescribeReplicationConfigurationsInput, *efs.DescribeReplicationConfigurationsOutput, *efs.Client, *efs.Options]{
 		ItemType:        "efs-replication-configuration",
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: replicationConfigurationAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *efs.Client, input *efs.DescribeReplicationConfigurationsInput) (*efs.DescribeReplicationConfigurationsOutput, error) {
 			return client.DescribeReplicationConfigurations(ctx, input)
 		},

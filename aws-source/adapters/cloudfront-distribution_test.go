@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -500,7 +499,7 @@ func TestNewCloudfrontDistributionAdapter(t *testing.T) {
 	config, account, _ := adapterhelpers.GetAutoConfig(t)
 	client := cloudfront.NewFromConfig(config)
 
-	adapter := NewCloudfrontDistributionAdapter(client, account)
+	adapter := NewCloudfrontDistributionAdapter(client, account, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

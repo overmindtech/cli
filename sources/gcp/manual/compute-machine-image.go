@@ -122,7 +122,7 @@ func (c computeMachineImageWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp
 }
 
 // ListStream lists compute machine images and sends them to the provided stream.
-func (c computeMachineImageWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeMachineImageWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListMachineImagesRequest{
 		Project: c.ProjectID(),
 	})

@@ -16,6 +16,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -91,7 +92,7 @@ func TestDocumentDBDatabaseAccountsIntegration(t *testing.T) {
 			)
 			scope := cosmosWrapper.Scopes()[0]
 
-			cosmosAdapter := sources.WrapperToAdapter(cosmosWrapper)
+			cosmosAdapter := sources.WrapperToAdapter(cosmosWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := cosmosAdapter.Get(ctx, scope, integrationTestCosmosDBAccountName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -132,7 +133,7 @@ func TestDocumentDBDatabaseAccountsIntegration(t *testing.T) {
 			)
 			scope := cosmosWrapper.Scopes()[0]
 
-			cosmosAdapter := sources.WrapperToAdapter(cosmosWrapper)
+			cosmosAdapter := sources.WrapperToAdapter(cosmosWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports listing
 			listable, ok := cosmosAdapter.(discovery.ListableAdapter)

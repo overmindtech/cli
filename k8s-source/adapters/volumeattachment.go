@@ -3,6 +3,7 @@ package adapters
 import (
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/storage/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -46,10 +47,11 @@ func volumeAttachmentExtractor(resource *v1.VolumeAttachment, scope string) ([]*
 	return queries, nil
 }
 
-func newVolumeAttachmentAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newVolumeAttachmentAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.VolumeAttachment, *v1.VolumeAttachmentList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
+		cacheField:  cache,
 		TypeName:    "VolumeAttachment",
 		ClusterInterfaceBuilder: func() ItemInterface[*v1.VolumeAttachment, *v1.VolumeAttachmentList] {
 			return cs.StorageV1().VolumeAttachments()

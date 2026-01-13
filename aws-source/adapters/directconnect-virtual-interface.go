@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 const gatewayIDVirtualInterfaceIDFormat = "gateway_id/virtual_interface_id"
@@ -141,13 +142,14 @@ func virtualInterfaceOutputMapper(_ context.Context, _ *directconnect.Client, sc
 	return items, nil
 }
 
-func NewDirectConnectVirtualInterfaceAdapter(client *directconnect.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeVirtualInterfacesInput, *directconnect.DescribeVirtualInterfacesOutput, *directconnect.Client, *directconnect.Options] {
+func NewDirectConnectVirtualInterfaceAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeVirtualInterfacesInput, *directconnect.DescribeVirtualInterfacesOutput, *directconnect.Client, *directconnect.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeVirtualInterfacesInput, *directconnect.DescribeVirtualInterfacesOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-virtual-interface",
 		AdapterMetadata: virtualInterfaceAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeVirtualInterfacesInput) (*directconnect.DescribeVirtualInterfacesOutput, error) {
 			return client.DescribeVirtualInterfaces(ctx, input)
 		},

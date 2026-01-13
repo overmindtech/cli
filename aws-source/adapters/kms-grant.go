@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -167,13 +168,14 @@ func grantOutputMapper(ctx context.Context, _ *kms.Client, scope string, _ *kms.
 	return items, nil
 }
 
-func NewKMSGrantAdapter(client *kms.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*kms.ListGrantsInput, *kms.ListGrantsOutput, *kms.Client, *kms.Options] {
+func NewKMSGrantAdapter(client *kms.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*kms.ListGrantsInput, *kms.ListGrantsOutput, *kms.Client, *kms.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*kms.ListGrantsInput, *kms.ListGrantsOutput, *kms.Client, *kms.Options]{
 		ItemType:        "kms-grant",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: grantAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *kms.Client, input *kms.ListGrantsInput) (*kms.ListGrantsOutput, error) {
 			return client.ListGrants(ctx, input)
 		},

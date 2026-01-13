@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -55,7 +56,7 @@ func TestComputeDiskIntegration(t *testing.T) {
 		disksWrapper := manual.NewComputeDisk(gcpshared.NewComputeDiskClient(diskClient), projectID, zone)
 		scope := disksWrapper.Scopes()[0]
 
-		disksAdapter := sources.WrapperToAdapter(disksWrapper)
+		disksAdapter := sources.WrapperToAdapter(disksWrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports listing
 		listable, ok := disksAdapter.(discovery.ListableAdapter)
@@ -94,7 +95,7 @@ func TestComputeDiskIntegration(t *testing.T) {
 		disksWrapper := manual.NewComputeDisk(gcpshared.NewComputeDiskClient(diskClient), projectID, zone)
 		scope := disksWrapper.Scopes()[0]
 
-		disksAdapter := sources.WrapperToAdapter(disksWrapper)
+		disksAdapter := sources.WrapperToAdapter(disksWrapper, sdpcache.NewNoOpCache())
 		sdpItem, qErr := disksAdapter.Get(ctx, scope, diskName, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)

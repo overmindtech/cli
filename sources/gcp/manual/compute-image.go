@@ -117,7 +117,7 @@ func (c computeImageWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryE
 }
 
 // ListStream lists compute images and sends them as items to the provided stream.
-func (c computeImageWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeImageWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListImagesRequest{
 		Project: c.ProjectID(),
 	})

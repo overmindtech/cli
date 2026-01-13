@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/route53/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -51,7 +50,7 @@ func TestHostedZoneItemMapper(t *testing.T) {
 func TestNewRoute53HostedZoneAdapter(t *testing.T) {
 	client, account, region := route53GetAutoConfig(t)
 
-	adapter := NewRoute53HostedZoneAdapter(client, account, region)
+	adapter := NewRoute53HostedZoneAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

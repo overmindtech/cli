@@ -29,24 +29,24 @@ type DNSAdapter struct {
 
 	client dns.Client
 
-	cache       *sdpcache.Cache // The sdpcache of this adapter
-	cacheInitMu sync.Mutex      // Mutex to ensure cache is only initialised once
+	cacheField sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 }
 
 const dnsCacheDuration = 5 * time.Minute
 
-func (s *DNSAdapter) ensureCache() {
-	s.cacheInitMu.Lock()
-	defer s.cacheInitMu.Unlock()
+var (
+	noOpCacheDNSOnce sync.Once
+	noOpCacheDNS     sdpcache.Cache
+)
 
-	if s.cache == nil {
-		s.cache = sdpcache.NewCache()
+func (d *DNSAdapter) Cache() sdpcache.Cache {
+	if d.cacheField == nil {
+		noOpCacheDNSOnce.Do(func() {
+			noOpCacheDNS = sdpcache.NewNoOpCache()
+		})
+		return noOpCacheDNS
 	}
-}
-
-func (s *DNSAdapter) Cache() *sdpcache.Cache {
-	s.ensureCache()
-	return s.cache
+	return d.cacheField
 }
 
 var DefaultServers = []string{
@@ -133,8 +133,12 @@ func (d *DNSAdapter) Get(ctx context.Context, scope string, query string, ignore
 		}
 	}
 
-	d.ensureCache()
-	cacheHit, ck, cachedItems, qErr := d.cache.Lookup(ctx, d.Name(), sdp.QueryMethod_GET, scope, d.Type(), query, ignoreCache)
+	var cacheHit bool
+	var ck sdpcache.CacheKey
+	var cachedItems []*sdp.Item
+	var qErr *sdp.QueryError
+
+	cacheHit, ck, cachedItems, qErr = d.Cache().Lookup(ctx, d.Name(), sdp.QueryMethod_GET, scope, d.Type(), query, ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -163,8 +167,7 @@ func (d *DNSAdapter) Get(ctx context.Context, scope string, query string, ignore
 			ItemType:    d.Type(),
 		}
 	}
-
-	d.cache.StoreItem(ctx, items[0], dnsCacheDuration, ck)
+	d.Cache().StoreItem(ctx, items[0], dnsCacheDuration, ck)
 	return items[0], nil
 }
 
@@ -199,22 +202,29 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 	}
 
 	// Check cache before making query
-	d.ensureCache()
-	cacheHit, _, cachedItems, qErr := d.cache.Lookup(ctx, d.Name(), sdp.QueryMethod_SEARCH, scope, d.Type(), query, ignoreCache)
-	if qErr != nil {
-		return nil, qErr
+	var cacheHit bool
+	var ck sdpcache.CacheKey
+	var cachedItems []*sdp.Item
+	var qErr *sdp.QueryError
+	if !ignoreCache {
+		cacheHit, _, cachedItems, qErr = d.Cache().Lookup(ctx, d.Name(), sdp.QueryMethod_SEARCH, scope, d.Type(), query, ignoreCache)
+		if qErr != nil {
+			return nil, qErr
+		}
+		if cacheHit {
+			return cachedItems, nil
+		}
+		ck = sdpcache.CacheKeyFromParts(d.Name(), sdp.QueryMethod_SEARCH, scope, d.Type(), query)
+	} else {
+		ck = sdpcache.CacheKeyFromParts(d.Name(), sdp.QueryMethod_SEARCH, scope, d.Type(), query)
 	}
-	if cacheHit {
-		return cachedItems, nil
-	}
-	ck := sdpcache.CacheKeyFromParts(d.Name(), sdp.QueryMethod_SEARCH, scope, d.Type(), query)
 
 	if net.ParseIP(query) != nil {
 		if d.ReverseLookup {
 			// If it's an IP then we want to run a reverse lookup
 			items, err := d.MakeReverseQuery(ctx, query)
 			if err != nil {
-				d.cache.StoreError(ctx, err, dnsCacheDuration, ck)
+				d.Cache().StoreError(ctx, err, dnsCacheDuration, ck)
 				return nil, err
 			}
 
@@ -227,12 +237,12 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 					SourceName:  d.Name(),
 					ItemType:    d.Type(),
 				}
-				d.cache.StoreError(ctx, notFoundErr, dnsCacheDuration, ck)
+				d.Cache().StoreError(ctx, notFoundErr, dnsCacheDuration, ck)
 				return nil, notFoundErr
 			}
 
 			for _, item := range items {
-				d.cache.StoreItem(ctx, item, dnsCacheDuration, ck)
+				d.Cache().StoreItem(ctx, item, dnsCacheDuration, ck)
 			}
 
 			return items, nil
@@ -245,12 +255,12 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 
 	items, err := d.MakeQuery(ctx, query)
 	if err != nil {
-		d.cache.StoreError(ctx, err, dnsCacheDuration, ck)
+		d.Cache().StoreError(ctx, err, dnsCacheDuration, ck)
 		return nil, err
 	}
 
 	for _, item := range items {
-		d.cache.StoreItem(ctx, item, dnsCacheDuration, ck)
+		d.Cache().StoreItem(ctx, item, dnsCacheDuration, ck)
 	}
 
 	return items, nil

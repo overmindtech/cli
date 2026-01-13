@@ -122,7 +122,7 @@ func (c computeAutoscalerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Q
 	return items, nil
 }
 
-func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	results := c.client.List(ctx, &computepb.ListAutoscalersRequest{
 		Project: c.ProjectID(),
 		Zone:    c.Zone(),

@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 // ServiceIncludeFields Fields that we want included by default
@@ -368,7 +369,7 @@ func serviceListFuncOutputMapper(output *ecs.ListServicesOutput, input *ecs.List
 	return inputs, nil
 }
 
-func NewECSServiceAdapter(client ECSClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*ecs.ListServicesInput, *ecs.ListServicesOutput, *ecs.DescribeServicesInput, *ecs.DescribeServicesOutput, ECSClient, *ecs.Options] {
+func NewECSServiceAdapter(client ECSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*ecs.ListServicesInput, *ecs.ListServicesOutput, *ecs.DescribeServicesInput, *ecs.DescribeServicesOutput, ECSClient, *ecs.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*ecs.ListServicesInput, *ecs.ListServicesOutput, *ecs.DescribeServicesInput, *ecs.DescribeServicesOutput, ECSClient, *ecs.Options]{
 		ItemType:        "ecs-service",
 		Client:          client,
@@ -377,6 +378,7 @@ func NewECSServiceAdapter(client ECSClient, accountID string, region string) *ad
 		GetFunc:         serviceGetFunc,
 		DisableList:     true,
 		AdapterMetadata: ecsServiceAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *ecs.DescribeServicesInput {
 			// We are using a custom id of {clusterName}/{id} e.g.
 			// ecs-template-ECSCluster-8nS0WOLbs3nZ/ecs-template-service-i0mQKzkhDI2C

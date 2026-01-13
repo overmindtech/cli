@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func coreNetworkPolicyGetFunc(ctx context.Context, client *networkmanager.Client, _, query string) (*types.CoreNetworkPolicy, error) {
@@ -56,13 +57,14 @@ func coreNetworkPolicyItemMapper(_, scope string, cn *types.CoreNetworkPolicy) (
 	return &item, nil
 }
 
-func NewNetworkManagerCoreNetworkPolicyAdapter(client *networkmanager.Client, accountID, region string) *adapterhelpers.GetListAdapter[*types.CoreNetworkPolicy, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerCoreNetworkPolicyAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.CoreNetworkPolicy, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.GetListAdapter[*types.CoreNetworkPolicy, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-core-network-policy",
 		AdapterMetadata: coreNetworkPolicyAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *networkmanager.Client, scope string, query string) (*types.CoreNetworkPolicy, error) {
 			return coreNetworkPolicyGetFunc(ctx, client, scope, query)
 		},

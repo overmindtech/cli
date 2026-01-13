@@ -14,6 +14,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/iter"
 	"go.opentelemetry.io/otel/trace"
@@ -271,7 +272,7 @@ func policyListExtractor(ctx context.Context, output *iam.ListPoliciesOutput, cl
 // is implemented so that it was mart enough to handle different scopes. This
 // has been added to the backlog:
 // https://github.com/overmindtech/workspace/aws-adapter/issues/68
-func NewIAMPolicyAdapter(client IAMClient, accountID string) *adapterhelpers.GetListAdapterV2[*iam.ListPoliciesInput, *iam.ListPoliciesOutput, *PolicyDetails, IAMClient, *iam.Options] {
+func NewIAMPolicyAdapter(client IAMClient, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapterV2[*iam.ListPoliciesInput, *iam.ListPoliciesOutput, *PolicyDetails, IAMClient, *iam.Options] {
 	return &adapterhelpers.GetListAdapterV2[*iam.ListPoliciesInput, *iam.ListPoliciesOutput, *PolicyDetails, IAMClient, *iam.Options]{
 		ItemType:               "iam-policy",
 		Client:                 client,
@@ -279,6 +280,7 @@ func NewIAMPolicyAdapter(client IAMClient, accountID string) *adapterhelpers.Get
 		Region:                 "",            // IAM policies aren't tied to a region
 		CacheDuration:          3 * time.Hour, // IAM has very low rate limits, we need to cache for a long time
 		AdapterMetadata:        policyAdapterMetadata,
+		SDPCache:               cache,
 		SupportGlobalResources: true,
 		InputMapperList: func(scope string) (*iam.ListPoliciesInput, error) {
 			var iamScope types.PolicyScopeType

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -247,6 +248,7 @@ func TestGetListSourceCaching(t *testing.T) {
 		ItemType:  "test-type",
 		Region:    "eu-west-2",
 		AccountID: "foo",
+		SDPCache:  sdpcache.NewCache(),
 		GetFunc: func(ctx context.Context, client struct{}, scope, query string) (string, error) {
 			generation += 1
 			return fmt.Sprintf("%v", generation), nil

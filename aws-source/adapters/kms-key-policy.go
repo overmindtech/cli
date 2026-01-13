@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -85,7 +86,7 @@ func getKeyPolicyFunc(ctx context.Context, client keyPolicyClient, scope string,
 	return item, nil
 }
 
-func NewKMSKeyPolicyAdapter(client keyPolicyClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*kms.ListKeyPoliciesInput, *kms.ListKeyPoliciesOutput, *kms.GetKeyPolicyInput, *kms.GetKeyPolicyOutput, keyPolicyClient, *kms.Options] {
+func NewKMSKeyPolicyAdapter(client keyPolicyClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*kms.ListKeyPoliciesInput, *kms.ListKeyPoliciesOutput, *kms.GetKeyPolicyInput, *kms.GetKeyPolicyOutput, keyPolicyClient, *kms.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*kms.ListKeyPoliciesInput, *kms.ListKeyPoliciesOutput, *kms.GetKeyPolicyInput, *kms.GetKeyPolicyOutput, keyPolicyClient, *kms.Options]{
 		ItemType:        "kms-key-policy",
 		Client:          client,
@@ -93,6 +94,7 @@ func NewKMSKeyPolicyAdapter(client keyPolicyClient, accountID string, region str
 		Region:          region,
 		DisableList:     true, // This adapter only supports listing by Key ID
 		AdapterMetadata: keyPolicyAdapterMetadata,
+		SDPCache:        cache,
 		SearchInputMapper: func(scope, query string) (*kms.ListKeyPoliciesInput, error) {
 			return &kms.ListKeyPoliciesInput{
 				KeyId: &query,

@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func addonGetFunc(ctx context.Context, client EKSClient, scope string, input *eks.DescribeAddonInput) (*sdp.Item, error) {
@@ -44,13 +45,14 @@ func addonGetFunc(ctx context.Context, client EKSClient, scope string, input *ek
 	return &item, nil
 }
 
-func NewEKSAddonAdapter(client EKSClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*eks.ListAddonsInput, *eks.ListAddonsOutput, *eks.DescribeAddonInput, *eks.DescribeAddonOutput, EKSClient, *eks.Options] {
+func NewEKSAddonAdapter(client EKSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*eks.ListAddonsInput, *eks.ListAddonsOutput, *eks.DescribeAddonInput, *eks.DescribeAddonOutput, EKSClient, *eks.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*eks.ListAddonsInput, *eks.ListAddonsOutput, *eks.DescribeAddonInput, *eks.DescribeAddonOutput, EKSClient, *eks.Options]{
 		ItemType:        "eks-addon",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: eksAddonAdapterMetadata,
+		SDPCache:        cache,
 		DisableList:     true,
 		SearchInputMapper: func(scope, query string) (*eks.ListAddonsInput, error) {
 			return &eks.ListAddonsInput{

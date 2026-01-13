@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func nodegroupGetFunc(ctx context.Context, client EKSClient, scope string, input *eks.DescribeNodegroupInput) (*sdp.Item, error) {
@@ -168,7 +169,7 @@ func nodegroupGetFunc(ctx context.Context, client EKSClient, scope string, input
 	return &item, nil
 }
 
-func NewEKSNodegroupAdapter(client EKSClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*eks.ListNodegroupsInput, *eks.ListNodegroupsOutput, *eks.DescribeNodegroupInput, *eks.DescribeNodegroupOutput, EKSClient, *eks.Options] {
+func NewEKSNodegroupAdapter(client EKSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*eks.ListNodegroupsInput, *eks.ListNodegroupsOutput, *eks.DescribeNodegroupInput, *eks.DescribeNodegroupOutput, EKSClient, *eks.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*eks.ListNodegroupsInput, *eks.ListNodegroupsOutput, *eks.DescribeNodegroupInput, *eks.DescribeNodegroupOutput, EKSClient, *eks.Options]{
 		ItemType:         "eks-nodegroup",
 		Client:           client,
@@ -176,6 +177,7 @@ func NewEKSNodegroupAdapter(client EKSClient, accountID string, region string) *
 		Region:           region,
 		AlwaysSearchARNs: true,
 		AdapterMetadata:  nodegroupAdapterMetadata,
+		SDPCache:         cache,
 		SearchInputMapper: func(scope, query string) (*eks.ListNodegroupsInput, error) {
 			return &eks.ListNodegroupsInput{
 				ClusterName: &query,

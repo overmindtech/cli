@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type platformApplicationClient interface {
@@ -68,7 +69,7 @@ func getPlatformApplicationFunc(ctx context.Context, client platformApplicationC
 	return item, nil
 }
 
-func NewSNSPlatformApplicationAdapter(client platformApplicationClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*sns.ListPlatformApplicationsInput, *sns.ListPlatformApplicationsOutput, *sns.GetPlatformApplicationAttributesInput, *sns.GetPlatformApplicationAttributesOutput, platformApplicationClient, *sns.Options] {
+func NewSNSPlatformApplicationAdapter(client platformApplicationClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*sns.ListPlatformApplicationsInput, *sns.ListPlatformApplicationsOutput, *sns.GetPlatformApplicationAttributesInput, *sns.GetPlatformApplicationAttributesOutput, platformApplicationClient, *sns.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*sns.ListPlatformApplicationsInput, *sns.ListPlatformApplicationsOutput, *sns.GetPlatformApplicationAttributesInput, *sns.GetPlatformApplicationAttributesOutput, platformApplicationClient, *sns.Options]{
 		ItemType:        "sns-platform-application",
 		Client:          client,
@@ -76,6 +77,7 @@ func NewSNSPlatformApplicationAdapter(client platformApplicationClient, accountI
 		Region:          region,
 		ListInput:       &sns.ListPlatformApplicationsInput{},
 		AdapterMetadata: platformApplicationAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *sns.GetPlatformApplicationAttributesInput {
 			return &sns.GetPlatformApplicationAttributesInput{
 				PlatformApplicationArn: &query,

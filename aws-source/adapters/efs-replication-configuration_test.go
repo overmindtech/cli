@@ -2,14 +2,12 @@ package adapters
 
 import (
 	"context"
-	"testing"
-	"time"
-
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/efs/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"testing"
+	"time"
 )
 
 func TestReplicationConfigurationOutputMapper(t *testing.T) {

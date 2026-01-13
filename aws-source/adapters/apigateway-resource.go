@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func convertGetResourceOutputToResource(output *apigateway.GetResourceOutput) *types.Resource {
@@ -76,13 +77,14 @@ func resourceOutputMapper(query, scope string, awsItem *types.Resource) (*sdp.It
 	return &item, nil
 }
 
-func NewAPIGatewayResourceAdapter(client *apigateway.Client, accountID string, region string) *adapterhelpers.GetListAdapter[*types.Resource, *apigateway.Client, *apigateway.Options] {
+func NewAPIGatewayResourceAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.Resource, *apigateway.Client, *apigateway.Options] {
 	return &adapterhelpers.GetListAdapter[*types.Resource, *apigateway.Client, *apigateway.Options]{
 		ItemType:        "apigateway-resource",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: apiGatewayResourceAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.Resource, error) {
 			f := strings.Split(query, "/")
 			if len(f) != 2 {

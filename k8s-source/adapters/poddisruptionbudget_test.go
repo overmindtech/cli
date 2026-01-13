@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var PodDisruptionBudgetYAML = `
@@ -25,7 +26,7 @@ func TestPodDisruptionBudgetAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newPodDisruptionBudgetAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newPodDisruptionBudgetAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

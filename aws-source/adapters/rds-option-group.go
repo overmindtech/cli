@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func optionGroupOutputMapper(ctx context.Context, client rdsClient, scope string, _ *rds.DescribeOptionGroupsInput, output *rds.DescribeOptionGroupsOutput) ([]*sdp.Item, error) {
@@ -46,13 +47,14 @@ func optionGroupOutputMapper(ctx context.Context, client rdsClient, scope string
 	return items, nil
 }
 
-func NewRDSOptionGroupAdapter(client rdsClient, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*rds.DescribeOptionGroupsInput, *rds.DescribeOptionGroupsOutput, rdsClient, *rds.Options] {
+func NewRDSOptionGroupAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*rds.DescribeOptionGroupsInput, *rds.DescribeOptionGroupsOutput, rdsClient, *rds.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*rds.DescribeOptionGroupsInput, *rds.DescribeOptionGroupsOutput, rdsClient, *rds.Options]{
 		ItemType:        "rds-option-group",
 		Region:          region,
 		AccountID:       accountID,
 		Client:          client,
 		AdapterMetadata: optionGroupAdapterMetadata,
+		SDPCache:        cache,
 		PaginatorBuilder: func(client rdsClient, params *rds.DescribeOptionGroupsInput) adapterhelpers.Paginator[*rds.DescribeOptionGroupsOutput, *rds.Options] {
 			return rds.NewDescribeOptionGroupsPaginator(client, params)
 		},

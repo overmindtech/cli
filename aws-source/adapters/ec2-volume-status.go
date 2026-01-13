@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func volumeStatusInputMapperGet(scope string, query string) (*ec2.DescribeVolumeStatusInput, error) {
@@ -98,13 +99,14 @@ func volumeStatusOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ 
 	return items, nil
 }
 
-func NewEC2VolumeStatusAdapter(client *ec2.Client, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeVolumeStatusInput, *ec2.DescribeVolumeStatusOutput, *ec2.Client, *ec2.Options] {
+func NewEC2VolumeStatusAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeVolumeStatusInput, *ec2.DescribeVolumeStatusOutput, *ec2.Client, *ec2.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeVolumeStatusInput, *ec2.DescribeVolumeStatusOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-volume-status",
 		AdapterMetadata: volumeStatusAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeVolumeStatusInput) (*ec2.DescribeVolumeStatusOutput, error) {
 			return client.DescribeVolumeStatus(ctx, input)
 		},

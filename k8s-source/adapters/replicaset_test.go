@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var replicaSetYAML = `
@@ -36,7 +37,7 @@ func TestReplicaSetAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newReplicaSetAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newReplicaSetAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

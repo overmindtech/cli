@@ -31,70 +31,70 @@ func APIGateway(t *testing.T) {
 
 	// Resources ------------------------------------------------------------------------------------------------------
 
-	restApiSource := adapters.NewAPIGatewayRestApiAdapter(testClient, accountID, testAWSConfig.Region)
+	restApiSource := adapters.NewAPIGatewayRestApiAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
 	err = restApiSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway restApi adapter: %v", err)
 	}
 
-	resourceApiSource := adapters.NewAPIGatewayResourceAdapter(testClient, accountID, testAWSConfig.Region)
+	resourceApiSource := adapters.NewAPIGatewayResourceAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
 	err = resourceApiSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway resource adapter: %v", err)
 	}
 
-	methodSource := adapters.NewAPIGatewayMethodAdapter(testClient, accountID, testAWSConfig.Region)
+	methodSource := adapters.NewAPIGatewayMethodAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
 	err = methodSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway method adapter: %v", err)
 	}
 
-	methodResponseSource := adapters.NewAPIGatewayMethodResponseAdapter(testClient, accountID, testAWSConfig.Region)
+	methodResponseSource := adapters.NewAPIGatewayMethodResponseAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
 	err = methodResponseSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway method response adapter: %v", err)
 	}
 
-	integrationSource := adapters.NewAPIGatewayIntegrationAdapter(testClient, accountID, testAWSConfig.Region)
+	integrationSource := adapters.NewAPIGatewayIntegrationAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
 	err = integrationSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway integration adapter: %v", err)
 	}
 
-	apiKeySource := adapters.NewAPIGatewayApiKeyAdapter(testClient, accountID, testAWSConfig.Region)
+	apiKeySource := adapters.NewAPIGatewayApiKeyAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
 	err = apiKeySource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway API key adapter: %v", err)
 	}
 
-	authorizerSource := adapters.NewAPIGatewayAuthorizerAdapter(testClient, accountID, testAWSConfig.Region)
+	authorizerSource := adapters.NewAPIGatewayAuthorizerAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
 	err = authorizerSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway authorizer adapter: %v", err)
 	}
 
-	deploymentSource := adapters.NewAPIGatewayDeploymentAdapter(testClient, accountID, testAWSConfig.Region)
+	deploymentSource := adapters.NewAPIGatewayDeploymentAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
 	err = deploymentSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway deployment adapter: %v", err)
 	}
 
-	stageSource := adapters.NewAPIGatewayStageAdapter(testClient, accountID, testAWSConfig.Region)
+	stageSource := adapters.NewAPIGatewayStageAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
 	err = stageSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway stage adapter: %v", err)
 	}
 
-	modelSource := adapters.NewAPIGatewayModelAdapter(testClient, accountID, testAWSConfig.Region)
+	modelSource := adapters.NewAPIGatewayModelAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
 	err = modelSource.Validate()
 	if err != nil {

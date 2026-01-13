@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func layerListFunc(ctx context.Context, client *lambda.Client, scope string) ([]*types.LayersListItem, error) {
@@ -64,13 +65,14 @@ func layerItemMapper(_, scope string, awsItem *types.LayersListItem) (*sdp.Item,
 	return &item, nil
 }
 
-func NewLambdaLayerAdapter(client *lambda.Client, accountID string, region string) *adapterhelpers.GetListAdapter[*types.LayersListItem, *lambda.Client, *lambda.Options] {
+func NewLambdaLayerAdapter(client *lambda.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.LayersListItem, *lambda.Client, *lambda.Options] {
 	return &adapterhelpers.GetListAdapter[*types.LayersListItem, *lambda.Client, *lambda.Options]{
 		ItemType:        "lambda-layer",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: lambdaLayerAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(_ context.Context, _ *lambda.Client, _, _ string) (*types.LayersListItem, error) {
 			// Layers can only be listed
 			return nil, errors.New("get is not supported for lambda-layers")

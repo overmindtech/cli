@@ -21,6 +21,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	_ "github.com/overmindtech/cli/sources/gcp/dynamic/adapters" // Import all adapters to register them
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -321,6 +322,7 @@ func init() {
 		"",
 		nil,
 		false,
+		sdpcache.NewNoOpCache(), // no-op cache for metadata registration
 	)
 	if err != nil {
 		panic(fmt.Errorf("error creating adapters: %w", err))
@@ -366,6 +368,9 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 	}
 
 	engine.StartSendingHeartbeats(ctx)
+
+	// Create a shared cache for all adapters in this source
+	sharedCache := sdpcache.NewCache()
 
 	err = func() error {
 		var logmsg string
@@ -477,7 +482,7 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 				"ovm.source.project_id": projectID,
 			}).Debug("Creating adapters for project")
 
-			discoveryAdapters, err := adapters(ctx, projectID, cfg.Regions, cfg.Zones, cfg.ImpersonationServiceAccountEmail, linker, true)
+			discoveryAdapters, err := adapters(ctx, projectID, cfg.Regions, cfg.Zones, cfg.ImpersonationServiceAccountEmail, linker, true, sharedCache)
 			if err != nil {
 				return fmt.Errorf("error creating discovery adapters for project %s: %w", projectID, err)
 			}
@@ -846,6 +851,7 @@ func adapters(
 	impersonationServiceAccountEmail string,
 	linker *gcpshared.Linker,
 	initGCPClients bool,
+	cache sdpcache.Cache,
 ) ([]discovery.Adapter, error) {
 	discoveryAdapters := make([]discovery.Adapter, 0)
 
@@ -872,6 +878,7 @@ func adapters(
 		zones,
 		tokenSource,
 		initGCPClients,
+		cache,
 	)
 	if err != nil {
 		return nil, err
@@ -901,6 +908,7 @@ func adapters(
 		linker,
 		httpClient,
 		initiatedManualAdapters,
+		cache,
 	)
 	if err != nil {
 		return nil, err

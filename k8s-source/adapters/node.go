@@ -5,6 +5,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/core/v1"
 
 	"k8s.io/client-go/kubernetes"
@@ -75,11 +76,12 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 	return queries, nil
 }
 
-func newNodeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newNodeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Node, *v1.NodeList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Node",
+		cacheField:  cache,
 		ClusterInterfaceBuilder: func() ItemInterface[*v1.Node, *v1.NodeList] {
 			return cs.CoreV1().Nodes()
 		},

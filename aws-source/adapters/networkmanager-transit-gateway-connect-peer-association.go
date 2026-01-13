@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func transitGatewayConnectPeerAssociationsOutputMapper(_ context.Context, _ *networkmanager.Client, scope string, _ *networkmanager.GetTransitGatewayConnectPeerAssociationsInput, output *networkmanager.GetTransitGatewayConnectPeerAssociationsOutput) ([]*sdp.Item, error) {
@@ -96,13 +97,14 @@ func transitGatewayConnectPeerAssociationsOutputMapper(_ context.Context, _ *net
 	return items, nil
 }
 
-func NewNetworkManagerTransitGatewayConnectPeerAssociationAdapter(client *networkmanager.Client, accountID, region string) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetTransitGatewayConnectPeerAssociationsInput, *networkmanager.GetTransitGatewayConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerTransitGatewayConnectPeerAssociationAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetTransitGatewayConnectPeerAssociationsInput, *networkmanager.GetTransitGatewayConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetTransitGatewayConnectPeerAssociationsInput, *networkmanager.GetTransitGatewayConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-transit-gateway-connect-peer-association",
 		AdapterMetadata: transitGatewayConnectPeerAssociationAdapterMetadata,
+		SDPCache:        cache,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.GetTransitGatewayConnectPeerAssociationsInput) (*networkmanager.GetTransitGatewayConnectPeerAssociationsOutput, error) {
 			return client.GetTransitGatewayConnectPeerAssociations(ctx, input)
 		},

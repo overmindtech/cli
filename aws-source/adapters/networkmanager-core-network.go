@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func coreNetworkGetFunc(ctx context.Context, client NetworkManagerClient, scope string, input *networkmanager.GetCoreNetworkInput) (*sdp.Item, error) {
@@ -110,7 +111,7 @@ func coreNetworkGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 	return &item, nil
 }
 
-func NewNetworkManagerCoreNetworkAdapter(client NetworkManagerClient, accountID, region string) *adapterhelpers.AlwaysGetAdapter[*networkmanager.ListCoreNetworksInput, *networkmanager.ListCoreNetworksOutput, *networkmanager.GetCoreNetworkInput, *networkmanager.GetCoreNetworkOutput, NetworkManagerClient, *networkmanager.Options] {
+func NewNetworkManagerCoreNetworkAdapter(client NetworkManagerClient, accountID, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*networkmanager.ListCoreNetworksInput, *networkmanager.ListCoreNetworksOutput, *networkmanager.GetCoreNetworkInput, *networkmanager.GetCoreNetworkOutput, NetworkManagerClient, *networkmanager.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*networkmanager.ListCoreNetworksInput, *networkmanager.ListCoreNetworksOutput, *networkmanager.GetCoreNetworkInput, *networkmanager.GetCoreNetworkOutput, NetworkManagerClient, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
@@ -119,6 +120,7 @@ func NewNetworkManagerCoreNetworkAdapter(client NetworkManagerClient, accountID,
 		ItemType:        "networkmanager-core-network",
 		ListInput:       &networkmanager.ListCoreNetworksInput{},
 		AdapterMetadata: coreNetworkAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *networkmanager.GetCoreNetworkInput {
 			return &networkmanager.GetCoreNetworkInput{
 				CoreNetworkId: &query,

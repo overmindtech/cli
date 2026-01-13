@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type subsCli interface {
@@ -85,7 +86,7 @@ func getSubsFunc(ctx context.Context, client subsCli, scope string, input *sns.G
 	return item, nil
 }
 
-func NewSNSSubscriptionAdapter(client subsCli, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*sns.ListSubscriptionsInput, *sns.ListSubscriptionsOutput, *sns.GetSubscriptionAttributesInput, *sns.GetSubscriptionAttributesOutput, subsCli, *sns.Options] {
+func NewSNSSubscriptionAdapter(client subsCli, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*sns.ListSubscriptionsInput, *sns.ListSubscriptionsOutput, *sns.GetSubscriptionAttributesInput, *sns.GetSubscriptionAttributesOutput, subsCli, *sns.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*sns.ListSubscriptionsInput, *sns.ListSubscriptionsOutput, *sns.GetSubscriptionAttributesInput, *sns.GetSubscriptionAttributesOutput, subsCli, *sns.Options]{
 		ItemType:        "sns-subscription",
 		Client:          client,
@@ -93,6 +94,7 @@ func NewSNSSubscriptionAdapter(client subsCli, accountID string, region string) 
 		Region:          region,
 		ListInput:       &sns.ListSubscriptionsInput{},
 		AdapterMetadata: snsSubscriptionAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *sns.GetSubscriptionAttributesInput {
 			return &sns.GetSubscriptionAttributesInput{
 				SubscriptionArn: &query,

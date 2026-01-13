@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -81,7 +82,7 @@ func TestStorageAccountIntegration(t *testing.T) {
 			)
 			scope := saWrapper.Scopes()[0]
 
-			saAdapter := sources.WrapperToAdapter(saWrapper)
+			saAdapter := sources.WrapperToAdapter(saWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := saAdapter.Get(ctx, scope, storageAccountName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -120,7 +121,7 @@ func TestStorageAccountIntegration(t *testing.T) {
 			)
 			scope := saWrapper.Scopes()[0]
 
-			saAdapter := sources.WrapperToAdapter(saWrapper)
+			saAdapter := sources.WrapperToAdapter(saWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports list
 			listable, ok := saAdapter.(discovery.ListableAdapter)
@@ -168,7 +169,7 @@ func TestStorageAccountIntegration(t *testing.T) {
 			)
 			scope := saWrapper.Scopes()[0]
 
-			saAdapter := sources.WrapperToAdapter(saWrapper)
+			saAdapter := sources.WrapperToAdapter(saWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := saAdapter.Get(ctx, scope, storageAccountName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)

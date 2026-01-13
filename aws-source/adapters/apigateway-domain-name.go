@@ -9,6 +9,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func convertGetDomainNameOutputToDomainName(output *apigateway.GetDomainNameOutput) *types.DomainName {
@@ -180,13 +181,14 @@ func domainNameOutputMapper(_, scope string, awsItem *types.DomainName) (*sdp.It
 	return &item, nil
 }
 
-func NewAPIGatewayDomainNameAdapter(client *apigateway.Client, accountID string, region string) *adapterhelpers.GetListAdapter[*types.DomainName, *apigateway.Client, *apigateway.Options] {
+func NewAPIGatewayDomainNameAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.DomainName, *apigateway.Client, *apigateway.Options] {
 	return &adapterhelpers.GetListAdapter[*types.DomainName, *apigateway.Client, *apigateway.Options]{
 		ItemType:        "apigateway-domain-name",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: apiGatewayDomainNameAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.DomainName, error) {
 			if query == "" {
 				return nil, &sdp.QueryError{

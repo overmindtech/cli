@@ -23,9 +23,8 @@ type GetListAdapterV2[ListInput InputType, ListOutput OutputType, AWSItem AWSIte
 	SupportGlobalResources bool         // If true, this will also support resources in the "aws" scope which are global
 	AdapterMetadata        *sdp.AdapterMetadata
 
-	CacheDuration time.Duration   // How long to cache items for
-	cache         *sdpcache.Cache // The sdpcache of this adapter
-	cacheInitMu   sync.Mutex      // Mutex to ensure cache is only initialised once
+	CacheDuration time.Duration  // How long to cache items for
+	SDPCache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 
 	// Disables List(), meaning all calls will return empty results. This does
 	// not affect Search()
@@ -76,18 +75,19 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 	return s.CacheDuration
 }
 
-func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]) ensureCache() {
-	s.cacheInitMu.Lock()
-	defer s.cacheInitMu.Unlock()
+var (
+	noOpCacheV2Once sync.Once
+	noOpCacheV2     sdpcache.Cache
+)
 
-	if s.cache == nil {
-		s.cache = sdpcache.NewCache()
+func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]) Cache() sdpcache.Cache {
+	if s.SDPCache == nil {
+		noOpCacheV2Once.Do(func() {
+			noOpCacheV2 = sdpcache.NewNoOpCache()
+		})
+		return noOpCacheV2
 	}
-}
-
-func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]) Cache() *sdpcache.Cache {
-	s.ensureCache()
-	return s.cache
+	return s.SDPCache
 }
 
 // Validate Checks that the adapter has been set up correctly
@@ -171,8 +171,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 		}
 	}
 
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -188,7 +187,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 	if err != nil {
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
-			s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+			s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
 		}
 		return nil, err
 	}
@@ -207,7 +206,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 		}
 	}
 
-	s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
+	s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 
 	return item, nil
 }
@@ -235,8 +234,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 		return
 	}
 
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
+	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
 	if qErr != nil {
 		stream.SendError(qErr)
 		return
@@ -280,7 +278,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 			}
 
 			stream.SendItem(item)
-			s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
+			s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 		}
 	}
 

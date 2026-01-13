@@ -18,6 +18,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -26,10 +27,10 @@ import (
 
 const (
 	integrationTestAvailabilitySetName = "ovm-integ-test-avset"
-	integrationTestVMForAVSetName     = "ovm-integ-test-vm-avset"
-	integrationTestNICForAVSetName    = "ovm-integ-test-nic-avset"
-	integrationTestVNetForAVSetName   = "ovm-integ-test-vnet-avset"
-	integrationTestSubnetForAVSetName = "default"
+	integrationTestVMForAVSetName      = "ovm-integ-test-vm-avset"
+	integrationTestNICForAVSetName     = "ovm-integ-test-nic-avset"
+	integrationTestVNetForAVSetName    = "ovm-integ-test-vnet-avset"
+	integrationTestSubnetForAVSetName  = "default"
 )
 
 func TestComputeAvailabilitySetIntegration(t *testing.T) {
@@ -165,7 +166,7 @@ func TestComputeAvailabilitySetIntegration(t *testing.T) {
 			)
 			scope := avSetWrapper.Scopes()[0]
 
-			avSetAdapter := sources.WrapperToAdapter(avSetWrapper)
+			avSetAdapter := sources.WrapperToAdapter(avSetWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := avSetAdapter.Get(ctx, scope, integrationTestAvailabilitySetName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -205,7 +206,7 @@ func TestComputeAvailabilitySetIntegration(t *testing.T) {
 			)
 			scope := avSetWrapper.Scopes()[0]
 
-			avSetAdapter := sources.WrapperToAdapter(avSetWrapper)
+			avSetAdapter := sources.WrapperToAdapter(avSetWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports listing
 			listable, ok := avSetAdapter.(discovery.ListableAdapter)
@@ -253,7 +254,7 @@ func TestComputeAvailabilitySetIntegration(t *testing.T) {
 			)
 			scope := avSetWrapper.Scopes()[0]
 
-			avSetAdapter := sources.WrapperToAdapter(avSetWrapper)
+			avSetAdapter := sources.WrapperToAdapter(avSetWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := avSetAdapter.Get(ctx, scope, integrationTestAvailabilitySetName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -317,7 +318,7 @@ func TestComputeAvailabilitySetIntegration(t *testing.T) {
 			)
 			scope := avSetWrapper.Scopes()[0]
 
-			avSetAdapter := sources.WrapperToAdapter(avSetWrapper)
+			avSetAdapter := sources.WrapperToAdapter(avSetWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := avSetAdapter.Get(ctx, scope, integrationTestAvailabilitySetName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -399,9 +400,9 @@ func createAvailabilitySet(ctx context.Context, client *armcompute.AvailabilityS
 		Location: ptr.To(location),
 		Properties: &armcompute.AvailabilitySetProperties{
 			PlatformFaultDomainCount:  ptr.To[int32](2),
-			PlatformUpdateDomainCount:  ptr.To[int32](2),
-			ProximityPlacementGroup:     nil, // Optional - not setting for this test
-			VirtualMachines:             nil, // Will be populated when VMs are added
+			PlatformUpdateDomainCount: ptr.To[int32](2),
+			ProximityPlacementGroup:   nil, // Optional - not setting for this test
+			VirtualMachines:           nil, // Will be populated when VMs are added
 		},
 		Tags: map[string]*string{
 			"purpose": ptr.To("overmind-integration-tests"),
@@ -662,4 +663,3 @@ func createVirtualMachineWithAvailabilitySet(ctx context.Context, client *armcom
 	log.Printf("Virtual machine %s created successfully with provisioning state: %s", vmName, provisioningState)
 	return nil
 }
-

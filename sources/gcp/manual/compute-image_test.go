@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
@@ -30,7 +31,7 @@ func TestComputeImage(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeImage("test-image", computepb.Image_READY), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-image", true)
 		if qErr != nil {
@@ -81,7 +82,7 @@ func TestComputeImage(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				wrapper := manual.NewComputeImage(mockClient, projectID)
-				adapter := sources.WrapperToAdapter(wrapper)
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeImage("test-instance", tc.input), nil)
 
@@ -100,7 +101,7 @@ func TestComputeImage(t *testing.T) {
 	t.Run("List", func(t *testing.T) {
 		wrapper := manual.NewComputeImage(mockClient, projectID)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeImageIterator(ctrl)
 
@@ -144,7 +145,7 @@ func TestComputeImage(t *testing.T) {
 	t.Run("ListStream", func(t *testing.T) {
 		wrapper := manual.NewComputeImage(mockClient, projectID)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeImageIterator(ctrl)
 

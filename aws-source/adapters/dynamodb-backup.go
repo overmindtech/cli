@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func backupGetFunc(ctx context.Context, client Client, scope string, input *dynamodb.DescribeBackupInput) (*sdp.Item, error) {
@@ -74,7 +75,7 @@ func backupGetFunc(ctx context.Context, client Client, scope string, input *dyna
 // found so far that can only be queries by ARN for Get. For this reason I'm
 // going to just disable GET. LIST works fine and allows it to be linked to the
 // table so this is enough for me at the moment
-func NewDynamoDBBackupAdapter(client Client, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*dynamodb.ListBackupsInput, *dynamodb.ListBackupsOutput, *dynamodb.DescribeBackupInput, *dynamodb.DescribeBackupOutput, Client, *dynamodb.Options] {
+func NewDynamoDBBackupAdapter(client Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*dynamodb.ListBackupsInput, *dynamodb.ListBackupsOutput, *dynamodb.DescribeBackupInput, *dynamodb.DescribeBackupOutput, Client, *dynamodb.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*dynamodb.ListBackupsInput, *dynamodb.ListBackupsOutput, *dynamodb.DescribeBackupInput, *dynamodb.DescribeBackupOutput, Client, *dynamodb.Options]{
 		ItemType:        "dynamodb-backup",
 		Client:          client,
@@ -83,6 +84,7 @@ func NewDynamoDBBackupAdapter(client Client, accountID string, region string) *a
 		GetFunc:         backupGetFunc,
 		ListInput:       &dynamodb.ListBackupsInput{},
 		AdapterMetadata: dynamodbBackupAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *dynamodb.DescribeBackupInput {
 			// Get is not supported since you can't search by name
 			return nil

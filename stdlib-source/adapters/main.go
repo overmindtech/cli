@@ -11,6 +11,7 @@ import (
 	"github.com/openrdap/rdap"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/stdlib-source/adapters/test"
 	log "github.com/sirupsen/logrus"
 
@@ -38,13 +39,19 @@ func InitializeEngine(ec *discovery.EngineConfig, reverseDNS bool) (*discovery.E
 		return nil
 	}
 
+	// Create a shared cache for all adapters in this source
+	sharedCache := sdpcache.NewCache()
+
 	// Add the base adapters
 	adapters := []discovery.Adapter{
 		&CertificateAdapter{},
 		&DNSAdapter{
 			ReverseLookup: reverseDNS,
+			cacheField:    sharedCache,
 		},
-		&HTTPAdapter{},
+		&HTTPAdapter{
+			cacheField: sharedCache,
+		},
 		&IPAdapter{},
 		&test.TestDogAdapter{},
 		&test.TestFoodAdapter{},

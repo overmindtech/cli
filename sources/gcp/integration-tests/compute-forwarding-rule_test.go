@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -58,7 +59,7 @@ func TestComputeForwardingRuleIntegration(t *testing.T) {
 		ruleWrapper := manual.NewComputeForwardingRule(gcpshared.NewComputeForwardingRuleClient(client), projectID, region)
 		scope := ruleWrapper.Scopes()[0]
 
-		ruleAdapter := sources.WrapperToAdapter(ruleWrapper)
+		ruleAdapter := sources.WrapperToAdapter(ruleWrapper, sdpcache.NewNoOpCache())
 		sdpItem, qErr := ruleAdapter.Get(ctx, scope, ruleName, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)

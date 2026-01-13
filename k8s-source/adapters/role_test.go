@@ -2,6 +2,8 @@ package adapters
 
 import (
 	"testing"
+
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var RoleYAML = `
@@ -37,7 +39,7 @@ func TestRoleAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newRoleAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newRoleAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

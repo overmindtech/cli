@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -34,7 +35,7 @@ func TestComputeInstance(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeInstance("test-instance", computepb.Instance_RUNNING), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance", true)
 		if qErr != nil {
@@ -172,7 +173,7 @@ func TestComputeInstance(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
-				adapter := sources.WrapperToAdapter(wrapper)
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeInstance("test-instance", tc.input), nil)
 
@@ -191,7 +192,7 @@ func TestComputeInstance(t *testing.T) {
 	t.Run("List", func(t *testing.T) {
 		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeInstanceIterator(ctrl)
 
@@ -232,7 +233,7 @@ func TestComputeInstance(t *testing.T) {
 	t.Run("ListStream", func(t *testing.T) {
 		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeInstanceIterator(ctrl)
 

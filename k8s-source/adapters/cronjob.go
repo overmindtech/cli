@@ -3,15 +3,17 @@ package adapters
 import (
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/batch/v1"
 
 	"k8s.io/client-go/kubernetes"
 )
 
-func newCronJobAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newCronJobAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.CronJob, *v1.CronJobList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,
+		cacheField:       cache,
 		TypeName:         "CronJob",
 		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.CronJob, *v1.CronJobList] {

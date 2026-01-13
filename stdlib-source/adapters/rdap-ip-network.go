@@ -12,7 +12,7 @@ import (
 
 type RdapIPNetworkAdapter struct {
 	ClientFac func() *rdap.Client
-	Cache     *sdpcache.Cache
+	Cache     sdpcache.Cache
 	IPCache   *IPCache[*rdap.IPNetwork]
 }
 

@@ -13,6 +13,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/manual"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -39,7 +40,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], scaleSetName, true)
 		if qErr != nil {
@@ -331,7 +332,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineScaleSetsClient(ctrl)
 
 		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
@@ -351,7 +352,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-vmss", true)
 		if qErr == nil {
@@ -416,7 +417,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 					}, nil)
 
 				wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
-				adapter := sources.WrapperToAdapter(wrapper)
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-vmss", true)
 				if qErr != nil {
@@ -452,7 +453,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -501,7 +502,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
 		wg.Add(2) // we added two items
@@ -551,7 +552,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 			armcompute.VirtualMachineScaleSetsClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-vmss", true)
 		if qErr == nil {
@@ -575,7 +576,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {

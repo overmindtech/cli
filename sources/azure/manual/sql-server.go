@@ -59,7 +59,7 @@ func (s sqlServerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryErro
 	return items, nil
 }
 
-func (s sqlServerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (s sqlServerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	pager := s.client.ListByResourceGroup(ctx, s.ResourceGroup(), nil)
 
 	for pager.More() {

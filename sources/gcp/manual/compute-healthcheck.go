@@ -113,7 +113,7 @@ func (c computeHealthCheckWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.
 }
 
 // ListStream implements the Streamer interface
-func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListHealthChecksRequest{
 		Project: c.ProjectID(),
 	})

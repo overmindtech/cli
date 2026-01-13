@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -33,7 +34,7 @@ func TestComputeReservation(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeReservation("test-reservation", computepb.Reservation_READY), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-reservation", true)
 		if qErr != nil {
@@ -110,7 +111,7 @@ func TestComputeReservation(t *testing.T) {
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				wrapper := manual.NewComputeReservation(mockClient, projectID, zone)
-				adapter := sources.WrapperToAdapter(wrapper)
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeReservation("test-reservation", tc.input), nil)
 
@@ -129,7 +130,7 @@ func TestComputeReservation(t *testing.T) {
 	t.Run("List", func(t *testing.T) {
 		wrapper := manual.NewComputeReservation(mockClient, projectID, zone)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeReservationIterator(ctrl)
 
@@ -169,7 +170,7 @@ func TestComputeReservation(t *testing.T) {
 	t.Run("ListStream", func(t *testing.T) {
 		wrapper := manual.NewComputeReservation(mockClient, projectID, zone)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeReservationIterator(ctrl)
 

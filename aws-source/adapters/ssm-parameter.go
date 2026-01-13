@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/sourcegraph/conc/iter"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -219,13 +220,14 @@ func ssmParameterOutputMapper(ctx context.Context, client ssmClient, scope strin
 	return items, err
 }
 
-func NewSSMParameterAdapter(client ssmClient, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*ssm.DescribeParametersInput, *ssm.DescribeParametersOutput, ssmClient, *ssm.Options] {
+func NewSSMParameterAdapter(client ssmClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ssm.DescribeParametersInput, *ssm.DescribeParametersOutput, ssmClient, *ssm.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*ssm.DescribeParametersInput, *ssm.DescribeParametersOutput, ssmClient, *ssm.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "ssm-parameter",
 		AdapterMetadata: ssmParameterAdapterMetadata,
+		SDPCache:        cache,
 		InputMapperGet: func(scope, query string) (*ssm.DescribeParametersInput, error) {
 			return &ssm.DescribeParametersInput{
 				ParameterFilters: []types.ParameterStringFilter{

@@ -75,9 +75,8 @@ type KubeTypeAdapter[Resource metav1.Object, ResourceList any] struct {
 	// AdapterMetadata for the adapter
 	AdapterMetadata *sdp.AdapterMetadata
 
-	CacheDuration time.Duration   // How long to cache items for
-	cache         *sdpcache.Cache // The sdpcache of this adapter
-	cacheInitMu   sync.Mutex      // Mutex to ensure cache is only initialised once
+	CacheDuration time.Duration  // How long to cache items for
+	cacheField    sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 }
 
 func (s *KubeTypeAdapter[Resource, ResourceList]) cacheDuration() time.Duration {
@@ -88,18 +87,19 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) cacheDuration() time.Duration 
 	return s.CacheDuration
 }
 
-func (s *KubeTypeAdapter[Resource, ResourceList]) ensureCache() {
-	s.cacheInitMu.Lock()
-	defer s.cacheInitMu.Unlock()
+var (
+	noOpCacheK8sOnce sync.Once
+	noOpCacheK8s     sdpcache.Cache
+)
 
-	if s.cache == nil {
-		s.cache = sdpcache.NewCache()
+func (s *KubeTypeAdapter[Resource, ResourceList]) Cache() sdpcache.Cache {
+	if s.cacheField == nil {
+		noOpCacheK8sOnce.Do(func() {
+			noOpCacheK8s = sdpcache.NewNoOpCache()
+		})
+		return noOpCacheK8s
 	}
-}
-
-func (s *KubeTypeAdapter[Resource, ResourceList]) Cache() *sdpcache.Cache {
-	s.ensureCache()
-	return s.cache
+	return s.cacheField
 }
 
 // validate Validates that the adapter is correctly set up
@@ -172,8 +172,12 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) Scopes() []string {
 }
 
 func (s *KubeTypeAdapter[Resource, ResourceList]) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	var cacheHit bool
+	var ck sdpcache.CacheKey
+	var cachedItems []*sdp.Item
+	var qErr *sdp.QueryError
+
+	cacheHit, ck, cachedItems, qErr = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -191,7 +195,7 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) Get(ctx context.Context, scope
 			ErrorType:   sdp.QueryError_NOSCOPE,
 			ErrorString: err.Error(),
 		}
-		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+		s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
@@ -205,24 +209,26 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) Get(ctx context.Context, scope
 				ErrorString: statusErr.ErrStatus.Message,
 			}
 		}
-
-		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+		s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
 	item, err := s.resourceToItem(resource)
 	if err != nil {
-		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+		s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
-
-	s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
+	s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 	return item, nil
 }
 
 func (s *KubeTypeAdapter[Resource, ResourceList]) List(ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error) {
-	s.ensureCache()
-	cacheHit, ck, cachedItems, qErr := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.Type(), "", ignoreCache)
+	var cacheHit bool
+	var ck sdpcache.CacheKey
+	var cachedItems []*sdp.Item
+	var qErr *sdp.QueryError
+
+	cacheHit, ck, cachedItems, qErr = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.Type(), "", ignoreCache)
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -232,12 +238,12 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) List(ctx context.Context, scop
 
 	items, err := s.listWithOptions(ctx, scope, metav1.ListOptions{})
 	if err != nil {
-		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+		s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
 	for _, item := range items {
-		s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
+		s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 	}
 
 	return items, nil
@@ -281,12 +287,12 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) Search(ctx context.Context, sc
 
 	items, err := s.listWithOptions(ctx, scope, opts)
 	if err != nil {
-		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+		s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
 	for _, item := range items {
-		s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
+		s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 	}
 
 	return items, nil

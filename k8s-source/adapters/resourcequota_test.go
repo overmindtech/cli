@@ -2,6 +2,8 @@ package adapters
 
 import (
 	"testing"
+
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var resourceQuotaYAML = `
@@ -24,7 +26,7 @@ func TestResourceQuotaAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newResourceQuotaAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newResourceQuotaAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

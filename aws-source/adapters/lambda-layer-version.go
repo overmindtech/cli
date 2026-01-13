@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func layerVersionGetInputMapper(scope, query string) *lambda.GetLayerVersionInput {
@@ -108,7 +109,7 @@ func layerVersionGetFunc(ctx context.Context, client LambdaClient, scope string,
 	return &item, nil
 }
 
-func NewLambdaLayerVersionAdapter(client LambdaClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*lambda.ListLayerVersionsInput, *lambda.ListLayerVersionsOutput, *lambda.GetLayerVersionInput, *lambda.GetLayerVersionOutput, LambdaClient, *lambda.Options] {
+func NewLambdaLayerVersionAdapter(client LambdaClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*lambda.ListLayerVersionsInput, *lambda.ListLayerVersionsOutput, *lambda.GetLayerVersionInput, *lambda.GetLayerVersionOutput, LambdaClient, *lambda.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*lambda.ListLayerVersionsInput, *lambda.ListLayerVersionsOutput, *lambda.GetLayerVersionInput, *lambda.GetLayerVersionOutput, LambdaClient, *lambda.Options]{
 		ItemType:        "lambda-layer-version",
 		Client:          client,
@@ -119,6 +120,7 @@ func NewLambdaLayerVersionAdapter(client LambdaClient, accountID string, region 
 		GetFunc:         layerVersionGetFunc,
 		ListInput:       &lambda.ListLayerVersionsInput{},
 		AdapterMetadata: layerVersionAdapterMetadata,
+		SDPCache:        cache,
 		ListFuncOutputMapper: func(output *lambda.ListLayerVersionsOutput, input *lambda.ListLayerVersionsInput) ([]*lambda.GetLayerVersionInput, error) {
 			return []*lambda.GetLayerVersionInput{}, nil
 		},

@@ -3,14 +3,16 @@ package adapters
 import (
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-func newResourceQuotaAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newResourceQuotaAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.ResourceQuota, *v1.ResourceQuotaList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
+		cacheField:  cache,
 		TypeName:    "ResourceQuota",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.ResourceQuota, *v1.ResourceQuotaList] {
 			return cs.CoreV1().ResourceQuotas(namespace)

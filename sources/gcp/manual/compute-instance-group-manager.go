@@ -133,7 +133,7 @@ func (c computeInstanceGroupManagerWrapper) List(ctx context.Context) ([]*sdp.It
 	return items, nil
 }
 
-func (c computeInstanceGroupManagerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeInstanceGroupManagerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListInstanceGroupManagersRequest{
 		Project: c.ProjectID(),
 		Zone:    c.Zone(),

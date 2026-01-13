@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var volumeAttachmentYAML = `
@@ -65,7 +66,7 @@ func TestVolumeAttachmentAdapter(t *testing.T) {
 		ClusterName: CurrentCluster.Name,
 	}
 
-	adapter := newVolumeAttachmentAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newVolumeAttachmentAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

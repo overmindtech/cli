@@ -2,6 +2,8 @@ package adapters
 
 import (
 	"testing"
+
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var persistentVolumeYAML = `
@@ -25,7 +27,7 @@ func TestPersistentVolumeAdapter(t *testing.T) {
 		Namespace:   "",
 	}
 
-	adapter := newPersistentVolumeAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newPersistentVolumeAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:       adapter,

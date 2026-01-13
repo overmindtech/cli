@@ -13,7 +13,7 @@ const CacheDuration = 10 * time.Second
 
 // NewPopulatedCache Returns a newly populated cache and the CacheQuery that
 // matches a randomly selected item in that cache
-func NewPopulatedCache(ctx context.Context, numberItems int) (*Cache, CacheKey) {
+func NewPopulatedCache(ctx context.Context, numberItems int) (Cache, CacheKey) {
 	// Populate the cache
 	c := NewCache()
 

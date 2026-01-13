@@ -1,9 +1,8 @@
 package adapters
 
 import (
-	"testing"
-
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
+	"testing"
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"

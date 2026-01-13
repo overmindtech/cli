@@ -17,6 +17,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -86,7 +87,7 @@ func TestComputeDiskIntegration(t *testing.T) {
 			)
 			scope := diskWrapper.Scopes()[0]
 
-			diskAdapter := sources.WrapperToAdapter(diskWrapper)
+			diskAdapter := sources.WrapperToAdapter(diskWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := diskAdapter.Get(ctx, scope, integrationTestDiskName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -122,7 +123,7 @@ func TestComputeDiskIntegration(t *testing.T) {
 			)
 			scope := diskWrapper.Scopes()[0]
 
-			diskAdapter := sources.WrapperToAdapter(diskWrapper)
+			diskAdapter := sources.WrapperToAdapter(diskWrapper, sdpcache.NewNoOpCache())
 
 			// Check if adapter supports listing
 			listable, ok := diskAdapter.(discovery.ListableAdapter)
@@ -167,7 +168,7 @@ func TestComputeDiskIntegration(t *testing.T) {
 			)
 			scope := diskWrapper.Scopes()[0]
 
-			diskAdapter := sources.WrapperToAdapter(diskWrapper)
+			diskAdapter := sources.WrapperToAdapter(diskWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := diskAdapter.Get(ctx, scope, integrationTestDiskName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -209,7 +210,7 @@ func TestComputeDiskIntegration(t *testing.T) {
 			)
 			scope := diskWrapper.Scopes()[0]
 
-			diskAdapter := sources.WrapperToAdapter(diskWrapper)
+			diskAdapter := sources.WrapperToAdapter(diskWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := diskAdapter.Get(ctx, scope, integrationTestDiskName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -411,4 +412,3 @@ func deleteDisk(ctx context.Context, client *armcompute.DisksClient, resourceGro
 	log.Printf("Disk %s deleted successfully", diskName)
 	return nil
 }
-

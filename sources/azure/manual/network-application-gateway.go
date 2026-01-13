@@ -58,7 +58,7 @@ func (n networkApplicationGatewayWrapper) List(ctx context.Context) ([]*sdp.Item
 	return items, nil
 }
 
-func (n networkApplicationGatewayWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (n networkApplicationGatewayWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	pager := n.client.List(n.ResourceGroup(), nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)

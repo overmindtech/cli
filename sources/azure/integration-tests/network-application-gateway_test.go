@@ -17,6 +17,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -146,7 +147,7 @@ func TestNetworkApplicationGatewayIntegration(t *testing.T) {
 			)
 			scope := agWrapper.Scopes()[0]
 
-			agAdapter := sources.WrapperToAdapter(agWrapper)
+			agAdapter := sources.WrapperToAdapter(agWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := agAdapter.Get(ctx, scope, integrationTestAGName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -186,7 +187,7 @@ func TestNetworkApplicationGatewayIntegration(t *testing.T) {
 			)
 			scope := agWrapper.Scopes()[0]
 
-			agAdapter := sources.WrapperToAdapter(agWrapper)
+			agAdapter := sources.WrapperToAdapter(agWrapper, sdpcache.NewNoOpCache())
 			listable, ok := agAdapter.(discovery.ListableAdapter)
 			if !ok {
 				t.Fatalf("Adapter does not support List operation")
@@ -231,7 +232,7 @@ func TestNetworkApplicationGatewayIntegration(t *testing.T) {
 			)
 			scope := agWrapper.Scopes()[0]
 
-			agAdapter := sources.WrapperToAdapter(agWrapper)
+			agAdapter := sources.WrapperToAdapter(agWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := agAdapter.Get(ctx, scope, integrationTestAGName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -271,7 +272,7 @@ func TestNetworkApplicationGatewayIntegration(t *testing.T) {
 			)
 			scope := agWrapper.Scopes()[0]
 
-			agAdapter := sources.WrapperToAdapter(agWrapper)
+			agAdapter := sources.WrapperToAdapter(agWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := agAdapter.Get(ctx, scope, integrationTestAGName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)

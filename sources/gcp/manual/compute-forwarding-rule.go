@@ -126,7 +126,7 @@ func (c computeForwardingRuleWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 	return items, nil
 }
 
-func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListForwardingRulesRequest{
 		Project: c.ProjectID(),
 		Region:  c.Region(),

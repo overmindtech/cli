@@ -42,6 +42,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/overmindtech/cli/aws-source/adapters"
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
@@ -220,6 +221,9 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 		return nil, fmt.Errorf("error initializing Engine: %w", err)
 	}
 
+	// Create a shared cache for all adapters in this source
+	sharedCache := sdpcache.NewCache()
+
 	var startupErrorMutex sync.Mutex
 	startupError := errors.New("source is starting")
 	if ec.HeartbeatOptions == nil {
@@ -363,165 +367,165 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 
 					configuredAdapters := []discovery.Adapter{
 						// EC2
-						adapters.NewEC2AddressAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2CapacityReservationFleetAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2CapacityReservationAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2EgressOnlyInternetGatewayAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2IamInstanceProfileAssociationAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2ImageAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2InstanceEventWindowAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2InstanceAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2InstanceStatusAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2InternetGatewayAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2KeyPairAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2LaunchTemplateAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2LaunchTemplateVersionAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2NatGatewayAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2NetworkAclAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2NetworkInterfacePermissionAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2NetworkInterfaceAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2PlacementGroupAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2ReservedInstanceAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2RouteTableAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2SecurityGroupRuleAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2SecurityGroupAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2SnapshotAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2SubnetAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2VolumeAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2VolumeStatusAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2VpcEndpointAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2VpcPeeringConnectionAdapter(ec2Client, *callerID.Account, cfg.Region),
-						adapters.NewEC2VpcAdapter(ec2Client, *callerID.Account, cfg.Region),
+						adapters.NewEC2AddressAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2CapacityReservationFleetAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2CapacityReservationAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2EgressOnlyInternetGatewayAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2IamInstanceProfileAssociationAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2ImageAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2InstanceEventWindowAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2InstanceAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2InstanceStatusAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2InternetGatewayAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2KeyPairAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2LaunchTemplateAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2LaunchTemplateVersionAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2NatGatewayAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2NetworkAclAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2NetworkInterfacePermissionAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2NetworkInterfaceAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2PlacementGroupAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2ReservedInstanceAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2RouteTableAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2SecurityGroupRuleAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2SecurityGroupAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2SnapshotAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2SubnetAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2VolumeAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2VolumeStatusAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2VpcEndpointAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2VpcPeeringConnectionAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEC2VpcAdapter(ec2Client, *callerID.Account, cfg.Region, sharedCache),
 
 						// EFS (I'm assuming it shares its rate limit with EC2))
-						adapters.NewEFSAccessPointAdapter(efsClient, *callerID.Account, cfg.Region),
-						adapters.NewEFSBackupPolicyAdapter(efsClient, *callerID.Account, cfg.Region),
-						adapters.NewEFSFileSystemAdapter(efsClient, *callerID.Account, cfg.Region),
-						adapters.NewEFSMountTargetAdapter(efsClient, *callerID.Account, cfg.Region),
-						adapters.NewEFSReplicationConfigurationAdapter(efsClient, *callerID.Account, cfg.Region),
+						adapters.NewEFSAccessPointAdapter(efsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEFSBackupPolicyAdapter(efsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEFSFileSystemAdapter(efsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEFSMountTargetAdapter(efsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEFSReplicationConfigurationAdapter(efsClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// EKS
-						adapters.NewEKSAddonAdapter(eksClient, *callerID.Account, cfg.Region),
-						adapters.NewEKSClusterAdapter(eksClient, *callerID.Account, cfg.Region),
-						adapters.NewEKSFargateProfileAdapter(eksClient, *callerID.Account, cfg.Region),
-						adapters.NewEKSNodegroupAdapter(eksClient, *callerID.Account, cfg.Region),
+						adapters.NewEKSAddonAdapter(eksClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEKSClusterAdapter(eksClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEKSFargateProfileAdapter(eksClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewEKSNodegroupAdapter(eksClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// Route 53
-						adapters.NewRoute53HealthCheckAdapter(route53Client, *callerID.Account, cfg.Region),
-						adapters.NewRoute53HostedZoneAdapter(route53Client, *callerID.Account, cfg.Region),
-						adapters.NewRoute53ResourceRecordSetAdapter(route53Client, *callerID.Account, cfg.Region),
+						adapters.NewRoute53HealthCheckAdapter(route53Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewRoute53HostedZoneAdapter(route53Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewRoute53ResourceRecordSetAdapter(route53Client, *callerID.Account, cfg.Region, sharedCache),
 
 						// Cloudwatch
-						adapters.NewCloudwatchAlarmAdapter(cloudwatchClient, *callerID.Account, cfg.Region),
-						adapters.NewCloudwatchInstanceMetricAdapter(cloudwatchClient, *callerID.Account, cfg.Region),
+						adapters.NewCloudwatchAlarmAdapter(cloudwatchClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewCloudwatchInstanceMetricAdapter(cloudwatchClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// Lambda
-						adapters.NewLambdaFunctionAdapter(lambdaClient, *callerID.Account, cfg.Region),
-						adapters.NewLambdaLayerAdapter(lambdaClient, *callerID.Account, cfg.Region),
-						adapters.NewLambdaLayerVersionAdapter(lambdaClient, *callerID.Account, cfg.Region),
-						adapters.NewLambdaEventSourceMappingAdapter(lambdaClient, *callerID.Account, cfg.Region),
+						adapters.NewLambdaFunctionAdapter(lambdaClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewLambdaLayerAdapter(lambdaClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewLambdaLayerVersionAdapter(lambdaClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewLambdaEventSourceMappingAdapter(lambdaClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// ECS
-						adapters.NewECSCapacityProviderAdapter(ecsClient, *callerID.Account, cfg.Region),
-						adapters.NewECSClusterAdapter(ecsClient, *callerID.Account, cfg.Region),
-						adapters.NewECSContainerInstanceAdapter(ecsClient, *callerID.Account, cfg.Region),
-						adapters.NewECSServiceAdapter(ecsClient, *callerID.Account, cfg.Region),
-						adapters.NewECSTaskDefinitionAdapter(ecsClient, *callerID.Account, cfg.Region),
-						adapters.NewECSTaskAdapter(ecsClient, *callerID.Account, cfg.Region),
+						adapters.NewECSCapacityProviderAdapter(ecsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewECSClusterAdapter(ecsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewECSContainerInstanceAdapter(ecsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewECSServiceAdapter(ecsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewECSTaskDefinitionAdapter(ecsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewECSTaskAdapter(ecsClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// DynamoDB
-						adapters.NewDynamoDBBackupAdapter(dynamodbClient, *callerID.Account, cfg.Region),
-						adapters.NewDynamoDBTableAdapter(dynamodbClient, *callerID.Account, cfg.Region),
+						adapters.NewDynamoDBBackupAdapter(dynamodbClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewDynamoDBTableAdapter(dynamodbClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// RDS
-						adapters.NewRDSDBClusterParameterGroupAdapter(rdsClient, *callerID.Account, cfg.Region),
-						adapters.NewRDSDBClusterAdapter(rdsClient, *callerID.Account, cfg.Region),
-						adapters.NewRDSDBInstanceAdapter(rdsClient, *callerID.Account, cfg.Region),
-						adapters.NewRDSDBParameterGroupAdapter(rdsClient, *callerID.Account, cfg.Region),
-						adapters.NewRDSDBSubnetGroupAdapter(rdsClient, *callerID.Account, cfg.Region),
-						adapters.NewRDSOptionGroupAdapter(rdsClient, *callerID.Account, cfg.Region),
+						adapters.NewRDSDBClusterParameterGroupAdapter(rdsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewRDSDBClusterAdapter(rdsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewRDSDBInstanceAdapter(rdsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewRDSDBParameterGroupAdapter(rdsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewRDSDBSubnetGroupAdapter(rdsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewRDSOptionGroupAdapter(rdsClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// Autoscaling
-						adapters.NewAutoScalingGroupAdapter(autoscalingClient, *callerID.Account, cfg.Region),
+						adapters.NewAutoScalingGroupAdapter(autoscalingClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// ELB
-						adapters.NewELBInstanceHealthAdapter(elbClient, *callerID.Account, cfg.Region),
-						adapters.NewELBLoadBalancerAdapter(elbClient, *callerID.Account, cfg.Region),
+						adapters.NewELBInstanceHealthAdapter(elbClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewELBLoadBalancerAdapter(elbClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// ELBv2
-						adapters.NewELBv2ListenerAdapter(elbv2Client, *callerID.Account, cfg.Region),
-						adapters.NewELBv2LoadBalancerAdapter(elbv2Client, *callerID.Account, cfg.Region),
-						adapters.NewELBv2RuleAdapter(elbv2Client, *callerID.Account, cfg.Region),
-						adapters.NewELBv2TargetGroupAdapter(elbv2Client, *callerID.Account, cfg.Region),
-						adapters.NewELBv2TargetHealthAdapter(elbv2Client, *callerID.Account, cfg.Region),
+						adapters.NewELBv2ListenerAdapter(elbv2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewELBv2LoadBalancerAdapter(elbv2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewELBv2RuleAdapter(elbv2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewELBv2TargetGroupAdapter(elbv2Client, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewELBv2TargetHealthAdapter(elbv2Client, *callerID.Account, cfg.Region, sharedCache),
 
 						// Network Firewall
-						adapters.NewNetworkFirewallFirewallAdapter(networkfirewallClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkFirewallFirewallPolicyAdapter(networkfirewallClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkFirewallRuleGroupAdapter(networkfirewallClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkFirewallTLSInspectionConfigurationAdapter(networkfirewallClient, *callerID.Account, cfg.Region),
+						adapters.NewNetworkFirewallFirewallAdapter(networkfirewallClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkFirewallFirewallPolicyAdapter(networkfirewallClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkFirewallRuleGroupAdapter(networkfirewallClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkFirewallTLSInspectionConfigurationAdapter(networkfirewallClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// Direct Connect
-						adapters.NewDirectConnectGatewayAdapter(directconnectClient, *callerID.Account, cfg.Region),
-						adapters.NewDirectConnectGatewayAssociationAdapter(directconnectClient, *callerID.Account, cfg.Region),
-						adapters.NewDirectConnectGatewayAssociationProposalAdapter(directconnectClient, *callerID.Account, cfg.Region),
-						adapters.NewDirectConnectConnectionAdapter(directconnectClient, *callerID.Account, cfg.Region),
-						adapters.NewDirectConnectGatewayAttachmentAdapter(directconnectClient, *callerID.Account, cfg.Region),
-						adapters.NewDirectConnectVirtualInterfaceAdapter(directconnectClient, *callerID.Account, cfg.Region),
-						adapters.NewDirectConnectVirtualGatewayAdapter(directconnectClient, *callerID.Account, cfg.Region),
-						adapters.NewDirectConnectCustomerMetadataAdapter(directconnectClient, *callerID.Account, cfg.Region),
-						adapters.NewDirectConnectLagAdapter(directconnectClient, *callerID.Account, cfg.Region),
-						adapters.NewDirectConnectLocationAdapter(directconnectClient, *callerID.Account, cfg.Region),
-						adapters.NewDirectConnectHostedConnectionAdapter(directconnectClient, *callerID.Account, cfg.Region),
-						adapters.NewDirectConnectInterconnectAdapter(directconnectClient, *callerID.Account, cfg.Region),
-						adapters.NewDirectConnectRouterConfigurationAdapter(directconnectClient, *callerID.Account, cfg.Region),
+						adapters.NewDirectConnectGatewayAdapter(directconnectClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewDirectConnectGatewayAssociationAdapter(directconnectClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewDirectConnectGatewayAssociationProposalAdapter(directconnectClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewDirectConnectConnectionAdapter(directconnectClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewDirectConnectGatewayAttachmentAdapter(directconnectClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewDirectConnectVirtualInterfaceAdapter(directconnectClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewDirectConnectVirtualGatewayAdapter(directconnectClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewDirectConnectCustomerMetadataAdapter(directconnectClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewDirectConnectLagAdapter(directconnectClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewDirectConnectLocationAdapter(directconnectClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewDirectConnectHostedConnectionAdapter(directconnectClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewDirectConnectInterconnectAdapter(directconnectClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewDirectConnectRouterConfigurationAdapter(directconnectClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// Network Manager
-						adapters.NewNetworkManagerConnectAttachmentAdapter(networkmanagerClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkManagerConnectPeerAssociationAdapter(networkmanagerClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkManagerConnectPeerAdapter(networkmanagerClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkManagerCoreNetworkPolicyAdapter(networkmanagerClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkManagerCoreNetworkAdapter(networkmanagerClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkManagerNetworkResourceRelationshipsAdapter(networkmanagerClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkManagerSiteToSiteVpnAttachmentAdapter(networkmanagerClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkManagerTransitGatewayConnectPeerAssociationAdapter(networkmanagerClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkManagerTransitGatewayPeeringAdapter(networkmanagerClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkManagerTransitGatewayRegistrationAdapter(networkmanagerClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkManagerTransitGatewayRouteTableAttachmentAdapter(networkmanagerClient, *callerID.Account, cfg.Region),
-						adapters.NewNetworkManagerVPCAttachmentAdapter(networkmanagerClient, *callerID.Account, cfg.Region),
+						adapters.NewNetworkManagerConnectAttachmentAdapter(networkmanagerClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkManagerConnectPeerAssociationAdapter(networkmanagerClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkManagerConnectPeerAdapter(networkmanagerClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkManagerCoreNetworkPolicyAdapter(networkmanagerClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkManagerCoreNetworkAdapter(networkmanagerClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkManagerNetworkResourceRelationshipsAdapter(networkmanagerClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkManagerSiteToSiteVpnAttachmentAdapter(networkmanagerClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkManagerTransitGatewayConnectPeerAssociationAdapter(networkmanagerClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkManagerTransitGatewayPeeringAdapter(networkmanagerClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkManagerTransitGatewayRegistrationAdapter(networkmanagerClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkManagerTransitGatewayRouteTableAttachmentAdapter(networkmanagerClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewNetworkManagerVPCAttachmentAdapter(networkmanagerClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// SQS
-						adapters.NewSQSQueueAdapter(sqsClient, *callerID.Account, cfg.Region),
+						adapters.NewSQSQueueAdapter(sqsClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// SNS
-						adapters.NewSNSSubscriptionAdapter(snsClient, *callerID.Account, cfg.Region),
-						adapters.NewSNSTopicAdapter(snsClient, *callerID.Account, cfg.Region),
-						adapters.NewSNSPlatformApplicationAdapter(snsClient, *callerID.Account, cfg.Region),
-						adapters.NewSNSEndpointAdapter(snsClient, *callerID.Account, cfg.Region),
-						adapters.NewSNSDataProtectionPolicyAdapter(snsClient, *callerID.Account, cfg.Region),
+						adapters.NewSNSSubscriptionAdapter(snsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewSNSTopicAdapter(snsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewSNSPlatformApplicationAdapter(snsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewSNSEndpointAdapter(snsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewSNSDataProtectionPolicyAdapter(snsClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// KMS
-						adapters.NewKMSKeyAdapter(kmsClient, *callerID.Account, cfg.Region),
-						adapters.NewKMSCustomKeyStoreAdapter(kmsClient, *callerID.Account, cfg.Region),
-						adapters.NewKMSAliasAdapter(kmsClient, *callerID.Account, cfg.Region),
-						adapters.NewKMSGrantAdapter(kmsClient, *callerID.Account, cfg.Region),
-						adapters.NewKMSKeyPolicyAdapter(kmsClient, *callerID.Account, cfg.Region),
+						adapters.NewKMSKeyAdapter(kmsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewKMSCustomKeyStoreAdapter(kmsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewKMSAliasAdapter(kmsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewKMSGrantAdapter(kmsClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewKMSKeyPolicyAdapter(kmsClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// ApiGateway
-						adapters.NewAPIGatewayRestApiAdapter(apigatewayClient, *callerID.Account, cfg.Region),
-						adapters.NewAPIGatewayResourceAdapter(apigatewayClient, *callerID.Account, cfg.Region),
-						adapters.NewAPIGatewayDomainNameAdapter(apigatewayClient, *callerID.Account, cfg.Region),
-						adapters.NewAPIGatewayMethodAdapter(apigatewayClient, *callerID.Account, cfg.Region),
-						adapters.NewAPIGatewayMethodResponseAdapter(apigatewayClient, *callerID.Account, cfg.Region),
-						adapters.NewAPIGatewayIntegrationAdapter(apigatewayClient, *callerID.Account, cfg.Region),
-						adapters.NewAPIGatewayApiKeyAdapter(apigatewayClient, *callerID.Account, cfg.Region),
-						adapters.NewAPIGatewayAuthorizerAdapter(apigatewayClient, *callerID.Account, cfg.Region),
-						adapters.NewAPIGatewayDeploymentAdapter(apigatewayClient, *callerID.Account, cfg.Region),
-						adapters.NewAPIGatewayStageAdapter(apigatewayClient, *callerID.Account, cfg.Region),
-						adapters.NewAPIGatewayModelAdapter(apigatewayClient, *callerID.Account, cfg.Region),
+						adapters.NewAPIGatewayRestApiAdapter(apigatewayClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewAPIGatewayResourceAdapter(apigatewayClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewAPIGatewayDomainNameAdapter(apigatewayClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewAPIGatewayMethodAdapter(apigatewayClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewAPIGatewayMethodResponseAdapter(apigatewayClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewAPIGatewayIntegrationAdapter(apigatewayClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewAPIGatewayApiKeyAdapter(apigatewayClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewAPIGatewayAuthorizerAdapter(apigatewayClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewAPIGatewayDeploymentAdapter(apigatewayClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewAPIGatewayStageAdapter(apigatewayClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewAPIGatewayModelAdapter(apigatewayClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// SSM
-						adapters.NewSSMParameterAdapter(ssmClient, *callerID.Account, cfg.Region),
+						adapters.NewSSMParameterAdapter(ssmClient, *callerID.Account, cfg.Region, sharedCache),
 					}
 
 					err = e.AddAdapters(configuredAdapters...)
@@ -534,37 +538,39 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 					// these APIs it doesn't matter which region we call them from, we
 					// get global results
 					if globalDone.CompareAndSwap(false, true) {
-						err = e.AddAdapters(
+						globalAdapters := []discovery.Adapter{
 							// Cloudfront
-							adapters.NewCloudfrontCachePolicyAdapter(cloudfrontClient, *callerID.Account),
-							adapters.NewCloudfrontContinuousDeploymentPolicyAdapter(cloudfrontClient, *callerID.Account),
-							adapters.NewCloudfrontDistributionAdapter(cloudfrontClient, *callerID.Account),
-							adapters.NewCloudfrontCloudfrontFunctionAdapter(cloudfrontClient, *callerID.Account),
-							adapters.NewCloudfrontKeyGroupAdapter(cloudfrontClient, *callerID.Account),
-							adapters.NewCloudfrontOriginAccessControlAdapter(cloudfrontClient, *callerID.Account),
-							adapters.NewCloudfrontOriginRequestPolicyAdapter(cloudfrontClient, *callerID.Account),
-							adapters.NewCloudfrontResponseHeadersPolicyAdapter(cloudfrontClient, *callerID.Account),
-							adapters.NewCloudfrontRealtimeLogConfigsAdapter(cloudfrontClient, *callerID.Account),
-							adapters.NewCloudfrontStreamingDistributionAdapter(cloudfrontClient, *callerID.Account),
+							adapters.NewCloudfrontCachePolicyAdapter(cloudfrontClient, *callerID.Account, sharedCache),
+							adapters.NewCloudfrontContinuousDeploymentPolicyAdapter(cloudfrontClient, *callerID.Account, sharedCache),
+							adapters.NewCloudfrontDistributionAdapter(cloudfrontClient, *callerID.Account, sharedCache),
+							adapters.NewCloudfrontCloudfrontFunctionAdapter(cloudfrontClient, *callerID.Account, sharedCache),
+							adapters.NewCloudfrontKeyGroupAdapter(cloudfrontClient, *callerID.Account, sharedCache),
+							adapters.NewCloudfrontOriginAccessControlAdapter(cloudfrontClient, *callerID.Account, sharedCache),
+							adapters.NewCloudfrontOriginRequestPolicyAdapter(cloudfrontClient, *callerID.Account, sharedCache),
+							adapters.NewCloudfrontResponseHeadersPolicyAdapter(cloudfrontClient, *callerID.Account, sharedCache),
+							adapters.NewCloudfrontRealtimeLogConfigsAdapter(cloudfrontClient, *callerID.Account, sharedCache),
+							adapters.NewCloudfrontStreamingDistributionAdapter(cloudfrontClient, *callerID.Account, sharedCache),
 
 							// S3
-							adapters.NewS3Adapter(cfg, *callerID.Account),
+							adapters.NewS3Adapter(cfg, *callerID.Account, sharedCache),
 
 							// Networkmanager
-							adapters.NewNetworkManagerGlobalNetworkAdapter(networkmanagerClient, *callerID.Account),
-							adapters.NewNetworkManagerSiteAdapter(networkmanagerClient, *callerID.Account),
-							adapters.NewNetworkManagerLinkAdapter(networkmanagerClient, *callerID.Account),
-							adapters.NewNetworkManagerDeviceAdapter(networkmanagerClient, *callerID.Account),
-							adapters.NewNetworkManagerLinkAssociationAdapter(networkmanagerClient, *callerID.Account),
-							adapters.NewNetworkManagerConnectionAdapter(networkmanagerClient, *callerID.Account),
+							adapters.NewNetworkManagerGlobalNetworkAdapter(networkmanagerClient, *callerID.Account, sharedCache),
+							adapters.NewNetworkManagerSiteAdapter(networkmanagerClient, *callerID.Account, sharedCache),
+							adapters.NewNetworkManagerLinkAdapter(networkmanagerClient, *callerID.Account, sharedCache),
+							adapters.NewNetworkManagerDeviceAdapter(networkmanagerClient, *callerID.Account, sharedCache),
+							adapters.NewNetworkManagerLinkAssociationAdapter(networkmanagerClient, *callerID.Account, sharedCache),
+							adapters.NewNetworkManagerConnectionAdapter(networkmanagerClient, *callerID.Account, sharedCache),
 
 							// IAM
-							adapters.NewIAMPolicyAdapter(iamClient, *callerID.Account),
-							adapters.NewIAMGroupAdapter(iamClient, *callerID.Account),
-							adapters.NewIAMInstanceProfileAdapter(iamClient, *callerID.Account),
-							adapters.NewIAMRoleAdapter(iamClient, *callerID.Account),
-							adapters.NewIAMUserAdapter(iamClient, *callerID.Account),
-						)
+							adapters.NewIAMPolicyAdapter(iamClient, *callerID.Account, sharedCache),
+							adapters.NewIAMGroupAdapter(iamClient, *callerID.Account, sharedCache),
+							adapters.NewIAMInstanceProfileAdapter(iamClient, *callerID.Account, sharedCache),
+							adapters.NewIAMRoleAdapter(iamClient, *callerID.Account, sharedCache),
+							adapters.NewIAMUserAdapter(iamClient, *callerID.Account, sharedCache),
+						}
+
+						err = e.AddAdapters(globalAdapters...)
 						if err != nil {
 							return err
 						}

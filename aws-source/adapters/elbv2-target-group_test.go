@@ -89,7 +89,7 @@ func TestNewELBv2TargetGroupAdapter(t *testing.T) {
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 	client := elbv2.NewFromConfig(config)
 
-	adapter := NewELBv2TargetGroupAdapter(client, account, region)
+	adapter := NewELBv2TargetGroupAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

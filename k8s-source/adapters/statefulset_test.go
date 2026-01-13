@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var statefulSetYAML = `
@@ -48,7 +49,7 @@ func TestStatefulSetAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newStatefulSetAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newStatefulSetAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

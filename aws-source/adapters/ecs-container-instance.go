@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 // ContainerInstanceIncludeFields Fields that we want included by default
@@ -115,7 +116,7 @@ func containerInstanceListFuncOutputMapper(output *ecs.ListContainerInstancesOut
 	return inputs, nil
 }
 
-func NewECSContainerInstanceAdapter(client ECSClient, accountID string, region string) *adapterhelpers.AlwaysGetAdapter[*ecs.ListContainerInstancesInput, *ecs.ListContainerInstancesOutput, *ecs.DescribeContainerInstancesInput, *ecs.DescribeContainerInstancesOutput, ECSClient, *ecs.Options] {
+func NewECSContainerInstanceAdapter(client ECSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*ecs.ListContainerInstancesInput, *ecs.ListContainerInstancesOutput, *ecs.DescribeContainerInstancesInput, *ecs.DescribeContainerInstancesOutput, ECSClient, *ecs.Options] {
 	return &adapterhelpers.AlwaysGetAdapter[*ecs.ListContainerInstancesInput, *ecs.ListContainerInstancesOutput, *ecs.DescribeContainerInstancesInput, *ecs.DescribeContainerInstancesOutput, ECSClient, *ecs.Options]{
 		ItemType:        "ecs-container-instance",
 		Client:          client,
@@ -123,6 +124,7 @@ func NewECSContainerInstanceAdapter(client ECSClient, accountID string, region s
 		Region:          region,
 		GetFunc:         containerInstanceGetFunc,
 		AdapterMetadata: containerInstanceAdapterMetadata,
+		SDPCache:        cache,
 		GetInputMapper: func(scope, query string) *ecs.DescribeContainerInstancesInput {
 			// We are using a custom id of {clusterName}/{id} e.g.
 			// ecs-template-ECSCluster-8nS0WOLbs3nZ/50e9bf71ed57450ca56293cc5a042886

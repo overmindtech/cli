@@ -15,6 +15,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -67,7 +68,7 @@ func TestComputeSnapshotIntegration(t *testing.T) {
 		snapshotsWrapper := manual.NewComputeSnapshot(gcpshared.NewComputeSnapshotsClient(client), projectID)
 		scope := snapshotsWrapper.Scopes()[0]
 
-		snapshotsAdapter := sources.WrapperToAdapter(snapshotsWrapper)
+		snapshotsAdapter := sources.WrapperToAdapter(snapshotsWrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports listing
 		listable, ok := snapshotsAdapter.(discovery.ListableAdapter)
@@ -106,7 +107,7 @@ func TestComputeSnapshotIntegration(t *testing.T) {
 		snapshotsWrapper := manual.NewComputeSnapshot(gcpshared.NewComputeSnapshotsClient(client), projectID)
 		scope := snapshotsWrapper.Scopes()[0]
 
-		snapshotsAdapter := sources.WrapperToAdapter(snapshotsWrapper)
+		snapshotsAdapter := sources.WrapperToAdapter(snapshotsWrapper, sdpcache.NewNoOpCache())
 		sdpItem, qErr := snapshotsAdapter.Get(ctx, scope, snapshotName, true)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)

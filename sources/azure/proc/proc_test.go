@@ -6,6 +6,7 @@ import (
 
 	// TODO: Uncomment when Azure dynamic adapters are implemented
 	// _ "github.com/overmindtech/cli/sources/azure/dynamic"
+	"github.com/overmindtech/cli/sdpcache"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 )
 
@@ -20,6 +21,7 @@ func Test_adapters(t *testing.T) {
 		nil, // No credentials needed for metadata registration
 		nil,
 		false,
+		sdpcache.NewNoOpCache(),
 	)
 	if err != nil {
 		t.Fatalf("error creating adapters: %v", err)

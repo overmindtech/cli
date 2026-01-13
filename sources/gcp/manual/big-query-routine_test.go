@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -33,7 +34,7 @@ func TestBigQueryRoutine(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, projectID, datasetID, routineID).Return(createRoutineMetadata("test routine"), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey(datasetID, routineID), true)
 		if qErr != nil {
@@ -63,7 +64,7 @@ func TestBigQueryRoutine(t *testing.T) {
 
 	t.Run("Get error", func(t *testing.T) {
 		wrapper := manual.NewBigQueryRoutine(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 		mockClient.EXPECT().Get(ctx, projectID, datasetID, routineID).Return(nil, assert.AnError)
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey(datasetID, routineID), true)
 		if qErr == nil {
@@ -73,7 +74,7 @@ func TestBigQueryRoutine(t *testing.T) {
 
 	t.Run("Search", func(t *testing.T) {
 		wrapper := manual.NewBigQueryRoutine(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Mock the List function to call the converter with each routine
 		mockClient.EXPECT().List(
@@ -128,7 +129,7 @@ func TestBigQueryRoutine(t *testing.T) {
 
 	t.Run("Search error", func(t *testing.T) {
 		wrapper := manual.NewBigQueryRoutine(mockClient, projectID)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Mock the List function to call the converter with each routine
 		mockClient.EXPECT().List(

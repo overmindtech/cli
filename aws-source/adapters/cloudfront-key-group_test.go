@@ -35,7 +35,7 @@ func TestKeyGroupItemMapper(t *testing.T) {
 func TestNewCloudfrontKeyGroupAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontKeyGroupAdapter(client, account)
+	adapter := NewCloudfrontKeyGroupAdapter(client, account, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

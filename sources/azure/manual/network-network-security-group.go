@@ -59,7 +59,7 @@ func (n networkNetworkSecurityGroupWrapper) List(ctx context.Context) ([]*sdp.It
 	return items, nil
 }
 
-func (n networkNetworkSecurityGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (n networkNetworkSecurityGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	pager := n.client.List(ctx, n.ResourceGroup(), nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)

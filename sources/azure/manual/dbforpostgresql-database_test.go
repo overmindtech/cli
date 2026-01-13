@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -80,7 +81,7 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 
 		testClient := &testPostgreSQLDatabasesClient{MockPostgreSQLDatabasesClient: mockClient}
 		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Get requires serverName and databaseName as query parts
 		query := shared.CompositeLookupKey(serverName, databaseName)
@@ -135,7 +136,7 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 		testClient := &testPostgreSQLDatabasesClient{MockPostgreSQLDatabasesClient: mockClient}
 
 		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (only server name)
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
@@ -161,11 +162,11 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 
 		testClient := &testPostgreSQLDatabasesClient{
 			MockPostgreSQLDatabasesClient: mockClient,
-			pager:                          mockPager,
+			pager:                         mockPager,
 		}
 
 		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
@@ -215,11 +216,11 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 
 		testClient := &testPostgreSQLDatabasesClient{
 			MockPostgreSQLDatabasesClient: mockClient,
-			pager:                          mockPager,
+			pager:                         mockPager,
 		}
 
 		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
@@ -263,7 +264,7 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 
 		testClient := &testPostgreSQLDatabasesClient{MockPostgreSQLDatabasesClient: mockClient}
 		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := shared.CompositeLookupKey(serverName, "nonexistent-database")
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], query, true)
@@ -279,11 +280,11 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 
 		testClient := &testPostgreSQLDatabasesClient{
 			MockPostgreSQLDatabasesClient: mockClient,
-			pager:                          errorPager,
+			pager:                         errorPager,
 		}
 
 		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
@@ -311,4 +312,3 @@ func createAzurePostgreSQLDatabase(serverName, databaseName string) *armpostgres
 		},
 	}
 }
-

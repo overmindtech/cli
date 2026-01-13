@@ -14,6 +14,7 @@ import (
 	"github.com/googleapis/gax-go/v2/apierror"
 	"google.golang.org/grpc/codes"
 
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -62,7 +63,7 @@ func TestSpannerDatabase(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create gcp http client with otel")
 		}
-		adapter, err := dynamic.MakeAdapter(gcpshared.SpannerDatabase, linker, gcpHTTPCliWithOtel, projectID)
+		adapter, err := dynamic.MakeAdapter(gcpshared.SpannerDatabase, linker, gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), projectID)
 		if err != nil {
 			t.Fatalf("Failed to make adapter for spanner database")
 		}

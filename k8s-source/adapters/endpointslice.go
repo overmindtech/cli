@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -98,10 +99,11 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 	return queries, nil
 }
 
-func newEndpointSliceAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newEndpointSliceAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.EndpointSlice, *v1.EndpointSliceList]{
 		ClusterName:   cluster,
 		Namespaces:    namespaces,
+		cacheField:    cache,
 		TypeName:      "EndpointSlice",
 		CacheDuration: 1 * time.Minute, // very low since this changes a lot
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.EndpointSlice, *v1.EndpointSliceList] {

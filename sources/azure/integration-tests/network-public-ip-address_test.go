@@ -17,6 +17,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -130,7 +131,7 @@ func TestNetworkPublicIPAddressIntegration(t *testing.T) {
 			)
 			scope := publicIPWrapper.Scopes()[0]
 
-			publicIPAdapter := sources.WrapperToAdapter(publicIPWrapper)
+			publicIPAdapter := sources.WrapperToAdapter(publicIPWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := publicIPAdapter.Get(ctx, scope, integrationTestPublicIPName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)
@@ -182,7 +183,7 @@ func TestNetworkPublicIPAddressIntegration(t *testing.T) {
 			)
 			scope := publicIPWrapper.Scopes()[0]
 
-			publicIPAdapter := sources.WrapperToAdapter(publicIPWrapper)
+			publicIPAdapter := sources.WrapperToAdapter(publicIPWrapper, sdpcache.NewNoOpCache())
 			listable, ok := publicIPAdapter.(discovery.ListableAdapter)
 			if !ok {
 				t.Fatalf("Adapter does not support List operation")
@@ -227,7 +228,7 @@ func TestNetworkPublicIPAddressIntegration(t *testing.T) {
 			)
 			scope := publicIPWrapper.Scopes()[0]
 
-			publicIPAdapter := sources.WrapperToAdapter(publicIPWrapper)
+			publicIPAdapter := sources.WrapperToAdapter(publicIPWrapper, sdpcache.NewNoOpCache())
 			sdpItem, qErr := publicIPAdapter.Get(ctx, scope, integrationTestPublicIPName, true)
 			if qErr != nil {
 				t.Fatalf("Expected no error, got: %v", qErr)

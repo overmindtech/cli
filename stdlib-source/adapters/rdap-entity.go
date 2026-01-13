@@ -12,7 +12,7 @@ import (
 
 type RdapEntityAdapter struct {
 	ClientFac func() *rdap.Client
-	Cache     *sdpcache.Cache
+	Cache     sdpcache.Cache
 }
 
 // Type is the type of items that this returns

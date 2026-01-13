@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var configMapYAML = `
@@ -32,7 +33,7 @@ func TestConfigMapAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newConfigMapAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newConfigMapAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:       adapter,
@@ -51,7 +52,7 @@ func TestConfigMapAdapterWithS3ARN(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newConfigMapAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newConfigMapAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:   adapter,

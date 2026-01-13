@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/manual"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -38,7 +39,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vnetName, true)
 		if qErr != nil {
@@ -95,7 +96,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 		mockClient := mocks.NewMockVirtualNetworksClient(ctrl)
 
 		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name - Get will still be called with empty string
 		// and Azure will return an error
@@ -130,7 +131,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -196,7 +197,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -218,7 +219,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 			armnetwork.VirtualNetworksClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-vnet", true)
 		if qErr == nil {
@@ -242,7 +243,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {

@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
@@ -31,7 +32,7 @@ func TestComputeInstanceGroup(t *testing.T) {
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeInstanceGroup("test-ig", "test-network", "test-subnetwork"), nil)
 
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-ig", true)
 		if qErr != nil {
@@ -46,7 +47,7 @@ func TestComputeInstanceGroup(t *testing.T) {
 
 	t.Run("List", func(t *testing.T) {
 		wrapper := manual.NewComputeInstanceGroup(mockClient, projectID, zone)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockComputeInstanceGroupIterator(ctrl)
 		mockIterator.EXPECT().Next().Return(createComputeInstanceGroup("test-ig-1", "net-1", "subnet-1"), nil)
@@ -84,7 +85,7 @@ func TestComputeInstanceGroup(t *testing.T) {
 
 	t.Run("ListStream", func(t *testing.T) {
 		wrapper := manual.NewComputeInstanceGroup(mockClient, projectID, zone)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockComputeInstanceGroupIterator(ctrl)
 		mockIterator.EXPECT().Next().Return(createComputeInstanceGroup("test-ig-1", "net-1", "subnet-1"), nil)

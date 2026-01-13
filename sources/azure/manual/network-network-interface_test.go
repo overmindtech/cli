@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/manual"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -38,7 +39,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], nicName, true)
 		if qErr != nil {
@@ -106,7 +107,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 		mockClient := mocks.NewMockNetworkInterfacesClient(ctrl)
 
 		wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name - Get will still be called with empty string
 		// and Azure will return an error
@@ -141,7 +142,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 		mockClient.EXPECT().List(ctx, resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -212,7 +213,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 		mockClient.EXPECT().List(ctx, resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -234,7 +235,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 			armnetwork.InterfacesClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-nic", true)
 		if qErr == nil {
@@ -258,7 +259,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 		mockClient.EXPECT().List(ctx, resourceGroup).Return(mockPager)
 
 		wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {

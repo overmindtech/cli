@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 	"time"
+
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var cronJobYAML = `
@@ -32,7 +34,7 @@ func TestCronJobAdapter(t *testing.T) {
 		Namespace:   "default",
 	}
 
-	adapter := newCronJobAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	adapter := newCronJobAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	st := AdapterTests{
 		Adapter:       adapter,
@@ -46,7 +48,7 @@ func TestCronJobAdapter(t *testing.T) {
 
 	// Additionally, make sure that the job has a link back to the cronjob that
 	// created it
-	jobAdapter := newJobAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace})
+	jobAdapter := newJobAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
 	// Wait for the job to be created
 	err := WaitFor(60*time.Second, func() bool {

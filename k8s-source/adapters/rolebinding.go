@@ -5,6 +5,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -72,10 +73,11 @@ func roleBindingExtractor(resource *v1.RoleBinding, scope string) ([]*sdp.Linked
 	return queries, nil
 }
 
-func newRoleBindingAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newRoleBindingAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.RoleBinding, *v1.RoleBindingList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
+		cacheField:  cache,
 		TypeName:    "RoleBinding",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.RoleBinding, *v1.RoleBindingList] {
 			return cs.RbacV1().RoleBindings(namespace)

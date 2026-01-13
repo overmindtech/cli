@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 // testCloudwatchMetricClient is a mock client for testing GetMetricData
@@ -395,7 +395,7 @@ func TestNewCloudwatchInstanceMetricAdapter(t *testing.T) {
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 	client := cloudwatch.NewFromConfig(config)
 
-	adapter := NewCloudwatchInstanceMetricAdapter(client, account, region)
+	adapter := NewCloudwatchInstanceMetricAdapter(client, account, region, nil)
 
 	if adapter.Type() != "cloudwatch-instance-metric" {
 		t.Errorf("expected type cloudwatch-instance-metric, got %s", adapter.Type())
@@ -412,6 +412,7 @@ func TestCloudwatchInstanceMetricAdapterCaching(t *testing.T) {
 		Client:    client,
 		AccountID: "123456789012",
 		Region:    "eu-west-2",
+		SDPCache:  sdpcache.NewCache(),
 	}
 
 	scope := "123456789012.eu-west-2"

@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func connectionOutputMapper(_ context.Context, _ *networkmanager.Client, scope string, _ *networkmanager.GetConnectionsInput, output *networkmanager.GetConnectionsOutput) ([]*sdp.Item, error) {
@@ -132,7 +133,7 @@ func connectionOutputMapper(_ context.Context, _ *networkmanager.Client, scope s
 	return items, nil
 }
 
-func NewNetworkManagerConnectionAdapter(client *networkmanager.Client, accountID string) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetConnectionsInput, *networkmanager.GetConnectionsOutput, *networkmanager.Client, *networkmanager.Options] {
+func NewNetworkManagerConnectionAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetConnectionsInput, *networkmanager.GetConnectionsOutput, *networkmanager.Client, *networkmanager.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetConnectionsInput, *networkmanager.GetConnectionsOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:    client,
 		AccountID: accountID,
@@ -141,6 +142,7 @@ func NewNetworkManagerConnectionAdapter(client *networkmanager.Client, accountID
 			return client.GetConnections(ctx, input)
 		},
 		AdapterMetadata: networkmanagerConnectionAdapterMetadata,
+		SDPCache:        cache,
 		InputMapperGet: func(scope, query string) (*networkmanager.GetConnectionsInput, error) {
 			// We are using a custom id of {globalNetworkId}|{connectionId}
 			sections := strings.Split(query, "|")

@@ -123,7 +123,7 @@ func (c computeBackendServiceWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 }
 
 // ListStream lists compute backend services and sends them to the stream.
-func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache *sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	it := c.client.List(ctx, &computepb.ListBackendServicesRequest{
 		Project: c.ProjectID(),
 	})

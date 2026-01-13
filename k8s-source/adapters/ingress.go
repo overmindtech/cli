@@ -5,6 +5,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -127,10 +128,11 @@ func ingressExtractor(resource *v1.Ingress, scope string) ([]*sdp.LinkedItemQuer
 	return queries, nil
 }
 
-func newIngressAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string) discovery.ListableAdapter {
+func newIngressAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string, cache sdpcache.Cache) discovery.ListableAdapter {
 	return &KubeTypeAdapter[*v1.Ingress, *v1.IngressList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
+		cacheField:  cache,
 		TypeName:    "Ingress",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Ingress, *v1.IngressList] {
 			return cs.NetworkingV1().Ingresses(namespace)

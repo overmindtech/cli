@@ -10,6 +10,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -198,13 +199,14 @@ func restApiOutputMapper(scope string, awsItem *types.RestApi) (*sdp.Item, error
 	return &item, nil
 }
 
-func NewAPIGatewayRestApiAdapter(client *apigateway.Client, accountID string, region string) *adapterhelpers.GetListAdapter[*types.RestApi, *apigateway.Client, *apigateway.Options] {
+func NewAPIGatewayRestApiAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.RestApi, *apigateway.Client, *apigateway.Options] {
 	return &adapterhelpers.GetListAdapter[*types.RestApi, *apigateway.Client, *apigateway.Options]{
 		ItemType:        "apigateway-rest-api",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: restApiAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.RestApi, error) {
 			out, err := client.GetRestApi(ctx, &apigateway.GetRestApiInput{
 				RestApiId: &query,

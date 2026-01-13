@@ -7,6 +7,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, _ *rds.DescribeDBClustersInput, output *rds.DescribeDBClustersOutput) ([]*sdp.Item, error) {
@@ -322,13 +323,14 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 	return items, nil
 }
 
-func NewRDSDBClusterAdapter(client rdsClient, accountID string, region string) *adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBClustersInput, *rds.DescribeDBClustersOutput, rdsClient, *rds.Options] {
+func NewRDSDBClusterAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBClustersInput, *rds.DescribeDBClustersOutput, rdsClient, *rds.Options] {
 	return &adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBClustersInput, *rds.DescribeDBClustersOutput, rdsClient, *rds.Options]{
 		ItemType:        "rds-db-cluster",
 		Region:          region,
 		AccountID:       accountID,
 		Client:          client,
 		AdapterMetadata: dbClusterAdapterMetadata,
+		SDPCache:        cache,
 		PaginatorBuilder: func(client rdsClient, params *rds.DescribeDBClustersInput) adapterhelpers.Paginator[*rds.DescribeDBClustersOutput, *rds.Options] {
 			return rds.NewDescribeDBClustersPaginator(client, params)
 		},

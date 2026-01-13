@@ -97,9 +97,9 @@ func TestNewELBv2RuleAdapter(t *testing.T) {
 	config, account, region := adapterhelpers.GetAutoConfig(t)
 	client := elbv2.NewFromConfig(config)
 
-	lbSource := NewELBv2LoadBalancerAdapter(client, account, region)
-	listenerSource := NewELBv2ListenerAdapter(client, account, region)
-	ruleSource := NewELBv2RuleAdapter(client, account, region)
+	lbSource := NewELBv2LoadBalancerAdapter(client, account, region, nil)
+	listenerSource := NewELBv2ListenerAdapter(client, account, region, nil)
+	ruleSource := NewELBv2RuleAdapter(client, account, region, nil)
 
 	stream := discovery.NewRecordingQueryResultStream()
 	lbSource.ListStream(context.Background(), lbSource.Scopes()[0], false, stream)

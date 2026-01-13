@@ -27,7 +27,7 @@ type SearchableListableAdapter struct {
 }
 
 // NewSearchableListableAdapter creates a new GCP dynamic adapter.
-func NewSearchableListableAdapter(searchURLFunc gcpshared.EndpointFunc, listEndpoint string, config *AdapterConfig, customSearchMethodDesc string) SearchableListableDiscoveryAdapter {
+func NewSearchableListableAdapter(searchURLFunc gcpshared.EndpointFunc, listEndpoint string, config *AdapterConfig, customSearchMethodDesc string, cache sdpcache.Cache) SearchableListableDiscoveryAdapter {
 	return SearchableListableAdapter{
 		customSearchMethodDescription: customSearchMethodDesc,
 		searchEndpointFunc:            searchURLFunc,
@@ -37,7 +37,7 @@ func NewSearchableListableAdapter(searchURLFunc gcpshared.EndpointFunc, listEndp
 				projectID:            config.ProjectID,
 				scope:                config.Scope,
 				httpCli:              config.HTTPClient,
-				cache:                sdpcache.NewCache(),
+				Cache:                cache,
 				getURLFunc:           config.GetURLFunc,
 				sdpAssetType:         config.SDPAssetType,
 				sdpAdapterCategory:   config.SDPAdapterCategory,
@@ -79,7 +79,7 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 		}
 	}
 
-	cacheHit, ck, cachedItems, qErr := g.cache.Lookup(
+	cacheHit, ck, cachedItems, qErr := g.GetCache().Lookup(
 		ctx,
 		g.Name(),
 		sdp.QueryMethod_SEARCH,
@@ -106,7 +106,7 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 		// This must be a terraform query in the format of:
 		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
 		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
-		return terraformMappingViaSearch(ctx, g.Adapter, query, g.cache, ck)
+		return terraformMappingViaSearch(ctx, g.Adapter, query, g.GetCache(), ck)
 	}
 
 	searchEndpoint := g.searchEndpointFunc(query)
@@ -123,7 +123,7 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 	}
 
 	for _, item := range items {
-		g.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
+		g.GetCache().StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 	}
 
 	return items, nil
@@ -138,7 +138,7 @@ func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, quer
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr := g.cache.Lookup(
+	cacheHit, ck, cachedItems, qErr := g.GetCache().Lookup(
 		ctx,
 		g.Name(),
 		sdp.QueryMethod_SEARCH,
@@ -169,7 +169,7 @@ func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, quer
 		// This must be a terraform query in the format of:
 		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
 		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
-		items, err := terraformMappingViaSearch(ctx, g.Adapter, query, g.cache, ck)
+		items, err := terraformMappingViaSearch(ctx, g.Adapter, query, g.GetCache(), ck)
 		if err != nil {
 			stream.SendError(&sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -177,8 +177,7 @@ func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, quer
 			})
 			return
 		}
-
-		g.cache.StoreItem(ctx, items[0], shared.DefaultCacheDuration, ck)
+		g.GetCache().StoreItem(ctx, items[0], shared.DefaultCacheDuration, ck)
 
 		// There should only be one item in the result, so we can send it directly
 		stream.SendItem(items[0])
@@ -198,5 +197,5 @@ func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, quer
 		return
 	}
 
-	streamSDPItems(ctx, g.Adapter, searchURL, stream, g.cache, ck)
+	streamSDPItems(ctx, g.Adapter, searchURL, stream, g.GetCache(), ck)
 }

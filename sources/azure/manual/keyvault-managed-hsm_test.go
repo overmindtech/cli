@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -82,7 +83,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewKeyVaultManagedHSM(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], hsmName, true)
 		if qErr != nil {
@@ -216,7 +217,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		mockClient := mocks.NewMockManagedHSMsClient(ctrl)
 
 		wrapper := manual.NewKeyVaultManagedHSM(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty name
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
@@ -240,7 +241,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewKeyVaultManagedHSM(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], hsmName, true)
 		if qErr == nil {
@@ -258,7 +259,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewKeyVaultManagedHSM(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], hsmName, true)
 		if qErr != nil {
@@ -294,7 +295,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		}
 
 		wrapper := manual.NewKeyVaultManagedHSM(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -333,7 +334,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		}
 
 		wrapper := manual.NewKeyVaultManagedHSM(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -375,7 +376,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		}
 
 		wrapper := manual.NewKeyVaultManagedHSM(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -416,7 +417,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		}
 
 		wrapper := manual.NewKeyVaultManagedHSM(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
 		wg.Add(2) // we added two items
@@ -480,7 +481,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		}
 
 		wrapper := manual.NewKeyVaultManagedHSM(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		var errs []error
 		mockErrorHandler := func(err error) {
@@ -530,7 +531,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		}
 
 		wrapper := manual.NewKeyVaultManagedHSM(testClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
 		wg.Add(2) // we expect two items (hsm2 with nil name should be skipped)
@@ -582,7 +583,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 			errors.New("client error"))
 
 		wrapper := manual.NewKeyVaultManagedHSM(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], hsmName, true)
 		if qErr == nil {
@@ -601,7 +602,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewKeyVaultManagedHSM(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], hsmName, true)
 		if qErr != nil {

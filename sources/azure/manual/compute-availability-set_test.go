@@ -12,6 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"
@@ -39,7 +40,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], availabilitySetName, true)
 		if qErr != nil {
@@ -114,7 +115,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], availabilitySetName, true)
 		if qErr != nil {
@@ -160,7 +161,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 			}, nil)
 
 		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], availabilitySetName, true)
 		if qErr != nil {
@@ -182,7 +183,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -219,7 +220,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
 		wg.Add(2) // we added two items
@@ -277,7 +278,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
 		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
@@ -303,7 +304,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 			armcompute.AvailabilitySetsClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-avset", true)
 		if qErr == nil {
@@ -315,7 +316,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 		mockClient := mocks.NewMockAvailabilitySetsClient(ctrl)
 
 		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
-		adapter := sources.WrapperToAdapter(wrapper)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
 		if qErr == nil {
@@ -346,7 +347,7 @@ func createAzureAvailabilitySet(avSetName string) *armcompute.AvailabilitySet {
 		},
 		Properties: &armcompute.AvailabilitySetProperties{
 			PlatformFaultDomainCount:  to.Ptr(int32(2)),
-			PlatformUpdateDomainCount:  to.Ptr(int32(5)),
+			PlatformUpdateDomainCount: to.Ptr(int32(5)),
 			ProximityPlacementGroup: &armcompute.SubResource{
 				ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/proximityPlacementGroups/test-ppg"),
 			},
@@ -373,7 +374,7 @@ func createAzureAvailabilitySetWithCrossResourceGroupLinks(avSetName, subscripti
 		},
 		Properties: &armcompute.AvailabilitySetProperties{
 			PlatformFaultDomainCount:  to.Ptr(int32(2)),
-			PlatformUpdateDomainCount:  to.Ptr(int32(5)),
+			PlatformUpdateDomainCount: to.Ptr(int32(5)),
 			ProximityPlacementGroup: &armcompute.SubResource{
 				ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/other-rg/providers/Microsoft.Compute/proximityPlacementGroups/test-ppg"),
 			},
@@ -396,7 +397,7 @@ func createAzureAvailabilitySetWithoutLinks(avSetName string) *armcompute.Availa
 		},
 		Properties: &armcompute.AvailabilitySetProperties{
 			PlatformFaultDomainCount:  to.Ptr(int32(2)),
-			PlatformUpdateDomainCount:  to.Ptr(int32(5)),
+			PlatformUpdateDomainCount: to.Ptr(int32(5)),
 			// No ProximityPlacementGroup
 			// No VirtualMachines
 		},
@@ -405,10 +406,10 @@ func createAzureAvailabilitySetWithoutLinks(avSetName string) *armcompute.Availa
 
 // mockAvailabilitySetsPager is a simple mock implementation of the Pager interface for testing
 type mockAvailabilitySetsPager struct {
-	ctrl     *gomock.Controller
-	items    []*armcompute.AvailabilitySet
-	index    int
-	more     bool
+	ctrl  *gomock.Controller
+	items []*armcompute.AvailabilitySet
+	index int
+	more  bool
 }
 
 func newMockAvailabilitySetsPager(ctrl *gomock.Controller, items []*armcompute.AvailabilitySet) clients.AvailabilitySetsPager {
@@ -444,4 +445,3 @@ func (m *mockAvailabilitySetsPager) NextPage(ctx context.Context) (armcompute.Av
 		},
 	}, nil
 }
-

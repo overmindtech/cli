@@ -8,6 +8,7 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type lambdaEventSourceMappingClient interface {
@@ -177,13 +178,14 @@ func eventSourceMappingOutputMapper(query, scope string, awsItem *types.EventSou
 	return &item, nil
 }
 
-func NewLambdaEventSourceMappingAdapter(client lambdaEventSourceMappingClient, accountID string, region string) *adapterhelpers.GetListAdapter[*types.EventSourceMappingConfiguration, lambdaEventSourceMappingClient, *lambda.Options] {
+func NewLambdaEventSourceMappingAdapter(client lambdaEventSourceMappingClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.EventSourceMappingConfiguration, lambdaEventSourceMappingClient, *lambda.Options] {
 	return &adapterhelpers.GetListAdapter[*types.EventSourceMappingConfiguration, lambdaEventSourceMappingClient, *lambda.Options]{
 		ItemType:        "lambda-event-source-mapping",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: lambdaEventSourceMappingAdapterMetadata,
+		SDPCache:        cache,
 		GetFunc: func(ctx context.Context, client lambdaEventSourceMappingClient, scope, query string) (*types.EventSourceMappingConfiguration, error) {
 			out, err := client.GetEventSourceMapping(ctx, &lambda.GetEventSourceMappingInput{
 				UUID: &query,

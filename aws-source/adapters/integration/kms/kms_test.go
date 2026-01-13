@@ -55,13 +55,13 @@ func KMS(t *testing.T) {
 
 	t.Log("Running KMS integration test")
 
-	keySource := adapters.NewKMSKeyAdapter(testClient, accountID, testAWSConfig.Region)
+	keySource := adapters.NewKMSKeyAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
-	aliasSource := adapters.NewKMSAliasAdapter(testClient, accountID, testAWSConfig.Region)
+	aliasSource := adapters.NewKMSAliasAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
-	grantSource := adapters.NewKMSGrantAdapter(testClient, accountID, testAWSConfig.Region)
+	grantSource := adapters.NewKMSGrantAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
-	keyPolicySource := adapters.NewKMSKeyPolicyAdapter(testClient, accountID, testAWSConfig.Region)
+	keyPolicySource := adapters.NewKMSKeyPolicyAdapter(testClient, accountID, testAWSConfig.Region, nil)
 
 	err = keySource.Validate()
 	if err != nil {

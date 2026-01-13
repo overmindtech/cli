@@ -9,6 +9,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/example/shared"
 )
@@ -20,7 +21,7 @@ func TestStaticData(t *testing.T) {
 	t.Run("Standard Wrapper", func(t *testing.T) {
 		standardSearchableListable := NewStandardSearchableListable(nil, projectID, zone)
 
-		adapter := sources.WrapperToAdapter(standardSearchableListable)
+		adapter := sources.WrapperToAdapter(standardSearchableListable, sdpcache.NewNoOpCache())
 
 		if adapter.Type() != fmt.Sprintf("%s-%s-%s",
 			shared.Source,
@@ -122,7 +123,7 @@ func TestStaticData(t *testing.T) {
 	t.Run("Custom Wrapper", func(t *testing.T) {
 		customSearchableListable := NewCustomSearchableListable(nil, projectID, zone)
 
-		adapter := sources.WrapperToAdapter(customSearchableListable)
+		adapter := sources.WrapperToAdapter(customSearchableListable, sdpcache.NewNoOpCache())
 
 		if adapter.Type() != fmt.Sprintf("%s-%s-%s",
 			shared.Source,

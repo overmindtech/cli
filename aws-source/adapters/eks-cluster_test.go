@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -208,7 +207,7 @@ func TestClusterGetFunc(t *testing.T) {
 func TestNewEKSClusterAdapter(t *testing.T) {
 	client, account, region := eksGetAutoConfig(t)
 
-	adapter := NewEKSClusterAdapter(client, account, region)
+	adapter := NewEKSClusterAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

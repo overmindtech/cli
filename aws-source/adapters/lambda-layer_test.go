@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
-
 	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -55,7 +54,7 @@ func TestLayerItemMapper(t *testing.T) {
 func TestNewLambdaLayerAdapter(t *testing.T) {
 	client, account, region := lambdaGetAutoConfig(t)
 
-	adapter := NewLambdaLayerAdapter(client, account, region)
+	adapter := NewLambdaLayerAdapter(client, account, region, nil)
 
 	test := adapterhelpers.E2ETest{
 		Adapter: adapter,

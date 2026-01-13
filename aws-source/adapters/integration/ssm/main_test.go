@@ -120,7 +120,7 @@ func TestIntegrationSSM(t *testing.T) {
 		client := ssm.NewFromConfig(testAWSConfig.Config)
 		scope := testAWSConfig.AccountID + "." + testAWSConfig.Region
 
-		adapter := adapters.NewSSMParameterAdapter(client, testAWSConfig.AccountID, testAWSConfig.Region)
+		adapter := adapters.NewSSMParameterAdapter(client, testAWSConfig.AccountID, testAWSConfig.Region, nil)
 
 		ctx, span := tracer.Start(ctx, "SSM.List")
 		defer span.End()
