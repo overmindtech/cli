@@ -648,9 +648,7 @@ func (c *BoltCache) Search(ck CacheKey) ([]*sdp.Item, error) {
 		}
 
 		if res.Item != nil {
-			// Return a copy of the item
-			itemCopy := proto.Clone(res.Item).(*sdp.Item)
-			items = append(items, itemCopy)
+			items = append(items, res.Item)
 		}
 	}
 
@@ -688,8 +686,6 @@ func (c *BoltCache) StoreItem(ctx context.Context, item *sdp.Item, duration time
 	// Set disk usage metrics
 	c.setDiskUsageAttributes(span)
 
-	itemCopy := proto.Clone(item).(*sdp.Item)
-
 	// Ensure minimum duration to avoid items expiring immediately
 	// This handles cases where time.Until() returns 0 or negative due to timing
 	// Use 100ms to account for race detector overhead and slow CI environments
@@ -698,11 +694,11 @@ func (c *BoltCache) StoreItem(ctx context.Context, item *sdp.Item, duration time
 	}
 
 	res := CachedResult{
-		Item:   itemCopy,
+		Item:   item,
 		Error:  nil,
 		Expiry: time.Now().Add(duration),
 		IndexValues: IndexValues{
-			UniqueAttributeValue: itemCopy.UniqueAttributeValue(),
+			UniqueAttributeValue: item.UniqueAttributeValue(),
 		},
 	}
 
