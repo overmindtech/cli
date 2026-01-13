@@ -71,6 +71,7 @@ func NewNetworkManagerCoreNetworkPolicyAdapter(client *networkmanager.Client, ac
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: "list not supported for networkmanager-core-network-policy, use get",
+				Scope:       scope,
 			}
 		},
 	}

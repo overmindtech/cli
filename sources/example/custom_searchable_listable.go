@@ -70,7 +70,7 @@ func (d *customComputeInstanceWrapper) GetLookups() sources.ItemTypeLookups {
 func (d *customComputeInstanceWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	external, err := d.client.Get(ctx, queryParts[0])
 	if err != nil {
-		return nil, queryError(err)
+		return nil, queryError(err, d.Scopes()[0], d.Type())
 	}
 
 	return d.externalTypeToSDPItem(external)
@@ -80,7 +80,7 @@ func (d *customComputeInstanceWrapper) Get(ctx context.Context, queryParts ...st
 func (d *customComputeInstanceWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
 	externals, err := d.client.List(ctx)
 	if err != nil {
-		return nil, queryError(err)
+		return nil, queryError(err, d.Scopes()[0], d.Type())
 	}
 
 	return d.mapper(externals)
@@ -117,7 +117,7 @@ func (d *customComputeInstanceWrapper) Search(ctx context.Context, queryParts ..
 		externals, err = d.client.Search(ctx, queryParts[0], queryParts[1])
 	}
 	if err != nil {
-		return nil, queryError(err)
+		return nil, queryError(err, d.Scopes()[0], d.Type())
 	}
 
 	// We don't need to check if the length of the query is different from 1 or 2.

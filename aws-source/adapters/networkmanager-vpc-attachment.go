@@ -23,7 +23,6 @@ func vpcAttachmentGetFunc(ctx context.Context, client *networkmanager.Client, _,
 
 func vpcAttachmentItemMapper(_, scope string, awsItem *types.VpcAttachment) (*sdp.Item, error) {
 	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
-
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +53,6 @@ func vpcAttachmentItemMapper(_, scope string, awsItem *types.VpcAttachment) (*sd
 				Out: true,
 			},
 		})
-
 	}
 
 	return &item, nil
@@ -75,6 +73,7 @@ func NewNetworkManagerVPCAttachmentAdapter(client *networkmanager.Client, accoun
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: "list not supported for networkmanager-vpc-attachment, use get",
+				Scope:       scope,
 			}
 		},
 	}

@@ -26,6 +26,7 @@ func getSubsFunc(ctx context.Context, client subsCli, scope string, input *sns.G
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: "get subscription attributes response was nil",
+			Scope:       scope,
 		}
 	}
 

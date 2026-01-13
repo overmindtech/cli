@@ -23,7 +23,6 @@ func getSiteToSiteVpnAttachmentGetFunc(ctx context.Context, client *networkmanag
 
 func siteToSiteVpnAttachmentItemMapper(_, scope string, awsItem *types.SiteToSiteVpnAttachment) (*sdp.Item, error) {
 	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
-
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +102,7 @@ func NewNetworkManagerSiteToSiteVpnAttachmentAdapter(client *networkmanager.Clie
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: "list not supported for networkmanager-site-to-site-vpn-attachment, use get",
+				Scope:       scope,
 			}
 		},
 	}

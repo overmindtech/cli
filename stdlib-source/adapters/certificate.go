@@ -92,7 +92,9 @@ func (s *CertificateAdapter) Get(ctx context.Context, scope string, query string
 	return nil, &sdp.QueryError{
 		ErrorType:   sdp.QueryError_NOTFOUND,
 		ErrorString: "certificate only responds to Search() requests. Consult the documentation",
+		SourceName:  s.Name(),
 		Scope:       scope,
+		ItemType:    s.Type(),
 	}
 }
 
@@ -112,7 +114,6 @@ func (s *CertificateAdapter) Search(ctx context.Context, scope string, query str
 	var items []*sdp.Item
 
 	bundle, err := decodePem(query)
-
 	if err != nil {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
@@ -128,7 +129,6 @@ func (s *CertificateAdapter) Search(ctx context.Context, scope string, query str
 		var attributes *sdp.ItemAttributes
 
 		cert, err = x509.ParseCertificate(b)
-
 		if err != nil {
 			errors = append(errors, err)
 			// Skip this cert
@@ -156,7 +156,6 @@ func (s *CertificateAdapter) Search(ctx context.Context, scope string, query str
 			"subjectKeyIdentifier":   toHex(cert.SubjectKeyId),
 			"authorityKeyIdentifier": toHex(cert.AuthorityKeyId),
 		})
-
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,

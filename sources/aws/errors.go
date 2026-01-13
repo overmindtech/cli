@@ -10,7 +10,7 @@ import (
 )
 
 // queryError takes an error and returns a sdp.QueryError.
-func queryError(err error) *sdp.QueryError {
+func queryError(err error, scope string, itemType string) *sdp.QueryError {
 	var responseErr *awsHttp.ResponseError
 	if errors.As(err, &responseErr) {
 		// If the input is bad, access is denied, or the thing wasn't found then
@@ -19,6 +19,9 @@ func queryError(err error) *sdp.QueryError {
 			return &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: err.Error(),
+				SourceName:  "aws-source",
+				Scope:       scope,
+				ItemType:    itemType,
 			}
 		}
 	}
@@ -26,5 +29,8 @@ func queryError(err error) *sdp.QueryError {
 	return &sdp.QueryError{
 		ErrorType:   sdp.QueryError_OTHER,
 		ErrorString: err.Error(),
+		SourceName:  "aws-source",
+		Scope:       scope,
+		ItemType:    itemType,
 	}
 }

@@ -16,6 +16,9 @@ func QueryError(err error, scope string, itemType string) *sdp.QueryError {
 		return &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: err.Error(),
+			SourceName:  "azure-source",
+			Scope:       scope,
+			ItemType:    itemType,
 		}
 	}
 

@@ -25,6 +25,7 @@ func getPlatformApplicationFunc(ctx context.Context, client platformApplicationC
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: "get platform application attributes response was nil",
+			Scope:       scope,
 		}
 	}
 

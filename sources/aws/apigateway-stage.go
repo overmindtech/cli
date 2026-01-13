@@ -73,7 +73,7 @@ func (d *apiGatewayStageWrapper) Get(ctx context.Context, queryParts ...string) 
 		StageName: &queryParts[1],
 	})
 	if err != nil {
-		return nil, queryError(err)
+		return nil, queryError(err, d.Scopes()[0], d.Type())
 	}
 
 	return d.awsToSdpItem(convertGetStageOutputToStage(out), queryParts[0])
@@ -110,7 +110,7 @@ func (d *apiGatewayStageWrapper) Search(ctx context.Context, queryParts ...strin
 
 	out, err := d.client.GetStages(ctx, input)
 	if err != nil {
-		return nil, queryError(err)
+		return nil, queryError(err, d.Scopes()[0], d.Type())
 	}
 
 	return d.mapper(out.Item, queryParts[0])

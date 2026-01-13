@@ -74,9 +74,8 @@ func (s *RdapASNAdapter) Get(ctx context.Context, scope string, query string, ig
 	request = request.WithContext(ctx)
 
 	response, err := s.ClientFac().Do(request)
-
 	if err != nil {
-		err = wrapRdapError(err)
+		err = wrapRdapError(err, scope)
 
 		s.Cache.StoreError(ctx, err, RdapCacheDuration, ck)
 
@@ -88,6 +87,8 @@ func (s *RdapASNAdapter) Get(ctx context.Context, scope string, query string, ig
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			Scope:       scope,
 			ErrorString: "No ASN found",
+			SourceName:  s.Name(),
+			ItemType:    s.Type(),
 		}
 	}
 
@@ -114,7 +115,6 @@ func (s *RdapASNAdapter) Get(ctx context.Context, scope string, query string, ig
 		"port43":          asn.Port43,
 		"events":          asn.Events,
 	}, true, RDAPTransforms)
-
 	if err != nil {
 		return nil, err
 	}

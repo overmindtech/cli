@@ -24,7 +24,6 @@ func connectAttachmentGetFunc(ctx context.Context, client *networkmanager.Client
 
 func connectAttachmentItemMapper(_, scope string, ca *types.ConnectAttachment) (*sdp.Item, error) {
 	attributes, err := adapterhelpers.ToAttributesWithExclude(ca)
-
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +94,7 @@ func NewNetworkManagerConnectAttachmentAdapter(client *networkmanager.Client, ac
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: "list not supported for networkmanager-connect-attachment, use get",
+				Scope:       scope,
 			}
 		},
 	}

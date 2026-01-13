@@ -27,6 +27,7 @@ func getFunc(ctx context.Context, client sqsClient, scope string, input *sqs.Get
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: "get queue attributes response was nil",
+			Scope:       scope,
 		}
 	}
 
@@ -45,6 +46,7 @@ func getFunc(ctx context.Context, client sqsClient, scope string, input *sqs.Get
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: err.Error(),
+			Scope:       scope,
 		}
 	}
 
@@ -101,6 +103,7 @@ func sqsQueueSearchInputMapper(scope string, query string) (*sqs.GetQueueAttribu
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: "ARN is not a valid SQS ARN",
+			Scope:       scope,
 		}
 	}
 

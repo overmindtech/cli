@@ -258,7 +258,6 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Search(ctx context.Cont
 func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchARN(ctx context.Context, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
 	// Parse the ARN
 	a, err := ParseARN(query)
-
 	if err != nil {
 		return nil, WrapAWSError(err)
 	}
@@ -266,24 +265,29 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchARN(ctx context.C
 	if a.ContainsWildcard() {
 		// We can't handle wildcards by default so bail out
 		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOTFOUND,
-			ErrorString: fmt.Sprintf("wildcards are not supported by adapter %v", s.Name()),
-			Scope:       scope,
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("wildcards are not supported by adapter %v", s.Name()),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
 		}
 	}
 
 	if arnScope := FormatScope(a.AccountID, a.Region); !s.hasScope(arnScope) {
 		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: fmt.Sprintf("ARN scope %v does not match request scope %v", arnScope, scope),
-			Scope:       scope,
+			ErrorType:     sdp.QueryError_NOSCOPE,
+			ErrorString:   fmt.Sprintf("ARN scope %v does not match request scope %v", arnScope, scope),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
 		}
 	}
 
 	// Since this gits the Get method, and this method implements caching, we
 	// don't need to implement it here
 	item, err := s.Get(ctx, scope, a.ResourceID(), ignoreCache)
-
 	if err != nil {
 		return nil, WrapAWSError(err)
 	}

@@ -27,6 +27,7 @@ func kmsKeyGetFunc(ctx context.Context, client kmsClient, scope string, input *k
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: "describe key response was nil",
+			Scope:       scope,
 		}
 	}
 

@@ -117,9 +117,8 @@ func (s *RdapIPNetworkAdapter) Search(ctx context.Context, scope string, query s
 		request = request.WithContext(ctx)
 
 		response, err := s.ClientFac().Do(request)
-
 		if err != nil {
-			err = wrapRdapError(err)
+			err = wrapRdapError(err, scope)
 
 			s.Cache.StoreError(ctx, err, RdapCacheDuration, ck)
 
@@ -129,9 +128,10 @@ func (s *RdapIPNetworkAdapter) Search(ctx context.Context, scope string, query s
 		if response.Object == nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
-				Scope:       scope,
 				ErrorString: fmt.Sprintf("No IP Network found for %s", query),
+				Scope:       scope,
 				SourceName:  s.Name(),
+				ItemType:    s.Type(),
 			}
 		}
 
@@ -145,7 +145,6 @@ func (s *RdapIPNetworkAdapter) Search(ctx context.Context, scope string, query s
 
 		// Calculate the CIDR for this network
 		network, err := calculateNetwork(ipNetwork.StartAddress, ipNetwork.EndAddress)
-
 		if err != nil {
 			return nil, err
 		}
@@ -172,7 +171,6 @@ func (s *RdapIPNetworkAdapter) Search(ctx context.Context, scope string, query s
 		"status":          ipNetwork.Status,
 		"type":            ipNetwork.Type,
 	}, true, RDAPTransforms)
-
 	if err != nil {
 		return nil, err
 	}

@@ -569,7 +569,7 @@ func (c *Cache) storeResult(ctx context.Context, res CachedResult) {
 			attrs := []attribute.KeyValue{
 				attribute.Bool("ovm.cache.unexpired_overwrite", true),
 				attribute.String("ovm.cache.time_until_expiry", timeUntilExpiry.String()),
-				attribute.String("ovm.cache.source_name", string(res.IndexValues.SSTHash)),
+				attribute.String("ovm.cache.sst_hash", string(res.IndexValues.SSTHash)),
 				attribute.String("ovm.cache.query_method", res.IndexValues.Method.String()),
 			}
 

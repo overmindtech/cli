@@ -79,6 +79,8 @@ func (bc *IPAdapter) Get(ctx context.Context, scope string, query string, ignore
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: fmt.Sprintf("%v is not a valid IP", query),
+			SourceName:  bc.Name(),
+			ItemType:    bc.Type(),
 			Scope:       scope,
 		}
 	}
@@ -96,6 +98,8 @@ func (bc *IPAdapter) Get(ctx context.Context, scope string, query string, ignore
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: fmt.Sprintf("%v is not a globally-unique IP and therefore could exist in every scope. Query with a wildcard does not work for non-global IPs", query),
 				Scope:       scope,
+				SourceName:  bc.Name(),
+				ItemType:    bc.Type(),
 			}
 		}
 	}
@@ -106,6 +110,8 @@ func (bc *IPAdapter) Get(ctx context.Context, scope string, query string, ignore
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: fmt.Sprintf("%v is not a valid ip withing the global scope. It must be request with some other scope", query),
 				Scope:       scope,
+				SourceName:  bc.Name(),
+				ItemType:    bc.Type(),
 			}
 		}
 	} else {
@@ -115,6 +121,8 @@ func (bc *IPAdapter) Get(ctx context.Context, scope string, query string, ignore
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: fmt.Sprintf("%v is a globally-unique IP and therefore only exists in the global scope. Note that private IP ranges are also considered 'global' for convenience", query),
 				Scope:       scope,
+				SourceName:  bc.Name(),
+				ItemType:    bc.Type(),
 			}
 		}
 	}
@@ -129,7 +137,6 @@ func (bc *IPAdapter) Get(ctx context.Context, scope string, query string, ignore
 		"linkLocalMulticast":      ip.IsLinkLocalMulticast(),
 		"linkLocalUnicast":        ip.IsLinkLocalUnicast(),
 	})
-
 	if err != nil {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,

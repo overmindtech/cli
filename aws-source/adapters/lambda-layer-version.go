@@ -22,7 +22,6 @@ func layerVersionGetInputMapper(scope, query string) *lambda.GetLayerVersionInpu
 	version := sections[len(sections)-1]
 	name := strings.Join(sections[0:len(sections)-1], ":")
 	versionInt, err := strconv.Atoi(version)
-
 	if err != nil {
 		return nil
 	}
@@ -38,23 +37,21 @@ func layerVersionGetFunc(ctx context.Context, client LambdaClient, scope string,
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: "nil input provided to query",
+			Scope:       scope,
 		}
 	}
 
 	out, err := client.GetLayerVersion(ctx, input)
-
 	if err != nil {
 		return nil, err
 	}
 
 	attributes, err := adapterhelpers.ToAttributesWithExclude(out, "resultMetadata")
-
 	if err != nil {
 		return nil, err
 	}
 
 	err = attributes.Set("FullName", fmt.Sprintf("%v:%v", *input.LayerName, input.VersionNumber))
-
 	if err != nil {
 		return nil, err
 	}

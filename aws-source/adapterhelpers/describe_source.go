@@ -250,16 +250,24 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 		}
 
 		qErr := &sdp.QueryError{
-			ErrorType:   sdp.QueryError_OTHER,
-			ErrorString: fmt.Sprintf("Request returned > 1 item for a GET request. Items: %v", strings.Join(itemNames, ", ")),
+			ErrorType:     sdp.QueryError_OTHER,
+			ErrorString:   fmt.Sprintf("Request returned > 1 item for a GET request. Items: %v", strings.Join(itemNames, ", ")),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
 		}
 		s.cache.StoreError(ctx, qErr, s.cacheDuration(), ck)
 
 		return nil, qErr
 	case numItems == 0:
 		qErr := &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOTFOUND,
-			ErrorString: fmt.Sprintf("%v %v not found", s.Type(), query),
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("%v %v not found", s.Type(), query),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
 		}
 		s.cache.StoreError(ctx, qErr, s.cacheDuration(), ck)
 		return nil, qErr
@@ -273,16 +281,24 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) ListStream(ctx context.Context, scope string, ignoreCache bool, stream discovery.QueryResultStream) {
 	if scope != s.Scopes()[0] {
 		stream.SendError(&sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: fmt.Sprintf("requested scope %v does not match adapter scope %v", scope, s.Scopes()[0]),
+			ErrorType:     sdp.QueryError_NOSCOPE,
+			ErrorString:   fmt.Sprintf("requested scope %v does not match adapter scope %v", scope, s.Scopes()[0]),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
 		})
 		return
 	}
 
 	if s.InputMapperList == nil {
 		stream.SendError(&sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOTFOUND,
-			ErrorString: fmt.Sprintf("list is not supported for %v resources", s.ItemType),
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("list is not supported for %v resources", s.ItemType),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
 		})
 		return
 	}
@@ -344,9 +360,12 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchARN(ct
 	if a.ContainsWildcard() {
 		// We can't handle wildcards by default so bail out
 		stream.SendError(&sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOTFOUND,
-			ErrorString: fmt.Sprintf("wildcards are not supported by adapter %v", s.Name()),
-			Scope:       scope,
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("wildcards are not supported by adapter %v", s.Name()),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
 		})
 		return
 	}

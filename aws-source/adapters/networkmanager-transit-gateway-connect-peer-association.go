@@ -18,7 +18,6 @@ func transitGatewayConnectPeerAssociationsOutputMapper(_ context.Context, _ *net
 		var err error
 		var attrs *sdp.ItemAttributes
 		attrs, err = adapterhelpers.ToAttributesWithExclude(a, "tags")
-
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -114,6 +113,7 @@ func NewNetworkManagerTransitGatewayConnectPeerAssociationAdapter(client *networ
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
 					ErrorString: "invalid query for networkmanager-transit-gateway-connect-peer-association. Use {GlobalNetworkId}|{TransitGatewayConnectPeerArn} format",
+					Scope:       scope,
 				}
 			}
 
@@ -130,6 +130,7 @@ func NewNetworkManagerTransitGatewayConnectPeerAssociationAdapter(client *networ
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
 				ErrorString: "list not supported for networkmanager-transit-gateway-connect-peer-association, use search",
+				Scope:       scope,
 			}
 		},
 		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetTransitGatewayConnectPeerAssociationsInput) adapterhelpers.Paginator[*networkmanager.GetTransitGatewayConnectPeerAssociationsOutput, *networkmanager.Options] {

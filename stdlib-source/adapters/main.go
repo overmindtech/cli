@@ -93,7 +93,7 @@ func InitializeEngine(ec *discovery.EngineConfig, reverseDNS bool) (*discovery.E
 // }
 
 // Wraps an RDAP error in an SDP error, correctly checking for things like 404s
-func wrapRdapError(err error) error {
+func wrapRdapError(err error, scope string) error {
 	if err == nil {
 		return nil
 	}
@@ -105,6 +105,8 @@ func wrapRdapError(err error) error {
 			return &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: err.Error(),
+				ItemType:    "rdap",
+				Scope:       scope,
 			}
 		}
 	}
@@ -169,7 +171,6 @@ func parseRdapUrl(rdapUrl string) (*RDAPUrl, error) {
 	}
 
 	serverRoot, err := url.Parse(matches[1])
-
 	if err != nil {
 		return nil, err
 	}

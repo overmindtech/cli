@@ -19,7 +19,6 @@ func linkOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 		var err error
 		var attrs *sdp.ItemAttributes
 		attrs, err = adapterhelpers.ToAttributesWithExclude(s, "tags")
-
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -128,6 +127,7 @@ func NewNetworkManagerLinkAdapter(client *networkmanager.Client, accountID strin
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
 					ErrorString: "invalid query for networkmanager-link get function",
+					Scope:       scope,
 				}
 			}
 			return &networkmanager.GetLinksInput{
@@ -141,6 +141,7 @@ func NewNetworkManagerLinkAdapter(client *networkmanager.Client, accountID strin
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: "list not supported for networkmanager-link, use search",
+				Scope:       scope,
 			}
 		},
 		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetLinksInput) adapterhelpers.Paginator[*networkmanager.GetLinksOutput, *networkmanager.Options] {
@@ -171,6 +172,7 @@ func NewNetworkManagerLinkAdapter(client *networkmanager.Client, accountID strin
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
 					ErrorString: "ARN is not a valid networkmanager-link ARN",
+					Scope:       scope,
 				}
 			}
 
@@ -193,9 +195,9 @@ func NewNetworkManagerLinkAdapter(client *networkmanager.Client, accountID strin
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
 					ErrorString: "invalid query for networkmanager-link get function",
+					Scope:       scope,
 				}
 			}
-
 		},
 	}
 }

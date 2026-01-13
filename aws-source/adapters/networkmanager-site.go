@@ -19,7 +19,6 @@ func siteOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 		var err error
 		var attrs *sdp.ItemAttributes
 		attrs, err = adapterhelpers.ToAttributesWithExclude(s, "tags")
-
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -113,6 +112,7 @@ func NewNetworkManagerSiteAdapter(client *networkmanager.Client, accountID strin
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
 					ErrorString: "invalid query for networkmanager-site get function",
+					Scope:       scope,
 				}
 			}
 			return &networkmanager.GetSitesInput{
@@ -126,6 +126,7 @@ func NewNetworkManagerSiteAdapter(client *networkmanager.Client, accountID strin
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: "list not supported for networkmanager-site, use search",
+				Scope:       scope,
 			}
 		},
 		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetSitesInput) adapterhelpers.Paginator[*networkmanager.GetSitesOutput, *networkmanager.Options] {
@@ -151,11 +152,12 @@ func NewNetworkManagerSiteAdapter(client *networkmanager.Client, accountID strin
 						}, nil
 					}
 				}
-				
+
 				// If it's not a valid networkmanager-site ARN, return an error
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
 					ErrorString: "ARN is not a valid networkmanager-site ARN",
+					Scope:       scope,
 				}
 			}
 
