@@ -19,7 +19,6 @@ func deviceOutputMapper(_ context.Context, _ *networkmanager.Client, scope strin
 		var err error
 		var attrs *sdp.ItemAttributes
 		attrs, err = adapterhelpers.ToAttributesWithExclude(s, "tags")
-
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -144,6 +143,7 @@ func NewNetworkManagerDeviceAdapter(client *networkmanager.Client, accountID str
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
 					ErrorString: "invalid query for networkmanager-device get function",
+					Scope:       scope,
 				}
 			}
 			return &networkmanager.GetDevicesInput{
@@ -157,6 +157,7 @@ func NewNetworkManagerDeviceAdapter(client *networkmanager.Client, accountID str
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: "list not supported for networkmanager-device, use search",
+				Scope:       scope,
 			}
 		},
 		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetDevicesInput) adapterhelpers.Paginator[*networkmanager.GetDevicesOutput, *networkmanager.Options] {
@@ -187,6 +188,7 @@ func NewNetworkManagerDeviceAdapter(client *networkmanager.Client, accountID str
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
 					ErrorString: "ARN is not a valid networkmanager-device ARN",
+					Scope:       scope,
 				}
 			}
 
@@ -209,9 +211,9 @@ func NewNetworkManagerDeviceAdapter(client *networkmanager.Client, accountID str
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
 					ErrorString: "invalid query for networkmanager-device get function",
+					Scope:       scope,
 				}
 			}
-
 		},
 	}
 }

@@ -330,9 +330,12 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 
 	if a.ContainsWildcard() {
 		stream.SendError(&sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOTFOUND,
-			ErrorString: fmt.Sprintf("wildcards are not supported by adapter %v", s.Name()),
-			Scope:       scope,
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("wildcards are not supported by adapter %v", s.Name()),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
 		})
 		return
 	}

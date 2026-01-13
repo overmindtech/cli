@@ -25,6 +25,7 @@ func getEndpointFunc(ctx context.Context, client endpointClient, scope string, i
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: "get endpoint attributes response was nil",
+			Scope:       scope,
 		}
 	}
 

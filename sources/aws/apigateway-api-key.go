@@ -14,9 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	APIGWAPIKey = shared.NewItemType(awsshared.AWS, awsshared.APIGateway, awsshared.APIKey)
-)
+var APIGWAPIKey = shared.NewItemType(awsshared.AWS, awsshared.APIGateway, awsshared.APIKey)
 
 // apiGatewayKeyWrapper is a struct that wraps the AWS API Gateway API Key functionality
 type apiGatewayKeyWrapper struct {
@@ -61,7 +59,7 @@ func (d *apiGatewayKeyWrapper) Get(ctx context.Context, queryParts ...string) (*
 		ApiKey: &queryParts[0],
 	})
 	if err != nil {
-		return nil, queryError(err)
+		return nil, queryError(err, d.Scopes()[0], d.Type())
 	}
 
 	return d.awsToSdpItem(convertGetApiKeyOutputToApiKey(out))
@@ -82,7 +80,7 @@ func (d *apiGatewayKeyWrapper) Search(ctx context.Context, queryParts ...string)
 		NameQuery: &queryParts[0],
 	})
 	if err != nil {
-		return nil, queryError(err)
+		return nil, queryError(err, d.Scopes()[0], d.Type())
 	}
 
 	return d.mapper(out.Items)
@@ -92,7 +90,7 @@ func (d *apiGatewayKeyWrapper) Search(ctx context.Context, queryParts ...string)
 func (d *apiGatewayKeyWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
 	out, err := d.client.GetApiKeys(ctx, &apigateway.GetApiKeysInput{})
 	if err != nil {
-		return nil, queryError(err)
+		return nil, queryError(err, d.Scopes()[0], d.Type())
 	}
 
 	return d.mapper(out.Items)

@@ -56,8 +56,10 @@ var DefaultServers = []string{
 	"8.8.4.4:53",
 }
 
-const ItemType = "dns"
-const UniqueAttribute = "name"
+const (
+	ItemType        = "dns"
+	UniqueAttribute = "name"
+)
 
 var ErrNoServersAvailable = errors.New("no dns servers available")
 
@@ -115,6 +117,8 @@ func (d *DNSAdapter) Get(ctx context.Context, scope string, query string, ignore
 			ErrorType:   sdp.QueryError_NOSCOPE,
 			ErrorString: "DNS queries only supported in global scope",
 			Scope:       scope,
+			SourceName:  d.Name(),
+			ItemType:    d.Type(),
 		}
 	}
 
@@ -123,6 +127,9 @@ func (d *DNSAdapter) Get(ctx context.Context, scope string, query string, ignore
 		return &sdp.Item{}, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: fmt.Sprintf("%v is already an IP address, no DNS entry will be found", query),
+			SourceName:  d.Name(),
+			Scope:       scope,
+			ItemType:    d.Type(),
 		}
 	}
 
@@ -143,15 +150,17 @@ func (d *DNSAdapter) Get(ctx context.Context, scope string, query string, ignore
 	// different and we're only querying for A and AAAA. Realistically people
 	// should be using Search() now anyway
 	items, err := d.MakeQuery(ctx, query)
-
 	if err != nil {
 		return nil, err
 	}
 
 	if len(items) == 0 {
 		return nil, &sdp.QueryError{
-			ErrorType: sdp.QueryError_NOTFOUND,
-			Scope:     "global",
+			ErrorType:   sdp.QueryError_NOTFOUND,
+			ErrorString: "no DNS records found",
+			Scope:       scope,
+			SourceName:  d.Name(),
+			ItemType:    d.Type(),
 		}
 	}
 
@@ -166,6 +175,8 @@ func (d *DNSAdapter) List(ctx context.Context, scope string, ignoreCache bool) (
 			ErrorType:   sdp.QueryError_NOSCOPE,
 			ErrorString: "DNS queries only supported in global scope",
 			Scope:       scope,
+			SourceName:  d.Name(),
+			ItemType:    d.Type(),
 		}
 	}
 
@@ -210,8 +221,11 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 			if len(items) == 0 {
 				// Cache NOTFOUND error for empty results to avoid repeated network calls
 				notFoundErr := &sdp.QueryError{
-					ErrorType: sdp.QueryError_NOTFOUND,
-					Scope:     "global",
+					ErrorType:   sdp.QueryError_NOTFOUND,
+					ErrorString: "no reverse DNS records found",
+					Scope:       "global",
+					SourceName:  d.Name(),
+					ItemType:    d.Type(),
 				}
 				d.cache.StoreError(ctx, notFoundErr, dnsCacheDuration, ck)
 				return nil, notFoundErr
@@ -309,7 +323,6 @@ func (d *DNSAdapter) MakeReverseQuery(ctx context.Context, query string) ([]*sdp
 
 func (d *DNSAdapter) makeReverseQueryImpl(ctx context.Context, query string, server string) ([]*sdp.Item, error) {
 	arpa, err := dns.ReverseAddr(query)
-
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +343,6 @@ func (d *DNSAdapter) makeReverseQueryImpl(ctx context.Context, query string, ser
 	}
 
 	r, _, err := d.client.ExchangeContext(ctx, &msg, server)
-
 	if err != nil {
 		return nil, err
 	}
@@ -340,7 +352,6 @@ func (d *DNSAdapter) makeReverseQueryImpl(ctx context.Context, query string, ser
 	for _, rr := range r.Answer {
 		if ptr, ok := rr.(*dns.PTR); ok {
 			newItems, err := d.MakeQuery(ctx, ptr.Ptr)
-
 			if err != nil {
 				return nil, err
 			}
@@ -378,7 +389,6 @@ func (d *DNSAdapter) makeQueryImpl(ctx context.Context, query string, server str
 	}
 
 	r, _, err := d.client.ExchangeContext(ctx, &msg, server)
-
 	if err != nil {
 		return nil, err
 	}
@@ -386,7 +396,6 @@ func (d *DNSAdapter) makeQueryImpl(ctx context.Context, query string, server str
 	// Also query for AAAA
 	msg.Question[0].Qtype = dns.TypeAAAA
 	r2, _, err := d.client.ExchangeContext(ctx, &msg, server)
-
 	if err != nil {
 		return nil, err
 	}
@@ -398,8 +407,11 @@ func (d *DNSAdapter) makeQueryImpl(ctx context.Context, query string, server str
 	if len(answers) == 0 {
 		// This means nothing was found
 		return nil, &sdp.QueryError{
-			ErrorType: sdp.QueryError_NOTFOUND,
-			Scope:     "global",
+			ErrorType:   sdp.QueryError_NOTFOUND,
+			ErrorString: "no A or AAAA records found",
+			Scope:       "global",
+			SourceName:  d.Name(),
+			ItemType:    d.Type(),
 		}
 	}
 
@@ -424,7 +436,6 @@ func (d *DNSAdapter) makeQueryImpl(ctx context.Context, query string, server str
 				"ttl":    cname.Hdr.Ttl,
 				"target": target,
 			})
-
 			if err != nil {
 				return nil, err
 			}
@@ -471,7 +482,6 @@ func (d *DNSAdapter) makeQueryImpl(ctx context.Context, query string, server str
 		name = trimDnsSuffix(name)
 
 		item, err := AToItem(name, rs)
-
 		if err != nil {
 			return nil, err
 		}
@@ -569,7 +579,6 @@ func AToItem(name string, records []dns.RR) (*sdp.Item, error) {
 		"type":    "address",
 		"records": recordAttrs,
 	})
-
 	if err != nil {
 		return nil, err
 	}

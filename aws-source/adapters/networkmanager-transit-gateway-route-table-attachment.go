@@ -23,7 +23,6 @@ func getTransitGatewayRouteTableAttachmentGetFunc(ctx context.Context, client *n
 
 func transitGatewayRouteTableAttachmentItemMapper(_, scope string, awsItem *types.TransitGatewayRouteTableAttachment) (*sdp.Item, error) {
 	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
-
 	if err != nil {
 		return nil, err
 	}
@@ -107,6 +106,7 @@ func NewNetworkManagerTransitGatewayRouteTableAttachmentAdapter(client *networkm
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: "list not supported for networkmanager-transit-gateway-route-table-attachment, use get",
+				Scope:       scope,
 			}
 		},
 	}

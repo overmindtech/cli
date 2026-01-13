@@ -27,6 +27,7 @@ func getKeyPolicyFunc(ctx context.Context, client keyPolicyClient, scope string,
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: "get key policy response was nil",
+			Scope:       scope,
 		}
 	}
 

@@ -70,16 +70,20 @@ func (s *RdapNameserverAdapter) Get(ctx context.Context, scope string, query str
 	// use the handle to query for an IP network)
 	return nil, &sdp.QueryError{
 		ErrorType:   sdp.QueryError_NOTFOUND,
-		Scope:       scope,
 		ErrorString: "Nameservers can't be queried by handle, use the SEARCH method instead",
+		Scope:       scope,
+		SourceName:  s.Name(),
+		ItemType:    s.Type(),
 	}
 }
 
 func (s *RdapNameserverAdapter) List(ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error) {
 	return nil, &sdp.QueryError{
 		ErrorType:   sdp.QueryError_NOTFOUND,
-		Scope:       scope,
 		ErrorString: "Nameservers cannot be listed, use the SEARCH method instead",
+		Scope:       scope,
+		SourceName:  s.Name(),
+		ItemType:    s.Type(),
 	}
 }
 
@@ -99,7 +103,6 @@ func (s *RdapNameserverAdapter) Search(ctx context.Context, scope string, query 
 	}
 
 	parsed, err := parseRdapUrl(query)
-
 	if err != nil {
 		return nil, err
 	}
@@ -112,9 +115,8 @@ func (s *RdapNameserverAdapter) Search(ctx context.Context, scope string, query 
 	request.WithContext(ctx)
 
 	response, err := s.ClientFac().Do(request)
-
 	if err != nil {
-		err = wrapRdapError(err)
+		err = wrapRdapError(err, scope)
 
 		s.Cache.StoreError(ctx, err, RdapCacheDuration, ck)
 
@@ -124,9 +126,10 @@ func (s *RdapNameserverAdapter) Search(ctx context.Context, scope string, query 
 	if response.Object == nil {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
-			Scope:       scope,
-			ErrorString: fmt.Sprintf("No IP Network found for %s", query),
+			ErrorString: fmt.Sprintf("No nameserver found for %s", query),
 			SourceName:  s.Name(),
+			Scope:       scope,
+			ItemType:    s.Type(),
 		}
 	}
 
@@ -150,7 +153,6 @@ func (s *RdapNameserverAdapter) Search(ctx context.Context, scope string, query 
 		"port43":          nameserver.Port43,
 		"events":          nameserver.Events,
 	}, true, RDAPTransforms)
-
 	if err != nil {
 		return nil, err
 	}

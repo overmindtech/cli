@@ -21,7 +21,6 @@ func linkAssociationOutputMapper(_ context.Context, _ *networkmanager.Client, sc
 		var err error
 		var attrs *sdp.ItemAttributes
 		attrs, err = adapterhelpers.ToAttributesWithExclude(s, "tags")
-
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -117,6 +116,7 @@ func NewNetworkManagerLinkAssociationAdapter(client *networkmanager.Client, acco
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
 					ErrorString: "invalid query for networkmanager-link-association get function",
+					Scope:       scope,
 				}
 			}
 			// "default|link-1|device-1"
@@ -130,6 +130,7 @@ func NewNetworkManagerLinkAssociationAdapter(client *networkmanager.Client, acco
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: "list not supported for networkmanager-link-association, use search",
+				Scope:       scope,
 			}
 		},
 		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetLinkAssociationsInput) adapterhelpers.Paginator[*networkmanager.GetLinkAssociationsOutput, *networkmanager.Options] {
@@ -165,6 +166,7 @@ func NewNetworkManagerLinkAssociationAdapter(client *networkmanager.Client, acco
 					return nil, &sdp.QueryError{
 						ErrorType:   sdp.QueryError_NOTFOUND,
 						ErrorString: fmt.Sprintf("invalid query for networkmanager-link-association get function, unknown resource type: %v", sections[1]),
+						Scope:       scope,
 					}
 
 				}
@@ -172,6 +174,7 @@ func NewNetworkManagerLinkAssociationAdapter(client *networkmanager.Client, acco
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
 					ErrorString: "invalid query for networkmanager-link-association get function",
+					Scope:       scope,
 				}
 			}
 		},

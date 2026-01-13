@@ -23,6 +23,7 @@ func getDataProtectionPolicyFunc(ctx context.Context, client dataProtectionPolic
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: "get data protection policy response was nil/empty",
+			Scope:       scope,
 		}
 	}
 

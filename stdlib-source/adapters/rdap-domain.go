@@ -68,16 +68,20 @@ func (s *RdapDomainAdapter) Get(ctx context.Context, scope string, query string,
 
 	return nil, &sdp.QueryError{
 		ErrorType:   sdp.QueryError_NOTFOUND,
-		Scope:       scope,
 		ErrorString: "Domains can't be queried by handle, use the SEARCH method instead",
+		Scope:       scope,
+		SourceName:  s.Name(),
+		ItemType:    s.Type(),
 	}
 }
 
 func (s *RdapDomainAdapter) List(ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error) {
 	return nil, &sdp.QueryError{
 		ErrorType:   sdp.QueryError_NOTFOUND,
-		Scope:       scope,
 		ErrorString: "Domains listed, use the SEARCH method instead",
+		Scope:       scope,
+		SourceName:  s.Name(),
+		ItemType:    s.Type(),
 	}
 }
 
@@ -112,7 +116,6 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 		request = request.WithContext(ctx)
 
 		response, err := s.ClientFac().Do(request)
-
 		if err != nil {
 			// If there was an error, continue to the next domain
 			continue
@@ -121,15 +124,23 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 		if response.Object == nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
-				Scope:       scope,
 				ErrorString: "Empty domain response",
+				Scope:       scope,
+				SourceName:  s.Name(),
+				ItemType:    s.Type(),
 			}
 		}
 
 		domain, ok := response.Object.(*rdap.Domain)
 
 		if !ok {
-			return nil, fmt.Errorf("Unexpected response type %T", response.Object)
+			return nil, &sdp.QueryError{
+				ErrorType:   sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf("Unexpected response type %T", response.Object),
+				Scope:       scope,
+				SourceName:  s.Name(),
+				ItemType:    s.Type(),
+			}
 		}
 
 		attributes, err := sdp.ToAttributesCustom(map[string]interface{}{
@@ -148,7 +159,6 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 			"unicodeName":     domain.UnicodeName,
 			"variants":        domain.Variants,
 		}, true, RDAPTransforms)
-
 		if err != nil {
 			return nil, err
 		}
@@ -202,7 +212,6 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 
 		// Link to IP Network
 		if network := domain.Network; network != nil {
-
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "rdap-ip-network",
@@ -229,8 +238,10 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 
 	err := &sdp.QueryError{
 		ErrorType:   sdp.QueryError_NOTFOUND,
-		Scope:       scope,
 		ErrorString: fmt.Sprintf("No domain found for %s", query),
+		Scope:       scope,
+		SourceName:  s.Name(),
+		ItemType:    s.Type(),
 	}
 
 	s.Cache.StoreError(ctx, err, RdapCacheDuration, ck)

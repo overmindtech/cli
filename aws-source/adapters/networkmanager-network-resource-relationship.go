@@ -27,13 +27,11 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 
 		// Parse the ARNs
 		fromArn, err := adapterhelpers.ParseARN(*relationship.From)
-
 		if err != nil {
 			return nil, err
 		}
 
 		toArn, err := adapterhelpers.ParseARN(*relationship.To)
-
 		if err != nil {
 			return nil, err
 		}
@@ -262,6 +260,7 @@ func NewNetworkManagerNetworkResourceRelationshipsAdapter(client *networkmanager
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: "list not supported for networkmanager-network-resource-relationship, use search",
+				Scope:       scope,
 			}
 		},
 		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetNetworkResourceRelationshipsInput) adapterhelpers.Paginator[*networkmanager.GetNetworkResourceRelationshipsOutput, *networkmanager.Options] {

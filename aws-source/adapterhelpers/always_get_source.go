@@ -383,18 +383,24 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 	if a.ContainsWildcard() {
 		// We can't handle wildcards by default so bail out
 		stream.SendError(&sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOTFOUND,
-			ErrorString: fmt.Sprintf("wildcards are not supported by adapter %v", s.Name()),
-			Scope:       scope,
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("wildcards are not supported by adapter %v", s.Name()),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
 		})
 		return
 	}
 
 	if arnScope := FormatScope(a.AccountID, a.Region); arnScope != scope {
 		stream.SendError(&sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: fmt.Sprintf("ARN scope %v does not match request scope %v", arnScope, scope),
-			Scope:       scope,
+			ErrorType:     sdp.QueryError_NOSCOPE,
+			ErrorString:   fmt.Sprintf("ARN scope %v does not match request scope %v", arnScope, scope),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
 		})
 		return
 	}

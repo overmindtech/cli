@@ -93,7 +93,6 @@ func (s *RdapEntityAdapter) Search(ctx context.Context, scope string, query stri
 
 	// Parse the URL
 	parsed, err := parseRdapUrl(query)
-
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +103,6 @@ func (s *RdapEntityAdapter) Search(ctx context.Context, scope string, query stri
 
 	// Run the entity request
 	item, err := s.runEntityRequest(ctx, parsed.Query, parsed.ServerRoot, scope, ck)
-
 	if err != nil {
 		return nil, err
 	}
@@ -122,9 +120,8 @@ func (s *RdapEntityAdapter) runEntityRequest(ctx context.Context, query string, 
 	request = request.WithContext(ctx)
 
 	response, err := s.ClientFac().Do(request)
-
 	if err != nil {
-		err = wrapRdapError(err)
+		err = wrapRdapError(err, scope)
 
 		s.Cache.StoreError(ctx, err, RdapCacheDuration, cacheKey)
 
@@ -136,8 +133,8 @@ func (s *RdapEntityAdapter) runEntityRequest(ctx context.Context, query string, 
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			Scope:       scope,
 			ErrorString: fmt.Sprintf("No entity found for %s", query),
-			ItemType:    s.Type(),
 			SourceName:  s.Name(),
+			ItemType:    s.Type(),
 		}
 	}
 
@@ -162,7 +159,6 @@ func (s *RdapEntityAdapter) runEntityRequest(ctx context.Context, query string, 
 		"status":          entity.Status,
 		"vCard":           entity.VCard,
 	}, true, RDAPTransforms)
-
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +179,6 @@ func (s *RdapEntityAdapter) runEntityRequest(ctx context.Context, query string, 
 
 	// Link to related ASNs
 	for _, autnum := range entity.Autnums {
-
 		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   "rdap-asn",

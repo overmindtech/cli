@@ -26,6 +26,7 @@ func getTopicFunc(ctx context.Context, client topicClient, scope string, input *
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: "get topic attributes response was nil",
+			Scope:       scope,
 		}
 	}
 

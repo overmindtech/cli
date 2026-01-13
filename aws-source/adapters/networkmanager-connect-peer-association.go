@@ -19,7 +19,6 @@ func connectPeerAssociationsOutputMapper(_ context.Context, _ *networkmanager.Cl
 		var err error
 		var attrs *sdp.ItemAttributes
 		attrs, err = adapterhelpers.ToAttributesWithExclude(a)
-
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -132,6 +131,7 @@ func NewNetworkManagerConnectPeerAssociationAdapter(client *networkmanager.Clien
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
 					ErrorString: "invalid query for networkmanager-connect-peer-association get function",
+					Scope:       scope,
 				}
 			}
 			return &networkmanager.GetConnectPeerAssociationsInput{
@@ -145,6 +145,7 @@ func NewNetworkManagerConnectPeerAssociationAdapter(client *networkmanager.Clien
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: "list not supported for networkmanager-connect-peer-association, use search",
+				Scope:       scope,
 			}
 		},
 		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetConnectPeerAssociationsInput) adapterhelpers.Paginator[*networkmanager.GetConnectPeerAssociationsOutput, *networkmanager.Options] {

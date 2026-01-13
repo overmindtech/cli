@@ -18,7 +18,6 @@ func transitGatewayRegistrationOutputMapper(_ context.Context, _ *networkmanager
 		var err error
 		var attrs *sdp.ItemAttributes
 		attrs, err = adapterhelpers.ToAttributesWithExclude(r)
-
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -108,6 +107,7 @@ func NewNetworkManagerTransitGatewayRegistrationAdapter(client *networkmanager.C
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: "list not supported for networkmanager-transit-gateway-registration, use search",
+				Scope:       scope,
 			}
 		},
 		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetTransitGatewayRegistrationsInput) adapterhelpers.Paginator[*networkmanager.GetTransitGatewayRegistrationsOutput, *networkmanager.Options] {

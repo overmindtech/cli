@@ -23,7 +23,6 @@ func getTransitGatewayPeeringGetFunc(ctx context.Context, client *networkmanager
 
 func transitGatewayPeeringItemMapper(_, scope string, awsItem *types.TransitGatewayPeering) (*sdp.Item, error) {
 	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
-
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +118,7 @@ func NewNetworkManagerTransitGatewayPeeringAdapter(client *networkmanager.Client
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOTFOUND,
 				ErrorString: "list not supported for networkmanager-transit-gateway-peering, use get",
+				Scope:       scope,
 			}
 		},
 	}
