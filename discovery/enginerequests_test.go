@@ -304,6 +304,10 @@ func TestWildcardAdapterExpansion(t *testing.T) {
 			t.Errorf("expected 1 get call got %v", len(personAdapter.GetCalls))
 		}
 
+		if len(personAdapter.GetCalls) == 0 {
+			t.Fatal("Can't continue without calls")
+		}
+
 		call := personAdapter.GetCalls[0]
 
 		if expected := "something.specific"; call[0] != expected {
