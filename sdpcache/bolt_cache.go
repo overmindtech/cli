@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
@@ -388,22 +389,36 @@ func (c *BoltCache) Close() error {
 // deleteCacheFile removes the cache file entirely. This is used as a last resort
 // when the disk is full and cleanup doesn't help. It closes the database,
 // removes the file, and resets internal state.
-func (c *BoltCache) deleteCacheFile() error {
+func (c *BoltCache) deleteCacheFile(ctx context.Context) error {
 	if c == nil {
 		return nil
 	}
 
+	// Create a span for this operation
+	ctx, span := tracing.Tracer().Start(ctx, "BoltCache.deleteCacheFile", trace.WithAttributes(
+		attribute.String("ovm.cache.path", c.path),
+	))
+	defer span.End()
+
 	// Close the database if it's open
 	if c.db != nil {
-		_ = c.db.Close()
+		if err := c.db.Close(); err != nil {
+			span.RecordError(err)
+			sentry.CaptureException(err)
+			log.WithContext(ctx).WithError(err).Error("Failed to close database during cache file deletion")
+		}
 		c.db = nil
 	}
 
 	// Remove the cache file
 	if c.path != "" {
 		if err := os.Remove(c.path); err != nil && !os.IsNotExist(err) {
+			span.RecordError(err)
+			sentry.CaptureException(err)
+			log.WithContext(ctx).WithError(err).Error("Failed to remove cache file")
 			return fmt.Errorf("failed to remove cache file: %w", err)
 		}
+		span.SetAttributes(attribute.Bool("ovm.cache.file_deleted", true))
 	}
 
 	// Reset internal state
@@ -810,7 +825,7 @@ func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
 
 		// If still failing with disk full, delete the cache entirely
 		if err != nil && isDiskFullError(err) {
-			_ = c.deleteCacheFile()
+			_ = c.deleteCacheFile(ctx)
 			// After deleting the cache, we can't store the result, so just return
 			return
 		}
@@ -1105,7 +1120,7 @@ func (c *BoltCache) compact(ctx context.Context) error {
 			// Attempt cleanup first
 			c.Purge(ctx, time.Now())
 			// If cleanup didn't help, delete the cache
-			_ = c.deleteCacheFile()
+			_ = c.deleteCacheFile(ctx)
 			return fmt.Errorf("disk full during %s, cache deleted: %w", operation, err)
 		}
 		return err

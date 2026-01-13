@@ -1332,7 +1332,7 @@ func TestBoltCacheDeleteOnDiskFull(t *testing.T) {
 	}
 
 	// Delete the cache file (cache is already *BoltCache)
-	if err := cache.deleteCacheFile(); err != nil {
+	if err := cache.deleteCacheFile(ctx); err != nil {
 		t.Fatalf("failed to delete cache file: %v", err)
 	}
 
