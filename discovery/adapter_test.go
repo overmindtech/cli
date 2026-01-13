@@ -146,7 +146,7 @@ func TestGet(t *testing.T) {
 		}
 
 		time.Sleep(10 * time.Millisecond)
-		e.sh.Purge()
+		e.sh.Purge(t.Context())
 
 		item3, _, _, err = e.executeQuerySync(context.Background(), &req)
 		if err != nil {
@@ -344,7 +344,7 @@ func TestListSearchCaching(t *testing.T) {
 		}
 
 		time.Sleep(10 * time.Millisecond)
-		e.sh.Purge()
+		e.sh.Purge(t.Context())
 
 		list3, _, _, err = e.executeQuerySync(context.Background(), &q)
 		if err != nil {

@@ -232,7 +232,7 @@ func TestPurge(t *testing.T) {
 			}
 
 			// Purge just the first one
-			stats := cache.Purge(cachedItems[0].Expiry.Add(500 * time.Millisecond))
+			stats := cache.Purge(t.Context(), cachedItems[0].Expiry.Add(500 * time.Millisecond))
 
 			if stats.NumPurged != 1 {
 				t.Errorf("expected 1 item purged, got %v", stats.NumPurged)
@@ -249,14 +249,14 @@ func TestPurge(t *testing.T) {
 			}
 
 			// Purge all but the last one
-			stats = cache.Purge(cachedItems[4].Expiry.Add(500 * time.Millisecond))
+			stats = cache.Purge(t.Context(), cachedItems[4].Expiry.Add(500 * time.Millisecond))
 
 			if stats.NumPurged != 4 {
 				t.Errorf("expected 4 item purged, got %v", stats.NumPurged)
 			}
 
 			// Purge the last one
-			stats = cache.Purge(cachedItems[5].Expiry.Add(500 * time.Millisecond))
+			stats = cache.Purge(t.Context(), cachedItems[5].Expiry.Add(500 * time.Millisecond))
 
 			if stats.NumPurged != 1 {
 				t.Errorf("expected 1 item purged, got %v", stats.NumPurged)
@@ -454,7 +454,7 @@ func TestLookup(t *testing.T) {
 				t.Error("expected tags to be set")
 			}
 
-			stats := cache.Purge(time.Now().Add(1 * time.Hour))
+			stats := cache.Purge(ctx, time.Now().Add(1 * time.Hour))
 			if stats.NumPurged != 1 {
 				t.Errorf("expected 1 item purged, got %v", stats.NumPurged)
 			}
@@ -814,7 +814,7 @@ func TestEmptyCacheOperations(t *testing.T) {
 			cache.Delete(ck)
 
 			// Purge on empty cache
-			stats := cache.Purge(time.Now())
+			stats := cache.Purge(t.Context(), time.Now())
 			if stats.NumPurged != 0 {
 				t.Errorf("expected 0 items purged on empty cache, got %v", stats.NumPurged)
 			}
@@ -1245,7 +1245,7 @@ func TestBoltCacheExistingFile(t *testing.T) {
 	items, err = cache2.Search(ck2)
 	if err == nil && len(items) > 0 {
 		// Item might still be there if purge hasn't run, so let's purge explicitly
-		cache2.Purge(time.Now())
+		cache2.Purge(ctx, time.Now())
 		items, err = cache2.Search(ck2)
 		if err == nil && len(items) > 0 {
 			t.Errorf("expected item2 to be expired and purged, but found %d items", len(items))
@@ -1253,7 +1253,7 @@ func TestBoltCacheExistingFile(t *testing.T) {
 	}
 
 	// Verify purge process works on existing data
-	stats := cache2.Purge(time.Now())
+	stats := cache2.Purge(ctx, time.Now())
 	if stats.NumPurged == 0 && err == nil {
 		// If we got here, item2 should have been purged
 		// Let's verify it's gone
@@ -1374,7 +1374,7 @@ func TestBoltCacheDiskFullDuringCompact(t *testing.T) {
 	cache.addDeletedBytes(cache.CompactThreshold)
 
 	// Trigger purge which should trigger compaction
-	stats := cache.Purge(time.Now().Add(-1 * time.Hour)) // Purge items from an hour ago (none should exist)
+	stats := cache.Purge(ctx, time.Now().Add(-1 * time.Hour)) // Purge items from an hour ago (none should exist)
 	_ = stats                                            // Use stats to avoid unused variable
 
 	// Verify cache still works after compaction attempt

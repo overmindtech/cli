@@ -13,9 +13,11 @@ import (
 	"time"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
 	"go.etcd.io/bbolt"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/proto"
 )
@@ -330,6 +332,51 @@ func (c *BoltCache) resetDeletedBytes() {
 	c.deletedMu.Unlock()
 }
 
+// getFileSize returns the size of the BoltDB file, logging any errors
+func (c *BoltCache) getFileSize() int64 {
+	if c == nil || c.path == "" {
+		return 0
+	}
+
+	stat, err := os.Stat(c.path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Warnf("BoltDB cache file does not exist: %s", c.path)
+		} else {
+			log.WithError(err).Warnf("Failed to stat BoltDB cache file: %s", c.path)
+		}
+		return 0
+	}
+
+	return stat.Size()
+}
+
+// getDiskUsageMetrics returns disk usage metrics for the BoltDB file
+func (c *BoltCache) getDiskUsageMetrics() (fileSize int64, deletedBytes int64) {
+	if c == nil || c.path == "" {
+		return 0, 0
+	}
+
+	fileSize = c.getFileSize()
+	deletedBytes = c.getDeletedBytes()
+
+	return fileSize, deletedBytes
+}
+
+// setDiskUsageAttributes sets disk usage attributes on a span
+func (c *BoltCache) setDiskUsageAttributes(span trace.Span) {
+	if c == nil {
+		return
+	}
+
+	fileSize, deletedBytes := c.getDiskUsageMetrics()
+	span.SetAttributes(
+		attribute.Int64("ovm.boltdb.fileSizeBytes", fileSize),
+		attribute.Int64("ovm.boltdb.deletedBytes", deletedBytes),
+		attribute.Int64("ovm.boltdb.compactThresholdBytes", c.CompactThreshold),
+	)
+}
+
 // Close closes the database
 func (c *BoltCache) Close() error {
 	if c == nil || c.db == nil {
@@ -367,8 +414,23 @@ func (c *BoltCache) deleteCacheFile() error {
 
 // Lookup performs a cache lookup for the given query parameters.
 func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError) {
-	span := trace.SpanFromContext(ctx)
+	//nolint:ineffassign,staticcheck // The output context from Start() contains the span and must be used if passing context to any child functions
+	ctx, span := tracing.Tracer().Start(ctx, "BoltCache.Lookup",
+		trace.WithAttributes(
+			attribute.String("ovm.cache.sourceName", srcName),
+			attribute.String("ovm.cache.method", method.String()),
+			attribute.String("ovm.cache.scope", scope),
+			attribute.String("ovm.cache.type", typ),
+			attribute.String("ovm.cache.query", query),
+			attribute.Bool("ovm.cache.ignoreCache", ignoreCache),
+		),
+	)
+	defer span.End()
+
 	ck := CacheKeyFromParts(srcName, method, scope, typ, query)
+
+	// Set disk usage metrics
+	c.setDiskUsageAttributes(span)
 
 	if c == nil || c.db == nil {
 		span.SetAttributes(
@@ -546,6 +608,27 @@ func (c *BoltCache) StoreItem(ctx context.Context, item *sdp.Item, duration time
 		return
 	}
 
+	methodStr := ""
+	if ck.Method != nil {
+		methodStr = ck.Method.String()
+	}
+
+	ctx, span := tracing.Tracer().Start(ctx, "BoltCache.StoreItem",
+		trace.WithAttributes(
+			attribute.String("ovm.cache.method", methodStr),
+			attribute.String("ovm.cache.scope", ck.SST.Scope),
+			attribute.String("ovm.cache.type", ck.SST.Type),
+			attribute.String("ovm.cache.sourceName", ck.SST.SourceName),
+			attribute.String("ovm.cache.itemType", item.GetType()),
+			attribute.String("ovm.cache.itemScope", item.GetScope()),
+			attribute.String("ovm.cache.duration", duration.String()),
+		),
+	)
+	defer span.End()
+
+	// Set disk usage metrics
+	c.setDiskUsageAttributes(span)
+
 	itemCopy := proto.Clone(item).(*sdp.Item)
 
 	// Ensure minimum duration to avoid items expiring immediately
@@ -582,6 +665,26 @@ func (c *BoltCache) StoreError(ctx context.Context, err error, duration time.Dur
 		return
 	}
 
+	methodStr := ""
+	if ck.Method != nil {
+		methodStr = ck.Method.String()
+	}
+
+	ctx, span := tracing.Tracer().Start(ctx, "BoltCache.StoreError",
+		trace.WithAttributes(
+			attribute.String("ovm.cache.method", methodStr),
+			attribute.String("ovm.cache.scope", ck.SST.Scope),
+			attribute.String("ovm.cache.type", ck.SST.Type),
+			attribute.String("ovm.cache.sourceName", ck.SST.SourceName),
+			attribute.String("ovm.cache.error", err.Error()),
+			attribute.String("ovm.cache.duration", duration.String()),
+		),
+	)
+	defer span.End()
+
+	// Set disk usage metrics
+	c.setDiskUsageAttributes(span)
+
 	// Ensure minimum duration to avoid items expiring immediately
 	// Use 100ms to account for race detector overhead and slow CI environments
 	if duration <= 100*time.Millisecond {
@@ -600,6 +703,8 @@ func (c *BoltCache) StoreError(ctx context.Context, err error, duration time.Dur
 
 // storeResult stores a CachedResult in the database
 func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
+	span := trace.SpanFromContext(ctx)
+
 	entry, err := fromCachedResult(&res)
 	if err != nil {
 		return // Silently fail on serialization errors
@@ -613,8 +718,8 @@ func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
 	entryKey := makeEntryKey(res.IndexValues, res.Item)
 	expiryKey := makeExpiryKey(res.Expiry, res.IndexValues.SSTHash, entryKey)
 
-	span := trace.SpanFromContext(ctx)
 	overwritten := false
+	entrySize := int64(len(entryBytes))
 
 	// Helper function to perform the actual database update
 	performUpdate := func() error {
@@ -698,7 +803,7 @@ func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
 	// Handle disk full errors
 	if err != nil && isDiskFullError(err) {
 		// Attempt cleanup by purging expired items
-		c.Purge(time.Now())
+		c.Purge(ctx, time.Now())
 
 		// Retry the write operation once
 		err = performUpdate()
@@ -712,6 +817,10 @@ func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
 	}
 
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to store result")
+		// Update disk usage metrics even on error
+		c.setDiskUsageAttributes(span)
 		return
 	}
 
@@ -723,6 +832,12 @@ func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
 	if !overwritten {
 		span.SetAttributes(attribute.Bool("ovm.cache.unexpired_overwrite", false))
 	}
+
+	// Add entry size and update disk usage metrics
+	span.SetAttributes(
+		attribute.Int64("ovm.boltdb.entrySizeBytes", entrySize),
+	)
+	c.setDiskUsageAttributes(span)
 
 	// Update the purge time if required
 	c.setNextPurgeIfEarlier(res.Expiry)
@@ -819,10 +934,20 @@ func (c *BoltCache) Clear() {
 }
 
 // Purge removes all expired items from the cache.
-func (c *BoltCache) Purge(before time.Time) PurgeStats {
+func (c *BoltCache) Purge(ctx context.Context, before time.Time) PurgeStats {
 	if c == nil || c.db == nil {
 		return PurgeStats{}
 	}
+
+	ctx, span := tracing.Tracer().Start(ctx, "BoltCache.Purge",
+		trace.WithAttributes(
+			attribute.String("ovm.boltdb.purgeBefore", before.Format(time.RFC3339)),
+		),
+	)
+	defer span.End()
+
+	// Set initial disk usage metrics
+	c.setDiskUsageAttributes(span)
 
 	start := time.Now()
 	var nextExpiry *time.Time
@@ -918,14 +1043,37 @@ func (c *BoltCache) Purge(before time.Time) PurgeStats {
 	}
 
 	// Check if compaction is needed
-	if c.getDeletedBytes() >= c.CompactThreshold {
-		if err := c.compact(); err == nil {
+	deletedBytesBeforeCompact := c.getDeletedBytes()
+	compactionTriggered := deletedBytesBeforeCompact >= c.CompactThreshold
+	if compactionTriggered {
+		span.SetAttributes(
+			attribute.Bool("ovm.boltdb.compactionTriggered", true),
+			attribute.Int64("ovm.boltdb.deletedBytesBeforeCompact", deletedBytesBeforeCompact),
+		)
+		if err := c.compact(ctx); err == nil {
 			c.resetDeletedBytes()
 			// Save reset state
 			_ = c.db.Update(func(tx *bbolt.Tx) error {
 				return c.saveDeletedBytes(tx)
 			})
+			span.SetAttributes(attribute.Bool("ovm.boltdb.compactionSuccess", true))
+		} else {
+			span.RecordError(err)
+			span.SetAttributes(attribute.Bool("ovm.boltdb.compactionSuccess", false))
 		}
+	} else {
+		span.SetAttributes(attribute.Bool("ovm.boltdb.compactionTriggered", false))
+	}
+
+	// Update final disk usage metrics
+	c.setDiskUsageAttributes(span)
+
+	span.SetAttributes(
+		attribute.Int("ovm.boltdb.numPurged", numPurged),
+		attribute.Int64("ovm.boltdb.totalDeletedBytes", totalDeleted),
+	)
+	if nextExpiry != nil {
+		span.SetAttributes(attribute.String("ovm.boltdb.nextExpiry", nextExpiry.Format(time.RFC3339)))
 	}
 
 	return PurgeStats{
@@ -936,7 +1084,18 @@ func (c *BoltCache) Purge(before time.Time) PurgeStats {
 }
 
 // compact performs database compaction to reclaim disk space
-func (c *BoltCache) compact() error {
+func (c *BoltCache) compact(ctx context.Context) error {
+	ctx, span := tracing.Tracer().Start(ctx, "BoltCache.compact")
+	defer span.End()
+
+	// Set initial disk usage metrics
+	c.setDiskUsageAttributes(span)
+
+	fileSizeBefore := c.getFileSize()
+	if fileSizeBefore > 0 {
+		span.SetAttributes(attribute.Int64("ovm.boltdb.fileSizeBeforeBytes", fileSizeBefore))
+	}
+
 	// Create a temporary file for the compacted database
 	tempPath := c.path + ".compact"
 
@@ -944,7 +1103,7 @@ func (c *BoltCache) compact() error {
 	handleDiskFull := func(err error, operation string) error {
 		if isDiskFullError(err) {
 			// Attempt cleanup first
-			c.Purge(time.Now())
+			c.Purge(ctx, time.Now())
 			// If cleanup didn't help, delete the cache
 			_ = c.deleteCacheFile()
 			return fmt.Errorf("disk full during %s, cache deleted: %w", operation, err)
@@ -957,7 +1116,7 @@ func (c *BoltCache) compact() error {
 	if err != nil {
 		if isDiskFullError(err) {
 			// Attempt cleanup first
-			c.Purge(time.Now())
+			c.Purge(ctx, time.Now())
 			// Try again
 			dstDB, err = bbolt.Open(tempPath, 0600, &bbolt.Options{Timeout: 5 * time.Second})
 			if err != nil {
@@ -974,7 +1133,7 @@ func (c *BoltCache) compact() error {
 		os.Remove(tempPath)
 		if isDiskFullError(err) {
 			// Attempt cleanup first
-			c.Purge(time.Now())
+			c.Purge(ctx, time.Now())
 			// Try compaction again
 			dstDB2, retryErr := bbolt.Open(tempPath, 0600, &bbolt.Options{Timeout: 5 * time.Second})
 			if retryErr != nil {
@@ -1015,10 +1174,23 @@ func (c *BoltCache) compact() error {
 	// Reopen the database
 	db, err := bbolt.Open(c.path, 0600, &bbolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to reopen database")
 		return fmt.Errorf("failed to reopen database: %w", err)
 	}
 
 	c.db = db
+
+	// Set final disk usage metrics and compaction results
+	fileSizeAfter := c.getFileSize()
+	spaceReclaimed := fileSizeBefore - fileSizeAfter
+
+	span.SetAttributes(
+		attribute.Int64("ovm.boltdb.fileSizeAfterBytes", fileSizeAfter),
+		attribute.Int64("ovm.boltdb.spaceReclaimedBytes", spaceReclaimed),
+	)
+	c.setDiskUsageAttributes(span)
+
 	return nil
 }
 
@@ -1055,7 +1227,7 @@ func (c *BoltCache) StartPurger(ctx context.Context) error {
 		for {
 			select {
 			case <-c.purgeTimer.C:
-				stats := c.Purge(time.Now())
+				stats := c.Purge(ctx, time.Now())
 				c.setNextPurgeFromStats(stats)
 			case <-ctx.Done():
 				c.purgeMutex.Lock()
