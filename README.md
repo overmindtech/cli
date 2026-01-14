@@ -5,6 +5,7 @@
     </picture>
   <h1 align="center">Overmind CLI</h1>
 
+
 <p align="center">
   <a href="https://discord.com/invite/5UKsqAkPWG" rel="nofollow"><img src="https://img.shields.io/discord/1088753599951151154?label=Discord&logo=discord&logoColor=white" alt="Discord Server"></a>
 </p>
