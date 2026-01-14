@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources/shared"
@@ -44,6 +46,7 @@ func NewLinker() *Linker {
 // AutoLink tries to find the item type of the TO item based on its GCP resource name.
 // If the item type is identified, it links the FROM item to the TO item.
 func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sdp.Item, fromSDPItemType shared.ItemType, toItemGCPResourceName string, keys []string) {
+	span := trace.SpanFromContext(ctx)
 	key := strings.Join(keys, ".")
 
 	if strings.HasPrefix(key, "selfLink") {
@@ -67,8 +70,16 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 	impact, ok := impacts[key]
 	if !ok {
 		if strings.Contains(toItemGCPResourceName, "/") && key != "name" {
-			// There is a high chance that the item type is not recognized, so we log a warning.
-			log.WithContext(ctx).WithFields(lf).Warnf("possible missing link")
+			// There is a high chance that the item type is not recognized, so
+			// store in otel for later analysis. This potentially overwrites the
+			// values from previous calls to AutoLink in the same span, but we
+			// don't want to spam honeycomb, so we only keep the last one.
+			span.SetAttributes(
+				attribute.Bool("ovm.gcp.autoLink.missingLink", true),
+				attribute.String("ovm.gcp.autoLink.toItemResourceName", toItemGCPResourceName),
+				attribute.String("ovm.gcp.autoLink.key", key),
+			)
+			log.WithContext(ctx).WithFields(lf).Debug("possible missing link")
 		}
 		return
 	}
