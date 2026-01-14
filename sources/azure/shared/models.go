@@ -106,6 +106,9 @@ const (
 	Route                                          shared.Resource = "route"
 	VirtualNetworkGateway                          shared.Resource = "virtual-network-gateway"
 	PrivateDNSZone                                 shared.Resource = "private-dns-zone"
+	Zone                                           shared.Resource = "zone"
+	DNSRecordSet                                   shared.Resource = "dns-record-set"
+	DNSVirtualNetworkLink                          shared.Resource = "dns-virtual-network-link"
 
 	// Storage resources
 	Account       shared.Resource = "account"
