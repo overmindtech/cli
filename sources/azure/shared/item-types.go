@@ -67,6 +67,9 @@ var (
 	NetworkRoute                                          = shared.NewItemType(Azure, Network, Route)
 	NetworkVirtualNetworkGateway                          = shared.NewItemType(Azure, Network, VirtualNetworkGateway)
 	NetworkPrivateDNSZone                                 = shared.NewItemType(Azure, Network, PrivateDNSZone)
+	NetworkZone                                           = shared.NewItemType(Azure, Network, Zone)
+	NetworkDNSRecordSet                                   = shared.NewItemType(Azure, Network, DNSRecordSet)
+	NetworkDNSVirtualNetworkLink                          = shared.NewItemType(Azure, Network, DNSVirtualNetworkLink)
 
 	//Storage item types
 	StorageAccount       = shared.NewItemType(Azure, Storage, Account)
