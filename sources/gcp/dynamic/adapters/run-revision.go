@@ -3,6 +3,7 @@ package adapters
 import (
 	"github.com/overmindtech/cli/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 // Run Revision adapter for Cloud Run revisions
@@ -57,7 +58,7 @@ var _ = registerableAdapter{
 		},
 		"volumes.cloudSqlInstance.instances": {
 			// Format: {project}:{location}:{instance}
-			// We need a manual adapter link for this.
+			// The manual adapter linker handles this format automatically.
 			ToSDPItemType:    gcpshared.SQLAdminInstance,
 			Description:      "If the Cloud SQL Instance is deleted or updated: The Revision may fail to access the database. If the Revision is updated: The instance remains unaffected.",
 			BlastPropagation: gcpshared.ImpactInOnly,
@@ -65,6 +66,21 @@ var _ = registerableAdapter{
 		"volumes.gcs.bucket": {
 			ToSDPItemType:    gcpshared.StorageBucket,
 			Description:      "If the Cloud Storage Bucket is deleted or updated: The Revision may fail to access the GCS volume. If the Revision is updated: The bucket remains unaffected.",
+			BlastPropagation: gcpshared.ImpactInOnly,
+		},
+		"volumes.secret.secret": {
+			ToSDPItemType:    gcpshared.SecretManagerSecret,
+			Description:      "If the Secret Manager Secret is deleted or updated: The Revision may fail to access sensitive data mounted as a volume. If the Revision is updated: The secret remains unaffected.",
+			BlastPropagation: gcpshared.ImpactInOnly,
+		},
+		"volumes.nfs.server": {
+			ToSDPItemType:    stdlib.NetworkIP,
+			Description:      "If the NFS server (IP address or hostname) becomes unavailable: The Revision may fail to mount the NFS volume. If the Revision is updated: The NFS server remains unaffected. The linker automatically detects whether the value is an IP address or DNS name.",
+			BlastPropagation: gcpshared.ImpactInOnly,
+		},
+		"logUri": {
+			ToSDPItemType:    stdlib.NetworkHTTP,
+			Description:      "If the log URI endpoint becomes unavailable: The Revision logs may not be accessible. If the Revision is updated: The log URI endpoint remains unaffected.",
 			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"encryptionKey": gcpshared.CryptoKeyImpactInOnly,

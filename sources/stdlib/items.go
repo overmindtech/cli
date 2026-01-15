@@ -17,6 +17,7 @@ func (i ItemType) String() string {
 }
 
 var (
-	NetworkIP  = ItemType{ItemTypeInstance: shared.NewItemType(stdlibshared.Stdlib, stdlibshared.Network, stdlibshared.IP)}
-	NetworkDNS = ItemType{ItemTypeInstance: shared.NewItemType(stdlibshared.Stdlib, stdlibshared.Network, stdlibshared.DNS)}
+	NetworkIP   = ItemType{ItemTypeInstance: shared.NewItemType(stdlibshared.Stdlib, stdlibshared.Network, stdlibshared.IP)}
+	NetworkDNS  = ItemType{ItemTypeInstance: shared.NewItemType(stdlibshared.Stdlib, stdlibshared.Network, stdlibshared.DNS)}
+	NetworkHTTP = ItemType{ItemTypeInstance: shared.NewItemType(stdlibshared.Stdlib, stdlibshared.Network, stdlibshared.HTTP)}
 )

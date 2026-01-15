@@ -258,6 +258,16 @@ func TestComputeGlobalForwardingRule(t *testing.T) {
 						Out: false,
 					},
 				},
+				{
+					ExpectedType:   gcpshared.ComputeTargetHttpProxy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-target-proxy",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

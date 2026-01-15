@@ -73,10 +73,13 @@ func TestComputeHttpHealthCheck(t *testing.T) {
 		}
 
 		t.Run("StaticTests", func(t *testing.T) {
+			// Test that DNS names are correctly detected when using IPImpactBothWays
+			// Even though the blast propagation uses stdlib.NetworkIP, it should detect
+			// that "example.com" is a DNS name and create a DNS link
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:   stdlib.NetworkIP.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedType:   stdlib.NetworkDNS.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "example.com",
 					ExpectedScope:  "global",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
@@ -87,6 +90,76 @@ func TestComputeHttpHealthCheck(t *testing.T) {
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
+
+		// Test with IP address - verify bidirectional detection works
+		// Even though the blast propagation uses stdlib.NetworkIP, it should detect
+		// that "192.168.1.1" is an IP address and create an IP link
+		t.Run("StaticTestsWithIP", func(t *testing.T) {
+			healthCheckWithIP := map[string]interface{}{
+				"name": "test-health-check-ip",
+				"host": "192.168.1.1",
+			}
+			expectedCallAndResponsesIP := map[string]shared.MockResponse{
+				fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/httpHealthChecks/%s", projectID, "test-health-check-ip"): {
+					StatusCode: http.StatusOK,
+					Body:       healthCheckWithIP,
+				},
+			}
+
+			httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponsesIP)
+			adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
+			if err != nil {
+				t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
+			}
+
+			sdpItem, err := adapter.Get(ctx, projectID, "test-health-check-ip", true)
+			if err != nil {
+				t.Fatalf("Failed to get resource: %v", err)
+			}
+
+			queryTests := shared.QueryTests{
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.1",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+			}
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	// Test bidirectional IP/DNS detection - verify that potential links include both
+	t.Run("PotentialLinksBidirectional", func(t *testing.T) {
+		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
+		if err != nil {
+			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
+		}
+
+		metadata := adapter.Metadata()
+		if metadata == nil {
+			t.Fatal("Adapter metadata is nil")
+		}
+
+		// Verify that both IP and DNS are in potential links when using IPImpactBothWays
+		// This demonstrates bidirectional behavior: even though we specify stdlib.NetworkIP
+		// in the blast propagation, both IP and DNS are included in potential links
+		potentialLinksMap := make(map[string]bool)
+		for _, link := range metadata.GetPotentialLinks() {
+			potentialLinksMap[link] = true
+		}
+
+		if !potentialLinksMap["ip"] {
+			t.Error("Expected 'ip' in potential links when using IPImpactBothWays")
+		}
+		if !potentialLinksMap["dns"] {
+			t.Error("Expected 'dns' in potential links when using IPImpactBothWays (bidirectional detection)")
+		}
 	})
 
 	t.Run("List", func(t *testing.T) {

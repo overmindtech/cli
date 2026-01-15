@@ -255,7 +255,10 @@ func (c computeNodeGroupWrapper) gcpComputeNodeGroupToSDPItem(ctx context.Contex
 
 	templateUrl := nodegroup.GetNodeTemplate()
 	if templateUrl != "" {
-		// https://www.googleapis.com/compute/v1/projects/{project}/regions/{region}/nodeTemplates/{name}
+		// Link to the Node Template used to create this node group.
+		// URL format: https://www.googleapis.com/compute/v1/projects/{project}/regions/{region}/nodeTemplates/{name}
+		// If the Node Template is deleted or updated: The Node Group may fail to operate correctly or become invalid.
+		// If the Node Group is updated: The Node Template remains unaffected.
 
 		name := gcpshared.LastPathComponent(templateUrl)
 		if name != "" {

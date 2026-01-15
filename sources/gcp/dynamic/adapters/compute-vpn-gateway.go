@@ -34,6 +34,15 @@ var _ = registerableAdapter{
 		// IP addresses assigned to VPN interfaces (each interface may have an external IP).
 		"vpnInterfaces.ipAddress":   gcpshared.IPImpactBothWays,
 		"vpnInterfaces.ipv6Address": gcpshared.IPImpactBothWays,
+		// Interconnect attachment used for HA VPN over Cloud Interconnect.
+		"vpnInterfaces.interconnectAttachment": {
+			ToSDPItemType: gcpshared.ComputeInterconnectAttachment,
+			Description:   "If the Interconnect Attachment is deleted or updated: The VPN gateway interface may fail to operate correctly. If the VPN gateway is deleted or updated: The interconnect attachment may become disconnected or unusable. They are tightly coupled.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_ha_vpn_gateway",

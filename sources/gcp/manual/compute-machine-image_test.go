@@ -18,6 +18,7 @@ import (
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 func TestComputeMachineImage(t *testing.T) {
@@ -46,6 +47,7 @@ func TestComputeMachineImage(t *testing.T) {
 
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
+				// Network link
 				{
 					ExpectedType:   gcpshared.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -56,6 +58,7 @@ func TestComputeMachineImage(t *testing.T) {
 						Out: false,
 					},
 				},
+				// Subnetwork link
 				{
 					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -66,6 +69,62 @@ func TestComputeMachineImage(t *testing.T) {
 						Out: false,
 					},
 				},
+				// Network Attachment link
+				{
+					ExpectedType:   gcpshared.ComputeNetworkAttachment.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-network-attachment",
+					ExpectedScope:  "test-project-id.us-central1",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// IPv4 internal IP address
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "10.0.0.1",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				// IPv6 internal address
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "2001:db8::1",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				// External IPv4 address (NAT IP)
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "203.0.113.1",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				// External IPv6 address
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "2001:db8::2",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				// Disk source link
 				{
 					ExpectedType:   gcpshared.ComputeDisk.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -76,6 +135,7 @@ func TestComputeMachineImage(t *testing.T) {
 						Out: false,
 					},
 				},
+				// Disk encryption key
 				{
 					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -85,7 +145,75 @@ func TestComputeMachineImage(t *testing.T) {
 						In:  true,
 						Out: false,
 					},
-				}, {
+				},
+				// Source image link
+				{
+					ExpectedType:   gcpshared.ComputeImage.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-source-image",
+					ExpectedScope:  "test-project-id",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// Source snapshot link
+				{
+					ExpectedType:   gcpshared.ComputeSnapshot.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-source-snapshot",
+					ExpectedScope:  "test-project-id",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// Source image encryption key
+				{
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-image",
+					ExpectedScope:  "test-project-id",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// Source snapshot encryption key
+				{
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-snapshot",
+					ExpectedScope:  "test-project-id",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// Service account link
+				{
+					ExpectedType:   gcpshared.IAMServiceAccount.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-sa@test-project-id.iam.gserviceaccount.com",
+					ExpectedScope:  "test-project-id",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// Accelerator type link
+				{
+					ExpectedType:   gcpshared.ComputeAcceleratorType.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "nvidia-tesla-k80",
+					ExpectedScope:  "test-project-id.us-central1-a",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// Machine image encryption key
+				{
 					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|test-version-machine-encryption-key",
@@ -95,10 +223,22 @@ func TestComputeMachineImage(t *testing.T) {
 						Out: false,
 					},
 				},
+				// Source instance link
 				{
 					ExpectedType:   gcpshared.ComputeInstance.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance",
+					ExpectedScope:  "test-project-id.us-central1-a",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// Saved disk link (from savedDisks)
+				{
+					ExpectedType:   gcpshared.ComputeDisk.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-saved-disk",
 					ExpectedScope:  "test-project-id.us-central1-a",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -270,8 +410,21 @@ func createComputeMachineImage(imageName string, status computepb.MachineImage_S
 		InstanceProperties: &computepb.InstanceProperties{
 			NetworkInterfaces: []*computepb.NetworkInterface{
 				{
-					Network:    ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/test-network"),
-					Subnetwork: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/subnetworks/test-subnetwork"),
+					Network:           ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/test-network"),
+					Subnetwork:        ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/subnetworks/test-subnetwork"),
+					NetworkAttachment: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/networkAttachments/test-network-attachment"),
+					NetworkIP:         ptr.To("10.0.0.1"),
+					Ipv6Address:       ptr.To("2001:db8::1"),
+					AccessConfigs: []*computepb.AccessConfig{
+						{
+							NatIP: ptr.To("203.0.113.1"),
+						},
+					},
+					Ipv6AccessConfigs: []*computepb.AccessConfig{
+						{
+							ExternalIpv6: ptr.To("2001:db8::2"),
+						},
+					},
 				},
 			},
 			Disks: []*computepb.AttachedDisk{
@@ -280,6 +433,27 @@ func createComputeMachineImage(imageName string, status computepb.MachineImage_S
 					DiskEncryptionKey: &computepb.CustomerEncryptionKey{
 						KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-disk"),
 					},
+					InitializeParams: &computepb.AttachedDiskInitializeParams{
+						SourceImage:    ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/images/test-source-image"),
+						SourceSnapshot: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/snapshots/test-source-snapshot"),
+						SourceImageEncryptionKey: &computepb.CustomerEncryptionKey{
+							KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-image"),
+						},
+						SourceSnapshotEncryptionKey: &computepb.CustomerEncryptionKey{
+							KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-snapshot"),
+						},
+					},
+				},
+			},
+			ServiceAccounts: []*computepb.ServiceAccount{
+				{
+					Email: ptr.To("test-sa@test-project-id.iam.gserviceaccount.com"),
+				},
+			},
+			GuestAccelerators: []*computepb.AcceleratorConfig{
+				{
+					AcceleratorType:  ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/acceleratorTypes/nvidia-tesla-k80"),
+					AcceleratorCount: ptr.To[int32](1),
 				},
 			},
 		},
@@ -287,5 +461,10 @@ func createComputeMachineImage(imageName string, status computepb.MachineImage_S
 			KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-machine-encryption-key"),
 		},
 		SourceInstance: ptr.To("projects/test-project-id/zones/us-central1-a/instances/test-instance"),
+		SavedDisks: []*computepb.SavedDisk{
+			{
+				SourceDisk: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/disks/test-saved-disk"),
+			},
+		},
 	}
 }

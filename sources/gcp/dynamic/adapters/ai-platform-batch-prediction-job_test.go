@@ -326,6 +326,28 @@ func TestAIPlatformBatchPredictionJob(t *testing.T) {
 						Out: false,
 					},
 				},
+				// Input GCS bucket link
+				{
+					ExpectedType:   gcpshared.StorageBucket.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  fmt.Sprintf("%s-input-bucket", projectID),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// Output GCS bucket link
+				{
+					ExpectedType:   gcpshared.StorageBucket.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  fmt.Sprintf("%s-output-bucket", projectID),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

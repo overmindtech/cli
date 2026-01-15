@@ -32,6 +32,7 @@ func TestRedisInstance(t *testing.T) {
 		AuthorizedNetwork:  fmt.Sprintf("projects/%s/global/networks/default", projectID),
 		CustomerManagedKey: "projects/test-project/locations/global/keyRings/test-ring/cryptoKeys/test-key",
 		Host:               "10.0.0.100",
+		ReadEndpoint:       "10.0.0.101",
 		ServerCaCerts: []*redispb.TlsCertificate{
 			{
 				Cert: "-----BEGIN CERTIFICATE-----\nMIIC...test certificate data...\n-----END CERTIFICATE-----",
@@ -135,6 +136,17 @@ func TestRedisInstance(t *testing.T) {
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.0.0.100",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				// Read endpoint IP address link
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "10.0.0.101",
 					ExpectedScope:  "global",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,

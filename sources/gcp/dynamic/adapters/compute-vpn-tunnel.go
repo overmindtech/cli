@@ -34,8 +34,8 @@ var _ = registerableAdapter{
 		// The peer IP address of the remote VPN gateway.
 		"peerIp": gcpshared.IPImpactBothWays,
 		"targetVpnGateway": {
-			ToSDPItemType: gcpshared.ComputeVpnGateway,
-			Description:   "They are tightly coupled.",
+			ToSDPItemType: gcpshared.ComputeTargetVpnGateway,
+			Description:   "If the Target VPN Gateway (Classic VPN) is deleted or updated: The VPN Tunnel may become invalid or fail to establish connections. If the VPN Tunnel is updated or deleted: The Target VPN Gateway may be affected as tunnels are tightly coupled to their gateway.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,
 				Out: true,
@@ -43,7 +43,7 @@ var _ = registerableAdapter{
 		},
 		"vpnGateway": {
 			ToSDPItemType: gcpshared.ComputeVpnGateway,
-			Description:   "They are tightly coupled.",
+			Description:   "If the HA VPN Gateway is deleted or updated: The VPN Tunnel may become invalid or fail to establish connections. If the VPN Tunnel is updated or deleted: The HA VPN Gateway may be affected as tunnels are tightly coupled to their gateway.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,
 				Out: true,
@@ -51,23 +51,23 @@ var _ = registerableAdapter{
 		},
 		"peerExternalGateway": {
 			ToSDPItemType: gcpshared.ComputeExternalVpnGateway,
-			Description:   "They are tightly coupled.",
+			Description:   "If the External VPN Gateway is deleted or updated: The VPN Tunnel may fail to establish connections with the peer. If the VPN Tunnel is updated or deleted: The External VPN Gateway remains unaffected, but the tunnel endpoint becomes inactive.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,
-				Out: true,
+				Out: false,
 			},
 		},
 		"peerGcpGateway": {
 			ToSDPItemType: gcpshared.ComputeVpnGateway,
-			Description:   "They are tightly coupled.",
+			Description:   "If the peer HA VPN Gateway is deleted or updated: The VPN Tunnel may fail to establish VPC-to-VPC connections. If the VPN Tunnel is updated or deleted: The peer HA VPN Gateway remains unaffected, but the tunnel endpoint becomes inactive.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,
-				Out: true,
+				Out: false,
 			},
 		},
 		"router": {
 			ToSDPItemType: gcpshared.ComputeRouter,
-			Description:   "They are tightly coupled.",
+			Description:   "If the Cloud Router is deleted or updated: The VPN Tunnel may lose dynamic routing capabilities (BGP). If the VPN Tunnel is updated or deleted: The Cloud Router may lose routes advertised through this tunnel.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,
 				Out: true,

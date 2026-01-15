@@ -27,12 +27,14 @@ func TestComputeVpnGateway(t *testing.T) {
 
 	networkURL := fmt.Sprintf("projects/%s/global/networks/default", projectID)
 	ipAddress := "203.0.113.1"
+	interconnectAttachmentURL := fmt.Sprintf("projects/%s/regions/%s/interconnectAttachments/test-attachment", projectID, region)
 	gateway := &computepb.VpnGateway{
 		Name:    &gatewayName,
 		Network: &networkURL,
 		VpnInterfaces: []*computepb.VpnGatewayVpnGatewayInterface{
 			{
-				IpAddress: &ipAddress,
+				IpAddress:              &ipAddress,
+				InterconnectAttachment: &interconnectAttachmentURL,
 			},
 		},
 	}
@@ -99,6 +101,16 @@ func TestComputeVpnGateway(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "203.0.113.1",
 					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeInterconnectAttachment.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-attachment",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: true,

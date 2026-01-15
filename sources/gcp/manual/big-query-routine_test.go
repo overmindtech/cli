@@ -16,6 +16,7 @@ import (
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -55,6 +56,39 @@ func TestBigQueryRoutine(t *testing.T) {
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: true,
+					},
+				},
+				// Imported library GCS bucket link
+				{
+					ExpectedType:   gcpshared.StorageBucket.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "bucket",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// Remote function connection link
+				{
+					ExpectedType:   gcpshared.BigQueryConnection.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "us|example-conn",
+					ExpectedScope:  "example",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// Remote function HTTP endpoint link
+				{
+					ExpectedType:   stdlib.NetworkHTTP.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "https://example.com/run",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
 					},
 				},
 			}

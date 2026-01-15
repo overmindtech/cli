@@ -5,6 +5,7 @@ import (
 
 	"github.com/overmindtech/cli/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 // Storage Transfer Transfer Job facilitates data transfers between cloud storage systems and on-premises data
@@ -58,16 +59,83 @@ var _ = registerableAdapter{
 		// TODO: Investigate how we can link to AWS and Azure source when the account id (scope) is not available
 		// https://cloud.google.com/storage-transfer/docs/reference/rest/v1/TransferSpec#AwsS3Data
 		// https://cloud.google.com/storage-transfer/docs/reference/rest/v1/TransferSpec#AzureBlobStorageData
-		"transferSpec.httpDataSource.listUrl": {
-			ToSDPItemType: gcpshared.StorageBucket,
-			Description:   "HTTP data source URL for transfer operations. If the HTTP endpoint is unreachable: The transfer job will fail to access the source data.",
+		// AWS S3 data source credentials secret (Secret Manager)
+		"transferSpec.awsS3DataSource.credentialsSecret": {
+			ToSDPItemType: gcpshared.SecretManagerSecret,
+			Description:   "If the Secret Manager secret containing AWS credentials is deleted or updated: The transfer job may fail to authenticate with AWS S3. If the transfer job is updated: The secret remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In: true,
 			},
 		},
+		// AWS S3 data source CloudFront domain (HTTP endpoint)
+		"transferSpec.awsS3DataSource.cloudfrontDomain": {
+			ToSDPItemType: stdlib.NetworkHTTP,
+			Description:   "If the CloudFront domain endpoint is unreachable: The transfer job will fail to access the source data via CloudFront. If the transfer job is updated: The CloudFront endpoint remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
+		},
+		// Azure Blob Storage data source credentials secret (Secret Manager)
+		"transferSpec.azureBlobStorageDataSource.credentialsSecret": {
+			ToSDPItemType: gcpshared.SecretManagerSecret,
+			Description:   "If the Secret Manager secret containing Azure SAS token is deleted or updated: The transfer job may fail to authenticate with Azure Blob Storage. If the transfer job is updated: The secret remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
+		// Agent pool for POSIX source
+		"transferSpec.sourceAgentPoolName": {
+			ToSDPItemType: gcpshared.StorageTransferAgentPool,
+			Description:   "If the source Agent Pool is deleted or updated: The transfer job may fail to access POSIX source file systems. If the transfer job is updated: The agent pool remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
+		// Agent pool for POSIX sink
+		"transferSpec.sinkAgentPoolName": {
+			ToSDPItemType: gcpshared.StorageTransferAgentPool,
+			Description:   "If the sink Agent Pool is deleted or updated: The transfer job may fail to write to POSIX sink file systems. If the transfer job is updated: The agent pool remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
+		// Transfer manifest location (gs:// URI pointing to manifest file)
+		"transferSpec.transferManifest.location": {
+			ToSDPItemType: gcpshared.StorageBucket,
+			Description:   "If the Storage Bucket containing the transfer manifest is deleted or inaccessible: The transfer job may fail to read the manifest file. If the transfer job is updated: The bucket remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
+		// HTTP data source URL - link to HTTP endpoint using stdlib
+		"transferSpec.httpDataSource.listUrl": {
+			ToSDPItemType: stdlib.NetworkHTTP,
+			Description:   "HTTP data source URL for transfer operations. If the HTTP endpoint is unreachable: The transfer job will fail to access the source data.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
+		},
 		"transferSpec.gcsIntermediateDataLocation.bucketName": {
 			ToSDPItemType: gcpshared.StorageBucket,
-			Description:   "If the destination GCS bucket is deleted or inaccessible: The transfer job will fail. If the transfer job is updated: The destination bucket remains unaffected.",
+			Description:   "If the intermediate GCS bucket is deleted or inaccessible: The transfer job will fail. If the transfer job is updated: The intermediate bucket remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
+		// Replication spec source bucket
+		"replicationSpec.gcsDataSource.bucketName": {
+			ToSDPItemType: gcpshared.StorageBucket,
+			Description:   "If the source GCS bucket for replication is deleted or inaccessible: The replication job will fail. If the replication job is updated: The source bucket remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
+		// Replication spec destination bucket
+		"replicationSpec.gcsDataSink.bucketName": {
+			ToSDPItemType: gcpshared.StorageBucket,
+			Description:   "If the destination GCS bucket for replication is deleted or inaccessible: The replication job will fail. If the replication job is updated: The destination bucket remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In: true,
 			},
@@ -97,6 +165,15 @@ var _ = registerableAdapter{
 			Description:   "If the Pub/Sub Subscription for event streaming is deleted: Transfer job events will not be consumed. If the transfer job is updated: The Pub/Sub subscription remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In: true,
+			},
+		},
+		// Latest transfer operation (child resource)
+		"latestOperationName": {
+			ToSDPItemType: gcpshared.StorageTransferTransferOperation,
+			Description:   "If the Transfer Operation is deleted or updated: The transfer job's latest operation reference may become invalid. If the transfer job is updated: The operation remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
 			},
 		},
 	},

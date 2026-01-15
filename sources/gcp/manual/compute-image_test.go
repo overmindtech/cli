@@ -2,6 +2,7 @@ package manual_test
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 
@@ -15,7 +16,9 @@ import (
 	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
+	"github.com/overmindtech/cli/sources/shared"
 )
 
 func TestComputeImage(t *testing.T) {
@@ -29,7 +32,7 @@ func TestComputeImage(t *testing.T) {
 	t.Run("Get", func(t *testing.T) {
 		wrapper := manual.NewComputeImage(mockClient, projectID)
 
-		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeImage("test-image", computepb.Image_READY), nil)
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeImageWithLinks(projectID, "test-image", computepb.Image_READY), nil)
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -41,6 +44,156 @@ func TestComputeImage(t *testing.T) {
 		if sdpItem.GetTags()["env"] != "test" {
 			t.Fatalf("Expected tag 'env=test', got: %v", sdpItem.GetTags()["env"])
 		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			queryTests := shared.QueryTests{
+				// sourceDisk link
+				{
+					ExpectedType:   gcpshared.ComputeDisk.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-source-disk",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1-a", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// sourceSnapshot link
+				{
+					ExpectedType:   gcpshared.ComputeSnapshot.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-source-snapshot",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// sourceImage link
+				{
+					ExpectedType:   gcpshared.ComputeImage.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-source-image",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// licenses link (first license)
+				{
+					ExpectedType:   gcpshared.ComputeLicense.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-license-1",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// licenses link (second license)
+				{
+					ExpectedType:   gcpshared.ComputeLicense.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-license-2",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// rawDisk.source (GCS bucket) link
+				{
+					ExpectedType:   gcpshared.StorageBucket.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  fmt.Sprintf("%s-raw-disk-bucket", projectID),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// imageEncryptionKey.kmsKeyName (CryptoKeyVersion) link
+				{
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-image-key|test-version-image",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// imageEncryptionKey.kmsKeyServiceAccount link
+				{
+					ExpectedType:   gcpshared.IAMServiceAccount.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  fmt.Sprintf("test-image-kms-sa@%s.iam.gserviceaccount.com", projectID),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// sourceImageEncryptionKey.kmsKeyName (CryptoKeyVersion) link
+				{
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-source-image-key|test-version-source-image",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// sourceImageEncryptionKey.kmsKeyServiceAccount link
+				{
+					ExpectedType:   gcpshared.IAMServiceAccount.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  fmt.Sprintf("test-source-image-kms-sa@%s.iam.gserviceaccount.com", projectID),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// sourceSnapshotEncryptionKey.kmsKeyName (CryptoKeyVersion) link
+				{
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-source-snapshot-key|test-version-source-snapshot",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// sourceSnapshotEncryptionKey.kmsKeyServiceAccount link
+				{
+					ExpectedType:   gcpshared.IAMServiceAccount.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  fmt.Sprintf("test-source-snapshot-kms-sa@%s.iam.gserviceaccount.com", projectID),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// deprecated.replacement link
+				{
+					ExpectedType:   gcpshared.ComputeImage.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-replacement-image",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
 	})
 
 	t.Run("HealthCheck", func(t *testing.T) {
@@ -201,5 +354,44 @@ func createComputeImage(imageName string, status computepb.Image_Status) *comput
 		Name:   ptr.To(imageName),
 		Labels: map[string]string{"env": "test"},
 		Status: ptr.To(status.String()),
+	}
+}
+
+func createComputeImageWithLinks(projectID, imageName string, status computepb.Image_Status) *computepb.Image {
+	zone := "us-central1-a"
+	sourceDiskURL := fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/disks/test-source-disk", projectID, zone)
+	sourceSnapshotURL := fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/snapshots/test-source-snapshot", projectID)
+	sourceImageURL := fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/images/test-source-image", projectID)
+	replacementImageURL := fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/images/test-replacement-image", projectID)
+
+	return &computepb.Image{
+		Name:           ptr.To(imageName),
+		Labels:         map[string]string{"env": "test"},
+		Status:         ptr.To(status.String()),
+		SourceDisk:     &sourceDiskURL,
+		SourceSnapshot: &sourceSnapshotURL,
+		SourceImage:    &sourceImageURL,
+		Licenses: []string{
+			fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/licenses/test-license-1", projectID),
+			fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/licenses/test-license-2", projectID),
+		},
+		RawDisk: &computepb.RawDisk{
+			Source: ptr.To(fmt.Sprintf("gs://%s-raw-disk-bucket/raw-disk.tar.gz", projectID)),
+		},
+		ImageEncryptionKey: &computepb.CustomerEncryptionKey{
+			KmsKeyName:           ptr.To(fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-image-key/cryptoKeyVersions/test-version-image", projectID)),
+			KmsKeyServiceAccount: ptr.To(fmt.Sprintf("projects/%s/serviceAccounts/test-image-kms-sa@%s.iam.gserviceaccount.com", projectID, projectID)),
+		},
+		SourceImageEncryptionKey: &computepb.CustomerEncryptionKey{
+			KmsKeyName:           ptr.To(fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-source-image-key/cryptoKeyVersions/test-version-source-image", projectID)),
+			KmsKeyServiceAccount: ptr.To(fmt.Sprintf("projects/%s/serviceAccounts/test-source-image-kms-sa@%s.iam.gserviceaccount.com", projectID, projectID)),
+		},
+		SourceSnapshotEncryptionKey: &computepb.CustomerEncryptionKey{
+			KmsKeyName:           ptr.To(fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-source-snapshot-key/cryptoKeyVersions/test-version-source-snapshot", projectID)),
+			KmsKeyServiceAccount: ptr.To(fmt.Sprintf("projects/%s/serviceAccounts/test-source-snapshot-kms-sa@%s.iam.gserviceaccount.com", projectID, projectID)),
+		},
+		Deprecated: &computepb.DeprecationStatus{
+			Replacement: &replacementImageURL,
+		},
 	}
 }

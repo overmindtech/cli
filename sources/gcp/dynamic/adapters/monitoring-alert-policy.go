@@ -45,6 +45,11 @@ var _ = registerableAdapter{
 			Description:      "The notification channels that are used to notify when this alert policy is triggered. If notification channels are deleted, the alert policy will not be able to notify when triggered. If the alert policy is deleted, the notification channels will not be affected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
+		"alertStrategy.notificationChannelStrategy.notificationChannelNames": {
+			ToSDPItemType:    gcpshared.MonitoringNotificationChannel,
+			Description:      "The notification channels specified in the alert strategy for channel-specific renotification behavior. If these notification channels are deleted, the alert policy will not be able to notify when triggered. If the alert policy is deleted, the notification channels will not be affected.",
+			BlastPropagation: &sdp.BlastPropagation{In: true},
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/monitoring_alert_policy",

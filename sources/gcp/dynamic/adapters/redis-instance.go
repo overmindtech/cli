@@ -46,6 +46,8 @@ var _ = registerableAdapter{
 		"customerManagedKey": gcpshared.CryptoKeyImpactInOnly,
 		// Output only. Hostname or IP address of the exposed Redis endpoint used by clients to connect to the service.
 		"host": gcpshared.IPImpactBothWays,
+		// Output only (standard tier). Endpoint for readonly traffic to the Redis instance. Can be a hostname or IP address.
+		"readEndpoint": gcpshared.IPImpactBothWays,
 		// Output only. List of server CA certificates for the instance.
 		"serverCaCerts.cert": {
 			ToSDPItemType:    gcpshared.ComputeSSLCertificate,

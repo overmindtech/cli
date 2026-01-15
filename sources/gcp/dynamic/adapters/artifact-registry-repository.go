@@ -34,6 +34,24 @@ var _ = registerableAdapter{
 			},
 			IsParentToChild: true,
 		},
+		// Link to upstream repositories in virtual repository configuration
+		"virtualRepositoryConfig.upstreamPolicies.repository": {
+			ToSDPItemType: gcpshared.ArtifactRegistryRepository,
+			Description:   "If an upstream Artifact Registry Repository is deleted or updated: The virtual repository may fail to serve artifacts from that upstream. If the virtual repository is updated: The upstream repositories remain unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
+		},
+		// Link to Secret Manager Secret Version used for remote repository authentication
+		"remoteRepositoryConfig.upstreamCredentials.passwordSecretVersion": {
+			ToSDPItemType: gcpshared.SecretManagerSecretVersion,
+			Description:   "If the Secret Manager Secret Version is deleted or its access is revoked: The remote repository may fail to authenticate with upstream sources. If the remote repository is updated: The secret version remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/artifact_registry_repository#attributes-reference",

@@ -169,6 +169,12 @@ func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(ctx co
 		Tags:            instantSnapshot.GetLabels(),
 	}
 
+	// The resource URL for the source disk of this instant snapshot.
+	// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
+	// https://cloud.google.com/compute/docs/reference/rest/v1/disks/get
+	// The source disk is the disk from which this instant snapshot was created.
+	// If the disk is deleted: The instant snapshot becomes unusable for restore operations.
+	// If the instant snapshot is deleted: The disk cannot be restored to the point where the snapshot was taken, but the disk itself remains unaffected.
 	if disk := instantSnapshot.GetSourceDisk(); disk != "" {
 		diskName := gcpshared.LastPathComponent(disk)
 		if diskName != "" {
@@ -181,8 +187,8 @@ func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(ctx co
 						Query:  diskName,
 						Scope:  scope,
 					},
-					//Disk cannot be restored to the point where the snapshot was taken if the snapshot is deleted.
-					//Deleting disk does not impact the snapshot.
+					// If the disk is deleted: The instant snapshot becomes unusable for restore operations.
+					// If the instant snapshot is deleted: The disk cannot be restored to the point where the snapshot was taken, but the disk itself remains unaffected.
 					BlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
 				})
 			}

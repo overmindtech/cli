@@ -327,6 +327,39 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context,
 		}
 	}
 
+	// The customer-supplied encryption key used to encrypt this snapshot; appears in the following format:
+	// "snapshotEncryptionKey.kmsKeyName": "projects/{kms_project_id}/locations/{region}/keyRings/{key_ring}/cryptoKeys/{key}" or
+	// "projects/{kms_project_id}/locations/{region}/keyRings/{key_ring}/cryptoKeys/{key}/cryptoKeyVersions/{version}"
+	// GET https://cloudkms.googleapis.com/v1/{name=projects/*/locations/*/keyRings/*/cryptoKeys/*/cryptoKeyVersions/*}
+	// https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings.cryptoKeys.cryptoKeyVersions
+	// snapshotEncryptionKey.kmsKeyName -> CloudKMSCryptoKeyVersion
+	if snapshotEncryptionKey := snapshot.GetSnapshotEncryptionKey(); snapshotEncryptionKey != nil {
+		if keyName := snapshotEncryptionKey.GetKmsKeyName(); keyName != "" {
+			// Parsing them all together to improve readability
+			location := gcpshared.ExtractPathParam("locations", keyName)
+			keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
+			cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
+			cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
+
+			// Validate all parts before proceeding, a bit less performatic if any is missing but readability is improved
+			// Note: cryptoKeyVersion may be empty if the key name doesn't include the version (it will use the primary version)
+			// However, for linking purposes, we need the version, so we skip if it's not present
+			if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
+						Scope:  c.ProjectID(),
+					},
+					// If the key is deleted, the snapshot cannot be decrypted or used.
+					// Deleting the snapshot does not affect the key.
+					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				})
+			}
+		}
+	}
+
 	switch snapshot.GetStatus() {
 	case computepb.Snapshot_UNDEFINED_STATUS.String():
 		sdpItem.Health = sdp.Health_HEALTH_UNKNOWN.Enum()

@@ -52,6 +52,8 @@ func (c computeInstanceGroupWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeSubnetwork,
 		gcpshared.ComputeNetwork,
+		gcpshared.ComputeZone,
+		gcpshared.ComputeRegion,
 	)
 }
 
@@ -193,6 +195,47 @@ func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGr
 					Scope:  c.ProjectID(),
 				},
 				BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			})
+		}
+	}
+
+	// Link to the zone where the instance group is located
+	// If the zone is deleted or becomes unavailable: The instance group may become inaccessible. If the instance group is updated: The zone remains unaffected.
+	if zone := instanceGroup.GetZone(); zone != "" {
+		zoneName := gcpshared.LastPathComponent(zone)
+		if zoneName != "" {
+			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   gcpshared.ComputeZone.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  zoneName,
+					Scope:  c.ProjectID(),
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			})
+		}
+	}
+
+	// Link to the region (for regional instance groups)
+	// Note: Unmanaged instance groups are zonal only, so this field may not be populated
+	// If the region is deleted or becomes unavailable: The instance group may become inaccessible. If the instance group is updated: The region remains unaffected.
+	if region := instanceGroup.GetRegion(); region != "" {
+		regionName := gcpshared.LastPathComponent(region)
+		if regionName != "" {
+			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   gcpshared.ComputeRegion.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  regionName,
+					Scope:  c.ProjectID(),
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
 			})
 		}
 	}

@@ -78,6 +78,30 @@ var _ = registerableAdapter{
 			ToSDPItemType:    gcpshared.AIPlatformModel,
 			BlastPropagation: gcpshared.ImpactInOnly,
 		},
+		// Optional. The ID of a PersistentResource to run the job on existing machines.
+		"jobSpec.persistentResourceId": {
+			Description:      "If the Vertex AI PersistentResource is deleted or updated: The CustomJob may fail to run or lose access to the persistent resources. If the CustomJob is updated: The PersistentResource remains unaffected.",
+			ToSDPItemType:    gcpshared.AIPlatformPersistentResource,
+			BlastPropagation: gcpshared.ImpactInOnly,
+		},
+		// Container image URI used in worker pool specs (for containerSpec).
+		"jobSpec.workerPoolSpecs.containerSpec.imageUri": {
+			Description:      "If the Artifact Registry Docker Image is updated or deleted: The CustomJob may fail to run or use an incorrect container image. If the CustomJob is updated: The Docker image remains unaffected.",
+			ToSDPItemType:    gcpshared.ArtifactRegistryDockerImage,
+			BlastPropagation: gcpshared.ImpactInOnly,
+		},
+		// Executor container image URI used in worker pool specs (for pythonPackageSpec).
+		"jobSpec.workerPoolSpecs.pythonPackageSpec.executorImageUri": {
+			Description:      "If the Artifact Registry Docker Image is updated or deleted: The CustomJob may fail to run or use an incorrect executor image. If the CustomJob is updated: The Docker image remains unaffected.",
+			ToSDPItemType:    gcpshared.ArtifactRegistryDockerImage,
+			BlastPropagation: gcpshared.ImpactInOnly,
+		},
+		// GCS URIs of Python package files used in worker pool specs.
+		"jobSpec.workerPoolSpecs.pythonPackageSpec.packageUris": {
+			Description:      "If the Storage Bucket containing the Python packages is deleted or updated: The CustomJob may fail to access required package files. If the CustomJob is updated: The bucket remains unaffected.",
+			ToSDPItemType:    gcpshared.StorageBucket,
+			BlastPropagation: gcpshared.ImpactInOnly,
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Description: "There is no terraform resource for this type.",

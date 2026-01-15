@@ -45,6 +45,14 @@ var _ = registerableAdapter{
 			Description:      "If the Logging Bucket is deleted or updated: The Storage Bucket may fail to write logs. If the Storage Bucket is updated: The Logging Bucket remains unaffected.",
 			BlastPropagation: gcpshared.ImpactInOnly,
 		},
+		// TODO: Add parent-to-child links once the child adapters are implemented:
+		// - StorageBucketAccessControl (requires adapter implementation)
+		// - StorageDefaultObjectAccessControl (requires adapter implementation)
+		// - StorageNotificationConfig (requires adapter implementation)
+		// Note: Parent-to-child links must use the "name" field (not array fields like "acl")
+		// since the linkItem function iterates into arrays before calling AutoLink, causing
+		// keys like "acl.entity" instead of "acl" which would never match.
+		// The framework only supports one parent-to-child link per field (map limitation).
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket",

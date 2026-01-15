@@ -2,6 +2,7 @@ package manual
 
 import (
 	"context"
+	"strings"
 
 	"cloud.google.com/go/bigquery"
 	"github.com/overmindtech/cli/discovery"
@@ -10,6 +11,7 @@ import (
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 var (
@@ -47,6 +49,9 @@ func (b BigQueryRoutineWrapper) PredefinedRole() string {
 func (b BigQueryRoutineWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.BigQueryDataset,
+		gcpshared.StorageBucket,
+		gcpshared.BigQueryConnection,
+		stdlib.NetworkHTTP,
 	)
 }
 
@@ -133,6 +138,92 @@ func (b BigQueryRoutineWrapper) GCPBigQueryRoutineToItem(metadata *bigquery.Rout
 			Out: true,
 		},
 	})
+
+	// Link to imported libraries (GCS buckets) for JavaScript routines
+	// Format: gs://bucket-name/path/to/file.js
+	if len(metadata.ImportedLibraries) > 0 {
+		blastPropagation := &sdp.BlastPropagation{
+			In:  true,
+			Out: false,
+		}
+		if linkFunc, ok := gcpshared.ManualAdapterLinksByAssetType[gcpshared.StorageBucket]; ok {
+			for _, libraryURI := range metadata.ImportedLibraries {
+				if libraryURI != "" {
+					linkedQuery := linkFunc(b.ProjectID(), b.DefaultScope(), libraryURI, blastPropagation)
+					if linkedQuery != nil {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, linkedQuery)
+					}
+				}
+			}
+		}
+	}
+
+	// Link to BigQuery Connection used for remote function authentication
+	// Format: projects/{projectId}/locations/{locationId}/connections/{connectionId}
+	// or: {projectId}.{locationId};{connectionId}
+	if metadata.RemoteFunctionOptions != nil && metadata.RemoteFunctionOptions.Connection != "" {
+		var projectID, location, connectionID string
+		values := gcpshared.ExtractPathParams(metadata.RemoteFunctionOptions.Connection, "projects", "locations", "connections")
+		if len(values) == 3 {
+			projectID = values[0]
+			location = values[1]
+			connectionID = values[2]
+		} else {
+			// Try short format: {projectId}.{locationId};{connectionId}
+			resParts := strings.Split(metadata.RemoteFunctionOptions.Connection, ".")
+			if len(resParts) == 2 {
+				projectID = resParts[0]
+				colParts := strings.Split(resParts[1], ";")
+				if len(colParts) == 2 {
+					location = colParts[0]
+					connectionID = colParts[1]
+				}
+			}
+		}
+		if projectID != "" && location != "" && connectionID != "" {
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   gcpshared.BigQueryConnection.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  shared.CompositeLookupKey(location, connectionID),
+					Scope:  projectID,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// If the Connection is deleted or updated: The remote function may fail to authenticate. If the routine is updated: The connection remains unaffected.
+					In:  true,
+					Out: false,
+				},
+			})
+		}
+	}
+
+	// Link to HTTP endpoint for remote function calls
+	// Format: https://example.com/run or http://example.com/run
+	if metadata.RemoteFunctionOptions != nil && metadata.RemoteFunctionOptions.Endpoint != "" {
+		endpoint := strings.TrimSpace(metadata.RemoteFunctionOptions.Endpoint)
+		if strings.HasPrefix(endpoint, "http://") || strings.HasPrefix(endpoint, "https://") {
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   stdlib.NetworkHTTP.String(),
+					Method: sdp.QueryMethod_SEARCH,
+					Query:  endpoint,
+					Scope:  "global",
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// If the HTTP endpoint is unreachable: The remote function will fail to execute. If the routine is updated: The endpoint remains unaffected.
+					In:  true,
+					Out: false,
+				},
+			})
+		}
+	}
+
+	// NOTE: SparkOptions and ExternalRuntimeOptions are not currently available in the Go SDK's RoutineMetadata struct,
+	// even though they exist in the REST API. If the Go SDK is updated to include these fields in the future,
+	// we should add links for:
+	// - sparkOptions.connection (BigQuery Connection)
+	// - sparkOptions.mainFileUri, pyFileUris, jarUris, fileUris, archiveUris (GCS buckets)
+	// - externalRuntimeOptions.runtimeConnection (BigQuery Connection)
 
 	//NOTE: optional feature for the future - parse routine_definition to identify referenced tables/views/connections and add links. Out-of-scope for initial version.
 

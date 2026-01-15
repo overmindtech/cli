@@ -2,6 +2,7 @@ package manual_test
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 
@@ -177,6 +178,194 @@ func TestComputeAddress(t *testing.T) {
 			t.Fatalf("Adapter should not support SearchStream operation")
 		}
 	})
+
+	t.Run("GetWithUsers", func(t *testing.T) {
+		wrapper := manual.NewComputeAddress(mockClient, projectID, region)
+
+		// Test with various user resource types
+		users := []string{
+			// Regional forwarding rule
+			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/forwardingRules/test-forwarding-rule", projectID, region),
+			// Global forwarding rule
+			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/forwardingRules/test-global-forwarding-rule", projectID),
+			// VM Instance
+			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/us-central1-a/instances/test-instance", projectID),
+			// Target VPN Gateway
+			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/targetVpnGateways/test-vpn-gateway", projectID, region),
+			// Router
+			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/routers/test-router", projectID, region),
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeAddressWithUsers("test-address-with-users", users), nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-address-with-users", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			queryTests := shared.QueryTests{
+				// Network link
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// Subnetwork link
+				{
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "default",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// IP address link
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.3",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				// Regional forwarding rule link (from users)
+				{
+					ExpectedType:   gcpshared.ComputeForwardingRule.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-forwarding-rule",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				// Global forwarding rule link (from users)
+				{
+					ExpectedType:   gcpshared.ComputeGlobalForwardingRule.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-global-forwarding-rule",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				// Instance link (from users)
+				{
+					ExpectedType:   gcpshared.ComputeInstance.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-instance",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1-a", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				// Target VPN Gateway link (from users)
+				{
+					ExpectedType:   gcpshared.ComputeTargetVpnGateway.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-vpn-gateway",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				// Router link (from users)
+				{
+					ExpectedType:   gcpshared.ComputeRouter.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-router",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+			}
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithIPCollection", func(t *testing.T) {
+		wrapper := manual.NewComputeAddress(mockClient, projectID, region)
+
+		ipCollection := fmt.Sprintf("projects/%s/regions/%s/publicDelegatedPrefixes/test-prefix", projectID, region)
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeAddressWithIPCollection("test-address-with-ip-collection", ipCollection), nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-address-with-ip-collection", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			queryTests := shared.QueryTests{
+				// Network link
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// Subnetwork link
+				{
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "default",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// IP address link
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.3",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				// Public Delegated Prefix link (from ipCollection)
+				{
+					ExpectedType:   gcpshared.ComputePublicDelegatedPrefix.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-prefix",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
 }
 
 func createComputeAddress(addressName string) *computepb.Address {
@@ -187,4 +376,16 @@ func createComputeAddress(addressName string) *computepb.Address {
 		Subnetwork: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/subnetworks/default"),
 		Address:    ptr.To("192.168.1.3"),
 	}
+}
+
+func createComputeAddressWithUsers(addressName string, users []string) *computepb.Address {
+	addr := createComputeAddress(addressName)
+	addr.Users = users
+	return addr
+}
+
+func createComputeAddressWithIPCollection(addressName string, ipCollection string) *computepb.Address {
+	addr := createComputeAddress(addressName)
+	addr.IpCollection = ptr.To(ipCollection)
+	return addr
 }

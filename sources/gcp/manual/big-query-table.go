@@ -48,12 +48,14 @@ func (b BigQueryTableWrapper) PredefinedRole() string {
 	return "roles/bigquery.metadataViewer"
 }
 
-// PotentialLinks returns the potential links for the BigQuery dataset wrapper
+// PotentialLinks returns the potential links for the BigQuery table wrapper
 func (b BigQueryTableWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.CloudKMSCryptoKey,
 		gcpshared.BigQueryDataset,
 		gcpshared.BigQueryConnection,
+		gcpshared.StorageBucket,
+		gcpshared.BigQueryTable,
 	)
 }
 
@@ -181,46 +183,128 @@ func (b BigQueryTableWrapper) GCPBigQueryTableToItem(metadata *bigquery.TableMet
 		}
 	}
 
-	if metadata.ExternalDataConfig != nil && metadata.ExternalDataConfig.ConnectionID != "" {
-		// The connection specifying the credentials to be used to read external storage, such as Azure Blob, Cloud Storage, or S3.
-		// The connectionId can have the form
-		// {projectId}.{locationId};{connectionId} or
-		// projects/{projectId}/locations/{locationId}/connections/{connectionId}
-		var projectID, location, connectionID string
-		values := gcpshared.ExtractPathParams(metadata.ExternalDataConfig.ConnectionID, "projects", "locations", "connections")
-		if len(values) == 3 {
-			projectID = values[0]
-			location = values[1]
-			connectionID = values[2]
-		} else {
-			// {projectId}.{locationId};{connectionId}
-			resParts := strings.Split(metadata.ExternalDataConfig.ConnectionID, ".")
-			if len(resParts) == 2 {
-				projectID = resParts[0]
-				// {locationId};{connectionId}
-				colParts := strings.Split(resParts[1], ";")
-				if len(colParts) == 2 {
-					location = colParts[0]
-					connectionID = colParts[1]
+	if metadata.ExternalDataConfig != nil {
+		if metadata.ExternalDataConfig.ConnectionID != "" {
+			// The connection specifying the credentials to be used to read external storage, such as Azure Blob, Cloud Storage, or S3.
+			// The connectionId can have the form
+			// {projectId}.{locationId};{connectionId} or
+			// projects/{projectId}/locations/{locationId}/connections/{connectionId}
+			var projectID, location, connectionID string
+			values := gcpshared.ExtractPathParams(metadata.ExternalDataConfig.ConnectionID, "projects", "locations", "connections")
+			if len(values) == 3 {
+				projectID = values[0]
+				location = values[1]
+				connectionID = values[2]
+			} else {
+				// {projectId}.{locationId};{connectionId}
+				resParts := strings.Split(metadata.ExternalDataConfig.ConnectionID, ".")
+				if len(resParts) == 2 {
+					projectID = resParts[0]
+					// {locationId};{connectionId}
+					colParts := strings.Split(resParts[1], ";")
+					if len(colParts) == 2 {
+						location = colParts[0]
+						connectionID = colParts[1]
+					}
+				}
+			}
+			if projectID != "" && location != "" && connectionID != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.BigQueryConnection.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  shared.CompositeLookupKey(location, connectionID),
+						Scope:  projectID,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// Tightly coupled.
+						In:  true,
+						Out: true,
+					},
+				})
+			}
+		}
+
+		// Link to Storage Buckets referenced in source URIs (gs:// URIs).
+		// Format: gs://bucket-name/path/to/file or gs://bucket-name/path/* (wildcard allowed after bucket name).
+		// GET https://storage.googleapis.com/storage/v1/b/{bucket}
+		// https://cloud.google.com/storage/docs/json_api/v1/buckets/get
+		if len(metadata.ExternalDataConfig.SourceURIs) > 0 {
+			// Use a map to deduplicate bucket names
+			bucketMap := make(map[string]bool)
+			for _, sourceURI := range metadata.ExternalDataConfig.SourceURIs {
+				if sourceURI != "" {
+					// Use the StorageBucket linker to extract bucket name from various URI formats
+					if linkFunc, ok := gcpshared.ManualAdapterLinksByAssetType[gcpshared.StorageBucket]; ok {
+						// The linker handles gs:// URIs and extracts bucket names
+						linkedQuery := linkFunc(b.ProjectID(), b.DefaultScope(), sourceURI, &sdp.BlastPropagation{
+							// If the Storage Bucket is deleted or updated: The external table may fail to read data. If the table is updated: The bucket remains unaffected.
+							In:  true,
+							Out: false,
+						})
+						if linkedQuery != nil {
+							// Create a unique key from query and scope to deduplicate
+							bucketKey := fmt.Sprintf("%s|%s", linkedQuery.GetQuery().GetQuery(), linkedQuery.GetQuery().GetScope())
+							if !bucketMap[bucketKey] {
+								bucketMap[bucketKey] = true
+								sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, linkedQuery)
+							}
+						}
+					}
 				}
 			}
 		}
-		if projectID != "" && location != "" && connectionID != "" {
+	}
+
+	// Link to base table if this is a snapshot.
+	// The base table from which this snapshot was created.
+	// GET https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}/tables/{tableId}
+	// https://cloud.google.com/bigquery/docs/reference/rest/v2/tables/get
+	if metadata.SnapshotDefinition != nil && metadata.SnapshotDefinition.BaseTableReference != nil {
+		baseTableRef := metadata.SnapshotDefinition.BaseTableReference
+		if baseTableRef.ProjectID != "" && baseTableRef.DatasetID != "" && baseTableRef.TableID != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   gcpshared.BigQueryConnection.String(),
+					Type:   gcpshared.BigQueryTable.String(),
 					Method: sdp.QueryMethod_GET,
-					Query:  shared.CompositeLookupKey(location, connectionID),
-					Scope:  projectID,
+					Query:  shared.CompositeLookupKey(baseTableRef.DatasetID, baseTableRef.TableID),
+					Scope:  baseTableRef.ProjectID,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
-					// Tightly coupled.
+					// If the base table is deleted or updated: The snapshot may become invalid or inaccessible. If the snapshot is updated: The base table remains unaffected.
 					In:  true,
-					Out: true,
+					Out: false,
 				},
 			})
 		}
 	}
+
+	// Link to base table if this is a clone.
+	// The base table from which this clone was created.
+	// GET https://bigquery.googleapis.com/bigquery/v2/projects/{projectId}/datasets/{datasetId}/tables/{tableId}
+	// https://cloud.google.com/bigquery/docs/reference/rest/v2/tables/get
+	if metadata.CloneDefinition != nil && metadata.CloneDefinition.BaseTableReference != nil {
+		baseTableRef := metadata.CloneDefinition.BaseTableReference
+		if baseTableRef.ProjectID != "" && baseTableRef.DatasetID != "" && baseTableRef.TableID != "" {
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   gcpshared.BigQueryTable.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  shared.CompositeLookupKey(baseTableRef.DatasetID, baseTableRef.TableID),
+					Scope:  baseTableRef.ProjectID,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// If the base table is deleted or updated: The clone may become invalid or inaccessible. If the clone is updated: The base table remains unaffected.
+					In:  true,
+					Out: false,
+				},
+			})
+		}
+	}
+
+	// Note: Replicas field is not available in the Go client library's TableMetadata struct,
+	// even though it exists in the REST API. If needed in the future, we would need to access
+	// the raw REST API response or wait for the Go client library to expose this field.
 
 	return sdpItem, nil
 }

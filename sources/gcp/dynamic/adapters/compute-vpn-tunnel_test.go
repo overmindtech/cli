@@ -26,6 +26,7 @@ func TestComputeVpnTunnel(t *testing.T) {
 	tunnelName := "test-vpn-tunnel"
 
 	peerIP := "203.0.113.1"
+	targetVpnGatewayURL := fmt.Sprintf("projects/%s/regions/%s/targetVpnGateways/test-target-gateway", projectID, region)
 	vpnGatewayURL := fmt.Sprintf("projects/%s/regions/%s/vpnGateways/test-gateway", projectID, region)
 	peerExternalGatewayURL := fmt.Sprintf("projects/%s/global/externalVpnGateways/test-external-gateway", projectID)
 	peerGcpGatewayURL := fmt.Sprintf("projects/%s/regions/%s/vpnGateways/test-peer-gcp-gateway", projectID, region)
@@ -33,6 +34,7 @@ func TestComputeVpnTunnel(t *testing.T) {
 	tunnel := &computepb.VpnTunnel{
 		Name:                &tunnelName,
 		PeerIp:              &peerIP,
+		TargetVpnGateway:    &targetVpnGatewayURL,
 		VpnGateway:          &vpnGatewayURL,
 		PeerExternalGateway: &peerExternalGatewayURL,
 		PeerGcpGateway:      &peerGcpGatewayURL,
@@ -97,7 +99,18 @@ func TestComputeVpnTunnel(t *testing.T) {
 						Out: true,
 					},
 				},
-				// VPN Gateway link
+				// Target VPN Gateway link (Classic VPN)
+				{
+					ExpectedType:   gcpshared.ComputeTargetVpnGateway.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-target-gateway",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				// VPN Gateway link (HA VPN)
 				{
 					ExpectedType:   gcpshared.ComputeVpnGateway.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -116,7 +129,7 @@ func TestComputeVpnTunnel(t *testing.T) {
 					ExpectedScope:  projectID,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
-						Out: true,
+						Out: false,
 					},
 				},
 				// Peer GCP Gateway link
@@ -127,7 +140,7 @@ func TestComputeVpnTunnel(t *testing.T) {
 					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
-						Out: true,
+						Out: false,
 					},
 				},
 				// Router link
