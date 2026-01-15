@@ -20,6 +20,60 @@ import (
 
 const USER_AGENT_VERSION = "0.1"
 
+// linkLocalRange represents the IPv4 link-local address range (169.254.0.0/16)
+// This includes the EC2 metadata service IP (169.254.169.254) and is blocked
+// to prevent DNS rebinding attacks and unauthorized metadata service access.
+var linkLocalRange = &net.IPNet{
+	IP:   net.IPv4(169, 254, 0, 0),
+	Mask: net.CIDRMask(16, 32),
+}
+
+// isLinkLocalIP checks if an IP address is in the link-local range (169.254.0.0/16)
+func isLinkLocalIP(ip net.IP) bool {
+	if ip == nil {
+		return false
+	}
+	// Convert IPv4-mapped IPv6 addresses to IPv4
+	ip = ip.To4()
+	if ip == nil {
+		return false
+	}
+	return linkLocalRange.Contains(ip)
+}
+
+// validateHostname checks if a hostname resolves to a link-local IP address.
+// This prevents DNS rebinding attacks where a hostname resolves to the EC2
+// metadata service or other link-local addresses.
+func validateHostname(ctx context.Context, hostname string) error {
+	// First check if the hostname is already an IP address
+	if ip := net.ParseIP(hostname); ip != nil {
+		if isLinkLocalIP(ip) {
+			return fmt.Errorf("access to link-local address range (169.254.0.0/16) is blocked for security reasons")
+		}
+		return nil
+	}
+
+	// Resolve the hostname to check if it resolves to a link-local IP
+	resolver := net.DefaultResolver
+	ips, err := resolver.LookupIPAddr(ctx, hostname)
+	if err != nil {
+		// If DNS resolution fails, we can't validate, but we should still
+		// allow the request to proceed (it will fail later if needed)
+		// This prevents blocking legitimate requests due to transient DNS issues
+		//nolint:nilerr // Intentionally allowing request to proceed if DNS resolution fails
+		return nil
+	}
+
+	// Check all resolved IPs
+	for _, ipAddr := range ips {
+		if isLinkLocalIP(ipAddr.IP) {
+			return fmt.Errorf("hostname %s resolves to link-local address %s (169.254.0.0/16), which is blocked for security reasons", hostname, ipAddr.IP)
+		}
+	}
+
+	return nil
+}
+
 type HTTPAdapter struct {
 	cacheField sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 }
@@ -107,6 +161,21 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "GET method requires clean URLs without query parameters or fragments. Use SEARCH method for URLs with query parameters or fragments.",
 			Scope:       scope,
+		}
+	}
+
+	// Validate hostname to prevent access to link-local addresses (including EC2 metadata service)
+	hostname := parsedURL.Hostname()
+	if hostname != "" {
+		if err := validateHostname(ctx, hostname); err != nil {
+			ck := sdpcache.CacheKeyFromParts(s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query)
+			err = &sdp.QueryError{
+				ErrorType:   sdp.QueryError_OTHER,
+				ErrorString: err.Error(),
+				Scope:       scope,
+			}
+			s.Cache().StoreError(ctx, err, httpCacheDuration, ck)
+			return nil, err
 		}
 	}
 
@@ -313,24 +382,37 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 				// Resolve relative URLs against the original request URL
 				resolvedURL := parsedURL.ResolveReference(locURL)
 
-				// Don't include query string and fragment in the linked item.
-				// This leads to too many items, like auth redirect errors, that
-				// do not provide value.
-				resolvedURL.Fragment = ""
-				resolvedURL.RawQuery = ""
-				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
-					Query: &sdp.Query{
-						Type:   "http",
-						Method: sdp.QueryMethod_SEARCH,
-						Query:  resolvedURL.String(),
-						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Redirects are tightly coupled
-						In:  true,
-						Out: true,
-					},
-				})
+				// Validate redirect target to prevent redirects to link-local addresses
+				redirectHostname := resolvedURL.Hostname()
+				if redirectHostname != "" {
+					if err := validateHostname(ctx, redirectHostname); err != nil {
+						// Don't fail the entire request, but mark the redirect as invalid
+						item.Attributes.AttrStruct.Fields["location-error"] = &structpb.Value{
+							Kind: &structpb.Value_StringValue{
+								StringValue: fmt.Sprintf("redirect blocked: %v", err),
+							},
+						}
+					} else {
+						// Don't include query string and fragment in the linked item.
+						// This leads to too many items, like auth redirect errors, that
+						// do not provide value.
+						resolvedURL.Fragment = ""
+						resolvedURL.RawQuery = ""
+						item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   "http",
+								Method: sdp.QueryMethod_SEARCH,
+								Query:  resolvedURL.String(),
+								Scope:  scope,
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								// Redirects are tightly coupled
+								In:  true,
+								Out: true,
+							},
+						})
+					}
+				}
 			}
 		}
 	}
