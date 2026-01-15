@@ -95,7 +95,7 @@ func (c computeInstanceWrapper) Get(ctx context.Context, queryParts ...string) (
 
 	var sdpErr *sdp.QueryError
 	var item *sdp.Item
-	item, sdpErr = c.gcpComputeInstanceToSDPItem(instance)
+	item, sdpErr = c.gcpComputeInstanceToSDPItem(ctx, instance)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -122,7 +122,7 @@ func (c computeInstanceWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Que
 
 		var sdpErr *sdp.QueryError
 		var item *sdp.Item
-		item, sdpErr = c.gcpComputeInstanceToSDPItem(instance)
+		item, sdpErr = c.gcpComputeInstanceToSDPItem(ctx, instance)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -151,7 +151,7 @@ func (c computeInstanceWrapper) ListStream(ctx context.Context, stream discovery
 
 		var sdpErr *sdp.QueryError
 		var item *sdp.Item
-		item, sdpErr = c.gcpComputeInstanceToSDPItem(instance)
+		item, sdpErr = c.gcpComputeInstanceToSDPItem(ctx, instance)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -162,7 +162,7 @@ func (c computeInstanceWrapper) ListStream(ctx context.Context, stream discovery
 	}
 }
 
-func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(instance *computepb.Instance) (*sdp.Item, *sdp.QueryError) {
+func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context, instance *computepb.Instance) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(instance, "labels")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -187,14 +187,14 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(instance *computepb.
 			if strings.Contains(disk.GetSource(), "/") {
 				diskNameParts := strings.Split(disk.GetSource(), "/")
 				diskName := diskNameParts[len(diskNameParts)-1]
-				zone := gcpshared.ExtractPathParam("zones", disk.GetSource())
-				if zone != "" {
+				scope, err := gcpshared.ExtractScopeFromURI(ctx, disk.GetSource())
+				if err == nil {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   gcpshared.ComputeDisk.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  diskName,
-							Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
+							Scope:  scope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,
@@ -252,15 +252,15 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(instance *computepb.
 				if strings.Contains(subnetwork, "/") {
 					subnetworkNameParts := strings.Split(subnetwork, "/")
 					subnetworkName := subnetworkNameParts[len(subnetworkNameParts)-1]
-					region := gcpshared.ExtractPathParam("regions", subnetwork)
-					if region != "" {
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, subnetwork)
+					if err == nil {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   gcpshared.ComputeSubnetwork.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  subnetworkName,
 								// This is a regional resource
-								Scope: gcpshared.RegionalScope(c.ProjectID(), region),
+								Scope: scope,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,
@@ -287,19 +287,22 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(instance *computepb.
 				if strings.Contains(network, "/") {
 					networkNameParts := strings.Split(network, "/")
 					networkName := networkNameParts[len(networkNameParts)-1]
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   gcpshared.ComputeNetwork.String(),
-							Method: sdp.QueryMethod_GET,
-							Query:  networkName,
-							// This is a global resource
-							Scope: c.ProjectID(),
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
-					})
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, network)
+					if err == nil {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.ComputeNetwork.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  networkName,
+								// This is a global resource
+								Scope: scope,
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
 				}
 			}
 		}
@@ -316,19 +319,21 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(instance *computepb.
 			parts := gcpshared.ExtractPathParams(rp, "regions", "resourcePolicies")
 			if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 				resourcePolicyName := parts[1]
-				region := parts[0]
-				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-					Query: &sdp.Query{
-						Type:   gcpshared.ComputeResourcePolicy.String(),
-						Method: sdp.QueryMethod_GET,
-						Query:  resourcePolicyName,
-						Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				})
+				scope, err := gcpshared.ExtractScopeFromURI(ctx, rp)
+				if err == nil {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   gcpshared.ComputeResourcePolicy.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  resourcePolicyName,
+							Scope:  scope,
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					})
+				}
 			}
 		}
 	}

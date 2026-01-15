@@ -89,7 +89,7 @@ func (c computeSnapshotWrapper) Get(ctx context.Context, queryParts ...string) (
 
 	var sdpErr *sdp.QueryError
 	var item *sdp.Item
-	item, sdpErr = c.gcpComputeSnapshotToSDPItem(snapshot)
+	item, sdpErr = c.gcpComputeSnapshotToSDPItem(ctx, snapshot)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -115,7 +115,7 @@ func (c computeSnapshotWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Que
 
 		var sdpErr *sdp.QueryError
 		var item *sdp.Item
-		item, sdpErr = c.gcpComputeSnapshotToSDPItem(snapshot)
+		item, sdpErr = c.gcpComputeSnapshotToSDPItem(ctx, snapshot)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -142,7 +142,7 @@ func (c computeSnapshotWrapper) ListStream(ctx context.Context, stream discovery
 			return
 		}
 
-		item, sdpErr := c.gcpComputeSnapshotToSDPItem(snapshot)
+		item, sdpErr := c.gcpComputeSnapshotToSDPItem(ctx, snapshot)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -154,7 +154,7 @@ func (c computeSnapshotWrapper) ListStream(ctx context.Context, stream discovery
 }
 
 // gcpComputeSnapshotToSDPItem converts a GCP Snapshot to an SDP Item, linking GCP resource fields.
-func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(snapshot *computepb.Snapshot) (*sdp.Item, *sdp.QueryError) {
+func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context, snapshot *computepb.Snapshot) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(snapshot, "labels")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -198,14 +198,14 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(snapshot *computepb.
 	if sourceInstantSnapshot := snapshot.GetSourceInstantSnapshot(); sourceInstantSnapshot != "" {
 		instantSnapshotName := gcpshared.LastPathComponent(sourceInstantSnapshot)
 		if instantSnapshotName != "" {
-			zone := gcpshared.ExtractPathParam("zones", sourceInstantSnapshot)
-			if zone != "" {
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, sourceInstantSnapshot)
+			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.ComputeInstantSnapshot.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  instantSnapshotName,
-						Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				})
@@ -250,16 +250,16 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(snapshot *computepb.
 	// The source disk is the disk from which this snapshot was created. Deleting the disk does not impact the snapshot,
 	// but the snapshot cannot be restored to the point where it was taken if the snapshot is deleted.
 	if disk := snapshot.GetSourceDisk(); disk != "" {
-		zone := gcpshared.ExtractPathParam("zones", disk)
-		if zone != "" {
-			diskName := gcpshared.LastPathComponent(disk)
-			if diskName != "" {
+		diskName := gcpshared.LastPathComponent(disk)
+		if diskName != "" {
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, disk)
+			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.ComputeDisk.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  diskName,
-						Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
+						Scope:  scope,
 					},
 					//Disk cannot be restored to the point where the snapshot was taken if the snapshot is deleted.
 					//Deleting disk does not impact the snapshot.
@@ -306,14 +306,14 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(snapshot *computepb.
 	if sourceSnapshotSchedulePolicy := snapshot.GetSourceSnapshotSchedulePolicy(); sourceSnapshotSchedulePolicy != "" {
 		snapshotSchedulePolicyName := gcpshared.LastPathComponent(sourceSnapshotSchedulePolicy)
 		if snapshotSchedulePolicyName != "" {
-			region := gcpshared.ExtractPathParam("regions", sourceSnapshotSchedulePolicy)
-			if region != "" {
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, sourceSnapshotSchedulePolicy)
+			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.ComputeResourcePolicy.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  snapshotSchedulePolicyName,
-						Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
+						Scope:  scope,
 					},
 					// Existing snapshot remains available even if the source policy is deleted.
 					// However, new snapshots will not be created automatically unless the policy is recreated or replaced.

@@ -51,7 +51,7 @@ func TestComputeNodeGroup(t *testing.T) {
 					ExpectedType:   gcpshared.ComputeNodeTemplate.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "node-template-1",
-					ExpectedScope:  "test-project-id.northamerica-northeast1",
+					ExpectedScope:  "test-project.northamerica-northeast1",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: false,

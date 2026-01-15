@@ -87,7 +87,7 @@ func (c computeReservationWrapper) Get(ctx context.Context, queryParts ...string
 		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
-	item, sdpErr := c.gcpComputeReservationToSDPItem(reservation)
+	item, sdpErr := c.gcpComputeReservationToSDPItem(ctx, reservation)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -111,7 +111,7 @@ func (c computeReservationWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.
 			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
-		item, sdpErr := c.gcpComputeReservationToSDPItem(reservation)
+		item, sdpErr := c.gcpComputeReservationToSDPItem(ctx, reservation)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -139,7 +139,7 @@ func (c computeReservationWrapper) ListStream(ctx context.Context, stream discov
 			return
 		}
 
-		item, sdpErr := c.gcpComputeReservationToSDPItem(reservation)
+		item, sdpErr := c.gcpComputeReservationToSDPItem(ctx, reservation)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -151,7 +151,7 @@ func (c computeReservationWrapper) ListStream(ctx context.Context, stream discov
 }
 
 // gcpComputeReservationToSDPItem converts a GCP Reservation to an SDP Item
-func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *computepb.Reservation) (*sdp.Item, *sdp.QueryError) {
+func (c computeReservationWrapper) gcpComputeReservationToSDPItem(ctx context.Context, reservation *computepb.Reservation) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(reservation)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -174,14 +174,14 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *c
 	if commitmentURL := reservation.GetCommitment(); commitmentURL != "" {
 		commitmentName := gcpshared.LastPathComponent(commitmentURL)
 		if commitmentName != "" {
-			region := gcpshared.ExtractPathParam("regions", commitmentURL)
-			if region != "" {
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, commitmentURL)
+			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.ComputeRegionCommitment.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  commitmentName,
-						Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
+						Scope:  scope,
 					},
 					// Deleting a reservation does not affect the commitment.
 					// But deleting a commitment may affect the reservation and cause unexpected cost increases if you were relying on the discount.
@@ -206,14 +206,14 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *c
 				acceleratorType := accelerator.GetAcceleratorType()
 				acceleratorName := gcpshared.LastPathComponent(acceleratorType)
 				if acceleratorName != "" {
-					zone := gcpshared.ExtractPathParam("zones", acceleratorType)
-					if zone != "" {
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, acceleratorType)
+					if err == nil {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   gcpshared.ComputeAcceleratorType.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  acceleratorName,
-								Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
+								Scope:  scope,
 							},
 							//Not too sure about this one; while deleting an accelerator type doesn't necessarily delete the reservation,
 							// it seems like deprecration of an accelerator type may make existing reservations unusable. Will set In: true for now to be sure.
@@ -237,14 +237,14 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(reservation *c
 			if policyURL != "" {
 				policyName := gcpshared.LastPathComponent(policyURL)
 				if policyName != "" {
-					region := gcpshared.ExtractPathParam("regions", policyURL)
-					if region != "" {
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, policyURL)
+					if err == nil {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   gcpshared.ComputeResourcePolicy.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  policyName,
-								Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
+								Scope:  scope,
 							},
 							//Not too sure about this one; while deleting an policies type doesn't necessarily delete the reservation,
 							// it seems like deleting a policy may cause errors.

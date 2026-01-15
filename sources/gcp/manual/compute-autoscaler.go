@@ -84,7 +84,7 @@ func (c computeAutoscalerWrapper) Get(ctx context.Context, queryParts ...string)
 
 	var sdpErr *sdp.QueryError
 	var item *sdp.Item
-	item, sdpErr = c.gcpComputeAutoscalerToSDPItem(autoscaler)
+	item, sdpErr = c.gcpComputeAutoscalerToSDPItem(ctx, autoscaler)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -111,7 +111,7 @@ func (c computeAutoscalerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Q
 
 		var sdpErr *sdp.QueryError
 		var item *sdp.Item
-		item, sdpErr = c.gcpComputeAutoscalerToSDPItem(autoscaler)
+		item, sdpErr = c.gcpComputeAutoscalerToSDPItem(ctx, autoscaler)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -138,7 +138,7 @@ func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discove
 			return
 		}
 
-		item, sdpErr := c.gcpComputeAutoscalerToSDPItem(autoscaler)
+		item, sdpErr := c.gcpComputeAutoscalerToSDPItem(ctx, autoscaler)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -149,7 +149,7 @@ func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discove
 	}
 }
 
-func (c computeAutoscalerWrapper) gcpComputeAutoscalerToSDPItem(autoscaler *computepb.Autoscaler) (*sdp.Item, *sdp.QueryError) {
+func (c computeAutoscalerWrapper) gcpComputeAutoscalerToSDPItem(ctx context.Context, autoscaler *computepb.Autoscaler) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(autoscaler)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -168,25 +168,26 @@ func (c computeAutoscalerWrapper) gcpComputeAutoscalerToSDPItem(autoscaler *comp
 
 	instanceGroupManagerName := autoscaler.GetTarget()
 	if instanceGroupManagerName != "" {
-		zone := gcpshared.ExtractPathParam("zones", instanceGroupManagerName)
 		igmNameParts := strings.Split(instanceGroupManagerName, "/")
 		igmName := igmNameParts[len(igmNameParts)-1]
+		scope, err := gcpshared.ExtractScopeFromURI(ctx, instanceGroupManagerName)
+		if err == nil {
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   gcpshared.ComputeInstanceGroupManager.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  igmName,
+					Scope:  scope,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					// Updating the IGM will affect this autoscaler's operation, but it's a weak connection.
+					In: true,
 
-		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-			Query: &sdp.Query{
-				Type:   gcpshared.ComputeInstanceGroupManager.String(),
-				Method: sdp.QueryMethod_GET,
-				Query:  igmName,
-				Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Updating the IGM will affect this autoscaler's operation, but it's a weak connection.
-				In: true,
-
-				// Updating the autoscaler will directly affect the IGM.
-				Out: true,
-			},
-		})
+					// Updating the autoscaler will directly affect the IGM.
+					Out: true,
+				},
+			})
+		}
 	}
 
 	return sdpItem, nil

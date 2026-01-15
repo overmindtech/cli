@@ -193,8 +193,8 @@ func createForwardingRule(name, projectID, region, ipAddress string) *computepb.
 		Name:           ptr.To(name),
 		IPAddress:      ptr.To(ipAddress),
 		Labels:         map[string]string{"env": "test"},
-		Network:        ptr.To("global/networks/test-network"),
-		Subnetwork:     ptr.To(fmt.Sprintf("regions/%s/subnetworks/test-subnetwork", region)),
+		Network:        ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/test-network", projectID)),
+		Subnetwork:     ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks/test-subnetwork", projectID, region)),
 		BackendService: ptr.To(fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/backendServices/backend-service", projectID, region)),
 	}
 }
