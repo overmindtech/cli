@@ -85,7 +85,7 @@ func (c computeInstantSnapshotWrapper) Get(ctx context.Context, queryParts ...st
 		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
-	item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(instantSnapshot)
+	item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(ctx, instantSnapshot)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -112,7 +112,7 @@ func (c computeInstantSnapshotWrapper) List(ctx context.Context) ([]*sdp.Item, *
 
 		var sdpErr *sdp.QueryError
 		var item *sdp.Item
-		item, sdpErr = c.gcpComputeInstantSnapshotToSDPItem(instantSnapshot)
+		item, sdpErr = c.gcpComputeInstantSnapshotToSDPItem(ctx, instantSnapshot)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -140,7 +140,7 @@ func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream di
 			return
 		}
 
-		item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(instantSnapshot)
+		item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(ctx, instantSnapshot)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -152,7 +152,7 @@ func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream di
 }
 
 // gcpComputeInstantSnapshotToSDPItem converts a GCP Instant Snapshot to an SDP Item
-func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(instantSnapshot *computepb.InstantSnapshot) (*sdp.Item, *sdp.QueryError) {
+func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(ctx context.Context, instantSnapshot *computepb.InstantSnapshot) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(instantSnapshot, "labels")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -170,16 +170,16 @@ func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(instan
 	}
 
 	if disk := instantSnapshot.GetSourceDisk(); disk != "" {
-		zone := gcpshared.ExtractPathParam("zones", disk)
-		if zone != "" {
-			diskName := gcpshared.LastPathComponent(disk)
-			if diskName != "" {
+		diskName := gcpshared.LastPathComponent(disk)
+		if diskName != "" {
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, disk)
+			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.ComputeDisk.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  diskName,
-						Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
+						Scope:  scope,
 					},
 					//Disk cannot be restored to the point where the snapshot was taken if the snapshot is deleted.
 					//Deleting disk does not impact the snapshot.

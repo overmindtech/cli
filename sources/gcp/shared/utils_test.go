@@ -1,6 +1,7 @@
 package shared_test
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
@@ -483,6 +484,196 @@ func TestZoneToRegion(t *testing.T) {
 			result := gcpshared.ZoneToRegion(tt.zone)
 			if result != tt.expected {
 				t.Errorf("ZoneToRegion(%q) = %q; expected %q", tt.zone, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestExtractScopeFromURI(t *testing.T) {
+	tests := []struct {
+		name        string
+		uri         string
+		expected    string
+		expectError bool
+	}{
+		// Zonal scope - Full HTTPS URLs
+		{
+			name:     "Zonal scope - Full HTTPS URL with www.googleapis.com",
+			uri:      "https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-a/disks/my-disk",
+			expected: "my-project.us-central1-a",
+		},
+		{
+			name:     "Zonal scope - Full HTTPS URL with service-specific domain",
+			uri:      "https://compute.googleapis.com/compute/v1/projects/my-project/zones/us-central1-a/instances/my-instance",
+			expected: "my-project.us-central1-a",
+		},
+		{
+			name:     "Zonal scope - Full resource name with // prefix",
+			uri:      "//compute.googleapis.com/projects/my-project/zones/us-central1-a/disks/my-disk",
+			expected: "my-project.us-central1-a",
+		},
+		{
+			name:     "Zonal scope - Locations with zone format",
+			uri:      "projects/my-project/locations/us-central1-a/functions/my-function",
+			expected: "my-project.us-central1-a",
+		},
+		{
+			name:     "Zonal scope - Bare path",
+			uri:      "projects/my-project/zones/us-central1-a/instances/my-instance",
+			expected: "my-project.us-central1-a",
+		},
+		{
+			name:     "Zonal scope - Different zone",
+			uri:      "projects/my-project/zones/europe-west1-b/disks/my-disk",
+			expected: "my-project.europe-west1-b",
+		},
+		// Regional scope - Full HTTPS URLs
+		{
+			name:     "Regional scope - Full HTTPS URL with regions",
+			uri:      "https://www.googleapis.com/compute/v1/projects/my-project/regions/us-central1/subnetworks/my-subnet",
+			expected: "my-project.us-central1",
+		},
+		{
+			name:     "Regional scope - Locations with region format",
+			uri:      "projects/my-project/locations/us-central1/services/my-service",
+			expected: "my-project.us-central1",
+		},
+		{
+			name:     "Regional scope - Bare path with regions",
+			uri:      "projects/my-project/regions/us-central1/addresses/my-address",
+			expected: "my-project.us-central1",
+		},
+		{
+			name:     "Regional scope - Different region",
+			uri:      "projects/my-project/regions/europe-west1/subnetworks/my-subnet",
+			expected: "my-project.europe-west1",
+		},
+		// Project scope - Global keyword
+		{
+			name:     "Project scope - Global keyword in path",
+			uri:      "https://www.googleapis.com/compute/v1/projects/my-project/global/networks/my-network",
+			expected: "my-project",
+		},
+		{
+			name:     "Project scope - Global keyword in bare path",
+			uri:      "projects/my-project/global/images/my-image",
+			expected: "my-project",
+		},
+		{
+			name:     "Project scope - Locations global",
+			uri:      "projects/my-project/locations/global/keyRings/my-keyring",
+			expected: "my-project",
+		},
+		// Project scope - No location specifier
+		{
+			name:     "Project scope - No location specifier (topics)",
+			uri:      "projects/my-project/topics/my-topic",
+			expected: "my-project",
+		},
+		{
+			name:     "Project scope - Service destination format (pubsub)",
+			uri:      "pubsub.googleapis.com/projects/my-project/topics/my-topic",
+			expected: "my-project",
+		},
+		{
+			name:     "Project scope - Service destination format (bigquery)",
+			uri:      "bigquery.googleapis.com/projects/my-project/datasets/my-dataset",
+			expected: "my-project",
+		},
+		{
+			name:     "Project scope - Full HTTPS URL with BigQuery",
+			uri:      "https://bigquery.googleapis.com/bigquery/v2/projects/my-project/datasets/my-dataset",
+			expected: "my-project",
+		},
+		{
+			name:     "Project scope - Full HTTPS URL with Pub/Sub",
+			uri:      "https://pubsub.googleapis.com/v1/projects/my-project/topics/my-topic",
+			expected: "my-project",
+		},
+		// Error cases
+		{
+			name:        "Error - Empty URI",
+			uri:         "",
+			expectError: true,
+		},
+		{
+			name:        "Error - No project (zones only)",
+			uri:         "zones/us-central1-a/disks/my-disk",
+			expectError: true,
+		},
+		{
+			name:        "Error - No project (malformed)",
+			uri:         "my-resource",
+			expectError: true,
+		},
+		{
+			name:        "Error - Project placeholder (_)",
+			uri:         "projects/_/buckets/my-bucket",
+			expectError: true,
+		},
+		{
+			name:        "Error - Both zones and regions present",
+			uri:         "projects/my-project/zones/us-central1-a/regions/us-central1/disks/my-disk",
+			expectError: true,
+		},
+		{
+			name:        "Error - Both zones and locations present",
+			uri:         "projects/my-project/zones/us-central1-a/locations/us-central1/services/my-service",
+			expectError: true,
+		},
+		{
+			name:        "Error - No project in storage URL",
+			uri:         "storage.googleapis.com/my-bucket/my-object",
+			expectError: true,
+		},
+		// Edge cases with query parameters and fragments
+		{
+			name:     "Zonal scope - URL with query parameters",
+			uri:      "https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-a/disks/my-disk?alt=json",
+			expected: "my-project.us-central1-a",
+		},
+		{
+			name:     "Regional scope - URL with fragment",
+			uri:      "projects/my-project/regions/us-central1/subnetworks/my-subnet#section",
+			expected: "my-project.us-central1",
+		},
+		// Additional test cases from plan
+		{
+			name:     "Zonal scope - Cloud Functions with locations",
+			uri:      "projects/my-project/locations/us-central1-b/functions/my-function",
+			expected: "my-project.us-central1-b",
+		},
+		{
+			name:     "Regional scope - Cloud Run with locations",
+			uri:      "projects/my-project/locations/us-central1/services/my-service",
+			expected: "my-project.us-central1",
+		},
+		{
+			name:     "Project scope - Cloud KMS with locations/global",
+			uri:      "projects/my-project/locations/global/keyRings/my-keyring",
+			expected: "my-project",
+		},
+		{
+			name:     "Project scope - IAM service account",
+			uri:      "https://iam.googleapis.com/v1/projects/my-project/serviceAccounts/my-service-account",
+			expected: "my-project",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := gcpshared.ExtractScopeFromURI(context.Background(), tt.uri)
+			if tt.expectError {
+				if err == nil {
+					t.Errorf("ExtractScopeFromURI(%q) expected error but got none. Result: %q", tt.uri, result)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("ExtractScopeFromURI(%q) unexpected error: %v", tt.uri, err)
+				}
+				if result != tt.expected {
+					t.Errorf("ExtractScopeFromURI(%q) = %q; expected %q", tt.uri, result, tt.expected)
+				}
 			}
 		})
 	}

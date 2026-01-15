@@ -86,7 +86,7 @@ func (c computeMachineImageWrapper) Get(ctx context.Context, queryParts ...strin
 		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
-	item, sdpErr := c.gcpComputeMachineImageToSDPItem(machineImage)
+	item, sdpErr := c.gcpComputeMachineImageToSDPItem(ctx, machineImage)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -110,7 +110,7 @@ func (c computeMachineImageWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp
 			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
-		item, sdpErr := c.gcpComputeMachineImageToSDPItem(machineImage)
+		item, sdpErr := c.gcpComputeMachineImageToSDPItem(ctx, machineImage)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -137,7 +137,7 @@ func (c computeMachineImageWrapper) ListStream(ctx context.Context, stream disco
 			return
 		}
 
-		item, sdpErr := c.gcpComputeMachineImageToSDPItem(machineImage)
+		item, sdpErr := c.gcpComputeMachineImageToSDPItem(ctx, machineImage)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -148,7 +148,7 @@ func (c computeMachineImageWrapper) ListStream(ctx context.Context, stream disco
 	}
 }
 
-func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(machineImage *computepb.MachineImage) (*sdp.Item, *sdp.QueryError) {
+func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.Context, machineImage *computepb.MachineImage) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(machineImage, "labels")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -178,17 +178,20 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(machineImage
 			if network := networkInterface.GetNetwork(); network != "" {
 				networkName := gcpshared.LastPathComponent(network)
 				if networkName != "" {
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   gcpshared.ComputeNetwork.String(),
-							Method: sdp.QueryMethod_GET,
-							Query:  networkName,
-							Scope:  c.ProjectID(),
-						},
-						// If the network is no longer valid errors may occur.
-						// User will need to override the network interface config when instantiating a VM from the image.
-						BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
-					})
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, network)
+					if err == nil {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.ComputeNetwork.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  networkName,
+								Scope:  scope,
+							},
+							// If the network is no longer valid errors may occur.
+							// User will need to override the network interface config when instantiating a VM from the image.
+							BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+						})
+					}
 				}
 			}
 
@@ -198,14 +201,14 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(machineImage
 			if subnet := networkInterface.GetSubnetwork(); subnet != "" {
 				subnetworkName := gcpshared.LastPathComponent(subnet)
 				if subnetworkName != "" {
-					region := gcpshared.ExtractPathParam("regions", subnet)
-					if region != "" {
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, subnet)
+					if err == nil {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   gcpshared.ComputeSubnetwork.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  subnetworkName,
-								Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
+								Scope:  scope,
 							},
 							// If the network is no longer valid errors may occur.
 							// User will need to select valid VPC/subnet during creation.
@@ -227,14 +230,14 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(machineImage
 				if strings.Contains(diskSource, "/") {
 					diskName := gcpshared.LastPathComponent(diskSource)
 					if diskName != "" {
-						zone := gcpshared.ExtractPathParam("zones", diskSource)
-						if zone != "" {
+						scope, err := gcpshared.ExtractScopeFromURI(ctx, diskSource)
+						if err == nil {
 							sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 								Query: &sdp.Query{
 									Type:   gcpshared.ComputeDisk.String(),
 									Method: sdp.QueryMethod_GET,
 									Query:  diskName,
-									Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
+									Scope:  scope,
 								},
 								BlastPropagation: &sdp.BlastPropagation{
 									In:  true,
@@ -320,14 +323,14 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(machineImage
 	if sourceInstance := machineImage.GetSourceInstance(); sourceInstance != "" {
 		sourceInstanceName := gcpshared.LastPathComponent(sourceInstance)
 		if sourceInstanceName != "" {
-			zone := gcpshared.ExtractPathParam("zones", sourceInstance)
-			if zone != "" {
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, sourceInstance)
+			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.ComputeInstance.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  sourceInstanceName,
-						Scope:  gcpshared.ZonalScope(c.ProjectID(), zone),
+						Scope:  scope,
 					},
 					// If sourceInstance gets deleted and user needs to recreate the machineImage in the future he will not be able to
 					// Deleting a machine image does not impact source Instance

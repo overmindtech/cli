@@ -102,7 +102,7 @@ func (c computeNodeGroupWrapper) Get(ctx context.Context, queryParts ...string) 
 
 	var sdpErr *sdp.QueryError
 	var item *sdp.Item
-	item, sdpErr = c.gcpComputeNodeGroupToSDPItem(nodeGroup)
+	item, sdpErr = c.gcpComputeNodeGroupToSDPItem(ctx, nodeGroup)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -129,7 +129,7 @@ func (c computeNodeGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Qu
 
 		var sdpErr *sdp.QueryError
 		var item *sdp.Item
-		item, sdpErr = c.gcpComputeNodeGroupToSDPItem(nodegroup)
+		item, sdpErr = c.gcpComputeNodeGroupToSDPItem(ctx, nodegroup)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -157,7 +157,7 @@ func (c computeNodeGroupWrapper) ListStream(ctx context.Context, stream discover
 			return
 		}
 
-		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(nodeGroup)
+		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(ctx, nodeGroup)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -191,7 +191,7 @@ func (c computeNodeGroupWrapper) Search(ctx context.Context, queryParts ...strin
 			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
-		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(nodegroup)
+		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(ctx, nodegroup)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -224,7 +224,7 @@ func (c computeNodeGroupWrapper) SearchStream(ctx context.Context, stream discov
 			return
 		}
 
-		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(nodeGroup)
+		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(ctx, nodeGroup)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -235,7 +235,7 @@ func (c computeNodeGroupWrapper) SearchStream(ctx context.Context, stream discov
 	}
 }
 
-func (c computeNodeGroupWrapper) gcpComputeNodeGroupToSDPItem(nodegroup *computepb.NodeGroup) (*sdp.Item, *sdp.QueryError) {
+func (c computeNodeGroupWrapper) gcpComputeNodeGroupToSDPItem(ctx context.Context, nodegroup *computepb.NodeGroup) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(nodegroup)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -257,22 +257,23 @@ func (c computeNodeGroupWrapper) gcpComputeNodeGroupToSDPItem(nodegroup *compute
 	if templateUrl != "" {
 		// https://www.googleapis.com/compute/v1/projects/{project}/regions/{region}/nodeTemplates/{name}
 
-		region := gcpshared.ExtractPathParam("regions", templateUrl)
 		name := gcpshared.LastPathComponent(templateUrl)
-
-		if region != "" && name != "" {
-			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   gcpshared.ComputeNodeTemplate.String(),
-					Method: sdp.QueryMethod_GET,
-					Query:  name,
-					Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
-			})
+		if name != "" {
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, templateUrl)
+			if err == nil {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputeNodeTemplate.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  name,
+						Scope:  scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				})
+			}
 		}
 	}
 

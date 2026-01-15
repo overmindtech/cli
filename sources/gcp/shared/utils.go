@@ -1,9 +1,25 @@
 package shared
 
 import (
+	"context"
 	"fmt"
 	"strings"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
+
+// RecordExtractScopeFromURIError records an error from ExtractScopeFromURI to the span.
+// This should be called whenever ExtractScopeFromURI returns an error to help with observability.
+func RecordExtractScopeFromURIError(ctx context.Context, uri string, err error) {
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		span.RecordError(err, trace.WithAttributes(
+			attribute.String("ovm.gcp.extractScopeFromURI.uri", uri),
+			attribute.String("ovm.gcp.extractScopeFromURI.error", err.Error()),
+		))
+	}
+}
 
 // RegionalScope constructs a regional scope string from project ID and region.
 func RegionalScope(projectID, region string) string {
@@ -112,4 +128,189 @@ func ZoneToRegion(zone string) string {
 	}
 
 	return strings.Join(parts[:len(parts)-1], "-")
+}
+
+// ExtractScopeFromURI extracts the scope from a GCP resource URI.
+// It supports various URL formats including full HTTPS URLs, full resource names,
+// service destination formats, and bare paths.
+//
+// Examples:
+//   - Zonal scope: "https://www.googleapis.com/compute/v1/projects/my-project/zones/us-central1-a/disks/my-disk" → "my-project.us-central1-a"
+//   - Regional scope: "projects/my-project/regions/us-central1/subnetworks/my-subnet" → "my-project.us-central1"
+//   - Project scope: "https://www.googleapis.com/compute/v1/projects/my-project/global/networks/my-network" → "my-project"
+//
+// The function determines scope based on the location specifiers found in the path:
+//   - If zones/{zone} or locations/{zone-format} is found → zonal scope (project.zone)
+//   - If regions/{region} or locations/{region-format} is found (and no zone) → regional scope (project.region)
+//   - If global keyword is found, or only project is found → project scope (project)
+//
+// Returns an error if:
+//   - The project ID cannot be determined
+//   - Conflicting location specifiers are found (e.g., both zones and regions)
+//   - The URI format is invalid
+//
+// If an error occurs, it is automatically recorded to the span from the context for observability.
+func ExtractScopeFromURI(ctx context.Context, uri string) (string, error) {
+	if uri == "" {
+		err := fmt.Errorf("URI is empty")
+		RecordExtractScopeFromURIError(ctx, uri, err)
+		return "", err
+	}
+
+	// Extract the path portion from various URL formats
+	path := extractPathFromURI(uri)
+
+	// Extract project, region, zone, and location from the path
+	projectID := ExtractPathParam("projects", path)
+	zone := ExtractPathParam("zones", path)
+	region := ExtractPathParam("regions", path)
+	location := ExtractPathParam("locations", path)
+
+	// Check for global keyword
+	hasGlobal := strings.Contains(path, "/global/") || location == "global"
+
+	// Handle special case: projects/_/buckets (project placeholder, cannot determine scope)
+	if projectID == "_" {
+		err := fmt.Errorf("cannot determine scope from URI with project placeholder: %s", uri)
+		RecordExtractScopeFromURIError(ctx, uri, err)
+		return "", err
+	}
+
+	// Validate project is present (unless it's the special _ case, already handled)
+	if projectID == "" {
+		err := fmt.Errorf("cannot determine scope: project ID not found in URI: %s", uri)
+		RecordExtractScopeFromURIError(ctx, uri, err)
+		return "", err
+	}
+
+	// Check for conflicting location specifiers
+	if zone != "" && region != "" {
+		err := fmt.Errorf("cannot determine scope: both zones and regions found in URI: %s", uri)
+		RecordExtractScopeFromURIError(ctx, uri, err)
+		return "", err
+	}
+	if zone != "" && location != "" {
+		err := fmt.Errorf("cannot determine scope: both zones and locations found in URI: %s", uri)
+		RecordExtractScopeFromURIError(ctx, uri, err)
+		return "", err
+	}
+
+	// Determine scope based on location specifiers found
+	// Priority: zone > region > project (global)
+
+	// Zonal scope: zones/{zone} or locations/{zone-format}
+	if zone != "" {
+		return ZonalScope(projectID, zone), nil
+	}
+	if location != "" && location != "global" {
+		// Check if location is zone-format using ZoneToRegion
+		// If ZoneToRegion returns a non-empty region, the location is a zone
+		if extractedRegion := ZoneToRegion(location); extractedRegion != "" {
+			// Location is zone-format
+			return ZonalScope(projectID, location), nil
+		}
+		// Location is region-format
+		return RegionalScope(projectID, location), nil
+	}
+
+	// Regional scope: regions/{region}
+	if region != "" {
+		return RegionalScope(projectID, region), nil
+	}
+
+	// Project scope: global keyword or no location specifiers
+	if hasGlobal || location == "global" {
+		return projectID, nil
+	}
+
+	// Project scope: only project found, no location specifiers
+	return projectID, nil
+}
+
+// extractPathFromURI extracts the resource path from various GCP URI formats.
+// It handles:
+//   - Full HTTPS URLs: https://www.googleapis.com/compute/v1/projects/...
+//   - Service-specific HTTPS URLs: https://compute.googleapis.com/compute/v1/projects/...
+//   - Full resource names: //compute.googleapis.com/projects/...
+//   - Service destination formats: pubsub.googleapis.com/projects/...
+//   - Bare paths: projects/...
+func extractPathFromURI(uri string) string {
+	// Remove query parameters and fragments
+	if idx := strings.IndexAny(uri, "?#"); idx != -1 {
+		uri = uri[:idx]
+	}
+
+	// Handle full resource names: //service.googleapis.com/path
+	if strings.HasPrefix(uri, "//") {
+		// Find the path after the domain
+		parts := strings.SplitN(uri[2:], "/", 2)
+		if len(parts) > 1 {
+			return parts[1]
+		}
+		return ""
+	}
+
+	// Handle HTTPS/HTTP URLs: https://domain/path or http://domain/path
+	if strings.HasPrefix(uri, "http://") || strings.HasPrefix(uri, "https://") {
+		// Remove protocol
+		uri = uri[strings.Index(uri, "://")+3:]
+		// Find the path after the domain
+		parts := strings.SplitN(uri, "/", 2)
+		if len(parts) > 1 {
+			path := parts[1]
+			// Strip version paths like /v1/, /v2/, /compute/v1/, /bigquery/v2/, etc.
+			// These appear after the domain and before the resource path
+			// Pattern: /{service}/v{version}/ or /v{version}/
+			path = stripVersionPath(path)
+			return path
+		}
+		return ""
+	}
+
+	// Handle service destination formats: service.googleapis.com/path
+	// These don't have a protocol prefix
+	if strings.Contains(uri, ".googleapis.com/") {
+		parts := strings.SplitN(uri, ".googleapis.com/", 2)
+		if len(parts) > 1 {
+			path := parts[1]
+			path = stripVersionPath(path)
+			return path
+		}
+	}
+
+	// Bare path: projects/... (use as-is)
+	return uri
+}
+
+// stripVersionPath removes version paths from the beginning of a path.
+// Examples:
+//   - "v1/projects/..." → "projects/..."
+//   - "compute/v1/projects/..." → "projects/..."
+//   - "bigquery/v2/projects/..." → "projects/..."
+func stripVersionPath(path string) string {
+	parts := strings.Split(path, "/")
+	if len(parts) == 0 {
+		return path
+	}
+
+	// Check for version pattern at the start
+	// Pattern 1: /v{version}/ (e.g., v1, v2)
+	if len(parts) > 0 && strings.HasPrefix(parts[0], "v") && len(parts[0]) == 2 {
+		// Skip version part
+		if len(parts) > 1 {
+			return strings.Join(parts[1:], "/")
+		}
+		return ""
+	}
+
+	// Pattern 2: /{service}/v{version}/ (e.g., compute/v1, bigquery/v2)
+	if len(parts) > 1 && strings.HasPrefix(parts[1], "v") && len(parts[1]) == 2 {
+		// Skip service and version parts
+		if len(parts) > 2 {
+			return strings.Join(parts[2:], "/")
+		}
+		return ""
+	}
+
+	return path
 }
