@@ -23,6 +23,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-storage-table":            {"storageAccounts", "tables"},
 		"azure-sql-database":             {"servers", "databases"},         // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-SQL-SouthEastAsia/providers/Microsoft.Sql/servers/testsvr/databases/testdb",
 		"azure-dbforpostgresql-database": {"flexibleServers", "databases"}, // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-PostgreSQL-SouthEastAsia/providers/Microsoft.DBforPostgreSQL/flexibleServers/testsvr/databases/testdb",
+		"azure-keyvault-secret":          {"vaults", "secrets"},            // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
 	}
 
 	if keys, ok := pathKeysMap[resourceType]; ok {
