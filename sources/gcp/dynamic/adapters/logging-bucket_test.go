@@ -26,7 +26,9 @@ func TestLoggingBucket(t *testing.T) {
 	bucket := &loggingpb.LogBucket{
 		Name: fmt.Sprintf("projects/%s/locations/%s/buckets/%s", projectID, location, bucketName),
 		CmekSettings: &loggingpb.CmekSettings{
-			KmsKeyName: "projects/test-project/locations/global/keyRings/my-keyring/cryptoKeys/my-key",
+			KmsKeyName:        "projects/test-project/locations/global/keyRings/my-keyring/cryptoKeys/my-key",
+			KmsKeyVersionName: "projects/test-project/locations/global/keyRings/my-keyring/cryptoKeys/my-key/cryptoKeyVersions/1",
+			ServiceAccountId:  "cmek-p123456789@gcp-sa-logging.iam.gserviceaccount.com",
 		},
 	}
 
@@ -71,6 +73,28 @@ func TestLoggingBucket(t *testing.T) {
 					ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("global", "my-keyring", "my-key"),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					// cmekSettings.kmsKeyVersionName
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  shared.CompositeLookupKey("global", "my-keyring", "my-key", "1"),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					// cmekSettings.serviceAccountId
+					ExpectedType:   gcpshared.IAMServiceAccount.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "cmek-p123456789@gcp-sa-logging.iam.gserviceaccount.com",
 					ExpectedScope:  projectID,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,

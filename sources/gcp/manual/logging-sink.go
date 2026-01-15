@@ -61,6 +61,7 @@ func (l loggingSinkWrapper) PotentialLinks() map[shared.ItemType]bool {
 		gcpshared.BigQueryDataset,
 		gcpshared.PubSubTopic,
 		gcpshared.LoggingBucket,
+		gcpshared.IAMServiceAccount,
 	)
 }
 
@@ -223,6 +224,37 @@ func (l loggingSinkWrapper) gcpLoggingSinkToItem(sink *loggingpb.LogSink) (*sdp.
 						Out: false, // Changes to sink don't affect bucket
 					},
 				})
+			}
+		}
+	}
+
+	// Link to IAM Service Account from writerIdentity
+	// The writerIdentity field contains the IAM identity (service account email or group) under which
+	// Cloud Logging writes the exported log entries. We only link if it's a service account email.
+	// Format: service-account@project-id.iam.gserviceaccount.com
+	if writerIdentity := sink.GetWriterIdentity(); writerIdentity != "" {
+		if strings.Contains(writerIdentity, ".iam.gserviceaccount.com") {
+			// Extract project ID from service account email
+			// Format: {account-id}@{project-id}.iam.gserviceaccount.com
+			parts := strings.Split(writerIdentity, "@")
+			if len(parts) == 2 {
+				domain := parts[1]
+				// Remove .iam.gserviceaccount.com to get project ID
+				projectID := strings.TrimSuffix(domain, ".iam.gserviceaccount.com")
+				if projectID != "" {
+					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   gcpshared.IAMServiceAccount.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  writerIdentity, // Service account email
+							Scope:  projectID,      // Project ID extracted from email
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,  // If the service account is deleted or its permissions are changed: The sink may fail to export logs
+							Out: false, // Changes to the sink don't affect the service account
+						},
+					})
+				}
 			}
 		}
 	}

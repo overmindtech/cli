@@ -186,6 +186,333 @@ func TestComputeForwardingRule(t *testing.T) {
 			t.Fatalf("Adapter should not support SearchStream operation")
 		}
 	})
+
+	t.Run("GetWithTarget", func(t *testing.T) {
+		wrapper := manual.NewComputeForwardingRule(mockClient, projectID, region)
+
+		// Test with TargetHttpProxy
+		targetURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/targetHttpProxies/test-target-proxy", projectID)
+		forwardingRule := createForwardingRule("test-rule", projectID, region, "192.168.1.1")
+		forwardingRule.Target = ptr.To(targetURL)
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(forwardingRule, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-rule", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.1",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-subnetwork",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeBackendService.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "backend-service",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+			}
+
+			// Add the new query we're testing
+			queryTests := append(baseQueries, shared.QueryTest{
+				ExpectedType:   gcpshared.ComputeTargetHttpProxy.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "test-target-proxy",
+				ExpectedScope:  projectID,
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: true,
+				},
+			})
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithBaseForwardingRule", func(t *testing.T) {
+		wrapper := manual.NewComputeForwardingRule(mockClient, projectID, region)
+
+		baseForwardingRuleURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/forwardingRules/base-forwarding-rule", projectID, region)
+		forwardingRule := createForwardingRule("test-rule", projectID, region, "192.168.1.1")
+		forwardingRule.BaseForwardingRule = ptr.To(baseForwardingRuleURL)
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(forwardingRule, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-rule", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.1",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-subnetwork",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeBackendService.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "backend-service",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+			}
+
+			// Add the new query we're testing
+			queryTests := append(baseQueries, shared.QueryTest{
+				ExpectedType:   gcpshared.ComputeForwardingRule.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "base-forwarding-rule",
+				ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			})
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithIPCollection", func(t *testing.T) {
+		wrapper := manual.NewComputeForwardingRule(mockClient, projectID, region)
+
+		ipCollectionURL := fmt.Sprintf("projects/%s/regions/%s/publicDelegatedPrefixes/test-prefix", projectID, region)
+		forwardingRule := createForwardingRule("test-rule", projectID, region, "192.168.1.1")
+		forwardingRule.IpCollection = ptr.To(ipCollectionURL)
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(forwardingRule, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-rule", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.1",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-subnetwork",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeBackendService.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "backend-service",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+			}
+
+			// Add the new query we're testing
+			queryTests := append(baseQueries, shared.QueryTest{
+				ExpectedType:   gcpshared.ComputePublicDelegatedPrefix.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "test-prefix",
+				ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			})
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithServiceDirectoryRegistrations", func(t *testing.T) {
+		wrapper := manual.NewComputeForwardingRule(mockClient, projectID, region)
+
+		namespaceURL := fmt.Sprintf("projects/%s/locations/us-central1/namespaces/test-namespace", projectID)
+		serviceName := "test-service"
+		forwardingRule := createForwardingRule("test-rule", projectID, region, "192.168.1.1")
+		forwardingRule.ServiceDirectoryRegistrations = []*computepb.ForwardingRuleServiceDirectoryRegistration{
+			{
+				Namespace: ptr.To(namespaceURL),
+				Service:   ptr.To(serviceName),
+			},
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(forwardingRule, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-rule", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.1",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-subnetwork",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeBackendService.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "backend-service",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+			}
+
+			// Add the new queries we're testing
+			queryTests := append(baseQueries,
+				shared.QueryTest{
+					ExpectedType:   gcpshared.ServiceDirectoryNamespace.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "us-central1|test-namespace",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				shared.QueryTest{
+					ExpectedType:   gcpshared.ServiceDirectoryService.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "us-central1|test-namespace|test-service",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			)
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
 }
 
 func createForwardingRule(name, projectID, region, ipAddress string) *computepb.ForwardingRule {

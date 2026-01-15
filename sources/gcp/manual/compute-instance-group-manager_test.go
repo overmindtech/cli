@@ -165,6 +165,188 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 
 				shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 			})
+
+			t.Run("VersionsWithInstanceTemplates", func(t *testing.T) {
+				// Create IGM with versions array containing multiple templates
+				igm := &computepb.InstanceGroupManager{
+					Name: ptr.To("test-instance-group-manager"),
+					Status: &computepb.InstanceGroupManagerStatus{
+						IsStable: ptr.To(true),
+					},
+					Versions: []*computepb.InstanceGroupManagerVersion{
+						{
+							Name:             ptr.To("canary"),
+							InstanceTemplate: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/instanceTemplates/canary-template"),
+						},
+						{
+							Name:             ptr.To("stable"),
+							InstanceTemplate: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/instanceTemplates/stable-template"),
+						},
+					},
+					InstanceGroup: ptr.To("projects/test-project-id/zones/us-central1-a/instanceGroups/test-group"),
+					TargetPools: []string{
+						"https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/targetPools/test-pool",
+					},
+					ResourcePolicies: &computepb.InstanceGroupManagerResourcePolicies{
+						WorkloadPolicy: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/resourcePolicies/test-policy"),
+					},
+				}
+
+				wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(igm, nil)
+
+				sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance-group-manager", true)
+				if qErr != nil {
+					t.Fatalf("Expected no error, got: %v", qErr)
+				}
+
+				queryTests := shared.QueryTests{
+					// Canary version template (global)
+					{
+						ExpectedType:   gcpshared.ComputeInstanceTemplate.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "canary-template",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					// Stable version template (regional)
+					{
+						ExpectedType:   gcpshared.ComputeRegionInstanceTemplate.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "stable-template",
+						ExpectedScope:  gcpshared.RegionalScope(projectID, region),
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						ExpectedType:   gcpshared.ComputeInstanceGroup.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "test-group",
+						ExpectedScope:  "test-project-id.us-central1-a",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					},
+					{
+						ExpectedType:   gcpshared.ComputeTargetPool.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "test-pool",
+						ExpectedScope:  "test-project-id.us-central1",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					},
+					{
+						ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "test-policy",
+						ExpectedScope:  "test-project-id.us-central1",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+				}
+
+				shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+			})
+
+			t.Run("AutoHealingPoliciesWithHealthCheck", func(t *testing.T) {
+				// Create IGM with auto-healing policy containing health check
+				igm := &computepb.InstanceGroupManager{
+					Name: ptr.To("test-instance-group-manager"),
+					Status: &computepb.InstanceGroupManagerStatus{
+						IsStable: ptr.To(true),
+					},
+					InstanceTemplate: ptr.To(instanceTemplateName),
+					InstanceGroup:    ptr.To("projects/test-project-id/zones/us-central1-a/instanceGroups/test-group"),
+					AutoHealingPolicies: []*computepb.InstanceGroupManagerAutoHealingPolicy{
+						{
+							HealthCheck:     ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/healthChecks/test-health-check"),
+							InitialDelaySec: ptr.To[int32](300),
+						},
+					},
+					TargetPools: []string{
+						"https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/targetPools/test-pool",
+					},
+					ResourcePolicies: &computepb.InstanceGroupManagerResourcePolicies{
+						WorkloadPolicy: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/resourcePolicies/test-policy"),
+					},
+				}
+
+				wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(igm, nil)
+
+				sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance-group-manager", true)
+				if qErr != nil {
+					t.Fatalf("Expected no error, got: %v", qErr)
+				}
+
+				queryTests := shared.QueryTests{
+					{
+						ExpectedType:   gcpshared.ComputeInstanceTemplate.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "unit-test-template",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					// Health check from auto-healing policy
+					{
+						ExpectedType:   gcpshared.ComputeHealthCheck.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "test-health-check",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
+						ExpectedType:   gcpshared.ComputeInstanceGroup.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "test-group",
+						ExpectedScope:  "test-project-id.us-central1-a",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					},
+					{
+						ExpectedType:   gcpshared.ComputeTargetPool.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "test-pool",
+						ExpectedScope:  "test-project-id.us-central1",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					},
+					{
+						ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "test-policy",
+						ExpectedScope:  "test-project-id.us-central1",
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+				}
+
+				shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+			})
 		})
 
 	})

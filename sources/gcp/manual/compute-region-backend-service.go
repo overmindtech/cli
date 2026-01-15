@@ -55,6 +55,9 @@ func (computeRegionBackendServiceWrapper) PotentialLinks() map[shared.ItemType]b
 		gcpshared.NetworkServicesServiceLbPolicy,
 		gcpshared.NetworkServicesServiceBinding,
 		gcpshared.ComputeInstanceGroup,
+		gcpshared.ComputeNetworkEndpointGroup,
+		gcpshared.ComputeHealthCheck,
+		gcpshared.ComputeInstance,
 	)
 }
 
@@ -91,7 +94,7 @@ func (c computeRegionBackendServiceWrapper) Get(ctx context.Context, queryParts 
 		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
-	item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), c.DefaultScope(), service)
+	item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, c.ProjectID(), c.DefaultScope(), service)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -116,7 +119,7 @@ func (c computeRegionBackendServiceWrapper) List(ctx context.Context) ([]*sdp.It
 			return nil, gcpshared.QueryError(err, c.Region(), c.Type())
 		}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), c.Region(), bs)
+		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, c.ProjectID(), c.Region(), bs)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -144,7 +147,7 @@ func (c computeRegionBackendServiceWrapper) ListStream(ctx context.Context, stre
 			return
 		}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), c.Region(), backendService)
+		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, c.ProjectID(), c.Region(), backendService)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue

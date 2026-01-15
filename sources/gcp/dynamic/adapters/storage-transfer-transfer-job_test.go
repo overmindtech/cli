@@ -14,6 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 func TestStorageTransferTransferJob(t *testing.T) {
@@ -183,6 +184,17 @@ func TestStorageTransferTransferJob(t *testing.T) {
 
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
+				// transferSpec.httpDataSource.listUrl (HTTP endpoint)
+				{
+					ExpectedType:   stdlib.NetworkHTTP.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "https://example.com/urllist.tsv",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
 				// transferSpec.gcsDataSink.bucketName
 				{
 					ExpectedType:   gcpshared.StorageBucket.String(),

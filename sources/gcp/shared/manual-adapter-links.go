@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -79,6 +80,301 @@ func ProjectBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, _
 	}
 }
 
+// ForwardingRuleTargetLinker handles polymorphic target field in forwarding rules.
+// The target field can reference multiple resource types (TargetHttpProxy, TargetHttpsProxy,
+// TargetTcpProxy, TargetSslProxy, TargetPool, TargetVpnGateway, TargetInstance, ServiceAttachment).
+// This function parses the URI to determine the target type and creates the appropriate link.
+// Supports both full HTTPS URLs and resource name formats.
+func ForwardingRuleTargetLinker(projectID, fromItemScope, targetURI string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	if targetURI == "" {
+		return nil
+	}
+
+	// Determine target type from URI path
+	var targetType shared.ItemType
+	var scope string
+	var query string
+
+	// Extract the resource name (last component)
+	name := LastPathComponent(targetURI)
+
+	// Normalize URI - remove protocol and domain if present
+	normalizedURI := targetURI
+	if strings.HasPrefix(normalizedURI, "https://") {
+		// Extract path from full URL: https://compute.googleapis.com/compute/v1/projects/{project}/global/targetHttpProxies/{proxy}
+		if idx := strings.Index(normalizedURI, "/projects/"); idx != -1 {
+			normalizedURI = normalizedURI[idx+1:]
+		}
+	}
+
+	// Check URI path to determine target type (case-insensitive check for robustness)
+	normalizedURI = strings.ToLower(normalizedURI)
+	if strings.Contains(normalizedURI, "/targethttpproxies/") {
+		targetType = ComputeTargetHttpProxy
+		scope = projectID // Global resource
+		query = name
+	} else if strings.Contains(normalizedURI, "/targethttpsproxies/") {
+		targetType = ComputeTargetHttpsProxy
+		scope = projectID // Global resource
+		query = name
+	} else if strings.Contains(normalizedURI, "/targettcpproxies/") {
+		targetType = ComputeTargetTcpProxy
+		scope = projectID // Global resource
+		query = name
+	} else if strings.Contains(normalizedURI, "/targetsslproxies/") {
+		targetType = ComputeTargetSslProxy
+		scope = projectID // Global resource
+		query = name
+	} else if strings.Contains(normalizedURI, "/targetpools/") {
+		targetType = ComputeTargetPool
+		// Use original targetURI for path parameter extraction (case-sensitive)
+		region := ExtractPathParam("regions", targetURI)
+		if region != "" {
+			scope = fmt.Sprintf("%s.%s", projectID, region)
+		} else {
+			scope = projectID
+		}
+		query = name
+	} else if strings.Contains(normalizedURI, "/targetvpngateways/") {
+		targetType = ComputeTargetVpnGateway
+		// Use original targetURI for path parameter extraction (case-sensitive)
+		region := ExtractPathParam("regions", targetURI)
+		if region != "" {
+			scope = fmt.Sprintf("%s.%s", projectID, region)
+		} else {
+			scope = projectID
+		}
+		query = name
+	} else if strings.Contains(normalizedURI, "/targetinstances/") {
+		targetType = ComputeTargetInstance
+		// Use original targetURI for path parameter extraction (case-sensitive)
+		zone := ExtractPathParam("zones", targetURI)
+		if zone != "" {
+			scope = fmt.Sprintf("%s.%s", projectID, zone)
+		} else {
+			scope = projectID
+		}
+		query = name
+	} else if strings.Contains(normalizedURI, "/serviceattachments/") {
+		targetType = ComputeServiceAttachment
+		// Use original targetURI for path parameter extraction (case-sensitive)
+		region := ExtractPathParam("regions", targetURI)
+		if region != "" {
+			scope = fmt.Sprintf("%s.%s", projectID, region)
+		} else {
+			scope = projectID
+		}
+		query = name
+	} else {
+		// Unknown target type
+		return nil
+	}
+
+	if projectID != "" && scope != "" && query != "" {
+		return &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   targetType.String(),
+				Method: sdp.QueryMethod_GET,
+				Query:  query,
+				Scope:  scope,
+			},
+			BlastPropagation: blastPropagation,
+		}
+	}
+
+	return nil
+}
+
+// BackendServiceOrBucketLinker handles polymorphic backend service/bucket fields in URL maps.
+// The service field can reference either a BackendService (global or regional) or a BackendBucket (global).
+// This function parses the URI to determine the target type and creates the appropriate link.
+// Supports both full HTTPS URLs and resource name formats.
+func BackendServiceOrBucketLinker(projectID, fromItemScope, backendURI string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	if backendURI == "" {
+		return nil
+	}
+
+	// Determine target type from URI path
+	var targetType shared.ItemType
+	var scope string
+	var query string
+
+	// Extract the resource name (last component)
+	name := LastPathComponent(backendURI)
+
+	// Normalize URI - remove protocol and domain if present
+	normalizedURI := backendURI
+	if strings.HasPrefix(normalizedURI, "https://") {
+		// Extract path from full URL: https://compute.googleapis.com/compute/v1/projects/{project}/global/backendServices/{service}
+		if idx := strings.Index(normalizedURI, "/projects/"); idx != -1 {
+			normalizedURI = normalizedURI[idx+1:]
+		}
+	}
+
+	// Check URI path to determine target type (case-insensitive check for robustness)
+	normalizedURILower := strings.ToLower(normalizedURI)
+	if strings.Contains(normalizedURILower, "/backendbuckets/") {
+		// Backend Bucket (global, project-scoped)
+		targetType = ComputeBackendBucket
+		scope = projectID
+		query = name
+	} else if strings.Contains(normalizedURILower, "/backendservices/") {
+		// Backend Service - check if it's regional or global
+		targetType = ComputeBackendService
+		// Use original backendURI for path parameter extraction (case-sensitive)
+		region := ExtractPathParam("regions", backendURI)
+		if region != "" {
+			// Regional backend service
+			targetType = ComputeRegionBackendService
+			scope = fmt.Sprintf("%s.%s", projectID, region)
+		} else {
+			// Global backend service
+			scope = projectID
+		}
+		query = name
+	} else {
+		// Unknown backend type
+		return nil
+	}
+
+	if projectID != "" && scope != "" && query != "" {
+		return &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   targetType.String(),
+				Method: sdp.QueryMethod_GET,
+				Query:  query,
+				Scope:  scope,
+			},
+			BlastPropagation: blastPropagation,
+		}
+	}
+
+	return nil
+}
+
+// AddressUsersLinker handles the polymorphic users field in Compute Address resources.
+// The users field contains an array of URLs referencing resources that are using the address.
+// This can include: forwarding rules (regional/global), instances, target VPN gateways, routers.
+// This function parses the URI to determine the resource type and creates the appropriate link.
+// Supports both full HTTPS URLs and resource name formats.
+func AddressUsersLinker(ctx context.Context, projectID, userURI string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	if userURI == "" {
+		return nil
+	}
+
+	// Determine resource type from URI path
+	var targetType shared.ItemType
+	var scope string
+	var query string
+
+	// Extract the resource name (last component)
+	name := LastPathComponent(userURI)
+
+	// Normalize URI - remove protocol and domain if present
+	normalizedURI := userURI
+	if strings.HasPrefix(normalizedURI, "https://") {
+		// Extract path from full URL: https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/forwardingRules/{rule}
+		if idx := strings.Index(normalizedURI, "/projects/"); idx != -1 {
+			normalizedURI = normalizedURI[idx+1:]
+		}
+	}
+
+	// Check URI path to determine resource type (case-insensitive check for robustness)
+	normalizedURILower := strings.ToLower(normalizedURI)
+	if strings.Contains(normalizedURILower, "/global/forwardingrules/") {
+		// Global forwarding rule (project-scoped)
+		targetType = ComputeGlobalForwardingRule
+		scope = projectID
+		query = name
+	} else if strings.Contains(normalizedURILower, "/forwardingrules/") {
+		// Regional forwarding rule
+		targetType = ComputeForwardingRule
+		// Use original userURI for path parameter extraction (case-sensitive)
+		region := ExtractPathParam("regions", userURI)
+		if region != "" {
+			scope = fmt.Sprintf("%s.%s", projectID, region)
+		} else {
+			// Try to extract scope from URI using utility function
+			extractedScope, err := ExtractScopeFromURI(ctx, userURI)
+			if err == nil {
+				scope = extractedScope
+			} else {
+				scope = projectID
+			}
+		}
+		query = name
+	} else if strings.Contains(normalizedURILower, "/instances/") {
+		// VM Instance (zonal)
+		targetType = ComputeInstance
+		// Use original userURI for path parameter extraction (case-sensitive)
+		zone := ExtractPathParam("zones", userURI)
+		if zone != "" {
+			scope = fmt.Sprintf("%s.%s", projectID, zone)
+		} else {
+			// Try to extract scope from URI using utility function
+			extractedScope, err := ExtractScopeFromURI(ctx, userURI)
+			if err == nil {
+				scope = extractedScope
+			} else {
+				scope = projectID
+			}
+		}
+		query = name
+	} else if strings.Contains(normalizedURILower, "/targetvpngateways/") {
+		// Target VPN Gateway (regional)
+		targetType = ComputeTargetVpnGateway
+		// Use original userURI for path parameter extraction (case-sensitive)
+		region := ExtractPathParam("regions", userURI)
+		if region != "" {
+			scope = fmt.Sprintf("%s.%s", projectID, region)
+		} else {
+			// Try to extract scope from URI using utility function
+			extractedScope, err := ExtractScopeFromURI(ctx, userURI)
+			if err == nil {
+				scope = extractedScope
+			} else {
+				scope = projectID
+			}
+		}
+		query = name
+	} else if strings.Contains(normalizedURILower, "/routers/") {
+		// Router (regional)
+		targetType = ComputeRouter
+		// Use original userURI for path parameter extraction (case-sensitive)
+		region := ExtractPathParam("regions", userURI)
+		if region != "" {
+			scope = fmt.Sprintf("%s.%s", projectID, region)
+		} else {
+			// Try to extract scope from URI using utility function
+			extractedScope, err := ExtractScopeFromURI(ctx, userURI)
+			if err == nil {
+				scope = extractedScope
+			} else {
+				scope = projectID
+			}
+		}
+		query = name
+	} else {
+		// Unknown resource type - log but don't fail
+		log.Debugf("AddressUsersLinker: unknown resource type in users field: %s", userURI)
+		return nil
+	}
+
+	if projectID != "" && scope != "" && query != "" {
+		return &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   targetType.String(),
+				Method: sdp.QueryMethod_GET,
+				Query:  query,
+				Scope:  scope,
+			},
+			BlastPropagation: blastPropagation,
+		}
+	}
+
+	return nil
+}
+
 func AWSLinkByARN(awsItem string) func(_, _, arn string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
 	return func(_, _, arn string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
 		// https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html#arns-syntax
@@ -116,24 +412,38 @@ func AWSLinkByARN(awsItem string) func(_, _, arn string, blastPropagation *sdp.B
 //
 // Expects that the query will have all the necessary information to create the linked item query.
 var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery{
-	ComputeInstance:             ZoneBaseLinkedItemQueryByName(ComputeInstance),
-	ComputeInstanceGroup:        ZoneBaseLinkedItemQueryByName(ComputeInstanceGroup),
-	ComputeInstanceGroupManager: ZoneBaseLinkedItemQueryByName(ComputeInstanceGroupManager),
-	ComputeAutoscaler:           ZoneBaseLinkedItemQueryByName(ComputeAutoscaler),
-	ComputeDisk:                 ZoneBaseLinkedItemQueryByName(ComputeDisk),
-	ComputeReservation:          ZoneBaseLinkedItemQueryByName(ComputeReservation),
-	ComputeNodeGroup:            ZoneBaseLinkedItemQueryByName(ComputeNodeGroup),
-	ComputeInstantSnapshot:      ZoneBaseLinkedItemQueryByName(ComputeInstantSnapshot),
-	ComputeMachineImage:         ProjectBaseLinkedItemQueryByName(ComputeMachineImage),
-	ComputeSecurityPolicy:       ProjectBaseLinkedItemQueryByName(ComputeSecurityPolicy),
-	ComputeSnapshot:             ProjectBaseLinkedItemQueryByName(ComputeSnapshot),
-	ComputeHealthCheck:          ProjectBaseLinkedItemQueryByName(ComputeHealthCheck),
-	ComputeBackendService:       ProjectBaseLinkedItemQueryByName(ComputeBackendService),
-	ComputeRegionBackendService: RegionBaseLinkedItemQueryByName(ComputeRegionBackendService),
-	ComputeImage:                ProjectBaseLinkedItemQueryByName(ComputeImage),
-	ComputeAddress:              RegionBaseLinkedItemQueryByName(ComputeAddress),
-	ComputeForwardingRule:       RegionBaseLinkedItemQueryByName(ComputeForwardingRule),
-	ComputeNodeTemplate:         RegionBaseLinkedItemQueryByName(ComputeNodeTemplate),
+	ComputeInstance:               ZoneBaseLinkedItemQueryByName(ComputeInstance),
+	ComputeInstanceGroup:          ZoneBaseLinkedItemQueryByName(ComputeInstanceGroup),
+	ComputeInstanceGroupManager:   ZoneBaseLinkedItemQueryByName(ComputeInstanceGroupManager),
+	ComputeAutoscaler:             ZoneBaseLinkedItemQueryByName(ComputeAutoscaler),
+	ComputeDisk:                   ZoneBaseLinkedItemQueryByName(ComputeDisk),
+	ComputeReservation:            ZoneBaseLinkedItemQueryByName(ComputeReservation),
+	ComputeNodeGroup:              ZoneBaseLinkedItemQueryByName(ComputeNodeGroup),
+	ComputeInstantSnapshot:        ZoneBaseLinkedItemQueryByName(ComputeInstantSnapshot),
+	ComputeMachineImage:           ProjectBaseLinkedItemQueryByName(ComputeMachineImage),
+	ComputeSecurityPolicy:         ProjectBaseLinkedItemQueryByName(ComputeSecurityPolicy),
+	ComputeSnapshot:               ProjectBaseLinkedItemQueryByName(ComputeSnapshot),
+	ComputeHealthCheck:            ProjectBaseLinkedItemQueryByName(ComputeHealthCheck),
+	ComputeBackendService:         BackendServiceOrBucketLinker, // Handles both backend services and backend buckets
+	ComputeRegionBackendService:   RegionBaseLinkedItemQueryByName(ComputeRegionBackendService),
+	ComputeImage:                  ProjectBaseLinkedItemQueryByName(ComputeImage),
+	ComputeAddress:                RegionBaseLinkedItemQueryByName(ComputeAddress),
+	ComputeForwardingRule:         RegionBaseLinkedItemQueryByName(ComputeForwardingRule),
+	ComputeInterconnectAttachment: RegionBaseLinkedItemQueryByName(ComputeInterconnectAttachment),
+	ComputeNodeTemplate:           RegionBaseLinkedItemQueryByName(ComputeNodeTemplate),
+	// Target proxy types (global, project-scoped) - use polymorphic linker for forwarding rule target field
+	ComputeTargetHttpProxy:  ForwardingRuleTargetLinker,
+	ComputeTargetHttpsProxy: ForwardingRuleTargetLinker,
+	ComputeTargetTcpProxy:   ForwardingRuleTargetLinker,
+	ComputeTargetSslProxy:   ForwardingRuleTargetLinker,
+	// Target pool (regional) - use polymorphic linker
+	ComputeTargetPool: ForwardingRuleTargetLinker,
+	// Target VPN Gateway (regional) - use polymorphic linker
+	ComputeTargetVpnGateway: ForwardingRuleTargetLinker,
+	// Target Instance (zonal) - use polymorphic linker
+	ComputeTargetInstance: ForwardingRuleTargetLinker,
+	// Service Attachment (regional) - use polymorphic linker
+	ComputeServiceAttachment: ForwardingRuleTargetLinker,
 	CloudKMSCryptoKeyVersion: func(projectID, _, keyName string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
 		location := ExtractPathParam("locations", keyName)
 		keyRing := ExtractPathParam("keyRings", keyName)
@@ -156,6 +466,99 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 	IAMServiceAccountKey: ProjectBaseLinkedItemQueryByName(IAMServiceAccountKey),
 	IAMServiceAccount:    ProjectBaseLinkedItemQueryByName(IAMServiceAccount),
 	CloudKMSKeyRing:      RegionBaseLinkedItemQueryByName(CloudKMSKeyRing),
+	// ProjectFolderOrganizationLinker handles polymorphic project/folder/organization fields in resource names.
+	// The name field can reference projects, folders, or organizations depending on the resource scope.
+	// This function parses the name to determine the target type and creates the appropriate link.
+	// This is registered for CloudResourceManagerProject but can detect and link to all three types.
+	CloudResourceManagerProject: func(projectID, _, name string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		if name == "" {
+			return nil
+		}
+		// Extract resource ID based on prefix - handle projects, folders, and organizations
+		if strings.HasPrefix(name, "projects/") {
+			projectIDFromName := ExtractPathParam("projects", name)
+			if projectIDFromName != "" {
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   CloudResourceManagerProject.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  projectIDFromName,
+						Scope:  projectIDFromName, // Project scope uses project ID as scope
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		} else if strings.HasPrefix(name, "folders/") {
+			folderID := ExtractPathParam("folders", name)
+			if folderID != "" {
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   CloudResourceManagerFolder.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  folderID,
+						Scope:  projectID, // Folder scope uses project ID (may need adjustment when folder adapter is created)
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		} else if strings.HasPrefix(name, "organizations/") {
+			orgID := ExtractPathParam("organizations", name)
+			if orgID != "" {
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   CloudResourceManagerOrganization.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  orgID,
+						Scope:  projectID, // Organization scope uses project ID (may need adjustment when org adapter is created)
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		}
+		return nil
+	},
+	CloudResourceManagerFolder: func(projectID, _, name string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		if name == "" {
+			return nil
+		}
+		// Extract folder ID from name
+		if strings.HasPrefix(name, "folders/") {
+			folderID := ExtractPathParam("folders", name)
+			if folderID != "" {
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   CloudResourceManagerFolder.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  folderID,
+						Scope:  projectID, // Folder scope uses project ID (may need adjustment when folder adapter is created)
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		}
+		return nil
+	},
+	CloudResourceManagerOrganization: func(projectID, _, name string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		if name == "" {
+			return nil
+		}
+		// Extract organization ID from name
+		if strings.HasPrefix(name, "organizations/") {
+			orgID := ExtractPathParam("organizations", name)
+			if orgID != "" {
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   CloudResourceManagerOrganization.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  orgID,
+						Scope:  projectID, // Organization scope uses project ID (may need adjustment when org adapter is created)
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		}
+		return nil
+	},
 	stdlib.NetworkIP: func(_, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
 		if query != "" {
 			return &sdp.LinkedItemQuery{
@@ -184,6 +587,31 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 		}
 		return nil
 	},
+	stdlib.NetworkHTTP: func(_, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		if query != "" {
+			// Extract the base URL (remove query parameters and fragments)
+			httpURL := query
+			if idx := strings.Index(httpURL, "?"); idx != -1 {
+				httpURL = httpURL[:idx]
+			}
+			if idx := strings.Index(httpURL, "#"); idx != -1 {
+				httpURL = httpURL[:idx]
+			}
+
+			if httpURL != "" {
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   "http",
+						Method: sdp.QueryMethod_SEARCH,
+						Query:  httpURL,
+						Scope:  "global",
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		}
+		return nil
+	},
 	CloudKMSCryptoKey: func(projectID, _, keyName string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
 		//"projects/{kms_project_id}/locations/{region}/keyRings/{key_region}/cryptoKeys/{key}
 		values := ExtractPathParams(keyName, "locations", "keyRings", "cryptoKeys")
@@ -208,11 +636,52 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 		return nil
 	},
 	BigQueryTable: func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
-		// expected query format: {projectId}.{datasetId}.{tableId}
-		// See: https://cloud.google.com/pubsub/docs/reference/rest/v1/projects.subscriptions#bigqueryconfig
-		//
-		// Also: bq://projectId or bq://projectId.bqDatasetId or bq://projectId.bqDatasetId.bqTableId.
-		// See: https://cloud.google.com/vertex-ai/docs/reference/rest/v1/BigQueryDestination
+		if query == "" {
+			return nil
+		}
+
+		// Supported formats:
+		// 1) //bigquery.googleapis.com/projects/PROJECT_ID/datasets/DATASET_ID/tables/TABLE_ID
+		//    See: https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.dataScans#DataSource
+		// 2) projects/PROJECT_ID/datasets/DATASET_ID/tables/TABLE_ID
+		// 3) {projectId}.{datasetId}.{tableId}
+		//    See: https://cloud.google.com/pubsub/docs/reference/rest/v1/projects.subscriptions#bigqueryconfig
+		// 4) bq://projectId or bq://projectId.bqDatasetId or bq://projectId.bqDatasetId.bqTableId
+		//    See: https://cloud.google.com/vertex-ai/docs/reference/rest/v1/BigQueryDestination
+
+		// Try full URI format first: //bigquery.googleapis.com/projects/PROJECT_ID/datasets/DATASET_ID/tables/TABLE_ID
+		if strings.HasPrefix(query, "//bigquery.googleapis.com/") || strings.HasPrefix(query, "https://bigquery.googleapis.com/") {
+			values := ExtractPathParams(query, "projects", "datasets", "tables")
+			if len(values) == 3 && values[0] != "" && values[1] != "" && values[2] != "" {
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   BigQueryTable.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  shared.CompositeLookupKey(values[1], values[2]),
+						Scope:  values[0],
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		}
+
+		// Try path format: projects/PROJECT_ID/datasets/DATASET_ID/tables/TABLE_ID
+		if strings.HasPrefix(query, "projects/") {
+			values := ExtractPathParams(query, "projects", "datasets", "tables")
+			if len(values) == 3 && values[0] != "" && values[1] != "" && values[2] != "" {
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   BigQueryTable.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  shared.CompositeLookupKey(values[1], values[2]),
+						Scope:  values[0],
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		}
+
+		// Try dot-separated format: {projectId}.{datasetId}.{tableId} or bq://projectId.bqDatasetId.bqTableId
 		query = strings.TrimPrefix(query, "bq://")
 		parts := strings.Split(query, ".")
 		if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
@@ -232,6 +701,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 	aws.KinesisStream:         AWSLinkByARN("kinesis-stream"),
 	aws.KinesisStreamConsumer: AWSLinkByARN("kinesis-stream-consumer"),
 	aws.IAMRole:               AWSLinkByARN("iam-role"),
+	aws.MSKCluster:            AWSLinkByARN("msk-cluster"),
 	SQLAdminInstance: func(projectID, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
 		// Supported formats:
 		// 1) {project}:{location}:{instance} (Cloud Run format)
@@ -289,13 +759,48 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 		// 1) datasetId (e.g., "my_dataset")
 		// 2) projects/{project}/datasets/{dataset}
 		// 3) project:dataset (BigQuery FullID style)
+		// 4) bigquery.googleapis.com/projects/{project}/datasets/{dataset}
 		if query == "" {
 			return nil
 		}
 
-		if strings.HasPrefix(query, "project/") {
-			// Try path-style first
-			values := ExtractPathParams(query, "projects", "datasets")
+		// Normalize URI formats (bigquery.googleapis.com/... or https://bigquery.googleapis.com/...)
+		normalizedQuery := query
+		if strings.Contains(query, ".googleapis.com/") {
+			// Handle service destination formats: bigquery.googleapis.com/path
+			parts := strings.SplitN(query, ".googleapis.com/", 2)
+			if len(parts) > 1 {
+				path := parts[1]
+				// Strip version paths like /v1/, /v2/, /bigquery/v2/, etc.
+				pathParts := strings.Split(path, "/")
+				// Remove version paths (v1, v2, bigquery/v2, etc.) that appear before "projects"
+				for i, part := range pathParts {
+					if part == "projects" {
+						normalizedQuery = strings.Join(pathParts[i:], "/")
+						break
+					}
+				}
+			}
+		} else if strings.HasPrefix(query, "https://") || strings.HasPrefix(query, "http://") {
+			// Handle HTTPS/HTTP URLs: https://bigquery.googleapis.com/bigquery/v2/projects/...
+			uri := query[strings.Index(query, "://")+3:]
+			parts := strings.SplitN(uri, "/", 2)
+			if len(parts) > 1 {
+				path := parts[1]
+				// Strip version paths
+				pathParts := strings.Split(path, "/")
+				for i, part := range pathParts {
+					if part == "projects" {
+						normalizedQuery = strings.Join(pathParts[i:], "/")
+						break
+					}
+				}
+			}
+		}
+
+		// Try path-style: projects/{project}/datasets/{dataset}
+		if strings.Contains(normalizedQuery, "projects/") && strings.Contains(normalizedQuery, "datasets/") {
+			values := ExtractPathParams(normalizedQuery, "projects", "datasets")
 			if len(values) == 2 && values[0] != "" && values[1] != "" {
 				parsedProject := values[0]
 				dataset := values[1]
@@ -394,4 +899,165 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 
 		return nil
 	},
+	StorageBucket: func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		if query == "" {
+			return nil
+		}
+
+		// Supported formats:
+		// 1) //storage.googleapis.com/projects/PROJECT_ID/buckets/BUCKET_ID
+		// 2) gs://bucket-name
+		// 3) gs://bucket-name/path/to/file
+		// 4) bucket-name (without gs:// prefix)
+
+		// Try full URI format first: //storage.googleapis.com/projects/PROJECT_ID/buckets/BUCKET_ID
+		if strings.HasPrefix(query, "//storage.googleapis.com/") || strings.HasPrefix(query, "https://storage.googleapis.com/") {
+			values := ExtractPathParams(query, "projects", "buckets")
+			if len(values) == 2 && values[0] != "" && values[1] != "" {
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   StorageBucket.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  values[1],
+						Scope:  values[0],
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		}
+
+		// Try path format: projects/PROJECT_ID/buckets/BUCKET_ID
+		if strings.HasPrefix(query, "projects/") {
+			values := ExtractPathParams(query, "projects", "buckets")
+			if len(values) == 2 && values[0] != "" && values[1] != "" {
+				return &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   StorageBucket.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  values[1],
+						Scope:  values[0],
+					},
+					BlastPropagation: blastPropagation,
+				}
+			}
+		}
+
+		// Strip gs:// prefix if present
+		query = strings.TrimPrefix(query, "gs://")
+
+		// Extract bucket name (everything before the first slash)
+		bucketName := query
+		if idx := strings.Index(query, "/"); idx != -1 {
+			bucketName = query[:idx]
+		}
+
+		// Validate bucket name is not empty
+		if bucketName == "" {
+			return nil
+		}
+
+		// Storage buckets are project-scoped
+		if projectID != "" {
+			return &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   StorageBucket.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  bucketName,
+					Scope:  projectID,
+				},
+				BlastPropagation: blastPropagation,
+			}
+		}
+
+		return nil
+	},
+	// OrgPolicyPolicy name field can reference parent project, folder, or organization
+	// This linker is registered for all three parent types since the name field can reference any of them
+	// Format: projects/{project_number}/policies/{constraint} or
+	//         folders/{folder_id}/policies/{constraint} or
+	//         organizations/{organization_id}/policies/{constraint}
+	CloudResourceManagerProject: func(projectID, _, policyName string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		return orgPolicyParentLinker(projectID, policyName, blastPropagation)
+	},
+	CloudResourceManagerFolder: func(projectID, _, policyName string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		return orgPolicyParentLinker(projectID, policyName, blastPropagation)
+	},
+	CloudResourceManagerOrganization: func(projectID, _, policyName string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+		return orgPolicyParentLinker(projectID, policyName, blastPropagation)
+	},
+}
+
+// orgPolicyParentLinker parses an org policy name to determine the parent resource type
+// and creates a linked item query for the appropriate parent (project, folder, or organization).
+// The policy name format is: projects/{project_number}/policies/{constraint} or
+//
+//	folders/{folder_id}/policies/{constraint} or
+//	organizations/{organization_id}/policies/{constraint}
+//
+// It also handles simple project references: projects/{project_id} (without /policies/)
+// In that case, the scope should be the current project (projectID), not the referenced project.
+func orgPolicyParentLinker(projectID, policyName string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	if policyName == "" {
+		return nil
+	}
+
+	var targetType shared.ItemType
+	var parentID string
+	var scope string
+
+	// Parse the policy name to determine parent type
+	if strings.HasPrefix(policyName, "projects/") {
+		// Check if this is a simple project reference (projects/{project_id}) or org policy (projects/{project_id}/policies/...)
+		if strings.Contains(policyName, "/policies/") {
+			// Org policy format: projects/{project_number}/policies/{constraint}
+			values := ExtractPathParams(policyName, "projects")
+			if len(values) >= 1 && values[0] != "" {
+				targetType = CloudResourceManagerProject
+				parentID = values[0]
+				scope = parentID // For org policies, use the project ID as scope
+			}
+		} else {
+			// Simple project reference: projects/{project_id}
+			// Extract project ID and use current project as scope
+			values := ExtractPathParams(policyName, "projects")
+			if len(values) >= 1 && values[0] != "" {
+				targetType = CloudResourceManagerProject
+				parentID = values[0]
+				scope = projectID // Use current project as scope when querying for another project
+			}
+		}
+	} else if strings.HasPrefix(policyName, "folders/") {
+		// Extract folder ID from: folders/{folder_id}/policies/{constraint}
+		values := ExtractPathParams(policyName, "folders")
+		if len(values) >= 1 && values[0] != "" {
+			targetType = CloudResourceManagerFolder
+			parentID = values[0]
+			// Folders are organization-scoped, but we don't have org ID here
+			// Use projectID as fallback scope (folder adapters will need to handle this)
+			scope = projectID
+		}
+	} else if strings.HasPrefix(policyName, "organizations/") {
+		// Extract organization ID from: organizations/{organization_id}/policies/{constraint}
+		values := ExtractPathParams(policyName, "organizations")
+		if len(values) >= 1 && values[0] != "" {
+			targetType = CloudResourceManagerOrganization
+			parentID = values[0]
+			// Organizations are global-scoped
+			scope = "global"
+		}
+	}
+
+	if parentID != "" && scope != "" {
+		return &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   targetType.String(),
+				Method: sdp.QueryMethod_GET,
+				Query:  parentID,
+				Scope:  scope,
+			},
+			BlastPropagation: blastPropagation,
+		}
+	}
+
+	return nil
 }

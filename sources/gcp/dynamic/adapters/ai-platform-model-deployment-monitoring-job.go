@@ -55,5 +55,40 @@ var _ = registerableAdapter{
 				In: true,
 			},
 		},
+		"bigqueryTables.bigqueryTablePath": {
+			ToSDPItemType: gcpshared.BigQueryTable,
+			Description:   "If the BigQuery table storing monitoring logs is deleted or inaccessible: The monitoring job may fail to write logs. If the monitoring job is updated: The table remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
+		"modelDeploymentMonitoringObjectiveConfigs.objectiveConfig.trainingDataset.gcsSource.uris": {
+			ToSDPItemType: gcpshared.StorageBucket,
+			Description:   "If the GCS bucket containing training data is deleted or inaccessible: The monitoring job may fail to compare predictions against training data. If the monitoring job is updated: The bucket remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
+		"modelDeploymentMonitoringObjectiveConfigs.objectiveConfig.trainingDataset.bigquerySource.inputUri": {
+			ToSDPItemType: gcpshared.BigQueryTable,
+			Description:   "If the BigQuery table containing training data is deleted or inaccessible: The monitoring job may fail to compare predictions against training data. If the monitoring job is updated: The table remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
+		"predictInstanceSchemaUri": {
+			ToSDPItemType: gcpshared.StorageBucket,
+			Description:   "If the GCS bucket containing the prediction instance schema is deleted or inaccessible: The monitoring job may fail to validate prediction requests. If the monitoring job is updated: The bucket remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
+		"analysisInstanceSchemaUri": {
+			ToSDPItemType: gcpshared.StorageBucket,
+			Description:   "If the GCS bucket containing the analysis instance schema is deleted or inaccessible: The monitoring job may fail to perform analysis. If the monitoring job is updated: The bucket remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
 	},
 }.Register()

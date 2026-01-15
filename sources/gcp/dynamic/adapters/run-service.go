@@ -3,6 +3,7 @@ package adapters
 import (
 	"github.com/overmindtech/cli/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 // Cloud Run Service adapter - Manages stateless containerized applications with automatic scaling
@@ -97,6 +98,32 @@ var _ = registerableAdapter{
 				Out: true,
 			},
 			IsParentToChild: true,
+		},
+		// Link to Binary Authorization platform policy (when explicitly specified via policy field)
+		// Note: When useDefault is true, the service uses the project's default policy,
+		// but we can't link to it here since there's no explicit policy field value
+		"binaryAuthorization.policy": {
+			ToSDPItemType:    gcpshared.BinaryAuthorizationPlatformPolicy,
+			Description:      "If the Binary Authorization platform policy is updated: The service may fail to deploy new revisions if images don't meet policy requirements. If the service is updated: The policy remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{In: true},
+		},
+		// Link to Cloud Storage bucket used in buildConfig source (if buildConfig is used)
+		"buildConfig.source.storageSource.bucket": {
+			ToSDPItemType:    gcpshared.StorageBucket,
+			Description:      "If the Cloud Storage Bucket containing source code is deleted or updated: The service may fail to build new revisions. If the service is updated: The bucket remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{In: true},
+		},
+		// Link to HTTP/HTTPS URLs serving traffic for this service
+		"urls": {
+			ToSDPItemType:    stdlib.NetworkHTTP,
+			Description:      "If the HTTP endpoint becomes unavailable: The service cannot serve traffic. If the service is updated: The endpoint URL may change.",
+			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+		},
+		// Link to main URI serving traffic for this service
+		"uri": {
+			ToSDPItemType:    stdlib.NetworkHTTP,
+			Description:      "If the HTTP endpoint becomes unavailable: The service cannot serve traffic. If the service is updated: The endpoint URI may change.",
+			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

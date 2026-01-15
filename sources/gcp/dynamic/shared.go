@@ -295,6 +295,13 @@ func potentialLinksFromBlasts(itemType shared.ItemType, blasts map[shared.ItemTy
 	var potentialLinksMap = make(map[string]bool)
 	for _, impact := range blasts[itemType] {
 		potentialLinksMap[impact.ToSDPItemType.String()] = true
+		// Special case: stdlib.NetworkIP and stdlib.NetworkDNS are interchangeable
+		// because the linker automatically detects whether a value is an IP address or DNS name
+		// If you specify either one, both are included in potential links
+		if impact.ToSDPItemType.String() == "ip" || impact.ToSDPItemType.String() == "dns" {
+			potentialLinksMap["ip"] = true
+			potentialLinksMap["dns"] = true
+		}
 	}
 
 	potentialLinks := make([]string, 0, len(potentialLinksMap))

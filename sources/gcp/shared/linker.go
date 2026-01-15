@@ -13,6 +13,7 @@ import (
 
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 // ItemTypeMeta holds metadata about an item type.
@@ -85,6 +86,15 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 	}
 
 	if linkFunc, ok := l.manualAdapterLinker[impact.ToSDPItemType]; ok {
+		// Special handling for stdlib.NetworkIP and stdlib.NetworkDNS - detect both IP and DNS
+		// This handles fields like "host" that could contain either an IP address or DNS name
+		// You can specify either IP or DNS in the blast propagation, and it will automatically
+		// detect which type the value actually is and create the appropriate link
+		if impact.ToSDPItemType == stdlib.NetworkIP || impact.ToSDPItemType == stdlib.NetworkDNS {
+			l.linkIPOrDNS(ctx, fromSDPItem, toItemGCPResourceName, impact.BlastPropagation)
+			return
+		}
+
 		linkedItemQuery := linkFunc(projectID, fromSDPItem.GetScope(), toItemGCPResourceName, impact.BlastPropagation)
 		if linkedItemQuery == nil {
 			log.WithContext(ctx).WithFields(lf).Warn(
@@ -184,6 +194,54 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 		},
 		BlastPropagation: impact.BlastPropagation,
 	})
+}
+
+// linkIPOrDNS detects whether the value is an IP address or DNS name and creates
+// the appropriate linked item query. This is used for fields like "host" that
+// could contain either type of value.
+func (l *Linker) linkIPOrDNS(ctx context.Context, fromSDPItem *sdp.Item, toItemValue string, blastPropagation *sdp.BlastPropagation) {
+	if toItemValue == "" {
+		return
+	}
+
+	// Check if it's an IP address first (more specific check)
+	if isIPAddress(toItemValue) {
+		fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "ip",
+				Method: sdp.QueryMethod_GET,
+				Query:  toItemValue,
+				Scope:  "global",
+			},
+			BlastPropagation: blastPropagation,
+		})
+		return
+	}
+
+	// Check if it's a DNS name
+	if isDNSName(toItemValue) {
+		fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "dns",
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  toItemValue,
+				Scope:  "global",
+			},
+			BlastPropagation: blastPropagation,
+		})
+		return
+	}
+
+	// If neither IP nor DNS, try the manual adapter linker as fallback
+	if linkFunc, ok := l.manualAdapterLinker[stdlib.NetworkIP]; ok {
+		linkedItemQuery := linkFunc("", fromSDPItem.GetScope(), toItemValue, blastPropagation)
+		if linkedItemQuery != nil {
+			fromSDPItem.LinkedItemQueries = append(
+				fromSDPItem.LinkedItemQueries,
+				linkedItemQuery,
+			)
+		}
+	}
 }
 
 func (l *Linker) tryGlobalResources(fromSDPItem *sdp.Item, toItemValue string) { //nolint: unused

@@ -169,6 +169,17 @@ func TestComputeRouter(t *testing.T) {
 						Out: false,
 					},
 				},
+				// Interconnect attachment link
+				{
+					ExpectedType:   gcpshared.ComputeInterconnectAttachment.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-attachment",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
 				// VPN tunnel link
 				{
 					ExpectedType:   gcpshared.ComputeVpnTunnel.String(),
@@ -229,7 +240,7 @@ func TestComputeRouter(t *testing.T) {
 					ExpectedScope:  "global",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
-						Out: true,
+						Out: false,
 					},
 				},
 				{
@@ -239,7 +250,7 @@ func TestComputeRouter(t *testing.T) {
 					ExpectedScope:  "global",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
-						Out: true,
+						Out: false,
 					},
 				},
 				{
@@ -249,7 +260,7 @@ func TestComputeRouter(t *testing.T) {
 					ExpectedScope:  "global",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
-						Out: true,
+						Out: false,
 					},
 				},
 				// NAT subnetworks

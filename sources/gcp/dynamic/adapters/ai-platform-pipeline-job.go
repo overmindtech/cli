@@ -33,6 +33,18 @@ var _ = registerableAdapter{
 			ToSDPItemType:    gcpshared.StorageBucket,
 			BlastPropagation: gcpshared.ImpactInOnly,
 		},
+		// The network attachment resource that the pipeline job will use for Private Service Connect.
+		"pscInterfaceConfig.networkAttachment": {
+			Description:      "If the Compute Network Attachment is deleted or updated: The PipelineJob may lose access to network services via Private Service Connect. If the PipelineJob is updated: The network attachment remains unaffected.",
+			ToSDPItemType:    gcpshared.ComputeNetworkAttachment,
+			BlastPropagation: gcpshared.ImpactInOnly,
+		},
+		// The schedule resource name, returned if the pipeline is created by the Schedule API.
+		"scheduleName": {
+			Description:      "If the Vertex AI Schedule is deleted or updated: The PipelineJob may stop being triggered or may be triggered incorrectly. If the PipelineJob is updated: The schedule remains unaffected.",
+			ToSDPItemType:    gcpshared.AIPlatformSchedule,
+			BlastPropagation: gcpshared.ImpactInOnly,
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Description: "There is no terraform resource for this type.",

@@ -59,6 +59,7 @@ func (c computeInstanceGroupManagerWrapper) PotentialLinks() map[shared.ItemType
 		gcpshared.ComputeTargetPool,
 		gcpshared.ComputeResourcePolicy,
 		gcpshared.ComputeAutoscaler,
+		gcpshared.ComputeHealthCheck,
 	)
 }
 
@@ -264,6 +265,67 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ctx
 						BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 					})
 				}
+			}
+		}
+	}
+
+	// Link to instance templates in versions array (used for canary/rolling deployments)
+	// If versions are defined, they override the top-level instanceTemplate
+	// Each version can have its own template, so we need to link all of them
+	for _, version := range instanceGroupManager.GetVersions() {
+		if versionTemplate := version.GetInstanceTemplate(); versionTemplate != "" {
+			versionTemplateName := gcpshared.LastPathComponent(versionTemplate)
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, versionTemplate)
+			if err == nil {
+				// Determine if this is a regional or global template based on scope format
+				// Regional scope has format "project.region", global scope is just "project"
+				if strings.Contains(scope, ".") {
+					// Regional template
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   gcpshared.ComputeRegionInstanceTemplate.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  versionTemplateName,
+							Scope:  scope,
+						},
+						BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+					})
+				} else {
+					// Global template
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   gcpshared.ComputeInstanceTemplate.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  versionTemplateName,
+							Scope:  scope,
+						},
+						BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+					})
+				}
+			}
+		}
+	}
+
+	// Link to health checks used in auto-healing policies
+	// Auto-healing policies use health checks to determine if instances are healthy
+	// If the health check is deleted or updated, auto-healing may fail
+	for _, autoHealingPolicy := range instanceGroupManager.GetAutoHealingPolicies() {
+		if healthCheckURL := autoHealingPolicy.GetHealthCheck(); healthCheckURL != "" {
+			healthCheckName := gcpshared.LastPathComponent(healthCheckURL)
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, healthCheckURL)
+			if err == nil && healthCheckName != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputeHealthCheck.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  healthCheckName,
+						Scope:  scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				})
 			}
 		}
 	}

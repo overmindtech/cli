@@ -42,6 +42,20 @@ var _ = registerableAdapter{
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"encryptionConfiguration.kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
+		"serviceAccountName":                 gcpshared.IAMServiceAccountImpactInOnly,
+		// Link to child Transfer Runs using SEARCH
+		// NOTE: BigQueryDataTransferTransferRun adapter does not exist yet
+		// When created, it must support SEARCH with transfer config identifier as query parameter
+		// API endpoint: GET https://bigquerydatatransfer.googleapis.com/v1/{parent=projects/*/locations/*/transferConfigs/*}/runs
+		"name": {
+			ToSDPItemType: gcpshared.BigQueryDataTransferTransferRun,
+			Description:   "If the Transfer Config is deleted or updated: All associated transfer runs may become invalid or inaccessible. If a transfer run is updated: The transfer config remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  false,
+				Out: true,
+			},
+			IsParentToChild: true,
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_data_transfer_config",

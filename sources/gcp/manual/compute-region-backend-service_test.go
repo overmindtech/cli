@@ -2,6 +2,7 @@ package manual_test
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 
@@ -212,6 +213,346 @@ func TestComputeRegionBackendService(t *testing.T) {
 		if ok {
 			t.Fatalf("Adapter should not support SearchStream operation")
 		}
+	})
+
+	t.Run("GetWithHealthCheck", func(t *testing.T) {
+		wrapper := manual.NewComputeRegionBackendService(mockClient, projectID, region)
+
+		// Test with regional health check
+		healthCheckURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/healthChecks/test-regional-health-check", projectID, region)
+		backendService := createComputeRegionBackendService("test-backend-service")
+		backendService.HealthChecks = []string{healthCheckURL}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-backend-service", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSecurityPolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-security-policy",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSecurityPolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-edge-security-policy",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.NetworkSecurityClientTlsPolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-location|test-client-tls-policy",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.NetworkServicesServiceLbPolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-location|test-service-lb-policy",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.NetworkServicesServiceBinding.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-location|test-service-binding",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeInstanceGroup.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-instance-group",
+					ExpectedScope:  "test-zone",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			// Add the new query we're testing
+			queryTests := append(baseQueries, shared.QueryTest{
+				ExpectedType:   gcpshared.ComputeHealthCheck.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "test-regional-health-check",
+				ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			})
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithInstanceGroup", func(t *testing.T) {
+		wrapper := manual.NewComputeRegionBackendService(mockClient, projectID, region)
+
+		// Test with unmanaged instance group
+		zone := "us-central1-a"
+		instanceGroupURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/instanceGroups/test-instance-group", projectID, zone)
+		backendService := createComputeRegionBackendService("test-backend-service")
+		backendService.Backends = []*computepb.Backend{
+			{
+				Group: ptr.To(instanceGroupURL),
+			},
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-backend-service", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSecurityPolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-security-policy",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSecurityPolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-edge-security-policy",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.NetworkSecurityClientTlsPolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-location|test-client-tls-policy",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.NetworkServicesServiceLbPolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-location|test-service-lb-policy",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.NetworkServicesServiceBinding.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-location|test-service-binding",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			// Add the new query we're testing
+			queryTests := append(baseQueries, shared.QueryTest{
+				ExpectedType:   gcpshared.ComputeInstanceGroup.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "test-instance-group",
+				ExpectedScope:  zone,
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			})
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithHAPolicy", func(t *testing.T) {
+		wrapper := manual.NewComputeRegionBackendService(mockClient, projectID, region)
+
+		// Test with HA Policy
+		zone := "us-central1-a"
+		backendGroupURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/networkEndpointGroups/test-neg", projectID, zone)
+		instanceName := "test-leader-instance"
+		backendService := createComputeRegionBackendService("test-backend-service")
+		backendService.HaPolicy = &computepb.BackendServiceHAPolicy{
+			Leader: &computepb.BackendServiceHAPolicyLeader{
+				BackendGroup: ptr.To(backendGroupURL),
+				NetworkEndpoint: &computepb.BackendServiceHAPolicyLeaderNetworkEndpoint{
+					Instance: ptr.To(instanceName),
+				},
+			},
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-backend-service", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSecurityPolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-security-policy",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSecurityPolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-edge-security-policy",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.NetworkSecurityClientTlsPolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-location|test-client-tls-policy",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.NetworkServicesServiceLbPolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-location|test-service-lb-policy",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.NetworkServicesServiceBinding.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-location|test-service-binding",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeInstanceGroup.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-instance-group",
+					ExpectedScope:  "test-zone",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			// Add the new queries we're testing
+			queryTests := append(baseQueries,
+				shared.QueryTest{
+					ExpectedType:   gcpshared.ComputeNetworkEndpointGroup.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-neg",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				shared.QueryTest{
+					ExpectedType:   gcpshared.ComputeInstance.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  instanceName,
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			)
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
 	})
 }
 

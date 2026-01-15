@@ -22,7 +22,14 @@ var _ = registerableAdapter{
 		PredefinedRole:      "roles/compute.viewer",
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
-		// There is no links originating from this item type.
+		// Cloud Storage bucket storage location where snapshots created by this policy are stored.
+		// The storageLocations field can contain bucket names, gs:// URIs, or region identifiers.
+		// The manual adapter linker will handle extraction of bucket names from various formats.
+		"snapshotSchedulePolicy.snapshotProperties.storageLocations": {
+			ToSDPItemType:    gcpshared.StorageBucket,
+			Description:      "If the Storage Bucket is deleted or updated: The Resource Policy may fail to create snapshots. If the Resource Policy is updated: The Storage Bucket remains unaffected.",
+			BlastPropagation: gcpshared.ImpactInOnly,
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Description: "There is no terraform resource for this type.",

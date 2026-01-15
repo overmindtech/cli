@@ -31,6 +31,9 @@ var _ = registerableAdapter{
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 		},
 		"diskEncryptionConfiguration.kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
+		// The Cloud KMS key version used to encrypt the backup.
+		// Format: projects/{project}/locations/{location}/keyRings/{keyRing}/cryptoKeys/{cryptoKey}/cryptoKeyVersions/{version}
+		"diskEncryptionStatus.kmsKeyVersionName": gcpshared.CryptoKeyVersionImpactInOnly,
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Description: "There is no terraform resource for this type.",

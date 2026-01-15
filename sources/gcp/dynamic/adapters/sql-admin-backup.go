@@ -32,10 +32,17 @@ var _ = registerableAdapter{
 		},
 		"kmsKey":        gcpshared.CryptoKeyImpactInOnly,
 		"kmsKeyVersion": gcpshared.CryptoKeyVersionImpactInOnly,
-		"backupRun": {
-			ToSDPItemType:    gcpshared.SQLAdminBackupRun,
-			Description:      "They are tightly coupled with the SQL Admin Backup.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+		// VPC network used for private IP access (from instance settings snapshot at backup time).
+		"instanceSettings.settings.ipConfiguration.privateNetwork": gcpshared.ComputeNetworkImpactInOnly,
+		// Allowed external IPv4 networks/ranges that can connect to the instance using its public IP (from instance settings snapshot).
+		// Each entry uses CIDR notation (e.g., 203.0.113.0/24, 198.51.100.5/32).
+		"instanceSettings.settings.ipConfiguration.authorizedNetworks.value": gcpshared.IPImpactBothWays,
+		// Named allocated IP range for use (Private IP only, from instance settings snapshot).
+		// This references an Internal Range resource that was used at backup time.
+		"instanceSettings.settings.ipConfiguration.allocatedIpRange": {
+			ToSDPItemType:    gcpshared.NetworkConnectivityInternalRange,
+			Description:      "If the Reserved Internal Range is deleted or updated: The backup's instance settings snapshot may reference an invalid IP range configuration. If the backup is updated: The internal range remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

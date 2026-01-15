@@ -15,7 +15,10 @@ import (
 	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
+	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 func TestComputeHealthCheck(t *testing.T) {
@@ -43,11 +46,158 @@ func TestComputeHealthCheck(t *testing.T) {
 			t.Fatalf("Expected scope to be 'test-project-id', got: %s", sdpItem.GetScope())
 		}
 
-		// [SPEC] HealthChecks have no linked items.
+		// [SPEC] TCP HealthChecks have no linked items (no host field).
 		if len(sdpItem.GetLinkedItemQueries()) != 0 {
-			t.Fatalf("Expected 0 linked item queries, got: %d", len(sdpItem.GetLinkedItemQueries()))
+			t.Fatalf("Expected 0 linked item queries for TCP health check, got: %d", len(sdpItem.GetLinkedItemQueries()))
+		}
+	})
+
+	t.Run("GetWithHTTPHealthCheck", func(t *testing.T) {
+		wrapper := manual.NewComputeHealthCheck(mockClient, projectID)
+
+		httpHealthCheck := createHTTPHealthCheck("test-http-healthcheck", "example.com")
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(httpHealthCheck, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-http-healthcheck", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
 		}
 
+		t.Run("StaticTests", func(t *testing.T) {
+			queryTests := shared.QueryTests{
+				// DNS name link from HTTP health check host field
+				{
+					ExpectedType:   stdlib.NetworkDNS.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "example.com",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+			}
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithHTTPSHealthCheckWithIP", func(t *testing.T) {
+		wrapper := manual.NewComputeHealthCheck(mockClient, projectID)
+
+		httpsHealthCheck := createHTTPSHealthCheck("test-https-healthcheck", "192.168.1.100")
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(httpsHealthCheck, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-https-healthcheck", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			queryTests := shared.QueryTests{
+				// IP address link from HTTPS health check host field
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.100",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+			}
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithSourceRegions", func(t *testing.T) {
+		wrapper := manual.NewComputeHealthCheck(mockClient, projectID)
+
+		healthCheckWithRegions := createHealthCheckWithSourceRegions("test-healthcheck-regions", []string{"us-central1", "us-east1", "europe-west1"})
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(healthCheckWithRegions, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-healthcheck-regions", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			queryTests := shared.QueryTests{
+				// Region links from sourceRegions array
+				{
+					ExpectedType:   gcpshared.ComputeRegion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "us-central1",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeRegion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "us-east1",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeRegion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "europe-west1",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithRegion", func(t *testing.T) {
+		wrapper := manual.NewComputeHealthCheck(mockClient, projectID)
+
+		regionalHealthCheck := createRegionalHealthCheck("test-regional-healthcheck", "us-central1")
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(regionalHealthCheck, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-regional-healthcheck", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			queryTests := shared.QueryTests{
+				// Region link from region field (output only, for regional health checks)
+				{
+					ExpectedType:   gcpshared.ComputeRegion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "us-central1",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
 	})
 
 	t.Run("List", func(t *testing.T) {
@@ -144,5 +294,59 @@ func createHealthCheck(healthCheckName string) *computepb.HealthCheck {
 		TcpHealthCheck: &computepb.TCPHealthCheck{
 			Port: ptr.To(int32(80)),
 		},
+	}
+}
+
+func createHTTPHealthCheck(healthCheckName, host string) *computepb.HealthCheck {
+	return &computepb.HealthCheck{
+		Name:             ptr.To(healthCheckName),
+		CheckIntervalSec: ptr.To(int32(5)),
+		TimeoutSec:       ptr.To(int32(5)),
+		Type:             ptr.To("HTTP"),
+		HttpHealthCheck: &computepb.HTTPHealthCheck{
+			Port:        ptr.To(int32(80)),
+			Host:        ptr.To(host),
+			RequestPath: ptr.To("/"),
+		},
+	}
+}
+
+func createHTTPSHealthCheck(healthCheckName, host string) *computepb.HealthCheck {
+	return &computepb.HealthCheck{
+		Name:             ptr.To(healthCheckName),
+		CheckIntervalSec: ptr.To(int32(5)),
+		TimeoutSec:       ptr.To(int32(5)),
+		Type:             ptr.To("HTTPS"),
+		HttpsHealthCheck: &computepb.HTTPSHealthCheck{
+			Port:        ptr.To(int32(443)),
+			Host:        ptr.To(host),
+			RequestPath: ptr.To("/"),
+		},
+	}
+}
+
+func createHealthCheckWithSourceRegions(healthCheckName string, regions []string) *computepb.HealthCheck {
+	return &computepb.HealthCheck{
+		Name:             ptr.To(healthCheckName),
+		CheckIntervalSec: ptr.To(int32(30)),
+		TimeoutSec:       ptr.To(int32(5)),
+		Type:             ptr.To("TCP"),
+		TcpHealthCheck: &computepb.TCPHealthCheck{
+			Port: ptr.To(int32(80)),
+		},
+		SourceRegions: regions,
+	}
+}
+
+func createRegionalHealthCheck(healthCheckName, region string) *computepb.HealthCheck {
+	return &computepb.HealthCheck{
+		Name:             ptr.To(healthCheckName),
+		CheckIntervalSec: ptr.To(int32(5)),
+		TimeoutSec:       ptr.To(int32(5)),
+		Type:             ptr.To("TCP"),
+		TcpHealthCheck: &computepb.TCPHealthCheck{
+			Port: ptr.To(int32(80)),
+		},
+		Region: ptr.To(region),
 	}
 }

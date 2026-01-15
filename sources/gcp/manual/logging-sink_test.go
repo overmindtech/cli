@@ -2,6 +2,7 @@ package manual_test
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 
@@ -96,7 +97,7 @@ func TestNewLoggingSink(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				wrapper := manual.NewLoggingSink(mockClient, projectID)
 
-				mockClient.EXPECT().GetSink(ctx, gomock.Any()).Return(createLoggingSink("my-sink", tc.destination), nil)
+				mockClient.EXPECT().GetSink(ctx, gomock.Any()).Return(createLoggingSink("my-sink", tc.destination, ""), nil)
 
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -121,6 +122,49 @@ func TestNewLoggingSink(t *testing.T) {
 				})
 			})
 		}
+
+		// Test writerIdentity link to IAM Service Account
+		t.Run("WriterIdentity Service Account", func(t *testing.T) {
+			wrapper := manual.NewLoggingSink(mockClient, projectID)
+			writerIdentity := fmt.Sprintf("logging-sink-writer@%s.iam.gserviceaccount.com", projectID)
+
+			mockClient.EXPECT().GetSink(ctx, gomock.Any()).Return(createLoggingSink("my-sink", "storage.googleapis.com/my_bucket", writerIdentity), nil)
+
+			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+			sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "my-sink", true)
+			if qErr != nil {
+				t.Fatalf("Expected no error, got: %v", qErr)
+			}
+
+			t.Run("StaticTests", func(t *testing.T) {
+				queryTests := shared.QueryTests{
+					// Storage bucket link
+					{
+						ExpectedType:   gcpshared.StorageBucket.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "my_bucket",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					// IAM Service Account link from writerIdentity
+					{
+						ExpectedType:   gcpshared.IAMServiceAccount.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  writerIdentity,
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+				}
+				shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+			})
+		})
 	})
 
 	t.Run("List", func(t *testing.T) {
@@ -128,8 +172,8 @@ func TestNewLoggingSink(t *testing.T) {
 
 		mockLoggingSinkIterator := mocks.NewMockLoggingSinkIterator(ctrl)
 
-		mockLoggingSinkIterator.EXPECT().Next().Return(createLoggingSink("sink1", "storage.googleapis.com/my_bucket"), nil)
-		mockLoggingSinkIterator.EXPECT().Next().Return(createLoggingSink("sink2", "bigquery.googleapis.com/projects/my-project-id/datasets/my_dataset"), nil)
+		mockLoggingSinkIterator.EXPECT().Next().Return(createLoggingSink("sink1", "storage.googleapis.com/my_bucket", ""), nil)
+		mockLoggingSinkIterator.EXPECT().Next().Return(createLoggingSink("sink2", "bigquery.googleapis.com/projects/my-project-id/datasets/my_dataset", ""), nil)
 		mockLoggingSinkIterator.EXPECT().Next().Return(nil, iterator.Done) // End of iteration
 
 		mockClient.EXPECT().ListSinks(ctx, gomock.Any()).Return(mockLoggingSinkIterator)
@@ -171,8 +215,8 @@ func TestNewLoggingSink(t *testing.T) {
 		mockLoggingSinkIterator := mocks.NewMockLoggingSinkIterator(ctrl)
 
 		// add mock implementation here
-		mockLoggingSinkIterator.EXPECT().Next().Return(createLoggingSink("sink1", "storage.googleapis.com/my_bucket"), nil)
-		mockLoggingSinkIterator.EXPECT().Next().Return(createLoggingSink("sink2", "bigquery.googleapis.com/projects/my-project-id/datasets/my_dataset"), nil)
+		mockLoggingSinkIterator.EXPECT().Next().Return(createLoggingSink("sink1", "storage.googleapis.com/my_bucket", ""), nil)
+		mockLoggingSinkIterator.EXPECT().Next().Return(createLoggingSink("sink2", "bigquery.googleapis.com/projects/my-project-id/datasets/my_dataset", ""), nil)
 		mockLoggingSinkIterator.EXPECT().Next().Return(nil, iterator.Done)
 
 		// Mock the ListSinks method
@@ -217,10 +261,14 @@ func TestNewLoggingSink(t *testing.T) {
 	})
 }
 
-func createLoggingSink(name, destination string) *loggingpb.LogSink {
-	return &loggingpb.LogSink{
+func createLoggingSink(name, destination, writerIdentity string) *loggingpb.LogSink {
+	sink := &loggingpb.LogSink{
 		Name:        name,
 		Destination: destination,
 		Filter:      "severity>=ERROR",
 	}
+	if writerIdentity != "" {
+		sink.WriterIdentity = writerIdentity
+	}
+	return sink
 }

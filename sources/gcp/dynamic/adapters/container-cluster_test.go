@@ -56,6 +56,17 @@ func TestContainerCluster(t *testing.T) {
 			ControlPlaneDiskEncryptionKey: "projects/test-project/locations/global/keyRings/test-ring/cryptoKeys/control-plane-key",
 			GkeopsEtcdBackupEncryptionKey: "projects/test-project/locations/global/keyRings/test-ring/cryptoKeys/etcd-backup-key",
 		},
+		DatabaseEncryption: &containerpb.DatabaseEncryption{
+			KeyName: "projects/test-project/locations/global/keyRings/test-ring/cryptoKeys/database-encryption-key",
+			State:   containerpb.DatabaseEncryption_ENCRYPTED,
+		},
+		ResourceUsageExportConfig: &containerpb.ResourceUsageExportConfig{
+			BigqueryDestination: &containerpb.ResourceUsageExportConfig_BigQueryDestination{
+				DatasetId: "gke_usage_export",
+			},
+			EnableNetworkEgressMetering: true,
+		},
+		Endpoint: "35.123.45.67",
 	}
 
 	// Create second cluster for list testing
@@ -235,6 +246,39 @@ func TestContainerCluster(t *testing.T) {
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: false,
+					},
+				},
+				// Database encryption key link
+				{
+					ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  shared.CompositeLookupKey("global", "test-ring", "database-encryption-key"),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// BigQuery dataset link
+				{
+					ExpectedType:   gcpshared.BigQueryDataset.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "gke_usage_export",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				// Master endpoint IP address link
+				{
+					ExpectedType:   "ip",
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "35.123.45.67",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
 					},
 				},
 				// Forward link to node pools (parent to child)

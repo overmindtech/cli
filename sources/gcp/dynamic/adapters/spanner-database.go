@@ -32,9 +32,19 @@ var _ = registerableAdapter{
 			ToSDPItemType:    gcpshared.SpannerBackup,
 			BlastPropagation: gcpshared.ImpactInOnly,
 		},
+		// Source database from which the backup was taken (if database was restored from backup).
+		"restoreInfo.backupInfo.sourceDatabase": {
+			Description:      "If the source Database is deleted or updated: The restored Database may become invalid or lose its restore point reference. If the restored Database is updated: The source database remains unaffected.",
+			ToSDPItemType:    gcpshared.SpannerDatabase,
+			BlastPropagation: gcpshared.ImpactInOnly,
+		},
 		"encryptionInfo.kmsKeyVersion": gcpshared.CryptoKeyVersionImpactInOnly,
 		// This is a backlink to instance.
 		// Framework will extract the instance name and create the linked item query with GET
+		// NOTE: Child resources (backupSchedules, databaseRoles, operations, sessions) have their own REST API endpoints
+		// but don't appear in the Database response JSON. To link to them, child adapters would need to be created
+		// and the framework would need to support multiple IsParentToChild links from the same field.
+		// Item types have been created for: SpannerBackupSchedule, SpannerDatabaseRole, SpannerDatabaseOperation, SpannerSession
 		"name": {
 			Description:      "If the Spanner Instance is deleted or updated: The Database may become invalid or inaccessible. If the Database is updated: The instance remains unaffected.",
 			ToSDPItemType:    gcpshared.SpannerInstance,

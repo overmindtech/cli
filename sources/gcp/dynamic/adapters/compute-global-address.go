@@ -32,9 +32,14 @@ var computeGlobalAddressAdapter = registerableAdapter{ //nolint:unused
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
-		"subnetwork": gcpshared.ComputeNetworkImpactInOnly,
+		"subnetwork": gcpshared.ComputeSubnetworkImpactInOnly,
 		"network":    gcpshared.ComputeNetworkImpactInOnly,
 		"address":    gcpshared.IPImpactBothWays,
+		"ipCollection": {
+			ToSDPItemType:    gcpshared.ComputePublicDelegatedPrefix,
+			Description:      "If the Public Delegated Prefix is deleted or updated: The Global Address may fail to reserve IP addresses from the prefix. If the Global Address is updated: The Public Delegated Prefix remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_global_address",

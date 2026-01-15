@@ -50,5 +50,14 @@ var _ = registerableAdapter{
 				Out: true,
 			},
 		},
+		// GCS bucket containing the Model artifact and supporting files (artifactUri).
+		"artifactUri": {
+			ToSDPItemType: gcpshared.StorageBucket,
+			Description:   "If the Storage Bucket containing model artifacts is deleted or its permissions are changed: The Model may fail to load artifacts and serve predictions. If the Model is updated: The Storage Bucket remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
+		},
 	},
 }.Register()

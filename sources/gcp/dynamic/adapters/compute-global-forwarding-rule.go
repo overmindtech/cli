@@ -46,6 +46,16 @@ var computeGlobalForwardingRuleAdapter = registerableAdapter{ //nolint:unused
 				Out: true,
 			},
 		},
+		// Target resource (polymorphic - can be TargetHttpProxy, TargetHttpsProxy, TargetTcpProxy, TargetSslProxy, TargetPool, TargetVpnGateway, or TargetInstance).
+		// The ForwardingRuleTargetLinker function determines the actual target type from the URI.
+		"target": {
+			ToSDPItemType: gcpshared.ComputeTargetHttpProxy, // Default type, but ForwardingRuleTargetLinker will determine actual type from URI
+			Description:   "If the target resource (proxy, pool, gateway, or instance) is updated or deleted: The forwarding rule routing behavior changes or breaks. If the forwarding rule is updated or deleted: Traffic will stop or be re-routed affecting the target resource.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_global_forwarding_rule",

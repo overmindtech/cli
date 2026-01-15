@@ -48,7 +48,7 @@ func (c computeDiskWrapper) PredefinedRole() string {
 	return "roles/compute.viewer"
 }
 
-// PotentialLinks returns the potential links for the compute instance wrapper
+// PotentialLinks returns the potential links for the compute disk wrapper
 func (c computeDiskWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeResourcePolicy,
@@ -59,6 +59,8 @@ func (c computeDiskWrapper) PotentialLinks() map[shared.ItemType]bool {
 		gcpshared.ComputeDiskType,
 		gcpshared.ComputeInstance,
 		gcpshared.CloudKMSCryptoKeyVersion,
+		gcpshared.StorageBucket,
+		gcpshared.ComputeStoragePool,
 	)
 }
 
@@ -483,7 +485,170 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 		}
 	}
 
-	// The following seem like possible links: SourceStorageObject. Nauany hasn't identified a way to get this from any of the APIs.
+	// The Cloud Storage URI for a disk image (tarball .tar.gz or .vmdk) used to create this disk.
+	// Format: gs://bucket-name/path/to/object or https://storage.googleapis.com/bucket-name/path/to/object
+	// GET https://storage.googleapis.com/storage/v1/b/{bucket}
+	// https://cloud.google.com/storage/docs/json_api/v1/buckets/get
+	// Note: Storage Bucket adapter only supports GET method (not SEARCH), so we extract the bucket name
+	// and use GET. We reuse the existing StorageBucket manual adapter linker to avoid duplicating
+	// GCS URI parsing logic, which handles various formats:
+	// - //storage.googleapis.com/projects/PROJECT_ID/buckets/BUCKET_ID
+	// - https://storage.googleapis.com/projects/PROJECT_ID/buckets/BUCKET_ID
+	// - gs://bucket-name
+	// - gs://bucket-name/path/to/file
+	// - bucket-name (without gs:// prefix)
+	if sourceStorageObject := disk.GetSourceStorageObject(); sourceStorageObject != "" {
+		blastPropagation := &sdp.BlastPropagation{
+			In:  true,
+			Out: false,
+		}
+		if linkFunc, ok := gcpshared.ManualAdapterLinksByAssetType[gcpshared.StorageBucket]; ok {
+			linkedQuery := linkFunc(c.ProjectID(), c.DefaultScope(), sourceStorageObject, blastPropagation)
+			if linkedQuery != nil {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, linkedQuery)
+			}
+		}
+	}
+
+	// The storage pool to create new disk in. URL or partial resource path accepted.
+	// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/storagePools/{storagePool}
+	// https://cloud.google.com/compute/docs/reference/rest/v1/storagePools/get
+	if storagePool := disk.GetStoragePool(); storagePool != "" {
+		if strings.Contains(storagePool, "/") {
+			storagePoolName := gcpshared.LastPathComponent(storagePool)
+			if storagePoolName != "" {
+				scope, err := gcpshared.ExtractScopeFromURI(ctx, storagePool)
+				if err == nil {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   gcpshared.ComputeStoragePool.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  storagePoolName,
+							Scope:  scope,
+						},
+						// If the Storage Pool is deleted or updated: The disk may fail to operate correctly or become invalid. If the disk is updated: The Storage Pool remains unaffected.
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					})
+				}
+			}
+		}
+	}
+
+	// The async primary disk (the disk this disk is asynchronously replicated from or to).
+	// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
+	// https://cloud.google.com/compute/docs/reference/rest/v1/disks/get
+	if asyncPrimaryDisk := disk.GetAsyncPrimaryDisk(); asyncPrimaryDisk != nil {
+		if primaryDisk := asyncPrimaryDisk.GetDisk(); primaryDisk != "" {
+			if strings.Contains(primaryDisk, "/") {
+				primaryDiskName := gcpshared.LastPathComponent(primaryDisk)
+				if primaryDiskName != "" {
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, primaryDisk)
+					if err == nil {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.ComputeDisk.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  primaryDiskName,
+								Scope:  scope,
+							},
+							// If the primary disk is deleted or updated: The async replication may fail or break. If this disk is updated: The primary disk remains unaffected.
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
+				}
+			}
+		}
+
+		// The consistency group policy for async primary disk replication.
+		// GET https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/resourcePolicies/{resourcePolicy}
+		// https://cloud.google.com/compute/docs/reference/rest/v1/resourcePolicies/get
+		if consistencyGroupPolicy := asyncPrimaryDisk.GetConsistencyGroupPolicy(); consistencyGroupPolicy != "" {
+			if strings.Contains(consistencyGroupPolicy, "/") {
+				policyName := gcpshared.LastPathComponent(consistencyGroupPolicy)
+				if policyName != "" {
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, consistencyGroupPolicy)
+					if err == nil {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.ComputeResourcePolicy.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  policyName,
+								Scope:  scope,
+							},
+							// If the Consistency Group Policy is deleted or updated: The async replication may fail or break. If this disk is updated: The policy remains unaffected.
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
+				}
+			}
+		}
+	}
+
+	// The async secondary disks (disks this disk is asynchronously replicating to).
+	// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
+	// https://cloud.google.com/compute/docs/reference/rest/v1/disks/get
+	for _, asyncSecondaryDisk := range disk.GetAsyncSecondaryDisks() {
+		if asyncReplicationDisk := asyncSecondaryDisk.GetAsyncReplicationDisk(); asyncReplicationDisk != nil {
+			// Link to the secondary disk
+			if secondaryDisk := asyncReplicationDisk.GetDisk(); secondaryDisk != "" {
+				if strings.Contains(secondaryDisk, "/") {
+					secondaryDiskName := gcpshared.LastPathComponent(secondaryDisk)
+					if secondaryDiskName != "" {
+						scope, err := gcpshared.ExtractScopeFromURI(ctx, secondaryDisk)
+						if err == nil {
+							sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+								Query: &sdp.Query{
+									Type:   gcpshared.ComputeDisk.String(),
+									Method: sdp.QueryMethod_GET,
+									Query:  secondaryDiskName,
+									Scope:  scope,
+								},
+								// If a secondary disk is deleted or updated: The async replication to that disk may fail or break. If this disk is updated: The secondary disk remains unaffected.
+								BlastPropagation: &sdp.BlastPropagation{
+									In:  true,
+									Out: false,
+								},
+							})
+						}
+					}
+				}
+			}
+
+			// Link to the consistency group policy for this secondary disk
+			if consistencyGroupPolicy := asyncReplicationDisk.GetConsistencyGroupPolicy(); consistencyGroupPolicy != "" {
+				if strings.Contains(consistencyGroupPolicy, "/") {
+					policyName := gcpshared.LastPathComponent(consistencyGroupPolicy)
+					if policyName != "" {
+						scope, err := gcpshared.ExtractScopeFromURI(ctx, consistencyGroupPolicy)
+						if err == nil {
+							sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+								Query: &sdp.Query{
+									Type:   gcpshared.ComputeResourcePolicy.String(),
+									Method: sdp.QueryMethod_GET,
+									Query:  policyName,
+									Scope:  scope,
+								},
+								// If the Consistency Group Policy is deleted or updated: The async replication may fail or break. If this disk is updated: The policy remains unaffected.
+								BlastPropagation: &sdp.BlastPropagation{
+									In:  true,
+									Out: false,
+								},
+							})
+						}
+					}
+				}
+			}
+		}
+	}
 
 	switch disk.GetStatus() {
 	case computepb.Disk_UNDEFINED_STATUS.String():

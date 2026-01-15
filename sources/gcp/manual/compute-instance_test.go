@@ -2,6 +2,7 @@ package manual_test
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 
@@ -281,6 +282,472 @@ func TestComputeInstance(t *testing.T) {
 		if ok {
 			t.Fatalf("Adapter should not support SearchStream operation")
 		}
+	})
+
+	t.Run("GetWithInitializeParams", func(t *testing.T) {
+		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+
+		// Test with sourceImage and sourceSnapshot in initializeParams
+		sourceImageURL := fmt.Sprintf("projects/%s/global/images/test-image", projectID)
+		sourceSnapshotURL := fmt.Sprintf("projects/%s/global/snapshots/test-snapshot", projectID)
+		sourceImageKeyName := fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-image", projectID)
+		sourceSnapshotKeyName := fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-snapshot", projectID)
+
+		instance := createComputeInstance("test-instance", computepb.Instance_RUNNING)
+		instance.Disks = []*computepb.AttachedDisk{
+			{
+				DeviceName: ptr.To("test-disk"),
+				Source:     ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/disks/test-instance", projectID, zone)),
+				InitializeParams: &computepb.AttachedDiskInitializeParams{
+					SourceImage:                ptr.To(sourceImageURL),
+					SourceSnapshot:             ptr.To(sourceSnapshotURL),
+					SourceImageEncryptionKey: &computepb.CustomerEncryptionKey{
+						KmsKeyName: ptr.To(sourceImageKeyName),
+					},
+					SourceSnapshotEncryptionKey: &computepb.CustomerEncryptionKey{
+						KmsKeyName: ptr.To(sourceSnapshotKeyName),
+					},
+				},
+			},
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(instance, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:   gcpshared.ComputeDisk.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-instance",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.3",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "default",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			// Add the new queries we're testing
+			queryTests := append(baseQueries,
+				shared.QueryTest{
+					ExpectedType:   gcpshared.ComputeImage.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-image",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				shared.QueryTest{
+					ExpectedType:   gcpshared.ComputeSnapshot.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-snapshot",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				shared.QueryTest{
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-image",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				shared.QueryTest{
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-snapshot",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			)
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithDiskEncryptionKey", func(t *testing.T) {
+		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+
+		// Test with diskEncryptionKey (with version)
+		diskKeyName := fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-disk", projectID)
+
+		instance := createComputeInstance("test-instance", computepb.Instance_RUNNING)
+		instance.Disks = []*computepb.AttachedDisk{
+			{
+				DeviceName: ptr.To("test-disk"),
+				Source:     ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/disks/test-instance", projectID, zone)),
+				DiskEncryptionKey: &computepb.CustomerEncryptionKey{
+					KmsKeyName: ptr.To(diskKeyName),
+				},
+			},
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(instance, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:   gcpshared.ComputeDisk.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-instance",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.3",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "default",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			// Add the new query we're testing
+			queryTests := append(baseQueries, shared.QueryTest{
+				ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "global|test-keyring|test-key|test-version-disk",
+				ExpectedScope:  projectID,
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			})
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithDiskEncryptionKeyWithoutVersion", func(t *testing.T) {
+		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+
+		// Test with diskEncryptionKey (without version - should link to CryptoKey)
+		diskKeyName := fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-key", projectID)
+
+		instance := createComputeInstance("test-instance", computepb.Instance_RUNNING)
+		instance.Disks = []*computepb.AttachedDisk{
+			{
+				DeviceName: ptr.To("test-disk"),
+				Source:     ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/disks/test-instance", projectID, zone)),
+				DiskEncryptionKey: &computepb.CustomerEncryptionKey{
+					KmsKeyName: ptr.To(diskKeyName),
+				},
+			},
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(instance, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:   gcpshared.ComputeDisk.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-instance",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.3",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "default",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			// Add the new query we're testing
+			queryTests := append(baseQueries, shared.QueryTest{
+				ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "global|test-keyring|test-key",
+				ExpectedScope:  projectID,
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			})
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithServiceAccount", func(t *testing.T) {
+		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+
+		// Test with service account email
+		serviceAccountEmail := "test-service-account@test-project-id.iam.gserviceaccount.com"
+
+		instance := createComputeInstance("test-instance", computepb.Instance_RUNNING)
+		instance.ServiceAccounts = []*computepb.ServiceAccount{
+			{
+				Email: ptr.To(serviceAccountEmail),
+			},
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(instance, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:   gcpshared.ComputeDisk.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-instance",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.3",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "default",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			// Add the new query we're testing
+			queryTests := append(baseQueries, shared.QueryTest{
+				ExpectedType:   gcpshared.IAMServiceAccount.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  serviceAccountEmail,
+				ExpectedScope:  projectID,
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			})
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
 	})
 }
 

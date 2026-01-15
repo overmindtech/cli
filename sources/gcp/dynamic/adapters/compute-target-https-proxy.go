@@ -49,6 +49,13 @@ var _ = registerableAdapter{
 				In: true,
 			},
 		},
+		"certificateMap": {
+			ToSDPItemType: gcpshared.CertificateManagerCertificateMap,
+			Description:   "If the Certificate Map is updated or deleted: TLS handshakes may fail for the HTTPS proxy. If the proxy changes: The certificate map resource remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_target_https_proxy",

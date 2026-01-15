@@ -56,6 +56,17 @@ var _ = registerableAdapter{
 		"userManagedKeysConfig.controlPlaneDiskEncryptionKey": gcpshared.CryptoKeyImpactInOnly,
 		// Resource path of the Cloud KMS cryptoKey to use for encryption of internal etcd backups.
 		"userManagedKeysConfig.gkeopsEtcdBackupEncryptionKey": gcpshared.CryptoKeyImpactInOnly,
+		// The Cloud KMS cryptoKey to use for encrypting secrets in etcd.
+		// Format: projects/{project}/locations/{location}/keyRings/{keyRing}/cryptoKeys/{cryptoKey}
+		"databaseEncryption.keyName": gcpshared.CryptoKeyImpactInOnly,
+		// The BigQuery dataset ID where cluster resource usage will be exported.
+		"resourceUsageExportConfig.bigqueryDestination.datasetId": {
+			ToSDPItemType:    gcpshared.BigQueryDataset,
+			Description:      "If the referenced BigQuery dataset is deleted or updated: Resource usage export may fail. Updates to the cluster will not affect the dataset.",
+			BlastPropagation: &sdp.BlastPropagation{In: true},
+		},
+		// The IP address of this cluster's master endpoint.
+		"endpoint": gcpshared.IPImpactBothWays,
 		// Forward link from parent to child via SEARCH
 		// Link to all node pools in this cluster
 		"name": {
