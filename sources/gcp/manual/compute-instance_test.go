@@ -298,7 +298,7 @@ func createComputeInstance(instanceName string, status computepb.Instance_Status
 			{
 				NetworkIP:   ptr.To("192.168.1.3"),
 				Subnetwork:  ptr.To("projects/test-project-id/regions/us-central1/subnetworks/default"),
-				Network:     ptr.To("global/networks/network"),
+				Network:     ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/network"),
 				Ipv6Address: ptr.To("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
 			},
 		},

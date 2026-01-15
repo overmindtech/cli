@@ -183,7 +183,7 @@ func createComputeAddress(addressName string) *computepb.Address {
 	return &computepb.Address{
 		Name:       ptr.To(addressName),
 		Labels:     map[string]string{"env": "test"},
-		Network:    ptr.To("global/networks/network"),
+		Network:    ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/network"),
 		Subnetwork: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/subnetworks/default"),
 		Address:    ptr.To("192.168.1.3"),
 	}

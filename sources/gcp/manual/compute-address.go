@@ -94,7 +94,7 @@ func (c computeAddressWrapper) Get(ctx context.Context, queryParts ...string) (*
 
 	var sdpErr *sdp.QueryError
 	var item *sdp.Item
-	item, sdpErr = c.gcpComputeAddressToSDPItem(address)
+	item, sdpErr = c.gcpComputeAddressToSDPItem(ctx, address)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -121,7 +121,7 @@ func (c computeAddressWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Quer
 
 		var sdpErr *sdp.QueryError
 		var item *sdp.Item
-		item, sdpErr = c.gcpComputeAddressToSDPItem(address)
+		item, sdpErr = c.gcpComputeAddressToSDPItem(ctx, address)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -149,7 +149,7 @@ func (c computeAddressWrapper) ListStream(ctx context.Context, stream discovery.
 			return
 		}
 
-		item, sdpErr := c.gcpComputeAddressToSDPItem(address)
+		item, sdpErr := c.gcpComputeAddressToSDPItem(ctx, address)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -160,7 +160,7 @@ func (c computeAddressWrapper) ListStream(ctx context.Context, stream discovery.
 	}
 }
 
-func (c computeAddressWrapper) gcpComputeAddressToSDPItem(address *computepb.Address) (*sdp.Item, *sdp.QueryError) {
+func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, address *computepb.Address) (*sdp.Item, *sdp.QueryError) {
 	// Convert the address to attributes
 	attributes, err := shared.ToAttributesWithExclude(address, "labels")
 	if err != nil {
@@ -182,18 +182,21 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(address *computepb.Add
 		if strings.Contains(network, "/") {
 			networkNameParts := strings.Split(network, "/")
 			networkName := networkNameParts[len(networkNameParts)-1]
-			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   gcpshared.ComputeNetwork.String(),
-					Method: sdp.QueryMethod_GET,
-					Query:  networkName,
-					Scope:  c.ProjectID(),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
-			})
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, network)
+			if err == nil {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputeNetwork.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  networkName,
+						Scope:  scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				})
+			}
 		}
 	}
 
@@ -201,19 +204,21 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(address *computepb.Add
 		if strings.Contains(subnetwork, "/") {
 			subnetworkNameParts := strings.Split(subnetwork, "/")
 			subnetworkName := subnetworkNameParts[len(subnetworkNameParts)-1]
-			region := gcpshared.ExtractPathParam("regions", subnetwork)
-			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   gcpshared.ComputeSubnetwork.String(),
-					Method: sdp.QueryMethod_GET,
-					Query:  subnetworkName,
-					Scope:  gcpshared.RegionalScope(c.ProjectID(), region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
-			})
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, subnetwork)
+			if err == nil {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputeSubnetwork.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  subnetworkName,
+						Scope:  scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				})
+			}
 		}
 	}
 

@@ -90,7 +90,7 @@ func (c computeForwardingRuleWrapper) Get(ctx context.Context, queryParts ...str
 		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
-	item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(rule)
+	item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(ctx, rule)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -115,7 +115,7 @@ func (c computeForwardingRuleWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
-		item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(rule)
+		item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(ctx, rule)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -142,7 +142,7 @@ func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream dis
 			return
 		}
 
-		item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(rule)
+		item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(ctx, rule)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -153,7 +153,7 @@ func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream dis
 	}
 }
 
-func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(rule *computepb.ForwardingRule) (*sdp.Item, *sdp.QueryError) {
+func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx context.Context, rule *computepb.ForwardingRule) (*sdp.Item, *sdp.QueryError) {
 	// Convert the forwarding rule to attributes
 	attributes, err := shared.ToAttributesWithExclude(rule, "labels")
 	if err != nil {
@@ -194,15 +194,15 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(rule *co
 		if strings.Contains(rule.GetBackendService(), "/") {
 			backendServiceNameParts := strings.Split(rule.GetBackendService(), "/")
 			backendServiceName := backendServiceNameParts[len(backendServiceNameParts)-1]
-			region := gcpshared.ExtractPathParam("regions", rule.GetBackendService())
-			if region != "" {
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, rule.GetBackendService())
+			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.ComputeBackendService.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  backendServiceName,
 						// This is a regional resource
-						Scope: gcpshared.RegionalScope(c.ProjectID(), region),
+						Scope: scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// They are tightly coupled
@@ -236,19 +236,22 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(rule *co
 		if strings.Contains(rule.GetNetwork(), "/") {
 			networkNameParts := strings.Split(rule.GetNetwork(), "/")
 			networkName := networkNameParts[len(networkNameParts)-1]
-			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   gcpshared.ComputeNetwork.String(),
-					Method: sdp.QueryMethod_GET,
-					Query:  networkName,
-					// This is a global resource
-					Scope: c.ProjectID(),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
-			})
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, rule.GetNetwork())
+			if err == nil {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputeNetwork.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  networkName,
+						// This is a global resource
+						Scope: scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				})
+			}
 		}
 	}
 
@@ -256,15 +259,15 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(rule *co
 		if strings.Contains(subnetwork, "/") {
 			subnetworkNameParts := strings.Split(subnetwork, "/")
 			subnetworkName := subnetworkNameParts[len(subnetworkNameParts)-1]
-			region := gcpshared.ExtractPathParam("regions", subnetwork)
-			if region != "" {
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, subnetwork)
+			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.ComputeSubnetwork.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  subnetworkName,
 						// This is a regional resource
-						Scope: gcpshared.RegionalScope(c.ProjectID(), region),
+						Scope: scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,
