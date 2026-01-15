@@ -36,6 +36,36 @@ func NewResponseSubject() string {
 func (e *Engine) HandleQuery(ctx context.Context, query *sdp.Query) {
 	var deadlineOverride bool
 
+	// Respond saying we've got it
+	responder := sdp.ResponseSender{
+		ResponseSubject: query.Subject(),
+	}
+
+	var pub sdp.EncodedConnection
+
+	if e.IsNATSConnected() {
+		pub = e.natsConnection
+	} else {
+		pub = NilConnection{}
+	}
+
+	ru := uuid.New()
+	responder.Start(
+		ctx,
+		pub,
+		e.EngineConfig.SourceName,
+		ru,
+	)
+
+	// Ensure responder ends exactly once (prevents double-ending on panic)
+	var responderEndOnce sync.Once
+	defer func() {
+		// Safety net: if we panic before explicitly ending, mark as error
+		responderEndOnce.Do(func() {
+			responder.ErrorWithContext(ctx)
+		})
+	}()
+
 	// If there is no deadline OR further in the future than MaxRequestTimeout, clamp the deadline to MaxRequestTimeout
 	maxRequestDeadline := time.Now().Add(e.MaxRequestTimeout)
 	if query.GetDeadline() == nil || query.GetDeadline().AsTime().After(maxRequestDeadline) {
@@ -51,7 +81,10 @@ func (e *Engine) HandleQuery(ctx context.Context, query *sdp.Query) {
 	numExpandedQueries := len(e.sh.ExpandQuery(query))
 
 	if numExpandedQueries == 0 {
-		// If we don't have any relevant adapters, exit
+		// If we don't have any relevant adapters, mark as done (OK) and exit
+		responderEndOnce.Do(func() {
+			responder.DoneWithContext(ctx)
+		})
 		return
 	}
 
@@ -79,29 +112,6 @@ func (e *Engine) HandleQuery(ctx context.Context, query *sdp.Query) {
 		)
 	}
 
-	// Respond saying we've got it
-	responder := sdp.ResponseSender{
-		ResponseSubject: query.Subject(),
-	}
-
-	var pub sdp.EncodedConnection
-
-	if e.IsNATSConnected() {
-		span.SetAttributes(attribute.Bool("ovm.nats.connected", true))
-		pub = e.natsConnection
-	} else {
-		span.SetAttributes(attribute.Bool("ovm.nats.connected", false))
-		pub = NilConnection{}
-	}
-
-	ru := uuid.New()
-	responder.Start(
-		ctx,
-		pub,
-		e.EngineConfig.SourceName,
-		ru,
-	)
-
 	qt := QueryTracker{
 		Query:   query,
 		Engine:  e,
@@ -118,20 +128,25 @@ func (e *Engine) HandleQuery(ctx context.Context, query *sdp.Query) {
 	// engine's nats connection
 	_, _, _, err := qt.Execute(ctx)
 
-	// If all failed then return an error
+	// End responder based on execution result
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
-			responder.CancelWithContext(ctx)
+			responderEndOnce.Do(func() {
+				responder.CancelWithContext(ctx)
+			})
 		} else {
-			responder.ErrorWithContext(ctx)
+			responderEndOnce.Do(func() {
+				responder.ErrorWithContext(ctx)
+			})
 		}
-
 		span.SetAttributes(
 			attribute.String("ovm.sdp.errorType", "OTHER"),
 			attribute.String("ovm.sdp.errorString", err.Error()),
 		)
 	} else {
-		responder.DoneWithContext(ctx)
+		responderEndOnce.Do(func() {
+			responder.DoneWithContext(ctx)
+		})
 	}
 }
 

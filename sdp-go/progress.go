@@ -25,7 +25,7 @@ const DefaultResponseInterval = (5 * time.Second)
 // DefaultStartTimeout is the default period of time to wait for the first
 // response on a query. If no response is received in this time, the query will
 // be marked as complete.
-const DefaultStartTimeout = 500 * time.Millisecond
+const DefaultStartTimeout = 2000 * time.Millisecond
 
 // ResponseSender is a struct responsible for sending responses out on behalf of
 // agents that are working on that request. Think of it as the agent side
