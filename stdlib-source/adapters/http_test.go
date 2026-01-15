@@ -2,14 +2,17 @@ package adapters
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdp-go"
 )
 
 const TestHTTPTimeout = 3 * time.Second
@@ -21,6 +24,7 @@ type TestHTTPServer struct {
 	InternalServerErrorPage string // A page that returns a 500
 	RedirectPage            string // A page that returns a 301
 	RedirectPageRelative    string // A page that returns a 301 with relative location
+	RedirectPageLinkLocal   string // A page that returns a 301 redirecting to link-local address
 	SlowPage                string // A page that takes longer than the timeout to respond
 	OKPage                  string // A page that returns a 200
 	OKPageNoTLS             string // A page that returns a 200 without TLS
@@ -57,6 +61,11 @@ func NewTestServer() (*TestHTTPServer, error) {
 		w.WriteHeader(http.StatusMovedPermanently)
 	}))
 
+	sm.Handle("/301-link-local", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Location", "http://169.254.169.254/latest/meta-data/")
+		w.WriteHeader(http.StatusMovedPermanently)
+	}))
+
 	sm.Handle("/200", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := w.Write([]byte("ok innit"))
 		if err != nil {
@@ -87,6 +96,7 @@ func NewTestServer() (*TestHTTPServer, error) {
 		InternalServerErrorPage: fmt.Sprintf("%v/500", tlsServer.URL),
 		RedirectPage:            fmt.Sprintf("%v/301", tlsServer.URL),
 		RedirectPageRelative:    fmt.Sprintf("%v/301-relative", tlsServer.URL),
+		RedirectPageLinkLocal:   fmt.Sprintf("%v/301-link-local", tlsServer.URL),
 		OKPage:                  fmt.Sprintf("%v/200", tlsServer.URL),
 		OKPageNoTLS:             fmt.Sprintf("%v/200", httpServer.URL),
 		SlowPage:                fmt.Sprintf("%v/slow", tlsServer.URL),
@@ -339,6 +349,85 @@ func TestHTTPGet(t *testing.T) {
 
 		if err == nil {
 			t.Error("Expected error for URL with query parameters and fragment, got nil")
+		}
+	})
+
+	t.Run("With link-local IP address should be blocked", func(t *testing.T) {
+		// Test direct access to EC2 metadata service IP
+		metadataURL := "http://169.254.169.254/latest/meta-data/"
+
+		_, err := src.Get(context.Background(), "global", metadataURL, false)
+
+		if err == nil {
+			t.Error("Expected error for link-local IP address, got nil")
+		}
+
+		// Verify the error message mentions link-local blocking
+		if err != nil {
+			errStr := err.Error()
+			if errStr == "" {
+				t.Error("Expected error message, got empty string")
+			}
+			// Check that it's a QueryError with the right error type
+			var qErr *sdp.QueryError
+			if errors.As(err, &qErr) {
+				if qErr.GetErrorType() != sdp.QueryError_OTHER {
+					t.Errorf("Expected error type OTHER, got %v", qErr.GetErrorType())
+				}
+				if !strings.Contains(qErr.GetErrorString(), "link-local") {
+					t.Errorf("Expected error message to mention 'link-local', got: %s", qErr.GetErrorString())
+				}
+			}
+		}
+	})
+
+	t.Run("With other link-local IP addresses should be blocked", func(t *testing.T) {
+		// Test other IPs in the 169.254.0.0/16 range
+		testIPs := []string{
+			"http://169.254.0.1/",
+			"http://169.254.1.1/",
+			"http://169.254.255.255/",
+		}
+
+		for _, testIP := range testIPs {
+			_, err := src.Get(context.Background(), "global", testIP, false)
+
+			if err == nil {
+				t.Errorf("Expected error for link-local IP %s, got nil", testIP)
+			}
+		}
+	})
+
+	t.Run("With redirect to link-local address should be blocked", func(t *testing.T) {
+		// Test that redirects to link-local addresses are blocked
+		item, err := src.Get(context.Background(), "global", server.RedirectPageLinkLocal, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// The request should succeed, but the redirect should be marked as blocked
+		var locationError interface{}
+		locationError, err = item.GetAttributes().Get("location-error")
+		if err != nil {
+			t.Fatal("Expected location-error attribute for blocked redirect")
+		}
+
+		locationErrorStr := locationError.(string)
+		if !strings.Contains(locationErrorStr, "redirect blocked") {
+			t.Errorf("Expected location-error to contain 'redirect blocked', got: %s", locationErrorStr)
+		}
+		if !strings.Contains(locationErrorStr, "link-local") {
+			t.Errorf("Expected location-error to mention 'link-local', got: %s", locationErrorStr)
+		}
+
+		// Verify that no linked item query was created for the blocked redirect
+		liqs := item.GetLinkedItemQueries()
+		for _, liq := range liqs {
+			if liq.GetQuery().GetType() == "http" {
+				if strings.Contains(liq.GetQuery().GetQuery(), "169.254") {
+					t.Errorf("Expected no linked item query for blocked link-local redirect, got: %s", liq.GetQuery().GetQuery())
+				}
+			}
 		}
 	})
 }
