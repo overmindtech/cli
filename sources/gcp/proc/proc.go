@@ -356,14 +356,9 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 			return startupError
 		}
 
-		if healthChecker != nil {
-			// Run the health check to verify we can still access all configured projects.
-			// This is called periodically by the heartbeat system to detect permission
-			// changes or other issues. Uses cached results (5 minute TTL) to avoid
-			// excessive API calls to GCP.
-			_, err := healthChecker.Check(ctx)
-			return err
-		}
+		// Permission check removed from liveness probe to prevent false failures
+		// The permission check is still performed during startup and can be
+		// monitored via heartbeats, but should not cause pod restarts.
 		return nil
 	}
 
