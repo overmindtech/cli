@@ -73,8 +73,32 @@ var _ = registerableAdapter{
 			ToSDPItemType:    stdlib.NetworkDNS,
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 		},
+		// Authorized networks (CIDR ranges) allowed to connect to the instance.
+		"settings.ipConfiguration.authorizedNetworks.value": gcpshared.IPImpactBothWays,
+		// Allocated IP range (secondary IP range in VPC) used for private IP allocation.
+		"settings.ipConfiguration.allocatedIpRange": {
+			Description:      "If the Subnetwork's secondary IP range is deleted or updated: The Cloud SQL Instance may fail to allocate private IP addresses. If the instance is updated: The subnetwork remains unaffected.",
+			ToSDPItemType:    gcpshared.ComputeSubnetwork,
+			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+		},
+		// CA pool resource name when using customer-managed CAs.
+		// Format: projects/{project}/locations/{region}/caPools/{caPoolId}
+		// TODO: Private CA resource type (PrivateCACAPool) does not exist yet. Uncomment when created.
+		// "settings.ipConfiguration.serverCaPool": {
+		// 	Description:      "If the Private CA Pool is deleted or updated: The Cloud SQL Instance may fail to use customer-managed certificates. If the instance is updated: The CA pool remains unaffected.",
+		// 	ToSDPItemType:    gcpshared.PrivateCACAPool,
+		// 	BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+		// },
 		// Forward link from parent to child via SEARCH
 		// Link to all backup runs for this instance
+		// NOTE: Due to Go map limitations, only one child resource type can be specified per field key.
+		// Additional child resources (databases, users, sslCerts) would also use the "name" field but
+		// cannot be added here until the framework supports multiple child resource types per field.
+		// Child resources that should be linked:
+		// - SQLAdminBackupRun (implemented below)
+		// - SQLAdminDatabase (requires framework support for multiple child types)
+		// - SQLAdminUser (requires framework support for multiple child types)
+		// - SQLAdminSSLCert (requires framework support for multiple child types)
 		"name": {
 			ToSDPItemType: gcpshared.SQLAdminBackupRun,
 			Description:   "If the Cloud SQL Instance is deleted or updated: All associated Backup Runs may become invalid or inaccessible. If a Backup Run is updated: The instance remains unaffected.",

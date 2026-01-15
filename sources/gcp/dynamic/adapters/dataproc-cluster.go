@@ -97,6 +97,36 @@ var _ = registerableAdapter{
 			Description:      "If the Storage Bucket is deleted or updated: The cluster may fail to stage data or logs. If the cluster is updated: The bucket remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
+		"config.stagingBucket": {
+			ToSDPItemType:    gcpshared.StorageBucket,
+			Description:      "If the Storage Bucket is deleted or updated: The cluster may fail to stage job dependencies, configuration files, or job driver console output. If the cluster is updated: The bucket remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{In: true},
+		},
+		"config.metastoreConfig.dataprocMetastoreService": {
+			ToSDPItemType:    gcpshared.DataprocMetastoreService,
+			Description:      "If the Dataproc Metastore Service is deleted or updated: The cluster may lose access to centralized metadata or fail to operate correctly. If the cluster is updated: The metastore service remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{In: true},
+		},
+		"virtualClusterConfig.kubernetesClusterConfig.gkeClusterConfig.gkeClusterTarget": {
+			ToSDPItemType:    gcpshared.ContainerCluster,
+			Description:      "If the GKE Cluster is deleted or updated: The Dataproc virtual cluster may become invalid or inaccessible. If the Dataproc cluster is updated: The GKE cluster remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{In: true},
+		},
+		"virtualClusterConfig.kubernetesClusterConfig.gkeClusterConfig.nodePoolTarget.nodePool": {
+			ToSDPItemType:    gcpshared.ContainerNodePool,
+			Description:      "If the GKE Node Pool is deleted or updated: The Dataproc virtual cluster may fail to schedule workloads or lose capacity. If the Dataproc cluster is updated: The node pool remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{In: true},
+		},
+		"virtualClusterConfig.stagingBucket": {
+			ToSDPItemType:    gcpshared.StorageBucket,
+			Description:      "If the Storage Bucket is deleted or updated: The virtual cluster may fail to stage job dependencies, configuration files, or job driver console output. If the cluster is updated: The bucket remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{In: true},
+		},
+		"virtualClusterConfig.auxiliaryServicesConfig.sparkHistoryServerConfig.dataprocCluster": {
+			ToSDPItemType:    gcpshared.DataprocCluster,
+			Description:      "If the Spark History Server Dataproc Cluster is deleted or updated: The cluster may lose access to Spark job history or fail to monitor Spark applications. If the cluster is updated: The Spark History Server cluster remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{In: true},
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/dataproc_cluster",

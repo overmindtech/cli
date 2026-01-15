@@ -2,6 +2,7 @@ package manual_test
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 
@@ -336,6 +337,410 @@ func TestComputeDisk(t *testing.T) {
 		if ok {
 			t.Fatalf("Adapter should not support SearchStream operation")
 		}
+	})
+
+	t.Run("GetWithSourceStorageObject", func(t *testing.T) {
+		wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
+
+		// Test with gs:// URI format
+		sourceStorageObject := "gs://test-bucket/path/to/image.tar.gz"
+		disk := createComputeDisk("test-disk", computepb.Disk_READY)
+		disk.SourceStorageObject = ptr.To(sourceStorageObject)
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(disk, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-disk", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-policy",
+					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeInstance.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-instance",
+					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeDiskType.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "pd-standard",
+					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-consistency-group-policy",
+					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeImage.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-image",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+			}
+
+			// Add the new query we're testing
+			queryTests := append(baseQueries, shared.QueryTest{
+				ExpectedType:             gcpshared.StorageBucket.String(),
+				ExpectedMethod:           sdp.QueryMethod_GET,
+				ExpectedQuery:            "test-bucket",
+				ExpectedScope:            projectID,
+				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+			})
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithStoragePool", func(t *testing.T) {
+		wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
+
+		storagePoolURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools/test-storage-pool", projectID, zone)
+		disk := createComputeDisk("test-disk", computepb.Disk_READY)
+		disk.StoragePool = ptr.To(storagePoolURL)
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(disk, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-disk", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present (same as above)
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-policy",
+					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeInstance.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-instance",
+					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeDiskType.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "pd-standard",
+					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-consistency-group-policy",
+					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeImage.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-image",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+			}
+
+			// Add the new query we're testing
+			queryTests := append(baseQueries, shared.QueryTest{
+				ExpectedType:             gcpshared.ComputeStoragePool.String(),
+				ExpectedMethod:           sdp.QueryMethod_GET,
+				ExpectedQuery:            "test-storage-pool",
+				ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+			})
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithAsyncPrimaryDisk", func(t *testing.T) {
+		wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
+
+		primaryDiskURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/disks/primary-disk", projectID, zone)
+		consistencyGroupPolicyURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/us-central1/resourcePolicies/test-consistency-policy", projectID)
+		disk := createComputeDisk("test-disk", computepb.Disk_READY)
+		disk.AsyncPrimaryDisk = &computepb.DiskAsyncReplication{
+			Disk:                      ptr.To(primaryDiskURL),
+			ConsistencyGroupPolicy:    ptr.To(consistencyGroupPolicyURL),
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(disk, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-disk", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-policy",
+					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeInstance.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-instance",
+					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeDiskType.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "pd-standard",
+					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-consistency-group-policy",
+					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeImage.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-image",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+			}
+
+			// Add the new queries we're testing
+			queryTests := append(baseQueries,
+				shared.QueryTest{
+					ExpectedType:             gcpshared.ComputeDisk.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "primary-disk",
+					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				shared.QueryTest{
+					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-consistency-policy",
+					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+			)
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithAsyncSecondaryDisks", func(t *testing.T) {
+		wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
+
+		secondaryDisk1URL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/disks/secondary-disk-1", projectID, zone)
+		secondaryDisk2URL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/disks/secondary-disk-2", projectID, zone)
+		consistencyGroupPolicyURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/us-central1/resourcePolicies/test-consistency-policy", projectID)
+		disk := createComputeDisk("test-disk", computepb.Disk_READY)
+		disk.AsyncSecondaryDisks = map[string]*computepb.DiskAsyncReplicationList{
+			"secondary-disk-1": {
+				AsyncReplicationDisk: &computepb.DiskAsyncReplication{
+					Disk:                      ptr.To(secondaryDisk1URL),
+					ConsistencyGroupPolicy:    ptr.To(consistencyGroupPolicyURL),
+				},
+			},
+			"secondary-disk-2": {
+				AsyncReplicationDisk: &computepb.DiskAsyncReplication{
+					Disk: ptr.To(secondaryDisk2URL),
+				},
+			},
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(disk, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-disk", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-policy",
+					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeInstance.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-instance",
+					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeDiskType.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "pd-standard",
+					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-consistency-group-policy",
+					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				{
+					ExpectedType:             gcpshared.ComputeImage.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-image",
+					ExpectedScope:            projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+			}
+
+			// Add the new queries we're testing
+			queryTests := append(baseQueries,
+				shared.QueryTest{
+					ExpectedType:             gcpshared.ComputeDisk.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "secondary-disk-1",
+					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				shared.QueryTest{
+					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "test-consistency-policy",
+					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+				shared.QueryTest{
+					ExpectedType:             gcpshared.ComputeDisk.String(),
+					ExpectedMethod:           sdp.QueryMethod_GET,
+					ExpectedQuery:            "secondary-disk-2",
+					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				},
+			)
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
 	})
 
 }

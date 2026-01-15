@@ -56,6 +56,18 @@ func (c computeForwardingRuleWrapper) PotentialLinks() map[shared.ItemType]bool 
 		gcpshared.ComputeSubnetwork,
 		gcpshared.ComputeNetwork,
 		gcpshared.ComputeBackendService,
+		gcpshared.ComputeTargetHttpProxy,
+		gcpshared.ComputeTargetHttpsProxy,
+		gcpshared.ComputeTargetTcpProxy,
+		gcpshared.ComputeTargetSslProxy,
+		gcpshared.ComputeTargetPool,
+		gcpshared.ComputeTargetVpnGateway,
+		gcpshared.ComputeTargetInstance,
+		gcpshared.ComputeServiceAttachment,
+		gcpshared.ComputeForwardingRule,
+		gcpshared.ComputePublicDelegatedPrefix,
+		gcpshared.ServiceDirectoryNamespace,
+		gcpshared.ServiceDirectoryService,
 	)
 }
 
@@ -276,7 +288,130 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 				})
 			}
 		}
+	}
 
+	// Link to target resource (polymorphic - can be various proxy types, pool, gateway, instance, or service attachment)
+	if target := rule.GetTarget(); target != "" {
+		// Use the ForwardingRuleTargetLinker to handle polymorphic target field
+		linkedQuery := gcpshared.ForwardingRuleTargetLinker(c.ProjectID(), c.DefaultScope(), target, &sdp.BlastPropagation{
+			// If the target resource is updated or deleted: The forwarding rule routing behavior changes or breaks.
+			// If the forwarding rule is updated or deleted: Traffic will stop or be re-routed affecting the target resource.
+			In:  true,
+			Out: true,
+		})
+		if linkedQuery != nil {
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, linkedQuery)
+		}
+	}
+
+	// Link to base forwarding rule (when using sourceIpRanges)
+	if baseForwardingRule := rule.GetBaseForwardingRule(); baseForwardingRule != "" {
+		if strings.Contains(baseForwardingRule, "/") {
+			forwardingRuleNameParts := strings.Split(baseForwardingRule, "/")
+			forwardingRuleName := forwardingRuleNameParts[len(forwardingRuleNameParts)-1]
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, baseForwardingRule)
+			if err == nil {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputeForwardingRule.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  forwardingRuleName,
+						Scope:  scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// If the base forwarding rule is deleted or updated: The forwarding rule with sourceIpRanges may become invalid.
+						// If the forwarding rule with sourceIpRanges is updated: The base forwarding rule remains unaffected.
+						In:  true,
+						Out: false,
+					},
+				})
+			}
+		}
+	}
+
+	// Link to Public Delegated Prefix (for IPv6 BYOIP forwarding rules)
+	if ipCollection := rule.GetIpCollection(); ipCollection != "" {
+		if strings.Contains(ipCollection, "/") {
+			prefixNameParts := strings.Split(ipCollection, "/")
+			prefixName := prefixNameParts[len(prefixNameParts)-1]
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, ipCollection)
+			if err == nil {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputePublicDelegatedPrefix.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  prefixName,
+						Scope:  scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// If the Public Delegated Prefix is deleted or updated: The forwarding rule may fail to reserve IP addresses from the prefix.
+						// If the forwarding rule is updated: The Public Delegated Prefix remains unaffected.
+						In:  true,
+						Out: false,
+					},
+				})
+			}
+		}
+	}
+
+	// Link to Service Directory namespace and service (for PSC forwarding rules)
+	for _, reg := range rule.GetServiceDirectoryRegistrations() {
+		// Link to Service Directory namespace
+		if namespace := reg.GetNamespace(); namespace != "" {
+			// Extract location and namespace from the namespace resource name
+			// Format: projects/{project}/locations/{location}/namespaces/{namespace}
+			location := gcpshared.ExtractPathParam("locations", namespace)
+			namespaceName := gcpshared.ExtractPathParam("namespaces", namespace)
+			if location != "" && namespaceName != "" {
+				// Service Directory namespace uses project-level scope with location and namespace in query
+				query := shared.CompositeLookupKey(location, namespaceName)
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ServiceDirectoryNamespace.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  query,
+						Scope:  c.ProjectID(),
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// If the Service Directory namespace is deleted or updated: The forwarding rule registration may fail.
+						// If the forwarding rule is updated: The namespace remains unaffected.
+						In:  true,
+						Out: false,
+					},
+				})
+			}
+		}
+
+		// Link to Service Directory service
+		if service := reg.GetService(); service != "" {
+			// Service name is relative to namespace, so we need to construct the full path
+			// Format from namespace: projects/{project}/locations/{location}/namespaces/{namespace}
+			// Service name: {service}
+			// Full path: projects/{project}/locations/{location}/namespaces/{namespace}/services/{service}
+			namespace := reg.GetNamespace()
+			if namespace != "" && service != "" {
+				location := gcpshared.ExtractPathParam("locations", namespace)
+				namespaceName := gcpshared.ExtractPathParam("namespaces", namespace)
+				if location != "" && namespaceName != "" {
+					// Service Directory service uses project-level scope with location, namespace, and service in query
+					query := shared.CompositeLookupKey(location, namespaceName, service)
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   gcpshared.ServiceDirectoryService.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  query,
+							Scope:  c.ProjectID(),
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							// If the Service Directory service is deleted or updated: The forwarding rule registration may fail.
+							// If the forwarding rule is updated: The service remains unaffected.
+							In:  true,
+							Out: false,
+						},
+					})
+				}
+			}
+		}
 	}
 
 	return sdpItem, nil

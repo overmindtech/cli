@@ -41,8 +41,27 @@ var _ = registerableAdapter{
 			},
 		},
 		"data.resource": {
+			// Note: data.resource can reference either a Storage Bucket (for DataDiscoveryScan)
+			// or a BigQuery Table (for DataProfileScan, DataQualityScan, or DataDocumentationScan).
+			// The StorageBucket manual linker will detect BigQuery Table URIs and delegate to
+			// the BigQueryTable linker automatically.
 			ToSDPItemType: gcpshared.StorageBucket,
-			Description:   "If the storage resource is deleted or inaccessible: The data scan will fail to access the data source. If the data scan is updated: The storage resource remains unaffected.",
+			Description:   "If the data source (Storage Bucket or BigQuery Table) is deleted or inaccessible: The data scan will fail to access the data source. If the data scan is updated: The data source remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
+		// Post-scan action BigQuery table exports
+		"dataQualitySpec.postScanActions.bigqueryExport.resultsTable": {
+			ToSDPItemType: gcpshared.BigQueryTable,
+			Description:   "If the BigQuery table for exporting data quality scan results is deleted or inaccessible: The post-scan action will fail. If the data scan is updated: The BigQuery table remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In: true,
+			},
+		},
+		"dataProfileSpec.postScanActions.bigqueryExport.resultsTable": {
+			ToSDPItemType: gcpshared.BigQueryTable,
+			Description:   "If the BigQuery table for exporting data profile scan results is deleted or inaccessible: The post-scan action will fail. If the data scan is updated: The BigQuery table remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In: true,
 			},

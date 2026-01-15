@@ -9,6 +9,7 @@ import (
 	"cloud.google.com/go/securitycentermanagement/apiv1/securitycentermanagementpb"
 
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -72,8 +73,25 @@ func TestSecurityCenterManagementSecurityCenterService(t *testing.T) {
 			t.Errorf("Expected unique attribute value '%s', got %s", combinedQuery, sdpItem.UniqueAttributeValue())
 		}
 
-		// Skip static tests - no blast propagations for this adapter
-		// Static tests fail when linked queries are nil
+		t.Run("StaticTests", func(t *testing.T) {
+			queryTests := shared.QueryTests{
+				// Link to parent Project from name field
+				// The name field format is: projects/{project}/locations/{location}/securityCenterServices/{service}
+				// The manual linker will extract the project ID from the name field
+				{
+					ExpectedType:   gcpshared.CloudResourceManagerProject.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  projectID,
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
 	})
 
 	t.Run("Search", func(t *testing.T) {

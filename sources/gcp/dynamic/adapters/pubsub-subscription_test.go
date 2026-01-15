@@ -14,6 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 func TestPubSubSubscription(t *testing.T) {
@@ -25,11 +26,24 @@ func TestPubSubSubscription(t *testing.T) {
 	subscription := &pubsub.Subscription{
 		Name:  fmt.Sprintf("projects/%s/subscriptions/%s", projectID, subscriptionName),
 		Topic: fmt.Sprintf("projects/%s/topics/test-topic", projectID),
+		DeadLetterPolicy: &pubsub.DeadLetterPolicy{
+			DeadLetterTopic:     fmt.Sprintf("projects/%s/topics/dead-letter-topic", projectID),
+			MaxDeliveryAttempts: 5,
+		},
+		PushConfig: &pubsub.PushConfig{
+			PushEndpoint: "https://example.com/push-endpoint",
+			OidcToken: &pubsub.OidcToken{
+				ServiceAccountEmail: fmt.Sprintf("push-sa@%s.iam.gserviceaccount.com", projectID),
+				Audience:            "https://example.com",
+			},
+		},
 		BigqueryConfig: &pubsub.BigQueryConfig{
-			Table: "test-project.test_dataset.test_table",
+			Table:               "test-project.test_dataset.test_table",
+			ServiceAccountEmail: fmt.Sprintf("bq-sa@%s.iam.gserviceaccount.com", projectID),
 		},
 		CloudStorageConfig: &pubsub.CloudStorageConfig{
-			Bucket: "test-bucket",
+			Bucket:              "test-bucket",
+			ServiceAccountEmail: fmt.Sprintf("storage-sa@%s.iam.gserviceaccount.com", projectID),
 		},
 	}
 
@@ -80,6 +94,39 @@ func TestPubSubSubscription(t *testing.T) {
 					},
 				},
 				{
+					// deadLetterPolicy.deadLetterTopic
+					ExpectedType:   gcpshared.PubSubTopic.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "dead-letter-topic",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					// pushConfig.pushEndpoint
+					ExpectedType:   stdlib.NetworkHTTP.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "https://example.com/push-endpoint",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					// pushConfig.oidcToken.serviceAccountEmail
+					ExpectedType:   gcpshared.IAMServiceAccount.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  fmt.Sprintf("push-sa@%s.iam.gserviceaccount.com", projectID),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
 					// bigqueryConfig.table
 					ExpectedType:   gcpshared.BigQueryTable.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -91,10 +138,32 @@ func TestPubSubSubscription(t *testing.T) {
 					},
 				},
 				{
+					// bigqueryConfig.serviceAccountEmail
+					ExpectedType:   gcpshared.IAMServiceAccount.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  fmt.Sprintf("bq-sa@%s.iam.gserviceaccount.com", projectID),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
 					// cloudStorageConfig.bucket
 					ExpectedType:   gcpshared.StorageBucket.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-bucket",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					// cloudStorageConfig.serviceAccountEmail
+					ExpectedType:   gcpshared.IAMServiceAccount.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  fmt.Sprintf("storage-sa@%s.iam.gserviceaccount.com", projectID),
 					ExpectedScope:  projectID,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,

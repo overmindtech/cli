@@ -14,6 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 func TestSQLAdminBackup(t *testing.T) {
@@ -28,6 +29,24 @@ func TestSQLAdminBackup(t *testing.T) {
 		KmsKey:        "projects/test-project/locations/global/keyRings/my-keyring/cryptoKeys/my-key",
 		KmsKeyVersion: "projects/test-project/locations/global/keyRings/my-keyring/cryptoKeys/my-key/cryptoKeyVersions/1",
 		BackupRun:     "1234567890",
+		InstanceSettings: &sqladmin.DatabaseInstance{
+			Settings: &sqladmin.Settings{
+				IpConfiguration: &sqladmin.IpConfiguration{
+					PrivateNetwork: "projects/test-project/global/networks/test-network",
+					AuthorizedNetworks: []*sqladmin.AclEntry{
+						{
+							Value: "203.0.113.0/24",
+							Name:  "office-range",
+						},
+						{
+							Value: "198.51.100.5/32",
+							Name:  "admin-ip",
+						},
+					},
+					AllocatedIpRange: "projects/test-project/locations/us-central1/internalRanges/test-range",
+				},
+			},
+		},
 	}
 
 	backupList := &sqladmin.ListBackupsResponse{
@@ -98,6 +117,41 @@ func TestSQLAdminBackup(t *testing.T) {
 						Out: false,
 					},
 				},
+				{
+					// instanceSettings.settings.ipConfiguration.privateNetwork
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					// instanceSettings.settings.ipConfiguration.authorizedNetworks.value (first entry)
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "203.0.113.0/24",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					// instanceSettings.settings.ipConfiguration.authorizedNetworks.value (second entry)
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "198.51.100.5/32",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				// Note: allocatedIpRange link is not tested here because the NetworkConnectivityInternalRange adapter doesn't exist yet.
+				// The blast propagation is defined in the adapter so it will work automatically when the adapter is created.
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

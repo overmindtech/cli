@@ -14,6 +14,7 @@ const (
 	WAFv2      shared.API = "wafv2"
 	Kinesis    shared.API = "kinesis"
 	IAM        shared.API = "iam"
+	MSK        shared.API = "msk"
 )
 
 // Resources
@@ -26,4 +27,5 @@ const (
 	Stream         shared.Resource = "stream"
 	StreamConsumer shared.Resource = "stream-consumer"
 	Role           shared.Resource = "role"
+	Cluster        shared.Resource = "cluster"
 )

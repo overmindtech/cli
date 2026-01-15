@@ -14,6 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 var ComputeMachineImageLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeMachineImage)
@@ -50,9 +51,15 @@ func (c computeMachineImageWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeNetwork,
 		gcpshared.ComputeSubnetwork,
+		gcpshared.ComputeNetworkAttachment,
 		gcpshared.ComputeDisk,
+		gcpshared.ComputeImage,
+		gcpshared.ComputeSnapshot,
 		gcpshared.CloudKMSCryptoKeyVersion,
 		gcpshared.ComputeInstance,
+		gcpshared.IAMServiceAccount,
+		gcpshared.ComputeAcceleratorType,
+		stdlib.NetworkIP,
 	)
 }
 
@@ -217,6 +224,89 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 					}
 				}
 			}
+
+			// Network Attachment for Private Service Connect
+			// GET https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/networkAttachments/{networkAttachment}
+			// https://cloud.google.com/compute/docs/reference/rest/v1/networkAttachments/get
+			if networkAttachment := networkInterface.GetNetworkAttachment(); networkAttachment != "" {
+				networkAttachmentName := gcpshared.LastPathComponent(networkAttachment)
+				if networkAttachmentName != "" {
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, networkAttachment)
+					if err == nil {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.ComputeNetworkAttachment.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  networkAttachmentName,
+								Scope:  scope,
+							},
+							// If the Network Attachment is deleted or updated: Instances created from this machine image may lose access to network services via Private Service Connect.
+							// If the machine image is updated: The network attachment remains unaffected.
+							BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+						})
+					}
+				}
+			}
+
+			// IPv4 internal IP address
+			if networkIP := networkInterface.GetNetworkIP(); networkIP != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   stdlib.NetworkIP.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  networkIP,
+						Scope:  "global",
+					},
+					// IP addresses are tightly coupled with the source type.
+					BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+				})
+			}
+
+			// IPv6 internal address
+			if ipv6Address := networkInterface.GetIpv6Address(); ipv6Address != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   stdlib.NetworkIP.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  ipv6Address,
+						Scope:  "global",
+					},
+					// IP addresses are tightly coupled with the source type.
+					BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+				})
+			}
+
+			// External IPv4 address from access configs
+			for _, accessConfig := range networkInterface.GetAccessConfigs() {
+				if natIP := accessConfig.GetNatIP(); natIP != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   stdlib.NetworkIP.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  natIP,
+							Scope:  "global",
+						},
+						// IP addresses are tightly coupled with the source type.
+						BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+					})
+				}
+			}
+
+			// External IPv6 address from IPv6 access configs
+			for _, ipv6AccessConfig := range networkInterface.GetIpv6AccessConfigs() {
+				if externalIpv6 := ipv6AccessConfig.GetExternalIpv6(); externalIpv6 != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   stdlib.NetworkIP.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  externalIpv6,
+							Scope:  "global",
+						},
+						// IP addresses are tightly coupled with the source type.
+						BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+					})
+				}
+			}
 		}
 
 		//An array of disks that are associated with the instances that are created from this machine image.
@@ -279,6 +369,168 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 					}
 				}
 			}
+
+			// Link to source image if disk is being initialized from an image
+			if initializeParams := disk.GetInitializeParams(); initializeParams != nil {
+				if sourceImage := initializeParams.GetSourceImage(); sourceImage != "" {
+					// Source image can be a full URL or partial path
+					// Format: projects/{project}/global/images/{image} or just the image name
+					imageName := gcpshared.LastPathComponent(sourceImage)
+					if imageName != "" {
+						scope, err := gcpshared.ExtractScopeFromURI(ctx, sourceImage)
+						if err == nil {
+							sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+								Query: &sdp.Query{
+									Type:   gcpshared.ComputeImage.String(),
+									Method: sdp.QueryMethod_GET,
+									Query:  imageName,
+									Scope:  scope,
+								},
+								// If the source image is deleted or updated: Instances created from this machine image may fail to initialize the disk.
+								// If the machine image is updated: The source image remains unaffected.
+								BlastPropagation: &sdp.BlastPropagation{
+									In:  true,
+									Out: false,
+								},
+							})
+						}
+					}
+				}
+
+				// Link to source snapshot if disk is being initialized from a snapshot
+				if sourceSnapshot := initializeParams.GetSourceSnapshot(); sourceSnapshot != "" {
+					// Source snapshot can be a full URL or partial path
+					// Format: projects/{project}/global/snapshots/{snapshot} or just the snapshot name
+					snapshotName := gcpshared.LastPathComponent(sourceSnapshot)
+					if snapshotName != "" {
+						scope, err := gcpshared.ExtractScopeFromURI(ctx, sourceSnapshot)
+						if err == nil {
+							sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+								Query: &sdp.Query{
+									Type:   gcpshared.ComputeSnapshot.String(),
+									Method: sdp.QueryMethod_GET,
+									Query:  snapshotName,
+									Scope:  scope,
+								},
+								// If the source snapshot is deleted or updated: Instances created from this machine image may fail to initialize the disk.
+								// If the machine image is updated: The source snapshot remains unaffected.
+								BlastPropagation: &sdp.BlastPropagation{
+									In:  true,
+									Out: false,
+								},
+							})
+						}
+					}
+				}
+
+				// Link to KMS key used to decrypt source image
+				if sourceImageEncryptionKey := initializeParams.GetSourceImageEncryptionKey(); sourceImageEncryptionKey != nil {
+					if keyName := sourceImageEncryptionKey.GetKmsKeyName(); keyName != "" {
+						location := gcpshared.ExtractPathParam("locations", keyName)
+						keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
+						cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
+						cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
+
+						if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
+							sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+								Query: &sdp.Query{
+									Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+									Method: sdp.QueryMethod_GET,
+									Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
+									Scope:  c.ProjectID(),
+								},
+								// If the encryption key is deleted: Instances created from this machine image may fail to decrypt the source image.
+								// If the machine image is updated: The encryption key remains unaffected.
+								BlastPropagation: &sdp.BlastPropagation{
+									In:  true,
+									Out: false,
+								},
+							})
+						}
+					}
+				}
+
+				// Link to KMS key used to decrypt source snapshot
+				if sourceSnapshotEncryptionKey := initializeParams.GetSourceSnapshotEncryptionKey(); sourceSnapshotEncryptionKey != nil {
+					if keyName := sourceSnapshotEncryptionKey.GetKmsKeyName(); keyName != "" {
+						location := gcpshared.ExtractPathParam("locations", keyName)
+						keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
+						cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
+						cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
+
+						if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
+							sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+								Query: &sdp.Query{
+									Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+									Method: sdp.QueryMethod_GET,
+									Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
+									Scope:  c.ProjectID(),
+								},
+								// If the encryption key is deleted: Instances created from this machine image may fail to decrypt the source snapshot.
+								// If the machine image is updated: The encryption key remains unaffected.
+								BlastPropagation: &sdp.BlastPropagation{
+									In:  true,
+									Out: false,
+								},
+							})
+						}
+					}
+				}
+			}
+		}
+
+		// Link to service accounts used by instances created from this machine image
+		for _, serviceAccount := range instanceProperties.GetServiceAccounts() {
+			if email := serviceAccount.GetEmail(); email != "" {
+				// Service account email can be in format: service-account@project.iam.gserviceaccount.com
+				// or as a full resource name: projects/{project}/serviceAccounts/{email}
+				// Extract email from either format
+				saEmail := email
+				if strings.Contains(email, "/") {
+					// Extract email from full resource name
+					saEmail = gcpshared.LastPathComponent(email)
+				} else if strings.Contains(email, "@") {
+					// Already in email format, use as-is
+					saEmail = email
+				}
+
+				if saEmail != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   gcpshared.IAMServiceAccount.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  saEmail,
+							Scope:  c.ProjectID(),
+						},
+						// If the IAM Service Account is deleted or updated: Instances created from this machine image may fail to authenticate or access required resources.
+						// If the machine image is updated: The service account remains unaffected.
+						BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+					})
+				}
+			}
+		}
+
+		// Link to accelerator types (GPUs/TPUs) attached to instances created from this machine image
+		for _, accelerator := range instanceProperties.GetGuestAccelerators() {
+			if acceleratorType := accelerator.GetAcceleratorType(); acceleratorType != "" {
+				acceleratorTypeName := gcpshared.LastPathComponent(acceleratorType)
+				if acceleratorTypeName != "" {
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, acceleratorType)
+					if err == nil {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.ComputeAcceleratorType.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  acceleratorTypeName,
+								Scope:  scope,
+							},
+							// If the Accelerator Type is deleted or becomes unavailable: Instances created from this machine image may fail to start or have reduced capabilities.
+							// If the machine image is updated: The accelerator type remains unaffected.
+							BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+						})
+					}
+				}
+			}
 		}
 
 	}
@@ -336,6 +588,30 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 					// Deleting a machine image does not impact source Instance
 					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				})
+			}
+		}
+	}
+
+	// Link to source disks from savedDisks (output-only field)
+	// savedDisks contains information about each disk attached to the source VM instance when the machine image was created
+	for _, savedDisk := range machineImage.GetSavedDisks() {
+		if sourceDisk := savedDisk.GetSourceDisk(); sourceDisk != "" {
+			diskName := gcpshared.LastPathComponent(sourceDisk)
+			if diskName != "" {
+				scope, err := gcpshared.ExtractScopeFromURI(ctx, sourceDisk)
+				if err == nil {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   gcpshared.ComputeDisk.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  diskName,
+							Scope:  scope,
+						},
+						// If the source disk is deleted or updated: The machine image may become invalid or fail to restore instances.
+						// If the machine image is updated: The source disk remains unaffected.
+						BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+					})
+				}
 			}
 		}
 	}

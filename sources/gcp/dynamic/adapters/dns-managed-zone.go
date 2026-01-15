@@ -28,12 +28,20 @@ var _ = registerableAdapter{
 			Description:      "Tightly coupled with the DNS Managed Zone.",
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 		},
+		// nameServers is an array of DNS names assigned to the managed zone (output only)
+		"nameServers": {
+			ToSDPItemType:    stdlib.NetworkDNS,
+			Description:      "Nameservers assigned to the managed zone are tightly coupled with the DNS Managed Zone.",
+			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+		},
 		"privateVisibilityConfig.networks.networkUrl": gcpshared.ComputeNetworkImpactInOnly,
 		// The resource name of the cluster to bind this ManagedZone to. This should be specified in the format like: projects/*/locations/*/clusters/*.
 		// This is referenced from GKE projects.locations.clusters.get
 		// API: https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.locations.clusters/get
 		"privateVisibilityConfig.gkeClusters.gkeClusterName": {
-			ToSDPItemType: gcpshared.ContainerCluster,
+			ToSDPItemType:    gcpshared.ContainerCluster,
+			Description:      "If the GKE Container Cluster is deleted or updated: The DNS Managed Zone may lose visibility for that cluster or fail to resolve names. If the DNS Managed Zone is updated: The cluster remains unaffected.",
+			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"forwardingConfig.targetNameServers.ipv4Address": gcpshared.IPImpactBothWays,
 		"forwardingConfig.targetNameServers.ipv6Address": gcpshared.IPImpactBothWays,

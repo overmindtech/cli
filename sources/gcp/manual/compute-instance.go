@@ -53,10 +53,17 @@ func (c computeInstanceWrapper) PredefinedRole() string {
 func (c computeInstanceWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		stdlib.NetworkIP,
+		stdlib.NetworkDNS,
 		gcpshared.ComputeDisk,
 		gcpshared.ComputeSubnetwork,
 		gcpshared.ComputeNetwork,
 		gcpshared.ComputeResourcePolicy,
+		gcpshared.IAMServiceAccount,
+		gcpshared.ComputeImage,
+		gcpshared.ComputeSnapshot,
+		gcpshared.CloudKMSCryptoKey,
+		gcpshared.CloudKMSCryptoKeyVersion,
+		gcpshared.ComputeZone,
 	)
 }
 
@@ -204,6 +211,149 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 				}
 			}
 		}
+
+		// Link to source image if disk is being initialized from an image
+		if initializeParams := disk.GetInitializeParams(); initializeParams != nil {
+			if sourceImage := initializeParams.GetSourceImage(); sourceImage != "" {
+				// Source image can be a full URL or partial path
+				// Format: projects/{project}/global/images/{image} or just the image name
+				imageName := gcpshared.LastPathComponent(sourceImage)
+				if imageName != "" {
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, sourceImage)
+					if err == nil {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.ComputeImage.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  imageName,
+								Scope:  scope,
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
+				}
+			}
+
+			// Link to source snapshot if disk is being initialized from a snapshot
+			if sourceSnapshot := initializeParams.GetSourceSnapshot(); sourceSnapshot != "" {
+				// Source snapshot can be a full URL or partial path
+				// Format: projects/{project}/global/snapshots/{snapshot} or just the snapshot name
+				snapshotName := gcpshared.LastPathComponent(sourceSnapshot)
+				if snapshotName != "" {
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, sourceSnapshot)
+					if err == nil {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.ComputeSnapshot.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  snapshotName,
+								Scope:  scope,
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
+				}
+			}
+
+
+			// Link to KMS key used to decrypt source image
+			if sourceImageEncryptionKey := initializeParams.GetSourceImageEncryptionKey(); sourceImageEncryptionKey != nil {
+				if keyName := sourceImageEncryptionKey.GetKmsKeyName(); keyName != "" {
+					location := gcpshared.ExtractPathParam("locations", keyName)
+					keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
+					cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
+					cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
+
+					if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
+								Scope:  c.ProjectID(),
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
+				}
+			}
+
+			// Link to KMS key used to decrypt source snapshot
+			if sourceSnapshotEncryptionKey := initializeParams.GetSourceSnapshotEncryptionKey(); sourceSnapshotEncryptionKey != nil {
+				if keyName := sourceSnapshotEncryptionKey.GetKmsKeyName(); keyName != "" {
+					location := gcpshared.ExtractPathParam("locations", keyName)
+					keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
+					cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
+					cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
+
+					if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
+								Scope:  c.ProjectID(),
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
+				}
+			}
+		}
+
+		// Link to KMS key used for disk encryption
+		if diskEncryptionKey := disk.GetDiskEncryptionKey(); diskEncryptionKey != nil {
+			if keyName := diskEncryptionKey.GetKmsKeyName(); keyName != "" {
+				location := gcpshared.ExtractPathParam("locations", keyName)
+				keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
+				cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
+				cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
+
+				if location != "" && keyRing != "" && cryptoKey != "" {
+					if cryptoKeyVersion != "" {
+						// Link to CryptoKeyVersion if version is specified
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
+								Scope:  c.ProjectID(),
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					} else {
+						// Link to CryptoKey if no version is specified
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.CloudKMSCryptoKey.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey),
+								Scope:  c.ProjectID(),
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
+				}
+			}
+		}
 	}
 
 	if instance.GetNetworkInterfaces() != nil {
@@ -236,6 +386,58 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 						Out: true,
 					},
 				})
+			}
+
+			// Link to external IPv4 address from access configs
+			for _, accessConfig := range networkInterface.GetAccessConfigs() {
+				if natIP := accessConfig.GetNatIP(); natIP != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   stdlib.NetworkIP.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  natIP,
+							Scope:  "global",
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					})
+				}
+
+				// Link to DNS name from PTR record if configured
+				if publicPtrDomainName := accessConfig.GetPublicPtrDomainName(); publicPtrDomainName != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   stdlib.NetworkDNS.String(),
+							Method: sdp.QueryMethod_SEARCH,
+							Query:  publicPtrDomainName,
+							Scope:  "global",
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					})
+				}
+			}
+
+			// Link to external IPv6 address from IPv6 access configs
+			for _, ipv6AccessConfig := range networkInterface.GetIpv6AccessConfigs() {
+				if externalIpv6 := ipv6AccessConfig.GetExternalIpv6(); externalIpv6 != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   stdlib.NetworkIP.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  externalIpv6,
+							Scope:  "global",
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					})
+				}
 			}
 
 			if subnetwork := networkInterface.GetSubnetwork(); subnetwork != "" {
@@ -334,6 +536,59 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 						},
 					})
 				}
+			}
+		}
+	}
+
+	// Link to service accounts used by the instance
+	for _, serviceAccount := range instance.GetServiceAccounts() {
+		if email := serviceAccount.GetEmail(); email != "" {
+			// Service account email can be in format: service-account@project.iam.gserviceaccount.com
+			// or as a full resource name: projects/{project}/serviceAccounts/{email}
+			// Extract email from either format
+			saEmail := email
+			if strings.Contains(email, "/") {
+				// Extract email from resource name format
+				saEmail = gcpshared.LastPathComponent(email)
+			}
+			if saEmail != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.IAMServiceAccount.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  saEmail,
+						Scope:  c.ProjectID(),
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				})
+			}
+		}
+	}
+
+
+	// Link to zone where the instance resides
+	if zone := instance.GetZone(); zone != "" {
+		// Zone can be a full URL or partial path
+		// Format: projects/{project}/zones/{zone} or zones/{zone}
+		zoneName := gcpshared.LastPathComponent(zone)
+		if zoneName != "" {
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, zone)
+			if err == nil {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputeZone.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  zoneName,
+						Scope:  scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				})
 			}
 		}
 	}

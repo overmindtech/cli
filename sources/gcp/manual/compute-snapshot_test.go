@@ -103,6 +103,16 @@ func TestComputeSnapshot(t *testing.T) {
 					ExpectedScope:            "test-project-id.us-central1",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
+				{
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-snapshot",
+					ExpectedScope:  "test-project-id",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -285,5 +295,8 @@ func createComputeSnapshot(snapshotName string, status computepb.Snapshot_Status
 			RawKey:     ptr.To("test-key"),
 		},
 		SourceSnapshotSchedulePolicy: ptr.To("projects/test-project-id/regions/us-central1/resourcePolicies/test-source-snapshot-schedule-policy"),
+		SnapshotEncryptionKey: &computepb.CustomerEncryptionKey{
+			KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-snapshot"),
+		},
 	}
 }

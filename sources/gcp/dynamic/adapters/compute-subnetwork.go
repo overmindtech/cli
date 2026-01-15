@@ -27,6 +27,16 @@ var _ = registerableAdapter{
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 		},
 		"gatewayAddress": gcpshared.IPImpactBothWays,
+		"secondaryIpRanges.reservedInternalRange": {
+			Description:      "If the Reserved Internal Range is deleted or updated: The subnetwork's secondary IP range configuration may become invalid. If the subnetwork is updated: The internal range remains unaffected.",
+			ToSDPItemType:    gcpshared.NetworkConnectivityInternalRange,
+			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+		},
+		"ipCollection": {
+			Description:      "If the Public Delegated Prefix is deleted or updated: The subnetwork may lose its IP allocation source (BYOIP). If the subnetwork is updated: The prefix remains unaffected.",
+			ToSDPItemType:    gcpshared.ComputePublicDelegatedPrefix,
+			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork",

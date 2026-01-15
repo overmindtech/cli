@@ -20,7 +20,7 @@ var (
 
 var (
 	IPImpactBothWays = &Impact{
-		Description:      "IP addresses are tightly coupled with the source type.",
+		Description:      "IP addresses and DNS names are tightly coupled with the source type. The linker automatically detects whether the value is an IP address or DNS name and creates the appropriate link. You can use either stdlib.NetworkIP or stdlib.NetworkDNS in blast propagation - both will automatically detect the actual type.",
 		ToSDPItemType:    stdlib.NetworkIP,
 		BlastPropagation: impactBothWays,
 	}

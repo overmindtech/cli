@@ -121,6 +121,11 @@ var _ = registerableAdapter{
 			ToSDPItemType:    gcpshared.ComputeNodeGroup,
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 		},
+		"properties.serviceAccounts.email": {
+			Description:      "If the IAM Service Account is deleted or updated: Instances created from this template may fail to authenticate or access required resources. If the template is updated: The service account remains unaffected.",
+			ToSDPItemType:    gcpshared.IAMServiceAccount,
+			BlastPropagation: gcpshared.ImpactInOnly,
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_template",

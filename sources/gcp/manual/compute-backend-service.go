@@ -54,6 +54,11 @@ func (computeBackendServiceWrapper) PotentialLinks() map[shared.ItemType]bool {
 		gcpshared.NetworkSecurityClientTlsPolicy,
 		gcpshared.NetworkServicesServiceLbPolicy,
 		gcpshared.NetworkServicesServiceBinding,
+		gcpshared.ComputeInstanceGroup,
+		gcpshared.ComputeNetworkEndpointGroup,
+		gcpshared.ComputeHealthCheck,
+		gcpshared.ComputeInstance,
+		gcpshared.ComputeRegion,
 	)
 }
 
@@ -87,7 +92,7 @@ func (c computeBackendServiceWrapper) Get(ctx context.Context, queryParts ...str
 		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 	}
 
-	item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), c.DefaultScope(), service)
+	item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, c.ProjectID(), c.DefaultScope(), service)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -111,7 +116,7 @@ func (c computeBackendServiceWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
 		}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), c.DefaultScope(), bs)
+		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, c.ProjectID(), c.DefaultScope(), bs)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -138,7 +143,7 @@ func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream dis
 			return
 		}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(c.ProjectID(), c.DefaultScope(), backendService)
+		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, c.ProjectID(), c.DefaultScope(), backendService)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -149,7 +154,7 @@ func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream dis
 	}
 }
 
-func gcpComputeBackendServiceToSDPItem(projectID string, scope string, bs *computepb.BackendService) (*sdp.Item, *sdp.QueryError) {
+func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, scope string, bs *computepb.BackendService) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(bs)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -274,6 +279,44 @@ func gcpComputeBackendServiceToSDPItem(projectID string, scope string, bs *compu
 		}
 	}
 
+	// Health checks are used by the backend service to probe the health of its backends.
+	// At most one health check can be specified per backend service.
+	// For regional backend services, these are typically regional health checks.
+	// GET https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/healthChecks/{healthCheck}
+	// or GET https://compute.googleapis.com/compute/v1/projects/{project}/global/healthChecks/{healthCheck}
+	// https://cloud.google.com/compute/docs/reference/rest/v1/regionHealthChecks/get
+	// https://cloud.google.com/compute/docs/reference/rest/v1/healthChecks/get
+	if healthChecks := bs.GetHealthChecks(); len(healthChecks) > 0 {
+		// At most one health check is allowed, but we iterate in case multiple are present
+		for _, healthCheckURL := range healthChecks {
+			if healthCheckURL != "" && strings.Contains(healthCheckURL, "/") {
+				// Extract scope from the health check URL (could be global or regional)
+				healthCheckScope, err := gcpshared.ExtractScopeFromURI(ctx, healthCheckURL)
+				if err != nil {
+					// If scope extraction fails, skip this health check
+					continue
+				}
+
+				// Extract health check name from URL
+				healthCheckName := gcpshared.LastPathComponent(healthCheckURL)
+				if healthCheckName != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   gcpshared.ComputeHealthCheck.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  healthCheckName,
+							Scope:  healthCheckScope,
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					})
+				}
+			}
+		}
+	}
+
 	for _, backend := range bs.GetBackends() {
 		if backend.GetGroup() != "" {
 			// The group field is a URL to a Compute Instance Group or Network Endpoint Group.
@@ -300,17 +343,64 @@ func gcpComputeBackendServiceToSDPItem(projectID string, scope string, bs *compu
 				}
 			}
 			if strings.Contains(backend.GetGroup(), "/networkEndpointGroups/") {
-				// https://cloud.google.com/compute/docs/reference/rest/v1/networkEndpointGroups/get#http-request
-				params := gcpshared.ExtractPathParams(backend.GetGroup(), "zones", "networkEndpointGroups")
+				// Network Endpoint Groups can be zonal, regional, or global
+				// https://cloud.google.com/compute/docs/reference/rest/v1/networkEndpointGroups/get
+				// https://cloud.google.com/compute/docs/reference/rest/v1/regionNetworkEndpointGroups/get
+				// https://cloud.google.com/compute/docs/reference/rest/v1/globalNetworkEndpointGroups/get
+				// Extract scope from the NEG URL
+				negScope, err := gcpshared.ExtractScopeFromURI(ctx, backend.GetGroup())
+				if err != nil {
+					// Fallback to zonal extraction for backward compatibility
+					params := gcpshared.ExtractPathParams(backend.GetGroup(), "zones", "networkEndpointGroups")
+					if len(params) == 2 && params[0] != "" && params[1] != "" {
+						zone := params[0]
+						negName := params[1]
+
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.ComputeNetworkEndpointGroup.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  negName,
+								Scope:  zone,
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
+				} else {
+					// Use scope extraction for zonal, regional, or global NEGs
+					negName := gcpshared.LastPathComponent(backend.GetGroup())
+					if negName != "" {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.ComputeNetworkEndpointGroup.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  negName,
+								Scope:  negScope,
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
+				}
+			}
+			// Also check for instanceGroups (unmanaged instance groups)
+			if strings.Contains(backend.GetGroup(), "/instanceGroups/") {
+				// https://cloud.google.com/compute/docs/reference/rest/v1/instanceGroups/get
+				params := gcpshared.ExtractPathParams(backend.GetGroup(), "zones", "instanceGroups")
 				if len(params) == 2 && params[0] != "" && params[1] != "" {
 					zone := params[0]
-					negName := params[1]
+					groupName := params[1]
 
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   gcpshared.ComputeNetworkEndpointGroup.String(),
+							Type:   gcpshared.ComputeInstanceGroup.String(),
 							Method: sdp.QueryMethod_GET,
-							Query:  negName,
+							Query:  groupName,
 							Scope:  zone,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
@@ -372,6 +462,92 @@ func gcpComputeBackendServiceToSDPItem(projectID string, scope string, bs *compu
 					})
 				}
 			}
+		}
+	}
+
+	// HA Policy (High Availability Policy) for External Passthrough and Internal Passthrough Network Load Balancers.
+	// Used for self-managed high availability with zonal NEG backends.
+	// GET https://cloud.google.com/compute/docs/reference/rest/v1/backendServices#BackendService
+	if haPolicy := bs.GetHaPolicy(); haPolicy != nil {
+		if leader := haPolicy.GetLeader(); leader != nil {
+			// Link to the Network Endpoint Group containing the leader endpoint
+			// haPolicy.leader.backendGroup is a fully-qualified URL of the zonal NEG containing the leader endpoint.
+			// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/networkEndpointGroups/{networkEndpointGroup}
+			// https://cloud.google.com/compute/docs/reference/rest/v1/networkEndpointGroups/get
+			if backendGroup := leader.GetBackendGroup(); backendGroup != "" {
+				negScope, err := gcpshared.ExtractScopeFromURI(ctx, backendGroup)
+				if err == nil {
+					negName := gcpshared.LastPathComponent(backendGroup)
+					if negName != "" {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.ComputeNetworkEndpointGroup.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  negName,
+								Scope:  negScope,
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
+				}
+			}
+
+			// Link to the Compute Instance designated as leader
+			// haPolicy.leader.networkEndpoint.instance is the name of the VM instance in the NEG to be leader.
+			// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances/{instance}
+			// https://cloud.google.com/compute/docs/reference/rest/v1/instances/get
+			if networkEndpoint := leader.GetNetworkEndpoint(); networkEndpoint != nil {
+				if instanceName := networkEndpoint.GetInstance(); instanceName != "" {
+					// The instance name alone is not enough - we need to extract the zone from the backendGroup
+					// Since the leader must be in the same NEG as specified in backendGroup, we can extract zone from there
+					if backendGroup := leader.GetBackendGroup(); backendGroup != "" {
+						// Extract zone from backendGroup URL
+						zone := gcpshared.ExtractPathParam("zones", backendGroup)
+						if zone != "" {
+							instanceScope := gcpshared.ZonalScope(projectID, zone)
+							sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+								Query: &sdp.Query{
+									Type:   gcpshared.ComputeInstance.String(),
+									Method: sdp.QueryMethod_GET,
+									Query:  instanceName,
+									Scope:  instanceScope,
+								},
+								BlastPropagation: &sdp.BlastPropagation{
+									In:  true,
+									Out: false,
+								},
+							})
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// The URL of the region where the regional backend service resides.
+	// This field is output-only and is not applicable to global backend services.
+	// GET https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}
+	// https://cloud.google.com/compute/docs/reference/rest/v1/regions/get
+	if region := bs.GetRegion(); region != "" {
+		if strings.Contains(region, "/") {
+			regionNameParts := strings.Split(region, "/")
+			regionName := regionNameParts[len(regionNameParts)-1]
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   gcpshared.ComputeRegion.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  regionName,
+					// Regions are project-scoped resources
+					Scope: projectID,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			})
 		}
 	}
 

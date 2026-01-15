@@ -2,6 +2,7 @@ package manual_test
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"testing"
 
@@ -15,7 +16,9 @@ import (
 	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
+	"github.com/overmindtech/cli/sources/shared"
 )
 
 func TestComputeInstanceGroup(t *testing.T) {
@@ -30,7 +33,7 @@ func TestComputeInstanceGroup(t *testing.T) {
 	t.Run("Get", func(t *testing.T) {
 		wrapper := manual.NewComputeInstanceGroup(mockClient, projectID, zone)
 
-		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeInstanceGroup("test-ig", "test-network", "test-subnetwork"), nil)
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeInstanceGroup("test-ig", "test-network", "test-subnetwork", projectID, zone), nil)
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -43,6 +46,43 @@ func TestComputeInstanceGroup(t *testing.T) {
 		if err != nil || nameAttrValue != "test-ig" {
 			t.Fatalf("Expected name 'test-ig', got: %s. Error: %v", nameAttrValue, err)
 		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			queryTests := shared.QueryTests{
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-subnetwork",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeZone.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  zone,
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
 	})
 
 	t.Run("List", func(t *testing.T) {
@@ -50,8 +90,8 @@ func TestComputeInstanceGroup(t *testing.T) {
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockComputeInstanceGroupIterator(ctrl)
-		mockIterator.EXPECT().Next().Return(createComputeInstanceGroup("test-ig-1", "net-1", "subnet-1"), nil)
-		mockIterator.EXPECT().Next().Return(createComputeInstanceGroup("test-ig-2", "net-2", "subnet-2"), nil)
+		mockIterator.EXPECT().Next().Return(createComputeInstanceGroup("test-ig-1", "net-1", "subnet-1", projectID, zone), nil)
+		mockIterator.EXPECT().Next().Return(createComputeInstanceGroup("test-ig-2", "net-2", "subnet-2", projectID, zone), nil)
 		mockIterator.EXPECT().Next().Return(nil, iterator.Done)
 
 		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockIterator)
@@ -88,8 +128,8 @@ func TestComputeInstanceGroup(t *testing.T) {
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockComputeInstanceGroupIterator(ctrl)
-		mockIterator.EXPECT().Next().Return(createComputeInstanceGroup("test-ig-1", "net-1", "subnet-1"), nil)
-		mockIterator.EXPECT().Next().Return(createComputeInstanceGroup("test-ig-2", "net-2", "subnet-2"), nil)
+		mockIterator.EXPECT().Next().Return(createComputeInstanceGroup("test-ig-1", "net-1", "subnet-1", projectID, zone), nil)
+		mockIterator.EXPECT().Next().Return(createComputeInstanceGroup("test-ig-2", "net-2", "subnet-2", projectID, zone), nil)
 		mockIterator.EXPECT().Next().Return(nil, iterator.Done)
 
 		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockIterator)
@@ -131,10 +171,11 @@ func TestComputeInstanceGroup(t *testing.T) {
 	})
 }
 
-func createComputeInstanceGroup(name, network, subnetwork string) *computepb.InstanceGroup {
+func createComputeInstanceGroup(name, network, subnetwork, projectID, zone string) *computepb.InstanceGroup {
 	return &computepb.InstanceGroup{
 		Name:       ptr.To(name),
-		Network:    ptr.To("projects/test-project/global/networks/" + network),
-		Subnetwork: ptr.To("projects/test-project/regions/us-central1/subnetworks/" + subnetwork),
+		Network:    ptr.To(fmt.Sprintf("projects/%s/global/networks/%s", projectID, network)),
+		Subnetwork: ptr.To(fmt.Sprintf("projects/%s/regions/us-central1/subnetworks/%s", projectID, subnetwork)),
+		Zone:       ptr.To(fmt.Sprintf("projects/%s/zones/%s", projectID, zone)),
 	}
 }

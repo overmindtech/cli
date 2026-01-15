@@ -27,7 +27,7 @@ func TestLoggingLink(t *testing.T) {
 	link := &loggingpb.Link{
 		Name: fmt.Sprintf("projects/%s/locations/%s/buckets/%s/links/%s", projectID, location, bucketName, linkName),
 		BigqueryDataset: &loggingpb.BigQueryDataset{
-			DatasetId: "test_dataset",
+			DatasetId: fmt.Sprintf("bigquery.googleapis.com/projects/%s/datasets/test_dataset", projectID),
 		},
 	}
 

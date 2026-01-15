@@ -60,6 +60,20 @@ var _ = registerableAdapter{
 			ToSDPItemType:    gcpshared.NetworkConnectivityHub,
 			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 		},
+		"nextHopIlb": {
+			// https://cloud.google.com/compute/docs/reference/rest/v1/routes/get
+			// Can be either a URL to a forwarding rule (loadBalancingScheme=INTERNAL) or an IP address
+			// When it's a URL, it references the ForwardingRule. When it's an IP, it's the IP address of the forwarding rule.
+			Description:      "The URL to a forwarding rule of type loadBalancingScheme=INTERNAL that should handle matching packets, or the IP address of the forwarding rule. If the Forwarding Rule is updated or deleted: The route may no longer forward traffic properly. If the route is updated: The forwarding rule remains unaffected but traffic routed through it may be affected.",
+			ToSDPItemType:    gcpshared.ComputeForwardingRule,
+			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+		},
+		"nextHopInterconnectAttachment": {
+			// https://cloud.google.com/compute/docs/reference/rest/v1/routes/get
+			Description:      "The URL to an InterconnectAttachment which is the next hop for the route. If the Interconnect Attachment is updated or deleted: The route may no longer forward traffic properly. If the route is updated: The interconnect attachment remains unaffected but traffic routed through it may be affected.",
+			ToSDPItemType:    gcpshared.ComputeInterconnectAttachment,
+			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_route",

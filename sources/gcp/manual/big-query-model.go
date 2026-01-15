@@ -59,10 +59,10 @@ func (m BigQueryModelWrapper) Get(ctx context.Context, queryParts ...string) (*s
 	if err != nil {
 		return nil, gcpshared.QueryError(err, m.DefaultScope(), m.Type())
 	}
-	return m.GCPBigQueryMetadataToItem(queryParts[0], metadata)
+	return m.GCPBigQueryMetadataToItem(ctx, queryParts[0], metadata)
 }
 
-func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(dataSetId string, metadata *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
+func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, dataSetId string, metadata *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(metadata, "labels")
 	if err != nil {
 		return nil, gcpshared.QueryError(err, m.DefaultScope(), m.Type())
@@ -111,21 +111,68 @@ func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(dataSetId string, metada
 	}
 
 	for _, row := range metadata.RawTrainingRuns() {
-		if row.DataSplitResult != nil && row.DataSplitResult.EvaluationTable.TableId != "" {
-			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   gcpshared.BigQueryTable.String(),
-					Method: sdp.QueryMethod_GET,
-					Scope:  m.DefaultScope(),
-					Query:  shared.CompositeLookupKey(dataSetId, row.DataSplitResult.EvaluationTable.TableId),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
-			})
+		if row.DataSplitResult != nil {
+			// Link to evaluation table (already existed)
+			if row.DataSplitResult.EvaluationTable != nil && row.DataSplitResult.EvaluationTable.TableId != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.BigQueryTable.String(),
+						Method: sdp.QueryMethod_GET,
+						Scope:  m.DefaultScope(),
+						Query:  shared.CompositeLookupKey(dataSetId, row.DataSplitResult.EvaluationTable.TableId),
+					},
+					// If the evaluation table is deleted or updated: The model's evaluation results may become invalid or inaccessible. If the model is updated: The table remains unaffected.
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				})
+			}
+
+			// Link to training table
+			if row.DataSplitResult.TrainingTable != nil && row.DataSplitResult.TrainingTable.TableId != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.BigQueryTable.String(),
+						Method: sdp.QueryMethod_GET,
+						Scope:  m.DefaultScope(),
+						Query:  shared.CompositeLookupKey(dataSetId, row.DataSplitResult.TrainingTable.TableId),
+					},
+					// If the training table is deleted or updated: The model's training data may become invalid or inaccessible. If the model is updated: The table remains unaffected.
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				})
+			}
+
+			// Link to test table
+			if row.DataSplitResult.TestTable != nil && row.DataSplitResult.TestTable.TableId != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.BigQueryTable.String(),
+						Method: sdp.QueryMethod_GET,
+						Scope:  m.DefaultScope(),
+						Query:  shared.CompositeLookupKey(dataSetId, row.DataSplitResult.TestTable.TableId),
+					},
+					// If the test table is deleted or updated: The model's test results may become invalid or inaccessible. If the model is updated: The table remains unaffected.
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				})
+			}
 		}
 	}
+
+	// TODO: Link to BigQuery Connection and Vertex AI Endpoint for remote models
+	// RemoteModelInfo (containing connection and endpoint fields) is not directly accessible
+	// in the Go SDK's ModelMetadata struct. To implement these links, we would need to:
+	// 1. Use the REST API directly to fetch model metadata, or
+	// 2. Wait for the Go SDK to expose RemoteModelInfo fields, or
+	// 3. Access the raw JSON response if available
+	// Connection format: projects/{projectId}/locations/{locationId}/connections/{connectionId}
+	// Endpoint format: https://{location}-aiplatform.googleapis.com/v1/projects/{project}/locations/{location}/endpoints/{endpoint_id}
 
 	return sdpItem, nil
 }
@@ -135,6 +182,8 @@ func (m BigQueryModelWrapper) PotentialLinks() map[shared.ItemType]bool {
 		gcpshared.CloudKMSCryptoKey,
 		gcpshared.BigQueryDataset,
 		gcpshared.BigQueryTable,
+		gcpshared.BigQueryConnection,
+		gcpshared.AIPlatformEndpoint,
 	)
 }
 
@@ -147,7 +196,9 @@ func (m BigQueryModelWrapper) SearchLookups() []sources.ItemTypeLookups {
 }
 
 func (m BigQueryModelWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	items, err := m.client.List(ctx, m.ProjectBase.ProjectID(), queryParts[0], m.GCPBigQueryMetadataToItem)
+	items, err := m.client.List(ctx, m.ProjectBase.ProjectID(), queryParts[0], func(datasetID string, md *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
+		return m.GCPBigQueryMetadataToItem(ctx, datasetID, md)
+	})
 	if err != nil {
 		return nil, gcpshared.QueryError(err, m.DefaultScope(), m.Type())
 	}
@@ -156,7 +207,7 @@ func (m BigQueryModelWrapper) Search(ctx context.Context, queryParts ...string) 
 
 func (m BigQueryModelWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
 	m.client.ListStream(ctx, m.ProjectBase.ProjectID(), queryParts[0], stream, func(datasetID string, md *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
-		item, qerr := m.GCPBigQueryMetadataToItem(datasetID, md)
+		item, qerr := m.GCPBigQueryMetadataToItem(ctx, datasetID, md)
 		if qerr == nil && item != nil {
 			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		}

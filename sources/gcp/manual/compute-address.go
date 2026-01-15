@@ -3,6 +3,7 @@ package manual
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
@@ -56,6 +57,12 @@ func (c computeAddressWrapper) PotentialLinks() map[shared.ItemType]bool {
 		gcpshared.ComputeAddress,
 		gcpshared.ComputeSubnetwork,
 		gcpshared.ComputeNetwork,
+		gcpshared.ComputeForwardingRule,
+		gcpshared.ComputeGlobalForwardingRule,
+		gcpshared.ComputeInstance,
+		gcpshared.ComputeTargetVpnGateway,
+		gcpshared.ComputeRouter,
+		gcpshared.ComputePublicDelegatedPrefix,
 	)
 }
 
@@ -235,6 +242,57 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, a
 				Out: true,
 			},
 		})
+	}
+
+	// Link to resources using this address (users field)
+	// The users field contains URLs of resources currently using the address.
+	// This can include forwarding rules, instances, VPN gateways, routers, etc.
+	// If the address is deleted or updated: Resources using it may lose connectivity or fail.
+	// If resources using the address are deleted or updated: The address may become unused.
+	users := address.GetUsers()
+	for _, userURI := range users {
+		if userURI != "" {
+			linkedQuery := gcpshared.AddressUsersLinker(
+				ctx,
+				c.ProjectID(),
+				userURI,
+				&sdp.BlastPropagation{
+					In:  true,
+					Out: true,
+				},
+			)
+			if linkedQuery != nil {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, linkedQuery)
+			}
+		}
+	}
+
+	// Link to Public Delegated Prefix (ipCollection field)
+	// This field is only available in beta API and references a Public Delegated Prefix
+	// used for BYOIP (Bring Your Own IP) scenarios.
+	// If the Public Delegated Prefix is deleted or updated: The Address may fail to reserve IP addresses from the prefix.
+	// If the Address is updated: The Public Delegated Prefix remains unaffected.
+	if ipCollection := address.GetIpCollection(); ipCollection != "" {
+		if strings.Contains(ipCollection, "/") {
+			// Extract region and prefix name from URI
+			// Format: projects/{project}/regions/{region}/publicDelegatedPrefixes/{prefix}
+			region := gcpshared.ExtractPathParam("regions", ipCollection)
+			prefixName := gcpshared.LastPathComponent(ipCollection)
+			if region != "" && prefixName != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputePublicDelegatedPrefix.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  prefixName,
+						Scope:  fmt.Sprintf("%s.%s", c.ProjectID(), region),
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				})
+			}
+		}
 	}
 
 	switch address.GetStatus() {

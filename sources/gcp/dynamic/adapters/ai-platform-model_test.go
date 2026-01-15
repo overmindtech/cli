@@ -34,6 +34,7 @@ func TestAIPlatformModel(t *testing.T) {
 			ImageUri: "us-central1-docker.pkg.dev/test-project/test-repo/test-image:latest",
 		},
 		PipelineJob: "projects/test-project/locations/global/pipelineJobs/test-pipeline",
+		ArtifactUri: fmt.Sprintf("gs://%s-model-artifacts/model/", projectID),
 		DeployedModels: []*aiplatformpb.DeployedModelRef{
 			{
 				Endpoint: "projects/test-project/locations/global/endpoints/test-endpoint",
@@ -139,6 +140,17 @@ func TestAIPlatformModel(t *testing.T) {
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: true,
+					},
+				},
+				// Storage bucket link (artifactUri)
+				{
+					ExpectedType:   gcpshared.StorageBucket.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  fmt.Sprintf("%s-model-artifacts", projectID),
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
 					},
 				},
 			}
