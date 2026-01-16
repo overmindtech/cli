@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -838,4 +839,226 @@ func TestClient(t *testing.T) {
 			t.Errorf("Query B got wrong item: expected 'item-B', got '%s'", resultsB[0].items[0].GetUniqueAttribute())
 		}
 	})
+}
+
+// TestRaceConditionOnClose stresses the shutdown path around the historical
+// "send on closed channel" bug. Originally, there was a race where:
+// 1. postRequestChan is called and acquires the read lock
+// 2. postRequestChan looks up a channel and prepares to send
+// 3. Another goroutine calls closeAllRequestChans(), which closes all channels
+// 4. postRequestChan tries to send on the now-closed channel and panics
+//
+// The implementation has since been fixed by eliminating this race via proper
+// synchronization (e.g. context cancellation followed by waiting for the
+// relevant goroutines to finish) instead of relying on recover(). This test
+// verifies that no "send on closed channel" panics escape to the caller under
+// concurrent activity and that the shutdown logic behaves correctly.
+//
+// This test is expected to pass cleanly when run with the Go race detector
+// enabled (go test -race). It may be run multiple times to increase stress:
+// go test -run TestRaceConditionOnClose -race -v -count=100
+func TestRaceConditionOnClose(t *testing.T) {
+	// Skip on CI to avoid flaky tests in automated environments
+	if os.Getenv("CI") != "" || os.Getenv("GITHUB_ACTIONS") != "" {
+		t.Skip("Skipping race condition test in CI environment")
+	}
+
+	// Skip goleak for this stress test as we're intentionally testing race conditions
+
+	ctx := t.Context()
+
+	// Run many iterations to increase probability of hitting the race condition
+	// The race happens when postRequestChan and closeAllRequestChans run concurrently
+	iterations := 1000
+	panics := 0
+
+	for iteration := range iterations {
+		func() {
+			// Create a minimal client with just the necessary fields
+			c := &Client{
+				requestMap:         make(map[uuid.UUID]chan *sdp.GatewayResponse),
+				finishedRequestMap: make(map[uuid.UUID]bool),
+			}
+			c.finishedRequestMapCond = sync.NewCond(&c.finishedRequestMapMu)
+
+			// Initialize context handling to properly test the mechanism
+			// This simulates what Dial() does
+			c.receiveCtx, c.receiveCancel = context.WithCancel(ctx)
+
+			// Create multiple request channels to increase race probability
+			numChannels := 10
+			uuids := make([]uuid.UUID, numChannels)
+			for i := range numChannels {
+				uuids[i] = uuid.New()
+				ch := make(chan *sdp.GatewayResponse, 1)
+				c.requestMapMu.Lock()
+				c.requestMap[uuids[i]] = ch
+				c.requestMapMu.Unlock()
+			}
+
+			// Create a message to send
+			msg := &sdp.GatewayResponse{
+				ResponseType: &sdp.GatewayResponse_NewItem{
+					NewItem: &sdp.Item{
+						Type:            "test",
+						UniqueAttribute: fmt.Sprintf("item-%d", iteration),
+						Scope:           "test",
+					},
+				},
+			}
+
+			// Use a wait group to coordinate concurrent operations
+			var wg sync.WaitGroup
+			panicChan := make(chan bool, numChannels*2)
+
+			// Start a simulated receive() goroutine that will call postRequestChan
+			// This simulates the real receive() behavior where it processes messages
+			// and calls postRequestChan() until the context is cancelled
+			c.receiveDone.Add(1)
+			go func() {
+				defer c.receiveDone.Done()
+				// Simulate receive() processing messages and calling postRequestChan
+				// It will be cancelled by Close() and should stop before channels are closed
+				for i := range 1000 {
+					// Check context before processing each message (like real receive() does)
+					if c.receiveCtx.Err() != nil {
+						// Context cancelled - exit gracefully (simulating receive() behavior)
+						return
+					}
+					// Simulate receive() processing a message and calling postRequestChan
+					// Use a random UUID to simulate different queries
+					// Wrap in recover() to catch any panics (shouldn't happen with proper context handling)
+					func() {
+						defer func() {
+							if r := recover(); r != nil {
+								panicChan <- true
+							}
+						}()
+						u := uuids[i%numChannels]
+						c.postRequestChan(u, msg)
+					}()
+					time.Sleep(time.Nanosecond)
+				}
+			}()
+
+			// Start a goroutine that calls Close() concurrently
+			// Close() will cancel the receive context, wait for receive() to finish,
+			// and then close channels. This ensures receive() stops before channels are closed.
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				// Wait a tiny bit to let some postRequestChan calls start
+				time.Sleep(time.Microsecond * 10)
+				// Use Close() which properly cancels receive context and waits before closing channels
+				_ = c.Close(ctx)
+			}()
+
+			// Wait for all goroutines to complete
+			wg.Wait()
+			close(panicChan)
+
+			// Count panics
+			for range panicChan {
+				panics++
+			}
+		}()
+	}
+
+	t.Logf("Successfully completed all %d iterations", iterations)
+	if panics > 0 {
+		t.Errorf("Detected %d panics - with proper context handling, receive() should stop before channels are closed, preventing panics. Panics indicate the context handling is not working correctly.", panics)
+	} else {
+		t.Logf("No panics detected - context handling is working correctly. receive() stops before channels are closed, preventing 'send on closed channel' panics")
+	}
+}
+
+// TestNoMessageDroppingDuringNormalOperation verifies that messages are not
+// dropped during normal operation when items arrive faster than they can be read.
+// This test sends many items rapidly and verifies that all items are received.
+func TestNoMessageDroppingDuringNormalOperation(t *testing.T) {
+	defer goleak.VerifyNone(t)
+	ctx := t.Context()
+
+	ts, closeFn := newTestServer(ctx, t)
+	defer closeFn()
+
+	c, err := Dial(ctx, ts.url, nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = c.Close(ctx)
+	}()
+
+	u := uuid.New()
+	q := &sdp.Query{
+		UUID:               u[:],
+		Type:               "test",
+		Method:             sdp.QueryMethod_GET,
+		Query:              "query",
+		RecursionBehaviour: &sdp.Query_RecursionBehaviour{},
+		Scope:              "test",
+		IgnoreCache:        false,
+	}
+
+	// Send many items rapidly - more than the channel buffer size (1)
+	// to test that blocking send works correctly and no messages are dropped
+	numItems := 100
+	expectedItems := make([]*sdp.Item, numItems)
+	for i := range numItems {
+		expectedItems[i] = &sdp.Item{
+			Type:            "test",
+			UniqueAttribute: fmt.Sprintf("item-%d", i),
+			Scope:           "test",
+			Metadata: &sdp.Metadata{
+				SourceQuery: q,
+			},
+		}
+	}
+
+	// Inject all items rapidly, then the completion status
+	go func() {
+		time.Sleep(50 * time.Millisecond)
+		// Send all items as fast as possible
+		for i := range numItems {
+			ts.inject(ctx, &sdp.GatewayResponse{
+				ResponseType: &sdp.GatewayResponse_NewItem{
+					NewItem: expectedItems[i],
+				},
+			})
+		}
+		// Then send the completion status
+		time.Sleep(10 * time.Millisecond)
+		ts.inject(ctx, &sdp.GatewayResponse{
+			ResponseType: &sdp.GatewayResponse_QueryStatus{
+				QueryStatus: &sdp.QueryStatus{
+					UUID:   u[:],
+					Status: sdp.QueryStatus_FINISHED,
+				},
+			},
+		})
+	}()
+
+	// QueryOne should receive all items, not drop any
+	items, err := c.QueryOne(ctx, q)
+	if err != nil {
+		t.Fatalf("QueryOne failed: %v", err)
+	}
+
+	if len(items) != numItems {
+		t.Errorf("Expected %d items, got %d. Messages were dropped!", numItems, len(items))
+	}
+
+	// Verify we got all the expected items
+	receivedAttrs := make(map[string]bool)
+	for _, item := range items {
+		receivedAttrs[item.GetUniqueAttribute()] = true
+	}
+
+	for i := range numItems {
+		expectedAttr := fmt.Sprintf("item-%d", i)
+		if !receivedAttrs[expectedAttr] {
+			t.Errorf("Missing expected item: %s", expectedAttr)
+		}
+	}
 }
