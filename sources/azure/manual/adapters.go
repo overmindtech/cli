@@ -9,6 +9,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
@@ -188,6 +189,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 		secretsClient, err := armkeyvault.NewSecretsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create secrets client: %w", err)
+		}
+
+		userAssignedIdentitiesClient, err := armmsi.NewUserAssignedIdentitiesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create user assigned identities client: %w", err)
 		}
 
 		// Create adapters for each resource group
@@ -407,6 +413,15 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					resourceGroup,
 				), cache),
 			)
+
+			// Add User Assigned Identity adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewManagedIdentityUserAssignedIdentity(
+					clients.NewUserAssignedIdentitiesClient(userAssignedIdentitiesClient),
+					subscriptionID,
+					resourceGroup,
+				), cache),
+			)
 		}
 
 		log.WithFields(log.Fields{
@@ -540,6 +555,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				"placeholder-resource-group",
 			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewKeyVaultSecret(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
+			sources.WrapperToAdapter(NewManagedIdentityUserAssignedIdentity(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
