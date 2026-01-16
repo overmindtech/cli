@@ -18,59 +18,6 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockStorageAccountsPager is a mock of StorageAccountsPager interface.
-type MockStorageAccountsPager struct {
-	ctrl     *gomock.Controller
-	recorder *MockStorageAccountsPagerMockRecorder
-	isgomock struct{}
-}
-
-// MockStorageAccountsPagerMockRecorder is the mock recorder for MockStorageAccountsPager.
-type MockStorageAccountsPagerMockRecorder struct {
-	mock *MockStorageAccountsPager
-}
-
-// NewMockStorageAccountsPager creates a new mock instance.
-func NewMockStorageAccountsPager(ctrl *gomock.Controller) *MockStorageAccountsPager {
-	mock := &MockStorageAccountsPager{ctrl: ctrl}
-	mock.recorder = &MockStorageAccountsPagerMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockStorageAccountsPager) EXPECT() *MockStorageAccountsPagerMockRecorder {
-	return m.recorder
-}
-
-// More mocks base method.
-func (m *MockStorageAccountsPager) More() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "More")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// More indicates an expected call of More.
-func (mr *MockStorageAccountsPagerMockRecorder) More() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeOf((*MockStorageAccountsPager)(nil).More))
-}
-
-// NextPage mocks base method.
-func (m *MockStorageAccountsPager) NextPage(ctx context.Context) (armstorage.AccountsClientListByResourceGroupResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NextPage", ctx)
-	ret0, _ := ret[0].(armstorage.AccountsClientListByResourceGroupResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// NextPage indicates an expected call of NextPage.
-func (mr *MockStorageAccountsPagerMockRecorder) NextPage(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeOf((*MockStorageAccountsPager)(nil).NextPage), ctx)
-}
-
 // MockStorageAccountsClient is a mock of StorageAccountsClient interface.
 type MockStorageAccountsClient struct {
 	ctrl     *gomock.Controller

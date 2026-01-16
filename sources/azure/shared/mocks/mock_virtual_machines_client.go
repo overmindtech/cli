@@ -18,59 +18,6 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockVirtualMachinesPager is a mock of VirtualMachinesPager interface.
-type MockVirtualMachinesPager struct {
-	ctrl     *gomock.Controller
-	recorder *MockVirtualMachinesPagerMockRecorder
-	isgomock struct{}
-}
-
-// MockVirtualMachinesPagerMockRecorder is the mock recorder for MockVirtualMachinesPager.
-type MockVirtualMachinesPagerMockRecorder struct {
-	mock *MockVirtualMachinesPager
-}
-
-// NewMockVirtualMachinesPager creates a new mock instance.
-func NewMockVirtualMachinesPager(ctrl *gomock.Controller) *MockVirtualMachinesPager {
-	mock := &MockVirtualMachinesPager{ctrl: ctrl}
-	mock.recorder = &MockVirtualMachinesPagerMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockVirtualMachinesPager) EXPECT() *MockVirtualMachinesPagerMockRecorder {
-	return m.recorder
-}
-
-// More mocks base method.
-func (m *MockVirtualMachinesPager) More() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "More")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// More indicates an expected call of More.
-func (mr *MockVirtualMachinesPagerMockRecorder) More() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeOf((*MockVirtualMachinesPager)(nil).More))
-}
-
-// NextPage mocks base method.
-func (m *MockVirtualMachinesPager) NextPage(ctx context.Context) (armcompute.VirtualMachinesClientListResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "NextPage", ctx)
-	ret0, _ := ret[0].(armcompute.VirtualMachinesClientListResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// NextPage indicates an expected call of NextPage.
-func (mr *MockVirtualMachinesPagerMockRecorder) NextPage(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeOf((*MockVirtualMachinesPager)(nil).NextPage), ctx)
-}
-
 // MockVirtualMachinesClient is a mock of VirtualMachinesClient interface.
 type MockVirtualMachinesClient struct {
 	ctrl     *gomock.Controller
