@@ -60,6 +60,13 @@ type Client struct {
 
 	closed   bool
 	closedMu sync.Mutex
+
+	// receiveCtx is the context for the receive goroutine
+	// receiveCancel cancels the receive context
+	// receiveDone signals when receive has finished
+	receiveCtx        context.Context
+	receiveCancel     context.CancelFunc
+	receiveDone       sync.WaitGroup
 }
 
 // Dial connects to the given URL and returns a new Client. Pass nil as handler
@@ -114,7 +121,13 @@ func dialImpl(ctx context.Context, u string, httpClient *http.Client, handler Ga
 	}
 	c.finishedRequestMapCond = sync.NewCond(&c.finishedRequestMapMu)
 
-	go c.receive(ctx)
+	// Create a dedicated context for receive() that we can cancel independently
+	c.receiveCtx, c.receiveCancel = context.WithCancel(ctx)
+	c.receiveDone.Add(1)
+	go func() {
+		defer c.receiveDone.Done()
+		c.receive(c.receiveCtx)
+	}()
 
 	return c, nil
 }
@@ -399,12 +412,21 @@ func (c *Client) abort(ctx context.Context, err error) {
 	c.err = errors.Join(c.err, err)
 	c.errMu.Unlock()
 
+	// Cancel the receive context to stop receive() from reading more messages.
+	if c.receiveCancel != nil {
+		c.receiveCancel()
+	}
+
 	// call this outside of the lock to avoid deadlock should other parts of the
 	// code try to call abort() when crashing out of a read or write
-	err = c.conn.Close(websocket.StatusNormalClosure, "normal closure")
+	// Only close the connection if it exists (may be nil in test scenarios)
+	var closeErr error
+	if c.conn != nil {
+		closeErr = c.conn.Close(websocket.StatusNormalClosure, "normal closure")
+	}
 
 	c.errMu.Lock()
-	c.err = errors.Join(c.err, err)
+	c.err = errors.Join(c.err, closeErr)
 	c.errMu.Unlock()
 
 	c.closeAllRequestChans()
@@ -412,6 +434,18 @@ func (c *Client) abort(ctx context.Context, err error) {
 
 // Close closes the connection and returns any errors from the underlying connection.
 func (c *Client) Close(ctx context.Context) error {
+	// Cancel the receive context first to stop receive() from reading more messages
+	if c.receiveCancel != nil {
+		c.receiveCancel()
+	}
+
+	// Wait for receive() to finish reading/sending its last message before closing channels.
+	// This prevents race conditions where we close channels while receive() is still trying
+	// to send to them. We do this before calling abort() to ensure receive() has finished.
+	if c.receiveCancel != nil {
+		c.receiveDone.Wait()
+	}
+
 	c.abort(ctx, nil)
 
 	c.errMu.Lock()
@@ -435,11 +469,30 @@ func (c *Client) createRequestChan(u uuid.UUID) chan *sdp.GatewayResponse {
 
 func (c *Client) postRequestChan(u uuid.UUID, msg *sdp.GatewayResponse) {
 	c.requestMapMu.RLock()
-	defer c.requestMapMu.RUnlock()
 	r, ok := c.requestMap[u]
-	if ok {
-		// this write has to happen under the lock to avoid panics when closing the channel
-		r <- msg
+	c.requestMapMu.RUnlock()
+
+	if !ok {
+		return
+	}
+
+	// Check if client is closed before sending. If closed, channels may be closed,
+	// so we should not attempt to send. With proper context handling, receive() will
+	// have finished before channels are closed, but we check here as a safety measure.
+	if c.Closed() {
+		return
+	}
+
+	// Use select with receive context to avoid blocking when context is cancelled.
+	// This prevents deadlock where receive() is blocked on send while Close() is waiting for it.
+	// During normal operation (context not cancelled), the send case will be selected,
+	// ensuring no messages are dropped. When context is cancelled, we use non-blocking send.
+	select {
+	case <-c.receiveCtx.Done():
+		return
+	case r <- msg:
+		// Successfully sent (normal operation - blocking until receiver reads)
+		return
 	}
 }
 
