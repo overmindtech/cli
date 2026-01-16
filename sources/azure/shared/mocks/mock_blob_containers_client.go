@@ -13,8 +13,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	runtime "github.com/Azure/azure-sdk-for-go/sdk/azcore/runtime"
 	armstorage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
+	clients "github.com/overmindtech/cli/sources/azure/clients"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -58,10 +58,10 @@ func (mr *MockBlobContainersClientMockRecorder) Get(ctx, resourceGroupName, acco
 }
 
 // List mocks base method.
-func (m *MockBlobContainersClient) List(ctx context.Context, resourceGroupName, accountName string) *runtime.Pager[armstorage.BlobContainersClientListResponse] {
+func (m *MockBlobContainersClient) List(ctx context.Context, resourceGroupName, accountName string) clients.BlobContainersPager {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", ctx, resourceGroupName, accountName)
-	ret0, _ := ret[0].(*runtime.Pager[armstorage.BlobContainersClientListResponse])
+	ret0, _ := ret[0].(clients.BlobContainersPager)
 	return ret0
 }
 
