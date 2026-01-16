@@ -134,7 +134,8 @@ var (
 	KeyVaultManagedHSM = shared.NewItemType(Azure, KeyVault, ManagedHSM)
 
 	// ManagedIdentity item types
-	ManagedIdentityUserAssignedIdentity = shared.NewItemType(Azure, ManagedIdentity, UserAssignedIdentity)
+	ManagedIdentityUserAssignedIdentity       = shared.NewItemType(Azure, ManagedIdentity, UserAssignedIdentity)
+	ManagedIdentityFederatedIdentityCredential = shared.NewItemType(Azure, ManagedIdentity, FederatedIdentityCredential)
 
 	// Batch item types
 	BatchBatchAccount                   = shared.NewItemType(Azure, Batch, BatchAccount)

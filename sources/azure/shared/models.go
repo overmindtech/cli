@@ -172,7 +172,8 @@ const (
 	ManagedHSM shared.Resource = "managed-hsm"
 
 	// ManagedIdentity resources
-	UserAssignedIdentity shared.Resource = "user-assigned-identity"
+	UserAssignedIdentity              shared.Resource = "user-assigned-identity"
+	FederatedIdentityCredential      shared.Resource = "federated-identity-credential"
 
 	// Batch resources
 	BatchAccount                   shared.Resource = "batch-account"
