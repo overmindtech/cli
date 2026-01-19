@@ -8,7 +8,9 @@ import (
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -23,6 +25,13 @@ var ErrNoHealthcheckDefined = errors.New("no healthcheck defined")
 // to indicate that the engine is in an error state, this will be sent to the
 // management API and will be displayed in the UI.
 func (e *Engine) SendHeartbeat(ctx context.Context, customErr error) error {
+	// Get span from context
+	span := trace.SpanFromContext(ctx)
+
+	// Read memory stats and add them to the span
+	memStats := tracing.ReadMemoryStats()
+	tracing.SetMemoryAttributes(span, "ovm.heartbeat", memStats)
+
 	if e.EngineConfig.HeartbeatOptions == nil || e.EngineConfig.HeartbeatOptions.HealthCheck == nil {
 		return ErrNoHealthcheckDefined
 	}
