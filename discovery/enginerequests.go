@@ -102,6 +102,9 @@ func (e *Engine) HandleQuery(ctx context.Context, query *sdp.Query) {
 		attribute.String("ovm.sdp.deadline", query.GetDeadline().AsTime().String()),
 		attribute.Bool("ovm.sdp.deadlineOverridden", deadlineOverride),
 		attribute.Bool("ovm.sdp.queryIgnoreCache", query.GetIgnoreCache()),
+		attribute.String("ovm.sdp.source_name", e.EngineConfig.SourceName),
+		attribute.String("ovm.engine.type", e.EngineConfig.EngineType),
+		attribute.String("ovm.engine.version", e.EngineConfig.Version),
 	))
 	defer span.End()
 
@@ -326,6 +329,9 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 		attribute.String("ovm.adapter.queryScope", q.GetScope()),
 		attribute.String("ovm.adapter.name", adapter.Name()),
 		attribute.String("ovm.adapter.query", q.GetQuery()),
+		attribute.String("ovm.sdp.source_name", e.EngineConfig.SourceName),
+		attribute.String("ovm.engine.type", e.EngineConfig.EngineType),
+		attribute.String("ovm.engine.version", e.EngineConfig.Version),
 	))
 	defer span.End()
 
