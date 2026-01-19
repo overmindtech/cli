@@ -12,12 +12,12 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.CloudBillingBillingInfo,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/billing/docs/reference/rest/v1/projects/getBillingInfo
 		// Gets the billing information for a project.
 		// GET https://cloudbilling.googleapis.com/v1/{name=projects/*}/billingInfo
 		// IAM permissions: resourcemanager.projects.get
-		GetEndpointBaseURLFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
+		GetEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
 			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
 				return func(query string) string {
 					if query != "" {

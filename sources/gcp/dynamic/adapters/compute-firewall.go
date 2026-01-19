@@ -10,9 +10,9 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeFirewall,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/firewalls/{firewall}
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls/%s"),
 		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/firewalls/list
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/firewalls
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls"),

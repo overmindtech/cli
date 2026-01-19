@@ -14,8 +14,8 @@ var cloudFunctionAdapter = registerableAdapter{ //nolint:unused
 	sdpType: gcpshared.CloudFunctionsFunction,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://cloudfunctions.googleapis.com/v2/projects/%s/locations/%s/functions/%s",
 		),
 		// Use SearchEndpointFunc since caller supplies a location to enumerate functions

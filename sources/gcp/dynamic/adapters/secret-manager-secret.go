@@ -18,8 +18,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.SecretManagerSecret,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://secretmanager.googleapis.com/v1/projects/%s/secrets/%s",
 		),
 		ListEndpointFunc: gcpshared.ProjectLevelListFunc(

@@ -17,8 +17,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.StorageTransferTransferJob,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
 			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
 				return func(query string) string {
 					if query != "" {

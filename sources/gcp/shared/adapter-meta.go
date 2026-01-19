@@ -8,23 +8,23 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-// Scope defines the scope of a GCP resource.
-type Scope string
+// LocationLevel defines the scope of a GCP resource.
+type LocationLevel string
 
 const (
-	ScopeProject  Scope = "project"
-	ScopeRegional Scope = "regional"
-	ScopeZonal    Scope = "zonal"
+	ProjectLevel  LocationLevel = "project"
+	RegionalLevel LocationLevel = "regional"
+	ZonalLevel    LocationLevel = "zonal"
 )
 
 type EndpointFunc func(query string) string
 
 // AdapterMeta contains metadata for a GCP dynamic adapter.
 type AdapterMeta struct {
-	Scope                  Scope
-	GetEndpointBaseURLFunc func(queryParts ...string) (EndpointFunc, error)
-	ListEndpointFunc       func(queryParts ...string) (string, error)
-	SearchEndpointFunc     func(queryParts ...string) (EndpointFunc, error)
+	LocationLevel      LocationLevel
+	GetEndpointFunc    func(queryParts ...string) (EndpointFunc, error)
+	ListEndpointFunc   func(queryParts ...string) (string, error)
+	SearchEndpointFunc func(queryParts ...string) (EndpointFunc, error)
 	// We will normally generate the search description from the UniqueAttributeKeys
 	// but we allow it to be overridden for specific adapters.
 	SearchDescription   string

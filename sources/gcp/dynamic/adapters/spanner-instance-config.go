@@ -11,10 +11,10 @@ var _ = registerableAdapter{
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 		InDevelopment:      true,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instanceConfigs/get?rep_location=global
 		// https://spanner.googleapis.com/v1/projects/*/instanceConfigs/*
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instanceConfigs/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instanceConfigs/%s"),
 		// https://// https://spanner.googleapis.com/v1/projects/*/instanceConfigs
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://spanner.googleapis.com/v1/projects/%s/instanceConfigs"),
 		UniqueAttributeKeys: []string{"instanceConfigs"},

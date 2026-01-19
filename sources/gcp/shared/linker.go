@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/getsentry/sentry-go"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -146,8 +147,8 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 
 	var scope string
 	var query string
-	switch toSDPItemMeta.Scope {
-	case ScopeProject:
+	switch toSDPItemMeta.LocationLevel {
+	case ProjectLevel:
 		scope = projectID
 		values := ExtractPathParams(toItemGCPResourceName, keysToExtract...)
 		if len(values) != len(keysToExtract) {
@@ -157,7 +158,7 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 			return
 		}
 		query = strings.Join(values, shared.QuerySeparator)
-	case ScopeRegional:
+	case RegionalLevel:
 		keysToExtract = append(keysToExtract, "regions")
 		values := ExtractPathParams(toItemGCPResourceName, keysToExtract...)
 		if len(values) != len(keysToExtract) {
@@ -168,7 +169,7 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 		}
 		scope = fmt.Sprintf("%s.%s", projectID, values[len(values)-1])      // e.g., "my-project.my-region"
 		query = strings.Join(values[:len(values)-1], shared.QuerySeparator) // e.g., "my-instance" or "my-network"
-	case ScopeZonal:
+	case ZonalLevel:
 		keysToExtract = append(keysToExtract, "zones")
 		values := ExtractPathParams(toItemGCPResourceName, keysToExtract...)
 		if len(values) != len(keysToExtract) {
@@ -181,7 +182,7 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 		query = strings.Join(values[:len(values)-1], shared.QuerySeparator) // e.g., "my-instance" or "my-network"
 
 	default:
-		log.WithContext(ctx).WithFields(lf).Errorf("unsupported scope %s", toSDPItemMeta.Scope)
+		sentry.CaptureException(fmt.Errorf("unsupported level %s", toSDPItemMeta.LocationLevel))
 		return
 	}
 
@@ -300,11 +301,11 @@ var dnsNameRegexp = regexp.MustCompile(`^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?
 
 // determineScope determines the scope of the GCP resource based on its type and parts.
 // If it fails to determine the scope.
-func determineScope(ctx context.Context, projectID string, scope Scope, lf log.Fields, toItemGCPResourceName string, parts []string) string {
+func determineScope(ctx context.Context, projectID string, scope LocationLevel, lf log.Fields, toItemGCPResourceName string, parts []string) string {
 	switch scope {
-	case ScopeProject:
+	case ProjectLevel:
 		return projectID
-	case ScopeRegional:
+	case RegionalLevel:
 		if len(parts) < 4 {
 			log.WithContext(ctx).WithFields(lf).Warnf(
 				"resource name is in unexpected format for regional item %s",
@@ -313,7 +314,7 @@ func determineScope(ctx context.Context, projectID string, scope Scope, lf log.F
 			return ""
 		}
 		return fmt.Sprintf("%s.%s", projectID, parts[len(parts)-3])
-	case ScopeZonal:
+	case ZonalLevel:
 		if len(parts) < 4 {
 			log.WithContext(ctx).WithFields(lf).Warnf(
 				"resource name is in unexpected format for zonal item %s",

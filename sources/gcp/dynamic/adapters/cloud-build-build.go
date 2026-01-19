@@ -10,11 +10,11 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.CloudBuildBuild,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/build/docs/api/reference/rest/v1/projects.builds/get
 		// GET https://cloudbuild.googleapis.com/v1/projects/{projectId}/builds/{id}
 		// IAM permissions: cloudbuild.builds.get
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://cloudbuild.googleapis.com/v1/projects/%s/builds/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://cloudbuild.googleapis.com/v1/projects/%s/builds/%s"),
 		// Reference: https://cloud.google.com/build/docs/api/reference/rest/v1/projects.builds/list
 		// GET https://cloudbuild.googleapis.com/v1/projects/{projectId}/builds
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://cloudbuild.googleapis.com/v1/projects/%s/builds"),

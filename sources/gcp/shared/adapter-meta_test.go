@@ -6,7 +6,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-func TestSDPAssetTypeToAdapterMeta_GetEndpointBaseURLFunc(t *testing.T) {
+func TestSDPAssetTypeToAdapterMeta_GetEndpointFunc(t *testing.T) {
 	tests := []struct {
 		name        string
 		assetType   shared.ItemType
@@ -83,7 +83,7 @@ func TestSDPAssetTypeToAdapterMeta_GetEndpointBaseURLFunc(t *testing.T) {
 			if !ok {
 				t.Fatalf("assetType %v not found in SDPAssetTypeToAdapterMeta", tt.assetType)
 			}
-			urlFunc, err := meta.GetEndpointBaseURLFunc(tt.params...)
+			urlFunc, err := meta.GetEndpointFunc(tt.params...)
 			if tt.expectErr {
 				if err == nil {
 					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, urlFunc)

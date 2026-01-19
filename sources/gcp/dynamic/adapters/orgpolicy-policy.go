@@ -16,8 +16,8 @@ var orgPolicyPolicyAdapter = registerableAdapter{ //nolint:unused
 	sdpType: gcpshared.OrgPolicyPolicy,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://orgpolicy.googleapis.com/v2/projects/%s/policies/%s",
 		),
 		ListEndpointFunc: gcpshared.ProjectLevelListFunc(

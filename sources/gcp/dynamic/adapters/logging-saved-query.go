@@ -10,11 +10,11 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.LoggingSavedQuery,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.savedQueries/get
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/savedQueries/*
 		// IAM permissions: logging.savedQueries.get
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/savedQueries/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/savedQueries/%s"),
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.savedQueries/list
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/savedQueries
 		// IAM permissions: logging.savedQueries.list

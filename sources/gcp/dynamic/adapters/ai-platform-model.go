@@ -14,8 +14,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.AIPlatformModel,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_AI,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://aiplatform.googleapis.com/v1/projects/%s/locations/global/models/%s",
 		),
 		ListEndpointFunc: gcpshared.ProjectLevelListFunc(

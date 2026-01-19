@@ -10,10 +10,10 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeSubnetwork,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-		Scope:              gcpshared.ScopeRegional,
+		LocationLevel:      gcpshared.RegionalLevel,
 		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/subnetworks/get
 		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/subnetworks/{subnetwork}
-		GetEndpointBaseURLFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks/%s"),
+		GetEndpointFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/subnetworks
 		ListEndpointFunc:    gcpshared.RegionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks"),
 		UniqueAttributeKeys: []string{"subnetworks"},

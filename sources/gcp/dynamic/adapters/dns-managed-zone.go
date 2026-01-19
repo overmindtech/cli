@@ -11,10 +11,10 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.DNSManagedZone,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/dns/docs/reference/rest/v1/managedZones/get
 		// GET https://dns.googleapis.com/dns/v1/projects/{project}/managedZones/{managedZone}
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://dns.googleapis.com/dns/v1/projects/%s/managedZones/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://dns.googleapis.com/dns/v1/projects/%s/managedZones/%s"),
 		// Reference: https://cloud.google.com/dns/docs/reference/rest/v1/managedZones/list
 		// GET https://dns.googleapis.com/dns/v1/projects/{project}/managedZones
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://dns.googleapis.com/dns/v1/projects/%s/managedZones"),

@@ -8,23 +8,20 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-// Scope defines the scope of an Azure resource.
-type Scope string
+// LocationLevel defines the scope of an Azure resource.
+type LocationLevel string
 
 const (
-	ScopeSubscription  Scope = "subscription"
-	ScopeResourceGroup Scope = "resource-group"
-	ScopeRegional      Scope = "regional"
+	SubscriptionLevel  LocationLevel = "subscription"
+	ResourceGroupLevel LocationLevel = "resource-group"
+	RegionalLevel      LocationLevel = "regional"
 )
 
 type EndpointFunc func(query string) string
 
 // AdapterMeta contains metadata for an Azure dynamic adapter.
 type AdapterMeta struct {
-	Scope                  Scope
-	GetEndpointBaseURLFunc func(queryParts ...string) (EndpointFunc, error)
-	ListEndpointFunc       func(queryParts ...string) (string, error)
-	SearchEndpointFunc     func(queryParts ...string) (EndpointFunc, error)
+	LocationLevel LocationLevel
 	// We will normally generate the search description from the UniqueAttributeKeys
 	// but we allow it to be overridden for specific adapters.
 	SearchDescription   string

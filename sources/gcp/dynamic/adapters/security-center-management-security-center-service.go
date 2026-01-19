@@ -14,8 +14,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.SecurityCenterManagementSecurityCenterService,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://securitycentermanagement.googleapis.com/v1/projects/%s/locations/%s/securityCenterServices/%s",
 		),
 		SearchEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(

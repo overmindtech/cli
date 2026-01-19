@@ -14,8 +14,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.AIPlatformBatchPredictionJob,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_AI,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/batchPredictionJobs/%s",
 		),
 		SearchEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(

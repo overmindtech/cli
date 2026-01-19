@@ -13,8 +13,8 @@ var computeGlobalAddressAdapter = registerableAdapter{ //nolint:unused
 	sdpType: gcpshared.ComputeGlobalAddress,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://compute.googleapis.com/compute/v1/projects/%s/global/addresses/%s",
 		),
 		ListEndpointFunc: gcpshared.ProjectLevelListFunc(

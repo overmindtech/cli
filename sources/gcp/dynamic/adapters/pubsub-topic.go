@@ -12,9 +12,9 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.PubSubTopic,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// https://pubsub.googleapis.com/v1/projects/{project}/topics/{topic}
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://pubsub.googleapis.com/v1/projects/%s/topics/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://pubsub.googleapis.com/v1/projects/%s/topics/%s"),
 		// https://pubsub.googleapis.com/v1/projects/{project}/topics
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://pubsub.googleapis.com/v1/projects/%s/topics"),
 		UniqueAttributeKeys: []string{"topics"},
@@ -73,8 +73,8 @@ var _ = registerableAdapter{
 			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"ingestionDataSourceSettings.confluentCloud.bootstrapServer": {
-			ToSDPItemType:    stdlib.NetworkDNS,
-			Description:      "Confluent Cloud bootstrap server endpoint (hostname:port). The linker automatically detects whether the value is a DNS name or IP address and creates the appropriate link. If the bootstrap server is unreachable: The Pub/Sub Topic may fail to receive data. If the Topic is updated: The bootstrap server remains unaffected.",
+			ToSDPItemType: stdlib.NetworkDNS,
+			Description:   "Confluent Cloud bootstrap server endpoint (hostname:port). The linker automatically detects whether the value is a DNS name or IP address and creates the appropriate link. If the bootstrap server is unreachable: The Pub/Sub Topic may fail to receive data. If the Topic is updated: The bootstrap server remains unaffected.",
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,
 				Out: true,
