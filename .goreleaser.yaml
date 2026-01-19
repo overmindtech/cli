@@ -143,7 +143,7 @@ checksum:
   name_template: "checksums.txt"
 
 snapshot:
-  version_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ if .Version }}{{ $cleanVersion := replace .Version \"kargo/\" \"\" }}{{ incpatch $cleanVersion }}{{ else }}0.0.1{{ end }}-next"
 
 changelog:
   sort: asc
