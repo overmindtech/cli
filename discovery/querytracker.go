@@ -7,6 +7,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -41,6 +42,11 @@ func (qt *QueryTracker) Execute(ctx context.Context) ([]*sdp.Item, []*sdp.Edge, 
 	}
 
 	span := trace.SpanFromContext(ctx)
+	span.SetAttributes(
+		attribute.String("ovm.sdp.source_name", qt.Engine.EngineConfig.SourceName),
+		attribute.String("ovm.engine.type", qt.Engine.EngineConfig.EngineType),
+		attribute.String("ovm.engine.version", qt.Engine.EngineConfig.Version),
+	)
 
 	responses := make(chan *sdp.QueryResponse)
 	errChan := make(chan error, 1)

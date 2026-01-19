@@ -10,6 +10,7 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
@@ -31,6 +32,11 @@ func (e *Engine) SendHeartbeat(ctx context.Context, customErr error) error {
 	// Read memory stats and add them to the span
 	memStats := tracing.ReadMemoryStats()
 	tracing.SetMemoryAttributes(span, "ovm.heartbeat", memStats)
+	span.SetAttributes(
+		attribute.String("ovm.sdp.source_name", e.EngineConfig.SourceName),
+		attribute.String("ovm.engine.type", e.EngineConfig.EngineType),
+		attribute.String("ovm.engine.version", e.EngineConfig.Version),
+	)
 
 	if e.EngineConfig.HeartbeatOptions == nil || e.EngineConfig.HeartbeatOptions.HealthCheck == nil {
 		return ErrNoHealthcheckDefined
