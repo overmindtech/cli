@@ -432,6 +432,7 @@ func (e *Engine) HealthCheck(ctx context.Context) error {
 
 	span.SetAttributes(
 		attribute.String("ovm.engine.name", e.EngineConfig.SourceName),
+		attribute.String("ovm.sdp.source_name", e.EngineConfig.SourceName),
 		attribute.Bool("ovm.nats.connected", natsConnected),
 		attribute.Int("ovm.discovery.listExecutionPoolCount", int(listExecutionPoolCount.Load())),
 		attribute.Int("ovm.discovery.getExecutionPoolCount", int(getExecutionPoolCount.Load())),
@@ -486,6 +487,9 @@ func (e *Engine) HealthCheck(ctx context.Context) error {
 func (e *Engine) HandleCancelQuery(ctx context.Context, cancelQuery *sdp.CancelQuery) {
 	span := trace.SpanFromContext(ctx)
 	span.SetName("HandleCancelQuery")
+	span.SetAttributes(
+		attribute.String("ovm.sdp.source_name", e.EngineConfig.SourceName),
+	)
 
 	u, err := uuid.FromBytes(cancelQuery.GetUUID())
 	if err != nil {
@@ -512,6 +516,9 @@ func (e *Engine) HandleCancelQuery(ctx context.Context, cancelQuery *sdp.CancelQ
 func (e *Engine) HandleLogRecordsRequest(ctx context.Context, replyTo string, request *sdp.NATSGetLogRecordsRequest) {
 	span := trace.SpanFromContext(ctx)
 	span.SetName("HandleLogRecordsRequest")
+	span.SetAttributes(
+		attribute.String("ovm.sdp.source_name", e.EngineConfig.SourceName),
+	)
 
 	if !strings.HasPrefix(replyTo, "logs.records.") {
 		sentry.CaptureException(fmt.Errorf("received log records request with invalid reply-to header: %s", replyTo))
@@ -611,6 +618,7 @@ func (e *Engine) HandleLogRecordsRequestWithErrors(ctx context.Context, replyTo 
 		attribute.String("ovm.logs.to", req.GetTo().String()),
 		attribute.Int("ovm.logs.maxRecords", int(req.GetMaxRecords())),
 		attribute.Bool("ovm.logs.startFromOldest", req.GetStartFromOldest()),
+		attribute.String("ovm.sdp.source_name", e.EngineConfig.SourceName),
 	)
 
 	stream := &LogRecordsStreamImpl{
