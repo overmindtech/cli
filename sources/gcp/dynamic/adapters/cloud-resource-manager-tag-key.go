@@ -16,8 +16,8 @@ var cloudResourceManagerTagKeyAdapter = registerableAdapter{ //nolint:unused
 	meta: gcpshared.AdapterMeta{
 		InDevelopment:      true,
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
 			// Expect a single non-empty initialization param (projectID for consistency)
 			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
 				return func(query string) string {

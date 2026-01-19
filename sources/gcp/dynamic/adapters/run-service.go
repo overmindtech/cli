@@ -14,8 +14,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.RunService,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://run.googleapis.com/v2/projects/%s/locations/%s/services/%s",
 		),
 		// List requires location parameter, so use Search

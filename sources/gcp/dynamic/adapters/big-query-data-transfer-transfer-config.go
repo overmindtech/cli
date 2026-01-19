@@ -12,9 +12,9 @@ var _ = registerableAdapter{
 	meta: gcpshared.AdapterMeta{
 		// Reference: https://cloud.google.com/bigquery/docs/reference/datatransfer/rest/v1/projects.transferConfigs/get
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// GET https://bigquerydatatransfer.googleapis.com/v1/projects/{projectId}/locations/{locationId}/transferConfigs/{transferConfigId}
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://bigquerydatatransfer.googleapis.com/v1/projects/%s/locations/%s/transferConfigs/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://bigquerydatatransfer.googleapis.com/v1/projects/%s/locations/%s/transferConfigs/%s"),
 		// Reference: https://cloud.google.com/bigquery/docs/reference/datatransfer/rest/v1/projects.locations.transferConfigs/list
 		// GET https://bigquerydatatransfer.googleapis.com/v1/projects/{projectId}/locations/{locationId}/transferConfigs
 		SearchEndpointFunc:  gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://bigquerydatatransfer.googleapis.com/v1/projects/%s/locations/%s/transferConfigs"),

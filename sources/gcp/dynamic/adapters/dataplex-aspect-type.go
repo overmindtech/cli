@@ -15,8 +15,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.DataplexAspectType,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://dataplex.googleapis.com/v1/projects/%s/locations/%s/aspectTypes/%s",
 		),
 		SearchEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(

@@ -69,12 +69,12 @@ func Test_ensureMandatoryFieldsInDynamicAdapters(t *testing.T) {
 					t.Skipf("InDevelopment is true for %s", sdpItemType.String())
 				}
 
-				if meta.GetEndpointBaseURLFunc == nil {
-					t.Errorf("GetEndpointBaseURLFunc is nil for %s", sdpItemType)
+				if meta.GetEndpointFunc == nil {
+					t.Errorf("GetEndpointFunc is nil for %s", sdpItemType)
 				}
 
-				if meta.Scope == "" {
-					t.Errorf("Scope is empty for %s", sdpItemType)
+				if meta.LocationLevel == "" {
+					t.Errorf("LocationLevel is empty for %s", sdpItemType)
 				}
 
 				if len(meta.UniqueAttributeKeys) == 0 {

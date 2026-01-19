@@ -12,11 +12,11 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.EssentialContactsContact,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OTHER,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/resource-manager/docs/reference/essentialcontacts/rest/v1/projects.contacts/get
 		// GET https://essentialcontacts.googleapis.com/v1/projects/*/contacts/*
 		// IAM permissions: essentialcontacts.contacts.get
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts/%s"),
 		// Reference: https://cloud.google.com/resource-manager/docs/reference/essentialcontacts/rest/v1/projects.contacts/list
 		// GET https://essentialcontacts.googleapis.com/v1/projects/*/contacts
 		// IAM permissions: essentialcontacts.contacts.list

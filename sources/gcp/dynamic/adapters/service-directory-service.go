@@ -12,9 +12,9 @@ var _ = registerableAdapter{
 		InDevelopment: true,
 		// Reference: https://cloud.google.com/service-directory/docs/reference/rest/v1/projects.locations.namespaces.services/get
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// https://servicedirectory.googleapis.com/v1/projects/*/locations/*/namespaces/*/services/*
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithThreeQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithThreeQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s"),
 		// https://servicedirectory.googleapis.com/v1/projects/*/locations/*/namespaces/*/services
 		// IAM Perm: servicedirectory.services.list
 		SearchEndpointFunc:  gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services"),

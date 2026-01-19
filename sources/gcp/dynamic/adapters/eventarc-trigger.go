@@ -15,8 +15,8 @@ var eventarcTriggerAdapter = registerableAdapter{ //nolint:unused
 	meta: gcpshared.AdapterMeta{
 		InDevelopment:      true,
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://eventarc.googleapis.com/v1/projects/%s/locations/%s/triggers/%s",
 		),
 		// List requires only the location (region or global) besides project.

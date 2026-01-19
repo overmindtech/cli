@@ -17,8 +17,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.ContainerNodePool,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithThreeQueries(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithThreeQueries(
 			"https://container.googleapis.com/v1/projects/%s/locations/%s/clusters/%s/nodePools/%s",
 		),
 		// Listing node pools requires location and cluster, so we support Search rather than List.

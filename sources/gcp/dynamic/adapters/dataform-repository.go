@@ -11,11 +11,11 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.DataformRepository,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/dataform/reference/rest/v1/projects.locations.repositories/get
 		// GET https://dataform.googleapis.com/v1/projects/*/locations/*/repositories/*
 		// IAM permissions: dataform.repositories.get
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories/%s"),
 		// Reference: https://cloud.google.com/dataform/reference/rest/v1/projects.locations.repositories/list
 		// GET https://dataform.googleapis.com/v1/projects/*/locations/*/repositories
 		SearchEndpointFunc:  gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories"),

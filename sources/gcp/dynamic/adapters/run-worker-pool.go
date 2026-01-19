@@ -15,8 +15,8 @@ var _ = registerableAdapter{
 	meta: gcpshared.AdapterMeta{
 		InDevelopment:      true,
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://run.googleapis.com/v2/projects/%s/locations/%s/workerPools/%s",
 		),
 		// The list endpoint requires the location only.

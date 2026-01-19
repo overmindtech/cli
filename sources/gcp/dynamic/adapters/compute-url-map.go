@@ -22,8 +22,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeUrlMap,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://compute.googleapis.com/compute/v1/projects/%s/global/urlMaps/%s",
 		),
 		ListEndpointFunc: gcpshared.ProjectLevelListFunc(

@@ -15,9 +15,9 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.ContainerCluster,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// GET https://container.googleapis.com/v1/projects/{project}/locations/{location}/clusters/{cluster}
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://container.googleapis.com/v1/projects/%s/locations/%s/clusters/%s",
 		),
 		// LIST https://container.googleapis.com/v1/projects/{project}/locations/{location}/clusters

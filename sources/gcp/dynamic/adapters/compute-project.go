@@ -13,7 +13,7 @@ var _ = registerableAdapter{
 	meta: gcpshared.AdapterMeta{
 		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/projects/get
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// https://compute.googleapis.com/compute/v1/projects/{project}
 		/*
 			https://cloud.google.com/compute/docs/reference/rest/v1/projects/get
@@ -25,7 +25,7 @@ var _ = registerableAdapter{
 		// We only need the name field for this adapter
 		// This resource won't carry any attributes to link it to other resources.
 		// It will always be a linked item from the other resources by its name.
-		GetEndpointBaseURLFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
+		GetEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
 			// We don't use the project ID here, but we need to ensure that the adapter is initialized with a project ID.
 			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
 				return func(query string) string {

@@ -12,9 +12,9 @@ var _ = registerableAdapter{
 		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/storagePools/get
 		InDevelopment:      true,
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
-		Scope:              gcpshared.ScopeZonal,
+		LocationLevel:      gcpshared.ZonalLevel,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/storagePools/{storagePool}
-		GetEndpointBaseURLFunc: gcpshared.ZoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools/%s"),
+		GetEndpointFunc: gcpshared.ZoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/storagePools
 		ListEndpointFunc:    gcpshared.ZoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools"),
 		UniqueAttributeKeys: []string{"storagePools"},

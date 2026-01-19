@@ -14,8 +14,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.DataprocAutoscalingPolicy,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeRegional,
-		GetEndpointBaseURLFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery(
+		LocationLevel:      gcpshared.RegionalLevel,
+		GetEndpointFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery(
 			"https://dataproc.googleapis.com/v1/projects/%s/regions/%s/autoscalingPolicies/%s",
 		),
 		ListEndpointFunc: gcpshared.RegionLevelListFunc(

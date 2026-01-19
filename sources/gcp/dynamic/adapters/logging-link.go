@@ -12,11 +12,11 @@ var _ = registerableAdapter{
 		// HEALTH: https://cloud.google.com/logging/docs/reference/v2/rest/v2/LifecycleState
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets.links/get
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets/*/links/*
 		// IAM permissions: logging.links.get
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithThreeQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s/links/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithThreeQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s/links/%s"),
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets.links/list
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets/*/links
 		// IAM permissions: logging.links.list
