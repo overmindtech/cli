@@ -15,6 +15,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/overmindtech/cli/auth"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
 	"go.opentelemetry.io/otel/attribute"
@@ -424,6 +425,10 @@ func (e *Engine) HealthCheck(ctx context.Context) error {
 	e.natsConnectionMutex.Unlock()
 
 	natsConnected := underlying != nil && underlying.IsConnected()
+
+	// Read memory stats and add them to the span
+	memStats := tracing.ReadMemoryStats()
+	tracing.SetMemoryAttributes(span, "ovm.healthcheck", memStats)
 
 	span.SetAttributes(
 		attribute.String("ovm.engine.name", e.EngineConfig.SourceName),
