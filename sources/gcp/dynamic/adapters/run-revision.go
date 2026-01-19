@@ -16,11 +16,11 @@ var _ = registerableAdapter{
 			Revisions are only created by updates to its parent Service.
 		*/
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.services.revisions/get
 		// GET https://run.googleapis.com/v2/projects/{project}/locations/{location}/services/{service}/revisions/{revision}
 		// IAM Perm: run.revisions.get
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithThreeQueries("https://run.googleapis.com/v2/projects/%s/locations/%s/services/%s/revisions/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithThreeQueries("https://run.googleapis.com/v2/projects/%s/locations/%s/services/%s/revisions/%s"),
 		// Reference: https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.services.revisions/list
 		// GET https://run.googleapis.com/v2/projects/{project}/locations/{location}/services/{service}/revisions
 		// IAM Perm: run.revisions.list

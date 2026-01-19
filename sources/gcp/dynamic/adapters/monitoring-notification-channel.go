@@ -17,8 +17,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.MonitoringNotificationChannel,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://monitoring.googleapis.com/v3/projects/%s/notificationChannels/%s",
 		),
 		ListEndpointFunc: gcpshared.ProjectLevelListFunc(

@@ -10,10 +10,10 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.SQLAdminBackup,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/Backups/GetBackup
 		// GET https://sqladmin.googleapis.com/v1/{name=projects/*/backups/*}
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://sqladmin.googleapis.com/v1/projects/%s/backups/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://sqladmin.googleapis.com/v1/projects/%s/backups/%s"),
 		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/Backups/ListBackups
 		// GET https://sqladmin.googleapis.com/v1/{parent=projects/*}/backups
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://sqladmin.googleapis.com/v1/projects/%s/backups"),

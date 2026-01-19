@@ -13,8 +13,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeVpnTunnel,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-		Scope:              gcpshared.ScopeRegional,
-		GetEndpointBaseURLFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery(
+		LocationLevel:      gcpshared.RegionalLevel,
+		GetEndpointFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery(
 			"https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/vpnTunnels/%s",
 		),
 		ListEndpointFunc: gcpshared.RegionLevelListFunc(

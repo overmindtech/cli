@@ -10,9 +10,9 @@ var _ = registerableAdapter{
 	meta: gcpshared.AdapterMeta{
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances/get
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s"),
 		// https://bigtableadmin.googleapis.com/v2/projects/*/instances
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://bigtableadmin.googleapis.com/v2/projects/%s/instances"),
 		UniqueAttributeKeys: []string{"instances"},

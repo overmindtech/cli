@@ -14,8 +14,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.DataprocCluster,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-		Scope:              gcpshared.ScopeRegional,
-		GetEndpointBaseURLFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery(
+		LocationLevel:      gcpshared.RegionalLevel,
+		GetEndpointFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery(
 			"https://dataproc.googleapis.com/v1/projects/%s/regions/%s/clusters/%s",
 		),
 		ListEndpointFunc: gcpshared.RegionLevelListFunc(

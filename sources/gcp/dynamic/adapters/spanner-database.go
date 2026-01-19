@@ -10,10 +10,10 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.SpannerDatabase,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.databases/get?rep_location=global
 		// https://spanner.googleapis.com/v1/projects/*/instances/*/databases/*
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://spanner.googleapis.com/v1/projects/%s/instances/%s/databases/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://spanner.googleapis.com/v1/projects/%s/instances/%s/databases/%s"),
 		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.databases/list?rep_location=global
 		// https://spanner.googleapis.com/v1/{parent=projects/*/instances/*}/databases
 		SearchEndpointFunc:  gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instances/%s/databases"),

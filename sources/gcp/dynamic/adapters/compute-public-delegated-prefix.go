@@ -15,8 +15,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.ComputePublicDelegatedPrefix,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-		Scope:              gcpshared.ScopeRegional,
-		GetEndpointBaseURLFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery(
+		LocationLevel:      gcpshared.RegionalLevel,
+		GetEndpointFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery(
 			"https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/publicDelegatedPrefixes/%s",
 		),
 		ListEndpointFunc: gcpshared.RegionLevelListFunc(

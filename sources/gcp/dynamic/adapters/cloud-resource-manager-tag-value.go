@@ -11,10 +11,10 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.CloudResourceManagerTagValue,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/resource-manager/reference/rest/v3/tagValues/get
 		// GET https://cloudresourcemanager.googleapis.com/v3/tagValues/{TAG_VALUE_ID}
-		GetEndpointBaseURLFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
+		GetEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
 			// Reuse project initialization pattern (even though endpoint itself isn't project-scoped) for consistency.
 			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
 				return func(query string) string {

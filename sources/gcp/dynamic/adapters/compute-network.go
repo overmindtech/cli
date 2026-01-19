@@ -10,9 +10,9 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeNetwork,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/networks/{network}
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/networks/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/networks/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/networks
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/networks"),
 		UniqueAttributeKeys: []string{"networks"},

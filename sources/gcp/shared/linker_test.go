@@ -205,7 +205,7 @@ func Test_determineScope(t *testing.T) {
 	type args struct {
 		ctx                   context.Context
 		projectID             string
-		scope                 Scope
+		locationLevel         LocationLevel
 		toItemGCPResourceName string
 		parts                 []string
 	}
@@ -219,7 +219,7 @@ func Test_determineScope(t *testing.T) {
 			args: args{
 				ctx:                   context.TODO(),
 				projectID:             "my-project",
-				scope:                 ScopeProject,
+				locationLevel:         ProjectLevel,
 				toItemGCPResourceName: "projects/my-project/global/networks/my-network",
 				parts:                 []string{"projects", "my-project", "global", "networks", "my-network"},
 			},
@@ -230,7 +230,7 @@ func Test_determineScope(t *testing.T) {
 			args: args{
 				ctx:                   context.TODO(),
 				projectID:             "my-project",
-				scope:                 ScopeRegional,
+				locationLevel:         RegionalLevel,
 				toItemGCPResourceName: "projects/my-project/regions/us-central1/networks/my-network",
 				parts:                 []string{"projects", "my-project", "regions", "us-central1", "networks", "my-network"},
 			},
@@ -241,7 +241,7 @@ func Test_determineScope(t *testing.T) {
 			args: args{
 				ctx:                   context.TODO(),
 				projectID:             "my-project",
-				scope:                 ScopeZonal,
+				locationLevel:         ZonalLevel,
 				toItemGCPResourceName: "projects/my-project/zones/us-central1-c/instances/my-instance",
 				parts:                 []string{"projects", "my-project", "zones", "us-central1-c", "instances", "my-instance"},
 			},
@@ -252,7 +252,7 @@ func Test_determineScope(t *testing.T) {
 			args: args{
 				ctx:                   context.TODO(),
 				projectID:             "my-project",
-				scope:                 ScopeRegional,
+				locationLevel:         RegionalLevel,
 				toItemGCPResourceName: "projects/my-project",
 				parts:                 []string{"projects", "my-project"},
 			},
@@ -263,7 +263,7 @@ func Test_determineScope(t *testing.T) {
 			args: args{
 				ctx:                   context.TODO(),
 				projectID:             "my-project",
-				scope:                 ScopeZonal,
+				locationLevel:         ZonalLevel,
 				toItemGCPResourceName: "projects/my-project",
 				parts:                 []string{"projects", "my-project"},
 			},
@@ -274,7 +274,7 @@ func Test_determineScope(t *testing.T) {
 			args: args{
 				ctx:                   context.TODO(),
 				projectID:             "my-project",
-				scope:                 Scope("unknown"),
+				locationLevel:         LocationLevel("unknown"),
 				toItemGCPResourceName: "projects/my-project/zones/us-central1-c/instances/my-instance",
 				parts:                 []string{"projects", "my-project", "zones", "us-central1-c", "instances", "my-instance"},
 			},
@@ -282,7 +282,7 @@ func Test_determineScope(t *testing.T) {
 		}}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := determineScope(tt.args.ctx, tt.args.projectID, tt.args.scope, nil, tt.args.toItemGCPResourceName, tt.args.parts); got != tt.want {
+			if got := determineScope(tt.args.ctx, tt.args.projectID, tt.args.locationLevel, nil, tt.args.toItemGCPResourceName, tt.args.parts); got != tt.want {
 				t.Errorf("determineScope() = %v, want %v", got, tt.want)
 			}
 		})

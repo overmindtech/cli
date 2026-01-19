@@ -11,13 +11,13 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.ServiceUsageService,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/service-usage/docs/reference/rest/v1/services/get
 		// GET https://serviceusage.googleapis.com/v1/{name=*/*/services/*}
 		// An example name would be: projects/123/services/service
 		// where 123 is the project number TODO: make sure that this is working with project ID as well
 		// IAM Perm: serviceusage.services.get
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://serviceusage.googleapis.com/v1/projects/%s/services/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://serviceusage.googleapis.com/v1/projects/%s/services/%s"),
 		// Reference: https://cloud.google.com/service-usage/docs/reference/rest/v1/services/list
 		// GET https://serviceusage.googleapis.com/v1/{parent=*/*}/services
 		/*

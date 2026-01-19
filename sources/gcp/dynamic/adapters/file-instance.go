@@ -16,9 +16,9 @@ var _ = registerableAdapter{
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 		// Project-level adapter (uses locations path parameter)
-		Scope: gcpshared.ScopeProject,
+		LocationLevel: gcpshared.ProjectLevel,
 		// GET https://file.googleapis.com/v1/projects/{project}/locations/{location}/instances/{instance}
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://file.googleapis.com/v1/projects/%s/locations/%s/instances/%s",
 		),
 		// Search (per-location) https://file.googleapis.com/v1/projects/{project}/locations/{location}/instances

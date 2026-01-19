@@ -12,9 +12,9 @@ var _ = registerableAdapter{
 		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/diskTypes/get
 		InDevelopment:      true,
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
-		Scope:              gcpshared.ScopeZonal,
+		LocationLevel:      gcpshared.ZonalLevel,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/diskTypes/{diskType}
-		GetEndpointBaseURLFunc: gcpshared.ZoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/diskTypes/%s"),
+		GetEndpointFunc: gcpshared.ZoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/diskTypes/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/diskTypes
 		ListEndpointFunc:    gcpshared.ZoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/diskTypes"),
 		UniqueAttributeKeys: []string{"diskTypes"},

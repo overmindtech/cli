@@ -9,10 +9,10 @@ var computeSSLCertificateAdapter = registerableAdapter{ //nolint:unused
 	sdpType: gcpshared.ComputeSSLCertificate,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/sslCertificates/get
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/sslCertificates/{sslCertificate}
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/sslCertificates/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/sslCertificates/%s"),
 		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/sslCertificates/list
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/sslCertificates
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/sslCertificates"),

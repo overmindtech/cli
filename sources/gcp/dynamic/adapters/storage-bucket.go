@@ -12,10 +12,10 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.StorageBucket,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/storage/docs/json_api/v1/buckets/get
 		// GET https://storage.googleapis.com/storage/v1/b/{bucket}
-		GetEndpointBaseURLFunc: func(queryParts ...string) (gcpshared.EndpointFunc, error) {
+		GetEndpointFunc: func(queryParts ...string) (gcpshared.EndpointFunc, error) {
 			if len(queryParts) == 1 && queryParts[0] != "" {
 				return func(query string) string {
 					if query != "" {

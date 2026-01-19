@@ -10,10 +10,10 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.AIPlatformPipelineJob,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_AI,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// When using the default endpoint, the location must be set to `global`.
 		//  Format: projects/{project}/locations/{location}/pipelineJobs/{pipelineJob}
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/pipelineJobs/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/pipelineJobs/%s"),
 		// Reference: https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.pipelineJobs/list
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/pipelineJobs"),
 		UniqueAttributeKeys: []string{"pipelineJobs"},

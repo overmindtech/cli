@@ -13,8 +13,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeNetworkEndpointGroup,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-		Scope:              gcpshared.ScopeZonal,
-		GetEndpointBaseURLFunc: gcpshared.ZoneLevelEndpointFuncWithSingleQuery(
+		LocationLevel:      gcpshared.ZonalLevel,
+		GetEndpointFunc: gcpshared.ZoneLevelEndpointFuncWithSingleQuery(
 			"https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/networkEndpointGroups/%s",
 		),
 		ListEndpointFunc: gcpshared.ZoneLevelListFunc(

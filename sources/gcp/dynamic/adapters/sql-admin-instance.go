@@ -14,8 +14,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.SQLAdminInstance,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
-		Scope:              gcpshared.ScopeProject,
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
+		LocationLevel:      gcpshared.ProjectLevel,
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://sqladmin.googleapis.com/sql/v1/projects/%s/instances/%s",
 		),
 		ListEndpointFunc: gcpshared.ProjectLevelListFunc(

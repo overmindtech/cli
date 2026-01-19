@@ -18,10 +18,10 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.RedisInstance,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/memorystore/docs/redis/reference/rest/v1/projects.locations.instances/get
 		// GET https://redis.googleapis.com/v1/projects/{project}/locations/{location}/instances/{instance}
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://redis.googleapis.com/v1/projects/%s/locations/%s/instances/%s",
 		),
 		// Reference: https://cloud.google.com/memorystore/docs/redis/reference/rest/v1/projects.locations.instances/list

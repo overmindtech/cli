@@ -10,9 +10,9 @@ var bigTableAdminClusterAdapter = registerableAdapter{ //nolint:unused
 	meta: gcpshared.AdapterMeta{
 		// Reference: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.clusters/get
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*/clusters/*
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s"),
 		// https://bigtableadmin.googleapis.com/v2/projects/*/instances/*/clusters
 		SearchEndpointFunc:  gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters"),
 		UniqueAttributeKeys: []string{"instances", "clusters"},

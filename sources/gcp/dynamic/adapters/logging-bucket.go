@@ -12,11 +12,11 @@ var _ = registerableAdapter{
 		// global is a type of location.
 		// location is generally a region.
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_OBSERVABILITY,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets/get
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets/*
 		// IAM permissions: logging.buckets.get
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s"),
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets/list
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets
 		// IAM permissions: logging.buckets.list

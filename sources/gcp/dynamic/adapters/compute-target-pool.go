@@ -15,8 +15,8 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.ComputeTargetPool,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-		Scope:              gcpshared.ScopeRegional,
-		GetEndpointBaseURLFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery(
+		LocationLevel:      gcpshared.RegionalLevel,
+		GetEndpointFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery(
 			"https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/targetPools/%s",
 		),
 		ListEndpointFunc: gcpshared.RegionLevelListFunc(

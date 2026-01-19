@@ -9,10 +9,10 @@ var spannerInstanceAdapter = registerableAdapter{ //nolint:unused
 	sdpType: gcpshared.SpannerInstance,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances/get?rep_location=global
 		// https://spanner.googleapis.com/v1/projects/*/instances/*
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instances/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://spanner.googleapis.com/v1/projects/%s/instances/%s"),
 		// Reference: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances/list?rep_location=global
 		// https://spanner.googleapis.com/v1/projects/*/instances
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://spanner.googleapis.com/v1/projects/%s/instances"),

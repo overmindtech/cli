@@ -12,9 +12,9 @@ var _ = registerableAdapter{
 		InDevelopment: true,
 		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/licenses/get
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/licenses/{license}
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/licenses/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/global/licenses/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/global/licenses
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/global/licenses"),
 		UniqueAttributeKeys: []string{"licenses"},

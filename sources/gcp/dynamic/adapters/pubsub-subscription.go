@@ -11,9 +11,9 @@ var _ = registerableAdapter{
 	sdpType: gcpshared.PubSubSubscription,
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-		Scope:              gcpshared.ScopeProject,
+		LocationLevel:      gcpshared.ProjectLevel,
 		// https://pubsub.googleapis.com/v1/projects/{project}/subscriptions/{subscription}
-		GetEndpointBaseURLFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://pubsub.googleapis.com/v1/projects/%s/subscriptions/%s"),
+		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://pubsub.googleapis.com/v1/projects/%s/subscriptions/%s"),
 		// Reference: https://cloud.google.com/pubsub/docs/reference/rest/v1/projects.subscriptions/list?rep_location=global
 		// https://pubsub.googleapis.com/v1/projects/{project}/subscriptions
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://pubsub.googleapis.com/v1/projects/%s/subscriptions"),

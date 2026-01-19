@@ -23,21 +23,21 @@ const (
 func Adapters(projectID string, regions []string, zones []string, linker *gcpshared.Linker, httpCli *http.Client, manualAdapters map[string]bool, cache sdpcache.Cache) ([]discovery.Adapter, error) {
 	var adapters []discovery.Adapter
 
-	adaptersByScope := make(map[gcpshared.Scope]map[shared.ItemType]gcpshared.AdapterMeta)
+	adaptersByLevel := make(map[gcpshared.LocationLevel]map[shared.ItemType]gcpshared.AdapterMeta)
 	for sdpItemType, meta := range gcpshared.SDPAssetTypeToAdapterMeta {
 		if meta.InDevelopment {
 			// Skip adapters that are in development
 			// This is useful for testing new adapters without exposing them to production
 			continue
 		}
-		if _, ok := adaptersByScope[meta.Scope]; !ok {
-			adaptersByScope[meta.Scope] = make(map[shared.ItemType]gcpshared.AdapterMeta)
+		if _, ok := adaptersByLevel[meta.LocationLevel]; !ok {
+			adaptersByLevel[meta.LocationLevel] = make(map[shared.ItemType]gcpshared.AdapterMeta)
 		}
-		adaptersByScope[meta.Scope][sdpItemType] = meta
+		adaptersByLevel[meta.LocationLevel][sdpItemType] = meta
 	}
 
 	// Project level adapters
-	for sdpItemType := range adaptersByScope[gcpshared.ScopeProject] {
+	for sdpItemType := range adaptersByLevel[gcpshared.ProjectLevel] {
 		if _, ok := manualAdapters[sdpItemType.String()]; ok {
 			// Skip, because we have a manual adapter for this item type
 			continue
@@ -53,7 +53,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 
 	// Regional adapters
 	for _, region := range regions {
-		for sdpItemType := range adaptersByScope[gcpshared.ScopeRegional] {
+		for sdpItemType := range adaptersByLevel[gcpshared.RegionalLevel] {
 			if _, ok := manualAdapters[sdpItemType.String()]; ok {
 				// Skip, because we have a manual adapter for this item type
 				continue
@@ -70,7 +70,7 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 
 	// Zonal adapters
 	for _, zone := range zones {
-		for sdpItemType := range adaptersByScope[gcpshared.ScopeZonal] {
+		for sdpItemType := range adaptersByLevel[gcpshared.ZonalLevel] {
 			if _, ok := manualAdapters[sdpItemType.String()]; ok {
 				// Skip, because we have a manual adapter for this item type
 				continue
@@ -117,7 +117,7 @@ func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli 
 		return nil, fmt.Errorf("no adapter metadata found for item type %s", sdpItemType.String())
 	}
 
-	getEndpointBaseURL, err := meta.GetEndpointBaseURLFunc(opts...)
+	getEndpointBaseURL, err := meta.GetEndpointFunc(opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -184,10 +184,10 @@ func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli 
 // - For zonal scope: opts[0] (project ID) + opts[1] (zone)
 // The second option can only be region or zone, depending on the scope type.
 func makeScope(meta gcpshared.AdapterMeta, opts ...string) string {
-	switch meta.Scope {
-	case gcpshared.ScopeProject:
+	switch meta.LocationLevel {
+	case gcpshared.ProjectLevel:
 		return opts[0]
-	case gcpshared.ScopeRegional, gcpshared.ScopeZonal:
+	case gcpshared.RegionalLevel, gcpshared.ZonalLevel:
 		return fmt.Sprintf("%s.%s", opts[0], opts[1])
 	default:
 		return ""
