@@ -32,6 +32,7 @@ type ChangeArchive struct {
 	PlannedChanges        []*MappedItemDiff        `protobuf:"bytes,7,rep,name=plannedChanges,proto3" json:"plannedChanges,omitempty"`
 	TimelineV2            []*ChangeTimelineEntryV2 `protobuf:"bytes,8,rep,name=timelineV2,proto3" json:"timelineV2,omitempty"`
 	Signals               []*Signal                `protobuf:"bytes,9,rep,name=signals,proto3" json:"signals,omitempty"`
+	Hypotheses            []*HypothesesDetails     `protobuf:"bytes,10,rep,name=hypotheses,proto3" json:"hypotheses,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -129,6 +130,13 @@ func (x *ChangeArchive) GetSignals() []*Signal {
 	return nil
 }
 
+func (x *ChangeArchive) GetHypotheses() []*HypothesesDetails {
+	if x != nil {
+		return x.Hypotheses
+	}
+	return nil
+}
+
 type GetChangeArchiveRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	UUID          []byte                 `protobuf:"bytes,1,opt,name=UUID,proto3" json:"UUID,omitempty"`
@@ -222,7 +230,7 @@ var File_area51_proto protoreflect.FileDescriptor
 const file_area51_proto_rawDesc = "" +
 	"\n" +
 	"\farea51.proto\x12\x06area51\x1a\x0fbookmarks.proto\x1a\rchanges.proto\x1a\fsignal.proto\x1a\x0fsnapshots.proto\x1a\n" +
-	"util.proto\"\xc9\x05\n" +
+	"util.proto\"\x85\x06\n" +
 	"\rChangeArchive\x12'\n" +
 	"\x06Change\x18\x01 \x01(\v2\x0f.changes.ChangeR\x06Change\x12N\n" +
 	"\x15changingItemsBookmark\x18\x02 \x01(\v2\x13.bookmarks.BookmarkH\x00R\x15changingItemsBookmark\x88\x01\x01\x12J\n" +
@@ -234,7 +242,11 @@ const file_area51_proto_rawDesc = "" +
 	"\n" +
 	"timelineV2\x18\b \x03(\v2\x1e.changes.ChangeTimelineEntryV2R\n" +
 	"timelineV2\x12(\n" +
-	"\asignals\x18\t \x03(\v2\x0e.signal.SignalR\asignalsB\x18\n" +
+	"\asignals\x18\t \x03(\v2\x0e.signal.SignalR\asignals\x12:\n" +
+	"\n" +
+	"hypotheses\x18\n" +
+	" \x03(\v2\x1a.changes.HypothesesDetailsR\n" +
+	"hypothesesB\x18\n" +
 	"\x16_changingItemsBookmarkB\x16\n" +
 	"\x14_blastRadiusSnapshotB\x17\n" +
 	"\x15_systemBeforeSnapshotB\x16\n" +
@@ -270,6 +282,7 @@ var file_area51_proto_goTypes = []any{
 	(*MappedItemDiff)(nil),           // 7: changes.MappedItemDiff
 	(*ChangeTimelineEntryV2)(nil),    // 8: changes.ChangeTimelineEntryV2
 	(*Signal)(nil),                   // 9: signal.Signal
+	(*HypothesesDetails)(nil),        // 10: changes.HypothesesDetails
 }
 var file_area51_proto_depIdxs = []int32{
 	3,  // 0: area51.ChangeArchive.Change:type_name -> changes.Change
@@ -281,14 +294,15 @@ var file_area51_proto_depIdxs = []int32{
 	7,  // 6: area51.ChangeArchive.plannedChanges:type_name -> changes.MappedItemDiff
 	8,  // 7: area51.ChangeArchive.timelineV2:type_name -> changes.ChangeTimelineEntryV2
 	9,  // 8: area51.ChangeArchive.signals:type_name -> signal.Signal
-	0,  // 9: area51.GetChangeArchiveResponse.changeArchive:type_name -> area51.ChangeArchive
-	1,  // 10: area51.Area51Service.GetChangeArchive:input_type -> area51.GetChangeArchiveRequest
-	2,  // 11: area51.Area51Service.GetChangeArchive:output_type -> area51.GetChangeArchiveResponse
-	11, // [11:12] is the sub-list for method output_type
-	10, // [10:11] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	10, // 9: area51.ChangeArchive.hypotheses:type_name -> changes.HypothesesDetails
+	0,  // 10: area51.GetChangeArchiveResponse.changeArchive:type_name -> area51.ChangeArchive
+	1,  // 11: area51.Area51Service.GetChangeArchive:input_type -> area51.GetChangeArchiveRequest
+	2,  // 12: area51.Area51Service.GetChangeArchive:output_type -> area51.GetChangeArchiveResponse
+	12, // [12:13] is the sub-list for method output_type
+	11, // [11:12] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_area51_proto_init() }
