@@ -36,14 +36,18 @@ func NewNetworkPublicIPAddress(client clients.PublicIPAddressesClient, subscript
 
 // reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/public-ip-addresses/list?view=rest-virtualnetwork-2025-03-01&tabs=HTTP
 // GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPAddresses?api-version=2025-03-01
-func (n networkPublicIPAddressWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := n.client.List(ctx, n.ResourceGroup())
+func (n networkPublicIPAddressWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	pager := n.client.List(ctx, resourceGroup)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
+			return nil, azureshared.QueryError(err, scope, n.Type())
 		}
 
 		for _, publicIPAddress := range page.Value {
@@ -51,7 +55,7 @@ func (n networkPublicIPAddressWrapper) List(ctx context.Context) ([]*sdp.Item, *
 				continue
 			}
 
-			item, sdpErr := n.azurePublicIPAddressToSDPItem(publicIPAddress)
+			item, sdpErr := n.azurePublicIPAddressToSDPItem(publicIPAddress, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -64,36 +68,40 @@ func (n networkPublicIPAddressWrapper) List(ctx context.Context) ([]*sdp.Item, *
 
 // reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/public-ip-addresses/get?view=rest-virtualnetwork-2025-03-01&tabs=HTTP
 // GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/{publicIpAddressName}?api-version=2025-03-01
-func (n networkPublicIPAddressWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (n networkPublicIPAddressWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) != 1 {
-		return nil, azureshared.QueryError(errors.New("query must be exactly one part and be a public IP address name"), n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(errors.New("query must be exactly one part and be a public IP address name"), scope, n.Type())
 	}
 
 	publicIPAddressName := queryParts[0]
 
-	publicIPAddress, err := n.client.Get(ctx, n.ResourceGroup(), publicIPAddressName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	publicIPAddress, err := n.client.Get(ctx, resourceGroup, publicIPAddressName)
 	if err != nil {
-		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
 
-	return n.azurePublicIPAddressToSDPItem(&publicIPAddress.PublicIPAddress)
+	return n.azurePublicIPAddressToSDPItem(&publicIPAddress.PublicIPAddress, scope)
 }
 
-func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAddress *armnetwork.PublicIPAddress) (*sdp.Item, *sdp.QueryError) {
+func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAddress *armnetwork.PublicIPAddress, scope string) (*sdp.Item, *sdp.QueryError) {
 	if publicIPAddress.Name == nil {
-		return nil, azureshared.QueryError(errors.New("public IP address name is nil"), n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(errors.New("public IP address name is nil"), scope, n.Type())
 	}
 
 	attributes, err := shared.ToAttributesWithExclude(publicIPAddress, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.NetworkPublicIPAddress.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           n.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(publicIPAddress.Tags),
 	}
 
@@ -141,16 +149,16 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 				nicName := azureshared.ExtractPathParamsFromResourceID(ipConfigID, []string{"networkInterfaces"})
 				if len(nicName) > 0 && nicName[0] != "" {
 					// Extract scope from the IP configuration ID (may be in different resource group)
-					scope := azureshared.ExtractScopeFromResourceID(ipConfigID)
-					if scope == "" {
-						scope = n.DefaultScope()
+					linkedScope := azureshared.ExtractScopeFromResourceID(ipConfigID)
+					if linkedScope == "" {
+						linkedScope = scope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.NetworkNetworkInterface.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  nicName[0],
-							Scope:  scope,
+							Scope:  linkedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // Network interface IP configuration changes affect the public IP address
@@ -169,16 +177,16 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 			linkedIPName := azureshared.ExtractResourceName(linkedIPID)
 			if linkedIPName != "" {
 				// Extract scope from the linked IP address ID (may be in different resource group)
-				scope := azureshared.ExtractScopeFromResourceID(linkedIPID)
-				if scope == "" {
-					scope = n.DefaultScope()
+				linkedScope := azureshared.ExtractScopeFromResourceID(linkedIPID)
+				if linkedScope == "" {
+					linkedScope = scope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.NetworkPublicIPAddress.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  linkedIPName,
-						Scope:  scope,
+						Scope:  linkedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true, // Linked public IP address changes can affect this public IP address
@@ -196,16 +204,16 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 			serviceIPName := azureshared.ExtractResourceName(serviceIPID)
 			if serviceIPName != "" {
 				// Extract scope from the service IP address ID (may be in different resource group)
-				scope := azureshared.ExtractScopeFromResourceID(serviceIPID)
-				if scope == "" {
-					scope = n.DefaultScope()
+				linkedScope := azureshared.ExtractScopeFromResourceID(serviceIPID)
+				if linkedScope == "" {
+					linkedScope = scope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.NetworkPublicIPAddress.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  serviceIPName,
-						Scope:  scope,
+						Scope:  linkedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,  // Service public IP address changes can affect this public IP address
@@ -223,16 +231,16 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 			prefixName := azureshared.ExtractResourceName(prefixID)
 			if prefixName != "" {
 				// Extract scope from the public IP prefix ID (may be in different resource group)
-				scope := azureshared.ExtractScopeFromResourceID(prefixID)
-				if scope == "" {
-					scope = n.DefaultScope()
+				linkedScope := azureshared.ExtractScopeFromResourceID(prefixID)
+				if linkedScope == "" {
+					linkedScope = scope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.NetworkPublicIPPrefix.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  prefixName,
-						Scope:  scope,
+						Scope:  linkedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,  // Public IP prefix changes can affect this public IP address
@@ -250,16 +258,16 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 			natGatewayName := azureshared.ExtractResourceName(natGatewayID)
 			if natGatewayName != "" {
 				// Extract scope from the NAT gateway ID (may be in different resource group)
-				scope := azureshared.ExtractScopeFromResourceID(natGatewayID)
-				if scope == "" {
-					scope = n.DefaultScope()
+				linkedScope := azureshared.ExtractScopeFromResourceID(natGatewayID)
+				if linkedScope == "" {
+					linkedScope = scope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.NetworkNatGateway.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  natGatewayName,
-						Scope:  scope,
+						Scope:  linkedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,  // NAT gateway changes can affect this public IP address
@@ -278,16 +286,16 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 				ddosPlanName := azureshared.ExtractResourceName(ddosPlanID)
 				if ddosPlanName != "" {
 					// Extract scope from the DDoS protection plan ID (may be in different resource group)
-					scope := azureshared.ExtractScopeFromResourceID(ddosPlanID)
-					if scope == "" {
-						scope = n.DefaultScope()
+					linkedScope := azureshared.ExtractScopeFromResourceID(ddosPlanID)
+					if linkedScope == "" {
+						linkedScope = scope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.NetworkDdosProtectionPlan.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  ddosPlanName,
-							Scope:  scope,
+							Scope:  linkedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // DDoS protection plan changes can affect this public IP address protection
@@ -309,16 +317,16 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 				lbName := azureshared.ExtractPathParamsFromResourceID(ipConfigID, []string{"loadBalancers"})
 				if len(lbName) > 0 && lbName[0] != "" {
 					// Extract scope from the load balancer ID (may be in different resource group)
-					scope := azureshared.ExtractScopeFromResourceID(ipConfigID)
-					if scope == "" {
-						scope = n.DefaultScope()
+					linkedScope := azureshared.ExtractScopeFromResourceID(ipConfigID)
+					if linkedScope == "" {
+						linkedScope = scope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.NetworkLoadBalancer.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  lbName[0],
-							Scope:  scope,
+							Scope:  linkedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // Load balancer frontend IP configuration changes affect the public IP address

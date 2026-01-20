@@ -15,9 +15,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	BigQueryTableLookupByID = shared.NewItemTypeLookup("id", gcpshared.BigQueryTable)
-)
+var BigQueryTableLookupByID = shared.NewItemTypeLookup("id", gcpshared.BigQueryTable)
 
 type BigQueryTableWrapper struct {
 	client gcpshared.BigQueryTableClient
@@ -26,11 +24,11 @@ type BigQueryTableWrapper struct {
 }
 
 // NewBigQueryTable creates a new bigQueryTable instance
-func NewBigQueryTable(client gcpshared.BigQueryTableClient, projectID string) sources.SearchableWrapper {
+func NewBigQueryTable(client gcpshared.BigQueryTableClient, locations []gcpshared.LocationInfo) sources.SearchStreamableWrapper {
 	return &BigQueryTableWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
-			projectID,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 			gcpshared.BigQueryTable,
 		),
@@ -88,31 +86,54 @@ func (b BigQueryTableWrapper) SearchLookups() []sources.ItemTypeLookups {
 }
 
 // Get retrieves a BigQuery dataset by its ID
-func (b BigQueryTableWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (b BigQueryTableWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := b.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	// O: dataset ID
 	// 1: table ID
-	metadata, err := b.client.Get(ctx, b.ProjectID(), queryParts[0], queryParts[1])
+	metadata, err := b.client.Get(ctx, location.ProjectID, queryParts[0], queryParts[1])
 	if err != nil {
-		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
+		return nil, gcpshared.QueryError(err, scope, b.Type())
 	}
 
-	return b.GCPBigQueryTableToItem(metadata)
+	return b.GCPBigQueryTableToItem(location, metadata)
 }
 
-func (b BigQueryTableWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	// queryParts[0]: Dataset ID
-	items, err := b.client.List(ctx, b.ProjectID(), queryParts[0], b.GCPBigQueryTableToItem)
+func (b BigQueryTableWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := b.LocationFromScope(scope)
 	if err != nil {
-		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
 	}
 
-	return items, nil
+	// queryParts[0]: Dataset ID
+	items, listErr := b.client.List(ctx, location.ProjectID, queryParts[0], func(md *bigquery.TableMetadata) (*sdp.Item, *sdp.QueryError) {
+		return b.GCPBigQueryTableToItem(location, md)
+	})
+	return items, listErr
 }
 
-func (b BigQueryTableWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
+func (b BigQueryTableWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	location, err := b.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	// queryParts[0]: Dataset ID
-	b.client.ListStream(ctx, b.ProjectID(), queryParts[0], stream, func(md *bigquery.TableMetadata) (*sdp.Item, *sdp.QueryError) {
-		item, qerr := b.GCPBigQueryTableToItem(md)
+	b.client.ListStream(ctx, location.ProjectID, queryParts[0], stream, func(md *bigquery.TableMetadata) (*sdp.Item, *sdp.QueryError) {
+		item, qerr := b.GCPBigQueryTableToItem(location, md)
 		if qerr == nil && item != nil {
 			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		}
@@ -120,30 +141,30 @@ func (b BigQueryTableWrapper) SearchStream(ctx context.Context, stream discovery
 	})
 }
 
-func (b BigQueryTableWrapper) GCPBigQueryTableToItem(metadata *bigquery.TableMetadata) (*sdp.Item, *sdp.QueryError) {
+func (b BigQueryTableWrapper) GCPBigQueryTableToItem(location gcpshared.LocationInfo, metadata *bigquery.TableMetadata) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(metadata, "labels")
 	if err != nil {
-		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
+		return nil, gcpshared.QueryError(err, location.ToScope(), b.Type())
 	}
 
 	// The full dataset ID in the form projectID:datasetID.tableID
-	parts := strings.Split(strings.TrimPrefix(metadata.FullID, b.ProjectID()+":"), ".")
+	parts := strings.Split(strings.TrimPrefix(metadata.FullID, location.ProjectID+":"), ".")
 	if len(parts) != 2 {
-		return nil, gcpshared.QueryError(fmt.Errorf("invalid table full ID: %s", metadata.FullID), b.DefaultScope(), b.Type())
+		return nil, gcpshared.QueryError(fmt.Errorf("invalid table full ID: %s", metadata.FullID), location.ToScope(), b.Type())
 	}
 
 	// O: dataset ID
 	// 1: table ID
 	err = attributes.Set("id", strings.Join(parts, shared.QuerySeparator))
 	if err != nil {
-		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
+		return nil, gcpshared.QueryError(err, location.ToScope(), b.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            gcpshared.BigQueryTable.String(),
 		UniqueAttribute: "id",
 		Attributes:      attributes,
-		Scope:           b.DefaultScope(),
+		Scope:           location.ToScope(),
 		Tags:            metadata.Labels,
 	}
 
@@ -152,7 +173,7 @@ func (b BigQueryTableWrapper) GCPBigQueryTableToItem(metadata *bigquery.TableMet
 			Type:   gcpshared.BigQueryDataset.String(),
 			Method: sdp.QueryMethod_GET,
 			Query:  parts[0], // dataset ID
-			Scope:  b.ProjectID(),
+			Scope:  location.ProjectID,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			// Tightly coupled.
@@ -172,7 +193,7 @@ func (b BigQueryTableWrapper) GCPBigQueryTableToItem(metadata *bigquery.TableMet
 					Type:   gcpshared.CloudKMSCryptoKey.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(values...),
-					Scope:  b.ProjectID(),
+					Scope:  location.ProjectID,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// Tightly coupled.
@@ -189,11 +210,11 @@ func (b BigQueryTableWrapper) GCPBigQueryTableToItem(metadata *bigquery.TableMet
 			// The connectionId can have the form
 			// {projectId}.{locationId};{connectionId} or
 			// projects/{projectId}/locations/{locationId}/connections/{connectionId}
-			var projectID, location, connectionID string
+			var projectID, connectionLocation, connectionID string
 			values := gcpshared.ExtractPathParams(metadata.ExternalDataConfig.ConnectionID, "projects", "locations", "connections")
 			if len(values) == 3 {
 				projectID = values[0]
-				location = values[1]
+				connectionLocation = values[1]
 				connectionID = values[2]
 			} else {
 				// {projectId}.{locationId};{connectionId}
@@ -203,17 +224,17 @@ func (b BigQueryTableWrapper) GCPBigQueryTableToItem(metadata *bigquery.TableMet
 					// {locationId};{connectionId}
 					colParts := strings.Split(resParts[1], ";")
 					if len(colParts) == 2 {
-						location = colParts[0]
+						connectionLocation = colParts[0]
 						connectionID = colParts[1]
 					}
 				}
 			}
-			if projectID != "" && location != "" && connectionID != "" {
+			if projectID != "" && connectionLocation != "" && connectionID != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.BigQueryConnection.String(),
 						Method: sdp.QueryMethod_GET,
-						Query:  shared.CompositeLookupKey(location, connectionID),
+						Query:  shared.CompositeLookupKey(connectionLocation, connectionID),
 						Scope:  projectID,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
@@ -237,7 +258,7 @@ func (b BigQueryTableWrapper) GCPBigQueryTableToItem(metadata *bigquery.TableMet
 					// Use the StorageBucket linker to extract bucket name from various URI formats
 					if linkFunc, ok := gcpshared.ManualAdapterLinksByAssetType[gcpshared.StorageBucket]; ok {
 						// The linker handles gs:// URIs and extracts bucket names
-						linkedQuery := linkFunc(b.ProjectID(), b.DefaultScope(), sourceURI, &sdp.BlastPropagation{
+						linkedQuery := linkFunc(location.ProjectID, location.ToScope(), sourceURI, &sdp.BlastPropagation{
 							// If the Storage Bucket is deleted or updated: The external table may fail to read data. If the table is updated: The bucket remains unaffected.
 							In:  true,
 							Out: false,

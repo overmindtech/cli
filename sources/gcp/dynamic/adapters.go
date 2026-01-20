@@ -20,9 +20,11 @@ const (
 )
 
 // Adapters returns a list of discovery.Adapters for the given project ID, regions, and zones.
+// Each adapter type is created once and handles all locations of its scope type.
 func Adapters(projectID string, regions []string, zones []string, linker *gcpshared.Linker, httpCli *http.Client, manualAdapters map[string]bool, cache sdpcache.Cache) ([]discovery.Adapter, error) {
 	var adapters []discovery.Adapter
 
+	// Group adapters by location level
 	adaptersByLevel := make(map[gcpshared.LocationLevel]map[shared.ItemType]gcpshared.AdapterMeta)
 	for sdpItemType, meta := range gcpshared.SDPAssetTypeToAdapterMeta {
 		if meta.InDevelopment {
@@ -36,14 +38,27 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 		adaptersByLevel[meta.LocationLevel][sdpItemType] = meta
 	}
 
-	// Project level adapters
+	// Build LocationInfo slices for each location level
+	projectLocation := []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)}
+
+	regionLocations := make([]gcpshared.LocationInfo, 0, len(regions))
+	for _, region := range regions {
+		regionLocations = append(regionLocations, gcpshared.NewRegionalLocation(projectID, region))
+	}
+
+	zoneLocations := make([]gcpshared.LocationInfo, 0, len(zones))
+	for _, zone := range zones {
+		zoneLocations = append(zoneLocations, gcpshared.NewZonalLocation(projectID, zone))
+	}
+
+	// Create project-level adapters (one per type)
 	for sdpItemType := range adaptersByLevel[gcpshared.ProjectLevel] {
 		if _, ok := manualAdapters[sdpItemType.String()]; ok {
 			// Skip, because we have a manual adapter for this item type
 			continue
 		}
 
-		adapter, err := MakeAdapter(sdpItemType, linker, httpCli, cache, projectID)
+		adapter, err := MakeAdapter(sdpItemType, linker, httpCli, cache, projectLocation)
 		if err != nil {
 			return nil, fmt.Errorf("failed to add adapter for %s: %w", sdpItemType, err)
 		}
@@ -51,34 +66,34 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 		adapters = append(adapters, adapter)
 	}
 
-	// Regional adapters
-	for _, region := range regions {
+	// Create regional adapters (one per type, handling all regions)
+	if len(regionLocations) > 0 {
 		for sdpItemType := range adaptersByLevel[gcpshared.RegionalLevel] {
 			if _, ok := manualAdapters[sdpItemType.String()]; ok {
 				// Skip, because we have a manual adapter for this item type
 				continue
 			}
 
-			adapter, err := MakeAdapter(sdpItemType, linker, httpCli, cache, projectID, region)
+			adapter, err := MakeAdapter(sdpItemType, linker, httpCli, cache, regionLocations)
 			if err != nil {
-				return nil, fmt.Errorf("failed to add adapter for %s in region %s: %w", sdpItemType, region, err)
+				return nil, fmt.Errorf("failed to add adapter for %s: %w", sdpItemType, err)
 			}
 
 			adapters = append(adapters, adapter)
 		}
 	}
 
-	// Zonal adapters
-	for _, zone := range zones {
+	// Create zonal adapters (one per type, handling all zones)
+	if len(zoneLocations) > 0 {
 		for sdpItemType := range adaptersByLevel[gcpshared.ZonalLevel] {
 			if _, ok := manualAdapters[sdpItemType.String()]; ok {
 				// Skip, because we have a manual adapter for this item type
 				continue
 			}
 
-			adapter, err := MakeAdapter(sdpItemType, linker, httpCli, cache, projectID, zone)
+			adapter, err := MakeAdapter(sdpItemType, linker, httpCli, cache, zoneLocations)
 			if err != nil {
-				return nil, fmt.Errorf("failed to add adapter for %s in zone %s: %w", sdpItemType, zone, err)
+				return nil, fmt.Errorf("failed to add adapter for %s: %w", sdpItemType, err)
 			}
 
 			adapters = append(adapters, adapter)
@@ -105,32 +120,23 @@ func adapterType(meta gcpshared.AdapterMeta) typeOfAdapter {
 }
 
 // MakeAdapter creates a new GCP dynamic adapter based on the provided SDP item type and metadata.
-// It expects the scope components (project ID, region, zone) to be passed as options.
-// It assumes that the first option is always the project ID, and subsequent options depend on the scope type.
-// Possible options are:
-// - For project scope: project ID
-// - For regional scope: project ID and region
-// - For zonal scope: project ID, region, and zone
-func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli *http.Client, cache sdpcache.Cache, opts ...string) (discovery.Adapter, error) {
+// It accepts a slice of LocationInfo representing all locations this adapter should handle.
+func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli *http.Client, cache sdpcache.Cache, locations []gcpshared.LocationInfo) (discovery.Adapter, error) {
 	meta, ok := gcpshared.SDPAssetTypeToAdapterMeta[sdpItemType]
 	if !ok {
 		return nil, fmt.Errorf("no adapter metadata found for item type %s", sdpItemType.String())
 	}
 
-	getEndpointBaseURL, err := meta.GetEndpointFunc(opts...)
-	if err != nil {
-		return nil, err
-	}
-
-	scope := makeScope(meta, opts...)
-	if scope == "" {
-		return nil, fmt.Errorf("invalid scope for adapter %s with options %v", sdpItemType.String(), opts)
+	// Validate that all locations match the adapter's expected scope type
+	for _, loc := range locations {
+		if loc.LocationLevel() != meta.LocationLevel {
+			return nil, fmt.Errorf("location %s has scope %s, expected %s", loc.ToScope(), loc.LocationLevel(), meta.LocationLevel)
+		}
 	}
 
 	cfg := &AdapterConfig{
-		ProjectID:            opts[0],
-		Scope:                scope,
-		GetURLFunc:           getEndpointBaseURL,
+		Locations:            locations,
+		GetURLFunc:           meta.GetEndpointFunc,
 		SDPAssetType:         sdpItemType,
 		SDPAdapterCategory:   meta.SDPAdapterCategory,
 		TerraformMappings:    gcpshared.SDPAssetTypeToTerraformMappings[sdpItemType].Mappings,
@@ -144,52 +150,14 @@ func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli 
 
 	switch adapterType(meta) {
 	case SearchableListable:
-		searchEndpointFunc, err := meta.SearchEndpointFunc(opts...)
-		if err != nil {
-			return nil, err
-		}
-
-		listEndpoint, err := meta.ListEndpointFunc(opts...)
-		if err != nil {
-			return nil, err
-		}
-
-		return NewSearchableListableAdapter(searchEndpointFunc, listEndpoint, cfg, meta.SearchDescription, cache), nil
+		return NewSearchableListableAdapter(meta.SearchEndpointFunc, meta.ListEndpointFunc, cfg, meta.SearchDescription, cache), nil
 	case Searchable:
-		searchEndpointFunc, err := meta.SearchEndpointFunc(opts...)
-		if err != nil {
-			return nil, err
-		}
-
-		return NewSearchableAdapter(searchEndpointFunc, cfg, meta.SearchDescription, cache), nil
+		return NewSearchableAdapter(meta.SearchEndpointFunc, cfg, meta.SearchDescription, cache), nil
 	case Listable:
-		listEndpoint, err := meta.ListEndpointFunc(opts...)
-		if err != nil {
-			return nil, err
-		}
-
-		return NewListableAdapter(listEndpoint, cfg, cache), nil
+		return NewListableAdapter(meta.ListEndpointFunc, cfg, cache), nil
 	case Standard:
 		return NewAdapter(cfg, cache), nil
 	default:
 		return nil, fmt.Errorf("unknown adapter type %s", adapterType(meta))
-	}
-}
-
-// makeScope constructs the scope string based on the provided metadata and options.
-// It uses the first option as the project ID, and for regional or zonal scopes, it appends the region or zone.
-// For example:
-// - For project scope: opts[0] (project ID)
-// - For regional scope: opts[0] (project ID) + opts[1] (region)
-// - For zonal scope: opts[0] (project ID) + opts[1] (zone)
-// The second option can only be region or zone, depending on the scope type.
-func makeScope(meta gcpshared.AdapterMeta, opts ...string) string {
-	switch meta.LocationLevel {
-	case gcpshared.ProjectLevel:
-		return opts[0]
-	case gcpshared.RegionalLevel, gcpshared.ZonalLevel:
-		return fmt.Sprintf("%s.%s", opts[0], opts[1])
-	default:
-		return ""
 	}
 }

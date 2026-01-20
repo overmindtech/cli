@@ -11,9 +11,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	StorageQueueLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageQueue)
-)
+var StorageQueueLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageQueue)
 
 type storageQueuesWrapper struct {
 	client clients.QueuesClient
@@ -33,42 +31,46 @@ func NewStorageQueues(client clients.QueuesClient, subscriptionID, resourceGroup
 	}
 }
 
-func (s storageQueuesWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (s storageQueuesWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 2 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Get requires 2 query parts: storageAccountName and queueName",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
 	storageAccountName := queryParts[0]
 	queueName := queryParts[1]
 
-	resp, err := s.client.Get(ctx, s.ResourceGroup(), storageAccountName, queueName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	resp, err := s.client.Get(ctx, resourceGroup, storageAccountName, queueName)
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
-	return s.azureQueueToSDPItem(&resp.Queue, storageAccountName, queueName)
+	return s.azureQueueToSDPItem(&resp.Queue, storageAccountName, queueName, scope)
 }
 
-func (s storageQueuesWrapper) azureQueueToSDPItem(queue *armstorage.Queue, storageAccountName, queueName string) (*sdp.Item, *sdp.QueryError) {
+func (s storageQueuesWrapper) azureQueueToSDPItem(queue *armstorage.Queue, storageAccountName, queueName, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(queue)
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(storageAccountName, queueName))
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.StorageQueue.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
-		Scope:           s.DefaultScope(),
+		Scope:           scope,
 	}
 
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -76,7 +78,7 @@ func (s storageQueuesWrapper) azureQueueToSDPItem(queue *armstorage.Queue, stora
 			Type:   azureshared.StorageAccount.String(),
 			Method: sdp.QueryMethod_GET,
 			Query:  storageAccountName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,
@@ -105,24 +107,28 @@ func (s storageQueuesWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
-func (s storageQueuesWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+func (s storageQueuesWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Search requires 1 query part: storageAccountName",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
 	storageAccountName := queryParts[0]
 
-	pager := s.client.List(ctx, s.ResourceGroup(), storageAccountName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	pager := s.client.List(ctx, resourceGroup, storageAccountName)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+			return nil, azureshared.QueryError(err, scope, s.Type())
 		}
 
 		for _, queue := range page.Value {
@@ -137,7 +143,7 @@ func (s storageQueuesWrapper) Search(ctx context.Context, queryParts ...string) 
 				QueueProperties: &armstorage.QueueProperties{
 					Metadata: queue.QueueProperties.Metadata,
 				},
-			}, storageAccountName, *queue.Name)
+			}, storageAccountName, *queue.Name, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -170,6 +176,6 @@ func (s storageQueuesWrapper) IAMPermissions() []string {
 }
 
 func (s storageQueuesWrapper) PredefinedRole() string {
-	//reference: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/storage#storage-queue-data-reader
+	// reference: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/storage#storage-queue-data-reader
 	return "Storage Queue Data Reader"
 }

@@ -19,17 +19,15 @@ var ComputeReservationLookupByName = shared.NewItemTypeLookup("name", gcpshared.
 
 type computeReservationWrapper struct {
 	client gcpshared.ComputeReservationClient
-
 	*gcpshared.ZoneBase
 }
 
-// NewComputeReservation creates a new computeReservationWrapper
-func NewComputeReservation(client gcpshared.ComputeReservationClient, projectID, zone string) sources.ListableWrapper {
+// NewComputeReservation creates a new computeReservationWrapper.
+func NewComputeReservation(client gcpshared.ComputeReservationClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeReservationWrapper{
 		client: client,
 		ZoneBase: gcpshared.NewZoneBase(
-			projectID,
-			zone,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			gcpshared.ComputeReservation,
 		),
@@ -47,7 +45,6 @@ func (c computeReservationWrapper) PredefinedRole() string {
 	return "roles/compute.viewer"
 }
 
-// PotentialLinks returns the potential links for the compute reservation wrapper
 func (c computeReservationWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeRegionCommitment,
@@ -56,62 +53,69 @@ func (c computeReservationWrapper) PotentialLinks() map[shared.ItemType]bool {
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the compute reservation wrapper
 func (c computeReservationWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
-			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_node_group#argument-reference
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_reservation.name",
 		},
 	}
 }
 
-// GetLookups returns the lookups for the compute reservation wrapper
 func (c computeReservationWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		ComputeReservationLookupByName,
 	}
 }
 
-// Get retrieves a compute reservation by its name
-func (c computeReservationWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeReservationWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetReservationRequest{
-		Project:     c.ProjectID(),
-		Zone:        c.Zone(),
+		Project:     location.ProjectID,
+		Zone:        location.Zone,
 		Reservation: queryParts[0],
 	}
 
-	reservation, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	reservation, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	item, sdpErr := c.gcpComputeReservationToSDPItem(ctx, reservation)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpComputeReservationToSDPItem(ctx, reservation, location)
 }
 
-// List lists compute reservations and converts them to sdp.Items.
-func (c computeReservationWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (c computeReservationWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	it := c.client.List(ctx, &computepb.ListReservationsRequest{
-		Project: c.ProjectID(), Zone: c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	var items []*sdp.Item
 	for {
-		reservation, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		reservation, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		item, sdpErr := c.gcpComputeReservationToSDPItem(ctx, reservation)
+		item, sdpErr := c.gcpComputeReservationToSDPItem(ctx, reservation, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -122,24 +126,32 @@ func (c computeReservationWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.
 	return items, nil
 }
 
-// ListStream lists compute reservations and sends them as items to the stream.
-func (c computeReservationWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeReservationWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListReservationsRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	for {
-		reservation, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		reservation, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpComputeReservationToSDPItem(ctx, reservation)
+		item, sdpErr := c.gcpComputeReservationToSDPItem(ctx, reservation, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -150,8 +162,7 @@ func (c computeReservationWrapper) ListStream(ctx context.Context, stream discov
 	}
 }
 
-// gcpComputeReservationToSDPItem converts a GCP Reservation to an SDP Item
-func (c computeReservationWrapper) gcpComputeReservationToSDPItem(ctx context.Context, reservation *computepb.Reservation) (*sdp.Item, *sdp.QueryError) {
+func (c computeReservationWrapper) gcpComputeReservationToSDPItem(ctx context.Context, reservation *computepb.Reservation, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(reservation)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -164,13 +175,10 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(ctx context.Co
 		Type:            gcpshared.ComputeReservation.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.Scopes()[0],
+		Scope:           location.ToScope(),
 	}
 
-	// Reservations and commitments are linked; reservations can have multiple commitments and
-	// commitments do not need to be linked to reservations.
-	// GET https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/commitments/{commitment}
-	// https://cloud.google.com/compute/docs/reference/rest/v1/regionCommitments/get
+	// Link commitment
 	if commitmentURL := reservation.GetCommitment(); commitmentURL != "" {
 		commitmentName := gcpshared.LastPathComponent(commitmentURL)
 		if commitmentName != "" {
@@ -183,8 +191,6 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(ctx context.Co
 						Query:  commitmentName,
 						Scope:  scope,
 					},
-					// Deleting a reservation does not affect the commitment.
-					// But deleting a commitment may affect the reservation and cause unexpected cost increases if you were relying on the discount.
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: false,
@@ -194,13 +200,8 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(ctx context.Co
 		}
 	}
 
-	// Reservations are used to guarantee availability of resources in a specific zone,
-	// and are defined in terms of machine types and other instance properties.
-
-	// Accelerators are a type of resource the reservation optionally targets.
-	// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/acceleratorTypes/{acceleratorType}
-	// https://cloud.google.com/compute/docs/reference/rest/v1/acceleratorTypes/get
-	if reservation.GetSpecificReservation() != nil && reservation.GetSpecificReservation().GetInstanceProperties() != nil && len(reservation.GetSpecificReservation().GetInstanceProperties().GetGuestAccelerators()) != 0 {
+	// Link accelerator types
+	if reservation.GetSpecificReservation() != nil && reservation.GetSpecificReservation().GetInstanceProperties() != nil {
 		for _, accelerator := range reservation.GetSpecificReservation().GetInstanceProperties().GetGuestAccelerators() {
 			if accelerator != nil && accelerator.GetAcceleratorType() != "" {
 				acceleratorType := accelerator.GetAcceleratorType()
@@ -215,8 +216,6 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(ctx context.Co
 								Query:  acceleratorName,
 								Scope:  scope,
 							},
-							//Not too sure about this one; while deleting an accelerator type doesn't necessarily delete the reservation,
-							// it seems like deprecration of an accelerator type may make existing reservations unusable. Will set In: true for now to be sure.
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,
 								Out: false,
@@ -228,41 +227,30 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(ctx context.Co
 		}
 	}
 
-	// ResourcePolicies define additional behavior for resources, such as schedules or maintenance windows.
-	// Reservations can reference resource policies to control instance creation timing or other lifecycle rules.
-	// GET https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/resourcePolicies/{resourcePolicy}
-	// https://cloud.google.com/compute/docs/reference/rest/v1/resourcePolicies/get
-	if reservation.GetResourcePolicies() != nil {
-		for _, policyURL := range reservation.GetResourcePolicies() {
-			if policyURL != "" {
-				policyName := gcpshared.LastPathComponent(policyURL)
-				if policyName != "" {
-					scope, err := gcpshared.ExtractScopeFromURI(ctx, policyURL)
-					if err == nil {
-						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-							Query: &sdp.Query{
-								Type:   gcpshared.ComputeResourcePolicy.String(),
-								Method: sdp.QueryMethod_GET,
-								Query:  policyName,
-								Scope:  scope,
-							},
-							//Not too sure about this one; while deleting an policies type doesn't necessarily delete the reservation,
-							// it seems like deleting a policy may cause errors.
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
-							},
-						})
-					}
+	// Link resource policies
+	for _, policyURL := range reservation.GetResourcePolicies() {
+		if policyURL != "" {
+			policyName := gcpshared.LastPathComponent(policyURL)
+			if policyName != "" {
+				scope, err := gcpshared.ExtractScopeFromURI(ctx, policyURL)
+				if err == nil {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   gcpshared.ComputeResourcePolicy.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  policyName,
+							Scope:  scope,
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					})
 				}
 			}
 		}
 	}
 
-	// The status of the reservation.
-	//	For more information about the status of the reservation, see Reservation life cycle.
-	// Check the Status enum for the list of possible values.
-	//https://cloud.google.com/compute/docs/reference/rest/v1/reservations#:~:text=from%20this%20reservation.-,status,-enum
 	switch reservation.GetStatus() {
 	case computepb.Reservation_CREATING.String(),
 		computepb.Reservation_DELETING.String(),

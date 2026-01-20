@@ -1,8 +1,6 @@
 package adapters
 
 import (
-	"fmt"
-
 	"github.com/overmindtech/cli/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
@@ -22,15 +20,9 @@ var _ = registerableAdapter{
 		// IAM permissions: essentialcontacts.contacts.list
 		ListEndpointFunc: gcpshared.ProjectLevelListFunc("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts"),
 		// This is a special case where we have to define the SEARCH method for only to support Terraform Mapping.
-		// We only validate the adapter initiation constraint: whether the project ID is provided or not.
-		// We return a nil EndpointFunc without any error, because in the runtime we will use the
-		// GET endpoint for retrieving the item for Terraform Query.
-		SearchEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
-			if len(adapterInitParams) != 1 || adapterInitParams[0] == "" {
-				return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
-			}
-
-			return nil, nil
+		// Returns empty URL to trigger GET with the provided full name.
+		SearchEndpointFunc: func(query string, location gcpshared.LocationInfo) string {
+			return ""
 		},
 		SearchDescription:   "Search for contacts by their ID in the form of \"projects/[project_id]/contacts/[contact_id]\".",
 		UniqueAttributeKeys: []string{"contacts"},

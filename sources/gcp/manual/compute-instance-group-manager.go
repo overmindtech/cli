@@ -16,23 +16,19 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ComputeInstanceGroupManagerLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeInstanceGroupManager)
-)
+var ComputeInstanceGroupManagerLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeInstanceGroupManager)
 
 type computeInstanceGroupManagerWrapper struct {
 	client gcpshared.ComputeInstanceGroupManagerClient
-
 	*gcpshared.ZoneBase
 }
 
-// NewComputeInstanceGroupManager creates a new computeInstanceGroupManagerWrapper
-func NewComputeInstanceGroupManager(client gcpshared.ComputeInstanceGroupManagerClient, projectID, zone string) sources.ListableWrapper {
+// NewComputeInstanceGroupManager creates a new computeInstanceGroupManagerWrapper.
+func NewComputeInstanceGroupManager(client gcpshared.ComputeInstanceGroupManagerClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeInstanceGroupManagerWrapper{
 		client: client,
 		ZoneBase: gcpshared.NewZoneBase(
-			projectID,
-			zone,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			gcpshared.ComputeInstanceGroupManager,
 		),
@@ -82,48 +78,54 @@ func (c computeInstanceGroupManagerWrapper) GetLookups() sources.ItemTypeLookups
 }
 
 // Get retrieves a compute instance group manager by its name
-func (c computeInstanceGroupManagerWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeInstanceGroupManagerWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetInstanceGroupManagerRequest{
-		Project:              c.ProjectID(),
-		Zone:                 c.Zone(),
+		Project:              location.ProjectID,
+		Zone:                 location.Zone,
 		InstanceGroupManager: queryParts[0],
 	}
 
-	igm, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	igm, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	var sdpErr *sdp.QueryError
-	var item *sdp.Item
-	item, sdpErr = c.gcpInstanceGroupManagerToSDPItem(ctx, igm)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpInstanceGroupManagerToSDPItem(ctx, igm, location)
 }
 
-// List lists compute instance group managers and converts them to sdp.Items.
-func (c computeInstanceGroupManagerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (c computeInstanceGroupManagerWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	it := c.client.List(ctx, &computepb.ListInstanceGroupManagersRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	var items []*sdp.Item
 	for {
-		instanceGroupManager, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		igm, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		var sdpErr *sdp.QueryError
-		var item *sdp.Item
-		item, sdpErr = c.gcpInstanceGroupManagerToSDPItem(ctx, instanceGroupManager)
+		item, sdpErr := c.gcpInstanceGroupManagerToSDPItem(ctx, igm, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -134,23 +136,32 @@ func (c computeInstanceGroupManagerWrapper) List(ctx context.Context) ([]*sdp.It
 	return items, nil
 }
 
-func (c computeInstanceGroupManagerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeInstanceGroupManagerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListInstanceGroupManagersRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	for {
-		instanceGroupManager, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		igm, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpInstanceGroupManagerToSDPItem(ctx, instanceGroupManager)
+		item, sdpErr := c.gcpInstanceGroupManagerToSDPItem(ctx, igm, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -161,8 +172,8 @@ func (c computeInstanceGroupManagerWrapper) ListStream(ctx context.Context, stre
 	}
 }
 
-func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *computepb.InstanceGroupManager) (*sdp.Item, *sdp.QueryError) {
-	attributes, err := shared.ToAttributesWithExclude(instanceGroupManager)
+func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *computepb.InstanceGroupManager, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
+	attributes, err := shared.ToAttributesWithExclude(instanceGroupManager, "")
 	if err != nil {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
@@ -174,49 +185,40 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ctx
 		Type:            gcpshared.ComputeInstanceGroupManager.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           location.ToScope(),
 	}
 
-	//Deleting the Instance Group Manager:
-	//If the IGM is deleted, the associated instances are also deleted, but the instance template remains unaffected.
-	//The instance template can still be used by other IGMs or for creating standalone instances.
-	//Deleting an instance template also doesn't not delete the IGM.
+	// Deleting the Instance Group Manager:
+	// If the IGM is deleted, the associated instances are also deleted, but the instance template remains unaffected.
+	// The instance template can still be used by other IGMs or for creating standalone instances.
+	// Deleting an instance template also doesn't not delete the IGM.
+
+	// Link instance template
 	if instanceTemplate := instanceGroupManager.GetInstanceTemplate(); instanceTemplate != "" {
 		instanceTemplateName := gcpshared.LastPathComponent(instanceTemplate)
 		scope, err := gcpshared.ExtractScopeFromURI(ctx, instanceTemplate)
-		if err == nil {
-			// Determine if this is a regional or global template based on scope format
-			// Regional scope has format "project.region", global scope is just "project"
-			if strings.Contains(scope, ".") {
-				// Regional template
-				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-					Query: &sdp.Query{
-						Type:   gcpshared.ComputeRegionInstanceTemplate.String(),
-						Method: sdp.QueryMethod_GET,
-						Query:  instanceTemplateName,
-						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
-				})
-			} else {
-				// Global template
-				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-					Query: &sdp.Query{
-						Type:   gcpshared.ComputeInstanceTemplate.String(),
-						Method: sdp.QueryMethod_GET,
-						Query:  instanceTemplateName,
-						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
-				})
+		if err == nil && instanceTemplateName != "" {
+			templateType := gcpshared.ComputeInstanceTemplate
+			if strings.Contains(instanceTemplate, "/regions/") {
+				templateType = gcpshared.ComputeRegionInstanceTemplate
 			}
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   templateType.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  instanceTemplateName,
+					Scope:  scope,
+				},
+				BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+			})
 		}
 	}
 
+	// Link instance group
 	if group := instanceGroupManager.GetInstanceGroup(); group != "" {
 		instanceGroupName := gcpshared.LastPathComponent(group)
 		scope, err := gcpshared.ExtractScopeFromURI(ctx, group)
-		if err == nil {
+		if err == nil && instanceGroupName != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   gcpshared.ComputeInstanceGroup.String(),
@@ -229,10 +231,11 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ctx
 		}
 	}
 
+	// Link target pools
 	for _, targetPool := range instanceGroupManager.GetTargetPools() {
 		targetPoolName := gcpshared.LastPathComponent(targetPool)
 		scope, err := gcpshared.ExtractScopeFromURI(ctx, targetPool)
-		if err == nil {
+		if err == nil && targetPoolName != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   gcpshared.ComputeTargetPool.String(),
@@ -245,26 +248,21 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ctx
 		}
 	}
 
-	if instanceGroupManager.GetResourcePolicies() != nil {
-		resourcePolicy := instanceGroupManager.GetResourcePolicies().GetWorkloadPolicy()
-		//Deleting the  Instance Group Manager does not affect the the Resource Policy.
-		//Deleting the Resource Policy doesn't stop the Instance Group Manager from running but makes it lose the policy’s scheduled effects.
-		if strings.Contains(resourcePolicy, "/") {
-			parts := gcpshared.ExtractPathParams(resourcePolicy, "regions", "resourcePolicies")
-			if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-				resourcePolicyName := parts[1]
-				scope, err := gcpshared.ExtractScopeFromURI(ctx, resourcePolicy)
-				if err == nil {
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   gcpshared.ComputeResourcePolicy.String(),
-							Method: sdp.QueryMethod_GET,
-							Query:  resourcePolicyName,
-							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
-					})
-				}
+	// Link resource policies from ResourcePolicies.WorkloadPolicy
+	if resourcePolicies := instanceGroupManager.GetResourcePolicies(); resourcePolicies != nil {
+		if workloadPolicy := resourcePolicies.GetWorkloadPolicy(); workloadPolicy != "" {
+			resourcePolicyName := gcpshared.LastPathComponent(workloadPolicy)
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, workloadPolicy)
+			if err == nil && resourcePolicyName != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputeResourcePolicy.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  resourcePolicyName,
+						Scope:  scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				})
 			}
 		}
 	}
@@ -276,32 +274,20 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ctx
 		if versionTemplate := version.GetInstanceTemplate(); versionTemplate != "" {
 			versionTemplateName := gcpshared.LastPathComponent(versionTemplate)
 			scope, err := gcpshared.ExtractScopeFromURI(ctx, versionTemplate)
-			if err == nil {
-				// Determine if this is a regional or global template based on scope format
-				// Regional scope has format "project.region", global scope is just "project"
-				if strings.Contains(scope, ".") {
-					// Regional template
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   gcpshared.ComputeRegionInstanceTemplate.String(),
-							Method: sdp.QueryMethod_GET,
-							Query:  versionTemplateName,
-							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
-					})
-				} else {
-					// Global template
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   gcpshared.ComputeInstanceTemplate.String(),
-							Method: sdp.QueryMethod_GET,
-							Query:  versionTemplateName,
-							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
-					})
+			if err == nil && versionTemplateName != "" {
+				templateType := gcpshared.ComputeInstanceTemplate
+				if strings.Contains(versionTemplate, "/regions/") {
+					templateType = gcpshared.ComputeRegionInstanceTemplate
 				}
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   templateType.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  versionTemplateName,
+						Scope:  scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				})
 			}
 		}
 	}
@@ -358,5 +344,4 @@ func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ctx
 	}
 
 	return sdpItem, nil
-
 }

@@ -32,6 +32,8 @@ func TestComputeInstanceGroupManagerIntegration(t *testing.T) {
 		t.Skip("GCP_ZONE environment variable not set")
 	}
 
+	t.Parallel()
+
 	instanceGroupManagerName := "overmind-test-instance-group-manager"
 	templateName := "overmind-integration-test-template"
 
@@ -64,7 +66,7 @@ func TestComputeInstanceGroupManagerIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Instance Group Manager in project %s, zone %s", projectID, zone)
 
-		instanceGroupManagerWrapper := manual.NewComputeInstanceGroupManager(gcpshared.NewComputeInstanceGroupManagerClient(instanceGroupManagerClient), projectID, zone)
+		instanceGroupManagerWrapper := manual.NewComputeInstanceGroupManager(gcpshared.NewComputeInstanceGroupManagerClient(instanceGroupManagerClient), []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		scope := instanceGroupManagerWrapper.Scopes()[0]
 
 		instanceGroupManagerAdapter := sources.WrapperToAdapter(instanceGroupManagerWrapper, sdpcache.NewNoOpCache())
@@ -88,8 +90,9 @@ func TestComputeInstanceGroupManagerIntegration(t *testing.T) {
 		}
 		// [SPEC] The only two linked item queries being created at the moment are one Instance Template and Instance Group
 		{
-			if len(sdpItem.GetLinkedItemQueries()) != 2 {
-				t.Fatalf("Expected 1 linked item query, got: %d", len(sdpItem.GetLinkedItemQueries()))
+			if len(sdpItem.GetLinkedItemQueries()) != 3 {
+				t.Logf("Linked item queries: %v", sdpItem.GetLinkedItemQueries())
+				t.Fatalf("Expected 3 linked item query, got: %d", len(sdpItem.GetLinkedItemQueries()))
 			}
 
 			// [SPEC] Ensure Instance Template is present

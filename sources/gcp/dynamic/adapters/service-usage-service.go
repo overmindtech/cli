@@ -42,9 +42,12 @@ var _ = registerableAdapter{
 			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"config.name": {
-			ToSDPItemType:    stdlib.NetworkDNS,
-			Description:      "The DNS address at which this service is available. They are tightly coupled with the Service Usage Service.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			ToSDPItemType: stdlib.NetworkDNS,
+			Description:   "The DNS address at which this service is available. They are tightly coupled with the Service Usage Service.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		"config.usage.producerNotificationChannel": {
 			// Google Service Management currently only supports Google Cloud Pub/Sub as a notification channel.
@@ -54,33 +57,48 @@ var _ = registerableAdapter{
 			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"config.endpoints.name": {
-			ToSDPItemType:    stdlib.NetworkDNS,
-			Description:      "The canonical DNS name of the endpoint. DNS names and endpoints are tightly coupled - if DNS resolution fails, the endpoint becomes inaccessible.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			ToSDPItemType: stdlib.NetworkDNS,
+			Description:   "The canonical DNS name of the endpoint. DNS names and endpoints are tightly coupled - if DNS resolution fails, the endpoint becomes inaccessible.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		"config.endpoints.target": {
 			// The target field can contain either an IP address or FQDN.
 			// The linker automatically detects which type the value is and creates the appropriate link.
-			ToSDPItemType:    stdlib.NetworkIP,
-			Description:      "The address of the API frontend (IP address or FQDN). Network connectivity to this address is required for the endpoint to function. The linker automatically detects whether the value is an IP address or DNS name.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			ToSDPItemType: stdlib.NetworkIP,
+			Description:   "The address of the API frontend (IP address or FQDN). Network connectivity to this address is required for the endpoint to function. The linker automatically detects whether the value is an IP address or DNS name.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		"config.endpoints.aliases": {
 			// Note: This field is deprecated but may still be present in existing configurations.
 			// The linker will process each alias in the array.
-			ToSDPItemType:    stdlib.NetworkDNS,
-			Description:      "Additional DNS names/aliases for the endpoint. DNS names and endpoints are tightly coupled - if DNS resolution fails, the endpoint becomes inaccessible.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			ToSDPItemType: stdlib.NetworkDNS,
+			Description:   "Additional DNS names/aliases for the endpoint. DNS names and endpoints are tightly coupled - if DNS resolution fails, the endpoint becomes inaccessible.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		"config.documentation.documentationRootUrl": {
-			ToSDPItemType:    stdlib.NetworkHTTP,
-			Description:      "The HTTP/HTTPS URL to the root of the service documentation. HTTP connectivity to this URL is required to access the documentation.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+			ToSDPItemType: stdlib.NetworkHTTP,
+			Description:   "The HTTP/HTTPS URL to the root of the service documentation. HTTP connectivity to this URL is required to access the documentation.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
 		},
 		"config.documentation.serviceRootUrl": {
-			ToSDPItemType:    stdlib.NetworkHTTP,
-			Description:      "The HTTP/HTTPS service root URL. HTTP connectivity to this URL may be required for service operations.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+			ToSDPItemType: stdlib.NetworkHTTP,
+			Description:   "The HTTP/HTTPS service root URL. HTTP connectivity to this URL may be required for service operations.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

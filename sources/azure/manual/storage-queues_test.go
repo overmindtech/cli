@@ -226,7 +226,7 @@ func TestStorageQueues(t *testing.T) {
 		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
 
 		// Test Search directly with no query parts - should return error before calling List
-		_, qErr := wrapper.Search(ctx)
+		_, qErr := wrapper.Search(ctx, wrapper.Scopes()[0])
 		if qErr == nil {
 			t.Error("Expected error when providing no query parts, but got nil")
 		}

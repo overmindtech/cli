@@ -16,6 +16,8 @@ func TestComputeInstanceTemplateIntegration(t *testing.T) {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
 	}
 
+	t.Parallel()
+
 	ctx := t.Context()
 
 	t.Run("Setup", func(t *testing.T) {
@@ -33,7 +35,7 @@ func TestComputeInstanceTemplateIntegration(t *testing.T) {
 		}
 
 		// Instance templates are global resources, no region needed
-		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

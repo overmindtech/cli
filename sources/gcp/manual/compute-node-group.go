@@ -26,13 +26,12 @@ type computeNodeGroupWrapper struct {
 	*gcpshared.ZoneBase
 }
 
-// NewComputeNodeGroup creates a new computeNodeGroupWrapper instance
-func NewComputeNodeGroup(client gcpshared.ComputeNodeGroupClient, projectID, zone string) sources.SearchableListableWrapper {
+// NewComputeNodeGroup creates a new computeNodeGroupWrapper instance.
+func NewComputeNodeGroup(client gcpshared.ComputeNodeGroupClient, locations []gcpshared.LocationInfo) sources.SearchableListableWrapper {
 	return &computeNodeGroupWrapper{
 		client: client,
 		ZoneBase: gcpshared.NewZoneBase(
-			projectID,
-			zone,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			gcpshared.ComputeNodeGroup,
 		),
@@ -50,19 +49,16 @@ func (c computeNodeGroupWrapper) PredefinedRole() string {
 	return "roles/compute.viewer"
 }
 
-// PotentialLinks returns the potential links for the compute instance wrapper
 func (c computeNodeGroupWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeNodeTemplate,
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the compute instance wrapper
 func (c computeNodeGroupWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
-			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_node_group#argument-reference
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_node_group.name",
 		},
 		{
@@ -72,7 +68,6 @@ func (c computeNodeGroupWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	}
 }
 
-// GetLookups defines how the source can be queried for specific items.
 func (c computeNodeGroupWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		ComputeNodeGroupLookupByName,
@@ -87,49 +82,54 @@ func (c computeNodeGroupWrapper) SearchLookups() []sources.ItemTypeLookups {
 	}
 }
 
-// Get retrieves a compute node group by its name
-func (c computeNodeGroupWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeNodeGroupWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetNodeGroupRequest{
-		Project:   c.ProjectID(),
-		Zone:      c.Zone(),
+		Project:   location.ProjectID,
+		Zone:      location.Zone,
 		NodeGroup: queryParts[0],
 	}
 
-	nodeGroup, err := c.client.Get(ctx, req)
+	nodeGroup, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
+	}
+
+	return c.gcpComputeNodeGroupToSDPItem(ctx, nodeGroup, location)
+}
+
+func (c computeNodeGroupWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
 	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
 	}
 
-	var sdpErr *sdp.QueryError
-	var item *sdp.Item
-	item, sdpErr = c.gcpComputeNodeGroupToSDPItem(ctx, nodeGroup)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
-}
-
-// List lists compute node groups and converts them to sdp.Items.
-func (c computeNodeGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
 	it := c.client.List(ctx, &computepb.ListNodeGroupsRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	var items []*sdp.Item
 	for {
-		nodegroup, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		nodegroup, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		var sdpErr *sdp.QueryError
-		var item *sdp.Item
-		item, sdpErr = c.gcpComputeNodeGroupToSDPItem(ctx, nodegroup)
+		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(ctx, nodegroup, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -140,24 +140,32 @@ func (c computeNodeGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Qu
 	return items, nil
 }
 
-// ListStream lists compute node groups and sends them as items to the stream.
-func (c computeNodeGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeNodeGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListNodeGroupsRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	for {
-		nodeGroup, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		nodeGroup, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(ctx, nodeGroup)
+		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(ctx, nodeGroup, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -168,14 +176,20 @@ func (c computeNodeGroupWrapper) ListStream(ctx context.Context, stream discover
 	}
 }
 
-// Search Currently supports a node template query.
-func (c computeNodeGroupWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	// Supported search for now is by node template
+func (c computeNodeGroupWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	nodeTemplate := queryParts[0]
 
 	req := &computepb.ListNodeGroupsRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 		Filter:  ptr.To("nodeTemplate = " + nodeTemplate),
 	}
 
@@ -183,15 +197,15 @@ func (c computeNodeGroupWrapper) Search(ctx context.Context, queryParts ...strin
 
 	var items []*sdp.Item
 	for {
-		nodegroup, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		nodegroup, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(ctx, nodegroup)
+		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(ctx, nodegroup, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -202,29 +216,37 @@ func (c computeNodeGroupWrapper) Search(ctx context.Context, queryParts ...strin
 	return items, nil
 }
 
-func (c computeNodeGroupWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
-	// Supported search for now is by node template
+func (c computeNodeGroupWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	nodeTemplate := queryParts[0]
 
 	req := &computepb.ListNodeGroupsRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 		Filter:  ptr.To("nodeTemplate = " + nodeTemplate),
 	}
 
 	it := c.client.List(ctx, req)
 
 	for {
-		nodeGroup, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		nodeGroup, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(ctx, nodeGroup)
+		item, sdpErr := c.gcpComputeNodeGroupToSDPItem(ctx, nodeGroup, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -235,7 +257,7 @@ func (c computeNodeGroupWrapper) SearchStream(ctx context.Context, stream discov
 	}
 }
 
-func (c computeNodeGroupWrapper) gcpComputeNodeGroupToSDPItem(ctx context.Context, nodegroup *computepb.NodeGroup) (*sdp.Item, *sdp.QueryError) {
+func (c computeNodeGroupWrapper) gcpComputeNodeGroupToSDPItem(ctx context.Context, nodegroup *computepb.NodeGroup, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(nodegroup)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -248,18 +270,12 @@ func (c computeNodeGroupWrapper) gcpComputeNodeGroupToSDPItem(ctx context.Contex
 		Type:            gcpshared.ComputeNodeGroup.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
-
+		Scope:           location.ToScope(),
 		// No labels for node groups.
 	}
 
 	templateUrl := nodegroup.GetNodeTemplate()
 	if templateUrl != "" {
-		// Link to the Node Template used to create this node group.
-		// URL format: https://www.googleapis.com/compute/v1/projects/{project}/regions/{region}/nodeTemplates/{name}
-		// If the Node Template is deleted or updated: The Node Group may fail to operate correctly or become invalid.
-		// If the Node Group is updated: The Node Template remains unaffected.
-
 		name := gcpshared.LastPathComponent(templateUrl)
 		if name != "" {
 			scope, err := gcpshared.ExtractScopeFromURI(ctx, templateUrl)
@@ -280,15 +296,13 @@ func (c computeNodeGroupWrapper) gcpComputeNodeGroupToSDPItem(ctx context.Contex
 		}
 	}
 
-	// Translate nodegroup status to common sdp status.
 	switch nodegroup.GetStatus() {
 	case computepb.NodeGroup_READY.String():
 		sdpItem.Health = sdp.Health_HEALTH_OK.Enum()
 	case computepb.NodeGroup_INVALID.String():
 		sdpItem.Health = sdp.Health_HEALTH_ERROR.Enum()
-	case computepb.NodeGroup_CREATING.String():
-		sdpItem.Health = sdp.Health_HEALTH_PENDING.Enum()
-	case computepb.NodeGroup_DELETING.String():
+	case computepb.NodeGroup_CREATING.String(),
+		computepb.NodeGroup_DELETING.String():
 		sdpItem.Health = sdp.Health_HEALTH_PENDING.Enum()
 	}
 

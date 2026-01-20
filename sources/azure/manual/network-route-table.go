@@ -33,8 +33,12 @@ func NewNetworkRouteTable(client clients.RouteTablesClient, subscriptionID, reso
 	}
 }
 
-func (n networkRouteTableWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := n.client.List(n.ResourceGroup(), nil)
+func (n networkRouteTableWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	pager := n.client.List(resourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -160,7 +164,7 @@ func (n networkRouteTableWrapper) azureRouteTableToSDPItem(routeTable *armnetwor
 	return sdpItem, nil
 }
 
-func (n networkRouteTableWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (n networkRouteTableWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, azureshared.QueryError(errors.New("queryParts must be at least 1 and be the route table name"), n.DefaultScope(), n.Type())
 	}
@@ -168,7 +172,11 @@ func (n networkRouteTableWrapper) Get(ctx context.Context, queryParts ...string)
 	if routeTableName == "" {
 		return nil, azureshared.QueryError(errors.New("route table name is empty"), n.DefaultScope(), n.Type())
 	}
-	resp, err := n.client.Get(ctx, n.ResourceGroup(), routeTableName, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	resp, err := n.client.Get(ctx, resourceGroup, routeTableName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
 	}

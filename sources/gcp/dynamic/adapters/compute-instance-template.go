@@ -33,9 +33,12 @@ var _ = registerableAdapter{
 			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"properties.networkInterfaces.networkIP": {
-			Description:      "IP address are always tightly coupled with the Compute Instance Template.",
-			ToSDPItemType:    stdlib.NetworkIP,
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			Description:   "IP address are always tightly coupled with the Compute Instance Template.",
+			ToSDPItemType: stdlib.NetworkIP,
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		"properties.networkInterfaces.ipv6Address":                      gcpshared.IPImpactBothWays,
 		"properties.networkInterfaces.accessConfigs.natIP":              gcpshared.IPImpactBothWays,
@@ -45,14 +48,20 @@ var _ = registerableAdapter{
 		"properties.networkInterfaces.ipv6AccessConfigs.externalIpv6":   gcpshared.IPImpactBothWays,
 		"properties.networkInterfaces.ipv6AccessConfigs.securityPolicy": gcpshared.SecurityPolicyImpactInOnly,
 		"properties.disks.source": {
-			Description:      "If the Compute Disk is updated: Instance creation may fail or behave unexpectedly. If the template is deleted: Existing disks can be deleted.",
-			ToSDPItemType:    gcpshared.ComputeDisk,
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			Description:   "If the Compute Disk is updated: Instance creation may fail or behave unexpectedly. If the template is deleted: Existing disks can be deleted.",
+			ToSDPItemType: gcpshared.ComputeDisk,
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		"properties.disks.initializeParams.diskName": {
-			Description:      "If the Compute Disk is updated: Instance creation may fail or behave unexpectedly. If the template is deleted: Existing disks can be deleted.",
-			ToSDPItemType:    gcpshared.ComputeDisk,
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			Description:   "If the Compute Disk is updated: Instance creation may fail or behave unexpectedly. If the template is deleted: Existing disks can be deleted.",
+			ToSDPItemType: gcpshared.ComputeDisk,
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		"properties.disks.initializeParams.sourceImage": {
 			Description:      "If the Compute Image is updated: Instances created from this template may not boot correctly. If the template is updated: Image is not affected.",
@@ -117,9 +126,12 @@ var _ = registerableAdapter{
 			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"properties.scheduling.nodeAffinities.values": {
-			Description:      "If the Compute Node Group is updated: Placement policies may break for new VMs. If the template is updated: Node affinity rules may change. Changing the affinity might cause new VMs to stop using that Node Group",
-			ToSDPItemType:    gcpshared.ComputeNodeGroup,
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			Description:   "If the Compute Node Group is updated: Placement policies may break for new VMs. If the template is updated: Node affinity rules may change. Changing the affinity might cause new VMs to stop using that Node Group",
+			ToSDPItemType: gcpshared.ComputeNodeGroup,
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		"properties.serviceAccounts.email": {
 			Description:      "If the IAM Service Account is deleted or updated: Instances created from this template may fail to authenticate or access required resources. If the template is updated: The service account remains unaffected.",

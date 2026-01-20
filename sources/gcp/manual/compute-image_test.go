@@ -30,7 +30,7 @@ func TestComputeImage(t *testing.T) {
 	projectID := "test-project-id"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeImage(mockClient, projectID)
+		wrapper := manual.NewComputeImage(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeImageWithLinks(projectID, "test-image", computepb.Image_READY), nil)
 
@@ -234,7 +234,7 @@ func TestComputeImage(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				wrapper := manual.NewComputeImage(mockClient, projectID)
+				wrapper := manual.NewComputeImage(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeImage("test-instance", tc.input), nil)
@@ -252,7 +252,7 @@ func TestComputeImage(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeImage(mockClient, projectID)
+		wrapper := manual.NewComputeImage(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -296,7 +296,7 @@ func TestComputeImage(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeImage(mockClient, projectID)
+		wrapper := manual.NewComputeImage(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 

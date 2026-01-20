@@ -18,8 +18,7 @@ import (
 
 // AdapterConfig holds the configuration for a GCP dynamic adapter.
 type AdapterConfig struct {
-	ProjectID            string
-	Scope                string
+	Locations            []gcpshared.LocationInfo
 	GetURLFunc           gcpshared.EndpointFunc
 	SDPAssetType         shared.ItemType
 	SDPAdapterCategory   sdp.AdapterCategory
@@ -34,11 +33,10 @@ type AdapterConfig struct {
 
 // Adapter implements discovery.ListableAdapter for GCP dynamic adapters.
 type Adapter struct {
-	projectID            string
+	locations            []gcpshared.LocationInfo
 	httpCli              *http.Client
 	Cache                sdpcache.Cache
 	getURLFunc           gcpshared.EndpointFunc
-	scope                string
 	sdpAssetType         shared.ItemType
 	sdpAdapterCategory   sdp.AdapterCategory
 	terraformMappings    []*sdp.TerraformMapping
@@ -53,19 +51,19 @@ type Adapter struct {
 // NewAdapter creates a new GCP dynamic adapter.
 func NewAdapter(config *AdapterConfig, cache sdpcache.Cache) discovery.Adapter {
 	return Adapter{
-		projectID:           config.ProjectID,
-		scope:               config.Scope,
-		httpCli:             config.HTTPClient,
-		Cache:               cache,
-		getURLFunc:          config.GetURLFunc,
-		sdpAssetType:        config.SDPAssetType,
-		sdpAdapterCategory:  config.SDPAdapterCategory,
-		terraformMappings:   config.TerraformMappings,
-		linker:              config.Linker,
-		potentialLinks:      potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
-		uniqueAttributeKeys: config.UniqueAttributeKeys,
-		iamPermissions:      config.IAMPermissions,
-		nameSelector:        config.NameSelector,
+		locations:            config.Locations,
+		httpCli:              config.HTTPClient,
+		Cache:                cache,
+		getURLFunc:           config.GetURLFunc,
+		sdpAssetType:         config.SDPAssetType,
+		sdpAdapterCategory:   config.SDPAdapterCategory,
+		terraformMappings:    config.TerraformMappings,
+		linker:               config.Linker,
+		potentialLinks:       potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
+		uniqueAttributeKeys:  config.UniqueAttributeKeys,
+		iamPermissions:       config.IAMPermissions,
+		nameSelector:         config.NameSelector,
+		listResponseSelector: config.ListResponseSelector,
 	}
 }
 
@@ -92,7 +90,7 @@ func (g Adapter) Metadata() *sdp.AdapterMetadata {
 }
 
 func (g Adapter) Scopes() []string {
-	return []string{g.scope}
+	return gcpshared.LocationsToScopes(g.locations)
 }
 
 var (
@@ -110,12 +108,31 @@ func (g Adapter) GetCache() sdpcache.Cache {
 	return g.Cache
 }
 
-func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
-	if scope != g.scope {
-		return nil, &sdp.QueryError{
+// validateScope checks if the requested scope matches one of the adapter's locations.
+func (g Adapter) validateScope(scope string) (gcpshared.LocationInfo, error) {
+	requestedLoc, err := gcpshared.LocationFromScope(scope)
+	if err != nil {
+		return gcpshared.LocationInfo{}, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: fmt.Sprintf("requested scope %v does not match any adapter scope %v", scope, g.Scopes()),
+			ErrorString: fmt.Sprintf("invalid scope format: %v", err),
 		}
+	}
+
+	for _, validLoc := range g.locations {
+		if requestedLoc.Equals(validLoc) {
+			return requestedLoc, nil
+		}
+	}
+	return gcpshared.LocationInfo{}, &sdp.QueryError{
+		ErrorType:   sdp.QueryError_NOSCOPE,
+		ErrorString: fmt.Sprintf("requested scope %v does not match any adapter scope %v", scope, g.Scopes()),
+	}
+}
+
+func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
+	location, err := g.validateScope(scope)
+	if err != nil {
+		return nil, err
 	}
 
 	cacheHit, ck, cachedItem, qErr := g.GetCache().Lookup(
@@ -141,7 +158,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		return cachedItem[0], nil
 	}
 
-	url := g.getURLFunc(query)
+	url := g.getURLFunc(query, location)
 	if url == "" {
 		return nil, &sdp.QueryError{
 			ErrorType: sdp.QueryError_OTHER,
@@ -158,7 +175,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		return nil, err
 	}
 
-	item, err := externalToSDP(ctx, g.projectID, g.scope, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker, g.nameSelector)
+	item, err := externalToSDP(ctx, location, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker, g.nameSelector)
 	if err != nil {
 		return nil, err
 	}

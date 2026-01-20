@@ -67,16 +67,16 @@ func (d *apiGatewayStageWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
-func (d *apiGatewayStageWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (d *apiGatewayStageWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	out, err := d.client.GetStage(ctx, &apigateway.GetStageInput{
 		RestApiId: &queryParts[0],
 		StageName: &queryParts[1],
 	})
 	if err != nil {
-		return nil, queryError(err, d.Scopes()[0], d.Type())
+		return nil, queryError(err, scope, d.Type())
 	}
 
-	return d.awsToSdpItem(convertGetStageOutputToStage(out), queryParts[0])
+	return d.awsToSdpItem(convertGetStageOutputToStage(out), scope, queryParts[0])
 }
 
 // SearchLookups returns the ItemTypeLookups for the Search operation
@@ -93,7 +93,7 @@ func (d *apiGatewayStageWrapper) SearchLookups() []sources.ItemTypeLookups {
 }
 
 // Search retrieves Stages by a search query and converts them to sdp.Items
-func (d *apiGatewayStageWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+func (d *apiGatewayStageWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
 	var input *apigateway.GetStagesInput
 
 	switch len(queryParts) {
@@ -110,18 +110,18 @@ func (d *apiGatewayStageWrapper) Search(ctx context.Context, queryParts ...strin
 
 	out, err := d.client.GetStages(ctx, input)
 	if err != nil {
-		return nil, queryError(err, d.Scopes()[0], d.Type())
+		return nil, queryError(err, scope, d.Type())
 	}
 
-	return d.mapper(out.Item, queryParts[0])
+	return d.mapper(out.Item, scope, queryParts[0])
 }
 
 // mapper converts a list of AWS Stages to a list of sdp.Items
-func (d *apiGatewayStageWrapper) mapper(stages []types.Stage, query string) ([]*sdp.Item, *sdp.QueryError) {
+func (d *apiGatewayStageWrapper) mapper(stages []types.Stage, scope, query string) ([]*sdp.Item, *sdp.QueryError) {
 	var items []*sdp.Item
 
 	for _, stage := range stages {
-		sdpItem, err := d.awsToSdpItem(stage, query)
+		sdpItem, err := d.awsToSdpItem(stage, scope, query)
 		if err != nil {
 			return nil, err
 		}
@@ -132,7 +132,7 @@ func (d *apiGatewayStageWrapper) mapper(stages []types.Stage, query string) ([]*
 	return items, nil
 }
 
-func (d *apiGatewayStageWrapper) awsToSdpItem(stage types.Stage, query string) (*sdp.Item, *sdp.QueryError) {
+func (d *apiGatewayStageWrapper) awsToSdpItem(stage types.Stage, scope, query string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := adapterhelpers.ToAttributesWithExclude(stage, "tags")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -155,7 +155,7 @@ func (d *apiGatewayStageWrapper) awsToSdpItem(stage types.Stage, query string) (
 		Type:            d.Type(),
 		UniqueAttribute: "StageName",
 		Attributes:      attributes,
-		Scope:           d.Scopes()[0],
+		Scope:           scope,
 		Tags:            stage.Tags,
 	}
 
@@ -165,7 +165,7 @@ func (d *apiGatewayStageWrapper) awsToSdpItem(stage types.Stage, query string) (
 				Type:   APIGWDeployment.String(),
 				Method: sdp.QueryMethod_GET,
 				Query:  restAPIID + "/" + *stage.DeploymentId,
-				Scope:  d.Scopes()[0],
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,
@@ -180,7 +180,7 @@ func (d *apiGatewayStageWrapper) awsToSdpItem(stage types.Stage, query string) (
 			Type:   linkedItemRestAPI.String(),
 			Method: sdp.QueryMethod_GET,
 			Query:  restAPIID,
-			Scope:  d.Scopes()[0],
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,

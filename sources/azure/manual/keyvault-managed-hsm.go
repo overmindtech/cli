@@ -16,9 +16,7 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-var (
-	KeyVaultManagedHSMsLookupByName = shared.NewItemTypeLookup("name", azureshared.KeyVaultManagedHSM)
-)
+var KeyVaultManagedHSMsLookupByName = shared.NewItemTypeLookup("name", azureshared.KeyVaultManagedHSM)
 
 type keyvaultManagedHSMsWrapper struct {
 	client clients.ManagedHSMsClient
@@ -39,14 +37,18 @@ func NewKeyVaultManagedHSM(client clients.ManagedHSMsClient, subscriptionID, res
 }
 
 // ref: https://learn.microsoft.com/en-us/rest/api/keyvault/managedhsm/managed-hsms/list-by-resource-group?view=rest-keyvault-managedhsm-2024-11-01&tabs=HTTP
-func (k keyvaultManagedHSMsWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := k.client.NewListByResourceGroupPager(k.ResourceGroup(), nil)
+func (k keyvaultManagedHSMsWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = k.ResourceGroup()
+	}
+	pager := k.client.NewListByResourceGroupPager(resourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, k.DefaultScope(), k.Type())
+			return nil, azureshared.QueryError(err, scope, k.Type())
 		}
 
 		for _, hsm := range page.Value {
@@ -54,7 +56,7 @@ func (k keyvaultManagedHSMsWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp
 				continue
 			}
 
-			item, sdpErr := k.azureManagedHSMToSDPItem(hsm)
+			item, sdpErr := k.azureManagedHSMToSDPItem(hsm, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -65,13 +67,17 @@ func (k keyvaultManagedHSMsWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp
 	return items, nil
 }
 
-func (k keyvaultManagedHSMsWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
-	pager := k.client.NewListByResourceGroupPager(k.ResourceGroup(), nil)
+func (k keyvaultManagedHSMsWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = k.ResourceGroup()
+	}
+	pager := k.client.NewListByResourceGroupPager(resourceGroup, nil)
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			stream.SendError(azureshared.QueryError(err, k.DefaultScope(), k.Type()))
+			stream.SendError(azureshared.QueryError(err, scope, k.Type()))
 			return
 		}
 
@@ -79,7 +85,7 @@ func (k keyvaultManagedHSMsWrapper) ListStream(ctx context.Context, stream disco
 			if hsm.Name == nil {
 				continue
 			}
-			item, sdpErr := k.azureManagedHSMToSDPItem(hsm)
+			item, sdpErr := k.azureManagedHSMToSDPItem(hsm, scope)
 			if sdpErr != nil {
 				stream.SendError(sdpErr)
 				continue
@@ -90,20 +96,20 @@ func (k keyvaultManagedHSMsWrapper) ListStream(ctx context.Context, stream disco
 	}
 }
 
-func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.ManagedHsm) (*sdp.Item, *sdp.QueryError) {
+func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.ManagedHsm, scope string) (*sdp.Item, *sdp.QueryError) {
 	if hsm.Name == nil {
-		return nil, azureshared.QueryError(errors.New("name is nil"), k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(errors.New("name is nil"), scope, k.Type())
 	}
 	attributes, err := shared.ToAttributesWithExclude(hsm, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:              azureshared.KeyVaultManagedHSM.String(),
 		UniqueAttribute:   "name",
 		Attributes:        attributes,
-		Scope:             k.DefaultScope(),
+		Scope:             scope,
 		Tags:              azureshared.ConvertAzureTags(hsm.Tags),
 		LinkedItemQueries: []*sdp.LinkedItemQuery{},
 	}
@@ -223,16 +229,16 @@ func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.Ma
 			identityName := azureshared.ExtractResourceName(identityResourceID)
 			if identityName != "" {
 				// Extract scope from resource ID if it's in a different resource group
-				scope := k.DefaultScope()
+				linkedScope := scope
 				if extractedScope := azureshared.ExtractScopeFromResourceID(identityResourceID); extractedScope != "" {
-					scope = extractedScope
+					linkedScope = extractedScope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  identityName,
-						Scope:  scope,
+						Scope:  linkedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Managed HSM depends on managed identity for authentication and access control
@@ -271,22 +277,26 @@ func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.Ma
 }
 
 // ref: https://learn.microsoft.com/en-us/rest/api/keyvault/managedhsm/managed-hsms/get?view=rest-keyvault-managedhsm-2024-11-01&tabs=HTTP
-func (k keyvaultManagedHSMsWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (k keyvaultManagedHSMsWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
-		return nil, azureshared.QueryError(errors.New("Get requires 1 query part: name"), k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(errors.New("Get requires 1 query part: name"), scope, k.Type())
 	}
 
 	name := queryParts[0]
 	if name == "" {
-		return nil, azureshared.QueryError(errors.New("name cannot be empty"), k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(errors.New("name cannot be empty"), scope, k.Type())
 	}
 
-	resp, err := k.client.Get(ctx, k.ResourceGroup(), name, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = k.ResourceGroup()
+	}
+	resp, err := k.client.Get(ctx, resourceGroup, name, nil)
 	if err != nil {
-		return nil, azureshared.QueryError(err, k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
 
-	return k.azureManagedHSMToSDPItem(&resp.ManagedHsm)
+	return k.azureManagedHSMToSDPItem(&resp.ManagedHsm, scope)
 }
 
 func (k keyvaultManagedHSMsWrapper) GetLookups() sources.ItemTypeLookups {

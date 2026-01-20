@@ -22,11 +22,11 @@ type iamServiceAccountKeyWrapper struct {
 }
 
 // NewIAMServiceAccountKey creates a new IAM Service Account Key adapter
-func NewIAMServiceAccountKey(client gcpshared.IAMServiceAccountKeyClient, projectID string) sources.SearchableWrapper {
+func NewIAMServiceAccountKey(client gcpshared.IAMServiceAccountKeyClient, locations []gcpshared.LocationInfo) sources.SearchStreamableWrapper {
 	return &iamServiceAccountKeyWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
-			projectID,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 			gcpshared.IAMServiceAccountKey,
 		),
@@ -74,25 +74,28 @@ func (c iamServiceAccountKeyWrapper) GetLookups() sources.ItemTypeLookups {
 // Get retrieves a Service Account Key by its name and related serviceAccount
 // See: https://cloud.google.com/iam/docs/reference/rest/v1/projects.serviceAccounts.keys/get
 // Format: GET https://iam.googleapis.com/v1/{name=projects/*/serviceAccounts/*/keys/*}
-func (c iamServiceAccountKeyWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c iamServiceAccountKeyWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	serviceAccountIdentifier := queryParts[0]
 	keyName := queryParts[1]
 
 	req := &adminpb.GetServiceAccountKeyRequest{
-		Name: "projects/" + c.ProjectID() + "/serviceAccounts/" + serviceAccountIdentifier + "/keys/" + keyName,
+		Name: "projects/" + location.ProjectID + "/serviceAccounts/" + serviceAccountIdentifier + "/keys/" + keyName,
 	}
 
-	key, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	key, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	item, sdpErr := c.gcpIAMServiceAccountKeyToSDPItem(key)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpIAMServiceAccountKeyToSDPItem(key, location)
 }
 
 // SearchLookups defines how the source can be searched for specific items.
@@ -105,19 +108,27 @@ func (c iamServiceAccountKeyWrapper) SearchLookups() []sources.ItemTypeLookups {
 }
 
 // Search retrieves Service Account Keys by name (or other supported fields in the future)
-func (c iamServiceAccountKeyWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+func (c iamServiceAccountKeyWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	serviceAccountIdentifier := queryParts[0]
 
-	it, err := c.client.Search(ctx, &adminpb.ListServiceAccountKeysRequest{
-		Name: "projects/" + c.ProjectID() + "/serviceAccounts/" + serviceAccountIdentifier,
+	it, searchErr := c.client.Search(ctx, &adminpb.ListServiceAccountKeysRequest{
+		Name: "projects/" + location.ProjectID + "/serviceAccounts/" + serviceAccountIdentifier,
 	})
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	if searchErr != nil {
+		return nil, gcpshared.QueryError(searchErr, scope, c.Type())
 	}
 
 	var items []*sdp.Item
 	for _, key := range it.GetKeys() {
-		item, sdpErr := c.gcpIAMServiceAccountKeyToSDPItem(key)
+		item, sdpErr := c.gcpIAMServiceAccountKeyToSDPItem(key, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -128,19 +139,28 @@ func (c iamServiceAccountKeyWrapper) Search(ctx context.Context, queryParts ...s
 }
 
 // SearchStream streams the search results for Service Account Keys.
-func (c iamServiceAccountKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
+func (c iamServiceAccountKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	serviceAccountIdentifier := queryParts[0]
 
-	it, err := c.client.Search(ctx, &adminpb.ListServiceAccountKeysRequest{
-		Name: "projects/" + c.ProjectID() + "/serviceAccounts/" + serviceAccountIdentifier,
+	it, searchErr := c.client.Search(ctx, &adminpb.ListServiceAccountKeysRequest{
+		Name: "projects/" + location.ProjectID + "/serviceAccounts/" + serviceAccountIdentifier,
 	})
-	if err != nil {
-		stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+	if searchErr != nil {
+		stream.SendError(gcpshared.QueryError(searchErr, scope, c.Type()))
 		return
 	}
 
 	for _, key := range it.GetKeys() {
-		item, sdpErr := c.gcpIAMServiceAccountKeyToSDPItem(key)
+		item, sdpErr := c.gcpIAMServiceAccountKeyToSDPItem(key, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -153,7 +173,7 @@ func (c iamServiceAccountKeyWrapper) SearchStream(ctx context.Context, stream di
 }
 
 // gcpIAMServiceAccountKeyToSDPItem converts a ServiceAccountKey to an sdp.Item
-func (c iamServiceAccountKeyWrapper) gcpIAMServiceAccountKeyToSDPItem(key *adminpb.ServiceAccountKey) (*sdp.Item, *sdp.QueryError) {
+func (c iamServiceAccountKeyWrapper) gcpIAMServiceAccountKeyToSDPItem(key *adminpb.ServiceAccountKey, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(key)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -189,7 +209,7 @@ func (c iamServiceAccountKeyWrapper) gcpIAMServiceAccountKeyToSDPItem(key *admin
 		Type:            gcpshared.IAMServiceAccountKey.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
-		Scope:           c.ProjectID(),
+		Scope:           location.ToScope(),
 	}
 
 	// The URL for the ServiceAccount related to this ServiceAccountKey
@@ -200,7 +220,7 @@ func (c iamServiceAccountKeyWrapper) gcpIAMServiceAccountKeyToSDPItem(key *admin
 			Type:   gcpshared.IAMServiceAccount.String(),
 			Method: sdp.QueryMethod_GET,
 			Query:  serviceAccountName,
-			Scope:  c.ProjectID(),
+			Scope:  location.ProjectID,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			// If service account is deleted, all keys that belong to it are deleted

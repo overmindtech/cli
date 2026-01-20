@@ -8,7 +8,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-// LocationLevel defines the scope of a GCP resource.
+// LocationLevel defines at which level of the GCP hierarchy a resource is located.
 type LocationLevel string
 
 const (
@@ -17,14 +17,24 @@ const (
 	ZonalLevel    LocationLevel = "zonal"
 )
 
-type EndpointFunc func(query string) string
+// EndpointFunc is a function that generates an API endpoint URL given a query and location.
+type EndpointFunc func(query string, location LocationInfo) string
+
+// ListEndpointFunc is a function that generates a list endpoint URL for a given location.
+type ListEndpointFunc func(location LocationInfo) (string, error)
 
 // AdapterMeta contains metadata for a GCP dynamic adapter.
 type AdapterMeta struct {
-	LocationLevel      LocationLevel
-	GetEndpointFunc    func(queryParts ...string) (EndpointFunc, error)
-	ListEndpointFunc   func(queryParts ...string) (string, error)
-	SearchEndpointFunc func(queryParts ...string) (EndpointFunc, error)
+	LocationLevel LocationLevel
+	// GetEndpointFunc is a function that generates GET endpoint URLs.
+	// It receives the query string and LocationInfo and returns the URL.
+	GetEndpointFunc EndpointFunc
+	// ListEndpointFunc is a function that generates list endpoint URLs.
+	// It accepts LocationInfo directly for the multi-scope architecture.
+	ListEndpointFunc ListEndpointFunc
+	// SearchEndpointFunc is a function that generates SEARCH endpoint URLs.
+	// It receives the query string and LocationInfo and returns the URL.
+	SearchEndpointFunc EndpointFunc
 	// We will normally generate the search description from the UniqueAttributeKeys
 	// but we allow it to be overridden for specific adapters.
 	SearchDescription   string
@@ -40,212 +50,186 @@ type AdapterMeta struct {
 	ListResponseSelector string
 }
 
-// We have group of functions that are similar in nature, however they cannot simplified into a generic function because
-// of the different number of query parts they accept.
-// Also, we want to keep the explicit logic for now for the sake of human readability.
+// =============================================
+// NEW PATTERN: Endpoint builder functions
+// These take a format string and return an EndpointFunc
+// =============================================
 
-func ProjectLevelEndpointFuncWithSingleQuery(format string) func(queryParts ...string) (EndpointFunc, error) {
-	// count number of `%s` in the format string
-	if strings.Count(format, "%s") != 2 { // project ID and query
+// ProjectLevelEndpointFuncWithSingleQuery returns a function that builds GET endpoint URLs for project-level resources.
+// Format string should have 2 %s placeholders: project ID and query.
+func ProjectLevelEndpointFuncWithSingleQuery(format string) EndpointFunc {
+	if strings.Count(format, "%s") != 2 {
 		panic(fmt.Sprintf("format string must contain 2 %%s placeholders: %s", format))
 	}
-	return func(adapterInitParams ...string) (EndpointFunc, error) {
-		if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-			return func(query string) string {
-				if query != "" {
-					// query must be an instance
-					return fmt.Sprintf(format, adapterInitParams[0], query)
-				}
-				return ""
-			}, nil
+	return func(query string, location LocationInfo) string {
+		if query == "" {
+			return ""
 		}
-		return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+		return fmt.Sprintf(format, location.ProjectID, query)
 	}
 }
 
-func ProjectLevelEndpointFuncWithTwoQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
-	// count number of `%s` in the format string
-	if strings.Count(format, "%s") != 3 { // project ID, and 2 parts of the query
+// ProjectLevelEndpointFuncWithTwoQueries returns a function for project-level resources with composite query.
+// Format string should have 3 %s placeholders: project ID and 2 parts of the query.
+func ProjectLevelEndpointFuncWithTwoQueries(format string) EndpointFunc {
+	if strings.Count(format, "%s") != 3 {
 		panic(fmt.Sprintf("format string must contain 3 %%s placeholders: %s", format))
 	}
-	return func(adapterInitParams ...string) (EndpointFunc, error) {
-		if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-			return func(query string) string {
-				if query != "" {
-					// query must be a composite
-					queryParts := strings.Split(query, shared.QuerySeparator)
-					if len(queryParts) == 2 && queryParts[0] != "" && queryParts[1] != "" {
-						return fmt.Sprintf(format, adapterInitParams[0], queryParts[0], queryParts[1])
-					}
-				}
-				return ""
-			}, nil
+	return func(query string, location LocationInfo) string {
+		if query == "" {
+			return ""
 		}
-		return nil, fmt.Errorf("projectID and region cannot be empty: %v", adapterInitParams)
+		queryParts := strings.Split(query, shared.QuerySeparator)
+		if len(queryParts) != 2 || queryParts[0] == "" || queryParts[1] == "" {
+			return ""
+		}
+		return fmt.Sprintf(format, location.ProjectID, queryParts[0], queryParts[1])
 	}
 }
 
-func ProjectLevelEndpointFuncWithThreeQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
-	// count number of `%s` in the format string
-	if strings.Count(format, "%s") != 4 { // project ID, and 3 parts of the query
+// ProjectLevelEndpointFuncWithThreeQueries returns a function for project-level resources with 3-part query.
+// Format string should have 4 %s placeholders: project ID and 3 parts of the query.
+func ProjectLevelEndpointFuncWithThreeQueries(format string) EndpointFunc {
+	if strings.Count(format, "%s") != 4 {
 		panic(fmt.Sprintf("format string must contain 4 %%s placeholders: %s", format))
 	}
-	return func(adapterInitParams ...string) (EndpointFunc, error) {
-		if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-			return func(query string) string {
-				if query != "" {
-					// query must be a composite
-					queryParts := strings.Split(query, shared.QuerySeparator)
-					if len(queryParts) == 3 && queryParts[0] != "" && queryParts[1] != "" && queryParts[2] != "" {
-						return fmt.Sprintf(format, adapterInitParams[0], queryParts[0], queryParts[1], queryParts[2])
-					}
-				}
-				return ""
-			}, nil
+	return func(query string, location LocationInfo) string {
+		if query == "" {
+			return ""
 		}
-		return nil, fmt.Errorf("projectID and region cannot be empty: %v", adapterInitParams)
+		queryParts := strings.Split(query, shared.QuerySeparator)
+		if len(queryParts) != 3 || queryParts[0] == "" || queryParts[1] == "" || queryParts[2] == "" {
+			return ""
+		}
+		return fmt.Sprintf(format, location.ProjectID, queryParts[0], queryParts[1], queryParts[2])
 	}
 }
 
-func ProjectLevelEndpointFuncWithFourQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
-	// count number of `%s` in the format string
-	if strings.Count(format, "%s") != 5 { // project ID, and 4 parts of the query
+// ProjectLevelEndpointFuncWithFourQueries returns a function for project-level resources with 4-part query.
+// Format string should have 5 %s placeholders: project ID and 4 parts of the query.
+func ProjectLevelEndpointFuncWithFourQueries(format string) EndpointFunc {
+	if strings.Count(format, "%s") != 5 {
 		panic(fmt.Sprintf("format string must contain 5 %%s placeholders: %s", format))
 	}
-	return func(adapterInitParams ...string) (EndpointFunc, error) {
-		if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-			return func(query string) string {
-				if query != "" {
-					// query must be a composite
-					queryParts := strings.Split(query, shared.QuerySeparator)
-					if len(queryParts) == 4 && queryParts[0] != "" && queryParts[1] != "" && queryParts[2] != "" && queryParts[3] != "" {
-						return fmt.Sprintf(format, adapterInitParams[0], queryParts[0], queryParts[1], queryParts[2], queryParts[3])
-					}
-				}
-				return ""
-			}, nil
+	return func(query string, location LocationInfo) string {
+		if query == "" {
+			return ""
 		}
-		return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+		queryParts := strings.Split(query, shared.QuerySeparator)
+		if len(queryParts) != 4 || queryParts[0] == "" || queryParts[1] == "" || queryParts[2] == "" || queryParts[3] == "" {
+			return ""
+		}
+		return fmt.Sprintf(format, location.ProjectID, queryParts[0], queryParts[1], queryParts[2], queryParts[3])
 	}
 }
 
-func ZoneLevelEndpointFuncWithSingleQuery(format string) func(queryParts ...string) (EndpointFunc, error) {
-	// count number of `%s` in the format string
-	if strings.Count(format, "%s") != 3 { // project ID, zone, and query
+// ZoneLevelEndpointFunc returns a function that builds GET endpoint URLs for zonal resources.
+// Format string should have 3 %s placeholders: project ID, zone, and query.
+func ZoneLevelEndpointFunc(format string) EndpointFunc {
+	if strings.Count(format, "%s") != 3 {
 		panic(fmt.Sprintf("format string must contain 3 %%s placeholders: %s", format))
 	}
-	return func(adapterInitParams ...string) (EndpointFunc, error) {
-		if len(adapterInitParams) == 2 && adapterInitParams[0] != "" && adapterInitParams[1] != "" {
-			return func(query string) string {
-				if query != "" {
-					// query must be an instance
-					return fmt.Sprintf(format, adapterInitParams[0], adapterInitParams[1], query)
-				}
-				return ""
-			}, nil
+	return func(query string, location LocationInfo) string {
+		if query == "" {
+			return ""
 		}
-		return nil, fmt.Errorf("projectID and zone cannot be empty: %v", adapterInitParams)
+		return fmt.Sprintf(format, location.ProjectID, location.Zone, query)
 	}
 }
 
-func RegionalLevelEndpointFuncWithSingleQuery(format string) func(queryParts ...string) (EndpointFunc, error) {
-	// count number of `%s` in the format string
-	if strings.Count(format, "%s") != 3 { // project ID, region, and query
+// ZoneLevelEndpointFuncWithTwoQueries returns a function for zonal resources with composite query.
+// Format string should have 4 %s placeholders: project ID, zone, and 2 parts of the query.
+func ZoneLevelEndpointFuncWithTwoQueries(format string) EndpointFunc {
+	if strings.Count(format, "%s") != 4 {
+		panic(fmt.Sprintf("format string must contain 4 %%s placeholders: %s", format))
+	}
+	return func(query string, location LocationInfo) string {
+		if query == "" {
+			return ""
+		}
+		queryParts := strings.Split(query, shared.QuerySeparator)
+		if len(queryParts) != 2 || queryParts[0] == "" || queryParts[1] == "" {
+			return ""
+		}
+		return fmt.Sprintf(format, location.ProjectID, location.Zone, queryParts[0], queryParts[1])
+	}
+}
+
+// RegionalLevelEndpointFunc returns a function that builds GET endpoint URLs for regional resources.
+// Format string should have 3 %s placeholders: project ID, region, and query.
+func RegionalLevelEndpointFunc(format string) EndpointFunc {
+	if strings.Count(format, "%s") != 3 {
 		panic(fmt.Sprintf("format string must contain 3 %%s placeholders: %s", format))
 	}
-	return func(adapterInitParams ...string) (EndpointFunc, error) {
-		if len(adapterInitParams) == 2 && adapterInitParams[0] != "" && adapterInitParams[1] != "" {
-			return func(query string) string {
-				if query != "" {
-					// query must be an instance
-					return fmt.Sprintf(format, adapterInitParams[0], adapterInitParams[1], query)
-				}
-				return ""
-			}, nil
+	return func(query string, location LocationInfo) string {
+		if query == "" {
+			return ""
 		}
-		return nil, fmt.Errorf("projectID and region cannot be empty: %v", adapterInitParams)
+		return fmt.Sprintf(format, location.ProjectID, location.Region, query)
 	}
 }
 
-func ZoneLevelEndpointFuncWithTwoQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
-	// count number of `%s` in the format string
-	if strings.Count(format, "%s") != 4 { // project ID, zone, and 2 parts of the query
+// RegionalLevelEndpointFuncWithTwoQueries returns a function for regional resources with composite query.
+// Format string should have 4 %s placeholders: project ID, region, and 2 parts of the query.
+func RegionalLevelEndpointFuncWithTwoQueries(format string) EndpointFunc {
+	if strings.Count(format, "%s") != 4 {
 		panic(fmt.Sprintf("format string must contain 4 %%s placeholders: %s", format))
 	}
-	return func(adapterInitParams ...string) (EndpointFunc, error) {
-		if len(adapterInitParams) == 2 && adapterInitParams[0] != "" && adapterInitParams[1] != "" {
-			return func(query string) string {
-				if query != "" {
-					// query must be a composite
-					queryParts := strings.Split(query, shared.QuerySeparator)
-					if len(queryParts) == 2 && queryParts[0] != "" && queryParts[1] != "" {
-						return fmt.Sprintf(format, adapterInitParams[0], adapterInitParams[1], queryParts[0], queryParts[1])
-					}
-				}
-				return ""
-			}, nil
+	return func(query string, location LocationInfo) string {
+		if query == "" {
+			return ""
 		}
-		return nil, fmt.Errorf("projectID and zone cannot be empty: %v", adapterInitParams)
+		queryParts := strings.Split(query, shared.QuerySeparator)
+		if len(queryParts) != 2 || queryParts[0] == "" || queryParts[1] == "" {
+			return ""
+		}
+		return fmt.Sprintf(format, location.ProjectID, location.Region, queryParts[0], queryParts[1])
 	}
 }
 
-func RegionalLevelEndpointFuncWithTwoQueries(format string) func(queryParts ...string) (EndpointFunc, error) {
-	// count number of `%s` in the format string
-	if strings.Count(format, "%s") != 4 { // project ID, region, and 2 parts of the query
-		panic(fmt.Sprintf("format string must contain 4 %%s placeholders: %s", format))
-	}
-	return func(adapterInitParams ...string) (EndpointFunc, error) {
-		if len(adapterInitParams) == 2 && adapterInitParams[0] != "" && adapterInitParams[1] != "" {
-			return func(query string) string {
-				if query != "" {
-					// query must be a composite
-					queryParts := strings.Split(query, shared.QuerySeparator)
-					if len(queryParts) == 2 && queryParts[0] != "" && queryParts[1] != "" {
-						return fmt.Sprintf(format, adapterInitParams[0], adapterInitParams[1], queryParts[0], queryParts[1])
-					}
-				}
-				return ""
-			}, nil
-		}
-		return nil, fmt.Errorf("projectID and region cannot be empty: %v", adapterInitParams)
-	}
-}
+// =============================================
+// LIST ENDPOINT FUNCTIONS
+// =============================================
 
-func ProjectLevelListFunc(format string) func(adapterInitParams ...string) (string, error) {
+// ProjectLevelListFunc returns a ListEndpointFunc for project-level resources.
+// Format string should have 1 %s placeholder: project ID.
+func ProjectLevelListFunc(format string) ListEndpointFunc {
 	if strings.Count(format, "%s") != 1 {
 		panic(fmt.Sprintf("format string must contain 1 %%s placeholder: %s", format))
 	}
-	return func(adapterInitParams ...string) (string, error) {
-		if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-			return fmt.Sprintf(format, adapterInitParams[0]), nil
+	return func(location LocationInfo) (string, error) {
+		if location.ProjectID == "" {
+			return "", fmt.Errorf("project ID cannot be empty")
 		}
-		return "", fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+		return fmt.Sprintf(format, location.ProjectID), nil
 	}
 }
 
-func RegionLevelListFunc(format string) func(adapterInitParams ...string) (string, error) {
-	// count number of `%s` in the format string
-	if strings.Count(format, "%s") != 2 { // project ID and region
+// RegionLevelListFunc returns a ListEndpointFunc for regional resources.
+// Format string should have 2 %s placeholders: project ID and region.
+func RegionLevelListFunc(format string) ListEndpointFunc {
+	if strings.Count(format, "%s") != 2 {
 		panic(fmt.Sprintf("format string must contain 2 %%s placeholders: %s", format))
 	}
-	return func(adapterInitParams ...string) (string, error) {
-		if len(adapterInitParams) == 2 && adapterInitParams[0] != "" && adapterInitParams[1] != "" {
-			return fmt.Sprintf(format, adapterInitParams[0], adapterInitParams[1]), nil
+	return func(location LocationInfo) (string, error) {
+		if location.ProjectID == "" || location.Region == "" {
+			return "", fmt.Errorf("project ID and region cannot be empty")
 		}
-		return "", fmt.Errorf("projectID and region cannot be empty: %v", adapterInitParams)
+		return fmt.Sprintf(format, location.ProjectID, location.Region), nil
 	}
 }
 
-func ZoneLevelListFunc(format string) func(adapterInitParams ...string) (string, error) {
-	// count number of `%s` in the format string
-	if strings.Count(format, "%s") != 2 { // project ID and zone
+// ZoneLevelListFunc returns a ListEndpointFunc for zonal resources.
+// Format string should have 2 %s placeholders: project ID and zone.
+func ZoneLevelListFunc(format string) ListEndpointFunc {
+	if strings.Count(format, "%s") != 2 {
 		panic(fmt.Sprintf("format string must contain 2 %%s placeholders: %s", format))
 	}
-	return func(adapterInitParams ...string) (string, error) {
-		if len(adapterInitParams) == 2 && adapterInitParams[0] != "" && adapterInitParams[1] != "" {
-			return fmt.Sprintf(format, adapterInitParams[0], adapterInitParams[1]), nil
+	return func(location LocationInfo) (string, error) {
+		if location.ProjectID == "" || location.Zone == "" {
+			return "", fmt.Errorf("project ID and zone cannot be empty")
 		}
-		return "", fmt.Errorf("projectID and zone cannot be empty: %v", adapterInitParams)
+		return fmt.Sprintf(format, location.ProjectID, location.Zone), nil
 	}
 }
 

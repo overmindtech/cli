@@ -30,7 +30,7 @@ func TestComputeHealthCheck(t *testing.T) {
 	projectID := "test-project-id"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeHealthCheck(mockClient, projectID)
+		wrapper := manual.NewComputeHealthCheck(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createHealthCheck("test-healthcheck"), nil)
 
@@ -53,7 +53,7 @@ func TestComputeHealthCheck(t *testing.T) {
 	})
 
 	t.Run("GetWithHTTPHealthCheck", func(t *testing.T) {
-		wrapper := manual.NewComputeHealthCheck(mockClient, projectID)
+		wrapper := manual.NewComputeHealthCheck(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		httpHealthCheck := createHTTPHealthCheck("test-http-healthcheck", "example.com")
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(httpHealthCheck, nil)
@@ -85,7 +85,7 @@ func TestComputeHealthCheck(t *testing.T) {
 	})
 
 	t.Run("GetWithHTTPSHealthCheckWithIP", func(t *testing.T) {
-		wrapper := manual.NewComputeHealthCheck(mockClient, projectID)
+		wrapper := manual.NewComputeHealthCheck(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		httpsHealthCheck := createHTTPSHealthCheck("test-https-healthcheck", "192.168.1.100")
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(httpsHealthCheck, nil)
@@ -117,7 +117,7 @@ func TestComputeHealthCheck(t *testing.T) {
 	})
 
 	t.Run("GetWithSourceRegions", func(t *testing.T) {
-		wrapper := manual.NewComputeHealthCheck(mockClient, projectID)
+		wrapper := manual.NewComputeHealthCheck(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		healthCheckWithRegions := createHealthCheckWithSourceRegions("test-healthcheck-regions", []string{"us-central1", "us-east1", "europe-west1"})
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(healthCheckWithRegions, nil)
@@ -169,7 +169,7 @@ func TestComputeHealthCheck(t *testing.T) {
 	})
 
 	t.Run("GetWithRegion", func(t *testing.T) {
-		wrapper := manual.NewComputeHealthCheck(mockClient, projectID)
+		wrapper := manual.NewComputeHealthCheck(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		regionalHealthCheck := createRegionalHealthCheck("test-regional-healthcheck", "us-central1")
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(regionalHealthCheck, nil)
@@ -201,7 +201,7 @@ func TestComputeHealthCheck(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeHealthCheck(mockClient, projectID)
+		wrapper := manual.NewComputeHealthCheck(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -243,7 +243,7 @@ func TestComputeHealthCheck(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeHealthCheck(mockClient, projectID)
+		wrapper := manual.NewComputeHealthCheck(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeHealthCheckIter := mocks.NewMockComputeHealthCheckIterator(ctrl)

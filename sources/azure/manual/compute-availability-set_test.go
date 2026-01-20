@@ -329,7 +329,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 
 		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
 		// Test the wrapper's Get method directly with insufficient query parts
-		_, qErr := wrapper.Get(ctx)
+		_, qErr := wrapper.Get(ctx, wrapper.Scopes()[0])
 		if qErr == nil {
 			t.Error("Expected error when getting availability set with insufficient query parts, but got nil")
 		}

@@ -38,9 +38,12 @@ var _ = registerableAdapter{
 		// The manual linker registered for CloudResourceManagerProject will detect the type based on the name prefix
 		// and create the appropriate link to Project, Folder, or Organization
 		"name": {
-			Description:      "If the parent Project, Folder, or Organization is deleted or updated: The Security Center Service may become invalid or inaccessible. If the Security Center Service is updated: The parent resource remains unaffected.",
-			ToSDPItemType:    gcpshared.CloudResourceManagerProject, // Manual linker handles detection of project/folder/organization from name prefix
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+			Description:   "If the parent Project, Folder, or Organization is deleted or updated: The Security Center Service may become invalid or inaccessible. If the Security Center Service is updated: The parent resource remains unaffected.",
+			ToSDPItemType: gcpshared.CloudResourceManagerProject, // Manual linker handles detection of project/folder/organization from name prefix
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
 		},
 		// Note: Custom modules (SecurityHealthAnalyticsCustomModule, EventThreatDetectionCustomModule, etc.)
 		// are not direct children in the API path structure - they are sibling resources under the same

@@ -26,6 +26,7 @@ func TestComputeAutoscalerIntegration(t *testing.T) {
 	if projectID == "" {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
 	}
+	t.Parallel()
 
 	zone := os.Getenv("GCP_ZONE")
 	if zone == "" {
@@ -83,7 +84,7 @@ func TestComputeAutoscalerIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Autoscaler in project %s, zone %s", projectID, zone)
 
-		autoscalerWrapper := manual.NewComputeAutoscaler(gcpshared.NewComputeAutoscalerClient(client), projectID, zone)
+		autoscalerWrapper := manual.NewComputeAutoscaler(gcpshared.NewComputeAutoscalerClient(client), []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		scope := autoscalerWrapper.Scopes()[0]
 
 		autoscalerAdapter := sources.WrapperToAdapter(autoscalerWrapper, sdpcache.NewNoOpCache())

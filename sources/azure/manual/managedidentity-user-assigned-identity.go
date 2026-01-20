@@ -14,9 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	ManagedIdentityUserAssignedIdentityLookupByName = shared.NewItemTypeLookup("name", azureshared.ManagedIdentityUserAssignedIdentity)
-)
+var ManagedIdentityUserAssignedIdentityLookupByName = shared.NewItemTypeLookup("name", azureshared.ManagedIdentityUserAssignedIdentity)
 
 type managedIdentityUserAssignedIdentityWrapper struct {
 	client clients.UserAssignedIdentitiesClient
@@ -36,20 +34,24 @@ func NewManagedIdentityUserAssignedIdentity(client clients.UserAssignedIdentitie
 	}
 }
 
-func (m managedIdentityUserAssignedIdentityWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := m.client.ListByResourceGroup(m.ResourceGroup(), nil)
+func (m managedIdentityUserAssignedIdentityWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = m.ResourceGroup()
+	}
+	pager := m.client.ListByResourceGroup(resourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, m.DefaultScope(), m.Type())
+			return nil, azureshared.QueryError(err, scope, m.Type())
 		}
 		for _, identity := range page.Value {
 			if identity.Name == nil {
 				continue
 			}
-			item, sdpErr := m.azureManagedIdentityUserAssignedIdentityToSDPItem(identity)
+			item, sdpErr := m.azureManagedIdentityUserAssignedIdentityToSDPItem(identity, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -59,19 +61,23 @@ func (m managedIdentityUserAssignedIdentityWrapper) List(ctx context.Context) ([
 	return items, nil
 }
 
-func (m managedIdentityUserAssignedIdentityWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
-	pager := m.client.ListByResourceGroup(m.ResourceGroup(), nil)
+func (m managedIdentityUserAssignedIdentityWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = m.ResourceGroup()
+	}
+	pager := m.client.ListByResourceGroup(resourceGroup, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			stream.SendError(azureshared.QueryError(err, m.DefaultScope(), m.Type()))
+			stream.SendError(azureshared.QueryError(err, scope, m.Type()))
 			return
 		}
 		for _, identity := range page.Value {
 			if identity.Name == nil {
 				continue
 			}
-			item, sdpErr := m.azureManagedIdentityUserAssignedIdentityToSDPItem(identity)
+			item, sdpErr := m.azureManagedIdentityUserAssignedIdentityToSDPItem(identity, scope)
 			if sdpErr != nil {
 				stream.SendError(sdpErr)
 				continue
@@ -82,20 +88,20 @@ func (m managedIdentityUserAssignedIdentityWrapper) ListStream(ctx context.Conte
 	}
 }
 
-func (m managedIdentityUserAssignedIdentityWrapper) azureManagedIdentityUserAssignedIdentityToSDPItem(identity *armmsi.Identity) (*sdp.Item, *sdp.QueryError) {
+func (m managedIdentityUserAssignedIdentityWrapper) azureManagedIdentityUserAssignedIdentityToSDPItem(identity *armmsi.Identity, scope string) (*sdp.Item, *sdp.QueryError) {
 	if identity.Name == nil {
-		return nil, azureshared.QueryError(errors.New("name is nil"), m.DefaultScope(), m.Type())
+		return nil, azureshared.QueryError(errors.New("name is nil"), scope, m.Type())
 	}
 	attributes, err := shared.ToAttributesWithExclude(identity, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, m.DefaultScope(), m.Type())
+		return nil, azureshared.QueryError(err, scope, m.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.ManagedIdentityUserAssignedIdentity.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           m.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(identity.Tags),
 	}
 
@@ -109,7 +115,7 @@ func (m managedIdentityUserAssignedIdentityWrapper) azureManagedIdentityUserAssi
 			Type:   azureshared.ManagedIdentityFederatedIdentityCredential.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  *identity.Name, // Identity name is sufficient since resource group is available to the adapter
-			Scope:  m.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			// Federated credentials are tightly coupled to the identity
@@ -122,19 +128,23 @@ func (m managedIdentityUserAssignedIdentityWrapper) azureManagedIdentityUserAssi
 	return sdpItem, nil
 }
 
-func (m managedIdentityUserAssignedIdentityWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (m managedIdentityUserAssignedIdentityWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) != 1 {
-		return nil, azureshared.QueryError(errors.New("user assigned identity name is required"), m.DefaultScope(), m.Type())
+		return nil, azureshared.QueryError(errors.New("user assigned identity name is required"), scope, m.Type())
 	}
 	name := queryParts[0]
 	if name == "" {
-		return nil, azureshared.QueryError(errors.New("user assigned identity name cannot be empty"), m.DefaultScope(), m.Type())
+		return nil, azureshared.QueryError(errors.New("user assigned identity name cannot be empty"), scope, m.Type())
 	}
-	identity, err := m.client.Get(ctx, m.ResourceGroup(), name, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = m.ResourceGroup()
+	}
+	identity, err := m.client.Get(ctx, resourceGroup, name, nil)
 	if err != nil {
-		return nil, azureshared.QueryError(err, m.DefaultScope(), m.Type())
+		return nil, azureshared.QueryError(err, scope, m.Type())
 	}
-	return m.azureManagedIdentityUserAssignedIdentityToSDPItem(&identity.Identity)
+	return m.azureManagedIdentityUserAssignedIdentityToSDPItem(&identity.Identity, scope)
 }
 
 func (m managedIdentityUserAssignedIdentityWrapper) GetLookups() sources.ItemTypeLookups {

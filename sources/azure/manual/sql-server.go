@@ -35,20 +35,24 @@ type sqlServerWrapper struct {
 	*azureshared.ResourceGroupBase
 }
 
-func (s sqlServerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := s.client.ListByResourceGroup(ctx, s.ResourceGroup(), nil)
+func (s sqlServerWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	pager := s.client.ListByResourceGroup(ctx, resourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+			return nil, azureshared.QueryError(err, scope, s.Type())
 		}
 		for _, server := range page.Value {
 			if server.Name == nil {
 				continue
 			}
-			item, sdpErr := s.azureSqlServerToSDPItem(server)
+			item, sdpErr := s.azureSqlServerToSDPItem(server, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -59,20 +63,24 @@ func (s sqlServerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryErro
 	return items, nil
 }
 
-func (s sqlServerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
-	pager := s.client.ListByResourceGroup(ctx, s.ResourceGroup(), nil)
+func (s sqlServerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	pager := s.client.ListByResourceGroup(ctx, resourceGroup, nil)
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			stream.SendError(azureshared.QueryError(err, s.DefaultScope(), s.Type()))
+			stream.SendError(azureshared.QueryError(err, scope, s.Type()))
 			return
 		}
 		for _, server := range page.Value {
 			if server.Name == nil {
 				continue
 			}
-			item, sdpErr := s.azureSqlServerToSDPItem(server)
+			item, sdpErr := s.azureSqlServerToSDPItem(server, scope)
 			if sdpErr != nil {
 				stream.SendError(sdpErr)
 				continue
@@ -83,27 +91,31 @@ func (s sqlServerWrapper) ListStream(ctx context.Context, stream discovery.Query
 	}
 }
 
-func (s sqlServerWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (s sqlServerWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
-		return nil, azureshared.QueryError(errors.New("Get requires 1 query part: serverName"), s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(errors.New("Get requires 1 query part: serverName"), scope, s.Type())
 	}
 	serverName := queryParts[0]
 	if serverName == "" {
-		return nil, azureshared.QueryError(errors.New("serverName is empty"), s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(errors.New("serverName is empty"), scope, s.Type())
 	}
 
-	resp, err := s.client.Get(ctx, s.ResourceGroup(), serverName, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	resp, err := s.client.Get(ctx, resourceGroup, serverName, nil)
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
-	return s.azureSqlServerToSDPItem(&resp.Server)
+	return s.azureSqlServerToSDPItem(&resp.Server, scope)
 }
 
-func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.Item, *sdp.QueryError) {
+func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(server, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	serverName := ""
@@ -115,7 +127,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 		Type:            azureshared.SQLServer.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           s.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(server.Tags),
 	}
 
@@ -130,7 +142,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLDatabase.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,  // SQL Server changes (especially deletion) affect databases
@@ -146,7 +158,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLElasticPool.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,  // SQL Server changes affect elastic pools
@@ -162,7 +174,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerFirewallRule.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect firewall rules
@@ -178,7 +190,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerVirtualNetworkRule.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect virtual network rules
@@ -194,7 +206,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerKey.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect server keys
@@ -210,7 +222,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerFailoverGroup.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect failover groups
@@ -226,7 +238,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerAdministrator.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect administrators
@@ -242,7 +254,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerSyncGroup.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,  // SQL Server changes affect sync groups
@@ -258,7 +270,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerSyncAgent.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,  // SQL Server changes affect sync agents
@@ -274,7 +286,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerPrivateEndpointConnection.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect private endpoint connections
@@ -292,16 +304,16 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 					privateEndpointName := azureshared.ExtractResourceName(privateEndpointID)
 					if privateEndpointName != "" {
 						// Extract scope from resource ID if it's in a different resource group
-						scope := s.DefaultScope()
-						if extractedScope := azureshared.ExtractScopeFromResourceID(privateEndpointID); extractedScope != "" {
-							scope = extractedScope
+						extractedScope := azureshared.ExtractScopeFromResourceID(privateEndpointID)
+						if extractedScope == "" {
+							extractedScope = scope
 						}
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   azureshared.NetworkPrivateEndpoint.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  privateEndpointName,
-								Scope:  scope,
+								Scope:  extractedScope,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true, // Private endpoint changes (deletion, network configuration) affect the SQL Server's private connectivity
@@ -321,7 +333,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerAuditingSetting.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect auditing settings
@@ -337,7 +349,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerSecurityAlertPolicy.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect security alert policies
@@ -353,7 +365,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerVulnerabilityAssessment.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect vulnerability assessments
@@ -369,7 +381,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerEncryptionProtector.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect encryption protector
@@ -385,7 +397,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerBlobAuditingPolicy.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect blob auditing policies
@@ -401,7 +413,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerAutomaticTuning.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect automatic tuning
@@ -417,7 +429,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerAdvancedThreatProtectionSetting.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect advanced threat protection settings
@@ -433,7 +445,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerDnsAlias.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect DNS aliases
@@ -449,7 +461,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerUsage.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,  // SQL Server changes affect usage metrics
@@ -465,7 +477,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerOperation.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,  // SQL Server changes affect operations history
@@ -481,7 +493,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerAdvisor.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,  // SQL Server changes affect advisors
@@ -497,7 +509,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerBackupLongTermRetentionPolicy.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect backup retention policies
@@ -513,7 +525,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerDevOpsAuditSetting.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect DevOps audit settings
@@ -529,7 +541,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerTrustGroup.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect trust groups
@@ -545,7 +557,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerOutboundFirewallRule.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // SQL Server changes affect outbound firewall rules
@@ -561,7 +573,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				Type:   azureshared.SQLServerPrivateLinkResource.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,  // SQL Server changes affect private link resources
@@ -581,16 +593,16 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 		if server.Properties.PrimaryUserAssignedIdentityID != nil && *server.Properties.PrimaryUserAssignedIdentityID != "" {
 			identityName := azureshared.ExtractResourceName(*server.Properties.PrimaryUserAssignedIdentityID)
 			if identityName != "" {
-				scope := s.DefaultScope()
-				if extractedScope := azureshared.ExtractScopeFromResourceID(*server.Properties.PrimaryUserAssignedIdentityID); extractedScope != "" {
-					scope = extractedScope
+				extractedScope := azureshared.ExtractScopeFromResourceID(*server.Properties.PrimaryUserAssignedIdentityID)
+				if extractedScope == "" {
+					extractedScope = scope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  identityName,
-						Scope:  scope,
+						Scope:  extractedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,  // Managed identity deletion/modification affects server authentication and operations
@@ -612,16 +624,16 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 				}
 				identityName := azureshared.ExtractResourceName(identityResourceID)
 				if identityName != "" {
-					scope := s.DefaultScope()
-					if extractedScope := azureshared.ExtractScopeFromResourceID(identityResourceID); extractedScope != "" {
-						scope = extractedScope
+					extractedScope := azureshared.ExtractScopeFromResourceID(identityResourceID)
+					if extractedScope == "" {
+						extractedScope = scope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  identityName,
-							Scope:  scope,
+							Scope:  extractedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // Managed identity deletion/modification affects server authentication and operations
@@ -652,7 +664,7 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server) (*sdp.I
 						Type:   azureshared.KeyVaultVault.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  vaultName,
-						Scope:  s.DefaultScope(), // Limitation: Key Vault URI doesn't contain resource group info
+						Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,  // Key Vault changes (key deletion, rotation, access policy) affect the SQL Server's encryption

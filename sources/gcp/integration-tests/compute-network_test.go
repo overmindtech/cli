@@ -16,6 +16,8 @@ func TestComputeNetworkIntegration(t *testing.T) {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
 	}
 
+	t.Parallel()
+
 	ctx := t.Context()
 
 	networkName := "default" // Use an existing network for testing
@@ -34,7 +36,7 @@ func TestComputeNetworkIntegration(t *testing.T) {
 			t.Fatalf("Failed to create GCP HTTP client: %v", err)
 		}
 
-		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

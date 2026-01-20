@@ -1,8 +1,6 @@
 package adapters
 
 import (
-	"fmt"
-
 	"github.com/overmindtech/cli/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
@@ -15,17 +13,15 @@ var _ = registerableAdapter{
 		LocationLevel:      gcpshared.RegionalLevel,
 		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/routers/get
 		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/routers/{router}
-		GetEndpointFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/routers/%s"),
+		GetEndpointFunc: gcpshared.RegionalLevelEndpointFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/routers/%s"),
 		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/routers/list
 		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/routers
 		ListEndpointFunc: gcpshared.RegionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/routers"),
 		// Provide a no-op search for terraform mapping support with full resource ID.
 		// Expected search query: projects/{project}/regions/{region}/routers/{router}
-		SearchEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
-			if len(adapterInitParams) != 2 || adapterInitParams[0] == "" || adapterInitParams[1] == "" {
-				return nil, fmt.Errorf("projectID and region cannot be empty: %v", adapterInitParams)
-			}
-			return nil, nil // runtime will use GET with provided full name
+		// Returns empty URL to trigger GET with the provided full name.
+		SearchEndpointFunc: func(query string, location gcpshared.LocationInfo) string {
+			return ""
 		},
 		SearchDescription:   "Search with full ID: projects/[project]/regions/[region]/routers/[router] (used for terraform mapping).",
 		UniqueAttributeKeys: []string{"routers"},

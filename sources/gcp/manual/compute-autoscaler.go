@@ -20,17 +20,15 @@ var ComputeAutoscalerLookupByName = shared.NewItemTypeLookup("name", gcpshared.C
 
 type computeAutoscalerWrapper struct {
 	client gcpshared.ComputeAutoscalerClient
-
 	*gcpshared.ZoneBase
 }
 
 // NewComputeAutoscaler creates a new computeAutoscalerWrapper instance.
-func NewComputeAutoscaler(client gcpshared.ComputeAutoscalerClient, projectID, zone string) sources.ListableWrapper {
+func NewComputeAutoscaler(client gcpshared.ComputeAutoscalerClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeAutoscalerWrapper{
 		client: client,
 		ZoneBase: gcpshared.NewZoneBase(
-			projectID,
-			zone,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 			gcpshared.ComputeAutoscaler,
 		),
@@ -57,8 +55,8 @@ func (c computeAutoscalerWrapper) PotentialLinks() map[shared.ItemType]bool {
 func (c computeAutoscalerWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
 			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_address#argument-reference
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_autoscaler.name",
 		},
 	}
@@ -70,48 +68,56 @@ func (c computeAutoscalerWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
-func (c computeAutoscalerWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+// Get retrieves an autoscaler by its name for a specific scope.
+func (c computeAutoscalerWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetAutoscalerRequest{
-		Project:    c.ProjectID(),
-		Zone:       c.Zone(),
+		Project:    location.ProjectID,
+		Zone:       location.Zone,
 		Autoscaler: queryParts[0],
 	}
 
-	autoscaler, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	autoscaler, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	var sdpErr *sdp.QueryError
-	var item *sdp.Item
-	item, sdpErr = c.gcpComputeAutoscalerToSDPItem(ctx, autoscaler)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpComputeAutoscalerToSDPItem(ctx, autoscaler, location)
 }
 
-func (c computeAutoscalerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+// List lists autoscalers for a specific scope.
+func (c computeAutoscalerWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	results := c.client.List(ctx, &computepb.ListAutoscalersRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	var items []*sdp.Item
 	for {
-		autoscaler, err := results.Next()
-		if errors.Is(err, iterator.Done) {
+		autoscaler, iterErr := results.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		var sdpErr *sdp.QueryError
-		var item *sdp.Item
-		item, sdpErr = c.gcpComputeAutoscalerToSDPItem(ctx, autoscaler)
+		item, sdpErr := c.gcpComputeAutoscalerToSDPItem(ctx, autoscaler, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -122,23 +128,33 @@ func (c computeAutoscalerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Q
 	return items, nil
 }
 
-func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+// ListStream lists autoscalers for a specific scope and sends them to a stream.
+func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	results := c.client.List(ctx, &computepb.ListAutoscalersRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	for {
-		autoscaler, err := results.Next()
-		if errors.Is(err, iterator.Done) {
+		autoscaler, iterErr := results.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpComputeAutoscalerToSDPItem(ctx, autoscaler)
+		item, sdpErr := c.gcpComputeAutoscalerToSDPItem(ctx, autoscaler, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -149,7 +165,7 @@ func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discove
 	}
 }
 
-func (c computeAutoscalerWrapper) gcpComputeAutoscalerToSDPItem(ctx context.Context, autoscaler *computepb.Autoscaler) (*sdp.Item, *sdp.QueryError) {
+func (c computeAutoscalerWrapper) gcpComputeAutoscalerToSDPItem(ctx context.Context, autoscaler *computepb.Autoscaler, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(autoscaler)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -162,7 +178,7 @@ func (c computeAutoscalerWrapper) gcpComputeAutoscalerToSDPItem(ctx context.Cont
 		Type:            gcpshared.ComputeAutoscaler.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           location.ToScope(),
 		// Autoscalers don't have labels.
 	}
 
@@ -180,10 +196,7 @@ func (c computeAutoscalerWrapper) gcpComputeAutoscalerToSDPItem(ctx context.Cont
 					Scope:  scope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
-					// Updating the IGM will affect this autoscaler's operation, but it's a weak connection.
-					In: true,
-
-					// Updating the autoscaler will directly affect the IGM.
+					In:  true,
 					Out: true,
 				},
 			})

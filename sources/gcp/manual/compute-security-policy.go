@@ -20,16 +20,15 @@ var ComputeSecurityPolicyLookupByName = shared.NewItemTypeLookup("name", gcpshar
 
 type computeSecurityPolicyWrapper struct {
 	client gcpshared.ComputeSecurityPolicyClient
-
 	*gcpshared.ProjectBase
 }
 
-// NewComputeSecurityPolicy creates a new computeSecurityPolicyWrapper instance
-func NewComputeSecurityPolicy(client gcpshared.ComputeSecurityPolicyClient, projectID string) sources.ListableWrapper {
+// NewComputeSecurityPolicy creates a new computeSecurityPolicyWrapper instance.
+func NewComputeSecurityPolicy(client gcpshared.ComputeSecurityPolicyClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeSecurityPolicyWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
-			projectID,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 			gcpshared.ComputeSecurityPolicy,
 		),
@@ -47,68 +46,73 @@ func (c computeSecurityPolicyWrapper) PredefinedRole() string {
 	return "roles/compute.viewer"
 }
 
-// PotentialLinks returns the potential links for the compute forwarding rule wrapper
 func (c computeSecurityPolicyWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeRule,
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the compute security policy wrapper
 func (c computeSecurityPolicyWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
-			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_security_policy#argument-reference
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_security_policy.name",
 		},
 	}
 }
 
-// GetLookups returns the lookups for the compute security policy wrapper
 func (c computeSecurityPolicyWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		ComputeSecurityPolicyLookupByName,
 	}
 }
 
-// Get retrieves a compute security policy by its name
-func (c computeSecurityPolicyWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeSecurityPolicyWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetSecurityPolicyRequest{
-		Project:        c.ProjectID(),
+		Project:        location.ProjectID,
 		SecurityPolicy: queryParts[0],
 	}
 
-	policy, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	policy, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	item, sdpErr := c.gcpComputeSecurityPolicyToSDPItem(policy)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpComputeSecurityPolicyToSDPItem(policy, location)
 }
 
-// List lists compute security policies and converts them to sdp.Items.
-func (c computeSecurityPolicyWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (c computeSecurityPolicyWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	it := c.client.List(ctx, &computepb.ListSecurityPoliciesRequest{
-		Project: c.ProjectID(),
+		Project: location.ProjectID,
 	})
 
 	var items []*sdp.Item
 	for {
-		securityPolicy, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		securityPolicy, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		item, sdpErr := c.gcpComputeSecurityPolicyToSDPItem(securityPolicy)
+		item, sdpErr := c.gcpComputeSecurityPolicyToSDPItem(securityPolicy, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -119,23 +123,31 @@ func (c computeSecurityPolicyWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 	return items, nil
 }
 
-// ListStream lists compute security policies and sends them as items to the stream.
-func (c computeSecurityPolicyWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeSecurityPolicyWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListSecurityPoliciesRequest{
-		Project: c.ProjectID(),
+		Project: location.ProjectID,
 	})
 
 	for {
-		securityPolicy, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		securityPolicy, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpComputeSecurityPolicyToSDPItem(securityPolicy)
+		item, sdpErr := c.gcpComputeSecurityPolicyToSDPItem(securityPolicy, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -145,8 +157,7 @@ func (c computeSecurityPolicyWrapper) ListStream(ctx context.Context, stream dis
 	}
 }
 
-// gcpComputeSecurityPolicyToSDPItem converts a GCP Security Policy to an SDP Item
-func (c computeSecurityPolicyWrapper) gcpComputeSecurityPolicyToSDPItem(securityPolicy *computepb.SecurityPolicy) (*sdp.Item, *sdp.QueryError) {
+func (c computeSecurityPolicyWrapper) gcpComputeSecurityPolicyToSDPItem(securityPolicy *computepb.SecurityPolicy, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(securityPolicy, "labels")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -159,14 +170,11 @@ func (c computeSecurityPolicyWrapper) gcpComputeSecurityPolicyToSDPItem(security
 		Type:            gcpshared.ComputeSecurityPolicy.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           location.ToScope(),
 		Tags:            securityPolicy.GetLabels(),
 	}
 
 	// Link to associated rules
-	// API Reference: https://cloud.google.com/compute/docs/reference/rest/v1/securityPolicies/getRule
-	// Rules can be inserted into a security policy using the following API call:
-	// GET https://compute.googleapis.com/compute/v1/projects/{project}/global/securityPolicies/{securityPolicy}/getRule
 	for _, rule := range securityPolicy.GetRules() {
 		policyName := securityPolicy.GetName()
 		rulePriority := strconv.Itoa(int(rule.GetPriority()))
@@ -175,11 +183,14 @@ func (c computeSecurityPolicyWrapper) gcpComputeSecurityPolicyToSDPItem(security
 				Type:   gcpshared.ComputeRule.String(),
 				Method: sdp.QueryMethod_GET,
 				Query:  shared.CompositeLookupKey(policyName, rulePriority),
-				Scope:  c.ProjectID(),
+				Scope:  location.ProjectID,
 			},
-			BlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  false,
+				Out: true,
+			},
 		})
-
 	}
+
 	return sdpItem, nil
 }

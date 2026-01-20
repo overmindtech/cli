@@ -1,8 +1,6 @@
 package adapters
 
 import (
-	"fmt"
-
 	"github.com/overmindtech/cli/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
@@ -25,11 +23,9 @@ var _ = registerableAdapter{
 			"https://monitoring.googleapis.com/v3/projects/%s/alertPolicies",
 		),
 		// Provide a no-op search (same pattern as other adapters) for terraform mapping support.
-		SearchEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
-			if len(adapterInitParams) != 1 || adapterInitParams[0] == "" {
-				return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
-			}
-			return nil, nil // runtime will use GET with provided full name
+		// Returns empty URL to trigger GET with the provided full name.
+		SearchEndpointFunc: func(query string, location gcpshared.LocationInfo) string {
+			return ""
 		},
 		SearchDescription:   "Search by full resource name: projects/[project]/alertPolicies/[alert_policy_id] (used for terraform mapping).",
 		UniqueAttributeKeys: []string{"alertPolicies"},

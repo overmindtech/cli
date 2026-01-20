@@ -11,9 +11,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	StorageTableLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageTable)
-)
+var StorageTableLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageTable)
 
 type storageTablesWrapper struct {
 	client clients.TablesClient
@@ -33,24 +31,28 @@ func NewStorageTable(client clients.TablesClient, subscriptionID, resourceGroup 
 	}
 }
 
-func (s storageTablesWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (s storageTablesWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 2 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Get requires 2 query parts: storageAccountName and tableName",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
 	storageAccountName := queryParts[0]
 	tableName := queryParts[1]
 
-	resp, err := s.client.Get(ctx, s.ResourceGroup(), storageAccountName, tableName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	resp, err := s.client.Get(ctx, resourceGroup, storageAccountName, tableName)
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
-	item, sdpErr := s.azureTableToSDPItem(&resp.Table, storageAccountName, tableName)
+	item, sdpErr := s.azureTableToSDPItem(&resp.Table, storageAccountName, tableName, scope)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -58,22 +60,22 @@ func (s storageTablesWrapper) Get(ctx context.Context, queryParts ...string) (*s
 	return item, nil
 }
 
-func (s storageTablesWrapper) azureTableToSDPItem(table *armstorage.Table, storageAccountName, tableName string) (*sdp.Item, *sdp.QueryError) {
+func (s storageTablesWrapper) azureTableToSDPItem(table *armstorage.Table, storageAccountName, tableName, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(table)
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(storageAccountName, tableName))
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.StorageTable.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
-		Scope:           s.DefaultScope(),
+		Scope:           scope,
 	}
 
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -81,7 +83,7 @@ func (s storageTablesWrapper) azureTableToSDPItem(table *armstorage.Table, stora
 			Type:   azureshared.StorageAccount.String(),
 			Method: sdp.QueryMethod_GET,
 			Query:  storageAccountName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,  // Tables ARE affected if storage account changes/deletes
@@ -110,24 +112,28 @@ func (s storageTablesWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
-func (s storageTablesWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+func (s storageTablesWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Search requires 1 query part: storageAccountName",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
 	storageAccountName := queryParts[0]
 
-	pager := s.client.List(ctx, s.ResourceGroup(), storageAccountName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	pager := s.client.List(ctx, resourceGroup, storageAccountName)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+			return nil, azureshared.QueryError(err, scope, s.Type())
 		}
 
 		for _, table := range page.Value {
@@ -140,7 +146,7 @@ func (s storageTablesWrapper) Search(ctx context.Context, queryParts ...string) 
 				Name:            table.Name,
 				Type:            table.Type,
 				TableProperties: table.TableProperties,
-			}, storageAccountName, *table.Name,
+			}, storageAccountName, *table.Name, scope,
 			)
 			if sdpErr != nil {
 				return nil, sdpErr

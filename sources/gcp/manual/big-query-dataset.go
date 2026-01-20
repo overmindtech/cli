@@ -15,22 +15,19 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	BigQueryDatasetLookupByID = shared.NewItemTypeLookup("id", gcpshared.BigQueryDataset)
-)
+var BigQueryDatasetLookupByID = shared.NewItemTypeLookup("id", gcpshared.BigQueryDataset)
 
 type BigQueryDatasetWrapper struct {
 	client gcpshared.BigQueryDatasetClient
-
 	*gcpshared.ProjectBase
 }
 
-// NewBigQueryDataset creates a new bigQueryDatasetWrapper instance
-func NewBigQueryDataset(client gcpshared.BigQueryDatasetClient, projectID string) sources.ListableWrapper {
+// NewBigQueryDataset creates a new bigQueryDatasetWrapper instance.
+func NewBigQueryDataset(client gcpshared.BigQueryDatasetClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &BigQueryDatasetWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
-			projectID,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 			gcpshared.BigQueryDataset,
 		),
@@ -47,7 +44,6 @@ func (b BigQueryDatasetWrapper) PredefinedRole() string {
 	return "roles/bigquery.metadataViewer"
 }
 
-// PotentialLinks returns the potential links for the BigQuery dataset wrapper
 func (b BigQueryDatasetWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.IAMServiceAccount,
@@ -60,7 +56,6 @@ func (b BigQueryDatasetWrapper) PotentialLinks() map[shared.ItemType]bool {
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the BigQuery dataset wrapper
 func (b BigQueryDatasetWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
@@ -70,35 +65,60 @@ func (b BigQueryDatasetWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	}
 }
 
-// GetLookups returns the lookups for the BigQuery dataset
 func (b BigQueryDatasetWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		BigQueryDatasetLookupByID,
 	}
 }
 
-// Get retrieves a BigQuery dataset by its ID
-func (b BigQueryDatasetWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
-	metadata, err := b.client.Get(ctx, b.ProjectID(), queryParts[0])
+func (b BigQueryDatasetWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := b.LocationFromScope(scope)
 	if err != nil {
-		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
 	}
 
-	return b.GCPBigQueryDatasetToItem(ctx, metadata)
+	metadata, getErr := b.client.Get(ctx, location.ProjectID, queryParts[0])
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, b.Type())
+	}
+
+	return b.gcpBigQueryDatasetToItem(ctx, metadata, location)
 }
 
-func (b BigQueryDatasetWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	items, err := b.client.List(ctx, b.ProjectID(), b.GCPBigQueryDatasetToItem)
+func (b BigQueryDatasetWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := b.LocationFromScope(scope)
 	if err != nil {
-		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
+	items, listErr := b.client.List(ctx, location.ProjectID, func(ctx context.Context, md *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError) {
+		return b.gcpBigQueryDatasetToItem(ctx, md, location)
+	})
+	if listErr != nil {
+		return nil, gcpshared.QueryError(listErr, scope, b.Type())
 	}
 
 	return items, nil
 }
 
-func (b BigQueryDatasetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
-	b.client.ListStream(ctx, b.ProjectID(), stream, func(ctx context.Context, md *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError) {
-		item, qerr := b.GCPBigQueryDatasetToItem(ctx, md)
+func (b BigQueryDatasetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := b.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
+	b.client.ListStream(ctx, location.ProjectID, stream, func(ctx context.Context, md *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError) {
+		item, qerr := b.gcpBigQueryDatasetToItem(ctx, md, location)
 		if qerr == nil && item != nil {
 			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		}
@@ -106,28 +126,28 @@ func (b BigQueryDatasetWrapper) ListStream(ctx context.Context, stream discovery
 	})
 }
 
-func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, metadata *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError) {
+func (b BigQueryDatasetWrapper) gcpBigQueryDatasetToItem(ctx context.Context, metadata *bigquery.DatasetMetadata, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(metadata, "labels")
 	if err != nil {
-		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
+		return nil, gcpshared.QueryError(err, location.ToScope(), b.Type())
 	}
 
 	// The full dataset ID in the form projectID:datasetID.
 	parts := strings.Split(metadata.FullID, ":")
 	if len(parts) != 2 {
-		return nil, gcpshared.QueryError(fmt.Errorf("invalid dataset full ID: %s", metadata.FullID), b.DefaultScope(), b.Type())
+		return nil, gcpshared.QueryError(fmt.Errorf("invalid dataset full ID: %s", metadata.FullID), location.ToScope(), b.Type())
 	}
 
 	err = attributes.Set("id", parts[1])
 	if err != nil {
-		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
+		return nil, gcpshared.QueryError(err, location.ToScope(), b.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            gcpshared.BigQueryDataset.String(),
 		UniqueAttribute: "id",
 		Attributes:      attributes,
-		Scope:           b.DefaultScope(),
+		Scope:           location.ToScope(),
 		Tags:            metadata.Labels,
 	}
 
@@ -137,7 +157,7 @@ func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, me
 			Type:   gcpshared.BigQueryModel.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  parts[1],
-			Scope:  b.DefaultScope(),
+			Scope:  location.ToScope(),
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,
@@ -151,7 +171,7 @@ func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, me
 			Type:   gcpshared.BigQueryTable.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  parts[1],
-			Scope:  b.DefaultScope(),
+			Scope:  location.ToScope(),
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,
@@ -165,7 +185,7 @@ func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, me
 			Type:   gcpshared.BigQueryRoutine.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  parts[1],
-			Scope:  b.DefaultScope(),
+			Scope:  location.ToScope(),
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,
@@ -183,7 +203,7 @@ func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, me
 						Type:   gcpshared.IAMServiceAccount.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  access.Entity,
-						Scope:  b.DefaultScope(),
+						Scope:  location.ToScope(),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -200,7 +220,7 @@ func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, me
 					Type:   gcpshared.BigQueryDataset.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  access.Dataset.Dataset.DatasetID,
-					Scope:  b.DefaultScope(),
+					Scope:  location.ToScope(),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					/*
@@ -213,7 +233,6 @@ func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, me
 					Out: true,
 				},
 			})
-
 		}
 	}
 
@@ -226,7 +245,7 @@ func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, me
 					Type:   gcpshared.CloudKMSCryptoKey.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(values...),
-					Scope:  b.ProjectID(),
+					Scope:  location.ProjectID,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,
@@ -246,10 +265,9 @@ func (b BigQueryDatasetWrapper) GCPBigQueryDatasetToItem(ctx context.Context, me
 					Type:   gcpshared.BigQueryConnection.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(values...),
-					Scope:  b.DefaultScope(),
+					Scope:  location.ToScope(),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
-					// Tightly coupled.
 					In:  true,
 					Out: true,
 				},

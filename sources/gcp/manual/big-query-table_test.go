@@ -29,7 +29,7 @@ func TestBigQueryTable(t *testing.T) {
 	tableID := "test_table"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewBigQueryTable(mockClient, projectID)
+		wrapper := manual.NewBigQueryTable(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, projectID, datasetID, tableID).Return(createTableMetadata(projectID, datasetID, tableID, projectID+".us;test-connection"), nil)
 
@@ -82,7 +82,7 @@ func TestBigQueryTable(t *testing.T) {
 	})
 
 	t.Run("Get with alternative connection id", func(t *testing.T) {
-		wrapper := manual.NewBigQueryTable(mockClient, projectID)
+		wrapper := manual.NewBigQueryTable(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, projectID, datasetID, tableID).Return(createTableMetadata(projectID, datasetID, tableID, fmt.Sprintf("projects/%s/locations/us/connections/test-connection", projectID)), nil)
 
@@ -135,7 +135,7 @@ func TestBigQueryTable(t *testing.T) {
 	})
 
 	t.Run("Search", func(t *testing.T) {
-		wrapper := manual.NewBigQueryTable(mockClient, projectID)
+		wrapper := manual.NewBigQueryTable(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Mock the List function to call the converter with each table
@@ -189,7 +189,7 @@ func TestBigQueryTable(t *testing.T) {
 	})
 
 	t.Run("SearchWithTerraformMapping", func(t *testing.T) {
-		wrapper := manual.NewBigQueryTable(mockClient, projectID)
+		wrapper := manual.NewBigQueryTable(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Mock the List function to call the converter with each table
@@ -225,7 +225,7 @@ func TestBigQueryTable(t *testing.T) {
 	})
 
 	t.Run("List_Unsupported", func(t *testing.T) {
-		wrapper := manual.NewBigQueryTable(mockClient, projectID)
+		wrapper := manual.NewBigQueryTable(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports list - it should not

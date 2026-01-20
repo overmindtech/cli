@@ -101,7 +101,8 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					{
 						Key:      "compute.googleapis.com/node-group-name",
 						Operator: "IN",
-						Values:   []string{"projects/test-project/zones/us-central1-a/nodeGroups/my-node-group"}},
+						Values:   []string{"projects/test-project/zones/us-central1-a/nodeGroups/my-node-group"},
+					},
 				},
 			},
 			ReservationAffinity: &compute.ReservationAffinity{
@@ -141,7 +142,7 @@ func TestComputeInstanceTemplate(t *testing.T) {
 	}
 
 	t.Run("Get", func(t *testing.T) {
-		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for ComputeInstanceTemplate: %v", err)
 		}
@@ -474,7 +475,7 @@ func TestComputeInstanceTemplate(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for ComputeInstanceTemplate: %v", err)
 		}
@@ -496,7 +497,7 @@ func TestComputeInstanceTemplate(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, linker, shared.NewMockHTTPClientProvider(expectedCallAndResponses), sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for ComputeInstanceTemplate: %v", err)
 		}

@@ -13,9 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	BigQueryModelLookupById = shared.NewItemTypeLookup("id", gcpshared.BigQueryModel)
-)
+var BigQueryModelLookupById = shared.NewItemTypeLookup("id", gcpshared.BigQueryModel)
 
 // BigQueryModelWrapper is a wrapper for the BigQueryModelClient that implements the sources.SearchableWrapper interface
 type BigQueryModelWrapper struct {
@@ -24,11 +22,11 @@ type BigQueryModelWrapper struct {
 }
 
 // NewBigQueryModel creates a new BigQueryModelWrapper instance
-func NewBigQueryModel(client gcpshared.BigQueryModelClient, projectID string) sources.SearchableWrapper {
+func NewBigQueryModel(client gcpshared.BigQueryModelClient, locations []gcpshared.LocationInfo) sources.SearchStreamableWrapper {
 	return &BigQueryModelWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
-			projectID,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 			gcpshared.BigQueryModel,
 		),
@@ -54,25 +52,33 @@ func (m BigQueryModelWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
-func (m BigQueryModelWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
-	metadata, err := m.client.Get(ctx, m.ProjectBase.ProjectID(), queryParts[0], queryParts[1])
+func (m BigQueryModelWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := m.LocationFromScope(scope)
 	if err != nil {
-		return nil, gcpshared.QueryError(err, m.DefaultScope(), m.Type())
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
 	}
-	return m.GCPBigQueryMetadataToItem(ctx, queryParts[0], metadata)
+
+	metadata, err := m.client.Get(ctx, location.ProjectID, queryParts[0], queryParts[1])
+	if err != nil {
+		return nil, gcpshared.QueryError(err, scope, m.Type())
+	}
+	return m.GCPBigQueryMetadataToItem(ctx, location, queryParts[0], metadata)
 }
 
-func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, dataSetId string, metadata *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
+func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, location gcpshared.LocationInfo, dataSetId string, metadata *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(metadata, "labels")
 	if err != nil {
-		return nil, gcpshared.QueryError(err, m.DefaultScope(), m.Type())
+		return nil, gcpshared.QueryError(err, location.ToScope(), m.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            gcpshared.BigQueryModel.String(),
 		UniqueAttribute: "Name",
 		Attributes:      attributes,
-		Scope:           m.DefaultScope(),
+		Scope:           location.ToScope(),
 		Tags:            metadata.Labels,
 	}
 
@@ -80,7 +86,7 @@ func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, dat
 		Query: &sdp.Query{
 			Type:   gcpshared.BigQueryDataset.String(),
 			Method: sdp.QueryMethod_GET,
-			Scope:  m.DefaultScope(),
+			Scope:  location.ProjectID,
 			Query:  dataSetId,
 		},
 		// Model is in a dataset, if dataset is deleted, model is deleted.
@@ -95,11 +101,10 @@ func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, dat
 		values := gcpshared.ExtractPathParams(metadata.EncryptionConfig.KMSKeyName, "locations", "keyRings", "cryptoKeys")
 		if len(values) == 3 && values[0] != "" && values[1] != "" && values[2] != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-
 				Query: &sdp.Query{
 					Type:   gcpshared.CloudKMSCryptoKey.String(),
 					Method: sdp.QueryMethod_GET,
-					Scope:  m.ProjectID(),
+					Scope:  location.ProjectID,
 					Query:  shared.CompositeLookupKey(values...),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
@@ -118,7 +123,7 @@ func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, dat
 					Query: &sdp.Query{
 						Type:   gcpshared.BigQueryTable.String(),
 						Method: sdp.QueryMethod_GET,
-						Scope:  m.DefaultScope(),
+						Scope:  location.ProjectID,
 						Query:  shared.CompositeLookupKey(dataSetId, row.DataSplitResult.EvaluationTable.TableId),
 					},
 					// If the evaluation table is deleted or updated: The model's evaluation results may become invalid or inaccessible. If the model is updated: The table remains unaffected.
@@ -135,7 +140,7 @@ func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, dat
 					Query: &sdp.Query{
 						Type:   gcpshared.BigQueryTable.String(),
 						Method: sdp.QueryMethod_GET,
-						Scope:  m.DefaultScope(),
+						Scope:  location.ProjectID,
 						Query:  shared.CompositeLookupKey(dataSetId, row.DataSplitResult.TrainingTable.TableId),
 					},
 					// If the training table is deleted or updated: The model's training data may become invalid or inaccessible. If the model is updated: The table remains unaffected.
@@ -152,7 +157,7 @@ func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, dat
 					Query: &sdp.Query{
 						Type:   gcpshared.BigQueryTable.String(),
 						Method: sdp.QueryMethod_GET,
-						Scope:  m.DefaultScope(),
+						Scope:  location.ProjectID,
 						Query:  shared.CompositeLookupKey(dataSetId, row.DataSplitResult.TestTable.TableId),
 					},
 					// If the test table is deleted or updated: The model's test results may become invalid or inaccessible. If the model is updated: The table remains unaffected.
@@ -195,19 +200,33 @@ func (m BigQueryModelWrapper) SearchLookups() []sources.ItemTypeLookups {
 	}
 }
 
-func (m BigQueryModelWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	items, err := m.client.List(ctx, m.ProjectBase.ProjectID(), queryParts[0], func(datasetID string, md *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
-		return m.GCPBigQueryMetadataToItem(ctx, datasetID, md)
-	})
+func (m BigQueryModelWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := m.LocationFromScope(scope)
 	if err != nil {
-		return nil, gcpshared.QueryError(err, m.DefaultScope(), m.Type())
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
 	}
-	return items, nil
+
+	items, listErr := m.client.List(ctx, location.ProjectID, queryParts[0], func(datasetID string, md *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
+		return m.GCPBigQueryMetadataToItem(ctx, location, datasetID, md)
+	})
+	return items, listErr
 }
 
-func (m BigQueryModelWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
-	m.client.ListStream(ctx, m.ProjectBase.ProjectID(), queryParts[0], stream, func(datasetID string, md *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
-		item, qerr := m.GCPBigQueryMetadataToItem(ctx, datasetID, md)
+func (m BigQueryModelWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	location, err := m.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
+	m.client.ListStream(ctx, location.ProjectID, queryParts[0], stream, func(datasetID string, md *bigquery.ModelMetadata) (*sdp.Item, *sdp.QueryError) {
+		item, qerr := m.GCPBigQueryMetadataToItem(ctx, location, datasetID, md)
 		if qerr == nil && item != nil {
 			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		}

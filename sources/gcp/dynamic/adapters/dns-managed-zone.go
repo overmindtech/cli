@@ -24,15 +24,21 @@ var _ = registerableAdapter{
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"dnsName": {
-			ToSDPItemType:    stdlib.NetworkDNS,
-			Description:      "Tightly coupled with the DNS Managed Zone.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			ToSDPItemType: stdlib.NetworkDNS,
+			Description:   "Tightly coupled with the DNS Managed Zone.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		// nameServers is an array of DNS names assigned to the managed zone (output only)
 		"nameServers": {
-			ToSDPItemType:    stdlib.NetworkDNS,
-			Description:      "Nameservers assigned to the managed zone are tightly coupled with the DNS Managed Zone.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			ToSDPItemType: stdlib.NetworkDNS,
+			Description:   "Nameservers assigned to the managed zone are tightly coupled with the DNS Managed Zone.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		"privateVisibilityConfig.networks.networkUrl": gcpshared.ComputeNetworkImpactInOnly,
 		// The resource name of the cluster to bind this ManagedZone to. This should be specified in the format like: projects/*/locations/*/clusters/*.

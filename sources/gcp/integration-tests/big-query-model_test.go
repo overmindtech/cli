@@ -10,6 +10,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
@@ -20,6 +21,7 @@ func TestBigQueryModel(t *testing.T) {
 	if projectID == "" {
 		t.Skip("GCP_PROJECT_ID environment variable is not set, skipping BigQuery model tests")
 	}
+	t.Parallel()
 
 	dataSet := "test_dataset"
 	model := "test_model"
@@ -114,8 +116,8 @@ func TestBigQueryModel(t *testing.T) {
 	})
 	t.Run("Get", func(t *testing.T) {
 		bigqueryClient := gcpshared.NewBigQueryModelClient(client)
-		adapter := manual.NewBigQueryModel(bigqueryClient, projectID)
-		sdpItem, err := adapter.Get(ctx, dataSet, model)
+		adapter := manual.NewBigQueryModel(bigqueryClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		sdpItem, err := adapter.Get(ctx, adapter.Scopes()[0], dataSet, model)
 		if err != nil {
 			t.Fatalf("Failed to get item: %v", err)
 		}
@@ -133,7 +135,12 @@ func TestBigQueryModel(t *testing.T) {
 			t.Fatalf("Expected unique attribute value to be %s, got %s", model, uniqueAttrValue)
 		}
 
-		sdpItems, err := adapter.Search(ctx, dataSet)
+		searchable, ok := adapter.(sources.SearchableWrapper)
+		if !ok {
+			t.Fatalf("Expected adapter to support search")
+		}
+
+		sdpItems, err := searchable.Search(ctx, adapter.Scopes()[0], dataSet)
 		if err != nil {
 			t.Fatalf("Failed to search items: %v", err)
 		}
@@ -155,9 +162,9 @@ func TestBigQueryModel(t *testing.T) {
 	})
 	t.Run("GetRoutine", func(t *testing.T) {
 		routineClient := gcpshared.NewBigQueryRoutineClient(client)
-		adapter := manual.NewBigQueryRoutine(routineClient, projectID)
+		adapter := manual.NewBigQueryRoutine(routineClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
-		sdpItem, err := adapter.Get(ctx, dataSet, routine)
+		sdpItem, err := adapter.Get(ctx, adapter.Scopes()[0], dataSet, routine)
 		if err != nil {
 			t.Fatalf("Failed to get routine: %v", err)
 		}
@@ -176,7 +183,12 @@ func TestBigQueryModel(t *testing.T) {
 			t.Fatalf("Expected routine unique attribute value to be %s, got %v", expectedUniqueAttrValue, uniqueAttrValue)
 		}
 
-		sdpItems, err := adapter.Search(ctx, dataSet)
+		searchable, ok := adapter.(sources.SearchableWrapper)
+		if !ok {
+			t.Fatalf("Expected adapter to support search")
+		}
+
+		sdpItems, err := searchable.Search(ctx, adapter.Scopes()[0], dataSet)
 		if err != nil {
 			t.Fatalf("Failed to search routines: %v", err)
 		}
@@ -199,9 +211,9 @@ func TestBigQueryModel(t *testing.T) {
 
 	t.Run("GetDataset", func(t *testing.T) {
 		datasetClient := gcpshared.NewBigQueryDatasetClient(client)
-		adapter := manual.NewBigQueryDataset(datasetClient, projectID)
+		adapter := manual.NewBigQueryDataset(datasetClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
-		sdpItem, err := adapter.Get(ctx, dataSet)
+		sdpItem, err := adapter.Get(ctx, adapter.Scopes()[0], dataSet)
 		if err != nil {
 			t.Fatalf("Failed to get dataset: %v", err)
 		}
@@ -268,9 +280,9 @@ func TestBigQueryModel(t *testing.T) {
 	})
 	t.Run("GetTable", func(t *testing.T) {
 		tableClient := gcpshared.NewBigQueryTableClient(client)
-		adapter := manual.NewBigQueryTable(tableClient, projectID)
+		adapter := manual.NewBigQueryTable(tableClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
-		sdpItem, err := adapter.Get(ctx, dataSet, table)
+		sdpItem, err := adapter.Get(ctx, adapter.Scopes()[0], dataSet, table)
 		if err != nil {
 			t.Fatalf("Failed to get table: %v", err)
 		}
@@ -288,7 +300,12 @@ func TestBigQueryModel(t *testing.T) {
 			t.Fatalf("Expected table unique attribute value to be %s, got %v", expectedUniqueAttrValue, uniqueAttrValue)
 		}
 
-		sdpItems, err := adapter.Search(ctx, dataSet)
+		searchable, ok := adapter.(sources.SearchableWrapper)
+		if !ok {
+			t.Fatalf("Expected adapter to support search")
+		}
+
+		sdpItems, err := searchable.Search(ctx, adapter.Scopes()[0], dataSet)
 		if err != nil {
 			t.Fatalf("Failed to search tables: %v", err)
 		}

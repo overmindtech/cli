@@ -2,6 +2,7 @@ package shared
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources/shared"
@@ -47,6 +48,19 @@ func (m *ResourceGroupBase) ResourceGroup() string {
 // Subscription ID and resource group are used to create the default scope.
 func (m *ResourceGroupBase) DefaultScope() string {
 	return m.Scopes()[0]
+}
+
+// ResourceGroupFromScope returns the resource group from a scope string.
+// Scope format is "{subscriptionId}.{resourceGroup}".
+func ResourceGroupFromScope(scope string) string {
+	if scope == "" {
+		return ""
+	}
+	parts := strings.SplitN(scope, ".", 2)
+	if len(parts) < 2 || parts[1] == "" {
+		return ""
+	}
+	return parts[1]
 }
 
 // SubscriptionBase customizes the sources.Base struct for Azure

@@ -14,7 +14,7 @@ var _ = registerableAdapter{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 		LocationLevel:      gcpshared.RegionalLevel,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/resourcePolicies/{resourcePolicy}
-		GetEndpointFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/resourcePolicies/%s"),
+		GetEndpointFunc: gcpshared.RegionalLevelEndpointFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/resourcePolicies/%s"),
 		// https://cloud.google.com/compute/docs/reference/rest/v1/resourcePolicies/list
 		ListEndpointFunc:    gcpshared.RegionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/resourcePolicies"),
 		UniqueAttributeKeys: []string{"resourcePolicies"},

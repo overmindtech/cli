@@ -31,7 +31,7 @@ func TestComputeNodeTemplate(t *testing.T) {
 
 	t.Run("Get", func(t *testing.T) {
 		// Attach mock client to our wrapper.
-		wrapper := manual.NewComputeNodeTemplate(mockClient, projectID, region)
+		wrapper := manual.NewComputeNodeTemplate(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createNodeTemplateApiFixture("test-node-template"), nil)
 
@@ -99,11 +99,10 @@ func TestComputeNodeTemplate(t *testing.T) {
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
-
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeNodeTemplate(mockClient, projectID, region)
+		wrapper := manual.NewComputeNodeTemplate(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeNodeTemplateIter := mocks.NewMockComputeNodeTemplateIterator(ctrl)
@@ -144,7 +143,7 @@ func TestComputeNodeTemplate(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeNodeTemplate(mockClient, projectID, region)
+		wrapper := manual.NewComputeNodeTemplate(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeNodeTemplateIter := mocks.NewMockComputeNodeTemplateIterator(ctrl)
