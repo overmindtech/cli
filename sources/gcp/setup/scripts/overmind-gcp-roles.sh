@@ -1,0 +1,43 @@
+# Define roles that can be applied at any level (org, folder, or project)
+ROLES=(
+    "roles/browser"
+    "roles/aiplatform.viewer"
+    "roles/artifactregistry.reader"
+    "roles/bigquery.metadataViewer"
+    "roles/bigquery.user"
+    "roles/bigtable.viewer"
+    "roles/cloudbuild.builds.viewer"
+    "roles/cloudfunctions.viewer"
+    "roles/cloudkms.viewer"
+    "roles/cloudsql.viewer"
+    "roles/compute.viewer"
+    "roles/container.viewer"
+    "roles/dataform.viewer"
+    "roles/dataplex.catalogViewer"
+    "roles/dataplex.viewer"
+    "roles/dataproc.viewer"
+    "roles/dns.reader"
+    "roles/essentialcontacts.viewer"
+    "roles/eventarc.viewer"
+    "roles/file.viewer"
+    "roles/logging.viewer"
+    "roles/monitoring.viewer"
+    "roles/orgpolicy.policyViewer"
+    "roles/pubsub.viewer"
+    "roles/redis.viewer"
+    "roles/resourcemanager.tagViewer"
+    "roles/run.viewer"
+    "roles/secretmanager.viewer"
+    "roles/securitycentermanagement.viewer"
+    "roles/servicedirectory.viewer"
+    "roles/serviceusage.serviceUsageViewer"
+    "roles/spanner.viewer"
+    "roles/storage.bucketViewer"
+    "roles/storagetransfer.viewer"
+)
+
+# Define roles that can only be applied at project level
+PROJECT_ONLY_ROLES=(
+    "roles/iam.roleViewer"
+    "roles/iam.serviceAccountViewer"
+)
