@@ -21,17 +21,15 @@ var ComputeInstanceLookupByName = shared.NewItemTypeLookup("name", gcpshared.Com
 
 type computeInstanceWrapper struct {
 	client gcpshared.ComputeInstanceClient
-
 	*gcpshared.ZoneBase
 }
 
-// NewComputeInstance creates a new computeInstanceWrapper instance
-func NewComputeInstance(client gcpshared.ComputeInstanceClient, projectID, zone string) sources.ListableWrapper {
+// NewComputeInstance creates a new computeInstanceWrapper instance.
+func NewComputeInstance(client gcpshared.ComputeInstanceClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeInstanceWrapper{
 		client: client,
 		ZoneBase: gcpshared.NewZoneBase(
-			projectID,
-			zone,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			gcpshared.ComputeInstance,
 		),
@@ -49,7 +47,6 @@ func (c computeInstanceWrapper) PredefinedRole() string {
 	return "roles/compute.viewer"
 }
 
-// PotentialLinks returns the potential links for the compute instance wrapper
 func (c computeInstanceWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		stdlib.NetworkIP,
@@ -67,7 +64,6 @@ func (c computeInstanceWrapper) PotentialLinks() map[shared.ItemType]bool {
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the compute instance wrapper
 func (c computeInstanceWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
@@ -78,58 +74,60 @@ func (c computeInstanceWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	}
 }
 
-// GetLookups returns the lookups for the compute instance wrapper
-// This defines how the source can be queried for specific item
-// In this case, it will be: gcp-compute-engine-instance-name
 func (c computeInstanceWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		ComputeInstanceLookupByName,
 	}
 }
 
-// Get retrieves a compute instance by its name
-func (c computeInstanceWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeInstanceWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetInstanceRequest{
-		Project:  c.ProjectID(),
-		Zone:     c.Zone(),
+		Project:  location.ProjectID,
+		Zone:     location.Zone,
 		Instance: queryParts[0],
 	}
 
-	instance, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	instance, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	var sdpErr *sdp.QueryError
-	var item *sdp.Item
-	item, sdpErr = c.gcpComputeInstanceToSDPItem(ctx, instance)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpComputeInstanceToSDPItem(ctx, instance, location)
 }
 
-// List lists compute instances and converts them to sdp.Items.
-func (c computeInstanceWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (c computeInstanceWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	it := c.client.List(ctx, &computepb.ListInstancesRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	var items []*sdp.Item
 	for {
-		instance, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		instance, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		var sdpErr *sdp.QueryError
-		var item *sdp.Item
-		item, sdpErr = c.gcpComputeInstanceToSDPItem(ctx, instance)
+		item, sdpErr := c.gcpComputeInstanceToSDPItem(ctx, instance, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -140,25 +138,32 @@ func (c computeInstanceWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Que
 	return items, nil
 }
 
-func (c computeInstanceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeInstanceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListInstancesRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	for {
-		instance, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		instance, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		var sdpErr *sdp.QueryError
-		var item *sdp.Item
-		item, sdpErr = c.gcpComputeInstanceToSDPItem(ctx, instance)
+		item, sdpErr := c.gcpComputeInstanceToSDPItem(ctx, instance, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -169,7 +174,7 @@ func (c computeInstanceWrapper) ListStream(ctx context.Context, stream discovery
 	}
 }
 
-func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context, instance *computepb.Instance) (*sdp.Item, *sdp.QueryError) {
+func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context, instance *computepb.Instance, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(instance, "labels")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -182,15 +187,12 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 		Type:            gcpshared.ComputeInstance.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           location.ToScope(),
 		Tags:            instance.GetLabels(),
 	}
 
 	for _, disk := range instance.GetDisks() {
 		if disk.GetSource() != "" {
-			// Specifies a valid partial or full URL to an existing Persistent Disk resource.
-			// "source": "https://www.googleapis.com/compute/v1/projects/project-test/zones/us-central1-c/disks/integration-test-instance"
-			// last part is the disk name
 			if strings.Contains(disk.GetSource(), "/") {
 				diskNameParts := strings.Split(disk.GetSource(), "/")
 				diskName := diskNameParts[len(diskNameParts)-1]
@@ -215,8 +217,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 		// Link to source image if disk is being initialized from an image
 		if initializeParams := disk.GetInitializeParams(); initializeParams != nil {
 			if sourceImage := initializeParams.GetSourceImage(); sourceImage != "" {
-				// Source image can be a full URL or partial path
-				// Format: projects/{project}/global/images/{image} or just the image name
 				imageName := gcpshared.LastPathComponent(sourceImage)
 				if imageName != "" {
 					scope, err := gcpshared.ExtractScopeFromURI(ctx, sourceImage)
@@ -239,8 +239,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 
 			// Link to source snapshot if disk is being initialized from a snapshot
 			if sourceSnapshot := initializeParams.GetSourceSnapshot(); sourceSnapshot != "" {
-				// Source snapshot can be a full URL or partial path
-				// Format: projects/{project}/global/snapshots/{snapshot} or just the snapshot name
 				snapshotName := gcpshared.LastPathComponent(sourceSnapshot)
 				if snapshotName != "" {
 					scope, err := gcpshared.ExtractScopeFromURI(ctx, sourceSnapshot)
@@ -261,22 +259,21 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 				}
 			}
 
-
 			// Link to KMS key used to decrypt source image
 			if sourceImageEncryptionKey := initializeParams.GetSourceImageEncryptionKey(); sourceImageEncryptionKey != nil {
 				if keyName := sourceImageEncryptionKey.GetKmsKeyName(); keyName != "" {
-					location := gcpshared.ExtractPathParam("locations", keyName)
+					loc := gcpshared.ExtractPathParam("locations", keyName)
 					keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
 					cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
 					cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
 
-					if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
+					if loc != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 								Method: sdp.QueryMethod_GET,
-								Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
-								Scope:  c.ProjectID(),
+								Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey, cryptoKeyVersion),
+								Scope:  location.ProjectID,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,
@@ -290,18 +287,18 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 			// Link to KMS key used to decrypt source snapshot
 			if sourceSnapshotEncryptionKey := initializeParams.GetSourceSnapshotEncryptionKey(); sourceSnapshotEncryptionKey != nil {
 				if keyName := sourceSnapshotEncryptionKey.GetKmsKeyName(); keyName != "" {
-					location := gcpshared.ExtractPathParam("locations", keyName)
+					loc := gcpshared.ExtractPathParam("locations", keyName)
 					keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
 					cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
 					cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
 
-					if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
+					if loc != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 								Method: sdp.QueryMethod_GET,
-								Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
-								Scope:  c.ProjectID(),
+								Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey, cryptoKeyVersion),
+								Scope:  location.ProjectID,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,
@@ -316,20 +313,19 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 		// Link to KMS key used for disk encryption
 		if diskEncryptionKey := disk.GetDiskEncryptionKey(); diskEncryptionKey != nil {
 			if keyName := diskEncryptionKey.GetKmsKeyName(); keyName != "" {
-				location := gcpshared.ExtractPathParam("locations", keyName)
+				loc := gcpshared.ExtractPathParam("locations", keyName)
 				keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
 				cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
 				cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
 
-				if location != "" && keyRing != "" && cryptoKey != "" {
+				if loc != "" && keyRing != "" && cryptoKey != "" {
 					if cryptoKeyVersion != "" {
-						// Link to CryptoKeyVersion if version is specified
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 								Method: sdp.QueryMethod_GET,
-								Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
-								Scope:  c.ProjectID(),
+								Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey, cryptoKeyVersion),
+								Scope:  location.ProjectID,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,
@@ -337,13 +333,12 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 							},
 						})
 					} else {
-						// Link to CryptoKey if no version is specified
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   gcpshared.CloudKMSCryptoKey.String(),
 								Method: sdp.QueryMethod_GET,
-								Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey),
-								Scope:  c.ProjectID(),
+								Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey),
+								Scope:  location.ProjectID,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,
@@ -404,14 +399,12 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 						},
 					})
 				}
-
-				// Link to DNS name from PTR record if configured
-				if publicPtrDomainName := accessConfig.GetPublicPtrDomainName(); publicPtrDomainName != "" {
+				if externalIPv6 := accessConfig.GetExternalIpv6(); externalIPv6 != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   stdlib.NetworkDNS.String(),
-							Method: sdp.QueryMethod_SEARCH,
-							Query:  publicPtrDomainName,
+							Type:   stdlib.NetworkIP.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  externalIPv6,
 							Scope:  "global",
 						},
 						BlastPropagation: &sdp.BlastPropagation{
@@ -422,14 +415,14 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 				}
 			}
 
-			// Link to external IPv6 address from IPv6 access configs
+			// Link to external IPv6 address from ipv6AccessConfigs
 			for _, ipv6AccessConfig := range networkInterface.GetIpv6AccessConfigs() {
-				if externalIpv6 := ipv6AccessConfig.GetExternalIpv6(); externalIpv6 != "" {
+				if externalIPv6 := ipv6AccessConfig.GetExternalIpv6(); externalIPv6 != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   stdlib.NetworkIP.String(),
 							Method: sdp.QueryMethod_GET,
-							Query:  externalIpv6,
+							Query:  externalIPv6,
 							Scope:  "global",
 						},
 						BlastPropagation: &sdp.BlastPropagation{
@@ -441,28 +434,16 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 			}
 
 			if subnetwork := networkInterface.GetSubnetwork(); subnetwork != "" {
-				// The URL of the Subnetwork resource for this instance.
-				// If the network resource is in legacy mode, do not specify this field.
-				// If the network is in auto subnet mode, specifying the subnetwork is optional.
-				// If the network is in custom subnet mode, specifying the subnetwork is required.
-				// If you specify this field, you can specify the subnetwork as a full or partial URL. For example,
-				// the following are all valid URLs:
-				//	- https://www.googleapis.com/compute/v1/projects/project/regions/region/subnetworks/subnetwork
-				//	- regions/region/subnetworks/subnetwork
-				// "subnetwork": "https://www.googleapis.com/compute/v1/projects/project-test/regions/us-central1/subnetworks/default"
-				// last part is the subnetwork name
 				if strings.Contains(subnetwork, "/") {
-					subnetworkNameParts := strings.Split(subnetwork, "/")
-					subnetworkName := subnetworkNameParts[len(subnetworkNameParts)-1]
-					scope, err := gcpshared.ExtractScopeFromURI(ctx, subnetwork)
-					if err == nil {
+					subnetworkName := gcpshared.LastPathComponent(subnetwork)
+					region := gcpshared.ExtractPathParam("regions", subnetwork)
+					if region != "" && subnetworkName != "" {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   gcpshared.ComputeSubnetwork.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  subnetworkName,
-								// This is a regional resource
-								Scope: scope,
+								Scope:  gcpshared.RegionalScope(location.ProjectID, region),
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,
@@ -474,30 +455,15 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 			}
 
 			if network := networkInterface.GetNetwork(); network != "" {
-				// URL of the VPC network resource for this instance.
-				// When creating an instance, if neither the network nor the subnetwork is specified,
-				// the default network global/networks/default is used.
-				// If the selected project doesn't have the default network, you must specify a network or subnet.
-				// If the network is not specified but the subnetwork is specified, the network is inferred.
-				// If you specify this property, you can specify the network as a full or partial URL.
-				// For example, the following are all valid URLs:
-				//	- https://www.googleapis.com/compute/v1/projects/project/global/networks/network
-				//	- projects/project/global/networks/network
-				//	- global/networks/default
-				//
-				// "network": "https://www.googleapis.com/compute/v1/projects/project-test/global/networks/default"
 				if strings.Contains(network, "/") {
-					networkNameParts := strings.Split(network, "/")
-					networkName := networkNameParts[len(networkNameParts)-1]
-					scope, err := gcpshared.ExtractScopeFromURI(ctx, network)
-					if err == nil {
+					networkName := gcpshared.LastPathComponent(network)
+					if networkName != "" {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   gcpshared.ComputeNetwork.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  networkName,
-								// This is a global resource
-								Scope: scope,
+								Scope:  location.ProjectID,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,
@@ -510,54 +476,19 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 		}
 	}
 
+	// Link to resource policies
 	for _, rp := range instance.GetResourcePolicies() {
-		// The URL of the resource policy to attach to this instance.
-		// This field is optional.
-		// If you specify this field, you can specify the resource policy as a full or partial URL.
-		// For example, the following are all valid URLs:
-		//  - https://www.googleapis.com/compute/v1/projects/project/regions/region/resourcePolicies/resourcePolicy
-		//  - regions/region/resourcePolicies/resourcePolicy
 		if strings.Contains(rp, "/") {
 			parts := gcpshared.ExtractPathParams(rp, "regions", "resourcePolicies")
 			if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 				resourcePolicyName := parts[1]
-				scope, err := gcpshared.ExtractScopeFromURI(ctx, rp)
-				if err == nil {
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   gcpshared.ComputeResourcePolicy.String(),
-							Method: sdp.QueryMethod_GET,
-							Query:  resourcePolicyName,
-							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
-					})
-				}
-			}
-		}
-	}
-
-	// Link to service accounts used by the instance
-	for _, serviceAccount := range instance.GetServiceAccounts() {
-		if email := serviceAccount.GetEmail(); email != "" {
-			// Service account email can be in format: service-account@project.iam.gserviceaccount.com
-			// or as a full resource name: projects/{project}/serviceAccounts/{email}
-			// Extract email from either format
-			saEmail := email
-			if strings.Contains(email, "/") {
-				// Extract email from resource name format
-				saEmail = gcpshared.LastPathComponent(email)
-			}
-			if saEmail != "" {
+				region := parts[0]
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
-						Type:   gcpshared.IAMServiceAccount.String(),
+						Type:   gcpshared.ComputeResourcePolicy.String(),
 						Method: sdp.QueryMethod_GET,
-						Query:  saEmail,
-						Scope:  c.ProjectID(),
+						Query:  resourcePolicyName,
+						Scope:  gcpshared.RegionalScope(location.ProjectID, region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -568,35 +499,44 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 		}
 	}
 
+	// Link to service account
+	for _, sa := range instance.GetServiceAccounts() {
+		if email := sa.GetEmail(); email != "" {
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   gcpshared.IAMServiceAccount.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  email,
+					Scope:  location.ProjectID,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			})
+		}
+	}
 
-	// Link to zone where the instance resides
-	if zone := instance.GetZone(); zone != "" {
-		// Zone can be a full URL or partial path
-		// Format: projects/{project}/zones/{zone} or zones/{zone}
-		zoneName := gcpshared.LastPathComponent(zone)
+	// Link to zone
+	if zoneURL := instance.GetZone(); zoneURL != "" {
+		zoneName := gcpshared.LastPathComponent(zoneURL)
 		if zoneName != "" {
-			scope, err := gcpshared.ExtractScopeFromURI(ctx, zone)
-			if err == nil {
-				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-					Query: &sdp.Query{
-						Type:   gcpshared.ComputeZone.String(),
-						Method: sdp.QueryMethod_GET,
-						Query:  zoneName,
-						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				})
-			}
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   gcpshared.ComputeZone.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  zoneName,
+					Scope:  location.ProjectID,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			})
 		}
 	}
 
-	// The status of the instance.
-	//	For more information about the status of the instance, see Instance life cycle.
-	// Check the Status enum for the list of possible values.
-	// https://cloud.google.com/compute/docs/instances/instance-lifecycle
+	// Set health based on status
 	switch instance.GetStatus() {
 	case computepb.Instance_RUNNING.String():
 		sdpItem.Health = sdp.Health_HEALTH_OK.Enum()
@@ -609,6 +549,7 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 	case computepb.Instance_TERMINATED.String(),
 		computepb.Instance_STOPPED.String(),
 		computepb.Instance_SUSPENDED.String():
+		// No health set for stopped/terminated instances
 	}
 
 	return sdpItem, nil

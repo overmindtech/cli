@@ -14,9 +14,7 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-var (
-	BigQueryRoutineLookupByID = shared.NewItemTypeLookup("id", gcpshared.BigQueryRoutine)
-)
+var BigQueryRoutineLookupByID = shared.NewItemTypeLookup("id", gcpshared.BigQueryRoutine)
 
 type BigQueryRoutineWrapper struct {
 	client gcpshared.BigQueryRoutineClient
@@ -24,11 +22,11 @@ type BigQueryRoutineWrapper struct {
 	*gcpshared.ProjectBase
 }
 
-func NewBigQueryRoutine(client gcpshared.BigQueryRoutineClient, projectID string) sources.SearchableWrapper {
+func NewBigQueryRoutine(client gcpshared.BigQueryRoutineClient, locations []gcpshared.LocationInfo) sources.SearchStreamableWrapper {
 	return &BigQueryRoutineWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
-			projectID,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 			gcpshared.BigQueryRoutine),
 	}
@@ -77,7 +75,6 @@ func (b BigQueryRoutineWrapper) GetLookups() sources.ItemTypeLookups {
 
 func (b BigQueryRoutineWrapper) SearchLookups() []sources.ItemTypeLookups {
 	return []sources.ItemTypeLookups{
-
 		{
 			BigQueryRoutineLookupByID,
 		},
@@ -85,44 +82,64 @@ func (b BigQueryRoutineWrapper) SearchLookups() []sources.ItemTypeLookups {
 }
 
 // Get retrieves a BigQuery routine by its ID
-func (b BigQueryRoutineWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (b BigQueryRoutineWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := b.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
 	// 0: dataset ID
 	// 1: routine ID
-	metadata, err := b.client.Get(ctx, b.ProjectID(), queryParts[0], queryParts[1])
-	if err != nil {
-		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
+	metadata, getErr := b.client.Get(ctx, location.ProjectID, queryParts[0], queryParts[1])
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, b.Type())
 	}
-	return b.GCPBigQueryRoutineToItem(metadata, queryParts[0], queryParts[1])
+	return b.gcpBigQueryRoutineToItem(metadata, queryParts[0], queryParts[1], location)
 }
 
-func (b BigQueryRoutineWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	items, err := b.client.List(ctx, b.ProjectID(), queryParts[0], b.GCPBigQueryRoutineToItem)
+func (b BigQueryRoutineWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := b.LocationFromScope(scope)
 	if err != nil {
-		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
+	toItem := func(metadata *bigquery.RoutineMetadata, datasetID, routineID string) (*sdp.Item, *sdp.QueryError) {
+		return b.gcpBigQueryRoutineToItem(metadata, datasetID, routineID, location)
+	}
+
+	items, listErr := b.client.List(ctx, location.ProjectID, queryParts[0], toItem)
+	if listErr != nil {
+		return nil, gcpshared.QueryError(listErr, scope, b.Type())
 	}
 
 	return items, nil
 }
 
-func (b BigQueryRoutineWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
+func (b BigQueryRoutineWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	// SearchStream not implemented for BigQueryRoutine
 }
 
-func (b BigQueryRoutineWrapper) GCPBigQueryRoutineToItem(metadata *bigquery.RoutineMetadata, datasetID, routineID string) (*sdp.Item, *sdp.QueryError) {
+func (b BigQueryRoutineWrapper) gcpBigQueryRoutineToItem(metadata *bigquery.RoutineMetadata, datasetID, routineID string, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(metadata, "")
 	if err != nil {
-		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
+		return nil, gcpshared.QueryError(err, location.ToScope(), b.Type())
 	}
 
 	err = attributes.Set("id", shared.CompositeLookupKey(datasetID, routineID))
 	if err != nil {
-		return nil, gcpshared.QueryError(err, b.DefaultScope(), b.Type())
+		return nil, gcpshared.QueryError(err, location.ToScope(), b.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            gcpshared.BigQueryRoutine.String(),
 		UniqueAttribute: "id",
 		Attributes:      attributes,
-		Scope:           b.DefaultScope(),
+		Scope:           location.ToScope(),
 		Tags:            make(map[string]string),
 	}
 
@@ -131,7 +148,7 @@ func (b BigQueryRoutineWrapper) GCPBigQueryRoutineToItem(metadata *bigquery.Rout
 			Type:   gcpshared.BigQueryDataset.String(),
 			Method: sdp.QueryMethod_GET,
 			Query:  datasetID,
-			Scope:  b.ProjectID(),
+			Scope:  location.ProjectID,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,
@@ -149,7 +166,7 @@ func (b BigQueryRoutineWrapper) GCPBigQueryRoutineToItem(metadata *bigquery.Rout
 		if linkFunc, ok := gcpshared.ManualAdapterLinksByAssetType[gcpshared.StorageBucket]; ok {
 			for _, libraryURI := range metadata.ImportedLibraries {
 				if libraryURI != "" {
-					linkedQuery := linkFunc(b.ProjectID(), b.DefaultScope(), libraryURI, blastPropagation)
+					linkedQuery := linkFunc(location.ProjectID, location.ToScope(), libraryURI, blastPropagation)
 					if linkedQuery != nil {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, linkedQuery)
 					}
@@ -225,7 +242,7 @@ func (b BigQueryRoutineWrapper) GCPBigQueryRoutineToItem(metadata *bigquery.Rout
 	// - sparkOptions.mainFileUri, pyFileUris, jarUris, fileUris, archiveUris (GCS buckets)
 	// - externalRuntimeOptions.runtimeConnection (BigQuery Connection)
 
-	//NOTE: optional feature for the future - parse routine_definition to identify referenced tables/views/connections and add links. Out-of-scope for initial version.
+	// NOTE: optional feature for the future - parse routine_definition to identify referenced tables/views/connections and add links. Out-of-scope for initial version.
 
 	return sdpItem, nil
 }

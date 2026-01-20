@@ -139,7 +139,7 @@ mockClient.EXPECT().Get(ctx, projectID, datasetID, tableID).Return(
 // BigQuery format: projectID:datasetID.tableID
 parts := strings.Split(strings.TrimPrefix(metadata.FullID, b.ProjectID()+":"), ".")
 if len(parts) != 2 {
-    return nil, gcpshared.QueryError(fmt.Errorf("invalid table full ID: %s", metadata.FullID), b.DefaultScope(), b.Type())
+    return nil, gcpshared.QueryError(fmt.Errorf("invalid table full ID: %s", metadata.FullID), scope, b.Type())
 }
 ```
 

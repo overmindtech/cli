@@ -279,7 +279,8 @@ func Test_determineScope(t *testing.T) {
 				parts:                 []string{"projects", "my-project", "zones", "us-central1-c", "instances", "my-instance"},
 			},
 			want: "",
-		}}
+		},
+	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := determineScope(tt.args.ctx, tt.args.projectID, tt.args.locationLevel, nil, tt.args.toItemGCPResourceName, tt.args.parts); got != tt.want {

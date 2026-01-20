@@ -13,9 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-var (
-	StorageAccountLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageAccount)
-)
+var StorageAccountLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageAccount)
 
 type storageAccountWrapper struct {
 	client clients.StorageAccountsClient
@@ -35,14 +33,18 @@ func NewStorageAccount(client clients.StorageAccountsClient, subscriptionID, res
 	}
 }
 
-func (s storageAccountWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := s.client.List(s.ResourceGroup())
+func (s storageAccountWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	pager := s.client.List(resourceGroup)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+			return nil, azureshared.QueryError(err, scope, s.Type())
 		}
 
 		for _, account := range page.Value {
@@ -50,7 +52,7 @@ func (s storageAccountWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Quer
 				continue
 			}
 
-			item, sdpErr := s.azureStorageAccountToSDPItem(account, *account.Name)
+			item, sdpErr := s.azureStorageAccountToSDPItem(account, *account.Name, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -61,12 +63,12 @@ func (s storageAccountWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Quer
 	return items, nil
 }
 
-func (s storageAccountWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (s storageAccountWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Get requires 1 query part: name",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
@@ -75,30 +77,34 @@ func (s storageAccountWrapper) Get(ctx context.Context, queryParts ...string) (*
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "name cannot be empty",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
 
-	resp, err := s.client.Get(ctx, s.ResourceGroup(), accountName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	resp, err := s.client.Get(ctx, resourceGroup, accountName)
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
-	return s.azureStorageAccountToSDPItem(&resp.Account, accountName)
+	return s.azureStorageAccountToSDPItem(&resp.Account, accountName, scope)
 }
 
-func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.Account, accountName string) (*sdp.Item, *sdp.QueryError) {
+func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.Account, accountName, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(account, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.StorageAccount.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           s.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(account.Tags),
 	}
 
@@ -107,7 +113,7 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 			Type:   azureshared.StorageBlobContainer.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  false, // Storage account is NOT affected if blob containers change
@@ -120,7 +126,7 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 			Type:   azureshared.StorageFileShare.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  false, // Storage account is NOT affected if file shares change
@@ -133,7 +139,7 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 			Type:   azureshared.StorageTable.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  false, // Storage account is NOT affected if tables change
@@ -146,7 +152,7 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 			Type:   azureshared.StorageQueue.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  false, // Storage account is NOT affected if queues change
@@ -161,16 +167,16 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 			identityName := azureshared.ExtractResourceName(identityResourceID)
 			if identityName != "" {
 				// Extract scope from resource ID if it's in a different resource group
-				scope := s.DefaultScope()
+				linkedScope := scope
 				if extractedScope := azureshared.ExtractScopeFromResourceID(identityResourceID); extractedScope != "" {
-					scope = extractedScope
+					linkedScope = extractedScope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  identityName,
-						Scope:  scope,
+						Scope:  linkedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Storage account depends on managed identity for authentication
@@ -203,7 +209,7 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 						Type:   azureshared.KeyVaultVault.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  vaultName,
-						Scope:  s.DefaultScope(), // Limitation: Key Vault URI doesn't contain resource group info
+						Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Storage account depends on Key Vault for customer-managed encryption keys
@@ -224,16 +230,16 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 			identityName := azureshared.ExtractResourceName(identityResourceID)
 			if identityName != "" {
 				// Extract scope from resource ID if it's in a different resource group
-				scope := s.DefaultScope()
+				linkedScope := scope
 				if extractedScope := azureshared.ExtractScopeFromResourceID(identityResourceID); extractedScope != "" {
-					scope = extractedScope
+					linkedScope = extractedScope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  identityName,
-						Scope:  scope,
+						Scope:  linkedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Storage account depends on managed identity for encryption key access
@@ -337,16 +343,16 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 				privateEndpointName := azureshared.ExtractResourceName(privateEndpointID)
 				if privateEndpointName != "" {
 					// Extract scope from resource ID if it's in a different resource group
-					scope := s.DefaultScope()
+					linkedScope := scope
 					if extractedScope := azureshared.ExtractScopeFromResourceID(privateEndpointID); extractedScope != "" {
-						scope = extractedScope
+						linkedScope = extractedScope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.NetworkPrivateEndpoint.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  privateEndpointName,
-							Scope:  scope,
+							Scope:  linkedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Private endpoint connection is tightly coupled with the storage account
@@ -496,5 +502,5 @@ func (s storageAccountWrapper) IAMPermissions() []string {
 }
 
 func (s storageAccountWrapper) PredefinedRole() string {
-	return "Reader" //there is no predefined role for storage accounts, so we use the most restrictive role (Reader)
+	return "Reader" // there is no predefined role for storage accounts, so we use the most restrictive role (Reader)
 }

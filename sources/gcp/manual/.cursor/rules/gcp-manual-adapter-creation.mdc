@@ -9,6 +9,7 @@ alwaysApply: false
 This document provides comprehensive rules and patterns for creating GCP manual adapters in the Overmind platform. Follow these guidelines to ensure consistency, maintainability, and proper integration with the SDP (State Description Protocol) framework.
 
 ## Table of Contents
+
 1. [Adapter Structure and Naming](#adapter-structure-and-naming)
 2. [Wrapper Type Selection](#wrapper-type-selection)
 3. [Base Struct Selection](#base-struct-selection)
@@ -24,10 +25,12 @@ This document provides comprehensive rules and patterns for creating GCP manual 
 ## Adapter Structure and Naming
 
 ### File Naming Convention
+
 - Use kebab-case for file names: `compute-instance.go`, `big-query-table.go`, `cloud-kms-crypto-key.go`
 - Test files should follow the same pattern with `_test.go` suffix: `compute-instance_test.go`
 
 ### Package and Import Structure
+
 ```go
 package manual
 
@@ -51,6 +54,7 @@ import (
 ```
 
 ### Struct Naming
+
 - Wrapper struct: `{resourceName}Wrapper` (e.g., `computeInstanceWrapper`, `bigQueryTableWrapper`)
 - Use camelCase with first letter lowercase for private structs
 - Constructor function: `New{ResourceName}` (e.g., `NewComputeInstance`, `NewBigQueryTable`)
@@ -60,26 +64,34 @@ import (
 Choose the appropriate wrapper interface based on GCP API capabilities:
 
 ### `Wrapper` (GET only)
+
 Use when the GCP API only supports individual resource retrieval:
+
 - IAM Service Account Keys
 - Compute Snapshots (individual retrieval)
 - Resources without list/search endpoints
 
 ### `ListableWrapper` (GET + LIST)
+
 Use when the GCP API supports listing all resources in a scope:
+
 - Compute Instances (per zone)
 - Compute Disks (per zone)
 - IAM Service Accounts (per project)
 - BigQuery Datasets (per project)
 
 ### `SearchableWrapper` (GET + SEARCH)
+
 Use when the GCP API supports filtering/searching resources:
+
 - BigQuery Tables (search within datasets)
 - KMS Crypto Keys (search within key rings)
 - KMS Key Rings (search within locations)
 
 ### `SearchableListableWrapper` (GET + LIST + SEARCH)
+
 Use when the GCP API supports both listing and searching:
+
 - Currently not used in existing adapters, but available for complex resources
 
 ## Base Struct Selection
@@ -87,19 +99,20 @@ Use when the GCP API supports both listing and searching:
 Choose the appropriate base struct based on GCP resource scope:
 
 ### `ZoneBase` - Zonal Resources
+
 For resources scoped to a specific zone:
+
 ```go
 type computeInstanceWrapper struct {
     client gcpshared.ComputeInstanceClient
     *gcpshared.ZoneBase
 }
 
-func NewComputeInstance(client gcpshared.ComputeInstanceClient, projectID, zone string) sources.ListableWrapper {
+func NewComputeInstance(client gcpshared.ComputeInstanceClient, locations []gcpshared.LocationInfo) sources.ListableWrapper {
     return &computeInstanceWrapper{
         client: client,
         ZoneBase: gcpshared.NewZoneBase(
-            projectID,
-            zone,
+            locations,
             sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
             gcpshared.ComputeInstance,
         ),
@@ -110,7 +123,9 @@ func NewComputeInstance(client gcpshared.ComputeInstanceClient, projectID, zone 
 **Examples:** Compute Instances, Compute Disks, Compute Snapshots, Compute Images
 
 ### `RegionBase` - Regional Resources
+
 For resources scoped to a specific region:
+
 ```go
 type computeAddressWrapper struct {
     client gcpshared.ComputeAddressClient
@@ -133,7 +148,9 @@ func NewComputeAddress(client gcpshared.ComputeAddressClient, projectID, region 
 **Examples:** Compute Addresses, Compute Reservations, Compute Resource Policies
 
 ### `ProjectBase` - Project-Level Resources
+
 For resources scoped to the entire project:
+
 ```go
 type iamServiceAccountWrapper struct {
     client gcpshared.IAMServiceAccountClient
@@ -157,7 +174,9 @@ func NewIAMServiceAccount(client gcpshared.IAMServiceAccountClient, projectID st
 ## Required Methods Implementation
 
 ### IAM Permissions
+
 Always implement with specific GCP API permissions:
+
 ```go
 func (c computeInstanceWrapper) IAMPermissions() []string {
     return []string{
@@ -168,7 +187,9 @@ func (c computeInstanceWrapper) IAMPermissions() []string {
 ```
 
 ### Predefined Role
+
 Always implement with the most restrictive GCP predefined role:
+
 ```go
 func (c computeInstanceWrapper) PredefinedRole() string {
     return "roles/compute.viewer"
@@ -176,7 +197,9 @@ func (c computeInstanceWrapper) PredefinedRole() string {
 ```
 
 ### Potential Links
+
 Document all possible linked resources:
+
 ```go
 func (c computeInstanceWrapper) PotentialLinks() map[shared.ItemType]bool {
     return shared.NewItemTypesSet(
@@ -192,7 +215,9 @@ func (c computeInstanceWrapper) PotentialLinks() map[shared.ItemType]bool {
 ## Terraform Mappings
 
 ### GET Method (Direct ID Match)
+
 Use when Terraform resource has a unique identifier that directly matches your adapter's unique attribute:
+
 ```go
 func (c computeInstanceWrapper) TerraformMappings() []*sdp.TerraformMapping {
     return []*sdp.TerraformMapping{
@@ -206,7 +231,9 @@ func (c computeInstanceWrapper) TerraformMappings() []*sdp.TerraformMapping {
 ```
 
 ### SEARCH Method (Multiple Parameters)
+
 Use when Terraform resource requires multiple parameters or different ID format:
+
 ```go
 func (b BigQueryTableWrapper) TerraformMappings() []*sdp.TerraformMapping {
     return []*sdp.TerraformMapping{
@@ -222,7 +249,9 @@ func (b BigQueryTableWrapper) TerraformMappings() []*sdp.TerraformMapping {
 ```
 
 ### Multiple Terraform Mappings
+
 For resources that can be referenced in multiple ways:
+
 ```go
 func (c iamServiceAccountWrapper) TerraformMappings() []*sdp.TerraformMapping {
     return []*sdp.TerraformMapping{
@@ -241,7 +270,9 @@ func (c iamServiceAccountWrapper) TerraformMappings() []*sdp.TerraformMapping {
 ## Get and Search Lookups
 
 ### Single Key Lookup
+
 For resources with a single unique identifier:
+
 ```go
 var ComputeInstanceLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeInstance)
 
@@ -253,7 +284,9 @@ func (c computeInstanceWrapper) GetLookups() sources.ItemTypeLookups {
 ```
 
 ### Multiple Keys Lookup (Order Matters)
+
 The order of lookups determines the order of `queryParts` in the `Get` method:
+
 ```go
 var (
     BigQueryDatasetLookupByID = shared.NewItemTypeLookup("id", gcpshared.BigQueryDataset)
@@ -267,7 +300,7 @@ func (b BigQueryTableWrapper) GetLookups() sources.ItemTypeLookups {
     }
 }
 
-func (b BigQueryTableWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (b BigQueryTableWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
     datasetID := queryParts[0]  // From BigQueryDatasetLookupByID
     tableID := queryParts[1]    // From BigQueryTableLookupByID
     // ... implementation
@@ -275,7 +308,9 @@ func (b BigQueryTableWrapper) Get(ctx context.Context, queryParts ...string) (*s
 ```
 
 ### Multiple Keys with Composite Lookup
+
 For complex hierarchical resources:
+
 ```go
 var (
     CloudKMSCryptoKeyRingLookupByLocation = shared.NewItemTypeLookup("location", gcpshared.CloudKMSKeyRing)
@@ -293,7 +328,9 @@ func (c cloudKMSCryptoKeyWrapper) GetLookups() sources.ItemTypeLookups {
 ```
 
 ### Search Lookups
+
 Define search parameters for SearchableWrapper:
+
 ```go
 // Single search lookup
 func (b BigQueryTableWrapper) SearchLookups() []sources.ItemTypeLookups {
@@ -321,7 +358,9 @@ func (c cloudKMSCryptoKeyWrapper) SearchLookups() []sources.ItemTypeLookups {
 ## Linked Item Queries
 
 ### Basic Pattern
+
 Always use this pattern for creating linked item queries:
+
 ```go
 sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
     Query: &sdp.Query{
@@ -338,7 +377,9 @@ sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQue
 ```
 
 ### Path Parameter Extraction
+
 Use helper functions for extracting parameters from GCP resource URLs:
+
 ```go
 // Extract parameters with their key names
 // key: projects/my-project/locations/my-location/keyRings/my-key-ring/cryptoKeys/my-crypto-key
@@ -349,12 +390,15 @@ values := gcpshared.ExtractPathParams(
 ```
 
 ### Composite Lookup Keys
+
 Use for multi-parameter queries:
+
 ```go
 Query: shared.CompositeLookupKey(location, keyRing, cryptoKey)
 ```
 
 ### Blast Propagation Rules
+
 - **In: true, Out: true** - Tightly coupled resources (parent-child relationships)
 - **In: true, Out: false** - This resource depends on linked resource (e.g., disk depends on image)
 - **In: false, Out: true** - Linked resource depends on this resource (e.g., instance depends on disk)
@@ -362,6 +406,7 @@ Query: shared.CompositeLookupKey(location, keyRing, cryptoKey)
 ### Common Linked Resource Patterns
 
 #### Network Resources
+
 ```go
 // Extract network name from full URL
 if network := instance.GetNetwork(); network != "" {
@@ -385,6 +430,7 @@ if network := instance.GetNetwork(); network != "" {
 ```
 
 #### KMS Resources
+
 ```go
 // Extract KMS key version parameters
 if keyName := encryptionKey.GetKmsKeyName(); keyName != "" {
@@ -413,15 +459,19 @@ if keyName := encryptionKey.GetKmsKeyName(); keyName != "" {
 ## Error Handling
 
 ### Standard Error Pattern
+
 Always use source-specific error wrapping:
+
 ```go
 if err != nil {
-    return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+    return nil, gcpshared.QueryError(err, scope, c.Type())
 }
 ```
 
 ### Iterator Pattern
+
 Handle GCP API iterators consistently:
+
 ```go
 for {
     item, err := it.Next()
@@ -429,17 +479,19 @@ for {
         break
     }
     if err != nil {
-        return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+        return nil, gcpshared.QueryError(err, scope, c.Type())
     }
     // Process item...
 }
 ```
 
 ### Stream Error Handling
+
 For streaming operations:
+
 ```go
 if err != nil {
-    stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+    stream.SendError(gcpshared.QueryError(err, scope, c.Type()))
     return
 }
 
@@ -453,7 +505,9 @@ if sdpErr != nil {
 ## Testing Patterns
 
 ### Test Structure
+
 Follow this exact pattern for all adapter tests:
+
 ```go
 func TestComputeInstance(t *testing.T) {
     ctx := context.Background()
@@ -503,6 +557,7 @@ func TestComputeInstance(t *testing.T) {
 ```
 
 ### Required Test Cases
+
 - **Get method**: Test successful retrieval and error cases
 - **StaticTests**: Test linked item queries using `shared.RunStaticTests`
 - **HealthCheck**: Test health status mapping (if applicable)
@@ -511,7 +566,9 @@ func TestComputeInstance(t *testing.T) {
 - **Interface compliance**: Verify adapter implements correct interfaces
 
 ### Test Helper Functions
+
 Create helper functions for test data:
+
 ```go
 func createComputeInstance(instanceName string, status computepb.Instance_Status) *computepb.Instance {
     return &computepb.Instance{
@@ -524,7 +581,9 @@ func createComputeInstance(instanceName string, status computepb.Instance_Status
 ```
 
 ### Mock Expectations
+
 Use gomock for client mocking:
+
 ```go
 mockClient := mocks.NewMockComputeInstanceClient(ctrl)
 mockClient.EXPECT().Get(ctx, gomock.Any()).Return(expectedResult, nil)
@@ -533,7 +592,9 @@ mockClient.EXPECT().Get(ctx, gomock.Any()).Return(expectedResult, nil)
 ## Client Interface Patterns
 
 ### Typed Client Interfaces
+
 Define typed client interfaces in the shared package:
+
 ```go
 // In sources/gcp/shared/compute-clients.go
 type ComputeInstanceClient interface {
@@ -548,7 +609,9 @@ func NewComputeInstanceClient(client *compute.InstancesClient) ComputeInstanceCl
 ```
 
 ### Client Implementation
+
 Implement the interface with proper error handling:
+
 ```go
 type computeInstanceClientImpl struct {
     client *compute.InstancesClient
@@ -566,7 +629,9 @@ func (c *computeInstanceClientImpl) List(ctx context.Context, req *computepb.Lis
 ## Common Gotchas and Best Practices
 
 ### 1. Unique Attribute Consistency
+
 Ensure the `UniqueAttribute` in the SDP item matches the lookup key:
+
 ```go
 // If using composite lookup key
 err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(values...))
@@ -578,7 +643,9 @@ sdpItem := &sdp.Item{
 ```
 
 ### 2. Scope Handling
+
 Use appropriate scope helper functions:
+
 ```go
 // For zonal resources
 scope := gcpshared.ZonalScope(projectID, zone)
@@ -591,14 +658,18 @@ scope := gcpshared.ProjectScope(projectID)
 ```
 
 ### 3. Attributes and Tags
+
 Use `ToAttributesWithExclude` to convert protobuf to attributes:
+
 ```go
 attributes, err := shared.ToAttributesWithExclude(instance, "labels")
 tags := instance.GetLabels() // Use labels as tags
 ```
 
 ### 4. Health Status Mapping
+
 Map GCP resource statuses to SDP health statuses:
+
 ```go
 switch disk.GetStatus() {
 case computepb.Disk_UNDEFINED_STATUS.String():
@@ -613,9 +684,11 @@ case computepb.Disk_READY.String():
 ```
 
 ### 5. Multiple Query Parameters
+
 For resources requiring multiple parameters:
+
 ```go
-func (b BigQueryTableWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (b BigQueryTableWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
     datasetID := queryParts[0]  // First parameter
     tableID := queryParts[1]    // Second parameter
     // ... implementation
@@ -623,7 +696,9 @@ func (b BigQueryTableWrapper) Get(ctx context.Context, queryParts ...string) (*s
 ```
 
 ### 6. Conditional Linked Queries
+
 Only create linked queries when the referenced resource exists:
+
 ```go
 if metadata.EncryptionConfig != nil && metadata.EncryptionConfig.KMSKeyName != "" {
     // Create KMS key linked query
@@ -631,7 +706,9 @@ if metadata.EncryptionConfig != nil && metadata.EncryptionConfig.KMSKeyName != "
 ```
 
 ### 7. Path Validation
+
 Always validate extracted path parameters:
+
 ```go
 values := gcpshared.ExtractPathParams(keyName, "locations", "keyRings", "cryptoKeys")
 if len(values) == 3 && values[0] != "" && values[1] != "" && values[2] != "" {
@@ -640,7 +717,9 @@ if len(values) == 3 && values[0] != "" && values[1] != "" && values[2] != "" {
 ```
 
 ### 8. Adapter Registration
+
 Register adapters in the main adapters file with proper scoping:
+
 ```go
 // Register zonal adapters
 for _, zone := range zones {
@@ -663,7 +742,9 @@ adapters = append(adapters,
 ```
 
 ### 9. Documentation Comments
+
 Always include GCP API documentation URLs in comments:
+
 ```go
 // The resource URL for the disk type associated with this disk.
 // GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/diskTypes/{diskType}
@@ -671,7 +752,9 @@ Always include GCP API documentation URLs in comments:
 ```
 
 ### 10. Error Message Consistency
+
 Use consistent error messages and include context:
+
 ```go
 return nil, &sdp.QueryError{
     ErrorType:   sdp.QueryError_OTHER,

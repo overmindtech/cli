@@ -69,17 +69,23 @@ var _ = registerableAdapter{
 		"serviceAccountEmailAddress": gcpshared.IAMServiceAccountImpactInOnly,
 		// Added: DNS name representing the instance endpoint.
 		"dnsName": {
-			Description:      "Tightly coupled with the Cloud SQL Instance endpoint.",
-			ToSDPItemType:    stdlib.NetworkDNS,
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			Description:   "Tightly coupled with the Cloud SQL Instance endpoint.",
+			ToSDPItemType: stdlib.NetworkDNS,
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		// Authorized networks (CIDR ranges) allowed to connect to the instance.
 		"settings.ipConfiguration.authorizedNetworks.value": gcpshared.IPImpactBothWays,
 		// Allocated IP range (secondary IP range in VPC) used for private IP allocation.
 		"settings.ipConfiguration.allocatedIpRange": {
-			Description:      "If the Subnetwork's secondary IP range is deleted or updated: The Cloud SQL Instance may fail to allocate private IP addresses. If the instance is updated: The subnetwork remains unaffected.",
-			ToSDPItemType:    gcpshared.ComputeSubnetwork,
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+			Description:   "If the Subnetwork's secondary IP range is deleted or updated: The Cloud SQL Instance may fail to allocate private IP addresses. If the instance is updated: The subnetwork remains unaffected.",
+			ToSDPItemType: gcpshared.ComputeSubnetwork,
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
 		},
 		// CA pool resource name when using customer-managed CAs.
 		// Format: projects/{project}/locations/{region}/caPools/{caPoolId}
@@ -87,7 +93,10 @@ var _ = registerableAdapter{
 		// "settings.ipConfiguration.serverCaPool": {
 		// 	Description:      "If the Private CA Pool is deleted or updated: The Cloud SQL Instance may fail to use customer-managed certificates. If the instance is updated: The CA pool remains unaffected.",
 		// 	ToSDPItemType:    gcpshared.PrivateCACAPool,
-		// 	BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+		// 		BlastPropagation: &sdp.BlastPropagation{
+		// 			In: false,
+		// 			Out: true,
+		// 		},
 		// },
 		// Forward link from parent to child via SEARCH
 		// Link to all backup runs for this instance

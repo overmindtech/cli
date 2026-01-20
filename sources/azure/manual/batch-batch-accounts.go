@@ -13,9 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-var (
-	BatchAccountLookupByName = shared.NewItemTypeLookup("name", azureshared.BatchBatchAccount)
-)
+var BatchAccountLookupByName = shared.NewItemTypeLookup("name", azureshared.BatchBatchAccount)
 
 type batchAccountWrapper struct {
 	client clients.BatchAccountsClient
@@ -35,14 +33,18 @@ func NewBatchAccount(client clients.BatchAccountsClient, subscriptionID, resourc
 	}
 }
 
-func (b batchAccountWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := b.client.ListByResourceGroup(ctx, b.ResourceGroup())
+func (b batchAccountWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = b.ResourceGroup()
+	}
+	pager := b.client.ListByResourceGroup(ctx, resourceGroup)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, b.DefaultScope(), b.Type())
+			return nil, azureshared.QueryError(err, scope, b.Type())
 		}
 
 		for _, account := range page.Value {
@@ -50,7 +52,7 @@ func (b batchAccountWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryE
 				continue
 			}
 
-			item, sdpErr := b.azureBatchAccountToSDPItem(account)
+			item, sdpErr := b.azureBatchAccountToSDPItem(account, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -61,20 +63,20 @@ func (b batchAccountWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryE
 	return items, nil
 }
 
-func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Account) (*sdp.Item, *sdp.QueryError) {
+func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Account, scope string) (*sdp.Item, *sdp.QueryError) {
 	if account.Name == nil {
-		return nil, azureshared.QueryError(errors.New("name is nil"), b.DefaultScope(), b.Type())
+		return nil, azureshared.QueryError(errors.New("name is nil"), scope, b.Type())
 	}
 	attributes, err := shared.ToAttributesWithExclude(account, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, b.DefaultScope(), b.Type())
+		return nil, azureshared.QueryError(err, scope, b.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.BatchBatchAccount.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           b.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(account.Tags),
 	}
 
@@ -87,16 +89,16 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 		storageAccountName := azureshared.ExtractResourceName(storageAccountID)
 		if storageAccountName != "" {
 			// Extract scope from resource ID if it's in a different resource group
-			scope := b.DefaultScope()
+			linkedScope := scope
 			if extractedScope := azureshared.ExtractScopeFromResourceID(storageAccountID); extractedScope != "" {
-				scope = extractedScope
+				linkedScope = extractedScope
 			}
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.StorageAccount.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  storageAccountName,
-					Scope:  scope,
+					Scope:  linkedScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// Batch account depends on storage account for auto-storage functionality
@@ -115,16 +117,16 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 		keyVaultName := azureshared.ExtractResourceName(keyVaultID)
 		if keyVaultName != "" {
 			// Extract scope from resource ID if it's in a different resource group
-			scope := b.DefaultScope()
+			linkedScope := scope
 			if extractedScope := azureshared.ExtractScopeFromResourceID(keyVaultID); extractedScope != "" {
-				scope = extractedScope
+				linkedScope = extractedScope
 			}
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.KeyVaultVault.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  keyVaultName,
-					Scope:  scope,
+					Scope:  linkedScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// Batch account depends on Key Vault for certificate management and encryption
@@ -156,7 +158,7 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 						Type:   azureshared.KeyVaultVault.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  vaultName,
-						Scope:  b.DefaultScope(), // Limitation: Key Vault URI doesn't contain resource group info
+						Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Batch account depends on Key Vault for customer-managed encryption keys
@@ -178,16 +180,16 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 				privateEndpointName := azureshared.ExtractResourceName(privateEndpointID)
 				if privateEndpointName != "" {
 					// Extract scope from resource ID if it's in a different resource group
-					scope := b.DefaultScope()
+					linkedScope := scope
 					if extractedScope := azureshared.ExtractScopeFromResourceID(privateEndpointID); extractedScope != "" {
-						scope = extractedScope
+						linkedScope = extractedScope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.NetworkPrivateEndpoint.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  privateEndpointName,
-							Scope:  scope,
+							Scope:  linkedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Private endpoint connection is tightly coupled with the batch account
@@ -208,16 +210,16 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 			identityName := azureshared.ExtractResourceName(identityResourceID)
 			if identityName != "" {
 				// Extract scope from resource ID if it's in a different resource group
-				scope := b.DefaultScope()
+				linkedScope := scope
 				if extractedScope := azureshared.ExtractScopeFromResourceID(identityResourceID); extractedScope != "" {
-					scope = extractedScope
+					linkedScope = extractedScope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  identityName,
-						Scope:  scope,
+						Scope:  linkedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Batch account depends on managed identity for authentication
@@ -237,16 +239,16 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 		nodeIdentityName := azureshared.ExtractResourceName(nodeIdentityID)
 		if nodeIdentityName != "" {
 			// Extract scope from resource ID if it's in a different resource group
-			scope := b.DefaultScope()
+			linkedScope := scope
 			if extractedScope := azureshared.ExtractScopeFromResourceID(nodeIdentityID); extractedScope != "" {
-				scope = extractedScope
+				linkedScope = extractedScope
 			}
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  nodeIdentityName,
-					Scope:  scope,
+					Scope:  linkedScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// Batch account compute nodes depend on managed identity for auto-storage access
@@ -266,7 +268,7 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 			Type:   azureshared.BatchBatchApplication.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
-			Scope:  b.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			// Applications are child resources of the batch account
@@ -284,7 +286,7 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 			Type:   azureshared.BatchBatchPool.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
-			Scope:  b.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			// Pools are child resources of the batch account
@@ -302,7 +304,7 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 			Type:   azureshared.BatchBatchCertificate.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
-			Scope:  b.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			// Certificates are child resources of the batch account
@@ -320,7 +322,7 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 			Type:   azureshared.BatchBatchPrivateEndpointConnection.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
-			Scope:  b.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			// Private endpoint connections are child resources of the batch account
@@ -338,7 +340,7 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 			Type:   azureshared.BatchBatchPrivateLinkResource.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
-			Scope:  b.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			// Private link resources are child resources of the batch account
@@ -356,7 +358,7 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 			Type:   azureshared.BatchBatchDetector.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
-			Scope:  b.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			// Detectors are child resources of the batch account
@@ -434,27 +436,31 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 	return sdpItem, nil
 }
 
-func (b batchAccountWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (b batchAccountWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Get requires 1 query part: accountName",
-			Scope:       b.DefaultScope(),
+			Scope:       scope,
 			ItemType:    b.Type(),
 		}
 	}
 	accountName := queryParts[0]
 
 	if accountName == "" {
-		return nil, azureshared.QueryError(errors.New("accountName is empty"), b.DefaultScope(), b.Type())
+		return nil, azureshared.QueryError(errors.New("accountName is empty"), scope, b.Type())
 	}
 
-	resp, err := b.client.Get(ctx, b.ResourceGroup(), accountName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = b.ResourceGroup()
+	}
+	resp, err := b.client.Get(ctx, resourceGroup, accountName)
 	if err != nil {
-		return nil, azureshared.QueryError(err, b.DefaultScope(), b.Type())
+		return nil, azureshared.QueryError(err, scope, b.Type())
 	}
 
-	return b.azureBatchAccountToSDPItem(&resp.Account)
+	return b.azureBatchAccountToSDPItem(&resp.Account, scope)
 }
 
 func (b batchAccountWrapper) GetLookups() sources.ItemTypeLookups {

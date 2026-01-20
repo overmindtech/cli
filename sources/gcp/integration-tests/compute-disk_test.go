@@ -26,6 +26,7 @@ func TestComputeDiskIntegration(t *testing.T) {
 	if projectID == "" {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
 	}
+	t.Parallel()
 
 	zone := os.Getenv("GCP_ZONE")
 	if zone == "" {
@@ -53,7 +54,7 @@ func TestComputeDiskIntegration(t *testing.T) {
 	t.Run("ListDisks", func(t *testing.T) {
 		log.Printf("Listing disks in project %s, zone %s", projectID, zone)
 
-		disksWrapper := manual.NewComputeDisk(gcpshared.NewComputeDiskClient(diskClient), projectID, zone)
+		disksWrapper := manual.NewComputeDisk(gcpshared.NewComputeDiskClient(diskClient), []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		scope := disksWrapper.Scopes()[0]
 
 		disksAdapter := sources.WrapperToAdapter(disksWrapper, sdpcache.NewNoOpCache())
@@ -92,7 +93,7 @@ func TestComputeDiskIntegration(t *testing.T) {
 	t.Run("GetDisk", func(t *testing.T) {
 		log.Printf("Retrieving disk %s in project %s, zone %s", diskName, projectID, zone)
 
-		disksWrapper := manual.NewComputeDisk(gcpshared.NewComputeDiskClient(diskClient), projectID, zone)
+		disksWrapper := manual.NewComputeDisk(gcpshared.NewComputeDiskClient(diskClient), []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		scope := disksWrapper.Scopes()[0]
 
 		disksAdapter := sources.WrapperToAdapter(disksWrapper, sdpcache.NewNoOpCache())

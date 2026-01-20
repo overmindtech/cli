@@ -5,6 +5,8 @@ import (
 	"os"
 	"strconv"
 	"testing"
+
+	_ "github.com/overmindtech/cli/sources/gcp/dynamic/adapters" // force import of adapters to register them
 )
 
 func TestMain(m *testing.M) {

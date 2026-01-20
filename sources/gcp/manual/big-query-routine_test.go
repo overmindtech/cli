@@ -31,7 +31,7 @@ func TestBigQueryRoutine(t *testing.T) {
 	routineID := "test_routine"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewBigQueryRoutine(mockClient, projectID)
+		wrapper := manual.NewBigQueryRoutine(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, projectID, datasetID, routineID).Return(createRoutineMetadata("test routine"), nil)
 
@@ -97,7 +97,7 @@ func TestBigQueryRoutine(t *testing.T) {
 	})
 
 	t.Run("Get error", func(t *testing.T) {
-		wrapper := manual.NewBigQueryRoutine(mockClient, projectID)
+		wrapper := manual.NewBigQueryRoutine(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 		mockClient.EXPECT().Get(ctx, projectID, datasetID, routineID).Return(nil, assert.AnError)
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey(datasetID, routineID), true)
@@ -107,7 +107,7 @@ func TestBigQueryRoutine(t *testing.T) {
 	})
 
 	t.Run("Search", func(t *testing.T) {
-		wrapper := manual.NewBigQueryRoutine(mockClient, projectID)
+		wrapper := manual.NewBigQueryRoutine(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Mock the List function to call the converter with each routine
@@ -158,11 +158,10 @@ func TestBigQueryRoutine(t *testing.T) {
 				t.Fatalf("Expected no validation error, got: %v", item.Validate())
 			}
 		}
-
 	})
 
 	t.Run("Search error", func(t *testing.T) {
-		wrapper := manual.NewBigQueryRoutine(mockClient, projectID)
+		wrapper := manual.NewBigQueryRoutine(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Mock the List function to call the converter with each routine
@@ -183,9 +182,7 @@ func TestBigQueryRoutine(t *testing.T) {
 		if err == nil {
 			t.Fatalf("Expected error, got nil")
 		}
-
 	})
-
 }
 
 func createRoutineMetadata(description string) *bigquery.RoutineMetadata {

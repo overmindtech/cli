@@ -33,7 +33,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 	instanceTemplateName := "https://www.googleapis.com/compute/v1/projects/test-project-id/global/instanceTemplates/unit-test-template"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstanceGroupManager(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createInstanceGroupManager("test-instance-group-manager", true, instanceTemplateName), nil)
 
@@ -52,7 +52,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 			t.Run("GlobalInstanceTemplate", func(t *testing.T) {
 				igm := createInstanceGroupManager("test-instance-group-manager", true, instanceTemplateName)
 
-				wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
+				wrapper := manual.NewComputeInstanceGroupManager(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(igm, nil)
 
@@ -111,7 +111,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 				regionalInstanceTemplateName := "https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/instanceTemplates/unit-test-template"
 				igm := createInstanceGroupManager("test-instance-group-manager", true, regionalInstanceTemplateName)
 
-				wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
+				wrapper := manual.NewComputeInstanceGroupManager(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(igm, nil)
 
@@ -192,7 +192,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 					},
 				}
 
-				wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
+				wrapper := manual.NewComputeInstanceGroupManager(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(igm, nil)
 
@@ -282,7 +282,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 					},
 				}
 
-				wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
+				wrapper := manual.NewComputeInstanceGroupManager(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(igm, nil)
 
@@ -348,7 +348,6 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 				shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 			})
 		})
-
 	})
 
 	t.Run("HealthCheck", func(t *testing.T) {
@@ -372,7 +371,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
+				wrapper := manual.NewComputeInstanceGroupManager(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createInstanceGroupManager("test-instance-group-manager", tc.isStable, instanceTemplateName), nil)
@@ -390,7 +389,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstanceGroupManager(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockComputeInstanceGroupManagerIterator(ctrl)
@@ -433,7 +432,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeInstanceGroupManager(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstanceGroupManager(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockComputeInstanceGroupManagerIterator(ctrl)

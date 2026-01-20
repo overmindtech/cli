@@ -13,9 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	DocumentDBDatabaseAccountsLookupByName = shared.NewItemTypeLookup("name", azureshared.DocumentDBDatabaseAccounts)
-)
+var DocumentDBDatabaseAccountsLookupByName = shared.NewItemTypeLookup("name", azureshared.DocumentDBDatabaseAccounts)
 
 type documentDBDatabaseAccountsWrapper struct {
 	client clients.DocumentDBDatabaseAccountsClient
@@ -35,19 +33,23 @@ func NewDocumentDBDatabaseAccounts(client clients.DocumentDBDatabaseAccountsClie
 	}
 }
 
-func (s documentDBDatabaseAccountsWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := s.client.ListByResourceGroup(s.ResourceGroup())
+func (s documentDBDatabaseAccountsWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	pager := s.client.ListByResourceGroup(resourceGroup)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+			return nil, azureshared.QueryError(err, scope, s.Type())
 		}
 
 		for _, account := range page.Value {
 
-			item, sdpErr := s.azureDocumentDBDatabaseAccountToSDPItem(account)
+			item, sdpErr := s.azureDocumentDBDatabaseAccountToSDPItem(account, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -57,12 +59,12 @@ func (s documentDBDatabaseAccountsWrapper) List(ctx context.Context) ([]*sdp.Ite
 	return items, nil
 }
 
-func (s documentDBDatabaseAccountsWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (s documentDBDatabaseAccountsWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Get requires 1 query part: name",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
@@ -71,45 +73,49 @@ func (s documentDBDatabaseAccountsWrapper) Get(ctx context.Context, queryParts .
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "name cannot be empty",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
 
-	resp, err := s.client.Get(ctx, s.ResourceGroup(), accountName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	resp, err := s.client.Get(ctx, resourceGroup, accountName)
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
-	return s.azureDocumentDBDatabaseAccountToSDPItem(&resp.DatabaseAccountGetResults)
+	return s.azureDocumentDBDatabaseAccountToSDPItem(&resp.DatabaseAccountGetResults, scope)
 }
 
-func (s documentDBDatabaseAccountsWrapper) azureDocumentDBDatabaseAccountToSDPItem(account *armcosmos.DatabaseAccountGetResults) (*sdp.Item, *sdp.QueryError) {
+func (s documentDBDatabaseAccountsWrapper) azureDocumentDBDatabaseAccountToSDPItem(account *armcosmos.DatabaseAccountGetResults, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(account, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	if account.Name == nil {
-		return nil, azureshared.QueryError(errors.New("name cannot be empty"), s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(errors.New("name cannot be empty"), scope, s.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.DocumentDBDatabaseAccounts.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           s.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(account.Tags),
 	}
 
-	//reference : https://learn.microsoft.com/en-us/rest/api/cosmos-db-resource-provider/private-endpoint-connections/list-by-database-account?view=rest-cosmos-db-resource-provider-2025-10-15&tabs=HTTP
+	// reference : https://learn.microsoft.com/en-us/rest/api/cosmos-db-resource-provider/private-endpoint-connections/list-by-database-account?view=rest-cosmos-db-resource-provider-2025-10-15&tabs=HTTP
 	if account.Properties != nil && account.Properties.PrivateEndpointConnections != nil {
 		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   azureshared.DocumentDBPrivateEndpointConnection.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  *account.Name,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true, // Private endpoint connection changes (deletion, status changes) affect the Database Account's network connectivity and accessibility
@@ -217,7 +223,7 @@ func (s documentDBDatabaseAccountsWrapper) azureDocumentDBDatabaseAccountToSDPIt
 					Type:   azureshared.KeyVaultVault.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  vaultName,
-					Scope:  s.DefaultScope(), // Limitation: Key Vault URI doesn't contain resource group info
+					Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // Key Vault changes (key deletion, rotation, access policy) affect the Database Account's encryption
@@ -227,15 +233,18 @@ func (s documentDBDatabaseAccountsWrapper) azureDocumentDBDatabaseAccountToSDPIt
 		}
 	}
 
-	// Link to User-Assigned Managed Identities
-	// Reference: https://learn.microsoft.com/en-us/rest/api/managedidentity/user-assigned-identities/list-by-resource-group?view=rest-managedidentity-2024-11-30&tabs=HTTP
-	// GET /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities?api-version=2024-11-30
+	// Link to User-Assigned Managed Identities Reference:
+	// https://learn.microsoft.com/en-us/rest/api/managedidentity/user-assigned-identities/list-by-resource-group?view=rest-managedidentity-2024-11-30&tabs=HTTP
+	// GET
+	// /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities?api-version=2024-11-30
 	//
-	// IMPORTANT: User-Assigned Managed Identities can be in a different resource group (or even subscription)
-	// than the Cosmos DB account. User-assigned managed identities are standalone Azure resources that can
-	// be assigned to multiple services across different resource groups. Therefore, we must extract the
-	// subscription ID and resource group from each identity's resource ID to construct the correct scope.
-	// Using the database account's scope (s.DefaultScope()) would fail if the identity is in a different
+	// IMPORTANT: User-Assigned Managed Identities can be in a different
+	// resource group (or even subscription) than the Cosmos DB account.
+	// User-assigned managed identities are standalone Azure resources that can
+	// be assigned to multiple services across different resource groups.
+	// Therefore, we must extract the subscription ID and resource group from
+	// each identity's resource ID to construct the correct scope. Using the
+	// database account's scope would fail if the identity is in a different
 	// resource group, as the query would look in the wrong location.
 	if account.Identity != nil && account.Identity.UserAssignedIdentities != nil {
 		// Track scopes (subscription.resourceGroup) to avoid duplicate queries

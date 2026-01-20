@@ -17,16 +17,16 @@ var _ = registerableAdapter{
 		// Gets the billing information for a project.
 		// GET https://cloudbilling.googleapis.com/v1/{name=projects/*}/billingInfo
 		// IAM permissions: resourcemanager.projects.get
-		GetEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
-			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-				return func(query string) string {
-					if query != "" {
-						return fmt.Sprintf("https://cloudbilling.googleapis.com/v1/projects/%s/billingInfo", query)
-					}
-					return ""
-				}, nil
+		// Note: This adapter uses the query as the project ID, and validates it
+		// against the adapter's configured project via location.ProjectID.
+		GetEndpointFunc: func(query string, location gcpshared.LocationInfo) string {
+			if query == "" {
+				return ""
 			}
-			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+			if query != location.ProjectID {
+				return ""
+			}
+			return fmt.Sprintf("https://cloudbilling.googleapis.com/v1/projects/%s/billingInfo", query)
 		},
 		UniqueAttributeKeys: []string{"billingInfo"},
 		IAMPermissions:      []string{"resourcemanager.projects.get"},
@@ -40,9 +40,12 @@ var _ = registerableAdapter{
 			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"billingAccountName": {
-			ToSDPItemType:    gcpshared.CloudBillingBillingAccount,
-			Description:      "If the Cloud Billing Billing Account is deleted or updated: The billing information may become invalid or inaccessible. If the billing info is updated: The billing account is impacted as well.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			ToSDPItemType: gcpshared.CloudBillingBillingAccount,
+			Description:   "If the Cloud Billing Billing Account is deleted or updated: The billing information may become invalid or inaccessible. If the billing info is updated: The billing account is impacted as well.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

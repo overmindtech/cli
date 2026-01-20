@@ -19,17 +19,15 @@ var ComputeInstantSnapshotLookupByName = shared.NewItemTypeLookup("name", gcpsha
 
 type computeInstantSnapshotWrapper struct {
 	client gcpshared.ComputeInstantSnapshotsClient
-
 	*gcpshared.ZoneBase
 }
 
-// NewComputeInstantSnapshot creates a new computeInstantSnapshotWrapper instance
-func NewComputeInstantSnapshot(client gcpshared.ComputeInstantSnapshotsClient, projectID, zone string) sources.ListableWrapper {
+// NewComputeInstantSnapshot creates a new computeInstantSnapshotWrapper instance.
+func NewComputeInstantSnapshot(client gcpshared.ComputeInstantSnapshotsClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeInstantSnapshotWrapper{
 		client: client,
 		ZoneBase: gcpshared.NewZoneBase(
-			projectID,
-			zone,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 			gcpshared.ComputeInstantSnapshot,
 		),
@@ -47,72 +45,75 @@ func (c computeInstantSnapshotWrapper) PredefinedRole() string {
 	return "roles/compute.viewer"
 }
 
-// PotentialLinks returns the potential links for the compute snapshot wrapper
 func (c computeInstantSnapshotWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeDisk,
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the compute instant snapshot wrapper
 func (c computeInstantSnapshotWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
-			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_group_manager#argument-reference
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_instant_snapshot.name",
 		},
 	}
 }
 
-// GetLookups returns the lookups for the compute instant snapshot wrapper
 func (c computeInstantSnapshotWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		ComputeInstantSnapshotLookupByName,
 	}
 }
 
-// Get retrieves a compute instant snapshot by its name
-func (c computeInstantSnapshotWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeInstantSnapshotWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetInstantSnapshotRequest{
-		Project:         c.ProjectID(),
-		Zone:            c.Zone(),
+		Project:         location.ProjectID,
+		Zone:            location.Zone,
 		InstantSnapshot: queryParts[0],
 	}
 
-	instantSnapshot, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	instantSnapshot, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(ctx, instantSnapshot)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpComputeInstantSnapshotToSDPItem(ctx, instantSnapshot, location)
 }
 
-// List lists compute instant snapshots and converts them to sdp.Items.
-func (c computeInstantSnapshotWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (c computeInstantSnapshotWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	it := c.client.List(ctx, &computepb.ListInstantSnapshotsRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	var items []*sdp.Item
 	for {
-		instantSnapshot, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		instantSnapshot, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		var sdpErr *sdp.QueryError
-		var item *sdp.Item
-		item, sdpErr = c.gcpComputeInstantSnapshotToSDPItem(ctx, instantSnapshot)
+		item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(ctx, instantSnapshot, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -123,24 +124,32 @@ func (c computeInstantSnapshotWrapper) List(ctx context.Context) ([]*sdp.Item, *
 	return items, nil
 }
 
-// ListStream lists compute instant snapshots and sends them to the stream.
-func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListInstantSnapshotsRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	for {
-		instantSnapshot, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		instantSnapshot, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(ctx, instantSnapshot)
+		item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(ctx, instantSnapshot, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -151,8 +160,7 @@ func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream di
 	}
 }
 
-// gcpComputeInstantSnapshotToSDPItem converts a GCP Instant Snapshot to an SDP Item
-func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(ctx context.Context, instantSnapshot *computepb.InstantSnapshot) (*sdp.Item, *sdp.QueryError) {
+func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(ctx context.Context, instantSnapshot *computepb.InstantSnapshot, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(instantSnapshot, "labels")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -165,16 +173,11 @@ func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(ctx co
 		Type:            gcpshared.ComputeInstantSnapshot.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           location.ToScope(),
 		Tags:            instantSnapshot.GetLabels(),
 	}
 
-	// The resource URL for the source disk of this instant snapshot.
-	// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
-	// https://cloud.google.com/compute/docs/reference/rest/v1/disks/get
-	// The source disk is the disk from which this instant snapshot was created.
-	// If the disk is deleted: The instant snapshot becomes unusable for restore operations.
-	// If the instant snapshot is deleted: The disk cannot be restored to the point where the snapshot was taken, but the disk itself remains unaffected.
+	// Link source disk
 	if disk := instantSnapshot.GetSourceDisk(); disk != "" {
 		diskName := gcpshared.LastPathComponent(disk)
 		if diskName != "" {
@@ -187,9 +190,10 @@ func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(ctx co
 						Query:  diskName,
 						Scope:  scope,
 					},
-					// If the disk is deleted: The instant snapshot becomes unusable for restore operations.
-					// If the instant snapshot is deleted: The disk cannot be restored to the point where the snapshot was taken, but the disk itself remains unaffected.
-					BlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  false,
+						Out: true,
+					},
 				})
 			}
 		}

@@ -17,17 +17,11 @@ var cloudResourceManagerTagKeyAdapter = registerableAdapter{ //nolint:unused
 		InDevelopment:      true,
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 		LocationLevel:      gcpshared.ProjectLevel,
-		GetEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
-			// Expect a single non-empty initialization param (projectID for consistency)
-			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-				return func(query string) string {
-					if query == "" { // require TagKey identifier (e.g. 123)
-						return ""
-					}
-					return fmt.Sprintf("https://cloudresourcemanager.googleapis.com/v3/tagKeys/%s", query)
-				}, nil
+		GetEndpointFunc: func(query string, location gcpshared.LocationInfo) string {
+			if query == "" { // require TagKey identifier (e.g. 123)
+				return ""
 			}
-			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+			return fmt.Sprintf("https://cloudresourcemanager.googleapis.com/v3/tagKeys/%s", query)
 		},
 		// List TagKeys requires a parent. We accept an organization ID (e.g. 123456789) and construct organizations/{ID}
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://cloudresourcemanager.googleapis.com/v3/tagKeys?parent=projects/%s"),

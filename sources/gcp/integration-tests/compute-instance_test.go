@@ -32,13 +32,14 @@ func TestComputeInstanceIntegration(t *testing.T) {
 		t.Skip("GCP_ZONE environment variable not set")
 	}
 
+	t.Parallel()
+
 	instanceName := "integration-test-instance"
 
 	ctx := context.Background()
 
 	// Create a new Compute Instance client
 	client, err := compute.NewInstancesRESTClient(ctx)
-
 	if err != nil {
 		t.Fatalf("NewInstancesRESTClient: %v", err)
 	}
@@ -55,7 +56,7 @@ func TestComputeInstanceIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Instance in project %s, zone %s", projectID, zone)
 
-		instanceWrapper := manual.NewComputeInstance(gcpshared.NewComputeInstanceClient(client), projectID, zone)
+		instanceWrapper := manual.NewComputeInstance(gcpshared.NewComputeInstanceClient(client), []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		scope := instanceWrapper.Scopes()[0]
 
 		instanceAdapter := sources.WrapperToAdapter(instanceWrapper, sdpcache.NewNoOpCache())

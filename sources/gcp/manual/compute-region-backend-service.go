@@ -19,17 +19,15 @@ var ComputeRegionBackendServiceLookupByName = shared.NewItemTypeLookup("name", g
 
 type computeRegionBackendServiceWrapper struct {
 	client gcpshared.ComputeRegionBackendServiceClient
-
 	*gcpshared.RegionBase
 }
 
-// NewComputeRegionBackendService creates a new computeRegionBackendServiceWrapper instance
-func NewComputeRegionBackendService(client gcpshared.ComputeRegionBackendServiceClient, projectID string, region string) sources.ListableWrapper {
+// NewComputeRegionBackendService creates a new computeRegionBackendServiceWrapper instance.
+func NewComputeRegionBackendService(client gcpshared.ComputeRegionBackendServiceClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeRegionBackendServiceWrapper{
 		client: client,
 		RegionBase: gcpshared.NewRegionBase(
-			projectID,
-			region,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			gcpshared.ComputeRegionBackendService,
 		),
@@ -61,65 +59,69 @@ func (computeRegionBackendServiceWrapper) PotentialLinks() map[shared.ItemType]b
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the compute region backend service wrapper
 func (c computeRegionBackendServiceWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
-			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_region_backend_service
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_region_backend_service.name",
 		},
 	}
 }
 
-// GetLookups returns the lookups for the compute region backend service wrapper
 func (c computeRegionBackendServiceWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		ComputeRegionBackendServiceLookupByName,
 	}
 }
 
-// Get retrieves a compute region backend service by its region and name
-func (c computeRegionBackendServiceWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
-	name := queryParts[0]
+func (c computeRegionBackendServiceWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
 
 	req := &computepb.GetRegionBackendServiceRequest{
-		Project:        c.ProjectID(),
-		Region:         c.Region(),
-		BackendService: name,
+		Project:        location.ProjectID,
+		Region:         location.Region,
+		BackendService: queryParts[0],
 	}
 
-	service, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	service, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, c.ProjectID(), c.DefaultScope(), service)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), service)
 }
 
-// List lists all compute region backend services in the specified region
-func (c computeRegionBackendServiceWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (c computeRegionBackendServiceWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	it := c.client.List(ctx, &computepb.ListRegionBackendServicesRequest{
-		Project: c.ProjectID(),
-		Region:  c.Region(),
+		Project: location.ProjectID,
+		Region:  location.Region,
 	})
 
 	var items []*sdp.Item
 	for {
-		bs, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		bs, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.Region(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, c.ProjectID(), c.Region(), bs)
+		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), bs)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -130,24 +132,32 @@ func (c computeRegionBackendServiceWrapper) List(ctx context.Context) ([]*sdp.It
 	return items, nil
 }
 
-// ListStream lists all compute region backend services in the specified region and streams them to the provided stream
-func (c computeRegionBackendServiceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeRegionBackendServiceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListRegionBackendServicesRequest{
-		Project: c.ProjectID(),
-		Region:  c.Region(),
+		Project: location.ProjectID,
+		Region:  location.Region,
 	})
 
 	for {
-		backendService, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		backendService, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.Region(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, c.ProjectID(), c.Region(), backendService)
+		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), backendService)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue

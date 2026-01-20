@@ -32,7 +32,7 @@ func TestIAMServiceAccountKey(t *testing.T) {
 	testKeyFullName := "projects/test-project-id/serviceAccounts/test-sa@test-project-id.iam.gserviceaccount.com/keys/1234567890abcdef"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
+		wrapper := manual.NewIAMServiceAccountKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createServiceAccountKey(testKeyFullName), nil)
 
@@ -59,7 +59,7 @@ func TestIAMServiceAccountKey(t *testing.T) {
 	})
 
 	t.Run("Search", func(t *testing.T) {
-		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
+		wrapper := manual.NewIAMServiceAccountKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockClient.EXPECT().Search(ctx, gomock.Any()).Return(&adminpb.ListServiceAccountKeysResponse{
@@ -93,7 +93,7 @@ func TestIAMServiceAccountKey(t *testing.T) {
 	})
 
 	t.Run("SearchWithTerraformQueryMap", func(t *testing.T) {
-		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
+		wrapper := manual.NewIAMServiceAccountKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createServiceAccountKey(testKeyFullName), nil)
 
@@ -125,7 +125,7 @@ func TestIAMServiceAccountKey(t *testing.T) {
 	})
 
 	t.Run("SearchStream", func(t *testing.T) {
-		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
+		wrapper := manual.NewIAMServiceAccountKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockClient.EXPECT().Search(ctx, gomock.Any()).Return(&adminpb.ListServiceAccountKeysResponse{
@@ -176,7 +176,7 @@ func TestIAMServiceAccountKey(t *testing.T) {
 	})
 
 	t.Run("List_Unsupported", func(t *testing.T) {
-		wrapper := manual.NewIAMServiceAccountKey(mockClient, projectID)
+		wrapper := manual.NewIAMServiceAccountKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports list - it should not

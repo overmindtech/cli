@@ -32,6 +32,8 @@ func TestComputeSnapshotIntegration(t *testing.T) {
 		t.Skip("GCP_ZONE environment variable not set")
 	}
 
+	t.Parallel()
+
 	snapshotName := "integration-test-snapshot"
 	diskName := "integration-test-disk-for-snapshot"
 
@@ -65,7 +67,7 @@ func TestComputeSnapshotIntegration(t *testing.T) {
 	t.Run("ListSnapshots", func(t *testing.T) {
 		log.Printf("Listing snapshots in project %s", projectID)
 
-		snapshotsWrapper := manual.NewComputeSnapshot(gcpshared.NewComputeSnapshotsClient(client), projectID)
+		snapshotsWrapper := manual.NewComputeSnapshot(gcpshared.NewComputeSnapshotsClient(client), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		scope := snapshotsWrapper.Scopes()[0]
 
 		snapshotsAdapter := sources.WrapperToAdapter(snapshotsWrapper, sdpcache.NewNoOpCache())
@@ -104,7 +106,7 @@ func TestComputeSnapshotIntegration(t *testing.T) {
 	t.Run("GetSnapshot", func(t *testing.T) {
 		log.Printf("Retrieving snapshot %s in project %s", snapshotName, projectID)
 
-		snapshotsWrapper := manual.NewComputeSnapshot(gcpshared.NewComputeSnapshotsClient(client), projectID)
+		snapshotsWrapper := manual.NewComputeSnapshot(gcpshared.NewComputeSnapshotsClient(client), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		scope := snapshotsWrapper.Scopes()[0]
 
 		snapshotsAdapter := sources.WrapperToAdapter(snapshotsWrapper, sdpcache.NewNoOpCache())

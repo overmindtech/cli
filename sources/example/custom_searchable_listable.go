@@ -67,20 +67,20 @@ func (d *customComputeInstanceWrapper) GetLookups() sources.ItemTypeLookups {
 }
 
 // Get retrieves a specific ExternalType by unique attribute and converts it to a sdp.Item
-func (d *customComputeInstanceWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (d *customComputeInstanceWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	external, err := d.client.Get(ctx, queryParts[0])
 	if err != nil {
-		return nil, queryError(err, d.Scopes()[0], d.Type())
+		return nil, queryError(err, scope, d.Type())
 	}
 
 	return d.externalTypeToSDPItem(external)
 }
 
 // List retrieves all ExternalType and converts them to sdp.Items
-func (d *customComputeInstanceWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (d *customComputeInstanceWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
 	externals, err := d.client.List(ctx)
 	if err != nil {
-		return nil, queryError(err, d.Scopes()[0], d.Type())
+		return nil, queryError(err, scope, d.Type())
 	}
 
 	return d.mapper(externals)
@@ -107,7 +107,7 @@ func (d *customComputeInstanceWrapper) SearchLookups() []sources.ItemTypeLookups
 }
 
 // Search retrieves ExternalType by a search query and converts them to sdp.Items
-func (d *customComputeInstanceWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+func (d *customComputeInstanceWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
 	var err error
 	var externals []*ExternalType
 	switch len(queryParts) {
@@ -117,7 +117,7 @@ func (d *customComputeInstanceWrapper) Search(ctx context.Context, queryParts ..
 		externals, err = d.client.Search(ctx, queryParts[0], queryParts[1])
 	}
 	if err != nil {
-		return nil, queryError(err, d.Scopes()[0], d.Type())
+		return nil, queryError(err, scope, d.Type())
 	}
 
 	// We don't need to check if the length of the query is different from 1 or 2.

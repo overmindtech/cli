@@ -28,7 +28,7 @@ func TestBigQueryModel(t *testing.T) {
 	modelName := "test_model"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewBigQueryModel(mockClient, projectID)
+		wrapper := manual.NewBigQueryModel(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, projectID, datasetID, modelName).Return(createDatasetModel(projectID, modelName), nil)
 
@@ -73,7 +73,7 @@ func TestBigQueryModel(t *testing.T) {
 	})
 
 	t.Run("Search", func(t *testing.T) {
-		wrapper := manual.NewBigQueryModel(mockClient, projectID)
+		wrapper := manual.NewBigQueryModel(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		mockClient.EXPECT().List(ctx, projectID, datasetID, gomock.Any()).Return([]*sdp.Item{
 			{},
 		}, nil)
@@ -101,7 +101,7 @@ func TestBigQueryModel(t *testing.T) {
 	})
 
 	t.Run("List_Unsupported", func(t *testing.T) {
-		wrapper := manual.NewBigQueryModel(mockClient, projectID)
+		wrapper := manual.NewBigQueryModel(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports list - it should not

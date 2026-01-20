@@ -29,7 +29,7 @@ func TestComputeSecurityPolicy(t *testing.T) {
 	projectID := "test-project-id"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeSecurityPolicy(mockClient, projectID)
+		wrapper := manual.NewComputeSecurityPolicy(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeSecurityPolicy("test-security-policy"), nil)
 
@@ -63,7 +63,7 @@ func TestComputeSecurityPolicy(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeSecurityPolicy(mockClient, projectID)
+		wrapper := manual.NewComputeSecurityPolicy(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -107,7 +107,7 @@ func TestComputeSecurityPolicy(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeSecurityPolicy(mockClient, projectID)
+		wrapper := manual.NewComputeSecurityPolicy(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 

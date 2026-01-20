@@ -95,7 +95,7 @@ func TestNewLoggingSink(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				wrapper := manual.NewLoggingSink(mockClient, projectID)
+				wrapper := manual.NewLoggingSink(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 				mockClient.EXPECT().GetSink(ctx, gomock.Any()).Return(createLoggingSink("my-sink", tc.destination, ""), nil)
 
@@ -125,7 +125,7 @@ func TestNewLoggingSink(t *testing.T) {
 
 		// Test writerIdentity link to IAM Service Account
 		t.Run("WriterIdentity Service Account", func(t *testing.T) {
-			wrapper := manual.NewLoggingSink(mockClient, projectID)
+			wrapper := manual.NewLoggingSink(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 			writerIdentity := fmt.Sprintf("logging-sink-writer@%s.iam.gserviceaccount.com", projectID)
 
 			mockClient.EXPECT().GetSink(ctx, gomock.Any()).Return(createLoggingSink("my-sink", "storage.googleapis.com/my_bucket", writerIdentity), nil)
@@ -168,7 +168,7 @@ func TestNewLoggingSink(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewLoggingSink(mockClient, projectID)
+		wrapper := manual.NewLoggingSink(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockLoggingSinkIterator := mocks.NewMockLoggingSinkIterator(ctrl)
 
@@ -208,7 +208,7 @@ func TestNewLoggingSink(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewLoggingSink(mockClient, projectID)
+		wrapper := manual.NewLoggingSink(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 

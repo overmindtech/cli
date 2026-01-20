@@ -19,17 +19,15 @@ var ComputeInstanceGroupLookupByName = shared.NewItemTypeLookup("name", gcpshare
 
 type computeInstanceGroupWrapper struct {
 	client gcpshared.ComputeInstanceGroupsClient
-
 	*gcpshared.ZoneBase
 }
 
-// NewComputeInstanceGroup creates a new computeInstanceGroupWrapper instance
-func NewComputeInstanceGroup(client gcpshared.ComputeInstanceGroupsClient, projectID, zone string) sources.ListableWrapper {
+// NewComputeInstanceGroup creates a new computeInstanceGroupWrapper instance.
+func NewComputeInstanceGroup(client gcpshared.ComputeInstanceGroupsClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeInstanceGroupWrapper{
 		client: client,
 		ZoneBase: gcpshared.NewZoneBase(
-			projectID,
-			zone,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			gcpshared.ComputeInstanceGroup,
 		),
@@ -47,7 +45,6 @@ func (c computeInstanceGroupWrapper) PredefinedRole() string {
 	return "roles/compute.viewer"
 }
 
-// PotentialLinks returns the potential links for the compute instance wrapper
 func (c computeInstanceGroupWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeSubnetwork,
@@ -57,63 +54,69 @@ func (c computeInstanceGroupWrapper) PotentialLinks() map[shared.ItemType]bool {
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the compute instance group wrapper
 func (c computeInstanceGroupWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
-			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance#argument-reference
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_instance_group.name",
 		},
 	}
 }
 
-// GetLookups returns the lookups for the compute instance group wrapper
 func (c computeInstanceGroupWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		ComputeInstanceGroupLookupByName,
 	}
 }
 
-// Get retrieves a compute instance group by its name
-func (c computeInstanceGroupWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeInstanceGroupWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetInstanceGroupRequest{
-		Project:       c.ProjectID(),
-		Zone:          c.Zone(),
+		Project:       location.ProjectID,
+		Zone:          location.Zone,
 		InstanceGroup: queryParts[0],
 	}
 
-	instanceGroup, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	instanceGroup, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	item, sdpErr := c.gcpComputeInstanceGroupToSDPItem(instanceGroup)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpComputeInstanceGroupToSDPItem(instanceGroup, location)
 }
 
-// List lists compute instance groups and converts them to sdp.Items.
-func (c computeInstanceGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (c computeInstanceGroupWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	it := c.client.List(ctx, &computepb.ListInstanceGroupsRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	var items []*sdp.Item
 	for {
-		instanceGroup, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		instanceGroup, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		item, sdpErr := c.gcpComputeInstanceGroupToSDPItem(instanceGroup)
+		item, sdpErr := c.gcpComputeInstanceGroupToSDPItem(instanceGroup, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -124,24 +127,32 @@ func (c computeInstanceGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sd
 	return items, nil
 }
 
-// ListStream lists compute instance groups and sends them as stream items.
-func (c computeInstanceGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeInstanceGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListInstanceGroupsRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	for {
-		instanceGroup, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		instanceGroup, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpComputeInstanceGroupToSDPItem(instanceGroup)
+		item, sdpErr := c.gcpComputeInstanceGroupToSDPItem(instanceGroup, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -152,8 +163,7 @@ func (c computeInstanceGroupWrapper) ListStream(ctx context.Context, stream disc
 	}
 }
 
-// gcpComputeInstanceGroupToSDPItem converts a GCP InstanceGroup to an SDP Item, linking GCP resource fields.
-func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGroup *computepb.InstanceGroup) (*sdp.Item, *sdp.QueryError) {
+func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGroup *computepb.InstanceGroup, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(instanceGroup, "")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -166,7 +176,7 @@ func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGr
 		Type:            gcpshared.ComputeInstanceGroup.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           location.ToScope(),
 	}
 
 	if network := instanceGroup.GetNetwork(); network != "" {
@@ -177,9 +187,12 @@ func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGr
 					Type:   gcpshared.ComputeNetwork.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  networkName,
-					Scope:  c.ProjectID(),
+					Scope:  location.ProjectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: true,
+				},
 			})
 		}
 	}
@@ -192,15 +205,16 @@ func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGr
 					Type:   gcpshared.ComputeSubnetwork.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  subnetworkName,
-					Scope:  c.ProjectID(),
+					Scope:  location.ProjectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: true,
+				},
 			})
 		}
 	}
 
-	// Link to the zone where the instance group is located
-	// If the zone is deleted or becomes unavailable: The instance group may become inaccessible. If the instance group is updated: The zone remains unaffected.
 	if zone := instanceGroup.GetZone(); zone != "" {
 		zoneName := gcpshared.LastPathComponent(zone)
 		if zoneName != "" {
@@ -209,7 +223,7 @@ func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGr
 					Type:   gcpshared.ComputeZone.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  zoneName,
-					Scope:  c.ProjectID(),
+					Scope:  location.ProjectID,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,
@@ -219,9 +233,6 @@ func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGr
 		}
 	}
 
-	// Link to the region (for regional instance groups)
-	// Note: Unmanaged instance groups are zonal only, so this field may not be populated
-	// If the region is deleted or becomes unavailable: The instance group may become inaccessible. If the instance group is updated: The region remains unaffected.
 	if region := instanceGroup.GetRegion(); region != "" {
 		regionName := gcpshared.LastPathComponent(region)
 		if regionName != "" {
@@ -230,7 +241,7 @@ func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGr
 					Type:   gcpshared.ComputeRegion.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  regionName,
-					Scope:  c.ProjectID(),
+					Scope:  location.ProjectID,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,

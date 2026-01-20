@@ -29,11 +29,11 @@ type cloudKMSKeyRingWrapper struct {
 }
 
 // NewCloudKMSKeyRing creates a new cloudKMSKeyRingWrapper.
-func NewCloudKMSKeyRing(client gcpshared.CloudKMSKeyRingClient, projectID string) sources.SearchableWrapper {
+func NewCloudKMSKeyRing(client gcpshared.CloudKMSKeyRingClient, locations []gcpshared.LocationInfo) sources.SearchStreamableWrapper {
 	return &cloudKMSKeyRingWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
-			projectID,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 			gcpshared.CloudKMSKeyRing,
 		),
@@ -80,29 +80,32 @@ func (c cloudKMSKeyRingWrapper) GetLookups() sources.ItemTypeLookups {
 // Get retrieves a KMS KeyRing by its name.
 // The name must be in the format: projects/{PROJECT_ID}/locations/{LOCATION}/keyRings/{KEY_RING}
 // See: https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings/get
-func (c cloudKMSKeyRingWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c cloudKMSKeyRingWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	loc, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	location := queryParts[0]
 	keyRingName := queryParts[1]
 
 	name := fmt.Sprintf("projects/%s/locations/%s/keyRings/%s",
-		c.ProjectID(), location, keyRingName,
+		loc.ProjectID, location, keyRingName,
 	)
 
 	req := &kmspb.GetKeyRingRequest{
 		Name: name,
 	}
 
-	keyRing, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	keyRing, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	item, sdpErr := c.gcpKeyRingToSDPItem(keyRing)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpKeyRingToSDPItem(keyRing, loc)
 }
 
 // SearchLookups returns the lookups for the KeyRing wrapper.
@@ -117,8 +120,16 @@ func (c cloudKMSKeyRingWrapper) SearchLookups() []sources.ItemTypeLookups {
 // Search searches KMS KeyRings and converts them to sdp.Items.
 // Searchable adapter because location parameter needs to be passed as a queryPart.
 // GET https://cloudkms.googleapis.com/v1/{parent=projects/*/locations/*}/keyRings
-func (c cloudKMSKeyRingWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	parent := fmt.Sprintf("projects/%s/locations/%s", c.ProjectID(), queryParts[0])
+func (c cloudKMSKeyRingWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+	loc, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
+	parent := fmt.Sprintf("projects/%s/locations/%s", loc.ProjectID, queryParts[0])
 
 	it := c.client.Search(ctx, &kmspb.ListKeyRingsRequest{
 		Parent: parent,
@@ -126,15 +137,15 @@ func (c cloudKMSKeyRingWrapper) Search(ctx context.Context, queryParts ...string
 
 	var items []*sdp.Item
 	for {
-		keyRing, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		keyRing, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		item, sdpErr := c.gcpKeyRingToSDPItem(keyRing)
+		item, sdpErr := c.gcpKeyRingToSDPItem(keyRing, loc)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -146,24 +157,33 @@ func (c cloudKMSKeyRingWrapper) Search(ctx context.Context, queryParts ...string
 }
 
 // SearchStream streams the search results for KMS KeyRings.
-func (c cloudKMSKeyRingWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
-	parent := fmt.Sprintf("projects/%s/locations/%s", c.ProjectID(), queryParts[0])
+func (c cloudKMSKeyRingWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	loc, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
+	parent := fmt.Sprintf("projects/%s/locations/%s", loc.ProjectID, queryParts[0])
 
 	it := c.client.Search(ctx, &kmspb.ListKeyRingsRequest{
 		Parent: parent,
 	})
 
 	for {
-		keyRing, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		keyRing, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpKeyRingToSDPItem(keyRing)
+		item, sdpErr := c.gcpKeyRingToSDPItem(keyRing, loc)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -176,7 +196,7 @@ func (c cloudKMSKeyRingWrapper) SearchStream(ctx context.Context, stream discove
 
 // gcpKeyRingToSDPItem converts a GCP KeyRing to an SDP Item, linking GCP resource fields.
 // See: https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings
-func (c cloudKMSKeyRingWrapper) gcpKeyRingToSDPItem(keyRing *kmspb.KeyRing) (*sdp.Item, *sdp.QueryError) {
+func (c cloudKMSKeyRingWrapper) gcpKeyRingToSDPItem(keyRing *kmspb.KeyRing, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(keyRing)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -212,7 +232,7 @@ func (c cloudKMSKeyRingWrapper) gcpKeyRingToSDPItem(keyRing *kmspb.KeyRing) (*sd
 		Type:            gcpshared.CloudKMSKeyRing.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           location.ToScope(),
 	}
 
 	// The IAM policy associated with this KeyRing.
@@ -222,13 +242,16 @@ func (c cloudKMSKeyRingWrapper) gcpKeyRingToSDPItem(keyRing *kmspb.KeyRing) (*sd
 		Query: &sdp.Query{
 			Type:   gcpshared.IAMPolicy.String(),
 			Method: sdp.QueryMethod_GET,
-			//TODO(Nauany): "":getIamPolicy" needs to be appended at the end of the URL, ensure team is aware
+			// TODO(Nauany): "":getIamPolicy" needs to be appended at the end of the URL, ensure team is aware
 			Query: shared.CompositeLookupKey(keyRingVals...),
-			Scope: c.ProjectID(),
+			Scope: location.ProjectID,
 		},
-		//Updating the IAM Policy makes the KeyRing non-functional
-		//KeyRings cannot be deleted or updated
-		BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+		// Updating the IAM Policy makes the KeyRing non-functional
+		// KeyRings cannot be deleted or updated
+		BlastPropagation: &sdp.BlastPropagation{
+			In:  true,
+			Out: true,
+		},
 	})
 
 	// The KMS CryptoKeys associated with this KeyRing.
@@ -237,7 +260,7 @@ func (c cloudKMSKeyRingWrapper) gcpKeyRingToSDPItem(keyRing *kmspb.KeyRing) (*sd
 			Type:   gcpshared.CloudKMSCryptoKey.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  shared.CompositeLookupKey(keyRingVals[0], keyRingVals[1]), // location|keyRingName
-			Scope:  c.ProjectID(),
+			Scope:  location.ProjectID,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  false,

@@ -37,6 +37,8 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 		t.Skip("GCP_ZONE environment variable not set")
 	}
 
+	t.Parallel()
+
 	region := zone[:strings.LastIndex(zone, "-")]
 
 	// Can replace with an environment-specific ID later.
@@ -78,7 +80,7 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 	t.Run("Test for Node Group", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Node Group in project %s, zone %s", projectID, zone)
 
-		nodeGroupWrapper := manual.NewComputeNodeGroup(gcpshared.NewComputeNodeGroupClient(client), projectID, zone)
+		nodeGroupWrapper := manual.NewComputeNodeGroup(gcpshared.NewComputeNodeGroupClient(client), []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		scope := nodeGroupWrapper.Scopes()[0]
 
 		nodeGroupAdapter := sources.WrapperToAdapter(nodeGroupWrapper, sdpcache.NewNoOpCache())
@@ -161,7 +163,7 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 	t.Run("Test for Node Template", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Node Template in project %s, zone %s", projectID, zone)
 
-		nodeTemplateWrapper := manual.NewComputeNodeTemplate(gcpshared.NewComputeNodeTemplateClient(ntClient), projectID, region)
+		nodeTemplateWrapper := manual.NewComputeNodeTemplate(gcpshared.NewComputeNodeTemplateClient(ntClient), []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 		scope := nodeTemplateWrapper.Scopes()[0]
 
 		nodeTemplateAdapter := sources.WrapperToAdapter(nodeTemplateWrapper, sdpcache.NewNoOpCache())

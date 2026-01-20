@@ -19,16 +19,15 @@ var ComputeSnapshotLookupByName = shared.NewItemTypeLookup("name", gcpshared.Com
 
 type computeSnapshotWrapper struct {
 	client gcpshared.ComputeSnapshotsClient
-
 	*gcpshared.ProjectBase
 }
 
-// NewComputeSnapshot creates a new computeSnapshotWrapper instance
-func NewComputeSnapshot(client gcpshared.ComputeSnapshotsClient, projectID string) sources.ListableWrapper {
+// NewComputeSnapshot creates a new computeSnapshotWrapper instance.
+func NewComputeSnapshot(client gcpshared.ComputeSnapshotsClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeSnapshotWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
-			projectID,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 			gcpshared.ComputeSnapshot,
 		),
@@ -46,7 +45,6 @@ func (c computeSnapshotWrapper) PredefinedRole() string {
 	return "roles/compute.viewer"
 }
 
-// PotentialLinks returns the potential links for the compute snapshot wrapper
 func (c computeSnapshotWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeInstantSnapshot,
@@ -57,65 +55,67 @@ func (c computeSnapshotWrapper) PotentialLinks() map[shared.ItemType]bool {
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the compute snapshot wrapper
 func (c computeSnapshotWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
-			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_snapshot#argument-reference
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_snapshot.name",
 		},
 	}
 }
 
-// GetLookups returns the lookups for the compute snapshot wrapper
 func (c computeSnapshotWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		ComputeSnapshotLookupByName,
 	}
 }
 
-// Get retrieves a compute snapshot by its name
-func (c computeSnapshotWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeSnapshotWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetSnapshotRequest{
-		Project:  c.ProjectID(),
+		Project:  location.ProjectID,
 		Snapshot: queryParts[0],
 	}
 
-	snapshot, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	snapshot, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	var sdpErr *sdp.QueryError
-	var item *sdp.Item
-	item, sdpErr = c.gcpComputeSnapshotToSDPItem(ctx, snapshot)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpComputeSnapshotToSDPItem(ctx, snapshot, location)
 }
 
-// List lists compute snapshots and converts them to sdp.Items.
-func (c computeSnapshotWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (c computeSnapshotWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	it := c.client.List(ctx, &computepb.ListSnapshotsRequest{
-		Project: c.ProjectID(),
+		Project: location.ProjectID,
 	})
 
 	var items []*sdp.Item
 	for {
-		snapshot, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		snapshot, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		var sdpErr *sdp.QueryError
-		var item *sdp.Item
-		item, sdpErr = c.gcpComputeSnapshotToSDPItem(ctx, snapshot)
+		item, sdpErr := c.gcpComputeSnapshotToSDPItem(ctx, snapshot, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -126,23 +126,31 @@ func (c computeSnapshotWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Que
 	return items, nil
 }
 
-// ListStream lists compute snapshots and sends them as items to the stream.
-func (c computeSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListSnapshotsRequest{
-		Project: c.ProjectID(),
+		Project: location.ProjectID,
 	})
 
 	for {
-		snapshot, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		snapshot, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpComputeSnapshotToSDPItem(ctx, snapshot)
+		item, sdpErr := c.gcpComputeSnapshotToSDPItem(ctx, snapshot, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -153,8 +161,7 @@ func (c computeSnapshotWrapper) ListStream(ctx context.Context, stream discovery
 	}
 }
 
-// gcpComputeSnapshotToSDPItem converts a GCP Snapshot to an SDP Item, linking GCP resource fields.
-func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context, snapshot *computepb.Snapshot) (*sdp.Item, *sdp.QueryError) {
+func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context, snapshot *computepb.Snapshot, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(snapshot, "labels")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -167,14 +174,11 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context,
 		Type:            gcpshared.ComputeSnapshot.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           location.ToScope(),
 		Tags:            snapshot.GetLabels(),
 	}
 
-	// The resource URLs for the licenses associated with this snapshot.
-	// GET https://compute.googleapis.com/compute/v1/projects/{project}/global/licenses/{license}
-	// https://cloud.google.com/compute/docs/reference/rest/v1/licenses/get
-	// Caution This resource is intended for use only by third-party partners who are creating Cloud Marketplace images.
+	// Link to licenses
 	for _, license := range snapshot.GetLicenses() {
 		licenseName := gcpshared.LastPathComponent(license)
 		if licenseName != "" {
@@ -183,18 +187,17 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context,
 					Type:   gcpshared.ComputeLicense.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  licenseName,
-					Scope:  c.ProjectID(),
+					Scope:  location.ProjectID,
 				},
-				// While most licenses are created and managed by GCP, the license can be created by the user https://cloud.google.com/compute/docs/reference/rest/v1/licenses/insert.
-				// If the license used to create the snapshot is a custom license created by the user then deleting it would leave the snapshot in an inconsistent state.
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
 			})
 		}
 	}
 
-	// The resource URL for the source instant snapshot of this snapshot.
-	// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instantSnapshots/{instantSnapshot}
-	// https://cloud.google.com/compute/docs/reference/rest/v1/instantSnapshots/get
+	// Link to source instant snapshot
 	if sourceInstantSnapshot := snapshot.GetSourceInstantSnapshot(); sourceInstantSnapshot != "" {
 		instantSnapshotName := gcpshared.LastPathComponent(sourceInstantSnapshot)
 		if instantSnapshotName != "" {
@@ -207,48 +210,20 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context,
 						Query:  instantSnapshotName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
 				})
 			}
 
-		}
-
-		// The customer provided encryption key when creating Snapshot from Instant Snapshot; appears in the following format:
-		// "sourceInstantSnapshotEncryptionKey.kmsKeyName": "projects/ kms_project_id/locations/ region/keyRings/ key_region/cryptoKeys/key /cryptoKeyVersions/1"
-		// GET https://cloudkms.googleapis.com/v1/{name=projects/*/locations/*/keyRings/*/cryptoKeys/*/cryptoKeyVersions/*}
-		// https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings.cryptoKeys.cryptoKeyVersions
-		// sourceInstantSnapshotEncryptionKey.kmsKeyName -> CloudKMSCryptoKeyVersion
-		if sourceInstantSnapshotEncryptionKey := snapshot.GetSourceInstantSnapshotEncryptionKey(); sourceInstantSnapshotEncryptionKey != nil {
-			if keyName := sourceInstantSnapshotEncryptionKey.GetKmsKeyName(); keyName != "" {
-				// Parsing them all together to improve readability
-				location := gcpshared.ExtractPathParam("locations", keyName)
-				keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
-				cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
-				cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
-
-				// Validate all parts before proceeding, a bit less performatic if any is missing but readability is improved
-				if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
-							Method: sdp.QueryMethod_GET,
-							Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
-							Scope:  c.ProjectID(),
-						},
-						//If the key is deleted the snapshot cannot be decrypted or used
-						//Deleting the snapshot does not affect the key
-						BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
-					})
-				}
+			if sourceInstantSnapshotEncryptionKey := snapshot.GetSourceInstantSnapshotEncryptionKey(); sourceInstantSnapshotEncryptionKey != nil {
+				c.addKMSKeyLink(sdpItem, sourceInstantSnapshotEncryptionKey.GetKmsKeyName(), location)
 			}
 		}
 	}
 
-	// The resource URL for the source disk of this snapshot.
-	// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
-	// https://cloud.google.com/compute/docs/reference/rest/v1/disks/get
-	// The source disk is the disk from which this snapshot was created. Deleting the disk does not impact the snapshot,
-	// but the snapshot cannot be restored to the point where it was taken if the snapshot is deleted.
+	// Link to source disk
 	if disk := snapshot.GetSourceDisk(); disk != "" {
 		diskName := gcpshared.LastPathComponent(disk)
 		if diskName != "" {
@@ -261,48 +236,20 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context,
 						Query:  diskName,
 						Scope:  scope,
 					},
-					//Disk cannot be restored to the point where the snapshot was taken if the snapshot is deleted.
-					//Deleting disk does not impact the snapshot.
-					BlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  false,
+						Out: true,
+					},
 				})
 			}
 		}
 
-		// The customer-supplied encryption key of the source disk; appears in the following format:
-		// "sourceDiskEncryptionKey.kmsKeyName": "projects/ kms_project_id/locations/ region/keyRings/ key_region/cryptoKeys/key /cryptoKeyVersions/1
-		// GET https://cloudkms.googleapis.com/v1/{name=projects/*/locations/*/keyRings/*/cryptoKeys/*/cryptoKeyVersions/*}
-		// https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings.cryptoKeys.cryptoKeyVersions
-		// sourceDiskEncryptionKey.kmsKeyName -> CloudKMSCryptoKeyVersion
 		if sourceDiskEncryptionKey := snapshot.GetSourceDiskEncryptionKey(); sourceDiskEncryptionKey != nil {
-			if keyName := sourceDiskEncryptionKey.GetKmsKeyName(); keyName != "" {
-
-				// Parsing them all together to improve readability
-				location := gcpshared.ExtractPathParam("locations", keyName)
-				keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
-				cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
-				cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
-
-				// Validate all parts before proceeding, a bit less performatic if any is missing but readability is improved
-				if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
-							Method: sdp.QueryMethod_GET,
-							Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
-							Scope:  c.ProjectID(),
-						},
-						//Deleting a key might break the disk’s ability to function and have its data read
-						//Deleting a disk in GCP does not affect its associated encryption key
-						BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
-					})
-				}
-			}
+			c.addKMSKeyLink(sdpItem, sourceDiskEncryptionKey.GetKmsKeyName(), location)
 		}
 	}
 
-	// The URL of the resource policy which created this scheduled snapshot; this is a type of Resource Policy.
-	// GET https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/resourcePolicies/{resourcePolicy}
-	// https://cloud.google.com/compute/docs/reference/rest/v1/resourcePolicies
+	// Link to snapshot schedule policy
 	if sourceSnapshotSchedulePolicy := snapshot.GetSourceSnapshotSchedulePolicy(); sourceSnapshotSchedulePolicy != "" {
 		snapshotSchedulePolicyName := gcpshared.LastPathComponent(sourceSnapshotSchedulePolicy)
 		if snapshotSchedulePolicyName != "" {
@@ -315,9 +262,6 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context,
 						Query:  snapshotSchedulePolicyName,
 						Scope:  scope,
 					},
-					// Existing snapshot remains available even if the source policy is deleted.
-					// However, new snapshots will not be created automatically unless the policy is recreated or replaced.
-					//If snapshot is deleted the policy remains unaffected.
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: false,
@@ -327,37 +271,9 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context,
 		}
 	}
 
-	// The customer-supplied encryption key used to encrypt this snapshot; appears in the following format:
-	// "snapshotEncryptionKey.kmsKeyName": "projects/{kms_project_id}/locations/{region}/keyRings/{key_ring}/cryptoKeys/{key}" or
-	// "projects/{kms_project_id}/locations/{region}/keyRings/{key_ring}/cryptoKeys/{key}/cryptoKeyVersions/{version}"
-	// GET https://cloudkms.googleapis.com/v1/{name=projects/*/locations/*/keyRings/*/cryptoKeys/*/cryptoKeyVersions/*}
-	// https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings.cryptoKeys.cryptoKeyVersions
-	// snapshotEncryptionKey.kmsKeyName -> CloudKMSCryptoKeyVersion
+	// Link to snapshot encryption key
 	if snapshotEncryptionKey := snapshot.GetSnapshotEncryptionKey(); snapshotEncryptionKey != nil {
-		if keyName := snapshotEncryptionKey.GetKmsKeyName(); keyName != "" {
-			// Parsing them all together to improve readability
-			location := gcpshared.ExtractPathParam("locations", keyName)
-			keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
-			cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
-			cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
-
-			// Validate all parts before proceeding, a bit less performatic if any is missing but readability is improved
-			// Note: cryptoKeyVersion may be empty if the key name doesn't include the version (it will use the primary version)
-			// However, for linking purposes, we need the version, so we skip if it's not present
-			if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
-				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-					Query: &sdp.Query{
-						Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
-						Method: sdp.QueryMethod_GET,
-						Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
-						Scope:  c.ProjectID(),
-					},
-					// If the key is deleted, the snapshot cannot be decrypted or used.
-					// Deleting the snapshot does not affect the key.
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
-				})
-			}
-		}
+		c.addKMSKeyLink(sdpItem, snapshotEncryptionKey.GetKmsKeyName(), location)
 	}
 
 	switch snapshot.GetStatus() {
@@ -376,4 +292,29 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context,
 	}
 
 	return sdpItem, nil
+}
+
+func (c computeSnapshotWrapper) addKMSKeyLink(sdpItem *sdp.Item, keyName string, location gcpshared.LocationInfo) {
+	if keyName == "" {
+		return
+	}
+	loc := gcpshared.ExtractPathParam("locations", keyName)
+	keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
+	cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
+	cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
+
+	if loc != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
+		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+				Method: sdp.QueryMethod_GET,
+				Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey, cryptoKeyVersion),
+				Scope:  location.ProjectID,
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
+		})
+	}
 }

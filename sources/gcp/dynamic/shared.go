@@ -76,8 +76,7 @@ func linkItem(ctx context.Context, projectID string, sdpItem *sdp.Item, sdpAsset
 
 func externalToSDP(
 	ctx context.Context,
-	projectID string,
-	scope string,
+	location gcpshared.LocationInfo,
 	uniqueAttrKeys []string,
 	resp map[string]interface{},
 	sdpAssetType shared.ItemType,
@@ -97,14 +96,13 @@ func externalToSDP(
 				labels[lk] = fmt.Sprintf("%v", lv)
 			}
 		}
-
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            sdpAssetType.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
-		Scope:           scope,
+		Scope:           location.ToScope(),
 		Tags:            labels,
 	}
 
@@ -126,7 +124,7 @@ func externalToSDP(
 
 	for k, v := range resp {
 		keys := []string{k}
-		linkItem(ctx, projectID, sdpItem, sdpAssetType, linker, v, keys)
+		linkItem(ctx, location.ProjectID, sdpItem, sdpAssetType, linker, v, keys)
 	}
 
 	return sdpItem, nil
@@ -292,7 +290,7 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 }
 
 func potentialLinksFromBlasts(itemType shared.ItemType, blasts map[shared.ItemType]map[string]*gcpshared.Impact) []string {
-	var potentialLinksMap = make(map[string]bool)
+	potentialLinksMap := make(map[string]bool)
 	for _, impact := range blasts[itemType] {
 		potentialLinksMap[impact.ToSDPItemType.String()] = true
 		// Special case: stdlib.NetworkIP and stdlib.NetworkDNS are interchangeable
@@ -316,7 +314,7 @@ func potentialLinksFromBlasts(itemType shared.ItemType, blasts map[shared.ItemTy
 }
 
 // aggregateSDPItems retrieves items from an external API and converts them to SDP items.
-func aggregateSDPItems(ctx context.Context, a Adapter, url string) ([]*sdp.Item, error) {
+func aggregateSDPItems(ctx context.Context, a Adapter, url string, location gcpshared.LocationInfo) ([]*sdp.Item, error) {
 	var items []*sdp.Item
 	itemsSelector := a.uniqueAttributeKeys[len(a.uniqueAttributeKeys)-1] // Use the last key as the item selector
 
@@ -337,7 +335,7 @@ func aggregateSDPItems(ctx context.Context, a Adapter, url string) ([]*sdp.Item,
 	)
 
 	for resp := range out {
-		item, err := externalToSDP(ctx, a.projectID, a.scope, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
+		item, err := externalToSDP(ctx, location, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
 		if err != nil {
 			log.WithError(err).Warn("failed to extract item from response")
 		}
@@ -354,7 +352,7 @@ func aggregateSDPItems(ctx context.Context, a Adapter, url string) ([]*sdp.Item,
 }
 
 // streamSDPItems retrieves items from an external API and streams them as SDP items.
-func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func streamSDPItems(ctx context.Context, a Adapter, url string, location gcpshared.LocationInfo, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	itemsSelector := a.uniqueAttributeKeys[len(a.uniqueAttributeKeys)-1] // Use the last key as the item selector
 
 	out := make(chan map[string]interface{})
@@ -369,7 +367,7 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery
 	})
 
 	for resp := range out {
-		item, err := externalToSDP(ctx, a.projectID, a.scope, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
+		item, err := externalToSDP(ctx, location, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
 		if err != nil {
 			log.WithError(err).Warn("failed to extract item from response")
 			continue
@@ -386,7 +384,7 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, stream discovery
 	}
 }
 
-func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) ([]*sdp.Item, error) {
+func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, location gcpshared.LocationInfo, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) ([]*sdp.Item, error) {
 	// query is in the format of:
 	// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
 	// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
@@ -414,7 +412,7 @@ func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, cac
 	query = strings.Join(queryParts, shared.QuerySeparator)
 
 	// We use the GET endpoint for this query. Because the terraform mappings are for single items,
-	getURL := a.getURLFunc(query)
+	getURL := a.getURLFunc(query, location)
 	if getURL == "" {
 		return nil, &sdp.QueryError{
 			ErrorType: sdp.QueryError_OTHER,
@@ -431,7 +429,7 @@ func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, cac
 		return nil, err
 	}
 
-	item, err := externalToSDP(ctx, a.projectID, a.scope, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
+	item, err := externalToSDP(ctx, location, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert response to SDP: %w", err)
 	}

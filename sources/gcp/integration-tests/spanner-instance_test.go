@@ -25,6 +25,8 @@ func TestSpannerInstance(t *testing.T) {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
 	}
 
+	t.Parallel()
+
 	instanceName := "integration-test-instance"
 
 	ctx := t.Context()
@@ -38,25 +40,27 @@ func TestSpannerInstance(t *testing.T) {
 	defer client.Close()
 
 	t.Run("Setup", func(t *testing.T) {
+		ctx := t.Context()
 		err := setupSpannerInstance(ctx, client, projectID, instanceName)
 		if err != nil {
 			t.Fatalf("Failed to setup Spanner Instance: %v", err)
 		}
 	})
 	t.Run("Run", func(t *testing.T) {
+		ctx := t.Context()
 		linker := shared.NewLinker()
 
 		gcpHTTPCliWithOtel, err := shared.GCPHTTPClientWithOtel(ctx, "")
 		if err != nil {
 			t.Fatalf("Failed to create gcp http client with otel")
 		}
-		adapter, err := dynamic.MakeAdapter(shared.SpannerInstance, linker, gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(shared.SpannerInstance, linker, gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), []shared.LocationInfo{shared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to make adapter for spanner instance: %v", err)
 		}
 		sdpItem, err := adapter.Get(ctx, projectID, instanceName, true)
 		if err != nil {
-			t.Fatalf("Failed to get item")
+			t.Fatalf("Failed to get item: %v", err)
 		}
 
 		uniqueAttrKey := sdpItem.GetUniqueAttribute()
@@ -98,6 +102,7 @@ func TestSpannerInstance(t *testing.T) {
 		}
 	})
 	t.Run("Teardown", func(t *testing.T) {
+		ctx := t.Context()
 		err := deleteSpannerInstance(ctx, client, projectID, instanceName)
 		if err != nil {
 			t.Fatalf("Failed to delete Spanner Instance: %v", err)

@@ -32,9 +32,12 @@ var _ = registerableAdapter{
 			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"bigqueryDataset.datasetId": {
-			Description:      "They are tightly coupled with the Logging Link.",
-			ToSDPItemType:    gcpshared.BigQueryDataset,
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			Description:   "They are tightly coupled with the Logging Link.",
+			ToSDPItemType: gcpshared.BigQueryDataset,
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

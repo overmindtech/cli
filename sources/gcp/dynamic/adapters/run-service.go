@@ -115,15 +115,21 @@ var _ = registerableAdapter{
 		},
 		// Link to HTTP/HTTPS URLs serving traffic for this service
 		"urls": {
-			ToSDPItemType:    stdlib.NetworkHTTP,
-			Description:      "If the HTTP endpoint becomes unavailable: The service cannot serve traffic. If the service is updated: The endpoint URL may change.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			ToSDPItemType: stdlib.NetworkHTTP,
+			Description:   "If the HTTP endpoint becomes unavailable: The service cannot serve traffic. If the service is updated: The endpoint URL may change.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		// Link to main URI serving traffic for this service
 		"uri": {
-			ToSDPItemType:    stdlib.NetworkHTTP,
-			Description:      "If the HTTP endpoint becomes unavailable: The service cannot serve traffic. If the service is updated: The endpoint URI may change.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			ToSDPItemType: stdlib.NetworkHTTP,
+			Description:   "If the HTTP endpoint becomes unavailable: The service cannot serve traffic. If the service is updated: The endpoint URI may change.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

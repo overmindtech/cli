@@ -37,6 +37,8 @@ func TestComputeMachineImageIntegration(t *testing.T) {
 		t.Skip("GCP_REGION environment variable not set")
 	}
 
+	t.Parallel()
+
 	machineImageName := "integration-test-machine-image"
 	sourceInstanceName := "integration-test-instance"
 
@@ -70,7 +72,7 @@ func TestComputeMachineImageIntegration(t *testing.T) {
 	t.Run("ListMachineImages", func(t *testing.T) {
 		log.Printf("Listing machine images in project %s", projectID)
 
-		machineImagesWrapper := manual.NewComputeMachineImage(gcpshared.NewComputeMachineImageClient(client), projectID)
+		machineImagesWrapper := manual.NewComputeMachineImage(gcpshared.NewComputeMachineImageClient(client), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		scope := machineImagesWrapper.Scopes()[0]
 
 		machineImagesAdapter := sources.WrapperToAdapter(machineImagesWrapper, sdpcache.NewNoOpCache())
@@ -109,7 +111,7 @@ func TestComputeMachineImageIntegration(t *testing.T) {
 	t.Run("GetMachineImage", func(t *testing.T) {
 		log.Printf("Retrieving machine image %s in project %s", machineImageName, projectID)
 
-		machineImagesWrapper := manual.NewComputeMachineImage(gcpshared.NewComputeMachineImageClient(client), projectID)
+		machineImagesWrapper := manual.NewComputeMachineImage(gcpshared.NewComputeMachineImageClient(client), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		scope := machineImagesWrapper.Scopes()[0]
 
 		machineImagesAdapter := sources.WrapperToAdapter(machineImagesWrapper, sdpcache.NewNoOpCache())

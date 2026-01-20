@@ -33,18 +33,22 @@ func NewNetworkVirtualNetwork(client clients.VirtualNetworksClient, subscription
 	}
 }
 
-func (n networkVirtualNetworkWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := n.client.NewListPager(n.ResourceGroup(), nil)
+func (n networkVirtualNetworkWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	pager := n.client.NewListPager(resourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
+			return nil, azureshared.QueryError(err, scope, n.Type())
 		}
 
 		for _, network := range page.Value {
-			item, sdpErr := n.azureVirtualNetworkToSDPItem(network)
+			item, sdpErr := n.azureVirtualNetworkToSDPItem(network, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -56,41 +60,45 @@ func (n networkVirtualNetworkWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 	return items, nil
 }
 
-func (n networkVirtualNetworkWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (n networkVirtualNetworkWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Get requires 1 query part: virtualNetworkName",
-			Scope:       n.DefaultScope(),
+			Scope:       scope,
 			ItemType:    n.Type(),
 		}
 	}
 
 	virtualNetworkName := queryParts[0]
 
-	resp, err := n.client.Get(ctx, n.ResourceGroup(), virtualNetworkName, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	resp, err := n.client.Get(ctx, resourceGroup, virtualNetworkName, nil)
 	if err != nil {
-		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
 
-	return n.azureVirtualNetworkToSDPItem(&resp.VirtualNetwork)
+	return n.azureVirtualNetworkToSDPItem(&resp.VirtualNetwork, scope)
 }
 
-func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armnetwork.VirtualNetwork) (*sdp.Item, *sdp.QueryError) {
+func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armnetwork.VirtualNetwork, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(network)
 	if err != nil {
-		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
 
 	if network.Name == nil {
-		return nil, azureshared.QueryError(errors.New("network name is nil"), n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(errors.New("network name is nil"), scope, n.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.NetworkVirtualNetwork.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           n.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(network.Tags),
 	}
 
@@ -98,7 +106,7 @@ func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armn
 		Query: &sdp.Query{
 			Type:   azureshared.NetworkSubnet.String(),
 			Method: sdp.QueryMethod_SEARCH,
-			Scope:  n.DefaultScope(),
+			Scope:  scope,
 			Query:  *network.Name, // List subnets in the virtual network
 		},
 		BlastPropagation: &sdp.BlastPropagation{
@@ -111,7 +119,7 @@ func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armn
 		Query: &sdp.Query{
 			Type:   azureshared.NetworkVirtualNetworkPeering.String(),
 			Method: sdp.QueryMethod_SEARCH,
-			Scope:  n.DefaultScope(),
+			Scope:  scope,
 			Query:  *network.Name, // List virtual network peerings in the virtual network
 		},
 		BlastPropagation: &sdp.BlastPropagation{
@@ -332,5 +340,5 @@ func (n networkVirtualNetworkWrapper) IAMPermissions() []string {
 }
 
 func (n networkVirtualNetworkWrapper) PredefinedRole() string {
-	return "Reader" //there is no predefined role for virtual networks, so we use the most restrictive role (Reader)
+	return "Reader" // there is no predefined role for virtual networks, so we use the most restrictive role (Reader)
 }

@@ -21,17 +21,15 @@ var ComputeForwardingRuleLookupByName = shared.NewItemTypeLookup("name", gcpshar
 
 type computeForwardingRuleWrapper struct {
 	client gcpshared.ComputeForwardingRuleClient
-
 	*gcpshared.RegionBase
 }
 
-// NewComputeForwardingRule creates a new computeForwardingRuleWrapper
-func NewComputeForwardingRule(client gcpshared.ComputeForwardingRuleClient, projectID, region string) sources.ListableWrapper {
+// NewComputeForwardingRule creates a new computeForwardingRuleWrapper.
+func NewComputeForwardingRule(client gcpshared.ComputeForwardingRuleClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeForwardingRuleWrapper{
 		client: client,
 		RegionBase: gcpshared.NewRegionBase(
-			projectID,
-			region,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 			gcpshared.ComputeForwardingRule,
 		),
@@ -49,7 +47,6 @@ func (c computeForwardingRuleWrapper) PredefinedRole() string {
 	return "roles/compute.viewer"
 }
 
-// PotentialLinks returns the potential links for the compute forwarding rule wrapper
 func (c computeForwardingRuleWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		stdlib.NetworkIP,
@@ -71,63 +68,69 @@ func (c computeForwardingRuleWrapper) PotentialLinks() map[shared.ItemType]bool 
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the compute forwarding rule wrapper
 func (c computeForwardingRuleWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
-			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk#argument-reference
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_forwarding_rule.name",
 		},
 	}
 }
 
-// GetLookups returns the lookups for the compute forwarding rule wrapper
 func (c computeForwardingRuleWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		ComputeForwardingRuleLookupByName,
 	}
 }
 
-// Get retrieves a compute forwarding rule by its name
-func (c computeForwardingRuleWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeForwardingRuleWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetForwardingRuleRequest{
-		Project:        c.ProjectID(),
-		Region:         c.Region(),
+		Project:        location.ProjectID,
+		Region:         location.Region,
 		ForwardingRule: queryParts[0],
 	}
 
-	rule, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	rule, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(ctx, rule)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpComputeForwardingRuleToSDPItem(ctx, rule, location)
 }
 
-// List lists compute forwarding rules and converts them to sdp.Items.
-func (c computeForwardingRuleWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (c computeForwardingRuleWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	it := c.client.List(ctx, &computepb.ListForwardingRulesRequest{
-		Project: c.ProjectID(),
-		Region:  c.Region(),
+		Project: location.ProjectID,
+		Region:  location.Region,
 	})
 
 	var items []*sdp.Item
 	for {
-		rule, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		rule, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(ctx, rule)
+		item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(ctx, rule, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -138,23 +141,32 @@ func (c computeForwardingRuleWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 	return items, nil
 }
 
-func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListForwardingRulesRequest{
-		Project: c.ProjectID(),
-		Region:  c.Region(),
+		Project: location.ProjectID,
+		Region:  location.Region,
 	})
 
 	for {
-		rule, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		rule, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(ctx, rule)
+		item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(ctx, rule, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -165,8 +177,7 @@ func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream dis
 	}
 }
 
-func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx context.Context, rule *computepb.ForwardingRule) (*sdp.Item, *sdp.QueryError) {
-	// Convert the forwarding rule to attributes
+func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx context.Context, rule *computepb.ForwardingRule, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(rule, "labels")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -179,7 +190,7 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 		Type:            gcpshared.ComputeForwardingRule.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           location.ToScope(),
 		Tags:            rule.GetLabels(),
 	}
 
@@ -199,13 +210,8 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 	}
 
 	if rule.GetBackendService() != "" {
-		// The URL for backend service is in the format:
-		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/backendServices/{backendService}
-		// We need to extract the backend service name and region
-		// from the URL and create a linked item query for it
 		if strings.Contains(rule.GetBackendService(), "/") {
-			backendServiceNameParts := strings.Split(rule.GetBackendService(), "/")
-			backendServiceName := backendServiceNameParts[len(backendServiceNameParts)-1]
+			backendServiceName := gcpshared.LastPathComponent(rule.GetBackendService())
 			scope, err := gcpshared.ExtractScopeFromURI(ctx, rule.GetBackendService())
 			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -213,11 +219,9 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 						Type:   gcpshared.ComputeBackendService.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  backendServiceName,
-						// This is a regional resource
-						Scope: scope,
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
-						// They are tightly coupled
 						In:  true,
 						Out: true,
 					},
@@ -225,8 +229,6 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 			}
 		}
 	}
-
-	// TODO: Further investigate if we can link an item via rule.GetPscConnectionId()
 
 	if rule.GetPscConnectionStatus() != "" {
 		switch rule.GetPscConnectionStatus() {
@@ -246,8 +248,7 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 
 	if rule.GetNetwork() != "" {
 		if strings.Contains(rule.GetNetwork(), "/") {
-			networkNameParts := strings.Split(rule.GetNetwork(), "/")
-			networkName := networkNameParts[len(networkNameParts)-1]
+			networkName := gcpshared.LastPathComponent(rule.GetNetwork())
 			scope, err := gcpshared.ExtractScopeFromURI(ctx, rule.GetNetwork())
 			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -255,8 +256,7 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 						Type:   gcpshared.ComputeNetwork.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  networkName,
-						// This is a global resource
-						Scope: scope,
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -269,8 +269,7 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 
 	if subnetwork := rule.GetSubnetwork(); subnetwork != "" {
 		if strings.Contains(subnetwork, "/") {
-			subnetworkNameParts := strings.Split(subnetwork, "/")
-			subnetworkName := subnetworkNameParts[len(subnetworkNameParts)-1]
+			subnetworkName := gcpshared.LastPathComponent(subnetwork)
 			scope, err := gcpshared.ExtractScopeFromURI(ctx, subnetwork)
 			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -278,8 +277,7 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 						Type:   gcpshared.ComputeSubnetwork.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  subnetworkName,
-						// This is a regional resource
-						Scope: scope,
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -290,12 +288,9 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 		}
 	}
 
-	// Link to target resource (polymorphic - can be various proxy types, pool, gateway, instance, or service attachment)
+	// Link to target resource (polymorphic)
 	if target := rule.GetTarget(); target != "" {
-		// Use the ForwardingRuleTargetLinker to handle polymorphic target field
-		linkedQuery := gcpshared.ForwardingRuleTargetLinker(c.ProjectID(), c.DefaultScope(), target, &sdp.BlastPropagation{
-			// If the target resource is updated or deleted: The forwarding rule routing behavior changes or breaks.
-			// If the forwarding rule is updated or deleted: Traffic will stop or be re-routed affecting the target resource.
+		linkedQuery := gcpshared.ForwardingRuleTargetLinker(location.ProjectID, location.ToScope(), target, &sdp.BlastPropagation{
 			In:  true,
 			Out: true,
 		})
@@ -304,11 +299,10 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 		}
 	}
 
-	// Link to base forwarding rule (when using sourceIpRanges)
+	// Link to base forwarding rule
 	if baseForwardingRule := rule.GetBaseForwardingRule(); baseForwardingRule != "" {
 		if strings.Contains(baseForwardingRule, "/") {
-			forwardingRuleNameParts := strings.Split(baseForwardingRule, "/")
-			forwardingRuleName := forwardingRuleNameParts[len(forwardingRuleNameParts)-1]
+			forwardingRuleName := gcpshared.LastPathComponent(baseForwardingRule)
 			scope, err := gcpshared.ExtractScopeFromURI(ctx, baseForwardingRule)
 			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -319,8 +313,6 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
-						// If the base forwarding rule is deleted or updated: The forwarding rule with sourceIpRanges may become invalid.
-						// If the forwarding rule with sourceIpRanges is updated: The base forwarding rule remains unaffected.
 						In:  true,
 						Out: false,
 					},
@@ -329,11 +321,10 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 		}
 	}
 
-	// Link to Public Delegated Prefix (for IPv6 BYOIP forwarding rules)
+	// Link to Public Delegated Prefix
 	if ipCollection := rule.GetIpCollection(); ipCollection != "" {
 		if strings.Contains(ipCollection, "/") {
-			prefixNameParts := strings.Split(ipCollection, "/")
-			prefixName := prefixNameParts[len(prefixNameParts)-1]
+			prefixName := gcpshared.LastPathComponent(ipCollection)
 			scope, err := gcpshared.ExtractScopeFromURI(ctx, ipCollection)
 			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -344,8 +335,6 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
-						// If the Public Delegated Prefix is deleted or updated: The forwarding rule may fail to reserve IP addresses from the prefix.
-						// If the forwarding rule is updated: The Public Delegated Prefix remains unaffected.
 						In:  true,
 						Out: false,
 					},
@@ -354,27 +343,21 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 		}
 	}
 
-	// Link to Service Directory namespace and service (for PSC forwarding rules)
+	// Link to Service Directory
 	for _, reg := range rule.GetServiceDirectoryRegistrations() {
-		// Link to Service Directory namespace
 		if namespace := reg.GetNamespace(); namespace != "" {
-			// Extract location and namespace from the namespace resource name
-			// Format: projects/{project}/locations/{location}/namespaces/{namespace}
-			location := gcpshared.ExtractPathParam("locations", namespace)
+			loc := gcpshared.ExtractPathParam("locations", namespace)
 			namespaceName := gcpshared.ExtractPathParam("namespaces", namespace)
-			if location != "" && namespaceName != "" {
-				// Service Directory namespace uses project-level scope with location and namespace in query
-				query := shared.CompositeLookupKey(location, namespaceName)
+			if loc != "" && namespaceName != "" {
+				query := shared.CompositeLookupKey(loc, namespaceName)
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.ServiceDirectoryNamespace.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  query,
-						Scope:  c.ProjectID(),
+						Scope:  location.ProjectID,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
-						// If the Service Directory namespace is deleted or updated: The forwarding rule registration may fail.
-						// If the forwarding rule is updated: The namespace remains unaffected.
 						In:  true,
 						Out: false,
 					},
@@ -382,29 +365,21 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 			}
 		}
 
-		// Link to Service Directory service
 		if service := reg.GetService(); service != "" {
-			// Service name is relative to namespace, so we need to construct the full path
-			// Format from namespace: projects/{project}/locations/{location}/namespaces/{namespace}
-			// Service name: {service}
-			// Full path: projects/{project}/locations/{location}/namespaces/{namespace}/services/{service}
 			namespace := reg.GetNamespace()
 			if namespace != "" && service != "" {
-				location := gcpshared.ExtractPathParam("locations", namespace)
+				loc := gcpshared.ExtractPathParam("locations", namespace)
 				namespaceName := gcpshared.ExtractPathParam("namespaces", namespace)
-				if location != "" && namespaceName != "" {
-					// Service Directory service uses project-level scope with location, namespace, and service in query
-					query := shared.CompositeLookupKey(location, namespaceName, service)
+				if loc != "" && namespaceName != "" {
+					query := shared.CompositeLookupKey(loc, namespaceName, service)
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   gcpshared.ServiceDirectoryService.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  query,
-							Scope:  c.ProjectID(),
+							Scope:  location.ProjectID,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							// If the Service Directory service is deleted or updated: The forwarding rule registration may fail.
-							// If the forwarding rule is updated: The service remains unaffected.
 							In:  true,
 							Out: false,
 						},

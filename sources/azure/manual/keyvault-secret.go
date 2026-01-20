@@ -13,9 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-var (
-	KeyVaultSecretLookupByName = shared.NewItemTypeLookup("name", azureshared.KeyVaultSecret)
-)
+var KeyVaultSecretLookupByName = shared.NewItemTypeLookup("name", azureshared.KeyVaultSecret)
 
 type keyvaultSecretWrapper struct {
 	client clients.SecretsClient
@@ -35,47 +33,55 @@ func NewKeyVaultSecret(client clients.SecretsClient, subscriptionID, resourceGro
 	}
 }
 
-func (k keyvaultSecretWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (k keyvaultSecretWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 2 {
-		return nil, azureshared.QueryError(errors.New("Get requires 2 query parts: vaultName and secretName"), k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(errors.New("Get requires 2 query parts: vaultName and secretName"), scope, k.Type())
 	}
 
 	vaultName := queryParts[0]
 	if vaultName == "" {
-		return nil, azureshared.QueryError(errors.New("vaultName cannot be empty"), k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(errors.New("vaultName cannot be empty"), scope, k.Type())
 	}
 
 	secretName := queryParts[1]
 	if secretName == "" {
-		return nil, azureshared.QueryError(errors.New("secretName cannot be empty"), k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(errors.New("secretName cannot be empty"), scope, k.Type())
 	}
 
-	resp, err := k.client.Get(ctx, k.ResourceGroup(), vaultName, secretName, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = k.ResourceGroup()
+	}
+	resp, err := k.client.Get(ctx, resourceGroup, vaultName, secretName, nil)
 	if err != nil {
-		return nil, azureshared.QueryError(err, k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
 
-	return k.azureSecretToSDPItem(&resp.Secret, vaultName, secretName)
+	return k.azureSecretToSDPItem(&resp.Secret, vaultName, secretName, scope)
 }
 
 // ref: https://learn.microsoft.com/en-us/rest/api/keyvault/secrets/get-secrets/get-secrets?view=rest-keyvault-secrets-2025-07-01&tabs=HTTP
-func (k keyvaultSecretWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+func (k keyvaultSecretWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
-		return nil, azureshared.QueryError(errors.New("Search requires 1 query part: vaultName"), k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(errors.New("Search requires 1 query part: vaultName"), scope, k.Type())
 	}
 
 	vaultName := queryParts[0]
 	if vaultName == "" {
-		return nil, azureshared.QueryError(errors.New("vaultName cannot be empty"), k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(errors.New("vaultName cannot be empty"), scope, k.Type())
 	}
 
-	pager := k.client.NewListPager(k.ResourceGroup(), vaultName, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = k.ResourceGroup()
+	}
+	pager := k.client.NewListPager(resourceGroup, vaultName, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, k.DefaultScope(), k.Type())
+			return nil, azureshared.QueryError(err, scope, k.Type())
 		}
 		for _, secret := range page.Value {
 			if secret.Name == nil {
@@ -94,7 +100,7 @@ func (k keyvaultSecretWrapper) Search(ctx context.Context, queryParts ...string)
 			if secretVaultName == "" {
 				secretVaultName = vaultName
 			}
-			item, sdpErr := k.azureSecretToSDPItem(secret, secretVaultName, *secret.Name)
+			item, sdpErr := k.azureSecretToSDPItem(secret, secretVaultName, *secret.Name, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -105,27 +111,27 @@ func (k keyvaultSecretWrapper) Search(ctx context.Context, queryParts ...string)
 	return items, nil
 }
 
-func (k keyvaultSecretWrapper) azureSecretToSDPItem(secret *armkeyvault.Secret, vaultName, secretName string) (*sdp.Item, *sdp.QueryError) {
+func (k keyvaultSecretWrapper) azureSecretToSDPItem(secret *armkeyvault.Secret, vaultName, secretName, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(secret, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
 
 	if secret.Name == nil {
-		return nil, azureshared.QueryError(errors.New("secret name is nil"), k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(errors.New("secret name is nil"), scope, k.Type())
 	}
 
 	// Set composite unique attribute to prevent collisions when secrets with the same name exist in different vaults
 	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(vaultName, secretName))
 	if err != nil {
-		return nil, azureshared.QueryError(err, k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.KeyVaultSecret.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
-		Scope:           k.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(secret.Tags),
 	}
 
@@ -144,17 +150,17 @@ func (k keyvaultSecretWrapper) azureSecretToSDPItem(secret *armkeyvault.Secret, 
 			vaultName := vaultParams[0]
 			if vaultName != "" {
 				// Extract scope from resource ID (subscription and resource group)
-				scope := azureshared.ExtractScopeFromResourceID(*secret.ID)
-				if scope == "" {
+				linkedScope := azureshared.ExtractScopeFromResourceID(*secret.ID)
+				if linkedScope == "" {
 					// Fallback to default scope if extraction fails
-					scope = k.DefaultScope()
+					linkedScope = scope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.KeyVaultVault.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  vaultName,
-						Scope:  scope, // Use the vault's scope from the resource ID
+						Scope:  linkedScope, // Use the vault's scope from the resource ID
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,  // If Key Vault is deleted/modified → secret access and configuration are affected (In: true)

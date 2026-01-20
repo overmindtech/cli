@@ -25,18 +25,16 @@ var _ = registerableAdapter{
 		// We only need the name field for this adapter
 		// This resource won't carry any attributes to link it to other resources.
 		// It will always be a linked item from the other resources by its name.
-		GetEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
-			// We don't use the project ID here, but we need to ensure that the adapter is initialized with a project ID.
-			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-				return func(query string) string {
-					if query != "" {
-						// query must be an instance
-						return fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s?fields=name", query)
-					}
-					return ""
-				}, nil
+		// Note: This adapter uses the query as the project ID, and validates it
+		// against the adapter's configured project via location.ProjectID.
+		GetEndpointFunc: func(query string, location gcpshared.LocationInfo) string {
+			if query == "" {
+				return ""
 			}
-			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+			if query != location.ProjectID {
+				return ""
+			}
+			return fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s?fields=name", query)
 		},
 		UniqueAttributeKeys: []string{"projects"},
 		IAMPermissions:      []string{"compute.projects.get"},
@@ -44,14 +42,20 @@ var _ = registerableAdapter{
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"defaultServiceAccount": {
-			Description:      "If the IAM Service Account is deleted: Project resources may fail to work as before. If the project is deleted: service account is deleted.",
-			ToSDPItemType:    gcpshared.IAMServiceAccount,
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			Description:   "If the IAM Service Account is deleted: Project resources may fail to work as before. If the project is deleted: service account is deleted.",
+			ToSDPItemType: gcpshared.IAMServiceAccount,
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		"usageExportLocation.bucketName": {
-			Description:      "If the Compute Bucket is deleted: Project usage export may fail. If the project is deleted: bucket is deleted.",
-			ToSDPItemType:    gcpshared.StorageBucket,
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			Description:   "If the Compute Bucket is deleted: Project usage export may fail. If the project is deleted: bucket is deleted.",
+			ToSDPItemType: gcpshared.StorageBucket,
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

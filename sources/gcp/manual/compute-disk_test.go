@@ -31,7 +31,7 @@ func TestComputeDisk(t *testing.T) {
 	zone := "us-central1-a"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
+		wrapper := manual.NewComputeDisk(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeDisk("test-disk", computepb.Disk_READY), nil)
 
@@ -168,7 +168,7 @@ func TestComputeDisk(t *testing.T) {
 			for _, tc := range cases {
 				t.Run(tc.name, func(t *testing.T) {
 					disk := createComputeDiskWithSource("test-disk", computepb.Disk_READY, tc.sourceType, tc.sourceValue)
-					wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
+					wrapper := manual.NewComputeDisk(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 					adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 					// Mock the Get call to return our disk
@@ -185,7 +185,6 @@ func TestComputeDisk(t *testing.T) {
 				})
 			}
 		})
-
 	})
 
 	t.Run("HealthCheck", func(t *testing.T) {
@@ -236,7 +235,7 @@ func TestComputeDisk(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
+				wrapper := manual.NewComputeDisk(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeDisk("test-disk", tc.input), nil)
@@ -254,7 +253,7 @@ func TestComputeDisk(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
+		wrapper := manual.NewComputeDisk(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeDiskIterator(ctrl)
@@ -293,7 +292,7 @@ func TestComputeDisk(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
+		wrapper := manual.NewComputeDisk(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeDiskIterator(ctrl)
@@ -340,7 +339,7 @@ func TestComputeDisk(t *testing.T) {
 	})
 
 	t.Run("GetWithSourceStorageObject", func(t *testing.T) {
-		wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
+		wrapper := manual.NewComputeDisk(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		// Test with gs:// URI format
 		sourceStorageObject := "gs://test-bucket/path/to/image.tar.gz"
@@ -431,7 +430,7 @@ func TestComputeDisk(t *testing.T) {
 	})
 
 	t.Run("GetWithStoragePool", func(t *testing.T) {
-		wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
+		wrapper := manual.NewComputeDisk(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		storagePoolURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools/test-storage-pool", projectID, zone)
 		disk := createComputeDisk("test-disk", computepb.Disk_READY)
@@ -521,14 +520,14 @@ func TestComputeDisk(t *testing.T) {
 	})
 
 	t.Run("GetWithAsyncPrimaryDisk", func(t *testing.T) {
-		wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
+		wrapper := manual.NewComputeDisk(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		primaryDiskURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/disks/primary-disk", projectID, zone)
 		consistencyGroupPolicyURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/us-central1/resourcePolicies/test-consistency-policy", projectID)
 		disk := createComputeDisk("test-disk", computepb.Disk_READY)
 		disk.AsyncPrimaryDisk = &computepb.DiskAsyncReplication{
-			Disk:                      ptr.To(primaryDiskURL),
-			ConsistencyGroupPolicy:    ptr.To(consistencyGroupPolicyURL),
+			Disk:                   ptr.To(primaryDiskURL),
+			ConsistencyGroupPolicy: ptr.To(consistencyGroupPolicyURL),
 		}
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(disk, nil)
@@ -624,7 +623,7 @@ func TestComputeDisk(t *testing.T) {
 	})
 
 	t.Run("GetWithAsyncSecondaryDisks", func(t *testing.T) {
-		wrapper := manual.NewComputeDisk(mockClient, projectID, zone)
+		wrapper := manual.NewComputeDisk(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		secondaryDisk1URL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/disks/secondary-disk-1", projectID, zone)
 		secondaryDisk2URL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/disks/secondary-disk-2", projectID, zone)
@@ -633,8 +632,8 @@ func TestComputeDisk(t *testing.T) {
 		disk.AsyncSecondaryDisks = map[string]*computepb.DiskAsyncReplicationList{
 			"secondary-disk-1": {
 				AsyncReplicationDisk: &computepb.DiskAsyncReplication{
-					Disk:                      ptr.To(secondaryDisk1URL),
-					ConsistencyGroupPolicy:    ptr.To(consistencyGroupPolicyURL),
+					Disk:                   ptr.To(secondaryDisk1URL),
+					ConsistencyGroupPolicy: ptr.To(consistencyGroupPolicyURL),
 				},
 			},
 			"secondary-disk-2": {
@@ -742,7 +741,6 @@ func TestComputeDisk(t *testing.T) {
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
 	})
-
 }
 
 func createComputeDisk(diskName string, status computepb.Disk_Status) *computepb.Disk {

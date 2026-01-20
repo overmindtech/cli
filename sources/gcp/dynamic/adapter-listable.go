@@ -15,17 +15,16 @@ import (
 
 // ListableAdapter implements discovery.ListableAdapter for GCP dynamic adapters.
 type ListableAdapter struct {
-	listEndpoint string
+	listEndpointFunc gcpshared.ListEndpointFunc
 	Adapter
 }
 
 // NewListableAdapter creates a new GCP dynamic adapter.
-func NewListableAdapter(listEndpoint string, config *AdapterConfig, cache sdpcache.Cache) discovery.ListableAdapter {
+func NewListableAdapter(listEndpointFunc gcpshared.ListEndpointFunc, config *AdapterConfig, cache sdpcache.Cache) discovery.ListableAdapter {
 	return ListableAdapter{
-		listEndpoint: listEndpoint,
+		listEndpointFunc: listEndpointFunc,
 		Adapter: Adapter{
-			projectID:            config.ProjectID,
-			scope:                config.Scope,
+			locations:            config.Locations,
 			httpCli:              config.HTTPClient,
 			Cache:                cache,
 			getURLFunc:           config.GetURLFunc,
@@ -59,11 +58,9 @@ func (g ListableAdapter) Metadata() *sdp.AdapterMetadata {
 }
 
 func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error) {
-	if scope != g.scope {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: fmt.Sprintf("requested scope %v does not match any adapter scope %v", scope, g.Scopes()),
-		}
+	location, err := g.validateScope(scope)
+	if err != nil {
+		return nil, err
 	}
 
 	cacheHit, ck, cachedItems, qErr := g.GetCache().Lookup(
@@ -89,7 +86,15 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 		return cachedItems, nil
 	}
 
-	items, err := aggregateSDPItems(ctx, g.Adapter, g.listEndpoint)
+	listURL, err := g.listEndpointFunc(location)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf("failed to construct list endpoint: %v", err),
+		}
+	}
+
+	items, err := aggregateSDPItems(ctx, g.Adapter, listURL, location)
 	if err != nil {
 		return nil, err
 	}
@@ -102,11 +107,9 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 }
 
 func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCache bool, stream discovery.QueryResultStream) {
-	if scope != g.scope {
-		stream.SendError(&sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: fmt.Sprintf("requested scope %v does not match any adapter scope %v", scope, g.Scopes()),
-		})
+	location, err := g.validateScope(scope)
+	if err != nil {
+		stream.SendError(err)
 		return
 	}
 
@@ -137,5 +140,14 @@ func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCac
 		return
 	}
 
-	streamSDPItems(ctx, g.Adapter, g.listEndpoint, stream, g.GetCache(), ck)
+	listURL, err := g.listEndpointFunc(location)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: fmt.Sprintf("failed to construct list endpoint: %v", err),
+		})
+		return
+	}
+
+	streamSDPItems(ctx, g.Adapter, listURL, location, stream, g.GetCache(), ck)
 }

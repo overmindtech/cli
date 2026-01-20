@@ -20,15 +20,15 @@ func Test_adapterType(t *testing.T) {
 		{
 			name: "Listable only",
 			meta: gcpshared.AdapterMeta{
-				ListEndpointFunc: func(queryParts ...string) (string, error) { return "", nil },
+				ListEndpointFunc: func(loc gcpshared.LocationInfo) (string, error) { return "", nil },
 			},
 			want: Listable,
 		},
 		{
 			name: "Searchable only",
 			meta: gcpshared.AdapterMeta{
-				SearchEndpointFunc: func(queryParts ...string) (gcpshared.EndpointFunc, error) {
-					return nil, nil
+				SearchEndpointFunc: func(query string, loc gcpshared.LocationInfo) string {
+					return ""
 				},
 			},
 			want: Searchable,
@@ -36,10 +36,11 @@ func Test_adapterType(t *testing.T) {
 		{
 			name: "SearchableListable",
 			meta: gcpshared.AdapterMeta{
-				ListEndpointFunc: func(queryParts ...string) (string, error) { return "", nil },
-				SearchEndpointFunc: func(queryParts ...string) (gcpshared.EndpointFunc, error) {
-					return nil, nil
-				}},
+				ListEndpointFunc: func(loc gcpshared.LocationInfo) (string, error) { return "", nil },
+				SearchEndpointFunc: func(query string, loc gcpshared.LocationInfo) string {
+					return ""
+				},
+			},
 			want: SearchableListable,
 		},
 		{
@@ -61,36 +62,37 @@ func Test_addAdapter(t *testing.T) {
 	type testCase struct {
 		name               string
 		sdpType            shared.ItemType
-		opts               []string
+		locations          []gcpshared.LocationInfo
 		listable           bool
 		searchable         bool
 		searchableListable bool
 		standard           bool
 	}
+	projectLocation := []gcpshared.LocationInfo{gcpshared.NewProjectLocation("my-project")}
 	testCases := []testCase{
 		{
-			name:     "Listable adapter",
-			sdpType:  gcpshared.ComputeFirewall,
-			opts:     []string{"my-project"},
-			listable: true,
+			name:      "Listable adapter",
+			sdpType:   gcpshared.ComputeFirewall,
+			locations: projectLocation,
+			listable:  true,
 		},
 		{
 			name:       "Searchable adapter",
 			sdpType:    gcpshared.SQLAdminBackupRun,
-			opts:       []string{"my-project"},
+			locations:  projectLocation,
 			searchable: true,
 		},
 		{
 			name:               "SearchableListable adapter",
 			sdpType:            gcpshared.MonitoringCustomDashboard,
-			opts:               []string{"my-project"},
+			locations:          projectLocation,
 			searchableListable: true,
 		},
 		{
-			name:     "Standard adapter",
-			sdpType:  gcpshared.CloudBillingBillingInfo,
-			opts:     []string{"my-project"},
-			standard: true,
+			name:      "Standard adapter",
+			sdpType:   gcpshared.CloudBillingBillingInfo,
+			locations: projectLocation,
+			standard:  true,
 		},
 	}
 
@@ -99,7 +101,7 @@ func Test_addAdapter(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			meta := gcpshared.SDPAssetTypeToAdapterMeta[tc.sdpType]
 
-			adapter, err := MakeAdapter(tc.sdpType, linker, http.DefaultClient, sdpcache.NewNoOpCache(), tc.opts...)
+			adapter, err := MakeAdapter(tc.sdpType, linker, http.DefaultClient, sdpcache.NewNoOpCache(), tc.locations)
 			if err != nil {
 				t.Errorf("MakeAdapter() error = %v", err)
 			}

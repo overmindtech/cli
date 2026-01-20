@@ -31,7 +31,7 @@ func TestComputeAutoscalerWrapper(t *testing.T) {
 
 	t.Run("Get", func(t *testing.T) {
 		// Attach mock client to our wrapper.
-		wrapper := manual.NewComputeAutoscaler(mockClient, projectID, zone)
+		wrapper := manual.NewComputeAutoscaler(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createAutoscalerApiFixture("test-autoscaler"), nil)
 
@@ -98,11 +98,10 @@ func TestComputeAutoscalerWrapper(t *testing.T) {
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
-
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeAutoscaler(mockClient, projectID, zone)
+		wrapper := manual.NewComputeAutoscaler(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -139,7 +138,7 @@ func TestComputeAutoscalerWrapper(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeAutoscaler(mockClient, projectID, zone)
+		wrapper := manual.NewComputeAutoscaler(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeAutoscalerIter := mocks.NewMockComputeAutoscalerIterator(ctrl)

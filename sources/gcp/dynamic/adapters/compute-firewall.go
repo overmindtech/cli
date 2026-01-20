@@ -22,9 +22,12 @@ var _ = registerableAdapter{
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"network": {
-			Description:      "If the Compute Network is updated: The firewall rules may no longer apply correctly. If the firewall is updated: The network remains unaffected, but its security posture may change.",
-			ToSDPItemType:    gcpshared.ComputeNetwork,
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			Description:   "If the Compute Network is updated: The firewall rules may no longer apply correctly. If the firewall is updated: The network remains unaffected, but its security posture may change.",
+			ToSDPItemType: gcpshared.ComputeNetwork,
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		"sourceServiceAccounts": gcpshared.IAMServiceAccountImpactInOnly,
 		"targetServiceAccounts": gcpshared.IAMServiceAccountImpactInOnly,

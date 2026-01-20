@@ -26,6 +26,7 @@ func TestComputeAddressIntegration(t *testing.T) {
 	if projectID == "" {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
 	}
+	t.Parallel()
 
 	region := os.Getenv("GCP_REGION")
 	if region == "" {
@@ -53,7 +54,7 @@ func TestComputeAddressIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute Address in project %s, region %s", projectID, region)
 
-		addressWrapper := manual.NewComputeAddress(shared.NewComputeAddressClient(client), projectID, region)
+		addressWrapper := manual.NewComputeAddress(shared.NewComputeAddressClient(client), []shared.LocationInfo{shared.NewRegionalLocation(projectID, region)})
 		scope := addressWrapper.Scopes()[0]
 
 		addressAdapter := sources.WrapperToAdapter(addressWrapper, sdpcache.NewNoOpCache())

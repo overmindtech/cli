@@ -28,8 +28,7 @@ func NewSearchableAdapter(searchEndpointFunc gcpshared.EndpointFunc, config *Ada
 		searchEndpointFunc:     searchEndpointFunc,
 
 		Adapter: Adapter{
-			projectID:            config.ProjectID,
-			scope:                config.Scope,
+			locations:            config.Locations,
 			httpCli:              config.HTTPClient,
 			Cache:                cache,
 			getURLFunc:           config.GetURLFunc,
@@ -63,11 +62,9 @@ func (g SearchableAdapter) Metadata() *sdp.AdapterMetadata {
 }
 
 func (g SearchableAdapter) Search(ctx context.Context, scope, query string, ignoreCache bool) ([]*sdp.Item, error) {
-	if scope != g.scope {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: fmt.Sprintf("requested scope %v does not match any adapter scope %v", scope, g.Scopes()),
-		}
+	location, err := g.validateScope(scope)
+	if err != nil {
+		return nil, err
 	}
 
 	cacheHit, ck, cachedItems, qErr := g.GetCache().Lookup(
@@ -97,11 +94,11 @@ func (g SearchableAdapter) Search(ctx context.Context, scope, query string, igno
 		// This must be a terraform query in the format of:
 		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
 		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
-		return terraformMappingViaSearch(ctx, g.Adapter, query, g.GetCache(), ck)
+		return terraformMappingViaSearch(ctx, g.Adapter, query, location, g.GetCache(), ck)
 	}
 
 	// This is a regular SEARCH call
-	searchEndpoint := g.searchEndpointFunc(query)
+	searchEndpoint := g.searchEndpointFunc(query, location)
 	if searchEndpoint == "" {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
@@ -109,7 +106,7 @@ func (g SearchableAdapter) Search(ctx context.Context, scope, query string, igno
 		}
 	}
 
-	items, err := aggregateSDPItems(ctx, g.Adapter, searchEndpoint)
+	items, err := aggregateSDPItems(ctx, g.Adapter, searchEndpoint, location)
 	if err != nil {
 		return nil, err
 	}
@@ -122,11 +119,9 @@ func (g SearchableAdapter) Search(ctx context.Context, scope, query string, igno
 }
 
 func (g SearchableAdapter) SearchStream(ctx context.Context, scope, query string, ignoreCache bool, stream discovery.QueryResultStream) {
-	if scope != g.scope {
-		stream.SendError(&sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: fmt.Sprintf("requested scope %v does not match any adapter scope %v", scope, g.Scopes()),
-		})
+	location, err := g.validateScope(scope)
+	if err != nil {
+		stream.SendError(err)
 		return
 	}
 
@@ -161,7 +156,7 @@ func (g SearchableAdapter) SearchStream(ctx context.Context, scope, query string
 		// This must be a terraform query in the format of:
 		// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
 		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
-		items, err := terraformMappingViaSearch(ctx, g.Adapter, query, g.GetCache(), ck)
+		items, err := terraformMappingViaSearch(ctx, g.Adapter, query, location, g.GetCache(), ck)
 		if err != nil {
 			stream.SendError(&sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -176,7 +171,7 @@ func (g SearchableAdapter) SearchStream(ctx context.Context, scope, query string
 		return
 	}
 
-	searchURL := g.searchEndpointFunc(query)
+	searchURL := g.searchEndpointFunc(query, location)
 	if searchURL == "" {
 		stream.SendError(&sdp.QueryError{
 			ErrorType: sdp.QueryError_OTHER,
@@ -189,5 +184,5 @@ func (g SearchableAdapter) SearchStream(ctx context.Context, scope, query string
 		return
 	}
 
-	streamSDPItems(ctx, g.Adapter, searchURL, stream, g.GetCache(), ck)
+	streamSDPItems(ctx, g.Adapter, searchURL, location, stream, g.GetCache(), ck)
 }

@@ -23,6 +23,8 @@ func TestComputeSubnetworkIntegration(t *testing.T) {
 		t.Logf("GCP_REGION environment variable not set, using default: %s", region)
 	}
 
+	t.Parallel()
+
 	ctx := t.Context()
 
 	// We'll use the default subnetwork for testing
@@ -44,7 +46,7 @@ func TestComputeSubnetworkIntegration(t *testing.T) {
 		}
 
 		// For subnetworks, we need to include the region as an initialization parameter
-		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), projectID, region)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, gcpshared.NewLinker(), gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

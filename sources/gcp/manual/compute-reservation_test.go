@@ -30,7 +30,7 @@ func TestComputeReservation(t *testing.T) {
 	zone := "us-central1-a"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeReservation(mockClient, projectID, zone)
+		wrapper := manual.NewComputeReservation(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeReservation("test-reservation", computepb.Reservation_READY), nil)
 
@@ -110,7 +110,7 @@ func TestComputeReservation(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				wrapper := manual.NewComputeReservation(mockClient, projectID, zone)
+				wrapper := manual.NewComputeReservation(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeReservation("test-reservation", tc.input), nil)
@@ -128,7 +128,7 @@ func TestComputeReservation(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeReservation(mockClient, projectID, zone)
+		wrapper := manual.NewComputeReservation(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -168,7 +168,7 @@ func TestComputeReservation(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeReservation(mockClient, projectID, zone)
+		wrapper := manual.NewComputeReservation(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 

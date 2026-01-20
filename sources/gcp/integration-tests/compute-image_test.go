@@ -32,6 +32,8 @@ func TestComputeImageIntegration(t *testing.T) {
 		t.Skip("GCP_ZONE environment variable not set")
 	}
 
+	t.Parallel()
+
 	imageName := "integration-test-image"
 	diskName := "integration-test-disk"
 
@@ -65,7 +67,7 @@ func TestComputeImageIntegration(t *testing.T) {
 	t.Run("ListImages", func(t *testing.T) {
 		log.Printf("Listing images in project %s", projectID)
 
-		imagesWrapper := manual.NewComputeImage(gcpshared.NewComputeImagesClient(client), projectID)
+		imagesWrapper := manual.NewComputeImage(gcpshared.NewComputeImagesClient(client), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		scope := imagesWrapper.Scopes()[0]
 
 		imagesAdapter := sources.WrapperToAdapter(imagesWrapper, sdpcache.NewNoOpCache())
@@ -104,7 +106,7 @@ func TestComputeImageIntegration(t *testing.T) {
 	t.Run("GetImage", func(t *testing.T) {
 		log.Printf("Retrieving image %s in project %s", imageName, projectID)
 
-		imagesWrapper := manual.NewComputeImage(gcpshared.NewComputeImagesClient(client), projectID)
+		imagesWrapper := manual.NewComputeImage(gcpshared.NewComputeImagesClient(client), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		scope := imagesWrapper.Scopes()[0]
 
 		imagesAdapter := sources.WrapperToAdapter(imagesWrapper, sdpcache.NewNoOpCache())
@@ -136,7 +138,6 @@ func TestComputeImageIntegration(t *testing.T) {
 			t.Fatalf("Failed to delete compute image: %v", err)
 		}
 	})
-
 }
 
 // createComputeImage creates a GCP Compute Image with the given parameters.

@@ -109,7 +109,6 @@ var rootCmd = &cobra.Command{
 		log.Info("Stopping engine")
 
 		err = e.Stop()
-
 		if err != nil {
 			log.WithFields(log.Fields{
 				"ovm.source.type":  "gcp",
@@ -223,8 +222,7 @@ func (t TerminationLogHook) Levels() []log.Level {
 func (t TerminationLogHook) Fire(e *log.Entry) error {
 	// shutdown tracing first to ensure all spans are flushed
 	tracing.ShutdownTracer(context.Background())
-	tLog, err := os.OpenFile("/dev/termination-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-
+	tLog, err := os.OpenFile("/dev/termination-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return err
 	}

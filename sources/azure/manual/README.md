@@ -136,7 +136,7 @@ mockClient.EXPECT().Get(ctx, resourceGroup, vmName, nil).Return(
 // Azure resource ID format: /subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}
 diskName := azureshared.ExtractResourceName(*vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID)
 if diskName == "" {
-    return nil, azureshared.QueryError(fmt.Errorf("invalid disk resource ID: %s", *vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID), c.DefaultScope(), c.Type())
+    return nil, azureshared.QueryError(fmt.Errorf("invalid disk resource ID: %s", *vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID), scope, c.Type())
 }
 ```
 

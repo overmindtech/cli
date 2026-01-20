@@ -32,8 +32,12 @@ func NewNetworkNetworkInterface(client clients.NetworkInterfacesClient, subscrip
 	}
 }
 
-func (n networkNetworkInterfaceWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := n.client.List(ctx, n.ResourceGroup())
+func (n networkNetworkInterfaceWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	pager := n.client.List(ctx, resourceGroup)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -130,13 +134,17 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 	return sdpItem, nil
 }
 
-func (n networkNetworkInterfaceWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (n networkNetworkInterfaceWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) != 1 {
 		return nil, azureshared.QueryError(errors.New("query must be exactly one part and be a network interface name"), n.DefaultScope(), n.Type())
 	}
 	networkInterfaceName := queryParts[0]
 
-	networkInterface, err := n.client.Get(ctx, n.ResourceGroup(), networkInterfaceName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	networkInterface, err := n.client.Get(ctx, resourceGroup, networkInterfaceName)
 	if err != nil {
 		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
 	}
