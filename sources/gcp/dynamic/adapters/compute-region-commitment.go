@@ -12,7 +12,7 @@ var _ = registerableAdapter{
 		LocationLevel:      gcpshared.RegionalLevel,
 		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/regionCommitments/get
 		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/commitments/{commitment}
-		GetEndpointFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/commitments/%s"),
+		GetEndpointFunc: gcpshared.RegionalLevelEndpointFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/commitments/%s"),
 		// Reference: https://cloud.google.com/compute/docs/reference/rest/v1/regionCommitments/list
 		// https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/commitments
 		ListEndpointFunc:    gcpshared.RegionLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/commitments"),

@@ -32,7 +32,7 @@ func TestComputeForwardingRule(t *testing.T) {
 	region := "us-central1"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeForwardingRule(mockClient, projectID, region)
+		wrapper := manual.NewComputeForwardingRule(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createForwardingRule("test-rule", projectID, region, "192.168.1.1"), nil)
 
@@ -96,7 +96,7 @@ func TestComputeForwardingRule(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeForwardingRule(mockClient, projectID, region)
+		wrapper := manual.NewComputeForwardingRule(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -136,7 +136,7 @@ func TestComputeForwardingRule(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeForwardingRule(mockClient, projectID, region)
+		wrapper := manual.NewComputeForwardingRule(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -188,7 +188,7 @@ func TestComputeForwardingRule(t *testing.T) {
 	})
 
 	t.Run("GetWithTarget", func(t *testing.T) {
-		wrapper := manual.NewComputeForwardingRule(mockClient, projectID, region)
+		wrapper := manual.NewComputeForwardingRule(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 
 		// Test with TargetHttpProxy
 		targetURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/targetHttpProxies/test-target-proxy", projectID)
@@ -266,7 +266,7 @@ func TestComputeForwardingRule(t *testing.T) {
 	})
 
 	t.Run("GetWithBaseForwardingRule", func(t *testing.T) {
-		wrapper := manual.NewComputeForwardingRule(mockClient, projectID, region)
+		wrapper := manual.NewComputeForwardingRule(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 
 		baseForwardingRuleURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/forwardingRules/base-forwarding-rule", projectID, region)
 		forwardingRule := createForwardingRule("test-rule", projectID, region, "192.168.1.1")
@@ -343,7 +343,7 @@ func TestComputeForwardingRule(t *testing.T) {
 	})
 
 	t.Run("GetWithIPCollection", func(t *testing.T) {
-		wrapper := manual.NewComputeForwardingRule(mockClient, projectID, region)
+		wrapper := manual.NewComputeForwardingRule(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 
 		ipCollectionURL := fmt.Sprintf("projects/%s/regions/%s/publicDelegatedPrefixes/test-prefix", projectID, region)
 		forwardingRule := createForwardingRule("test-rule", projectID, region, "192.168.1.1")
@@ -420,7 +420,7 @@ func TestComputeForwardingRule(t *testing.T) {
 	})
 
 	t.Run("GetWithServiceDirectoryRegistrations", func(t *testing.T) {
-		wrapper := manual.NewComputeForwardingRule(mockClient, projectID, region)
+		wrapper := manual.NewComputeForwardingRule(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 
 		namespaceURL := fmt.Sprintf("projects/%s/locations/us-central1/namespaces/test-namespace", projectID)
 		serviceName := "test-service"

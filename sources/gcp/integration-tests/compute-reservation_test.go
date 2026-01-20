@@ -32,6 +32,8 @@ func TestComputeReservationIntegration(t *testing.T) {
 		t.Skip("GCP_ZONE environment variable not set")
 	}
 
+	t.Parallel()
+
 	reservationName := "integration-test-reservation"
 	machineType := "e2-medium" // Use a common machine type for testing
 
@@ -54,7 +56,7 @@ func TestComputeReservationIntegration(t *testing.T) {
 	t.Run("ListReservations", func(t *testing.T) {
 		log.Printf("Listing reservations in project %s, zone %s", projectID, zone)
 
-		reservationsWrapper := manual.NewComputeReservation(gcpshared.NewComputeReservationClient(client), projectID, zone)
+		reservationsWrapper := manual.NewComputeReservation(gcpshared.NewComputeReservationClient(client), []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		scope := reservationsWrapper.Scopes()[0]
 
 		reservationsAdapter := sources.WrapperToAdapter(reservationsWrapper, sdpcache.NewNoOpCache())
@@ -93,7 +95,7 @@ func TestComputeReservationIntegration(t *testing.T) {
 	t.Run("GetReservation", func(t *testing.T) {
 		log.Printf("Retrieving reservation %s in project %s, zone %s", reservationName, projectID, zone)
 
-		reservationsWrapper := manual.NewComputeReservation(gcpshared.NewComputeReservationClient(client), projectID, zone)
+		reservationsWrapper := manual.NewComputeReservation(gcpshared.NewComputeReservationClient(client), []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		scope := reservationsWrapper.Scopes()[0]
 
 		reservationsAdapter := sources.WrapperToAdapter(reservationsWrapper, sdpcache.NewNoOpCache())

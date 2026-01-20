@@ -29,7 +29,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 	projectID := "test-project-id"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSCryptoKey(mockClient, projectID)
+		wrapper := manual.NewCloudKMSCryptoKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(
 			createCryptoKey(
@@ -100,7 +100,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 	})
 
 	t.Run("Search", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSCryptoKey(mockClient, projectID)
+		wrapper := manual.NewCloudKMSCryptoKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockCryptoKeyIterator := mocks.NewMockCloudKMSCryptoKeyIterator(ctrl)
@@ -160,7 +160,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 	})
 
 	t.Run("SearchStream", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSCryptoKey(mockClient, projectID)
+		wrapper := manual.NewCloudKMSCryptoKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockCryptoKeyIterator := mocks.NewMockCloudKMSCryptoKeyIterator(ctrl)
@@ -222,7 +222,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 	})
 
 	t.Run("List_Unsupported", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSCryptoKey(mockClient, projectID)
+		wrapper := manual.NewCloudKMSCryptoKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports list - it should not

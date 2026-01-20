@@ -22,17 +22,15 @@ var ComputeAddressLookupByName = shared.NewItemTypeLookup("name", gcpshared.Comp
 
 type computeAddressWrapper struct {
 	client gcpshared.ComputeAddressClient
-
 	*gcpshared.RegionBase
 }
 
-// NewComputeAddress creates a new computeAddressWrapper address
-func NewComputeAddress(client gcpshared.ComputeAddressClient, projectID, region string) sources.ListableWrapper {
+// NewComputeAddress creates a new computeAddressWrapper.
+func NewComputeAddress(client gcpshared.ComputeAddressClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeAddressWrapper{
 		client: client,
 		RegionBase: gcpshared.NewRegionBase(
-			projectID,
-			region,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 			gcpshared.ComputeAddress,
 		),
@@ -50,7 +48,6 @@ func (c computeAddressWrapper) PredefinedRole() string {
 	return "roles/compute.viewer"
 }
 
-// PotentialLinks returns the potential links for the compute address wrapper
 func (c computeAddressWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		stdlib.NetworkIP,
@@ -66,69 +63,69 @@ func (c computeAddressWrapper) PotentialLinks() map[shared.ItemType]bool {
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the compute address wrapper
 func (c computeAddressWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
-			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_address
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_address.name",
 		},
 	}
 }
 
-// GetLookups returns the lookups for the compute address wrapper
-// This defines how the source can be queried for specific item
-// In this case, it will be: gcp-compute-engine-address-name
 func (c computeAddressWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		ComputeAddressLookupByName,
 	}
 }
 
-// Get retrieves a compute address by its name
-func (c computeAddressWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeAddressWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetAddressRequest{
-		Project: c.ProjectID(),
-		Region:  c.Region(),
+		Project: location.ProjectID,
+		Region:  location.Region,
 		Address: queryParts[0],
 	}
 
-	address, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	address, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	var sdpErr *sdp.QueryError
-	var item *sdp.Item
-	item, sdpErr = c.gcpComputeAddressToSDPItem(ctx, address)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpComputeAddressToSDPItem(ctx, address, location)
 }
 
-// List lists compute addresss and converts them to sdp.Items.
-func (c computeAddressWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (c computeAddressWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	it := c.client.List(ctx, &computepb.ListAddressesRequest{
-		Project: c.ProjectID(),
-		Region:  c.Region(),
+		Project: location.ProjectID,
+		Region:  location.Region,
 	})
 
 	var items []*sdp.Item
 	for {
-		address, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		address, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		var sdpErr *sdp.QueryError
-		var item *sdp.Item
-		item, sdpErr = c.gcpComputeAddressToSDPItem(ctx, address)
+		item, sdpErr := c.gcpComputeAddressToSDPItem(ctx, address, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -139,24 +136,32 @@ func (c computeAddressWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Quer
 	return items, nil
 }
 
-// ListStream lists compute addresses and sends them as items to the stream.
-func (c computeAddressWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeAddressWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListAddressesRequest{
-		Project: c.ProjectID(),
-		Region:  c.Region(),
+		Project: location.ProjectID,
+		Region:  location.Region,
 	})
 
 	for {
-		address, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		address, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpComputeAddressToSDPItem(ctx, address)
+		item, sdpErr := c.gcpComputeAddressToSDPItem(ctx, address, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -167,8 +172,7 @@ func (c computeAddressWrapper) ListStream(ctx context.Context, stream discovery.
 	}
 }
 
-func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, address *computepb.Address) (*sdp.Item, *sdp.QueryError) {
-	// Convert the address to attributes
+func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, address *computepb.Address, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(address, "labels")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -181,14 +185,13 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, a
 		Type:            gcpshared.ComputeAddress.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.Scopes()[0],
+		Scope:           location.ToScope(),
 		Tags:            address.GetLabels(),
 	}
 
 	if network := address.GetNetwork(); network != "" {
 		if strings.Contains(network, "/") {
-			networkNameParts := strings.Split(network, "/")
-			networkName := networkNameParts[len(networkNameParts)-1]
+			networkName := gcpshared.LastPathComponent(network)
 			scope, err := gcpshared.ExtractScopeFromURI(ctx, network)
 			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -209,8 +212,7 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, a
 
 	if subnetwork := address.GetSubnetwork(); subnetwork != "" {
 		if strings.Contains(subnetwork, "/") {
-			subnetworkNameParts := strings.Split(subnetwork, "/")
-			subnetworkName := subnetworkNameParts[len(subnetworkNameParts)-1]
+			subnetworkName := gcpshared.LastPathComponent(subnetwork)
 			scope, err := gcpshared.ExtractScopeFromURI(ctx, subnetwork)
 			if err == nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -244,22 +246,14 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, a
 		})
 	}
 
-	// Link to resources using this address (users field)
-	// The users field contains URLs of resources currently using the address.
-	// This can include forwarding rules, instances, VPN gateways, routers, etc.
-	// If the address is deleted or updated: Resources using it may lose connectivity or fail.
-	// If resources using the address are deleted or updated: The address may become unused.
-	users := address.GetUsers()
-	for _, userURI := range users {
+	// Link to resources using this address
+	for _, userURI := range address.GetUsers() {
 		if userURI != "" {
 			linkedQuery := gcpshared.AddressUsersLinker(
 				ctx,
-				c.ProjectID(),
+				location.ProjectID,
 				userURI,
-				&sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
+				&sdp.BlastPropagation{In: true, Out: true},
 			)
 			if linkedQuery != nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, linkedQuery)
@@ -267,15 +261,9 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, a
 		}
 	}
 
-	// Link to Public Delegated Prefix (ipCollection field)
-	// This field is only available in beta API and references a Public Delegated Prefix
-	// used for BYOIP (Bring Your Own IP) scenarios.
-	// If the Public Delegated Prefix is deleted or updated: The Address may fail to reserve IP addresses from the prefix.
-	// If the Address is updated: The Public Delegated Prefix remains unaffected.
+	// Link to Public Delegated Prefix
 	if ipCollection := address.GetIpCollection(); ipCollection != "" {
 		if strings.Contains(ipCollection, "/") {
-			// Extract region and prefix name from URI
-			// Format: projects/{project}/regions/{region}/publicDelegatedPrefixes/{prefix}
 			region := gcpshared.ExtractPathParam("regions", ipCollection)
 			prefixName := gcpshared.LastPathComponent(ipCollection)
 			if region != "" && prefixName != "" {
@@ -284,7 +272,7 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, a
 						Type:   gcpshared.ComputePublicDelegatedPrefix.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  prefixName,
-						Scope:  fmt.Sprintf("%s.%s", c.ProjectID(), region),
+						Scope:  fmt.Sprintf("%s.%s", location.ProjectID, region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,

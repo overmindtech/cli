@@ -18,17 +18,12 @@ var _ = registerableAdapter{
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 		LocationLevel:      gcpshared.ProjectLevel,
-		GetEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
-			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-				return func(query string) string {
-					if query != "" {
-						// query is the job name, adapterInitParams[0] is the project ID
-						return fmt.Sprintf("https://storagetransfer.googleapis.com/v1/transferJobs/%s?projectId=%s", query, adapterInitParams[0])
-					}
-					return ""
-				}, nil
+		GetEndpointFunc: func(query string, location gcpshared.LocationInfo) string {
+			if query != "" {
+				// query is the job name, use location.ProjectID for the project
+				return fmt.Sprintf("https://storagetransfer.googleapis.com/v1/transferJobs/%s?projectId=%s", query, location.ProjectID)
 			}
-			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+			return ""
 		},
 		ListEndpointFunc:    gcpshared.ProjectLevelListFunc("https://storagetransfer.googleapis.com/v1/transferJobs?filter={\"projectId\":\"%s\"}"),
 		UniqueAttributeKeys: []string{"transferJobs"},

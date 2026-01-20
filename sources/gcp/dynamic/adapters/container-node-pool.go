@@ -53,9 +53,12 @@ var _ = registerableAdapter{
 		"config.network":    gcpshared.ComputeNetworkImpactInOnly,
 		"config.subnetwork": gcpshared.ComputeSubnetworkImpactInOnly,
 		"instanceGroupUrls": {
-			ToSDPItemType:    gcpshared.ComputeInstanceGroupManager,
-			Description:      "If the Instance Group Manager is deleted or updated: The Node Pool may fail to create new nodes or become invalid. If the Node Pool is updated: The instance group manager remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+			ToSDPItemType: gcpshared.ComputeInstanceGroupManager,
+			Description:   "If the Instance Group Manager is deleted or updated: The Node Pool may fail to create new nodes or become invalid. If the Node Pool is updated: The instance group manager remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

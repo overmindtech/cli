@@ -35,37 +35,45 @@ func NewDBforPostgreSQLFlexibleServer(client clients.PostgreSQLFlexibleServersCl
 }
 
 // ref: https://learn.microsoft.com/en-us/rest/api/postgresql/servers/get?view=rest-postgresql-2025-08-01&tabs=HTTP
-func (s dbforPostgreSQLFlexibleServerWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (s dbforPostgreSQLFlexibleServerWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
-		return nil, azureshared.QueryError(errors.New("Get requires 1 query part: serverName"), s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(errors.New("Get requires 1 query part: serverName"), scope, s.Type())
 	}
 	serverName := queryParts[0]
 	if serverName == "" {
-		return nil, azureshared.QueryError(errors.New("serverName is empty"), s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(errors.New("serverName is empty"), scope, s.Type())
 	}
 
-	resp, err := s.client.Get(ctx, s.ResourceGroup(), serverName, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	resp, err := s.client.Get(ctx, resourceGroup, serverName, nil)
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
-	return s.azureDBforPostgreSQLFlexibleServerToSDPItem(&resp.Server)
+	return s.azureDBforPostgreSQLFlexibleServerToSDPItem(&resp.Server, scope)
 }
 
 // ref: https://learn.microsoft.com/en-us/rest/api/postgresql/servers/list-by-resource-group?view=rest-postgresql-2025-08-01&tabs=HTTP
-func (s dbforPostgreSQLFlexibleServerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := s.client.ListByResourceGroup(ctx, s.ResourceGroup(), nil)
+func (s dbforPostgreSQLFlexibleServerWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	pager := s.client.ListByResourceGroup(ctx, resourceGroup, nil)
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+			return nil, azureshared.QueryError(err, scope, s.Type())
 		}
 		for _, server := range page.Value {
 			if server.Name == nil {
 				continue
 			}
-			item, sdpErr := s.azureDBforPostgreSQLFlexibleServerToSDPItem(server)
+			item, sdpErr := s.azureDBforPostgreSQLFlexibleServerToSDPItem(server, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -75,21 +83,21 @@ func (s dbforPostgreSQLFlexibleServerWrapper) List(ctx context.Context) ([]*sdp.
 	return items, nil
 }
 
-func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServerToSDPItem(server *armpostgresqlflexibleservers.Server) (*sdp.Item, *sdp.QueryError) {
+func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServerToSDPItem(server *armpostgresqlflexibleservers.Server, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(server, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	if server.Name == nil {
-		return nil, azureshared.QueryError(errors.New("serverName is nil"), s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(errors.New("serverName is nil"), scope, s.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            s.Type(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           s.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(server.Tags),
 	}
 
@@ -162,7 +170,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Type:   azureshared.DBforPostgreSQLDatabase.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  serverName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,  // Server changes (deletion, configuration, maintenance) directly affect database availability
@@ -178,7 +186,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Type:   azureshared.DBforPostgreSQLFlexibleServerFirewallRule.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  serverName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true, // Server changes affect firewall rules
@@ -194,7 +202,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Type:   azureshared.DBforPostgreSQLFlexibleServerConfiguration.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  serverName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true, // Server changes affect configurations
@@ -226,16 +234,16 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			identityName := azureshared.ExtractResourceName(identityResourceID)
 			if identityName != "" {
 				// Extract scope from resource ID if it's in a different resource group
-				scope := s.DefaultScope()
+				linkedScope := scope
 				if extractedScope := azureshared.ExtractScopeFromResourceID(identityResourceID); extractedScope != "" {
-					scope = extractedScope
+					linkedScope = extractedScope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  identityName,
-						Scope:  scope,
+						Scope:  linkedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// PostgreSQL Flexible Server depends on managed identity for authentication
@@ -256,16 +264,16 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 		privateDNSZoneName := azureshared.ExtractResourceName(privateDNSZoneID)
 		if privateDNSZoneName != "" {
 			// Extract scope from resource ID if it's in a different resource group
-			scope := s.DefaultScope()
+			linkedScope := scope
 			if extractedScope := azureshared.ExtractScopeFromResourceID(privateDNSZoneID); extractedScope != "" {
-				scope = extractedScope
+				linkedScope = extractedScope
 			}
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.NetworkPrivateDNSZone.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  privateDNSZoneName,
-					Scope:  scope,
+					Scope:  linkedScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// PostgreSQL Flexible Server depends on private DNS zone for DNS resolution
@@ -285,7 +293,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Type:   azureshared.DBforPostgreSQLFlexibleServerAdministrator.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  serverName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true, // Server changes affect administrators
@@ -301,7 +309,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Type:   azureshared.DBforPostgreSQLFlexibleServerPrivateEndpointConnection.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  serverName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true, // Server changes affect private endpoint connections
@@ -319,16 +327,16 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 				privateEndpointName := azureshared.ExtractResourceName(privateEndpointID)
 				if privateEndpointName != "" {
 					// Extract scope from resource ID if it's in a different resource group
-					scope := s.DefaultScope()
+					linkedScope := scope
 					if extractedScope := azureshared.ExtractScopeFromResourceID(privateEndpointID); extractedScope != "" {
-						scope = extractedScope
+						linkedScope = extractedScope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.NetworkPrivateEndpoint.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  privateEndpointName,
-							Scope:  scope,
+							Scope:  linkedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Private endpoint changes (deletion, network configuration) affect the PostgreSQL Flexible Server's private connectivity
@@ -350,7 +358,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Type:   azureshared.DBforPostgreSQLFlexibleServerPrivateLinkResource.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  serverName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true, // Server changes affect private link resources
@@ -366,7 +374,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Type:   azureshared.DBforPostgreSQLFlexibleServerReplica.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  serverName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,  // Server changes (deletion, configuration) directly affect replica availability
@@ -382,7 +390,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Type:   azureshared.DBforPostgreSQLFlexibleServerMigration.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  serverName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,  // Server changes affect migration operations
@@ -398,7 +406,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Type:   azureshared.DBforPostgreSQLFlexibleServerBackup.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  serverName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,  // Server changes (deletion, configuration) directly affect backup availability
@@ -414,7 +422,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Type:   azureshared.DBforPostgreSQLFlexibleServerVirtualEndpoint.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  serverName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true, // Server changes (deletion, configuration) directly affect virtual endpoint availability
@@ -437,7 +445,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Type:   azureshared.KeyVaultVault.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  vaultName,
-					Scope:  s.DefaultScope(),
+					Scope:  scope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// PostgreSQL Flexible Server depends on Key Vault for customer-managed encryption keys
@@ -468,7 +476,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Type:   azureshared.KeyVaultKey.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  query,
-					Scope:  s.DefaultScope(),
+					Scope:  scope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// PostgreSQL Flexible Server depends on Key Vault key for customer-managed encryption
@@ -487,16 +495,16 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 		identityName := azureshared.ExtractResourceName(identityID)
 		if identityName != "" {
 			// Extract scope from resource ID if it's in a different resource group
-			scope := s.DefaultScope()
+			linkedScope := scope
 			if extractedScope := azureshared.ExtractScopeFromResourceID(identityID); extractedScope != "" {
-				scope = extractedScope
+				linkedScope = extractedScope
 			}
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  identityName,
-					Scope:  scope,
+					Scope:  linkedScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// PostgreSQL Flexible Server depends on managed identity for accessing encryption keys
@@ -523,7 +531,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Type:   azureshared.KeyVaultVault.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  vaultName,
-					Scope:  s.DefaultScope(),
+					Scope:  scope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// PostgreSQL Flexible Server depends on Key Vault for geo-redundant backup encryption keys
@@ -554,7 +562,7 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Type:   azureshared.KeyVaultKey.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  query,
-					Scope:  s.DefaultScope(),
+					Scope:  scope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// PostgreSQL Flexible Server depends on Key Vault key for geo-redundant backup encryption
@@ -573,16 +581,16 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 		identityName := azureshared.ExtractResourceName(identityID)
 		if identityName != "" {
 			// Extract scope from resource ID if it's in a different resource group
-			scope := s.DefaultScope()
+			linkedScope := scope
 			if extractedScope := azureshared.ExtractScopeFromResourceID(identityID); extractedScope != "" {
-				scope = extractedScope
+				linkedScope = extractedScope
 			}
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  identityName,
-					Scope:  scope,
+					Scope:  linkedScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// PostgreSQL Flexible Server depends on managed identity for accessing geo-backup encryption keys
@@ -602,16 +610,16 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 		sourceServerName := azureshared.ExtractResourceName(sourceServerID)
 		if sourceServerName != "" {
 			// Extract scope from resource ID if it's in a different resource group
-			scope := s.DefaultScope()
+			linkedScope := scope
 			if extractedScope := azureshared.ExtractScopeFromResourceID(sourceServerID); extractedScope != "" {
-				scope = extractedScope
+				linkedScope = extractedScope
 			}
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.DBforPostgreSQLFlexibleServer.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  sourceServerName,
-					Scope:  scope,
+					Scope:  linkedScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// Replica server depends on source server for replication

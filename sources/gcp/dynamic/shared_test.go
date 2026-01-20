@@ -15,13 +15,13 @@ import (
 
 func Test_externalToSDP(t *testing.T) {
 	type args struct {
-		projectID      string
-		scope          string
+		location       gcpshared.LocationInfo
 		uniqueAttrKeys []string
 		resp           map[string]interface{}
 		sdpAssetType   shared.ItemType
 		nameSelector   string
 	}
+	testLocation := gcpshared.NewProjectLocation("test-project")
 	tests := []struct {
 		name    string
 		args    args
@@ -31,8 +31,7 @@ func Test_externalToSDP(t *testing.T) {
 		{
 			name: "ReturnsSDPItemWithCorrectAttributes",
 			args: args{
-				projectID:      "test-project",
-				scope:          "test-scope",
+				location:       testLocation,
 				uniqueAttrKeys: []string{"projects", "locations", "instances"},
 				resp: map[string]interface{}{
 					"name":   "projects/test-project/locations/us-central1/instances/instance-1",
@@ -44,7 +43,7 @@ func Test_externalToSDP(t *testing.T) {
 			want: &sdp.Item{
 				Type:            gcpshared.ComputeInstance.String(),
 				UniqueAttribute: "uniqueAttr",
-				Scope:           "test-scope",
+				Scope:           testLocation.ToScope(),
 				Tags:            map[string]string{"env": "prod"},
 				Attributes: &sdp.ItemAttributes{
 					AttrStruct: &structpb.Struct{
@@ -61,8 +60,7 @@ func Test_externalToSDP(t *testing.T) {
 		{
 			name: "ReturnsSDPItemWithCorrectAttributesWhenNameDoesNotHaveUniqueAttrKeys",
 			args: args{
-				projectID:      "test-project",
-				scope:          "test-scope",
+				location:       testLocation,
 				uniqueAttrKeys: []string{"projects", "locations", "instances"},
 				resp: map[string]interface{}{
 					// There is name, but it does not include uniqueAttrKeys, expected to use the name as is.
@@ -75,7 +73,7 @@ func Test_externalToSDP(t *testing.T) {
 			want: &sdp.Item{
 				Type:            gcpshared.ComputeInstance.String(),
 				UniqueAttribute: "uniqueAttr",
-				Scope:           "test-scope",
+				Scope:           testLocation.ToScope(),
 				Tags:            map[string]string{"env": "prod"},
 				Attributes: &sdp.ItemAttributes{
 					AttrStruct: &structpb.Struct{
@@ -92,8 +90,7 @@ func Test_externalToSDP(t *testing.T) {
 		{
 			name: "ReturnsErrorWhenNameMissing",
 			args: args{
-				projectID:      "test-project",
-				scope:          "test-scope",
+				location:       testLocation,
 				uniqueAttrKeys: []string{"projects", "locations", "instances"},
 				resp: map[string]interface{}{
 					"labels": map[string]interface{}{"env": "prod"},
@@ -107,8 +104,7 @@ func Test_externalToSDP(t *testing.T) {
 		{
 			name: "UseCustomNameSelectorWhenProvided",
 			args: args{
-				projectID:      "test-project",
-				scope:          "test-scope",
+				location:       testLocation,
 				uniqueAttrKeys: []string{"projects", "locations", "instances"},
 				resp: map[string]interface{}{
 					"instanceName": "instance-1",
@@ -121,7 +117,7 @@ func Test_externalToSDP(t *testing.T) {
 			want: &sdp.Item{
 				Type:            gcpshared.ComputeInstance.String(),
 				UniqueAttribute: "uniqueAttr",
-				Scope:           "test-scope",
+				Scope:           testLocation.ToScope(),
 				Tags:            map[string]string{"env": "prod"},
 				Attributes: &sdp.ItemAttributes{
 					AttrStruct: &structpb.Struct{
@@ -138,8 +134,7 @@ func Test_externalToSDP(t *testing.T) {
 		{
 			name: "ReturnsSDPItemWithEmptyLabels",
 			args: args{
-				projectID:      "test-project",
-				scope:          "test-scope",
+				location:       testLocation,
 				uniqueAttrKeys: []string{"projects", "locations", "instances"},
 				resp: map[string]interface{}{
 					"name": "projects/test-project/locations/us-central1/instances/instance-2",
@@ -159,7 +154,7 @@ func Test_externalToSDP(t *testing.T) {
 						},
 					},
 				},
-				Scope: "test-scope",
+				Scope: testLocation.ToScope(),
 				Tags:  map[string]string{},
 			},
 			wantErr: false,
@@ -168,13 +163,13 @@ func Test_externalToSDP(t *testing.T) {
 	linker := gcpshared.NewLinker()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := externalToSDP(context.Background(), tt.args.projectID, tt.args.scope, tt.args.uniqueAttrKeys, tt.args.resp, tt.args.sdpAssetType, linker, tt.args.nameSelector)
+			got, err := externalToSDP(context.Background(), tt.args.location, tt.args.uniqueAttrKeys, tt.args.resp, tt.args.sdpAssetType, linker, tt.args.nameSelector)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("externalToSDP() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
-			//got.Attributes = createAttr(t, tt.args.resp)
+			// got.Attributes = createAttr(t, tt.args.resp)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("externalToSDP() got = %v, want %v", got, tt.want)
 			}

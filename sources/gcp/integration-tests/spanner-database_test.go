@@ -26,6 +26,8 @@ func TestSpannerDatabase(t *testing.T) {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
 	}
 
+	t.Parallel()
+
 	instanceName := "integration-test-instance"
 	databaseName := "integration-test-database"
 
@@ -63,7 +65,7 @@ func TestSpannerDatabase(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create gcp http client with otel")
 		}
-		adapter, err := dynamic.MakeAdapter(gcpshared.SpannerDatabase, linker, gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(gcpshared.SpannerDatabase, linker, gcpHTTPCliWithOtel, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to make adapter for spanner database")
 		}

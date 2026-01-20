@@ -20,16 +20,15 @@ var IAMServiceAccountLookupByEmailOrUniqueID = shared.NewItemTypeLookup("email o
 
 type iamServiceAccountWrapper struct {
 	client gcpshared.IAMServiceAccountClient
-
 	*gcpshared.ProjectBase
 }
 
-// NewIAMServiceAccount creates a new iamServiceAccountWrapper
-func NewIAMServiceAccount(client gcpshared.IAMServiceAccountClient, projectID string) sources.ListableWrapper {
+// NewIAMServiceAccount creates a new iamServiceAccountWrapper.
+func NewIAMServiceAccount(client gcpshared.IAMServiceAccountClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &iamServiceAccountWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
-			projectID,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 			gcpshared.IAMServiceAccount,
 		),
@@ -47,7 +46,6 @@ func (c iamServiceAccountWrapper) PredefinedRole() string {
 	return "roles/iam.serviceAccountViewer"
 }
 
-// PotentialLinks returns the potential links for the IAM ServiceAccount wrapper
 func (c iamServiceAccountWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.CloudResourceManagerProject,
@@ -55,10 +53,8 @@ func (c iamServiceAccountWrapper) PotentialLinks() map[shared.ItemType]bool {
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the IAM ServiceAccount wrapper
 func (c iamServiceAccountWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
-		// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_snapshot#argument-reference
 		{
 			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_service_account.email",
@@ -70,62 +66,71 @@ func (c iamServiceAccountWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	}
 }
 
-// GetLookups returns the lookups for the IAM ServiceAccount wrapper
 func (c iamServiceAccountWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		IAMServiceAccountLookupByEmailOrUniqueID,
 	}
 }
 
-// Get retrieves a ServiceAccount by its email or unique_id
-func (c iamServiceAccountWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
-	// Can be either an email or a unique_id.
+func (c iamServiceAccountWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	resourceIdentifier := queryParts[0]
-	name := "projects/" + c.ProjectID() + "/serviceAccounts/" + resourceIdentifier
+	name := "projects/" + location.ProjectID + "/serviceAccounts/" + resourceIdentifier
 
 	req := &adminpb.GetServiceAccountRequest{
 		Name: name,
 	}
 
-	serviceAccount, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	serviceAccount, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	item, sdpErr := c.gcpIAMServiceAccountToSDPItem(serviceAccount)
+	item, sdpErr := c.gcpIAMServiceAccountToSDPItem(serviceAccount, location)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
 
-	// If the resourceIdentifier is an email, set the unique attribute to "email"
-	// This is to ensure tha the get method query parameter matches the unique attribute
 	if strings.Contains(resourceIdentifier, "@") {
-		// SDP item has an attribute of "email".
 		item.UniqueAttribute = "email"
 	}
 
 	return item, nil
 }
 
-// List lists IAM ServiceAccounts and converts them to sdp.Items.
-func (c iamServiceAccountWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (c iamServiceAccountWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &adminpb.ListServiceAccountsRequest{
-		Name: "projects/" + c.ProjectID(),
+		Name: "projects/" + location.ProjectID,
 	}
 
 	results := c.client.List(ctx, req)
 
 	var items []*sdp.Item
 	for {
-		sa, err := results.Next()
-		if errors.Is(err, iterator.Done) {
+		sa, iterErr := results.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		item, sdpErr := c.gcpIAMServiceAccountToSDPItem(sa)
+		item, sdpErr := c.gcpIAMServiceAccountToSDPItem(sa, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -136,25 +141,33 @@ func (c iamServiceAccountWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Q
 	return items, nil
 }
 
-// ListStream lists IAM ServiceAccounts and sends them as sdp.Items to the stream.
-func (c iamServiceAccountWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c iamServiceAccountWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	req := &adminpb.ListServiceAccountsRequest{
-		Name: "projects/" + c.ProjectID(),
+		Name: "projects/" + location.ProjectID,
 	}
 
 	results := c.client.List(ctx, req)
 
 	for {
-		sa, err := results.Next()
-		if errors.Is(err, iterator.Done) {
+		sa, iterErr := results.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpIAMServiceAccountToSDPItem(sa)
+		item, sdpErr := c.gcpIAMServiceAccountToSDPItem(sa, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -165,9 +178,7 @@ func (c iamServiceAccountWrapper) ListStream(ctx context.Context, stream discove
 	}
 }
 
-// gcpIAMServiceAccountToSDPItem converts a GCP ServiceAccount to an SDP Item, linking GCP resource fields.
-// See: https://cloud.google.com/iam/docs/reference/rest/v1/projects.serviceAccounts/get
-func (c iamServiceAccountWrapper) gcpIAMServiceAccountToSDPItem(serviceAccount *adminpb.ServiceAccount) (*sdp.Item, *sdp.QueryError) {
+func (c iamServiceAccountWrapper) gcpIAMServiceAccountToSDPItem(serviceAccount *adminpb.ServiceAccount, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(serviceAccount)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -180,32 +191,24 @@ func (c iamServiceAccountWrapper) gcpIAMServiceAccountToSDPItem(serviceAccount *
 		Type:            gcpshared.IAMServiceAccount.String(),
 		UniqueAttribute: "unique_id",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           location.ToScope(),
 	}
 
-	// Link to the project that owns this service account
-	// GET https://cloudresourcemanager.googleapis.com/v1/projects/{projectId}
-	// https://cloud.google.com/resource-manager/reference/rest/v1/projects/get
 	if projectID := serviceAccount.GetProjectId(); projectID != "" {
 		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   gcpshared.CloudResourceManagerProject.String(),
 				Method: sdp.QueryMethod_GET,
 				Query:  projectID,
-				Scope:  c.ProjectID(),
+				Scope:  location.ProjectID,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
-				// Deleting a project deletes the associated ServiceAccounts
-				// Account permissions affect projects
 				In:  true,
 				Out: true,
 			},
 		})
 	}
 
-	// The URL for the ServiceAccount related to this ServiceAccountKey
-	// GET https://iam.googleapis.com/v1/{name=projects/*/serviceAccounts/*}/keys
-	// https://cloud.google.com/iam/docs/reference/rest/v1/projects.serviceAccounts.keys/list
 	if serviceAccountName := serviceAccount.GetName(); serviceAccountName != "" {
 		if strings.Contains(serviceAccountName, "/") {
 			serviceAccountID := gcpshared.ExtractPathParam("serviceAccounts", serviceAccountName)
@@ -215,11 +218,9 @@ func (c iamServiceAccountWrapper) gcpIAMServiceAccountToSDPItem(serviceAccount *
 						Type:   gcpshared.IAMServiceAccountKey.String(),
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  serviceAccountID,
-						Scope:  c.ProjectID(),
+						Scope:  location.ProjectID,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
-						// If key is deleted resources using the key are affected but account itself is not
-						// If service account is deleted, all keys that belong to it are deleted
 						In:  false,
 						Out: true,
 					},
@@ -227,8 +228,6 @@ func (c iamServiceAccountWrapper) gcpIAMServiceAccountToSDPItem(serviceAccount *
 			}
 		}
 	}
-
-	//It's also possible to get Oauth2ClientId from the serviceAccount, but no request is available in GCP to get data about the Oauth2Client.
 
 	return sdpItem, nil
 }

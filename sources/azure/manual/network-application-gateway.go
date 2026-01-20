@@ -35,8 +35,12 @@ func NewNetworkApplicationGateway(client clients.ApplicationGatewaysClient, subs
 	}
 }
 
-func (n networkApplicationGatewayWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := n.client.List(n.ResourceGroup(), nil)
+func (n networkApplicationGatewayWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	pager := n.client.List(resourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -58,8 +62,12 @@ func (n networkApplicationGatewayWrapper) List(ctx context.Context) ([]*sdp.Item
 	return items, nil
 }
 
-func (n networkApplicationGatewayWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
-	pager := n.client.List(n.ResourceGroup(), nil)
+func (n networkApplicationGatewayWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	pager := n.client.List(resourceGroup, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -80,6 +88,7 @@ func (n networkApplicationGatewayWrapper) ListStream(ctx context.Context, stream
 		}
 	}
 }
+
 func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(applicationGateway *armnetwork.ApplicationGateway) (*sdp.Item, *sdp.QueryError) {
 	if applicationGateway.Name == nil {
 		return nil, azureshared.QueryError(errors.New("application gateway name is nil"), n.DefaultScope(), n.Type())
@@ -759,7 +768,7 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 	return sdpItem, nil
 }
 
-func (n networkApplicationGatewayWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (n networkApplicationGatewayWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) != 1 {
 		return nil, azureshared.QueryError(errors.New("query must be exactly one part and be a application gateway name"), n.DefaultScope(), n.Type())
 	}
@@ -767,7 +776,11 @@ func (n networkApplicationGatewayWrapper) Get(ctx context.Context, queryParts ..
 	if applicationGatewayName == "" {
 		return nil, azureshared.QueryError(errors.New("application gateway name cannot be empty"), n.DefaultScope(), n.Type())
 	}
-	resp, err := n.client.Get(ctx, n.ResourceGroup(), applicationGatewayName, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	resp, err := n.client.Get(ctx, resourceGroup, applicationGatewayName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
 	}

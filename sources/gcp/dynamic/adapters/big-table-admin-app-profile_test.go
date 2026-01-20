@@ -62,7 +62,7 @@ func TestBigTableAdminAppProfile(t *testing.T) {
 
 	t.Run("Get", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}
@@ -99,7 +99,7 @@ func TestBigTableAdminAppProfile(t *testing.T) {
 
 	t.Run("Get with multi-cluster routing", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}
@@ -136,7 +136,7 @@ func TestBigTableAdminAppProfile(t *testing.T) {
 
 	t.Run("Search", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}
@@ -158,7 +158,7 @@ func TestBigTableAdminAppProfile(t *testing.T) {
 
 	t.Run("Search with Terraform format", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}
@@ -200,7 +200,7 @@ func TestBigTableAdminAppProfile(t *testing.T) {
 		}
 
 		httpCli := shared.NewMockHTTPClientProvider(errorResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

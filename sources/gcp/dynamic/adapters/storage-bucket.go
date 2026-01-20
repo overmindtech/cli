@@ -15,16 +15,12 @@ var _ = registerableAdapter{
 		LocationLevel:      gcpshared.ProjectLevel,
 		// Reference: https://cloud.google.com/storage/docs/json_api/v1/buckets/get
 		// GET https://storage.googleapis.com/storage/v1/b/{bucket}
-		GetEndpointFunc: func(queryParts ...string) (gcpshared.EndpointFunc, error) {
-			if len(queryParts) == 1 && queryParts[0] != "" {
-				return func(query string) string {
-					if query != "" {
-						return fmt.Sprintf("https://storage.googleapis.com/storage/v1/b/%s", query)
-					}
-					return ""
-				}, nil
+		// Note: Storage buckets are globally unique and don't require project ID in the URL
+		GetEndpointFunc: func(query string, location gcpshared.LocationInfo) string {
+			if query != "" {
+				return fmt.Sprintf("https://storage.googleapis.com/storage/v1/b/%s", query)
 			}
-			return nil, fmt.Errorf("bucket name cannot be empty: %v", queryParts)
+			return ""
 		},
 		// Reference: https://cloud.google.com/storage/docs/json_api/v1/buckets/list
 		// GET https://storage.googleapis.com/storage/v1/b?project={project}

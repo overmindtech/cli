@@ -31,7 +31,7 @@ func TestComputeInstanceGroup(t *testing.T) {
 	zone := "us-central1-a"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeInstanceGroup(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstanceGroup(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeInstanceGroup("test-ig", "test-network", "test-subnetwork", projectID, zone), nil)
 
@@ -86,7 +86,7 @@ func TestComputeInstanceGroup(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeInstanceGroup(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstanceGroup(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockComputeInstanceGroupIterator(ctrl)
@@ -124,7 +124,7 @@ func TestComputeInstanceGroup(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeInstanceGroup(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstanceGroup(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockComputeInstanceGroupIterator(ctrl)

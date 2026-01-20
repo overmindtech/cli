@@ -35,14 +35,18 @@ func NewNetworkLoadBalancer(client clients.LoadBalancersClient, subscriptionID, 
 	}
 }
 
-func (n networkLoadBalancerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := n.client.List(n.ResourceGroup())
+func (n networkLoadBalancerWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	pager := n.client.List(resourceGroup)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
+			return nil, azureshared.QueryError(err, scope, n.Type())
 		}
 
 		for _, loadBalancer := range page.Value {
@@ -50,7 +54,7 @@ func (n networkLoadBalancerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp
 				continue
 			}
 
-			item, sdpErr := n.azureLoadBalancerToSDPItem(loadBalancer)
+			item, sdpErr := n.azureLoadBalancerToSDPItem(loadBalancer, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -61,22 +65,26 @@ func (n networkLoadBalancerWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp
 	return items, nil
 }
 
-func (n networkLoadBalancerWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (n networkLoadBalancerWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) != 1 {
-		return nil, azureshared.QueryError(errors.New("query must be a load balancer name"), n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(errors.New("query must be a load balancer name"), scope, n.Type())
 	}
 
 	loadBalancerName := queryParts[0]
 	if loadBalancerName == "" {
-		return nil, azureshared.QueryError(errors.New("load balancer name cannot be empty"), n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(errors.New("load balancer name cannot be empty"), scope, n.Type())
 	}
 
-	resp, err := n.client.Get(ctx, n.ResourceGroup(), loadBalancerName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	resp, err := n.client.Get(ctx, resourceGroup, loadBalancerName)
 	if err != nil {
-		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
 
-	item, sdpErr := n.azureLoadBalancerToSDPItem(&resp.LoadBalancer)
+	item, sdpErr := n.azureLoadBalancerToSDPItem(&resp.LoadBalancer, scope)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -84,21 +92,21 @@ func (n networkLoadBalancerWrapper) Get(ctx context.Context, queryParts ...strin
 	return item, nil
 }
 
-func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *armnetwork.LoadBalancer) (*sdp.Item, *sdp.QueryError) {
+func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *armnetwork.LoadBalancer, scope string) (*sdp.Item, *sdp.QueryError) {
 	if loadBalancer.Name == nil {
-		return nil, azureshared.QueryError(errors.New("load balancer name is nil"), n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(errors.New("load balancer name is nil"), scope, n.Type())
 	}
 
 	attributes, err := shared.ToAttributesWithExclude(loadBalancer, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.NetworkLoadBalancer.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           n.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(loadBalancer.Tags),
 	}
 
@@ -115,7 +123,7 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Type:   azureshared.NetworkLoadBalancerFrontendIPConfiguration.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(loadBalancerName, *frontendIPConfig.Name),
-						Scope:  n.DefaultScope(),
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true, // FrontendIPConfiguration changes affect the load balancer's frontend configuration
@@ -133,13 +141,11 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						// Extract subscription ID and resource group from the resource ID to determine scope
 						resourceID := *frontendIPConfig.Properties.PublicIPAddress.ID
 						parts := strings.Split(strings.Trim(resourceID, "/"), "/")
-						var scope string
+						linkedScope := scope
 						if len(parts) >= 4 && parts[0] == "subscriptions" && parts[2] == "resourceGroups" {
 							subscriptionID := parts[1]
 							resourceGroup := parts[3]
-							scope = fmt.Sprintf("%s.%s", subscriptionID, resourceGroup)
-						} else {
-							scope = n.DefaultScope()
+							linkedScope = fmt.Sprintf("%s.%s", subscriptionID, resourceGroup)
 						}
 
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -147,7 +153,7 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 								Type:   azureshared.NetworkPublicIPAddress.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  publicIPName,
-								Scope:  scope,
+								Scope:  linkedScope,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,  // Public IP changes (like deletion or reassignment) affect the load balancer's frontend
@@ -216,7 +222,7 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Type:   azureshared.NetworkLoadBalancerBackendAddressPool.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(loadBalancerName, *backendPool.Name),
-						Scope:  n.DefaultScope(),
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true, // BackendAddressPool changes affect which backends receive traffic
@@ -238,7 +244,7 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Type:   azureshared.NetworkLoadBalancerInboundNatRule.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(loadBalancerName, *natRule.Name),
-						Scope:  n.DefaultScope(),
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true, // InboundNatRule changes affect the load balancer's NAT configuration
@@ -287,7 +293,7 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Type:   azureshared.NetworkLoadBalancerLoadBalancingRule.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(loadBalancerName, *lbRule.Name),
-						Scope:  n.DefaultScope(),
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true, // LoadBalancingRule changes affect how traffic is distributed
@@ -309,7 +315,7 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Type:   azureshared.NetworkLoadBalancerProbe.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(loadBalancerName, *probe.Name),
-						Scope:  n.DefaultScope(),
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true, // Probe changes affect health monitoring of backend instances
@@ -331,7 +337,7 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Type:   azureshared.NetworkLoadBalancerOutboundRule.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(loadBalancerName, *outboundRule.Name),
-						Scope:  n.DefaultScope(),
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true, // OutboundRule changes affect outbound connectivity configuration
@@ -353,7 +359,7 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Type:   azureshared.NetworkLoadBalancerInboundNatPool.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(loadBalancerName, *natPool.Name),
-						Scope:  n.DefaultScope(),
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true, // InboundNatPool changes affect NAT pool configuration

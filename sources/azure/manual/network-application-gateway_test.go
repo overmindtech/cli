@@ -342,7 +342,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
 
 		// Test with wrong number of query parts - need to call through the wrapper directly
-		_, qErr := wrapper.Get(ctx, "part1", "part2")
+		_, qErr := wrapper.Get(ctx, wrapper.Scopes()[0], "part1", "part2")
 		if qErr == nil {
 			t.Error("Expected error when getting application gateway with wrong number of query parts, but got nil")
 		}

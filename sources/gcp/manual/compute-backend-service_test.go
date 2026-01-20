@@ -30,7 +30,7 @@ func TestComputeBackendService(t *testing.T) {
 	projectID := "test-project"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, projectID)
+		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeBackendService("test-backend-service"), nil)
 
@@ -107,11 +107,10 @@ func TestComputeBackendService(t *testing.T) {
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
-
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, projectID)
+		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -151,7 +150,7 @@ func TestComputeBackendService(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, projectID)
+		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -204,7 +203,7 @@ func TestComputeBackendService(t *testing.T) {
 	})
 
 	t.Run("GetWithHealthCheck", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, projectID)
+		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		// Test with global health check
 		healthCheckURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/healthChecks/test-health-check", projectID)
@@ -299,7 +298,7 @@ func TestComputeBackendService(t *testing.T) {
 	})
 
 	t.Run("GetWithRegionalHealthCheck", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, projectID)
+		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		// Test with regional health check
 		region := "us-central1"
@@ -395,7 +394,7 @@ func TestComputeBackendService(t *testing.T) {
 	})
 
 	t.Run("GetWithInstanceGroup", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, projectID)
+		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		// Test with unmanaged instance group
 		zone := "us-central1-a"
@@ -495,7 +494,7 @@ func TestComputeBackendService(t *testing.T) {
 	})
 
 	t.Run("GetWithHAPolicy", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, projectID)
+		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		// Test with HA Policy
 		zone := "us-central1-a"
@@ -609,7 +608,7 @@ func TestComputeBackendService(t *testing.T) {
 	})
 
 	t.Run("GetWithRegion", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, projectID)
+		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		// Test with region field (output-only, typically for regional backend services)
 		region := "us-central1"

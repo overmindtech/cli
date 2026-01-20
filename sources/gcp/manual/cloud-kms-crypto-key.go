@@ -26,11 +26,11 @@ type cloudKMSCryptoKeyWrapper struct {
 }
 
 // NewCloudKMSCryptoKey creates a new cloudKMSCryptoKeyWrapper.
-func NewCloudKMSCryptoKey(client gcpshared.CloudKMSCryptoKeyClient, projectID string) sources.SearchableWrapper {
+func NewCloudKMSCryptoKey(client gcpshared.CloudKMSCryptoKeyClient, locations []gcpshared.LocationInfo) sources.SearchStreamableWrapper {
 	return &cloudKMSCryptoKeyWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
-			projectID,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 			gcpshared.CloudKMSCryptoKey,
 		),
@@ -78,30 +78,33 @@ func (c cloudKMSCryptoKeyWrapper) GetLookups() sources.ItemTypeLookups {
 // Get retrieves a KMS CryptoKey by its name.
 // The name must be in the format: projects/{PROJECT_ID}/locations/{LOCATION}/keyRings/{KEY_RING}/cryptoKeys/{CRYPTO_KEY}
 // See: https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings.cryptoKeys/get
-func (c cloudKMSCryptoKeyWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c cloudKMSCryptoKeyWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	loc, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	location := queryParts[0]
 	keyRing := queryParts[1]
 	cryptoKeyName := queryParts[2]
 
 	name := fmt.Sprintf("projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s",
-		c.ProjectID(), location, keyRing, cryptoKeyName,
+		loc.ProjectID, location, keyRing, cryptoKeyName,
 	)
 
 	req := &kmspb.GetCryptoKeyRequest{
 		Name: name,
 	}
 
-	cryptoKey, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	cryptoKey, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	item, sdpErr := c.gcpCryptoKeyToSDPItem(cryptoKey)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpCryptoKeyToSDPItem(cryptoKey, loc)
 }
 
 // SearchLookups returns the lookups for the CryptoKey wrapper.
@@ -116,12 +119,20 @@ func (c cloudKMSCryptoKeyWrapper) SearchLookups() []sources.ItemTypeLookups {
 
 // Search searches KMS CryptoKeys and converts them to sdp.Items.
 // GET https://cloudkms.googleapis.com/v1/{parent=projects/*/locations/*/keyRings/*}/cryptoKeys
-func (c cloudKMSCryptoKeyWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+func (c cloudKMSCryptoKeyWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+	loc, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	location := queryParts[0]
 	keyRing := queryParts[1]
 
 	parent := fmt.Sprintf("projects/%s/locations/%s/keyRings/%s",
-		c.ProjectID(), location, keyRing,
+		loc.ProjectID, location, keyRing,
 	)
 
 	it := c.client.List(ctx, &kmspb.ListCryptoKeysRequest{
@@ -130,15 +141,15 @@ func (c cloudKMSCryptoKeyWrapper) Search(ctx context.Context, queryParts ...stri
 
 	var items []*sdp.Item
 	for {
-		cryptoKey, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		cryptoKey, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		item, sdpErr := c.gcpCryptoKeyToSDPItem(cryptoKey)
+		item, sdpErr := c.gcpCryptoKeyToSDPItem(cryptoKey, loc)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -149,12 +160,21 @@ func (c cloudKMSCryptoKeyWrapper) Search(ctx context.Context, queryParts ...stri
 	return items, nil
 }
 
-func (c cloudKMSCryptoKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string) {
+func (c cloudKMSCryptoKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	loc, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	location := queryParts[0]
 	keyRing := queryParts[1]
 
 	parent := fmt.Sprintf("projects/%s/locations/%s/keyRings/%s",
-		c.ProjectID(), location, keyRing,
+		loc.ProjectID, location, keyRing,
 	)
 
 	it := c.client.List(ctx, &kmspb.ListCryptoKeysRequest{
@@ -162,18 +182,19 @@ func (c cloudKMSCryptoKeyWrapper) SearchStream(ctx context.Context, stream disco
 	})
 
 	for {
-		cryptoKey, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		cryptoKey, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpCryptoKeyToSDPItem(cryptoKey)
+		item, sdpErr := c.gcpCryptoKeyToSDPItem(cryptoKey, loc)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
+			continue
 		}
 
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
@@ -183,7 +204,7 @@ func (c cloudKMSCryptoKeyWrapper) SearchStream(ctx context.Context, stream disco
 
 // gcpCryptoKeyToSDPItem converts a GCP CryptoKey to an SDP Item, linking GCP resource fields.
 // See: https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings.cryptoKeys
-func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoKey) (*sdp.Item, *sdp.QueryError) {
+func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoKey, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(cryptoKey, "labels")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -199,7 +220,7 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 	// [CryptoKey][google.cloud.kms.v1.CryptoKey] in the format
 	// `projects/*/locations/*/keyRings/*/cryptoKeys/*`.
 	values := gcpshared.ExtractPathParams(cryptoKey.GetName(), "locations", "keyRings", "cryptoKeys")
-	location := values[0]
+	kmsLocation := values[0]
 	keyRing := values[1]
 	cryptoKeyName := values[2]
 	if len(values) != 3 {
@@ -221,7 +242,7 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 		Type:            gcpshared.CloudKMSCryptoKey.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           location.ToScope(),
 		Tags:            cryptoKey.GetLabels(),
 	}
 
@@ -232,24 +253,27 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 		Query: &sdp.Query{
 			Type:   gcpshared.IAMPolicy.String(),
 			Method: sdp.QueryMethod_GET,
-			//TODO(Nauany): "":getIamPolicy" needs to be appended at the end of the URL, ensure team is aware
-			Query: shared.CompositeLookupKey(location, keyRing, cryptoKeyName),
-			Scope: c.ProjectID(),
+			// TODO(Nauany): "":getIamPolicy" needs to be appended at the end of the URL, ensure team is aware
+			Query: shared.CompositeLookupKey(kmsLocation, keyRing, cryptoKeyName),
+			Scope: location.ProjectID,
 		},
-		//Deleting the IAM Policy makes the CryptoKey non-functional
-		//Deleting the CryptoKey deletes the IAM Policy
-		BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+		// Deleting the IAM Policy makes the CryptoKey non-functional
+		// Deleting the CryptoKey deletes the IAM Policy
+		BlastPropagation: &sdp.BlastPropagation{
+			In:  true,
+			Out: true,
+		},
 	})
 
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
 			Type:   gcpshared.CloudKMSKeyRing.String(),
 			Method: sdp.QueryMethod_GET,
-			Query:  shared.CompositeLookupKey(location, keyRing),
-			Scope:  c.ProjectID(),
+			Query:  shared.CompositeLookupKey(kmsLocation, keyRing),
+			Scope:  location.ProjectID,
 		},
-		//Deleting the KeyRing makes the CryptoKey non-functional
-		//Deleting the CryptoKey does not affect the KeyRing; KeyRings are not owned by individual CryptoKeys.
+		// Deleting the KeyRing makes the CryptoKey non-functional
+		// Deleting the CryptoKey does not affect the KeyRing; KeyRings are not owned by individual CryptoKeys.
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,
 			Out: false,
@@ -269,11 +293,14 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 						Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(keyVersionVals...),
-						Scope:  c.ProjectID(),
+						Scope:  location.ProjectID,
 					},
-					//If all versions of a crypto key are deleted it will become non-functional
-					//CryptoKey can only be deleted if all versions are deleted
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+					// If all versions of a crypto key are deleted it will become non-functional
+					// CryptoKey can only be deleted if all versions are deleted
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
 				})
 			}
 		}
@@ -290,11 +317,14 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 						Type:   gcpshared.CloudKMSImportJob.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(importJobVals...),
-						Scope:  c.ProjectID(),
+						Scope:  location.ProjectID,
 					},
-					//Deleting the ImportJob makes the CryptoKeyVersion non-functional if it was imported
-					//Deleting the CryptoKey or CryptoKeyVersion doesn't affect the ImportJob; ImportJobs are not owned by individual CryptoKeys.
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+					// Deleting the ImportJob makes the CryptoKeyVersion non-functional if it was imported
+					// Deleting the CryptoKey or CryptoKeyVersion doesn't affect the ImportJob; ImportJobs are not owned by individual CryptoKeys.
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
 				})
 			}
 		}
@@ -314,11 +344,14 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 							Type:   gcpshared.CloudKMSEKMConnection.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(backendVals...),
-							Scope:  c.ProjectID(),
+							Scope:  location.ProjectID,
 						},
-						//Deleting the CryptoKeyBackend makes the CryptoKey non-functional
-						//Deleting the CryptoKey doesn't affect the EKMConnection; EKM Connections are not owned by individual CryptoKeys.
-						BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+						// Deleting the CryptoKeyBackend makes the CryptoKey non-functional
+						// Deleting the CryptoKey doesn't affect the EKMConnection; EKM Connections are not owned by individual CryptoKeys.
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
 					})
 				}
 			}

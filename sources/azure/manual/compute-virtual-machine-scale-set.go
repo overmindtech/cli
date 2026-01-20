@@ -37,17 +37,21 @@ func NewComputeVirtualMachineScaleSet(client clients.VirtualMachineScaleSetsClie
 }
 
 // ref: https://linear.app/overmind/issue/ENG-2114/create-microsoftcomputevirtualmachinescalesets-adapter
-func (c computeVirtualMachineScaleSetWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := c.client.NewListPager(c.ResourceGroup(), nil)
+func (c computeVirtualMachineScaleSetWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = c.ResourceGroup()
+	}
+	pager := c.client.NewListPager(resourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, c.DefaultScope(), c.Type())
+			return nil, azureshared.QueryError(err, scope, c.Type())
 		}
 		for _, scaleSet := range page.Value {
-			item, sdpErr := c.azureVirtualMachineScaleSetToSDPItem(scaleSet)
+			item, sdpErr := c.azureVirtualMachineScaleSetToSDPItem(scaleSet, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -58,16 +62,20 @@ func (c computeVirtualMachineScaleSetWrapper) List(ctx context.Context) ([]*sdp.
 	return items, nil
 }
 
-func (c computeVirtualMachineScaleSetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
-	pager := c.client.NewListPager(c.ResourceGroup(), nil)
+func (c computeVirtualMachineScaleSetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = c.ResourceGroup()
+	}
+	pager := c.client.NewListPager(resourceGroup, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			stream.SendError(azureshared.QueryError(err, c.DefaultScope(), c.Type()))
+			stream.SendError(azureshared.QueryError(err, scope, c.Type()))
 			return
 		}
 		for _, scaleSet := range page.Value {
-			item, sdpErr := c.azureVirtualMachineScaleSetToSDPItem(scaleSet)
+			item, sdpErr := c.azureVirtualMachineScaleSetToSDPItem(scaleSet, scope)
 			if sdpErr != nil {
 				stream.SendError(sdpErr)
 				continue
@@ -79,36 +87,40 @@ func (c computeVirtualMachineScaleSetWrapper) ListStream(ctx context.Context, st
 }
 
 // ref: https://learn.microsoft.com/en-us/rest/api/compute/virtual-machine-scale-sets/get?view=rest-compute-2025-04-01&tabs=HTTP
-func (c computeVirtualMachineScaleSetWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeVirtualMachineScaleSetWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
-		return nil, azureshared.QueryError(errors.New("queryParts must be at least 1"), c.DefaultScope(), c.Type())
+		return nil, azureshared.QueryError(errors.New("queryParts must be at least 1"), scope, c.Type())
 	}
 	scaleSetName := queryParts[0]
 	if scaleSetName == "" {
-		return nil, azureshared.QueryError(errors.New("scaleSetName cannot be empty"), c.DefaultScope(), c.Type())
+		return nil, azureshared.QueryError(errors.New("scaleSetName cannot be empty"), scope, c.Type())
 	}
-	scaleSet, err := c.client.Get(ctx, c.ResourceGroup(), scaleSetName, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = c.ResourceGroup()
+	}
+	scaleSet, err := c.client.Get(ctx, resourceGroup, scaleSetName, nil)
 	if err != nil {
-		return nil, azureshared.QueryError(err, c.DefaultScope(), c.Type())
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
 
-	return c.azureVirtualMachineScaleSetToSDPItem(&scaleSet.VirtualMachineScaleSet)
+	return c.azureVirtualMachineScaleSetToSDPItem(&scaleSet.VirtualMachineScaleSet, scope)
 }
 
-func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPItem(scaleSet *armcompute.VirtualMachineScaleSet) (*sdp.Item, *sdp.QueryError) {
+func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPItem(scaleSet *armcompute.VirtualMachineScaleSet, scope string) (*sdp.Item, *sdp.QueryError) {
 	if scaleSet.Name == nil {
-		return nil, azureshared.QueryError(errors.New("scaleSetName is nil"), c.DefaultScope(), c.Type())
+		return nil, azureshared.QueryError(errors.New("scaleSetName is nil"), scope, c.Type())
 	}
 	attributes, err := shared.ToAttributesWithExclude(scaleSet, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, c.DefaultScope(), c.Type())
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.ComputeVirtualMachineScaleSet.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(scaleSet.Tags),
 	}
 
@@ -136,7 +148,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 						Type:   azureshared.ComputeVirtualMachineExtension.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(scaleSetName, *extension.Name),
-						Scope:  c.DefaultScope(),
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  false, // If Extensions are deleted → VMSS remains functional (In: false)
@@ -156,7 +168,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 				Type:   azureshared.ComputeVirtualMachine.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  scaleSetName,
-				Scope:  c.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  false, // If VM instances are deleted → VMSS remains functional (In: false)
@@ -176,17 +188,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 				if nicConfig.Properties.NetworkSecurityGroup != nil && nicConfig.Properties.NetworkSecurityGroup.ID != nil {
 					nsgName := azureshared.ExtractResourceName(*nicConfig.Properties.NetworkSecurityGroup.ID)
 					if nsgName != "" {
-						scope := c.DefaultScope()
 						// Check if NSG is in a different resource group
-						if extractedScope := azureshared.ExtractScopeFromResourceID(*nicConfig.Properties.NetworkSecurityGroup.ID); extractedScope != "" {
-							scope = extractedScope
+						extractedScope := azureshared.ExtractScopeFromResourceID(*nicConfig.Properties.NetworkSecurityGroup.ID)
+						if extractedScope == "" {
+							extractedScope = scope
 						}
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   azureshared.NetworkNetworkSecurityGroup.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  nsgName,
-								Scope:  scope,
+								Scope:  extractedScope,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,  // If NSG changes → VMSS network behavior changes (In: true)
@@ -210,10 +222,10 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 								if len(parts) >= 2 {
 									vnetName := parts[0]
 									subnetName := parts[1]
-									scope := c.DefaultScope()
 									// Check if subnet is in a different resource group
-									if extractedScope := azureshared.ExtractScopeFromResourceID(subnetID); extractedScope != "" {
-										scope = extractedScope
+									extractedScope := azureshared.ExtractScopeFromResourceID(subnetID)
+									if extractedScope == "" {
+										extractedScope = scope
 									}
 									// Link to Virtual Network
 									// Reference: https://learn.microsoft.com/en-us/rest/api/virtual-network/virtual-networks/get
@@ -222,7 +234,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 											Type:   azureshared.NetworkVirtualNetwork.String(),
 											Method: sdp.QueryMethod_GET,
 											Query:  vnetName,
-											Scope:  scope,
+											Scope:  extractedScope,
 										},
 										BlastPropagation: &sdp.BlastPropagation{
 											In:  true,  // If Virtual Network changes → VMSS network behavior changes (In: true)
@@ -235,7 +247,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 											Type:   azureshared.NetworkSubnet.String(),
 											Method: sdp.QueryMethod_GET,
 											Query:  shared.CompositeLookupKey(vnetName, subnetName),
-											Scope:  scope,
+											Scope:  extractedScope,
 										},
 										BlastPropagation: &sdp.BlastPropagation{
 											In:  true,  // If Subnet changes → VMSS network behavior changes (In: true)
@@ -253,17 +265,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 								ipConfig.Properties.PublicIPAddressConfiguration.Properties.PublicIPPrefix.ID != nil {
 								publicIPPrefixName := azureshared.ExtractResourceName(*ipConfig.Properties.PublicIPAddressConfiguration.Properties.PublicIPPrefix.ID)
 								if publicIPPrefixName != "" {
-									scope := c.DefaultScope()
 									// Check if Public IP Prefix is in a different resource group
-									if extractedScope := azureshared.ExtractScopeFromResourceID(*ipConfig.Properties.PublicIPAddressConfiguration.Properties.PublicIPPrefix.ID); extractedScope != "" {
-										scope = extractedScope
+									extractedScope := azureshared.ExtractScopeFromResourceID(*ipConfig.Properties.PublicIPAddressConfiguration.Properties.PublicIPPrefix.ID)
+									if extractedScope == "" {
+										extractedScope = scope
 									}
 									sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 										Query: &sdp.Query{
 											Type:   azureshared.NetworkPublicIPPrefix.String(),
 											Method: sdp.QueryMethod_GET,
 											Query:  publicIPPrefixName,
-											Scope:  scope,
+											Scope:  extractedScope,
 										},
 										BlastPropagation: &sdp.BlastPropagation{
 											In:  true,  // If Public IP Prefix changes → VMSS public IP allocation changes (In: true)
@@ -285,10 +297,10 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 										if len(parts) >= 2 {
 											lbName := parts[0]
 											poolName := parts[1]
-											scope := c.DefaultScope()
 											// Check if Load Balancer is in a different resource group
-											if extractedScope := azureshared.ExtractScopeFromResourceID(poolID); extractedScope != "" {
-												scope = extractedScope
+											extractedScope := azureshared.ExtractScopeFromResourceID(poolID)
+											if extractedScope == "" {
+												extractedScope = scope
 											}
 											// Link to Load Balancer (deduplicated - same LB may be referenced by multiple child resources)
 											// Reference: https://learn.microsoft.com/en-us/rest/api/load-balancer/load-balancers/get
@@ -297,7 +309,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 													Type:   azureshared.NetworkLoadBalancer.String(),
 													Method: sdp.QueryMethod_GET,
 													Query:  lbName,
-													Scope:  scope,
+													Scope:  extractedScope,
 												},
 												BlastPropagation: &sdp.BlastPropagation{
 													In:  true,  // If Load Balancer changes → VMSS load balancing changes (In: true)
@@ -310,7 +322,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 													Type:   azureshared.NetworkLoadBalancerBackendAddressPool.String(),
 													Method: sdp.QueryMethod_GET,
 													Query:  shared.CompositeLookupKey(lbName, poolName),
-													Scope:  scope,
+													Scope:  extractedScope,
 												},
 												BlastPropagation: &sdp.BlastPropagation{
 													In:  true, // If Backend Pool changes → VMSS load balancing changes (In: true)
@@ -334,10 +346,10 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 										if len(parts) >= 2 {
 											lbName := parts[0]
 											poolName := parts[1]
-											scope := c.DefaultScope()
 											// Check if Load Balancer is in a different resource group
-											if extractedScope := azureshared.ExtractScopeFromResourceID(natPoolID); extractedScope != "" {
-												scope = extractedScope
+											extractedScope := azureshared.ExtractScopeFromResourceID(natPoolID)
+											if extractedScope == "" {
+												extractedScope = scope
 											}
 											// Link to Load Balancer (deduplicated - same LB may be referenced by multiple child resources)
 											// Reference: https://learn.microsoft.com/en-us/rest/api/load-balancer/load-balancers/get
@@ -346,7 +358,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 													Type:   azureshared.NetworkLoadBalancer.String(),
 													Method: sdp.QueryMethod_GET,
 													Query:  lbName,
-													Scope:  scope,
+													Scope:  extractedScope,
 												},
 												BlastPropagation: &sdp.BlastPropagation{
 													In:  true,  // If Load Balancer changes → VMSS load balancing changes (In: true)
@@ -359,7 +371,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 													Type:   azureshared.NetworkLoadBalancerInboundNatPool.String(),
 													Method: sdp.QueryMethod_GET,
 													Query:  shared.CompositeLookupKey(lbName, poolName),
-													Scope:  scope,
+													Scope:  extractedScope,
 												},
 												BlastPropagation: &sdp.BlastPropagation{
 													In:  true, // If NAT Pool changes → VMSS NAT behavior changes (In: true)
@@ -383,10 +395,10 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 										if len(parts) >= 2 {
 											agName := parts[0]
 											poolName := parts[1]
-											scope := c.DefaultScope()
 											// Check if Application Gateway is in a different resource group
-											if extractedScope := azureshared.ExtractScopeFromResourceID(agPoolID); extractedScope != "" {
-												scope = extractedScope
+											extractedScope := azureshared.ExtractScopeFromResourceID(agPoolID)
+											if extractedScope == "" {
+												extractedScope = scope
 											}
 											// Link to Application Gateway (deduplicated - same AG may be referenced by multiple child resources)
 											// Reference: https://learn.microsoft.com/en-us/rest/api/application-gateway/application-gateways/get
@@ -395,7 +407,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 													Type:   azureshared.NetworkApplicationGateway.String(),
 													Method: sdp.QueryMethod_GET,
 													Query:  agName,
-													Scope:  scope,
+													Scope:  extractedScope,
 												},
 												BlastPropagation: &sdp.BlastPropagation{
 													In:  true,  // If Application Gateway changes → VMSS routing changes (In: true)
@@ -408,7 +420,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 													Type:   azureshared.NetworkApplicationGatewayBackendAddressPool.String(),
 													Method: sdp.QueryMethod_GET,
 													Query:  shared.CompositeLookupKey(agName, poolName),
-													Scope:  scope,
+													Scope:  extractedScope,
 												},
 												BlastPropagation: &sdp.BlastPropagation{
 													In:  true, // If Backend Pool changes → VMSS routing changes (In: true)
@@ -427,17 +439,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 									if asgRef.ID != nil {
 										asgName := azureshared.ExtractResourceName(*asgRef.ID)
 										if asgName != "" {
-											scope := c.DefaultScope()
 											// Check if Application Security Group is in a different resource group
-											if extractedScope := azureshared.ExtractScopeFromResourceID(*asgRef.ID); extractedScope != "" {
-												scope = extractedScope
+											extractedScope := azureshared.ExtractScopeFromResourceID(*asgRef.ID)
+											if extractedScope == "" {
+												extractedScope = scope
 											}
 											sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 												Query: &sdp.Query{
 													Type:   azureshared.NetworkApplicationSecurityGroup.String(),
 													Method: sdp.QueryMethod_GET,
 													Query:  asgName,
-													Scope:  scope,
+													Scope:  extractedScope,
 												},
 												BlastPropagation: &sdp.BlastPropagation{
 													In:  true,  // If ASG changes → VMSS network rules change (In: true)
@@ -469,10 +481,10 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 		if len(parts) >= 2 {
 			lbName := parts[0]
 			probeName := parts[1]
-			scope := c.DefaultScope()
 			// Check if Load Balancer is in a different resource group
-			if extractedScope := azureshared.ExtractScopeFromResourceID(probeID); extractedScope != "" {
-				scope = extractedScope
+			extractedScope := azureshared.ExtractScopeFromResourceID(probeID)
+			if extractedScope == "" {
+				extractedScope = scope
 			}
 			// Link to Load Balancer (deduplicated - same LB may be referenced by multiple child resources)
 			// Reference: https://learn.microsoft.com/en-us/rest/api/load-balancer/load-balancers/get
@@ -481,7 +493,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 					Type:   azureshared.NetworkLoadBalancer.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  lbName,
-					Scope:  scope,
+					Scope:  extractedScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // If Load Balancer changes → VMSS load balancing changes (In: true)
@@ -494,7 +506,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 					Type:   azureshared.NetworkLoadBalancerProbe.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(lbName, probeName),
-					Scope:  scope,
+					Scope:  extractedScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // If Health Probe changes → VMSS health checks change (In: true)
@@ -515,17 +527,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 			scaleSet.Properties.VirtualMachineProfile.StorageProfile.OSDisk.ManagedDisk.DiskEncryptionSet.ID != nil {
 			encryptionSetName := azureshared.ExtractResourceName(*scaleSet.Properties.VirtualMachineProfile.StorageProfile.OSDisk.ManagedDisk.DiskEncryptionSet.ID)
 			if encryptionSetName != "" {
-				scope := c.DefaultScope()
 				// Check if Disk Encryption Set is in a different resource group
-				if extractedScope := azureshared.ExtractScopeFromResourceID(*scaleSet.Properties.VirtualMachineProfile.StorageProfile.OSDisk.ManagedDisk.DiskEncryptionSet.ID); extractedScope != "" {
-					scope = extractedScope
+				extractedScope := azureshared.ExtractScopeFromResourceID(*scaleSet.Properties.VirtualMachineProfile.StorageProfile.OSDisk.ManagedDisk.DiskEncryptionSet.ID)
+				if extractedScope == "" {
+					extractedScope = scope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.ComputeDiskEncryptionSet.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  encryptionSetName,
-						Scope:  scope,
+						Scope:  extractedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,  // If Disk Encryption Set changes → VMSS disk encryption changes (In: true)
@@ -542,17 +554,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 					dataDisk.ManagedDisk.DiskEncryptionSet.ID != nil {
 					encryptionSetName := azureshared.ExtractResourceName(*dataDisk.ManagedDisk.DiskEncryptionSet.ID)
 					if encryptionSetName != "" {
-						scope := c.DefaultScope()
 						// Check if Disk Encryption Set is in a different resource group
-						if extractedScope := azureshared.ExtractScopeFromResourceID(*dataDisk.ManagedDisk.DiskEncryptionSet.ID); extractedScope != "" {
-							scope = extractedScope
+						extractedScope := azureshared.ExtractScopeFromResourceID(*dataDisk.ManagedDisk.DiskEncryptionSet.ID)
+						if extractedScope == "" {
+							extractedScope = scope
 						}
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   azureshared.ComputeDiskEncryptionSet.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  encryptionSetName,
-								Scope:  scope,
+								Scope:  extractedScope,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,  // If Disk Encryption Set changes → VMSS disk encryption changes (In: true)
@@ -579,17 +591,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 				imageID := *imageRef.ID
 				imageName := azureshared.ExtractResourceName(imageID)
 				if imageName != "" {
-					scope := c.DefaultScope()
 					// Check if Image is in a different resource group
-					if extractedScope := azureshared.ExtractScopeFromResourceID(imageID); extractedScope != "" {
-						scope = extractedScope
+					extractedScope := azureshared.ExtractScopeFromResourceID(imageID)
+					if extractedScope == "" {
+						extractedScope = scope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.ComputeImage.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  imageName,
-							Scope:  scope,
+							Scope:  extractedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If Image changes → VMSS VM configuration changes (In: true)
@@ -611,17 +623,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 						galleryName := parts[0]
 						imageName := parts[1]
 						version := parts[2]
-						scope := c.DefaultScope()
 						// Check if gallery is in a different resource group
-						if extractedScope := azureshared.ExtractScopeFromResourceID(sharedGalleryImageID); extractedScope != "" {
-							scope = extractedScope
+						extractedScope := azureshared.ExtractScopeFromResourceID(sharedGalleryImageID)
+						if extractedScope == "" {
+							extractedScope = scope
 						}
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   azureshared.ComputeSharedGalleryImage.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  shared.CompositeLookupKey(galleryName, imageName, version),
-								Scope:  scope,
+								Scope:  extractedScope,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,  // If Gallery Image changes → VMSS VM configuration changes (In: true)
@@ -650,7 +662,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 								Type:   azureshared.ComputeCommunityGalleryImage.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  shared.CompositeLookupKey(communityGalleryName, imageName, version),
-								Scope:  c.DefaultScope(), // Community galleries are subscription-level
+								Scope:  scope, // Community galleries are subscription-level
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,  // If Gallery Image changes → VMSS VM configuration changes (In: true)
@@ -679,17 +691,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 						galleryName := parts[0]
 						applicationName := parts[1]
 						version := parts[2]
-						scope := c.DefaultScope()
 						// Check if gallery is in a different resource group
-						if extractedScope := azureshared.ExtractScopeFromResourceID(packageRefID); extractedScope != "" {
-							scope = extractedScope
+						extractedScope := azureshared.ExtractScopeFromResourceID(packageRefID)
+						if extractedScope == "" {
+							extractedScope = scope
 						}
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   azureshared.ComputeSharedGalleryApplicationVersion.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  shared.CompositeLookupKey(galleryName, applicationName, version),
-								Scope:  scope,
+								Scope:  extractedScope,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,  // If Gallery Application Version changes → VMSS application configuration changes (In: true)
@@ -709,17 +721,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 		if scaleSet.Properties.ProximityPlacementGroup != nil && scaleSet.Properties.ProximityPlacementGroup.ID != nil {
 			ppgName := azureshared.ExtractResourceName(*scaleSet.Properties.ProximityPlacementGroup.ID)
 			if ppgName != "" {
-				scope := c.DefaultScope()
 				// Check if Proximity Placement Group is in a different resource group
-				if extractedScope := azureshared.ExtractScopeFromResourceID(*scaleSet.Properties.ProximityPlacementGroup.ID); extractedScope != "" {
-					scope = extractedScope
+				extractedScope := azureshared.ExtractScopeFromResourceID(*scaleSet.Properties.ProximityPlacementGroup.ID)
+				if extractedScope == "" {
+					extractedScope = scope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.ComputeProximityPlacementGroup.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  ppgName,
-						Scope:  scope,
+						Scope:  extractedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,  // If PPG changes → VMSS placement changes (In: true)
@@ -734,17 +746,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 		if scaleSet.Properties.HostGroup != nil && scaleSet.Properties.HostGroup.ID != nil {
 			hostGroupName := azureshared.ExtractResourceName(*scaleSet.Properties.HostGroup.ID)
 			if hostGroupName != "" {
-				scope := c.DefaultScope()
 				// Check if Dedicated Host Group is in a different resource group
-				if extractedScope := azureshared.ExtractScopeFromResourceID(*scaleSet.Properties.HostGroup.ID); extractedScope != "" {
-					scope = extractedScope
+				extractedScope := azureshared.ExtractScopeFromResourceID(*scaleSet.Properties.HostGroup.ID)
+				if extractedScope == "" {
+					extractedScope = scope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.ComputeDedicatedHostGroup.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  hostGroupName,
-						Scope:  scope,
+						Scope:  extractedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,  // If Host Group changes → VMSS host placement changes (In: true)
@@ -763,17 +775,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 		scaleSet.Properties.VirtualMachineProfile.CapacityReservation.CapacityReservationGroup.ID != nil {
 		capacityReservationGroupName := azureshared.ExtractResourceName(*scaleSet.Properties.VirtualMachineProfile.CapacityReservation.CapacityReservationGroup.ID)
 		if capacityReservationGroupName != "" {
-			scope := c.DefaultScope()
 			// Check if Capacity Reservation Group is in a different resource group
-			if extractedScope := azureshared.ExtractScopeFromResourceID(*scaleSet.Properties.VirtualMachineProfile.CapacityReservation.CapacityReservationGroup.ID); extractedScope != "" {
-				scope = extractedScope
+			extractedScope := azureshared.ExtractScopeFromResourceID(*scaleSet.Properties.VirtualMachineProfile.CapacityReservation.CapacityReservationGroup.ID)
+			if extractedScope == "" {
+				extractedScope = scope
 			}
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.ComputeCapacityReservationGroup.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  capacityReservationGroupName,
-					Scope:  scope,
+					Scope:  extractedScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // If Capacity Reservation Group changes → VMSS capacity reservation changes (In: true)
@@ -790,17 +802,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 			if identityID != "" {
 				identityName := azureshared.ExtractResourceName(identityID)
 				if identityName != "" {
-					scope := c.DefaultScope()
 					// Check if identity is in a different resource group
-					if extractedScope := azureshared.ExtractScopeFromResourceID(identityID); extractedScope != "" {
-						scope = extractedScope
+					extractedScope := azureshared.ExtractScopeFromResourceID(identityID)
+					if extractedScope == "" {
+						extractedScope = scope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  identityName,
-							Scope:  scope,
+							Scope:  extractedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If Identity changes → VMSS access changes (In: true)
@@ -857,7 +869,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 							Type:   azureshared.StorageAccount.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  accountName,
-							Scope:  c.DefaultScope(),
+							Scope:  scope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If Storage Account changes → VMSS boot diagnostics affected (In: true)
@@ -878,17 +890,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 			if secret.SourceVault != nil && secret.SourceVault.ID != nil {
 				vaultName := azureshared.ExtractResourceName(*secret.SourceVault.ID)
 				if vaultName != "" {
-					scope := c.DefaultScope()
 					// Check if Key Vault is in a different resource group
-					if extractedScope := azureshared.ExtractScopeFromResourceID(*secret.SourceVault.ID); extractedScope != "" {
-						scope = extractedScope
+					extractedScope := azureshared.ExtractScopeFromResourceID(*secret.SourceVault.ID)
+					if extractedScope == "" {
+						extractedScope = scope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.KeyVaultVault.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  vaultName,
-							Scope:  scope,
+							Scope:  extractedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If Key Vault changes → VMSS secrets access changes (In: true)
@@ -910,17 +922,17 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 				extension.Properties.ProtectedSettingsFromKeyVault.SourceVault.ID != nil {
 				vaultName := azureshared.ExtractResourceName(*extension.Properties.ProtectedSettingsFromKeyVault.SourceVault.ID)
 				if vaultName != "" {
-					scope := c.DefaultScope()
 					// Check if Key Vault is in a different resource group
-					if extractedScope := azureshared.ExtractScopeFromResourceID(*extension.Properties.ProtectedSettingsFromKeyVault.SourceVault.ID); extractedScope != "" {
-						scope = extractedScope
+					extractedScope := azureshared.ExtractScopeFromResourceID(*extension.Properties.ProtectedSettingsFromKeyVault.SourceVault.ID)
+					if extractedScope == "" {
+						extractedScope = scope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.KeyVaultVault.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  vaultName,
-							Scope:  scope,
+							Scope:  extractedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If Key Vault changes → VMSS extension settings access changes (In: true)

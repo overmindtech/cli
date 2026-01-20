@@ -54,15 +54,15 @@ func (d *apiGatewayKeyWrapper) GetLookups() sources.ItemTypeLookups {
 }
 
 // Get retrieves an API Key by its ID and converts it to an sdp.Item
-func (d *apiGatewayKeyWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (d *apiGatewayKeyWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	out, err := d.client.GetApiKey(ctx, &apigateway.GetApiKeyInput{
 		ApiKey: &queryParts[0],
 	})
 	if err != nil {
-		return nil, queryError(err, d.Scopes()[0], d.Type())
+		return nil, queryError(err, scope, d.Type())
 	}
 
-	return d.awsToSdpItem(convertGetApiKeyOutputToApiKey(out))
+	return d.awsToSdpItem(convertGetApiKeyOutputToApiKey(out), scope)
 }
 
 // SearchLookups returns the ItemTypeLookups for the Search operation
@@ -75,33 +75,33 @@ func (d *apiGatewayKeyWrapper) SearchLookups() []sources.ItemTypeLookups {
 }
 
 // Search retrieves API Keys by a search query and converts them to sdp.Items
-func (d *apiGatewayKeyWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+func (d *apiGatewayKeyWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
 	out, err := d.client.GetApiKeys(ctx, &apigateway.GetApiKeysInput{
 		NameQuery: &queryParts[0],
 	})
 	if err != nil {
-		return nil, queryError(err, d.Scopes()[0], d.Type())
+		return nil, queryError(err, scope, d.Type())
 	}
 
-	return d.mapper(out.Items)
+	return d.mapper(out.Items, scope)
 }
 
 // List retrieves all API Keys and converts them to sdp.Items
-func (d *apiGatewayKeyWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (d *apiGatewayKeyWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
 	out, err := d.client.GetApiKeys(ctx, &apigateway.GetApiKeysInput{})
 	if err != nil {
-		return nil, queryError(err, d.Scopes()[0], d.Type())
+		return nil, queryError(err, scope, d.Type())
 	}
 
-	return d.mapper(out.Items)
+	return d.mapper(out.Items, scope)
 }
 
 // mapper converts a list of AWS API Keys to a list of sdp.Items
-func (d *apiGatewayKeyWrapper) mapper(apiKeys []types.ApiKey) ([]*sdp.Item, *sdp.QueryError) {
+func (d *apiGatewayKeyWrapper) mapper(apiKeys []types.ApiKey, scope string) ([]*sdp.Item, *sdp.QueryError) {
 	var items []*sdp.Item
 
 	for _, apiKey := range apiKeys {
-		sdpItem, err := d.awsToSdpItem(apiKey)
+		sdpItem, err := d.awsToSdpItem(apiKey, scope)
 		if err != nil {
 			return nil, err
 		}
@@ -112,7 +112,7 @@ func (d *apiGatewayKeyWrapper) mapper(apiKeys []types.ApiKey) ([]*sdp.Item, *sdp
 	return items, nil
 }
 
-func (d *apiGatewayKeyWrapper) awsToSdpItem(apiKey types.ApiKey) (*sdp.Item, *sdp.QueryError) {
+func (d *apiGatewayKeyWrapper) awsToSdpItem(apiKey types.ApiKey, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := adapterhelpers.ToAttributesWithExclude(apiKey, "tags")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -125,7 +125,7 @@ func (d *apiGatewayKeyWrapper) awsToSdpItem(apiKey types.ApiKey) (*sdp.Item, *sd
 		Type:            d.Type(),
 		UniqueAttribute: "Id",
 		Attributes:      attributes,
-		Scope:           d.Scopes()[0],
+		Scope:           scope,
 		Tags:            apiKey.Tags,
 	}
 
@@ -140,7 +140,7 @@ func (d *apiGatewayKeyWrapper) awsToSdpItem(apiKey types.ApiKey) (*sdp.Item, *sd
 						Type:   linkedItem.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  restAPIID,
-						Scope:  d.Scopes()[0],
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,

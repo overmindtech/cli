@@ -30,7 +30,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 	keyRingName := "test-keyring"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSKeyRing(mockClient, projectID)
+		wrapper := manual.NewCloudKMSKeyRing(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createKeyRing(projectID, location, keyRingName), nil)
 
@@ -70,7 +70,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 	})
 
 	t.Run("Search", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSKeyRing(mockClient, projectID)
+		wrapper := manual.NewCloudKMSKeyRing(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
@@ -105,7 +105,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 	})
 
 	t.Run("SearchStream", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSKeyRing(mockClient, projectID)
+		wrapper := manual.NewCloudKMSKeyRing(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
@@ -158,7 +158,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 	})
 
 	t.Run("List_Unsupported", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSKeyRing(mockClient, projectID)
+		wrapper := manual.NewCloudKMSKeyRing(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Check if adapter supports list - it should not

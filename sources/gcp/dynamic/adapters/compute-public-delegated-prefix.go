@@ -1,8 +1,6 @@
 package adapters
 
 import (
-	"fmt"
-
 	"github.com/overmindtech/cli/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
@@ -16,7 +14,7 @@ var _ = registerableAdapter{
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 		LocationLevel:      gcpshared.RegionalLevel,
-		GetEndpointFunc: gcpshared.RegionalLevelEndpointFuncWithSingleQuery(
+		GetEndpointFunc: gcpshared.RegionalLevelEndpointFunc(
 			"https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/publicDelegatedPrefixes/%s",
 		),
 		ListEndpointFunc: gcpshared.RegionLevelListFunc(
@@ -24,11 +22,9 @@ var _ = registerableAdapter{
 		),
 		// Provide a no-op search for terraform mapping support with full resource ID.
 		// Expected search query: projects/{project}/regions/{region}/publicDelegatedPrefixes/{name}
-		SearchEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
-			if len(adapterInitParams) != 2 || adapterInitParams[0] == "" || adapterInitParams[1] == "" {
-				return nil, fmt.Errorf("projectID and region cannot be empty: %v", adapterInitParams)
-			}
-			return nil, nil // runtime will use GET with provided full name
+		// Returns empty URL to trigger GET with the provided full name.
+		SearchEndpointFunc: func(query string, location gcpshared.LocationInfo) string {
+			return ""
 		},
 		SearchDescription:   "Search with full ID: projects/[project]/regions/[region]/publicDelegatedPrefixes/[name] (used for terraform mapping).",
 		UniqueAttributeKeys: []string{"publicDelegatedPrefixes"},

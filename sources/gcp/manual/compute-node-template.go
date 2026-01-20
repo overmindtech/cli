@@ -19,17 +19,15 @@ var ComputeNodeTemplateLookupByName = shared.NewItemTypeLookup("name", gcpshared
 
 type computeNodeTemplateWrapper struct {
 	client gcpshared.ComputeNodeTemplateClient
-
 	*gcpshared.RegionBase
 }
 
 // NewComputeNodeTemplate creates a new computeNodeTemplateWrapper instance.
-func NewComputeNodeTemplate(client gcpshared.ComputeNodeTemplateClient, projectID, region string) sources.ListableWrapper {
+func NewComputeNodeTemplate(client gcpshared.ComputeNodeTemplateClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeNodeTemplateWrapper{
 		client: client,
 		RegionBase: gcpshared.NewRegionBase(
-			projectID,
-			region,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 			gcpshared.ComputeNodeTemplate,
 		),
@@ -56,8 +54,7 @@ func (c computeNodeTemplateWrapper) PotentialLinks() map[shared.ItemType]bool {
 func (c computeNodeTemplateWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
-			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_node_group#argument-reference
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_node_template.name",
 		},
 	}
@@ -69,48 +66,54 @@ func (c computeNodeTemplateWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
-func (c computeNodeTemplateWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeNodeTemplateWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetNodeTemplateRequest{
-		Project:      c.ProjectID(),
-		Region:       c.Region(),
+		Project:      location.ProjectID,
+		Region:       location.Region,
 		NodeTemplate: queryParts[0],
 	}
 
-	nodeTemplate, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	nodeTemplate, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	var sdpErr *sdp.QueryError
-	var item *sdp.Item
-	item, sdpErr = c.gcpComputeNodeTemplateToSDPItem(nodeTemplate)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpComputeNodeTemplateToSDPItem(nodeTemplate, location)
 }
 
-func (c computeNodeTemplateWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	results := c.client.List(ctx, &computepb.ListNodeTemplatesRequest{
-		Project: c.ProjectID(),
-		Region:  c.Region(),
+func (c computeNodeTemplateWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
+	it := c.client.List(ctx, &computepb.ListNodeTemplatesRequest{
+		Project: location.ProjectID,
+		Region:  location.Region,
 	})
 
 	var items []*sdp.Item
 	for {
-		nodeTemplate, err := results.Next()
-		if errors.Is(err, iterator.Done) {
+		nodeTemplate, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		var sdpErr *sdp.QueryError
-		var item *sdp.Item
-		item, sdpErr = c.gcpComputeNodeTemplateToSDPItem(nodeTemplate)
+		item, sdpErr := c.gcpComputeNodeTemplateToSDPItem(nodeTemplate, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -121,23 +124,32 @@ func (c computeNodeTemplateWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp
 	return items, nil
 }
 
-func (c computeNodeTemplateWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeNodeTemplateWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListNodeTemplatesRequest{
-		Project: c.ProjectID(),
-		Region:  c.Region(),
+		Project: location.ProjectID,
+		Region:  location.Region,
 	})
 
 	for {
-		nodeTemplate, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		nodeTemplate, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpComputeNodeTemplateToSDPItem(nodeTemplate)
+		item, sdpErr := c.gcpComputeNodeTemplateToSDPItem(nodeTemplate, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -148,7 +160,7 @@ func (c computeNodeTemplateWrapper) ListStream(ctx context.Context, stream disco
 	}
 }
 
-func (c computeNodeTemplateWrapper) gcpComputeNodeTemplateToSDPItem(nodeTemplate *computepb.NodeTemplate) (*sdp.Item, *sdp.QueryError) {
+func (c computeNodeTemplateWrapper) gcpComputeNodeTemplateToSDPItem(nodeTemplate *computepb.NodeTemplate, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(nodeTemplate)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -161,13 +173,10 @@ func (c computeNodeTemplateWrapper) gcpComputeNodeTemplateToSDPItem(nodeTemplate
 		Type:            gcpshared.ComputeNodeTemplate.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
-		// No labels
+		Scope:           location.ToScope(),
 	}
 
 	// Backlink to any node group using this template.
-	// TODO: Revisit this link when working on this issue:
-	// https://linear.app/overmind/issue/ENG-404/investigate-how-to-create-backlinks-without-the-location-information
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
 			Type:   gcpshared.ComputeNodeGroup.String(),
@@ -175,7 +184,6 @@ func (c computeNodeTemplateWrapper) gcpComputeNodeTemplateToSDPItem(nodeTemplate
 			Query:  nodeTemplate.GetName(),
 			Scope:  "*",
 		},
-
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  false,
 			Out: true,

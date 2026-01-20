@@ -32,6 +32,8 @@ func TestComputeInstanceGroupIntegration(t *testing.T) {
 		t.Skip("GCP_ZONE environment variable not set")
 	}
 
+	t.Parallel()
+
 	instanceGroupName := "integration-test-instance-group"
 
 	ctx := context.Background()
@@ -53,7 +55,7 @@ func TestComputeInstanceGroupIntegration(t *testing.T) {
 	t.Run("ListInstanceGroups", func(t *testing.T) {
 		log.Printf("Listing instance groups in project %s, zone %s", projectID, zone)
 
-		instanceGroupWrapper := manual.NewComputeInstanceGroup(gcpshared.NewComputeInstanceGroupsClient(client), projectID, zone)
+		instanceGroupWrapper := manual.NewComputeInstanceGroup(gcpshared.NewComputeInstanceGroupsClient(client), []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		scope := instanceGroupWrapper.Scopes()[0]
 
 		adapter := sources.WrapperToAdapter(instanceGroupWrapper, sdpcache.NewNoOpCache())
@@ -93,7 +95,7 @@ func TestComputeInstanceGroupIntegration(t *testing.T) {
 	t.Run("GetInstanceGroup", func(t *testing.T) {
 		log.Printf("Retrieving instance group %s in project %s, zone %s", instanceGroupName, projectID, zone)
 
-		instanceGroupWrapper := manual.NewComputeInstanceGroup(gcpshared.NewComputeInstanceGroupsClient(client), projectID, zone)
+		instanceGroupWrapper := manual.NewComputeInstanceGroup(gcpshared.NewComputeInstanceGroupsClient(client), []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		scope := instanceGroupWrapper.Scopes()[0]
 
 		adapter := sources.WrapperToAdapter(instanceGroupWrapper, sdpcache.NewNoOpCache())

@@ -21,16 +21,15 @@ var ComputeHealthCheckLookupByName = shared.NewItemTypeLookup("name", gcpshared.
 
 type computeHealthCheckWrapper struct {
 	client gcpshared.ComputeHealthCheckClient
-
 	*gcpshared.ProjectBase
 }
 
 // NewComputeHealthCheck creates a new computeHealthCheckWrapper instance.
-func NewComputeHealthCheck(client gcpshared.ComputeHealthCheckClient, projectID string) sources.ListableWrapper {
+func NewComputeHealthCheck(client gcpshared.ComputeHealthCheckClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeHealthCheckWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
-			projectID,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 			gcpshared.ComputeHealthCheck,
 		),
@@ -48,7 +47,6 @@ func (c computeHealthCheckWrapper) PredefinedRole() string {
 	return "roles/compute.viewer"
 }
 
-// PotentialLinks returns the potential links for the compute health check wrapper
 func (c computeHealthCheckWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		stdlib.NetworkIP,
@@ -60,8 +58,7 @@ func (c computeHealthCheckWrapper) PotentialLinks() map[shared.ItemType]bool {
 func (c computeHealthCheckWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
-			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_health_check#argument-reference
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_health_check.name",
 		},
 	}
@@ -73,46 +70,52 @@ func (c computeHealthCheckWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
-func (c computeHealthCheckWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeHealthCheckWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetHealthCheckRequest{
-		Project:     c.ProjectID(),
+		Project:     location.ProjectID,
 		HealthCheck: queryParts[0],
 	}
 
-	healthCheck, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	healthCheck, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	var sdpErr *sdp.QueryError
-	var item *sdp.Item
-	item, sdpErr = c.gcpComputeHealthCheckToSDPItem(ctx, healthCheck)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpComputeHealthCheckToSDPItem(healthCheck, location)
 }
 
-func (c computeHealthCheckWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	results := c.client.List(ctx, &computepb.ListHealthChecksRequest{
-		Project: c.ProjectID(),
+func (c computeHealthCheckWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
+	it := c.client.List(ctx, &computepb.ListHealthChecksRequest{
+		Project: location.ProjectID,
 	})
 
 	var items []*sdp.Item
 	for {
-		healthCheck, err := results.Next()
-		if errors.Is(err, iterator.Done) {
+		healthCheck, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		var sdpErr *sdp.QueryError
-		var item *sdp.Item
-		item, sdpErr = c.gcpComputeHealthCheckToSDPItem(ctx, healthCheck)
+		item, sdpErr := c.gcpComputeHealthCheckToSDPItem(healthCheck, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -123,23 +126,31 @@ func (c computeHealthCheckWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.
 	return items, nil
 }
 
-// ListStream implements the Streamer interface
-func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListHealthChecksRequest{
-		Project: c.ProjectID(),
+		Project: location.ProjectID,
 	})
 
 	for {
-		healthCheck, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		healthCheck, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpComputeHealthCheckToSDPItem(ctx, healthCheck)
+		item, sdpErr := c.gcpComputeHealthCheckToSDPItem(healthCheck, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -150,8 +161,7 @@ func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discov
 	}
 }
 
-// gcpComputeHealthCheckToSDPItem converts a GCP HealthCheck to an SDP Item
-func (c computeHealthCheckWrapper) gcpComputeHealthCheckToSDPItem(ctx context.Context, healthCheck *computepb.HealthCheck) (*sdp.Item, *sdp.QueryError) {
+func (c computeHealthCheckWrapper) gcpComputeHealthCheckToSDPItem(healthCheck *computepb.HealthCheck, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(healthCheck)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -164,31 +174,31 @@ func (c computeHealthCheckWrapper) gcpComputeHealthCheckToSDPItem(ctx context.Co
 		Type:            gcpshared.ComputeHealthCheck.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           location.ToScope(),
 	}
 
-	// Link to host field from HTTP health checks (can be IP address or DNS name)
+	// Link to host field from HTTP health checks
 	if httpHealthCheck := healthCheck.GetHttpHealthCheck(); httpHealthCheck != nil {
 		if host := httpHealthCheck.GetHost(); host != "" {
 			linkHostToNetworkResource(sdpItem, host)
 		}
 	}
 
-	// Link to host field from HTTPS health checks (can be IP address or DNS name)
+	// Link to host field from HTTPS health checks
 	if httpsHealthCheck := healthCheck.GetHttpsHealthCheck(); httpsHealthCheck != nil {
 		if host := httpsHealthCheck.GetHost(); host != "" {
 			linkHostToNetworkResource(sdpItem, host)
 		}
 	}
 
-	// Link to host field from HTTP/2 health checks (can be IP address or DNS name)
+	// Link to host field from HTTP/2 health checks
 	if http2HealthCheck := healthCheck.GetHttp2HealthCheck(); http2HealthCheck != nil {
 		if host := http2HealthCheck.GetHost(); host != "" {
 			linkHostToNetworkResource(sdpItem, host)
 		}
 	}
 
-	// Link to source regions (array of region names for global health checks)
+	// Link to source regions
 	for _, regionName := range healthCheck.GetSourceRegions() {
 		if regionName != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -196,7 +206,7 @@ func (c computeHealthCheckWrapper) gcpComputeHealthCheckToSDPItem(ctx context.Co
 					Type:   gcpshared.ComputeRegion.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  regionName,
-					Scope:  c.ProjectID(), // Regions are project-scoped resources
+					Scope:  location.ProjectID,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,
@@ -206,14 +216,14 @@ func (c computeHealthCheckWrapper) gcpComputeHealthCheckToSDPItem(ctx context.Co
 		}
 	}
 
-	// Link to region field (output only, for regional health checks)
+	// Link to region field
 	if region := healthCheck.GetRegion(); region != "" {
 		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   gcpshared.ComputeRegion.String(),
 				Method: sdp.QueryMethod_GET,
 				Query:  region,
-				Scope:  c.ProjectID(), // Regions are project-scoped resources
+				Scope:  location.ProjectID,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,
@@ -225,16 +235,12 @@ func (c computeHealthCheckWrapper) gcpComputeHealthCheckToSDPItem(ctx context.Co
 	return sdpItem, nil
 }
 
-// linkHostToNetworkResource creates a linked item query for a host value that can be either an IP address or DNS name.
-// The linker automatically detects the type, but for manual adapters we need to determine it ourselves.
 func linkHostToNetworkResource(sdpItem *sdp.Item, host string) {
 	if host == "" {
 		return
 	}
 
-	// Check if the host is an IP address
 	if net.ParseIP(host) != nil {
-		// It's an IP address
 		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   stdlib.NetworkIP.String(),
@@ -248,7 +254,6 @@ func linkHostToNetworkResource(sdpItem *sdp.Item, host string) {
 			},
 		})
 	} else {
-		// It's a DNS name
 		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
 				Type:   stdlib.NetworkDNS.String(),

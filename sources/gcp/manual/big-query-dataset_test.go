@@ -27,7 +27,7 @@ func TestBigQueryDataset(t *testing.T) {
 	datasetID := "test_dataset"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewBigQueryDataset(mockClient, projectID)
+		wrapper := manual.NewBigQueryDataset(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, projectID, datasetID).Return(createDataset(projectID, datasetID), nil)
 
@@ -116,7 +116,7 @@ func TestBigQueryDataset(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewBigQueryDataset(mockClient, projectID)
+		wrapper := manual.NewBigQueryDataset(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockClient.EXPECT().List(ctx, projectID, gomock.Any()).Return([]*sdp.Item{

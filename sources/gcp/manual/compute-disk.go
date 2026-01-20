@@ -20,17 +20,15 @@ var ComputeDiskLookupByName = shared.NewItemTypeLookup("name", gcpshared.Compute
 
 type computeDiskWrapper struct {
 	client gcpshared.ComputeDiskClient
-
 	*gcpshared.ZoneBase
 }
 
-// NewComputeDisk creates a new computeDiskWrapper
-func NewComputeDisk(client gcpshared.ComputeDiskClient, projectID, zone string) sources.ListableWrapper {
+// NewComputeDisk creates a new computeDiskWrapper.
+func NewComputeDisk(client gcpshared.ComputeDiskClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeDiskWrapper{
 		client: client,
 		ZoneBase: gcpshared.NewZoneBase(
-			projectID,
-			zone,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 			gcpshared.ComputeDisk,
 		),
@@ -48,7 +46,6 @@ func (c computeDiskWrapper) PredefinedRole() string {
 	return "roles/compute.viewer"
 }
 
-// PotentialLinks returns the potential links for the compute disk wrapper
 func (c computeDiskWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeResourcePolicy,
@@ -64,67 +61,69 @@ func (c computeDiskWrapper) PotentialLinks() map[shared.ItemType]bool {
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the compute disk wrapper
 func (c computeDiskWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
-			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_disk#argument-reference
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_disk.name",
 		},
 	}
 }
 
-// GetLookups returns the lookups for the compute disk wrapper
 func (c computeDiskWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		ComputeDiskLookupByName,
 	}
 }
 
-// Get retrieves a compute disk by its name
-func (c computeDiskWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeDiskWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetDiskRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 		Disk:    queryParts[0],
 	}
 
-	disk, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	disk, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	var sdpErr *sdp.QueryError
-	var item *sdp.Item
-	item, sdpErr = c.gcpComputeDiskToSDPItem(ctx, disk)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return c.gcpComputeDiskToSDPItem(ctx, disk, location)
 }
 
-// List lists compute disks and converts them to sdp.Items.
-func (c computeDiskWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (c computeDiskWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	it := c.client.List(ctx, &computepb.ListDisksRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	var items []*sdp.Item
 	for {
-		disk, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		disk, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		var sdpErr *sdp.QueryError
-		var item *sdp.Item
-		item, sdpErr = c.gcpComputeDiskToSDPItem(ctx, disk)
+		item, sdpErr := c.gcpComputeDiskToSDPItem(ctx, disk, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -135,24 +134,32 @@ func (c computeDiskWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryEr
 	return items, nil
 }
 
-// ListStream lists compute disks and sends them as items to the stream.
-func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListDisksRequest{
-		Project: c.ProjectID(),
-		Zone:    c.Zone(),
+		Project: location.ProjectID,
+		Zone:    location.Zone,
 	})
 
 	for {
-		disk, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		disk, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := c.gcpComputeDiskToSDPItem(ctx, disk)
+		item, sdpErr := c.gcpComputeDiskToSDPItem(ctx, disk, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -163,8 +170,7 @@ func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.Que
 	}
 }
 
-// gcpComputeDiskToSDPItem converts a GCP Disk to an SDP Item, linking GCP resource fields.
-func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *computepb.Disk) (*sdp.Item, *sdp.QueryError) {
+func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *computepb.Disk, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(disk, "labels")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -177,7 +183,7 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 		Type:            gcpshared.ComputeDisk.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           location.ToScope(),
 		Tags:            disk.GetLabels(),
 	}
 
@@ -204,7 +210,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 					})
 				}
 			}
-
 		}
 	}
 
@@ -257,7 +262,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 					})
 				}
 			}
-
 		}
 	}
 
@@ -284,7 +288,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 					})
 				}
 			}
-
 		}
 	}
 
@@ -337,7 +340,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 					})
 				}
 			}
-
 		}
 	}
 	// The resource URLs for the users (instances) using this disk.
@@ -373,25 +375,25 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 	// DiskEncryptionKey.kmsKeyName -> CloudKMSCryptoKeyVersion
 	if diskEncryptionKey := disk.GetDiskEncryptionKey(); diskEncryptionKey != nil {
 		if keyName := diskEncryptionKey.GetKmsKeyName(); keyName != "" {
-
-			// Parsing them all together to improve readability
-			location := gcpshared.ExtractPathParam("locations", keyName)
+			loc := gcpshared.ExtractPathParam("locations", keyName)
 			keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
 			cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
 			cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
 
-			// Validate all parts before proceeding, a bit less performatic if any is missing but readability is improved
-			if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
+			if loc != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 						Method: sdp.QueryMethod_GET,
-						Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
-						Scope:  c.ProjectID(),
+						Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey, cryptoKeyVersion),
+						Scope:  location.ProjectID,
 					},
-					//Deleting a key might break the disk’s ability to function and have its data read
-					//Deleting a disk in GCP does not affect its associated encryption key
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+					// Deleting a key might break the disk’s ability to function and have its data read
+					// Deleting a disk in GCP does not affect its associated encryption key
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
 				})
 			}
 		}
@@ -404,25 +406,25 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 	// SourceImageEncryptionKey.kmsKeyName -> CloudKMSCryptoKeyVersion
 	if sourceImageEncryptionKey := disk.GetSourceImageEncryptionKey(); sourceImageEncryptionKey != nil {
 		if keyName := sourceImageEncryptionKey.GetKmsKeyName(); keyName != "" {
-
-			// Parsing them all together to improve readability
-			location := gcpshared.ExtractPathParam("locations", keyName)
+			loc := gcpshared.ExtractPathParam("locations", keyName)
 			keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
 			cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
 			cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
 
-			// Validate all parts before proceeding, a bit less performatic if any is missing but readability is improved
-			if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
+			if loc != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 						Method: sdp.QueryMethod_GET,
-						Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
-						Scope:  c.ProjectID(),
+						Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey, cryptoKeyVersion),
+						Scope:  location.ProjectID,
 					},
-					//Deleting a key might break the disk’s ability to function and have its data read
-					//Deleting a disk in GCP does not affect its source image's encryption key
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+					// Deleting a key might break the disk’s ability to function and have its data read
+					// Deleting a disk in GCP does not affect its source image's encryption key
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
 				})
 			}
 		}
@@ -435,25 +437,25 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 	// SourceSnapshotEncryptionKey.kmsKeyName -> CloudKMSCryptoKeyVersion
 	if sourceSnapshotEncryptionKey := disk.GetSourceSnapshotEncryptionKey(); sourceSnapshotEncryptionKey != nil {
 		if keyName := sourceSnapshotEncryptionKey.GetKmsKeyName(); keyName != "" {
-
-			// Parsing them all together to improve readability
-			location := gcpshared.ExtractPathParam("locations", keyName)
+			loc := gcpshared.ExtractPathParam("locations", keyName)
 			keyRing := gcpshared.ExtractPathParam("keyRings", keyName)
 			cryptoKey := gcpshared.ExtractPathParam("cryptoKeys", keyName)
 			cryptoKeyVersion := gcpshared.ExtractPathParam("cryptoKeyVersions", keyName)
 
-			// Validate all parts before proceeding, a bit less performatic if any is missing but readability is improved
-			if location != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
+			if loc != "" && keyRing != "" && cryptoKey != "" && cryptoKeyVersion != "" {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 						Method: sdp.QueryMethod_GET,
-						Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
-						Scope:  c.ProjectID(),
+						Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey, cryptoKeyVersion),
+						Scope:  location.ProjectID,
 					},
-					//Deleting a key might break the disk’s ability to function and have its data read
-					//Deleting a disk in GCP does not affect its source image's encryption key
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+					// Deleting a key might break the disk’s ability to function and have its data read
+					// Deleting a disk in GCP does not affect its source image's encryption key
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
 				})
 			}
 		}
@@ -498,12 +500,9 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 	// - gs://bucket-name/path/to/file
 	// - bucket-name (without gs:// prefix)
 	if sourceStorageObject := disk.GetSourceStorageObject(); sourceStorageObject != "" {
-		blastPropagation := &sdp.BlastPropagation{
-			In:  true,
-			Out: false,
-		}
+		blastPropagation := &sdp.BlastPropagation{In: true, Out: false}
 		if linkFunc, ok := gcpshared.ManualAdapterLinksByAssetType[gcpshared.StorageBucket]; ok {
-			linkedQuery := linkFunc(c.ProjectID(), c.DefaultScope(), sourceStorageObject, blastPropagation)
+			linkedQuery := linkFunc(location.ProjectID, location.ToScope(), sourceStorageObject, blastPropagation)
 			if linkedQuery != nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, linkedQuery)
 			}
@@ -537,9 +536,7 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 		}
 	}
 
-	// The async primary disk (the disk this disk is asynchronously replicated from or to).
-	// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
-	// https://cloud.google.com/compute/docs/reference/rest/v1/disks/get
+	// Link async primary disk
 	if asyncPrimaryDisk := disk.GetAsyncPrimaryDisk(); asyncPrimaryDisk != nil {
 		if primaryDisk := asyncPrimaryDisk.GetDisk(); primaryDisk != "" {
 			if strings.Contains(primaryDisk, "/") {
@@ -554,7 +551,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 								Query:  primaryDiskName,
 								Scope:  scope,
 							},
-							// If the primary disk is deleted or updated: The async replication may fail or break. If this disk is updated: The primary disk remains unaffected.
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,
 								Out: false,
@@ -565,9 +561,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 			}
 		}
 
-		// The consistency group policy for async primary disk replication.
-		// GET https://compute.googleapis.com/compute/v1/projects/{project}/regions/{region}/resourcePolicies/{resourcePolicy}
-		// https://cloud.google.com/compute/docs/reference/rest/v1/resourcePolicies/get
 		if consistencyGroupPolicy := asyncPrimaryDisk.GetConsistencyGroupPolicy(); consistencyGroupPolicy != "" {
 			if strings.Contains(consistencyGroupPolicy, "/") {
 				policyName := gcpshared.LastPathComponent(consistencyGroupPolicy)
@@ -581,7 +574,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 								Query:  policyName,
 								Scope:  scope,
 							},
-							// If the Consistency Group Policy is deleted or updated: The async replication may fail or break. If this disk is updated: The policy remains unaffected.
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,
 								Out: false,
@@ -593,12 +585,9 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 		}
 	}
 
-	// The async secondary disks (disks this disk is asynchronously replicating to).
-	// GET https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/disks/{disk}
-	// https://cloud.google.com/compute/docs/reference/rest/v1/disks/get
+	// Link async secondary disks
 	for _, asyncSecondaryDisk := range disk.GetAsyncSecondaryDisks() {
 		if asyncReplicationDisk := asyncSecondaryDisk.GetAsyncReplicationDisk(); asyncReplicationDisk != nil {
-			// Link to the secondary disk
 			if secondaryDisk := asyncReplicationDisk.GetDisk(); secondaryDisk != "" {
 				if strings.Contains(secondaryDisk, "/") {
 					secondaryDiskName := gcpshared.LastPathComponent(secondaryDisk)
@@ -612,7 +601,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 									Query:  secondaryDiskName,
 									Scope:  scope,
 								},
-								// If a secondary disk is deleted or updated: The async replication to that disk may fail or break. If this disk is updated: The secondary disk remains unaffected.
 								BlastPropagation: &sdp.BlastPropagation{
 									In:  true,
 									Out: false,
@@ -623,7 +611,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 				}
 			}
 
-			// Link to the consistency group policy for this secondary disk
 			if consistencyGroupPolicy := asyncReplicationDisk.GetConsistencyGroupPolicy(); consistencyGroupPolicy != "" {
 				if strings.Contains(consistencyGroupPolicy, "/") {
 					policyName := gcpshared.LastPathComponent(consistencyGroupPolicy)
@@ -637,7 +624,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 									Query:  policyName,
 									Scope:  scope,
 								},
-								// If the Consistency Group Policy is deleted or updated: The async replication may fail or break. If this disk is updated: The policy remains unaffected.
 								BlastPropagation: &sdp.BlastPropagation{
 									In:  true,
 									Out: false,
@@ -650,15 +636,13 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 		}
 	}
 
+	// Set health status
 	switch disk.GetStatus() {
 	case computepb.Disk_UNDEFINED_STATUS.String():
 		sdpItem.Health = sdp.Health_HEALTH_UNKNOWN.Enum()
-	case computepb.Disk_CREATING.String(),
-		computepb.Disk_RESTORING.String(),
-		computepb.Disk_DELETING.String():
+	case computepb.Disk_CREATING.String(), computepb.Disk_RESTORING.String(), computepb.Disk_DELETING.String():
 		sdpItem.Health = sdp.Health_HEALTH_PENDING.Enum()
-	case computepb.Disk_FAILED.String(),
-		computepb.Disk_UNAVAILABLE.String():
+	case computepb.Disk_FAILED.String(), computepb.Disk_UNAVAILABLE.String():
 		sdpItem.Health = sdp.Health_HEALTH_ERROR.Enum()
 	case computepb.Disk_READY.String():
 		sdpItem.Health = sdp.Health_HEALTH_OK.Enum()

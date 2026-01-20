@@ -34,7 +34,7 @@ func TestStandardSearchableListable(t *testing.T) {
 			LinkedItemID:    "test-link-me",
 		}, nil)
 
-		item, err := searchableListable.Get(ctx, "test-id")
+		item, err := searchableListable.Get(ctx, searchableListable.Scopes()[0], "test-id")
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -72,7 +72,7 @@ func TestStandardSearchableListable(t *testing.T) {
 		// Mock the Get method to return a NotFoundError
 		mockExternalAPIClient.EXPECT().Get(ctx, "test-id").Return(nil, example.NotFoundError{})
 
-		item, err := searchableListable.Get(ctx, "test-id")
+		item, err := searchableListable.Get(ctx, searchableListable.Scopes()[0], "test-id")
 		if err == nil {
 			t.Fatalf("Expected error, got: %v", item)
 		}
@@ -103,7 +103,7 @@ func TestStandardSearchableListable(t *testing.T) {
 			},
 		}, nil)
 
-		items, err := searchableListable.List(ctx)
+		items, err := searchableListable.List(ctx, searchableListable.Scopes()[0])
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -131,7 +131,7 @@ func TestStandardSearchableListable(t *testing.T) {
 		// Mock the List method to return a NotFoundError
 		mockExternalAPIClient.EXPECT().List(ctx).Return(nil, example.NotFoundError{})
 
-		items, err := searchableListable.List(ctx)
+		items, err := searchableListable.List(ctx, searchableListable.Scopes()[0])
 		if err == nil {
 			t.Fatalf("Expected error, got: %v", items)
 		}
@@ -161,7 +161,7 @@ func TestStandardSearchableListable(t *testing.T) {
 			},
 		}, nil)
 
-		items, err := searchableListable.Search(ctx, "test-query")
+		items, err := searchableListable.Search(ctx, searchableListable.Scopes()[0], "test-query")
 		if err != nil {
 			t.Fatalf("Expected no error, got: %v", err)
 		}
@@ -189,7 +189,7 @@ func TestStandardSearchableListable(t *testing.T) {
 		// Mock the Search method to return a NotFoundError
 		mockExternalAPIClient.EXPECT().Search(ctx, "test-query").Return(nil, example.NotFoundError{})
 
-		items, err := searchableListable.Search(ctx, "test-query")
+		items, err := searchableListable.Search(ctx, searchableListable.Scopes()[0], "test-query")
 		if err == nil {
 			t.Fatalf("Expected error, got: %v", items)
 		}

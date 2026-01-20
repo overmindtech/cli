@@ -14,7 +14,7 @@ var _ = registerableAdapter{
 	meta: gcpshared.AdapterMeta{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 		LocationLevel:      gcpshared.ZonalLevel,
-		GetEndpointFunc: gcpshared.ZoneLevelEndpointFuncWithSingleQuery(
+		GetEndpointFunc: gcpshared.ZoneLevelEndpointFunc(
 			"https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/networkEndpointGroups/%s",
 		),
 		ListEndpointFunc: gcpshared.ZoneLevelListFunc(
@@ -33,27 +33,39 @@ var _ = registerableAdapter{
 		"network": gcpshared.ComputeNetworkImpactInOnly,
 		// Subnetwork reference (regional) – subnetwork changes can affect endpoints, NEG changes do not affect subnetwork
 		"subnetwork": {
-			ToSDPItemType:    gcpshared.ComputeSubnetwork,
-			Description:      "If the Compute Subnetwork is updated: Endpoint reachability or configuration for the NEG may change. If the NEG is updated: The subnetwork remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+			ToSDPItemType: gcpshared.ComputeSubnetwork,
+			Description:   "If the Compute Subnetwork is updated: Endpoint reachability or configuration for the NEG may change. If the NEG is updated: The subnetwork remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
 		},
 		// Serverless NEG referencing a Cloud Run Service
 		"cloudRun.service": {
-			ToSDPItemType:    gcpshared.RunService,
-			Description:      "If the Cloud Run Service is updated or deleted: Requests routed via the NEG may fail or change behavior. If the NEG changes: The Cloud Run service remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+			ToSDPItemType: gcpshared.RunService,
+			Description:   "If the Cloud Run Service is updated or deleted: Requests routed via the NEG may fail or change behavior. If the NEG changes: The Cloud Run service remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
 		},
 		// Serverless NEG referencing an App Engine service
 		"appEngine.service": {
-			ToSDPItemType:    gcpshared.AppEngineService,
-			Description:      "If the App Engine Service is updated or deleted: Requests routed via the NEG may fail or change behavior. If the NEG changes: The App Engine service remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+			ToSDPItemType: gcpshared.AppEngineService,
+			Description:   "If the App Engine Service is updated or deleted: Requests routed via the NEG may fail or change behavior. If the NEG changes: The App Engine service remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
 		},
 		// Serverless NEG referencing a Cloud Function
 		"cloudFunction.function": {
-			ToSDPItemType:    gcpshared.CloudFunctionsFunction,
-			Description:      "If the Cloud Function is updated or deleted: Requests routed via the NEG may fail or change behavior. If the NEG changes: The Cloud Function remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+			ToSDPItemType: gcpshared.CloudFunctionsFunction,
+			Description:   "If the Cloud Function is updated or deleted: Requests routed via the NEG may fail or change behavior. If the NEG changes: The Cloud Function remains unaffected.",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

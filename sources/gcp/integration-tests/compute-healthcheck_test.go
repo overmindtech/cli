@@ -26,6 +26,7 @@ func TestComputeHealthCheckIntegration(t *testing.T) {
 	if projectID == "" {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
 	}
+	t.Parallel()
 
 	healthCheckName := "integration-test-healthcheck"
 
@@ -48,7 +49,7 @@ func TestComputeHealthCheckIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute HealthCheck in project %s", projectID)
 
-		healthCheckWrapper := manual.NewComputeHealthCheck(gcpshared.NewComputeHealthCheckClient(client), projectID)
+		healthCheckWrapper := manual.NewComputeHealthCheck(gcpshared.NewComputeHealthCheckClient(client), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		scope := healthCheckWrapper.Scopes()[0]
 
 		healthCheckAdapter := sources.WrapperToAdapter(healthCheckWrapper, sdpcache.NewNoOpCache())

@@ -34,7 +34,7 @@ func (lookups ItemTypeLookups) ReadableFormat() string {
 type Wrapper interface {
 	Scopes() []string
 	GetLookups() ItemTypeLookups
-	Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError)
+	Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError)
 	Type() string
 	Name() string
 	ItemType() shared.ItemType
@@ -48,26 +48,26 @@ type Wrapper interface {
 // ListableWrapper defines an optional interface for resources that support listing.
 type ListableWrapper interface {
 	Wrapper
-	List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError)
+	List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError)
 }
 
 // ListStreamableWrapper defines an interface for resources that support listing with streaming.
 type ListStreamableWrapper interface {
 	Wrapper
-	ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey)
+	ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string)
 }
 
 // SearchableWrapper defines an optional interface for resources that support searching.
 type SearchableWrapper interface {
 	Wrapper
 	SearchLookups() []ItemTypeLookups
-	Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError)
+	Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError)
 }
 
 // SearchStreamableWrapper defines an interface for resources that support searching with streaming.
 type SearchStreamableWrapper interface {
 	Wrapper
-	SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, queryParts ...string)
+	SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string)
 }
 
 // SearchableListableWrapper defines an interface for resources that support both searching and listing.
@@ -293,7 +293,7 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 		)
 	}
 
-	item, err := s.wrapper.Get(ctx, queryParts...)
+	item, err := s.wrapper.Get(ctx, scope, queryParts...)
 	if err != nil {
 		return nil, err
 	}
@@ -366,7 +366,6 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 
 	if s.listable == nil {
 		log.WithField("adapter", s.Name()).Debug("list operation not supported")
-
 		return nil, nil
 	}
 
@@ -393,7 +392,7 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 		return cachedItems, nil
 	}
 
-	items, err := s.listable.List(ctx)
+	items, err := s.listable.List(ctx, scope)
 	if err != nil {
 		return nil, err
 	}
@@ -442,7 +441,7 @@ func (s *standardListableAdapterImpl) ListStream(ctx context.Context, scope stri
 		return
 	}
 
-	s.listStreamable.ListStream(ctx, stream, s.cacheField, ck)
+	s.listStreamable.ListStream(ctx, stream, s.cacheField, ck, scope)
 }
 
 // Metadata returns the metadata of the listable adapter.
@@ -573,7 +572,6 @@ func (s *standardSearchableAdapterImpl) Search(ctx context.Context, scope string
 
 	if s.searchable == nil {
 		log.WithField("adapter", s.Name()).Debug("search operation not supported")
-
 		return nil, nil
 	}
 
@@ -581,8 +579,11 @@ func (s *standardSearchableAdapterImpl) Search(ctx context.Context, scope string
 	// {{datasetName}}|{{tableName}}
 	queryParts = strings.Split(query, shared.QuerySeparator)
 
+	// Determine which search lookups to use
+	searchLookups := s.searchable.SearchLookups()
+
 	var validQuery bool
-	for _, kw := range s.searchable.SearchLookups() {
+	for _, kw := range searchLookups {
 		if len(kw) == len(queryParts) {
 			validQuery = true
 			break
@@ -595,11 +596,11 @@ func (s *standardSearchableAdapterImpl) Search(ctx context.Context, scope string
 		return nil, fmt.Errorf(
 			"invalid search query format: %s, expected: %s",
 			query,
-			expectedSearchQueryFormat(s.searchable.SearchLookups()),
+			expectedSearchQueryFormat(searchLookups),
 		)
 	}
 
-	items, err := s.searchable.Search(ctx, queryParts...)
+	items, err := s.searchable.Search(ctx, scope, queryParts...)
 	if err != nil {
 		return nil, err
 	}
@@ -727,8 +728,11 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 	// {{datasetName}}|{{tableName}}
 	queryParts = strings.Split(query, shared.QuerySeparator)
 
+	// Determine which search lookups to use
+	searchLookups := s.searchable.SearchLookups()
+
 	var validQuery bool
-	for _, kw := range s.searchable.SearchLookups() {
+	for _, kw := range searchLookups {
 		if len(kw) == len(queryParts) {
 			validQuery = true
 			break
@@ -741,12 +745,12 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 		stream.SendError(fmt.Errorf(
 			"invalid search query format: %s, expected: %s",
 			query,
-			expectedSearchQueryFormat(s.searchable.SearchLookups()),
+			expectedSearchQueryFormat(searchLookups),
 		))
 		return
 	}
 
-	s.searchStreamable.SearchStream(ctx, stream, s.cacheField, ck, queryParts...)
+	s.searchStreamable.SearchStream(ctx, stream, s.cacheField, ck, scope, queryParts...)
 }
 
 // Metadata returns the metadata of the searchable adapter.

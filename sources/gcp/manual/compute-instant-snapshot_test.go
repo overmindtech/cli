@@ -30,7 +30,7 @@ func TestComputeInstantSnapshot(t *testing.T) {
 	zone := "us-central1-a"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeInstantSnapshot(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstantSnapshot(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeInstantSnapshot("test-snapshot", zone, computepb.InstantSnapshot_READY), nil)
 
@@ -84,7 +84,6 @@ func TestComputeInstantSnapshot(t *testing.T) {
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
-
 	})
 
 	t.Run("HealthCheck", func(t *testing.T) {
@@ -130,7 +129,7 @@ func TestComputeInstantSnapshot(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				wrapper := manual.NewComputeInstantSnapshot(mockClient, projectID, zone)
+				wrapper := manual.NewComputeInstantSnapshot(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeInstantSnapshot("test-snapshot", zone, tc.input), nil)
@@ -148,7 +147,7 @@ func TestComputeInstantSnapshot(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeInstantSnapshot(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstantSnapshot(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -192,7 +191,7 @@ func TestComputeInstantSnapshot(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeInstantSnapshot(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstantSnapshot(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 

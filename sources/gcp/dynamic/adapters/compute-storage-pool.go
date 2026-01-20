@@ -14,7 +14,7 @@ var _ = registerableAdapter{
 		SDPAdapterCategory: sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 		LocationLevel:      gcpshared.ZonalLevel,
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/storagePools/{storagePool}
-		GetEndpointFunc: gcpshared.ZoneLevelEndpointFuncWithSingleQuery("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools/%s"),
+		GetEndpointFunc: gcpshared.ZoneLevelEndpointFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools/%s"),
 		// https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/storagePools
 		ListEndpointFunc:    gcpshared.ZoneLevelListFunc("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools"),
 		UniqueAttributeKeys: []string{"storagePools"},

@@ -36,8 +36,12 @@ func NewNetworkNetworkSecurityGroup(client clients.NetworkSecurityGroupsClient, 
 }
 
 // reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-security-groups/list?view=rest-virtualnetwork-2025-03-01&tabs=HTTP
-func (n networkNetworkSecurityGroupWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := n.client.List(ctx, n.ResourceGroup(), nil)
+func (n networkNetworkSecurityGroupWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	pager := n.client.List(ctx, resourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -59,8 +63,12 @@ func (n networkNetworkSecurityGroupWrapper) List(ctx context.Context) ([]*sdp.It
 	return items, nil
 }
 
-func (n networkNetworkSecurityGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
-	pager := n.client.List(ctx, n.ResourceGroup(), nil)
+func (n networkNetworkSecurityGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	pager := n.client.List(ctx, resourceGroup, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -83,13 +91,17 @@ func (n networkNetworkSecurityGroupWrapper) ListStream(ctx context.Context, stre
 }
 
 // ref: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-security-groups/get?view=rest-virtualnetwork-2025-03-01&tabs=HTTP
-func (n networkNetworkSecurityGroupWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (n networkNetworkSecurityGroupWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, azureshared.QueryError(errors.New("queryParts must be at least 1 and be the network security group name"), n.DefaultScope(), n.Type())
 	}
 	networkSecurityGroupName := queryParts[0]
 
-	networkSecurityGroup, err := n.client.Get(ctx, n.ResourceGroup(), networkSecurityGroupName, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	networkSecurityGroup, err := n.client.Get(ctx, resourceGroup, networkSecurityGroupName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
 	}

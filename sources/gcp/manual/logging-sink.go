@@ -19,12 +19,12 @@ import (
 
 var LoggingSinkLookupByName = shared.NewItemTypeLookup("name", gcpshared.LoggingSink)
 
-// NewLoggingSink creates a new logging sink instance
-func NewLoggingSink(client gcpshared.LoggingConfigClient, projectID string) sources.ListableWrapper {
+// NewLoggingSink creates a new logging sink instance.
+func NewLoggingSink(client gcpshared.LoggingConfigClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &loggingSinkWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
-			projectID,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
 			gcpshared.LoggingSink,
 		),
@@ -49,6 +49,9 @@ type loggingSinkWrapper struct {
 	*gcpshared.ProjectBase
 }
 
+// assert interface
+var _ sources.ListStreamableWrapper = (*loggingSinkWrapper)(nil)
+
 func (l loggingSinkWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		LoggingSinkLookupByName,
@@ -65,43 +68,49 @@ func (l loggingSinkWrapper) PotentialLinks() map[shared.ItemType]bool {
 	)
 }
 
-func (l loggingSinkWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
-	// O: sink name
-	sink, err := l.client.GetSink(ctx, &loggingpb.GetSinkRequest{
-		SinkName: fmt.Sprintf("projects/%s/sinks/%s", l.ProjectID(), queryParts[0]),
-	})
+func (l loggingSinkWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := l.LocationFromScope(scope)
 	if err != nil {
-		return nil, gcpshared.QueryError(err, l.DefaultScope(), l.Type())
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
 	}
 
-	var sdpErr *sdp.QueryError
-	var item *sdp.Item
-	item, sdpErr = l.gcpLoggingSinkToItem(sink)
-	if sdpErr != nil {
-		return nil, sdpErr
+	sink, getErr := l.client.GetSink(ctx, &loggingpb.GetSinkRequest{
+		SinkName: fmt.Sprintf("projects/%s/sinks/%s", location.ProjectID, queryParts[0]),
+	})
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, l.Type())
 	}
 
-	return item, nil
+	return l.gcpLoggingSinkToItem(sink, location)
 }
 
-func (l loggingSinkWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (l loggingSinkWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := l.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	it := l.client.ListSinks(ctx, &loggingpb.ListSinksRequest{
-		Parent: fmt.Sprintf("projects/%s", l.ProjectID()),
+		Parent: fmt.Sprintf("projects/%s", location.ProjectID),
 	})
 
 	var items []*sdp.Item
 	for {
-		sink, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		sink, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, l.DefaultScope(), l.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, l.Type())
 		}
 
-		var sdpErr *sdp.QueryError
-		var item *sdp.Item
-		item, sdpErr = l.gcpLoggingSinkToItem(sink)
+		item, sdpErr := l.gcpLoggingSinkToItem(sink, location)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -112,22 +121,31 @@ func (l loggingSinkWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryEr
 	return items, nil
 }
 
-func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := l.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := l.client.ListSinks(ctx, &loggingpb.ListSinksRequest{
-		Parent: fmt.Sprintf("projects/%s", l.ProjectID()),
+		Parent: fmt.Sprintf("projects/%s", location.ProjectID),
 	})
 
 	for {
-		sink, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		sink, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, l.DefaultScope(), l.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, l.Type()))
 			return
 		}
 
-		item, sdpErr := l.gcpLoggingSinkToItem(sink)
+		item, sdpErr := l.gcpLoggingSinkToItem(sink, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -138,8 +156,7 @@ func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.Que
 	}
 }
 
-func (l loggingSinkWrapper) gcpLoggingSinkToItem(sink *loggingpb.LogSink) (*sdp.Item, *sdp.QueryError) {
-	// Convert the GCP logging sink to an SDP item
+func (l loggingSinkWrapper) gcpLoggingSinkToItem(sink *loggingpb.LogSink, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(sink)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -152,7 +169,7 @@ func (l loggingSinkWrapper) gcpLoggingSinkToItem(sink *loggingpb.LogSink) (*sdp.
 		Type:            gcpshared.LoggingSink.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           l.DefaultScope(),
+		Scope:           location.ToScope(),
 	}
 
 	if sink.GetDestination() != "" {
@@ -166,7 +183,7 @@ func (l loggingSinkWrapper) gcpLoggingSinkToItem(sink *loggingpb.LogSink) (*sdp.
 						Type:   gcpshared.StorageBucket.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  parts[1], // Bucket name
-						Scope:  l.ProjectID(),
+						Scope:  location.ProjectID,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,  // Changes to bucket affect sink

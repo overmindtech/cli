@@ -10,70 +10,37 @@ func TestSDPAssetTypeToAdapterMeta_GetEndpointFunc(t *testing.T) {
 	tests := []struct {
 		name        string
 		assetType   shared.ItemType
-		params      []string
+		location    LocationInfo
 		query       string
 		expectedURL string
-		expectErr   bool
 	}{
 		{
 			name:        "ComputeNetwork valid",
 			assetType:   ComputeNetwork,
-			params:      []string{"proj"},
+			location:    NewProjectLocation("proj"),
 			query:       "net",
 			expectedURL: "https://compute.googleapis.com/compute/v1/projects/proj/global/networks/net",
-			expectErr:   false,
-		},
-		{
-			name:      "ComputeNetwork missing param",
-			assetType: ComputeNetwork,
-			params:    []string{""},
-			query:     "net",
-			expectErr: true,
 		},
 		{
 			name:        "ComputeSubnetwork valid",
 			assetType:   ComputeSubnetwork,
-			params:      []string{"proj", "region"},
+			location:    NewRegionalLocation("proj", "region"),
 			query:       "subnet",
 			expectedURL: "https://compute.googleapis.com/compute/v1/projects/proj/regions/region/subnetworks/subnet",
-			expectErr:   false,
-		},
-		{
-			name:      "ComputeSubnetwork missing region",
-			assetType: ComputeSubnetwork,
-			params:    []string{"proj", ""},
-			query:     "subnet",
-			expectErr: true,
 		},
 		{
 			name:        "PubSubSubscription valid",
 			assetType:   PubSubSubscription,
-			params:      []string{"proj"},
+			location:    NewProjectLocation("proj"),
 			query:       "mysub",
 			expectedURL: "https://pubsub.googleapis.com/v1/projects/proj/subscriptions/mysub",
-			expectErr:   false,
-		},
-		{
-			name:      "PubSubSubscription missing param",
-			assetType: PubSubSubscription,
-			params:    []string{""},
-			query:     "mysub",
-			expectErr: true,
 		},
 		{
 			name:        "PubSubTopic valid",
 			assetType:   PubSubTopic,
-			params:      []string{"proj"},
+			location:    NewProjectLocation("proj"),
 			query:       "mytopic",
 			expectedURL: "https://pubsub.googleapis.com/v1/projects/proj/topics/mytopic",
-			expectErr:   false,
-		},
-		{
-			name:      "PubSubTopic missing param",
-			assetType: PubSubTopic,
-			params:    []string{""},
-			query:     "mytopic",
-			expectErr: true,
 		},
 	}
 
@@ -83,18 +50,10 @@ func TestSDPAssetTypeToAdapterMeta_GetEndpointFunc(t *testing.T) {
 			if !ok {
 				t.Fatalf("assetType %v not found in SDPAssetTypeToAdapterMeta", tt.assetType)
 			}
-			urlFunc, err := meta.GetEndpointFunc(tt.params...)
-			if tt.expectErr {
-				if err == nil {
-					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, urlFunc)
-				}
-				return
+			if meta.GetEndpointFunc == nil {
+				t.Fatalf("GetEndpointFunc is nil for asset type %v", tt.assetType)
 			}
-			if err != nil {
-				t.Errorf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, urlFunc, tt.expectedURL)
-				return
-			}
-			gotURL := urlFunc(tt.query)
+			gotURL := meta.GetEndpointFunc(tt.query, tt.location)
 			if gotURL != tt.expectedURL {
 				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", gotURL, tt.expectedURL)
 			}
@@ -106,61 +65,45 @@ func TestSDPAssetTypeToAdapterMeta_ListEndpointFunc(t *testing.T) {
 	tests := []struct {
 		name        string
 		assetType   shared.ItemType
-		params      []string
+		location    LocationInfo
 		expectedURL string
 		expectErr   bool
 	}{
 		{
 			name:        "ComputeNetwork valid",
 			assetType:   ComputeNetwork,
-			params:      []string{"proj"},
+			location:    NewProjectLocation("proj"),
 			expectedURL: "https://compute.googleapis.com/compute/v1/projects/proj/global/networks",
-			expectErr:   false,
 		},
 		{
 			name:      "ComputeNetwork missing param",
 			assetType: ComputeNetwork,
-			params:    []string{""},
+			location:  LocationInfo{},
 			expectErr: true,
 		},
 		{
 			name:        "ComputeSubnetwork valid",
 			assetType:   ComputeSubnetwork,
-			params:      []string{"proj", "region"},
+			location:    NewRegionalLocation("proj", "region"),
 			expectedURL: "https://compute.googleapis.com/compute/v1/projects/proj/regions/region/subnetworks",
-			expectErr:   false,
 		},
 		{
 			name:      "ComputeSubnetwork missing region",
 			assetType: ComputeSubnetwork,
-			params:    []string{"proj", ""},
+			location:  NewProjectLocation("proj"),
 			expectErr: true,
 		},
 		{
 			name:        "PubSubSubscription valid",
 			assetType:   PubSubSubscription,
-			params:      []string{"proj"},
+			location:    NewProjectLocation("proj"),
 			expectedURL: "https://pubsub.googleapis.com/v1/projects/proj/subscriptions",
-			expectErr:   false,
-		},
-		{
-			name:      "PubSubSubscription missing param",
-			assetType: PubSubSubscription,
-			params:    []string{""},
-			expectErr: true,
 		},
 		{
 			name:        "PubSubTopic valid",
 			assetType:   PubSubTopic,
-			params:      []string{"proj"},
+			location:    NewProjectLocation("proj"),
 			expectedURL: "https://pubsub.googleapis.com/v1/projects/proj/topics",
-			expectErr:   false,
-		},
-		{
-			name:      "PubSubTopic missing param",
-			assetType: PubSubTopic,
-			params:    []string{""},
-			expectErr: true,
 		},
 	}
 
@@ -173,15 +116,15 @@ func TestSDPAssetTypeToAdapterMeta_ListEndpointFunc(t *testing.T) {
 			if meta.ListEndpointFunc == nil {
 				t.Skip("ListEndpointFunc not defined for this asset type")
 			}
-			gotURL, err := meta.ListEndpointFunc(tt.params...)
+			gotURL, err := meta.ListEndpointFunc(tt.location)
 			if tt.expectErr {
 				if err == nil {
-					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, gotURL)
+					t.Errorf("expected error but got none\n  got: %v", gotURL)
 				}
 				return
 			}
 			if err != nil {
-				t.Errorf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, gotURL, tt.expectedURL)
+				t.Errorf("unexpected error: %v", err)
 				return
 			}
 			if gotURL != tt.expectedURL {
@@ -195,33 +138,23 @@ func TestSDPAssetTypeToAdapterMeta_SearchEndpointFunc(t *testing.T) {
 	tests := []struct {
 		name        string
 		assetType   shared.ItemType
-		params      []string
+		location    LocationInfo
 		query       string
 		expectedURL string
-		expectErr   bool
 	}{
 		{
 			name:        "ArtifactRegistryDockerImage valid",
 			assetType:   ArtifactRegistryDockerImage,
-			params:      []string{"my-project"},
+			location:    NewProjectLocation("my-project"),
 			query:       "my-location|my-repo",
 			expectedURL: "https://artifactregistry.googleapis.com/v1/projects/my-project/locations/my-location/repositories/my-repo/dockerImages",
-			expectErr:   false,
 		},
 		{
-			name:      "ArtifactRegistryDockerImage missing param - during adapter init",
-			assetType: ArtifactRegistryDockerImage,
-			params:    []string{},
-			query:     "my-location|my-repo",
-			expectErr: true,
-		},
-		{
-			name:        "ArtifactRegistryDockerImage invalid query - during a search call",
+			name:        "ArtifactRegistryDockerImage invalid query returns empty",
 			assetType:   ArtifactRegistryDockerImage,
-			params:      []string{"my-project"},
-			query:       "my-location",
-			expectedURL: "",    // This is checked in the adapter. So, it won't slip.
-			expectErr:   false, // We only return error during adapter init, not during search calls.
+			location:    NewProjectLocation("my-project"),
+			query:       "my-location", // Missing repo part
+			expectedURL: "",
 		},
 	}
 
@@ -234,18 +167,7 @@ func TestSDPAssetTypeToAdapterMeta_SearchEndpointFunc(t *testing.T) {
 			if meta.SearchEndpointFunc == nil {
 				t.Skip("SearchEndpointFunc not defined for this asset type")
 			}
-			urlFunc, err := meta.SearchEndpointFunc(tt.params...)
-			if tt.expectErr {
-				if err == nil {
-					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, urlFunc)
-				}
-				return
-			}
-			if err != nil {
-				t.Errorf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, urlFunc, tt.expectedURL)
-				return
-			}
-			gotURL := urlFunc(tt.query)
+			gotURL := meta.SearchEndpointFunc(tt.query, tt.location)
 			if gotURL != tt.expectedURL {
 				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", gotURL, tt.expectedURL)
 			}
@@ -253,59 +175,34 @@ func TestSDPAssetTypeToAdapterMeta_SearchEndpointFunc(t *testing.T) {
 	}
 }
 
-func TestProjectLevelEndpointFuncWithSingleQuery(t *testing.T) {
+func TestProjectLevelGetEndpointFunc(t *testing.T) {
 	tests := []struct {
-		name          string
-		format        string
-		params        []string
-		query         string
-		expectedURL   string
-		expectInitErr bool
+		name        string
+		format      string
+		location    LocationInfo
+		query       string
+		expectedURL string
 	}{
 		{
 			name:        "valid project and query",
 			format:      "https://example.com/projects/%s/resources/%s",
-			params:      []string{"my-project"},
+			location:    NewProjectLocation("my-project"),
 			query:       "my-resource",
 			expectedURL: "https://example.com/projects/my-project/resources/my-resource",
 		},
 		{
-			name:          "empty project id",
-			format:        "https://example.com/projects/%s/resources/%s",
-			params:        []string{""},
-			query:         "my-resource",
-			expectInitErr: true,
-		},
-		{
 			name:        "empty query returns empty string",
 			format:      "https://example.com/projects/%s/resources/%s",
-			params:      []string{"my-project"},
+			location:    NewProjectLocation("my-project"),
 			query:       "",
 			expectedURL: "",
-		},
-		{
-			name:          "too many init params",
-			format:        "https://example.com/projects/%s/resources/%s",
-			params:        []string{"my-project", "extra"},
-			query:         "my-resource",
-			expectInitErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn := ProjectLevelEndpointFuncWithSingleQuery(tt.format)
-			endpointFunc, err := fn(tt.params...)
-			if tt.expectInitErr {
-				if err == nil {
-					t.Errorf("expected error but got none (params: %v)", tt.params)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("unexpected error: %v (params: %v)", err, tt.params)
-			}
-			got := endpointFunc(tt.query)
+			endpointFunc := ProjectLevelEndpointFuncWithSingleQuery(tt.format)
+			got := endpointFunc(tt.query, tt.location)
 			if got != tt.expectedURL {
 				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
 			}
@@ -313,80 +210,41 @@ func TestProjectLevelEndpointFuncWithSingleQuery(t *testing.T) {
 	}
 }
 
-func TestProjectLevelEndpointFuncWithTwoQueries(t *testing.T) {
+func TestProjectLevelGetEndpointFuncWithTwoQueries(t *testing.T) {
 	tests := []struct {
-		name          string
-		format        string
-		params        []string
-		query         string
-		expectedURL   string
-		expectInitErr bool
+		name        string
+		format      string
+		location    LocationInfo
+		query       string
+		expectedURL string
 	}{
 		{
 			name:        "valid project and composite query",
 			format:      "https://example.com/projects/%s/parent-resources/%s/child-resources/%s",
-			params:      []string{"my-project"},
+			location:    NewProjectLocation("my-project"),
 			query:       "foo|bar",
 			expectedURL: "https://example.com/projects/my-project/parent-resources/foo/child-resources/bar",
 		},
 		{
-			name:          "empty project id",
-			format:        "https://example.com/projects/%s/parent-resources/%s/child-resources/%s",
-			params:        []string{""},
-			query:         "foo|bar",
-			expectInitErr: true,
-		},
-		{
 			name:        "empty query returns empty string",
 			format:      "https://example.com/projects/%s/parent-resources/%s/child-resources/%s",
-			params:      []string{"my-project"},
+			location:    NewProjectLocation("my-project"),
 			query:       "",
 			expectedURL: "",
 		},
 		{
 			name:        "query with only one part returns empty string",
 			format:      "https://example.com/projects/%s/parent-resources/%s/child-resources/%s",
-			params:      []string{"my-project"},
+			location:    NewProjectLocation("my-project"),
 			query:       "foo",
 			expectedURL: "",
-		},
-		{
-			name:        "query with empty part returns empty string",
-			format:      "https://example.com/projects/%s/parent-resources/%s/child-resources/%s",
-			params:      []string{"my-project"},
-			query:       "foo|",
-			expectedURL: "",
-		},
-		{
-			name:        "query with both parts empty returns empty string",
-			format:      "https://example.com/projects/%s/parent-resources/%s/child-resources/%s",
-			params:      []string{"my-project"},
-			query:       "|",
-			expectedURL: "",
-		},
-		{
-			name:          "too many init params",
-			format:        "https://example.com/projects/%s/parent-resources/%s/child-resources/%s",
-			params:        []string{"my-project", "extra"},
-			query:         "foo|bar",
-			expectInitErr: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn := ProjectLevelEndpointFuncWithTwoQueries(tt.format)
-			endpointFunc, err := fn(tt.params...)
-			if tt.expectInitErr {
-				if err == nil {
-					t.Errorf("expected error but got none (params: %v)", tt.params)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("unexpected error: %v (params: %v)", err, tt.params)
-			}
-			got := endpointFunc(tt.query)
+			endpointFunc := ProjectLevelEndpointFuncWithTwoQueries(tt.format)
+			got := endpointFunc(tt.query, tt.location)
 			if got != tt.expectedURL {
 				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
 			}
@@ -394,54 +252,25 @@ func TestProjectLevelEndpointFuncWithTwoQueries(t *testing.T) {
 	}
 }
 
-func TestZoneLevelEndpointFuncWithSingleQuery(t *testing.T) {
+func TestZoneLevelGetEndpointFunc(t *testing.T) {
 	tests := []struct {
-		name          string
-		format        string
-		params        []string
-		query         string
-		expectedURL   string
-		expectInitErr bool
+		name        string
+		format      string
+		location    LocationInfo
+		query       string
+		expectedURL string
 	}{
 		{
 			name:        "valid project, zone and query",
 			format:      "https://example.com/projects/%s/zones/%s/resources/%s",
-			params:      []string{"my-project", "my-zone"},
+			location:    NewZonalLocation("my-project", "my-zone"),
 			query:       "my-resource",
 			expectedURL: "https://example.com/projects/my-project/zones/my-zone/resources/my-resource",
 		},
 		{
-			name:          "empty project id",
-			format:        "https://example.com/projects/%s/zones/%s/resources/%s",
-			params:        []string{"", "my-zone"},
-			query:         "my-resource",
-			expectInitErr: true,
-		},
-		{
-			name:          "empty zone",
-			format:        "https://example.com/projects/%s/zones/%s/resources/%s",
-			params:        []string{"my-project", ""},
-			query:         "my-resource",
-			expectInitErr: true,
-		},
-		{
-			name:          "too few params",
-			format:        "https://example.com/projects/%s/zones/%s/resources/%s",
-			params:        []string{"my-project"},
-			query:         "my-resource",
-			expectInitErr: true,
-		},
-		{
-			name:          "too many params",
-			format:        "https://example.com/projects/%s/zones/%s/resources/%s",
-			params:        []string{"my-project", "my-zone", "extra"},
-			query:         "my-resource",
-			expectInitErr: true,
-		},
-		{
 			name:        "empty query returns empty string",
 			format:      "https://example.com/projects/%s/zones/%s/resources/%s",
-			params:      []string{"my-project", "my-zone"},
+			location:    NewZonalLocation("my-project", "my-zone"),
 			query:       "",
 			expectedURL: "",
 		},
@@ -449,17 +278,8 @@ func TestZoneLevelEndpointFuncWithSingleQuery(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn, err := ZoneLevelEndpointFuncWithSingleQuery(tt.format)(tt.params...)
-			if tt.expectInitErr {
-				if err == nil {
-					t.Errorf("expected error but got none (params: %v)", tt.params)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("unexpected error: %v (params: %v)", err, tt.params)
-			}
-			got := fn(tt.query)
+			endpointFunc := ZoneLevelEndpointFunc(tt.format)
+			got := endpointFunc(tt.query, tt.location)
 			if got != tt.expectedURL {
 				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
 			}
@@ -467,54 +287,25 @@ func TestZoneLevelEndpointFuncWithSingleQuery(t *testing.T) {
 	}
 }
 
-func TestRegionalLevelEndpointFuncWithSingleQuery(t *testing.T) {
+func TestRegionalLevelGetEndpointFunc(t *testing.T) {
 	tests := []struct {
-		name          string
-		format        string
-		params        []string
-		query         string
-		expectedURL   string
-		expectInitErr bool
+		name        string
+		format      string
+		location    LocationInfo
+		query       string
+		expectedURL string
 	}{
 		{
 			name:        "valid project, region and query",
 			format:      "https://example.com/projects/%s/regions/%s/resources/%s",
-			params:      []string{"my-project", "my-region"},
+			location:    NewRegionalLocation("my-project", "my-region"),
 			query:       "my-resource",
 			expectedURL: "https://example.com/projects/my-project/regions/my-region/resources/my-resource",
 		},
 		{
-			name:          "empty project id",
-			format:        "https://example.com/projects/%s/regions/%s/resources/%s",
-			params:        []string{"", "my-region"},
-			query:         "my-resource",
-			expectInitErr: true,
-		},
-		{
-			name:          "empty region",
-			format:        "https://example.com/projects/%s/regions/%s/resources/%s",
-			params:        []string{"my-project", ""},
-			query:         "my-resource",
-			expectInitErr: true,
-		},
-		{
-			name:          "too few params",
-			format:        "https://example.com/projects/%s/regions/%s/resources/%s",
-			params:        []string{"my-project"},
-			query:         "my-resource",
-			expectInitErr: true,
-		},
-		{
-			name:          "too many params",
-			format:        "https://example.com/projects/%s/regions/%s/resources/%s",
-			params:        []string{"my-project", "my-region", "extra"},
-			query:         "my-resource",
-			expectInitErr: true,
-		},
-		{
 			name:        "empty query returns empty string",
 			format:      "https://example.com/projects/%s/regions/%s/resources/%s",
-			params:      []string{"my-project", "my-region"},
+			location:    NewRegionalLocation("my-project", "my-region"),
 			query:       "",
 			expectedURL: "",
 		},
@@ -522,362 +313,8 @@ func TestRegionalLevelEndpointFuncWithSingleQuery(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			fn, err := RegionalLevelEndpointFuncWithSingleQuery(tt.format)(tt.params...)
-			if tt.expectInitErr {
-				if err == nil {
-					t.Errorf("expected error but got none (params: %v)", tt.params)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("unexpected error: %v (params: %v)", err, tt.params)
-			}
-			got := fn(tt.query)
-			if got != tt.expectedURL {
-				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
-			}
-		})
-	}
-}
-
-func TestZoneLevelEndpointFuncWithTwoQueries(t *testing.T) {
-	tests := []struct {
-		name          string
-		format        string
-		params        []string
-		query         string
-		expectedURL   string
-		expectInitErr bool
-	}{
-		{
-			name:        "valid project, zone and composite query",
-			format:      "https://example.com/projects/%s/zones/%s/resources/%s/child/%s",
-			params:      []string{"my-project", "my-zone"},
-			query:       "foo|bar",
-			expectedURL: "https://example.com/projects/my-project/zones/my-zone/resources/foo/child/bar",
-		},
-		{
-			name:          "empty project id",
-			format:        "https://example.com/projects/%s/zones/%s/resources/%s/child/%s",
-			params:        []string{"", "my-zone"},
-			query:         "foo|bar",
-			expectInitErr: true,
-		},
-		{
-			name:          "empty zone",
-			format:        "https://example.com/projects/%s/zones/%s/resources/%s/child/%s",
-			params:        []string{"my-project", ""},
-			query:         "foo|bar",
-			expectInitErr: true,
-		},
-		{
-			name:          "too few params",
-			format:        "https://example.com/projects/%s/zones/%s/resources/%s/child/%s",
-			params:        []string{"my-project"},
-			query:         "foo|bar",
-			expectInitErr: true,
-		},
-		{
-			name:          "too many params",
-			format:        "https://example.com/projects/%s/zones/%s/resources/%s/child/%s",
-			params:        []string{"my-project", "my-zone", "extra"},
-			query:         "foo|bar",
-			expectInitErr: true,
-		},
-		{
-			name:        "empty query returns empty string",
-			format:      "https://example.com/projects/%s/zones/%s/resources/%s/child/%s",
-			params:      []string{"my-project", "my-zone"},
-			query:       "",
-			expectedURL: "",
-		},
-		{
-			name:        "query with only one part returns empty string",
-			format:      "https://example.com/projects/%s/zones/%s/resources/%s/child/%s",
-			params:      []string{"my-project", "my-zone"},
-			query:       "foo",
-			expectedURL: "",
-		},
-		{
-			name:        "query with empty part returns empty string",
-			format:      "https://example.com/projects/%s/zones/%s/resources/%s/child/%s",
-			params:      []string{"my-project", "my-zone"},
-			query:       "foo|",
-			expectedURL: "",
-		},
-		{
-			name:        "query with both parts empty returns empty string",
-			format:      "https://example.com/projects/%s/zones/%s/resources/%s/child/%s",
-			params:      []string{"my-project", "my-zone"},
-			query:       "|",
-			expectedURL: "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			fn := ZoneLevelEndpointFuncWithTwoQueries(tt.format)
-			endpointFunc, err := fn(tt.params...)
-			if tt.expectInitErr {
-				if err == nil {
-					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, endpointFunc)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, endpointFunc, tt.expectedURL)
-			}
-			got := endpointFunc(tt.query)
-			if got != tt.expectedURL {
-				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
-			}
-		})
-	}
-}
-
-func TestRegionalLevelEndpointFuncWithTwoQueries(t *testing.T) {
-	tests := []struct {
-		name          string
-		format        string
-		params        []string
-		query         string
-		expectedURL   string
-		expectInitErr bool
-	}{
-		{
-			name:        "valid project, region and composite query",
-			format:      "https://example.com/projects/%s/regions/%s/resources/%s/child/%s",
-			params:      []string{"my-project", "my-region"},
-			query:       "foo|bar",
-			expectedURL: "https://example.com/projects/my-project/regions/my-region/resources/foo/child/bar",
-		},
-		{
-			name:          "empty project id",
-			format:        "https://example.com/projects/%s/regions/%s/resources/%s/child/%s",
-			params:        []string{"", "my-region"},
-			query:         "foo|bar",
-			expectInitErr: true,
-		},
-		{
-			name:          "empty region",
-			format:        "https://example.com/projects/%s/regions/%s/resources/%s/child/%s",
-			params:        []string{"my-project", ""},
-			query:         "foo|bar",
-			expectInitErr: true,
-		},
-		{
-			name:          "too few params",
-			format:        "https://example.com/projects/%s/regions/%s/resources/%s/child/%s",
-			params:        []string{"my-project"},
-			query:         "foo|bar",
-			expectInitErr: true,
-		},
-		{
-			name:          "too many params",
-			format:        "https://example.com/projects/%s/regions/%s/resources/%s/child/%s",
-			params:        []string{"my-project", "my-region", "extra"},
-			query:         "foo|bar",
-			expectInitErr: true,
-		},
-		{
-			name:        "empty query returns empty string",
-			format:      "https://example.com/projects/%s/regions/%s/resources/%s/child/%s",
-			params:      []string{"my-project", "my-region"},
-			query:       "",
-			expectedURL: "",
-		},
-		{
-			name:        "query with only one part returns empty string",
-			format:      "https://example.com/projects/%s/regions/%s/resources/%s/child/%s",
-			params:      []string{"my-project", "my-region"},
-			query:       "foo",
-			expectedURL: "",
-		},
-		{
-			name:        "query with empty part returns empty string",
-			format:      "https://example.com/projects/%s/regions/%s/resources/%s/child/%s",
-			params:      []string{"my-project", "my-region"},
-			query:       "foo|",
-			expectedURL: "",
-		},
-		{
-			name:        "query with both parts empty returns empty string",
-			format:      "https://example.com/projects/%s/regions/%s/resources/%s/child/%s",
-			params:      []string{"my-project", "my-region"},
-			query:       "|",
-			expectedURL: "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			fn := RegionalLevelEndpointFuncWithTwoQueries(tt.format)
-			endpointFunc, err := fn(tt.params...)
-			if tt.expectInitErr {
-				if err == nil {
-					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, endpointFunc)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, endpointFunc, tt.expectedURL)
-			}
-			got := endpointFunc(tt.query)
-			if got != tt.expectedURL {
-				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
-			}
-		})
-	}
-}
-
-func TestProjectLevelEndpointFuncWithThreeQueries(t *testing.T) {
-	tests := []struct {
-		name          string
-		format        string
-		params        []string
-		query         string
-		expectedURL   string
-		expectInitErr bool
-	}{
-		{
-			name:        "valid project and triple composite query",
-			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s",
-			params:      []string{"my-project"},
-			query:       "foo|bar|baz",
-			expectedURL: "https://example.com/projects/my-project/resources/foo/child/bar/grandchild/baz",
-		},
-		{
-			name:          "empty project id",
-			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s",
-			params:        []string{""},
-			query:         "foo|bar|baz",
-			expectInitErr: true,
-		},
-		{
-			name:        "empty query returns empty string",
-			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s",
-			params:      []string{"my-project"},
-			query:       "",
-			expectedURL: "",
-		},
-		{
-			name:        "query with only one part returns empty string",
-			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s",
-			params:      []string{"my-project"},
-			query:       "foo",
-			expectedURL: "",
-		},
-		{
-			name:        "query with two parts returns empty string",
-			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s",
-			params:      []string{"my-project"},
-			query:       "foo|bar",
-			expectedURL: "",
-		},
-		{
-			name:        "query with empty part returns empty string",
-			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s",
-			params:      []string{"my-project"},
-			query:       "foo|bar|",
-			expectedURL: "",
-		},
-		{
-			name:        "query with all parts empty returns empty string",
-			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s",
-			params:      []string{"my-project"},
-			query:       "||",
-			expectedURL: "",
-		},
-		{
-			name:          "too many init params",
-			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s",
-			params:        []string{"my-project", "extra"},
-			query:         "foo|bar|baz",
-			expectInitErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			fn := ProjectLevelEndpointFuncWithThreeQueries(tt.format)
-			endpointFunc, err := fn(tt.params...)
-			if tt.expectInitErr {
-				if err == nil {
-					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, endpointFunc)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, endpointFunc, tt.expectedURL)
-			}
-			got := endpointFunc(tt.query)
-			if got != tt.expectedURL {
-				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
-			}
-		})
-	}
-}
-
-func TestProjectLevelEndpointFuncWithFourQueries(t *testing.T) {
-	tests := []struct {
-		name          string
-		format        string
-		params        []string
-		query         string
-		expectedURL   string
-		expectInitErr bool
-	}{
-		{
-			name:        "valid project and quadruple composite query",
-			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
-			params:      []string{"my-project"},
-			query:       "foo|bar|baz|qux",
-			expectedURL: "https://example.com/projects/my-project/resources/foo/child/bar/grandchild/baz/greatgrandchild/qux",
-		},
-		{
-			name:          "empty project id",
-			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
-			params:        []string{""},
-			query:         "foo|bar|baz|qux",
-			expectInitErr: true,
-		},
-		{
-			name:        "missing query",
-			format:      "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
-			params:      []string{"my-project"},
-			query:       "",
-			expectedURL: "",
-		},
-		{
-			name:          "too many params",
-			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
-			params:        []string{"my-project", "extra"},
-			query:         "foo|bar|baz|qux",
-			expectInitErr: true,
-		},
-		{
-			name:          "too few params",
-			format:        "https://example.com/projects/%s/resources/%s/child/%s/grandchild/%s/greatgrandchild/%s",
-			params:        []string{},
-			query:         "foo|bar|baz|qux",
-			expectInitErr: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			fn := ProjectLevelEndpointFuncWithFourQueries(tt.format)
-			endpointFunc, err := fn(tt.params...)
-			if tt.expectInitErr {
-				if err == nil {
-					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, endpointFunc)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, endpointFunc, tt.expectedURL)
-			}
-			got := endpointFunc(tt.query)
+			endpointFunc := RegionalLevelEndpointFunc(tt.format)
+			got := endpointFunc(tt.query, tt.location)
 			if got != tt.expectedURL {
 				t.Errorf("unexpected URL:\n  got:  %v\n  want: %v", got, tt.expectedURL)
 			}
@@ -888,52 +325,30 @@ func TestProjectLevelEndpointFuncWithFourQueries(t *testing.T) {
 func TestEndpointFuncWithQueries_PanicsOnWrongFormat(t *testing.T) {
 	tests := []struct {
 		name   string
-		fn     func(string) func(...string) (EndpointFunc, error)
+		fn     func(string) EndpointFunc
 		format string
-		count  int
 	}{
 		{
-			name:   "ProjectLevelEndpointFuncWithThreeQueries panics on wrong format",
+			name:   "ProjectLevelGetEndpointFuncWithThreeQueries panics on wrong format",
 			fn:     ProjectLevelEndpointFuncWithThreeQueries,
 			format: "https://example.com/projects/%s/resources/%s/child/%s", // 3 %s, should be 4
-			count:  4,
 		},
 		{
-			name:   "ProjectLevelEndpointFuncWithSingleQuery panics on wrong format",
+			name:   "ProjectLevelGetEndpointFunc panics on wrong format",
 			fn:     ProjectLevelEndpointFuncWithSingleQuery,
 			format: "https://example.com/projects/%s/resources", // 1 %s, should be 2
-			count:  2,
 		},
 		{
-			name:   "ProjectLevelEndpointFuncWithTwoQueries panics on wrong format",
-			fn:     ProjectLevelEndpointFuncWithTwoQueries,
-			format: "https://example.com/projects/%s/resources/%s", // 2 %s, should be 3
-			count:  3,
-		},
-		{
-			name:   "ZoneLevelEndpointFuncWithSingleQuery panics on wrong format",
-			fn:     ZoneLevelEndpointFuncWithSingleQuery,
+			name:   "ZoneLevelGetEndpointFunc panics on wrong format",
+			fn:     ZoneLevelEndpointFunc,
 			format: "https://example.com/projects/%s/zones/%s/resources", // 2 %s, should be 3
-			count:  3,
 		},
 		{
-			name:   "RegionalLevelEndpointFuncWithSingleQuery panics on wrong format",
-			fn:     RegionalLevelEndpointFuncWithSingleQuery,
+			name:   "RegionalLevelGetEndpointFunc panics on wrong format",
+			fn:     RegionalLevelEndpointFunc,
 			format: "https://example.com/projects/%s/regions/%s/resources", // 2 %s, should be 3
-			count:  3,
 		},
-		{
-			name:   "ZoneLevelEndpointFuncWithTwoQueries panics on wrong format",
-			fn:     ZoneLevelEndpointFuncWithTwoQueries,
-			format: "https://example.com/projects/%s/zones/%s/resources/%s", // 3 %s, should be 4
-			count:  4,
-		},
-		{
-			name:   "RegionalLevelEndpointFuncWithTwoQueries panics on wrong format",
-			fn:     RegionalLevelEndpointFuncWithTwoQueries,
-			format: "https://example.com/projects/%s/regions/%s/resources/%s", // 3 %s, should be 4
-			count:  4,
-		}}
+	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -951,33 +366,20 @@ func Test_projectLevelListFunc(t *testing.T) {
 	tests := []struct {
 		name        string
 		format      string
-		params      []string
+		location    LocationInfo
 		expectedURL string
 		expectErr   bool
 	}{
 		{
 			name:        "valid project id",
 			format:      "https://example.com/projects/%s/resources",
-			params:      []string{"my-project"},
+			location:    NewProjectLocation("my-project"),
 			expectedURL: "https://example.com/projects/my-project/resources",
-			expectErr:   false,
 		},
 		{
 			name:      "empty project id",
 			format:    "https://example.com/projects/%s/resources",
-			params:    []string{""},
-			expectErr: true,
-		},
-		{
-			name:      "too many params",
-			format:    "https://example.com/projects/%s/resources",
-			params:    []string{"my-project", "extra"},
-			expectErr: true,
-		},
-		{
-			name:      "too few params",
-			format:    "https://example.com/projects/%s/resources",
-			params:    []string{},
+			location:  LocationInfo{},
 			expectErr: true,
 		},
 	}
@@ -985,15 +387,15 @@ func Test_projectLevelListFunc(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fn := ProjectLevelListFunc(tt.format)
-			got, err := fn(tt.params...)
+			got, err := fn(tt.location)
 			if tt.expectErr {
 				if err == nil {
-					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, got)
+					t.Errorf("expected error but got none\n  got: %v", got)
 				}
 				return
 			}
 			if err != nil {
-				t.Errorf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, got, tt.expectedURL)
+				t.Errorf("unexpected error: %v", err)
 				return
 			}
 			if got != tt.expectedURL {
@@ -1007,39 +409,26 @@ func Test_regionLevelListFunc(t *testing.T) {
 	tests := []struct {
 		name        string
 		format      string
-		params      []string
+		location    LocationInfo
 		expectedURL string
 		expectErr   bool
 	}{
 		{
 			name:        "valid project and region",
 			format:      "https://example.com/projects/%s/regions/%s/resources",
-			params:      []string{"my-project", "my-region"},
+			location:    NewRegionalLocation("my-project", "my-region"),
 			expectedURL: "https://example.com/projects/my-project/regions/my-region/resources",
-			expectErr:   false,
 		},
 		{
 			name:      "empty project id",
 			format:    "https://example.com/projects/%s/regions/%s/resources",
-			params:    []string{"", "my-region"},
+			location:  LocationInfo{Region: "my-region"},
 			expectErr: true,
 		},
 		{
 			name:      "empty region",
 			format:    "https://example.com/projects/%s/regions/%s/resources",
-			params:    []string{"my-project", ""},
-			expectErr: true,
-		},
-		{
-			name:      "too few params",
-			format:    "https://example.com/projects/%s/regions/%s/resources",
-			params:    []string{"my-project"},
-			expectErr: true,
-		},
-		{
-			name:      "too many params",
-			format:    "https://example.com/projects/%s/regions/%s/resources",
-			params:    []string{"my-project", "my-region", "extra"},
+			location:  LocationInfo{ProjectID: "my-project"},
 			expectErr: true,
 		},
 	}
@@ -1047,15 +436,15 @@ func Test_regionLevelListFunc(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fn := RegionLevelListFunc(tt.format)
-			got, err := fn(tt.params...)
+			got, err := fn(tt.location)
 			if tt.expectErr {
 				if err == nil {
-					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, got)
+					t.Errorf("expected error but got none\n  got: %v", got)
 				}
 				return
 			}
 			if err != nil {
-				t.Errorf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, got, tt.expectedURL)
+				t.Errorf("unexpected error: %v", err)
 				return
 			}
 			if got != tt.expectedURL {
@@ -1069,39 +458,26 @@ func Test_zoneLevelListFunc(t *testing.T) {
 	tests := []struct {
 		name        string
 		format      string
-		params      []string
+		location    LocationInfo
 		expectedURL string
 		expectErr   bool
 	}{
 		{
 			name:        "valid project and zone",
 			format:      "https://example.com/projects/%s/zones/%s/resources",
-			params:      []string{"my-project", "my-zone"},
+			location:    NewZonalLocation("my-project", "my-zone"),
 			expectedURL: "https://example.com/projects/my-project/zones/my-zone/resources",
-			expectErr:   false,
 		},
 		{
 			name:      "empty project id",
 			format:    "https://example.com/projects/%s/zones/%s/resources",
-			params:    []string{"", "my-zone"},
+			location:  LocationInfo{Zone: "my-zone"},
 			expectErr: true,
 		},
 		{
 			name:      "empty zone",
 			format:    "https://example.com/projects/%s/zones/%s/resources",
-			params:    []string{"my-project", ""},
-			expectErr: true,
-		},
-		{
-			name:      "too few params",
-			format:    "https://example.com/projects/%s/zones/%s/resources",
-			params:    []string{"my-project"},
-			expectErr: true,
-		},
-		{
-			name:      "too many params",
-			format:    "https://example.com/projects/%s/zones/%s/resources",
-			params:    []string{"my-project", "my-zone", "extra"},
+			location:  LocationInfo{ProjectID: "my-project"},
 			expectErr: true,
 		},
 	}
@@ -1109,15 +485,15 @@ func Test_zoneLevelListFunc(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			fn := ZoneLevelListFunc(tt.format)
-			got, err := fn(tt.params...)
+			got, err := fn(tt.location)
 			if tt.expectErr {
 				if err == nil {
-					t.Errorf("expected error but got none (params: %v)\n  got: %v\n  want error", tt.params, got)
+					t.Errorf("expected error but got none\n  got: %v", got)
 				}
 				return
 			}
 			if err != nil {
-				t.Errorf("unexpected error: %v (params: %v)\n  got: %v\n  want: %v", err, tt.params, got, tt.expectedURL)
+				t.Errorf("unexpected error: %v", err)
 				return
 			}
 			if got != tt.expectedURL {

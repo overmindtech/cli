@@ -31,42 +31,46 @@ func NewSqlDatabase(client clients.SqlDatabasesClient, subscriptionID, resourceG
 	}
 }
 
-func (s sqlDatabaseWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (s sqlDatabaseWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 2 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Get requires 2 query parts: serverName and databaseName",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
 	serverName := queryParts[0]
 	databaseName := queryParts[1]
 
-	resp, err := s.client.Get(ctx, s.ResourceGroup(), serverName, databaseName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	resp, err := s.client.Get(ctx, resourceGroup, serverName, databaseName)
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
-	return s.azureSqlDatabaseToSDPItem(&resp.Database, serverName, databaseName)
+	return s.azureSqlDatabaseToSDPItem(&resp.Database, serverName, databaseName, scope)
 }
 
-func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database, serverName, databaseName string) (*sdp.Item, *sdp.QueryError) {
+func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database, serverName, databaseName, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(database, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(serverName, databaseName))
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.SQLDatabase.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
-		Scope:           s.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(database.Tags),
 	}
 
@@ -79,7 +83,7 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Type:   azureshared.SQLServer.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  extractedServerName,
-					Scope:  s.DefaultScope(),
+					Scope:  scope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // SQL Server changes (especially deletion) affect the database's availability and configuration
@@ -97,7 +101,7 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Type:   azureshared.SQLElasticPool.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  elasticPoolName,
-					Scope:  s.DefaultScope(),
+					Scope:  scope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // Elastic pool changes (especially deletion or resource configuration changes) affect the database's performance and availability
@@ -118,7 +122,7 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Type:   azureshared.SQLRecoverableDatabase.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(recoverableServerName, recoverableDatabaseName),
-					Scope:  s.DefaultScope(),
+					Scope:  scope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // Recoverable database deletion or unavailability affects the SQL Database's ability to restore from that point
@@ -139,7 +143,7 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Type:   azureshared.SQLRestorableDroppedDatabase.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(restorableDroppedServerName, restorableDroppedDatabaseName),
-					Scope:  s.DefaultScope(),
+					Scope:  scope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // Restorable dropped database deletion/purge affects the SQL Database's ability to restore from that dropped database
@@ -155,7 +159,7 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 				Type:   azureshared.SQLRecoveryServicesRecoveryPoint.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  serverName,
-				Scope:  s.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				In:  true,  // Recovery point deletion affects the SQL Database's ability to restore from that specific backup point
@@ -174,7 +178,7 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Type:   azureshared.SQLDatabase.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(sourceServerName, sourceDatabaseName),
-					Scope:  s.DefaultScope(),
+					Scope:  scope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  false, // Source database changes don't affect the copy (copy is independent after creation)
@@ -199,7 +203,7 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Type:   azureshared.SQLDatabase.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(serverName, databaseName),
-					Scope:  s.DefaultScope(),
+					Scope:  scope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // Source database changes (especially deletion) affect the database's ability to restore
@@ -214,7 +218,7 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Type:   azureshared.SQLElasticPool.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  elasticPoolName,
-					Scope:  s.DefaultScope(),
+					Scope:  scope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // Source elastic pool changes (especially deletion) affect the database's ability to restore
@@ -239,30 +243,34 @@ func (s sqlDatabaseWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
-func (s sqlDatabaseWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+func (s sqlDatabaseWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Search requires 1 query part: serverName",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
 	serverName := queryParts[0]
 
-	pager := s.client.ListByServer(ctx, s.ResourceGroup(), serverName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	pager := s.client.ListByServer(ctx, resourceGroup, serverName)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+			return nil, azureshared.QueryError(err, scope, s.Type())
 		}
 		for _, database := range page.Value {
 			if database.Name == nil {
 				continue
 			}
-			item, sdpErr := s.azureSqlDatabaseToSDPItem(database, serverName, *database.Name)
+			item, sdpErr := s.azureSqlDatabaseToSDPItem(database, serverName, *database.Name, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}

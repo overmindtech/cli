@@ -37,7 +37,7 @@ func TestSpannerDatabase(t *testing.T) {
 			},
 		},
 		EncryptionInfo: []*spanner.EncryptionInfo{
-			&spanner.EncryptionInfo{
+			{
 				KmsKeyVersion: "projects/test-project/locations/global/keyRings/my-keyring/cryptoKeys/my-key/cryptoKeyVersions/1",
 			},
 		},
@@ -62,7 +62,7 @@ func TestSpannerDatabase(t *testing.T) {
 
 	t.Run("Get", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}
@@ -141,7 +141,7 @@ func TestSpannerDatabase(t *testing.T) {
 	t.Run("Search", func(t *testing.T) {
 		// This is a project level adapter, so we pass the project
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

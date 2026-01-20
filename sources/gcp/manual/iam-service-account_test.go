@@ -32,7 +32,7 @@ func TestIAMServiceAccount(t *testing.T) {
 	testDisplayName := "Test Service Account"
 
 	t.Run("Get by unique_id", func(t *testing.T) {
-		wrapper := manual.NewIAMServiceAccount(mockClient, projectID)
+		wrapper := manual.NewIAMServiceAccount(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createServiceAccount(testUniqueID, testEmail, testDisplayName, projectID, false), nil)
 
@@ -66,7 +66,7 @@ func TestIAMServiceAccount(t *testing.T) {
 	})
 
 	t.Run("Get by email", func(t *testing.T) {
-		wrapper := manual.NewIAMServiceAccount(mockClient, projectID)
+		wrapper := manual.NewIAMServiceAccount(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createServiceAccount(testUniqueID, testEmail, testDisplayName, projectID, false), nil)
 
@@ -99,7 +99,7 @@ func TestIAMServiceAccount(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewIAMServiceAccount(mockClient, projectID)
+		wrapper := manual.NewIAMServiceAccount(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockIAMServiceAccountIterator(ctrl)
@@ -135,7 +135,7 @@ func TestIAMServiceAccount(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewIAMServiceAccount(mockClient, projectID)
+		wrapper := manual.NewIAMServiceAccount(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockIterator := mocks.NewMockIAMServiceAccountIterator(ctrl)

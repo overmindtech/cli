@@ -12,9 +12,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	DBforPostgreSQLDatabaseLookupByName = shared.NewItemTypeLookup("name", azureshared.DBforPostgreSQLDatabase)
-)
+var DBforPostgreSQLDatabaseLookupByName = shared.NewItemTypeLookup("name", azureshared.DBforPostgreSQLDatabase)
 
 type dbforPostgreSQLDatabaseWrapper struct {
 	client clients.PostgreSQLDatabasesClient
@@ -36,45 +34,49 @@ func NewDBforPostgreSQLDatabase(client clients.PostgreSQLDatabasesClient, subscr
 
 // reference : https://learn.microsoft.com/en-us/rest/api/postgresql/databases/get?view=rest-postgresql-2025-08-01&tabs=HTTP
 // GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DBforPostgreSQL/flexibleServers/{serverName}/databases/{databaseName}?api-version=2025-08-01
-func (s dbforPostgreSQLDatabaseWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (s dbforPostgreSQLDatabaseWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 2 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Get requires 2 query parts: serverName and databaseName",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
 	serverName := queryParts[0]
 	databaseName := queryParts[1]
 
-	resp, err := s.client.Get(ctx, s.ResourceGroup(), serverName, databaseName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	resp, err := s.client.Get(ctx, resourceGroup, serverName, databaseName)
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
-	return s.azureDBforPostgreSQLDatabaseToSDPItem(&resp.Database, serverName)
+	return s.azureDBforPostgreSQLDatabaseToSDPItem(&resp.Database, serverName, scope)
 }
 
-func (s dbforPostgreSQLDatabaseWrapper) azureDBforPostgreSQLDatabaseToSDPItem(database *armpostgresqlflexibleservers.Database, serverName string) (*sdp.Item, *sdp.QueryError) {
+func (s dbforPostgreSQLDatabaseWrapper) azureDBforPostgreSQLDatabaseToSDPItem(database *armpostgresqlflexibleservers.Database, serverName, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(database)
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 	if database.Name == nil {
-		return nil, azureshared.QueryError(fmt.Errorf("database name is nil"), s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(fmt.Errorf("database name is nil"), scope, s.Type())
 	}
 
 	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(serverName, *database.Name))
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.DBforPostgreSQLDatabase.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
-		Scope:           s.DefaultScope(),
+		Scope:           scope,
 	}
 
 	// Link to PostgreSQL Flexible Server (parent resource)
@@ -88,7 +90,7 @@ func (s dbforPostgreSQLDatabaseWrapper) azureDBforPostgreSQLDatabaseToSDPItem(da
 			Type:   azureshared.DBforPostgreSQLFlexibleServer.String(),
 			Method: sdp.QueryMethod_GET,
 			Query:  serverName,
-			Scope:  s.DefaultScope(), // Server is in the same resource group as the database
+			Scope:  scope, // Server is in the same resource group as the database
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,  // Server changes (deletion, configuration, maintenance) directly affect database availability and functionality
@@ -101,31 +103,35 @@ func (s dbforPostgreSQLDatabaseWrapper) azureDBforPostgreSQLDatabaseToSDPItem(da
 
 // reference : https://learn.microsoft.com/en-us/rest/api/postgresql/databases/list-by-server?view=rest-postgresql-2025-08-01&tabs=HTTP#security
 // GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.DBforPostgreSQL/flexibleServers/{serverName}/databases?api-version=2025-08-01
-func (s dbforPostgreSQLDatabaseWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+func (s dbforPostgreSQLDatabaseWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Search requires 1 query part: serverName",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
 	serverName := queryParts[0]
 
-	pager := s.client.ListByServer(ctx, s.ResourceGroup(), serverName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	pager := s.client.ListByServer(ctx, resourceGroup, serverName)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+			return nil, azureshared.QueryError(err, scope, s.Type())
 		}
 
 		for _, database := range page.Value {
 			if database.Name == nil {
 				continue
 			}
-			item, sdpErr := s.azureDBforPostgreSQLDatabaseToSDPItem(database, serverName)
+			item, sdpErr := s.azureDBforPostgreSQLDatabaseToSDPItem(database, serverName, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}

@@ -32,7 +32,7 @@ func TestComputeAddress(t *testing.T) {
 	region := "us-central1"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeAddress(mockClient, projectID, region)
+		wrapper := manual.NewComputeAddress(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeAddress("test-address"), nil)
 
@@ -86,7 +86,7 @@ func TestComputeAddress(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeAddress(mockClient, projectID, region)
+		wrapper := manual.NewComputeAddress(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -127,7 +127,7 @@ func TestComputeAddress(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeAddress(mockClient, projectID, region)
+		wrapper := manual.NewComputeAddress(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -180,7 +180,7 @@ func TestComputeAddress(t *testing.T) {
 	})
 
 	t.Run("GetWithUsers", func(t *testing.T) {
-		wrapper := manual.NewComputeAddress(mockClient, projectID, region)
+		wrapper := manual.NewComputeAddress(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 
 		// Test with various user resource types
 		users := []string{
@@ -302,7 +302,7 @@ func TestComputeAddress(t *testing.T) {
 	})
 
 	t.Run("GetWithIPCollection", func(t *testing.T) {
-		wrapper := manual.NewComputeAddress(mockClient, projectID, region)
+		wrapper := manual.NewComputeAddress(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
 
 		ipCollection := fmt.Sprintf("projects/%s/regions/%s/publicDelegatedPrefixes/test-prefix", projectID, region)
 

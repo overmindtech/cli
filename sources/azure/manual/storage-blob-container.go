@@ -11,9 +11,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	StorageBlobContainerLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageBlobContainer)
-)
+var StorageBlobContainerLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageBlobContainer)
 
 type storageBlobContainerWrapper struct {
 	client clients.BlobContainersClient
@@ -33,26 +31,30 @@ func NewStorageBlobContainer(client clients.BlobContainersClient, subscriptionID
 	}
 }
 
-func (s storageBlobContainerWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (s storageBlobContainerWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 2 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Get requires 2 query parts: storageAccountName and containerName",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
 	storageAccountName := queryParts[0]
 	containerName := queryParts[1]
 
-	resp, err := s.client.Get(ctx, s.ResourceGroup(), storageAccountName, containerName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	resp, err := s.client.Get(ctx, resourceGroup, storageAccountName, containerName)
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	var sdpErr *sdp.QueryError
 	var item *sdp.Item
-	item, sdpErr = s.azureBlobContainerToSDPItem(&resp.BlobContainer, storageAccountName, containerName)
+	item, sdpErr = s.azureBlobContainerToSDPItem(&resp.BlobContainer, storageAccountName, containerName, scope)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -60,24 +62,28 @@ func (s storageBlobContainerWrapper) Get(ctx context.Context, queryParts ...stri
 	return item, nil
 }
 
-func (s storageBlobContainerWrapper) Search(ctx context.Context, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+func (s storageBlobContainerWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Search requires 1 query part: storageAccountName",
-			Scope:       s.DefaultScope(),
+			Scope:       scope,
 			ItemType:    s.Type(),
 		}
 	}
 	storageAccountName := queryParts[0]
 
-	pager := s.client.List(ctx, s.ResourceGroup(), storageAccountName)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = s.ResourceGroup()
+	}
+	pager := s.client.List(ctx, resourceGroup, storageAccountName)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+			return nil, azureshared.QueryError(err, scope, s.Type())
 		}
 
 		for _, container := range page.Value {
@@ -91,7 +97,7 @@ func (s storageBlobContainerWrapper) Search(ctx context.Context, queryParts ...s
 				Type:                container.Type,
 				ContainerProperties: container.Properties,
 				Etag:                container.Etag,
-			}, storageAccountName, *container.Name)
+			}, storageAccountName, *container.Name, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -124,22 +130,22 @@ func (s storageBlobContainerWrapper) PotentialLinks() map[shared.ItemType]bool {
 	)
 }
 
-func (s storageBlobContainerWrapper) azureBlobContainerToSDPItem(container *armstorage.BlobContainer, storageAccountName, containerName string) (*sdp.Item, *sdp.QueryError) {
+func (s storageBlobContainerWrapper) azureBlobContainerToSDPItem(container *armstorage.BlobContainer, storageAccountName, containerName, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(container)
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(storageAccountName, containerName))
 	if err != nil {
-		return nil, azureshared.QueryError(err, s.DefaultScope(), s.Type())
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.StorageBlobContainer.String(),
 		UniqueAttribute: "uniqueAttr",
 		Attributes:      attributes,
-		Scope:           s.DefaultScope(),
+		Scope:           scope,
 	}
 
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -147,7 +153,7 @@ func (s storageBlobContainerWrapper) azureBlobContainerToSDPItem(container *arms
 			Type:   azureshared.StorageAccount.String(),
 			Method: sdp.QueryMethod_GET,
 			Query:  storageAccountName,
-			Scope:  s.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  true,

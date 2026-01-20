@@ -34,7 +34,7 @@ func TestComputeNodeGroup(t *testing.T) {
 	testTemplateUrl2 := "https://www.googleapis.com/compute/v1/projects/test-project/regions/northamerica-northeast1/nodeTemplates/node-template-2"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
+		wrapper := manual.NewComputeNodeGroup(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeNodeGroup("test-node-group", testTemplateUrl, computepb.NodeGroup_READY), nil)
 
@@ -95,7 +95,7 @@ func TestComputeNodeGroup(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
+				wrapper := manual.NewComputeNodeGroup(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeNodeGroup("test-ng", "test-temp", tc.input), nil)
@@ -113,7 +113,7 @@ func TestComputeNodeGroup(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
+		wrapper := manual.NewComputeNodeGroup(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -155,7 +155,7 @@ func TestComputeNodeGroup(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
+		wrapper := manual.NewComputeNodeGroup(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		mockComputeIterator := mocks.NewMockComputeNodeGroupIterator(ctrl)
@@ -197,7 +197,7 @@ func TestComputeNodeGroup(t *testing.T) {
 	})
 
 	t.Run("Search", func(t *testing.T) {
-		wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
+		wrapper := manual.NewComputeNodeGroup(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		filterBy := testTemplateUrl
@@ -265,7 +265,7 @@ func TestComputeNodeGroup(t *testing.T) {
 	})
 
 	t.Run("SearchStream", func(t *testing.T) {
-		wrapper := manual.NewComputeNodeGroup(mockClient, projectID, zone)
+		wrapper := manual.NewComputeNodeGroup(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		filterBy := testTemplateUrl

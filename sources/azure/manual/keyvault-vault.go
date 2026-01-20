@@ -13,9 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var (
-	KeyVaultVaultLookupByName = shared.NewItemTypeLookup("name", azureshared.KeyVaultVault)
-)
+var KeyVaultVaultLookupByName = shared.NewItemTypeLookup("name", azureshared.KeyVaultVault)
 
 type keyvaultVaultWrapper struct {
 	client clients.VaultsClient
@@ -35,14 +33,18 @@ func NewKeyVaultVault(client clients.VaultsClient, subscriptionID, resourceGroup
 	}
 }
 
-func (k keyvaultVaultWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := k.client.NewListByResourceGroupPager(k.ResourceGroup(), nil)
+func (k keyvaultVaultWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = k.ResourceGroup()
+	}
+	pager := k.client.NewListByResourceGroupPager(resourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, k.DefaultScope(), k.Type())
+			return nil, azureshared.QueryError(err, scope, k.Type())
 		}
 
 		for _, vault := range page.Value {
@@ -50,7 +52,7 @@ func (k keyvaultVaultWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Query
 				continue
 			}
 
-			item, sdpErr := k.azureKeyVaultToSDPItem(vault)
+			item, sdpErr := k.azureKeyVaultToSDPItem(vault, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -61,39 +63,43 @@ func (k keyvaultVaultWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.Query
 	return items, nil
 }
 
-func (k keyvaultVaultWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (k keyvaultVaultWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
-		return nil, azureshared.QueryError(errors.New("Get requires 1 query part: vaultName"), k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(errors.New("Get requires 1 query part: vaultName"), scope, k.Type())
 	}
 
 	vaultName := queryParts[0]
 	if vaultName == "" {
-		return nil, azureshared.QueryError(errors.New("vaultName cannot be empty"), k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(errors.New("vaultName cannot be empty"), scope, k.Type())
 	}
 
-	resp, err := k.client.Get(ctx, k.ResourceGroup(), vaultName, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = k.ResourceGroup()
+	}
+	resp, err := k.client.Get(ctx, resourceGroup, vaultName, nil)
 	if err != nil {
-		return nil, azureshared.QueryError(err, k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
 
-	return k.azureKeyVaultToSDPItem(&resp.Vault)
+	return k.azureKeyVaultToSDPItem(&resp.Vault, scope)
 }
 
-func (k keyvaultVaultWrapper) azureKeyVaultToSDPItem(vault *armkeyvault.Vault) (*sdp.Item, *sdp.QueryError) {
+func (k keyvaultVaultWrapper) azureKeyVaultToSDPItem(vault *armkeyvault.Vault, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(vault, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
 
 	if vault.Name == nil {
-		return nil, azureshared.QueryError(errors.New("vault name is nil"), k.DefaultScope(), k.Type())
+		return nil, azureshared.QueryError(errors.New("vault name is nil"), scope, k.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.KeyVaultVault.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           k.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(vault.Tags),
 	}
 

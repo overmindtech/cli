@@ -66,7 +66,7 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 				fmt.Sprintf("projects/%s/notificationChannels/alert-channel-2", projectID),
 			},
 		},
-		PredictInstanceSchemaUri: "gs://schema-bucket/predict-schema.yaml",
+		PredictInstanceSchemaUri:  "gs://schema-bucket/predict-schema.yaml",
 		AnalysisInstanceSchemaUri: "gs://schema-bucket-2/analysis-schema.yaml",
 		BigqueryTables: []*aiplatformpb.ModelDeploymentMonitoringBigQueryTable{
 			{
@@ -110,7 +110,7 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 
 	t.Run("Get", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}
@@ -280,7 +280,7 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 
 	t.Run("Search", func(t *testing.T) {
 		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}
@@ -309,7 +309,7 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 		}
 
 		httpCli := shared.NewMockHTTPClientProvider(errorResponses)
-		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), projectID)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		if err != nil {
 			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
 		}

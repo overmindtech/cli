@@ -44,6 +44,8 @@ func TestServiceAccountImpersonationIntegration(t *testing.T) {
 		t.Skip("GCP_PROJECT_ID environment variable not set")
 	}
 
+	t.Parallel()
+
 	// Initialize Cloud Resource Manager service
 	crmService, err := cloudresourcemanager.NewService(t.Context())
 	if err != nil {
@@ -69,11 +71,14 @@ func TestServiceAccountImpersonationIntegration(t *testing.T) {
 	state.ourServiceAccountID = fmt.Sprintf("ovm-test-our-sa-%s", strings.ReplaceAll(ourSAUUID[:8], "-", ""))
 	state.customerServiceAccountID = fmt.Sprintf("ovm-test-cust-%s", strings.ReplaceAll(customerSAUUID[:8], "-", ""))
 
-	t.Run("Setup", func(t *testing.T) {
-		setupTest(t, t.Context(), iamService, crmService, state)
-	})
-
+	// since this test needs to keep state between tests, we wrap it in a Run function
 	t.Run("Run", func(t *testing.T) {
+		setupTest(t, t.Context(), iamService, crmService, state)
+
+		t.Cleanup(func() {
+			teardownTest(t, t.Context(), iamService, crmService, state)
+		})
+
 		t.Run("Test1_OurServiceAccountDirectAuth", func(t *testing.T) {
 			testOurServiceAccountDirectAuth(t, t.Context(), state)
 		})
@@ -85,10 +90,7 @@ func TestServiceAccountImpersonationIntegration(t *testing.T) {
 		t.Run("Test3_Impersonation", func(t *testing.T) {
 			testImpersonation(t, t.Context(), state)
 		})
-	})
 
-	t.Run("Teardown", func(t *testing.T) {
-		teardownTest(t, t.Context(), iamService, crmService, state)
 	})
 }
 
@@ -250,6 +252,7 @@ func testOurServiceAccountDirectAuth(t *testing.T, ctx context.Context, state *t
 	// Create credentials from the key
 	creds, err := google.CredentialsFromJSON(ctx, keyData, compute.DefaultAuthScopes()...)
 	if err != nil {
+		t.Logf("Key data: %s", string(keyData))
 		t.Fatalf("Failed to create credentials from key: %v", err)
 	}
 
@@ -337,7 +340,6 @@ func testCustomerServiceAccountDirectAuth(t *testing.T, ctx context.Context, sta
 
 	it := client.List(ctx, req)
 	_, err = it.Next()
-
 	if err != nil {
 		t.Fatalf("Expected to successfully list instances, but got error: %v", err)
 	}
@@ -402,7 +404,6 @@ func testImpersonation(t *testing.T, ctx context.Context, state *testState) {
 
 	it := client.List(ctx, req)
 	_, err = it.Next()
-
 	if err != nil {
 		t.Fatalf("Expected to successfully list instances via impersonation, but got error: %v", err)
 	}

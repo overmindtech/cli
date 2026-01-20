@@ -428,7 +428,6 @@ func TestProjectHealthChecker_Check_Success(t *testing.T) {
 
 	checker := NewProjectHealthChecker(projectIDs, adapters, 1*time.Minute)
 	result, err := checker.Check(ctx)
-
 	if err != nil {
 		t.Errorf("expected no error, got %v", err)
 	}

@@ -20,16 +20,15 @@ var ComputeBackendServiceLookupByName = shared.NewItemTypeLookup("name", gcpshar
 
 type computeBackendServiceWrapper struct {
 	client gcpshared.ComputeBackendServiceClient
-
 	*gcpshared.ProjectBase
 }
 
-// NewComputeBackendService creates a new computeBackendServiceWrapper instance
-func NewComputeBackendService(client gcpshared.ComputeBackendServiceClient, projectID string) sources.ListableWrapper {
+// NewComputeBackendService creates a new computeBackendServiceWrapper instance.
+func NewComputeBackendService(client gcpshared.ComputeBackendServiceClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
 	return &computeBackendServiceWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
-			projectID,
+			locations,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			gcpshared.ComputeBackendService,
 		),
@@ -62,61 +61,67 @@ func (computeBackendServiceWrapper) PotentialLinks() map[shared.ItemType]bool {
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the compute backend service wrapper
 func (c computeBackendServiceWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
-			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_backend_service#argument-reference
+			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_backend_service.name",
 		},
 	}
 }
 
-// GetLookups returns the lookups for the compute backend service wrapper
 func (c computeBackendServiceWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		ComputeBackendServiceLookupByName,
 	}
 }
 
-// Get retrieves a compute backend service by its name
-func (c computeBackendServiceWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeBackendServiceWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	req := &computepb.GetBackendServiceRequest{
-		Project:        c.ProjectID(),
+		Project:        location.ProjectID,
 		BackendService: queryParts[0],
 	}
 
-	service, err := c.client.Get(ctx, req)
-	if err != nil {
-		return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+	service, getErr := c.client.Get(ctx, req)
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, c.ProjectID(), c.DefaultScope(), service)
-	if sdpErr != nil {
-		return nil, sdpErr
-	}
-
-	return item, nil
+	return gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), service)
 }
 
-// List lists compute backend services and converts them to sdp.Items.
-func (c computeBackendServiceWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+func (c computeBackendServiceWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
 	it := c.client.List(ctx, &computepb.ListBackendServicesRequest{
-		Project: c.ProjectID(),
+		Project: location.ProjectID,
 	})
 
 	var items []*sdp.Item
 	for {
-		bs, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		bs, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			return nil, gcpshared.QueryError(err, c.DefaultScope(), c.Type())
+		if iterErr != nil {
+			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
 		}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, c.ProjectID(), c.DefaultScope(), bs)
+		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), bs)
 		if sdpErr != nil {
 			return nil, sdpErr
 		}
@@ -127,23 +132,31 @@ func (c computeBackendServiceWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 	return items, nil
 }
 
-// ListStream lists compute backend services and sends them to the stream.
-func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
 	it := c.client.List(ctx, &computepb.ListBackendServicesRequest{
-		Project: c.ProjectID(),
+		Project: location.ProjectID,
 	})
 
 	for {
-		backendService, err := it.Next()
-		if errors.Is(err, iterator.Done) {
+		backendService, iterErr := it.Next()
+		if errors.Is(iterErr, iterator.Done) {
 			break
 		}
-		if err != nil {
-			stream.SendError(gcpshared.QueryError(err, c.DefaultScope(), c.Type()))
+		if iterErr != nil {
+			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
 			return
 		}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, c.ProjectID(), c.DefaultScope(), backendService)
+		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), backendService)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
 			continue
@@ -176,8 +189,7 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 	// This field can only be specified when the load balancing scheme is set to INTERNAL.
 	if network := bs.GetNetwork(); network != "" {
 		if strings.Contains(network, "/") {
-			networkNameParts := strings.Split(network, "/")
-			networkName := networkNameParts[len(networkNameParts)-1]
+			networkName := gcpshared.LastPathComponent(network)
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   gcpshared.ComputeNetwork.String(),
@@ -204,38 +216,32 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 	// https://cloud.google.com/compute/docs/reference/rest/v1/securityPolicies/get
 	if securityPolicy := bs.GetSecurityPolicy(); securityPolicy != "" {
 		if strings.Contains(securityPolicy, "/") {
-			securityPolicyNameParts := strings.Split(securityPolicy, "/")
-			if len(securityPolicyNameParts) >= 2 {
-				securityPolicyName := securityPolicyNameParts[len(securityPolicyNameParts)-1]
-				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-					Query: &sdp.Query{
-						Type:   gcpshared.ComputeSecurityPolicy.String(),
-						Method: sdp.QueryMethod_GET,
-						Query:  securityPolicyName,
-						// This is a global resource
-						Scope: projectID,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				})
-			}
+			securityPolicyName := gcpshared.LastPathComponent(securityPolicy)
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   gcpshared.ComputeSecurityPolicy.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  securityPolicyName,
+					Scope:  projectID,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			})
 		}
 	}
 
 	// The resource URL for the edge security policy associated with this backend service.
 	if edgeSecurityPolicy := bs.GetEdgeSecurityPolicy(); edgeSecurityPolicy != "" {
 		if strings.Contains(edgeSecurityPolicy, "/") {
-			edgeSecurityPolicyNameParts := strings.Split(edgeSecurityPolicy, "/")
-			edgeSecurityPolicyName := edgeSecurityPolicyNameParts[len(edgeSecurityPolicyNameParts)-1]
+			edgeSecurityPolicyName := gcpshared.LastPathComponent(edgeSecurityPolicy)
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   gcpshared.ComputeSecurityPolicy.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  edgeSecurityPolicyName,
-					// This is a global resource
-					Scope: projectID,
+					Scope:  projectID,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,
@@ -327,7 +333,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 				if len(params) == 2 && params[0] != "" && params[1] != "" {
 					zone := params[0]
 					groupName := params[1]
-
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   gcpshared.ComputeInstanceGroup.String(),
@@ -355,7 +360,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 					if len(params) == 2 && params[0] != "" && params[1] != "" {
 						zone := params[0]
 						negName := params[1]
-
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   gcpshared.ComputeNetworkEndpointGroup.String(),
@@ -395,7 +399,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 				if len(params) == 2 && params[0] != "" && params[1] != "" {
 					zone := params[0]
 					groupName := params[1]
-
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   gcpshared.ComputeInstanceGroup.String(),

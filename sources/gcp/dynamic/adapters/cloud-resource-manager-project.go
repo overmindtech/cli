@@ -16,16 +16,16 @@ var _ = registerableAdapter{
 		// Reference: https://cloud.google.com/resource-manager/reference/rest/v3/projects/get
 		// GET https://cloudresourcemanager.googleapis.com/v3/projects/*
 		// IAM permissions: resourcemanager.projects.get
-		GetEndpointFunc: func(adapterInitParams ...string) (gcpshared.EndpointFunc, error) {
-			if len(adapterInitParams) == 1 && adapterInitParams[0] != "" {
-				return func(query string) string {
-					if query != "" {
-						return fmt.Sprintf("https://cloudresourcemanager.googleapis.com/v3/projects/%s", query)
-					}
-					return ""
-				}, nil
+		// Note: This adapter uses the query as the project ID, and validates it
+		// against the adapter's configured project via location.ProjectID.
+		GetEndpointFunc: func(query string, location gcpshared.LocationInfo) string {
+			if query == "" {
+				return ""
 			}
-			return nil, fmt.Errorf("projectID cannot be empty: %v", adapterInitParams)
+			if query != location.ProjectID {
+				return ""
+			}
+			return fmt.Sprintf("https://cloudresourcemanager.googleapis.com/v3/projects/%s", query)
 		},
 		UniqueAttributeKeys: []string{"projects"},
 		// HEALTH: https://cloud.google.com/resource-manager/reference/rest/v3/projects#State

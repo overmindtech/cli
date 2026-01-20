@@ -102,17 +102,21 @@ func (c computeVirtualMachineWrapper) GetLookups() sources.ItemTypeLookups {
 
 // Get retrieves a virtual machine by its name
 // Reference: https://learn.microsoft.com/en-us/rest/api/compute/virtual-machines/get
-func (c computeVirtualMachineWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (c computeVirtualMachineWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	vmName := queryParts[0]
 
-	resp, err := c.client.Get(ctx, c.ResourceGroup(), vmName, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = c.ResourceGroup()
+	}
+	resp, err := c.client.Get(ctx, resourceGroup, vmName, nil)
 	if err != nil {
-		return nil, azureshared.QueryError(err, c.DefaultScope(), c.Type())
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
 
 	var sdpErr *sdp.QueryError
 	var item *sdp.Item
-	item, sdpErr = c.azureVirtualMachineToSDPItem(&resp.VirtualMachine)
+	item, sdpErr = c.azureVirtualMachineToSDPItem(&resp.VirtualMachine, scope)
 	if sdpErr != nil {
 		return nil, sdpErr
 	}
@@ -122,20 +126,24 @@ func (c computeVirtualMachineWrapper) Get(ctx context.Context, queryParts ...str
 
 // List lists virtual machines in the resource group and converts them to sdp.Items.
 // Reference: https://learn.microsoft.com/en-us/rest/api/compute/virtual-machines/list
-func (c computeVirtualMachineWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := c.client.NewListPager(c.ResourceGroup(), nil)
+func (c computeVirtualMachineWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = c.ResourceGroup()
+	}
+	pager := c.client.NewListPager(resourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, c.DefaultScope(), c.Type())
+			return nil, azureshared.QueryError(err, scope, c.Type())
 		}
 
 		for _, vm := range page.Value {
 			var sdpErr *sdp.QueryError
 			var item *sdp.Item
-			item, sdpErr = c.azureVirtualMachineToSDPItem(vm)
+			item, sdpErr = c.azureVirtualMachineToSDPItem(vm, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -147,20 +155,24 @@ func (c computeVirtualMachineWrapper) List(ctx context.Context) ([]*sdp.Item, *s
 	return items, nil
 }
 
-func (c computeVirtualMachineWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
-	pager := c.client.NewListPager(c.ResourceGroup(), nil)
+func (c computeVirtualMachineWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = c.ResourceGroup()
+	}
+	pager := c.client.NewListPager(resourceGroup, nil)
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			stream.SendError(azureshared.QueryError(err, c.DefaultScope(), c.Type()))
+			stream.SendError(azureshared.QueryError(err, scope, c.Type()))
 			return
 		}
 
 		for _, vm := range page.Value {
 			var sdpErr *sdp.QueryError
 			var item *sdp.Item
-			item, sdpErr = c.azureVirtualMachineToSDPItem(vm)
+			item, sdpErr = c.azureVirtualMachineToSDPItem(vm, scope)
 			if sdpErr != nil {
 				stream.SendError(sdpErr)
 				continue
@@ -172,7 +184,7 @@ func (c computeVirtualMachineWrapper) ListStream(ctx context.Context, stream dis
 	}
 }
 
-func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcompute.VirtualMachine) (*sdp.Item, *sdp.QueryError) {
+func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcompute.VirtualMachine, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(vm, "tags")
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -185,7 +197,7 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 		Type:            azureshared.ComputeVirtualMachine.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           c.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(vm.Tags),
 	}
 
@@ -713,11 +725,11 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 						Type:   azureshared.ComputeVirtualMachineExtension.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(*vm.Name, *extension.Name),
-						Scope:  c.DefaultScope(),
+						Scope:  scope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
-						In:  false, //If Extensions are deleted → VM remains functional (In: false)
-						Out: true,  //If VM is deleted → Extensions become invalid/unusable (Out: true)
+						In:  false, // If Extensions are deleted → VM remains functional (In: false)
+						Out: true,  // If VM is deleted → Extensions become invalid/unusable (Out: true)
 					},
 				})
 			}
@@ -725,7 +737,7 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 	}
 
 	// Link to run commands
-	//Reference: https://learn.microsoft.com/en-us/rest/api/compute/virtual-machine-run-commands/list-by-virtual-machine?view=rest-compute-2025-04-01&tabs=HTTP
+	// Reference: https://learn.microsoft.com/en-us/rest/api/compute/virtual-machine-run-commands/list-by-virtual-machine?view=rest-compute-2025-04-01&tabs=HTTP
 	// GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/virtualMachines/{vmName}/runCommands?api-version=2025-04-01
 	if vm.Name != nil {
 		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -733,11 +745,11 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 				Type:   azureshared.ComputeVirtualMachineRunCommand.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  *vm.Name,
-				Scope:  c.DefaultScope(),
+				Scope:  scope,
 			},
 			BlastPropagation: &sdp.BlastPropagation{
-				In:  false, //If Run Commands are deleted → VM remains functional (In: false)
-				Out: true,  //If VM is deleted → Run Commands become invalid/unusable (Out: true)
+				In:  false, // If Run Commands are deleted → VM remains functional (In: false)
+				Out: true,  // If VM is deleted → Run Commands become invalid/unusable (Out: true)
 			},
 		})
 	}

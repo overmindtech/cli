@@ -32,7 +32,7 @@ func TestComputeInstance(t *testing.T) {
 	zone := "us-central1-a"
 
 	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeInstance("test-instance", computepb.Instance_RUNNING), nil)
 
@@ -173,7 +173,7 @@ func TestComputeInstance(t *testing.T) {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+				wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeInstance("test-instance", tc.input), nil)
@@ -191,7 +191,7 @@ func TestComputeInstance(t *testing.T) {
 	})
 
 	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -232,7 +232,7 @@ func TestComputeInstance(t *testing.T) {
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -285,7 +285,7 @@ func TestComputeInstance(t *testing.T) {
 	})
 
 	t.Run("GetWithInitializeParams", func(t *testing.T) {
-		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		// Test with sourceImage and sourceSnapshot in initializeParams
 		sourceImageURL := fmt.Sprintf("projects/%s/global/images/test-image", projectID)
@@ -299,8 +299,8 @@ func TestComputeInstance(t *testing.T) {
 				DeviceName: ptr.To("test-disk"),
 				Source:     ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/disks/test-instance", projectID, zone)),
 				InitializeParams: &computepb.AttachedDiskInitializeParams{
-					SourceImage:                ptr.To(sourceImageURL),
-					SourceSnapshot:             ptr.To(sourceSnapshotURL),
+					SourceImage:    ptr.To(sourceImageURL),
+					SourceSnapshot: ptr.To(sourceSnapshotURL),
 					SourceImageEncryptionKey: &computepb.CustomerEncryptionKey{
 						KmsKeyName: ptr.To(sourceImageKeyName),
 					},
@@ -434,7 +434,7 @@ func TestComputeInstance(t *testing.T) {
 	})
 
 	t.Run("GetWithDiskEncryptionKey", func(t *testing.T) {
-		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		// Test with diskEncryptionKey (with version)
 		diskKeyName := fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-disk", projectID)
@@ -541,7 +541,7 @@ func TestComputeInstance(t *testing.T) {
 	})
 
 	t.Run("GetWithDiskEncryptionKeyWithoutVersion", func(t *testing.T) {
-		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		// Test with diskEncryptionKey (without version - should link to CryptoKey)
 		diskKeyName := fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-key", projectID)
@@ -648,7 +648,7 @@ func TestComputeInstance(t *testing.T) {
 	})
 
 	t.Run("GetWithServiceAccount", func(t *testing.T) {
-		wrapper := manual.NewComputeInstance(mockClient, projectID, zone)
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 
 		// Test with service account email
 		serviceAccountEmail := "test-service-account@test-project-id.iam.gserviceaccount.com"

@@ -9,6 +9,7 @@ alwaysApply: false
 This document provides comprehensive rules and patterns for creating Azure manual adapters in the Overmind platform. Follow these guidelines to ensure consistency, maintainability, and proper integration with the SDP (State Description Protocol) framework.
 
 ## Table of Contents
+
 1. [Adapter Structure and Naming](#adapter-structure-and-naming)
 2. [Wrapper Type Selection](#wrapper-type-selection)
 3. [Base Struct Selection](#base-struct-selection)
@@ -24,10 +25,12 @@ This document provides comprehensive rules and patterns for creating Azure manua
 ## Adapter Structure and Naming
 
 ### File Naming Convention
+
 - Use kebab-case for file names: `compute-instance.go`, `big-query-table.go`, `cloud-kms-crypto-key.go`
 - Test files should follow the same pattern with `_test.go` suffix: `compute-instance_test.go`
 
 ### Package and Import Structure
+
 ```go
 package manual
 
@@ -49,6 +52,7 @@ import (
 ```
 
 ### Struct Naming
+
 - Wrapper struct: `{resourceName}Wrapper` (e.g., `computeInstanceWrapper`, `bigQueryTableWrapper`)
 - Use camelCase with first letter lowercase for private structs
 - Constructor function: `New{ResourceName}` (e.g., `NewComputeInstance`, `NewBigQueryTable`)
@@ -58,24 +62,32 @@ import (
 Choose the appropriate wrapper interface based on Azure API capabilities:
 
 ### `Wrapper` (GET only)
+
 Use when the Azure API only supports individual resource retrieval:
+
 - Resources without list endpoints
 - Resources that require specific identifiers for retrieval
 
 ### `ListableWrapper` (GET + LIST)
+
 Use when the Azure API supports listing all resources in a scope:
+
 - Compute Virtual Machines (per resource group)
 - Compute Disks (per resource group)
 - Network Interfaces (per resource group)
 - Resources scoped to resource groups or subscriptions
 
 ### `SearchableWrapper` (GET + SEARCH)
+
 Use when the Azure API supports filtering/searching resources:
+
 - Resources that can be queried with filters
 - Resources that support tag-based or property-based searches
 
 ### `SearchableListableWrapper` (GET + LIST + SEARCH)
+
 Use when the Azure API supports both listing and searching:
+
 - Currently not used in existing adapters, but available for complex resources
 
 ## Base Struct Selection
@@ -83,7 +95,9 @@ Use when the Azure API supports both listing and searching:
 Choose the appropriate base struct based on Azure resource scope:
 
 ### `ResourceGroupBase` - Resource Group Scoped Resources
+
 For resources scoped to a specific resource group:
+
 ```go
 type computeVirtualMachineWrapper struct {
     client clients.VirtualMachinesClient
@@ -106,7 +120,9 @@ func NewComputeVirtualMachine(client clients.VirtualMachinesClient, subscription
 **Examples:** Compute Virtual Machines, Compute Disks, Network Interfaces, Network Security Groups
 
 ### `SubscriptionBase` - Subscription-Level Resources
+
 For resources scoped to the entire subscription:
+
 ```go
 type subscriptionWrapper struct {
     client clients.SubscriptionClient
@@ -130,7 +146,9 @@ func NewSubscription(client clients.SubscriptionClient, subscriptionID string) s
 ## Required Methods Implementation
 
 ### IAM Permissions
+
 Always implement with specific Azure RBAC permissions:
+
 ```go
 func (c computeVirtualMachineWrapper) IAMPermissions() []string {
     return []string{
@@ -140,7 +158,9 @@ func (c computeVirtualMachineWrapper) IAMPermissions() []string {
 ```
 
 ### Predefined Role
+
 Always implement with the most restrictive Azure built-in role:
+
 ```go
 func (c computeVirtualMachineWrapper) PredefinedRole() string {
     return "Reader" // or more specific role like "Virtual Machine Contributor" if write access needed
@@ -148,7 +168,9 @@ func (c computeVirtualMachineWrapper) PredefinedRole() string {
 ```
 
 ### Potential Links
+
 Document all possible linked resources:
+
 ```go
 func (c computeVirtualMachineWrapper) PotentialLinks() map[shared.ItemType]bool {
     return shared.NewItemTypesSet(
@@ -165,7 +187,9 @@ func (c computeVirtualMachineWrapper) PotentialLinks() map[shared.ItemType]bool 
 ## Terraform Mappings
 
 ### GET Method (Direct ID Match)
+
 Use when Terraform resource has a unique identifier that directly matches your adapter's unique attribute:
+
 ```go
 func (c computeVirtualMachineWrapper) TerraformMappings() []*sdp.TerraformMapping {
     return []*sdp.TerraformMapping{
@@ -189,7 +213,9 @@ func (c computeVirtualMachineWrapper) TerraformMappings() []*sdp.TerraformMappin
 ```
 
 ### SEARCH Method (Multiple Parameters)
+
 Use when Terraform resource requires multiple parameters or different ID format:
+
 ```go
 func (b resourceWrapper) TerraformMappings() []*sdp.TerraformMapping {
     return []*sdp.TerraformMapping{
@@ -205,7 +231,9 @@ func (b resourceWrapper) TerraformMappings() []*sdp.TerraformMapping {
 ```
 
 ### Multiple Terraform Mappings
+
 For resources that can be referenced in multiple ways:
+
 ```go
 func (c resourceWrapper) TerraformMappings() []*sdp.TerraformMapping {
     return []*sdp.TerraformMapping{
@@ -224,7 +252,9 @@ func (c resourceWrapper) TerraformMappings() []*sdp.TerraformMapping {
 ## Get and Search Lookups
 
 ### Single Key Lookup
+
 For resources with a single unique identifier:
+
 ```go
 var ComputeVirtualMachineLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeVirtualMachine)
 
@@ -236,7 +266,9 @@ func (c computeVirtualMachineWrapper) GetLookups() sources.ItemTypeLookups {
 ```
 
 ### Multiple Keys Lookup (Order Matters)
+
 The order of lookups determines the order of `queryParts` in the `Get` method:
+
 ```go
 var (
     ResourceGroupLookupByName = shared.NewItemTypeLookup("name", azureshared.ResourceGroup)
@@ -251,7 +283,7 @@ func (b subnetWrapper) GetLookups() sources.ItemTypeLookups {
     }
 }
 
-func (b subnetWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (b subnetWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
     resourceGroup := queryParts[0]  // From ResourceGroupLookupByName
     vnetName := queryParts[1]       // From VirtualNetworkLookupByName
     subnetName := queryParts[2]     // From SubnetLookupByName
@@ -260,7 +292,9 @@ func (b subnetWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item
 ```
 
 ### Multiple Keys with Composite Lookup
+
 For complex hierarchical resources:
+
 ```go
 var (
     SubscriptionLookupByID = shared.NewItemTypeLookup("id", azureshared.Subscription)
@@ -270,15 +304,17 @@ var (
 
 func (c resourceWrapper) GetLookups() sources.ItemTypeLookups {
     return sources.ItemTypeLookups{
-        SubscriptionLookupByID,        // First key: subscription ID
-        ResourceGroupLookupByName,      // Second key: resource group name
-        ResourceLookupByName,           // Third key: resource name
+        SubscriptionLookupByID,     // First key: subscription ID
+        ResourceGroupLookupByName,  // Second key: resource group name
+        ResourceLookupByName,       // Third key: resource name
     }
 }
 ```
 
 ### Search Lookups
+
 Define search parameters for SearchableWrapper:
+
 ```go
 // Single search lookup
 func (b resourceWrapper) SearchLookups() []sources.ItemTypeLookups {
@@ -306,7 +342,9 @@ func (c resourceWrapper) SearchLookups() []sources.ItemTypeLookups {
 ## Linked Item Queries
 
 ### Basic Pattern
+
 Always use this pattern for creating linked item queries:
+
 ```go
 sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
     Query: &sdp.Query{
@@ -323,7 +361,9 @@ sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQue
 ```
 
 ### Resource ID Extraction
+
 Use helper functions for extracting parameters from Azure resource IDs:
+
 ```go
 // Extract resource name from Azure resource ID
 // ID: /subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Compute/disks/{diskName}
@@ -331,12 +371,15 @@ diskName := azureshared.ExtractResourceName(*vm.Properties.StorageProfile.OSDisk
 ```
 
 ### Composite Lookup Keys
+
 Use for multi-parameter queries:
+
 ```go
 Query: shared.CompositeLookupKey(resourceGroup, resourceName)
 ```
 
 ### Blast Propagation Rules
+
 - **In: true, Out: true** - Tightly coupled resources (parent-child relationships)
 - **In: true, Out: false** - This resource depends on linked resource (e.g., disk depends on image)
 - **In: false, Out: true** - Linked resource depends on this resource (e.g., instance depends on disk)
@@ -344,6 +387,7 @@ Query: shared.CompositeLookupKey(resourceGroup, resourceName)
 ### Common Linked Resource Patterns
 
 #### Network Resources
+
 ```go
 // Extract network interface name from Azure resource ID
 if vm.Properties.NetworkProfile != nil && len(vm.Properties.NetworkProfile.NetworkInterfaces) > 0 {
@@ -355,7 +399,7 @@ if vm.Properties.NetworkProfile != nil && len(vm.Properties.NetworkProfile.Netwo
                     Type:   azureshared.NetworkNetworkInterface.String(),
                     Method: sdp.QueryMethod_GET,
                     Query:  nicName,
-                    Scope:  c.DefaultScope(), // Network interfaces are scoped to resource group
+                    Scope:  scope, // Network interfaces are scoped to resource group
                 },
                 BlastPropagation: &sdp.BlastPropagation{
                     In:  true,
@@ -368,6 +412,7 @@ if vm.Properties.NetworkProfile != nil && len(vm.Properties.NetworkProfile.Netwo
 ```
 
 #### Disk Resources
+
 ```go
 // Extract disk name from Azure resource ID
 if vm.Properties.StorageProfile != nil && vm.Properties.StorageProfile.OSDisk != nil {
@@ -378,7 +423,7 @@ if vm.Properties.StorageProfile != nil && vm.Properties.StorageProfile.OSDisk !=
                 Type:   azureshared.ComputeDisk.String(),
                 Method: sdp.QueryMethod_GET,
                 Query:  diskName,
-                Scope:  c.DefaultScope(),
+                Scope:  scope,
             },
             BlastPropagation: &sdp.BlastPropagation{
                 In:  true,
@@ -392,21 +437,29 @@ if vm.Properties.StorageProfile != nil && vm.Properties.StorageProfile.OSDisk !=
 ## Error Handling
 
 ### Standard Error Pattern
+
 Always use source-specific error wrapping:
+
 ```go
 if err != nil {
-    return nil, azureshared.QueryError(err, c.DefaultScope(), c.Type())
+    return nil, azureshared.QueryError(err, scope, c.Type())
 }
 ```
 
 ### Pager Pattern
+
 Handle Azure SDK pagers consistently:
+
 ```go
-pager := c.client.NewListPager(c.ResourceGroup(), nil)
+resourceGroup := azureshared.ResourceGroupFromScope(scope)
+if resourceGroup == "" {
+    resourceGroup = c.ResourceGroup()
+}
+pager := c.client.NewListPager(resourceGroup, nil)
 for pager.More() {
     page, err := pager.NextPage(ctx)
     if err != nil {
-        return nil, azureshared.QueryError(err, c.DefaultScope(), c.Type())
+        return nil, azureshared.QueryError(err, scope, c.Type())
     }
     for _, item := range page.Value {
         // Process item...
@@ -415,10 +468,12 @@ for pager.More() {
 ```
 
 ### Stream Error Handling
+
 For streaming operations:
+
 ```go
 if err != nil {
-    stream.SendError(azureshared.QueryError(err, c.DefaultScope(), c.Type()))
+    stream.SendError(azureshared.QueryError(err, scope, c.Type()))
     return
 }
 
@@ -432,7 +487,9 @@ if sdpErr != nil {
 ## Testing Patterns
 
 ### Test Structure
+
 Follow this exact pattern for all adapter tests:
+
 ```go
 func TestComputeVirtualMachine(t *testing.T) {
     ctx := context.Background()
@@ -485,6 +542,7 @@ func TestComputeVirtualMachine(t *testing.T) {
 ```
 
 ### Required Test Cases
+
 - **Get method**: Test successful retrieval and error cases
 - **StaticTests**: Test linked item queries using `shared.RunStaticTests`
 - **HealthCheck**: Test health status mapping (if applicable)
@@ -493,7 +551,9 @@ func TestComputeVirtualMachine(t *testing.T) {
 - **Interface compliance**: Verify adapter implements correct interfaces
 
 ### Test Helper Functions
+
 Create helper functions for test data:
+
 ```go
 func createAzureVirtualMachine(vmName string, provisioningState string) *armcompute.VirtualMachine {
     return &armcompute.VirtualMachine{
@@ -510,7 +570,9 @@ func createAzureVirtualMachine(vmName string, provisioningState string) *armcomp
 ```
 
 ### Mock Expectations
+
 Use gomock for client mocking:
+
 ```go
 mockClient := mocks.NewMockVirtualMachinesClient(ctrl)
 mockClient.EXPECT().Get(ctx, resourceGroup, vmName, nil).Return(expectedResult, nil)
@@ -519,7 +581,9 @@ mockClient.EXPECT().Get(ctx, resourceGroup, vmName, nil).Return(expectedResult, 
 ## Client Interface Patterns
 
 ### Typed Client Interfaces
+
 Define typed client interfaces in the clients package:
+
 ```go
 // In sources/azure/clients/virtual-machines-client.go
 type VirtualMachinesClient interface {
@@ -534,7 +598,9 @@ func NewVirtualMachinesClient(client *armcompute.VirtualMachinesClient) VirtualM
 ```
 
 ### Client Implementation
+
 Implement the interface with proper error handling:
+
 ```go
 type virtualMachinesClientAdapter struct {
     client *armcompute.VirtualMachinesClient
@@ -552,7 +618,9 @@ func (c *virtualMachinesClientAdapter) NewListPager(resourceGroupName string, op
 ## Common Gotchas and Best Practices
 
 ### 1. Unique Attribute Consistency
+
 Ensure the `UniqueAttribute` in the SDP item matches the lookup key:
+
 ```go
 // If using composite lookup key
 err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(values...))
@@ -564,7 +632,9 @@ sdpItem := &sdp.Item{
 ```
 
 ### 2. Scope Handling
+
 Use appropriate scope helper functions:
+
 ```go
 // For resource group scoped resources
 scope := fmt.Sprintf("%s.%s", subscriptionID, resourceGroup)
@@ -574,14 +644,18 @@ scope := subscriptionID
 ```
 
 ### 3. Attributes and Tags
+
 Convert Azure SDK structs to attributes and tags:
+
 ```go
 attributes, err := shared.ToAttributesWithExclude(vm, "tags")
 tags := convertAzureTags(vm.Tags) // Convert map[string]*string to map[string]string
 ```
 
 ### 4. Health Status Mapping
+
 Map Azure resource provisioning states to SDP health statuses:
+
 ```go
 switch *vm.Properties.ProvisioningState {
 case "Succeeded":
@@ -596,9 +670,11 @@ default:
 ```
 
 ### 5. Multiple Query Parameters
+
 For resources requiring multiple parameters:
+
 ```go
-func (b resourceWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (b resourceWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
     resourceGroup := queryParts[0]  // First parameter
     resourceName := queryParts[1]   // Second parameter
     // ... implementation
@@ -606,7 +682,9 @@ func (b resourceWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.It
 ```
 
 ### 6. Conditional Linked Queries
+
 Only create linked queries when the referenced resource exists:
+
 ```go
 if vm.Properties.StorageProfile != nil && vm.Properties.StorageProfile.OSDisk != nil {
     if vm.Properties.StorageProfile.OSDisk.ManagedDisk != nil && vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID != nil {
@@ -616,7 +694,9 @@ if vm.Properties.StorageProfile != nil && vm.Properties.StorageProfile.OSDisk !=
 ```
 
 ### 7. Resource ID Validation
+
 Always validate extracted resource IDs:
+
 ```go
 if resourceID != nil && *resourceID != "" {
     resourceName := azureshared.ExtractResourceName(*resourceID)
@@ -627,7 +707,9 @@ if resourceID != nil && *resourceID != "" {
 ```
 
 ### 8. Adapter Registration
+
 Register adapters in the main adapters file with proper scoping:
+
 ```go
 // Register resource group scoped adapters
 for _, resourceGroup := range resourceGroups {
@@ -650,7 +732,9 @@ adapters = append(adapters,
 ```
 
 ### 9. Documentation Comments
+
 Always include Azure REST API documentation URLs in comments:
+
 ```go
 // Get retrieves a virtual machine by its name
 // Reference: https://learn.microsoft.com/en-us/rest/api/compute/virtual-machines/get
@@ -658,7 +742,9 @@ Always include Azure REST API documentation URLs in comments:
 ```
 
 ### 10. Error Message Consistency
+
 Use consistent error messages and include context:
+
 ```go
 return nil, &sdp.QueryError{
     ErrorType:   sdp.QueryError_OTHER,

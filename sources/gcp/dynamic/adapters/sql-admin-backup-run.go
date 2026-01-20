@@ -26,9 +26,12 @@ var _ = registerableAdapter{
 	},
 	blastPropagation: map[string]*gcpshared.Impact{
 		"instance": {
-			ToSDPItemType:    gcpshared.SQLAdminInstance,
-			Description:      "They are tightly coupled",
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+			ToSDPItemType: gcpshared.SQLAdminInstance,
+			Description:   "They are tightly coupled",
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
 		},
 		"diskEncryptionConfiguration.kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		// The Cloud KMS key version used to encrypt the backup.

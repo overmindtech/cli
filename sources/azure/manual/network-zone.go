@@ -35,21 +35,25 @@ func NewNetworkZone(client clients.ZonesClient, subscriptionID, resourceGroup st
 	}
 }
 
-func (n networkZoneWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	pager := n.client.NewListByResourceGroupPager(n.ResourceGroup(), nil)
+func (n networkZoneWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	pager := n.client.NewListByResourceGroupPager(resourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
+			return nil, azureshared.QueryError(err, scope, n.Type())
 		}
 
 		for _, zone := range page.Value {
 			if zone.Name == nil {
 				continue
 			}
-			item, sdpErr := n.azureZoneToSDPItem(zone)
+			item, sdpErr := n.azureZoneToSDPItem(zone, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -61,19 +65,23 @@ func (n networkZoneWrapper) List(ctx context.Context) ([]*sdp.Item, *sdp.QueryEr
 }
 
 // ref: https://learn.microsoft.com/en-us/rest/api/dns/zones/list-by-resource-group?view=rest-dns-2018-05-01&tabs=HTTP
-func (n networkZoneWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
-	pager := n.client.NewListByResourceGroupPager(n.ResourceGroup(), nil)
+func (n networkZoneWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	pager := n.client.NewListByResourceGroupPager(resourceGroup, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
-			stream.SendError(azureshared.QueryError(err, n.DefaultScope(), n.Type()))
+			stream.SendError(azureshared.QueryError(err, scope, n.Type()))
 			return
 		}
 		for _, zone := range page.Value {
 			if zone.Name == nil {
 				continue
 			}
-			item, sdpErr := n.azureZoneToSDPItem(zone)
+			item, sdpErr := n.azureZoneToSDPItem(zone, scope)
 			if sdpErr != nil {
 				stream.SendError(sdpErr)
 				continue
@@ -84,21 +92,21 @@ func (n networkZoneWrapper) ListStream(ctx context.Context, stream discovery.Que
 	}
 }
 
-func (n networkZoneWrapper) azureZoneToSDPItem(zone *armdns.Zone) (*sdp.Item, *sdp.QueryError) {
+func (n networkZoneWrapper) azureZoneToSDPItem(zone *armdns.Zone, scope string) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(zone, "tags")
 	if err != nil {
-		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
 
 	if zone.Name == nil {
-		return nil, azureshared.QueryError(errors.New("zone name is nil"), n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(errors.New("zone name is nil"), scope, n.Type())
 	}
 
 	sdpItem := &sdp.Item{
 		Type:            azureshared.NetworkZone.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
-		Scope:           n.DefaultScope(),
+		Scope:           scope,
 		Tags:            azureshared.ConvertAzureTags(zone.Tags),
 	}
 
@@ -130,9 +138,9 @@ func (n networkZoneWrapper) azureZoneToSDPItem(zone *armdns.Zone) (*sdp.Item, *s
 				vnetName := azureshared.ExtractResourceName(*vnetRef.ID)
 				if vnetName != "" {
 					// Extract subscription ID and resource group from the resource ID to determine scope
-					scope := azureshared.ExtractScopeFromResourceID(*vnetRef.ID)
-					if scope == "" {
-						scope = n.DefaultScope()
+					linkedScope := azureshared.ExtractScopeFromResourceID(*vnetRef.ID)
+					if linkedScope == "" {
+						linkedScope = scope
 					}
 
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -140,7 +148,7 @@ func (n networkZoneWrapper) azureZoneToSDPItem(zone *armdns.Zone) (*sdp.Item, *s
 							Type:   azureshared.NetworkVirtualNetwork.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  vnetName,
-							Scope:  scope,
+							Scope:  linkedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// DNS zone depends on virtual network for registration
@@ -162,9 +170,9 @@ func (n networkZoneWrapper) azureZoneToSDPItem(zone *armdns.Zone) (*sdp.Item, *s
 				vnetName := azureshared.ExtractResourceName(*vnetRef.ID)
 				if vnetName != "" {
 					// Extract subscription ID and resource group from the resource ID to determine scope
-					scope := azureshared.ExtractScopeFromResourceID(*vnetRef.ID)
-					if scope == "" {
-						scope = n.DefaultScope()
+					linkedScope := azureshared.ExtractScopeFromResourceID(*vnetRef.ID)
+					if linkedScope == "" {
+						linkedScope = scope
 					}
 
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -172,7 +180,7 @@ func (n networkZoneWrapper) azureZoneToSDPItem(zone *armdns.Zone) (*sdp.Item, *s
 							Type:   azureshared.NetworkVirtualNetwork.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  vnetName,
-							Scope:  scope,
+							Scope:  linkedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// DNS zone depends on virtual network for resolution
@@ -195,7 +203,7 @@ func (n networkZoneWrapper) azureZoneToSDPItem(zone *armdns.Zone) (*sdp.Item, *s
 			Type:   azureshared.NetworkDNSRecordSet.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  zoneName,
-			Scope:  n.DefaultScope(),
+			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
 			// Record sets are child resources of the DNS zone
@@ -231,18 +239,22 @@ func (n networkZoneWrapper) azureZoneToSDPItem(zone *armdns.Zone) (*sdp.Item, *s
 }
 
 // ref: https://learn.microsoft.com/en-us/rest/api/dns/zones/get?view=rest-dns-2018-05-01&tabs=HTTP
-func (n networkZoneWrapper) Get(ctx context.Context, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+func (n networkZoneWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
-		return nil, azureshared.QueryError(errors.New("query must be exactly one part and be a zone name"), n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(errors.New("query must be exactly one part and be a zone name"), scope, n.Type())
 	}
 	zoneName := queryParts[0]
 
-	zone, err := n.client.Get(ctx, n.ResourceGroup(), zoneName, nil)
+	resourceGroup := azureshared.ResourceGroupFromScope(scope)
+	if resourceGroup == "" {
+		resourceGroup = n.ResourceGroup()
+	}
+	zone, err := n.client.Get(ctx, resourceGroup, zoneName, nil)
 	if err != nil {
-		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
 
-	return n.azureZoneToSDPItem(&zone.Zone)
+	return n.azureZoneToSDPItem(&zone.Zone, scope)
 }
 
 func (n networkZoneWrapper) GetLookups() sources.ItemTypeLookups {
