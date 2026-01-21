@@ -3,97 +3,148 @@ package cmd
 import (
 	"testing"
 	"time"
-
-	"github.com/overmindtech/cli/sdp-go"
-	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 func TestBlastRadiusConfigCreation(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name                       string
-		maxDepth                   int32
-		maxItems                   int32
-		maxTime                    time.Duration
-		expectConfig               bool
-		expectedMaxItems           int32
-		expectedLinkDepth          int32
-		expectMaxBlastRadiusTime   bool
-		expectedMaxBlastRadiusTime time.Duration
+		name                             string
+		blastRadiusMaxDepth              int32
+		blastRadiusMaxItems              int32
+		blastRadiusMaxTime               time.Duration
+		changeAnalysisMaxTimeout         time.Duration
+		expectBlastRadiusConfig          bool
+		expectedBlastRadiusMaxItems      int32
+		expectedBlastRadiusLinkDepth     int32
+		expectChangeAnalysisMaxTimeout   bool
+		expectedChangeAnalysisMaxTimeout time.Duration
+		expectError                      bool
+		expectedErrorMsg                 string
 	}{
 		{
-			name:         "No flags specified",
-			maxDepth:     0,
-			maxItems:     0,
-			maxTime:      0,
-			expectConfig: false,
+			name:                    "No flags specified",
+			blastRadiusMaxDepth:     0,
+			blastRadiusMaxItems:     0,
+			blastRadiusMaxTime:      0,
+			expectBlastRadiusConfig: false,
 		},
 		{
-			name:              "Only maxDepth specified",
-			maxDepth:          5,
-			maxItems:          0,
-			maxTime:           0,
-			expectConfig:      true,
-			expectedMaxItems:  0,
-			expectedLinkDepth: 5,
+			name:                         "Only maxDepth specified",
+			blastRadiusMaxDepth:          5,
+			blastRadiusMaxItems:          0,
+			blastRadiusMaxTime:           0,
+			expectBlastRadiusConfig:      true,
+			expectedBlastRadiusMaxItems:  0,
+			expectedBlastRadiusLinkDepth: 5,
 		},
 		{
-			name:              "Only maxItems specified",
-			maxDepth:          0,
-			maxItems:          1000,
-			maxTime:           0,
-			expectConfig:      true,
-			expectedMaxItems:  1000,
-			expectedLinkDepth: 0,
+			name:                         "Only maxItems specified",
+			blastRadiusMaxDepth:          0,
+			blastRadiusMaxItems:          1000,
+			blastRadiusMaxTime:           0,
+			expectBlastRadiusConfig:      true,
+			expectedBlastRadiusMaxItems:  1000,
+			expectedBlastRadiusLinkDepth: 0,
 		},
 		{
-			name:         "Only maxTime specified - BUG: creates config with zero values",
-			maxDepth:     0,
-			maxItems:     0,
-			maxTime:      10 * time.Minute,
-			expectConfig: true,
+			name:                    "Only maxTime specified - BUG: creates config with zero values",
+			blastRadiusMaxDepth:     0,
+			blastRadiusMaxItems:     0,
+			blastRadiusMaxTime:      10 * time.Minute,
+			expectBlastRadiusConfig: true,
 			// BUG DEMONSTRATED: When only maxTime is specified, a BlastRadiusConfig is created
 			// with MaxItems=0 and LinkDepth=0. These explicit zeros will override the server's
 			// defaults (100,000 and 1,000), effectively breaking the blast radius calculation.
 			// The server should treat 0 values as "use defaults" rather than literal zeros.
-			expectedMaxItems:           0,
-			expectedLinkDepth:          0,
-			expectMaxBlastRadiusTime:   true,
-			expectedMaxBlastRadiusTime: 10 * time.Minute,
+			expectedBlastRadiusMaxItems:      0,
+			expectedBlastRadiusLinkDepth:     0,
+			expectChangeAnalysisMaxTimeout:   true,
+			expectedChangeAnalysisMaxTimeout: 15 * time.Minute, // maxTime * 1.5
 		},
 		{
-			name:                       "All flags specified",
-			maxDepth:                   5,
-			maxItems:                   1000,
-			maxTime:                    15 * time.Minute,
-			expectConfig:               true,
-			expectedMaxItems:           1000,
-			expectedLinkDepth:          5,
-			expectMaxBlastRadiusTime:   true,
-			expectedMaxBlastRadiusTime: 15 * time.Minute,
+			name:                             "All flags specified",
+			blastRadiusMaxDepth:              5,
+			blastRadiusMaxItems:              1000,
+			blastRadiusMaxTime:               15 * time.Minute,
+			changeAnalysisMaxTimeout:         20 * time.Minute,
+			expectBlastRadiusConfig:          true,
+			expectedBlastRadiusMaxItems:      1000,
+			expectedBlastRadiusLinkDepth:     5,
+			expectChangeAnalysisMaxTimeout:   true,
+			expectedChangeAnalysisMaxTimeout: 20 * time.Minute, // changeAnalysisMaxTimeout overrides maxTime
 		},
 		{
-			name:                       "maxTime and maxDepth specified",
-			maxDepth:                   3,
-			maxItems:                   0,
-			maxTime:                    5 * time.Minute,
-			expectConfig:               true,
-			expectedMaxItems:           0,
-			expectedLinkDepth:          3,
-			expectMaxBlastRadiusTime:   true,
-			expectedMaxBlastRadiusTime: 5 * time.Minute,
+			name:                             "maxTime and maxDepth specified",
+			blastRadiusMaxDepth:              3,
+			blastRadiusMaxItems:              0,
+			blastRadiusMaxTime:               5 * time.Minute,
+			expectBlastRadiusConfig:          true,
+			expectedBlastRadiusMaxItems:      0,
+			expectedBlastRadiusLinkDepth:     3,
+			expectChangeAnalysisMaxTimeout:   true,
+			expectedChangeAnalysisMaxTimeout: 7*time.Minute + 30*time.Second, // maxTime * 1.5
 		},
 		{
-			name:                       "maxTime and maxItems specified",
-			maxDepth:                   0,
-			maxItems:                   500,
-			maxTime:                    20 * time.Minute,
-			expectConfig:               true,
-			expectedMaxItems:           500,
-			expectedLinkDepth:          0,
-			expectMaxBlastRadiusTime:   true,
-			expectedMaxBlastRadiusTime: 20 * time.Minute,
+			name:                             "maxTime and maxItems specified",
+			blastRadiusMaxDepth:              0,
+			blastRadiusMaxItems:              500,
+			blastRadiusMaxTime:               20 * time.Minute,
+			expectBlastRadiusConfig:          true,
+			expectedBlastRadiusMaxItems:      500,
+			expectedBlastRadiusLinkDepth:     0,
+			expectChangeAnalysisMaxTimeout:   true,
+			expectedChangeAnalysisMaxTimeout: 30 * time.Minute, // maxTime * 1.5
+		},
+		{
+			name:                             "Only changeAnalysisMaxTimeout specified",
+			blastRadiusMaxDepth:              0,
+			blastRadiusMaxItems:              0,
+			blastRadiusMaxTime:               0,
+			changeAnalysisMaxTimeout:         10 * time.Minute,
+			expectBlastRadiusConfig:          true,
+			expectedBlastRadiusMaxItems:      0,
+			expectedBlastRadiusLinkDepth:     0,
+			expectChangeAnalysisMaxTimeout:   true,
+			expectedChangeAnalysisMaxTimeout: 10 * time.Minute,
+		},
+		{
+			name:                     "changeAnalysisMaxTimeout too low",
+			blastRadiusMaxDepth:      0,
+			blastRadiusMaxItems:      0,
+			blastRadiusMaxTime:       0,
+			changeAnalysisMaxTimeout: 30 * time.Second,
+			expectBlastRadiusConfig:  true,
+			expectError:              true,
+			expectedErrorMsg:         "--change-analysis-max-timeout must be between 1 minute and 30 minutes",
+		},
+		{
+			name:                     "changeAnalysisMaxTimeout too high",
+			blastRadiusMaxDepth:      0,
+			blastRadiusMaxItems:      0,
+			blastRadiusMaxTime:       0,
+			changeAnalysisMaxTimeout: 31 * time.Minute,
+			expectBlastRadiusConfig:  true,
+			expectError:              true,
+			expectedErrorMsg:         "--change-analysis-max-timeout must be between 1 minute and 30 minutes",
+		},
+		{
+			name:                    "maxTime results in timeout too low",
+			blastRadiusMaxDepth:     0,
+			blastRadiusMaxItems:     0,
+			blastRadiusMaxTime:      30 * time.Second, // * 1.5 = 45 seconds, which is < 1 minute
+			expectBlastRadiusConfig: true,
+			expectError:             true,
+			expectedErrorMsg:        "--change-analysis-max-timeout must be between 1 minute and 30 minutes",
+		},
+		{
+			name:                    "maxTime results in timeout too high",
+			blastRadiusMaxDepth:     0,
+			blastRadiusMaxItems:     0,
+			blastRadiusMaxTime:      21 * time.Minute, // * 1.5 = 31.5 minutes, which is > 30 minutes
+			expectBlastRadiusConfig: true,
+			expectError:             true,
+			expectedErrorMsg:        "--change-analysis-max-timeout must be between 1 minute and 30 minutes",
 		},
 	}
 
@@ -101,44 +152,54 @@ func TestBlastRadiusConfigCreation(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			// This is the logic from changes_submit_plan.go lines 222-235
-			var blastRadiusConfigOverride *sdp.BlastRadiusConfig
-			if tt.maxDepth > 0 || tt.maxItems > 0 || tt.maxTime > 0 {
-				blastRadiusConfigOverride = &sdp.BlastRadiusConfig{
-					MaxItems:  tt.maxItems,
-					LinkDepth: tt.maxDepth,
+			blastRadiusConfigOverride, err := createBlastRadiusConfig(tt.blastRadiusMaxDepth, tt.blastRadiusMaxItems, tt.blastRadiusMaxTime, tt.changeAnalysisMaxTimeout)
+
+			// Check error expectations
+			if tt.expectError {
+				if err == nil {
+					t.Errorf("Expected error, but got nil")
+					return
 				}
-				if tt.maxTime > 0 {
-					blastRadiusConfigOverride.MaxBlastRadiusTime = durationpb.New(tt.maxTime)
+				if err.Error() != tt.expectedErrorMsg {
+					t.Errorf("Expected error message %q, but got %q", tt.expectedErrorMsg, err.Error())
 				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("Unexpected error: %v", err)
+				return
 			}
 
 			// Verify expectations
-			if tt.expectConfig && blastRadiusConfigOverride == nil {
+			if tt.expectBlastRadiusConfig && blastRadiusConfigOverride == nil {
 				t.Errorf("Expected BlastRadiusConfig to be created, but got nil")
 				return
 			}
-			if !tt.expectConfig && blastRadiusConfigOverride != nil {
+			if !tt.expectBlastRadiusConfig && blastRadiusConfigOverride != nil {
 				t.Errorf("Expected BlastRadiusConfig to be nil, but got %+v", blastRadiusConfigOverride)
 				return
 			}
 
-			if tt.expectConfig {
-				if blastRadiusConfigOverride.GetMaxItems() != tt.expectedMaxItems {
-					t.Errorf("Expected MaxItems to be %d, but got %d", tt.expectedMaxItems, blastRadiusConfigOverride.GetMaxItems())
+			if tt.expectBlastRadiusConfig {
+				if blastRadiusConfigOverride.GetMaxItems() != tt.expectedBlastRadiusMaxItems {
+					t.Errorf("Expected MaxItems to be %d, but got %d", tt.expectedBlastRadiusMaxItems, blastRadiusConfigOverride.GetMaxItems())
 				}
-				if blastRadiusConfigOverride.GetLinkDepth() != tt.expectedLinkDepth {
-					t.Errorf("Expected LinkDepth to be %d, but got %d", tt.expectedLinkDepth, blastRadiusConfigOverride.GetLinkDepth())
+				if blastRadiusConfigOverride.GetLinkDepth() != tt.expectedBlastRadiusLinkDepth {
+					t.Errorf("Expected LinkDepth to be %d, but got %d", tt.expectedBlastRadiusLinkDepth, blastRadiusConfigOverride.GetLinkDepth())
 				}
-				if tt.expectMaxBlastRadiusTime {
-					if blastRadiusConfigOverride.GetMaxBlastRadiusTime() == nil {
-						t.Errorf("Expected MaxBlastRadiusTime to be set, but got nil")
-					} else if blastRadiusConfigOverride.GetMaxBlastRadiusTime().AsDuration() != tt.expectedMaxBlastRadiusTime {
-						t.Errorf("Expected MaxBlastRadiusTime to be %v, but got %v", tt.expectedMaxBlastRadiusTime, blastRadiusConfigOverride.GetMaxBlastRadiusTime().AsDuration())
+				if tt.expectChangeAnalysisMaxTimeout {
+					if blastRadiusConfigOverride.GetChangeAnalysisMaxTimeout() == nil {
+						t.Errorf("Expected ChangeAnalysisMaxTimeout to be set, but got nil")
+					} else {
+						actualTimeout := blastRadiusConfigOverride.GetChangeAnalysisMaxTimeout().AsDuration()
+						if actualTimeout != tt.expectedChangeAnalysisMaxTimeout {
+							t.Errorf("Expected ChangeAnalysisMaxTimeout to be %v, but got %v", tt.expectedChangeAnalysisMaxTimeout, actualTimeout)
+						}
 					}
 				} else {
-					if blastRadiusConfigOverride.GetMaxBlastRadiusTime() != nil {
-						t.Errorf("Expected MaxBlastRadiusTime to be nil, but got %v", blastRadiusConfigOverride.GetMaxBlastRadiusTime())
+					if blastRadiusConfigOverride.GetChangeAnalysisMaxTimeout() != nil {
+						t.Errorf("Expected ChangeAnalysisMaxTimeout to be nil, but got %v", blastRadiusConfigOverride.GetChangeAnalysisMaxTimeout())
 					}
 				}
 			}
