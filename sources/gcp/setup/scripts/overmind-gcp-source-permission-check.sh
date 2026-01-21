@@ -74,8 +74,10 @@ echo "Checking permissions for service account: ${GCP_OVERMIND_SA}"
 echo "on project: ${GCP_PROJECT_ID}"
 echo ""
 
-# GENERATED: Roles definitions will be inlined here by generate-gcp-scripts.mjs - DO NOT EDIT MANUALLY
-# @generator-inline:generate-gcp-scripts.mjs:overmind-gcp-roles.sh
+# @generator:inline-start:overmind-gcp-roles.sh
+# This block is replaced with inlined role definitions during TypeScript generation
+source "$(dirname "$0")/overmind-gcp-roles.sh"
+# @generator:inline-end
 
 # Fetch the current IAM policy
 echo "Fetching current IAM policy for project ${GCP_PROJECT_ID}..."
