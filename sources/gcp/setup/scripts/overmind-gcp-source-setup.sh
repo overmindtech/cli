@@ -64,8 +64,10 @@ echo "export GCP_OVERMIND_SA=\"${GCP_OVERMIND_SA}\"" >> ./.gcp-source-setup-env
 echo "Using GCP Parent: ${GCP_PARENT}"
 echo "Service Account: ${GCP_OVERMIND_SA}"
 
-# GENERATED: Roles definitions will be inlined here by generate-gcp-scripts.mjs - DO NOT EDIT MANUALLY
-# @generator-inline:generate-gcp-scripts.mjs:overmind-gcp-roles.sh
+# @generator:inline-start:overmind-gcp-roles.sh
+# This block is replaced with inlined role definitions during TypeScript generation
+source "$(dirname "$0")/overmind-gcp-roles.sh"
+# @generator:inline-end
 
 # For project-level parents, create custom role
 if [ "${PARENT_TYPE}" = "project" ]; then
