@@ -70,6 +70,13 @@ type SearchStreamableWrapper interface {
 	SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string)
 }
 
+// WildcardScopeWrapper is an optional interface that wrappers can implement
+// to declare they can handle "*" wildcard scopes efficiently.
+type WildcardScopeWrapper interface {
+	Wrapper
+	SupportsWildcardScope() bool
+}
+
 // SearchableListableWrapper defines an interface for resources that support both searching and listing.
 type SearchableListableWrapper interface {
 	SearchableWrapper
@@ -243,6 +250,13 @@ func (s *standardAdapterCore) Scopes() []string {
 }
 
 func (s *standardAdapterCore) validateScopes(scope string) error {
+	// Allow wildcard scope if the wrapper supports it
+	if scope == "*" {
+		if ws, ok := s.wrapper.(WildcardScopeWrapper); ok && ws.SupportsWildcardScope() {
+			return nil
+		}
+	}
+
 	for _, expectedScope := range s.Scopes() {
 		if scope == expectedScope {
 			return nil
@@ -492,6 +506,14 @@ func (s *standardListableAdapterImpl) Validate() error {
 	}
 
 	return protovalidate.Validate(s.Metadata())
+}
+
+// SupportsWildcardScope delegates to the wrapper if it implements WildcardScopeWrapper
+func (s *standardListableAdapterImpl) SupportsWildcardScope() bool {
+	if ws, ok := s.wrapper.(WildcardScopeWrapper); ok {
+		return ws.SupportsWildcardScope()
+	}
+	return false
 }
 
 // Searchable Adapter Implementation
@@ -881,6 +903,11 @@ func (s *standardSearchableListableAdapterImpl) Search(ctx context.Context, scop
 // SearchStream delegates to the searchable implementation.
 func (s *standardSearchableListableAdapterImpl) SearchStream(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
 	s.searchableImpl.SearchStream(ctx, scope, query, ignoreCache, stream)
+}
+
+// SupportsWildcardScope delegates to the listable implementation.
+func (s *standardSearchableListableAdapterImpl) SupportsWildcardScope() bool {
+	return s.listableImpl.SupportsWildcardScope()
 }
 
 // expectedSearchQueryFormat generates a readable format for the search query.

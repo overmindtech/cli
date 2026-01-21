@@ -7,6 +7,7 @@ import (
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -76,6 +77,12 @@ func (c computeDiskWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
+// SupportsWildcardScope implements the WildcardScopeAdapter interface
+// Always returns true for compute disks since they use aggregatedList
+func (c computeDiskWrapper) SupportsWildcardScope() bool {
+	return true
+}
+
 func (c computeDiskWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	location, err := c.LocationFromScope(scope)
 	if err != nil {
@@ -100,6 +107,12 @@ func (c computeDiskWrapper) Get(ctx context.Context, scope string, queryParts ..
 }
 
 func (c computeDiskWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	// Handle wildcard scope with AggregatedList
+	if scope == "*" {
+		return c.listAggregated(ctx)
+	}
+
+	// Handle specific scope with per-zone List
 	location, err := c.LocationFromScope(scope)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -134,7 +147,63 @@ func (c computeDiskWrapper) List(ctx context.Context, scope string) ([]*sdp.Item
 	return items, nil
 }
 
+// listAggregated uses AggregatedList to fetch all disks across all zones
+func (c computeDiskWrapper) listAggregated(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+	var items []*sdp.Item
+
+	// Get all unique project IDs
+	projectIDs := c.GetProjectIDs()
+
+	for _, projectID := range projectIDs {
+		it := c.client.AggregatedList(ctx, &computepb.AggregatedListDisksRequest{
+			Project:              projectID,
+			ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
+		})
+
+		for {
+			pair, iterErr := it.Next()
+			if errors.Is(iterErr, iterator.Done) {
+				break
+			}
+			if iterErr != nil {
+				return nil, gcpshared.QueryError(iterErr, projectID, c.Type())
+			}
+
+			// Parse scope from pair.Key (e.g., "zones/us-central1-a")
+			scopeLocation, err := gcpshared.ParseAggregatedListScope(projectID, pair.Key)
+			if err != nil {
+				continue // Skip unparseable scopes
+			}
+
+			// Only process if this scope is in our adapter's configured locations
+			if !c.HasLocation(scopeLocation) {
+				continue
+			}
+
+			// Process disks in this scope
+			if pair.Value != nil && pair.Value.GetDisks() != nil {
+				for _, disk := range pair.Value.GetDisks() {
+					item, sdpErr := c.gcpComputeDiskToSDPItem(ctx, disk, scopeLocation)
+					if sdpErr != nil {
+						return nil, sdpErr
+					}
+					items = append(items, item)
+				}
+			}
+		}
+	}
+
+	return items, nil
+}
+
 func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	// Handle wildcard scope with AggregatedList
+	if scope == "*" {
+		c.listAggregatedStream(ctx, stream, cache, cacheKey)
+		return
+	}
+
+	// Handle specific scope with per-zone List
 	location, err := c.LocationFromScope(scope)
 	if err != nil {
 		stream.SendError(&sdp.QueryError{
@@ -167,6 +236,55 @@ func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.Que
 
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
+	}
+}
+
+// listAggregatedStream uses AggregatedList to stream all disks across all zones
+func (c computeDiskWrapper) listAggregatedStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+	// Get all unique project IDs
+	projectIDs := c.GetProjectIDs()
+
+	for _, projectID := range projectIDs {
+		it := c.client.AggregatedList(ctx, &computepb.AggregatedListDisksRequest{
+			Project:              projectID,
+			ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
+		})
+
+		for {
+			pair, iterErr := it.Next()
+			if errors.Is(iterErr, iterator.Done) {
+				break
+			}
+			if iterErr != nil {
+				stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
+				return
+			}
+
+			// Parse scope from pair.Key (e.g., "zones/us-central1-a")
+			scopeLocation, err := gcpshared.ParseAggregatedListScope(projectID, pair.Key)
+			if err != nil {
+				continue // Skip unparseable scopes
+			}
+
+			// Only process if this scope is in our adapter's configured locations
+			if !c.HasLocation(scopeLocation) {
+				continue
+			}
+
+			// Process disks in this scope
+			if pair.Value != nil && pair.Value.GetDisks() != nil {
+				for _, disk := range pair.Value.GetDisks() {
+					item, sdpErr := c.gcpComputeDiskToSDPItem(ctx, disk, scopeLocation)
+					if sdpErr != nil {
+						stream.SendError(sdpErr)
+						continue
+					}
+
+					cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+					stream.SendItem(item)
+				}
+			}
+		}
 	}
 }
 

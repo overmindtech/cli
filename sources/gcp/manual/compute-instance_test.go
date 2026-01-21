@@ -6,6 +6,7 @@ import (
 	"sync"
 	"testing"
 
+	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
@@ -748,6 +749,144 @@ func TestComputeInstance(t *testing.T) {
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
+	})
+
+	t.Run("SupportsWildcardScope", func(t *testing.T) {
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		// Check if adapter implements WildcardScopeAdapter
+		if wildcardAdapter, ok := adapter.(discovery.WildcardScopeAdapter); ok {
+			if !wildcardAdapter.SupportsWildcardScope() {
+				t.Fatal("Expected SupportsWildcardScope to return true")
+			}
+		} else {
+			t.Fatal("Expected adapter to implement WildcardScopeAdapter interface")
+		}
+	})
+
+	t.Run("List with wildcard scope", func(t *testing.T) {
+		zone1 := "us-central1-a"
+		zone2 := "us-central1-b"
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{
+			gcpshared.NewZonalLocation(projectID, zone1),
+			gcpshared.NewZonalLocation(projectID, zone2),
+		})
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		// Create mock aggregated list iterator
+		mockAggregatedIterator := mocks.NewMockInstancesScopedListPairIterator(ctrl)
+
+		// Mock response for zone1
+		mockAggregatedIterator.EXPECT().Next().Return(compute.InstancesScopedListPair{
+			Key: "zones/us-central1-a",
+			Value: &computepb.InstancesScopedList{
+				Instances: []*computepb.Instance{
+					createComputeInstance("instance-1-zone-a", computepb.Instance_RUNNING),
+				},
+			},
+		}, nil)
+
+		// Mock response for zone2
+		mockAggregatedIterator.EXPECT().Next().Return(compute.InstancesScopedListPair{
+			Key: "zones/us-central1-b",
+			Value: &computepb.InstancesScopedList{
+				Instances: []*computepb.Instance{
+					createComputeInstance("instance-1-zone-b", computepb.Instance_RUNNING),
+				},
+			},
+		}, nil)
+
+		// Mock response for a zone not in our config (should be filtered)
+		mockAggregatedIterator.EXPECT().Next().Return(compute.InstancesScopedListPair{
+			Key: "zones/us-west1-a",
+			Value: &computepb.InstancesScopedList{
+				Instances: []*computepb.Instance{
+					createComputeInstance("instance-west", computepb.Instance_RUNNING),
+				},
+			},
+		}, nil)
+
+		// End of iteration
+		mockAggregatedIterator.EXPECT().Next().Return(compute.InstancesScopedListPair{}, iterator.Done)
+
+		// Mock the AggregatedList method
+		mockClient.EXPECT().AggregatedList(ctx, gomock.Any()).DoAndReturn(
+			func(ctx context.Context, req *computepb.AggregatedListInstancesRequest, opts ...any) gcpshared.InstancesScopedListPairIterator {
+				// Verify request parameters
+				if req.GetProject() != projectID {
+					t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
+				}
+				if !req.GetReturnPartialSuccess() {
+					t.Error("Expected ReturnPartialSuccess to be true")
+				}
+				return mockAggregatedIterator
+			},
+		)
+
+		// Check if adapter supports listing
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		// Call List with wildcard scope
+		sdpItems, err := listable.List(ctx, "*", true)
+		if err != nil {
+			t.Fatalf("Expected no error, got: %v", err)
+		}
+
+		// Should return only items from configured zones (zone-a and zone-b, not west1-a)
+		if len(sdpItems) != 2 {
+			t.Fatalf("Expected 2 items (filtered), got: %d", len(sdpItems))
+		}
+
+		// Verify items have correct scopes
+		scopesSeen := make(map[string]bool)
+		for _, item := range sdpItems {
+			scopesSeen[item.GetScope()] = true
+		}
+
+		expectedScopes := []string{
+			fmt.Sprintf("%s.%s", projectID, zone1),
+			fmt.Sprintf("%s.%s", projectID, zone2),
+		}
+
+		for _, expectedScope := range expectedScopes {
+			if !scopesSeen[expectedScope] {
+				t.Errorf("Expected to see scope %s in results", expectedScope)
+			}
+		}
+	})
+
+	t.Run("List with specific scope still works", func(t *testing.T) {
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		mockComputeIterator := mocks.NewMockComputeInstanceIterator(ctrl)
+
+		// Mock normal per-zone List behavior
+		mockComputeIterator.EXPECT().Next().Return(createComputeInstance("test-instance", computepb.Instance_RUNNING), nil)
+		mockComputeIterator.EXPECT().Next().Return(nil, iterator.Done)
+
+		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockComputeIterator)
+
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		// Call List with specific scope (not wildcard)
+		sdpItems, err := listable.List(ctx, wrapper.Scopes()[0], true)
+		if err != nil {
+			t.Fatalf("Expected no error, got: %v", err)
+		}
+
+		if len(sdpItems) != 1 {
+			t.Fatalf("Expected 1 item, got: %d", len(sdpItems))
+		}
 	})
 }
 

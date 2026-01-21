@@ -7,6 +7,7 @@ import (
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -80,6 +81,12 @@ func (c computeInstanceWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
+// SupportsWildcardScope implements the WildcardScopeAdapter interface
+// Always returns true for compute instances since they use aggregatedList
+func (c computeInstanceWrapper) SupportsWildcardScope() bool {
+	return true
+}
+
 func (c computeInstanceWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	location, err := c.LocationFromScope(scope)
 	if err != nil {
@@ -104,6 +111,12 @@ func (c computeInstanceWrapper) Get(ctx context.Context, scope string, queryPart
 }
 
 func (c computeInstanceWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	// Handle wildcard scope with AggregatedList
+	if scope == "*" {
+		return c.listAggregated(ctx)
+	}
+
+	// Handle specific scope with per-zone List
 	location, err := c.LocationFromScope(scope)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -138,7 +151,63 @@ func (c computeInstanceWrapper) List(ctx context.Context, scope string) ([]*sdp.
 	return items, nil
 }
 
+// listAggregated uses AggregatedList to fetch all instances across all zones
+func (c computeInstanceWrapper) listAggregated(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
+	var items []*sdp.Item
+
+	// Get all unique project IDs
+	projectIDs := c.GetProjectIDs()
+
+	for _, projectID := range projectIDs {
+		it := c.client.AggregatedList(ctx, &computepb.AggregatedListInstancesRequest{
+			Project:              projectID,
+			ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
+		})
+
+		for {
+			pair, iterErr := it.Next()
+			if errors.Is(iterErr, iterator.Done) {
+				break
+			}
+			if iterErr != nil {
+				return nil, gcpshared.QueryError(iterErr, projectID, c.Type())
+			}
+
+			// Parse scope from pair.Key (e.g., "zones/us-central1-a")
+			scopeLocation, err := gcpshared.ParseAggregatedListScope(projectID, pair.Key)
+			if err != nil {
+				continue // Skip unparseable scopes
+			}
+
+			// Only process if this scope is in our adapter's configured locations
+			if !c.HasLocation(scopeLocation) {
+				continue
+			}
+
+			// Process instances in this scope
+			if pair.Value != nil && pair.Value.GetInstances() != nil {
+				for _, instance := range pair.Value.GetInstances() {
+					item, sdpErr := c.gcpComputeInstanceToSDPItem(ctx, instance, scopeLocation)
+					if sdpErr != nil {
+						return nil, sdpErr
+					}
+					items = append(items, item)
+				}
+			}
+		}
+	}
+
+	return items, nil
+}
+
 func (c computeInstanceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	// Handle wildcard scope with AggregatedList
+	if scope == "*" {
+		c.listAggregatedStream(ctx, stream, cache, cacheKey)
+		return
+	}
+
+	// Handle specific scope with per-zone List
 	location, err := c.LocationFromScope(scope)
 	if err != nil {
 		stream.SendError(&sdp.QueryError{
@@ -171,6 +240,55 @@ func (c computeInstanceWrapper) ListStream(ctx context.Context, stream discovery
 
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
+	}
+}
+
+// listAggregatedStream uses AggregatedList to stream all instances across all zones
+func (c computeInstanceWrapper) listAggregatedStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+	// Get all unique project IDs
+	projectIDs := c.GetProjectIDs()
+
+	for _, projectID := range projectIDs {
+		it := c.client.AggregatedList(ctx, &computepb.AggregatedListInstancesRequest{
+			Project:              projectID,
+			ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
+		})
+
+		for {
+			pair, iterErr := it.Next()
+			if errors.Is(iterErr, iterator.Done) {
+				break
+			}
+			if iterErr != nil {
+				stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
+				return
+			}
+
+			// Parse scope from pair.Key (e.g., "zones/us-central1-a")
+			scopeLocation, err := gcpshared.ParseAggregatedListScope(projectID, pair.Key)
+			if err != nil {
+				continue // Skip unparseable scopes
+			}
+
+			// Only process if this scope is in our adapter's configured locations
+			if !c.HasLocation(scopeLocation) {
+				continue
+			}
+
+			// Process instances in this scope
+			if pair.Value != nil && pair.Value.GetInstances() != nil {
+				for _, instance := range pair.Value.GetInstances() {
+					item, sdpErr := c.gcpComputeInstanceToSDPItem(ctx, instance, scopeLocation)
+					if sdpErr != nil {
+						stream.SendError(sdpErr)
+						continue
+					}
+
+					cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+					stream.SendItem(item)
+				}
+			}
+		}
 	}
 }
 

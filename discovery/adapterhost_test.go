@@ -187,3 +187,131 @@ func TestAdapterHostAddAdapters(t *testing.T) {
 		t.Fatalf("Expected 1 adapters, got %v", x)
 	}
 }
+
+func TestAdapterHostExpandQuery_WildcardScope(t *testing.T) {
+	sh := NewAdapterHost()
+
+	// Add regular adapter without wildcard support
+	regularAdapter := &TestAdapter{
+		ReturnScopes: []string{"project.zone-a", "project.zone-b"},
+		ReturnType:   "regular-type",
+		ReturnName:   "regular",
+	}
+
+	// Add wildcard-supporting adapter
+	wildcardAdapter := &TestWildcardAdapter{
+		TestAdapter: TestAdapter{
+			ReturnScopes: []string{"project.zone-a", "project.zone-b"},
+			ReturnType:   "wildcard-type",
+			ReturnName:   "wildcard",
+		},
+		supportsWildcard: true,
+	}
+
+	err := sh.AddAdapters(regularAdapter, wildcardAdapter)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("Regular adapter with wildcard scope expands to all scopes", func(t *testing.T) {
+		req := sdp.Query{
+			Type:  "regular-type",
+			Scope: sdp.WILDCARD,
+		}
+
+		expanded := sh.ExpandQuery(&req)
+
+		// Should expand to 2 queries (one per zone)
+		if len(expanded) != 2 {
+			t.Fatalf("Expected 2 expanded queries for regular adapter, got %v", len(expanded))
+		}
+
+		// Check that scopes are specific, not wildcard
+		for q := range expanded {
+			if q.GetScope() == sdp.WILDCARD {
+				t.Errorf("Expected specific scope, got wildcard")
+			}
+		}
+	})
+
+	t.Run("Wildcard-supporting adapter with wildcard scope does not expand", func(t *testing.T) {
+		req := sdp.Query{
+			Type:  "wildcard-type",
+			Scope: sdp.WILDCARD,
+		}
+
+		expanded := sh.ExpandQuery(&req)
+
+		// Should NOT expand - just 1 query with wildcard scope
+		if len(expanded) != 1 {
+			t.Fatalf("Expected 1 query for wildcard adapter, got %v", len(expanded))
+		}
+
+		// Check that scope is still wildcard
+		for q := range expanded {
+			if q.GetScope() != sdp.WILDCARD {
+				t.Errorf("Expected wildcard scope to be preserved, got %v", q.GetScope())
+			}
+		}
+	})
+
+	t.Run("Wildcard-supporting adapter with specific scope works normally", func(t *testing.T) {
+		req := sdp.Query{
+			Type:  "wildcard-type",
+			Scope: "project.zone-a",
+		}
+
+		expanded := sh.ExpandQuery(&req)
+
+		// Should return 1 query with specific scope
+		if len(expanded) != 1 {
+			t.Fatalf("Expected 1 query, got %v", len(expanded))
+		}
+
+		for q := range expanded {
+			if q.GetScope() != "project.zone-a" {
+				t.Errorf("Expected scope 'project.zone-a', got %v", q.GetScope())
+			}
+		}
+	})
+
+	t.Run("Hidden wildcard adapter with wildcard scope is not included", func(t *testing.T) {
+		hiddenWildcardAdapter := &TestWildcardAdapter{
+			TestAdapter: TestAdapter{
+				ReturnScopes: []string{"project.zone-a"},
+				ReturnType:   "hidden-wildcard-type",
+				ReturnName:   "hidden-wildcard",
+				IsHidden:     true,
+			},
+			supportsWildcard: true,
+		}
+
+		err := sh.AddAdapters(hiddenWildcardAdapter)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		req := sdp.Query{
+			Type:  "hidden-wildcard-type",
+			Scope: sdp.WILDCARD,
+		}
+
+		expanded := sh.ExpandQuery(&req)
+
+		// Hidden adapters should not be expanded for wildcard scopes
+		if len(expanded) != 0 {
+			t.Fatalf("Expected 0 queries for hidden wildcard adapter, got %v", len(expanded))
+		}
+	})
+}
+
+// TestWildcardAdapter extends TestAdapter to implement WildcardScopeAdapter
+type TestWildcardAdapter struct {
+	TestAdapter
+	supportsWildcard bool
+}
+
+// SupportsWildcardScope implements the WildcardScopeAdapter interface
+func (t *TestWildcardAdapter) SupportsWildcardScope() bool {
+	return t.supportsWildcard
+}
