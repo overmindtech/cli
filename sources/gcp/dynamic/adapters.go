@@ -19,9 +19,9 @@ const (
 	SearchableListable typeOfAdapter = "searchableListable"
 )
 
-// Adapters returns a list of discovery.Adapters for the given project ID, regions, and zones.
+// Adapters returns a list of discovery.Adapters for the given locations.
 // Each adapter type is created once and handles all locations of its scope type.
-func Adapters(projectID string, regions []string, zones []string, linker *gcpshared.Linker, httpCli *http.Client, manualAdapters map[string]bool, cache sdpcache.Cache) ([]discovery.Adapter, error) {
+func Adapters(projectLocations, regionLocations, zoneLocations []gcpshared.LocationInfo, linker *gcpshared.Linker, httpCli *http.Client, manualAdapters map[string]bool, cache sdpcache.Cache) ([]discovery.Adapter, error) {
 	var adapters []discovery.Adapter
 
 	// Group adapters by location level
@@ -38,32 +38,21 @@ func Adapters(projectID string, regions []string, zones []string, linker *gcpsha
 		adaptersByLevel[meta.LocationLevel][sdpItemType] = meta
 	}
 
-	// Build LocationInfo slices for each location level
-	projectLocation := []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)}
-
-	regionLocations := make([]gcpshared.LocationInfo, 0, len(regions))
-	for _, region := range regions {
-		regionLocations = append(regionLocations, gcpshared.NewRegionalLocation(projectID, region))
-	}
-
-	zoneLocations := make([]gcpshared.LocationInfo, 0, len(zones))
-	for _, zone := range zones {
-		zoneLocations = append(zoneLocations, gcpshared.NewZonalLocation(projectID, zone))
-	}
-
 	// Create project-level adapters (one per type)
-	for sdpItemType := range adaptersByLevel[gcpshared.ProjectLevel] {
-		if _, ok := manualAdapters[sdpItemType.String()]; ok {
-			// Skip, because we have a manual adapter for this item type
-			continue
-		}
+	if len(projectLocations) > 0 {
+		for sdpItemType := range adaptersByLevel[gcpshared.ProjectLevel] {
+			if _, ok := manualAdapters[sdpItemType.String()]; ok {
+				// Skip, because we have a manual adapter for this item type
+				continue
+			}
 
-		adapter, err := MakeAdapter(sdpItemType, linker, httpCli, cache, projectLocation)
-		if err != nil {
-			return nil, fmt.Errorf("failed to add adapter for %s: %w", sdpItemType, err)
-		}
+			adapter, err := MakeAdapter(sdpItemType, linker, httpCli, cache, projectLocations)
+			if err != nil {
+				return nil, fmt.Errorf("failed to add adapter for %s: %w", sdpItemType, err)
+			}
 
-		adapters = append(adapters, adapter)
+			adapters = append(adapters, adapter)
+		}
 	}
 
 	// Create regional adapters (one per type, handling all regions)

@@ -174,3 +174,26 @@ func ValidateScopeForLocations(scope string, locations []LocationInfo) (Location
 	}
 	return LocationInfo{}, fmt.Errorf("scope %s not found in configured locations", scope)
 }
+
+// ParseAggregatedListScope parses a scope key from aggregatedList response
+// Examples:
+//   - "zones/us-central1-a" -> LocationInfo{ProjectID: projectID, Zone: "us-central1-a", Region: "us-central1"}
+//   - "regions/us-central1" -> LocationInfo{ProjectID: projectID, Region: "us-central1"}
+func ParseAggregatedListScope(projectID, scopeKey string) (LocationInfo, error) {
+	parts := strings.Split(scopeKey, "/")
+	if len(parts) != 2 {
+		return LocationInfo{}, fmt.Errorf("invalid scope key format: %s", scopeKey)
+	}
+
+	scopeType := parts[0] // "zones" or "regions"
+	locationName := parts[1]
+
+	switch scopeType {
+	case "zones":
+		return NewZonalLocation(projectID, locationName), nil
+	case "regions":
+		return NewRegionalLocation(projectID, locationName), nil
+	default:
+		return LocationInfo{}, fmt.Errorf("unsupported scope type: %s", scopeType)
+	}
+}

@@ -152,6 +152,21 @@ func (sh *AdapterHost) ExpandQuery(q *sdp.Query) map[*sdp.Query]Adapter {
 			isHidden = hs.Hidden()
 		}
 
+		// Check if adapter supports wildcard scopes
+		supportsWildcard := false
+		if ws, ok := adapter.(WildcardScopeAdapter); ok {
+			supportsWildcard = ws.SupportsWildcardScope()
+		}
+
+		// If query has wildcard scope and adapter supports wildcards,
+		// create ONE query with wildcard scope (no expansion)
+		if supportsWildcard && IsWildcard(q.GetScope()) && !isHidden {
+			dest := proto.Clone(q).(*sdp.Query)
+			dest.Type = adapter.Type() // specialise the query to the adapter type
+			expandedQueries[dest] = adapter
+			continue // Skip normal scope expansion loop
+		}
+
 		for _, adapterScope := range adapter.Scopes() {
 			// Create a new query if:
 			//

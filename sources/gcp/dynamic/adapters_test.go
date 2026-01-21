@@ -179,9 +179,9 @@ func TestAdapters(t *testing.T) {
 
 	// Let's ensure that we can create adapters without any issues.
 	adapters, err := Adapters(
-		"my-project",
-		[]string{"us-central1"},
-		[]string{"us-central1-a"},
+		[]gcpshared.LocationInfo{gcpshared.NewProjectLocation("my-project")},
+		[]gcpshared.LocationInfo{gcpshared.NewRegionalLocation("my-project", "us-central1")},
+		[]gcpshared.LocationInfo{gcpshared.NewZonalLocation("my-project", "us-central1-a")},
 		gcpshared.NewLinker(),
 		http.DefaultClient,
 		nil,

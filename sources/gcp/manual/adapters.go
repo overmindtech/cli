@@ -19,9 +19,9 @@ import (
 )
 
 // Adapters returns a slice of discovery.Adapter instances for GCP Source.
-// It initializes GCP clients if initGCPClients is true, and creates adapters for the specified project ID, regions, and zones.
+// It initializes GCP clients if initGCPClients is true, and creates adapters for the specified locations.
 // Otherwise, it uses nil clients, which is useful for enumerating adapters for documentation purposes.
-func Adapters(ctx context.Context, projectID string, regions []string, zones []string, tokenSource *oauth2.TokenSource, initGCPClients bool, cache sdpcache.Cache) ([]discovery.Adapter, error) {
+func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocations []shared.LocationInfo, tokenSource *oauth2.TokenSource, initGCPClients bool, cache sdpcache.Cache) ([]discovery.Adapter, error) {
 	var err error
 	var (
 		instanceCli               *compute.InstancesClient
@@ -153,7 +153,7 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 			return nil, fmt.Errorf("failed to create KMS crypto key client: %w", err)
 		}
 
-		bigQueryDatasetCli, err = bigquery.NewClient(ctx, projectID, opts...)
+		bigQueryDatasetCli, err = bigquery.NewClient(ctx, bigquery.DetectProjectID, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create bigquery client: %w", err)
 		}
@@ -181,19 +181,6 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 
 	var adapters []discovery.Adapter
 
-	// Build LocationInfo slices for multi-scope adapters
-	zoneLocations := make([]shared.LocationInfo, 0, len(zones))
-	for _, zone := range zones {
-		zoneLocations = append(zoneLocations, shared.NewZonalLocation(projectID, zone))
-	}
-
-	regionLocations := make([]shared.LocationInfo, 0, len(regions))
-	for _, region := range regions {
-		regionLocations = append(regionLocations, shared.NewRegionalLocation(projectID, region))
-	}
-
-	projectLocations := []shared.LocationInfo{shared.NewProjectLocation(projectID)}
-
 	// Multi-scope regional adapters (one adapter per type handling all regions)
 	if len(regionLocations) > 0 {
 		adapters = append(adapters,
@@ -219,21 +206,23 @@ func Adapters(ctx context.Context, projectID string, regions []string, zones []s
 	}
 
 	// global - project level - adapters
-	adapters = append(adapters,
-		sources.WrapperToAdapter(NewComputeBackendService(shared.NewComputeBackendServiceClient(backendServiceCli), projectLocations), cache),
-		sources.WrapperToAdapter(NewComputeImage(shared.NewComputeImagesClient(computeImagesCli), projectLocations), cache),
-		sources.WrapperToAdapter(NewComputeHealthCheck(shared.NewComputeHealthCheckClient(computeHealthCheckCli), projectLocations), cache),
-		sources.WrapperToAdapter(NewComputeSecurityPolicy(shared.NewComputeSecurityPolicyClient(computeSecurityPolicyCli), projectLocations), cache),
-		sources.WrapperToAdapter(NewComputeMachineImage(shared.NewComputeMachineImageClient(computeMachineImageCli), projectLocations), cache),
-		sources.WrapperToAdapter(NewComputeSnapshot(shared.NewComputeSnapshotsClient(computeSnapshotCli), projectLocations), cache),
-		sources.WrapperToAdapter(NewIAMServiceAccountKey(shared.NewIAMServiceAccountKeyClient(iamServiceAccountKeyCli), projectLocations), cache),
-		sources.WrapperToAdapter(NewIAMServiceAccount(shared.NewIAMServiceAccountClient(iamServiceAccountCli), projectLocations), cache),
-		sources.WrapperToAdapter(NewCloudKMSKeyRing(shared.NewCloudKMSKeyRingClient(kmsKeyRingCli), projectLocations), cache),
-		sources.WrapperToAdapter(NewCloudKMSCryptoKey(shared.NewCloudKMSCryptoKeyClient(kmsCryptoKeyCli), projectLocations), cache),
-		sources.WrapperToAdapter(NewBigQueryDataset(shared.NewBigQueryDatasetClient(bigQueryDatasetCli), projectLocations), cache),
-		sources.WrapperToAdapter(NewLoggingSink(shared.NewLoggingConfigClient(loggingConfigCli), projectLocations), cache),
-		sources.WrapperToAdapter(NewBigQueryRoutine(shared.NewBigQueryRoutineClient(bigQueryDatasetCli), projectLocations), cache),
-	)
+	if len(projectLocations) > 0 {
+		adapters = append(adapters,
+			sources.WrapperToAdapter(NewComputeBackendService(shared.NewComputeBackendServiceClient(backendServiceCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewComputeImage(shared.NewComputeImagesClient(computeImagesCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewComputeHealthCheck(shared.NewComputeHealthCheckClient(computeHealthCheckCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewComputeSecurityPolicy(shared.NewComputeSecurityPolicyClient(computeSecurityPolicyCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewComputeMachineImage(shared.NewComputeMachineImageClient(computeMachineImageCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewComputeSnapshot(shared.NewComputeSnapshotsClient(computeSnapshotCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewIAMServiceAccountKey(shared.NewIAMServiceAccountKeyClient(iamServiceAccountKeyCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewIAMServiceAccount(shared.NewIAMServiceAccountClient(iamServiceAccountCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewCloudKMSKeyRing(shared.NewCloudKMSKeyRingClient(kmsKeyRingCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewCloudKMSCryptoKey(shared.NewCloudKMSCryptoKeyClient(kmsCryptoKeyCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewBigQueryDataset(shared.NewBigQueryDatasetClient(bigQueryDatasetCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewLoggingSink(shared.NewLoggingConfigClient(loggingConfigCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewBigQueryRoutine(shared.NewBigQueryRoutineClient(bigQueryDatasetCli), projectLocations), cache),
+		)
+	}
 
 	return adapters, nil
 }

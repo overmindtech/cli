@@ -85,6 +85,17 @@ type HiddenAdapter interface {
 	Hidden() bool
 }
 
+// WildcardScopeAdapter is an optional interface that adapters can implement
+// to declare they can handle "*" wildcard scopes efficiently (e.g., using
+// GCP's aggregatedList API). When an adapter implements this interface and
+// returns true from SupportsWildcardScope(), the engine will pass wildcard
+// scopes directly to the adapter instead of expanding them to all configured
+// scopes.
+type WildcardScopeAdapter interface {
+	Adapter
+	SupportsWildcardScope() bool
+}
+
 // QueryResultStream is a stream of items and errors that are returned from a
 // query. Adapters should send items to the stream as soon as they are
 // discovered using the `SendItem` method and should send any errors that occur
