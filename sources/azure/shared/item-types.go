@@ -134,7 +134,7 @@ var (
 	KeyVaultManagedHSM = shared.NewItemType(Azure, KeyVault, ManagedHSM)
 
 	// ManagedIdentity item types
-	ManagedIdentityUserAssignedIdentity       = shared.NewItemType(Azure, ManagedIdentity, UserAssignedIdentity)
+	ManagedIdentityUserAssignedIdentity        = shared.NewItemType(Azure, ManagedIdentity, UserAssignedIdentity)
 	ManagedIdentityFederatedIdentityCredential = shared.NewItemType(Azure, ManagedIdentity, FederatedIdentityCredential)
 
 	// Batch item types
@@ -149,4 +149,8 @@ var (
 
 	// ElasticSAN item types
 	ElasticSanVolumeSnapshot = shared.NewItemType(Azure, ElasticSAN, VolumeSnapshot)
+
+	// Authorization item types
+	AuthorizationRoleAssignment = shared.NewItemType(Azure, Authorization, RoleAssignment)
+	AuthorizationRoleDefinition = shared.NewItemType(Azure, Authorization, RoleDefinition)
 )

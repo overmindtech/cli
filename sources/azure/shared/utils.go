@@ -3,6 +3,7 @@ package shared
 import (
 	"fmt"
 	"net/url"
+	"regexp"
 	"strings"
 )
 
@@ -17,13 +18,14 @@ import (
 func GetResourceIDPathKeys(resourceType string) []string {
 	// Map of resource types to their path keys in the order they appear in GetLookups()
 	pathKeysMap := map[string][]string{
-		"azure-storage-queue":            {"storageAccounts", "queues"},
-		"azure-storage-blob-container":   {"storageAccounts", "containers"},
-		"azure-storage-file-share":       {"storageAccounts", "shares"},
-		"azure-storage-table":            {"storageAccounts", "tables"},
-		"azure-sql-database":             {"servers", "databases"},         // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-SQL-SouthEastAsia/providers/Microsoft.Sql/servers/testsvr/databases/testdb",
-		"azure-dbforpostgresql-database": {"flexibleServers", "databases"}, // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-PostgreSQL-SouthEastAsia/providers/Microsoft.DBforPostgreSQL/flexibleServers/testsvr/databases/testdb",
-		"azure-keyvault-secret":          {"vaults", "secrets"},            // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
+		"azure-storage-queue":                 {"storageAccounts", "queues"},
+		"azure-storage-blob-container":        {"storageAccounts", "containers"},
+		"azure-storage-file-share":            {"storageAccounts", "shares"},
+		"azure-storage-table":                 {"storageAccounts", "tables"},
+		"azure-sql-database":                  {"servers", "databases"},         // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-SQL-SouthEastAsia/providers/Microsoft.Sql/servers/testsvr/databases/testdb",
+		"azure-dbforpostgresql-database":      {"flexibleServers", "databases"}, // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-PostgreSQL-SouthEastAsia/providers/Microsoft.DBforPostgreSQL/flexibleServers/testsvr/databases/testdb",
+		"azure-keyvault-secret":               {"vaults", "secrets"},            // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
+		"azure-authorization-role-assignment": {"roleAssignments"},              // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Authorization/roleAssignments/{roleAssignmentName}",
 	}
 
 	if keys, ok := pathKeysMap[resourceType]; ok {
@@ -302,6 +304,27 @@ func ExtractSecretNameFromURI(uri string) string {
 	return ""
 }
 
+// ExtractSubscriptionIDFromResourceID extracts the subscription ID from an Azure resource ID
+// Azure resource IDs follow the format:
+// /subscriptions/{subscriptionId}/providers/... or
+// /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/...
+// This function returns just the subscription ID
+// Returns empty string if the subscription ID cannot be found
+func ExtractSubscriptionIDFromResourceID(resourceID string) string {
+	if resourceID == "" {
+		return ""
+	}
+
+	parts := strings.Split(strings.Trim(resourceID, "/"), "/")
+	for i, part := range parts {
+		if part == "subscriptions" && i+1 < len(parts) {
+			return parts[i+1]
+		}
+	}
+
+	return ""
+}
+
 // ExtractScopeFromResourceID extracts the scope (subscription.resourceGroup) from an Azure resource ID
 // Azure resource IDs follow the format:
 // /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/...
@@ -363,4 +386,44 @@ func ExtractDNSFromURL(urlStr string) string {
 		}
 	}
 	return urlStr
+}
+
+// ref: https://learn.microsoft.com/en-us/rest/api/authorization/role-assignments/get?view=rest-authorization-2022-04-01&tabs=HTTP
+// subscriptionIDPattern matches Azure subscription IDs (UUID format: 8-4-4-4-12 hex digits)
+var subscriptionIDPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)
+
+// ConstructRoleAssignmentScope constructs an Azure role assignment scope path from a scope input.
+// The scopeInput is usually in the format "{subscriptionId}.{resourceGroup}".
+// If the input contains a dot, it's split into subscription ID and resource group name.
+// If the input matches a UUID pattern (no dot), it's treated as a subscription ID.
+// Otherwise, it's treated as a resource group name and uses the provided subscriptionID parameter.
+//
+// Parameters:
+//   - scopeInput: Usually in format "{subscriptionId}.{resourceGroup}", or a subscription ID (UUID), or a resource group name
+//   - subscriptionID: The subscription ID to use when constructing resource group scopes (fallback when scopeInput is just a resource group name)
+//
+// Returns:
+//   - The Azure scope path in the format expected by the Azure SDK
+func ConstructRoleAssignmentScope(scopeInput, subscriptionID string) string {
+	if scopeInput == "" {
+		return ""
+	}
+
+	// Check if scopeInput is in the format "{subscriptionId}.{resourceGroup}"
+	if strings.Contains(scopeInput, ".") {
+		parts := strings.SplitN(scopeInput, ".", 2)
+		if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+			// It's in the format subscriptionId.resourceGroup - construct resource group scope
+			return fmt.Sprintf("/subscriptions/%s/resourceGroups/%s", parts[0], parts[1])
+		}
+	}
+
+	// Check if scopeInput is a subscription ID (UUID format)
+	if subscriptionIDPattern.MatchString(scopeInput) {
+		// It's a subscription ID - construct subscription scope
+		return "/subscriptions/" + scopeInput
+	}
+
+	// It's a resource group name - construct resource group scope using provided subscriptionID
+	return fmt.Sprintf("/subscriptions/%s/resourceGroups/%s", subscriptionID, scopeInput)
 }
