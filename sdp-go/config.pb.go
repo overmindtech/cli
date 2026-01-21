@@ -197,13 +197,13 @@ type BlastRadiusConfig struct {
 	// is the maximum number of levels of links to traverse from the root item.
 	// Different implementations may differ in how they handle this.
 	LinkDepth int32 `protobuf:"varint,2,opt,name=linkDepth,proto3" json:"linkDepth,omitempty"`
-	// Maximum time duration for blast radius calculation. When this time limit
-	// is reached, the analysis gracefully continues with risks identified up to
-	// that point. If not specified, defaults to 10 minutes for backward compatibility.
+	// Maximum time duration for change analysis. When this time limit is reached, the analysis will be cancelled.
+	// Blast radius calculation has a soft limit that is a percentage of the max timeout, this is currently set to 2/3 of the max timeout.
+	// It returns the results up to that point.
 	// Minimum recommended: 1 minute, Maximum recommended: 30 minutes.
-	MaxBlastRadiusTime *durationpb.Duration `protobuf:"bytes,3,opt,name=maxBlastRadiusTime,proto3,oneof" json:"maxBlastRadiusTime,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	ChangeAnalysisMaxTimeout *durationpb.Duration `protobuf:"bytes,4,opt,name=changeAnalysisMaxTimeout,proto3,oneof" json:"changeAnalysisMaxTimeout,omitempty"`
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
 }
 
 func (x *BlastRadiusConfig) Reset() {
@@ -250,9 +250,9 @@ func (x *BlastRadiusConfig) GetLinkDepth() int32 {
 	return 0
 }
 
-func (x *BlastRadiusConfig) GetMaxBlastRadiusTime() *durationpb.Duration {
+func (x *BlastRadiusConfig) GetChangeAnalysisMaxTimeout() *durationpb.Duration {
 	if x != nil {
-		return x.MaxBlastRadiusTime
+		return x.ChangeAnalysisMaxTimeout
 	}
 	return nil
 }
@@ -1585,12 +1585,12 @@ var File_config_proto protoreflect.FileDescriptor
 
 const file_config_proto_rawDesc = "" +
 	"\n" +
-	"\fconfig.proto\x12\x06config\x1a\rapikeys.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb4\x01\n" +
+	"\fconfig.proto\x12\x06config\x1a\rapikeys.proto\x1a\x1bbuf/validate/validate.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xcc\x01\n" +
 	"\x11BlastRadiusConfig\x12\x1a\n" +
 	"\bmaxItems\x18\x01 \x01(\x05R\bmaxItems\x12\x1c\n" +
-	"\tlinkDepth\x18\x02 \x01(\x05R\tlinkDepth\x12N\n" +
-	"\x12maxBlastRadiusTime\x18\x03 \x01(\v2\x19.google.protobuf.DurationH\x00R\x12maxBlastRadiusTime\x88\x01\x01B\x15\n" +
-	"\x13_maxBlastRadiusTime\"\xbe\x02\n" +
+	"\tlinkDepth\x18\x02 \x01(\x05R\tlinkDepth\x12Z\n" +
+	"\x18changeAnalysisMaxTimeout\x18\x04 \x01(\v2\x19.google.protobuf.DurationH\x00R\x18changeAnalysisMaxTimeout\x88\x01\x01B\x1b\n" +
+	"\x19_changeAnalysisMaxTimeoutJ\x04\b\x03\x10\x04\"\xbe\x02\n" +
 	"\rAccountConfig\x12U\n" +
 	"\x11blastRadiusPreset\x18\x02 \x01(\x0e2'.config.AccountConfig.BlastRadiusPresetR\x11blastRadiusPreset\x12@\n" +
 	"\vblastRadius\x18\x01 \x01(\v2\x19.config.BlastRadiusConfigH\x00R\vblastRadius\x88\x01\x01\x12@\n" +
@@ -1738,7 +1738,7 @@ var file_config_proto_goTypes = []any{
 	(*timestamppb.Timestamp)(nil),                                 // 33: google.protobuf.Timestamp
 }
 var file_config_proto_depIdxs = []int32{
-	31, // 0: config.BlastRadiusConfig.maxBlastRadiusTime:type_name -> google.protobuf.Duration
+	31, // 0: config.BlastRadiusConfig.changeAnalysisMaxTimeout:type_name -> google.protobuf.Duration
 	0,  // 1: config.AccountConfig.blastRadiusPreset:type_name -> config.AccountConfig.BlastRadiusPreset
 	3,  // 2: config.AccountConfig.blastRadius:type_name -> config.BlastRadiusConfig
 	4,  // 3: config.GetAccountConfigResponse.config:type_name -> config.AccountConfig
