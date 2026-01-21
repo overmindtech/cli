@@ -13,6 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
+	compute "cloud.google.com/go/compute/apiv1"
 	computepb "cloud.google.com/go/compute/apiv1/computepb"
 	gax "github.com/googleapis/gax-go/v2"
 	shared "github.com/overmindtech/cli/sources/gcp/shared"
@@ -58,6 +59,45 @@ func (mr *MockComputeInstanceIteratorMockRecorder) Next() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeInstanceIterator)(nil).Next))
 }
 
+// MockInstancesScopedListPairIterator is a mock of InstancesScopedListPairIterator interface.
+type MockInstancesScopedListPairIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockInstancesScopedListPairIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockInstancesScopedListPairIteratorMockRecorder is the mock recorder for MockInstancesScopedListPairIterator.
+type MockInstancesScopedListPairIteratorMockRecorder struct {
+	mock *MockInstancesScopedListPairIterator
+}
+
+// NewMockInstancesScopedListPairIterator creates a new mock instance.
+func NewMockInstancesScopedListPairIterator(ctrl *gomock.Controller) *MockInstancesScopedListPairIterator {
+	mock := &MockInstancesScopedListPairIterator{ctrl: ctrl}
+	mock.recorder = &MockInstancesScopedListPairIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockInstancesScopedListPairIterator) EXPECT() *MockInstancesScopedListPairIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockInstancesScopedListPairIterator) Next() (compute.InstancesScopedListPair, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(compute.InstancesScopedListPair)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockInstancesScopedListPairIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockInstancesScopedListPairIterator)(nil).Next))
+}
+
 // MockComputeInstanceClient is a mock of ComputeInstanceClient interface.
 type MockComputeInstanceClient struct {
 	ctrl     *gomock.Controller
@@ -80,6 +120,25 @@ func NewMockComputeInstanceClient(ctrl *gomock.Controller) *MockComputeInstanceC
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockComputeInstanceClient) EXPECT() *MockComputeInstanceClientMockRecorder {
 	return m.recorder
+}
+
+// AggregatedList mocks base method.
+func (m *MockComputeInstanceClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListInstancesRequest, opts ...gax.CallOption) shared.InstancesScopedListPairIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AggregatedList", varargs...)
+	ret0, _ := ret[0].(shared.InstancesScopedListPairIterator)
+	return ret0
+}
+
+// AggregatedList indicates an expected call of AggregatedList.
+func (mr *MockComputeInstanceClientMockRecorder) AggregatedList(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AggregatedList", reflect.TypeOf((*MockComputeInstanceClient)(nil).AggregatedList), varargs...)
 }
 
 // Get mocks base method.
@@ -1486,6 +1545,45 @@ func (mr *MockComputeDiskIteratorMockRecorder) Next() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeDiskIterator)(nil).Next))
 }
 
+// MockDisksScopedListPairIterator is a mock of DisksScopedListPairIterator interface.
+type MockDisksScopedListPairIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockDisksScopedListPairIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockDisksScopedListPairIteratorMockRecorder is the mock recorder for MockDisksScopedListPairIterator.
+type MockDisksScopedListPairIteratorMockRecorder struct {
+	mock *MockDisksScopedListPairIterator
+}
+
+// NewMockDisksScopedListPairIterator creates a new mock instance.
+func NewMockDisksScopedListPairIterator(ctrl *gomock.Controller) *MockDisksScopedListPairIterator {
+	mock := &MockDisksScopedListPairIterator{ctrl: ctrl}
+	mock.recorder = &MockDisksScopedListPairIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDisksScopedListPairIterator) EXPECT() *MockDisksScopedListPairIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockDisksScopedListPairIterator) Next() (compute.DisksScopedListPair, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(compute.DisksScopedListPair)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockDisksScopedListPairIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockDisksScopedListPairIterator)(nil).Next))
+}
+
 // MockComputeDiskClient is a mock of ComputeDiskClient interface.
 type MockComputeDiskClient struct {
 	ctrl     *gomock.Controller
@@ -1508,6 +1606,25 @@ func NewMockComputeDiskClient(ctrl *gomock.Controller) *MockComputeDiskClient {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockComputeDiskClient) EXPECT() *MockComputeDiskClientMockRecorder {
 	return m.recorder
+}
+
+// AggregatedList mocks base method.
+func (m *MockComputeDiskClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListDisksRequest, opts ...gax.CallOption) shared.DisksScopedListPairIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AggregatedList", varargs...)
+	ret0, _ := ret[0].(shared.DisksScopedListPairIterator)
+	return ret0
+}
+
+// AggregatedList indicates an expected call of AggregatedList.
+func (mr *MockComputeDiskClientMockRecorder) AggregatedList(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AggregatedList", reflect.TypeOf((*MockComputeDiskClient)(nil).AggregatedList), varargs...)
 }
 
 // Get mocks base method.

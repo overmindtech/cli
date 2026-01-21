@@ -85,7 +85,7 @@ func (b BigQueryDatasetWrapper) Get(ctx context.Context, scope string, queryPart
 		return nil, gcpshared.QueryError(getErr, scope, b.Type())
 	}
 
-	return b.gcpBigQueryDatasetToItem(ctx, metadata, location)
+	return b.gcpBigQueryDatasetToItem(metadata, location)
 }
 
 func (b BigQueryDatasetWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
@@ -98,7 +98,7 @@ func (b BigQueryDatasetWrapper) List(ctx context.Context, scope string) ([]*sdp.
 	}
 
 	items, listErr := b.client.List(ctx, location.ProjectID, func(ctx context.Context, md *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError) {
-		return b.gcpBigQueryDatasetToItem(ctx, md, location)
+		return b.gcpBigQueryDatasetToItem(md, location)
 	})
 	if listErr != nil {
 		return nil, gcpshared.QueryError(listErr, scope, b.Type())
@@ -118,7 +118,7 @@ func (b BigQueryDatasetWrapper) ListStream(ctx context.Context, stream discovery
 	}
 
 	b.client.ListStream(ctx, location.ProjectID, stream, func(ctx context.Context, md *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError) {
-		item, qerr := b.gcpBigQueryDatasetToItem(ctx, md, location)
+		item, qerr := b.gcpBigQueryDatasetToItem(md, location)
 		if qerr == nil && item != nil {
 			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		}
@@ -126,7 +126,7 @@ func (b BigQueryDatasetWrapper) ListStream(ctx context.Context, stream discovery
 	})
 }
 
-func (b BigQueryDatasetWrapper) gcpBigQueryDatasetToItem(ctx context.Context, metadata *bigquery.DatasetMetadata, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
+func (b BigQueryDatasetWrapper) gcpBigQueryDatasetToItem(metadata *bigquery.DatasetMetadata, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(metadata, "labels")
 	if err != nil {
 		return nil, gcpshared.QueryError(err, location.ToScope(), b.Type())

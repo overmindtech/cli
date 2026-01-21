@@ -90,7 +90,7 @@ type projectCheckResult struct {
 // ProjectHealthChecker manages permission checks for GCP projects with caching support
 type ProjectHealthChecker struct {
 	projectIDs    []string
-	adapters      map[string]discovery.Adapter
+	adapter       discovery.Adapter
 	cacheDuration time.Duration
 	cachedResult  *ProjectPermissionCheckResult
 	cacheTime     time.Time
@@ -100,12 +100,12 @@ type ProjectHealthChecker struct {
 // NewProjectHealthChecker creates a new ProjectHealthChecker with the given configuration
 func NewProjectHealthChecker(
 	projectIDs []string,
-	adapters map[string]discovery.Adapter,
+	adapter discovery.Adapter,
 	cacheDuration time.Duration,
 ) *ProjectHealthChecker {
 	return &ProjectHealthChecker{
 		projectIDs:    projectIDs,
-		adapters:      adapters,
+		adapter:       adapter,
 		cacheDuration: cacheDuration,
 	}
 }
@@ -147,17 +147,9 @@ func (c *ProjectHealthChecker) runCheck(ctx context.Context) (*ProjectPermission
 	}
 
 	checkResults, _ := mapper.MapErr(c.projectIDs, func(projectID *string) (projectCheckResult, error) {
-		adapter, exists := c.adapters[*projectID]
-		if !exists {
-			return projectCheckResult{
-				ProjectID: *projectID,
-				Error:     fmt.Errorf("adapter not found for project"),
-			}, nil
-		}
-
 		// Get the project from the cloud resource manager
 		// Giving this permission is mandatory for the GCP source health check
-		prj, err := adapter.Get(ctx, *projectID, *projectID, false)
+		prj, err := c.adapter.Get(ctx, *projectID, *projectID, false)
 		if err != nil {
 			// Check if this is a permission error and provide a simplified message
 			var permissionError *dynamic.PermissionError
@@ -312,13 +304,16 @@ func init() {
 	// Register the GCP source metadata for documentation purposes
 	ctx := context.Background()
 
-	// project, regions, and zones are just placeholders here
-	// They are not used in the metadata content
+	// Placeholder locations for metadata registration
+	projectLocations := []gcpshared.LocationInfo{gcpshared.NewProjectLocation("project")}
+	regionLocations := []gcpshared.LocationInfo{gcpshared.NewRegionalLocation("project", "region")}
+	zoneLocations := []gcpshared.LocationInfo{gcpshared.NewZonalLocation("project", "zone")}
+
 	discoveryAdapters, err := adapters(
 		ctx,
-		"project",
-		[]string{"region"},
-		[]string{"zone"},
+		projectLocations,
+		regionLocations,
+		zoneLocations,
 		"",
 		nil,
 		false,
@@ -452,7 +447,9 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 			"ovm.source.zones":                               cfg.Zones,
 			"ovm.source.impersonation-service-account-email": cfg.ImpersonationServiceAccountEmail,
 		}
-		if cfg.Parent != "" {
+		if cfg.Parent == "" {
+			logFields["ovm.source.parent"] = "<discover all projects>"
+		} else {
 			logFields["ovm.source.parent"] = cfg.Parent
 		}
 		if cfg.ProjectID != "" {
@@ -467,46 +464,63 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 
 		linker := gcpshared.NewLinker()
 
-		// Create adapters for all projects
-		var allAdapters []discovery.Adapter
-		cloudResourceManagerProjectAdapters := make(map[string]discovery.Adapter)
-
+		// Build LocationInfo slices for all projects, regions, and zones
+		projectLocations := make([]gcpshared.LocationInfo, 0, len(projectIDs))
 		for _, projectID := range projectIDs {
-			log.WithFields(log.Fields{
-				"ovm.source.type":       "gcp",
-				"ovm.source.project_id": projectID,
-			}).Debug("Creating adapters for project")
+			projectLocations = append(projectLocations, gcpshared.NewProjectLocation(projectID))
+		}
 
-			discoveryAdapters, err := adapters(ctx, projectID, cfg.Regions, cfg.Zones, cfg.ImpersonationServiceAccountEmail, linker, true, sharedCache)
-			if err != nil {
-				return fmt.Errorf("error creating discovery adapters for project %s: %w", projectID, err)
-			}
-
-			allAdapters = append(allAdapters, discoveryAdapters...)
-
-			// Collect cloud resource manager project adapters for health checks
-			for _, adapter := range discoveryAdapters {
-				if adapter.Type() == gcpshared.CloudResourceManagerProject.String() {
-					cloudResourceManagerProjectAdapters[projectID] = adapter
-				}
+		regionLocations := make([]gcpshared.LocationInfo, 0, len(projectIDs)*len(cfg.Regions))
+		for _, projectID := range projectIDs {
+			for _, region := range cfg.Regions {
+				regionLocations = append(regionLocations, gcpshared.NewRegionalLocation(projectID, region))
 			}
 		}
 
-		if len(cloudResourceManagerProjectAdapters) == 0 {
+		zoneLocations := make([]gcpshared.LocationInfo, 0, len(projectIDs)*len(cfg.Zones))
+		for _, projectID := range projectIDs {
+			for _, zone := range cfg.Zones {
+				zoneLocations = append(zoneLocations, gcpshared.NewZonalLocation(projectID, zone))
+			}
+		}
+
+		// Create adapters once for all projects using pre-built LocationInfo
+		log.WithFields(log.Fields{
+			"ovm.source.type":          "gcp",
+			"ovm.source.project_count": len(projectIDs),
+		}).Debug("Creating multi-project adapters")
+
+		allAdapters, err := adapters(
+			ctx,
+			projectLocations,
+			regionLocations,
+			zoneLocations,
+			cfg.ImpersonationServiceAccountEmail,
+			linker,
+			true,
+			sharedCache,
+		)
+		if err != nil {
+			return fmt.Errorf("error creating discovery adapters: %w", err)
+		}
+
+		// Find the single multi-project CloudResourceManagerProject adapter
+		var cloudResourceManagerProjectAdapter discovery.Adapter
+		for _, adapter := range allAdapters {
+			if adapter.Type() == gcpshared.CloudResourceManagerProject.String() {
+				cloudResourceManagerProjectAdapter = adapter
+				break
+			}
+		}
+
+		if cloudResourceManagerProjectAdapter == nil {
 			return fmt.Errorf("cloud resource manager project adapter not found")
 		}
 
-		// Verify we have an adapter for each project
-		for _, projectID := range projectIDs {
-			if _, exists := cloudResourceManagerProjectAdapters[projectID]; !exists {
-				return fmt.Errorf("cloud resource manager project adapter not found for project %s", projectID)
-			}
-		}
-
-		// Create health checker with 5 minute cache duration
+		// Create health checker with single multi-project adapter and 5 minute cache duration
 		healthChecker = NewProjectHealthChecker(
 			projectIDs,
-			cloudResourceManagerProjectAdapters,
+			cloudResourceManagerProjectAdapter,
 			5*time.Minute,
 		)
 
@@ -836,19 +850,19 @@ func discoverProjectsUnderSpecificParent(ctx context.Context, parent string, imp
 	return projects, nil
 }
 
-// adapters returns a list of discovery adapters for GCP
-// It includes both manual adapters and dynamic adapters.
+// adapters returns a list of discovery adapters for GCP. It includes both
+// manual adapters and dynamic adapters.
 func adapters(
 	ctx context.Context,
-	projectID string,
-	regions []string,
-	zones []string,
+	projectLocations []gcpshared.LocationInfo,
+	regionLocations []gcpshared.LocationInfo,
+	zoneLocations []gcpshared.LocationInfo,
 	impersonationServiceAccountEmail string,
 	linker *gcpshared.Linker,
 	initGCPClients bool,
 	cache sdpcache.Cache,
 ) ([]discovery.Adapter, error) {
-	discoveryAdapters := make([]discovery.Adapter, 0)
+	adapters := make([]discovery.Adapter, 0)
 
 	var tokenSource *oauth2.TokenSource
 	if impersonationServiceAccountEmail != "" {
@@ -868,9 +882,9 @@ func adapters(
 	// Add manual adapters
 	manualAdapters, err := manual.Adapters(
 		ctx,
-		projectID,
-		regions,
-		zones,
+		projectLocations,
+		regionLocations,
+		zoneLocations,
 		tokenSource,
 		initGCPClients,
 		cache,
@@ -884,7 +898,7 @@ func adapters(
 		initiatedManualAdapters[adapter.Type()] = true
 	}
 
-	discoveryAdapters = append(discoveryAdapters, manualAdapters...)
+	adapters = append(adapters, manualAdapters...)
 
 	httpClient := http.DefaultClient
 	if initGCPClients {
@@ -897,9 +911,9 @@ func adapters(
 
 	// Add dynamic adapters
 	dynamicAdapters, err := dynamic.Adapters(
-		projectID,
-		regions,
-		zones,
+		projectLocations,
+		regionLocations,
+		zoneLocations,
 		linker,
 		httpClient,
 		initiatedManualAdapters,
@@ -909,7 +923,7 @@ func adapters(
 		return nil, err
 	}
 
-	discoveryAdapters = append(discoveryAdapters, dynamicAdapters...)
+	adapters = append(adapters, dynamicAdapters...)
 
-	return discoveryAdapters, nil
+	return adapters, nil
 }

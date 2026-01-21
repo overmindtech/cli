@@ -14,10 +14,16 @@ type ComputeInstanceIterator interface {
 	Next() (*computepb.Instance, error)
 }
 
+// InstancesScopedListPairIterator is an interface for iterating over aggregated list responses
+type InstancesScopedListPairIterator interface {
+	Next() (compute.InstancesScopedListPair, error)
+}
+
 // ComputeInstanceClient is an interface for the Compute Instance client
 type ComputeInstanceClient interface {
 	Get(ctx context.Context, req *computepb.GetInstanceRequest, opts ...gax.CallOption) (*computepb.Instance, error)
 	List(ctx context.Context, req *computepb.ListInstancesRequest, opts ...gax.CallOption) ComputeInstanceIterator
+	AggregatedList(ctx context.Context, req *computepb.AggregatedListInstancesRequest, opts ...gax.CallOption) InstancesScopedListPairIterator
 }
 
 type computeInstanceClient struct {
@@ -39,6 +45,11 @@ func (c computeInstanceClient) Get(ctx context.Context, req *computepb.GetInstan
 // List lists compute instances and returns an iterator
 func (c computeInstanceClient) List(ctx context.Context, req *computepb.ListInstancesRequest, opts ...gax.CallOption) ComputeInstanceIterator {
 	return c.instanceClient.List(ctx, req, opts...)
+}
+
+// AggregatedList lists compute instances across all zones using aggregated list
+func (c computeInstanceClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListInstancesRequest, opts ...gax.CallOption) InstancesScopedListPairIterator {
+	return c.instanceClient.AggregatedList(ctx, req, opts...)
 }
 
 // ComputeAddressIterator is an interface for iterating over compute address
@@ -453,10 +464,16 @@ type ComputeDiskIterator interface {
 	Next() (*computepb.Disk, error)
 }
 
+// DisksScopedListPairIterator is an interface for iterating over aggregated disk list responses
+type DisksScopedListPairIterator interface {
+	Next() (compute.DisksScopedListPair, error)
+}
+
 // ComputeDiskClient is an interface for the Compute Engine Disk client
 type ComputeDiskClient interface {
 	Get(ctx context.Context, req *computepb.GetDiskRequest, opts ...gax.CallOption) (*computepb.Disk, error)
 	List(ctx context.Context, req *computepb.ListDisksRequest, opts ...gax.CallOption) ComputeDiskIterator
+	AggregatedList(ctx context.Context, req *computepb.AggregatedListDisksRequest, opts ...gax.CallOption) DisksScopedListPairIterator
 }
 
 type computeDiskClient struct {
@@ -478,6 +495,11 @@ func (c computeDiskClient) Get(ctx context.Context, req *computepb.GetDiskReques
 // List lists compute disks and returns an iterator
 func (c computeDiskClient) List(ctx context.Context, req *computepb.ListDisksRequest, opts ...gax.CallOption) ComputeDiskIterator {
 	return c.client.List(ctx, req, opts...)
+}
+
+// AggregatedList lists compute disks across all zones using aggregated list
+func (c computeDiskClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListDisksRequest, opts ...gax.CallOption) DisksScopedListPairIterator {
+	return c.client.AggregatedList(ctx, req, opts...)
 }
 
 // ComputeMachineImageIterator is an interface for iterating over compute machine images

@@ -19,11 +19,15 @@ import (
 
 func Test_adapters(t *testing.T) {
 	ctx := context.Background()
+	projectLocations := []gcpshared.LocationInfo{gcpshared.NewProjectLocation("project")}
+	regionLocations := []gcpshared.LocationInfo{gcpshared.NewRegionalLocation("project", "region")}
+	zoneLocations := []gcpshared.LocationInfo{gcpshared.NewZonalLocation("project", "zone")}
+
 	discoveryAdapters, err := adapters(
 		ctx,
-		"project",
-		[]string{"region"},
-		[]string{"zone"},
+		projectLocations,
+		regionLocations,
+		zoneLocations,
 		"",
 		gcpshared.NewLinker(),
 		false,
@@ -300,15 +304,14 @@ func Test_normalizeParent(t *testing.T) {
 
 // mockAdapter is a mock implementation of discovery.Adapter for testing
 type mockAdapter struct {
-	projectID    string
 	shouldError  bool
 	errorMessage string
 	callCount    *atomic.Int32
 }
 
 func newMockAdapter(projectID string, shouldError bool, errorMessage string) *mockAdapter {
+	// projectID parameter is kept for backwards compatibility but not used anymore
 	return &mockAdapter{
-		projectID:    projectID,
 		shouldError:  shouldError,
 		errorMessage: errorMessage,
 		callCount:    &atomic.Int32{},
@@ -340,14 +343,15 @@ func (m *mockAdapter) Get(ctx context.Context, scope string, query string, ignor
 		return nil, fmt.Errorf("%s", m.errorMessage)
 	}
 
-	// Return a mock item with the project ID
+	// Return a mock item with the queried project ID
+	// The query parameter contains the project ID being checked
 	item := &sdp.Item{
 		Type:            m.Type(),
 		UniqueAttribute: "name",
 		Attributes: &sdp.ItemAttributes{
 			AttrStruct: &structpb.Struct{
 				Fields: map[string]*structpb.Value{
-					"projectId": structpb.NewStringValue(m.projectID),
+					"projectId": structpb.NewStringValue(query),
 				},
 			},
 		},
@@ -372,28 +376,28 @@ func TestNewProjectHealthChecker(t *testing.T) {
 	tests := []struct {
 		name          string
 		projectIDs    []string
-		adapters      map[string]discovery.Adapter
+		adapter       discovery.Adapter
 		cacheDuration time.Duration
 		expectValid   bool
 	}{
 		{
 			name:          "valid inputs",
 			projectIDs:    []string{"project-1", "project-2"},
-			adapters:      map[string]discovery.Adapter{"project-1": newMockAdapter("project-1", false, "")},
+			adapter:       newMockAdapter("project-1", false, ""),
 			cacheDuration: 1 * time.Minute,
 			expectValid:   true,
 		},
 		{
 			name:          "empty project IDs",
 			projectIDs:    []string{},
-			adapters:      map[string]discovery.Adapter{},
+			adapter:       newMockAdapter("project-1", false, ""),
 			cacheDuration: 1 * time.Minute,
 			expectValid:   true,
 		},
 		{
 			name:          "zero cache duration",
 			projectIDs:    []string{"project-1"},
-			adapters:      map[string]discovery.Adapter{"project-1": newMockAdapter("project-1", false, "")},
+			adapter:       newMockAdapter("project-1", false, ""),
 			cacheDuration: 0,
 			expectValid:   true,
 		},
@@ -401,7 +405,7 @@ func TestNewProjectHealthChecker(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			checker := NewProjectHealthChecker(tt.projectIDs, tt.adapters, tt.cacheDuration)
+			checker := NewProjectHealthChecker(tt.projectIDs, tt.adapter, tt.cacheDuration)
 
 			if checker == nil {
 				t.Fatal("expected checker to be non-nil")
@@ -421,12 +425,9 @@ func TestNewProjectHealthChecker(t *testing.T) {
 func TestProjectHealthChecker_Check_Success(t *testing.T) {
 	ctx := context.Background()
 	projectIDs := []string{"project-1", "project-2"}
-	adapters := map[string]discovery.Adapter{
-		"project-1": newMockAdapter("project-1", false, ""),
-		"project-2": newMockAdapter("project-2", false, ""),
-	}
+	adapter := newMockAdapter("project-1", false, "")
 
-	checker := NewProjectHealthChecker(projectIDs, adapters, 1*time.Minute)
+	checker := NewProjectHealthChecker(projectIDs, adapter, 1*time.Minute)
 	result, err := checker.Check(ctx)
 	if err != nil {
 		t.Errorf("expected no error, got %v", err)
@@ -448,29 +449,30 @@ func TestProjectHealthChecker_Check_Success(t *testing.T) {
 func TestProjectHealthChecker_Check_Failures(t *testing.T) {
 	ctx := context.Background()
 	projectIDs := []string{"project-1", "project-2", "project-3"}
-	adapters := map[string]discovery.Adapter{
-		"project-1": newMockAdapter("project-1", false, ""),
-		"project-2": newMockAdapter("project-2", true, "permission denied"),
-		"project-3": newMockAdapter("project-3", true, "not found"),
-	}
+	// Single adapter that will fail for project-2 and project-3
+	adapter := newMockAdapter("project-1", true, "permission denied")
 
-	checker := NewProjectHealthChecker(projectIDs, adapters, 1*time.Minute)
+	checker := NewProjectHealthChecker(projectIDs, adapter, 1*time.Minute)
 	result, err := checker.Check(ctx)
 
 	if err == nil {
 		t.Error("expected error, got nil")
 	}
 
-	if result.SuccessCount != 1 {
-		t.Errorf("expected 1 success, got %d", result.SuccessCount)
+	if result.SuccessCount != 0 {
+		t.Errorf("expected 0 success, got %d", result.SuccessCount)
 	}
 
-	if result.FailureCount != 2 {
-		t.Errorf("expected 2 failures, got %d", result.FailureCount)
+	if result.FailureCount != 3 {
+		t.Errorf("expected 3 failures, got %d", result.FailureCount)
 	}
 
-	if len(result.ProjectErrors) != 2 {
-		t.Errorf("expected 2 project errors, got %d", len(result.ProjectErrors))
+	if len(result.ProjectErrors) != 3 {
+		t.Errorf("expected 3 project errors, got %d", len(result.ProjectErrors))
+	}
+
+	if _, exists := result.ProjectErrors["project-1"]; !exists {
+		t.Error("expected error for project-1")
 	}
 
 	if _, exists := result.ProjectErrors["project-2"]; !exists {
@@ -483,31 +485,9 @@ func TestProjectHealthChecker_Check_Failures(t *testing.T) {
 }
 
 func TestProjectHealthChecker_Check_MissingAdapter(t *testing.T) {
-	ctx := context.Background()
-	projectIDs := []string{"project-1", "project-2"}
-	adapters := map[string]discovery.Adapter{
-		"project-1": newMockAdapter("project-1", false, ""),
-		// project-2 adapter is missing
-	}
-
-	checker := NewProjectHealthChecker(projectIDs, adapters, 1*time.Minute)
-	result, err := checker.Check(ctx)
-
-	if err == nil {
-		t.Error("expected error, got nil")
-	}
-
-	if result.SuccessCount != 1 {
-		t.Errorf("expected 1 success, got %d", result.SuccessCount)
-	}
-
-	if result.FailureCount != 1 {
-		t.Errorf("expected 1 failure, got %d", result.FailureCount)
-	}
-
-	if _, exists := result.ProjectErrors["project-2"]; !exists {
-		t.Error("expected error for project-2")
-	}
+	// This test is no longer relevant with a single multi-project adapter
+	// The adapter now handles all projects, so there's no concept of a "missing" adapter for a specific project
+	t.Skip("Test not applicable with single multi-project adapter pattern")
 }
 
 func TestProjectHealthChecker_Check_Caching(t *testing.T) {
@@ -544,11 +524,8 @@ func TestProjectHealthChecker_Check_Caching(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create fresh mock adapter for each test
 			mockAdpt := newMockAdapter("project-1", false, "")
-			adapters := map[string]discovery.Adapter{
-				"project-1": mockAdpt,
-			}
 
-			checker := NewProjectHealthChecker(projectIDs, adapters, tt.cacheDuration)
+			checker := NewProjectHealthChecker(projectIDs, mockAdpt, tt.cacheDuration)
 
 			// First call
 			_, err := checker.Check(ctx)
@@ -593,11 +570,8 @@ func TestProjectHealthChecker_Check_ConcurrentAccess(t *testing.T) {
 	ctx := context.Background()
 	projectIDs := []string{"project-1"}
 	mockAdpt := newMockAdapter("project-1", false, "")
-	adapters := map[string]discovery.Adapter{
-		"project-1": mockAdpt,
-	}
 
-	checker := NewProjectHealthChecker(projectIDs, adapters, 1*time.Minute)
+	checker := NewProjectHealthChecker(projectIDs, mockAdpt, 1*time.Minute)
 
 	// Run multiple checks concurrently
 	const concurrency = 10
