@@ -444,6 +444,7 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 
 	switch q.GetMethod() {
 	case sdp.QueryMethod_GET:
+		span.SetAttributes(attribute.Bool("ovm.sdp.streaming", false))
 		newItem, err := adapter.Get(ctx, q.GetScope(), q.GetQuery(), q.GetIgnoreCache())
 
 		if newItem != nil {
@@ -455,9 +456,11 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 	case sdp.QueryMethod_LIST:
 		if listStreamingAdapter, ok := adapter.(ListStreamableAdapter); ok {
 			// Prefer the streaming methods if they are available
+			span.SetAttributes(attribute.Bool("ovm.sdp.streaming", true))
 			listStreamingAdapter.ListStream(ctx, q.GetScope(), q.GetIgnoreCache(), stream)
 		} else if listableAdapter, ok := adapter.(ListableAdapter); ok {
 			// Fall back to the non-streaming methods
+			span.SetAttributes(attribute.Bool("ovm.sdp.streaming", false))
 			resultItems, err := listableAdapter.List(ctx, q.GetScope(), q.GetIgnoreCache())
 
 			for _, i := range resultItems {
@@ -477,9 +480,11 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 	case sdp.QueryMethod_SEARCH:
 		if searchStreamingAdapter, ok := adapter.(SearchStreamableAdapter); ok {
 			// Prefer the streaming methods if they are available
+			span.SetAttributes(attribute.Bool("ovm.sdp.streaming", true))
 			searchStreamingAdapter.SearchStream(ctx, q.GetScope(), q.GetQuery(), q.GetIgnoreCache(), stream)
 		} else if searchableAdapter, ok := adapter.(SearchableAdapter); ok {
 			// Fall back to the non-streaming methods
+			span.SetAttributes(attribute.Bool("ovm.sdp.streaming", false))
 			resultItems, err := searchableAdapter.Search(ctx, q.GetScope(), q.GetQuery(), q.GetIgnoreCache())
 
 			for _, i := range resultItems {
