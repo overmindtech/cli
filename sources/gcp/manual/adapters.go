@@ -153,7 +153,38 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 			return nil, fmt.Errorf("failed to create KMS crypto key client: %w", err)
 		}
 
-		bigQueryDatasetCli, err = bigquery.NewClient(ctx, bigquery.DetectProjectID, opts...)
+		// Extract project ID from projectLocations for BigQuery client initialization.
+		//
+		// IMPORTANT: The project ID passed to bigquery.NewClient() is used for:
+		// 1. Billing - all BigQuery operations are billed to this project
+		// 2. Client initialization - required parameter, cannot be omitted
+		//
+		// This does NOT restrict which projects we can query. All actual API operations
+		// in our codebase explicitly specify the target project using:
+		// - DatasetInProject(projectID, datasetID) for Get operations
+		// - dsIterator.ProjectID = projectID for List operations
+		//
+		// Therefore, using the first project ID here allows the adapter to query
+		// resources across ALL configured projects. The only consideration is billing:
+		// if projects have separate billing accounts, operations will be billed to
+		// the first project. If all projects share billing, this doesn't matter.
+		//
+		// We use the first project ID rather than bigquery.DetectProjectID because:
+		// - Auto-detection fails in containerized/Kubernetes environments
+		// - We have explicit project IDs available in projectLocations
+		// - Explicit configuration is more reliable than environment detection
+		var bigQueryProjectID string
+		for _, loc := range projectLocations {
+			if loc.ProjectID != "" {
+				bigQueryProjectID = loc.ProjectID
+				break
+			}
+		}
+		if bigQueryProjectID == "" {
+			return nil, fmt.Errorf("at least one project location with a valid project ID is required to create BigQuery client")
+		}
+
+		bigQueryDatasetCli, err = bigquery.NewClient(ctx, bigQueryProjectID, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create bigquery client: %w", err)
 		}
