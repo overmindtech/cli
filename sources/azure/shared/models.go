@@ -40,6 +40,9 @@ const (
 
 	// ElasticSAN
 	ElasticSAN shared.API = "elasticsan" // Microsoft.ElasticSan
+
+	// Authorization
+	Authorization shared.API = "authorization" // Microsoft.Authorization
 )
 
 // Resources
@@ -172,8 +175,8 @@ const (
 	ManagedHSM shared.Resource = "managed-hsm"
 
 	// ManagedIdentity resources
-	UserAssignedIdentity              shared.Resource = "user-assigned-identity"
-	FederatedIdentityCredential      shared.Resource = "federated-identity-credential"
+	UserAssignedIdentity        shared.Resource = "user-assigned-identity"
+	FederatedIdentityCredential shared.Resource = "federated-identity-credential"
 
 	// Batch resources
 	BatchAccount                   shared.Resource = "batch-account"
@@ -187,4 +190,8 @@ const (
 
 	// ElasticSAN resources
 	VolumeSnapshot shared.Resource = "elastic-san-volume-snapshot"
+
+	// Authorization resources
+	RoleAssignment shared.Resource = "role-assignment"
+	RoleDefinition shared.Resource = "role-definition"
 )

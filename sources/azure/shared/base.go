@@ -63,6 +63,19 @@ func ResourceGroupFromScope(scope string) string {
 	return parts[1]
 }
 
+// SubscriptionIDFromScope returns the subscription ID from a scope string.
+// Scope format is "{subscriptionId}.{resourceGroup}".
+func SubscriptionIDFromScope(scope string) string {
+	if scope == "" {
+		return ""
+	}
+	parts := strings.SplitN(scope, ".", 2)
+	if len(parts) < 2 || parts[0] == "" {
+		return ""
+	}
+	return parts[0]
+}
+
 // SubscriptionBase customizes the sources.Base struct for Azure
 // It adds the subscription ID to the base struct
 // and makes them available to concrete wrapper implementations.
