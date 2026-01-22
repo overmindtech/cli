@@ -205,7 +205,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 						Out: false,
 					},
 				},
-			},
 				{
 					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
