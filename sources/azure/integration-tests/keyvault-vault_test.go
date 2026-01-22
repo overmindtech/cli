@@ -163,12 +163,21 @@ func TestKeyVaultVaultIntegration(t *testing.T) {
 	})
 
 	t.Run("Teardown", func(t *testing.T) {
-		ctx := t.Context()
-
-		// Delete Key Vault
-		err := deleteKeyVault(ctx, keyVaultClient, integrationTestResourceGroup, integrationTestKeyVaultName)
-		if err != nil {
-			t.Fatalf("Failed to delete Key Vault: %v", err)
+		// We intentionally keep the Key Vault by default.
+		//
+		// Key Vault names are globally unique and (by default) soft-deleted on removal.
+		// Deleting the vault in tests frequently causes subsequent runs to fail because the
+		// name is still held by the soft-deleted vault, and recreating requires a purge.
+		//
+		// To opt into cleanup, set CLEANUP_AZURE_INTEGRATION_TESTS=true.
+		if os.Getenv("CLEANUP_AZURE_INTEGRATION_TESTS") == "true" {
+			ctx := t.Context()
+			err := deleteKeyVault(ctx, keyVaultClient, integrationTestResourceGroup, integrationTestKeyVaultName)
+			if err != nil {
+				t.Fatalf("Failed to delete Key Vault: %v", err)
+			}
+		} else {
+			log.Printf("Skipping Key Vault deletion (set CLEANUP_AZURE_INTEGRATION_TESTS=true to enable)")
 		}
 
 		// Optionally delete the resource group
@@ -201,10 +210,10 @@ func createKeyVault(ctx context.Context, client *armkeyvault.VaultsClient, resou
 	createCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 
-	// Create the Key Vault
+	// Create the Key Vault.
 	// Key Vault names must be globally unique and 3-24 characters
 	// They can only contain alphanumeric characters and hyphens
-	poller, err := client.BeginCreateOrUpdate(createCtx, resourceGroupName, vaultName, armkeyvault.VaultCreateOrUpdateParameters{
+	params := armkeyvault.VaultCreateOrUpdateParameters{
 		Location: ptr.To(location),
 		Properties: &armkeyvault.VaultProperties{
 			TenantID: ptr.To(tenantID),
@@ -213,46 +222,61 @@ func createKeyVault(ctx context.Context, client *armkeyvault.VaultsClient, resou
 				Name:   ptr.To(armkeyvault.SKUNameStandard),
 			},
 			AccessPolicies: []*armkeyvault.AccessPolicyEntry{
-				// Add a default access policy if needed
-				// For integration tests, we'll create with minimal configuration
+				// For integration tests, we create with minimal configuration.
 			},
 		},
 		Tags: map[string]*string{
 			"purpose": ptr.To("overmind-integration-tests"),
 			"test":    ptr.To("keyvault-vault"),
 		},
-	}, nil)
-	if err != nil {
-		// Check if context timed out
-		if errors.Is(err, context.DeadlineExceeded) {
-			return fmt.Errorf("timeout starting Key Vault creation (this may indicate the Microsoft.KeyVault resource provider is not registered or the operation is taking too long): %w", err)
-		}
-		// Check if Key Vault already exists (conflict)
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusConflict {
-			log.Printf("Key Vault %s already exists, skipping creation", vaultName)
-			return nil
-		}
-		return fmt.Errorf("failed to begin creating Key Vault: %w", err)
 	}
 
-	// Use the same timeout context for polling
-	resp, err := poller.PollUntilDone(createCtx, nil)
-	if err != nil {
-		// Check if context timed out
-		if errors.Is(err, context.DeadlineExceeded) {
-			return fmt.Errorf("timeout waiting for Key Vault creation to complete (this may indicate the Microsoft.KeyVault resource provider is not registered): %w", err)
+	// We allow one remediation pass for the common failure mode:
+	// the vault was soft-deleted previously, so the name is still held and create returns 409.
+	for attempt := 1; attempt <= 2; attempt++ {
+		poller, err := client.BeginCreateOrUpdate(createCtx, resourceGroupName, vaultName, params, nil)
+		if err != nil {
+			// Check if context timed out
+			if errors.Is(err, context.DeadlineExceeded) {
+				return fmt.Errorf("timeout starting Key Vault creation (this may indicate the Microsoft.KeyVault resource provider is not registered or the operation is taking too long): %w", err)
+			}
+
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusConflict {
+				// Key Vault uses soft-delete by default; 409 commonly means a deleted vault is still holding the name.
+				// Attempt to purge the deleted vault (if it exists) and retry creation.
+				if attempt == 1 {
+					if purgeErr := purgeSoftDeletedKeyVault(createCtx, client, vaultName, location); purgeErr != nil {
+						return fmt.Errorf("key vault name conflict for %s and purge failed: %w", vaultName, purgeErr)
+					}
+					continue
+				}
+				return fmt.Errorf("key vault name conflict for %s (it may be soft-deleted and require purge before recreate): %w", vaultName, err)
+			}
+
+			return fmt.Errorf("failed to begin creating Key Vault: %w", err)
 		}
-		return fmt.Errorf("failed to create Key Vault: %w", err)
+
+		// Use the same timeout context for polling
+		resp, err := poller.PollUntilDone(createCtx, nil)
+		if err != nil {
+			// Check if context timed out
+			if errors.Is(err, context.DeadlineExceeded) {
+				return fmt.Errorf("timeout waiting for Key Vault creation to complete (this may indicate the Microsoft.KeyVault resource provider is not registered): %w", err)
+			}
+			return fmt.Errorf("failed to create Key Vault: %w", err)
+		}
+
+		// Verify the Key Vault was created successfully
+		if resp.Properties == nil {
+			return fmt.Errorf("Key Vault created but properties are nil")
+		}
+
+		log.Printf("Key Vault %s created successfully", vaultName)
+		return nil
 	}
 
-	// Verify the Key Vault was created successfully
-	if resp.Properties == nil {
-		return fmt.Errorf("Key Vault created but properties are nil")
-	}
-
-	log.Printf("Key Vault %s created successfully", vaultName)
-	return nil
+	return fmt.Errorf("failed to create Key Vault %s: exhausted retries", vaultName)
 }
 
 // waitForKeyVaultAvailable waits for a Key Vault to be fully available
@@ -260,9 +284,15 @@ func waitForKeyVaultAvailable(ctx context.Context, client *armkeyvault.VaultsCli
 	maxAttempts := 20
 	pollInterval := 10 * time.Second
 
-	for attempt := range maxAttempts {
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		resp, err := client.Get(ctx, resourceGroupName, vaultName, nil)
 		if err != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+				log.Printf("Key Vault %s not yet available (attempt %d/%d), waiting %v...", vaultName, attempt, maxAttempts, pollInterval)
+				time.Sleep(pollInterval)
+				continue
+			}
 			return fmt.Errorf("failed to get Key Vault: %w", err)
 		}
 
@@ -273,11 +303,61 @@ func waitForKeyVaultAvailable(ctx context.Context, client *armkeyvault.VaultsCli
 			return nil
 		}
 
-		log.Printf("Waiting for Key Vault %s to be available (attempt %d/%d)", vaultName, attempt+1, maxAttempts)
+		log.Printf("Waiting for Key Vault %s to be available (attempt %d/%d)", vaultName, attempt, maxAttempts)
 		time.Sleep(pollInterval)
 	}
 
 	return fmt.Errorf("Key Vault %s did not become available within the timeout period", vaultName)
+}
+
+func purgeSoftDeletedKeyVault(ctx context.Context, client *armkeyvault.VaultsClient, vaultName, location string) error {
+	// Check if the vault is soft-deleted (this is the usual reason for 409 conflicts).
+	_, err := client.GetDeleted(ctx, vaultName, location, nil)
+	if err != nil {
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+			// The caller may have passed the wrong location. Try to locate the deleted vault and
+			// determine its original location.
+			pager := client.NewListDeletedPager(nil)
+			for pager.More() {
+				page, pageErr := pager.NextPage(ctx)
+				if pageErr != nil {
+					return fmt.Errorf("failed to list deleted vaults while resolving conflict for %s: %w", vaultName, pageErr)
+				}
+				for _, v := range page.Value {
+					if v == nil || v.Name == nil || *v.Name != vaultName {
+						continue
+					}
+					if v.Properties != nil && v.Properties.Location != nil && *v.Properties.Location != "" {
+						location = *v.Properties.Location
+						log.Printf("Found soft-deleted Key Vault %s in location %s via ListDeleted", vaultName, location)
+						goto purge
+					}
+					// If we can't determine location, we still can't purge with the SDK.
+					return fmt.Errorf("soft-deleted Key Vault %s found but location was empty; cannot purge automatically", vaultName)
+				}
+			}
+
+			// Not a soft-deleted vault in this subscription (or not visible); the name may be held elsewhere.
+			return fmt.Errorf("vault name %s is not soft-deleted in subscription/location (may be held by another subscription/tenant): %w", vaultName, err)
+		}
+		return fmt.Errorf("failed to check deleted Key Vault %s in %s: %w", vaultName, location, err)
+	}
+
+purge:
+	log.Printf("Key Vault %s is soft-deleted in %s; purging to allow recreation", vaultName, location)
+	poller, err := client.BeginPurgeDeleted(ctx, vaultName, location, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin purging soft-deleted Key Vault %s: %w", vaultName, err)
+	}
+
+	_, err = poller.PollUntilDone(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to purge soft-deleted Key Vault %s: %w", vaultName, err)
+	}
+
+	log.Printf("Soft-deleted Key Vault %s purged successfully", vaultName)
+	return nil
 }
 
 // deleteKeyVault deletes an Azure Key Vault (idempotent)
