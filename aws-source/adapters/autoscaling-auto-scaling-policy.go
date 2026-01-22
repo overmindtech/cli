@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -24,7 +23,7 @@ func scalingPolicyOutputMapper(_ context.Context, _ *autoscaling.Client, scope s
 			}
 		}
 
-		attributes, err := adapterhelpers.ToAttributesWithExclude(policy)
+		attributes, err := ToAttributesWithExclude(policy)
 
 		if err != nil {
 			return nil, err
@@ -182,14 +181,14 @@ func parseResourceLabelLinks(resourceLabel string, scope string) []*sdp.LinkedIt
 	return links
 }
 
-func NewAutoScalingPolicyAdapter(client *autoscaling.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*autoscaling.DescribePoliciesInput, *autoscaling.DescribePoliciesOutput, *autoscaling.Client, *autoscaling.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*autoscaling.DescribePoliciesInput, *autoscaling.DescribePoliciesOutput, *autoscaling.Client, *autoscaling.Options]{
+func NewAutoScalingPolicyAdapter(client *autoscaling.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*autoscaling.DescribePoliciesInput, *autoscaling.DescribePoliciesOutput, *autoscaling.Client, *autoscaling.Options] {
+	return &DescribeOnlyAdapter[*autoscaling.DescribePoliciesInput, *autoscaling.DescribePoliciesOutput, *autoscaling.Client, *autoscaling.Options]{
 		ItemType:        "autoscaling-auto-scaling-policy",
 		AccountID:       accountID,
 		Region:          region,
 		Client:          client,
 		AdapterMetadata: scalingPolicyAdapterMetadata,
-		SDPCache:        cache,
+		cache:           cache,
 		InputMapperGet: func(scope, query string) (*autoscaling.DescribePoliciesInput, error) {
 			// Query must be in the format: asgName/policyName
 			// e.g., "my-asg/scale-up-policy"
@@ -213,7 +212,7 @@ func NewAutoScalingPolicyAdapter(client *autoscaling.Client, accountID string, r
 			// Parse the ARN to extract the policy name and ASG name
 			// Scaling Policy ARNs have the format:
 			// arn:aws:autoscaling:region:account-id:scalingPolicy:uuid:autoScalingGroupName/group-name:policyName/policy-name
-			arn, err := adapterhelpers.ParseARN(query)
+			arn, err := ParseARN(query)
 			if err != nil {
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
@@ -269,7 +268,7 @@ func NewAutoScalingPolicyAdapter(client *autoscaling.Client, accountID string, r
 				PolicyNames:          []string{policyName},
 			}, nil
 		},
-		PaginatorBuilder: func(client *autoscaling.Client, params *autoscaling.DescribePoliciesInput) adapterhelpers.Paginator[*autoscaling.DescribePoliciesOutput, *autoscaling.Options] {
+		PaginatorBuilder: func(client *autoscaling.Client, params *autoscaling.DescribePoliciesInput) Paginator[*autoscaling.DescribePoliciesOutput, *autoscaling.Options] {
 			return autoscaling.NewDescribePoliciesPaginator(client, params)
 		},
 		DescribeFunc: func(ctx context.Context, client *autoscaling.Client, input *autoscaling.DescribePoliciesInput) (*autoscaling.DescribePoliciesOutput, error) {
