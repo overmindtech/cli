@@ -1,4 +1,4 @@
-package adapterhelpers
+package adapters
 
 import "context"
 

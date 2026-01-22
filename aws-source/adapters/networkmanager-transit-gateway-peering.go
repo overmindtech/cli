@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -23,7 +22,7 @@ func getTransitGatewayPeeringGetFunc(ctx context.Context, client *networkmanager
 }
 
 func transitGatewayPeeringItemMapper(_, scope string, awsItem *types.TransitGatewayPeering) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 	if err != nil {
 		return nil, err
 	}
@@ -85,13 +84,13 @@ func transitGatewayPeeringItemMapper(_, scope string, awsItem *types.TransitGate
 
 	// ARN example: "arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234"
 	if awsItem.TransitGatewayArn != nil {
-		if arn, err := adapterhelpers.ParseARN(*awsItem.TransitGatewayArn); err == nil {
+		if arn, err := ParseARN(*awsItem.TransitGatewayArn); err == nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "ec2-transit-gateway",
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *awsItem.TransitGatewayArn,
-					Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+					Scope:  FormatScope(arn.AccountID, arn.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,
@@ -104,14 +103,14 @@ func transitGatewayPeeringItemMapper(_, scope string, awsItem *types.TransitGate
 	return &item, nil
 }
 
-func NewNetworkManagerTransitGatewayPeeringAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.TransitGatewayPeering, *networkmanager.Client, *networkmanager.Options] {
-	return &adapterhelpers.GetListAdapter[*types.TransitGatewayPeering, *networkmanager.Client, *networkmanager.Options]{
+func NewNetworkManagerTransitGatewayPeeringAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *GetListAdapter[*types.TransitGatewayPeering, *networkmanager.Client, *networkmanager.Options] {
+	return &GetListAdapter[*types.TransitGatewayPeering, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-transit-gateway-peering",
 		AdapterMetadata: transitGatewayPeeringAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *networkmanager.Client, scope string, query string) (*types.TransitGatewayPeering, error) {
 			return getTransitGatewayPeeringGetFunc(ctx, client, scope, query)
 		},

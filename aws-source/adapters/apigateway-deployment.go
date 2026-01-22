@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -24,7 +23,7 @@ func convertGetDeploymentOutputToDeployment(output *apigateway.GetDeploymentOutp
 }
 
 func deploymentOutputMapper(query, scope string, awsItem *types.Deployment) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem, "tags")
+	attributes, err := ToAttributesWithExclude(awsItem, "tags")
 	if err != nil {
 		return nil, err
 	}
@@ -76,14 +75,14 @@ func deploymentOutputMapper(query, scope string, awsItem *types.Deployment) (*sd
 	return &item, nil
 }
 
-func NewAPIGatewayDeploymentAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.Deployment, *apigateway.Client, *apigateway.Options] {
-	return &adapterhelpers.GetListAdapter[*types.Deployment, *apigateway.Client, *apigateway.Options]{
+func NewAPIGatewayDeploymentAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *GetListAdapter[*types.Deployment, *apigateway.Client, *apigateway.Options] {
+	return &GetListAdapter[*types.Deployment, *apigateway.Client, *apigateway.Options]{
 		ItemType:        "apigateway-deployment",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: deploymentAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.Deployment, error) {
 			f := strings.Split(query, "/")
 			if len(f) != 2 {

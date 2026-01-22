@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -15,7 +14,7 @@ func directConnectGatewayAssociationProposalOutputMapper(_ context.Context, _ *d
 	items := make([]*sdp.Item, 0)
 
 	for _, associationProposal := range output.DirectConnectGatewayAssociationProposals {
-		attributes, err := adapterhelpers.ToAttributesWithExclude(associationProposal, "tags")
+		attributes, err := ToAttributesWithExclude(associationProposal, "tags")
 		if err != nil {
 			return nil, err
 		}
@@ -51,13 +50,13 @@ func directConnectGatewayAssociationProposalOutputMapper(_ context.Context, _ *d
 	return items, nil
 }
 
-func NewDirectConnectGatewayAssociationProposalAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, *directconnect.Client, *directconnect.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, *directconnect.Client, *directconnect.Options]{
+func NewDirectConnectGatewayAssociationProposalAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, *directconnect.Client, *directconnect.Options] {
+	return &DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: directConnectGatewayAssociationProposalAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		ItemType:        "directconnect-direct-connect-gateway-association-proposal",
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationProposalsInput) (*directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, error) {
 			return client.DescribeDirectConnectGatewayAssociationProposals(ctx, input)

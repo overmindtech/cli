@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -46,10 +45,10 @@ func TestEgressOnlyInternetGatewayOutputMapper(t *testing.T) {
 				Attachments: []types.InternetGatewayAttachment{
 					{
 						State: types.AttachmentStatusAttached,
-						VpcId: adapterhelpers.PtrString("vpc-0d7892e00e573e701"),
+						VpcId: PtrString("vpc-0d7892e00e573e701"),
 					},
 				},
-				EgressOnlyInternetGatewayId: adapterhelpers.PtrString("eigw-0ff50f360e066777a"),
+				EgressOnlyInternetGatewayId: PtrString("eigw-0ff50f360e066777a"),
 			},
 		},
 	}
@@ -74,7 +73,7 @@ func TestEgressOnlyInternetGatewayOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-vpc",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -92,7 +91,7 @@ func TestNewEC2EgressOnlyInternetGatewayAdapter(t *testing.T) {
 
 	adapter := NewEC2EgressOnlyInternetGatewayAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

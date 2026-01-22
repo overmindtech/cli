@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -39,10 +38,10 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 	if err == nil {
 		tags = cloudfrontTagsToMap(tagsOut.Tags)
 	} else {
-		tags = adapterhelpers.HandleTagsError(ctx, err)
+		tags = HandleTagsError(ctx, err)
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(d)
+	attributes, err := ToAttributesWithExclude(d)
 
 	if err != nil {
 		return nil, err
@@ -209,13 +208,13 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 				}
 
 				if behavior.RealtimeLogConfigArn != nil {
-					if arn, err := adapterhelpers.ParseARN(*behavior.RealtimeLogConfigArn); err == nil {
+					if arn, err := ParseARN(*behavior.RealtimeLogConfigArn); err == nil {
 						item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   "cloudfront-realtime-log-config",
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  *behavior.RealtimeLogConfigArn,
-								Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+								Scope:  FormatScope(arn.AccountID, arn.Region),
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								// Changing the config will affect the distribution
@@ -266,13 +265,13 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 				if behavior.FunctionAssociations != nil {
 					for _, function := range behavior.FunctionAssociations.Items {
 						if function.FunctionARN != nil {
-							if arn, err := adapterhelpers.ParseARN(*function.FunctionARN); err == nil {
+							if arn, err := ParseARN(*function.FunctionARN); err == nil {
 								item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 									Query: &sdp.Query{
 										Type:   "cloudfront-function",
 										Method: sdp.QueryMethod_SEARCH,
 										Query:  *function.FunctionARN,
-										Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+										Scope:  FormatScope(arn.AccountID, arn.Region),
 									},
 									BlastPropagation: &sdp.BlastPropagation{
 										// Changing the function could affect the distribution
@@ -288,13 +287,13 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 
 				if behavior.LambdaFunctionAssociations != nil {
 					for _, function := range behavior.LambdaFunctionAssociations.Items {
-						if arn, err := adapterhelpers.ParseARN(*function.LambdaFunctionARN); err == nil {
+						if arn, err := ParseARN(*function.LambdaFunctionARN); err == nil {
 							item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 								Query: &sdp.Query{
 									Type:   "lambda-function",
 									Method: sdp.QueryMethod_SEARCH,
 									Query:  *function.LambdaFunctionARN,
-									Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+									Scope:  FormatScope(arn.AccountID, arn.Region),
 								},
 								BlastPropagation: &sdp.BlastPropagation{
 									// Changing the function could affect the distribution
@@ -356,7 +355,7 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 									Type:   "s3-bucket",
 									Method: sdp.QueryMethod_GET,
 									Query:  matches[1],
-									Scope:  adapterhelpers.FormatScope(scope, ""), // S3 buckets are global
+									Scope:  FormatScope(scope, ""), // S3 buckets are global
 								},
 								BlastPropagation: &sdp.BlastPropagation{
 									// Changing the bucket could affect the distribution
@@ -441,13 +440,13 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 			}
 
 			if dc.DefaultCacheBehavior.RealtimeLogConfigArn != nil {
-				if arn, err := adapterhelpers.ParseARN(*dc.DefaultCacheBehavior.RealtimeLogConfigArn); err == nil {
+				if arn, err := ParseARN(*dc.DefaultCacheBehavior.RealtimeLogConfigArn); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "cloudfront-realtime-log-config",
 							Method: sdp.QueryMethod_GET,
 							Query:  *dc.DefaultCacheBehavior.RealtimeLogConfigArn,
-							Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+							Scope:  FormatScope(arn.AccountID, arn.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Changing the config will affect the distribution
@@ -498,13 +497,13 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 			if dc.DefaultCacheBehavior.FunctionAssociations != nil {
 				for _, function := range dc.DefaultCacheBehavior.FunctionAssociations.Items {
 					if function.FunctionARN != nil {
-						if arn, err := adapterhelpers.ParseARN(*function.FunctionARN); err == nil {
+						if arn, err := ParseARN(*function.FunctionARN); err == nil {
 							item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 								Query: &sdp.Query{
 									Type:   "cloudfront-function",
 									Method: sdp.QueryMethod_SEARCH,
 									Query:  *function.FunctionARN,
-									Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+									Scope:  FormatScope(arn.AccountID, arn.Region),
 								},
 								BlastPropagation: &sdp.BlastPropagation{
 									// Changing the function could affect the distribution
@@ -520,13 +519,13 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 
 			if dc.DefaultCacheBehavior.LambdaFunctionAssociations != nil {
 				for _, function := range dc.DefaultCacheBehavior.LambdaFunctionAssociations.Items {
-					if arn, err := adapterhelpers.ParseARN(*function.LambdaFunctionARN); err == nil {
+					if arn, err := ParseARN(*function.LambdaFunctionARN); err == nil {
 						item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   "lambda-function",
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  *function.LambdaFunctionARN,
-								Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+								Scope:  FormatScope(arn.AccountID, arn.Region),
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								// Changing the function could affect the distribution
@@ -558,13 +557,13 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 
 		if dc.ViewerCertificate != nil {
 			if dc.ViewerCertificate.ACMCertificateArn != nil {
-				if arn, err := adapterhelpers.ParseARN(*dc.ViewerCertificate.ACMCertificateArn); err == nil {
+				if arn, err := ParseARN(*dc.ViewerCertificate.ACMCertificateArn); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "acm-certificate",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *dc.ViewerCertificate.ACMCertificateArn,
-							Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+							Scope:  FormatScope(arn.AccountID, arn.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Changing the certificate could affect the distribution
@@ -594,13 +593,13 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 		}
 
 		if dc.WebACLId != nil {
-			if arn, err := adapterhelpers.ParseARN(*dc.WebACLId); err == nil {
+			if arn, err := ParseARN(*dc.WebACLId); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "wafv2-web-acl",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *dc.WebACLId,
-						Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+						Scope:  FormatScope(arn.AccountID, arn.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the ACL could affect the distribution
@@ -632,16 +631,16 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 	return &item, nil
 }
 
-func NewCloudfrontDistributionAdapter(client CloudFrontClient, accountID string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*cloudfront.ListDistributionsInput, *cloudfront.ListDistributionsOutput, *cloudfront.GetDistributionInput, *cloudfront.GetDistributionOutput, CloudFrontClient, *cloudfront.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*cloudfront.ListDistributionsInput, *cloudfront.ListDistributionsOutput, *cloudfront.GetDistributionInput, *cloudfront.GetDistributionOutput, CloudFrontClient, *cloudfront.Options]{
+func NewCloudfrontDistributionAdapter(client CloudFrontClient, accountID string, cache sdpcache.Cache) *AlwaysGetAdapter[*cloudfront.ListDistributionsInput, *cloudfront.ListDistributionsOutput, *cloudfront.GetDistributionInput, *cloudfront.GetDistributionOutput, CloudFrontClient, *cloudfront.Options] {
+	return &AlwaysGetAdapter[*cloudfront.ListDistributionsInput, *cloudfront.ListDistributionsOutput, *cloudfront.GetDistributionInput, *cloudfront.GetDistributionOutput, CloudFrontClient, *cloudfront.Options]{
 		ItemType:        "cloudfront-distribution",
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: distributionAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		ListInput:       &cloudfront.ListDistributionsInput{},
-		ListFuncPaginatorBuilder: func(client CloudFrontClient, input *cloudfront.ListDistributionsInput) adapterhelpers.Paginator[*cloudfront.ListDistributionsOutput, *cloudfront.Options] {
+		ListFuncPaginatorBuilder: func(client CloudFrontClient, input *cloudfront.ListDistributionsInput) Paginator[*cloudfront.ListDistributionsOutput, *cloudfront.Options] {
 			return cloudfront.NewListDistributionsPaginator(client, input)
 		},
 		GetInputMapper: func(scope, query string) *cloudfront.GetDistributionInput {

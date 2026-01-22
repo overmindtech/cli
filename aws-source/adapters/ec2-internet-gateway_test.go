@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -46,15 +45,15 @@ func TestInternetGatewayOutputMapper(t *testing.T) {
 				Attachments: []types.InternetGatewayAttachment{
 					{
 						State: types.AttachmentStatusAttached,
-						VpcId: adapterhelpers.PtrString("vpc-0d7892e00e573e701"),
+						VpcId: PtrString("vpc-0d7892e00e573e701"),
 					},
 				},
-				InternetGatewayId: adapterhelpers.PtrString("igw-03809416c9e2fcb66"),
-				OwnerId:           adapterhelpers.PtrString("052392120703"),
+				InternetGatewayId: PtrString("igw-03809416c9e2fcb66"),
+				OwnerId:           PtrString("052392120703"),
 				Tags: []types.Tag{
 					{
-						Key:   adapterhelpers.PtrString("Name"),
-						Value: adapterhelpers.PtrString("test"),
+						Key:   PtrString("Name"),
+						Value: PtrString("test"),
 					},
 				},
 			},
@@ -81,7 +80,7 @@ func TestInternetGatewayOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-vpc",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -99,7 +98,7 @@ func TestNewEC2InternetGatewayAdapter(t *testing.T) {
 
 	adapter := NewEC2InternetGatewayAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

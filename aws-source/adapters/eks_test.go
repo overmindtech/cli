@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/eks"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 type EKSTestClient struct {
@@ -62,7 +61,7 @@ func (t EKSTestClient) DescribeNodegroup(ctx context.Context, params *eks.Descri
 }
 
 func eksGetAutoConfig(t *testing.T) (*eks.Client, string, string) {
-	config, account, region := adapterhelpers.GetAutoConfig(t)
+	config, account, region := GetAutoConfig(t)
 	client := eks.NewFromConfig(config)
 
 	return client, account, region

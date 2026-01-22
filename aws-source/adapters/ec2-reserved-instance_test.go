@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 func TestReservedInstanceInputMapperGet(t *testing.T) {
@@ -42,12 +41,12 @@ func TestReservedInstanceOutputMapper(t *testing.T) {
 	output := &ec2.DescribeReservedInstancesOutput{
 		ReservedInstances: []types.ReservedInstances{
 			{
-				AvailabilityZone:   adapterhelpers.PtrString("az"),
+				AvailabilityZone:   PtrString("az"),
 				CurrencyCode:       types.CurrencyCodeValuesUsd,
-				Duration:           adapterhelpers.PtrInt64(100),
-				End:                adapterhelpers.PtrTime(time.Now()),
-				FixedPrice:         adapterhelpers.PtrFloat32(1.23),
-				InstanceCount:      adapterhelpers.PtrInt32(1),
+				Duration:           PtrInt64(100),
+				End:                PtrTime(time.Now()),
+				FixedPrice:         PtrFloat32(1.23),
+				InstanceCount:      PtrInt32(1),
 				InstanceTenancy:    types.TenancyDedicated,
 				InstanceType:       types.InstanceTypeA14xlarge,
 				OfferingClass:      types.OfferingClassTypeConvertible,
@@ -55,15 +54,15 @@ func TestReservedInstanceOutputMapper(t *testing.T) {
 				ProductDescription: types.RIProductDescription("foo"),
 				RecurringCharges: []types.RecurringCharge{
 					{
-						Amount:    adapterhelpers.PtrFloat64(1.111),
+						Amount:    PtrFloat64(1.111),
 						Frequency: types.RecurringChargeFrequencyHourly,
 					},
 				},
-				ReservedInstancesId: adapterhelpers.PtrString("id"),
+				ReservedInstancesId: PtrString("id"),
 				Scope:               types.ScopeAvailabilityZone,
-				Start:               adapterhelpers.PtrTime(time.Now()),
+				Start:               PtrTime(time.Now()),
 				State:               types.ReservedInstanceStateActive,
-				UsagePrice:          adapterhelpers.PtrFloat32(99.00000001),
+				UsagePrice:          PtrFloat32(99.00000001),
 			},
 		},
 	}
@@ -88,7 +87,7 @@ func TestReservedInstanceOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{}
+	tests := QueryTests{}
 
 	tests.Execute(t, item)
 
@@ -99,7 +98,7 @@ func TestNewEC2ReservedInstanceAdapter(t *testing.T) {
 
 	adapter := NewEC2ReservedInstanceAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

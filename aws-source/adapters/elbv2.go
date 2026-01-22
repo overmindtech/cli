@@ -7,7 +7,6 @@ import (
 
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -40,7 +39,7 @@ func elbv2GetTagsMap(ctx context.Context, client elbv2Client, arns []string) map
 			ResourceArns: arns,
 		})
 		if err != nil {
-			tags := adapterhelpers.HandleTagsError(ctx, err)
+			tags := HandleTagsError(ctx, err)
 
 			// Set these tags for all ARNs
 			for _, arn := range arns {
@@ -65,13 +64,13 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 
 	if action.AuthenticateCognitoConfig != nil {
 		if action.AuthenticateCognitoConfig.UserPoolArn != nil {
-			if a, err := adapterhelpers.ParseARN(*action.AuthenticateCognitoConfig.UserPoolArn); err == nil {
+			if a, err := ParseARN(*action.AuthenticateCognitoConfig.UserPoolArn); err == nil {
 				requests = append(requests, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "cognito-idp-user-pool",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *action.AuthenticateCognitoConfig.UserPoolArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the user pool could affect the LB
@@ -140,13 +139,13 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 	if action.ForwardConfig != nil {
 		for _, tg := range action.ForwardConfig.TargetGroups {
 			if tg.TargetGroupArn != nil {
-				if a, err := adapterhelpers.ParseARN(*tg.TargetGroupArn); err == nil {
+				if a, err := ParseARN(*tg.TargetGroupArn); err == nil {
 					requests = append(requests, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "elbv2-target-group",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *tg.TargetGroupArn,
-							Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+							Scope:  FormatScope(a.AccountID, a.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Changing the target group could affect the LB
@@ -205,13 +204,13 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 	}
 
 	if action.TargetGroupArn != nil {
-		if a, err := adapterhelpers.ParseARN(*action.TargetGroupArn); err == nil {
+		if a, err := ParseARN(*action.TargetGroupArn); err == nil {
 			requests = append(requests, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "elbv2-target-group",
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *action.TargetGroupArn,
-					Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+					Scope:  FormatScope(a.AccountID, a.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// These are closely linked

@@ -9,7 +9,6 @@ import (
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -18,11 +17,11 @@ func TestRuleOutputMapper(t *testing.T) {
 	output := elbv2.DescribeRulesOutput{
 		Rules: []types.Rule{
 			{
-				RuleArn:  adapterhelpers.PtrString("arn:aws:elasticloadbalancing:eu-west-2:944651592624:listener-rule/app/ingress/1bf10920c5bd199d/9d28f512be129134/0f73a74d21b008f7"),
-				Priority: adapterhelpers.PtrString("1"),
+				RuleArn:  PtrString("arn:aws:elasticloadbalancing:eu-west-2:944651592624:listener-rule/app/ingress/1bf10920c5bd199d/9d28f512be129134/0f73a74d21b008f7"),
+				Priority: PtrString("1"),
 				Conditions: []types.RuleCondition{
 					{
-						Field: adapterhelpers.PtrString("path-pattern"),
+						Field: PtrString("path-pattern"),
 						Values: []string{
 							"/api/gateway",
 						},
@@ -37,7 +36,7 @@ func TestRuleOutputMapper(t *testing.T) {
 							},
 						},
 						HttpHeaderConfig: &types.HttpHeaderConditionConfig{
-							HttpHeaderName: adapterhelpers.PtrString("SOMETHING"),
+							HttpHeaderName: PtrString("SOMETHING"),
 							Values: []string{
 								"foo",
 							},
@@ -50,8 +49,8 @@ func TestRuleOutputMapper(t *testing.T) {
 						QueryStringConfig: &types.QueryStringConditionConfig{
 							Values: []types.QueryStringKeyValuePair{
 								{
-									Key:   adapterhelpers.PtrString("foo"),
-									Value: adapterhelpers.PtrString("bar"),
+									Key:   PtrString("foo"),
+									Value: PtrString("bar"),
 								},
 							},
 						},
@@ -65,7 +64,7 @@ func TestRuleOutputMapper(t *testing.T) {
 				Actions: []types.Action{
 					// Tested in actions.go
 				},
-				IsDefault: adapterhelpers.PtrBool(false),
+				IsDefault: PtrBool(false),
 			},
 		},
 	}
@@ -81,7 +80,7 @@ func TestRuleOutputMapper(t *testing.T) {
 
 	item := items[0]
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "dns",
 			ExpectedMethod: sdp.QueryMethod_SEARCH,
@@ -94,7 +93,7 @@ func TestRuleOutputMapper(t *testing.T) {
 }
 
 func TestNewELBv2RuleAdapter(t *testing.T) {
-	config, account, region := adapterhelpers.GetAutoConfig(t)
+	config, account, region := GetAutoConfig(t)
 	client := elbv2.NewFromConfig(config)
 
 	lbSource := NewELBv2LoadBalancerAdapter(client, account, region, nil)
@@ -139,7 +138,7 @@ func TestNewELBv2RuleAdapter(t *testing.T) {
 
 	goodSearch := fmt.Sprint(listenerARN)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter:         ruleSource,
 		Timeout:         10 * time.Second,
 		GoodSearchQuery: &goodSearch,

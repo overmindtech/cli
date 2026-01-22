@@ -6,7 +6,6 @@ import (
 
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -25,7 +24,7 @@ func targetGroupOutputMapper(ctx context.Context, client elbv2Client, scope stri
 	tagsMap := elbv2GetTagsMap(ctx, client, tgArns)
 
 	for _, tg := range output.TargetGroups {
-		attrs, err := adapterhelpers.ToAttributesWithExclude(tg)
+		attrs, err := ToAttributesWithExclude(tg)
 
 		if err != nil {
 			return nil, err
@@ -79,13 +78,13 @@ func targetGroupOutputMapper(ctx context.Context, client elbv2Client, scope stri
 		}
 
 		for _, lbArn := range tg.LoadBalancerArns {
-			if a, err := adapterhelpers.ParseARN(lbArn); err == nil {
+			if a, err := ParseARN(lbArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "elbv2-load-balancer",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  lbArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Load balancers and their target groups are tightly coupled
@@ -102,14 +101,14 @@ func targetGroupOutputMapper(ctx context.Context, client elbv2Client, scope stri
 	return items, nil
 }
 
-func NewELBv2TargetGroupAdapter(client elbv2Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeTargetGroupsInput, *elbv2.DescribeTargetGroupsOutput, elbv2Client, *elbv2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeTargetGroupsInput, *elbv2.DescribeTargetGroupsOutput, elbv2Client, *elbv2.Options]{
+func NewELBv2TargetGroupAdapter(client elbv2Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*elbv2.DescribeTargetGroupsInput, *elbv2.DescribeTargetGroupsOutput, elbv2Client, *elbv2.Options] {
+	return &DescribeOnlyAdapter[*elbv2.DescribeTargetGroupsInput, *elbv2.DescribeTargetGroupsOutput, elbv2Client, *elbv2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "elbv2-target-group",
 		AdapterMetadata: targetGroupAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client elbv2Client, input *elbv2.DescribeTargetGroupsInput) (*elbv2.DescribeTargetGroupsOutput, error) {
 			return client.DescribeTargetGroups(ctx, input)
 		},
@@ -122,7 +121,7 @@ func NewELBv2TargetGroupAdapter(client elbv2Client, accountID string, region str
 			return &elbv2.DescribeTargetGroupsInput{}, nil
 		},
 		InputMapperSearch: func(ctx context.Context, client elbv2Client, scope, query string) (*elbv2.DescribeTargetGroupsInput, error) {
-			arn, err := adapterhelpers.ParseARN(query)
+			arn, err := ParseARN(query)
 
 			if err != nil {
 				return nil, err
@@ -145,7 +144,7 @@ func NewELBv2TargetGroupAdapter(client elbv2Client, accountID string, region str
 				return nil, fmt.Errorf("unsupported resource type: %s", arn.Resource)
 			}
 		},
-		PaginatorBuilder: func(client elbv2Client, params *elbv2.DescribeTargetGroupsInput) adapterhelpers.Paginator[*elbv2.DescribeTargetGroupsOutput, *elbv2.Options] {
+		PaginatorBuilder: func(client elbv2Client, params *elbv2.DescribeTargetGroupsInput) Paginator[*elbv2.DescribeTargetGroupsOutput, *elbv2.Options] {
 			return elbv2.NewDescribeTargetGroupsPaginator(client, params)
 		},
 		OutputMapper: targetGroupOutputMapper,

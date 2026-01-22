@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/route53/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -103,7 +102,7 @@ func resourceRecordSetSearchFunc(ctx context.Context, client *route53.Client, sc
 }
 
 func resourceRecordSetItemMapper(_, scope string, awsItem *types.ResourceRecordSet) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 
 	if err != nil {
 		return nil, err
@@ -189,8 +188,8 @@ func resourceRecordSetItemMapper(_, scope string, awsItem *types.ResourceRecordS
 	return &item, nil
 }
 
-func NewRoute53ResourceRecordSetAdapter(client *route53.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.ResourceRecordSet, *route53.Client, *route53.Options] {
-	return &adapterhelpers.GetListAdapter[*types.ResourceRecordSet, *route53.Client, *route53.Options]{
+func NewRoute53ResourceRecordSetAdapter(client *route53.Client, accountID string, region string, cache sdpcache.Cache) *GetListAdapter[*types.ResourceRecordSet, *route53.Client, *route53.Options] {
+	return &GetListAdapter[*types.ResourceRecordSet, *route53.Client, *route53.Options]{
 		ItemType:        "route53-resource-record-set",
 		Client:          client,
 		DisableList:     true,
@@ -200,7 +199,7 @@ func NewRoute53ResourceRecordSetAdapter(client *route53.Client, accountID string
 		ItemMapper:      resourceRecordSetItemMapper,
 		SearchFunc:      resourceRecordSetSearchFunc,
 		AdapterMetadata: resourceRecordSetAdapterMetadata,
-		SDPCache:        cache}
+		cache:        cache}
 }
 
 var resourceRecordSetAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{

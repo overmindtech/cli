@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -19,7 +18,7 @@ type ParameterGroup struct {
 }
 
 func dBParameterGroupItemMapper(_, scope string, awsItem *ParameterGroup) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 
 	if err != nil {
 		return nil, err
@@ -35,14 +34,14 @@ func dBParameterGroupItemMapper(_, scope string, awsItem *ParameterGroup) (*sdp.
 	return &item, nil
 }
 
-func NewRDSDBParameterGroupAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*ParameterGroup, rdsClient, *rds.Options] {
-	return &adapterhelpers.GetListAdapter[*ParameterGroup, rdsClient, *rds.Options]{
+func NewRDSDBParameterGroupAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *GetListAdapter[*ParameterGroup, rdsClient, *rds.Options] {
+	return &GetListAdapter[*ParameterGroup, rdsClient, *rds.Options]{
 		ItemType:        "rds-db-parameter-group",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: dbParameterGroupAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client rdsClient, scope, query string) (*ParameterGroup, error) {
 			out, err := client.DescribeDBParameterGroups(ctx, &rds.DescribeDBParameterGroupsInput{
 				DBParameterGroupName: &query,

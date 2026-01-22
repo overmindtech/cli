@@ -5,20 +5,19 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 func TestKeyGroupItemMapper(t *testing.T) {
 	group := types.KeyGroup{
-		Id: adapterhelpers.PtrString("test-id"),
+		Id: PtrString("test-id"),
 		KeyGroupConfig: &types.KeyGroupConfig{
 			Items: []string{
 				"some-identity",
 			},
-			Name:    adapterhelpers.PtrString("test-name"),
-			Comment: adapterhelpers.PtrString("test-comment"),
+			Name:    PtrString("test-name"),
+			Comment: PtrString("test-comment"),
 		},
-		LastModifiedTime: adapterhelpers.PtrTime(time.Now()),
+		LastModifiedTime: PtrTime(time.Now()),
 	}
 
 	item, err := KeyGroupItemMapper("", "test", &group)
@@ -37,7 +36,7 @@ func TestNewCloudfrontKeyGroupAdapter(t *testing.T) {
 
 	adapter := NewCloudfrontKeyGroupAdapter(client, account, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

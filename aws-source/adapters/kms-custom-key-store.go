@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -17,7 +16,7 @@ func customKeyStoreOutputMapper(_ context.Context, _ *kms.Client, scope string, 
 	items := make([]*sdp.Item, 0)
 
 	for _, customKeyStore := range output.CustomKeyStores {
-		attributes, err := adapterhelpers.ToAttributesWithExclude(customKeyStore, "tags")
+		attributes, err := ToAttributesWithExclude(customKeyStore, "tags")
 		if err != nil {
 			return nil, err
 		}
@@ -88,14 +87,14 @@ func customKeyStoreOutputMapper(_ context.Context, _ *kms.Client, scope string, 
 	return items, nil
 }
 
-func NewKMSCustomKeyStoreAdapter(client *kms.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*kms.DescribeCustomKeyStoresInput, *kms.DescribeCustomKeyStoresOutput, *kms.Client, *kms.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*kms.DescribeCustomKeyStoresInput, *kms.DescribeCustomKeyStoresOutput, *kms.Client, *kms.Options]{
+func NewKMSCustomKeyStoreAdapter(client *kms.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*kms.DescribeCustomKeyStoresInput, *kms.DescribeCustomKeyStoresOutput, *kms.Client, *kms.Options] {
+	return &DescribeOnlyAdapter[*kms.DescribeCustomKeyStoresInput, *kms.DescribeCustomKeyStoresOutput, *kms.Client, *kms.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "kms-custom-key-store",
 		AdapterMetadata: customKeyStoreAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *kms.Client, input *kms.DescribeCustomKeyStoresInput) (*kms.DescribeCustomKeyStoresOutput, error) {
 			return client.DescribeCustomKeyStores(ctx, input)
 		},

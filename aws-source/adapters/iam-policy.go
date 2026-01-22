@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/micahhausler/aws-iam-policy/policy"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 	log "github.com/sirupsen/logrus"
@@ -30,7 +29,7 @@ type PolicyDetails struct {
 
 func policyGetFunc(ctx context.Context, client IAMClient, scope, query string) (*PolicyDetails, error) {
 	// Construct the ARN from the name etc.
-	a := adapterhelpers.ARN{
+	a := ARN{
 		ARN: arn.ARN{
 			Partition: "aws",
 			Service:   "iam",
@@ -40,7 +39,7 @@ func policyGetFunc(ctx context.Context, client IAMClient, scope, query string) (
 		},
 	}
 	out, err := client.GetPolicy(ctx, &iam.GetPolicyInput{
-		PolicyArn: adapterhelpers.PtrString(a.String()),
+		PolicyArn: PtrString(a.String()),
 	})
 	if err != nil {
 		return nil, err
@@ -139,7 +138,7 @@ func policyItemMapper(_ *string, scope string, awsItem *PolicyDetails) (*sdp.Ite
 		Policy:   awsItem.Policy,
 		Document: awsItem.Document,
 	}
-	attributes, err := adapterhelpers.ToAttributesWithExclude(finalAttributes)
+	attributes, err := ToAttributesWithExclude(finalAttributes)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +232,7 @@ func policyListTagsFunc(ctx context.Context, p *PolicyDetails, client IAMClient)
 	for paginator.HasMorePages() {
 		out, err := paginator.NextPage(ctx)
 		if err != nil {
-			return adapterhelpers.HandleTagsError(ctx, err), nil
+			return HandleTagsError(ctx, err), nil
 		}
 
 		for _, tag := range out.Tags {
@@ -272,15 +271,15 @@ func policyListExtractor(ctx context.Context, output *iam.ListPoliciesOutput, cl
 // is implemented so that it was mart enough to handle different scopes. This
 // has been added to the backlog:
 // https://github.com/overmindtech/workspace/aws-adapter/issues/68
-func NewIAMPolicyAdapter(client IAMClient, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapterV2[*iam.ListPoliciesInput, *iam.ListPoliciesOutput, *PolicyDetails, IAMClient, *iam.Options] {
-	return &adapterhelpers.GetListAdapterV2[*iam.ListPoliciesInput, *iam.ListPoliciesOutput, *PolicyDetails, IAMClient, *iam.Options]{
+func NewIAMPolicyAdapter(client IAMClient, accountID string, cache sdpcache.Cache) *GetListAdapterV2[*iam.ListPoliciesInput, *iam.ListPoliciesOutput, *PolicyDetails, IAMClient, *iam.Options] {
+	return &GetListAdapterV2[*iam.ListPoliciesInput, *iam.ListPoliciesOutput, *PolicyDetails, IAMClient, *iam.Options]{
 		ItemType:               "iam-policy",
 		Client:                 client,
 		AccountID:              accountID,
 		Region:                 "",            // IAM policies aren't tied to a region
 		CacheDuration:          3 * time.Hour, // IAM has very low rate limits, we need to cache for a long time
 		AdapterMetadata:        policyAdapterMetadata,
-		SDPCache:               cache,
+		cache:               cache,
 		SupportGlobalResources: true,
 		InputMapperList: func(scope string) (*iam.ListPoliciesInput, error) {
 			var iamScope types.PolicyScopeType
@@ -294,7 +293,7 @@ func NewIAMPolicyAdapter(client IAMClient, accountID string, cache sdpcache.Cach
 				Scope:        iamScope,
 			}, nil
 		},
-		ListFuncPaginatorBuilder: func(client IAMClient, params *iam.ListPoliciesInput) adapterhelpers.Paginator[*iam.ListPoliciesOutput, *iam.Options] {
+		ListFuncPaginatorBuilder: func(client IAMClient, params *iam.ListPoliciesInput) Paginator[*iam.ListPoliciesOutput, *iam.Options] {
 			return iam.NewListPoliciesPaginator(client, params)
 		},
 		ListExtractor: policyListExtractor,

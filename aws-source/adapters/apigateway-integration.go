@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -30,7 +29,7 @@ func apiGatewayIntegrationGetFunc(ctx context.Context, client apiGatewayIntegrat
 		return nil, err
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(output, "tags")
+	attributes, err := ToAttributesWithExclude(output, "tags")
 	if err != nil {
 		return nil, err
 	}
@@ -89,14 +88,14 @@ func apiGatewayIntegrationGetFunc(ctx context.Context, client apiGatewayIntegrat
 	return item, nil
 }
 
-func NewAPIGatewayIntegrationAdapter(client apiGatewayIntegrationGetter, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, *apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, apiGatewayIntegrationGetter, *apigateway.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, *apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, apiGatewayIntegrationGetter, *apigateway.Options]{
+func NewAPIGatewayIntegrationAdapter(client apiGatewayIntegrationGetter, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, *apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, apiGatewayIntegrationGetter, *apigateway.Options] {
+	return &AlwaysGetAdapter[*apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, *apigateway.GetIntegrationInput, *apigateway.GetIntegrationOutput, apiGatewayIntegrationGetter, *apigateway.Options]{
 		ItemType:        "apigateway-integration",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: apiGatewayIntegrationAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc:         apiGatewayIntegrationGetFunc,
 		GetInputMapper: func(scope, query string) *apigateway.GetIntegrationInput {
 			// We are using a custom id of {rest-api-id}/{resource-id}/{http-method} e.g.

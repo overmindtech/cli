@@ -1,4 +1,4 @@
-package adapterhelpers
+package adapters
 
 import (
 	"context"
@@ -80,7 +80,7 @@ type AlwaysGetAdapter[ListInput InputType, ListOutput OutputType, GetInput Input
 	ListFuncOutputMapper func(output ListOutput, input ListInput) ([]GetInput, error)
 
 	CacheDuration time.Duration  // How long to cache items for
-	SDPCache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+	cache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 }
 
 func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) cacheDuration() time.Duration {
@@ -97,13 +97,13 @@ var (
 )
 
 func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) Cache() sdpcache.Cache {
-	if s.SDPCache == nil {
+	if s.cache == nil {
 		noOpCacheAlwaysGetOnce.Do(func() {
 			noOpCacheAlwaysGet = sdpcache.NewNoOpCache()
 		})
 		return noOpCacheAlwaysGet
 	}
-	return s.SDPCache
+	return s.cache
 }
 
 // Validate Checks that the adapter has been set up correctly

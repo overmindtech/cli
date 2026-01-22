@@ -7,15 +7,14 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 func TestCustomerMetadataOutputMapper(t *testing.T) {
 	output := &directconnect.DescribeCustomerMetadataOutput{
 		Agreements: []types.CustomerAgreement{
 			{
-				AgreementName: adapterhelpers.PtrString("example-customer-agreement"),
-				Status:        adapterhelpers.PtrString("signed"),
+				AgreementName: PtrString("example-customer-agreement"),
+				Status:        PtrString("signed"),
 			},
 		},
 	}
@@ -41,7 +40,7 @@ func TestNewDirectConnectCustomerMetadataAdapter(t *testing.T) {
 
 	adapter := NewDirectConnectCustomerMetadataAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

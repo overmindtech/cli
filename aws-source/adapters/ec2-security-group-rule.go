@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -28,7 +27,7 @@ func securityGroupRuleOutputMapper(_ context.Context, _ *ec2.Client, scope strin
 	for _, securityGroupRule := range output.SecurityGroupRules {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(securityGroupRule, "tags")
+		attrs, err = ToAttributesWithExclude(securityGroupRule, "tags")
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -86,20 +85,20 @@ func securityGroupRuleOutputMapper(_ context.Context, _ *ec2.Client, scope strin
 	return items, nil
 }
 
-func NewEC2SecurityGroupRuleAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeSecurityGroupRulesInput, *ec2.DescribeSecurityGroupRulesOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeSecurityGroupRulesInput, *ec2.DescribeSecurityGroupRulesOutput, *ec2.Client, *ec2.Options]{
+func NewEC2SecurityGroupRuleAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeSecurityGroupRulesInput, *ec2.DescribeSecurityGroupRulesOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeSecurityGroupRulesInput, *ec2.DescribeSecurityGroupRulesOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-security-group-rule",
 		AdapterMetadata: securityGroupRuleAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeSecurityGroupRulesInput) (*ec2.DescribeSecurityGroupRulesOutput, error) {
 			return client.DescribeSecurityGroupRules(ctx, input)
 		},
 		InputMapperGet:  securityGroupRuleInputMapperGet,
 		InputMapperList: securityGroupRuleInputMapperList,
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeSecurityGroupRulesInput) adapterhelpers.Paginator[*ec2.DescribeSecurityGroupRulesOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeSecurityGroupRulesInput) Paginator[*ec2.DescribeSecurityGroupRulesOutput, *ec2.Options] {
 			return ec2.NewDescribeSecurityGroupRulesPaginator(client, params)
 		},
 		OutputMapper: securityGroupRuleOutputMapper,

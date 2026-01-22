@@ -4,15 +4,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"testing"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
 func TestVPCAttachmentItemMapper(t *testing.T) {
 	input := types.VpcAttachment{
 		Attachment: &types.Attachment{
-			AttachmentId:  adapterhelpers.PtrString("attachment1"),
-			CoreNetworkId: adapterhelpers.PtrString("corenetwork1"),
+			AttachmentId:  PtrString("attachment1"),
+			CoreNetworkId: PtrString("corenetwork1"),
 		},
 	}
 	scope := "123456789012.eu-west-2"
@@ -30,7 +29,7 @@ func TestVPCAttachmentItemMapper(t *testing.T) {
 		t.Fatalf("expected %v, got %v", "attachment1", item.UniqueAttributeValue())
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "networkmanager-core-network",
 			ExpectedMethod: sdp.QueryMethod_GET,

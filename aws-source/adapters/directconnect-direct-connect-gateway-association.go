@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -21,7 +20,7 @@ func directConnectGatewayAssociationOutputMapper(_ context.Context, _ *directcon
 	items := make([]*sdp.Item, 0)
 
 	for _, association := range output.DirectConnectGatewayAssociations {
-		attributes, err := adapterhelpers.ToAttributesWithExclude(association, "tags")
+		attributes, err := ToAttributesWithExclude(association, "tags")
 		if err != nil {
 			return nil, err
 		}
@@ -80,14 +79,14 @@ func directConnectGatewayAssociationOutputMapper(_ context.Context, _ *directcon
 	return items, nil
 }
 
-func NewDirectConnectGatewayAssociationAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationsInput, *directconnect.DescribeDirectConnectGatewayAssociationsOutput, *directconnect.Client, *directconnect.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationsInput, *directconnect.DescribeDirectConnectGatewayAssociationsOutput, *directconnect.Client, *directconnect.Options]{
+func NewDirectConnectGatewayAssociationAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationsInput, *directconnect.DescribeDirectConnectGatewayAssociationsOutput, *directconnect.Client, *directconnect.Options] {
+	return &DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewayAssociationsInput, *directconnect.DescribeDirectConnectGatewayAssociationsOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-direct-connect-gateway-association",
 		AdapterMetadata: directConnectGatewayAssociationAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationsInput) (*directconnect.DescribeDirectConnectGatewayAssociationsOutput, error) {
 			return client.DescribeDirectConnectGatewayAssociations(ctx, input)
 		},

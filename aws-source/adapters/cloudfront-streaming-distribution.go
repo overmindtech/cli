@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -37,14 +36,14 @@ func streamingDistributionGetFunc(ctx context.Context, client CloudFrontClient, 
 	if err == nil {
 		tags = cloudfrontTagsToMap(tagsOut.Tags)
 	} else {
-		tags = adapterhelpers.HandleTagsError(ctx, err)
+		tags = HandleTagsError(ctx, err)
 	}
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tags for streaming distribution %v: %w", *d.Id, err)
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(d)
+	attributes, err := ToAttributesWithExclude(d)
 
 	if err != nil {
 		return nil, err
@@ -157,16 +156,16 @@ func streamingDistributionGetFunc(ctx context.Context, client CloudFrontClient, 
 	return &item, nil
 }
 
-func NewCloudfrontStreamingDistributionAdapter(client CloudFrontClient, accountID string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*cloudfront.ListStreamingDistributionsInput, *cloudfront.ListStreamingDistributionsOutput, *cloudfront.GetStreamingDistributionInput, *cloudfront.GetStreamingDistributionOutput, CloudFrontClient, *cloudfront.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*cloudfront.ListStreamingDistributionsInput, *cloudfront.ListStreamingDistributionsOutput, *cloudfront.GetStreamingDistributionInput, *cloudfront.GetStreamingDistributionOutput, CloudFrontClient, *cloudfront.Options]{
+func NewCloudfrontStreamingDistributionAdapter(client CloudFrontClient, accountID string, cache sdpcache.Cache) *AlwaysGetAdapter[*cloudfront.ListStreamingDistributionsInput, *cloudfront.ListStreamingDistributionsOutput, *cloudfront.GetStreamingDistributionInput, *cloudfront.GetStreamingDistributionOutput, CloudFrontClient, *cloudfront.Options] {
+	return &AlwaysGetAdapter[*cloudfront.ListStreamingDistributionsInput, *cloudfront.ListStreamingDistributionsOutput, *cloudfront.GetStreamingDistributionInput, *cloudfront.GetStreamingDistributionOutput, CloudFrontClient, *cloudfront.Options]{
 		ItemType:        "cloudfront-streaming-distribution",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata: streamingDistributionAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		ListInput:       &cloudfront.ListStreamingDistributionsInput{},
-		ListFuncPaginatorBuilder: func(client CloudFrontClient, input *cloudfront.ListStreamingDistributionsInput) adapterhelpers.Paginator[*cloudfront.ListStreamingDistributionsOutput, *cloudfront.Options] {
+		ListFuncPaginatorBuilder: func(client CloudFrontClient, input *cloudfront.ListStreamingDistributionsInput) Paginator[*cloudfront.ListStreamingDistributionsOutput, *cloudfront.Options] {
 			return cloudfront.NewListStreamingDistributionsPaginator(client, input)
 		},
 		GetInputMapper: func(scope, query string) *cloudfront.GetStreamingDistributionInput {

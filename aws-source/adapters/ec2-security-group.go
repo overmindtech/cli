@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -29,7 +28,7 @@ func securityGroupOutputMapper(_ context.Context, _ *ec2.Client, scope string, _
 	for _, securityGroup := range output.SecurityGroups {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(securityGroup, "tags")
+		attrs, err = ToAttributesWithExclude(securityGroup, "tags")
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -95,20 +94,20 @@ func securityGroupOutputMapper(_ context.Context, _ *ec2.Client, scope string, _
 	return items, nil
 }
 
-func NewEC2SecurityGroupAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeSecurityGroupsInput, *ec2.DescribeSecurityGroupsOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeSecurityGroupsInput, *ec2.DescribeSecurityGroupsOutput, *ec2.Client, *ec2.Options]{
+func NewEC2SecurityGroupAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeSecurityGroupsInput, *ec2.DescribeSecurityGroupsOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeSecurityGroupsInput, *ec2.DescribeSecurityGroupsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-security-group",
 		AdapterMetadata: securityGroupAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeSecurityGroupsInput) (*ec2.DescribeSecurityGroupsOutput, error) {
 			return client.DescribeSecurityGroups(ctx, input)
 		},
 		InputMapperGet:  securityGroupInputMapperGet,
 		InputMapperList: securityGroupInputMapperList,
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeSecurityGroupsInput) adapterhelpers.Paginator[*ec2.DescribeSecurityGroupsOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeSecurityGroupsInput) Paginator[*ec2.DescribeSecurityGroupsOutput, *ec2.Options] {
 			return ec2.NewDescribeSecurityGroupsPaginator(client, params)
 		},
 		OutputMapper: securityGroupOutputMapper,
@@ -142,7 +141,7 @@ var securityGroupAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 // extractLinkedSecurityGroups Extracts related security groups from IP
 // permissions
 func extractLinkedSecurityGroups(permissions []types.IpPermission, scope string) []*sdp.LinkedItemQuery {
-	currentAccount, region, err := adapterhelpers.ParseScope(scope)
+	currentAccount, region, err := ParseScope(scope)
 	requests := make([]*sdp.LinkedItemQuery, 0)
 	var relatedAccount string
 
@@ -164,7 +163,7 @@ func extractLinkedSecurityGroups(permissions []types.IpPermission, scope string)
 						Type:   "ec2-security-group",
 						Method: sdp.QueryMethod_GET,
 						Query:  *idGroup.GroupId,
-						Scope:  adapterhelpers.FormatScope(relatedAccount, region),
+						Scope:  FormatScope(relatedAccount, region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Linked security groups affect each other

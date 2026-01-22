@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -15,8 +14,8 @@ func TestGlobalNetworkOutputMapper(t *testing.T) {
 	output := networkmanager.DescribeGlobalNetworksOutput{
 		GlobalNetworks: []types.GlobalNetwork{
 			{
-				GlobalNetworkArn: adapterhelpers.PtrString("arn:aws:networkmanager:eu-west-2:052392120703:networkmanager/global-network/default"),
-				GlobalNetworkId:  adapterhelpers.PtrString("default"),
+				GlobalNetworkArn: PtrString("arn:aws:networkmanager:eu-west-2:052392120703:networkmanager/global-network/default"),
+				GlobalNetworkId:  PtrString("default"),
 			},
 		},
 	}
@@ -39,7 +38,7 @@ func TestGlobalNetworkOutputMapper(t *testing.T) {
 
 	item := items[0]
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "networkmanager-site",
 			ExpectedMethod: sdp.QueryMethod_SEARCH,

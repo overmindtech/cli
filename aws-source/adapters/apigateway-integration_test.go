@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -55,7 +54,7 @@ func TestApiGatewayIntegrationGetFunc(t *testing.T) {
 
 	integrationID := fmt.Sprintf("%s/%s/%s", *input.RestApiId, *input.ResourceId, *input.HttpMethod)
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "apigateway-method",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -74,13 +73,13 @@ func TestApiGatewayIntegrationGetFunc(t *testing.T) {
 }
 
 func TestNewAPIGatewayIntegrationAdapter(t *testing.T) {
-	config, account, region := adapterhelpers.GetAutoConfig(t)
+	config, account, region := GetAutoConfig(t)
 
 	client := apigateway.NewFromConfig(config)
 
 	adapter := NewAPIGatewayIntegrationAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter:  adapter,
 		Timeout:  10 * time.Second,
 		SkipList: true,

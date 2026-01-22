@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -43,7 +42,7 @@ func TestStageOutputMapper(t *testing.T) {
 			t.Error(err)
 		}
 
-		tests := adapterhelpers.QueryTests{
+		tests := QueryTests{
 			{
 				ExpectedType:   "apigateway-deployment",
 				ExpectedMethod: sdp.QueryMethod_GET,
@@ -63,13 +62,13 @@ func TestStageOutputMapper(t *testing.T) {
 }
 
 func TestNewAPIGatewayStageAdapter(t *testing.T) {
-	config, account, region := adapterhelpers.GetAutoConfig(t)
+	config, account, region := GetAutoConfig(t)
 
 	client := apigateway.NewFromConfig(config)
 
 	adapter := NewAPIGatewayStageAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter:  adapter,
 		Timeout:  10 * time.Second,
 		SkipList: true,

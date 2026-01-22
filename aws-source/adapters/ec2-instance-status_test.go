@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -43,10 +42,10 @@ func TestInstanceStatusOutputMapper(t *testing.T) {
 	output := &ec2.DescribeInstanceStatusOutput{
 		InstanceStatuses: []types.InstanceStatus{
 			{
-				AvailabilityZone: adapterhelpers.PtrString("eu-west-2c"),          // link
-				InstanceId:       adapterhelpers.PtrString("i-022bdccde30270570"), // link
+				AvailabilityZone: PtrString("eu-west-2c"),          // link
+				InstanceId:       PtrString("i-022bdccde30270570"), // link
 				InstanceState: &types.InstanceState{
-					Code: adapterhelpers.PtrInt32(16),
+					Code: PtrInt32(16),
 					Name: types.InstanceStateNameRunning,
 				},
 				InstanceStatus: &types.InstanceStatusSummary{
@@ -91,7 +90,7 @@ func TestInstanceStatusOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-instance",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -109,7 +108,7 @@ func TestNewEC2InstanceStatusAdapter(t *testing.T) {
 
 	adapter := NewEC2InstanceStatusAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -16,7 +15,7 @@ func lagOutputMapper(_ context.Context, _ *directconnect.Client, scope string, _
 	items := make([]*sdp.Item, 0)
 
 	for _, lag := range output.Lags {
-		attributes, err := adapterhelpers.ToAttributesWithExclude(lag, "tags")
+		attributes, err := ToAttributesWithExclude(lag, "tags")
 		if err != nil {
 			return nil, err
 		}
@@ -106,14 +105,14 @@ func lagOutputMapper(_ context.Context, _ *directconnect.Client, scope string, _
 	return items, nil
 }
 
-func NewDirectConnectLagAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeLagsInput, *directconnect.DescribeLagsOutput, *directconnect.Client, *directconnect.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeLagsInput, *directconnect.DescribeLagsOutput, *directconnect.Client, *directconnect.Options]{
+func NewDirectConnectLagAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*directconnect.DescribeLagsInput, *directconnect.DescribeLagsOutput, *directconnect.Client, *directconnect.Options] {
+	return &DescribeOnlyAdapter[*directconnect.DescribeLagsInput, *directconnect.DescribeLagsOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-lag",
 		AdapterMetadata: lagAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeLagsInput) (*directconnect.DescribeLagsOutput, error) {
 			return client.DescribeLags(ctx, input)
 		},

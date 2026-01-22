@@ -7,33 +7,32 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
 var NodeGroupClient = EKSTestClient{
 	DescribeNodegroupOutput: &eks.DescribeNodegroupOutput{
 		Nodegroup: &types.Nodegroup{
-			NodegroupName:  adapterhelpers.PtrString("default-2022122213523169820000001f"),
-			NodegroupArn:   adapterhelpers.PtrString("arn:aws:eks:eu-west-2:801795385023:nodegroup/dylan/default-2022122213523169820000001f/98c29d0d-b22a-aaa3-445e-ebf71d43f67c"),
-			ClusterName:    adapterhelpers.PtrString("dylan"),
-			Version:        adapterhelpers.PtrString("1.24"),
-			ReleaseVersion: adapterhelpers.PtrString("1.24.7-20221112"),
-			CreatedAt:      adapterhelpers.PtrTime(time.Now()),
-			ModifiedAt:     adapterhelpers.PtrTime(time.Now()),
+			NodegroupName:  PtrString("default-2022122213523169820000001f"),
+			NodegroupArn:   PtrString("arn:aws:eks:eu-west-2:801795385023:nodegroup/dylan/default-2022122213523169820000001f/98c29d0d-b22a-aaa3-445e-ebf71d43f67c"),
+			ClusterName:    PtrString("dylan"),
+			Version:        PtrString("1.24"),
+			ReleaseVersion: PtrString("1.24.7-20221112"),
+			CreatedAt:      PtrTime(time.Now()),
+			ModifiedAt:     PtrTime(time.Now()),
 			Status:         types.NodegroupStatusActive,
 			CapacityType:   types.CapacityTypesOnDemand,
-			DiskSize:       adapterhelpers.PtrInt32(100),
+			DiskSize:       PtrInt32(100),
 			RemoteAccess: &types.RemoteAccessConfig{
-				Ec2SshKey: adapterhelpers.PtrString("key"), // link
+				Ec2SshKey: PtrString("key"), // link
 				SourceSecurityGroups: []string{
 					"sg1", // link
 				},
 			},
 			ScalingConfig: &types.NodegroupScalingConfig{
-				MinSize:     adapterhelpers.PtrInt32(1),
-				MaxSize:     adapterhelpers.PtrInt32(3),
-				DesiredSize: adapterhelpers.PtrInt32(1),
+				MinSize:     PtrInt32(1),
+				MaxSize:     PtrInt32(3),
+				DesiredSize: PtrInt32(1),
 			},
 			InstanceTypes: []string{
 				"T3large",
@@ -42,33 +41,33 @@ var NodeGroupClient = EKSTestClient{
 				"subnet0d1fabfe6794b5543", // link
 			},
 			AmiType:  types.AMITypesAl2Arm64,
-			NodeRole: adapterhelpers.PtrString("arn:aws:iam::801795385023:role/default-eks-node-group-20221222134106992000000003"),
+			NodeRole: PtrString("arn:aws:iam::801795385023:role/default-eks-node-group-20221222134106992000000003"),
 			Labels:   map[string]string{},
 			Taints: []types.Taint{
 				{
 					Effect: types.TaintEffectNoSchedule,
-					Key:    adapterhelpers.PtrString("key"),
-					Value:  adapterhelpers.PtrString("value"),
+					Key:    PtrString("key"),
+					Value:  PtrString("value"),
 				},
 			},
 			Resources: &types.NodegroupResources{
 				AutoScalingGroups: []types.AutoScalingGroup{
 					{
-						Name: adapterhelpers.PtrString("eks-default-2022122213523169820000001f-98c29d0d-b22a-aaa3-445e-ebf71d43f67c"), // link
+						Name: PtrString("eks-default-2022122213523169820000001f-98c29d0d-b22a-aaa3-445e-ebf71d43f67c"), // link
 					},
 				},
-				RemoteAccessSecurityGroup: adapterhelpers.PtrString("sg2"), // link
+				RemoteAccessSecurityGroup: PtrString("sg2"), // link
 			},
 			Health: &types.NodegroupHealth{
 				Issues: []types.Issue{},
 			},
 			UpdateConfig: &types.NodegroupUpdateConfig{
-				MaxUnavailablePercentage: adapterhelpers.PtrInt32(33),
+				MaxUnavailablePercentage: PtrInt32(33),
 			},
 			LaunchTemplate: &types.LaunchTemplateSpecification{
-				Name:    adapterhelpers.PtrString("default-2022122213523100410000001d"), // link
-				Version: adapterhelpers.PtrString("1"),
-				Id:      adapterhelpers.PtrString("lt-097e994ce7e14fcdc"),
+				Name:    PtrString("default-2022122213523100410000001d"), // link
+				Version: PtrString("1"),
+				Id:      PtrString("lt-097e994ce7e14fcdc"),
 			},
 			Tags: map[string]string{},
 		},
@@ -88,7 +87,7 @@ func TestNodegroupGetFunc(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-key-pair",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -135,7 +134,7 @@ func TestNewEKSNodegroupAdapter(t *testing.T) {
 
 	adapter := NewEKSNodegroupAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter:           adapter,
 		Timeout:           10 * time.Second,
 		SkipNotFoundCheck: true,

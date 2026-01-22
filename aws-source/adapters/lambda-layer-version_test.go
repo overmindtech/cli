@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -62,17 +61,17 @@ func (t *TestLambdaClient) GetLayerVersion(ctx context.Context, params *lambda.G
 			types.RuntimeDotnet6,
 		},
 		Content: &types.LayerVersionContentOutput{
-			CodeSha256:               adapterhelpers.PtrString("sha"),
+			CodeSha256:               PtrString("sha"),
 			CodeSize:                 100,
-			Location:                 adapterhelpers.PtrString("somewhere"),
-			SigningJobArn:            adapterhelpers.PtrString("arn:aws:service:region:account:type/id"),
-			SigningProfileVersionArn: adapterhelpers.PtrString("arn:aws:service:region:account:type/id"),
+			Location:                 PtrString("somewhere"),
+			SigningJobArn:            PtrString("arn:aws:service:region:account:type/id"),
+			SigningProfileVersionArn: PtrString("arn:aws:service:region:account:type/id"),
 		},
-		CreatedDate:     adapterhelpers.PtrString("YYYY-MM-DDThh:mm:ss.sTZD"),
-		Description:     adapterhelpers.PtrString("description"),
-		LayerArn:        adapterhelpers.PtrString("arn:aws:service:region:account:type/id"),
-		LayerVersionArn: adapterhelpers.PtrString("arn:aws:service:region:account:type/id"),
-		LicenseInfo:     adapterhelpers.PtrString("info"),
+		CreatedDate:     PtrString("YYYY-MM-DDThh:mm:ss.sTZD"),
+		Description:     PtrString("description"),
+		LayerArn:        PtrString("arn:aws:service:region:account:type/id"),
+		LayerVersionArn: PtrString("arn:aws:service:region:account:type/id"),
+		LicenseInfo:     PtrString("info"),
 		Version:         *params.VersionNumber,
 	}, nil
 }
@@ -83,8 +82,8 @@ func (t *TestLambdaClient) ListLayerVersions(context.Context, *lambda.ListLayerV
 
 func TestLayerVersionGetFunc(t *testing.T) {
 	item, err := layerVersionGetFunc(context.Background(), &TestLambdaClient{}, "foo", &lambda.GetLayerVersionInput{
-		LayerName:     adapterhelpers.PtrString("layer"),
-		VersionNumber: adapterhelpers.PtrInt64(999),
+		LayerName:     PtrString("layer"),
+		VersionNumber: PtrInt64(999),
 	})
 
 	if err != nil {
@@ -95,7 +94,7 @@ func TestLayerVersionGetFunc(t *testing.T) {
 		t.Error(err)
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "signer-signing-job",
 			ExpectedMethod: sdp.QueryMethod_SEARCH,
@@ -118,7 +117,7 @@ func TestNewLambdaLayerVersionAdapter(t *testing.T) {
 
 	adapter := NewLambdaLayerVersionAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

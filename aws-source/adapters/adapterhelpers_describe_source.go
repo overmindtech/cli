@@ -1,4 +1,4 @@
-package adapterhelpers
+package adapters
 
 import (
 	"context"
@@ -29,7 +29,7 @@ type DescribeOnlyAdapter[Input InputType, Output OutputType, ClientStruct Client
 	AdapterMetadata   *sdp.AdapterMetadata
 
 	CacheDuration time.Duration  // How long to cache items for
-	SDPCache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+	cache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 
 	// The function that should be used to describe the resources that this
 	// adapter is related to
@@ -114,13 +114,13 @@ var (
 )
 
 func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Cache() sdpcache.Cache {
-	if s.SDPCache == nil {
+	if s.cache == nil {
 		noOpCacheDescribeOnce.Do(func() {
 			noOpCacheDescribe = sdpcache.NewNoOpCache()
 		})
 		return noOpCacheDescribe
 	}
-	return s.SDPCache
+	return s.cache
 }
 
 // Validate Checks that the adapter is correctly set up and returns an error if

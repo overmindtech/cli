@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdpcache"
 )
 
@@ -392,7 +391,7 @@ func TestCloudwatchInstanceMetricAdapterMetadata(t *testing.T) {
 }
 
 func TestNewCloudwatchInstanceMetricAdapter(t *testing.T) {
-	config, account, region := adapterhelpers.GetAutoConfig(t)
+	config, account, region := GetAutoConfig(t)
 	client := cloudwatch.NewFromConfig(config)
 
 	adapter := NewCloudwatchInstanceMetricAdapter(client, account, region, nil)
@@ -413,7 +412,7 @@ func TestCloudwatchInstanceMetricAdapterCaching(t *testing.T) {
 		Client:    client,
 		AccountID: "123456789012",
 		Region:    "eu-west-2",
-		SDPCache:  sdpcache.NewCache(ctx),
+		cache:  sdpcache.NewCache(ctx),
 	}
 
 	scope := "123456789012.eu-west-2"

@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -75,11 +74,11 @@ func alarmOutputMapper(ctx context.Context, client CloudwatchClient, scope strin
 		var arn *string
 
 		if alarm.Metric != nil {
-			attrs, err = adapterhelpers.ToAttributesWithExclude(alarm.Metric)
+			attrs, err = ToAttributesWithExclude(alarm.Metric)
 			arn = alarm.Metric.AlarmArn
 		}
 		if alarm.Composite != nil {
-			attrs, err = adapterhelpers.ToAttributesWithExclude(alarm.Composite)
+			attrs, err = ToAttributesWithExclude(alarm.Composite)
 			arn = alarm.Composite.AlarmArn
 		}
 
@@ -97,7 +96,7 @@ func alarmOutputMapper(ctx context.Context, client CloudwatchClient, scope strin
 		if err == nil {
 			tags = cloudwatchTagsToMap(tagsOut.Tags)
 		} else {
-			tags = adapterhelpers.HandleTagsError(ctx, err)
+			tags = HandleTagsError(ctx, err)
 		}
 
 		item := sdp.Item{
@@ -147,13 +146,13 @@ func alarmOutputMapper(ctx context.Context, client CloudwatchClient, scope strin
 
 		// Link to the suppressor alarm
 		if alarm.Composite != nil && alarm.Composite.ActionsSuppressor != nil {
-			if arn, err := adapterhelpers.ParseARN(*alarm.Composite.ActionsSuppressor); err == nil {
+			if arn, err := ParseARN(*alarm.Composite.ActionsSuppressor); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "cloudwatch-alarm",
 						Method: sdp.QueryMethod_GET,
 						Query:  arn.ResourceID(),
-						Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+						Scope:  FormatScope(arn.AccountID, arn.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changes to the suppressor alarm will affect this alarm
@@ -183,15 +182,15 @@ func alarmOutputMapper(ctx context.Context, client CloudwatchClient, scope strin
 	return items, nil
 }
 
-func NewCloudwatchAlarmAdapter(client *cloudwatch.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*cloudwatch.DescribeAlarmsInput, *cloudwatch.DescribeAlarmsOutput, CloudwatchClient, *cloudwatch.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*cloudwatch.DescribeAlarmsInput, *cloudwatch.DescribeAlarmsOutput, CloudwatchClient, *cloudwatch.Options]{
+func NewCloudwatchAlarmAdapter(client *cloudwatch.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*cloudwatch.DescribeAlarmsInput, *cloudwatch.DescribeAlarmsOutput, CloudwatchClient, *cloudwatch.Options] {
+	return &DescribeOnlyAdapter[*cloudwatch.DescribeAlarmsInput, *cloudwatch.DescribeAlarmsOutput, CloudwatchClient, *cloudwatch.Options]{
 		ItemType:        "cloudwatch-alarm",
 		Client:          client,
 		Region:          region,
 		AccountID:       accountID,
 		AdapterMetadata: cloudwatchAlarmAdapterMetadata,
-		SDPCache:        cache,
-		PaginatorBuilder: func(client CloudwatchClient, params *cloudwatch.DescribeAlarmsInput) adapterhelpers.Paginator[*cloudwatch.DescribeAlarmsOutput, *cloudwatch.Options] {
+		cache:        cache,
+		PaginatorBuilder: func(client CloudwatchClient, params *cloudwatch.DescribeAlarmsInput) Paginator[*cloudwatch.DescribeAlarmsOutput, *cloudwatch.Options] {
 			return cloudwatch.NewDescribeAlarmsPaginator(client, params)
 		},
 		DescribeFunc: func(ctx context.Context, client CloudwatchClient, input *cloudwatch.DescribeAlarmsInput) (*cloudwatch.DescribeAlarmsOutput, error) {
@@ -294,7 +293,7 @@ var cloudwatchAlarmAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 //
 // * arn:aws:ssm-incidents::account-id:responseplan/response-plan-name
 func actionToLink(action string) (*sdp.LinkedItemQuery, error) {
-	arn, err := adapterhelpers.ParseARN(action)
+	arn, err := ParseARN(action)
 
 	if err != nil {
 		return nil, err
@@ -307,7 +306,7 @@ func actionToLink(action string) (*sdp.LinkedItemQuery, error) {
 				Type:   "autoscaling-policy",
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  action,
-				Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+				Scope:  FormatScope(arn.AccountID, arn.Region),
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				// Changes to the policy won't affect the alarm
@@ -322,7 +321,7 @@ func actionToLink(action string) (*sdp.LinkedItemQuery, error) {
 				Type:   "sns-topic",
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  action,
-				Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+				Scope:  FormatScope(arn.AccountID, arn.Region),
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				// Changes to the topic won't affect the alarm
@@ -337,7 +336,7 @@ func actionToLink(action string) (*sdp.LinkedItemQuery, error) {
 				Type:   "ssm-ops-item",
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  action,
-				Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+				Scope:  FormatScope(arn.AccountID, arn.Region),
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				// Changes to an ops item won't affect the alarm
@@ -352,7 +351,7 @@ func actionToLink(action string) (*sdp.LinkedItemQuery, error) {
 				Type:   "ssm-incidents-response-plan",
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  action,
-				Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+				Scope:  FormatScope(arn.AccountID, arn.Region),
 			},
 			BlastPropagation: &sdp.BlastPropagation{
 				// Changes to a response plan won't affect the alarm

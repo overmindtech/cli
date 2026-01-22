@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 )
@@ -17,16 +16,16 @@ import (
 func (t *TestIAMClient) GetPolicy(ctx context.Context, params *iam.GetPolicyInput, optFns ...func(*iam.Options)) (*iam.GetPolicyOutput, error) {
 	return &iam.GetPolicyOutput{
 		Policy: &types.Policy{
-			PolicyName:                    adapterhelpers.PtrString("AWSControlTowerStackSetRolePolicy"),
-			PolicyId:                      adapterhelpers.PtrString("ANPA3VLV2U277MP54R2OV"),
-			Arn:                           adapterhelpers.PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerStackSetRolePolicy"),
-			Path:                          adapterhelpers.PtrString("/service-role/"),
-			DefaultVersionId:              adapterhelpers.PtrString("v1"),
-			AttachmentCount:               adapterhelpers.PtrInt32(1),
-			PermissionsBoundaryUsageCount: adapterhelpers.PtrInt32(0),
+			PolicyName:                    PtrString("AWSControlTowerStackSetRolePolicy"),
+			PolicyId:                      PtrString("ANPA3VLV2U277MP54R2OV"),
+			Arn:                           PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerStackSetRolePolicy"),
+			Path:                          PtrString("/service-role/"),
+			DefaultVersionId:              PtrString("v1"),
+			AttachmentCount:               PtrInt32(1),
+			PermissionsBoundaryUsageCount: PtrInt32(0),
 			IsAttachable:                  true,
-			CreateDate:                    adapterhelpers.PtrTime(time.Now()),
-			UpdateDate:                    adapterhelpers.PtrTime(time.Now()),
+			CreateDate:                    PtrTime(time.Now()),
+			UpdateDate:                    PtrTime(time.Now()),
 		},
 	}, nil
 }
@@ -35,20 +34,20 @@ func (t *TestIAMClient) ListEntitiesForPolicy(context.Context, *iam.ListEntities
 	return &iam.ListEntitiesForPolicyOutput{
 		PolicyGroups: []types.PolicyGroup{
 			{
-				GroupId:   adapterhelpers.PtrString("groupId"),
-				GroupName: adapterhelpers.PtrString("groupName"),
+				GroupId:   PtrString("groupId"),
+				GroupName: PtrString("groupName"),
 			},
 		},
 		PolicyRoles: []types.PolicyRole{
 			{
-				RoleId:   adapterhelpers.PtrString("roleId"),
-				RoleName: adapterhelpers.PtrString("roleName"),
+				RoleId:   PtrString("roleId"),
+				RoleName: PtrString("roleName"),
 			},
 		},
 		PolicyUsers: []types.PolicyUser{
 			{
-				UserId:   adapterhelpers.PtrString("userId"),
-				UserName: adapterhelpers.PtrString("userName"),
+				UserId:   PtrString("userId"),
+				UserName: PtrString("userName"),
 			},
 		},
 	}, nil
@@ -58,28 +57,28 @@ func (t *TestIAMClient) ListPolicies(context.Context, *iam.ListPoliciesInput, ..
 	return &iam.ListPoliciesOutput{
 		Policies: []types.Policy{
 			{
-				PolicyName:                    adapterhelpers.PtrString("AWSControlTowerAdminPolicy"),
-				PolicyId:                      adapterhelpers.PtrString("ANPA3VLV2U2745H37HTHN"),
-				Arn:                           adapterhelpers.PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerAdminPolicy"),
-				Path:                          adapterhelpers.PtrString("/service-role/"),
-				DefaultVersionId:              adapterhelpers.PtrString("v1"),
-				AttachmentCount:               adapterhelpers.PtrInt32(1),
-				PermissionsBoundaryUsageCount: adapterhelpers.PtrInt32(0),
+				PolicyName:                    PtrString("AWSControlTowerAdminPolicy"),
+				PolicyId:                      PtrString("ANPA3VLV2U2745H37HTHN"),
+				Arn:                           PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerAdminPolicy"),
+				Path:                          PtrString("/service-role/"),
+				DefaultVersionId:              PtrString("v1"),
+				AttachmentCount:               PtrInt32(1),
+				PermissionsBoundaryUsageCount: PtrInt32(0),
 				IsAttachable:                  true,
-				CreateDate:                    adapterhelpers.PtrTime(time.Now()),
-				UpdateDate:                    adapterhelpers.PtrTime(time.Now()),
+				CreateDate:                    PtrTime(time.Now()),
+				UpdateDate:                    PtrTime(time.Now()),
 			},
 			{
-				PolicyName:                    adapterhelpers.PtrString("AWSControlTowerCloudTrailRolePolicy"),
-				PolicyId:                      adapterhelpers.PtrString("ANPA3VLV2U27UOP7KSM6I"),
-				Arn:                           adapterhelpers.PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerCloudTrailRolePolicy"),
-				Path:                          adapterhelpers.PtrString("/service-role/"),
-				DefaultVersionId:              adapterhelpers.PtrString("v1"),
-				AttachmentCount:               adapterhelpers.PtrInt32(1),
-				PermissionsBoundaryUsageCount: adapterhelpers.PtrInt32(0),
+				PolicyName:                    PtrString("AWSControlTowerCloudTrailRolePolicy"),
+				PolicyId:                      PtrString("ANPA3VLV2U27UOP7KSM6I"),
+				Arn:                           PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerCloudTrailRolePolicy"),
+				Path:                          PtrString("/service-role/"),
+				DefaultVersionId:              PtrString("v1"),
+				AttachmentCount:               PtrInt32(1),
+				PermissionsBoundaryUsageCount: PtrInt32(0),
 				IsAttachable:                  true,
-				CreateDate:                    adapterhelpers.PtrTime(time.Now()),
-				UpdateDate:                    adapterhelpers.PtrTime(time.Now()),
+				CreateDate:                    PtrTime(time.Now()),
+				UpdateDate:                    PtrTime(time.Now()),
 			},
 		},
 	}, nil
@@ -89,8 +88,8 @@ func (t *TestIAMClient) ListPolicyTags(ctx context.Context, params *iam.ListPoli
 	return &iam.ListPolicyTagsOutput{
 		Tags: []types.Tag{
 			{
-				Key:   adapterhelpers.PtrString("foo"),
-				Value: adapterhelpers.PtrString("foo"),
+				Key:   PtrString("foo"),
+				Value: PtrString("foo"),
 			},
 		},
 	}, nil
@@ -208,7 +207,7 @@ func TestPolicyGetFunc(t *testing.T) {
 func TestPolicyListTagsFunc(t *testing.T) {
 	tags, err := policyListTagsFunc(context.Background(), &PolicyDetails{
 		Policy: &types.Policy{
-			Arn: adapterhelpers.PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerAdminPolicy"),
+			Arn: PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerAdminPolicy"),
 		},
 	}, &TestIAMClient{})
 	if err != nil {
@@ -223,33 +222,33 @@ func TestPolicyListTagsFunc(t *testing.T) {
 func TestPolicyItemMapper(t *testing.T) {
 	details := &PolicyDetails{
 		Policy: &types.Policy{
-			PolicyName:                    adapterhelpers.PtrString("AWSControlTowerAdminPolicy"),
-			PolicyId:                      adapterhelpers.PtrString("ANPA3VLV2U2745H37HTHN"),
-			Arn:                           adapterhelpers.PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerAdminPolicy"),
-			Path:                          adapterhelpers.PtrString("/service-role/"),
-			DefaultVersionId:              adapterhelpers.PtrString("v1"),
-			AttachmentCount:               adapterhelpers.PtrInt32(1),
-			PermissionsBoundaryUsageCount: adapterhelpers.PtrInt32(0),
+			PolicyName:                    PtrString("AWSControlTowerAdminPolicy"),
+			PolicyId:                      PtrString("ANPA3VLV2U2745H37HTHN"),
+			Arn:                           PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerAdminPolicy"),
+			Path:                          PtrString("/service-role/"),
+			DefaultVersionId:              PtrString("v1"),
+			AttachmentCount:               PtrInt32(1),
+			PermissionsBoundaryUsageCount: PtrInt32(0),
 			IsAttachable:                  true,
-			CreateDate:                    adapterhelpers.PtrTime(time.Now()),
-			UpdateDate:                    adapterhelpers.PtrTime(time.Now()),
+			CreateDate:                    PtrTime(time.Now()),
+			UpdateDate:                    PtrTime(time.Now()),
 		},
 		PolicyGroups: []types.PolicyGroup{
 			{
-				GroupId:   adapterhelpers.PtrString("groupId"),
-				GroupName: adapterhelpers.PtrString("groupName"),
+				GroupId:   PtrString("groupId"),
+				GroupName: PtrString("groupName"),
 			},
 		},
 		PolicyRoles: []types.PolicyRole{
 			{
-				RoleId:   adapterhelpers.PtrString("roleId"),
-				RoleName: adapterhelpers.PtrString("roleName"),
+				RoleId:   PtrString("roleId"),
+				RoleName: PtrString("roleName"),
 			},
 		},
 		PolicyUsers: []types.PolicyUser{
 			{
-				UserId:   adapterhelpers.PtrString("userId"),
-				UserName: adapterhelpers.PtrString("userName"),
+				UserId:   PtrString("userId"),
+				UserName: PtrString("userName"),
 			},
 		},
 	}
@@ -266,7 +265,7 @@ func TestPolicyItemMapper(t *testing.T) {
 		t.Error(err)
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "iam-group",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -307,7 +306,7 @@ func TestPolicyItemMapper(t *testing.T) {
 }
 
 func TestNewIAMPolicyAdapter(t *testing.T) {
-	config, account, _ := adapterhelpers.GetAutoConfig(t)
+	config, account, _ := GetAutoConfig(t)
 	client := iam.NewFromConfig(config, func(o *iam.Options) {
 		o.RetryMode = aws.RetryModeAdaptive
 		o.RetryMaxAttempts = 10
@@ -315,7 +314,7 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 
 	adapter := NewIAMPolicyAdapter(client, account, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 30 * time.Second,
 	}
@@ -330,7 +329,7 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 
 		t.Parallel()
 		// This item shouldn't be found since it lives globally
-		_, err := adapter.Get(ctx, adapterhelpers.FormatScope(account, ""), "ReadOnlyAccess", false)
+		_, err := adapter.Get(ctx, FormatScope(account, ""), "ReadOnlyAccess", false)
 
 		if err == nil {
 			t.Error("expected error, got nil")
@@ -358,7 +357,7 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 		defer span.End()
 
 		stream := discovery.NewRecordingQueryResultStream()
-		adapter.ListStream(ctx, adapterhelpers.FormatScope(account, ""), false, stream)
+		adapter.ListStream(ctx, FormatScope(account, ""), false, stream)
 
 		errs := stream.GetErrors()
 		if len(errs) > 0 {
@@ -371,7 +370,7 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 				t.Errorf("expected item to have an arn attribute, got %v", err)
 			}
 
-			arn, err := adapterhelpers.ParseARN(arnString.(string))
+			arn, err := ParseARN(arnString.(string))
 			if err != nil {
 				t.Error(err)
 			}
@@ -394,7 +393,7 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 			t.Parallel()
 
 			streamSearch := discovery.NewRecordingQueryResultStream()
-			adapter.SearchStream(ctxSearch, adapterhelpers.FormatScope(account, ""), arn.(string), false, streamSearch)
+			adapter.SearchStream(ctxSearch, FormatScope(account, ""), arn.(string), false, streamSearch)
 
 			errsSearch := streamSearch.GetErrors()
 			if len(errsSearch) > 0 {
@@ -441,7 +440,7 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 				t.Errorf("expected item to have an arn attribute, got %v", err)
 			}
 
-			arn, err := adapterhelpers.ParseARN(arnString.(string))
+			arn, err := ParseARN(arnString.(string))
 			if err != nil {
 				t.Error(err)
 			}
@@ -459,7 +458,7 @@ func TestNewIAMPolicyAdapter(t *testing.T) {
 
 			arn, _ := items[0].GetAttributes().Get("Arn")
 			streamSearch := discovery.NewRecordingQueryResultStream()
-			adapter.SearchStream(ctxSearch, adapterhelpers.FormatScope(account, ""), arn.(string), false, streamSearch)
+			adapter.SearchStream(ctxSearch, FormatScope(account, ""), arn.(string), false, streamSearch)
 
 			errorsStreamSearch := streamSearch.GetErrors()
 			if len(errorsStreamSearch) == 0 {

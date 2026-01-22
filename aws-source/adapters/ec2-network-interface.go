@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -40,7 +39,7 @@ func networkInterfaceInputMapperSearch(_ context.Context, _ *ec2.Client, scope, 
 	}
 
 	// Otherwise try to parse as an ARN
-	arn, err := adapterhelpers.ParseARN(query)
+	arn, err := ParseARN(query)
 	if err != nil {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOTFOUND,
@@ -70,7 +69,7 @@ func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 	for _, ni := range output.NetworkInterfaces {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(ni, "tagSet")
+		attrs, err = ToAttributesWithExclude(ni, "tagSet")
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -285,21 +284,21 @@ func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 	return items, nil
 }
 
-func NewEC2NetworkInterfaceAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeNetworkInterfacesInput, *ec2.DescribeNetworkInterfacesOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeNetworkInterfacesInput, *ec2.DescribeNetworkInterfacesOutput, *ec2.Client, *ec2.Options]{
+func NewEC2NetworkInterfaceAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeNetworkInterfacesInput, *ec2.DescribeNetworkInterfacesOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeNetworkInterfacesInput, *ec2.DescribeNetworkInterfacesOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-network-interface",
 		AdapterMetadata: networkInterfaceAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) (*ec2.DescribeNetworkInterfacesOutput, error) {
 			return client.DescribeNetworkInterfaces(ctx, input)
 		},
 		InputMapperGet:    networkInterfaceInputMapperGet,
 		InputMapperList:   networkInterfaceInputMapperList,
 		InputMapperSearch: networkInterfaceInputMapperSearch,
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeNetworkInterfacesInput) adapterhelpers.Paginator[*ec2.DescribeNetworkInterfacesOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeNetworkInterfacesInput) Paginator[*ec2.DescribeNetworkInterfacesOutput, *ec2.Options] {
 			return ec2.NewDescribeNetworkInterfacesPaginator(client, params)
 		},
 		OutputMapper: networkInterfaceOutputMapper,

@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -17,21 +16,21 @@ func (n NetworkManagerTestClient) GetConnectPeer(ctx context.Context, params *ne
 			Configuration: &types.ConnectPeerConfiguration{
 				BgpConfigurations: []types.ConnectPeerBgpConfiguration{
 					{
-						CoreNetworkAddress: adapterhelpers.PtrString("1.4.2.4"),         // link
-						CoreNetworkAsn:     adapterhelpers.PtrInt64(64512),              // link
-						PeerAddress:        adapterhelpers.PtrString("123.123.123.123"), // link
-						PeerAsn:            adapterhelpers.PtrInt64(64513),              // link
+						CoreNetworkAddress: PtrString("1.4.2.4"),         // link
+						CoreNetworkAsn:     PtrInt64(64512),              // link
+						PeerAddress:        PtrString("123.123.123.123"), // link
+						PeerAsn:            PtrInt64(64513),              // link
 					},
 				},
-				CoreNetworkAddress: adapterhelpers.PtrString("1.1.1.3"),  // link
-				PeerAddress:        adapterhelpers.PtrString("1.1.1.45"), // link
+				CoreNetworkAddress: PtrString("1.1.1.3"),  // link
+				PeerAddress:        PtrString("1.1.1.45"), // link
 			},
-			ConnectAttachmentId: adapterhelpers.PtrString("ca-1"), // link
-			ConnectPeerId:       adapterhelpers.PtrString("cp-1"),
-			CoreNetworkId:       adapterhelpers.PtrString("cn-1"), // link
-			EdgeLocation:        adapterhelpers.PtrString("us-west-2"),
+			ConnectAttachmentId: PtrString("ca-1"), // link
+			ConnectPeerId:       PtrString("cp-1"),
+			CoreNetworkId:       PtrString("cn-1"), // link
+			EdgeLocation:        PtrString("us-west-2"),
 			State:               types.ConnectPeerStateAvailable,
-			SubnetArn:           adapterhelpers.PtrString("arn:aws:ec2:us-west-2:123456789012:subnet/subnet-1"), // link
+			SubnetArn:           PtrString("arn:aws:ec2:us-west-2:123456789012:subnet/subnet-1"), // link
 		},
 	}, nil
 }
@@ -56,7 +55,7 @@ func TestConnectPeerGetFunc(t *testing.T) {
 		t.Fatalf("expected cp-1, got %v", item.UniqueAttributeValue())
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ip",
 			ExpectedMethod: sdp.QueryMethod_GET,

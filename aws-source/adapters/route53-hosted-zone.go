@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/route53/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -41,7 +40,7 @@ func hostedZoneListFunc(ctx context.Context, client *route53.Client, scope strin
 }
 
 func hostedZoneItemMapper(_, scope string, awsItem *types.HostedZone) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 
 	if err != nil {
 		return nil, err
@@ -73,8 +72,8 @@ func hostedZoneItemMapper(_, scope string, awsItem *types.HostedZone) (*sdp.Item
 	return &item, nil
 }
 
-func NewRoute53HostedZoneAdapter(client *route53.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.HostedZone, *route53.Client, *route53.Options] {
-	return &adapterhelpers.GetListAdapter[*types.HostedZone, *route53.Client, *route53.Options]{
+func NewRoute53HostedZoneAdapter(client *route53.Client, accountID string, region string, cache sdpcache.Cache) *GetListAdapter[*types.HostedZone, *route53.Client, *route53.Options] {
+	return &GetListAdapter[*types.HostedZone, *route53.Client, *route53.Options]{
 		ItemType:        "route53-hosted-zone",
 		Client:          client,
 		AccountID:       accountID,
@@ -83,7 +82,7 @@ func NewRoute53HostedZoneAdapter(client *route53.Client, accountID string, regio
 		ListFunc:        hostedZoneListFunc,
 		ItemMapper:      hostedZoneItemMapper,
 		AdapterMetadata: hostedZoneAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		ListTagsFunc: func(ctx context.Context, hz *types.HostedZone, c *route53.Client) (map[string]string, error) {
 			if hz.Id == nil {
 				return nil, nil

@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -19,7 +18,7 @@ func deviceOutputMapper(_ context.Context, _ *networkmanager.Client, scope strin
 	for _, s := range output.Devices {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(s, "tags")
+		attrs, err = ToAttributesWithExclude(s, "tags")
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -127,8 +126,8 @@ func deviceOutputMapper(_ context.Context, _ *networkmanager.Client, scope strin
 	return items, nil
 }
 
-func NewNetworkManagerDeviceAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetDevicesInput, *networkmanager.GetDevicesOutput, *networkmanager.Client, *networkmanager.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetDevicesInput, *networkmanager.GetDevicesOutput, *networkmanager.Client, *networkmanager.Options]{
+func NewNetworkManagerDeviceAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *DescribeOnlyAdapter[*networkmanager.GetDevicesInput, *networkmanager.GetDevicesOutput, *networkmanager.Client, *networkmanager.Options] {
+	return &DescribeOnlyAdapter[*networkmanager.GetDevicesInput, *networkmanager.GetDevicesOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:    client,
 		AccountID: accountID,
 		ItemType:  "networkmanager-device",
@@ -136,7 +135,7 @@ func NewNetworkManagerDeviceAdapter(client *networkmanager.Client, accountID str
 			return client.GetDevices(ctx, input)
 		},
 		AdapterMetadata: networkmanagerDeviceAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		InputMapperGet: func(scope, query string) (*networkmanager.GetDevicesInput, error) {
 			// We are using a custom id of {globalNetworkId}|{deviceId}
 			sections := strings.Split(query, "|")
@@ -162,13 +161,13 @@ func NewNetworkManagerDeviceAdapter(client *networkmanager.Client, accountID str
 				Scope:       scope,
 			}
 		},
-		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetDevicesInput) adapterhelpers.Paginator[*networkmanager.GetDevicesOutput, *networkmanager.Options] {
+		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetDevicesInput) Paginator[*networkmanager.GetDevicesOutput, *networkmanager.Options] {
 			return networkmanager.NewGetDevicesPaginator(client, params)
 		},
 		OutputMapper: deviceOutputMapper,
 		InputMapperSearch: func(ctx context.Context, client *networkmanager.Client, scope, query string) (*networkmanager.GetDevicesInput, error) {
 			// Try to parse as ARN first
-			arn, err := adapterhelpers.ParseARN(query)
+			arn, err := ParseARN(query)
 			if err == nil {
 				// Check if it's a networkmanager-device ARN
 				if arn.Service == "networkmanager" && arn.Type() == "device" {

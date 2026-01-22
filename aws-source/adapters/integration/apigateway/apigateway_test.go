@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/aws-source/adapters"
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 	"github.com/overmindtech/cli/sdp-go"
@@ -103,7 +102,7 @@ func APIGateway(t *testing.T) {
 
 	// Tests ----------------------------------------------------------------------------------------------------------
 
-	scope := adapterhelpers.FormatScope(accountID, testAWSConfig.Region)
+	scope := adapters.FormatScope(accountID, testAWSConfig.Region)
 
 	// List restApis
 	restApis, err := restApiSource.List(ctx, scope, true)

@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -43,30 +42,30 @@ func TestSecurityGroupOutputMapper(t *testing.T) {
 	output := &ec2.DescribeSecurityGroupsOutput{
 		SecurityGroups: []types.SecurityGroup{
 			{
-				Description: adapterhelpers.PtrString("default VPC security group"),
-				GroupName:   adapterhelpers.PtrString("default"),
+				Description: PtrString("default VPC security group"),
+				GroupName:   PtrString("default"),
 				IpPermissions: []types.IpPermission{
 					{
-						IpProtocol:    adapterhelpers.PtrString("-1"),
+						IpProtocol:    PtrString("-1"),
 						IpRanges:      []types.IpRange{},
 						Ipv6Ranges:    []types.Ipv6Range{},
 						PrefixListIds: []types.PrefixListId{},
 						UserIdGroupPairs: []types.UserIdGroupPair{
 							{
-								GroupId: adapterhelpers.PtrString("sg-094e151c9fc5da181"),
-								UserId:  adapterhelpers.PtrString("052392120704"),
+								GroupId: PtrString("sg-094e151c9fc5da181"),
+								UserId:  PtrString("052392120704"),
 							},
 						},
 					},
 				},
-				OwnerId: adapterhelpers.PtrString("052392120703"),
-				GroupId: adapterhelpers.PtrString("sg-094e151c9fc5da181"),
+				OwnerId: PtrString("052392120703"),
+				GroupId: PtrString("sg-094e151c9fc5da181"),
 				IpPermissionsEgress: []types.IpPermission{
 					{
-						IpProtocol: adapterhelpers.PtrString("-1"),
+						IpProtocol: PtrString("-1"),
 						IpRanges: []types.IpRange{
 							{
-								CidrIp: adapterhelpers.PtrString("0.0.0.0/0"),
+								CidrIp: PtrString("0.0.0.0/0"),
 							},
 						},
 						Ipv6Ranges:       []types.Ipv6Range{},
@@ -74,7 +73,7 @@ func TestSecurityGroupOutputMapper(t *testing.T) {
 						UserIdGroupPairs: []types.UserIdGroupPair{},
 					},
 				},
-				VpcId: adapterhelpers.PtrString("vpc-0d7892e00e573e701"),
+				VpcId: PtrString("vpc-0d7892e00e573e701"),
 			},
 		},
 	}
@@ -93,7 +92,7 @@ func TestSecurityGroupOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-vpc",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -123,7 +122,7 @@ func TestNewEC2SecurityGroupAdapter(t *testing.T) {
 
 	adapter := NewEC2SecurityGroupAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

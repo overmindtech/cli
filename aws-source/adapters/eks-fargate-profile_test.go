@@ -7,22 +7,21 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
 var FargateTestClient = EKSTestClient{
 	DescribeFargateProfileOutput: &eks.DescribeFargateProfileOutput{
 		FargateProfile: &types.FargateProfile{
-			ClusterName:         adapterhelpers.PtrString("cluster"),
-			CreatedAt:           adapterhelpers.PtrTime(time.Now()),
-			FargateProfileArn:   adapterhelpers.PtrString("arn:partition:service:region:account-id:resource-type/resource-id"),
-			FargateProfileName:  adapterhelpers.PtrString("name"),
-			PodExecutionRoleArn: adapterhelpers.PtrString("arn:partition:service::account-id:resource-type/resource-id"),
+			ClusterName:         PtrString("cluster"),
+			CreatedAt:           PtrTime(time.Now()),
+			FargateProfileArn:   PtrString("arn:partition:service:region:account-id:resource-type/resource-id"),
+			FargateProfileName:  PtrString("name"),
+			PodExecutionRoleArn: PtrString("arn:partition:service::account-id:resource-type/resource-id"),
 			Selectors: []types.FargateProfileSelector{
 				{
 					Labels:    map[string]string{},
-					Namespace: adapterhelpers.PtrString("namespace"),
+					Namespace: PtrString("namespace"),
 				},
 			},
 			Status: types.FargateProfileStatusActive,
@@ -47,7 +46,7 @@ func TestFargateProfileGetFunc(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "iam-role",
 			ExpectedMethod: sdp.QueryMethod_SEARCH,
@@ -70,7 +69,7 @@ func TestNewEKSFargateProfileAdapter(t *testing.T) {
 
 	adapter := NewEKSFargateProfileAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter:           adapter,
 		Timeout:           10 * time.Second,
 		SkipNotFoundCheck: true,

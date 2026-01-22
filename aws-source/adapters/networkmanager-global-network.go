@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -18,7 +17,7 @@ func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client,
 	for _, gn := range output.GlobalNetworks {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(gn, "tags")
+		attrs, err = ToAttributesWithExclude(gn, "tags")
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -161,13 +160,13 @@ func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client,
 	return items, nil
 }
 
-func NewNetworkManagerGlobalNetworkAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.DescribeGlobalNetworksInput, *networkmanager.DescribeGlobalNetworksOutput, *networkmanager.Client, *networkmanager.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.DescribeGlobalNetworksInput, *networkmanager.DescribeGlobalNetworksOutput, *networkmanager.Client, *networkmanager.Options]{
+func NewNetworkManagerGlobalNetworkAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *DescribeOnlyAdapter[*networkmanager.DescribeGlobalNetworksInput, *networkmanager.DescribeGlobalNetworksOutput, *networkmanager.Client, *networkmanager.Options] {
+	return &DescribeOnlyAdapter[*networkmanager.DescribeGlobalNetworksInput, *networkmanager.DescribeGlobalNetworksOutput, *networkmanager.Client, *networkmanager.Options]{
 		ItemType:        "networkmanager-global-network",
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: globalNetworkAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.DescribeGlobalNetworksInput) (*networkmanager.DescribeGlobalNetworksOutput, error) {
 			return client.DescribeGlobalNetworks(ctx, input)
 		},
@@ -179,7 +178,7 @@ func NewNetworkManagerGlobalNetworkAdapter(client *networkmanager.Client, accoun
 		InputMapperList: func(scope string) (*networkmanager.DescribeGlobalNetworksInput, error) {
 			return &networkmanager.DescribeGlobalNetworksInput{}, nil
 		},
-		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.DescribeGlobalNetworksInput) adapterhelpers.Paginator[*networkmanager.DescribeGlobalNetworksOutput, *networkmanager.Options] {
+		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.DescribeGlobalNetworksInput) Paginator[*networkmanager.DescribeGlobalNetworksOutput, *networkmanager.Options] {
 			return networkmanager.NewDescribeGlobalNetworksPaginator(client, params)
 		},
 		OutputMapper: globalNetworkOutputMapper,

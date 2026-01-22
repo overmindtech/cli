@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -17,14 +16,14 @@ func TestVirtualInterfaceOutputMapper(t *testing.T) {
 	output := &directconnect.DescribeVirtualInterfacesOutput{
 		VirtualInterfaces: []types.VirtualInterface{
 			{
-				VirtualInterfaceId:     adapterhelpers.PtrString("dxvif-ffhhk74f"),
-				ConnectionId:           adapterhelpers.PtrString("dxcon-fguhmqlc"),
+				VirtualInterfaceId:     PtrString("dxvif-ffhhk74f"),
+				ConnectionId:           PtrString("dxcon-fguhmqlc"),
 				VirtualInterfaceState:  "verifying",
-				CustomerAddress:        adapterhelpers.PtrString("192.168.1.2/30"),
-				AmazonAddress:          adapterhelpers.PtrString("192.168.1.1/30"),
-				VirtualInterfaceType:   adapterhelpers.PtrString("private"),
-				VirtualInterfaceName:   adapterhelpers.PtrString("PrivateVirtualInterface"),
-				DirectConnectGatewayId: adapterhelpers.PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
+				CustomerAddress:        PtrString("192.168.1.2/30"),
+				AmazonAddress:          PtrString("192.168.1.1/30"),
+				VirtualInterfaceType:   PtrString("private"),
+				VirtualInterfaceName:   PtrString("PrivateVirtualInterface"),
+				DirectConnectGatewayId: PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
 			},
 		},
 	}
@@ -46,7 +45,7 @@ func TestVirtualInterfaceOutputMapper(t *testing.T) {
 
 	item := items[0]
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "directconnect-connection",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -93,7 +92,7 @@ func TestNewDirectConnectVirtualInterfaceAdapter(t *testing.T) {
 
 	adapter := NewDirectConnectVirtualInterfaceAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -19,7 +18,7 @@ func siteOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 	for _, s := range output.Sites {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(s, "tags")
+		attrs, err = ToAttributesWithExclude(s, "tags")
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -96,13 +95,13 @@ func siteOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 	return items, nil
 }
 
-func NewNetworkManagerSiteAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetSitesInput, *networkmanager.GetSitesOutput, *networkmanager.Client, *networkmanager.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetSitesInput, *networkmanager.GetSitesOutput, *networkmanager.Client, *networkmanager.Options]{
+func NewNetworkManagerSiteAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *DescribeOnlyAdapter[*networkmanager.GetSitesInput, *networkmanager.GetSitesOutput, *networkmanager.Client, *networkmanager.Options] {
+	return &DescribeOnlyAdapter[*networkmanager.GetSitesInput, *networkmanager.GetSitesOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "networkmanager-site",
 		AdapterMetadata: siteAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.GetSitesInput) (*networkmanager.GetSitesOutput, error) {
 			return client.GetSites(ctx, input)
 		},
@@ -131,13 +130,13 @@ func NewNetworkManagerSiteAdapter(client *networkmanager.Client, accountID strin
 				Scope:       scope,
 			}
 		},
-		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetSitesInput) adapterhelpers.Paginator[*networkmanager.GetSitesOutput, *networkmanager.Options] {
+		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetSitesInput) Paginator[*networkmanager.GetSitesOutput, *networkmanager.Options] {
 			return networkmanager.NewGetSitesPaginator(client, params)
 		},
 		OutputMapper: siteOutputMapper,
 		InputMapperSearch: func(ctx context.Context, client *networkmanager.Client, scope, query string) (*networkmanager.GetSitesInput, error) {
 			// Try to parse as ARN first
-			arn, err := adapterhelpers.ParseARN(query)
+			arn, err := ParseARN(query)
 			if err == nil {
 				// Check if it's a networkmanager-site ARN
 				if arn.Service == "networkmanager" && arn.Type() == "site" {

@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -15,10 +14,10 @@ func TestLinkOutputMapper(t *testing.T) {
 	output := networkmanager.GetLinksOutput{
 		Links: []types.Link{
 			{
-				LinkId:          adapterhelpers.PtrString("link-1"),
-				GlobalNetworkId: adapterhelpers.PtrString("default"),
-				SiteId:          adapterhelpers.PtrString("site-1"),
-				LinkArn:         adapterhelpers.PtrString("arn:aws:networkmanager:us-west-2:123456789012:link/link-1"),
+				LinkId:          PtrString("link-1"),
+				GlobalNetworkId: PtrString("default"),
+				SiteId:          PtrString("site-1"),
+				LinkArn:         PtrString("arn:aws:networkmanager:us-west-2:123456789012:link/link-1"),
 			},
 		},
 	}
@@ -52,7 +51,7 @@ func TestLinkOutputMapper(t *testing.T) {
 		t.Fatalf("expected default|link-1, got %v", item.UniqueAttributeValue())
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "networkmanager-global-network",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -95,7 +94,7 @@ func TestLinkInputMapperSearch(t *testing.T) {
 			name:  "Valid networkmanager-link ARN",
 			query: "arn:aws:networkmanager::123456789012:link/global-network-01231231231231231/link-11112222aaaabbbb1",
 			expectedInput: &networkmanager.GetLinksInput{
-				GlobalNetworkId: adapterhelpers.PtrString("global-network-01231231231231231"),
+				GlobalNetworkId: PtrString("global-network-01231231231231231"),
 				LinkIds:         []string{"link-11112222aaaabbbb1"},
 			},
 			expectError: false,
@@ -104,7 +103,7 @@ func TestLinkInputMapperSearch(t *testing.T) {
 			name:  "Global Network ID only",
 			query: "global-network-123456789",
 			expectedInput: &networkmanager.GetLinksInput{
-				GlobalNetworkId: adapterhelpers.PtrString("global-network-123456789"),
+				GlobalNetworkId: PtrString("global-network-123456789"),
 			},
 			expectError: false,
 		},
@@ -112,8 +111,8 @@ func TestLinkInputMapperSearch(t *testing.T) {
 			name:  "Global Network ID and Site ID",
 			query: "global-network-123456789|site-987654321",
 			expectedInput: &networkmanager.GetLinksInput{
-				GlobalNetworkId: adapterhelpers.PtrString("global-network-123456789"),
-				SiteId:          adapterhelpers.PtrString("site-987654321"),
+				GlobalNetworkId: PtrString("global-network-123456789"),
+				SiteId:          PtrString("site-987654321"),
 			},
 			expectError: false,
 		},

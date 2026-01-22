@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -28,7 +27,7 @@ func vpcOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.Desc
 	for _, vpc := range output.Vpcs {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(vpc, "tags")
+		attrs, err = ToAttributesWithExclude(vpc, "tags")
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -52,20 +51,20 @@ func vpcOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.Desc
 	return items, nil
 }
 
-func NewEC2VpcAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeVpcsInput, *ec2.DescribeVpcsOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeVpcsInput, *ec2.DescribeVpcsOutput, *ec2.Client, *ec2.Options]{
+func NewEC2VpcAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeVpcsInput, *ec2.DescribeVpcsOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeVpcsInput, *ec2.DescribeVpcsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-vpc",
 		AdapterMetadata: vpcAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeVpcsInput) (*ec2.DescribeVpcsOutput, error) {
 			return client.DescribeVpcs(ctx, input)
 		},
 		InputMapperGet:  vpcInputMapperGet,
 		InputMapperList: vpcInputMapperList,
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeVpcsInput) adapterhelpers.Paginator[*ec2.DescribeVpcsOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeVpcsInput) Paginator[*ec2.DescribeVpcsOutput, *ec2.Options] {
 			return ec2.NewDescribeVpcsPaginator(client, params)
 		},
 		OutputMapper: vpcOutputMapper,

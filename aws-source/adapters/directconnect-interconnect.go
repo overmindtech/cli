@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -16,7 +15,7 @@ func interconnectOutputMapper(_ context.Context, _ *directconnect.Client, scope 
 	items := make([]*sdp.Item, 0)
 
 	for _, interconnect := range output.Interconnects {
-		attributes, err := adapterhelpers.ToAttributesWithExclude(interconnect, "tags")
+		attributes, err := ToAttributesWithExclude(interconnect, "tags")
 		if err != nil {
 			return nil, err
 		}
@@ -120,14 +119,14 @@ func interconnectOutputMapper(_ context.Context, _ *directconnect.Client, scope 
 	return items, nil
 }
 
-func NewDirectConnectInterconnectAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeInterconnectsInput, *directconnect.DescribeInterconnectsOutput, *directconnect.Client, *directconnect.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeInterconnectsInput, *directconnect.DescribeInterconnectsOutput, *directconnect.Client, *directconnect.Options]{
+func NewDirectConnectInterconnectAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*directconnect.DescribeInterconnectsInput, *directconnect.DescribeInterconnectsOutput, *directconnect.Client, *directconnect.Options] {
+	return &DescribeOnlyAdapter[*directconnect.DescribeInterconnectsInput, *directconnect.DescribeInterconnectsOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-interconnect",
 		AdapterMetadata: interconnectAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeInterconnectsInput) (*directconnect.DescribeInterconnectsOutput, error) {
 			return client.DescribeInterconnects(ctx, input)
 		},

@@ -6,20 +6,19 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 func TestOptionGroupOutputMapper(t *testing.T) {
 	output := rds.DescribeOptionGroupsOutput{
 		OptionGroupsList: []types.OptionGroup{
 			{
-				OptionGroupName:                       adapterhelpers.PtrString("default:aurora-mysql-8-0"),
-				OptionGroupDescription:                adapterhelpers.PtrString("Default option group for aurora-mysql 8.0"),
-				EngineName:                            adapterhelpers.PtrString("aurora-mysql"),
-				MajorEngineVersion:                    adapterhelpers.PtrString("8.0"),
+				OptionGroupName:                       PtrString("default:aurora-mysql-8-0"),
+				OptionGroupDescription:                PtrString("Default option group for aurora-mysql 8.0"),
+				EngineName:                            PtrString("aurora-mysql"),
+				MajorEngineVersion:                    PtrString("8.0"),
 				Options:                               []types.Option{},
-				AllowsVpcAndNonVpcInstanceMemberships: adapterhelpers.PtrBool(true),
-				OptionGroupArn:                        adapterhelpers.PtrString("arn:aws:rds:eu-west-2:052392120703:og:default:aurora-mysql-8-0"),
+				AllowsVpcAndNonVpcInstanceMemberships: PtrBool(true),
+				OptionGroupArn:                        PtrString("arn:aws:rds:eu-west-2:052392120703:og:default:aurora-mysql-8-0"),
 			},
 		},
 	}

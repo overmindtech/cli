@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -19,7 +18,7 @@ func MountTargetOutputMapper(_ context.Context, _ *efs.Client, scope string, inp
 	items := make([]*sdp.Item, 0)
 
 	for _, mt := range output.MountTargets {
-		attrs, err := adapterhelpers.ToAttributesWithExclude(mt)
+		attrs, err := ToAttributesWithExclude(mt)
 
 		if err != nil {
 			return nil, err
@@ -123,14 +122,14 @@ func MountTargetOutputMapper(_ context.Context, _ *efs.Client, scope string, inp
 	return items, nil
 }
 
-func NewEFSMountTargetAdapter(client *efs.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*efs.DescribeMountTargetsInput, *efs.DescribeMountTargetsOutput, *efs.Client, *efs.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*efs.DescribeMountTargetsInput, *efs.DescribeMountTargetsOutput, *efs.Client, *efs.Options]{
+func NewEFSMountTargetAdapter(client *efs.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*efs.DescribeMountTargetsInput, *efs.DescribeMountTargetsOutput, *efs.Client, *efs.Options] {
+	return &DescribeOnlyAdapter[*efs.DescribeMountTargetsInput, *efs.DescribeMountTargetsOutput, *efs.Client, *efs.Options]{
 		ItemType:        "efs-mount-target",
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: efsMountTargetAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *efs.Client, input *efs.DescribeMountTargetsInput) (*efs.DescribeMountTargetsOutput, error) {
 			return client.DescribeMountTargets(ctx, input)
 		},

@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -23,7 +22,7 @@ func getTransitGatewayRouteTableAttachmentGetFunc(ctx context.Context, client *n
 }
 
 func transitGatewayRouteTableAttachmentItemMapper(_, scope string, awsItem *types.TransitGatewayRouteTableAttachment) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 	if err != nil {
 		return nil, err
 	}
@@ -73,13 +72,13 @@ func transitGatewayRouteTableAttachmentItemMapper(_, scope string, awsItem *type
 
 	// ARN example: "arn:aws:ec2:us-west-2:123456789012:transit-gateway-route-table/tgw-rtb-9876543210123456"
 	if awsItem.TransitGatewayRouteTableArn != nil {
-		if arn, err := adapterhelpers.ParseARN(*awsItem.TransitGatewayRouteTableArn); err == nil {
+		if arn, err := ParseARN(*awsItem.TransitGatewayRouteTableArn); err == nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "ec2-transit-gateway-route-table",
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *awsItem.TransitGatewayRouteTableArn,
-					Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+					Scope:  FormatScope(arn.AccountID, arn.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,
@@ -92,14 +91,14 @@ func transitGatewayRouteTableAttachmentItemMapper(_, scope string, awsItem *type
 	return &item, nil
 }
 
-func NewNetworkManagerTransitGatewayRouteTableAttachmentAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.TransitGatewayRouteTableAttachment, *networkmanager.Client, *networkmanager.Options] {
-	return &adapterhelpers.GetListAdapter[*types.TransitGatewayRouteTableAttachment, *networkmanager.Client, *networkmanager.Options]{
+func NewNetworkManagerTransitGatewayRouteTableAttachmentAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *GetListAdapter[*types.TransitGatewayRouteTableAttachment, *networkmanager.Client, *networkmanager.Options] {
+	return &GetListAdapter[*types.TransitGatewayRouteTableAttachment, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-transit-gateway-route-table-attachment",
 		AdapterMetadata: transitGatewayRouteTableAttachmentAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *networkmanager.Client, scope string, query string) (*types.TransitGatewayRouteTableAttachment, error) {
 			return getTransitGatewayRouteTableAttachmentGetFunc(ctx, client, scope, query)
 		},

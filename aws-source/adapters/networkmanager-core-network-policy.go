@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -24,7 +23,7 @@ func coreNetworkPolicyGetFunc(ctx context.Context, client *networkmanager.Client
 }
 
 func coreNetworkPolicyItemMapper(_, scope string, cn *types.CoreNetworkPolicy) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(cn)
+	attributes, err := ToAttributesWithExclude(cn)
 	if err != nil {
 		return nil, err
 	}
@@ -57,14 +56,14 @@ func coreNetworkPolicyItemMapper(_, scope string, cn *types.CoreNetworkPolicy) (
 	return &item, nil
 }
 
-func NewNetworkManagerCoreNetworkPolicyAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.CoreNetworkPolicy, *networkmanager.Client, *networkmanager.Options] {
-	return &adapterhelpers.GetListAdapter[*types.CoreNetworkPolicy, *networkmanager.Client, *networkmanager.Options]{
+func NewNetworkManagerCoreNetworkPolicyAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *GetListAdapter[*types.CoreNetworkPolicy, *networkmanager.Client, *networkmanager.Options] {
+	return &GetListAdapter[*types.CoreNetworkPolicy, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-core-network-policy",
 		AdapterMetadata: coreNetworkPolicyAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *networkmanager.Client, scope string, query string) (*types.CoreNetworkPolicy, error) {
 			return coreNetworkPolicyGetFunc(ctx, client, scope, query)
 		},
