@@ -445,8 +445,9 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 						adapters.NewRDSDBSubnetGroupAdapter(rdsClient, *callerID.Account, cfg.Region, sharedCache),
 						adapters.NewRDSOptionGroupAdapter(rdsClient, *callerID.Account, cfg.Region, sharedCache),
 
-						// Autoscaling
+						// AutoScaling
 						adapters.NewAutoScalingGroupAdapter(autoscalingClient, *callerID.Account, cfg.Region, sharedCache),
+						adapters.NewAutoScalingPolicyAdapter(autoscalingClient, *callerID.Account, cfg.Region, sharedCache),
 
 						// ELB
 						adapters.NewELBInstanceHealthAdapter(elbClient, *callerID.Account, cfg.Region, sharedCache),
