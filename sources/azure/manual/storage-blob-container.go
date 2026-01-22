@@ -2,6 +2,8 @@ package manual
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
 	"github.com/overmindtech/cli/sdp-go"
@@ -9,6 +11,7 @@ import (
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 var StorageBlobContainerLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageBlobContainer)
@@ -127,6 +130,8 @@ func (s storageBlobContainerWrapper) SearchLookups() []sources.ItemTypeLookups {
 func (s storageBlobContainerWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		azureshared.StorageAccount,
+		stdlib.NetworkHTTP,
+		stdlib.NetworkDNS,
 	)
 }
 
@@ -160,6 +165,42 @@ func (s storageBlobContainerWrapper) azureBlobContainerToSDPItem(container *arms
 			Out: false,
 		},
 	})
+
+	// Link to DNS name (standard library) from blob container URI
+	// Blob container URI format: https://{storageAccountName}.blob.core.windows.net/{containerName}
+	// Any attribute containing a DNS name should create a LinkedItemQuery for dns type
+	blobContainerURI := fmt.Sprintf("https://%s.blob.core.windows.net/%s", storageAccountName, containerName)
+	dnsName := azureshared.ExtractDNSFromURL(blobContainerURI)
+	if dnsName != "" {
+		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   stdlib.NetworkDNS.String(),
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  dnsName,
+				Scope:  "global",
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true, // If DNS name is unavailable → blob container becomes inaccessible (In: true)
+				Out: true, // If blob container is deleted → DNS name may still be used by other resources (Out: true)
+			}, // Blob container depends on DNS name for endpoint resolution
+		})
+	}
+
+	// Link to stdlib.NetworkHTTP for blob container URI
+	if strings.HasPrefix(blobContainerURI, "https://") {
+		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   stdlib.NetworkHTTP.String(),
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  blobContainerURI,
+				Scope:  "global",
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true, // If HTTP endpoint is unavailable → blob container becomes inaccessible (In: true)
+				Out: true, // If blob container is deleted → HTTP endpoint may still be used by other resources (Out: true)
+			}, // Blob container depends on HTTP endpoint for access
+		})
+	}
 
 	return sdpItem, nil
 }
