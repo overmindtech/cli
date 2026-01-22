@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/sourcegraph/conc/iter"
+	"github.com/sourcegraph/conc/pool"
 	"google.golang.org/api/iterator"
 	"google.golang.org/protobuf/proto"
 
@@ -149,12 +151,23 @@ func (c computeDiskWrapper) List(ctx context.Context, scope string) ([]*sdp.Item
 
 // listAggregated uses AggregatedList to fetch all disks across all zones
 func (c computeDiskWrapper) listAggregated(ctx context.Context) ([]*sdp.Item, *sdp.QueryError) {
-	var items []*sdp.Item
-
 	// Get all unique project IDs
 	projectIDs := c.GetProjectIDs()
 
-	for _, projectID := range projectIDs {
+	// Use conc/iter to parallelize AggregatedList calls across projects (10x concurrency)
+	type result struct {
+		items []*sdp.Item
+		err   *sdp.QueryError
+	}
+
+	mapper := iter.Mapper[string, result]{
+		MaxGoroutines: 10,
+	}
+
+	results, mapErr := mapper.MapErr(projectIDs, func(projectIDPtr *string) (result, error) {
+		projectID := *projectIDPtr
+		var projectItems []*sdp.Item
+
 		it := c.client.AggregatedList(ctx, &computepb.AggregatedListDisksRequest{
 			Project:              projectID,
 			ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
@@ -166,7 +179,8 @@ func (c computeDiskWrapper) listAggregated(ctx context.Context) ([]*sdp.Item, *s
 				break
 			}
 			if iterErr != nil {
-				return nil, gcpshared.QueryError(iterErr, projectID, c.Type())
+				qErr := gcpshared.QueryError(iterErr, projectID, c.Type())
+				return result{err: qErr}, errors.New(qErr.GetErrorString())
 			}
 
 			// Parse scope from pair.Key (e.g., "zones/us-central1-a")
@@ -185,15 +199,34 @@ func (c computeDiskWrapper) listAggregated(ctx context.Context) ([]*sdp.Item, *s
 				for _, disk := range pair.Value.GetDisks() {
 					item, sdpErr := c.gcpComputeDiskToSDPItem(ctx, disk, scopeLocation)
 					if sdpErr != nil {
-						return nil, sdpErr
+						return result{err: sdpErr}, errors.New(sdpErr.GetErrorString())
 					}
-					items = append(items, item)
+					projectItems = append(projectItems, item)
 				}
 			}
 		}
+
+		return result{items: projectItems}, nil
+	})
+
+	// Check for mapping errors
+	if mapErr != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: mapErr.Error(),
+		}
 	}
 
-	return items, nil
+	// Aggregate all results
+	var allItems []*sdp.Item
+	for _, res := range results {
+		if res.err != nil {
+			return nil, res.err
+		}
+		allItems = append(allItems, res.items...)
+	}
+
+	return allItems, nil
 }
 
 func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
@@ -244,48 +277,58 @@ func (c computeDiskWrapper) listAggregatedStream(ctx context.Context, stream dis
 	// Get all unique project IDs
 	projectIDs := c.GetProjectIDs()
 
+	// Use a pool with 10x concurrency to parallelize AggregatedList calls
+	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
+
 	for _, projectID := range projectIDs {
-		it := c.client.AggregatedList(ctx, &computepb.AggregatedListDisksRequest{
-			Project:              projectID,
-			ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
-		})
+		p.Go(func(ctx context.Context) error {
+			it := c.client.AggregatedList(ctx, &computepb.AggregatedListDisksRequest{
+				Project:              projectID,
+				ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
+			})
 
-		for {
-			pair, iterErr := it.Next()
-			if errors.Is(iterErr, iterator.Done) {
-				break
-			}
-			if iterErr != nil {
-				stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
-				return
-			}
+			for {
+				pair, iterErr := it.Next()
+				if errors.Is(iterErr, iterator.Done) {
+					break
+				}
+				if iterErr != nil {
+					stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
+					return iterErr
+				}
 
-			// Parse scope from pair.Key (e.g., "zones/us-central1-a")
-			scopeLocation, err := gcpshared.ParseAggregatedListScope(projectID, pair.Key)
-			if err != nil {
-				continue // Skip unparseable scopes
-			}
+				// Parse scope from pair.Key (e.g., "zones/us-central1-a")
+				scopeLocation, err := gcpshared.ParseAggregatedListScope(projectID, pair.Key)
+				if err != nil {
+					continue // Skip unparseable scopes
+				}
 
-			// Only process if this scope is in our adapter's configured locations
-			if !c.HasLocation(scopeLocation) {
-				continue
-			}
+				// Only process if this scope is in our adapter's configured locations
+				if !c.HasLocation(scopeLocation) {
+					continue
+				}
 
-			// Process disks in this scope
-			if pair.Value != nil && pair.Value.GetDisks() != nil {
-				for _, disk := range pair.Value.GetDisks() {
-					item, sdpErr := c.gcpComputeDiskToSDPItem(ctx, disk, scopeLocation)
-					if sdpErr != nil {
-						stream.SendError(sdpErr)
-						continue
+				// Process disks in this scope
+				if pair.Value != nil && pair.Value.GetDisks() != nil {
+					for _, disk := range pair.Value.GetDisks() {
+						item, sdpErr := c.gcpComputeDiskToSDPItem(ctx, disk, scopeLocation)
+						if sdpErr != nil {
+							stream.SendError(sdpErr)
+							continue
+						}
+
+						cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+						stream.SendItem(item)
 					}
-
-					cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
-					stream.SendItem(item)
 				}
 			}
-		}
+
+			return nil
+		})
 	}
+
+	// Wait for all goroutines to complete
+	_ = p.Wait()
 }
 
 func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *computepb.Disk, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
