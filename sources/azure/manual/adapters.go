@@ -7,7 +7,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
@@ -200,6 +200,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 		roleAssignmentsClient, err := armauthorization.NewRoleAssignmentsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create role assignments client: %w", err)
+		}
+
+		diskEncryptionSetsClient, err := armcompute.NewDiskEncryptionSetsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create disk encryption sets client: %w", err)
 		}
 
 		// Create adapters for each resource group
@@ -436,6 +441,14 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					resourceGroup,
 				), cache),
 			)
+			// Add Disk Encryption Set adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewComputeDiskEncryptionSet(
+					clients.NewDiskEncryptionSetsClient(diskEncryptionSetsClient),
+					subscriptionID,
+					resourceGroup,
+				), cache),
+			)
 		}
 
 		log.WithFields(log.Fields{
@@ -579,6 +592,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				"placeholder-resource-group",
 			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewAuthorizationRoleAssignment(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
+			sources.WrapperToAdapter(NewComputeDiskEncryptionSet(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
