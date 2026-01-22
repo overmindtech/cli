@@ -195,16 +195,16 @@ func TestComputeInstanceTemplate(t *testing.T) {
 						Out: true,
 					},
 				},
-				{
-					ExpectedType:   gcpshared.ComputeImage.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "debian-11",
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
+			{
+				ExpectedType:   gcpshared.ComputeImage.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "debian-11",
+				ExpectedScope:  "debian-cloud", // Cross-project image reference
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
 				},
+			},
 				{
 					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
