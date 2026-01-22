@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 type rdsClient interface {
@@ -34,8 +33,8 @@ func (m mockRdsClient) ListTagsForResource(ctx context.Context, params *rds.List
 	return &rds.ListTagsForResourceOutput{
 		TagList: []types.Tag{
 			{
-				Key:   adapterhelpers.PtrString("key"),
-				Value: adapterhelpers.PtrString("value"),
+				Key:   PtrString("key"),
+				Value: PtrString("value"),
 			},
 		},
 	}, nil

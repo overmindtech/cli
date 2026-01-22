@@ -2,14 +2,13 @@ package adapters
 
 import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"testing"
 )
 
 type ecsTestClient struct{}
 
 func ecsGetAutoConfig(t *testing.T) (*ecs.Client, string, string) {
-	config, account, region := adapterhelpers.GetAutoConfig(t)
+	config, account, region := GetAutoConfig(t)
 	client := ecs.NewFromConfig(config)
 
 	return client, account, region

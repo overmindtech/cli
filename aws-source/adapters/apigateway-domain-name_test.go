@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -43,21 +42,21 @@ import (
 
 func TestDomainNameOutputMapper(t *testing.T) {
 	domainName := &types.DomainName{
-		CertificateArn:                      adapterhelpers.PtrString("arn:aws:acm:region:account-id:certificate/certificate-id"),
-		CertificateName:                     adapterhelpers.PtrString("certificate-name"),
-		CertificateUploadDate:               adapterhelpers.PtrTime(time.Now()),
-		DistributionDomainName:              adapterhelpers.PtrString("distribution-domain-name"),
-		DistributionHostedZoneId:            adapterhelpers.PtrString("distribution-hosted-zone-id"),
-		DomainName:                          adapterhelpers.PtrString("domain-name"),
+		CertificateArn:                      PtrString("arn:aws:acm:region:account-id:certificate/certificate-id"),
+		CertificateName:                     PtrString("certificate-name"),
+		CertificateUploadDate:               PtrTime(time.Now()),
+		DistributionDomainName:              PtrString("distribution-domain-name"),
+		DistributionHostedZoneId:            PtrString("distribution-hosted-zone-id"),
+		DomainName:                          PtrString("domain-name"),
 		DomainNameStatus:                    types.DomainNameStatusAvailable,
-		DomainNameStatusMessage:             adapterhelpers.PtrString("status-message"),
+		DomainNameStatusMessage:             PtrString("status-message"),
 		EndpointConfiguration:               &types.EndpointConfiguration{Types: []types.EndpointType{types.EndpointTypeEdge}},
-		MutualTlsAuthentication:             &types.MutualTlsAuthentication{TruststoreUri: adapterhelpers.PtrString("truststore-uri")},
-		OwnershipVerificationCertificateArn: adapterhelpers.PtrString("arn:aws:acm:region:account-id:certificate/ownership-verification-certificate-id"),
-		RegionalCertificateArn:              adapterhelpers.PtrString("arn:aws:acm:region:account-id:certificate/regional-certificate-id"),
-		RegionalCertificateName:             adapterhelpers.PtrString("regional-certificate-name"),
-		RegionalDomainName:                  adapterhelpers.PtrString("regional-domain-name"),
-		RegionalHostedZoneId:                adapterhelpers.PtrString("regional-hosted-zone-id"),
+		MutualTlsAuthentication:             &types.MutualTlsAuthentication{TruststoreUri: PtrString("truststore-uri")},
+		OwnershipVerificationCertificateArn: PtrString("arn:aws:acm:region:account-id:certificate/ownership-verification-certificate-id"),
+		RegionalCertificateArn:              PtrString("arn:aws:acm:region:account-id:certificate/regional-certificate-id"),
+		RegionalCertificateName:             PtrString("regional-certificate-name"),
+		RegionalDomainName:                  PtrString("regional-domain-name"),
+		RegionalHostedZoneId:                PtrString("regional-hosted-zone-id"),
 		SecurityPolicy:                      types.SecurityPolicyTls12,
 		Tags:                                map[string]string{"key": "value"},
 	}
@@ -71,17 +70,17 @@ func TestDomainNameOutputMapper(t *testing.T) {
 		t.Error(err)
 	}
 
-	a, err := adapterhelpers.ParseARN("arn:aws:acm:region:account-id:certificate/regional-certificate-id")
+	a, err := ParseARN("arn:aws:acm:region:account-id:certificate/regional-certificate-id")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "acm-certificate",
 			ExpectedMethod: sdp.QueryMethod_GET,
 			ExpectedQuery:  "arn:aws:acm:region:account-id:certificate/certificate-id",
-			ExpectedScope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+			ExpectedScope:  FormatScope(a.AccountID, a.Region),
 		},
 		{
 			ExpectedType:   "route53-hosted-zone",
@@ -99,13 +98,13 @@ func TestDomainNameOutputMapper(t *testing.T) {
 			ExpectedType:   "acm-certificate",
 			ExpectedMethod: sdp.QueryMethod_GET,
 			ExpectedQuery:  "arn:aws:acm:region:account-id:certificate/regional-certificate-id",
-			ExpectedScope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+			ExpectedScope:  FormatScope(a.AccountID, a.Region),
 		},
 		{
 			ExpectedType:   "acm-certificate",
 			ExpectedMethod: sdp.QueryMethod_GET,
 			ExpectedQuery:  "arn:aws:acm:region:account-id:certificate/ownership-verification-certificate-id",
-			ExpectedScope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+			ExpectedScope:  FormatScope(a.AccountID, a.Region),
 		},
 		{
 			ExpectedType:   "apigateway-domain-name",
@@ -119,13 +118,13 @@ func TestDomainNameOutputMapper(t *testing.T) {
 }
 
 func TestNewAPIGatewayDomainNameAdapter(t *testing.T) {
-	config, account, region := adapterhelpers.GetAutoConfig(t)
+	config, account, region := GetAutoConfig(t)
 
 	client := apigateway.NewFromConfig(config)
 
 	adapter := NewAPIGatewayDomainNameAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

@@ -7,23 +7,22 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
 func TestRouterConfigurationOutputMapper(t *testing.T) {
 	output := &directconnect.DescribeRouterConfigurationOutput{
-		CustomerRouterConfig: adapterhelpers.PtrString("some config"),
+		CustomerRouterConfig: PtrString("some config"),
 		Router: &types.RouterType{
-			Platform:                  adapterhelpers.PtrString("2900 Series Routers"),
-			RouterTypeIdentifier:      adapterhelpers.PtrString("CiscoSystemsInc-2900SeriesRouters-IOS124"),
-			Software:                  adapterhelpers.PtrString("IOS 12.4+"),
-			Vendor:                    adapterhelpers.PtrString("Cisco Systems, Inc."),
-			XsltTemplateName:          adapterhelpers.PtrString("customer-router-cisco-generic.xslt"),
-			XsltTemplateNameForMacSec: adapterhelpers.PtrString(""),
+			Platform:                  PtrString("2900 Series Routers"),
+			RouterTypeIdentifier:      PtrString("CiscoSystemsInc-2900SeriesRouters-IOS124"),
+			Software:                  PtrString("IOS 12.4+"),
+			Vendor:                    PtrString("Cisco Systems, Inc."),
+			XsltTemplateName:          PtrString("customer-router-cisco-generic.xslt"),
+			XsltTemplateNameForMacSec: PtrString(""),
 		},
-		VirtualInterfaceId:   adapterhelpers.PtrString("dxvif-ffhhk74f"),
-		VirtualInterfaceName: adapterhelpers.PtrString("PrivateVirtualInterface"),
+		VirtualInterfaceId:   PtrString("dxvif-ffhhk74f"),
+		VirtualInterfaceName: PtrString("PrivateVirtualInterface"),
 	}
 
 	items, err := routerConfigurationOutputMapper(context.Background(), nil, "foo", nil, output)
@@ -43,7 +42,7 @@ func TestRouterConfigurationOutputMapper(t *testing.T) {
 
 	item := items[0]
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "directconnect-virtual-interface",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -60,7 +59,7 @@ func TestNewDirectConnectRouterConfigurationAdapter(t *testing.T) {
 
 	adapter := NewDirectConnectRouterConfigurationAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter:  adapter,
 		Timeout:  10 * time.Second,
 		SkipList: true,

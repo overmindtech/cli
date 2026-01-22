@@ -1,4 +1,4 @@
-package adapterhelpers
+package adapters
 
 import (
 	"context"
@@ -475,7 +475,7 @@ func TestAlwaysGetSourceCaching(t *testing.T) {
 		Region:          "eu-west-2",
 		Client:          struct{}{},
 		ListInput:       "",
-		SDPCache:        sdpcache.NewCache(ctx),
+		cache:        sdpcache.NewCache(ctx),
 		ListFuncPaginatorBuilder: func(client struct{}, input string) Paginator[string, struct{}] {
 			return &TestPaginator{
 				DataFunc: func() string {

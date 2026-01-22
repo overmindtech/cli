@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -18,7 +17,7 @@ func transitGatewayRegistrationOutputMapper(_ context.Context, _ *networkmanager
 	for _, r := range output.TransitGatewayRegistrations {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(r)
+		attrs, err = ToAttributesWithExclude(r)
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -56,13 +55,13 @@ func transitGatewayRegistrationOutputMapper(_ context.Context, _ *networkmanager
 
 		// ARN example: "arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234"
 		if r.TransitGatewayArn != nil {
-			if arn, err := adapterhelpers.ParseARN(*r.TransitGatewayArn); err == nil {
+			if arn, err := ParseARN(*r.TransitGatewayArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "ec2-transit-gateway",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *r.TransitGatewayArn,
-						Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+						Scope:  FormatScope(arn.AccountID, arn.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -78,14 +77,14 @@ func transitGatewayRegistrationOutputMapper(_ context.Context, _ *networkmanager
 	return items, nil
 }
 
-func NewNetworkManagerTransitGatewayRegistrationAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetTransitGatewayRegistrationsInput, *networkmanager.GetTransitGatewayRegistrationsOutput, *networkmanager.Client, *networkmanager.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetTransitGatewayRegistrationsInput, *networkmanager.GetTransitGatewayRegistrationsOutput, *networkmanager.Client, *networkmanager.Options]{
+func NewNetworkManagerTransitGatewayRegistrationAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*networkmanager.GetTransitGatewayRegistrationsInput, *networkmanager.GetTransitGatewayRegistrationsOutput, *networkmanager.Client, *networkmanager.Options] {
+	return &DescribeOnlyAdapter[*networkmanager.GetTransitGatewayRegistrationsInput, *networkmanager.GetTransitGatewayRegistrationsOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-transit-gateway-registration",
 		AdapterMetadata: transitGatewayRegistrationAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.GetTransitGatewayRegistrationsInput) (*networkmanager.GetTransitGatewayRegistrationsOutput, error) {
 			return client.GetTransitGatewayRegistrations(ctx, input)
 		},
@@ -112,7 +111,7 @@ func NewNetworkManagerTransitGatewayRegistrationAdapter(client *networkmanager.C
 				Scope:       scope,
 			}
 		},
-		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetTransitGatewayRegistrationsInput) adapterhelpers.Paginator[*networkmanager.GetTransitGatewayRegistrationsOutput, *networkmanager.Options] {
+		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetTransitGatewayRegistrationsInput) Paginator[*networkmanager.GetTransitGatewayRegistrationsOutput, *networkmanager.Options] {
 			return networkmanager.NewGetTransitGatewayRegistrationsPaginator(client, params)
 		},
 		OutputMapper: transitGatewayRegistrationOutputMapper,

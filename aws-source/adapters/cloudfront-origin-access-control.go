@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -40,7 +39,7 @@ func originAccessControlListFunc(ctx context.Context, client *cloudfront.Client,
 }
 
 func originAccessControlItemMapper(_, scope string, awsItem *types.OriginAccessControl) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 
 	if err != nil {
 		return nil, err
@@ -56,14 +55,14 @@ func originAccessControlItemMapper(_, scope string, awsItem *types.OriginAccessC
 	return &item, nil
 }
 
-func NewCloudfrontOriginAccessControlAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.OriginAccessControl, *cloudfront.Client, *cloudfront.Options] {
-	return &adapterhelpers.GetListAdapter[*types.OriginAccessControl, *cloudfront.Client, *cloudfront.Options]{
+func NewCloudfrontOriginAccessControlAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *GetListAdapter[*types.OriginAccessControl, *cloudfront.Client, *cloudfront.Options] {
+	return &GetListAdapter[*types.OriginAccessControl, *cloudfront.Client, *cloudfront.Options]{
 		ItemType:        "cloudfront-origin-access-control",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata: originAccessControlAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *cloudfront.Client, scope, query string) (*types.OriginAccessControl, error) {
 			out, err := client.GetOriginAccessControl(ctx, &cloudfront.GetOriginAccessControlInput{
 				Id: &query,

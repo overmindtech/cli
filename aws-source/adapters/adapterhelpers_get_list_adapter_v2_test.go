@@ -1,4 +1,4 @@
-package adapterhelpers
+package adapters
 
 import (
 	"context"
@@ -291,7 +291,7 @@ func TestGetListAdapterV2Caching(t *testing.T) {
 		ItemType:  "test-type",
 		Region:    "eu-west-2",
 		AccountID: "foo",
-		SDPCache:  sdpcache.NewCache(ctx),
+		cache:  sdpcache.NewCache(ctx),
 		GetFunc: func(ctx context.Context, client struct{}, scope, query string) (string, error) {
 			generation += 1
 			return fmt.Sprintf("%v", generation), nil

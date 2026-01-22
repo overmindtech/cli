@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -23,7 +22,7 @@ func vpcAttachmentGetFunc(ctx context.Context, client *networkmanager.Client, _,
 }
 
 func vpcAttachmentItemMapper(_, scope string, awsItem *types.VpcAttachment) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 	if err != nil {
 		return nil, err
 	}
@@ -59,14 +58,14 @@ func vpcAttachmentItemMapper(_, scope string, awsItem *types.VpcAttachment) (*sd
 	return &item, nil
 }
 
-func NewNetworkManagerVPCAttachmentAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.VpcAttachment, *networkmanager.Client, *networkmanager.Options] {
-	return &adapterhelpers.GetListAdapter[*types.VpcAttachment, *networkmanager.Client, *networkmanager.Options]{
+func NewNetworkManagerVPCAttachmentAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *GetListAdapter[*types.VpcAttachment, *networkmanager.Client, *networkmanager.Options] {
+	return &GetListAdapter[*types.VpcAttachment, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		Region:          region,
 		AccountID:       accountID,
 		ItemType:        "networkmanager-vpc-attachment",
 		AdapterMetadata: vpcAttachmentAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *networkmanager.Client, scope string, query string) (*types.VpcAttachment, error) {
 			return vpcAttachmentGetFunc(ctx, client, scope, query)
 		},

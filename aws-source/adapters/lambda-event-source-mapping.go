@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -69,7 +68,7 @@ func convertGetEventSourceMappingOutputToConfiguration(output *lambda.GetEventSo
 }
 
 func eventSourceMappingOutputMapper(query, scope string, awsItem *types.EventSourceMappingConfiguration) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 	if err != nil {
 		return nil, err
 	}
@@ -91,14 +90,14 @@ func eventSourceMappingOutputMapper(query, scope string, awsItem *types.EventSou
 
 	// Link to the Lambda function if FunctionArn is present
 	if awsItem.FunctionArn != nil {
-		parsedARN, err := adapterhelpers.ParseARN(*awsItem.FunctionArn)
+		parsedARN, err := ParseARN(*awsItem.FunctionArn)
 		if err == nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "lambda-function",
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *awsItem.FunctionArn,
-					Scope:  adapterhelpers.FormatScope(parsedARN.AccountID, parsedARN.Region),
+					Scope:  FormatScope(parsedARN.AccountID, parsedARN.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// They are tightly linked
@@ -111,7 +110,7 @@ func eventSourceMappingOutputMapper(query, scope string, awsItem *types.EventSou
 
 	// Link to the event source if EventSourceArn is present
 	if awsItem.EventSourceArn != nil {
-		parsedARN, err := adapterhelpers.ParseARN(*awsItem.EventSourceArn)
+		parsedARN, err := ParseARN(*awsItem.EventSourceArn)
 		if err == nil {
 			var queryType string
 
@@ -142,7 +141,7 @@ func eventSourceMappingOutputMapper(query, scope string, awsItem *types.EventSou
 						Type:   queryType,
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *awsItem.EventSourceArn,
-						Scope:  adapterhelpers.FormatScope(parsedARN.AccountID, parsedARN.Region),
+						Scope:  FormatScope(parsedARN.AccountID, parsedARN.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the event source will affect the mapping
@@ -178,14 +177,14 @@ func eventSourceMappingOutputMapper(query, scope string, awsItem *types.EventSou
 	return &item, nil
 }
 
-func NewLambdaEventSourceMappingAdapter(client lambdaEventSourceMappingClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.EventSourceMappingConfiguration, lambdaEventSourceMappingClient, *lambda.Options] {
-	return &adapterhelpers.GetListAdapter[*types.EventSourceMappingConfiguration, lambdaEventSourceMappingClient, *lambda.Options]{
+func NewLambdaEventSourceMappingAdapter(client lambdaEventSourceMappingClient, accountID string, region string, cache sdpcache.Cache) *GetListAdapter[*types.EventSourceMappingConfiguration, lambdaEventSourceMappingClient, *lambda.Options] {
+	return &GetListAdapter[*types.EventSourceMappingConfiguration, lambdaEventSourceMappingClient, *lambda.Options]{
 		ItemType:        "lambda-event-source-mapping",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: lambdaEventSourceMappingAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client lambdaEventSourceMappingClient, scope, query string) (*types.EventSourceMappingConfiguration, error) {
 			out, err := client.GetEventSourceMapping(ctx, &lambda.GetEventSourceMappingInput{
 				UUID: &query,

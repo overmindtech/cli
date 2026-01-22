@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -38,7 +37,7 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 
 	for _, reservation := range output.Reservations {
 		for _, instance := range reservation.Instances {
-			attrs, err := adapterhelpers.ToAttributesWithExclude(instance, "tags")
+			attrs, err := ToAttributesWithExclude(instance, "tags")
 
 			if err != nil {
 				return nil, &sdp.QueryError{
@@ -106,13 +105,13 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 			if instance.IamInstanceProfile != nil {
 				// Prefer the ARN
 				if instance.IamInstanceProfile.Arn != nil {
-					if arn, err := adapterhelpers.ParseARN(*instance.IamInstanceProfile.Arn); err == nil {
+					if arn, err := ParseARN(*instance.IamInstanceProfile.Arn); err == nil {
 						item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   "iam-instance-profile",
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  *instance.IamInstanceProfile.Arn,
-								Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+								Scope:  FormatScope(arn.AccountID, arn.Region),
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								// Changes to the profile will affect this instance
@@ -178,13 +177,13 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 
 			for _, assoc := range instance.ElasticInferenceAcceleratorAssociations {
 				if assoc.ElasticInferenceAcceleratorArn != nil {
-					if arn, err := adapterhelpers.ParseARN(*assoc.ElasticInferenceAcceleratorArn); err == nil {
+					if arn, err := ParseARN(*assoc.ElasticInferenceAcceleratorArn); err == nil {
 						item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   "elastic-inference-accelerator",
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  *assoc.ElasticInferenceAcceleratorArn,
-								Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+								Scope:  FormatScope(arn.AccountID, arn.Region),
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								// Changing the accelerator will affect the instance
@@ -199,13 +198,13 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 
 			for _, license := range instance.Licenses {
 				if license.LicenseConfigurationArn != nil {
-					if arn, err := adapterhelpers.ParseARN(*license.LicenseConfigurationArn); err == nil {
+					if arn, err := ParseARN(*license.LicenseConfigurationArn); err == nil {
 						item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   "license-manager-license-configuration",
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  *license.LicenseConfigurationArn,
-								Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+								Scope:  FormatScope(arn.AccountID, arn.Region),
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								// Changing the license will affect the instance
@@ -219,13 +218,13 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 			}
 
 			if instance.OutpostArn != nil {
-				if arn, err := adapterhelpers.ParseARN(*instance.OutpostArn); err == nil {
+				if arn, err := ParseARN(*instance.OutpostArn); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "outposts-outpost",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *instance.OutpostArn,
-							Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+							Scope:  FormatScope(arn.AccountID, arn.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Changing the outpost will affect the instance
@@ -478,20 +477,20 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 	return items, nil
 }
 
-func NewEC2InstanceAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeInstancesInput, *ec2.DescribeInstancesOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeInstancesInput, *ec2.DescribeInstancesOutput, *ec2.Client, *ec2.Options]{
+func NewEC2InstanceAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeInstancesInput, *ec2.DescribeInstancesOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeInstancesInput, *ec2.DescribeInstancesOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-instance",
 		AdapterMetadata: ec2InstanceAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeInstancesInput) (*ec2.DescribeInstancesOutput, error) {
 			return client.DescribeInstances(ctx, input)
 		},
 		InputMapperGet:  instanceInputMapperGet,
 		InputMapperList: instanceInputMapperList,
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeInstancesInput) adapterhelpers.Paginator[*ec2.DescribeInstancesOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeInstancesInput) Paginator[*ec2.DescribeInstancesOutput, *ec2.Options] {
 			return ec2.NewDescribeInstancesPaginator(client, params)
 		},
 		OutputMapper: instanceOutputMapper,

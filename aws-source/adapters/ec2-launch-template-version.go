@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -44,7 +43,7 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 	for _, ltv := range output.LaunchTemplateVersions {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(ltv)
+		attrs, err = ToAttributesWithExclude(ltv)
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -300,20 +299,20 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 	return items, nil
 }
 
-func NewEC2LaunchTemplateVersionAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeLaunchTemplateVersionsInput, *ec2.DescribeLaunchTemplateVersionsOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeLaunchTemplateVersionsInput, *ec2.DescribeLaunchTemplateVersionsOutput, *ec2.Client, *ec2.Options]{
+func NewEC2LaunchTemplateVersionAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeLaunchTemplateVersionsInput, *ec2.DescribeLaunchTemplateVersionsOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeLaunchTemplateVersionsInput, *ec2.DescribeLaunchTemplateVersionsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-launch-template-version",
 		AdapterMetadata: launchTemplateVersionAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeLaunchTemplateVersionsInput) (*ec2.DescribeLaunchTemplateVersionsOutput, error) {
 			return client.DescribeLaunchTemplateVersions(ctx, input)
 		},
 		InputMapperGet:  launchTemplateVersionInputMapperGet,
 		InputMapperList: launchTemplateVersionInputMapperList,
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeLaunchTemplateVersionsInput) adapterhelpers.Paginator[*ec2.DescribeLaunchTemplateVersionsOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeLaunchTemplateVersionsInput) Paginator[*ec2.DescribeLaunchTemplateVersionsOutput, *ec2.Options] {
 			return ec2.NewDescribeLaunchTemplateVersionsPaginator(client, params)
 		},
 		OutputMapper: launchTemplateVersionOutputMapper,

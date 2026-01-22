@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 func TestLaunchTemplateInputMapperGet(t *testing.T) {
@@ -42,12 +41,12 @@ func TestLaunchTemplateOutputMapper(t *testing.T) {
 	output := &ec2.DescribeLaunchTemplatesOutput{
 		LaunchTemplates: []types.LaunchTemplate{
 			{
-				CreateTime:           adapterhelpers.PtrTime(time.Now()),
-				CreatedBy:            adapterhelpers.PtrString("me"),
-				DefaultVersionNumber: adapterhelpers.PtrInt64(1),
-				LatestVersionNumber:  adapterhelpers.PtrInt64(10),
-				LaunchTemplateId:     adapterhelpers.PtrString("id"),
-				LaunchTemplateName:   adapterhelpers.PtrString("hello"),
+				CreateTime:           PtrTime(time.Now()),
+				CreatedBy:            PtrString("me"),
+				DefaultVersionNumber: PtrInt64(1),
+				LatestVersionNumber:  PtrInt64(10),
+				LaunchTemplateId:     PtrString("id"),
+				LaunchTemplateName:   PtrString("hello"),
 				Tags:                 []types.Tag{},
 			},
 		},
@@ -70,7 +69,7 @@ func TestNewEC2LaunchTemplateAdapter(t *testing.T) {
 
 	adapter := NewEC2LaunchTemplateAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -16,10 +15,10 @@ func TestDirectConnectGatewayAssociationOutputMapper_Health_OK(t *testing.T) {
 		DirectConnectGatewayAssociations: []types.DirectConnectGatewayAssociation{
 			{
 				AssociationState:           types.DirectConnectGatewayAssociationStateAssociating,
-				AssociationId:              adapterhelpers.PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
-				VirtualGatewayOwnerAccount: adapterhelpers.PtrString("123456789012"),
-				DirectConnectGatewayId:     adapterhelpers.PtrString("5f294f92-bafb-4011-916d-9b0bexample"),
-				VirtualGatewayId:           adapterhelpers.PtrString("vgw-6efe725e"),
+				AssociationId:              PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
+				VirtualGatewayOwnerAccount: PtrString("123456789012"),
+				DirectConnectGatewayId:     PtrString("5f294f92-bafb-4011-916d-9b0bexample"),
+				VirtualGatewayId:           PtrString("vgw-6efe725e"),
 			},
 		},
 	}
@@ -45,7 +44,7 @@ func TestDirectConnectGatewayAssociationOutputMapper_Health_OK(t *testing.T) {
 		t.Fatalf("expected health to be OK, got: %v", item.GetHealth())
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "directconnect-direct-connect-gateway",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -68,11 +67,11 @@ func TestDirectConnectGatewayAssociationOutputMapper_Health_Error(t *testing.T) 
 		DirectConnectGatewayAssociations: []types.DirectConnectGatewayAssociation{
 			{
 				AssociationState:           types.DirectConnectGatewayAssociationStateAssociating,
-				AssociationId:              adapterhelpers.PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
-				VirtualGatewayOwnerAccount: adapterhelpers.PtrString("123456789012"),
-				DirectConnectGatewayId:     adapterhelpers.PtrString("5f294f92-bafb-4011-916d-9b0bexample"),
-				VirtualGatewayId:           adapterhelpers.PtrString("vgw-6efe725e"),
-				StateChangeError:           adapterhelpers.PtrString("something went wrong"),
+				AssociationId:              PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
+				VirtualGatewayOwnerAccount: PtrString("123456789012"),
+				DirectConnectGatewayId:     PtrString("5f294f92-bafb-4011-916d-9b0bexample"),
+				VirtualGatewayId:           PtrString("vgw-6efe725e"),
+				StateChangeError:           PtrString("something went wrong"),
 			},
 		},
 	}
@@ -98,7 +97,7 @@ func TestDirectConnectGatewayAssociationOutputMapper_Health_Error(t *testing.T) 
 		t.Fatalf("expected health to be ERROR, got: %v", item.GetHealth())
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "directconnect-direct-connect-gateway",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -121,7 +120,7 @@ func TestNewDirectConnectGatewayAssociationAdapter(t *testing.T) {
 
 	adapter := NewDirectConnectGatewayAssociationAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter:  adapter,
 		Timeout:  10 * time.Second,
 		SkipList: true,

@@ -1,24 +1,17 @@
-package adapterhelpers
+package adapters
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/structpb"
 )
-
-func TestMain(m *testing.M) {
-	log.SetLevel(log.TraceLevel)
-	os.Exit(m.Run())
-}
 
 func TestType(t *testing.T) {
 	s := DescribeOnlyAdapter[string, string, struct{}, struct{}]{
@@ -682,7 +675,7 @@ func TestDescribeOnlySourceCaching(t *testing.T) {
 		MaxResultsPerPage: 1,
 		Region:            "eu-west-2",
 		AccountID:         "foo",
-		SDPCache:          sdpcache.NewCache(ctx),
+		cache:          sdpcache.NewCache(ctx),
 		InputMapperGet: func(scope, query string) (string, error) {
 			return "input", nil
 		},

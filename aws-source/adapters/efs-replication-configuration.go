@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/efs/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -20,7 +19,7 @@ func ReplicationConfigurationOutputMapper(_ context.Context, _ *efs.Client, scop
 	items := make([]*sdp.Item, 0)
 
 	for _, replication := range output.Replications {
-		attrs, err := adapterhelpers.ToAttributesWithExclude(replication)
+		attrs, err := ToAttributesWithExclude(replication)
 
 		if err != nil {
 			return nil, err
@@ -34,7 +33,7 @@ func ReplicationConfigurationOutputMapper(_ context.Context, _ *efs.Client, scop
 			return nil, errors.New("efs-replication-configuration has nil SourceFileSystemRegion")
 		}
 
-		accountID, _, err := adapterhelpers.ParseScope(scope)
+		accountID, _, err := ParseScope(scope)
 
 		if err != nil {
 			return nil, err
@@ -52,7 +51,7 @@ func ReplicationConfigurationOutputMapper(_ context.Context, _ *efs.Client, scop
 						Type:   "efs-file-system",
 						Method: sdp.QueryMethod_GET,
 						Query:  *replication.SourceFileSystemId,
-						Scope:  adapterhelpers.FormatScope(accountID, *replication.SourceFileSystemRegion),
+						Scope:  FormatScope(accountID, *replication.SourceFileSystemRegion),
 					},
 				},
 			},
@@ -65,7 +64,7 @@ func ReplicationConfigurationOutputMapper(_ context.Context, _ *efs.Client, scop
 						Type:   "efs-file-system",
 						Method: sdp.QueryMethod_GET,
 						Query:  *destination.FileSystemId,
-						Scope:  adapterhelpers.FormatScope(accountID, *destination.Region),
+						Scope:  FormatScope(accountID, *destination.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changes to the destination shouldn't affect the source
@@ -100,13 +99,13 @@ func ReplicationConfigurationOutputMapper(_ context.Context, _ *efs.Client, scop
 		}
 
 		if replication.OriginalSourceFileSystemArn != nil {
-			if arn, err := adapterhelpers.ParseARN(*replication.OriginalSourceFileSystemArn); err == nil {
+			if arn, err := ParseARN(*replication.OriginalSourceFileSystemArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "efs-file-system",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *replication.OriginalSourceFileSystemArn,
-						Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+						Scope:  FormatScope(arn.AccountID, arn.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the source file system will affect its replication
@@ -125,14 +124,14 @@ func ReplicationConfigurationOutputMapper(_ context.Context, _ *efs.Client, scop
 	return items, nil
 }
 
-func NewEFSReplicationConfigurationAdapter(client *efs.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*efs.DescribeReplicationConfigurationsInput, *efs.DescribeReplicationConfigurationsOutput, *efs.Client, *efs.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*efs.DescribeReplicationConfigurationsInput, *efs.DescribeReplicationConfigurationsOutput, *efs.Client, *efs.Options]{
+func NewEFSReplicationConfigurationAdapter(client *efs.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*efs.DescribeReplicationConfigurationsInput, *efs.DescribeReplicationConfigurationsOutput, *efs.Client, *efs.Options] {
+	return &DescribeOnlyAdapter[*efs.DescribeReplicationConfigurationsInput, *efs.DescribeReplicationConfigurationsOutput, *efs.Client, *efs.Options]{
 		ItemType:        "efs-replication-configuration",
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: replicationConfigurationAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *efs.Client, input *efs.DescribeReplicationConfigurationsInput) (*efs.DescribeReplicationConfigurationsOutput, error) {
 			return client.DescribeReplicationConfigurations(ctx, input)
 		},

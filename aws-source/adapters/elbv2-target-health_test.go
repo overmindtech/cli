@@ -7,7 +7,6 @@ import (
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -16,61 +15,61 @@ func TestTargetHealthOutputMapper(t *testing.T) {
 		TargetHealthDescriptions: []types.TargetHealthDescription{
 			{
 				Target: &types.TargetDescription{
-					Id:               adapterhelpers.PtrString("10.0.6.64"), // link
-					Port:             adapterhelpers.PtrInt32(8080),
-					AvailabilityZone: adapterhelpers.PtrString("eu-west-2c"),
+					Id:               PtrString("10.0.6.64"), // link
+					Port:             PtrInt32(8080),
+					AvailabilityZone: PtrString("eu-west-2c"),
 				},
-				HealthCheckPort: adapterhelpers.PtrString("8080"),
+				HealthCheckPort: PtrString("8080"),
 				TargetHealth: &types.TargetHealth{
 					State:       types.TargetHealthStateEnumHealthy,
 					Reason:      types.TargetHealthReasonEnumDeregistrationInProgress,
-					Description: adapterhelpers.PtrString("Health checks failed with these codes: [404]"),
+					Description: PtrString("Health checks failed with these codes: [404]"),
 				},
 			},
 			{
 				Target: &types.TargetDescription{
-					Id:               adapterhelpers.PtrString("arn:aws:elasticloadbalancing:eu-west-2:944651592624:loadbalancer/app/ingress/1bf10920c5bd199d"), // link
-					Port:             adapterhelpers.PtrInt32(8080),
-					AvailabilityZone: adapterhelpers.PtrString("eu-west-2c"),
+					Id:               PtrString("arn:aws:elasticloadbalancing:eu-west-2:944651592624:loadbalancer/app/ingress/1bf10920c5bd199d"), // link
+					Port:             PtrInt32(8080),
+					AvailabilityZone: PtrString("eu-west-2c"),
 				},
-				HealthCheckPort: adapterhelpers.PtrString("8080"),
+				HealthCheckPort: PtrString("8080"),
 				TargetHealth: &types.TargetHealth{
 					State:       types.TargetHealthStateEnumHealthy,
 					Reason:      types.TargetHealthReasonEnumDeregistrationInProgress,
-					Description: adapterhelpers.PtrString("Health checks failed with these codes: [404]"),
+					Description: PtrString("Health checks failed with these codes: [404]"),
 				},
 			},
 			{
 				Target: &types.TargetDescription{
-					Id:               adapterhelpers.PtrString("i-foo"), // link
-					Port:             adapterhelpers.PtrInt32(8080),
-					AvailabilityZone: adapterhelpers.PtrString("eu-west-2c"),
+					Id:               PtrString("i-foo"), // link
+					Port:             PtrInt32(8080),
+					AvailabilityZone: PtrString("eu-west-2c"),
 				},
-				HealthCheckPort: adapterhelpers.PtrString("8080"),
+				HealthCheckPort: PtrString("8080"),
 				TargetHealth: &types.TargetHealth{
 					State:       types.TargetHealthStateEnumHealthy,
 					Reason:      types.TargetHealthReasonEnumDeregistrationInProgress,
-					Description: adapterhelpers.PtrString("Health checks failed with these codes: [404]"),
+					Description: PtrString("Health checks failed with these codes: [404]"),
 				},
 			},
 			{
 				Target: &types.TargetDescription{
-					Id:               adapterhelpers.PtrString("arn:aws:lambda:eu-west-2:944651592624:function/foobar"), // link
-					Port:             adapterhelpers.PtrInt32(8080),
-					AvailabilityZone: adapterhelpers.PtrString("eu-west-2c"),
+					Id:               PtrString("arn:aws:lambda:eu-west-2:944651592624:function/foobar"), // link
+					Port:             PtrInt32(8080),
+					AvailabilityZone: PtrString("eu-west-2c"),
 				},
-				HealthCheckPort: adapterhelpers.PtrString("8080"),
+				HealthCheckPort: PtrString("8080"),
 				TargetHealth: &types.TargetHealth{
 					State:       types.TargetHealthStateEnumHealthy,
 					Reason:      types.TargetHealthReasonEnumDeregistrationInProgress,
-					Description: adapterhelpers.PtrString("Health checks failed with these codes: [404]"),
+					Description: PtrString("Health checks failed with these codes: [404]"),
 				},
 			},
 		},
 	}
 
 	items, err := targetHealthOutputMapper(context.Background(), nil, "foo", &elbv2.DescribeTargetHealthInput{
-		TargetGroupArn: adapterhelpers.PtrString("arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222"),
+		TargetGroupArn: PtrString("arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222"),
 	}, &output)
 
 	if err != nil {
@@ -89,7 +88,7 @@ func TestTargetHealthOutputMapper(t *testing.T) {
 
 	item := items[0]
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ip",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -102,7 +101,7 @@ func TestTargetHealthOutputMapper(t *testing.T) {
 
 	item = items[1]
 
-	tests = adapterhelpers.QueryTests{
+	tests = QueryTests{
 		{
 			ExpectedType:   "elbv2-load-balancer",
 			ExpectedMethod: sdp.QueryMethod_SEARCH,
@@ -115,7 +114,7 @@ func TestTargetHealthOutputMapper(t *testing.T) {
 
 	item = items[2]
 
-	tests = adapterhelpers.QueryTests{
+	tests = QueryTests{
 		{
 			ExpectedType:   "ec2-instance",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -128,7 +127,7 @@ func TestTargetHealthOutputMapper(t *testing.T) {
 
 	item = items[3]
 
-	tests = adapterhelpers.QueryTests{
+	tests = QueryTests{
 		{
 			ExpectedType:   "lambda-function",
 			ExpectedMethod: sdp.QueryMethod_SEARCH,
@@ -168,8 +167,8 @@ func TestTargetHealthUniqueID(t *testing.T) {
 		id := TargetHealthUniqueID{
 			TargetGroupArn:   "arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222",
 			Id:               "10.0.0.1",
-			AvailabilityZone: adapterhelpers.PtrString("eu-west-2"),
-			Port:             adapterhelpers.PtrInt32(8080),
+			AvailabilityZone: PtrString("eu-west-2"),
+			Port:             PtrInt32(8080),
 		}
 
 		expected := "arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222|10.0.0.1|eu-west-2|8080"
@@ -193,7 +192,7 @@ func TestTargetHealthUniqueID(t *testing.T) {
 		id := TargetHealthUniqueID{
 			TargetGroupArn: "arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222",
 			Id:             "arn:partition:service:region:account-id:resource-type:resource-id",
-			Port:           adapterhelpers.PtrInt32(8080),
+			Port:           PtrInt32(8080),
 		}
 
 		expected := "arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222|arn:partition:service:region:account-id:resource-type:resource-id||8080"

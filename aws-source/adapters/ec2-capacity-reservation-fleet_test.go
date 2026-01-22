@@ -7,38 +7,37 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 func TestCapacityReservationFleetOutputMapper(t *testing.T) {
 	output := &ec2.DescribeCapacityReservationFleetsOutput{
 		CapacityReservationFleets: []types.CapacityReservationFleet{
 			{
-				AllocationStrategy:          adapterhelpers.PtrString("prioritized"),
-				CapacityReservationFleetArn: adapterhelpers.PtrString("arn:aws:ec2:us-east-1:123456789012:capacity-reservation/fleet/crf-1234567890abcdef0"),
-				CapacityReservationFleetId:  adapterhelpers.PtrString("crf-1234567890abcdef0"),
-				CreateTime:                  adapterhelpers.PtrTime(time.Now()),
+				AllocationStrategy:          PtrString("prioritized"),
+				CapacityReservationFleetArn: PtrString("arn:aws:ec2:us-east-1:123456789012:capacity-reservation/fleet/crf-1234567890abcdef0"),
+				CapacityReservationFleetId:  PtrString("crf-1234567890abcdef0"),
+				CreateTime:                  PtrTime(time.Now()),
 				EndDate:                     nil,
 				InstanceMatchCriteria:       types.FleetInstanceMatchCriteriaOpen,
 				InstanceTypeSpecifications: []types.FleetCapacityReservation{
 					{
-						AvailabilityZone:      adapterhelpers.PtrString("us-east-1a"), // link
-						AvailabilityZoneId:    adapterhelpers.PtrString("use1-az1"),
-						CapacityReservationId: adapterhelpers.PtrString("cr-1234567890abcdef0"), // link
-						CreateDate:            adapterhelpers.PtrTime(time.Now()),
-						EbsOptimized:          adapterhelpers.PtrBool(true),
-						FulfilledCapacity:     adapterhelpers.PtrFloat64(1),
+						AvailabilityZone:      PtrString("us-east-1a"), // link
+						AvailabilityZoneId:    PtrString("use1-az1"),
+						CapacityReservationId: PtrString("cr-1234567890abcdef0"), // link
+						CreateDate:            PtrTime(time.Now()),
+						EbsOptimized:          PtrBool(true),
+						FulfilledCapacity:     PtrFloat64(1),
 						InstancePlatform:      types.CapacityReservationInstancePlatformLinuxUnix,
 						InstanceType:          types.InstanceTypeA12xlarge,
-						Priority:              adapterhelpers.PtrInt32(1),
-						TotalInstanceCount:    adapterhelpers.PtrInt32(1),
-						Weight:                adapterhelpers.PtrFloat64(1),
+						Priority:              PtrInt32(1),
+						TotalInstanceCount:    PtrInt32(1),
+						Weight:                PtrFloat64(1),
 					},
 				},
 				State:                  types.CapacityReservationFleetStateActive, // health
 				Tenancy:                types.FleetCapacityReservationTenancyDefault,
-				TotalFulfilledCapacity: adapterhelpers.PtrFloat64(1),
-				TotalTargetCapacity:    adapterhelpers.PtrInt32(1),
+				TotalFulfilledCapacity: PtrFloat64(1),
+				TotalTargetCapacity:    PtrInt32(1),
 			},
 		},
 	}
@@ -63,7 +62,7 @@ func TestCapacityReservationFleetOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{}
+	tests := QueryTests{}
 
 	tests.Execute(t, item)
 
@@ -74,7 +73,7 @@ func TestNewEC2CapacityReservationFleetAdapter(t *testing.T) {
 
 	adapter := NewEC2CapacityReservationFleetAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

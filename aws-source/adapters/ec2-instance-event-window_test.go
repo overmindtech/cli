@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -51,14 +50,14 @@ func TestInstanceEventWindowOutputMapper(t *testing.T) {
 						"instance",
 					},
 				},
-				CronExpression:        adapterhelpers.PtrString("something"),
-				InstanceEventWindowId: adapterhelpers.PtrString("window-123"),
-				Name:                  adapterhelpers.PtrString("test"),
+				CronExpression:        PtrString("something"),
+				InstanceEventWindowId: PtrString("window-123"),
+				Name:                  PtrString("test"),
 				State:                 types.InstanceEventWindowStateActive,
 				TimeRanges: []types.InstanceEventWindowTimeRange{
 					{
-						StartHour:    adapterhelpers.PtrInt32(1),
-						EndHour:      adapterhelpers.PtrInt32(2),
+						StartHour:    PtrInt32(1),
+						EndHour:      PtrInt32(2),
 						EndWeekDay:   types.WeekDayFriday,
 						StartWeekDay: types.WeekDayMonday,
 					},
@@ -88,7 +87,7 @@ func TestInstanceEventWindowOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-host",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -112,7 +111,7 @@ func TestNewEC2InstanceEventWindowAdapter(t *testing.T) {
 
 	adapter := NewEC2InstanceEventWindowAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

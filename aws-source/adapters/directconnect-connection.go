@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -14,7 +13,7 @@ func directconnectConnectionOutputMapper(_ context.Context, _ *directconnect.Cli
 	items := make([]*sdp.Item, 0)
 
 	for _, connection := range output.Connections {
-		attributes, err := adapterhelpers.ToAttributesWithExclude(connection, "tags")
+		attributes, err := ToAttributesWithExclude(connection, "tags")
 		if err != nil {
 			return nil, err
 		}
@@ -100,14 +99,14 @@ func directconnectConnectionOutputMapper(_ context.Context, _ *directconnect.Cli
 	return items, nil
 }
 
-func NewDirectConnectConnectionAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeConnectionsInput, *directconnect.DescribeConnectionsOutput, *directconnect.Client, *directconnect.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeConnectionsInput, *directconnect.DescribeConnectionsOutput, *directconnect.Client, *directconnect.Options]{
+func NewDirectConnectConnectionAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*directconnect.DescribeConnectionsInput, *directconnect.DescribeConnectionsOutput, *directconnect.Client, *directconnect.Options] {
+	return &DescribeOnlyAdapter[*directconnect.DescribeConnectionsInput, *directconnect.DescribeConnectionsOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-connection",
 		AdapterMetadata: directconnectConnectionAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeConnectionsInput) (*directconnect.DescribeConnectionsOutput, error) {
 			return client.DescribeConnections(ctx, input)
 		},

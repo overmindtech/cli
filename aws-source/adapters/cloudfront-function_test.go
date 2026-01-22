@@ -5,23 +5,22 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 func TestFunctionItemMapper(t *testing.T) {
 	summary := types.FunctionSummary{
 		FunctionConfig: &types.FunctionConfig{
-			Comment: adapterhelpers.PtrString("test-comment"),
+			Comment: PtrString("test-comment"),
 			Runtime: types.FunctionRuntimeCloudfrontJs20,
 		},
 		FunctionMetadata: &types.FunctionMetadata{
-			FunctionARN:      adapterhelpers.PtrString("arn:aws:cloudfront::123456789012:function/test-function"),
-			LastModifiedTime: adapterhelpers.PtrTime(time.Now()),
-			CreatedTime:      adapterhelpers.PtrTime(time.Now()),
+			FunctionARN:      PtrString("arn:aws:cloudfront::123456789012:function/test-function"),
+			LastModifiedTime: PtrTime(time.Now()),
+			CreatedTime:      PtrTime(time.Now()),
 			Stage:            types.FunctionStageLive,
 		},
-		Name:   adapterhelpers.PtrString("test-function"),
-		Status: adapterhelpers.PtrString("test-status"),
+		Name:   PtrString("test-function"),
+		Status: PtrString("test-status"),
 	}
 
 	item, err := functionItemMapper("", "test", &summary)
@@ -40,7 +39,7 @@ func TestNewCloudfrontCloudfrontFunctionAdapter(t *testing.T) {
 
 	adapter := NewCloudfrontCloudfrontFunctionAdapter(client, account, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

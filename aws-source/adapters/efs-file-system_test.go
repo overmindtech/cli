@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/efs/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -15,32 +14,32 @@ func TestFileSystemOutputMapper(t *testing.T) {
 	output := &efs.DescribeFileSystemsOutput{
 		FileSystems: []types.FileSystemDescription{
 			{
-				CreationTime:         adapterhelpers.PtrTime(time.Now()),
-				CreationToken:        adapterhelpers.PtrString("TOKEN"),
-				FileSystemId:         adapterhelpers.PtrString("fs-1231123123"),
+				CreationTime:         PtrTime(time.Now()),
+				CreationToken:        PtrString("TOKEN"),
+				FileSystemId:         PtrString("fs-1231123123"),
 				LifeCycleState:       types.LifeCycleStateAvailable,
 				NumberOfMountTargets: 10,
-				OwnerId:              adapterhelpers.PtrString("944651592624"),
+				OwnerId:              PtrString("944651592624"),
 				PerformanceMode:      types.PerformanceModeGeneralPurpose,
 				SizeInBytes: &types.FileSystemSize{
 					Value:           1024,
-					Timestamp:       adapterhelpers.PtrTime(time.Now()),
-					ValueInIA:       adapterhelpers.PtrInt64(2048),
-					ValueInStandard: adapterhelpers.PtrInt64(128),
+					Timestamp:       PtrTime(time.Now()),
+					ValueInIA:       PtrInt64(2048),
+					ValueInStandard: PtrInt64(128),
 				},
 				Tags: []types.Tag{
 					{
-						Key:   adapterhelpers.PtrString("foo"),
-						Value: adapterhelpers.PtrString("bar"),
+						Key:   PtrString("foo"),
+						Value: PtrString("bar"),
 					},
 				},
-				AvailabilityZoneId:           adapterhelpers.PtrString("use1-az1"),
-				AvailabilityZoneName:         adapterhelpers.PtrString("us-east-1"),
-				Encrypted:                    adapterhelpers.PtrBool(true),
-				FileSystemArn:                adapterhelpers.PtrString("arn:aws:elasticfilesystem:eu-west-2:944651592624:file-system/fs-0c6f2f41e957f42a9"),
-				KmsKeyId:                     adapterhelpers.PtrString("arn:aws:kms:eu-west-2:944651592624:key/be76a6fa-d307-41c2-a4e3-cbfba2440747"),
-				Name:                         adapterhelpers.PtrString("test"),
-				ProvisionedThroughputInMibps: adapterhelpers.PtrFloat64(64),
+				AvailabilityZoneId:           PtrString("use1-az1"),
+				AvailabilityZoneName:         PtrString("us-east-1"),
+				Encrypted:                    PtrBool(true),
+				FileSystemArn:                PtrString("arn:aws:elasticfilesystem:eu-west-2:944651592624:file-system/fs-0c6f2f41e957f42a9"),
+				KmsKeyId:                     PtrString("arn:aws:kms:eu-west-2:944651592624:key/be76a6fa-d307-41c2-a4e3-cbfba2440747"),
+				Name:                         PtrString("test"),
+				ProvisionedThroughputInMibps: PtrFloat64(64),
 				ThroughputMode:               types.ThroughputModeBursting,
 			},
 		},
@@ -66,7 +65,7 @@ func TestFileSystemOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "efs-backup-policy",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -96,7 +95,7 @@ func TestNewEFSFileSystemAdapter(t *testing.T) {
 
 	adapter := NewEFSFileSystemAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

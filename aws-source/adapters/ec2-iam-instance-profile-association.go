@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -14,7 +13,7 @@ func iamInstanceProfileAssociationOutputMapper(_ context.Context, _ *ec2.Client,
 	items := make([]*sdp.Item, 0)
 
 	for _, assoc := range output.IamInstanceProfileAssociations {
-		attributes, err := adapterhelpers.ToAttributesWithExclude(assoc)
+		attributes, err := ToAttributesWithExclude(assoc)
 
 		if err != nil {
 			return nil, err
@@ -28,13 +27,13 @@ func iamInstanceProfileAssociationOutputMapper(_ context.Context, _ *ec2.Client,
 		}
 
 		if assoc.IamInstanceProfile != nil && assoc.IamInstanceProfile.Arn != nil {
-			if arn, err := adapterhelpers.ParseARN(*assoc.IamInstanceProfile.Arn); err == nil {
+			if arn, err := ParseARN(*assoc.IamInstanceProfile.Arn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "iam-instance-profile",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *assoc.IamInstanceProfile.Arn,
-						Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+						Scope:  FormatScope(arn.AccountID, arn.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changes to the profile will affect this
@@ -70,14 +69,14 @@ func iamInstanceProfileAssociationOutputMapper(_ context.Context, _ *ec2.Client,
 }
 
 // NewIamInstanceProfileAssociationAdapter Creates a new adapter for aws-IamInstanceProfileAssociation resources
-func NewEC2IamInstanceProfileAssociationAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeIamInstanceProfileAssociationsInput, *ec2.DescribeIamInstanceProfileAssociationsOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeIamInstanceProfileAssociationsInput, *ec2.DescribeIamInstanceProfileAssociationsOutput, *ec2.Client, *ec2.Options]{
+func NewEC2IamInstanceProfileAssociationAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeIamInstanceProfileAssociationsInput, *ec2.DescribeIamInstanceProfileAssociationsOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeIamInstanceProfileAssociationsInput, *ec2.DescribeIamInstanceProfileAssociationsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-iam-instance-profile-association",
 		AdapterMetadata: iamInstanceProfileAssociationAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeIamInstanceProfileAssociationsInput) (*ec2.DescribeIamInstanceProfileAssociationsOutput, error) {
 			return client.DescribeIamInstanceProfileAssociations(ctx, input)
 		},

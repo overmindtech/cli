@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -15,7 +14,7 @@ func vpcPeeringConnectionOutputMapper(_ context.Context, _ *ec2.Client, scope st
 	items := make([]*sdp.Item, 0)
 
 	for _, connection := range output.VpcPeeringConnections {
-		attributes, err := adapterhelpers.ToAttributesWithExclude(connection, "tags")
+		attributes, err := ToAttributesWithExclude(connection, "tags")
 
 		if err != nil {
 			return nil, err
@@ -55,7 +54,7 @@ func vpcPeeringConnectionOutputMapper(_ context.Context, _ *ec2.Client, scope st
 		if connection.AccepterVpcInfo != nil {
 			if connection.AccepterVpcInfo.Region != nil {
 				if connection.AccepterVpcInfo.VpcId != nil && connection.AccepterVpcInfo.OwnerId != nil {
-					pairedScope := adapterhelpers.FormatScope(*connection.AccepterVpcInfo.OwnerId, *connection.AccepterVpcInfo.Region)
+					pairedScope := FormatScope(*connection.AccepterVpcInfo.OwnerId, *connection.AccepterVpcInfo.Region)
 
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
@@ -79,7 +78,7 @@ func vpcPeeringConnectionOutputMapper(_ context.Context, _ *ec2.Client, scope st
 		if connection.RequesterVpcInfo != nil {
 			if connection.RequesterVpcInfo.Region != nil {
 				if connection.RequesterVpcInfo.VpcId != nil && connection.RequesterVpcInfo.OwnerId != nil {
-					pairedScope := adapterhelpers.FormatScope(*connection.RequesterVpcInfo.OwnerId, *connection.RequesterVpcInfo.Region)
+					pairedScope := FormatScope(*connection.RequesterVpcInfo.OwnerId, *connection.RequesterVpcInfo.Region)
 
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
@@ -105,14 +104,14 @@ func vpcPeeringConnectionOutputMapper(_ context.Context, _ *ec2.Client, scope st
 	return items, nil
 }
 
-func NewEC2VpcPeeringConnectionAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeVpcPeeringConnectionsInput, *ec2.DescribeVpcPeeringConnectionsOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeVpcPeeringConnectionsInput, *ec2.DescribeVpcPeeringConnectionsOutput, *ec2.Client, *ec2.Options]{
+func NewEC2VpcPeeringConnectionAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeVpcPeeringConnectionsInput, *ec2.DescribeVpcPeeringConnectionsOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeVpcPeeringConnectionsInput, *ec2.DescribeVpcPeeringConnectionsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-vpc-peering-connection",
 		AdapterMetadata: vpcPeeringConnectionAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeVpcPeeringConnectionsInput) (*ec2.DescribeVpcPeeringConnectionsOutput, error) {
 			return client.DescribeVpcPeeringConnections(ctx, input)
 		},
@@ -124,7 +123,7 @@ func NewEC2VpcPeeringConnectionAdapter(client *ec2.Client, accountID string, reg
 		InputMapperList: func(scope string) (*ec2.DescribeVpcPeeringConnectionsInput, error) {
 			return &ec2.DescribeVpcPeeringConnectionsInput{}, nil
 		},
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeVpcPeeringConnectionsInput) adapterhelpers.Paginator[*ec2.DescribeVpcPeeringConnectionsOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeVpcPeeringConnectionsInput) Paginator[*ec2.DescribeVpcPeeringConnectionsOutput, *ec2.Options] {
 			return ec2.NewDescribeVpcPeeringConnectionsPaginator(client, params)
 		},
 		OutputMapper: vpcPeeringConnectionOutputMapper,

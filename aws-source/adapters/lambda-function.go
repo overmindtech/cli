@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -109,7 +108,7 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 		}
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(function, "resultMetadata")
+	attributes, err := ToAttributesWithExclude(function, "resultMetadata")
 
 	if err != nil {
 		return nil, err
@@ -193,7 +192,7 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 		}
 	}
 
-	var a *adapterhelpers.ARN
+	var a *ARN
 
 	if function.Configuration != nil {
 		switch function.Configuration.State {
@@ -216,13 +215,13 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 		}
 
 		if function.Configuration.Role != nil {
-			if a, err = adapterhelpers.ParseARN(*function.Configuration.Role); err == nil {
+			if a, err = ParseARN(*function.Configuration.Role); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "iam-role",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *function.Configuration.Role,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the role will affect the function
@@ -252,13 +251,13 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 
 		for _, fsConfig := range function.Configuration.FileSystemConfigs {
 			if fsConfig.Arn != nil {
-				if a, err = adapterhelpers.ParseARN(*fsConfig.Arn); err == nil {
+				if a, err = ParseARN(*fsConfig.Arn); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "efs-access-point",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *fsConfig.Arn,
-							Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+							Scope:  FormatScope(a.AccountID, a.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// These are really tightly linked
@@ -271,13 +270,13 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 		}
 
 		if function.Configuration.KMSKeyArn != nil {
-			if a, err = adapterhelpers.ParseARN(*function.Configuration.KMSKeyArn); err == nil {
+			if a, err = ParseARN(*function.Configuration.KMSKeyArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "kms-key",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *function.Configuration.KMSKeyArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the key will affect the function
@@ -291,7 +290,7 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 
 		for _, layer := range function.Configuration.Layers {
 			if layer.Arn != nil {
-				if a, err = adapterhelpers.ParseARN(*layer.Arn); err == nil {
+				if a, err = ParseARN(*layer.Arn); err == nil {
 					// Strip the leading "layer:"
 					name := strings.TrimPrefix(a.Resource, "layer:")
 
@@ -300,7 +299,7 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 							Type:   "lambda-layer-version",
 							Method: sdp.QueryMethod_GET,
 							Query:  name,
-							Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+							Scope:  FormatScope(a.AccountID, a.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// These are tightly linked
@@ -312,13 +311,13 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 			}
 
 			if layer.SigningJobArn != nil {
-				if a, err = adapterhelpers.ParseARN(*layer.SigningJobArn); err == nil {
+				if a, err = ParseARN(*layer.SigningJobArn); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "signer-signing-job",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *layer.SigningJobArn,
-							Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+							Scope:  FormatScope(a.AccountID, a.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Changing the signing will affect the function
@@ -331,13 +330,13 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 			}
 
 			if layer.SigningProfileVersionArn != nil {
-				if a, err = adapterhelpers.ParseARN(*layer.SigningProfileVersionArn); err == nil {
+				if a, err = ParseARN(*layer.SigningProfileVersionArn); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "signer-signing-profile",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *layer.SigningProfileVersionArn,
-							Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+							Scope:  FormatScope(a.AccountID, a.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Changing the signing will affect the function
@@ -351,13 +350,13 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 		}
 
 		if function.Configuration.MasterArn != nil {
-			if a, err = adapterhelpers.ParseARN(*function.Configuration.MasterArn); err == nil {
+			if a, err = ParseARN(*function.Configuration.MasterArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "lambda-function",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *function.Configuration.MasterArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Tightly linked
@@ -369,13 +368,13 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 		}
 
 		if function.Configuration.SigningJobArn != nil {
-			if a, err = adapterhelpers.ParseARN(*function.Configuration.SigningJobArn); err == nil {
+			if a, err = ParseARN(*function.Configuration.SigningJobArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "signer-signing-job",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *function.Configuration.SigningJobArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the signing will affect the function
@@ -388,13 +387,13 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 		}
 
 		if function.Configuration.SigningProfileVersionArn != nil {
-			if a, err = adapterhelpers.ParseARN(*function.Configuration.SigningProfileVersionArn); err == nil {
+			if a, err = ParseARN(*function.Configuration.SigningProfileVersionArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "signer-signing-profile",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *function.Configuration.SigningProfileVersionArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the signing will affect the function
@@ -528,20 +527,20 @@ func ExtractLinksFromPolicy(policy *PolicyDocument) []*sdp.LinkedItemQuery {
 			// that from the policy as the ARN doesn't contain the account that
 			// the bucket is in
 			queryType = "s3-bucket"
-			scope = adapterhelpers.FormatScope(statement.Condition.StringEquals.AWSSourceAccount, "")
+			scope = FormatScope(statement.Condition.StringEquals.AWSSourceAccount, "")
 		default:
 			continue
 		}
 
 		if scope == "" {
 			// If we don't have a scope set then extract it from the target ARN
-			parsedARN, err := adapterhelpers.ParseARN(statement.Condition.ArnLike.AWSSourceArn)
+			parsedARN, err := ParseARN(statement.Condition.ArnLike.AWSSourceArn)
 
 			if err != nil {
 				continue
 			}
 
-			scope = adapterhelpers.FormatScope(parsedARN.AccountID, parsedARN.Region)
+			scope = FormatScope(parsedARN.AccountID, parsedARN.Region)
 		}
 
 		links = append(links, &sdp.LinkedItemQuery{
@@ -565,13 +564,13 @@ func ExtractLinksFromPolicy(policy *PolicyDocument) []*sdp.LinkedItemQuery {
 
 // GetEventLinkedItem Gets the linked item request for a given destination ARN
 func GetEventLinkedItem(destinationARN string) (*sdp.LinkedItemQuery, error) {
-	parsed, err := adapterhelpers.ParseARN(destinationARN)
+	parsed, err := ParseARN(destinationARN)
 
 	if err != nil {
 		return nil, err
 	}
 
-	scope := adapterhelpers.FormatScope(parsed.AccountID, parsed.Region)
+	scope := FormatScope(parsed.AccountID, parsed.Region)
 
 	switch parsed.Service {
 	case "sns":
@@ -636,8 +635,8 @@ func GetEventLinkedItem(destinationARN string) (*sdp.LinkedItemQuery, error) {
 	return nil, errors.New("could not find matching request")
 }
 
-func NewLambdaFunctionAdapter(client LambdaClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*lambda.ListFunctionsInput, *lambda.ListFunctionsOutput, *lambda.GetFunctionInput, *lambda.GetFunctionOutput, LambdaClient, *lambda.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*lambda.ListFunctionsInput, *lambda.ListFunctionsOutput, *lambda.GetFunctionInput, *lambda.GetFunctionOutput, LambdaClient, *lambda.Options]{
+func NewLambdaFunctionAdapter(client LambdaClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*lambda.ListFunctionsInput, *lambda.ListFunctionsOutput, *lambda.GetFunctionInput, *lambda.GetFunctionOutput, LambdaClient, *lambda.Options] {
+	return &AlwaysGetAdapter[*lambda.ListFunctionsInput, *lambda.ListFunctionsOutput, *lambda.GetFunctionInput, *lambda.GetFunctionOutput, LambdaClient, *lambda.Options]{
 		ItemType:        "lambda-function",
 		Client:          client,
 		AccountID:       accountID,
@@ -645,13 +644,13 @@ func NewLambdaFunctionAdapter(client LambdaClient, accountID string, region stri
 		ListInput:       &lambda.ListFunctionsInput{},
 		GetFunc:         functionGetFunc,
 		AdapterMetadata: lambdaFunctionAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetInputMapper: func(scope, query string) *lambda.GetFunctionInput {
 			return &lambda.GetFunctionInput{
 				FunctionName: &query,
 			}
 		},
-		ListFuncPaginatorBuilder: func(client LambdaClient, input *lambda.ListFunctionsInput) adapterhelpers.Paginator[*lambda.ListFunctionsOutput, *lambda.Options] {
+		ListFuncPaginatorBuilder: func(client LambdaClient, input *lambda.ListFunctionsInput) Paginator[*lambda.ListFunctionsOutput, *lambda.Options] {
 			return lambda.NewListFunctionsPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *lambda.ListFunctionsOutput, input *lambda.ListFunctionsInput) ([]*lambda.GetFunctionInput, error) {

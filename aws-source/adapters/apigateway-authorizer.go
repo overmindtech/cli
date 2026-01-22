@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -30,7 +29,7 @@ func convertGetAuthorizerOutputToAuthorizer(output *apigateway.GetAuthorizerOutp
 }
 
 func authorizerOutputMapper(query, scope string, awsItem *types.Authorizer) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem, "tags")
+	attributes, err := ToAttributesWithExclude(awsItem, "tags")
 	if err != nil {
 		return nil, err
 	}
@@ -59,14 +58,14 @@ func authorizerOutputMapper(query, scope string, awsItem *types.Authorizer) (*sd
 	return &item, nil
 }
 
-func NewAPIGatewayAuthorizerAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.Authorizer, *apigateway.Client, *apigateway.Options] {
-	return &adapterhelpers.GetListAdapter[*types.Authorizer, *apigateway.Client, *apigateway.Options]{
+func NewAPIGatewayAuthorizerAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *GetListAdapter[*types.Authorizer, *apigateway.Client, *apigateway.Options] {
+	return &GetListAdapter[*types.Authorizer, *apigateway.Client, *apigateway.Options]{
 		ItemType:        "apigateway-authorizer",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: authorizerAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.Authorizer, error) {
 			f := strings.Split(query, "/")
 			if len(f) != 2 {

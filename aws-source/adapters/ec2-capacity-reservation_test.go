@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -15,30 +14,30 @@ func TestCapacityReservationOutputMapper(t *testing.T) {
 	output := &ec2.DescribeCapacityReservationsOutput{
 		CapacityReservations: []types.CapacityReservation{
 			{
-				AvailabilityZone:           adapterhelpers.PtrString("us-east-1a"), // links
-				AvailabilityZoneId:         adapterhelpers.PtrString("use1-az1"),
-				AvailableInstanceCount:     adapterhelpers.PtrInt32(1),
-				CapacityReservationArn:     adapterhelpers.PtrString("arn:aws:ec2:us-east-1:123456789012:capacity-reservation/cr-1234567890abcdef0"),
-				CapacityReservationId:      adapterhelpers.PtrString("cr-1234567890abcdef0"),
-				CapacityReservationFleetId: adapterhelpers.PtrString("crf-1234567890abcdef0"), // link
-				CreateDate:                 adapterhelpers.PtrTime(time.Now()),
-				EbsOptimized:               adapterhelpers.PtrBool(true),
+				AvailabilityZone:           PtrString("us-east-1a"), // links
+				AvailabilityZoneId:         PtrString("use1-az1"),
+				AvailableInstanceCount:     PtrInt32(1),
+				CapacityReservationArn:     PtrString("arn:aws:ec2:us-east-1:123456789012:capacity-reservation/cr-1234567890abcdef0"),
+				CapacityReservationId:      PtrString("cr-1234567890abcdef0"),
+				CapacityReservationFleetId: PtrString("crf-1234567890abcdef0"), // link
+				CreateDate:                 PtrTime(time.Now()),
+				EbsOptimized:               PtrBool(true),
 				EndDateType:                types.EndDateTypeUnlimited,
 				EndDate:                    nil,
 				InstanceMatchCriteria:      types.InstanceMatchCriteriaTargeted,
 				InstancePlatform:           types.CapacityReservationInstancePlatformLinuxUnix,
-				InstanceType:               adapterhelpers.PtrString("t2.micro"),
-				OutpostArn:                 adapterhelpers.PtrString("arn:aws:ec2:us-east-1:123456789012:outpost/op-1234567890abcdef0"), // link
-				OwnerId:                    adapterhelpers.PtrString("123456789012"),
-				PlacementGroupArn:          adapterhelpers.PtrString("arn:aws:ec2:us-east-1:123456789012:placement-group/pg-1234567890abcdef0"), // link
-				StartDate:                  adapterhelpers.PtrTime(time.Now()),
+				InstanceType:               PtrString("t2.micro"),
+				OutpostArn:                 PtrString("arn:aws:ec2:us-east-1:123456789012:outpost/op-1234567890abcdef0"), // link
+				OwnerId:                    PtrString("123456789012"),
+				PlacementGroupArn:          PtrString("arn:aws:ec2:us-east-1:123456789012:placement-group/pg-1234567890abcdef0"), // link
+				StartDate:                  PtrTime(time.Now()),
 				State:                      types.CapacityReservationStateActive,
 				Tenancy:                    types.CapacityReservationTenancyDefault,
-				TotalInstanceCount:         adapterhelpers.PtrInt32(1),
+				TotalInstanceCount:         PtrInt32(1),
 				CapacityAllocations: []types.CapacityAllocation{
 					{
 						AllocationType: types.AllocationTypeUsed,
-						Count:          adapterhelpers.PtrInt32(1),
+						Count:          PtrInt32(1),
 					},
 				},
 			},
@@ -65,7 +64,7 @@ func TestCapacityReservationOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-capacity-reservation-fleet",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -95,7 +94,7 @@ func TestNewEC2CapacityReservationAdapter(t *testing.T) {
 
 	adapter := NewEC2CapacityReservationAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

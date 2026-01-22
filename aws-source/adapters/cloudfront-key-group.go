@@ -6,13 +6,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
 
 func KeyGroupItemMapper(_, scope string, awsItem *types.KeyGroup) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 
 	if err != nil {
 		return nil, err
@@ -28,14 +27,14 @@ func KeyGroupItemMapper(_, scope string, awsItem *types.KeyGroup) (*sdp.Item, er
 	return &item, nil
 }
 
-func NewCloudfrontKeyGroupAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.KeyGroup, *cloudfront.Client, *cloudfront.Options] {
-	return &adapterhelpers.GetListAdapter[*types.KeyGroup, *cloudfront.Client, *cloudfront.Options]{
+func NewCloudfrontKeyGroupAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *GetListAdapter[*types.KeyGroup, *cloudfront.Client, *cloudfront.Options] {
+	return &GetListAdapter[*types.KeyGroup, *cloudfront.Client, *cloudfront.Options]{
 		ItemType:        "cloudfront-key-group",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata: keyGroupAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *cloudfront.Client, scope, query string) (*types.KeyGroup, error) {
 			out, err := client.GetKeyGroup(ctx, &cloudfront.GetKeyGroupInput{
 				Id: &query,

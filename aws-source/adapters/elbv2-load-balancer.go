@@ -5,7 +5,6 @@ import (
 
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -25,7 +24,7 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 	tagsMap := elbv2GetTagsMap(ctx, client, arns)
 
 	for _, lb := range output.LoadBalancers {
-		attrs, err := adapterhelpers.ToAttributesWithExclude(lb)
+		attrs, err := ToAttributesWithExclude(lb)
 
 		if err != nil {
 			return nil, err
@@ -251,14 +250,14 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 	return items, nil
 }
 
-func NewELBv2LoadBalancerAdapter(client elbv2Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeLoadBalancersInput, *elbv2.DescribeLoadBalancersOutput, elbv2Client, *elbv2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeLoadBalancersInput, *elbv2.DescribeLoadBalancersOutput, elbv2Client, *elbv2.Options]{
+func NewELBv2LoadBalancerAdapter(client elbv2Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*elbv2.DescribeLoadBalancersInput, *elbv2.DescribeLoadBalancersOutput, elbv2Client, *elbv2.Options] {
+	return &DescribeOnlyAdapter[*elbv2.DescribeLoadBalancersInput, *elbv2.DescribeLoadBalancersOutput, elbv2Client, *elbv2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "elbv2-load-balancer",
 		AdapterMetadata: loadBalancerAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client elbv2Client, input *elbv2.DescribeLoadBalancersInput) (*elbv2.DescribeLoadBalancersOutput, error) {
 			return client.DescribeLoadBalancers(ctx, input)
 		},
@@ -275,7 +274,7 @@ func NewELBv2LoadBalancerAdapter(client elbv2Client, accountID string, region st
 				LoadBalancerArns: []string{query},
 			}, nil
 		},
-		PaginatorBuilder: func(client elbv2Client, params *elbv2.DescribeLoadBalancersInput) adapterhelpers.Paginator[*elbv2.DescribeLoadBalancersOutput, *elbv2.Options] {
+		PaginatorBuilder: func(client elbv2Client, params *elbv2.DescribeLoadBalancersInput) Paginator[*elbv2.DescribeLoadBalancersOutput, *elbv2.Options] {
 			return elbv2.NewDescribeLoadBalancersPaginator(client, params)
 		},
 		OutputMapper: elbv2LoadBalancerOutputMapper,

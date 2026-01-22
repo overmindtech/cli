@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -19,7 +18,7 @@ func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scop
 	var err error
 
 	for _, asg := range output.AutoScalingGroups {
-		attributes, err = adapterhelpers.ToAttributesWithExclude(asg)
+		attributes, err = ToAttributesWithExclude(asg)
 
 		if err != nil {
 			return nil, err
@@ -65,17 +64,17 @@ func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scop
 			}
 		}
 
-		var a *adapterhelpers.ARN
+		var a *ARN
 		var err error
 
 		for _, tgARN := range asg.TargetGroupARNs {
-			if a, err = adapterhelpers.ParseARN(tgARN); err == nil {
+			if a, err = ParseARN(tgARN); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "elbv2-target-group",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  tgARN,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changes to a target group won't affect the ASG
@@ -128,13 +127,13 @@ func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scop
 		}
 
 		if asg.ServiceLinkedRoleARN != nil {
-			if a, err = adapterhelpers.ParseARN(*asg.ServiceLinkedRoleARN); err == nil {
+			if a, err = ParseARN(*asg.ServiceLinkedRoleARN); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "iam-role",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *asg.ServiceLinkedRoleARN,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changes to a role can affect the functioning of the
@@ -207,14 +206,14 @@ func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scop
 
 //
 
-func NewAutoScalingGroupAdapter(client *autoscaling.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*autoscaling.DescribeAutoScalingGroupsInput, *autoscaling.DescribeAutoScalingGroupsOutput, *autoscaling.Client, *autoscaling.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*autoscaling.DescribeAutoScalingGroupsInput, *autoscaling.DescribeAutoScalingGroupsOutput, *autoscaling.Client, *autoscaling.Options]{
+func NewAutoScalingGroupAdapter(client *autoscaling.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*autoscaling.DescribeAutoScalingGroupsInput, *autoscaling.DescribeAutoScalingGroupsOutput, *autoscaling.Client, *autoscaling.Options] {
+	return &DescribeOnlyAdapter[*autoscaling.DescribeAutoScalingGroupsInput, *autoscaling.DescribeAutoScalingGroupsOutput, *autoscaling.Client, *autoscaling.Options]{
 		ItemType:        "autoscaling-auto-scaling-group",
 		AccountID:       accountID,
 		Region:          region,
 		Client:          client,
 		AdapterMetadata: autoScalingGroupAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		InputMapperGet: func(scope, query string) (*autoscaling.DescribeAutoScalingGroupsInput, error) {
 			return &autoscaling.DescribeAutoScalingGroupsInput{
 				AutoScalingGroupNames: []string{query},
@@ -227,7 +226,7 @@ func NewAutoScalingGroupAdapter(client *autoscaling.Client, accountID string, re
 			// Parse the ARN to extract the AutoScaling Group name
 			// AutoScaling Group ARNs have the format:
 			// arn:aws:autoscaling:region:account-id:autoScalingGroup:uuid:autoScalingGroupName/name
-			arn, err := adapterhelpers.ParseARN(query)
+			arn, err := ParseARN(query)
 			if err != nil {
 				return nil, &sdp.QueryError{
 					ErrorType:   sdp.QueryError_NOTFOUND,
@@ -260,7 +259,7 @@ func NewAutoScalingGroupAdapter(client *autoscaling.Client, accountID string, re
 				ErrorString: "could not extract AutoScaling Group name from ARN",
 			}
 		},
-		PaginatorBuilder: func(client *autoscaling.Client, params *autoscaling.DescribeAutoScalingGroupsInput) adapterhelpers.Paginator[*autoscaling.DescribeAutoScalingGroupsOutput, *autoscaling.Options] {
+		PaginatorBuilder: func(client *autoscaling.Client, params *autoscaling.DescribeAutoScalingGroupsInput) Paginator[*autoscaling.DescribeAutoScalingGroupsOutput, *autoscaling.Options] {
 			return autoscaling.NewDescribeAutoScalingGroupsPaginator(client, params)
 		},
 		DescribeFunc: func(ctx context.Context, client *autoscaling.Client, input *autoscaling.DescribeAutoScalingGroupsInput) (*autoscaling.DescribeAutoScalingGroupsOutput, error) {

@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -25,7 +24,7 @@ func coreNetworkGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 
 	cn := out.CoreNetwork
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(cn)
+	attributes, err := ToAttributesWithExclude(cn)
 
 	if err != nil {
 		return nil, err
@@ -111,8 +110,8 @@ func coreNetworkGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 	return &item, nil
 }
 
-func NewNetworkManagerCoreNetworkAdapter(client NetworkManagerClient, accountID, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*networkmanager.ListCoreNetworksInput, *networkmanager.ListCoreNetworksOutput, *networkmanager.GetCoreNetworkInput, *networkmanager.GetCoreNetworkOutput, NetworkManagerClient, *networkmanager.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*networkmanager.ListCoreNetworksInput, *networkmanager.ListCoreNetworksOutput, *networkmanager.GetCoreNetworkInput, *networkmanager.GetCoreNetworkOutput, NetworkManagerClient, *networkmanager.Options]{
+func NewNetworkManagerCoreNetworkAdapter(client NetworkManagerClient, accountID, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*networkmanager.ListCoreNetworksInput, *networkmanager.ListCoreNetworksOutput, *networkmanager.GetCoreNetworkInput, *networkmanager.GetCoreNetworkOutput, NetworkManagerClient, *networkmanager.Options] {
+	return &AlwaysGetAdapter[*networkmanager.ListCoreNetworksInput, *networkmanager.ListCoreNetworksOutput, *networkmanager.GetCoreNetworkInput, *networkmanager.GetCoreNetworkOutput, NetworkManagerClient, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
@@ -120,13 +119,13 @@ func NewNetworkManagerCoreNetworkAdapter(client NetworkManagerClient, accountID,
 		ItemType:        "networkmanager-core-network",
 		ListInput:       &networkmanager.ListCoreNetworksInput{},
 		AdapterMetadata: coreNetworkAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetInputMapper: func(scope, query string) *networkmanager.GetCoreNetworkInput {
 			return &networkmanager.GetCoreNetworkInput{
 				CoreNetworkId: &query,
 			}
 		},
-		ListFuncPaginatorBuilder: func(client NetworkManagerClient, input *networkmanager.ListCoreNetworksInput) adapterhelpers.Paginator[*networkmanager.ListCoreNetworksOutput, *networkmanager.Options] {
+		ListFuncPaginatorBuilder: func(client NetworkManagerClient, input *networkmanager.ListCoreNetworksInput) Paginator[*networkmanager.ListCoreNetworksOutput, *networkmanager.Options] {
 			return networkmanager.NewListCoreNetworksPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *networkmanager.ListCoreNetworksOutput, input *networkmanager.ListCoreNetworksInput) ([]*networkmanager.GetCoreNetworkInput, error) {

@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -45,33 +44,33 @@ func TestVolumeStatusOutputMapper(t *testing.T) {
 			{
 				Actions: []types.VolumeStatusAction{
 					{
-						Code:        adapterhelpers.PtrString("enable-volume-io"),
-						Description: adapterhelpers.PtrString("Enable volume I/O"),
-						EventId:     adapterhelpers.PtrString("12"),
-						EventType:   adapterhelpers.PtrString("io-enabled"),
+						Code:        PtrString("enable-volume-io"),
+						Description: PtrString("Enable volume I/O"),
+						EventId:     PtrString("12"),
+						EventType:   PtrString("io-enabled"),
 					},
 				},
-				AvailabilityZone: adapterhelpers.PtrString("eu-west-2c"),
+				AvailabilityZone: PtrString("eu-west-2c"),
 				Events: []types.VolumeStatusEvent{
 					{
-						Description: adapterhelpers.PtrString("The volume is operating normally"),
-						EventId:     adapterhelpers.PtrString("12"),
-						EventType:   adapterhelpers.PtrString("io-enabled"),
-						InstanceId:  adapterhelpers.PtrString("i-0667d3ca802741e30"), // link
-						NotAfter:    adapterhelpers.PtrTime(time.Now()),
-						NotBefore:   adapterhelpers.PtrTime(time.Now()),
+						Description: PtrString("The volume is operating normally"),
+						EventId:     PtrString("12"),
+						EventType:   PtrString("io-enabled"),
+						InstanceId:  PtrString("i-0667d3ca802741e30"), // link
+						NotAfter:    PtrTime(time.Now()),
+						NotBefore:   PtrTime(time.Now()),
 					},
 				},
-				VolumeId: adapterhelpers.PtrString("vol-0a38796ac85e21c11"), // link
+				VolumeId: PtrString("vol-0a38796ac85e21c11"), // link
 				VolumeStatus: &types.VolumeStatusInfo{
 					Details: []types.VolumeStatusDetails{
 						{
 							Name:   types.VolumeStatusNameIoEnabled,
-							Status: adapterhelpers.PtrString("passed"),
+							Status: PtrString("passed"),
 						},
 						{
 							Name:   types.VolumeStatusNameIoPerformance,
-							Status: adapterhelpers.PtrString("not-applicable"),
+							Status: PtrString("not-applicable"),
 						},
 					},
 					Status: types.VolumeStatusInfoStatusOk,
@@ -100,7 +99,7 @@ func TestVolumeStatusOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-instance",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -123,7 +122,7 @@ func TestNewEC2VolumeStatusAdapter(t *testing.T) {
 
 	adapter := NewEC2VolumeAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

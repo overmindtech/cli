@@ -7,30 +7,29 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 var AddonTestClient = EKSTestClient{
 	DescribeAddonOutput: &eks.DescribeAddonOutput{
 		Addon: &types.Addon{
-			AddonName:           adapterhelpers.PtrString("aws-ebs-csi-driver"),
-			ClusterName:         adapterhelpers.PtrString("dylan"),
+			AddonName:           PtrString("aws-ebs-csi-driver"),
+			ClusterName:         PtrString("dylan"),
 			Status:              types.AddonStatusActive,
-			AddonVersion:        adapterhelpers.PtrString("v1.13.0-eksbuild.3"),
-			ConfigurationValues: adapterhelpers.PtrString("values"),
+			AddonVersion:        PtrString("v1.13.0-eksbuild.3"),
+			ConfigurationValues: PtrString("values"),
 			MarketplaceInformation: &types.MarketplaceInformation{
-				ProductId:  adapterhelpers.PtrString("id"),
-				ProductUrl: adapterhelpers.PtrString("url"),
+				ProductId:  PtrString("id"),
+				ProductUrl: PtrString("url"),
 			},
-			Publisher: adapterhelpers.PtrString("publisher"),
-			Owner:     adapterhelpers.PtrString("owner"),
+			Publisher: PtrString("publisher"),
+			Owner:     PtrString("owner"),
 			Health: &types.AddonHealth{
 				Issues: []types.AddonIssue{},
 			},
-			AddonArn:              adapterhelpers.PtrString("arn:aws:eks:eu-west-2:801795385023:addon/dylan/aws-ebs-csi-driver/a2c29d0e-72c4-a702-7887-2f739f4fc189"),
-			CreatedAt:             adapterhelpers.PtrTime(time.Now()),
-			ModifiedAt:            adapterhelpers.PtrTime(time.Now()),
-			ServiceAccountRoleArn: adapterhelpers.PtrString("arn:aws:iam::801795385023:role/eks-csi-dylan"),
+			AddonArn:              PtrString("arn:aws:eks:eu-west-2:801795385023:addon/dylan/aws-ebs-csi-driver/a2c29d0e-72c4-a702-7887-2f739f4fc189"),
+			CreatedAt:             PtrTime(time.Now()),
+			ModifiedAt:            PtrTime(time.Now()),
+			ServiceAccountRoleArn: PtrString("arn:aws:iam::801795385023:role/eks-csi-dylan"),
 		},
 	},
 }
@@ -52,7 +51,7 @@ func TestNewEKSAddonAdapter(t *testing.T) {
 
 	adapter := NewEKSAddonAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter:           adapter,
 		Timeout:           10 * time.Second,
 		SkipNotFoundCheck: true,

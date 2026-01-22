@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -17,90 +16,90 @@ func (t *ecsTestClient) DescribeTasks(ctx context.Context, params *ecs.DescribeT
 			{
 				Attachments: []types.Attachment{
 					{
-						Id:     adapterhelpers.PtrString("id"), // link?
-						Status: adapterhelpers.PtrString("OK"),
-						Type:   adapterhelpers.PtrString("ElasticNetworkInterface"),
+						Id:     PtrString("id"), // link?
+						Status: PtrString("OK"),
+						Type:   PtrString("ElasticNetworkInterface"),
 					},
 				},
 				Attributes: []types.Attribute{
 					{
-						Name:  adapterhelpers.PtrString("ecs.cpu-architecture"),
-						Value: adapterhelpers.PtrString("x86_64"),
+						Name:  PtrString("ecs.cpu-architecture"),
+						Value: PtrString("x86_64"),
 					},
 				},
-				AvailabilityZone:     adapterhelpers.PtrString("eu-west-1c"),
-				ClusterArn:           adapterhelpers.PtrString("arn:aws:ecs:eu-west-1:052392120703:cluster/test-ECSCluster-Bt4SqcM3CURk"), // link
+				AvailabilityZone:     PtrString("eu-west-1c"),
+				ClusterArn:           PtrString("arn:aws:ecs:eu-west-1:052392120703:cluster/test-ECSCluster-Bt4SqcM3CURk"), // link
 				Connectivity:         types.ConnectivityConnected,
-				ConnectivityAt:       adapterhelpers.PtrTime(time.Now()),
-				ContainerInstanceArn: adapterhelpers.PtrString("arn:aws:ecs:eu-west-1:052392120703:container-instance/test-ECSCluster-Bt4SqcM3CURk/4b5c1d7dbb6746b38ada1b97b1866f6a"), // link
+				ConnectivityAt:       PtrTime(time.Now()),
+				ContainerInstanceArn: PtrString("arn:aws:ecs:eu-west-1:052392120703:container-instance/test-ECSCluster-Bt4SqcM3CURk/4b5c1d7dbb6746b38ada1b97b1866f6a"), // link
 				Containers: []types.Container{
 					{
-						ContainerArn:      adapterhelpers.PtrString("arn:aws:ecs:eu-west-1:052392120703:container/test-ECSCluster-Bt4SqcM3CURk/2ffd7ed376c841bcb0e6795ddb6e72e2/39a3ede1-1b28-472e-967a-d87d691f65e0"),
-						TaskArn:           adapterhelpers.PtrString("arn:aws:ecs:eu-west-1:052392120703:task/test-ECSCluster-Bt4SqcM3CURk/2ffd7ed376c841bcb0e6795ddb6e72e2"),
-						Name:              adapterhelpers.PtrString("busybox"),
-						Image:             adapterhelpers.PtrString("busybox"),
-						RuntimeId:         adapterhelpers.PtrString("7c158f5c2711416cbb6e653ad90997346489c9722c59d1115ad2121dd040748e"),
-						LastStatus:        adapterhelpers.PtrString("RUNNING"),
+						ContainerArn:      PtrString("arn:aws:ecs:eu-west-1:052392120703:container/test-ECSCluster-Bt4SqcM3CURk/2ffd7ed376c841bcb0e6795ddb6e72e2/39a3ede1-1b28-472e-967a-d87d691f65e0"),
+						TaskArn:           PtrString("arn:aws:ecs:eu-west-1:052392120703:task/test-ECSCluster-Bt4SqcM3CURk/2ffd7ed376c841bcb0e6795ddb6e72e2"),
+						Name:              PtrString("busybox"),
+						Image:             PtrString("busybox"),
+						RuntimeId:         PtrString("7c158f5c2711416cbb6e653ad90997346489c9722c59d1115ad2121dd040748e"),
+						LastStatus:        PtrString("RUNNING"),
 						NetworkBindings:   []types.NetworkBinding{},
 						NetworkInterfaces: []types.NetworkInterface{},
 						HealthStatus:      types.HealthStatusUnknown,
-						Cpu:               adapterhelpers.PtrString("10"),
-						Memory:            adapterhelpers.PtrString("200"),
+						Cpu:               PtrString("10"),
+						Memory:            PtrString("200"),
 					},
 					{
-						ContainerArn: adapterhelpers.PtrString("arn:aws:ecs:eu-west-1:052392120703:container/test-ECSCluster-Bt4SqcM3CURk/2ffd7ed376c841bcb0e6795ddb6e72e2/8f3db814-6b39-4cc0-9d0a-a7d5702175eb"),
-						TaskArn:      adapterhelpers.PtrString("arn:aws:ecs:eu-west-1:052392120703:task/test-ECSCluster-Bt4SqcM3CURk/2ffd7ed376c841bcb0e6795ddb6e72e2"),
-						Name:         adapterhelpers.PtrString("simple-app"),
-						Image:        adapterhelpers.PtrString("httpd:2.4"),
-						RuntimeId:    adapterhelpers.PtrString("7316b64efb397cececce7cc5f39c6d48ab454f904cc80009aef5ed01ebdb1333"),
-						LastStatus:   adapterhelpers.PtrString("RUNNING"),
+						ContainerArn: PtrString("arn:aws:ecs:eu-west-1:052392120703:container/test-ECSCluster-Bt4SqcM3CURk/2ffd7ed376c841bcb0e6795ddb6e72e2/8f3db814-6b39-4cc0-9d0a-a7d5702175eb"),
+						TaskArn:      PtrString("arn:aws:ecs:eu-west-1:052392120703:task/test-ECSCluster-Bt4SqcM3CURk/2ffd7ed376c841bcb0e6795ddb6e72e2"),
+						Name:         PtrString("simple-app"),
+						Image:        PtrString("httpd:2.4"),
+						RuntimeId:    PtrString("7316b64efb397cececce7cc5f39c6d48ab454f904cc80009aef5ed01ebdb1333"),
+						LastStatus:   PtrString("RUNNING"),
 						NetworkBindings: []types.NetworkBinding{
 							{
-								BindIP:        adapterhelpers.PtrString("0.0.0.0"), // Link? NetworkSocket?
-								ContainerPort: adapterhelpers.PtrInt32(80),
-								HostPort:      adapterhelpers.PtrInt32(32768),
+								BindIP:        PtrString("0.0.0.0"), // Link? NetworkSocket?
+								ContainerPort: PtrInt32(80),
+								HostPort:      PtrInt32(32768),
 								Protocol:      types.TransportProtocolTcp,
 							},
 						},
 						NetworkInterfaces: []types.NetworkInterface{
 							{
-								AttachmentId:       adapterhelpers.PtrString("attachmentId"),
-								Ipv6Address:        adapterhelpers.PtrString("2001:db8:3333:4444:5555:6666:7777:8888"), // link
-								PrivateIpv4Address: adapterhelpers.PtrString("10.0.0.1"),                               // link
+								AttachmentId:       PtrString("attachmentId"),
+								Ipv6Address:        PtrString("2001:db8:3333:4444:5555:6666:7777:8888"), // link
+								PrivateIpv4Address: PtrString("10.0.0.1"),                               // link
 							},
 						},
 						HealthStatus: types.HealthStatusUnknown,
-						Cpu:          adapterhelpers.PtrString("10"),
-						Memory:       adapterhelpers.PtrString("300"),
+						Cpu:          PtrString("10"),
+						Memory:       PtrString("300"),
 					},
 				},
-				Cpu:                  adapterhelpers.PtrString("20"),
-				CreatedAt:            adapterhelpers.PtrTime(time.Now()),
-				DesiredStatus:        adapterhelpers.PtrString("RUNNING"),
+				Cpu:                  PtrString("20"),
+				CreatedAt:            PtrTime(time.Now()),
+				DesiredStatus:        PtrString("RUNNING"),
 				EnableExecuteCommand: false,
-				Group:                adapterhelpers.PtrString("service:test-service-lszmaXSqRKuF"),
+				Group:                PtrString("service:test-service-lszmaXSqRKuF"),
 				HealthStatus:         types.HealthStatusUnknown,
-				LastStatus:           adapterhelpers.PtrString("RUNNING"),
+				LastStatus:           PtrString("RUNNING"),
 				LaunchType:           types.LaunchTypeEc2,
-				Memory:               adapterhelpers.PtrString("500"),
+				Memory:               PtrString("500"),
 				Overrides: &types.TaskOverride{
 					ContainerOverrides: []types.ContainerOverride{
 						{
-							Name: adapterhelpers.PtrString("busybox"),
+							Name: PtrString("busybox"),
 						},
 						{
-							Name: adapterhelpers.PtrString("simple-app"),
+							Name: PtrString("simple-app"),
 						},
 					},
 					InferenceAcceleratorOverrides: []types.InferenceAcceleratorOverride{},
 				},
-				PullStartedAt:     adapterhelpers.PtrTime(time.Now()),
-				PullStoppedAt:     adapterhelpers.PtrTime(time.Now()),
-				StartedAt:         adapterhelpers.PtrTime(time.Now()),
-				StartedBy:         adapterhelpers.PtrString("ecs-svc/0710912874193920929"),
+				PullStartedAt:     PtrTime(time.Now()),
+				PullStoppedAt:     PtrTime(time.Now()),
+				StartedAt:         PtrTime(time.Now()),
+				StartedBy:         PtrString("ecs-svc/0710912874193920929"),
 				Tags:              []types.Tag{},
-				TaskArn:           adapterhelpers.PtrString("arn:aws:ecs:eu-west-1:052392120703:task/test-ECSCluster-Bt4SqcM3CURk/2ffd7ed376c841bcb0e6795ddb6e72e2"),
-				TaskDefinitionArn: adapterhelpers.PtrString("arn:aws:ecs:eu-west-1:052392120703:task-definition/test-ecs-demo-app:1"), // link
+				TaskArn:           PtrString("arn:aws:ecs:eu-west-1:052392120703:task/test-ECSCluster-Bt4SqcM3CURk/2ffd7ed376c841bcb0e6795ddb6e72e2"),
+				TaskDefinitionArn: PtrString("arn:aws:ecs:eu-west-1:052392120703:task-definition/test-ecs-demo-app:1"), // link
 				Version:           3,
 				EphemeralStorage: &types.EphemeralStorage{
 					SizeInGiB: 1,
@@ -188,7 +187,7 @@ func TestTaskGetFunc(t *testing.T) {
 		t.Error(err)
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-network-interface",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -235,7 +234,7 @@ func TestNewECSTaskAdapter(t *testing.T) {
 
 	adapter := NewECSTaskAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter:           adapter,
 		Timeout:           10 * time.Second,
 		SkipNotFoundCheck: true,

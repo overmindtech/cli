@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -17,15 +16,15 @@ func TestTransitGatewayRegistrationOutputMapper(t *testing.T) {
 		name         string
 		out          networkmanager.GetTransitGatewayRegistrationsOutput
 		expectedAttr string
-		tests        adapterhelpers.QueryTests
+		tests        QueryTests
 	}{
 		{
 			name: "ok",
 			out: networkmanager.GetTransitGatewayRegistrationsOutput{
 				TransitGatewayRegistrations: []types.TransitGatewayRegistration{
 					{
-						GlobalNetworkId:   adapterhelpers.PtrString("default"),
-						TransitGatewayArn: adapterhelpers.PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234"),
+						GlobalNetworkId:   PtrString("default"),
+						TransitGatewayArn: PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234"),
 						State: &types.TransitGatewayRegistrationStateReason{
 							Code: types.TransitGatewayRegistrationStateAvailable,
 						},
@@ -33,7 +32,7 @@ func TestTransitGatewayRegistrationOutputMapper(t *testing.T) {
 				},
 			},
 			expectedAttr: "default|arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234",
-			tests: adapterhelpers.QueryTests{
+			tests: QueryTests{
 				{
 					ExpectedType:   "networkmanager-global-network",
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -53,8 +52,8 @@ func TestTransitGatewayRegistrationOutputMapper(t *testing.T) {
 			out: networkmanager.GetTransitGatewayRegistrationsOutput{
 				TransitGatewayRegistrations: []types.TransitGatewayRegistration{
 					{
-						GlobalNetworkId:   adapterhelpers.PtrString("default"),
-						TransitGatewayArn: adapterhelpers.PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234"),
+						GlobalNetworkId:   PtrString("default"),
+						TransitGatewayArn: PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234"),
 						State: &types.TransitGatewayRegistrationStateReason{
 							Code: types.TransitGatewayRegistrationStateDeleting,
 						},
@@ -62,7 +61,7 @@ func TestTransitGatewayRegistrationOutputMapper(t *testing.T) {
 				},
 			},
 			expectedAttr: "default|arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234",
-			tests: adapterhelpers.QueryTests{
+			tests: QueryTests{
 				{
 					ExpectedType:   "networkmanager-global-network",
 					ExpectedMethod: sdp.QueryMethod_GET,

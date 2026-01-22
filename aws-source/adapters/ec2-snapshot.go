@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -34,7 +33,7 @@ func snapshotOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 	for _, snapshot := range output.Snapshots {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(snapshot, "tags")
+		attrs, err = ToAttributesWithExclude(snapshot, "tags")
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -80,20 +79,20 @@ func snapshotOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 	return items, nil
 }
 
-func NewEC2SnapshotAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeSnapshotsInput, *ec2.DescribeSnapshotsOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeSnapshotsInput, *ec2.DescribeSnapshotsOutput, *ec2.Client, *ec2.Options]{
+func NewEC2SnapshotAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeSnapshotsInput, *ec2.DescribeSnapshotsOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeSnapshotsInput, *ec2.DescribeSnapshotsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-snapshot",
 		AdapterMetadata: snapshotAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeSnapshotsInput) (*ec2.DescribeSnapshotsOutput, error) {
 			return client.DescribeSnapshots(ctx, input)
 		},
 		InputMapperGet:  snapshotInputMapperGet,
 		InputMapperList: snapshotInputMapperList,
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeSnapshotsInput) adapterhelpers.Paginator[*ec2.DescribeSnapshotsOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeSnapshotsInput) Paginator[*ec2.DescribeSnapshotsOutput, *ec2.Options] {
 			return ec2.NewDescribeSnapshotsPaginator(client, params)
 		},
 		OutputMapper: snapshotOutputMapper,

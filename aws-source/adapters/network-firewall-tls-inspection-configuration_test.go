@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"testing"
 	"time"
@@ -14,42 +13,42 @@ func (c testNetworkFirewallClient) DescribeTLSInspectionConfiguration(ctx contex
 	now := time.Now()
 	return &networkfirewall.DescribeTLSInspectionConfigurationOutput{
 		TLSInspectionConfigurationResponse: &types.TLSInspectionConfigurationResponse{
-			TLSInspectionConfigurationArn:  adapterhelpers.PtrString("arn:aws:network-firewall:us-east-1:123456789012:tls-inspection-configuration/aws-network-firewall-DefaultTLSInspectionConfiguration-1J3Z3W2ZQXV3"),
-			TLSInspectionConfigurationId:   adapterhelpers.PtrString("test"),
-			TLSInspectionConfigurationName: adapterhelpers.PtrString("test"),
+			TLSInspectionConfigurationArn:  PtrString("arn:aws:network-firewall:us-east-1:123456789012:tls-inspection-configuration/aws-network-firewall-DefaultTLSInspectionConfiguration-1J3Z3W2ZQXV3"),
+			TLSInspectionConfigurationId:   PtrString("test"),
+			TLSInspectionConfigurationName: PtrString("test"),
 			CertificateAuthority: &types.TlsCertificateData{
-				CertificateArn:    adapterhelpers.PtrString("arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"), // link
-				CertificateSerial: adapterhelpers.PtrString("test"),
-				Status:            adapterhelpers.PtrString("OK"),
-				StatusMessage:     adapterhelpers.PtrString("test"),
+				CertificateArn:    PtrString("arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"), // link
+				CertificateSerial: PtrString("test"),
+				Status:            PtrString("OK"),
+				StatusMessage:     PtrString("test"),
 			},
 			Certificates: []types.TlsCertificateData{
 				{
-					CertificateArn:    adapterhelpers.PtrString("arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"), // link
-					CertificateSerial: adapterhelpers.PtrString("test"),
-					Status:            adapterhelpers.PtrString("OK"),
-					StatusMessage:     adapterhelpers.PtrString("test"),
+					CertificateArn:    PtrString("arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"), // link
+					CertificateSerial: PtrString("test"),
+					Status:            PtrString("OK"),
+					StatusMessage:     PtrString("test"),
 				},
 			},
-			Description: adapterhelpers.PtrString("test"),
+			Description: PtrString("test"),
 			EncryptionConfiguration: &types.EncryptionConfiguration{
 				Type:  types.EncryptionTypeAwsOwnedKmsKey,
-				KeyId: adapterhelpers.PtrString("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"), // link (this can be an ARN or ID)
+				KeyId: PtrString("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"), // link (this can be an ARN or ID)
 			},
 			LastModifiedTime:                 &now,
-			NumberOfAssociations:             adapterhelpers.PtrInt32(1),
+			NumberOfAssociations:             PtrInt32(1),
 			TLSInspectionConfigurationStatus: types.ResourceStatusActive, // health
 			Tags: []types.Tag{
 				{
-					Key:   adapterhelpers.PtrString("test"),
-					Value: adapterhelpers.PtrString("test"),
+					Key:   PtrString("test"),
+					Value: PtrString("test"),
 				},
 			},
 		},
 		TLSInspectionConfiguration: &types.TLSInspectionConfiguration{
 			ServerCertificateConfigurations: []types.ServerCertificateConfiguration{
 				{
-					CertificateAuthorityArn: adapterhelpers.PtrString("arn:aws:acm:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"), // link
+					CertificateAuthorityArn: PtrString("arn:aws:acm:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"), // link
 					CheckCertificateRevocationStatus: &types.CheckCertificateRevocationStatusActions{
 						RevokedStatusAction: types.RevocationCheckActionPass,
 						UnknownStatusAction: types.RevocationCheckActionPass,
@@ -64,7 +63,7 @@ func (c testNetworkFirewallClient) DescribeTLSInspectionConfiguration(ctx contex
 							},
 							Destinations: []types.Address{
 								{
-									AddressDefinition: adapterhelpers.PtrString("test"),
+									AddressDefinition: PtrString("test"),
 								},
 							},
 							Protocols: []int32{1},
@@ -76,14 +75,14 @@ func (c testNetworkFirewallClient) DescribeTLSInspectionConfiguration(ctx contex
 							},
 							Sources: []types.Address{
 								{
-									AddressDefinition: adapterhelpers.PtrString("test"),
+									AddressDefinition: PtrString("test"),
 								},
 							},
 						},
 					},
 					ServerCertificates: []types.ServerCertificate{
 						{
-							ResourceArn: adapterhelpers.PtrString("arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"), // link
+							ResourceArn: PtrString("arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"), // link
 						},
 					},
 				},
@@ -96,7 +95,7 @@ func (c testNetworkFirewallClient) ListTLSInspectionConfigurations(ctx context.C
 	return &networkfirewall.ListTLSInspectionConfigurationsOutput{
 		TLSInspectionConfigurations: []types.TLSInspectionConfigurationMetadata{
 			{
-				Arn: adapterhelpers.PtrString("arn:aws:network-firewall:us-east-1:123456789012:tls-inspection-configuration/aws-network-firewall-DefaultTLSInspectionConfiguration-1J3Z3W2ZQXV3"),
+				Arn: PtrString("arn:aws:network-firewall:us-east-1:123456789012:tls-inspection-configuration/aws-network-firewall-DefaultTLSInspectionConfiguration-1J3Z3W2ZQXV3"),
 			},
 		},
 	}, nil
@@ -113,7 +112,7 @@ func TestTLSInspectionConfigurationGetFunc(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "acm-pca-certificate-authority-certificate",
 			ExpectedMethod: sdp.QueryMethod_SEARCH,

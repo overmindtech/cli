@@ -1,4 +1,4 @@
-package adapterhelpers
+package adapters
 
 import (
 	"context"
@@ -248,7 +248,7 @@ func TestGetListSourceCaching(t *testing.T) {
 		ItemType:  "test-type",
 		Region:    "eu-west-2",
 		AccountID: "foo",
-		SDPCache:  sdpcache.NewMemoryCache(),
+		cache:  sdpcache.NewMemoryCache(),
 		GetFunc: func(ctx context.Context, client struct{}, scope, query string) (string, error) {
 			generation += 1
 			return fmt.Sprintf("%v", generation), nil

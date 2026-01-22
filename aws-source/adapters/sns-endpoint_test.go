@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 type mockEndpointClient struct{}
@@ -44,7 +43,7 @@ func TestGetEndpointFunc(t *testing.T) {
 	cli := &mockEndpointClient{}
 
 	item, err := getEndpointFunc(ctx, cli, "scope", &sns.GetEndpointAttributesInput{
-		EndpointArn: adapterhelpers.PtrString("arn:aws:sns:us-west-2:123456789012:endpoint/GCM/MyApplication/12345678-abcd-9012-efgh-345678901234"),
+		EndpointArn: PtrString("arn:aws:sns:us-west-2:123456789012:endpoint/GCM/MyApplication/12345678-abcd-9012-efgh-345678901234"),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -56,12 +55,12 @@ func TestGetEndpointFunc(t *testing.T) {
 }
 
 func TestNewSNSEndpointAdapter(t *testing.T) {
-	config, account, region := adapterhelpers.GetAutoConfig(t)
+	config, account, region := GetAutoConfig(t)
 	client := sns.NewFromConfig(config)
 
 	adapter := NewSNSEndpointAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter:  adapter,
 		Timeout:  10 * time.Second,
 		SkipList: true,

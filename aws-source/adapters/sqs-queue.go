@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -32,7 +31,7 @@ func getFunc(ctx context.Context, client sqsClient, scope string, input *sqs.Get
 		}
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(output.Attributes)
+	attributes, err := ToAttributesWithExclude(output.Attributes)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +94,7 @@ func getFunc(ctx context.Context, client sqsClient, scope string, input *sqs.Get
 }
 
 func sqsQueueSearchInputMapper(scope string, query string) (*sqs.GetQueueAttributesInput, error) {
-	arn, err := adapterhelpers.ParseARN(query)
+	arn, err := ParseARN(query)
 	if err != nil {
 		return nil, err
 	}
@@ -109,20 +108,20 @@ func sqsQueueSearchInputMapper(scope string, query string) (*sqs.GetQueueAttribu
 	}
 
 	return &sqs.GetQueueAttributesInput{
-		QueueUrl:       adapterhelpers.PtrString(fmt.Sprintf("https://sqs.%s.%s/%s/%s", arn.Region, adapterhelpers.GetPartitionDNSSuffix(arn.Partition), arn.AccountID, arn.Resource)),
+		QueueUrl:       PtrString(fmt.Sprintf("https://sqs.%s.%s/%s/%s", arn.Region, GetPartitionDNSSuffix(arn.Partition), arn.AccountID, arn.Resource)),
 		AttributeNames: []types.QueueAttributeName{"All"},
 	}, nil
 }
 
-func NewSQSQueueAdapter(client sqsClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*sqs.ListQueuesInput, *sqs.ListQueuesOutput, *sqs.GetQueueAttributesInput, *sqs.GetQueueAttributesOutput, sqsClient, *sqs.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*sqs.ListQueuesInput, *sqs.ListQueuesOutput, *sqs.GetQueueAttributesInput, *sqs.GetQueueAttributesOutput, sqsClient, *sqs.Options]{
+func NewSQSQueueAdapter(client sqsClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*sqs.ListQueuesInput, *sqs.ListQueuesOutput, *sqs.GetQueueAttributesInput, *sqs.GetQueueAttributesOutput, sqsClient, *sqs.Options] {
+	return &AlwaysGetAdapter[*sqs.ListQueuesInput, *sqs.ListQueuesOutput, *sqs.GetQueueAttributesInput, *sqs.GetQueueAttributesOutput, sqsClient, *sqs.Options]{
 		ItemType:        "sqs-queue",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ListInput:       &sqs.ListQueuesInput{},
 		AdapterMetadata: sqsQueueAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetInputMapper: func(scope, query string) *sqs.GetQueueAttributesInput {
 			return &sqs.GetQueueAttributesInput{
 				QueueUrl: &query,
@@ -130,7 +129,7 @@ func NewSQSQueueAdapter(client sqsClient, accountID string, region string, cache
 				AttributeNames: []types.QueueAttributeName{"All"},
 			}
 		},
-		ListFuncPaginatorBuilder: func(client sqsClient, input *sqs.ListQueuesInput) adapterhelpers.Paginator[*sqs.ListQueuesOutput, *sqs.Options] {
+		ListFuncPaginatorBuilder: func(client sqsClient, input *sqs.ListQueuesInput) Paginator[*sqs.ListQueuesOutput, *sqs.Options] {
 			return sqs.NewListQueuesPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *sqs.ListQueuesOutput, _ *sqs.ListQueuesInput) ([]*sqs.GetQueueAttributesInput, error) {

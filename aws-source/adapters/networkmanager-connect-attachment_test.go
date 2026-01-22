@@ -4,7 +4,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"testing"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -13,9 +12,9 @@ func TestConnectAttachmentItemMapper(t *testing.T) {
 	scope := "123456789012.eu-west-2"
 	item, err := connectAttachmentItemMapper("", scope, &types.ConnectAttachment{
 		Attachment: &types.Attachment{
-			AttachmentId:   adapterhelpers.PtrString("att-1"),
-			CoreNetworkId:  adapterhelpers.PtrString("cn-1"),
-			CoreNetworkArn: adapterhelpers.PtrString("arn:aws:networkmanager:eu-west-2:123456789012:core-network/cn-1"),
+			AttachmentId:   PtrString("att-1"),
+			CoreNetworkId:  PtrString("cn-1"),
+			CoreNetworkArn: PtrString("arn:aws:networkmanager:eu-west-2:123456789012:core-network/cn-1"),
 		},
 	})
 	if err != nil {
@@ -32,7 +31,7 @@ func TestConnectAttachmentItemMapper(t *testing.T) {
 		t.Fatalf("expected att-1, got %v", item.UniqueAttributeValue())
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "networkmanager-core-network",
 			ExpectedMethod: sdp.QueryMethod_GET,

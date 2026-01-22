@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -14,7 +13,7 @@ func virtualGatewayOutputMapper(_ context.Context, _ *directconnect.Client, scop
 	items := make([]*sdp.Item, 0)
 
 	for _, virtualGateway := range output.VirtualGateways {
-		attributes, err := adapterhelpers.ToAttributesWithExclude(virtualGateway, "tags")
+		attributes, err := ToAttributesWithExclude(virtualGateway, "tags")
 		if err != nil {
 			return nil, err
 		}
@@ -32,14 +31,14 @@ func virtualGatewayOutputMapper(_ context.Context, _ *directconnect.Client, scop
 	return items, nil
 }
 
-func NewDirectConnectVirtualGatewayAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeVirtualGatewaysInput, *directconnect.DescribeVirtualGatewaysOutput, *directconnect.Client, *directconnect.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeVirtualGatewaysInput, *directconnect.DescribeVirtualGatewaysOutput, *directconnect.Client, *directconnect.Options]{
+func NewDirectConnectVirtualGatewayAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*directconnect.DescribeVirtualGatewaysInput, *directconnect.DescribeVirtualGatewaysOutput, *directconnect.Client, *directconnect.Options] {
+	return &DescribeOnlyAdapter[*directconnect.DescribeVirtualGatewaysInput, *directconnect.DescribeVirtualGatewaysOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-virtual-gateway",
 		AdapterMetadata: virtualGatewayAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeVirtualGatewaysInput) (*directconnect.DescribeVirtualGatewaysOutput, error) {
 			return client.DescribeVirtualGateways(ctx, input)
 		},

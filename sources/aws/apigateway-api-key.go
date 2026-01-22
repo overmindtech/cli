@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
+	"github.com/overmindtech/cli/aws-source/adapters"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	awsshared "github.com/overmindtech/cli/sources/aws/shared"
@@ -113,7 +113,7 @@ func (d *apiGatewayKeyWrapper) mapper(apiKeys []types.ApiKey, scope string) ([]*
 }
 
 func (d *apiGatewayKeyWrapper) awsToSdpItem(apiKey types.ApiKey, scope string) (*sdp.Item, *sdp.QueryError) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(apiKey, "tags")
+	attributes, err := adapters.ToAttributesWithExclude(apiKey, "tags")
 	if err != nil {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,

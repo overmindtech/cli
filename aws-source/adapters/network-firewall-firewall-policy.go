@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -28,7 +27,7 @@ func firewallPolicyGetFunc(ctx context.Context, client networkFirewallClient, sc
 		FirewallPolicy:         resp.FirewallPolicy,
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(ufp)
+	attributes, err := ToAttributesWithExclude(ufp)
 
 	if err != nil {
 		return nil, err
@@ -80,14 +79,14 @@ func firewallPolicyGetFunc(ctx context.Context, client networkFirewallClient, sc
 	}
 
 	for _, arn := range ruleGroupArns {
-		if a, err := adapterhelpers.ParseARN(arn); err == nil {
+		if a, err := ParseARN(arn); err == nil {
 			//+overmind:link network-firewall-rule-group
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "network-firewall-rule-group",
 					Query:  arn,
 					Method: sdp.QueryMethod_SEARCH,
-					Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+					Scope:  FormatScope(a.AccountID, a.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,
@@ -98,14 +97,14 @@ func firewallPolicyGetFunc(ctx context.Context, client networkFirewallClient, sc
 	}
 
 	if resp.FirewallPolicy.TLSInspectionConfigurationArn != nil {
-		if a, err := adapterhelpers.ParseARN(*resp.FirewallPolicy.TLSInspectionConfigurationArn); err == nil {
+		if a, err := ParseARN(*resp.FirewallPolicy.TLSInspectionConfigurationArn); err == nil {
 			//+overmind:link network-firewall-tls-inspection-configuration
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "network-firewall-tls-inspection-configuration",
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *resp.FirewallPolicy.TLSInspectionConfigurationArn,
-					Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+					Scope:  FormatScope(a.AccountID, a.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,
@@ -118,15 +117,15 @@ func firewallPolicyGetFunc(ctx context.Context, client networkFirewallClient, sc
 	return &item, nil
 }
 
-func NewNetworkFirewallFirewallPolicyAdapter(client networkFirewallClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*networkfirewall.ListFirewallPoliciesInput, *networkfirewall.ListFirewallPoliciesOutput, *networkfirewall.DescribeFirewallPolicyInput, *networkfirewall.DescribeFirewallPolicyOutput, networkFirewallClient, *networkfirewall.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*networkfirewall.ListFirewallPoliciesInput, *networkfirewall.ListFirewallPoliciesOutput, *networkfirewall.DescribeFirewallPolicyInput, *networkfirewall.DescribeFirewallPolicyOutput, networkFirewallClient, *networkfirewall.Options]{
+func NewNetworkFirewallFirewallPolicyAdapter(client networkFirewallClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*networkfirewall.ListFirewallPoliciesInput, *networkfirewall.ListFirewallPoliciesOutput, *networkfirewall.DescribeFirewallPolicyInput, *networkfirewall.DescribeFirewallPolicyOutput, networkFirewallClient, *networkfirewall.Options] {
+	return &AlwaysGetAdapter[*networkfirewall.ListFirewallPoliciesInput, *networkfirewall.ListFirewallPoliciesOutput, *networkfirewall.DescribeFirewallPolicyInput, *networkfirewall.DescribeFirewallPolicyOutput, networkFirewallClient, *networkfirewall.Options]{
 		ItemType:        "network-firewall-firewall-policy",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ListInput:       &networkfirewall.ListFirewallPoliciesInput{},
 		AdapterMetadata: firewallPolicyAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetInputMapper: func(scope, query string) *networkfirewall.DescribeFirewallPolicyInput {
 			return &networkfirewall.DescribeFirewallPolicyInput{
 				FirewallPolicyName: &query,
@@ -137,7 +136,7 @@ func NewNetworkFirewallFirewallPolicyAdapter(client networkFirewallClient, accou
 				FirewallPolicyArn: &query,
 			}, nil
 		},
-		ListFuncPaginatorBuilder: func(client networkFirewallClient, input *networkfirewall.ListFirewallPoliciesInput) adapterhelpers.Paginator[*networkfirewall.ListFirewallPoliciesOutput, *networkfirewall.Options] {
+		ListFuncPaginatorBuilder: func(client networkFirewallClient, input *networkfirewall.ListFirewallPoliciesInput) Paginator[*networkfirewall.ListFirewallPoliciesOutput, *networkfirewall.Options] {
 			return networkfirewall.NewListFirewallPoliciesPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *networkfirewall.ListFirewallPoliciesOutput, input *networkfirewall.ListFirewallPoliciesInput) ([]*networkfirewall.DescribeFirewallPolicyInput, error) {

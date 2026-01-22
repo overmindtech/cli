@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -28,7 +27,7 @@ func natGatewayOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 	for _, ng := range output.NatGateways {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(ng, "tags")
+		attrs, err = ToAttributesWithExclude(ng, "tags")
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -138,20 +137,20 @@ func natGatewayOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 	return items, nil
 }
 
-func NewEC2NatGatewayAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeNatGatewaysInput, *ec2.DescribeNatGatewaysOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeNatGatewaysInput, *ec2.DescribeNatGatewaysOutput, *ec2.Client, *ec2.Options]{
+func NewEC2NatGatewayAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeNatGatewaysInput, *ec2.DescribeNatGatewaysOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeNatGatewaysInput, *ec2.DescribeNatGatewaysOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-nat-gateway",
 		AdapterMetadata: natGatewayAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeNatGatewaysInput) (*ec2.DescribeNatGatewaysOutput, error) {
 			return client.DescribeNatGateways(ctx, input)
 		},
 		InputMapperGet:  natGatewayInputMapperGet,
 		InputMapperList: natGatewayInputMapperList,
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeNatGatewaysInput) adapterhelpers.Paginator[*ec2.DescribeNatGatewaysOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeNatGatewaysInput) Paginator[*ec2.DescribeNatGatewaysOutput, *ec2.Options] {
 			return ec2.NewDescribeNatGatewaysPaginator(client, params)
 		},
 		OutputMapper: natGatewayOutputMapper,

@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -35,7 +34,7 @@ func convertGetDomainNameOutputToDomainName(output *apigateway.GetDomainNameOutp
 }
 
 func domainNameOutputMapper(_, scope string, awsItem *types.DomainName) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem, "tags")
+	attributes, err := ToAttributesWithExclude(awsItem, "tags")
 	if err != nil {
 		return nil, err
 	}
@@ -103,14 +102,14 @@ func domainNameOutputMapper(_, scope string, awsItem *types.DomainName) (*sdp.It
 	}
 
 	if awsItem.CertificateArn != nil {
-		if a, err := adapterhelpers.ParseARN(*awsItem.CertificateArn); err == nil {
+		if a, err := ParseARN(*awsItem.CertificateArn); err == nil {
 			//+overmind:link acm-certificate
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "acm-certificate",
 					Method: sdp.QueryMethod_GET,
 					Query:  *awsItem.CertificateArn,
-					Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+					Scope:  FormatScope(a.AccountID, a.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// They are tightly linked
@@ -122,14 +121,14 @@ func domainNameOutputMapper(_, scope string, awsItem *types.DomainName) (*sdp.It
 	}
 
 	if awsItem.RegionalCertificateArn != nil {
-		if a, err := adapterhelpers.ParseARN(*awsItem.RegionalCertificateArn); err == nil {
+		if a, err := ParseARN(*awsItem.RegionalCertificateArn); err == nil {
 			//+overmind:link acm-certificate
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "acm-certificate",
 					Method: sdp.QueryMethod_GET,
 					Query:  *awsItem.RegionalCertificateArn,
-					Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+					Scope:  FormatScope(a.AccountID, a.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// They are tightly linked
@@ -158,14 +157,14 @@ func domainNameOutputMapper(_, scope string, awsItem *types.DomainName) (*sdp.It
 	}
 
 	if awsItem.OwnershipVerificationCertificateArn != nil {
-		if a, err := adapterhelpers.ParseARN(*awsItem.OwnershipVerificationCertificateArn); err == nil {
+		if a, err := ParseARN(*awsItem.OwnershipVerificationCertificateArn); err == nil {
 			//+overmind:link acm-certificate
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "acm-certificate",
 					Method: sdp.QueryMethod_GET,
 					Query:  *awsItem.OwnershipVerificationCertificateArn,
-					Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+					Scope:  FormatScope(a.AccountID, a.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// They are tightly linked
@@ -181,14 +180,14 @@ func domainNameOutputMapper(_, scope string, awsItem *types.DomainName) (*sdp.It
 	return &item, nil
 }
 
-func NewAPIGatewayDomainNameAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.DomainName, *apigateway.Client, *apigateway.Options] {
-	return &adapterhelpers.GetListAdapter[*types.DomainName, *apigateway.Client, *apigateway.Options]{
+func NewAPIGatewayDomainNameAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *GetListAdapter[*types.DomainName, *apigateway.Client, *apigateway.Options] {
+	return &GetListAdapter[*types.DomainName, *apigateway.Client, *apigateway.Options]{
 		ItemType:        "apigateway-domain-name",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: apiGatewayDomainNameAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.DomainName, error) {
 			if query == "" {
 				return nil, &sdp.QueryError{

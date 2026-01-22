@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -35,7 +34,7 @@ func tableGetFunc(ctx context.Context, client Client, scope string, input *dynam
 		})
 
 		if err != nil {
-			tagsMap = adapterhelpers.HandleTagsError(ctx, err)
+			tagsMap = HandleTagsError(ctx, err)
 			break
 		}
 
@@ -53,7 +52,7 @@ func tableGetFunc(ctx context.Context, client Client, scope string, input *dynam
 		}
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(table)
+	attributes, err := ToAttributesWithExclude(table)
 
 	if err != nil {
 		return nil, err
@@ -67,7 +66,7 @@ func tableGetFunc(ctx context.Context, client Client, scope string, input *dynam
 		Tags:            tagsMap,
 	}
 
-	var a *adapterhelpers.ARN
+	var a *ARN
 
 	streamsOut, err := client.DescribeKinesisStreamingDestination(ctx, &dynamodb.DescribeKinesisStreamingDestinationInput{
 		TableName: table.TableName,
@@ -76,13 +75,13 @@ func tableGetFunc(ctx context.Context, client Client, scope string, input *dynam
 	if err == nil {
 		for _, dest := range streamsOut.KinesisDataStreamDestinations {
 			if dest.StreamArn != nil {
-				if a, err = adapterhelpers.ParseARN(*dest.StreamArn); err == nil {
+				if a, err = ParseARN(*dest.StreamArn); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "kinesis-stream",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *dest.StreamArn,
-							Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+							Scope:  FormatScope(a.AccountID, a.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// If you change the stream, it could mean the table
@@ -100,13 +99,13 @@ func tableGetFunc(ctx context.Context, client Client, scope string, input *dynam
 
 	if table.RestoreSummary != nil {
 		if table.RestoreSummary.SourceBackupArn != nil {
-			if a, err = adapterhelpers.ParseARN(*table.RestoreSummary.SourceBackupArn); err == nil {
+			if a, err = ParseARN(*table.RestoreSummary.SourceBackupArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "backup-recovery-point",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *table.RestoreSummary.SourceBackupArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// The backup is just the source from which the table
@@ -121,13 +120,13 @@ func tableGetFunc(ctx context.Context, client Client, scope string, input *dynam
 		}
 
 		if table.RestoreSummary.SourceTableArn != nil {
-			if a, err = adapterhelpers.ParseARN(*table.RestoreSummary.SourceTableArn); err == nil {
+			if a, err = ParseARN(*table.RestoreSummary.SourceTableArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "dynamodb-table",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *table.RestoreSummary.SourceTableArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// If the table was restored from another table, and
@@ -144,13 +143,13 @@ func tableGetFunc(ctx context.Context, client Client, scope string, input *dynam
 
 	if table.SSEDescription != nil {
 		if table.SSEDescription.KMSMasterKeyArn != nil {
-			if a, err = adapterhelpers.ParseARN(*table.SSEDescription.KMSMasterKeyArn); err == nil {
+			if a, err = ParseARN(*table.SSEDescription.KMSMasterKeyArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "kms-key",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *table.SSEDescription.KMSMasterKeyArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the key could affect the table
@@ -166,8 +165,8 @@ func tableGetFunc(ctx context.Context, client Client, scope string, input *dynam
 	return &item, nil
 }
 
-func NewDynamoDBTableAdapter(client Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*dynamodb.ListTablesInput, *dynamodb.ListTablesOutput, *dynamodb.DescribeTableInput, *dynamodb.DescribeTableOutput, Client, *dynamodb.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*dynamodb.ListTablesInput, *dynamodb.ListTablesOutput, *dynamodb.DescribeTableInput, *dynamodb.DescribeTableOutput, Client, *dynamodb.Options]{
+func NewDynamoDBTableAdapter(client Client, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*dynamodb.ListTablesInput, *dynamodb.ListTablesOutput, *dynamodb.DescribeTableInput, *dynamodb.DescribeTableOutput, Client, *dynamodb.Options] {
+	return &AlwaysGetAdapter[*dynamodb.ListTablesInput, *dynamodb.ListTablesOutput, *dynamodb.DescribeTableInput, *dynamodb.DescribeTableOutput, Client, *dynamodb.Options]{
 		ItemType:        "dynamodb-table",
 		Client:          client,
 		AccountID:       accountID,
@@ -175,13 +174,13 @@ func NewDynamoDBTableAdapter(client Client, accountID string, region string, cac
 		GetFunc:         tableGetFunc,
 		ListInput:       &dynamodb.ListTablesInput{},
 		AdapterMetadata: dynamodbTableAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetInputMapper: func(scope, query string) *dynamodb.DescribeTableInput {
 			return &dynamodb.DescribeTableInput{
 				TableName: &query,
 			}
 		},
-		ListFuncPaginatorBuilder: func(client Client, input *dynamodb.ListTablesInput) adapterhelpers.Paginator[*dynamodb.ListTablesOutput, *dynamodb.Options] {
+		ListFuncPaginatorBuilder: func(client Client, input *dynamodb.ListTablesInput) Paginator[*dynamodb.ListTablesOutput, *dynamodb.Options] {
 			return dynamodb.NewListTablesPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *dynamodb.ListTablesOutput, input *dynamodb.ListTablesInput) ([]*dynamodb.DescribeTableInput, error) {

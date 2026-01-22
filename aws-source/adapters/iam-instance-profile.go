@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -25,7 +24,7 @@ func instanceProfileGetFunc(ctx context.Context, client *iam.Client, _, query st
 }
 
 func instanceProfileItemMapper(_ *string, scope string, awsItem *types.InstanceProfile) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 
 	if err != nil {
 		return nil, err
@@ -39,13 +38,13 @@ func instanceProfileItemMapper(_ *string, scope string, awsItem *types.InstanceP
 	}
 
 	for _, role := range awsItem.Roles {
-		if arn, err := adapterhelpers.ParseARN(*role.Arn); err == nil {
+		if arn, err := ParseARN(*role.Arn); err == nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "iam-role",
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *role.Arn,
-					Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+					Scope:  FormatScope(arn.AccountID, arn.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// Changes to the role will affect this
@@ -57,13 +56,13 @@ func instanceProfileItemMapper(_ *string, scope string, awsItem *types.InstanceP
 		}
 
 		if role.PermissionsBoundary != nil {
-			if arn, err := adapterhelpers.ParseARN(*role.PermissionsBoundary.PermissionsBoundaryArn); err == nil {
+			if arn, err := ParseARN(*role.PermissionsBoundary.PermissionsBoundaryArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "iam-policy",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *role.PermissionsBoundary.PermissionsBoundaryArn,
-						Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+						Scope:  FormatScope(arn.AccountID, arn.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changes to the policy will affect this
@@ -90,7 +89,7 @@ func instanceProfileListTagsFunc(ctx context.Context, ip *types.InstanceProfile,
 		out, err := paginator.NextPage(ctx)
 
 		if err != nil {
-			return adapterhelpers.HandleTagsError(ctx, err)
+			return HandleTagsError(ctx, err)
 		}
 
 		for _, tag := range out.Tags {
@@ -103,21 +102,21 @@ func instanceProfileListTagsFunc(ctx context.Context, ip *types.InstanceProfile,
 	return tags
 }
 
-func NewIAMInstanceProfileAdapter(client *iam.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapterV2[*iam.ListInstanceProfilesInput, *iam.ListInstanceProfilesOutput, *types.InstanceProfile, *iam.Client, *iam.Options] {
-	return &adapterhelpers.GetListAdapterV2[*iam.ListInstanceProfilesInput, *iam.ListInstanceProfilesOutput, *types.InstanceProfile, *iam.Client, *iam.Options]{
+func NewIAMInstanceProfileAdapter(client *iam.Client, accountID string, cache sdpcache.Cache) *GetListAdapterV2[*iam.ListInstanceProfilesInput, *iam.ListInstanceProfilesOutput, *types.InstanceProfile, *iam.Client, *iam.Options] {
+	return &GetListAdapterV2[*iam.ListInstanceProfilesInput, *iam.ListInstanceProfilesOutput, *types.InstanceProfile, *iam.Client, *iam.Options]{
 		ItemType:        "iam-instance-profile",
 		Client:          client,
 		CacheDuration:   3 * time.Hour, // IAM has very low rate limits, we need to cache for a long time
 		AccountID:       accountID,
 		AdapterMetadata: instanceProfileAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *iam.Client, scope, query string) (*types.InstanceProfile, error) {
 			return instanceProfileGetFunc(ctx, client, scope, query)
 		},
 		InputMapperList: func(scope string) (*iam.ListInstanceProfilesInput, error) {
 			return &iam.ListInstanceProfilesInput{}, nil
 		},
-		ListFuncPaginatorBuilder: func(client *iam.Client, params *iam.ListInstanceProfilesInput) adapterhelpers.Paginator[*iam.ListInstanceProfilesOutput, *iam.Options] {
+		ListFuncPaginatorBuilder: func(client *iam.Client, params *iam.ListInstanceProfilesInput) Paginator[*iam.ListInstanceProfilesOutput, *iam.Options] {
 			return iam.NewListInstanceProfilesPaginator(client, params)
 		},
 		ListExtractor: func(_ context.Context, output *iam.ListInstanceProfilesOutput, _ *iam.Client) ([]*types.InstanceProfile, error) {

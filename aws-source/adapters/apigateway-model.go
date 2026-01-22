@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -24,7 +23,7 @@ func convertGetModelOutputToModel(output *apigateway.GetModelOutput) *types.Mode
 }
 
 func modelOutputMapper(query, scope string, awsItem *types.Model) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem, "tags")
+	attributes, err := ToAttributesWithExclude(awsItem, "tags")
 	if err != nil {
 		return nil, err
 	}
@@ -60,14 +59,14 @@ func modelOutputMapper(query, scope string, awsItem *types.Model) (*sdp.Item, er
 	return &item, nil
 }
 
-func NewAPIGatewayModelAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.Model, *apigateway.Client, *apigateway.Options] {
-	return &adapterhelpers.GetListAdapter[*types.Model, *apigateway.Client, *apigateway.Options]{
+func NewAPIGatewayModelAdapter(client *apigateway.Client, accountID string, region string, cache sdpcache.Cache) *GetListAdapter[*types.Model, *apigateway.Client, *apigateway.Options] {
+	return &GetListAdapter[*types.Model, *apigateway.Client, *apigateway.Options]{
 		ItemType:        "apigateway-model",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: modelAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.Model, error) {
 			f := strings.Split(query, "/")
 			if len(f) != 2 {

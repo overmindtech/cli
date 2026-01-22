@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -30,7 +29,7 @@ func getEndpointFunc(ctx context.Context, client endpointClient, scope string, i
 		}
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(output.Attributes)
+	attributes, err := ToAttributesWithExclude(output.Attributes)
 	if err != nil {
 		return nil, err
 	}
@@ -54,15 +53,15 @@ func getEndpointFunc(ctx context.Context, client endpointClient, scope string, i
 	return item, nil
 }
 
-func NewSNSEndpointAdapter(client endpointClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*sns.ListEndpointsByPlatformApplicationInput, *sns.ListEndpointsByPlatformApplicationOutput, *sns.GetEndpointAttributesInput, *sns.GetEndpointAttributesOutput, endpointClient, *sns.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*sns.ListEndpointsByPlatformApplicationInput, *sns.ListEndpointsByPlatformApplicationOutput, *sns.GetEndpointAttributesInput, *sns.GetEndpointAttributesOutput, endpointClient, *sns.Options]{
+func NewSNSEndpointAdapter(client endpointClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*sns.ListEndpointsByPlatformApplicationInput, *sns.ListEndpointsByPlatformApplicationOutput, *sns.GetEndpointAttributesInput, *sns.GetEndpointAttributesOutput, endpointClient, *sns.Options] {
+	return &AlwaysGetAdapter[*sns.ListEndpointsByPlatformApplicationInput, *sns.ListEndpointsByPlatformApplicationOutput, *sns.GetEndpointAttributesInput, *sns.GetEndpointAttributesOutput, endpointClient, *sns.Options]{
 		ItemType:        "sns-endpoint",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		DisableList:     true, // This source only supports listing by platform application ARN
 		AdapterMetadata: snsEndpointAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		SearchInputMapper: func(scope, query string) (*sns.ListEndpointsByPlatformApplicationInput, error) {
 			return &sns.ListEndpointsByPlatformApplicationInput{
 				PlatformApplicationArn: &query,
@@ -73,7 +72,7 @@ func NewSNSEndpointAdapter(client endpointClient, accountID string, region strin
 				EndpointArn: &query,
 			}
 		},
-		ListFuncPaginatorBuilder: func(client endpointClient, input *sns.ListEndpointsByPlatformApplicationInput) adapterhelpers.Paginator[*sns.ListEndpointsByPlatformApplicationOutput, *sns.Options] {
+		ListFuncPaginatorBuilder: func(client endpointClient, input *sns.ListEndpointsByPlatformApplicationInput) Paginator[*sns.ListEndpointsByPlatformApplicationOutput, *sns.Options] {
 			return sns.NewListEndpointsByPlatformApplicationPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *sns.ListEndpointsByPlatformApplicationOutput, input *sns.ListEndpointsByPlatformApplicationInput) ([]*sns.GetEndpointAttributesInput, error) {

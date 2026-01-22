@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -15,7 +14,7 @@ func routerConfigurationOutputMapper(_ context.Context, _ *directconnect.Client,
 		return nil, nil
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(output, "tags")
+	attributes, err := ToAttributesWithExclude(output, "tags")
 	if err != nil {
 		return nil, err
 	}
@@ -48,14 +47,14 @@ func routerConfigurationOutputMapper(_ context.Context, _ *directconnect.Client,
 	}, nil
 }
 
-func NewDirectConnectRouterConfigurationAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeRouterConfigurationInput, *directconnect.DescribeRouterConfigurationOutput, *directconnect.Client, *directconnect.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeRouterConfigurationInput, *directconnect.DescribeRouterConfigurationOutput, *directconnect.Client, *directconnect.Options]{
+func NewDirectConnectRouterConfigurationAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*directconnect.DescribeRouterConfigurationInput, *directconnect.DescribeRouterConfigurationOutput, *directconnect.Client, *directconnect.Options] {
+	return &DescribeOnlyAdapter[*directconnect.DescribeRouterConfigurationInput, *directconnect.DescribeRouterConfigurationOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-router-configuration",
 		AdapterMetadata: routerConfigurationAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeRouterConfigurationInput) (*directconnect.DescribeRouterConfigurationOutput, error) {
 			return client.DescribeRouterConfiguration(ctx, input)
 		},

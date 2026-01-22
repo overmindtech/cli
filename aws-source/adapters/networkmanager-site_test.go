@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -15,8 +14,8 @@ func TestSiteOutputMapper(t *testing.T) {
 	output := networkmanager.GetSitesOutput{
 		Sites: []types.Site{
 			{
-				SiteId:          adapterhelpers.PtrString("site1"),
-				GlobalNetworkId: adapterhelpers.PtrString("default"),
+				SiteId:          PtrString("site1"),
+				GlobalNetworkId: PtrString("default"),
 			},
 		},
 	}
@@ -50,7 +49,7 @@ func TestSiteOutputMapper(t *testing.T) {
 		t.Fatalf("expected default|site1, got %v", item.UniqueAttributeValue())
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "networkmanager-global-network",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -87,7 +86,7 @@ func TestSiteInputMapperSearch(t *testing.T) {
 			name:  "Valid networkmanager-site ARN",
 			query: "arn:aws:networkmanager::123456789012:site/global-network-01231231231231231/site-444555aaabbb11223",
 			expectedInput: &networkmanager.GetSitesInput{
-				GlobalNetworkId: adapterhelpers.PtrString("global-network-01231231231231231"),
+				GlobalNetworkId: PtrString("global-network-01231231231231231"),
 				SiteIds:         []string{"site-444555aaabbb11223"},
 			},
 			expectError: false,
@@ -96,7 +95,7 @@ func TestSiteInputMapperSearch(t *testing.T) {
 			name:  "Global Network ID (backward compatibility)",
 			query: "global-network-123456789",
 			expectedInput: &networkmanager.GetSitesInput{
-				GlobalNetworkId: adapterhelpers.PtrString("global-network-123456789"),
+				GlobalNetworkId: PtrString("global-network-123456789"),
 			},
 			expectError: false,
 		},

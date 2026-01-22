@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -27,7 +26,7 @@ func instanceStatusOutputMapper(_ context.Context, _ *ec2.Client, scope string, 
 	items := make([]*sdp.Item, 0)
 
 	for _, instanceStatus := range output.InstanceStatuses {
-		attrs, err := adapterhelpers.ToAttributesWithExclude(instanceStatus)
+		attrs, err := ToAttributesWithExclude(instanceStatus)
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -79,20 +78,20 @@ func instanceStatusOutputMapper(_ context.Context, _ *ec2.Client, scope string, 
 	return items, nil
 }
 
-func NewEC2InstanceStatusAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeInstanceStatusInput, *ec2.DescribeInstanceStatusOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeInstanceStatusInput, *ec2.DescribeInstanceStatusOutput, *ec2.Client, *ec2.Options]{
+func NewEC2InstanceStatusAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeInstanceStatusInput, *ec2.DescribeInstanceStatusOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeInstanceStatusInput, *ec2.DescribeInstanceStatusOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-instance-status",
 		AdapterMetadata: instanceStatusAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeInstanceStatusInput) (*ec2.DescribeInstanceStatusOutput, error) {
 			return client.DescribeInstanceStatus(ctx, input)
 		},
 		InputMapperGet:  instanceStatusInputMapperGet,
 		InputMapperList: instanceStatusInputMapperList,
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeInstanceStatusInput) adapterhelpers.Paginator[*ec2.DescribeInstanceStatusOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeInstanceStatusInput) Paginator[*ec2.DescribeInstanceStatusOutput, *ec2.Options] {
 			return ec2.NewDescribeInstanceStatusPaginator(client, params)
 		},
 		OutputMapper: instanceStatusOutputMapper,

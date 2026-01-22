@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -45,24 +44,24 @@ func TestVolumeOutputMapper(t *testing.T) {
 			{
 				Attachments: []types.VolumeAttachment{
 					{
-						AttachTime:          adapterhelpers.PtrTime(time.Now()),
-						Device:              adapterhelpers.PtrString("/dev/sdb"),
-						InstanceId:          adapterhelpers.PtrString("i-0667d3ca802741e30"),
+						AttachTime:          PtrTime(time.Now()),
+						Device:              PtrString("/dev/sdb"),
+						InstanceId:          PtrString("i-0667d3ca802741e30"),
 						State:               types.VolumeAttachmentStateAttaching,
-						VolumeId:            adapterhelpers.PtrString("vol-0eae6976b359d8825"),
-						DeleteOnTermination: adapterhelpers.PtrBool(false),
+						VolumeId:            PtrString("vol-0eae6976b359d8825"),
+						DeleteOnTermination: PtrBool(false),
 					},
 				},
-				AvailabilityZone:   adapterhelpers.PtrString("eu-west-2c"),
-				CreateTime:         adapterhelpers.PtrTime(time.Now()),
-				Encrypted:          adapterhelpers.PtrBool(false),
-				Size:               adapterhelpers.PtrInt32(8),
+				AvailabilityZone:   PtrString("eu-west-2c"),
+				CreateTime:         PtrTime(time.Now()),
+				Encrypted:          PtrBool(false),
+				Size:               PtrInt32(8),
 				State:              types.VolumeStateInUse,
-				VolumeId:           adapterhelpers.PtrString("vol-0eae6976b359d8825"),
-				Iops:               adapterhelpers.PtrInt32(3000),
+				VolumeId:           PtrString("vol-0eae6976b359d8825"),
+				Iops:               PtrInt32(3000),
 				VolumeType:         types.VolumeTypeGp3,
-				MultiAttachEnabled: adapterhelpers.PtrBool(false),
-				Throughput:         adapterhelpers.PtrInt32(125),
+				MultiAttachEnabled: PtrBool(false),
+				Throughput:         PtrInt32(125),
 			},
 		},
 	}
@@ -87,7 +86,7 @@ func TestVolumeOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-instance",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -105,7 +104,7 @@ func TestNewEC2VolumeAdapter(t *testing.T) {
 
 	adapter := NewEC2VolumeAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}
