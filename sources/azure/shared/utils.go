@@ -18,14 +18,15 @@ import (
 func GetResourceIDPathKeys(resourceType string) []string {
 	// Map of resource types to their path keys in the order they appear in GetLookups()
 	pathKeysMap := map[string][]string{
-		"azure-storage-queue":                 {"storageAccounts", "queues"},
-		"azure-storage-blob-container":        {"storageAccounts", "containers"},
-		"azure-storage-file-share":            {"storageAccounts", "shares"},
-		"azure-storage-table":                 {"storageAccounts", "tables"},
-		"azure-sql-database":                  {"servers", "databases"},         // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-SQL-SouthEastAsia/providers/Microsoft.Sql/servers/testsvr/databases/testdb",
-		"azure-dbforpostgresql-database":      {"flexibleServers", "databases"}, // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-PostgreSQL-SouthEastAsia/providers/Microsoft.DBforPostgreSQL/flexibleServers/testsvr/databases/testdb",
-		"azure-keyvault-secret":               {"vaults", "secrets"},            // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
-		"azure-authorization-role-assignment": {"roleAssignments"},              // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Authorization/roleAssignments/{roleAssignmentName}",
+		"azure-storage-queue":                       {"storageAccounts", "queues"},
+		"azure-storage-blob-container":              {"storageAccounts", "containers"},
+		"azure-storage-file-share":                  {"storageAccounts", "shares"},
+		"azure-storage-table":                       {"storageAccounts", "tables"},
+		"azure-sql-database":                        {"servers", "databases"},           // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-SQL-SouthEastAsia/providers/Microsoft.Sql/servers/testsvr/databases/testdb",
+		"azure-dbforpostgresql-database":            {"flexibleServers", "databases"},   // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-PostgreSQL-SouthEastAsia/providers/Microsoft.DBforPostgreSQL/flexibleServers/testsvr/databases/testdb",
+		"azure-keyvault-secret":                     {"vaults", "secrets"},              // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
+		"azure-authorization-role-assignment":       {"roleAssignments"},                // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Authorization/roleAssignments/{roleAssignmentName}",
+		"azure-compute-virtual-machine-run-command": {"virtualMachines", "runCommands"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/runCommands/{runCommandName}",
 	}
 
 	if keys, ok := pathKeysMap[resourceType]; ok {
@@ -403,6 +404,38 @@ func ExtractStorageAccountNameFromBlobURI(blobURI string) string {
 	host := parsedURL.Host
 	// Extract account name from hostname: {accountName}.blob.core.windows.net
 	parts := strings.Split(host, ".")
+	if len(parts) > 0 && parts[0] != "" {
+		return parts[0]
+	}
+
+	return ""
+}
+
+// ExtractContainerNameFromBlobURI extracts the container name from an Azure blob URI
+// Blob URIs follow the format: https://{accountName}.blob.core.windows.net/{container}/{blob}
+// Returns the first path segment which is the container name
+func ExtractContainerNameFromBlobURI(blobURI string) string {
+	if blobURI == "" {
+		return ""
+	}
+
+	// Defensive check: ensure this is actually a blob URI
+	if !strings.Contains(blobURI, ".blob.core.windows.net") {
+		return ""
+	}
+
+	parsedURL, err := url.Parse(blobURI)
+	if err != nil {
+		return ""
+	}
+
+	path := strings.Trim(parsedURL.Path, "/")
+	if path == "" {
+		return ""
+	}
+
+	// Split path and get the first segment (container name)
+	parts := strings.Split(path, "/")
 	if len(parts) > 0 && parts[0] != "" {
 		return parts[0]
 	}

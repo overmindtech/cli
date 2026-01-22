@@ -3,6 +3,7 @@ package manual_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
@@ -114,25 +115,62 @@ func TestStorageBlobContainer(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			// Verify linked item queries
 			linkedQueries := sdpItem.GetLinkedItemQueries()
-			if len(linkedQueries) != 1 {
-				t.Fatalf("Expected 1 linked query, got: %d", len(linkedQueries))
+			if len(linkedQueries) != 3 {
+				t.Fatalf("Expected 3 linked queries (StorageAccount, DNS, HTTP), got: %d", len(linkedQueries))
 			}
 
-			linkedQuery := linkedQueries[0]
-			if linkedQuery.GetQuery().GetType() != azureshared.StorageAccount.String() {
-				t.Errorf("Expected linked query type %s, got %s", azureshared.StorageAccount, linkedQuery.GetQuery().GetType())
+			var hasStorageAccountLink, hasDNSLink, hasHTTPLink bool
+			for _, linkedQuery := range linkedQueries {
+				switch linkedQuery.GetQuery().GetType() {
+				case azureshared.StorageAccount.String():
+					hasStorageAccountLink = true
+					if linkedQuery.GetQuery().GetMethod() != sdp.QueryMethod_GET {
+						t.Errorf("Expected StorageAccount linked query method GET, got %s", linkedQuery.GetQuery().GetMethod())
+					}
+					if linkedQuery.GetQuery().GetQuery() != storageAccountName {
+						t.Errorf("Expected StorageAccount linked query %s, got %s", storageAccountName, linkedQuery.GetQuery().GetQuery())
+					}
+					if linkedQuery.GetBlastPropagation().GetIn() != true {
+						t.Error("Expected StorageAccount BlastPropagation.In to be true")
+					}
+					if linkedQuery.GetBlastPropagation().GetOut() != false {
+						t.Error("Expected StorageAccount BlastPropagation.Out to be false")
+					}
+				case "dns":
+					hasDNSLink = true
+					if linkedQuery.GetQuery().GetMethod() != sdp.QueryMethod_SEARCH {
+						t.Errorf("Expected DNS linked query method SEARCH, got %s", linkedQuery.GetQuery().GetMethod())
+					}
+					expectedDNS := fmt.Sprintf("%s.blob.core.windows.net", storageAccountName)
+					if linkedQuery.GetQuery().GetQuery() != expectedDNS {
+						t.Errorf("Expected DNS linked query %s, got %s", expectedDNS, linkedQuery.GetQuery().GetQuery())
+					}
+					if linkedQuery.GetQuery().GetScope() != "global" {
+						t.Errorf("Expected DNS linked query scope 'global', got %s", linkedQuery.GetQuery().GetScope())
+					}
+				case "http":
+					hasHTTPLink = true
+					if linkedQuery.GetQuery().GetMethod() != sdp.QueryMethod_SEARCH {
+						t.Errorf("Expected HTTP linked query method SEARCH, got %s", linkedQuery.GetQuery().GetMethod())
+					}
+					expectedHTTP := fmt.Sprintf("https://%s.blob.core.windows.net/%s", storageAccountName, containerName)
+					if linkedQuery.GetQuery().GetQuery() != expectedHTTP {
+						t.Errorf("Expected HTTP linked query %s, got %s", expectedHTTP, linkedQuery.GetQuery().GetQuery())
+					}
+					if linkedQuery.GetQuery().GetScope() != "global" {
+						t.Errorf("Expected HTTP linked query scope 'global', got %s", linkedQuery.GetQuery().GetScope())
+					}
+				}
 			}
-			if linkedQuery.GetQuery().GetMethod() != sdp.QueryMethod_GET {
-				t.Errorf("Expected linked query method GET, got %s", linkedQuery.GetQuery().GetMethod())
+
+			if !hasStorageAccountLink {
+				t.Error("Expected StorageAccount linked query, but didn't find one")
 			}
-			if linkedQuery.GetQuery().GetQuery() != storageAccountName {
-				t.Errorf("Expected linked query %s, got %s", storageAccountName, linkedQuery.GetQuery().GetQuery())
+			if !hasDNSLink {
+				t.Error("Expected DNS linked query, but didn't find one")
 			}
-			if linkedQuery.GetBlastPropagation().GetIn() != true {
-				t.Error("Expected BlastPropagation.In to be true")
-			}
-			if linkedQuery.GetBlastPropagation().GetOut() != false {
-				t.Error("Expected BlastPropagation.Out to be false")
+			if !hasHTTPLink {
+				t.Error("Expected HTTP linked query, but didn't find one")
 			}
 		})
 	})
