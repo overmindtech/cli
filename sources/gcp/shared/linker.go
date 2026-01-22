@@ -149,7 +149,13 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 	var query string
 	switch toSDPItemMeta.LocationLevel {
 	case ProjectLevel:
-		scope = projectID
+		// Extract project ID from URI if present (for cross-project references)
+		extractedProjectID := ExtractPathParam("projects", toItemGCPResourceName)
+		if extractedProjectID != "" {
+			scope = extractedProjectID
+		} else {
+			scope = projectID
+		}
 		values := ExtractPathParams(toItemGCPResourceName, keysToExtract...)
 		if len(values) != len(keysToExtract) {
 			log.WithContext(ctx).WithFields(lf).Warnf(
@@ -159,6 +165,11 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 		}
 		query = strings.Join(values, shared.QuerySeparator)
 	case RegionalLevel:
+		// Extract project ID from URI if present (for cross-project references)
+		extractedProjectID := ExtractPathParam("projects", toItemGCPResourceName)
+		if extractedProjectID != "" {
+			projectID = extractedProjectID
+		}
 		keysToExtract = append(keysToExtract, "regions")
 		values := ExtractPathParams(toItemGCPResourceName, keysToExtract...)
 		if len(values) != len(keysToExtract) {
@@ -170,6 +181,11 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 		scope = fmt.Sprintf("%s.%s", projectID, values[len(values)-1])      // e.g., "my-project.my-region"
 		query = strings.Join(values[:len(values)-1], shared.QuerySeparator) // e.g., "my-instance" or "my-network"
 	case ZonalLevel:
+		// Extract project ID from URI if present (for cross-project references)
+		extractedProjectID := ExtractPathParam("projects", toItemGCPResourceName)
+		if extractedProjectID != "" {
+			projectID = extractedProjectID
+		}
 		keysToExtract = append(keysToExtract, "zones")
 		values := ExtractPathParams(toItemGCPResourceName, keysToExtract...)
 		if len(values) != len(keysToExtract) {

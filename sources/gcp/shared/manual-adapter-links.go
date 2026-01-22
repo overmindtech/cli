@@ -17,6 +17,11 @@ func ZoneBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, from
 	return func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
 		name := LastPathComponent(query)
 		zone := ExtractPathParam("zones", query)
+		// Extract project ID from URI if present (for cross-project references)
+		extractedProjectID := ExtractPathParam("projects", query)
+		if extractedProjectID != "" {
+			projectID = extractedProjectID
+		}
 		scope := fromItemScope
 		if zone != "" {
 			scope = fmt.Sprintf("%s.%s", projectID, zone)
@@ -42,6 +47,11 @@ func RegionBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, fr
 		name := LastPathComponent(query)
 		scope := fromItemScope
 		region := ExtractPathParam("regions", query)
+		// Extract project ID from URI if present (for cross-project references)
+		extractedProjectID := ExtractPathParam("projects", query)
+		if extractedProjectID != "" {
+			projectID = extractedProjectID
+		}
 		if region != "" {
 			scope = fmt.Sprintf("%s.%s", projectID, region)
 		}
@@ -64,13 +74,19 @@ func RegionBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, fr
 func ProjectBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
 	return func(projectID, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
 		name := LastPathComponent(query)
-		if projectID != "" && name != "" {
+		// Extract project ID from URI if present (for cross-project references)
+		extractedProjectID := ExtractPathParam("projects", query)
+		scope := projectID
+		if extractedProjectID != "" {
+			scope = extractedProjectID
+		}
+		if scope != "" && name != "" {
 			return &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   sdpItem.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  name,
-					Scope:  projectID,
+					Scope:  scope,
 				},
 				BlastPropagation: blastPropagation,
 			}
