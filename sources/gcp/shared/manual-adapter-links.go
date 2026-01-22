@@ -96,6 +96,33 @@ func ProjectBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, _
 	}
 }
 
+// ComputeImageLinker handles linking to compute images using SEARCH method.
+// SEARCH supports any format: full URIs, family names, or specific image names.
+// The adapter's Search method will intelligently detect the format and use the appropriate API.
+func ComputeImageLinker(projectID, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	// Extract project ID from the URI if present, otherwise use the provided projectID
+	imageProjectID := ExtractPathParam("projects", query)
+	if imageProjectID == "" {
+		imageProjectID = projectID
+	}
+
+	// Extract the name/family (last component)
+	name := LastPathComponent(query)
+	if imageProjectID != "" && name != "" {
+		return &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   ComputeImage.String(),
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  query, // Pass the full query string so Search can detect the format
+				Scope:  imageProjectID,
+			},
+			BlastPropagation: blastPropagation,
+		}
+	}
+
+	return nil
+}
+
 // ForwardingRuleTargetLinker handles polymorphic target field in forwarding rules.
 // The target field can reference multiple resource types (TargetHttpProxy, TargetHttpsProxy,
 // TargetTcpProxy, TargetSslProxy, TargetPool, TargetVpnGateway, TargetInstance, ServiceAttachment).
@@ -442,7 +469,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 	ComputeHealthCheck:            ProjectBaseLinkedItemQueryByName(ComputeHealthCheck),
 	ComputeBackendService:         BackendServiceOrBucketLinker, // Handles both backend services and backend buckets
 	ComputeRegionBackendService:   RegionBaseLinkedItemQueryByName(ComputeRegionBackendService),
-	ComputeImage:                  ProjectBaseLinkedItemQueryByName(ComputeImage),
+	ComputeImage:                  ComputeImageLinker, // Custom linker that uses SEARCH for all image references (handles both names and families)
 	ComputeAddress:                RegionBaseLinkedItemQueryByName(ComputeAddress),
 	ComputeForwardingRule:         RegionBaseLinkedItemQueryByName(ComputeForwardingRule),
 	ComputeInterconnectAttachment: RegionBaseLinkedItemQueryByName(ComputeInterconnectAttachment),

@@ -9,6 +9,8 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/discovery"
@@ -69,11 +71,11 @@ func TestComputeImage(t *testing.T) {
 						Out: false,
 					},
 				},
-				// sourceImage link
+				// sourceImage link (SEARCH handles full URI; createComputeImageWithLinks uses https URL)
 				{
 					ExpectedType:   gcpshared.ComputeImage.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "test-source-image",
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/images/test-source-image", projectID),
 					ExpectedScope:  projectID,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -179,11 +181,11 @@ func TestComputeImage(t *testing.T) {
 						Out: false,
 					},
 				},
-				// deprecated.replacement link
+				// deprecated.replacement link (SEARCH handles full URI)
 				{
 					ExpectedType:   gcpshared.ComputeImage.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "test-replacement-image",
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/images/test-replacement-image", projectID),
 					ExpectedScope:  projectID,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -288,11 +290,6 @@ func TestComputeImage(t *testing.T) {
 				t.Fatalf("Expected tag 'env=test', got: %s", item.GetTags()["env"])
 			}
 		}
-
-		_, ok = adapter.(discovery.SearchStreamableAdapter)
-		if ok {
-			t.Fatalf("Adapter should not support SearchStream operation")
-		}
 	})
 
 	t.Run("ListStream", func(t *testing.T) {
@@ -341,10 +338,248 @@ func TestComputeImage(t *testing.T) {
 		if len(items) != 2 {
 			t.Fatalf("Expected 2 items, got: %d", len(items))
 		}
+	})
 
-		_, ok = adapter.(discovery.SearchStreamableAdapter)
-		if ok {
-			t.Fatalf("Adapter should not support SearchStream operation")
+	t.Run("Search", func(t *testing.T) {
+		t.Run("SearchByFamilyName", func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockClient := mocks.NewMockComputeImagesClient(ctrl)
+			wrapper := manual.NewComputeImage(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+			familyName := "test-image-family"
+			expectedImageName := "test-image-family-20240101"
+
+			// When searching by name (not URI), Search tries Get first, then falls back to GetFromFamily
+			mockClient.EXPECT().Get(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetImageRequest, opts ...interface{}) (*computepb.Image, error) {
+				if req.GetProject() != projectID {
+					t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
+				}
+				if req.GetImage() != familyName {
+					t.Errorf("Expected image %s, got %s", familyName, req.GetImage())
+				}
+				return nil, status.Error(codes.NotFound, "image not found")
+			})
+
+			mockClient.EXPECT().GetFromFamily(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetFromFamilyImageRequest, opts ...interface{}) (*computepb.Image, error) {
+				if req.GetProject() != projectID {
+					t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
+				}
+				if req.GetFamily() != familyName {
+					t.Errorf("Expected family %s, got %s", familyName, req.GetFamily())
+				}
+				return createComputeImageWithLinks(projectID, expectedImageName, computepb.Image_READY), nil
+			})
+
+			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+			// Verify adapter implements SearchableWrapper
+			searchable, ok := adapter.(discovery.SearchableAdapter)
+			if !ok {
+				t.Fatalf("Adapter should implement SearchableAdapter interface")
+			}
+
+			sdpItems, err := searchable.Search(ctx, wrapper.Scopes()[0], familyName, true)
+			if err != nil {
+				t.Fatalf("Expected no error, got: %v", err)
+			}
+
+			if len(sdpItems) != 1 {
+				t.Fatalf("Expected 1 item, got: %d", len(sdpItems))
+			}
+
+			sdpItem := sdpItems[0]
+			if sdpItem.Validate() != nil {
+				t.Fatalf("Expected no validation error, got: %v", sdpItem.Validate())
+			}
+
+			// Verify the returned image has the correct name (from GetFromFamily)
+			uniqueAttrKey := sdpItem.GetUniqueAttribute()
+			uniqueAttrValue, err := sdpItem.GetAttributes().Get(uniqueAttrKey)
+			if err != nil {
+				t.Fatalf("Failed to get unique attribute: %v", err)
+			}
+
+			if uniqueAttrValue != expectedImageName {
+				t.Fatalf("Expected image name %s, got %s", expectedImageName, uniqueAttrValue)
+			}
+
+			if sdpItem.GetTags()["env"] != "test" {
+				t.Fatalf("Expected tag 'env=test', got: %v", sdpItem.GetTags()["env"])
+			}
+		})
+
+		t.Run("SearchByFamilyURI", func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockClient := mocks.NewMockComputeImagesClient(ctrl)
+			wrapper := manual.NewComputeImage(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+			// Pass the full URI - Search should detect it's a family reference
+			familyURI := "projects/" + projectID + "/global/images/family/test-image-family"
+			expectedImageName := "test-image-family-20240101"
+
+			mockClient.EXPECT().GetFromFamily(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetFromFamilyImageRequest, opts ...interface{}) (*computepb.Image, error) {
+				if req.GetProject() != projectID {
+					t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
+				}
+				if req.GetFamily() != "test-image-family" {
+					t.Errorf("Expected family 'test-image-family', got %s", req.GetFamily())
+				}
+				return createComputeImageWithLinks(projectID, expectedImageName, computepb.Image_READY), nil
+			})
+
+			// Call Search directly on the wrapper to bypass adapter's projects/ routing logic
+			sdpItems, err := wrapper.Search(ctx, wrapper.Scopes()[0], familyURI)
+			if err != nil {
+				t.Fatalf("Expected no error, got: %v", err)
+			}
+
+			if len(sdpItems) != 1 {
+				t.Fatalf("Expected 1 item, got: %d", len(sdpItems))
+			}
+
+			sdpItem := sdpItems[0]
+			uniqueAttrKey := sdpItem.GetUniqueAttribute()
+			uniqueAttrValue, attrErr := sdpItem.GetAttributes().Get(uniqueAttrKey)
+			if attrErr != nil {
+				t.Fatalf("Failed to get unique attribute: %v", attrErr)
+			}
+
+			if uniqueAttrValue != expectedImageName {
+				t.Fatalf("Expected image name %s, got %s", expectedImageName, uniqueAttrValue)
+			}
+		})
+
+		t.Run("SearchByImageURI", func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockClient := mocks.NewMockComputeImagesClient(ctrl)
+			wrapper := manual.NewComputeImage(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+			imageURI := "projects/" + projectID + "/global/images/test-image-exact"
+			expectedImageName := "test-image-exact"
+
+			mockClient.EXPECT().Get(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetImageRequest, opts ...interface{}) (*computepb.Image, error) {
+				if req.GetProject() != projectID {
+					t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
+				}
+				if req.GetImage() != expectedImageName {
+					t.Errorf("Expected image %s, got %s", expectedImageName, req.GetImage())
+				}
+				return createComputeImage(expectedImageName, computepb.Image_READY), nil
+			})
+
+			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+			searchable := adapter.(discovery.SearchableAdapter)
+
+			sdpItems, err := searchable.Search(ctx, wrapper.Scopes()[0], imageURI, true)
+			if err != nil {
+				t.Fatalf("Expected no error, got: %v", err)
+			}
+
+			if len(sdpItems) != 1 {
+				t.Fatalf("Expected 1 item, got: %d", len(sdpItems))
+			}
+
+			sdpItem := sdpItems[0]
+			uniqueAttrKey := sdpItem.GetUniqueAttribute()
+			uniqueAttrValue, err := sdpItem.GetAttributes().Get(uniqueAttrKey)
+			if err != nil {
+				t.Fatalf("Failed to get unique attribute: %v", err)
+			}
+
+			if uniqueAttrValue != expectedImageName {
+				t.Fatalf("Expected image name %s, got %s", expectedImageName, uniqueAttrValue)
+			}
+		})
+
+		t.Run("SearchByImageNameWithFallback", func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			mockClient := mocks.NewMockComputeImagesClient(ctrl)
+			wrapper := manual.NewComputeImage(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+			imageName := "test-image-name"
+			expectedImageName := "test-image-name"
+
+			// First Get call fails with NotFound
+			mockClient.EXPECT().Get(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetImageRequest, opts ...interface{}) (*computepb.Image, error) {
+				if req.GetProject() != projectID {
+					t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
+				}
+				if req.GetImage() != imageName {
+					t.Errorf("Expected image %s, got %s", imageName, req.GetImage())
+				}
+				return nil, status.Error(codes.NotFound, "image not found")
+			})
+
+			// Then GetFromFamily succeeds (treating name as family)
+			mockClient.EXPECT().GetFromFamily(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetFromFamilyImageRequest, opts ...interface{}) (*computepb.Image, error) {
+				if req.GetProject() != projectID {
+					t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
+				}
+				if req.GetFamily() != imageName {
+					t.Errorf("Expected family %s, got %s", imageName, req.GetFamily())
+				}
+				return createComputeImage(expectedImageName, computepb.Image_READY), nil
+			})
+
+			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+			searchable := adapter.(discovery.SearchableAdapter)
+
+			sdpItems, err := searchable.Search(ctx, wrapper.Scopes()[0], imageName, true)
+			if err != nil {
+				t.Fatalf("Expected no error, got: %v", err)
+			}
+
+			if len(sdpItems) != 1 {
+				t.Fatalf("Expected 1 item, got: %d", len(sdpItems))
+			}
+
+			sdpItem := sdpItems[0]
+			uniqueAttrKey := sdpItem.GetUniqueAttribute()
+			uniqueAttrValue, err := sdpItem.GetAttributes().Get(uniqueAttrKey)
+			if err != nil {
+				t.Fatalf("Failed to get unique attribute: %v", err)
+			}
+
+			if uniqueAttrValue != expectedImageName {
+				t.Fatalf("Expected image name %s, got %s", expectedImageName, uniqueAttrValue)
+			}
+		})
+	})
+
+	t.Run("GetStillWorksWithExactName", func(t *testing.T) {
+		wrapper := manual.NewComputeImage(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		exactImageName := "test-image-exact"
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetImageRequest, opts ...interface{}) (*computepb.Image, error) {
+			if req.GetProject() != projectID {
+				t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
+			}
+			if req.GetImage() != exactImageName {
+				t.Errorf("Expected image %s, got %s", exactImageName, req.GetImage())
+			}
+			return createComputeImage(exactImageName, computepb.Image_READY), nil
+		})
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], exactImageName, true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		// Verify Get still works with exact image names
+		uniqueAttrKey := sdpItem.GetUniqueAttribute()
+		uniqueAttrValue, err := sdpItem.GetAttributes().Get(uniqueAttrKey)
+		if err != nil {
+			t.Fatalf("Failed to get unique attribute: %v", err)
+		}
+
+		if uniqueAttrValue != exactImageName {
+			t.Fatalf("Expected image name %s, got %s", exactImageName, uniqueAttrValue)
 		}
 	})
 }
