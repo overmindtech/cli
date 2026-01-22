@@ -181,6 +181,24 @@ func TestLinker_AutoLink(t *testing.T) {
 				keys:                  []string{"properties", "disks", "initializeParams", "sourceImage"},
 			},
 		},
+		{
+			name: "Auto link from ComputeInstanceTemplate to ComputeImage family via dynamic adapters",
+			args: args{
+				fromSDPItemType:       ComputeInstanceTemplate,
+				toItemGCPResourceName: "projects/debian-cloud/global/images/family/debian-11",
+				toSDPItemType:         ComputeImage.String(),
+				keys:                  []string{"properties", "disks", "initializeParams", "sourceImage"},
+			},
+		},
+		{
+			name: "Auto link from ComputeInstanceTemplate to ComputeImage specific image via dynamic adapters",
+			args: args{
+				fromSDPItemType:       ComputeInstanceTemplate,
+				toItemGCPResourceName: "projects/debian-cloud/global/images/debian-11-20240101",
+				toSDPItemType:         ComputeImage.String(),
+				keys:                  []string{"properties", "disks", "initializeParams", "sourceImage"},
+			},
+		},
 	}
 	projectID := "project-test"
 	l := NewLinker()
@@ -196,6 +214,13 @@ func TestLinker_AutoLink(t *testing.T) {
 			linkedItemQuery := fromSDPItem.GetLinkedItemQueries()[0]
 			if linkedItemQuery.GetQuery() != nil && linkedItemQuery.GetQuery().GetType() != tt.args.toSDPItemType {
 				t.Errorf("Linker.Link() returned linked item with type %s, expected %s", linkedItemQuery.GetQuery().GetType(), tt.args.toSDPItemType)
+			}
+
+			// For ComputeImage references, verify it uses SEARCH method (handles both family and specific images)
+			if tt.args.toSDPItemType == ComputeImage.String() {
+				if linkedItemQuery.GetQuery().GetMethod() != sdp.QueryMethod_SEARCH {
+					t.Errorf("Linker.Link() returned linked item with method %s, expected SEARCH for ComputeImage references", linkedItemQuery.GetQuery().GetMethod())
+				}
 			}
 		})
 	}

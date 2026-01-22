@@ -365,6 +365,26 @@ func (mr *MockComputeImagesClientMockRecorder) Get(ctx, req any, opts ...any) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockComputeImagesClient)(nil).Get), varargs...)
 }
 
+// GetFromFamily mocks base method.
+func (m *MockComputeImagesClient) GetFromFamily(ctx context.Context, req *computepb.GetFromFamilyImageRequest, opts ...gax.CallOption) (*computepb.Image, error) {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetFromFamily", varargs...)
+	ret0, _ := ret[0].(*computepb.Image)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFromFamily indicates an expected call of GetFromFamily.
+func (mr *MockComputeImagesClientMockRecorder) GetFromFamily(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFromFamily", reflect.TypeOf((*MockComputeImagesClient)(nil).GetFromFamily), varargs...)
+}
+
 // List mocks base method.
 func (m *MockComputeImagesClient) List(ctx context.Context, req *computepb.ListImagesRequest, opts ...gax.CallOption) shared.ComputeImageIterator {
 	m.ctrl.T.Helper()

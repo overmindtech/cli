@@ -64,8 +64,8 @@ func TestComputeDisk(t *testing.T) {
 					expectedLinked: shared.QueryTests{
 						{
 							ExpectedType:             gcpshared.ComputeImage.String(),
-							ExpectedMethod:           sdp.QueryMethod_GET,
-							ExpectedQuery:            "test-image",
+							ExpectedMethod:           sdp.QueryMethod_SEARCH,
+							ExpectedQuery:            "projects/test-project-id/global/images/test-image",
 							ExpectedScope:            "test-project-id",
 							ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 						},
@@ -410,8 +410,8 @@ func TestComputeDisk(t *testing.T) {
 				},
 				{
 					ExpectedType:             gcpshared.ComputeImage.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-image",
+					ExpectedMethod:           sdp.QueryMethod_SEARCH,
+					ExpectedQuery:            "projects/test-project-id/global/images/test-image",
 					ExpectedScope:            projectID,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
@@ -500,8 +500,8 @@ func TestComputeDisk(t *testing.T) {
 				},
 				{
 					ExpectedType:             gcpshared.ComputeImage.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-image",
+					ExpectedMethod:           sdp.QueryMethod_SEARCH,
+					ExpectedQuery:            "projects/test-project-id/global/images/test-image",
 					ExpectedScope:            projectID,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
@@ -594,8 +594,8 @@ func TestComputeDisk(t *testing.T) {
 				},
 				{
 					ExpectedType:             gcpshared.ComputeImage.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-image",
+					ExpectedMethod:           sdp.QueryMethod_SEARCH,
+					ExpectedQuery:            "projects/test-project-id/global/images/test-image",
 					ExpectedScope:            projectID,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
@@ -707,8 +707,8 @@ func TestComputeDisk(t *testing.T) {
 				},
 				{
 					ExpectedType:             gcpshared.ComputeImage.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-image",
+					ExpectedMethod:           sdp.QueryMethod_SEARCH,
+					ExpectedQuery:            "projects/test-project-id/global/images/test-image",
 					ExpectedScope:            projectID,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},

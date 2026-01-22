@@ -7,6 +7,8 @@ import (
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"google.golang.org/api/iterator"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -17,6 +19,7 @@ import (
 )
 
 var ComputeImageLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeImage)
+var ComputeImageLookupByFamily = shared.NewItemTypeLookup("family", gcpshared.ComputeImage)
 
 type computeImageWrapper struct {
 	client gcpshared.ComputeImagesClient
@@ -24,7 +27,7 @@ type computeImageWrapper struct {
 }
 
 // NewComputeImage creates a new computeImageWrapper instance.
-func NewComputeImage(client gcpshared.ComputeImagesClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
+func NewComputeImage(client gcpshared.ComputeImagesClient, locations []gcpshared.LocationInfo) sources.SearchableListableWrapper {
 	return &computeImageWrapper{
 		client: client,
 		ProjectBase: gcpshared.NewProjectBase(
@@ -61,6 +64,14 @@ func (c computeImageWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
+func (c computeImageWrapper) SearchLookups() []sources.ItemTypeLookups {
+	return []sources.ItemTypeLookups{
+		{
+			ComputeImageLookupByFamily,
+		},
+	}
+}
+
 func (c computeImageWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		gcpshared.ComputeDisk,
@@ -94,6 +105,78 @@ func (c computeImageWrapper) Get(ctx context.Context, scope string, queryParts .
 	}
 
 	return c.gcpComputeImageToSDPItem(ctx, image, location)
+}
+
+func (c computeImageWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+	location, err := c.LocationFromScope(scope)
+	if err != nil {
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
+	query := queryParts[0]
+	var image *computepb.Image
+	var getErr error
+
+	// Check if query is a full URI format
+	if strings.Contains(query, "/images/") {
+		// Extract project ID from URI if present
+		imageProjectID := gcpshared.ExtractPathParam("projects", query)
+		if imageProjectID == "" {
+			imageProjectID = location.ProjectID
+		}
+
+		// Check if it's a family reference
+		if strings.Contains(query, "/images/family/") {
+			// Extract family name
+			familyName := gcpshared.LastPathComponent(query)
+			req := &computepb.GetFromFamilyImageRequest{
+				Project: imageProjectID,
+				Family:  familyName,
+			}
+			image, getErr = c.client.GetFromFamily(ctx, req)
+		} else {
+			// Regular image reference - extract image name
+			imageName := gcpshared.LastPathComponent(query)
+			req := &computepb.GetImageRequest{
+				Project: imageProjectID,
+				Image:   imageName,
+			}
+			image, getErr = c.client.Get(ctx, req)
+		}
+	} else {
+		// Query is just a name - try Get first, then fallback to GetFromFamily
+		req := &computepb.GetImageRequest{
+			Project: location.ProjectID,
+			Image:   query,
+		}
+		image, getErr = c.client.Get(ctx, req)
+
+		// If Get fails with not found, try GetFromFamily (treating the name as a family)
+		if getErr != nil {
+			// Check if it's a "not found" error
+			if s, ok := status.FromError(getErr); ok && s.Code() == codes.NotFound {
+				familyReq := &computepb.GetFromFamilyImageRequest{
+					Project: location.ProjectID,
+					Family:  query,
+				}
+				image, getErr = c.client.GetFromFamily(ctx, familyReq)
+			}
+		}
+	}
+
+	if getErr != nil {
+		return nil, gcpshared.QueryError(getErr, scope, c.Type())
+	}
+
+	item, sdpErr := c.gcpComputeImageToSDPItem(ctx, image, location)
+	if sdpErr != nil {
+		return nil, sdpErr
+	}
+
+	return []*sdp.Item{item}, nil
 }
 
 func (c computeImageWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
@@ -236,26 +319,24 @@ func (c computeImageWrapper) gcpComputeImageToSDPItem(ctx context.Context, image
 
 	// Link to source image
 	if sourceImage := image.GetSourceImage(); sourceImage != "" {
-		imageName := gcpshared.LastPathComponent(sourceImage)
-		if imageName != "" {
-			projectID := gcpshared.ExtractPathParam("projects", sourceImage)
-			scope := location.ProjectID
-			if projectID != "" {
-				scope = projectID
-			}
-			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   gcpshared.ComputeImage.String(),
-					Method: sdp.QueryMethod_GET,
-					Query:  imageName,
-					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
-			})
+		projectID := gcpshared.ExtractPathParam("projects", sourceImage)
+		scope := location.ProjectID
+		if projectID != "" {
+			scope = projectID
 		}
+		// Use SEARCH for all image references - it handles both family and specific image formats
+		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   gcpshared.ComputeImage.String(),
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  sourceImage, // Pass full URI so Search can detect format
+				Scope:  scope,
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: false,
+			},
+		})
 	}
 
 	// Link to licenses
@@ -313,26 +394,24 @@ func (c computeImageWrapper) gcpComputeImageToSDPItem(ctx context.Context, image
 	// Link to replacement image
 	if deprecated := image.GetDeprecated(); deprecated != nil {
 		if replacement := deprecated.GetReplacement(); replacement != "" {
-			replacementImageName := gcpshared.LastPathComponent(replacement)
-			if replacementImageName != "" {
-				projectID := gcpshared.ExtractPathParam("projects", replacement)
-				scope := location.ProjectID
-				if projectID != "" {
-					scope = projectID
-				}
-				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-					Query: &sdp.Query{
-						Type:   gcpshared.ComputeImage.String(),
-						Method: sdp.QueryMethod_GET,
-						Query:  replacementImageName,
-						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				})
+			projectID := gcpshared.ExtractPathParam("projects", replacement)
+			scope := location.ProjectID
+			if projectID != "" {
+				scope = projectID
 			}
+			// Use SEARCH for all image references - it handles both family and specific image formats
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   gcpshared.ComputeImage.String(),
+					Method: sdp.QueryMethod_SEARCH,
+					Query:  replacement, // Pass full URI so Search can detect format
+					Scope:  scope,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			})
 		}
 	}
 
