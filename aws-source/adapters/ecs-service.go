@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -50,14 +49,14 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 
 	service.TaskSets = []types.TaskSet{}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(service, "tags")
+	attributes, err := ToAttributesWithExclude(service, "tags")
 
 	if err != nil {
 		return nil, err
 	}
 
 	if service.ServiceArn != nil {
-		if a, err := adapterhelpers.ParseARN(*service.ServiceArn); err == nil {
+		if a, err := ParseARN(*service.ServiceArn); err == nil {
 			attributes.Set("ServiceFullName", a.Resource)
 		}
 	}
@@ -81,16 +80,16 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 		}
 	}
 
-	var a *adapterhelpers.ARN
+	var a *ARN
 
 	if service.ClusterArn != nil {
-		if a, err = adapterhelpers.ParseARN(*service.ClusterArn); err == nil {
+		if a, err = ParseARN(*service.ClusterArn); err == nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "ecs-cluster",
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *service.ClusterArn,
-					Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+					Scope:  FormatScope(a.AccountID, a.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// Changes to the cluster will affect the service
@@ -104,13 +103,13 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 
 	for _, lb := range service.LoadBalancers {
 		if lb.TargetGroupArn != nil {
-			if a, err = adapterhelpers.ParseARN(*lb.TargetGroupArn); err == nil {
+			if a, err = ParseARN(*lb.TargetGroupArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "elbv2-target-group",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *lb.TargetGroupArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// These are tightly linked
@@ -124,13 +123,13 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 
 	for _, sr := range service.ServiceRegistries {
 		if sr.RegistryArn != nil {
-			if a, err = adapterhelpers.ParseARN(*sr.RegistryArn); err == nil {
+			if a, err = ParseARN(*sr.RegistryArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "servicediscovery-service",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *sr.RegistryArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// These are tightly linked
@@ -143,13 +142,13 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 	}
 
 	if service.TaskDefinition != nil {
-		if a, err = adapterhelpers.ParseARN(*service.TaskDefinition); err == nil {
+		if a, err = ParseARN(*service.TaskDefinition); err == nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "ecs-task-definition",
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *service.TaskDefinition,
-					Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+					Scope:  FormatScope(a.AccountID, a.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// Changing the task definition will affect the service
@@ -163,13 +162,13 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 
 	for _, deployment := range service.Deployments {
 		if deployment.TaskDefinition != nil {
-			if a, err = adapterhelpers.ParseARN(*deployment.TaskDefinition); err == nil {
+			if a, err = ParseARN(*deployment.TaskDefinition); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "ecs-task-definition",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *deployment.TaskDefinition,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the task definition will affect the service
@@ -262,13 +261,13 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 
 		for _, cr := range deployment.ServiceConnectResources {
 			if cr.DiscoveryArn != nil {
-				if a, err = adapterhelpers.ParseARN(*cr.DiscoveryArn); err == nil {
+				if a, err = ParseARN(*cr.DiscoveryArn); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "servicediscovery-service",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *cr.DiscoveryArn,
-							Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+							Scope:  FormatScope(a.AccountID, a.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// These are tightly linked
@@ -341,11 +340,11 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 func serviceListFuncOutputMapper(output *ecs.ListServicesOutput, input *ecs.ListServicesInput) ([]*ecs.DescribeServicesInput, error) {
 	inputs := make([]*ecs.DescribeServicesInput, 0)
 
-	var a *adapterhelpers.ARN
+	var a *ARN
 	var err error
 
 	for _, arn := range output.ServiceArns {
-		a, err = adapterhelpers.ParseARN(arn)
+		a, err = ParseARN(arn)
 
 		if err != nil {
 			continue
@@ -369,8 +368,8 @@ func serviceListFuncOutputMapper(output *ecs.ListServicesOutput, input *ecs.List
 	return inputs, nil
 }
 
-func NewECSServiceAdapter(client ECSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*ecs.ListServicesInput, *ecs.ListServicesOutput, *ecs.DescribeServicesInput, *ecs.DescribeServicesOutput, ECSClient, *ecs.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*ecs.ListServicesInput, *ecs.ListServicesOutput, *ecs.DescribeServicesInput, *ecs.DescribeServicesOutput, ECSClient, *ecs.Options]{
+func NewECSServiceAdapter(client ECSClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*ecs.ListServicesInput, *ecs.ListServicesOutput, *ecs.DescribeServicesInput, *ecs.DescribeServicesOutput, ECSClient, *ecs.Options] {
+	return &AlwaysGetAdapter[*ecs.ListServicesInput, *ecs.ListServicesOutput, *ecs.DescribeServicesInput, *ecs.DescribeServicesOutput, ECSClient, *ecs.Options]{
 		ItemType:        "ecs-service",
 		Client:          client,
 		AccountID:       accountID,
@@ -378,7 +377,7 @@ func NewECSServiceAdapter(client ECSClient, accountID string, region string, cac
 		GetFunc:         serviceGetFunc,
 		DisableList:     true,
 		AdapterMetadata: ecsServiceAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetInputMapper: func(scope, query string) *ecs.DescribeServicesInput {
 			// We are using a custom id of {clusterName}/{id} e.g.
 			// ecs-template-ECSCluster-8nS0WOLbs3nZ/ecs-template-service-i0mQKzkhDI2C
@@ -397,13 +396,13 @@ func NewECSServiceAdapter(client ECSClient, accountID string, region string, cac
 			}
 		},
 		ListInput: &ecs.ListServicesInput{},
-		ListFuncPaginatorBuilder: func(client ECSClient, input *ecs.ListServicesInput) adapterhelpers.Paginator[*ecs.ListServicesOutput, *ecs.Options] {
+		ListFuncPaginatorBuilder: func(client ECSClient, input *ecs.ListServicesInput) Paginator[*ecs.ListServicesOutput, *ecs.Options] {
 			return ecs.NewListServicesPaginator(client, input)
 		},
 		SearchInputMapper: func(scope, query string) (*ecs.ListServicesInput, error) {
 			// Custom search by cluster
 			return &ecs.ListServicesInput{
-				Cluster: adapterhelpers.PtrString(query),
+				Cluster: PtrString(query),
 			}, nil
 		},
 		ListFuncOutputMapper: serviceListFuncOutputMapper,

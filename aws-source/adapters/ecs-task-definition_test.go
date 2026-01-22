@@ -7,67 +7,66 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
 func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.DescribeTaskDefinitionInput, optFns ...func(*ecs.Options)) (*ecs.DescribeTaskDefinitionOutput, error) {
 	return &ecs.DescribeTaskDefinitionOutput{
 		TaskDefinition: &types.TaskDefinition{
-			TaskDefinitionArn: adapterhelpers.PtrString("arn:aws:ecs:eu-west-1:052392120703:task-definition/ecs-template-ecs-demo-app:1"),
+			TaskDefinitionArn: PtrString("arn:aws:ecs:eu-west-1:052392120703:task-definition/ecs-template-ecs-demo-app:1"),
 			ContainerDefinitions: []types.ContainerDefinition{
 				{
-					Name:   adapterhelpers.PtrString("simple-app"),
-					Image:  adapterhelpers.PtrString("httpd:2.4"),
+					Name:   PtrString("simple-app"),
+					Image:  PtrString("httpd:2.4"),
 					Cpu:    10,
-					Memory: adapterhelpers.PtrInt32(300),
+					Memory: PtrInt32(300),
 					Links:  []string{},
 					PortMappings: []types.PortMapping{
 						{
-							ContainerPort: adapterhelpers.PtrInt32(80),
-							HostPort:      adapterhelpers.PtrInt32(0),
+							ContainerPort: PtrInt32(80),
+							HostPort:      PtrInt32(0),
 							Protocol:      types.TransportProtocolTcp,
 							AppProtocol:   types.ApplicationProtocolHttp,
 						},
 					},
-					Essential:  adapterhelpers.PtrBool(true),
+					Essential:  PtrBool(true),
 					EntryPoint: []string{},
 					Command:    []string{},
 					Environment: []types.KeyValuePair{
 						{
-							Name:  adapterhelpers.PtrString("DATABASE_SERVER"),
-							Value: adapterhelpers.PtrString("database01.my-company.com"),
+							Name:  PtrString("DATABASE_SERVER"),
+							Value: PtrString("database01.my-company.com"),
 						},
 					},
 					EnvironmentFiles: []types.EnvironmentFile{},
 					MountPoints: []types.MountPoint{
 						{
-							SourceVolume:  adapterhelpers.PtrString("my-vol"),
-							ContainerPath: adapterhelpers.PtrString("/usr/local/apache2/htdocs"),
-							ReadOnly:      adapterhelpers.PtrBool(false),
+							SourceVolume:  PtrString("my-vol"),
+							ContainerPath: PtrString("/usr/local/apache2/htdocs"),
+							ReadOnly:      PtrBool(false),
 						},
 					},
 					VolumesFrom: []types.VolumeFrom{
 						{
-							SourceContainer: adapterhelpers.PtrString("container"),
+							SourceContainer: PtrString("container"),
 						},
 					},
 					Secrets: []types.Secret{
 						{
-							Name:      adapterhelpers.PtrString("secrets-manager"),
-							ValueFrom: adapterhelpers.PtrString("arn:aws:secretsmanager:us-west-2:123456789012:secret:my-path/my-secret-name-1a2b3c"), // link
+							Name:      PtrString("secrets-manager"),
+							ValueFrom: PtrString("arn:aws:secretsmanager:us-west-2:123456789012:secret:my-path/my-secret-name-1a2b3c"), // link
 						},
 						{
-							Name:      adapterhelpers.PtrString("ssm"),
-							ValueFrom: adapterhelpers.PtrString("arn:aws:ssm:us-east-2:123456789012:parameter/prod-123"), // link
+							Name:      PtrString("ssm"),
+							ValueFrom: PtrString("arn:aws:ssm:us-east-2:123456789012:parameter/prod-123"), // link
 						},
 					},
 					DnsServers:       []string{},
 					DnsSearchDomains: []string{},
 					ExtraHosts: []types.HostEntry{
 						{
-							Hostname:  adapterhelpers.PtrString("host"),
-							IpAddress: adapterhelpers.PtrString("127.0.0.1"),
+							Hostname:  PtrString("host"),
+							IpAddress: PtrString("127.0.0.1"),
 						},
 					},
 					DockerSecurityOptions: []string{},
@@ -82,43 +81,43 @@ func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.
 						},
 						SecretOptions: []types.Secret{
 							{
-								Name:      adapterhelpers.PtrString("secrets-manager"),
-								ValueFrom: adapterhelpers.PtrString("arn:aws:secretsmanager:us-west-2:123456789012:secret:my-path/my-secret-name-1a2b3c"), // link
+								Name:      PtrString("secrets-manager"),
+								ValueFrom: PtrString("arn:aws:secretsmanager:us-west-2:123456789012:secret:my-path/my-secret-name-1a2b3c"), // link
 							},
 							{
-								Name:      adapterhelpers.PtrString("ssm"),
-								ValueFrom: adapterhelpers.PtrString("arn:aws:ssm:us-east-2:123456789012:parameter/prod-123"), // link
+								Name:      PtrString("ssm"),
+								ValueFrom: PtrString("arn:aws:ssm:us-east-2:123456789012:parameter/prod-123"), // link
 							},
 						},
 					},
 					SystemControls:    []types.SystemControl{},
 					DependsOn:         []types.ContainerDependency{},
-					DisableNetworking: adapterhelpers.PtrBool(false),
+					DisableNetworking: PtrBool(false),
 					FirelensConfiguration: &types.FirelensConfiguration{
 						Type:    types.FirelensConfigurationTypeFluentd,
 						Options: map[string]string{},
 					},
 					HealthCheck:            &types.HealthCheck{},
-					Hostname:               adapterhelpers.PtrString("hostname"),
-					Interactive:            adapterhelpers.PtrBool(false),
+					Hostname:               PtrString("hostname"),
+					Interactive:            PtrBool(false),
 					LinuxParameters:        &types.LinuxParameters{},
-					MemoryReservation:      adapterhelpers.PtrInt32(100),
-					Privileged:             adapterhelpers.PtrBool(false),
-					PseudoTerminal:         adapterhelpers.PtrBool(false),
-					ReadonlyRootFilesystem: adapterhelpers.PtrBool(false),
+					MemoryReservation:      PtrInt32(100),
+					Privileged:             PtrBool(false),
+					PseudoTerminal:         PtrBool(false),
+					ReadonlyRootFilesystem: PtrBool(false),
 					RepositoryCredentials:  &types.RepositoryCredentials{}, // Skipping the link here for now, if you need it, add it in a PR
 					ResourceRequirements:   []types.ResourceRequirement{},
-					StartTimeout:           adapterhelpers.PtrInt32(1),
-					StopTimeout:            adapterhelpers.PtrInt32(1),
-					User:                   adapterhelpers.PtrString("foo"),
-					WorkingDirectory:       adapterhelpers.PtrString("/"),
+					StartTimeout:           PtrInt32(1),
+					StopTimeout:            PtrInt32(1),
+					User:                   PtrString("foo"),
+					WorkingDirectory:       PtrString("/"),
 				},
 				{
-					Name:      adapterhelpers.PtrString("busybox"),
-					Image:     adapterhelpers.PtrString("busybox"),
+					Name:      PtrString("busybox"),
+					Image:     PtrString("busybox"),
 					Cpu:       10,
-					Memory:    adapterhelpers.PtrInt32(200),
-					Essential: adapterhelpers.PtrBool(false),
+					Memory:    PtrInt32(200),
+					Essential: PtrBool(false),
 					EntryPoint: []string{
 						"sh",
 						"-c",
@@ -128,7 +127,7 @@ func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.
 					},
 					VolumesFrom: []types.VolumeFrom{
 						{
-							SourceContainer: adapterhelpers.PtrString("simple-app"),
+							SourceContainer: PtrString("simple-app"),
 						},
 					},
 					DockerLabels: map[string]string{},
@@ -142,29 +141,29 @@ func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.
 					},
 				},
 			},
-			Family:   adapterhelpers.PtrString("ecs-template-ecs-demo-app"),
+			Family:   PtrString("ecs-template-ecs-demo-app"),
 			Revision: 1,
 			Volumes: []types.Volume{
 				{
-					Name: adapterhelpers.PtrString("my-vol"),
+					Name: PtrString("my-vol"),
 					Host: &types.HostVolumeProperties{
-						SourcePath: adapterhelpers.PtrString("/"),
+						SourcePath: PtrString("/"),
 					},
 				},
 			},
 			Status: types.TaskDefinitionStatusActive,
 			RequiresAttributes: []types.Attribute{
 				{
-					Name: adapterhelpers.PtrString("com.amazonaws.ecs.capability.logging-driver.awslogs"),
+					Name: PtrString("com.amazonaws.ecs.capability.logging-driver.awslogs"),
 				},
 				{
-					Name: adapterhelpers.PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.19"),
+					Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.19"),
 				},
 				{
-					Name: adapterhelpers.PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.17"),
+					Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.17"),
 				},
 				{
-					Name: adapterhelpers.PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.18"),
+					Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.18"),
 				},
 			},
 			PlacementConstraints: []types.TaskDefinitionPlacementConstraint{},
@@ -172,17 +171,17 @@ func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.
 				"EXTERNAL",
 				"EC2",
 			},
-			RegisteredAt:   adapterhelpers.PtrTime(time.Now()),
-			RegisteredBy:   adapterhelpers.PtrString("arn:aws:sts::052392120703:assumed-role/AWSReservedSSO_AWSAdministratorAccess_c1c3c9c54821c68a/dylan@overmind.tech"),
-			Cpu:            adapterhelpers.PtrString("cpu"),
-			DeregisteredAt: adapterhelpers.PtrTime(time.Now()),
+			RegisteredAt:   PtrTime(time.Now()),
+			RegisteredBy:   PtrString("arn:aws:sts::052392120703:assumed-role/AWSReservedSSO_AWSAdministratorAccess_c1c3c9c54821c68a/dylan@overmind.tech"),
+			Cpu:            PtrString("cpu"),
+			DeregisteredAt: PtrTime(time.Now()),
 			EphemeralStorage: &types.EphemeralStorage{
 				SizeInGiB: 1,
 			},
-			ExecutionRoleArn:        adapterhelpers.PtrString("arn:aws:iam:us-east-2:123456789012:role/foo"), // link
+			ExecutionRoleArn:        PtrString("arn:aws:iam:us-east-2:123456789012:role/foo"), // link
 			InferenceAccelerators:   []types.InferenceAccelerator{},
 			IpcMode:                 types.IpcModeHost,
-			Memory:                  adapterhelpers.PtrString("memory"),
+			Memory:                  PtrString("memory"),
 			NetworkMode:             types.NetworkModeAwsvpc,
 			PidMode:                 types.PidModeHost,
 			ProxyConfiguration:      nil,
@@ -191,7 +190,7 @@ func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.
 				CpuArchitecture:       types.CPUArchitectureX8664,
 				OperatingSystemFamily: types.OSFamilyLinux,
 			},
-			TaskRoleArn: adapterhelpers.PtrString("arn:aws:iam:us-east-2:123456789012:role/bar"), // link
+			TaskRoleArn: PtrString("arn:aws:iam:us-east-2:123456789012:role/bar"), // link
 		},
 	}, nil
 }
@@ -206,7 +205,7 @@ func (t *ecsTestClient) ListTaskDefinitions(context.Context, *ecs.ListTaskDefini
 
 func TestTaskDefinitionGetFunc(t *testing.T) {
 	item, err := taskDefinitionGetFunc(context.Background(), &ecsTestClient{}, "foo", &ecs.DescribeTaskDefinitionInput{
-		TaskDefinition: adapterhelpers.PtrString("ecs-template-ecs-demo-app:1"),
+		TaskDefinition: PtrString("ecs-template-ecs-demo-app:1"),
 	})
 
 	if err != nil {
@@ -217,7 +216,7 @@ func TestTaskDefinitionGetFunc(t *testing.T) {
 		t.Error(err)
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "secretsmanager-secret",
 			ExpectedMethod: sdp.QueryMethod_SEARCH,
@@ -258,7 +257,7 @@ func TestNewECSTaskDefinitionAdapter(t *testing.T) {
 
 	adapter := NewECSTaskDefinitionAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -28,7 +27,7 @@ func egressOnlyInternetGatewayOutputMapper(_ context.Context, _ *ec2.Client, sco
 	for _, gw := range output.EgressOnlyInternetGateways {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(gw, "tags")
+		attrs, err = ToAttributesWithExclude(gw, "tags")
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -71,20 +70,20 @@ func egressOnlyInternetGatewayOutputMapper(_ context.Context, _ *ec2.Client, sco
 	return items, nil
 }
 
-func NewEC2EgressOnlyInternetGatewayAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeEgressOnlyInternetGatewaysInput, *ec2.DescribeEgressOnlyInternetGatewaysOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeEgressOnlyInternetGatewaysInput, *ec2.DescribeEgressOnlyInternetGatewaysOutput, *ec2.Client, *ec2.Options]{
+func NewEC2EgressOnlyInternetGatewayAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeEgressOnlyInternetGatewaysInput, *ec2.DescribeEgressOnlyInternetGatewaysOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeEgressOnlyInternetGatewaysInput, *ec2.DescribeEgressOnlyInternetGatewaysOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-egress-only-internet-gateway",
 		AdapterMetadata: egressOnlyInternetGatewayAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeEgressOnlyInternetGatewaysInput) (*ec2.DescribeEgressOnlyInternetGatewaysOutput, error) {
 			return client.DescribeEgressOnlyInternetGateways(ctx, input)
 		},
 		InputMapperGet:  egressOnlyInternetGatewayInputMapperGet,
 		InputMapperList: egressOnlyInternetGatewayInputMapperList,
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeEgressOnlyInternetGatewaysInput) adapterhelpers.Paginator[*ec2.DescribeEgressOnlyInternetGatewaysOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeEgressOnlyInternetGatewaysInput) Paginator[*ec2.DescribeEgressOnlyInternetGatewaysOutput, *ec2.Options] {
 			return ec2.NewDescribeEgressOnlyInternetGatewaysPaginator(client, params)
 		},
 		OutputMapper: egressOnlyInternetGatewayOutputMapper,

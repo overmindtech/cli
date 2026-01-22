@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -44,7 +43,7 @@ func addressOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.
 	}
 
 	for _, address := range output.Addresses {
-		attrs, err = adapterhelpers.ToAttributesWithExclude(address, "tags")
+		attrs, err = ToAttributesWithExclude(address, "tags")
 
 		if err != nil {
 			return nil, err
@@ -136,14 +135,14 @@ func addressOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.
 }
 
 // NewAddressAdapter Creates a new adapter for aws-Address resources
-func NewEC2AddressAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeAddressesInput, *ec2.DescribeAddressesOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeAddressesInput, *ec2.DescribeAddressesOutput, *ec2.Client, *ec2.Options]{
+func NewEC2AddressAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeAddressesInput, *ec2.DescribeAddressesOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeAddressesInput, *ec2.DescribeAddressesOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-address",
 		AdapterMetadata: addressAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeAddressesInput) (*ec2.DescribeAddressesOutput, error) {
 			return client.DescribeAddresses(ctx, input)
 		},

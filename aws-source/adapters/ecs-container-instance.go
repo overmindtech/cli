@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -32,7 +31,7 @@ func containerInstanceGetFunc(ctx context.Context, client ECSClient, scope strin
 
 	containerInstance := out.ContainerInstances[0]
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(containerInstance, "tags")
+	attributes, err := ToAttributesWithExclude(containerInstance, "tags")
 
 	if err != nil {
 		return nil, err
@@ -41,7 +40,7 @@ func containerInstanceGetFunc(ctx context.Context, client ECSClient, scope strin
 	// Create an ID param since they don't have anything that uniquely
 	// identifies them. This is {clusterName}/{id}
 	// ecs-template-ECSCluster-8nS0WOLbs3nZ/50e9bf71ed57450ca56293cc5a042886
-	if a, err := adapterhelpers.ParseARN(*containerInstance.ContainerInstanceArn); err == nil {
+	if a, err := ParseARN(*containerInstance.ContainerInstanceArn); err == nil {
 		attributes.Set("Id", a.Resource)
 	}
 
@@ -88,11 +87,11 @@ func containerInstanceGetFunc(ctx context.Context, client ECSClient, scope strin
 func containerInstanceListFuncOutputMapper(output *ecs.ListContainerInstancesOutput, input *ecs.ListContainerInstancesInput) ([]*ecs.DescribeContainerInstancesInput, error) {
 	inputs := make([]*ecs.DescribeContainerInstancesInput, 0)
 
-	var a *adapterhelpers.ARN
+	var a *ARN
 	var err error
 
 	for _, arn := range output.ContainerInstanceArns {
-		a, err = adapterhelpers.ParseARN(arn)
+		a, err = ParseARN(arn)
 
 		if err != nil {
 			continue
@@ -116,15 +115,15 @@ func containerInstanceListFuncOutputMapper(output *ecs.ListContainerInstancesOut
 	return inputs, nil
 }
 
-func NewECSContainerInstanceAdapter(client ECSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*ecs.ListContainerInstancesInput, *ecs.ListContainerInstancesOutput, *ecs.DescribeContainerInstancesInput, *ecs.DescribeContainerInstancesOutput, ECSClient, *ecs.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*ecs.ListContainerInstancesInput, *ecs.ListContainerInstancesOutput, *ecs.DescribeContainerInstancesInput, *ecs.DescribeContainerInstancesOutput, ECSClient, *ecs.Options]{
+func NewECSContainerInstanceAdapter(client ECSClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*ecs.ListContainerInstancesInput, *ecs.ListContainerInstancesOutput, *ecs.DescribeContainerInstancesInput, *ecs.DescribeContainerInstancesOutput, ECSClient, *ecs.Options] {
+	return &AlwaysGetAdapter[*ecs.ListContainerInstancesInput, *ecs.ListContainerInstancesOutput, *ecs.DescribeContainerInstancesInput, *ecs.DescribeContainerInstancesOutput, ECSClient, *ecs.Options]{
 		ItemType:        "ecs-container-instance",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		GetFunc:         containerInstanceGetFunc,
 		AdapterMetadata: containerInstanceAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetInputMapper: func(scope, query string) *ecs.DescribeContainerInstancesInput {
 			// We are using a custom id of {clusterName}/{id} e.g.
 			// ecs-template-ECSCluster-8nS0WOLbs3nZ/50e9bf71ed57450ca56293cc5a042886
@@ -144,13 +143,13 @@ func NewECSContainerInstanceAdapter(client ECSClient, accountID string, region s
 		},
 		ListInput:   &ecs.ListContainerInstancesInput{},
 		DisableList: true, // Tou can't list without a cluster
-		ListFuncPaginatorBuilder: func(client ECSClient, input *ecs.ListContainerInstancesInput) adapterhelpers.Paginator[*ecs.ListContainerInstancesOutput, *ecs.Options] {
+		ListFuncPaginatorBuilder: func(client ECSClient, input *ecs.ListContainerInstancesInput) Paginator[*ecs.ListContainerInstancesOutput, *ecs.Options] {
 			return ecs.NewListContainerInstancesPaginator(client, input)
 		},
 		SearchInputMapper: func(scope, query string) (*ecs.ListContainerInstancesInput, error) {
 			// Custom search by cluster
 			return &ecs.ListContainerInstancesInput{
-				Cluster: adapterhelpers.PtrString(query),
+				Cluster: PtrString(query),
 			}, nil
 		},
 		ListFuncOutputMapper: containerInstanceListFuncOutputMapper,

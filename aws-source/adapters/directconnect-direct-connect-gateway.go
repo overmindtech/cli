@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -39,7 +38,7 @@ func directConnectGatewayOutputMapper(ctx context.Context, cli *directconnect.Cl
 
 	items := make([]*sdp.Item, 0)
 	for _, directConnectGateway := range output.DirectConnectGateways {
-		attributes, err := adapterhelpers.ToAttributesWithExclude(directConnectGateway, "tags")
+		attributes, err := ToAttributesWithExclude(directConnectGateway, "tags")
 		if err != nil {
 			return nil, err
 		}
@@ -75,14 +74,14 @@ func directconnectARN(region, accountID, gatewayID string) string {
 	return fmt.Sprintf("arn:aws:directconnect:%s:%s:dx-gateway/%s", region, accountID, gatewayID)
 }
 
-func NewDirectConnectGatewayAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewaysInput, *directconnect.DescribeDirectConnectGatewaysOutput, *directconnect.Client, *directconnect.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewaysInput, *directconnect.DescribeDirectConnectGatewaysOutput, *directconnect.Client, *directconnect.Options]{
+func NewDirectConnectGatewayAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewaysInput, *directconnect.DescribeDirectConnectGatewaysOutput, *directconnect.Client, *directconnect.Options] {
+	return &DescribeOnlyAdapter[*directconnect.DescribeDirectConnectGatewaysInput, *directconnect.DescribeDirectConnectGatewaysOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-direct-connect-gateway",
 		AdapterMetadata: directConnectGatewayAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeDirectConnectGatewaysInput) (*directconnect.DescribeDirectConnectGatewaysOutput, error) {
 			return client.DescribeDirectConnectGateways(ctx, input)
 		},

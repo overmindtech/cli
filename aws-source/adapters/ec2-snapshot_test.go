@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -43,23 +42,23 @@ func TestSnapshotOutputMapper(t *testing.T) {
 	output := &ec2.DescribeSnapshotsOutput{
 		Snapshots: []types.Snapshot{
 			{
-				DataEncryptionKeyId: adapterhelpers.PtrString("ek"),
-				KmsKeyId:            adapterhelpers.PtrString("key"),
-				SnapshotId:          adapterhelpers.PtrString("id"),
-				Description:         adapterhelpers.PtrString("foo"),
-				Encrypted:           adapterhelpers.PtrBool(false),
-				OutpostArn:          adapterhelpers.PtrString("something"),
-				OwnerAlias:          adapterhelpers.PtrString("something"),
-				OwnerId:             adapterhelpers.PtrString("owner"),
-				Progress:            adapterhelpers.PtrString("50%"),
-				RestoreExpiryTime:   adapterhelpers.PtrTime(time.Now()),
-				StartTime:           adapterhelpers.PtrTime(time.Now()),
+				DataEncryptionKeyId: PtrString("ek"),
+				KmsKeyId:            PtrString("key"),
+				SnapshotId:          PtrString("id"),
+				Description:         PtrString("foo"),
+				Encrypted:           PtrBool(false),
+				OutpostArn:          PtrString("something"),
+				OwnerAlias:          PtrString("something"),
+				OwnerId:             PtrString("owner"),
+				Progress:            PtrString("50%"),
+				RestoreExpiryTime:   PtrTime(time.Now()),
+				StartTime:           PtrTime(time.Now()),
 				State:               types.SnapshotStatePending,
-				StateMessage:        adapterhelpers.PtrString("pending"),
+				StateMessage:        PtrString("pending"),
 				StorageTier:         types.StorageTierArchive,
 				Tags:                []types.Tag{},
-				VolumeId:            adapterhelpers.PtrString("volumeId"),
-				VolumeSize:          adapterhelpers.PtrInt32(1024),
+				VolumeId:            PtrString("volumeId"),
+				VolumeSize:          PtrInt32(1024),
 			},
 		},
 	}
@@ -78,7 +77,7 @@ func TestSnapshotOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-volume",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -96,7 +95,7 @@ func TestNewEC2SnapshotAdapter(t *testing.T) {
 
 	adapter := NewEC2SnapshotAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

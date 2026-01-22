@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 /*
@@ -83,25 +82,25 @@ import (
 
 func TestResourceOutputMapper(t *testing.T) {
 	resource := &types.Resource{
-		Id:       adapterhelpers.PtrString("test-id"),
-		ParentId: adapterhelpers.PtrString("parent-id"),
-		Path:     adapterhelpers.PtrString("/test-path"),
-		PathPart: adapterhelpers.PtrString("test-path-part"),
+		Id:       PtrString("test-id"),
+		ParentId: PtrString("parent-id"),
+		Path:     PtrString("/test-path"),
+		PathPart: PtrString("test-path-part"),
 		ResourceMethods: map[string]types.Method{
 			"GET": {
-				ApiKeyRequired:      adapterhelpers.PtrBool(true),
+				ApiKeyRequired:      PtrBool(true),
 				AuthorizationScopes: []string{"scope1", "scope2"},
-				AuthorizationType:   adapterhelpers.PtrString("NONE"),
-				AuthorizerId:        adapterhelpers.PtrString("authorizer-id"),
-				HttpMethod:          adapterhelpers.PtrString("GET"),
+				AuthorizationType:   PtrString("NONE"),
+				AuthorizerId:        PtrString("authorizer-id"),
+				HttpMethod:          PtrString("GET"),
 				MethodIntegration: &types.Integration{
 					CacheKeyParameters: []string{"param1", "param2"},
-					CacheNamespace:     adapterhelpers.PtrString("namespace"),
-					ConnectionId:       adapterhelpers.PtrString("connection-id"),
+					CacheNamespace:     PtrString("namespace"),
+					ConnectionId:       PtrString("connection-id"),
 					ConnectionType:     types.ConnectionTypeInternet,
 					ContentHandling:    types.ContentHandlingStrategyConvertToBinary,
-					Credentials:        adapterhelpers.PtrString("credentials"),
-					HttpMethod:         adapterhelpers.PtrString("POST"),
+					Credentials:        PtrString("credentials"),
+					HttpMethod:         PtrString("POST"),
 					IntegrationResponses: map[string]types.IntegrationResponse{
 						"200": {
 							ContentHandling: types.ContentHandlingStrategyConvertToText,
@@ -111,11 +110,11 @@ func TestResourceOutputMapper(t *testing.T) {
 							ResponseTemplates: map[string]string{
 								"template1": "value1",
 							},
-							SelectionPattern: adapterhelpers.PtrString("pattern"),
-							StatusCode:       adapterhelpers.PtrString("200"),
+							SelectionPattern: PtrString("pattern"),
+							StatusCode:       PtrString("200"),
 						},
 					},
-					PassthroughBehavior: adapterhelpers.PtrString("WHEN_NO_MATCH"),
+					PassthroughBehavior: PtrString("WHEN_NO_MATCH"),
 					RequestParameters: map[string]string{
 						"param1": "value1",
 					},
@@ -127,7 +126,7 @@ func TestResourceOutputMapper(t *testing.T) {
 						InsecureSkipVerification: false,
 					},
 					Type: types.IntegrationTypeAwsProxy,
-					Uri:  adapterhelpers.PtrString("uri"),
+					Uri:  PtrString("uri"),
 				},
 				MethodResponses: map[string]types.MethodResponse{
 					"200": {
@@ -137,17 +136,17 @@ func TestResourceOutputMapper(t *testing.T) {
 						ResponseParameters: map[string]bool{
 							"param1": true,
 						},
-						StatusCode: adapterhelpers.PtrString("200"),
+						StatusCode: PtrString("200"),
 					},
 				},
-				OperationName: adapterhelpers.PtrString("operation"),
+				OperationName: PtrString("operation"),
 				RequestModels: map[string]string{
 					"model1": "value1",
 				},
 				RequestParameters: map[string]bool{
 					"param1": true,
 				},
-				RequestValidatorId: adapterhelpers.PtrString("validator-id"),
+				RequestValidatorId: PtrString("validator-id"),
 			},
 		},
 	}
@@ -163,13 +162,13 @@ func TestResourceOutputMapper(t *testing.T) {
 }
 
 func TestNewAPIGatewayResourceAdapter(t *testing.T) {
-	config, account, region := adapterhelpers.GetAutoConfig(t)
+	config, account, region := GetAutoConfig(t)
 
 	client := apigateway.NewFromConfig(config)
 
 	adapter := NewAPIGatewayResourceAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter:  adapter,
 		Timeout:  10 * time.Second,
 		SkipList: true,

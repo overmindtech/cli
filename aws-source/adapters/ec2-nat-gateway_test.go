@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -43,47 +42,47 @@ func TestNatGatewayOutputMapper(t *testing.T) {
 	output := &ec2.DescribeNatGatewaysOutput{
 		NatGateways: []types.NatGateway{
 			{
-				CreateTime:     adapterhelpers.PtrTime(time.Now()),
-				DeleteTime:     adapterhelpers.PtrTime(time.Now()),
-				FailureCode:    adapterhelpers.PtrString("Gateway.NotAttached"),
-				FailureMessage: adapterhelpers.PtrString("Network vpc-0d7892e00e573e701 has no Internet gateway attached"),
+				CreateTime:     PtrTime(time.Now()),
+				DeleteTime:     PtrTime(time.Now()),
+				FailureCode:    PtrString("Gateway.NotAttached"),
+				FailureMessage: PtrString("Network vpc-0d7892e00e573e701 has no Internet gateway attached"),
 				NatGatewayAddresses: []types.NatGatewayAddress{
 					{
-						AllocationId:       adapterhelpers.PtrString("eipalloc-000a9739291350592"),
-						NetworkInterfaceId: adapterhelpers.PtrString("eni-0c59532b8e10343ae"),
-						PrivateIp:          adapterhelpers.PtrString("172.31.89.23"),
+						AllocationId:       PtrString("eipalloc-000a9739291350592"),
+						NetworkInterfaceId: PtrString("eni-0c59532b8e10343ae"),
+						PrivateIp:          PtrString("172.31.89.23"),
 					},
 				},
-				NatGatewayId: adapterhelpers.PtrString("nat-0e4e73d7ac46af25e"),
+				NatGatewayId: PtrString("nat-0e4e73d7ac46af25e"),
 				State:        types.NatGatewayStateFailed,
-				SubnetId:     adapterhelpers.PtrString("subnet-0450a637af9984235"),
-				VpcId:        adapterhelpers.PtrString("vpc-0d7892e00e573e701"),
+				SubnetId:     PtrString("subnet-0450a637af9984235"),
+				VpcId:        PtrString("vpc-0d7892e00e573e701"),
 				Tags: []types.Tag{
 					{
-						Key:   adapterhelpers.PtrString("Name"),
-						Value: adapterhelpers.PtrString("test"),
+						Key:   PtrString("Name"),
+						Value: PtrString("test"),
 					},
 				},
 				ConnectivityType: types.ConnectivityTypePublic,
 			},
 			{
-				CreateTime: adapterhelpers.PtrTime(time.Now()),
+				CreateTime: PtrTime(time.Now()),
 				NatGatewayAddresses: []types.NatGatewayAddress{
 					{
-						AllocationId:       adapterhelpers.PtrString("eipalloc-000a9739291350592"),
-						NetworkInterfaceId: adapterhelpers.PtrString("eni-0b4652e6f2aa36d78"),
-						PrivateIp:          adapterhelpers.PtrString("172.31.35.98"),
-						PublicIp:           adapterhelpers.PtrString("18.170.133.9"),
+						AllocationId:       PtrString("eipalloc-000a9739291350592"),
+						NetworkInterfaceId: PtrString("eni-0b4652e6f2aa36d78"),
+						PrivateIp:          PtrString("172.31.35.98"),
+						PublicIp:           PtrString("18.170.133.9"),
 					},
 				},
-				NatGatewayId: adapterhelpers.PtrString("nat-0e07f7530ef076766"),
+				NatGatewayId: PtrString("nat-0e07f7530ef076766"),
 				State:        types.NatGatewayStateAvailable,
-				SubnetId:     adapterhelpers.PtrString("subnet-0d8ae4b4e07647efa"),
-				VpcId:        adapterhelpers.PtrString("vpc-0d7892e00e573e701"),
+				SubnetId:     PtrString("subnet-0d8ae4b4e07647efa"),
+				VpcId:        PtrString("vpc-0d7892e00e573e701"),
 				Tags: []types.Tag{
 					{
-						Key:   adapterhelpers.PtrString("Name"),
-						Value: adapterhelpers.PtrString("test"),
+						Key:   PtrString("Name"),
+						Value: PtrString("test"),
 					},
 				},
 				ConnectivityType: types.ConnectivityTypePublic,
@@ -111,7 +110,7 @@ func TestNatGatewayOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-network-interface",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -153,7 +152,7 @@ func TestNewEC2NatGatewayAdapter(t *testing.T) {
 
 	adapter := NewEC2NatGatewayAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

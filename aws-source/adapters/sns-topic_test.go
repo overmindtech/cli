@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 type testTopicClient struct{}
@@ -30,7 +29,7 @@ func (t testTopicClient) ListTopics(context.Context, *sns.ListTopicsInput, ...fu
 	return &sns.ListTopicsOutput{
 		Topics: []types.Topic{
 			{
-				TopicArn: adapterhelpers.PtrString("arn:aws:sns:us-west-2:123456789012:my-topic"),
+				TopicArn: PtrString("arn:aws:sns:us-west-2:123456789012:my-topic"),
 			},
 		},
 	}, nil
@@ -39,8 +38,8 @@ func (t testTopicClient) ListTopics(context.Context, *sns.ListTopicsInput, ...fu
 func (t testTopicClient) ListTagsForResource(context.Context, *sns.ListTagsForResourceInput, ...func(*sns.Options)) (*sns.ListTagsForResourceOutput, error) {
 	return &sns.ListTagsForResourceOutput{
 		Tags: []types.Tag{
-			{Key: adapterhelpers.PtrString("tag1"), Value: adapterhelpers.PtrString("value1")},
-			{Key: adapterhelpers.PtrString("tag2"), Value: adapterhelpers.PtrString("value2")},
+			{Key: PtrString("tag1"), Value: PtrString("value1")},
+			{Key: PtrString("tag2"), Value: PtrString("value2")},
 		},
 	}, nil
 }
@@ -50,7 +49,7 @@ func TestGetTopicFunc(t *testing.T) {
 	cli := testTopicClient{}
 
 	item, err := getTopicFunc(ctx, cli, "scope", &sns.GetTopicAttributesInput{
-		TopicArn: adapterhelpers.PtrString("arn:aws:sns:us-west-2:123456789012:my-topic"),
+		TopicArn: PtrString("arn:aws:sns:us-west-2:123456789012:my-topic"),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -62,12 +61,12 @@ func TestGetTopicFunc(t *testing.T) {
 }
 
 func TestNewSNSTopicAdapter(t *testing.T) {
-	config, account, region := adapterhelpers.GetAutoConfig(t)
+	config, account, region := GetAutoConfig(t)
 	client := sns.NewFromConfig(config)
 
 	adapter := NewSNSTopicAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

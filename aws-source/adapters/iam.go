@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/micahhausler/aws-iam-policy/policy"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -57,7 +56,7 @@ var ssmQueryExtractor = QueryExtractor{
 		// https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-access.html
 		//
 		// Because of this all ARNs essential with a wildcard for the path
-		a, err := adapterhelpers.ParseARN(resource)
+		a, err := ParseARN(resource)
 		if err != nil {
 			return nil
 		}
@@ -68,7 +67,7 @@ var ssmQueryExtractor = QueryExtractor{
 					Type:   "ssm-parameter",
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  a.String() + "*", // Wildcard at the end
-					Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+					Scope:  FormatScope(a.AccountID, a.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,
@@ -82,7 +81,7 @@ var ssmQueryExtractor = QueryExtractor{
 var fallbackQueryExtractor = QueryExtractor{
 	RelevantResources: regexp.MustCompile("^arn:"),
 	ExtractorFunc: func(resource string, actions []string) []*sdp.LinkedItemQuery {
-		arn, err := adapterhelpers.ParseARN(resource)
+		arn, err := ParseARN(resource)
 		if err != nil {
 			return nil
 		}
@@ -94,7 +93,7 @@ var fallbackQueryExtractor = QueryExtractor{
 		if arn.AccountID != "aws" {
 			if arn.AccountID != "*" && arn.Region != "*" {
 				// If we have an account and region, then use those
-				scope = adapterhelpers.FormatScope(arn.AccountID, arn.Region)
+				scope = FormatScope(arn.AccountID, arn.Region)
 			}
 		}
 
@@ -155,7 +154,7 @@ func LinksFromPolicy(document *policy.Policy) []*sdp.LinkedItemQuery {
 			if awsPrincipal := statement.Principal.AWS(); awsPrincipal != nil {
 				for _, value := range awsPrincipal.Values() {
 					// These are in the format of ARN so we'll parse them
-					if arn, err := adapterhelpers.ParseARN(value); err == nil {
+					if arn, err := ParseARN(value); err == nil {
 						var typ string
 						switch arn.Type() {
 						case "role":
@@ -170,7 +169,7 @@ func LinksFromPolicy(document *policy.Policy) []*sdp.LinkedItemQuery {
 									Type:   typ,
 									Method: sdp.QueryMethod_SEARCH,
 									Query:  arn.String(),
-									Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+									Scope:  FormatScope(arn.AccountID, arn.Region),
 								},
 								BlastPropagation: &sdp.BlastPropagation{
 									// If a user or role iex explicitly

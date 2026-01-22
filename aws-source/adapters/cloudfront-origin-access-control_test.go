@@ -5,18 +5,17 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 func TestOriginAccessControlItemMapper(t *testing.T) {
 	x := types.OriginAccessControl{
-		Id: adapterhelpers.PtrString("test"),
+		Id: PtrString("test"),
 		OriginAccessControlConfig: &types.OriginAccessControlConfig{
-			Name:                          adapterhelpers.PtrString("example-name"),
+			Name:                          PtrString("example-name"),
 			OriginAccessControlOriginType: types.OriginAccessControlOriginTypesS3,
 			SigningBehavior:               types.OriginAccessControlSigningBehaviorsAlways,
 			SigningProtocol:               types.OriginAccessControlSigningProtocolsSigv4,
-			Description:                   adapterhelpers.PtrString("example-description"),
+			Description:                   PtrString("example-description"),
 		},
 	}
 
@@ -36,7 +35,7 @@ func TestNewCloudfrontOriginAccessControlAdapter(t *testing.T) {
 
 	adapter := NewCloudfrontOriginAccessControlAdapter(client, account, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

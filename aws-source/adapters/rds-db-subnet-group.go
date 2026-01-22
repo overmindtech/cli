@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -24,10 +23,10 @@ func dBSubnetGroupOutputMapper(ctx context.Context, client rdsClient, scope stri
 		if err == nil {
 			tags = rdsTagsToMap(tagsOut.TagList)
 		} else {
-			tags = adapterhelpers.HandleTagsError(ctx, err)
+			tags = HandleTagsError(ctx, err)
 		}
 
-		attributes, err := adapterhelpers.ToAttributesWithExclude(sg)
+		attributes, err := ToAttributesWithExclude(sg)
 
 		if err != nil {
 			return nil, err
@@ -41,7 +40,7 @@ func dBSubnetGroupOutputMapper(ctx context.Context, client rdsClient, scope stri
 			Tags:            tags,
 		}
 
-		var a *adapterhelpers.ARN
+		var a *ARN
 
 		if sg.VpcId != nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -80,13 +79,13 @@ func dBSubnetGroupOutputMapper(ctx context.Context, client rdsClient, scope stri
 
 			if subnet.SubnetOutpost != nil {
 				if subnet.SubnetOutpost.Arn != nil {
-					if a, err = adapterhelpers.ParseARN(*subnet.SubnetOutpost.Arn); err == nil {
+					if a, err = ParseARN(*subnet.SubnetOutpost.Arn); err == nil {
 						item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   "outposts-outpost",
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  *subnet.SubnetOutpost.Arn,
-								Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+								Scope:  FormatScope(a.AccountID, a.Region),
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								// Changing the outpost can affect the subnet group
@@ -106,15 +105,15 @@ func dBSubnetGroupOutputMapper(ctx context.Context, client rdsClient, scope stri
 	return items, nil
 }
 
-func NewRDSDBSubnetGroupAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBSubnetGroupsInput, *rds.DescribeDBSubnetGroupsOutput, rdsClient, *rds.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBSubnetGroupsInput, *rds.DescribeDBSubnetGroupsOutput, rdsClient, *rds.Options]{
+func NewRDSDBSubnetGroupAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*rds.DescribeDBSubnetGroupsInput, *rds.DescribeDBSubnetGroupsOutput, rdsClient, *rds.Options] {
+	return &DescribeOnlyAdapter[*rds.DescribeDBSubnetGroupsInput, *rds.DescribeDBSubnetGroupsOutput, rdsClient, *rds.Options]{
 		ItemType:        "rds-db-subnet-group",
 		Region:          region,
 		AccountID:       accountID,
 		Client:          client,
 		AdapterMetadata: dbSubnetGroupAdapterMetadata,
-		SDPCache:        cache,
-		PaginatorBuilder: func(client rdsClient, params *rds.DescribeDBSubnetGroupsInput) adapterhelpers.Paginator[*rds.DescribeDBSubnetGroupsOutput, *rds.Options] {
+		cache:        cache,
+		PaginatorBuilder: func(client rdsClient, params *rds.DescribeDBSubnetGroupsInput) Paginator[*rds.DescribeDBSubnetGroupsOutput, *rds.Options] {
 			return rds.NewDescribeDBSubnetGroupsPaginator(client, params)
 		},
 		DescribeFunc: func(ctx context.Context, client rdsClient, input *rds.DescribeDBSubnetGroupsInput) (*rds.DescribeDBSubnetGroupsOutput, error) {

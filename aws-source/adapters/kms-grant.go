@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 
@@ -18,7 +17,7 @@ func grantOutputMapper(ctx context.Context, _ *kms.Client, scope string, _ *kms.
 	items := make([]*sdp.Item, 0)
 
 	for _, grant := range output.Grants {
-		attributes, err := adapterhelpers.ToAttributesWithExclude(grant, "tags")
+		attributes, err := ToAttributesWithExclude(grant, "tags")
 		if err != nil {
 			return nil, err
 		}
@@ -31,7 +30,7 @@ func grantOutputMapper(ctx context.Context, _ *kms.Client, scope string, _ *kms.
 			}
 		}
 
-		arn, errA := adapterhelpers.ParseARN(*grant.KeyId)
+		arn, errA := ParseARN(*grant.KeyId)
 		if errA != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -55,7 +54,7 @@ func grantOutputMapper(ctx context.Context, _ *kms.Client, scope string, _ *kms.
 			Scope:           scope,
 		}
 
-		scope = adapterhelpers.FormatScope(arn.AccountID, arn.Region)
+		scope = FormatScope(arn.AccountID, arn.Region)
 
 		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
@@ -121,7 +120,7 @@ func grantOutputMapper(ctx context.Context, _ *kms.Client, scope string, _ *kms.
 				},
 			}
 
-			arn, errA := adapterhelpers.ParseARN(principal)
+			arn, errA := ParseARN(principal)
 			if errA != nil {
 				log.WithFields(log.Fields{
 					"error": errA,
@@ -168,14 +167,14 @@ func grantOutputMapper(ctx context.Context, _ *kms.Client, scope string, _ *kms.
 	return items, nil
 }
 
-func NewKMSGrantAdapter(client *kms.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*kms.ListGrantsInput, *kms.ListGrantsOutput, *kms.Client, *kms.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*kms.ListGrantsInput, *kms.ListGrantsOutput, *kms.Client, *kms.Options]{
+func NewKMSGrantAdapter(client *kms.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*kms.ListGrantsInput, *kms.ListGrantsOutput, *kms.Client, *kms.Options] {
+	return &DescribeOnlyAdapter[*kms.ListGrantsInput, *kms.ListGrantsOutput, *kms.Client, *kms.Options]{
 		ItemType:        "kms-grant",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: grantAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *kms.Client, input *kms.ListGrantsInput) (*kms.ListGrantsOutput, error) {
 			return client.ListGrants(ctx, input)
 		},
@@ -192,7 +191,7 @@ func NewKMSGrantAdapter(client *kms.Client, accountID string, region string, cac
 
 			return &kms.ListGrantsInput{
 				KeyId:   &tmp[0],                                              // keyID
-				GrantId: adapterhelpers.PtrString(strings.Join(tmp[1:], "/")), // grantId
+				GrantId: PtrString(strings.Join(tmp[1:], "/")), // grantId
 			}, nil
 		},
 		UseListForGet: true,

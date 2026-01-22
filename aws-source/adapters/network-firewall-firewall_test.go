@@ -7,36 +7,35 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
 func (c testNetworkFirewallClient) DescribeFirewall(ctx context.Context, params *networkfirewall.DescribeFirewallInput, optFns ...func(*networkfirewall.Options)) (*networkfirewall.DescribeFirewallOutput, error) {
 	return &networkfirewall.DescribeFirewallOutput{
 		Firewall: &types.Firewall{
-			FirewallId:        adapterhelpers.PtrString("test"),
-			FirewallPolicyArn: adapterhelpers.PtrString("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"), // link
+			FirewallId:        PtrString("test"),
+			FirewallPolicyArn: PtrString("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"), // link
 			SubnetMappings: []types.SubnetMapping{
 				{
-					SubnetId:      adapterhelpers.PtrString("subnet-12345678901234567"), // link
+					SubnetId:      PtrString("subnet-12345678901234567"), // link
 					IPAddressType: types.IPAddressTypeIpv4,
 				},
 			},
-			VpcId:            adapterhelpers.PtrString("vpc-12345678901234567"), // link
+			VpcId:            PtrString("vpc-12345678901234567"), // link
 			DeleteProtection: false,
-			Description:      adapterhelpers.PtrString("test"),
+			Description:      PtrString("test"),
 			EncryptionConfiguration: &types.EncryptionConfiguration{
 				Type:  types.EncryptionTypeAwsOwnedKmsKey,
-				KeyId: adapterhelpers.PtrString("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"), // link (this can be an ARN or ID)
+				KeyId: PtrString("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"), // link (this can be an ARN or ID)
 			},
-			FirewallArn:                    adapterhelpers.PtrString("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"),
-			FirewallName:                   adapterhelpers.PtrString("test"),
+			FirewallArn:                    PtrString("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"),
+			FirewallName:                   PtrString("test"),
 			FirewallPolicyChangeProtection: false,
 			SubnetChangeProtection:         false,
 			Tags: []types.Tag{
 				{
-					Key:   adapterhelpers.PtrString("test"),
-					Value: adapterhelpers.PtrString("test"),
+					Key:   PtrString("test"),
+					Value: PtrString("test"),
 				},
 			},
 		},
@@ -45,22 +44,22 @@ func (c testNetworkFirewallClient) DescribeFirewall(ctx context.Context, params 
 			Status:                        types.FirewallStatusValueDeleting,
 			CapacityUsageSummary: &types.CapacityUsageSummary{
 				CIDRs: &types.CIDRSummary{
-					AvailableCIDRCount: adapterhelpers.PtrInt32(1),
+					AvailableCIDRCount: PtrInt32(1),
 					IPSetReferences: map[string]types.IPSetMetadata{
 						"test": {
-							ResolvedCIDRCount: adapterhelpers.PtrInt32(1),
+							ResolvedCIDRCount: PtrInt32(1),
 						},
 					},
-					UtilizedCIDRCount: adapterhelpers.PtrInt32(1),
+					UtilizedCIDRCount: PtrInt32(1),
 				},
 			},
 			SyncStates: map[string]types.SyncState{
 				"test": {
 					Attachment: &types.Attachment{
-						EndpointId:    adapterhelpers.PtrString("test"),
+						EndpointId:    PtrString("test"),
 						Status:        types.AttachmentStatusCreating,
-						StatusMessage: adapterhelpers.PtrString("test"),
-						SubnetId:      adapterhelpers.PtrString("test"), // link,
+						StatusMessage: PtrString("test"),
+						SubnetId:      PtrString("test"), // link,
 					},
 				},
 			},
@@ -70,7 +69,7 @@ func (c testNetworkFirewallClient) DescribeFirewall(ctx context.Context, params 
 
 func (c testNetworkFirewallClient) DescribeLoggingConfiguration(ctx context.Context, params *networkfirewall.DescribeLoggingConfigurationInput, optFns ...func(*networkfirewall.Options)) (*networkfirewall.DescribeLoggingConfigurationOutput, error) {
 	return &networkfirewall.DescribeLoggingConfigurationOutput{
-		FirewallArn: adapterhelpers.PtrString("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"),
+		FirewallArn: PtrString("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"),
 		LoggingConfiguration: &types.LoggingConfiguration{
 			LogDestinationConfigs: []types.LogDestinationConfig{
 				{
@@ -102,7 +101,7 @@ func (c testNetworkFirewallClient) DescribeLoggingConfiguration(ctx context.Cont
 
 func (c testNetworkFirewallClient) DescribeResourcePolicy(ctx context.Context, params *networkfirewall.DescribeResourcePolicyInput, optFns ...func(*networkfirewall.Options)) (*networkfirewall.DescribeResourcePolicyOutput, error) {
 	return &networkfirewall.DescribeResourcePolicyOutput{
-		Policy: adapterhelpers.PtrString("test"), // link
+		Policy: PtrString("test"), // link
 	}, nil
 }
 
@@ -110,7 +109,7 @@ func (c testNetworkFirewallClient) ListFirewalls(context.Context, *networkfirewa
 	return &networkfirewall.ListFirewallsOutput{
 		Firewalls: []types.FirewallMetadata{
 			{
-				FirewallArn: adapterhelpers.PtrString("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"),
+				FirewallArn: PtrString("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"),
 			},
 		},
 	}, nil
@@ -127,7 +126,7 @@ func TestFirewallGetFunc(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-subnet",
 			ExpectedMethod: sdp.QueryMethod_GET,

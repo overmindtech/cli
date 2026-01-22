@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -19,7 +18,7 @@ func FileSystemOutputMapper(_ context.Context, _ *efs.Client, scope string, inpu
 	items := make([]*sdp.Item, 0)
 
 	for _, fs := range output.FileSystems {
-		attrs, err := adapterhelpers.ToAttributesWithExclude(fs, "tags")
+		attrs, err := ToAttributesWithExclude(fs, "tags")
 
 		if err != nil {
 			return nil, err
@@ -70,13 +69,13 @@ func FileSystemOutputMapper(_ context.Context, _ *efs.Client, scope string, inpu
 
 		if fs.KmsKeyId != nil {
 			// KMS key ID is an ARN
-			if arn, err := adapterhelpers.ParseARN(*fs.KmsKeyId); err == nil {
+			if arn, err := ParseARN(*fs.KmsKeyId); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "kms-key",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *fs.KmsKeyId,
-						Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+						Scope:  FormatScope(arn.AccountID, arn.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the key will affect us
@@ -94,18 +93,18 @@ func FileSystemOutputMapper(_ context.Context, _ *efs.Client, scope string, inpu
 	return items, nil
 }
 
-func NewEFSFileSystemAdapter(client *efs.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*efs.DescribeFileSystemsInput, *efs.DescribeFileSystemsOutput, *efs.Client, *efs.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*efs.DescribeFileSystemsInput, *efs.DescribeFileSystemsOutput, *efs.Client, *efs.Options]{
+func NewEFSFileSystemAdapter(client *efs.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*efs.DescribeFileSystemsInput, *efs.DescribeFileSystemsOutput, *efs.Client, *efs.Options] {
+	return &DescribeOnlyAdapter[*efs.DescribeFileSystemsInput, *efs.DescribeFileSystemsOutput, *efs.Client, *efs.Options]{
 		ItemType:        "efs-file-system",
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: efsFileSystemAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *efs.Client, input *efs.DescribeFileSystemsInput) (*efs.DescribeFileSystemsOutput, error) {
 			return client.DescribeFileSystems(ctx, input)
 		},
-		PaginatorBuilder: func(client *efs.Client, params *efs.DescribeFileSystemsInput) adapterhelpers.Paginator[*efs.DescribeFileSystemsOutput, *efs.Options] {
+		PaginatorBuilder: func(client *efs.Client, params *efs.DescribeFileSystemsInput) Paginator[*efs.DescribeFileSystemsOutput, *efs.Options] {
 			return efs.NewDescribeFileSystemsPaginator(client, params)
 		},
 		InputMapperGet: func(scope, query string) (*efs.DescribeFileSystemsInput, error) {

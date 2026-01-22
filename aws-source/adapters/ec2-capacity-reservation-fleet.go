@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -15,7 +14,7 @@ func capacityReservationFleetOutputMapper(_ context.Context, _ *ec2.Client, scop
 	items := make([]*sdp.Item, 0)
 
 	for _, cr := range output.CapacityReservationFleets {
-		attributes, err := adapterhelpers.ToAttributesWithExclude(cr, "tags")
+		attributes, err := ToAttributesWithExclude(cr, "tags")
 
 		if err != nil {
 			return nil, err
@@ -75,14 +74,14 @@ func capacityReservationFleetOutputMapper(_ context.Context, _ *ec2.Client, scop
 	return items, nil
 }
 
-func NewEC2CapacityReservationFleetAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeCapacityReservationFleetsInput, *ec2.DescribeCapacityReservationFleetsOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeCapacityReservationFleetsInput, *ec2.DescribeCapacityReservationFleetsOutput, *ec2.Client, *ec2.Options]{
+func NewEC2CapacityReservationFleetAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeCapacityReservationFleetsInput, *ec2.DescribeCapacityReservationFleetsOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeCapacityReservationFleetsInput, *ec2.DescribeCapacityReservationFleetsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-capacity-reservation-fleet",
 		AdapterMetadata: capacityReservationFleetAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeCapacityReservationFleetsInput) (*ec2.DescribeCapacityReservationFleetsOutput, error) {
 			return client.DescribeCapacityReservationFleets(ctx, input)
 		},
@@ -94,7 +93,7 @@ func NewEC2CapacityReservationFleetAdapter(client *ec2.Client, accountID string,
 		InputMapperList: func(scope string) (*ec2.DescribeCapacityReservationFleetsInput, error) {
 			return &ec2.DescribeCapacityReservationFleetsInput{}, nil
 		},
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeCapacityReservationFleetsInput) adapterhelpers.Paginator[*ec2.DescribeCapacityReservationFleetsOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeCapacityReservationFleetsInput) Paginator[*ec2.DescribeCapacityReservationFleetsOutput, *ec2.Options] {
 			return ec2.NewDescribeCapacityReservationFleetsPaginator(client, params)
 		},
 		OutputMapper: capacityReservationFleetOutputMapper,

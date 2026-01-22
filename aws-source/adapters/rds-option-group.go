@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -24,10 +23,10 @@ func optionGroupOutputMapper(ctx context.Context, client rdsClient, scope string
 		if err == nil {
 			tags = rdsTagsToMap(tagsOut.TagList)
 		} else {
-			tags = adapterhelpers.HandleTagsError(ctx, err)
+			tags = HandleTagsError(ctx, err)
 		}
 
-		attributes, err := adapterhelpers.ToAttributesWithExclude(group)
+		attributes, err := ToAttributesWithExclude(group)
 
 		if err != nil {
 			return nil, err
@@ -47,15 +46,15 @@ func optionGroupOutputMapper(ctx context.Context, client rdsClient, scope string
 	return items, nil
 }
 
-func NewRDSOptionGroupAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*rds.DescribeOptionGroupsInput, *rds.DescribeOptionGroupsOutput, rdsClient, *rds.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*rds.DescribeOptionGroupsInput, *rds.DescribeOptionGroupsOutput, rdsClient, *rds.Options]{
+func NewRDSOptionGroupAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*rds.DescribeOptionGroupsInput, *rds.DescribeOptionGroupsOutput, rdsClient, *rds.Options] {
+	return &DescribeOnlyAdapter[*rds.DescribeOptionGroupsInput, *rds.DescribeOptionGroupsOutput, rdsClient, *rds.Options]{
 		ItemType:        "rds-option-group",
 		Region:          region,
 		AccountID:       accountID,
 		Client:          client,
 		AdapterMetadata: optionGroupAdapterMetadata,
-		SDPCache:        cache,
-		PaginatorBuilder: func(client rdsClient, params *rds.DescribeOptionGroupsInput) adapterhelpers.Paginator[*rds.DescribeOptionGroupsOutput, *rds.Options] {
+		cache:        cache,
+		PaginatorBuilder: func(client rdsClient, params *rds.DescribeOptionGroupsInput) Paginator[*rds.DescribeOptionGroupsOutput, *rds.Options] {
 			return rds.NewDescribeOptionGroupsPaginator(client, params)
 		},
 		DescribeFunc: func(ctx context.Context, client rdsClient, input *rds.DescribeOptionGroupsInput) (*rds.DescribeOptionGroupsOutput, error) {

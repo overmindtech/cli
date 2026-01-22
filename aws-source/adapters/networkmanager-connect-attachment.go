@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -24,7 +23,7 @@ func connectAttachmentGetFunc(ctx context.Context, client *networkmanager.Client
 }
 
 func connectAttachmentItemMapper(_, scope string, ca *types.ConnectAttachment) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(ca)
+	attributes, err := ToAttributesWithExclude(ca)
 	if err != nil {
 		return nil, err
 	}
@@ -59,13 +58,13 @@ func connectAttachmentItemMapper(_, scope string, ca *types.ConnectAttachment) (
 	}
 
 	if ca.Attachment.CoreNetworkArn != nil {
-		if arn, err := adapterhelpers.ParseARN(*ca.Attachment.CoreNetworkArn); err == nil {
+		if arn, err := ParseARN(*ca.Attachment.CoreNetworkArn); err == nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "networkmanager-core-network",
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *ca.Attachment.CoreNetworkArn,
-					Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+					Scope:  FormatScope(arn.AccountID, arn.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,
@@ -80,14 +79,14 @@ func connectAttachmentItemMapper(_, scope string, ca *types.ConnectAttachment) (
 	return &item, nil
 }
 
-func NewNetworkManagerConnectAttachmentAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.ConnectAttachment, *networkmanager.Client, *networkmanager.Options] {
-	return &adapterhelpers.GetListAdapter[*types.ConnectAttachment, *networkmanager.Client, *networkmanager.Options]{
+func NewNetworkManagerConnectAttachmentAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *GetListAdapter[*types.ConnectAttachment, *networkmanager.Client, *networkmanager.Options] {
+	return &GetListAdapter[*types.ConnectAttachment, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-connect-attachment",
 		AdapterMetadata: connectAttachmentAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *networkmanager.Client, scope string, query string) (*types.ConnectAttachment, error) {
 			return connectAttachmentGetFunc(ctx, client, scope, query)
 		},

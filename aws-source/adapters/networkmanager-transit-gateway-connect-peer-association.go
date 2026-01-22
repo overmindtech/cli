@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -18,7 +17,7 @@ func transitGatewayConnectPeerAssociationsOutputMapper(_ context.Context, _ *net
 	for _, a := range output.TransitGatewayConnectPeerAssociations {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(a, "tags")
+		attrs, err = ToAttributesWithExclude(a, "tags")
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -97,14 +96,14 @@ func transitGatewayConnectPeerAssociationsOutputMapper(_ context.Context, _ *net
 	return items, nil
 }
 
-func NewNetworkManagerTransitGatewayConnectPeerAssociationAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetTransitGatewayConnectPeerAssociationsInput, *networkmanager.GetTransitGatewayConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetTransitGatewayConnectPeerAssociationsInput, *networkmanager.GetTransitGatewayConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options]{
+func NewNetworkManagerTransitGatewayConnectPeerAssociationAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*networkmanager.GetTransitGatewayConnectPeerAssociationsInput, *networkmanager.GetTransitGatewayConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options] {
+	return &DescribeOnlyAdapter[*networkmanager.GetTransitGatewayConnectPeerAssociationsInput, *networkmanager.GetTransitGatewayConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-transit-gateway-connect-peer-association",
 		AdapterMetadata: transitGatewayConnectPeerAssociationAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.GetTransitGatewayConnectPeerAssociationsInput) (*networkmanager.GetTransitGatewayConnectPeerAssociationsOutput, error) {
 			return client.GetTransitGatewayConnectPeerAssociations(ctx, input)
 		},
@@ -135,7 +134,7 @@ func NewNetworkManagerTransitGatewayConnectPeerAssociationAdapter(client *networ
 				Scope:       scope,
 			}
 		},
-		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetTransitGatewayConnectPeerAssociationsInput) adapterhelpers.Paginator[*networkmanager.GetTransitGatewayConnectPeerAssociationsOutput, *networkmanager.Options] {
+		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetTransitGatewayConnectPeerAssociationsInput) Paginator[*networkmanager.GetTransitGatewayConnectPeerAssociationsOutput, *networkmanager.Options] {
 			return networkmanager.NewGetTransitGatewayConnectPeerAssociationsPaginator(client, params)
 		},
 		OutputMapper: transitGatewayConnectPeerAssociationsOutputMapper,

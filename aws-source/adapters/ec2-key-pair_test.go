@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 func TestKeyPairInputMapperGet(t *testing.T) {
@@ -42,13 +41,13 @@ func TestKeyPairOutputMapper(t *testing.T) {
 	output := &ec2.DescribeKeyPairsOutput{
 		KeyPairs: []types.KeyPairInfo{
 			{
-				KeyPairId:      adapterhelpers.PtrString("key-04d7068d3a33bf9b2"),
-				KeyFingerprint: adapterhelpers.PtrString("df:73:bb:86:a7:cd:9e:18:16:10:50:79:fa:3b:4f:c7:1d:32:cf:58"),
-				KeyName:        adapterhelpers.PtrString("dylan.ratcliffe"),
+				KeyPairId:      PtrString("key-04d7068d3a33bf9b2"),
+				KeyFingerprint: PtrString("df:73:bb:86:a7:cd:9e:18:16:10:50:79:fa:3b:4f:c7:1d:32:cf:58"),
+				KeyName:        PtrString("dylan.ratcliffe"),
 				KeyType:        types.KeyTypeRsa,
 				Tags:           []types.Tag{},
-				CreateTime:     adapterhelpers.PtrTime(time.Now()),
-				PublicKey:      adapterhelpers.PtrString("PUB"),
+				CreateTime:     PtrTime(time.Now()),
+				PublicKey:      PtrString("PUB"),
 			},
 		},
 	}
@@ -76,7 +75,7 @@ func TestNewEC2KeyPairAdapter(t *testing.T) {
 
 	adapter := NewEC2KeyPairAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

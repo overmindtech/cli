@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -25,7 +24,7 @@ func fargateProfileGetFunc(ctx context.Context, client EKSClient, scope string, 
 		}
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(out.FargateProfile)
+	attributes, err := ToAttributesWithExclude(out.FargateProfile)
 
 	if err != nil {
 		return nil, err
@@ -44,13 +43,13 @@ func fargateProfileGetFunc(ctx context.Context, client EKSClient, scope string, 
 	}
 
 	if out.FargateProfile.PodExecutionRoleArn != nil {
-		if a, err := adapterhelpers.ParseARN(*out.FargateProfile.PodExecutionRoleArn); err == nil {
+		if a, err := ParseARN(*out.FargateProfile.PodExecutionRoleArn); err == nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "iam-role",
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *out.FargateProfile.PodExecutionRoleArn,
-					Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+					Scope:  FormatScope(a.AccountID, a.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// The execution role will affect the fargate profile
@@ -82,8 +81,8 @@ func fargateProfileGetFunc(ctx context.Context, client EKSClient, scope string, 
 	return &item, nil
 }
 
-func NewEKSFargateProfileAdapter(client EKSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*eks.ListFargateProfilesInput, *eks.ListFargateProfilesOutput, *eks.DescribeFargateProfileInput, *eks.DescribeFargateProfileOutput, EKSClient, *eks.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*eks.ListFargateProfilesInput, *eks.ListFargateProfilesOutput, *eks.DescribeFargateProfileInput, *eks.DescribeFargateProfileOutput, EKSClient, *eks.Options]{
+func NewEKSFargateProfileAdapter(client EKSClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*eks.ListFargateProfilesInput, *eks.ListFargateProfilesOutput, *eks.DescribeFargateProfileInput, *eks.DescribeFargateProfileOutput, EKSClient, *eks.Options] {
+	return &AlwaysGetAdapter[*eks.ListFargateProfilesInput, *eks.ListFargateProfilesOutput, *eks.DescribeFargateProfileInput, *eks.DescribeFargateProfileOutput, EKSClient, *eks.Options]{
 		ItemType:         "eks-fargate-profile",
 		Client:           client,
 		AccountID:        accountID,
@@ -91,7 +90,7 @@ func NewEKSFargateProfileAdapter(client EKSClient, accountID string, region stri
 		DisableList:      true,
 		AlwaysSearchARNs: true,
 		AdapterMetadata:  fargateProfileAdapterMetadata,
-		SDPCache:         cache,
+		cache:         cache,
 		SearchInputMapper: func(scope, query string) (*eks.ListFargateProfilesInput, error) {
 			return &eks.ListFargateProfilesInput{
 				ClusterName: &query,
@@ -115,7 +114,7 @@ func NewEKSFargateProfileAdapter(client EKSClient, accountID string, region stri
 				ClusterName:        &clusterName,
 			}
 		},
-		ListFuncPaginatorBuilder: func(client EKSClient, input *eks.ListFargateProfilesInput) adapterhelpers.Paginator[*eks.ListFargateProfilesOutput, *eks.Options] {
+		ListFuncPaginatorBuilder: func(client EKSClient, input *eks.ListFargateProfilesInput) Paginator[*eks.ListFargateProfilesOutput, *eks.Options] {
 			return eks.NewListFargateProfilesPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *eks.ListFargateProfilesOutput, input *eks.ListFargateProfilesInput) ([]*eks.DescribeFargateProfileInput, error) {

@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -15,26 +14,26 @@ func TestHostedConnectionOutputMapper(t *testing.T) {
 	output := &directconnect.DescribeHostedConnectionsOutput{
 		Connections: []types.Connection{
 			{
-				AwsDeviceV2:          adapterhelpers.PtrString("EqDC2-123h49s71dabc"),
-				AwsLogicalDeviceId:   adapterhelpers.PtrString("device-1"),
-				Bandwidth:            adapterhelpers.PtrString("1Gbps"),
-				ConnectionId:         adapterhelpers.PtrString("dxcon-fguhmqlc"),
-				ConnectionName:       adapterhelpers.PtrString("My_Connection"),
+				AwsDeviceV2:          PtrString("EqDC2-123h49s71dabc"),
+				AwsLogicalDeviceId:   PtrString("device-1"),
+				Bandwidth:            PtrString("1Gbps"),
+				ConnectionId:         PtrString("dxcon-fguhmqlc"),
+				ConnectionName:       PtrString("My_Connection"),
 				ConnectionState:      "down",
-				EncryptionMode:       adapterhelpers.PtrString("must_encrypt"),
+				EncryptionMode:       PtrString("must_encrypt"),
 				HasLogicalRedundancy: "unknown",
-				JumboFrameCapable:    adapterhelpers.PtrBool(true),
-				LagId:                adapterhelpers.PtrString("dxlag-ffrz71kw"),
-				LoaIssueTime:         adapterhelpers.PtrTime(time.Now()),
-				Location:             adapterhelpers.PtrString("EqDC2"),
-				Region:               adapterhelpers.PtrString("us-east-1"),
-				ProviderName:         adapterhelpers.PtrString("provider-1"),
-				OwnerAccount:         adapterhelpers.PtrString("123456789012"),
-				PartnerName:          adapterhelpers.PtrString("partner-1"),
+				JumboFrameCapable:    PtrBool(true),
+				LagId:                PtrString("dxlag-ffrz71kw"),
+				LoaIssueTime:         PtrTime(time.Now()),
+				Location:             PtrString("EqDC2"),
+				Region:               PtrString("us-east-1"),
+				ProviderName:         PtrString("provider-1"),
+				OwnerAccount:         PtrString("123456789012"),
+				PartnerName:          PtrString("partner-1"),
 				Tags: []types.Tag{
 					{
-						Key:   adapterhelpers.PtrString("foo"),
-						Value: adapterhelpers.PtrString("bar"),
+						Key:   PtrString("foo"),
+						Value: PtrString("bar"),
 					},
 				},
 			},
@@ -58,7 +57,7 @@ func TestHostedConnectionOutputMapper(t *testing.T) {
 
 	item := items[0]
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "directconnect-lag",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -93,7 +92,7 @@ func TestNewDirectConnectHostedConnectionAdapter(t *testing.T) {
 
 	adapter := NewDirectConnectHostedConnectionAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter:  adapter,
 		Timeout:  10 * time.Second,
 		SkipList: true,

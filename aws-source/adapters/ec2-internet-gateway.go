@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -28,7 +27,7 @@ func internetGatewayOutputMapper(_ context.Context, _ *ec2.Client, scope string,
 	for _, gw := range output.InternetGateways {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(gw, "tags")
+		attrs, err = ToAttributesWithExclude(gw, "tags")
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -72,20 +71,20 @@ func internetGatewayOutputMapper(_ context.Context, _ *ec2.Client, scope string,
 	return items, nil
 }
 
-func NewEC2InternetGatewayAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeInternetGatewaysInput, *ec2.DescribeInternetGatewaysOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeInternetGatewaysInput, *ec2.DescribeInternetGatewaysOutput, *ec2.Client, *ec2.Options]{
+func NewEC2InternetGatewayAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeInternetGatewaysInput, *ec2.DescribeInternetGatewaysOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeInternetGatewaysInput, *ec2.DescribeInternetGatewaysOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-internet-gateway",
 		AdapterMetadata: internetGatewayAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeInternetGatewaysInput) (*ec2.DescribeInternetGatewaysOutput, error) {
 			return client.DescribeInternetGateways(ctx, input)
 		},
 		InputMapperGet:  internetGatewayInputMapperGet,
 		InputMapperList: internetGatewayInputMapperList,
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeInternetGatewaysInput) adapterhelpers.Paginator[*ec2.DescribeInternetGatewaysOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeInternetGatewaysInput) Paginator[*ec2.DescribeInternetGatewaysOutput, *ec2.Options] {
 			return ec2.NewDescribeInternetGatewaysPaginator(client, params)
 		},
 		OutputMapper: internetGatewayOutputMapper,

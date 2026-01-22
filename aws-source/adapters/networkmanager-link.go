@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -19,7 +18,7 @@ func linkOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 	for _, s := range output.Links {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(s, "tags")
+		attrs, err = ToAttributesWithExclude(s, "tags")
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -111,13 +110,13 @@ func linkOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 	return items, nil
 }
 
-func NewNetworkManagerLinkAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetLinksInput, *networkmanager.GetLinksOutput, *networkmanager.Client, *networkmanager.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetLinksInput, *networkmanager.GetLinksOutput, *networkmanager.Client, *networkmanager.Options]{
+func NewNetworkManagerLinkAdapter(client *networkmanager.Client, accountID string, cache sdpcache.Cache) *DescribeOnlyAdapter[*networkmanager.GetLinksInput, *networkmanager.GetLinksOutput, *networkmanager.Client, *networkmanager.Options] {
+	return &DescribeOnlyAdapter[*networkmanager.GetLinksInput, *networkmanager.GetLinksOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "networkmanager-link",
 		AdapterMetadata: linkAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.GetLinksInput) (*networkmanager.GetLinksOutput, error) {
 			return client.GetLinks(ctx, input)
 		},
@@ -146,13 +145,13 @@ func NewNetworkManagerLinkAdapter(client *networkmanager.Client, accountID strin
 				Scope:       scope,
 			}
 		},
-		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetLinksInput) adapterhelpers.Paginator[*networkmanager.GetLinksOutput, *networkmanager.Options] {
+		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetLinksInput) Paginator[*networkmanager.GetLinksOutput, *networkmanager.Options] {
 			return networkmanager.NewGetLinksPaginator(client, params)
 		},
 		OutputMapper: linkOutputMapper,
 		InputMapperSearch: func(ctx context.Context, client *networkmanager.Client, scope, query string) (*networkmanager.GetLinksInput, error) {
 			// Try to parse as ARN first
-			arn, err := adapterhelpers.ParseARN(query)
+			arn, err := ParseARN(query)
 			if err == nil {
 				// Check if it's a networkmanager-link ARN
 				if arn.Service == "networkmanager" && arn.Type() == "link" {

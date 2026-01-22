@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -14,7 +13,7 @@ func customerMetadataOutputMapper(_ context.Context, _ *directconnect.Client, sc
 	items := make([]*sdp.Item, 0)
 
 	for _, agreement := range output.Agreements {
-		attributes, err := adapterhelpers.ToAttributesWithExclude(agreement, "tags")
+		attributes, err := ToAttributesWithExclude(agreement, "tags")
 		if err != nil {
 			return nil, err
 		}
@@ -32,14 +31,14 @@ func customerMetadataOutputMapper(_ context.Context, _ *directconnect.Client, sc
 	return items, nil
 }
 
-func NewDirectConnectCustomerMetadataAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeCustomerMetadataInput, *directconnect.DescribeCustomerMetadataOutput, *directconnect.Client, *directconnect.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*directconnect.DescribeCustomerMetadataInput, *directconnect.DescribeCustomerMetadataOutput, *directconnect.Client, *directconnect.Options]{
+func NewDirectConnectCustomerMetadataAdapter(client *directconnect.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*directconnect.DescribeCustomerMetadataInput, *directconnect.DescribeCustomerMetadataOutput, *directconnect.Client, *directconnect.Options] {
+	return &DescribeOnlyAdapter[*directconnect.DescribeCustomerMetadataInput, *directconnect.DescribeCustomerMetadataOutput, *directconnect.Client, *directconnect.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "directconnect-customer-metadata",
 		AdapterMetadata: customerMetadataAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *directconnect.Client, input *directconnect.DescribeCustomerMetadataInput) (*directconnect.DescribeCustomerMetadataOutput, error) {
 			return client.DescribeCustomerMetadata(ctx, input)
 		},

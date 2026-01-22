@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -40,7 +39,7 @@ func tlsInspectionConfigurationGetFunc(ctx context.Context, client networkFirewa
 		TLSInspectionConfiguration: resp.TLSInspectionConfiguration,
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(utic)
+	attributes, err := ToAttributesWithExclude(utic)
 
 	if err != nil {
 		return nil, err
@@ -74,14 +73,14 @@ func tlsInspectionConfigurationGetFunc(ctx context.Context, client networkFirewa
 
 	if utic.Properties.CertificateAuthority != nil {
 		if utic.Properties.CertificateAuthority.CertificateArn != nil {
-			if a, err := adapterhelpers.ParseARN(*utic.Properties.CertificateAuthority.CertificateArn); err == nil {
+			if a, err := ParseARN(*utic.Properties.CertificateAuthority.CertificateArn); err == nil {
 				//+overmind:link acm-pca-certificate-authority-certificate
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "acm-pca-certificate-authority-certificate",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *utic.Properties.CertificateAuthority.CertificateArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -94,14 +93,14 @@ func tlsInspectionConfigurationGetFunc(ctx context.Context, client networkFirewa
 
 	for _, cert := range utic.Properties.Certificates {
 		if cert.CertificateArn != nil {
-			if a, err := adapterhelpers.ParseARN(*cert.CertificateArn); err == nil {
+			if a, err := ParseARN(*cert.CertificateArn); err == nil {
 				//+overmind:link acm-certificate
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "acm-certificate",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *cert.CertificateArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -116,14 +115,14 @@ func tlsInspectionConfigurationGetFunc(ctx context.Context, client networkFirewa
 
 	for _, config := range utic.TLSInspectionConfiguration.ServerCertificateConfigurations {
 		if config.CertificateAuthorityArn != nil {
-			if a, err := adapterhelpers.ParseARN(*config.CertificateAuthorityArn); err == nil {
+			if a, err := ParseARN(*config.CertificateAuthorityArn); err == nil {
 				//+overmind:link acm-pca-certificate-authority
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "acm-pca-certificate-authority",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *config.CertificateAuthorityArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -135,14 +134,14 @@ func tlsInspectionConfigurationGetFunc(ctx context.Context, client networkFirewa
 
 		for _, serverCert := range config.ServerCertificates {
 			if serverCert.ResourceArn != nil {
-				if a, err := adapterhelpers.ParseARN(*serverCert.ResourceArn); err == nil {
+				if a, err := ParseARN(*serverCert.ResourceArn); err == nil {
 					//+overmind:link acm-certificate
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "acm-certificate",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *serverCert.ResourceArn,
-							Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+							Scope:  FormatScope(a.AccountID, a.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,
@@ -157,15 +156,15 @@ func tlsInspectionConfigurationGetFunc(ctx context.Context, client networkFirewa
 	return &item, nil
 }
 
-func NewNetworkFirewallTLSInspectionConfigurationAdapter(client networkFirewallClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*networkfirewall.ListTLSInspectionConfigurationsInput, *networkfirewall.ListTLSInspectionConfigurationsOutput, *networkfirewall.DescribeTLSInspectionConfigurationInput, *networkfirewall.DescribeTLSInspectionConfigurationOutput, networkFirewallClient, *networkfirewall.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*networkfirewall.ListTLSInspectionConfigurationsInput, *networkfirewall.ListTLSInspectionConfigurationsOutput, *networkfirewall.DescribeTLSInspectionConfigurationInput, *networkfirewall.DescribeTLSInspectionConfigurationOutput, networkFirewallClient, *networkfirewall.Options]{
+func NewNetworkFirewallTLSInspectionConfigurationAdapter(client networkFirewallClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*networkfirewall.ListTLSInspectionConfigurationsInput, *networkfirewall.ListTLSInspectionConfigurationsOutput, *networkfirewall.DescribeTLSInspectionConfigurationInput, *networkfirewall.DescribeTLSInspectionConfigurationOutput, networkFirewallClient, *networkfirewall.Options] {
+	return &AlwaysGetAdapter[*networkfirewall.ListTLSInspectionConfigurationsInput, *networkfirewall.ListTLSInspectionConfigurationsOutput, *networkfirewall.DescribeTLSInspectionConfigurationInput, *networkfirewall.DescribeTLSInspectionConfigurationOutput, networkFirewallClient, *networkfirewall.Options]{
 		ItemType:        "network-firewall-tls-inspection-configuration",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ListInput:       &networkfirewall.ListTLSInspectionConfigurationsInput{},
 		AdapterMetadata: tlsInspectionConfigurationAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetInputMapper: func(scope, query string) *networkfirewall.DescribeTLSInspectionConfigurationInput {
 			return &networkfirewall.DescribeTLSInspectionConfigurationInput{
 				TLSInspectionConfigurationName: &query,
@@ -176,7 +175,7 @@ func NewNetworkFirewallTLSInspectionConfigurationAdapter(client networkFirewallC
 				TLSInspectionConfigurationArn: &query,
 			}, nil
 		},
-		ListFuncPaginatorBuilder: func(client networkFirewallClient, input *networkfirewall.ListTLSInspectionConfigurationsInput) adapterhelpers.Paginator[*networkfirewall.ListTLSInspectionConfigurationsOutput, *networkfirewall.Options] {
+		ListFuncPaginatorBuilder: func(client networkFirewallClient, input *networkfirewall.ListTLSInspectionConfigurationsInput) Paginator[*networkfirewall.ListTLSInspectionConfigurationsOutput, *networkfirewall.Options] {
 			return networkfirewall.NewListTLSInspectionConfigurationsPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *networkfirewall.ListTLSInspectionConfigurationsOutput, input *networkfirewall.ListTLSInspectionConfigurationsInput) ([]*networkfirewall.DescribeTLSInspectionConfigurationInput, error) {

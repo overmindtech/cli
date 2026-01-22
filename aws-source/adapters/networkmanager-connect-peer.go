@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -20,7 +19,7 @@ func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 
 	cn := out.ConnectPeer
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(cn, "tags")
+	attributes, err := ToAttributesWithExclude(cn, "tags")
 
 	if err != nil {
 		return nil, err
@@ -150,14 +149,14 @@ func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 	}
 
 	if cn.SubnetArn != nil {
-		if arn, err := adapterhelpers.ParseARN(*cn.SubnetArn); err == nil {
+		if arn, err := ParseARN(*cn.SubnetArn); err == nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				//+overmind:link ec2-subnet
 				Query: &sdp.Query{
 					Type:   "ec2-subnet",
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *cn.SubnetArn,
-					Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+					Scope:  FormatScope(arn.AccountID, arn.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,
@@ -197,15 +196,15 @@ func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 	return &item, nil
 }
 
-func NewNetworkManagerConnectPeerAdapter(client NetworkManagerClient, accountID, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*networkmanager.ListConnectPeersInput, *networkmanager.ListConnectPeersOutput, *networkmanager.GetConnectPeerInput, *networkmanager.GetConnectPeerOutput, NetworkManagerClient, *networkmanager.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*networkmanager.ListConnectPeersInput, *networkmanager.ListConnectPeersOutput, *networkmanager.GetConnectPeerInput, *networkmanager.GetConnectPeerOutput, NetworkManagerClient, *networkmanager.Options]{
+func NewNetworkManagerConnectPeerAdapter(client NetworkManagerClient, accountID, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*networkmanager.ListConnectPeersInput, *networkmanager.ListConnectPeersOutput, *networkmanager.GetConnectPeerInput, *networkmanager.GetConnectPeerOutput, NetworkManagerClient, *networkmanager.Options] {
+	return &AlwaysGetAdapter[*networkmanager.ListConnectPeersInput, *networkmanager.ListConnectPeersOutput, *networkmanager.GetConnectPeerInput, *networkmanager.GetConnectPeerOutput, NetworkManagerClient, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-connect-peer",
 		ListInput:       &networkmanager.ListConnectPeersInput{},
 		AdapterMetadata: connectPeerAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		SearchInputMapper: func(scope, query string) (*networkmanager.ListConnectPeersInput, error) {
 			// Search by CoreNetworkId
 			return &networkmanager.ListConnectPeersInput{
@@ -217,7 +216,7 @@ func NewNetworkManagerConnectPeerAdapter(client NetworkManagerClient, accountID,
 				ConnectPeerId: &query,
 			}
 		},
-		ListFuncPaginatorBuilder: func(client NetworkManagerClient, input *networkmanager.ListConnectPeersInput) adapterhelpers.Paginator[*networkmanager.ListConnectPeersOutput, *networkmanager.Options] {
+		ListFuncPaginatorBuilder: func(client NetworkManagerClient, input *networkmanager.ListConnectPeersInput) Paginator[*networkmanager.ListConnectPeersOutput, *networkmanager.Options] {
 			return networkmanager.NewListConnectPeersPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *networkmanager.ListConnectPeersOutput, input *networkmanager.ListConnectPeersInput) ([]*networkmanager.GetConnectPeerInput, error) {

@@ -6,7 +6,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/micahhausler/aws-iam-policy/policy"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 
@@ -52,7 +51,7 @@ func getKeyPolicyFunc(ctx context.Context, client keyPolicyClient, scope string,
 		return nil, nil //nolint:nilerr
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(parsedPolicy)
+	attributes, err := ToAttributesWithExclude(parsedPolicy)
 	if err != nil {
 		return nil, err
 	}
@@ -86,15 +85,15 @@ func getKeyPolicyFunc(ctx context.Context, client keyPolicyClient, scope string,
 	return item, nil
 }
 
-func NewKMSKeyPolicyAdapter(client keyPolicyClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*kms.ListKeyPoliciesInput, *kms.ListKeyPoliciesOutput, *kms.GetKeyPolicyInput, *kms.GetKeyPolicyOutput, keyPolicyClient, *kms.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*kms.ListKeyPoliciesInput, *kms.ListKeyPoliciesOutput, *kms.GetKeyPolicyInput, *kms.GetKeyPolicyOutput, keyPolicyClient, *kms.Options]{
+func NewKMSKeyPolicyAdapter(client keyPolicyClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*kms.ListKeyPoliciesInput, *kms.ListKeyPoliciesOutput, *kms.GetKeyPolicyInput, *kms.GetKeyPolicyOutput, keyPolicyClient, *kms.Options] {
+	return &AlwaysGetAdapter[*kms.ListKeyPoliciesInput, *kms.ListKeyPoliciesOutput, *kms.GetKeyPolicyInput, *kms.GetKeyPolicyOutput, keyPolicyClient, *kms.Options]{
 		ItemType:        "kms-key-policy",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		DisableList:     true, // This adapter only supports listing by Key ID
 		AdapterMetadata: keyPolicyAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		SearchInputMapper: func(scope, query string) (*kms.ListKeyPoliciesInput, error) {
 			return &kms.ListKeyPoliciesInput{
 				KeyId: &query,
@@ -105,7 +104,7 @@ func NewKMSKeyPolicyAdapter(client keyPolicyClient, accountID string, region str
 				KeyId: &query,
 			}
 		},
-		ListFuncPaginatorBuilder: func(client keyPolicyClient, input *kms.ListKeyPoliciesInput) adapterhelpers.Paginator[*kms.ListKeyPoliciesOutput, *kms.Options] {
+		ListFuncPaginatorBuilder: func(client keyPolicyClient, input *kms.ListKeyPoliciesInput) Paginator[*kms.ListKeyPoliciesOutput, *kms.Options] {
 			return kms.NewListKeyPoliciesPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *kms.ListKeyPoliciesOutput, input *kms.ListKeyPoliciesInput) ([]*kms.GetKeyPolicyInput, error) {

@@ -6,13 +6,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
 
 func originRequestPolicyItemMapper(_, scope string, awsItem *types.OriginRequestPolicy) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 
 	if err != nil {
 		return nil, err
@@ -28,14 +27,14 @@ func originRequestPolicyItemMapper(_, scope string, awsItem *types.OriginRequest
 	return &item, nil
 }
 
-func NewCloudfrontOriginRequestPolicyAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.OriginRequestPolicy, *cloudfront.Client, *cloudfront.Options] {
-	return &adapterhelpers.GetListAdapter[*types.OriginRequestPolicy, *cloudfront.Client, *cloudfront.Options]{
+func NewCloudfrontOriginRequestPolicyAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *GetListAdapter[*types.OriginRequestPolicy, *cloudfront.Client, *cloudfront.Options] {
+	return &GetListAdapter[*types.OriginRequestPolicy, *cloudfront.Client, *cloudfront.Options]{
 		ItemType:        "cloudfront-origin-request-policy",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata: originRequestPolicyAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *cloudfront.Client, scope, query string) (*types.OriginRequestPolicy, error) {
 			out, err := client.GetOriginRequestPolicy(ctx, &cloudfront.GetOriginRequestPolicyInput{
 				Id: &query,

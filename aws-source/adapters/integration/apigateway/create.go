@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
+	"github.com/overmindtech/cli/aws-source/adapters"
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 )
 
@@ -30,8 +30,8 @@ func createRestAPI(ctx context.Context, logger *slog.Logger, client *apigateway.
 	}
 
 	result, err := client.CreateRestApi(ctx, &apigateway.CreateRestApiInput{
-		Name:        adapterhelpers.PtrString(integration.ResourceName(integration.APIGateway, restAPISrc, testID)),
-		Description: adapterhelpers.PtrString("Test Rest API"),
+		Name:        adapters.PtrString(integration.ResourceName(integration.APIGateway, restAPISrc, testID)),
+		Description: adapters.PtrString("Test Rest API"),
 		Tags:        resourceTags(restAPISrc, testID),
 	})
 	if err != nil {
@@ -60,7 +60,7 @@ func createResource(ctx context.Context, logger *slog.Logger, client *apigateway
 	result, err := client.CreateResource(ctx, &apigateway.CreateResourceInput{
 		RestApiId: restAPIID,
 		ParentId:  parentID,
-		PathPart:  adapterhelpers.PtrString(cleanPath(path)),
+		PathPart:  adapters.PtrString(cleanPath(path)),
 	})
 	if err != nil {
 		return nil, err
@@ -97,8 +97,8 @@ func createMethod(ctx context.Context, logger *slog.Logger, client *apigateway.C
 	_, err = client.PutMethod(ctx, &apigateway.PutMethodInput{
 		RestApiId:         restAPIID,
 		ResourceId:        resourceID,
-		HttpMethod:        adapterhelpers.PtrString(method),
-		AuthorizationType: adapterhelpers.PtrString("NONE"),
+		HttpMethod:        adapters.PtrString(method),
+		AuthorizationType: adapters.PtrString("NONE"),
 	})
 	if err != nil {
 		return err
@@ -126,8 +126,8 @@ func createMethodResponse(ctx context.Context, logger *slog.Logger, client *apig
 	_, err = client.PutMethodResponse(ctx, &apigateway.PutMethodResponseInput{
 		RestApiId:  restAPIID,
 		ResourceId: resourceID,
-		HttpMethod: adapterhelpers.PtrString(method),
-		StatusCode: adapterhelpers.PtrString(statusCode),
+		HttpMethod: adapters.PtrString(method),
+		StatusCode: adapters.PtrString(statusCode),
 		ResponseModels: map[string]string{
 			"application/json": "Empty",
 		},
@@ -161,7 +161,7 @@ func createIntegration(ctx context.Context, logger *slog.Logger, client *apigate
 	_, err = client.PutIntegration(ctx, &apigateway.PutIntegrationInput{
 		RestApiId:  restAPIID,
 		ResourceId: resourceID,
-		HttpMethod: adapterhelpers.PtrString(method),
+		HttpMethod: adapters.PtrString(method),
 		Type:       "MOCK",
 	})
 	if err != nil {
@@ -188,7 +188,7 @@ func createAPIKey(ctx context.Context, logger *slog.Logger, client *apigateway.C
 	}
 
 	_, err = client.CreateApiKey(ctx, &apigateway.CreateApiKeyInput{
-		Name:    adapterhelpers.PtrString(integration.ResourceName(integration.APIGateway, apiKeySrc, testID)),
+		Name:    adapters.PtrString(integration.ResourceName(integration.APIGateway, apiKeySrc, testID)),
 		Tags:    resourceTags(apiKeySrc, testID),
 		Enabled: true,
 	})
@@ -218,10 +218,10 @@ func createAuthorizer(ctx context.Context, logger *slog.Logger, client *apigatew
 	identitySource := "method.request.header.Authorization"
 	_, err = client.CreateAuthorizer(ctx, &apigateway.CreateAuthorizerInput{
 		RestApiId:      &restAPIID,
-		Name:           adapterhelpers.PtrString(integration.ResourceName(integration.APIGateway, authorizerSrc, testID)),
+		Name:           adapters.PtrString(integration.ResourceName(integration.APIGateway, authorizerSrc, testID)),
 		Type:           types.AuthorizerTypeToken,
 		IdentitySource: &identitySource,
-		AuthorizerUri:  adapterhelpers.PtrString("arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:123456789012:function:auth-function/invocations"),
+		AuthorizerUri:  adapters.PtrString("arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:123456789012:function:auth-function/invocations"),
 	})
 	if err != nil {
 		return err
@@ -248,7 +248,7 @@ func createDeployment(ctx context.Context, logger *slog.Logger, client *apigatew
 
 	resp, err := client.CreateDeployment(ctx, &apigateway.CreateDeploymentInput{
 		RestApiId:   &restAPIID,
-		Description: adapterhelpers.PtrString("test-deployment"),
+		Description: adapters.PtrString("test-deployment"),
 	})
 	if err != nil {
 		return nil, err
@@ -307,8 +307,8 @@ func createModel(ctx context.Context, logger *slog.Logger, client *apigateway.Cl
 	_, err = client.CreateModel(ctx, &apigateway.CreateModelInput{
 		RestApiId:   &restAPIID,
 		Name:        &modelName,
-		Schema:      adapterhelpers.PtrString("{}"),
-		ContentType: adapterhelpers.PtrString("application/json"),
+		Schema:      adapters.PtrString("{}"),
+		ContentType: adapters.PtrString("application/json"),
 	})
 	if err != nil {
 		return err

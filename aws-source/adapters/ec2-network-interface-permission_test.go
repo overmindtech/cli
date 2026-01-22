@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -43,9 +42,9 @@ func TestNetworkInterfacePermissionOutputMapper(t *testing.T) {
 	output := &ec2.DescribeNetworkInterfacePermissionsOutput{
 		NetworkInterfacePermissions: []types.NetworkInterfacePermission{
 			{
-				NetworkInterfacePermissionId: adapterhelpers.PtrString("eni-perm-0b6211455242c105e"),
-				NetworkInterfaceId:           adapterhelpers.PtrString("eni-07f8f3d404036c833"),
-				AwsService:                   adapterhelpers.PtrString("routing.hyperplane.eu-west-2.amazonaws.com"),
+				NetworkInterfacePermissionId: PtrString("eni-perm-0b6211455242c105e"),
+				NetworkInterfaceId:           PtrString("eni-07f8f3d404036c833"),
+				AwsService:                   PtrString("routing.hyperplane.eu-west-2.amazonaws.com"),
 				Permission:                   types.InterfacePermissionTypeInstanceAttach,
 				PermissionState: &types.NetworkInterfacePermissionState{
 					State: types.NetworkInterfacePermissionStateCodeGranted,
@@ -74,7 +73,7 @@ func TestNetworkInterfacePermissionOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ec2-network-interface",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -92,7 +91,7 @@ func TestNewEC2NetworkInterfacePermissionAdapter(t *testing.T) {
 
 	adapter := NewEC2NetworkInterfacePermissionAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

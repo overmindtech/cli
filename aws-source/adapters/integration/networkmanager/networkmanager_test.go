@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/aws-source/adapters"
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 	"github.com/overmindtech/cli/discovery"
@@ -73,7 +72,7 @@ func NetworkManager(t *testing.T) {
 		t.Fatalf("failed to validate NetworkManager device adapter: %v", err)
 	}
 
-	globalScope := adapterhelpers.FormatScope(accountID, "")
+	globalScope := adapters.FormatScope(accountID, "")
 
 	t.Run("Global Network", func(t *testing.T) {
 		stream := discovery.NewRecordingQueryResultStream()

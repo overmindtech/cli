@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -28,7 +27,7 @@ func networkInterfacePermissionOutputMapper(_ context.Context, _ *ec2.Client, sc
 	for _, ni := range output.NetworkInterfacePermissions {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(ni)
+		attrs, err = ToAttributesWithExclude(ni)
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -67,20 +66,20 @@ func networkInterfacePermissionOutputMapper(_ context.Context, _ *ec2.Client, sc
 	return items, nil
 }
 
-func NewEC2NetworkInterfacePermissionAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeNetworkInterfacePermissionsInput, *ec2.DescribeNetworkInterfacePermissionsOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeNetworkInterfacePermissionsInput, *ec2.DescribeNetworkInterfacePermissionsOutput, *ec2.Client, *ec2.Options]{
+func NewEC2NetworkInterfacePermissionAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeNetworkInterfacePermissionsInput, *ec2.DescribeNetworkInterfacePermissionsOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeNetworkInterfacePermissionsInput, *ec2.DescribeNetworkInterfacePermissionsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-network-interface-permission",
 		AdapterMetadata: networkInterfacePermissionAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeNetworkInterfacePermissionsInput) (*ec2.DescribeNetworkInterfacePermissionsOutput, error) {
 			return client.DescribeNetworkInterfacePermissions(ctx, input)
 		},
 		InputMapperGet:  networkInterfacePermissionInputMapperGet,
 		InputMapperList: networkInterfacePermissionInputMapperList,
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeNetworkInterfacePermissionsInput) adapterhelpers.Paginator[*ec2.DescribeNetworkInterfacePermissionsOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeNetworkInterfacePermissionsInput) Paginator[*ec2.DescribeNetworkInterfacePermissionsOutput, *ec2.Options] {
 			return ec2.NewDescribeNetworkInterfacePermissionsPaginator(client, params)
 		},
 		OutputMapper: networkInterfacePermissionOutputMapper,

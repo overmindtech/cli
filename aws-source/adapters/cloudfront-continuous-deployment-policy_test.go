@@ -5,18 +5,17 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
 func TestContinuousDeploymentPolicyItemMapper(t *testing.T) {
 	item, err := continuousDeploymentPolicyItemMapper("", "test", &types.ContinuousDeploymentPolicy{
-		Id:               adapterhelpers.PtrString("test-id"),
-		LastModifiedTime: adapterhelpers.PtrTime(time.Now()),
+		Id:               PtrString("test-id"),
+		LastModifiedTime: PtrTime(time.Now()),
 		ContinuousDeploymentPolicyConfig: &types.ContinuousDeploymentPolicyConfig{
-			Enabled: adapterhelpers.PtrBool(true),
+			Enabled: PtrBool(true),
 			StagingDistributionDnsNames: &types.StagingDistributionDnsNames{
-				Quantity: adapterhelpers.PtrInt32(1),
+				Quantity: PtrInt32(1),
 				Items: []string{
 					"staging.test.com", // link
 				},
@@ -24,14 +23,14 @@ func TestContinuousDeploymentPolicyItemMapper(t *testing.T) {
 			TrafficConfig: &types.TrafficConfig{
 				Type: types.ContinuousDeploymentPolicyTypeSingleWeight,
 				SingleHeaderConfig: &types.ContinuousDeploymentSingleHeaderConfig{
-					Header: adapterhelpers.PtrString("test-header"),
-					Value:  adapterhelpers.PtrString("test-value"),
+					Header: PtrString("test-header"),
+					Value:  PtrString("test-value"),
 				},
 				SingleWeightConfig: &types.ContinuousDeploymentSingleWeightConfig{
-					Weight: adapterhelpers.PtrFloat32(1),
+					Weight: PtrFloat32(1),
 					SessionStickinessConfig: &types.SessionStickinessConfig{
-						IdleTTL:    adapterhelpers.PtrInt32(1),
-						MaximumTTL: adapterhelpers.PtrInt32(2),
+						IdleTTL:    PtrInt32(1),
+						MaximumTTL: PtrInt32(2),
 					},
 				},
 			},
@@ -46,7 +45,7 @@ func TestContinuousDeploymentPolicyItemMapper(t *testing.T) {
 		t.Error(err)
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "dns",
 			ExpectedMethod: sdp.QueryMethod_SEARCH,
@@ -63,7 +62,7 @@ func TestNewCloudfrontContinuousDeploymentPolicyAdapter(t *testing.T) {
 
 	adapter := NewCloudfrontContinuousDeploymentPolicyAdapter(client, account, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

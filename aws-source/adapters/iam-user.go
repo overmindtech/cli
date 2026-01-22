@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -79,7 +78,7 @@ func getUserGroups(ctx context.Context, client IAMClient, userName *string) ([]t
 }
 
 func userItemMapper(_ *string, scope string, awsItem *UserDetails) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem.User)
+	attributes, err := ToAttributesWithExclude(awsItem.User)
 
 	if err != nil {
 		return nil, err
@@ -123,7 +122,7 @@ func userListTagsFunc(ctx context.Context, u *UserDetails, client IAMClient) (ma
 		out, err := paginator.NextPage(ctx)
 
 		if err != nil {
-			return adapterhelpers.HandleTagsError(ctx, err), nil
+			return HandleTagsError(ctx, err), nil
 		}
 
 		for _, tag := range out.Tags {
@@ -136,8 +135,8 @@ func userListTagsFunc(ctx context.Context, u *UserDetails, client IAMClient) (ma
 	return tags, nil
 }
 
-func NewIAMUserAdapter(client IAMClient, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapterV2[*iam.ListUsersInput, *iam.ListUsersOutput, *UserDetails, IAMClient, *iam.Options] {
-	return &adapterhelpers.GetListAdapterV2[*iam.ListUsersInput, *iam.ListUsersOutput, *UserDetails, IAMClient, *iam.Options]{
+func NewIAMUserAdapter(client IAMClient, accountID string, cache sdpcache.Cache) *GetListAdapterV2[*iam.ListUsersInput, *iam.ListUsersOutput, *UserDetails, IAMClient, *iam.Options] {
+	return &GetListAdapterV2[*iam.ListUsersInput, *iam.ListUsersOutput, *UserDetails, IAMClient, *iam.Options]{
 		ItemType:      "iam-user",
 		Client:        client,
 		CacheDuration: 3 * time.Hour, // IAM has very low rate limits, we need to cache for a long time
@@ -148,7 +147,7 @@ func NewIAMUserAdapter(client IAMClient, accountID string, cache sdpcache.Cache)
 		InputMapperList: func(scope string) (*iam.ListUsersInput, error) {
 			return &iam.ListUsersInput{}, nil
 		},
-		ListFuncPaginatorBuilder: func(client IAMClient, input *iam.ListUsersInput) adapterhelpers.Paginator[*iam.ListUsersOutput, *iam.Options] {
+		ListFuncPaginatorBuilder: func(client IAMClient, input *iam.ListUsersInput) Paginator[*iam.ListUsersOutput, *iam.Options] {
 			return iam.NewListUsersPaginator(client, input)
 		},
 		ListExtractor: func(ctx context.Context, output *iam.ListUsersOutput, client IAMClient) ([]*UserDetails, error) {

@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -19,7 +18,7 @@ func connectPeerAssociationsOutputMapper(_ context.Context, _ *networkmanager.Cl
 	for _, a := range output.ConnectPeerAssociations {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(a)
+		attrs, err = ToAttributesWithExclude(a)
 		if err != nil {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
@@ -114,14 +113,14 @@ func connectPeerAssociationsOutputMapper(_ context.Context, _ *networkmanager.Cl
 	return items, nil
 }
 
-func NewNetworkManagerConnectPeerAssociationAdapter(client *networkmanager.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetConnectPeerAssociationsInput, *networkmanager.GetConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetConnectPeerAssociationsInput, *networkmanager.GetConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options]{
+func NewNetworkManagerConnectPeerAssociationAdapter(client *networkmanager.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*networkmanager.GetConnectPeerAssociationsInput, *networkmanager.GetConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options] {
+	return &DescribeOnlyAdapter[*networkmanager.GetConnectPeerAssociationsInput, *networkmanager.GetConnectPeerAssociationsOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-connect-peer-association",
 		AdapterMetadata: connectPeerAssociationAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.GetConnectPeerAssociationsInput) (*networkmanager.GetConnectPeerAssociationsOutput, error) {
 			return client.GetConnectPeerAssociations(ctx, input)
 		},
@@ -150,7 +149,7 @@ func NewNetworkManagerConnectPeerAssociationAdapter(client *networkmanager.Clien
 				Scope:       scope,
 			}
 		},
-		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetConnectPeerAssociationsInput) adapterhelpers.Paginator[*networkmanager.GetConnectPeerAssociationsOutput, *networkmanager.Options] {
+		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetConnectPeerAssociationsInput) Paginator[*networkmanager.GetConnectPeerAssociationsOutput, *networkmanager.Options] {
 			return networkmanager.NewGetConnectPeerAssociationsPaginator(client, params)
 		},
 		OutputMapper: connectPeerAssociationsOutputMapper,

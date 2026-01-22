@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 	"github.com/sourcegraph/conc/iter"
@@ -61,7 +60,7 @@ func ssmParameterInputMapperSearch(ctx context.Context, client ssmClient, scope,
 	// be applied *after* we have queried the data
 
 	// Parse the ARN
-	parsedArn, err := adapterhelpers.ParseARN(query)
+	parsedArn, err := ParseARN(query)
 	if err != nil {
 		return nil, fmt.Errorf("invalid ARN format: %w", err)
 	}
@@ -126,7 +125,7 @@ func ssmParameterInputMapperSearch(ctx context.Context, client ssmClient, scope,
 }
 
 func ssmParameterPostSearchFilter(ctx context.Context, query string, items []*sdp.Item) ([]*sdp.Item, error) {
-	arn, err := adapterhelpers.ParseARN(query)
+	arn, err := ParseARN(query)
 	if err != nil {
 		return nil, fmt.Errorf("invalid ARN format: %w", err)
 	}
@@ -149,7 +148,7 @@ func ssmParameterPostSearchFilter(ctx context.Context, query string, items []*sd
 
 func ssmParameterOutputMapper(ctx context.Context, client ssmClient, scope string, input *ssm.DescribeParametersInput, output *ssm.DescribeParametersOutput) ([]*sdp.Item, error) {
 	items, err := iter.MapErr(output.Parameters, func(parameter *types.ParameterMetadata) (*sdp.Item, error) {
-		attrs, err := adapterhelpers.ToAttributesWithExclude(parameter)
+		attrs, err := ToAttributesWithExclude(parameter)
 
 		if err != nil {
 			return nil, err
@@ -171,7 +170,7 @@ func ssmParameterOutputMapper(ctx context.Context, client ssmClient, scope strin
 		if err != nil {
 			// If we can't get the tags we don't want to do anything drastic
 			// since it's not a critical error
-			tags = adapterhelpers.HandleTagsError(ctx, err)
+			tags = HandleTagsError(ctx, err)
 		} else {
 			tags = make(map[string]string)
 			for _, tag := range tagsOut.TagList {
@@ -187,7 +186,7 @@ func ssmParameterOutputMapper(ctx context.Context, client ssmClient, scope strin
 		if parameter.Type != types.ParameterTypeSecureString {
 			request := &ssm.GetParameterInput{
 				Name:           parameter.Name,
-				WithDecryption: adapterhelpers.PtrBool(false), // let's be double sure we don't get any secrets
+				WithDecryption: PtrBool(false), // let's be double sure we don't get any secrets
 			}
 			paramResp, err := client.GetParameter(ctx, request)
 			if err != nil {
@@ -220,20 +219,20 @@ func ssmParameterOutputMapper(ctx context.Context, client ssmClient, scope strin
 	return items, err
 }
 
-func NewSSMParameterAdapter(client ssmClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ssm.DescribeParametersInput, *ssm.DescribeParametersOutput, ssmClient, *ssm.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ssm.DescribeParametersInput, *ssm.DescribeParametersOutput, ssmClient, *ssm.Options]{
+func NewSSMParameterAdapter(client ssmClient, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ssm.DescribeParametersInput, *ssm.DescribeParametersOutput, ssmClient, *ssm.Options] {
+	return &DescribeOnlyAdapter[*ssm.DescribeParametersInput, *ssm.DescribeParametersOutput, ssmClient, *ssm.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "ssm-parameter",
 		AdapterMetadata: ssmParameterAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		InputMapperGet: func(scope, query string) (*ssm.DescribeParametersInput, error) {
 			return &ssm.DescribeParametersInput{
 				ParameterFilters: []types.ParameterStringFilter{
 					{
-						Key:    adapterhelpers.PtrString("Name"),
-						Option: adapterhelpers.PtrString("Equals"),
+						Key:    PtrString("Name"),
+						Option: PtrString("Equals"),
 						Values: []string{query},
 					},
 				},
@@ -245,7 +244,7 @@ func NewSSMParameterAdapter(client ssmClient, accountID string, region string, c
 		OutputMapper:      ssmParameterOutputMapper,
 		InputMapperSearch: ssmParameterInputMapperSearch,
 		PostSearchFilter:  ssmParameterPostSearchFilter,
-		PaginatorBuilder: func(client ssmClient, params *ssm.DescribeParametersInput) adapterhelpers.Paginator[*ssm.DescribeParametersOutput, *ssm.Options] {
+		PaginatorBuilder: func(client ssmClient, params *ssm.DescribeParametersInput) Paginator[*ssm.DescribeParametersOutput, *ssm.Options] {
 			return ssm.NewDescribeParametersPaginator(client, params, func(dppo *ssm.DescribeParametersPaginatorOptions) {
 				dppo.Limit = 50
 			})

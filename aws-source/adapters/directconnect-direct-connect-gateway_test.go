@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -15,10 +14,10 @@ func TestDirectConnectGatewayOutputMapper_Health_OK(t *testing.T) {
 	output := &directconnect.DescribeDirectConnectGatewaysOutput{
 		DirectConnectGateways: []types.DirectConnectGateway{
 			{
-				AmazonSideAsn:             adapterhelpers.PtrInt64(64512),
-				DirectConnectGatewayId:    adapterhelpers.PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
-				OwnerAccount:              adapterhelpers.PtrString("123456789012"),
-				DirectConnectGatewayName:  adapterhelpers.PtrString("DxGateway2"),
+				AmazonSideAsn:             PtrInt64(64512),
+				DirectConnectGatewayId:    PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
+				OwnerAccount:              PtrString("123456789012"),
+				DirectConnectGatewayName:  PtrString("DxGateway2"),
 				DirectConnectGatewayState: types.DirectConnectGatewayStateAvailable,
 			},
 		},
@@ -48,12 +47,12 @@ func TestDirectConnectGatewayOutputMapper_Health_ERROR(t *testing.T) {
 	output := &directconnect.DescribeDirectConnectGatewaysOutput{
 		DirectConnectGateways: []types.DirectConnectGateway{
 			{
-				AmazonSideAsn:             adapterhelpers.PtrInt64(64512),
-				DirectConnectGatewayId:    adapterhelpers.PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
-				OwnerAccount:              adapterhelpers.PtrString("123456789012"),
-				DirectConnectGatewayName:  adapterhelpers.PtrString("DxGateway2"),
+				AmazonSideAsn:             PtrInt64(64512),
+				DirectConnectGatewayId:    PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
+				OwnerAccount:              PtrString("123456789012"),
+				DirectConnectGatewayName:  PtrString("DxGateway2"),
 				DirectConnectGatewayState: types.DirectConnectGatewayStateAvailable,
-				StateChangeError:          adapterhelpers.PtrString("error"),
+				StateChangeError:          PtrString("error"),
 			},
 		},
 	}
@@ -83,7 +82,7 @@ func TestNewDirectConnectGatewayAdapter(t *testing.T) {
 
 	adapter := NewDirectConnectGatewayAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -29,7 +28,7 @@ func apiGatewayMethodGetFunc(ctx context.Context, client apigatewayClient, scope
 		return nil, err
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(output, "tags")
+	attributes, err := ToAttributesWithExclude(output, "tags")
 	if err != nil {
 		return nil, err
 	}
@@ -125,14 +124,14 @@ func apiGatewayMethodGetFunc(ctx context.Context, client apigatewayClient, scope
 	return item, nil
 }
 
-func NewAPIGatewayMethodAdapter(client apigatewayClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*apigateway.GetMethodInput, *apigateway.GetMethodOutput, *apigateway.GetMethodInput, *apigateway.GetMethodOutput, apigatewayClient, *apigateway.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*apigateway.GetMethodInput, *apigateway.GetMethodOutput, *apigateway.GetMethodInput, *apigateway.GetMethodOutput, apigatewayClient, *apigateway.Options]{
+func NewAPIGatewayMethodAdapter(client apigatewayClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*apigateway.GetMethodInput, *apigateway.GetMethodOutput, *apigateway.GetMethodInput, *apigateway.GetMethodOutput, apigatewayClient, *apigateway.Options] {
+	return &AlwaysGetAdapter[*apigateway.GetMethodInput, *apigateway.GetMethodOutput, *apigateway.GetMethodInput, *apigateway.GetMethodOutput, apigatewayClient, *apigateway.Options]{
 		ItemType:        "apigateway-method",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: apiGatewayMethodAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc:         apiGatewayMethodGetFunc,
 		GetInputMapper: func(scope, query string) *apigateway.GetMethodInput {
 			// We are using a custom id of {rest-api-id}/{resource-id}/{http-method} e.g.

@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -25,7 +24,7 @@ func addonGetFunc(ctx context.Context, client EKSClient, scope string, input *ek
 		}
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(out.Addon)
+	attributes, err := ToAttributesWithExclude(out.Addon)
 
 	if err != nil {
 		return nil, err
@@ -45,14 +44,14 @@ func addonGetFunc(ctx context.Context, client EKSClient, scope string, input *ek
 	return &item, nil
 }
 
-func NewEKSAddonAdapter(client EKSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*eks.ListAddonsInput, *eks.ListAddonsOutput, *eks.DescribeAddonInput, *eks.DescribeAddonOutput, EKSClient, *eks.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*eks.ListAddonsInput, *eks.ListAddonsOutput, *eks.DescribeAddonInput, *eks.DescribeAddonOutput, EKSClient, *eks.Options]{
+func NewEKSAddonAdapter(client EKSClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*eks.ListAddonsInput, *eks.ListAddonsOutput, *eks.DescribeAddonInput, *eks.DescribeAddonOutput, EKSClient, *eks.Options] {
+	return &AlwaysGetAdapter[*eks.ListAddonsInput, *eks.ListAddonsOutput, *eks.DescribeAddonInput, *eks.DescribeAddonOutput, EKSClient, *eks.Options]{
 		ItemType:        "eks-addon",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: eksAddonAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DisableList:     true,
 		SearchInputMapper: func(scope, query string) (*eks.ListAddonsInput, error) {
 			return &eks.ListAddonsInput{
@@ -77,7 +76,7 @@ func NewEKSAddonAdapter(client EKSClient, accountID string, region string, cache
 				ClusterName: &clusterName,
 			}
 		},
-		ListFuncPaginatorBuilder: func(client EKSClient, input *eks.ListAddonsInput) adapterhelpers.Paginator[*eks.ListAddonsOutput, *eks.Options] {
+		ListFuncPaginatorBuilder: func(client EKSClient, input *eks.ListAddonsInput) Paginator[*eks.ListAddonsOutput, *eks.Options] {
 			return eks.NewListAddonsPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *eks.ListAddonsOutput, input *eks.ListAddonsInput) ([]*eks.DescribeAddonInput, error) {

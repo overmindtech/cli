@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -32,7 +31,7 @@ func kmsKeyGetFunc(ctx context.Context, client kmsClient, scope string, input *k
 		}
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(output.KeyMetadata)
+	attributes, err := ToAttributesWithExclude(output.KeyMetadata)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +43,7 @@ func kmsKeyGetFunc(ctx context.Context, client kmsClient, scope string, input *k
 	var resourceTags map[string]string
 	resourceTags, err = kmsTags(ctx, client, *input.KeyId)
 	if err != nil {
-		resourceTags = adapterhelpers.HandleTagsError(ctx, err)
+		resourceTags = HandleTagsError(ctx, err)
 	}
 
 	item := &sdp.Item{
@@ -121,21 +120,21 @@ func kmsKeyGetFunc(ctx context.Context, client kmsClient, scope string, input *k
 	return item, nil
 }
 
-func NewKMSKeyAdapter(client kmsClient, accountID, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*kms.ListKeysInput, *kms.ListKeysOutput, *kms.DescribeKeyInput, *kms.DescribeKeyOutput, kmsClient, *kms.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*kms.ListKeysInput, *kms.ListKeysOutput, *kms.DescribeKeyInput, *kms.DescribeKeyOutput, kmsClient, *kms.Options]{
+func NewKMSKeyAdapter(client kmsClient, accountID, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*kms.ListKeysInput, *kms.ListKeysOutput, *kms.DescribeKeyInput, *kms.DescribeKeyOutput, kmsClient, *kms.Options] {
+	return &AlwaysGetAdapter[*kms.ListKeysInput, *kms.ListKeysOutput, *kms.DescribeKeyInput, *kms.DescribeKeyOutput, kmsClient, *kms.Options]{
 		ItemType:        "kms-key",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ListInput:       &kms.ListKeysInput{},
 		AdapterMetadata: kmsKeyAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetInputMapper: func(scope, query string) *kms.DescribeKeyInput {
 			return &kms.DescribeKeyInput{
 				KeyId: &query,
 			}
 		},
-		ListFuncPaginatorBuilder: func(client kmsClient, input *kms.ListKeysInput) adapterhelpers.Paginator[*kms.ListKeysOutput, *kms.Options] {
+		ListFuncPaginatorBuilder: func(client kmsClient, input *kms.ListKeysInput) Paginator[*kms.ListKeysOutput, *kms.Options] {
 			return kms.NewListKeysPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *kms.ListKeysOutput, _ *kms.ListKeysInput) ([]*kms.DescribeKeyInput, error) {

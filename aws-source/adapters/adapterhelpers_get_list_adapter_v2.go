@@ -1,4 +1,4 @@
-package adapterhelpers
+package adapters
 
 import (
 	"context"
@@ -24,7 +24,7 @@ type GetListAdapterV2[ListInput InputType, ListOutput OutputType, AWSItem AWSIte
 	AdapterMetadata        *sdp.AdapterMetadata
 
 	CacheDuration time.Duration  // How long to cache items for
-	SDPCache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+	cache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 
 	// Disables List(), meaning all calls will return empty results. This does
 	// not affect Search()
@@ -81,13 +81,13 @@ var (
 )
 
 func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]) Cache() sdpcache.Cache {
-	if s.SDPCache == nil {
+	if s.cache == nil {
 		noOpCacheV2Once.Do(func() {
 			noOpCacheV2 = sdpcache.NewNoOpCache()
 		})
 		return noOpCacheV2
 	}
-	return s.SDPCache
+	return s.cache
 }
 
 // Validate Checks that the adapter has been set up correctly

@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -31,7 +30,7 @@ func getSubsFunc(ctx context.Context, client subsCli, scope string, input *sns.G
 		}
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(output.Attributes)
+	attributes, err := ToAttributesWithExclude(output.Attributes)
 	if err != nil {
 		return nil, err
 	}
@@ -65,13 +64,13 @@ func getSubsFunc(ctx context.Context, client subsCli, scope string, input *sns.G
 	}
 
 	if subsRoleArn, err := attributes.Get("subscriptionRoleArn"); err == nil {
-		if arn, err := adapterhelpers.ParseARN(fmt.Sprint(subsRoleArn)); err == nil {
+		if arn, err := ParseARN(fmt.Sprint(subsRoleArn)); err == nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   "iam-role",
 					Method: sdp.QueryMethod_GET,
 					Query:  arn.ResourceID(),
-					Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+					Scope:  FormatScope(arn.AccountID, arn.Region),
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					// If role is not healthy, subscription will not work
@@ -86,21 +85,21 @@ func getSubsFunc(ctx context.Context, client subsCli, scope string, input *sns.G
 	return item, nil
 }
 
-func NewSNSSubscriptionAdapter(client subsCli, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*sns.ListSubscriptionsInput, *sns.ListSubscriptionsOutput, *sns.GetSubscriptionAttributesInput, *sns.GetSubscriptionAttributesOutput, subsCli, *sns.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*sns.ListSubscriptionsInput, *sns.ListSubscriptionsOutput, *sns.GetSubscriptionAttributesInput, *sns.GetSubscriptionAttributesOutput, subsCli, *sns.Options]{
+func NewSNSSubscriptionAdapter(client subsCli, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*sns.ListSubscriptionsInput, *sns.ListSubscriptionsOutput, *sns.GetSubscriptionAttributesInput, *sns.GetSubscriptionAttributesOutput, subsCli, *sns.Options] {
+	return &AlwaysGetAdapter[*sns.ListSubscriptionsInput, *sns.ListSubscriptionsOutput, *sns.GetSubscriptionAttributesInput, *sns.GetSubscriptionAttributesOutput, subsCli, *sns.Options]{
 		ItemType:        "sns-subscription",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ListInput:       &sns.ListSubscriptionsInput{},
 		AdapterMetadata: snsSubscriptionAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetInputMapper: func(scope, query string) *sns.GetSubscriptionAttributesInput {
 			return &sns.GetSubscriptionAttributesInput{
 				SubscriptionArn: &query,
 			}
 		},
-		ListFuncPaginatorBuilder: func(client subsCli, input *sns.ListSubscriptionsInput) adapterhelpers.Paginator[*sns.ListSubscriptionsOutput, *sns.Options] {
+		ListFuncPaginatorBuilder: func(client subsCli, input *sns.ListSubscriptionsInput) Paginator[*sns.ListSubscriptionsOutput, *sns.Options] {
 			return sns.NewListSubscriptionsPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *sns.ListSubscriptionsOutput, _ *sns.ListSubscriptionsInput) ([]*sns.GetSubscriptionAttributesInput, error) {

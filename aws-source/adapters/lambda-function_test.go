@@ -7,23 +7,22 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
 var testFuncConfig = &types.FunctionConfiguration{
-	FunctionName: adapterhelpers.PtrString("aws-controltower-NotificationForwarder"),
-	FunctionArn:  adapterhelpers.PtrString("arn:aws:lambda:eu-west-2:052392120703:function:aws-controltower-NotificationForwarder"),
+	FunctionName: PtrString("aws-controltower-NotificationForwarder"),
+	FunctionArn:  PtrString("arn:aws:lambda:eu-west-2:052392120703:function:aws-controltower-NotificationForwarder"),
 	Runtime:      types.RuntimePython39,
-	Role:         adapterhelpers.PtrString("arn:aws:iam::052392120703:role/aws-controltower-ForwardSnsNotificationRole"), // link
-	Handler:      adapterhelpers.PtrString("index.lambda_handler"),
+	Role:         PtrString("arn:aws:iam::052392120703:role/aws-controltower-ForwardSnsNotificationRole"), // link
+	Handler:      PtrString("index.lambda_handler"),
 	CodeSize:     473,
-	Description:  adapterhelpers.PtrString("SNS message forwarding function for aggregating account notifications."),
-	Timeout:      adapterhelpers.PtrInt32(60),
-	MemorySize:   adapterhelpers.PtrInt32(128),
-	LastModified: adapterhelpers.PtrString("2022-12-13T15:22:48.157+0000"),
-	CodeSha256:   adapterhelpers.PtrString("3zU7iYiZektHRaog6qOFvv34ggadB56rd/UMjnYms6A="),
-	Version:      adapterhelpers.PtrString("$LATEST"),
+	Description:  PtrString("SNS message forwarding function for aggregating account notifications."),
+	Timeout:      PtrInt32(60),
+	MemorySize:   PtrInt32(128),
+	LastModified: PtrString("2022-12-13T15:22:48.157+0000"),
+	CodeSha256:   PtrString("3zU7iYiZektHRaog6qOFvv34ggadB56rd/UMjnYms6A="),
+	Version:      PtrString("$LATEST"),
 	Environment: &types.EnvironmentResponse{
 		Variables: map[string]string{
 			"sns_arn": "arn:aws:sns:eu-west-2:347195421325:aws-controltower-AggregateSecurityNotifications",
@@ -32,7 +31,7 @@ var testFuncConfig = &types.FunctionConfiguration{
 	TracingConfig: &types.TracingConfigResponse{
 		Mode: types.TracingModePassThrough,
 	},
-	RevisionId:       adapterhelpers.PtrString("b00dd2e6-eec3-48b0-abf1-f84406e00a3e"),
+	RevisionId:       PtrString("b00dd2e6-eec3-48b0-abf1-f84406e00a3e"),
 	State:            types.StateActive,
 	LastUpdateStatus: types.LastUpdateStatusSuccessful,
 	PackageType:      types.PackageTypeZip,
@@ -40,47 +39,47 @@ var testFuncConfig = &types.FunctionConfiguration{
 		types.ArchitectureX8664,
 	},
 	EphemeralStorage: &types.EphemeralStorage{
-		Size: adapterhelpers.PtrInt32(512),
+		Size: PtrInt32(512),
 	},
 	DeadLetterConfig: &types.DeadLetterConfig{
-		TargetArn: adapterhelpers.PtrString("arn:aws:sns:us-east-2:444455556666:MyTopic"), // links
+		TargetArn: PtrString("arn:aws:sns:us-east-2:444455556666:MyTopic"), // links
 	},
 	FileSystemConfigs: []types.FileSystemConfig{
 		{
-			Arn:            adapterhelpers.PtrString("arn:aws:service:region:account:type/id"), // links
-			LocalMountPath: adapterhelpers.PtrString("/config"),
+			Arn:            PtrString("arn:aws:service:region:account:type/id"), // links
+			LocalMountPath: PtrString("/config"),
 		},
 	},
 	ImageConfigResponse: &types.ImageConfigResponse{
 		Error: &types.ImageConfigError{
-			ErrorCode: adapterhelpers.PtrString("500"),
-			Message:   adapterhelpers.PtrString("borked"),
+			ErrorCode: PtrString("500"),
+			Message:   PtrString("borked"),
 		},
 		ImageConfig: &types.ImageConfig{
 			Command:          []string{"echo", "foo"},
 			EntryPoint:       []string{"/bin"},
-			WorkingDirectory: adapterhelpers.PtrString("/"),
+			WorkingDirectory: PtrString("/"),
 		},
 	},
-	KMSKeyArn:                  adapterhelpers.PtrString("arn:aws:service:region:account:type/id"), // link
-	LastUpdateStatusReason:     adapterhelpers.PtrString("reason"),
+	KMSKeyArn:                  PtrString("arn:aws:service:region:account:type/id"), // link
+	LastUpdateStatusReason:     PtrString("reason"),
 	LastUpdateStatusReasonCode: types.LastUpdateStatusReasonCodeDisabledKMSKey,
 	Layers: []types.Layer{
 		{
-			Arn:                      adapterhelpers.PtrString("arn:aws:service:region:account:layer:name:version"), // link
+			Arn:                      PtrString("arn:aws:service:region:account:layer:name:version"), // link
 			CodeSize:                 128,
-			SigningJobArn:            adapterhelpers.PtrString("arn:aws:service:region:account:type/id"), // link
-			SigningProfileVersionArn: adapterhelpers.PtrString("arn:aws:service:region:account:type/id"), // link
+			SigningJobArn:            PtrString("arn:aws:service:region:account:type/id"), // link
+			SigningProfileVersionArn: PtrString("arn:aws:service:region:account:type/id"), // link
 		},
 	},
-	MasterArn:                adapterhelpers.PtrString("arn:aws:service:region:account:type/id"), // link
-	SigningJobArn:            adapterhelpers.PtrString("arn:aws:service:region:account:type/id"), // link
-	SigningProfileVersionArn: adapterhelpers.PtrString("arn:aws:service:region:account:type/id"), // link
+	MasterArn:                PtrString("arn:aws:service:region:account:type/id"), // link
+	SigningJobArn:            PtrString("arn:aws:service:region:account:type/id"), // link
+	SigningProfileVersionArn: PtrString("arn:aws:service:region:account:type/id"), // link
 	SnapStart: &types.SnapStartResponse{
 		ApplyOn:            types.SnapStartApplyOnPublishedVersions,
 		OptimizationStatus: types.SnapStartOptimizationStatusOn,
 	},
-	StateReason:     adapterhelpers.PtrString("reason"),
+	StateReason:     PtrString("reason"),
 	StateReasonCode: types.StateReasonCodeCreating,
 	VpcConfig: &types.VpcConfigResponse{
 		SecurityGroupIds: []string{
@@ -89,15 +88,15 @@ var testFuncConfig = &types.FunctionConfiguration{
 		SubnetIds: []string{
 			"id", // link
 		},
-		VpcId: adapterhelpers.PtrString("id"), // link
+		VpcId: PtrString("id"), // link
 	},
 }
 
 var testFuncCode = &types.FunctionCodeLocation{
-	RepositoryType:   adapterhelpers.PtrString("S3"),
-	Location:         adapterhelpers.PtrString("https://awslambda-eu-west-2-tasks.s3.eu-west-2.amazonaws.com/snapshots/052392120703/aws-controltower-NotificationForwarder-bcea303b-7721-4cf0-b8db-7a0e6dca76dd?versionId=3Lk06tjGEoY451GYYupIohtTV96CkVKC&X-Amz-Security-Token=IQoJb3JpZ2l&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Etc=etcetcetc"), // link
-	ImageUri:         adapterhelpers.PtrString("https://foo"),                                                                                                                                                                                                                                                                                      // link
-	ResolvedImageUri: adapterhelpers.PtrString("https://foo"),                                                                                                                                                                                                                                                                                      // link
+	RepositoryType:   PtrString("S3"),
+	Location:         PtrString("https://awslambda-eu-west-2-tasks.s3.eu-west-2.amazonaws.com/snapshots/052392120703/aws-controltower-NotificationForwarder-bcea303b-7721-4cf0-b8db-7a0e6dca76dd?versionId=3Lk06tjGEoY451GYYupIohtTV96CkVKC&X-Amz-Security-Token=IQoJb3JpZ2l&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Etc=etcetcetc"), // link
+	ImageUri:         PtrString("https://foo"),                                                                                                                                                                                                                                                                                      // link
+	ResolvedImageUri: PtrString("https://foo"),                                                                                                                                                                                                                                                                                      // link
 }
 
 func (t *TestLambdaClient) GetFunction(ctx context.Context, params *lambda.GetFunctionInput, optFns ...func(*lambda.Options)) (*lambda.GetFunctionOutput, error) {
@@ -118,16 +117,16 @@ func (t *TestLambdaClient) ListFunctionEventInvokeConfigs(context.Context, *lamb
 			{
 				DestinationConfig: &types.DestinationConfig{
 					OnFailure: &types.OnFailure{
-						Destination: adapterhelpers.PtrString("arn:aws:events:region:account:event-bus/event-bus-name"), // link
+						Destination: PtrString("arn:aws:events:region:account:event-bus/event-bus-name"), // link
 					},
 					OnSuccess: &types.OnSuccess{
-						Destination: adapterhelpers.PtrString("arn:aws:events:region:account:event-bus/event-bus-name"), // link
+						Destination: PtrString("arn:aws:events:region:account:event-bus/event-bus-name"), // link
 					},
 				},
-				FunctionArn:              adapterhelpers.PtrString("arn:aws:service:region:account:type/id"),
-				LastModified:             adapterhelpers.PtrTime(time.Now()),
-				MaximumEventAgeInSeconds: adapterhelpers.PtrInt32(10),
-				MaximumRetryAttempts:     adapterhelpers.PtrInt32(20),
+				FunctionArn:              PtrString("arn:aws:service:region:account:type/id"),
+				LastModified:             PtrTime(time.Now()),
+				MaximumEventAgeInSeconds: PtrInt32(10),
+				MaximumRetryAttempts:     PtrInt32(20),
 			},
 		},
 	}, nil
@@ -138,17 +137,17 @@ func (t *TestLambdaClient) ListFunctionUrlConfigs(context.Context, *lambda.ListF
 		FunctionUrlConfigs: []types.FunctionUrlConfig{
 			{
 				AuthType:         types.FunctionUrlAuthTypeNone,
-				CreationTime:     adapterhelpers.PtrString("recently"),
-				FunctionArn:      adapterhelpers.PtrString("arn:aws:service:region:account:type/id"),
-				FunctionUrl:      adapterhelpers.PtrString("https://bar"), // link
-				LastModifiedTime: adapterhelpers.PtrString("recently"),
+				CreationTime:     PtrString("recently"),
+				FunctionArn:      PtrString("arn:aws:service:region:account:type/id"),
+				FunctionUrl:      PtrString("https://bar"), // link
+				LastModifiedTime: PtrString("recently"),
 				Cors: &types.Cors{
-					AllowCredentials: adapterhelpers.PtrBool(true),
+					AllowCredentials: PtrBool(true),
 					AllowHeaders:     []string{"X-Forwarded-For"},
 					AllowMethods:     []string{"GET"},
 					AllowOrigins:     []string{"https://bar"},
 					ExposeHeaders:    []string{"X-Authentication"},
-					MaxAge:           adapterhelpers.PtrInt32(10),
+					MaxAge:           PtrInt32(10),
 				},
 			},
 		},
@@ -180,7 +179,7 @@ func TestFunctionGetFunc(t *testing.T) {
 		t.Error(err)
 	}
 
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "http",
 			ExpectedMethod: sdp.QueryMethod_SEARCH,
@@ -378,7 +377,7 @@ func TestNewLambdaFunctionAdapter(t *testing.T) {
 
 	adapter := NewLambdaFunctionAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

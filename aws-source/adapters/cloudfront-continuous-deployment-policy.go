@@ -6,13 +6,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
 
 func continuousDeploymentPolicyItemMapper(_, scope string, awsItem *types.ContinuousDeploymentPolicy) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 
 	if err != nil {
 		return nil, err
@@ -48,15 +47,15 @@ func continuousDeploymentPolicyItemMapper(_, scope string, awsItem *types.Contin
 
 // Terraform is not yet supported for this: https://github.com/hashicorp/terraform-provider-aws/issues/28920
 
-func NewCloudfrontContinuousDeploymentPolicyAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.ContinuousDeploymentPolicy, *cloudfront.Client, *cloudfront.Options] {
-	return &adapterhelpers.GetListAdapter[*types.ContinuousDeploymentPolicy, *cloudfront.Client, *cloudfront.Options]{
+func NewCloudfrontContinuousDeploymentPolicyAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *GetListAdapter[*types.ContinuousDeploymentPolicy, *cloudfront.Client, *cloudfront.Options] {
+	return &GetListAdapter[*types.ContinuousDeploymentPolicy, *cloudfront.Client, *cloudfront.Options]{
 		ItemType:               "cloudfront-continuous-deployment-policy",
 		Client:                 client,
 		AccountID:              accountID,
 		Region:                 "",   // Cloudfront resources aren't tied to a region
 		SupportGlobalResources: true, // Some policies are global
 		AdapterMetadata:        continuousDeploymentPolicyAdapterMetadata,
-		SDPCache:               cache,
+		cache:               cache,
 		GetFunc: func(ctx context.Context, client *cloudfront.Client, scope, query string) (*types.ContinuousDeploymentPolicy, error) {
 			out, err := client.GetContinuousDeploymentPolicy(ctx, &cloudfront.GetContinuousDeploymentPolicyInput{
 				Id: &query,

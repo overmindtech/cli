@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -27,12 +26,12 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 		}
 
 		// Parse the ARNs
-		fromArn, err := adapterhelpers.ParseARN(*relationship.From)
+		fromArn, err := ParseARN(*relationship.From)
 		if err != nil {
 			return nil, err
 		}
 
-		toArn, err := adapterhelpers.ParseARN(*relationship.To)
+		toArn, err := ParseARN(*relationship.To)
 		if err != nil {
 			return nil, err
 		}
@@ -243,14 +242,14 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 	return items, nil
 }
 
-func NewNetworkManagerNetworkResourceRelationshipsAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetNetworkResourceRelationshipsInput, *networkmanager.GetNetworkResourceRelationshipsOutput, *networkmanager.Client, *networkmanager.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*networkmanager.GetNetworkResourceRelationshipsInput, *networkmanager.GetNetworkResourceRelationshipsOutput, *networkmanager.Client, *networkmanager.Options]{
+func NewNetworkManagerNetworkResourceRelationshipsAdapter(client *networkmanager.Client, accountID, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*networkmanager.GetNetworkResourceRelationshipsInput, *networkmanager.GetNetworkResourceRelationshipsOutput, *networkmanager.Client, *networkmanager.Options] {
+	return &DescribeOnlyAdapter[*networkmanager.GetNetworkResourceRelationshipsInput, *networkmanager.GetNetworkResourceRelationshipsOutput, *networkmanager.Client, *networkmanager.Options]{
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ItemType:        "networkmanager-network-resource-relationship",
 		AdapterMetadata: networkResourceRelationshipAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		OutputMapper:    networkResourceRelationshipOutputMapper,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.GetNetworkResourceRelationshipsInput) (*networkmanager.GetNetworkResourceRelationshipsOutput, error) {
 			return client.GetNetworkResourceRelationships(ctx, input)
@@ -265,7 +264,7 @@ func NewNetworkManagerNetworkResourceRelationshipsAdapter(client *networkmanager
 				Scope:       scope,
 			}
 		},
-		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetNetworkResourceRelationshipsInput) adapterhelpers.Paginator[*networkmanager.GetNetworkResourceRelationshipsOutput, *networkmanager.Options] {
+		PaginatorBuilder: func(client *networkmanager.Client, params *networkmanager.GetNetworkResourceRelationshipsInput) Paginator[*networkmanager.GetNetworkResourceRelationshipsOutput, *networkmanager.Options] {
 			return networkmanager.NewGetNetworkResourceRelationshipsPaginator(client, params)
 		},
 		InputMapperSearch: func(ctx context.Context, client *networkmanager.Client, scope, query string) (*networkmanager.GetNetworkResourceRelationshipsInput, error) {

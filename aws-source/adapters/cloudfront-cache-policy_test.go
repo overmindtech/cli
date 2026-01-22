@@ -7,33 +7,32 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 var testCachePolicy = &types.CachePolicy{
-	Id:               adapterhelpers.PtrString("test-id"),
-	LastModifiedTime: adapterhelpers.PtrTime(time.Now()),
+	Id:               PtrString("test-id"),
+	LastModifiedTime: PtrTime(time.Now()),
 	CachePolicyConfig: &types.CachePolicyConfig{
-		MinTTL:     adapterhelpers.PtrInt64(1),
-		Name:       adapterhelpers.PtrString("test-name"),
-		Comment:    adapterhelpers.PtrString("test-comment"),
-		DefaultTTL: adapterhelpers.PtrInt64(1),
-		MaxTTL:     adapterhelpers.PtrInt64(1),
+		MinTTL:     PtrInt64(1),
+		Name:       PtrString("test-name"),
+		Comment:    PtrString("test-comment"),
+		DefaultTTL: PtrInt64(1),
+		MaxTTL:     PtrInt64(1),
 		ParametersInCacheKeyAndForwardedToOrigin: &types.ParametersInCacheKeyAndForwardedToOrigin{
 			CookiesConfig: &types.CachePolicyCookiesConfig{
 				CookieBehavior: types.CachePolicyCookieBehaviorAll,
 				Cookies: &types.CookieNames{
-					Quantity: adapterhelpers.PtrInt32(1),
+					Quantity: PtrInt32(1),
 					Items: []string{
 						"test-cookie",
 					},
 				},
 			},
-			EnableAcceptEncodingGzip: adapterhelpers.PtrBool(true),
+			EnableAcceptEncodingGzip: PtrBool(true),
 			HeadersConfig: &types.CachePolicyHeadersConfig{
 				HeaderBehavior: types.CachePolicyHeaderBehaviorWhitelist,
 				Headers: &types.Headers{
-					Quantity: adapterhelpers.PtrInt32(1),
+					Quantity: PtrInt32(1),
 					Items: []string{
 						"test-header",
 					},
@@ -42,13 +41,13 @@ var testCachePolicy = &types.CachePolicy{
 			QueryStringsConfig: &types.CachePolicyQueryStringsConfig{
 				QueryStringBehavior: types.CachePolicyQueryStringBehaviorWhitelist,
 				QueryStrings: &types.QueryStringNames{
-					Quantity: adapterhelpers.PtrInt32(1),
+					Quantity: PtrInt32(1),
 					Items: []string{
 						"test-query-string",
 					},
 				},
 			},
-			EnableAcceptEncodingBrotli: adapterhelpers.PtrBool(true),
+			EnableAcceptEncodingBrotli: PtrBool(true),
 		},
 	},
 }
@@ -89,7 +88,7 @@ func TestNewCloudfrontCachePolicyAdapter(t *testing.T) {
 
 	adapter := NewCloudfrontCachePolicyAdapter(client, account, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

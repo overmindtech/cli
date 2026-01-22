@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -185,7 +184,7 @@ type CloudwatchInstanceMetricAdapter struct {
 	AccountID     string
 	Region        string
 	CacheDuration time.Duration  // How long to cache items for
-	SDPCache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+	cache         sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 }
 
 // Default cache duration for metrics - matches the 15-minute period over which metrics are averaged
@@ -204,13 +203,13 @@ var (
 )
 
 func (a *CloudwatchInstanceMetricAdapter) Cache() sdpcache.Cache {
-	if a.SDPCache == nil {
+	if a.cache == nil {
 		noOpCacheCloudwatchOnce.Do(func() {
 			noOpCacheCloudwatch = sdpcache.NewNoOpCache()
 		})
 		return noOpCacheCloudwatch
 	}
-	return a.SDPCache
+	return a.cache
 }
 
 // Type returns the type of items this adapter returns
@@ -230,15 +229,15 @@ func (a *CloudwatchInstanceMetricAdapter) Metadata() *sdp.AdapterMetadata {
 
 // Scopes returns the scopes this adapter can query
 func (a *CloudwatchInstanceMetricAdapter) Scopes() []string {
-	return []string{adapterhelpers.FormatScope(a.AccountID, a.Region)}
+	return []string{FormatScope(a.AccountID, a.Region)}
 }
 
 // Get fetches CloudWatch metrics for an EC2 instance by instance ID
 func (a *CloudwatchInstanceMetricAdapter) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
-	if scope != adapterhelpers.FormatScope(a.AccountID, a.Region) {
+	if scope != FormatScope(a.AccountID, a.Region) {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: fmt.Sprintf("scope %s does not match adapter scope %s", scope, adapterhelpers.FormatScope(a.AccountID, a.Region)),
+			ErrorString: fmt.Sprintf("scope %s does not match adapter scope %s", scope, FormatScope(a.AccountID, a.Region)),
 			Scope:       scope,
 		}
 	}
@@ -358,7 +357,7 @@ func NewCloudwatchInstanceMetricAdapter(client *cloudwatch.Client, accountID str
 		Client:    client,
 		AccountID: accountID,
 		Region:    region,
-		SDPCache:  cache,
+		cache:  cache,
 	}
 }
 

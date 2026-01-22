@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -24,10 +23,10 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 		if err == nil {
 			tags = rdsTagsToMap(tagsOut.TagList)
 		} else {
-			tags = adapterhelpers.HandleTagsError(ctx, err)
+			tags = HandleTagsError(ctx, err)
 		}
 
-		attributes, err := adapterhelpers.ToAttributesWithExclude(cluster)
+		attributes, err := ToAttributesWithExclude(cluster)
 
 		if err != nil {
 			return nil, err
@@ -41,7 +40,7 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 			Tags:            tags,
 		}
 
-		var a *adapterhelpers.ARN
+		var a *ARN
 
 		if cluster.DBSubnetGroup != nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -78,13 +77,13 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 		}
 
 		for _, replica := range cluster.ReadReplicaIdentifiers {
-			if a, err = adapterhelpers.ParseARN(replica); err == nil {
+			if a, err = ParseARN(replica); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "rds-db-cluster",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  replica,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Tightly coupled
@@ -150,13 +149,13 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 		}
 
 		if cluster.KmsKeyId != nil {
-			if a, err = adapterhelpers.ParseARN(*cluster.KmsKeyId); err == nil {
+			if a, err = ParseARN(*cluster.KmsKeyId); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "kms-key",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *cluster.KmsKeyId,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changes to the KMS key can affect the cluster
@@ -222,13 +221,13 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 
 		if cluster.MasterUserSecret != nil {
 			if cluster.MasterUserSecret.KmsKeyId != nil {
-				if a, err = adapterhelpers.ParseARN(*cluster.MasterUserSecret.KmsKeyId); err == nil {
+				if a, err = ParseARN(*cluster.MasterUserSecret.KmsKeyId); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "kms-key",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *cluster.MasterUserSecret.KmsKeyId,
-							Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+							Scope:  FormatScope(a.AccountID, a.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Changes to the KMS key can affect the cluster
@@ -241,13 +240,13 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 			}
 
 			if cluster.MasterUserSecret.SecretArn != nil {
-				if a, err = adapterhelpers.ParseARN(*cluster.MasterUserSecret.SecretArn); err == nil {
+				if a, err = ParseARN(*cluster.MasterUserSecret.SecretArn); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "secretsmanager-secret",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *cluster.MasterUserSecret.SecretArn,
-							Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+							Scope:  FormatScope(a.AccountID, a.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Changes to the secret can affect the cluster
@@ -261,13 +260,13 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 		}
 
 		if cluster.MonitoringRoleArn != nil {
-			if a, err = adapterhelpers.ParseARN(*cluster.MonitoringRoleArn); err == nil {
+			if a, err = ParseARN(*cluster.MonitoringRoleArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "iam-role",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *cluster.MonitoringRoleArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changes to the IAM role can affect the cluster
@@ -281,13 +280,13 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 
 		if cluster.PerformanceInsightsKMSKeyId != nil {
 			// This is an ARN
-			if a, err = adapterhelpers.ParseARN(*cluster.PerformanceInsightsKMSKeyId); err == nil {
+			if a, err = ParseARN(*cluster.PerformanceInsightsKMSKeyId); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "kms-key",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *cluster.PerformanceInsightsKMSKeyId,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changes to the KMS key can affect the cluster
@@ -300,13 +299,13 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 		}
 
 		if cluster.ReplicationSourceIdentifier != nil {
-			if a, err = adapterhelpers.ParseARN(*cluster.ReplicationSourceIdentifier); err == nil {
+			if a, err = ParseARN(*cluster.ReplicationSourceIdentifier); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "rds-db-cluster",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *cluster.ReplicationSourceIdentifier,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Tightly coupled
@@ -323,15 +322,15 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 	return items, nil
 }
 
-func NewRDSDBClusterAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBClustersInput, *rds.DescribeDBClustersOutput, rdsClient, *rds.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBClustersInput, *rds.DescribeDBClustersOutput, rdsClient, *rds.Options]{
+func NewRDSDBClusterAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*rds.DescribeDBClustersInput, *rds.DescribeDBClustersOutput, rdsClient, *rds.Options] {
+	return &DescribeOnlyAdapter[*rds.DescribeDBClustersInput, *rds.DescribeDBClustersOutput, rdsClient, *rds.Options]{
 		ItemType:        "rds-db-cluster",
 		Region:          region,
 		AccountID:       accountID,
 		Client:          client,
 		AdapterMetadata: dbClusterAdapterMetadata,
-		SDPCache:        cache,
-		PaginatorBuilder: func(client rdsClient, params *rds.DescribeDBClustersInput) adapterhelpers.Paginator[*rds.DescribeDBClustersOutput, *rds.Options] {
+		cache:        cache,
+		PaginatorBuilder: func(client rdsClient, params *rds.DescribeDBClustersInput) Paginator[*rds.DescribeDBClustersOutput, *rds.Options] {
 			return rds.NewDescribeDBClustersPaginator(client, params)
 		},
 		DescribeFunc: func(ctx context.Context, client rdsClient, input *rds.DescribeDBClustersInput) (*rds.DescribeDBClustersOutput, error) {

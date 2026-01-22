@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -87,7 +86,7 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 		if err == nil {
 			tags = rdsTagsToMap(tagsOut.TagList)
 		} else {
-			tags = adapterhelpers.HandleTagsError(ctx, err)
+			tags = HandleTagsError(ctx, err)
 		}
 
 		var dbSubnetGroup *string
@@ -100,7 +99,7 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 			instance.DBSubnetGroup = nil
 		}
 
-		attributes, err := adapterhelpers.ToAttributesWithExclude(instance)
+		attributes, err := ToAttributesWithExclude(instance)
 
 		if err != nil {
 			return nil, err
@@ -118,7 +117,7 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 			item.Health = statusToHealth(*instance.DBInstanceStatus)
 		}
 
-		var a *adapterhelpers.ARN
+		var a *ARN
 
 		if instance.Endpoint != nil {
 			if instance.Endpoint.Address != nil {
@@ -228,13 +227,13 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 
 		if instance.KmsKeyId != nil {
 			// This actually uses the ARN not the id
-			if a, err = adapterhelpers.ParseARN(*instance.KmsKeyId); err == nil {
+			if a, err = ParseARN(*instance.KmsKeyId); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "kms-key",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *instance.KmsKeyId,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the KMS key can affect the instance
@@ -247,13 +246,13 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 		}
 
 		if instance.EnhancedMonitoringResourceArn != nil {
-			if a, err = adapterhelpers.ParseARN(*instance.EnhancedMonitoringResourceArn); err == nil {
+			if a, err = ParseARN(*instance.EnhancedMonitoringResourceArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "logs-log-stream",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *instance.EnhancedMonitoringResourceArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Tightly coupled
@@ -265,13 +264,13 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 		}
 
 		if instance.MonitoringRoleArn != nil {
-			if a, err = adapterhelpers.ParseARN(*instance.MonitoringRoleArn); err == nil {
+			if a, err = ParseARN(*instance.MonitoringRoleArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "iam-role",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *instance.MonitoringRoleArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the role can affect the instance
@@ -285,13 +284,13 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 
 		if instance.PerformanceInsightsKMSKeyId != nil {
 			// This is an ARN
-			if a, err = adapterhelpers.ParseARN(*instance.PerformanceInsightsKMSKeyId); err == nil {
+			if a, err = ParseARN(*instance.PerformanceInsightsKMSKeyId); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "kms-key",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *instance.PerformanceInsightsKMSKeyId,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the KMS key can affect the instance
@@ -305,13 +304,13 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 
 		for _, role := range instance.AssociatedRoles {
 			if role.RoleArn != nil {
-				if a, err = adapterhelpers.ParseARN(*role.RoleArn); err == nil {
+				if a, err = ParseARN(*role.RoleArn); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "iam-role",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *role.RoleArn,
-							Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+							Scope:  FormatScope(a.AccountID, a.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Changing the role can affect the instance
@@ -341,13 +340,13 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 		}
 
 		if instance.AwsBackupRecoveryPointArn != nil {
-			if a, err = adapterhelpers.ParseARN(*instance.AwsBackupRecoveryPointArn); err == nil {
+			if a, err = ParseARN(*instance.AwsBackupRecoveryPointArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "backup-recovery-point",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *instance.AwsBackupRecoveryPointArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Tightly coupled
@@ -360,13 +359,13 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 
 		if instance.CustomIamInstanceProfile != nil {
 			// This is almost certainly an ARN since IAM basically always is
-			if a, err = adapterhelpers.ParseARN(*instance.CustomIamInstanceProfile); err == nil {
+			if a, err = ParseARN(*instance.CustomIamInstanceProfile); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "iam-instance-profile",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *instance.CustomIamInstanceProfile,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the instance profile can affect the instance
@@ -380,13 +379,13 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 
 		for _, replication := range instance.DBInstanceAutomatedBackupsReplications {
 			if replication.DBInstanceAutomatedBackupsArn != nil {
-				if a, err = adapterhelpers.ParseARN(*replication.DBInstanceAutomatedBackupsArn); err == nil {
+				if a, err = ParseARN(*replication.DBInstanceAutomatedBackupsArn); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "rds-db-instance-automated-backup",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *replication.DBInstanceAutomatedBackupsArn,
-							Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+							Scope:  FormatScope(a.AccountID, a.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Tightly coupled
@@ -452,13 +451,13 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 			}
 
 			if instance.MasterUserSecret.SecretArn != nil {
-				if a, err = adapterhelpers.ParseARN(*instance.MasterUserSecret.SecretArn); err == nil {
+				if a, err = ParseARN(*instance.MasterUserSecret.SecretArn); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "secretsmanager-secret",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *instance.MasterUserSecret.SecretArn,
-							Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+							Scope:  FormatScope(a.AccountID, a.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Changing the secret can affect the instance
@@ -477,15 +476,15 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 	return items, nil
 }
 
-func NewRDSDBInstanceAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBInstancesInput, *rds.DescribeDBInstancesOutput, rdsClient, *rds.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*rds.DescribeDBInstancesInput, *rds.DescribeDBInstancesOutput, rdsClient, *rds.Options]{
+func NewRDSDBInstanceAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*rds.DescribeDBInstancesInput, *rds.DescribeDBInstancesOutput, rdsClient, *rds.Options] {
+	return &DescribeOnlyAdapter[*rds.DescribeDBInstancesInput, *rds.DescribeDBInstancesOutput, rdsClient, *rds.Options]{
 		ItemType:        "rds-db-instance",
 		Region:          region,
 		AccountID:       accountID,
 		Client:          client,
 		AdapterMetadata: dbInstanceAdapterMetadata,
-		SDPCache:        cache,
-		PaginatorBuilder: func(client rdsClient, params *rds.DescribeDBInstancesInput) adapterhelpers.Paginator[*rds.DescribeDBInstancesOutput, *rds.Options] {
+		cache:        cache,
+		PaginatorBuilder: func(client rdsClient, params *rds.DescribeDBInstancesInput) Paginator[*rds.DescribeDBInstancesOutput, *rds.Options] {
 			return rds.NewDescribeDBInstancesPaginator(client, params)
 		},
 		DescribeFunc: func(ctx context.Context, client rdsClient, input *rds.DescribeDBInstancesInput) (*rds.DescribeDBInstancesOutput, error) {

@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -19,7 +18,7 @@ type ClusterParameterGroup struct {
 }
 
 func dBClusterParameterGroupItemMapper(_, scope string, awsItem *ClusterParameterGroup) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 
 	if err != nil {
 		return nil, err
@@ -35,14 +34,14 @@ func dBClusterParameterGroupItemMapper(_, scope string, awsItem *ClusterParamete
 	return &item, nil
 }
 
-func NewRDSDBClusterParameterGroupAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*ClusterParameterGroup, rdsClient, *rds.Options] {
-	return &adapterhelpers.GetListAdapter[*ClusterParameterGroup, rdsClient, *rds.Options]{
+func NewRDSDBClusterParameterGroupAdapter(client rdsClient, accountID string, region string, cache sdpcache.Cache) *GetListAdapter[*ClusterParameterGroup, rdsClient, *rds.Options] {
+	return &GetListAdapter[*ClusterParameterGroup, rdsClient, *rds.Options]{
 		ItemType:        "rds-db-cluster-parameter-group",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: dbClusterParameterGroupAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client rdsClient, scope, query string) (*ClusterParameterGroup, error) {
 			out, err := client.DescribeDBClusterParameterGroups(ctx, &rds.DescribeDBClusterParameterGroupsInput{
 				DBClusterParameterGroupName: &query,

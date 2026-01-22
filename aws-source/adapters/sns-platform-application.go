@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -30,7 +29,7 @@ func getPlatformApplicationFunc(ctx context.Context, client platformApplicationC
 		}
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(output.Attributes)
+	attributes, err := ToAttributesWithExclude(output.Attributes)
 	if err != nil {
 		return nil, err
 	}
@@ -69,21 +68,21 @@ func getPlatformApplicationFunc(ctx context.Context, client platformApplicationC
 	return item, nil
 }
 
-func NewSNSPlatformApplicationAdapter(client platformApplicationClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*sns.ListPlatformApplicationsInput, *sns.ListPlatformApplicationsOutput, *sns.GetPlatformApplicationAttributesInput, *sns.GetPlatformApplicationAttributesOutput, platformApplicationClient, *sns.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*sns.ListPlatformApplicationsInput, *sns.ListPlatformApplicationsOutput, *sns.GetPlatformApplicationAttributesInput, *sns.GetPlatformApplicationAttributesOutput, platformApplicationClient, *sns.Options]{
+func NewSNSPlatformApplicationAdapter(client platformApplicationClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*sns.ListPlatformApplicationsInput, *sns.ListPlatformApplicationsOutput, *sns.GetPlatformApplicationAttributesInput, *sns.GetPlatformApplicationAttributesOutput, platformApplicationClient, *sns.Options] {
+	return &AlwaysGetAdapter[*sns.ListPlatformApplicationsInput, *sns.ListPlatformApplicationsOutput, *sns.GetPlatformApplicationAttributesInput, *sns.GetPlatformApplicationAttributesOutput, platformApplicationClient, *sns.Options]{
 		ItemType:        "sns-platform-application",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		ListInput:       &sns.ListPlatformApplicationsInput{},
 		AdapterMetadata: platformApplicationAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetInputMapper: func(scope, query string) *sns.GetPlatformApplicationAttributesInput {
 			return &sns.GetPlatformApplicationAttributesInput{
 				PlatformApplicationArn: &query,
 			}
 		},
-		ListFuncPaginatorBuilder: func(client platformApplicationClient, input *sns.ListPlatformApplicationsInput) adapterhelpers.Paginator[*sns.ListPlatformApplicationsOutput, *sns.Options] {
+		ListFuncPaginatorBuilder: func(client platformApplicationClient, input *sns.ListPlatformApplicationsInput) Paginator[*sns.ListPlatformApplicationsOutput, *sns.Options] {
 			return sns.NewListPlatformApplicationsPaginator(client, input)
 		},
 		ListFuncOutputMapper: func(output *sns.ListPlatformApplicationsOutput, input *sns.ListPlatformApplicationsInput) ([]*sns.GetPlatformApplicationAttributesInput, error) {

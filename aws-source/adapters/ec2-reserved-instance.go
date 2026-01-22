@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -26,7 +25,7 @@ func reservedInstanceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 	items := make([]*sdp.Item, 0)
 
 	for _, reservation := range output.ReservedInstances {
-		attrs, err := adapterhelpers.ToAttributesWithExclude(reservation, "tags")
+		attrs, err := ToAttributesWithExclude(reservation, "tags")
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -50,14 +49,14 @@ func reservedInstanceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 	return items, nil
 }
 
-func NewEC2ReservedInstanceAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeReservedInstancesInput, *ec2.DescribeReservedInstancesOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeReservedInstancesInput, *ec2.DescribeReservedInstancesOutput, *ec2.Client, *ec2.Options]{
+func NewEC2ReservedInstanceAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeReservedInstancesInput, *ec2.DescribeReservedInstancesOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeReservedInstancesInput, *ec2.DescribeReservedInstancesOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-reserved-instance",
 		AdapterMetadata: reservedInstanceAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeReservedInstancesInput) (*ec2.DescribeReservedInstancesOutput, error) {
 			return client.DescribeReservedInstances(ctx, input)
 		},

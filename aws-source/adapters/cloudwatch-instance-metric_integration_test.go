@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 )
 
 // TestCloudwatchInstanceMetricIntegration fetches real CloudWatch metrics for an EC2 instance
@@ -20,11 +19,11 @@ func TestCloudwatchInstanceMetricIntegration(t *testing.T) {
 		t.Skip("Skipping integration test: TEST_INSTANCE_ID environment variable not set")
 	}
 
-	config, account, region := adapterhelpers.GetAutoConfig(t)
+	config, account, region := GetAutoConfig(t)
 	client := cloudwatch.NewFromConfig(config)
 
 	adapter := NewCloudwatchInstanceMetricAdapter(client, account, region, nil)
-	scope := adapterhelpers.FormatScope(account, region)
+	scope := FormatScope(account, region)
 
 	// Query is just the instance ID
 	query := instanceID

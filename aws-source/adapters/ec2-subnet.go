@@ -5,7 +5,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -28,7 +27,7 @@ func subnetOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.D
 	for _, subnet := range output.Subnets {
 		var err error
 		var attrs *sdp.ItemAttributes
-		attrs, err = adapterhelpers.ToAttributesWithExclude(subnet, "tags")
+		attrs, err = ToAttributesWithExclude(subnet, "tags")
 
 		if err != nil {
 			return nil, &sdp.QueryError{
@@ -69,20 +68,20 @@ func subnetOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.D
 	return items, nil
 }
 
-func NewEC2SubnetAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeSubnetsInput, *ec2.DescribeSubnetsOutput, *ec2.Client, *ec2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*ec2.DescribeSubnetsInput, *ec2.DescribeSubnetsOutput, *ec2.Client, *ec2.Options]{
+func NewEC2SubnetAdapter(client *ec2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*ec2.DescribeSubnetsInput, *ec2.DescribeSubnetsOutput, *ec2.Client, *ec2.Options] {
+	return &DescribeOnlyAdapter[*ec2.DescribeSubnetsInput, *ec2.DescribeSubnetsOutput, *ec2.Client, *ec2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "ec2-subnet",
 		AdapterMetadata: subnetAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeSubnetsInput) (*ec2.DescribeSubnetsOutput, error) {
 			return client.DescribeSubnets(ctx, input)
 		},
 		InputMapperGet:  subnetInputMapperGet,
 		InputMapperList: subnetInputMapperList,
-		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeSubnetsInput) adapterhelpers.Paginator[*ec2.DescribeSubnetsOutput, *ec2.Options] {
+		PaginatorBuilder: func(client *ec2.Client, params *ec2.DescribeSubnetsInput) Paginator[*ec2.DescribeSubnetsOutput, *ec2.Options] {
 			return ec2.NewDescribeSubnetsPaginator(client, params)
 		},
 		OutputMapper: subnetOutputMapper,

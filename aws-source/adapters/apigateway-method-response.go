@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -24,7 +23,7 @@ func apiGatewayMethodResponseGetFunc(ctx context.Context, client apigatewayClien
 		return nil, err
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(output, "tags")
+	attributes, err := ToAttributesWithExclude(output, "tags")
 	if err != nil {
 		return nil, err
 	}
@@ -67,14 +66,14 @@ func apiGatewayMethodResponseGetFunc(ctx context.Context, client apigatewayClien
 	return item, nil
 }
 
-func NewAPIGatewayMethodResponseAdapter(client apigatewayClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*apigateway.GetMethodResponseInput, *apigateway.GetMethodResponseOutput, *apigateway.GetMethodResponseInput, *apigateway.GetMethodResponseOutput, apigatewayClient, *apigateway.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*apigateway.GetMethodResponseInput, *apigateway.GetMethodResponseOutput, *apigateway.GetMethodResponseInput, *apigateway.GetMethodResponseOutput, apigatewayClient, *apigateway.Options]{
+func NewAPIGatewayMethodResponseAdapter(client apigatewayClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*apigateway.GetMethodResponseInput, *apigateway.GetMethodResponseOutput, *apigateway.GetMethodResponseInput, *apigateway.GetMethodResponseOutput, apigatewayClient, *apigateway.Options] {
+	return &AlwaysGetAdapter[*apigateway.GetMethodResponseInput, *apigateway.GetMethodResponseOutput, *apigateway.GetMethodResponseInput, *apigateway.GetMethodResponseOutput, apigatewayClient, *apigateway.Options]{
 		ItemType:        "apigateway-method-response",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: apiGatewayMethodResponseAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc:         apiGatewayMethodResponseGetFunc,
 		GetInputMapper: func(scope, query string) *apigateway.GetMethodResponseInput {
 			// We are using a custom id of {rest-api-id}/{resource-id}/{http-method}/{status-code} e.g.

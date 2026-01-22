@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/efs/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -15,16 +14,16 @@ func TestMountTargetOutputMapper(t *testing.T) {
 	output := &efs.DescribeMountTargetsOutput{
 		MountTargets: []types.MountTargetDescription{
 			{
-				FileSystemId:         adapterhelpers.PtrString("fs-1234567890"),
+				FileSystemId:         PtrString("fs-1234567890"),
 				LifeCycleState:       types.LifeCycleStateAvailable,
-				MountTargetId:        adapterhelpers.PtrString("fsmt-01e86506d8165e43f"),
-				SubnetId:             adapterhelpers.PtrString("subnet-1234567"),
-				AvailabilityZoneId:   adapterhelpers.PtrString("use1-az1"),
-				AvailabilityZoneName: adapterhelpers.PtrString("us-east-1"),
-				IpAddress:            adapterhelpers.PtrString("10.230.43.1"),
-				NetworkInterfaceId:   adapterhelpers.PtrString("eni-2345"),
-				OwnerId:              adapterhelpers.PtrString("234234"),
-				VpcId:                adapterhelpers.PtrString("vpc-23452345235"),
+				MountTargetId:        PtrString("fsmt-01e86506d8165e43f"),
+				SubnetId:             PtrString("subnet-1234567"),
+				AvailabilityZoneId:   PtrString("use1-az1"),
+				AvailabilityZoneName: PtrString("us-east-1"),
+				IpAddress:            PtrString("10.230.43.1"),
+				NetworkInterfaceId:   PtrString("eni-2345"),
+				OwnerId:              PtrString("234234"),
+				VpcId:                PtrString("vpc-23452345235"),
 			},
 		},
 	}
@@ -49,7 +48,7 @@ func TestMountTargetOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "efs-file-system",
 			ExpectedMethod: sdp.QueryMethod_GET,

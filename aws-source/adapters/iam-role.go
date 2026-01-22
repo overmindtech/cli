@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/micahhausler/aws-iam-policy/policy"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 	"github.com/sourcegraph/conc/iter"
@@ -179,7 +178,7 @@ func roleItemMapper(_ *string, scope string, awsItem *RoleDetails) (*sdp.Item, e
 		enrichedRole.AssumeRolePolicyDocument = policyDoc
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(enrichedRole)
+	attributes, err := ToAttributesWithExclude(enrichedRole)
 
 	if err != nil {
 		return nil, err
@@ -194,13 +193,13 @@ func roleItemMapper(_ *string, scope string, awsItem *RoleDetails) (*sdp.Item, e
 
 	for _, policy := range awsItem.AttachedPolicies {
 		if policy.PolicyArn != nil {
-			if a, err := adapterhelpers.ParseARN(*policy.PolicyArn); err == nil {
+			if a, err := ParseARN(*policy.PolicyArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "iam-policy",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *policy.PolicyArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Changing the policy will affect the role
@@ -237,7 +236,7 @@ func roleListTagsFunc(ctx context.Context, r *RoleDetails, client IAMClient) (ma
 		out, err := paginator.NextPage(ctx)
 
 		if err != nil {
-			return adapterhelpers.HandleTagsError(ctx, err), nil
+			return HandleTagsError(ctx, err), nil
 		}
 
 		for _, tag := range out.Tags {
@@ -250,8 +249,8 @@ func roleListTagsFunc(ctx context.Context, r *RoleDetails, client IAMClient) (ma
 	return tags, nil
 }
 
-func NewIAMRoleAdapter(client IAMClient, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapterV2[*iam.ListRolesInput, *iam.ListRolesOutput, *RoleDetails, IAMClient, *iam.Options] {
-	return &adapterhelpers.GetListAdapterV2[*iam.ListRolesInput, *iam.ListRolesOutput, *RoleDetails, IAMClient, *iam.Options]{
+func NewIAMRoleAdapter(client IAMClient, accountID string, cache sdpcache.Cache) *GetListAdapterV2[*iam.ListRolesInput, *iam.ListRolesOutput, *RoleDetails, IAMClient, *iam.Options] {
+	return &GetListAdapterV2[*iam.ListRolesInput, *iam.ListRolesOutput, *RoleDetails, IAMClient, *iam.Options]{
 		ItemType:      "iam-role",
 		Client:        client,
 		CacheDuration: 3 * time.Hour, // IAM has very low rate limits, we need to cache for a long time
@@ -262,7 +261,7 @@ func NewIAMRoleAdapter(client IAMClient, accountID string, cache sdpcache.Cache)
 		InputMapperList: func(scope string) (*iam.ListRolesInput, error) {
 			return &iam.ListRolesInput{}, nil
 		},
-		ListFuncPaginatorBuilder: func(client IAMClient, input *iam.ListRolesInput) adapterhelpers.Paginator[*iam.ListRolesOutput, *iam.Options] {
+		ListFuncPaginatorBuilder: func(client IAMClient, input *iam.ListRolesInput) Paginator[*iam.ListRolesOutput, *iam.Options] {
 			return iam.NewListRolesPaginator(client, input)
 		},
 		ListExtractor: func(ctx context.Context, output *iam.ListRolesOutput, client IAMClient) ([]*RoleDetails, error) {

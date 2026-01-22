@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -34,7 +33,7 @@ func backupGetFunc(ctx context.Context, client Client, scope string, input *dyna
 
 	details := out.BackupDescription.BackupDetails
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(details)
+	attributes, err := ToAttributesWithExclude(details)
 
 	if err != nil {
 		return nil, err
@@ -75,8 +74,8 @@ func backupGetFunc(ctx context.Context, client Client, scope string, input *dyna
 // found so far that can only be queries by ARN for Get. For this reason I'm
 // going to just disable GET. LIST works fine and allows it to be linked to the
 // table so this is enough for me at the moment
-func NewDynamoDBBackupAdapter(client Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*dynamodb.ListBackupsInput, *dynamodb.ListBackupsOutput, *dynamodb.DescribeBackupInput, *dynamodb.DescribeBackupOutput, Client, *dynamodb.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*dynamodb.ListBackupsInput, *dynamodb.ListBackupsOutput, *dynamodb.DescribeBackupInput, *dynamodb.DescribeBackupOutput, Client, *dynamodb.Options]{
+func NewDynamoDBBackupAdapter(client Client, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*dynamodb.ListBackupsInput, *dynamodb.ListBackupsOutput, *dynamodb.DescribeBackupInput, *dynamodb.DescribeBackupOutput, Client, *dynamodb.Options] {
+	return &AlwaysGetAdapter[*dynamodb.ListBackupsInput, *dynamodb.ListBackupsOutput, *dynamodb.DescribeBackupInput, *dynamodb.DescribeBackupOutput, Client, *dynamodb.Options]{
 		ItemType:        "dynamodb-backup",
 		Client:          client,
 		AccountID:       accountID,
@@ -84,7 +83,7 @@ func NewDynamoDBBackupAdapter(client Client, accountID string, region string, ca
 		GetFunc:         backupGetFunc,
 		ListInput:       &dynamodb.ListBackupsInput{},
 		AdapterMetadata: dynamodbBackupAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetInputMapper: func(scope, query string) *dynamodb.DescribeBackupInput {
 			// Get is not supported since you can't search by name
 			return nil
@@ -102,7 +101,7 @@ func NewDynamoDBBackupAdapter(client Client, accountID string, region string, ca
 
 			return inputs, nil
 		},
-		ListFuncPaginatorBuilder: func(client Client, input *dynamodb.ListBackupsInput) adapterhelpers.Paginator[*dynamodb.ListBackupsOutput, *dynamodb.Options] {
+		ListFuncPaginatorBuilder: func(client Client, input *dynamodb.ListBackupsInput) Paginator[*dynamodb.ListBackupsOutput, *dynamodb.Options] {
 			return NewListBackupsPaginator(client, input)
 		},
 		SearchInputMapper: func(scope, query string) (*dynamodb.ListBackupsInput, error) {

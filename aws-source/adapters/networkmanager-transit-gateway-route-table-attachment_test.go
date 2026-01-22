@@ -4,7 +4,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"testing"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -14,20 +13,20 @@ func TestTransitGatewayRouteTableAttachmentItemMapper(t *testing.T) {
 		name         string
 		input        types.TransitGatewayRouteTableAttachment
 		expectedAttr string
-		tests        adapterhelpers.QueryTests
+		tests        QueryTests
 	}{
 		{
 			name: "ok",
 			input: types.TransitGatewayRouteTableAttachment{
 				Attachment: &types.Attachment{
-					AttachmentId:  adapterhelpers.PtrString("attachment1"),
-					CoreNetworkId: adapterhelpers.PtrString("corenetwork1"),
+					AttachmentId:  PtrString("attachment1"),
+					CoreNetworkId: PtrString("corenetwork1"),
 				},
-				TransitGatewayRouteTableArn: adapterhelpers.PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway-route-table/tgw-rtb-9876543210123456"),
-				PeeringId:                   adapterhelpers.PtrString("peer1"),
+				TransitGatewayRouteTableArn: PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway-route-table/tgw-rtb-9876543210123456"),
+				PeeringId:                   PtrString("peer1"),
 			},
 			expectedAttr: "attachment1",
-			tests: adapterhelpers.QueryTests{
+			tests: QueryTests{
 				{
 					ExpectedType:   "networkmanager-core-network",
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -52,12 +51,12 @@ func TestTransitGatewayRouteTableAttachmentItemMapper(t *testing.T) {
 			name: "missing ec2-transit-gateway-route-table",
 			input: types.TransitGatewayRouteTableAttachment{
 				Attachment: &types.Attachment{
-					AttachmentId:  adapterhelpers.PtrString("attachment1"),
-					CoreNetworkId: adapterhelpers.PtrString("corenetwork1"),
+					AttachmentId:  PtrString("attachment1"),
+					CoreNetworkId: PtrString("corenetwork1"),
 				},
 			},
 			expectedAttr: "attachment1",
-			tests: adapterhelpers.QueryTests{
+			tests: QueryTests{
 				{
 					ExpectedType:   "networkmanager-core-network",
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -70,13 +69,13 @@ func TestTransitGatewayRouteTableAttachmentItemMapper(t *testing.T) {
 			name: "invalid ec2-transit-gateway-route-table",
 			input: types.TransitGatewayRouteTableAttachment{
 				Attachment: &types.Attachment{
-					AttachmentId:  adapterhelpers.PtrString("attachment1"),
-					CoreNetworkId: adapterhelpers.PtrString("corenetwork1"),
+					AttachmentId:  PtrString("attachment1"),
+					CoreNetworkId: PtrString("corenetwork1"),
 				},
-				TransitGatewayRouteTableArn: adapterhelpers.PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway-route-table-tgw-rtb-9876543210123456"),
+				TransitGatewayRouteTableArn: PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway-route-table-tgw-rtb-9876543210123456"),
 			},
 			expectedAttr: "attachment1",
-			tests: adapterhelpers.QueryTests{
+			tests: QueryTests{
 				{
 					ExpectedType:   "networkmanager-core-network",
 					ExpectedMethod: sdp.QueryMethod_GET,

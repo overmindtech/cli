@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -43,16 +42,16 @@ func TestAddressOutputMapper(t *testing.T) {
 	output := ec2.DescribeAddressesOutput{
 		Addresses: []types.Address{
 			{
-				PublicIp:           adapterhelpers.PtrString("3.11.82.6"),
-				AllocationId:       adapterhelpers.PtrString("eipalloc-030a6f43bc6086267"),
+				PublicIp:           PtrString("3.11.82.6"),
+				AllocationId:       PtrString("eipalloc-030a6f43bc6086267"),
 				Domain:             types.DomainTypeVpc,
-				PublicIpv4Pool:     adapterhelpers.PtrString("amazon"),
-				NetworkBorderGroup: adapterhelpers.PtrString("eu-west-2"),
-				InstanceId:         adapterhelpers.PtrString("instance"),
-				CarrierIp:          adapterhelpers.PtrString("3.11.82.7"),
-				CustomerOwnedIp:    adapterhelpers.PtrString("3.11.82.8"),
-				NetworkInterfaceId: adapterhelpers.PtrString("foo"),
-				PrivateIpAddress:   adapterhelpers.PtrString("3.11.82.9"),
+				PublicIpv4Pool:     PtrString("amazon"),
+				NetworkBorderGroup: PtrString("eu-west-2"),
+				InstanceId:         PtrString("instance"),
+				CarrierIp:          PtrString("3.11.82.7"),
+				CustomerOwnedIp:    PtrString("3.11.82.8"),
+				NetworkInterfaceId: PtrString("foo"),
+				PrivateIpAddress:   PtrString("3.11.82.9"),
 			},
 		},
 	}
@@ -77,7 +76,7 @@ func TestAddressOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "ip",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -124,7 +123,7 @@ func TestNewEC2AddressAdapter(t *testing.T) {
 
 	adapter := NewEC2AddressAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -15,14 +14,14 @@ func TestIamInstanceProfileAssociationOutputMapper(t *testing.T) {
 	output := ec2.DescribeIamInstanceProfileAssociationsOutput{
 		IamInstanceProfileAssociations: []types.IamInstanceProfileAssociation{
 			{
-				AssociationId: adapterhelpers.PtrString("eipassoc-1234567890abcdef0"),
+				AssociationId: PtrString("eipassoc-1234567890abcdef0"),
 				IamInstanceProfile: &types.IamInstanceProfile{
-					Arn: adapterhelpers.PtrString("arn:aws:iam::123456789012:instance-profile/webserver"), // link
-					Id:  adapterhelpers.PtrString("AIDACKCEVSQ6C2EXAMPLE"),
+					Arn: PtrString("arn:aws:iam::123456789012:instance-profile/webserver"), // link
+					Id:  PtrString("AIDACKCEVSQ6C2EXAMPLE"),
 				},
-				InstanceId: adapterhelpers.PtrString("i-1234567890abcdef0"), // link
+				InstanceId: PtrString("i-1234567890abcdef0"), // link
 				State:      types.IamInstanceProfileAssociationStateAssociated,
-				Timestamp:  adapterhelpers.PtrTime(time.Now()),
+				Timestamp:  PtrTime(time.Now()),
 			},
 		},
 	}
@@ -47,7 +46,7 @@ func TestIamInstanceProfileAssociationOutputMapper(t *testing.T) {
 
 	// It doesn't really make sense to test anything other than the linked items
 	// since the attributes are converted automatically
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "iam-instance-profile",
 			ExpectedQuery:  "arn:aws:iam::123456789012:instance-profile/webserver",
@@ -70,7 +69,7 @@ func TestNewEC2IamInstanceProfileAssociationAdapter(t *testing.T) {
 
 	adapter := NewEC2IamInstanceProfileAssociationAdapter(client, account, region, nil)
 
-	test := adapterhelpers.E2ETest{
+	test := E2ETest{
 		Adapter: adapter,
 		Timeout: 10 * time.Second,
 	}

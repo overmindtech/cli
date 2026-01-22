@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -25,7 +24,7 @@ func nodegroupGetFunc(ctx context.Context, client EKSClient, scope string, input
 		}
 	}
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(out.Nodegroup)
+	attributes, err := ToAttributesWithExclude(out.Nodegroup)
 
 	if err != nil {
 		return nil, err
@@ -169,15 +168,15 @@ func nodegroupGetFunc(ctx context.Context, client EKSClient, scope string, input
 	return &item, nil
 }
 
-func NewEKSNodegroupAdapter(client EKSClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.AlwaysGetAdapter[*eks.ListNodegroupsInput, *eks.ListNodegroupsOutput, *eks.DescribeNodegroupInput, *eks.DescribeNodegroupOutput, EKSClient, *eks.Options] {
-	return &adapterhelpers.AlwaysGetAdapter[*eks.ListNodegroupsInput, *eks.ListNodegroupsOutput, *eks.DescribeNodegroupInput, *eks.DescribeNodegroupOutput, EKSClient, *eks.Options]{
+func NewEKSNodegroupAdapter(client EKSClient, accountID string, region string, cache sdpcache.Cache) *AlwaysGetAdapter[*eks.ListNodegroupsInput, *eks.ListNodegroupsOutput, *eks.DescribeNodegroupInput, *eks.DescribeNodegroupOutput, EKSClient, *eks.Options] {
+	return &AlwaysGetAdapter[*eks.ListNodegroupsInput, *eks.ListNodegroupsOutput, *eks.DescribeNodegroupInput, *eks.DescribeNodegroupOutput, EKSClient, *eks.Options]{
 		ItemType:         "eks-nodegroup",
 		Client:           client,
 		AccountID:        accountID,
 		Region:           region,
 		AlwaysSearchARNs: true,
 		AdapterMetadata:  nodegroupAdapterMetadata,
-		SDPCache:         cache,
+		cache:         cache,
 		SearchInputMapper: func(scope, query string) (*eks.ListNodegroupsInput, error) {
 			return &eks.ListNodegroupsInput{
 				ClusterName: &query,
@@ -201,7 +200,7 @@ func NewEKSNodegroupAdapter(client EKSClient, accountID string, region string, c
 				ClusterName:   &clusterName,
 			}
 		},
-		ListFuncPaginatorBuilder: func(client EKSClient, input *eks.ListNodegroupsInput) adapterhelpers.Paginator[*eks.ListNodegroupsOutput, *eks.Options] {
+		ListFuncPaginatorBuilder: func(client EKSClient, input *eks.ListNodegroupsInput) Paginator[*eks.ListNodegroupsOutput, *eks.Options] {
 			return eks.NewListNodegroupsPaginator(client, input)
 		},
 		// While LIST queries are not supported for this adapter, we do support

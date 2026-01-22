@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -33,7 +32,7 @@ func layerListFunc(ctx context.Context, client *lambda.Client, scope string) ([]
 }
 
 func layerItemMapper(_, scope string, awsItem *types.LayersListItem) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 
 	if err != nil {
 		return nil, err
@@ -65,14 +64,14 @@ func layerItemMapper(_, scope string, awsItem *types.LayersListItem) (*sdp.Item,
 	return &item, nil
 }
 
-func NewLambdaLayerAdapter(client *lambda.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.LayersListItem, *lambda.Client, *lambda.Options] {
-	return &adapterhelpers.GetListAdapter[*types.LayersListItem, *lambda.Client, *lambda.Options]{
+func NewLambdaLayerAdapter(client *lambda.Client, accountID string, region string, cache sdpcache.Cache) *GetListAdapter[*types.LayersListItem, *lambda.Client, *lambda.Options] {
+	return &GetListAdapter[*types.LayersListItem, *lambda.Client, *lambda.Options]{
 		ItemType:        "lambda-layer",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: lambdaLayerAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(_ context.Context, _ *lambda.Client, _, _ string) (*types.LayersListItem, error) {
 			// Layers can only be listed
 			return nil, errors.New("get is not supported for lambda-layers")

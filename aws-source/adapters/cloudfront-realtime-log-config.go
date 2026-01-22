@@ -6,13 +6,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
 
 func realtimeLogConfigsItemMapper(_, scope string, awsItem *types.RealtimeLogConfig) (*sdp.Item, error) {
-	attributes, err := adapterhelpers.ToAttributesWithExclude(awsItem)
+	attributes, err := ToAttributesWithExclude(awsItem)
 
 	if err != nil {
 		return nil, err
@@ -28,13 +27,13 @@ func realtimeLogConfigsItemMapper(_, scope string, awsItem *types.RealtimeLogCon
 	for _, endpoint := range awsItem.EndPoints {
 		if endpoint.KinesisStreamConfig != nil {
 			if endpoint.KinesisStreamConfig.RoleARN != nil {
-				if arn, err := adapterhelpers.ParseARN(*endpoint.KinesisStreamConfig.RoleARN); err == nil {
+				if arn, err := ParseARN(*endpoint.KinesisStreamConfig.RoleARN); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "iam-role",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *endpoint.KinesisStreamConfig.RoleARN,
-							Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+							Scope:  FormatScope(arn.AccountID, arn.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Changes to the role will affect us
@@ -47,13 +46,13 @@ func realtimeLogConfigsItemMapper(_, scope string, awsItem *types.RealtimeLogCon
 			}
 
 			if endpoint.KinesisStreamConfig.StreamARN != nil {
-				if arn, err := adapterhelpers.ParseARN(*endpoint.KinesisStreamConfig.StreamARN); err == nil {
+				if arn, err := ParseARN(*endpoint.KinesisStreamConfig.StreamARN); err == nil {
 					item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   "kinesis-stream",
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *endpoint.KinesisStreamConfig.StreamARN,
-							Scope:  adapterhelpers.FormatScope(arn.AccountID, arn.Region),
+							Scope:  FormatScope(arn.AccountID, arn.Region),
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							// Changes to this will affect the stream
@@ -70,14 +69,14 @@ func realtimeLogConfigsItemMapper(_, scope string, awsItem *types.RealtimeLogCon
 	return &item, nil
 }
 
-func NewCloudfrontRealtimeLogConfigsAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *adapterhelpers.GetListAdapter[*types.RealtimeLogConfig, *cloudfront.Client, *cloudfront.Options] {
-	return &adapterhelpers.GetListAdapter[*types.RealtimeLogConfig, *cloudfront.Client, *cloudfront.Options]{
+func NewCloudfrontRealtimeLogConfigsAdapter(client *cloudfront.Client, accountID string, cache sdpcache.Cache) *GetListAdapter[*types.RealtimeLogConfig, *cloudfront.Client, *cloudfront.Options] {
+	return &GetListAdapter[*types.RealtimeLogConfig, *cloudfront.Client, *cloudfront.Options]{
 		ItemType:        "cloudfront-realtime-log-config",
 		Client:          client,
 		AccountID:       accountID,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata: realtimeLogConfigsAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		GetFunc: func(ctx context.Context, client *cloudfront.Client, scope, query string) (*types.RealtimeLogConfig, error) {
 			out, err := client.GetRealtimeLogConfig(ctx, &cloudfront.GetRealtimeLogConfigInput{
 				Name: &query,

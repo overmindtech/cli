@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -18,24 +17,24 @@ func TestTransitGatewayConnectPeerAssociationsOutputMapper(t *testing.T) {
 		out            networkmanager.GetTransitGatewayConnectPeerAssociationsOutput
 		expectedHealth sdp.Health
 		expectedAttr   string
-		tests          adapterhelpers.QueryTests
+		tests          QueryTests
 	}{
 		{
 			name: "ok",
 			out: networkmanager.GetTransitGatewayConnectPeerAssociationsOutput{
 				TransitGatewayConnectPeerAssociations: []types.TransitGatewayConnectPeerAssociation{
 					{
-						GlobalNetworkId:              adapterhelpers.PtrString("default"),
-						TransitGatewayConnectPeerArn: adapterhelpers.PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway-connect-peer-association/tgw-1234"),
+						GlobalNetworkId:              PtrString("default"),
+						TransitGatewayConnectPeerArn: PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway-connect-peer-association/tgw-1234"),
 						State:                        types.TransitGatewayConnectPeerAssociationStateAvailable,
-						DeviceId:                     adapterhelpers.PtrString("device-1"),
-						LinkId:                       adapterhelpers.PtrString("link-1"),
+						DeviceId:                     PtrString("device-1"),
+						LinkId:                       PtrString("link-1"),
 					},
 				},
 			},
 			expectedHealth: sdp.Health_HEALTH_OK,
 			expectedAttr:   "default|arn:aws:ec2:us-west-2:123456789012:transit-gateway-connect-peer-association/tgw-1234",
-			tests: adapterhelpers.QueryTests{
+			tests: QueryTests{
 				{
 					ExpectedType:   "networkmanager-global-network",
 					ExpectedMethod: sdp.QueryMethod_GET,

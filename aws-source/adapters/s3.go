@@ -11,12 +11,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/getsentry/sentry-go"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
 
 const CacheDuration = 10 * time.Minute
+
+var (
+	noOpCacheS3Once sync.Once
+	noOpCacheS3     sdpcache.Cache
+)
 
 // NewS3Source Creates a new S3 adapter
 func NewS3Adapter(config aws.Config, accountID string, cache sdpcache.Cache) *S3Source {
@@ -24,7 +28,7 @@ func NewS3Adapter(config aws.Config, accountID string, cache sdpcache.Cache) *S3
 		config:          config,
 		accountID:       accountID,
 		AdapterMetadata: s3Metadata,
-		SDPCache:        cache,
+		cache:           cache,
 	}
 }
 
@@ -82,11 +86,17 @@ type S3Source struct {
 	AdapterMetadata *sdp.AdapterMetadata
 
 	CacheDuration time.Duration  // How long to cache items for
-	SDPCache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+	cache         sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 }
 
 func (s *S3Source) Cache() sdpcache.Cache {
-	return s.SDPCache
+	if s.cache == nil {
+		noOpCacheS3Once.Do(func() {
+			noOpCacheS3 = sdpcache.NewNoOpCache()
+		})
+		return noOpCacheS3
+	}
+	return s.cache
 }
 
 func (s *S3Source) Client() *s3.Client {
@@ -124,7 +134,7 @@ func (s *S3Source) Metadata() *sdp.AdapterMetadata {
 // in the format {accountID} since S3 endpoint is global
 func (s *S3Source) Scopes() []string {
 	return []string{
-		adapterhelpers.FormatScope(s.accountID, ""),
+		FormatScope(s.accountID, ""),
 	}
 }
 
@@ -192,7 +202,7 @@ func (s *S3Source) Get(ctx context.Context, scope string, query string, ignoreCa
 		}
 	}
 
-	return getImpl(ctx, s.SDPCache, s.Client(), scope, query, ignoreCache)
+	return getImpl(ctx, s.Cache(), s.Client(), scope, query, ignoreCache)
 }
 
 func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
@@ -217,14 +227,14 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 	var wg sync.WaitGroup
 	var err error
 
-	bucketName := adapterhelpers.PtrString(query)
+	bucketName := PtrString(query)
 
 	location, err = client.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
 		Bucket: bucketName,
 	})
 
 	if err != nil {
-		err = adapterhelpers.WrapAWSError(err)
+		err = WrapAWSError(err)
 		cache.StoreError(ctx, err, CacheDuration, ck)
 		return nil, err
 	}
@@ -389,7 +399,7 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 	// Wait for all requests to complete
 	wg.Wait()
 
-	attributes, err := adapterhelpers.ToAttributesWithExclude(bucket)
+	attributes, err := ToAttributesWithExclude(bucket)
 
 	if err != nil {
 		err = &sdp.QueryError{
@@ -447,17 +457,17 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 		}
 	}
 
-	var a *adapterhelpers.ARN
+	var a *ARN
 
 	for _, lambdaConfig := range bucket.LambdaFunctionConfigurations {
 		if lambdaConfig.LambdaFunctionArn != nil {
-			if a, err = adapterhelpers.ParseARN(*lambdaConfig.LambdaFunctionArn); err == nil {
+			if a, err = ParseARN(*lambdaConfig.LambdaFunctionArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "lambda-function",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *lambdaConfig.LambdaFunctionArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Tightly coupled
@@ -471,13 +481,13 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 
 	for _, q := range bucket.QueueConfigurations {
 		if q.QueueArn != nil {
-			if a, err = adapterhelpers.ParseARN(*q.QueueArn); err == nil {
+			if a, err = ParseARN(*q.QueueArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "sqs-queue",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *q.QueueArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Tightly coupled
@@ -491,13 +501,13 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 
 	for _, topic := range bucket.TopicConfigurations {
 		if topic.TopicArn != nil {
-			if a, err = adapterhelpers.ParseARN(*topic.TopicArn); err == nil {
+			if a, err = ParseARN(*topic.TopicArn); err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   "sns-topic",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *topic.TopicArn,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Tightly coupled
@@ -531,13 +541,13 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 		if bucket.InventoryConfiguration.Destination != nil {
 			if bucket.InventoryConfiguration.Destination.S3BucketDestination != nil {
 				if bucket.InventoryConfiguration.Destination.S3BucketDestination.Bucket != nil {
-					if a, err = adapterhelpers.ParseARN(*bucket.InventoryConfiguration.Destination.S3BucketDestination.Bucket); err == nil {
+					if a, err = ParseARN(*bucket.InventoryConfiguration.Destination.S3BucketDestination.Bucket); err == nil {
 						item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   "s3-bucket",
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  *bucket.InventoryConfiguration.Destination.S3BucketDestination.Bucket,
-								Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+								Scope:  FormatScope(a.AccountID, a.Region),
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								// Tightly coupled
@@ -559,13 +569,13 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 				if bucket.AnalyticsConfiguration.StorageClassAnalysis.DataExport.Destination != nil {
 					if bucket.AnalyticsConfiguration.StorageClassAnalysis.DataExport.Destination.S3BucketDestination != nil {
 						if bucket.AnalyticsConfiguration.StorageClassAnalysis.DataExport.Destination.S3BucketDestination.Bucket != nil {
-							if a, err = adapterhelpers.ParseARN(*bucket.AnalyticsConfiguration.StorageClassAnalysis.DataExport.Destination.S3BucketDestination.Bucket); err == nil {
+							if a, err = ParseARN(*bucket.AnalyticsConfiguration.StorageClassAnalysis.DataExport.Destination.S3BucketDestination.Bucket); err == nil {
 								item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 									Query: &sdp.Query{
 										Type:   "s3-bucket",
 										Method: sdp.QueryMethod_SEARCH,
 										Query:  *bucket.AnalyticsConfiguration.StorageClassAnalysis.DataExport.Destination.S3BucketDestination.Bucket,
-										Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+										Scope:  FormatScope(a.AccountID, a.Region),
 									},
 									BlastPropagation: &sdp.BlastPropagation{
 										// Tightly coupled
@@ -596,7 +606,7 @@ func (s *S3Source) List(ctx context.Context, scope string, ignoreCache bool) ([]
 		}
 	}
 
-	return listImpl(ctx, s.SDPCache, s.Client(), scope, ignoreCache)
+	return listImpl(ctx, s.Cache(), s.Client(), scope, ignoreCache)
 }
 
 func listImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope string, ignoreCache bool) ([]*sdp.Item, error) {
@@ -653,12 +663,12 @@ func (s *S3Source) Search(ctx context.Context, scope string, query string, ignor
 		}
 	}
 
-	return searchImpl(ctx, s.SDPCache, s.Client(), scope, query, ignoreCache)
+	return searchImpl(ctx, s.Cache(), s.Client(), scope, query, ignoreCache)
 }
 
 func searchImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
 	// Parse the ARN
-	a, err := adapterhelpers.ParseARN(query)
+	a, err := ParseARN(query)
 
 	if err != nil {
 		return nil, sdp.NewQueryError(err)
@@ -668,7 +678,7 @@ func searchImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scop
 	// and use the adapter's scope (which is account-scoped)
 	// If the ARN does have an account ID, validate it matches the adapter scope
 	if a.AccountID != "" {
-		if arnScope := adapterhelpers.FormatScope(a.AccountID, a.Region); arnScope != scope {
+		if arnScope := FormatScope(a.AccountID, a.Region); arnScope != scope {
 			return nil, &sdp.QueryError{
 				ErrorType:   sdp.QueryError_NOSCOPE,
 				ErrorString: fmt.Sprintf("ARN scope %v does not match adapters scope %v", arnScope, scope),

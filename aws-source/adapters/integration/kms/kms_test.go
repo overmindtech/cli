@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/aws-source/adapters"
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 	"github.com/overmindtech/cli/discovery"
@@ -83,7 +82,7 @@ func KMS(t *testing.T) {
 		t.Fatalf("failed to validate KMS key policy adapter: %v", err)
 	}
 
-	scope := adapterhelpers.FormatScope(accountID, testAWSConfig.Region)
+	scope := adapters.FormatScope(accountID, testAWSConfig.Region)
 
 	// List keys
 	sdpListKeys, err := listSync(keySource, context.Background(), scope, true)

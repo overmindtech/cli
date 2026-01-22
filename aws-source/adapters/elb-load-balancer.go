@@ -6,7 +6,6 @@ import (
 	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -56,7 +55,7 @@ func elbLoadBalancerOutputMapper(ctx context.Context, client elbClient, scope st
 	}
 
 	for _, desc := range output.LoadBalancerDescriptions {
-		attrs, err := adapterhelpers.ToAttributesWithExclude(desc)
+		attrs, err := ToAttributesWithExclude(desc)
 
 		if err != nil {
 			return nil, err
@@ -178,14 +177,14 @@ func elbLoadBalancerOutputMapper(ctx context.Context, client elbClient, scope st
 	return items, nil
 }
 
-func NewELBLoadBalancerAdapter(client elbClient, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*elb.DescribeLoadBalancersInput, *elb.DescribeLoadBalancersOutput, elbClient, *elb.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*elb.DescribeLoadBalancersInput, *elb.DescribeLoadBalancersOutput, elbClient, *elb.Options]{
+func NewELBLoadBalancerAdapter(client elbClient, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*elb.DescribeLoadBalancersInput, *elb.DescribeLoadBalancersOutput, elbClient, *elb.Options] {
+	return &DescribeOnlyAdapter[*elb.DescribeLoadBalancersInput, *elb.DescribeLoadBalancersOutput, elbClient, *elb.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "elb-load-balancer",
 		AdapterMetadata: elbLoadBalancerAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client elbClient, input *elb.DescribeLoadBalancersInput) (*elb.DescribeLoadBalancersOutput, error) {
 			return client.DescribeLoadBalancers(ctx, input)
 		},
@@ -197,7 +196,7 @@ func NewELBLoadBalancerAdapter(client elbClient, accountID string, region string
 		InputMapperList: func(scope string) (*elb.DescribeLoadBalancersInput, error) {
 			return &elb.DescribeLoadBalancersInput{}, nil
 		},
-		PaginatorBuilder: func(client elbClient, params *elb.DescribeLoadBalancersInput) adapterhelpers.Paginator[*elb.DescribeLoadBalancersOutput, *elb.Options] {
+		PaginatorBuilder: func(client elbClient, params *elb.DescribeLoadBalancersInput) Paginator[*elb.DescribeLoadBalancersOutput, *elb.Options] {
 			return elb.NewDescribeLoadBalancersPaginator(client, params)
 		},
 		OutputMapper: elbLoadBalancerOutputMapper,

@@ -5,7 +5,6 @@ import (
 
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -24,7 +23,7 @@ func ruleOutputMapper(ctx context.Context, client elbv2Client, scope string, _ *
 	tagsMap := elbv2GetTagsMap(ctx, client, ruleArns)
 
 	for _, rule := range output.Rules {
-		attrs, err := adapterhelpers.ToAttributesWithExclude(rule)
+		attrs, err := ToAttributesWithExclude(rule)
 
 		if err != nil {
 			return nil, err
@@ -77,14 +76,14 @@ func ruleOutputMapper(ctx context.Context, client elbv2Client, scope string, _ *
 	return items, nil
 }
 
-func NewELBv2RuleAdapter(client elbv2Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeRulesInput, *elbv2.DescribeRulesOutput, elbv2Client, *elbv2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeRulesInput, *elbv2.DescribeRulesOutput, elbv2Client, *elbv2.Options]{
+func NewELBv2RuleAdapter(client elbv2Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*elbv2.DescribeRulesInput, *elbv2.DescribeRulesOutput, elbv2Client, *elbv2.Options] {
+	return &DescribeOnlyAdapter[*elbv2.DescribeRulesInput, *elbv2.DescribeRulesOutput, elbv2Client, *elbv2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "elbv2-rule",
 		AdapterMetadata: ruleAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client elbv2Client, input *elbv2.DescribeRulesInput) (*elbv2.DescribeRulesOutput, error) {
 			return client.DescribeRules(ctx, input)
 		},

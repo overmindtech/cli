@@ -10,7 +10,6 @@ import (
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 )
@@ -80,7 +79,7 @@ func targetHealthOutputMapper(_ context.Context, _ *elbv2.Client, scope string, 
 	items := make([]*sdp.Item, 0)
 
 	for _, desc := range output.TargetHealthDescriptions {
-		attrs, err := adapterhelpers.ToAttributesWithExclude(desc)
+		attrs, err := ToAttributesWithExclude(desc)
 
 		if err != nil {
 			return nil, err
@@ -141,7 +140,7 @@ func targetHealthOutputMapper(_ context.Context, _ *elbv2.Client, scope string, 
 		item.GetAttributes().Set("UniqueId", id.String())
 
 		// See if the ID is an ARN
-		a, err := adapterhelpers.ParseARN(*desc.Target.Id)
+		a, err := ParseARN(*desc.Target.Id)
 
 		if err == nil {
 			switch a.Service {
@@ -151,7 +150,7 @@ func targetHealthOutputMapper(_ context.Context, _ *elbv2.Client, scope string, 
 						Type:   "lambda-function",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *desc.Target.Id,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						// Everything is tightly coupled with target health
@@ -165,7 +164,7 @@ func targetHealthOutputMapper(_ context.Context, _ *elbv2.Client, scope string, 
 						Type:   "elbv2-load-balancer",
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *desc.Target.Id,
-						Scope:  adapterhelpers.FormatScope(a.AccountID, a.Region),
+						Scope:  FormatScope(a.AccountID, a.Region),
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -213,14 +212,14 @@ func targetHealthOutputMapper(_ context.Context, _ *elbv2.Client, scope string, 
 	return items, nil
 }
 
-func NewELBv2TargetHealthAdapter(client *elbv2.Client, accountID string, region string, cache sdpcache.Cache) *adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeTargetHealthInput, *elbv2.DescribeTargetHealthOutput, *elbv2.Client, *elbv2.Options] {
-	return &adapterhelpers.DescribeOnlyAdapter[*elbv2.DescribeTargetHealthInput, *elbv2.DescribeTargetHealthOutput, *elbv2.Client, *elbv2.Options]{
+func NewELBv2TargetHealthAdapter(client *elbv2.Client, accountID string, region string, cache sdpcache.Cache) *DescribeOnlyAdapter[*elbv2.DescribeTargetHealthInput, *elbv2.DescribeTargetHealthOutput, *elbv2.Client, *elbv2.Options] {
+	return &DescribeOnlyAdapter[*elbv2.DescribeTargetHealthInput, *elbv2.DescribeTargetHealthOutput, *elbv2.Client, *elbv2.Options]{
 		Region:          region,
 		Client:          client,
 		AccountID:       accountID,
 		ItemType:        "elbv2-target-health",
 		AdapterMetadata: targetHealthAdapterMetadata,
-		SDPCache:        cache,
+		cache:        cache,
 		DescribeFunc: func(ctx context.Context, client *elbv2.Client, input *elbv2.DescribeTargetHealthInput) (*elbv2.DescribeTargetHealthOutput, error) {
 			return client.DescribeTargetHealth(ctx, input)
 		},
