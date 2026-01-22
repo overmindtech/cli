@@ -350,11 +350,12 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 					if imageName != "" {
 						scope, err := gcpshared.ExtractScopeFromURI(ctx, sourceImage)
 						if err == nil {
+							// Use SEARCH for all image references - it handles both family and specific image formats
 							sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 								Query: &sdp.Query{
 									Type:   gcpshared.ComputeImage.String(),
-									Method: sdp.QueryMethod_GET,
-									Query:  imageName,
+									Method: sdp.QueryMethod_SEARCH,
+									Query:  sourceImage, // Pass full URI so Search can detect format
 									Scope:  scope,
 								},
 								BlastPropagation: &sdp.BlastPropagation{

@@ -147,11 +147,11 @@ func TestDataprocCluster(t *testing.T) {
 						Out: false,
 					},
 				},
-				// Master config
+				// Master config (SEARCH with full ImageUri)
 				{
 					ExpectedType:   gcpshared.ComputeImage.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "master-dataproc-image",
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/images/master-dataproc-image", projectID),
 					ExpectedScope:  projectID,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -169,22 +169,22 @@ func TestDataprocCluster(t *testing.T) {
 						Out: false,
 					},
 				},
-				// Worker config
+				// Worker config (SEARCH with full ImageUri)
 				{
 					ExpectedType:   gcpshared.ComputeImage.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "worker-dataproc-image",
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/images/worker-dataproc-image", projectID),
 					ExpectedScope:  projectID,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: false,
 					},
 				},
-				// Secondary worker config
+				// Secondary worker config (SEARCH with full ImageUri)
 				{
 					ExpectedType:   gcpshared.ComputeImage.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "secondary-dataproc-image",
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/images/secondary-dataproc-image", projectID),
 					ExpectedScope:  projectID,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,

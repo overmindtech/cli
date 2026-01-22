@@ -146,11 +146,11 @@ func TestComputeMachineImage(t *testing.T) {
 						Out: false,
 					},
 				},
-				// Source image link
+				// Source image link (SEARCH handles full URI)
 				{
 					ExpectedType:   gcpshared.ComputeImage.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "test-source-image",
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "https://www.googleapis.com/compute/v1/projects/test-project-id/global/images/test-source-image",
 					ExpectedScope:  "test-project-id",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,

@@ -390,8 +390,8 @@ func TestComputeInstance(t *testing.T) {
 			queryTests := append(baseQueries,
 				shared.QueryTest{
 					ExpectedType:   gcpshared.ComputeImage.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "test-image",
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  fmt.Sprintf("projects/%s/global/images/test-image", projectID),
 					ExpectedScope:  projectID,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,

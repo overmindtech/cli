@@ -92,6 +92,7 @@ type ComputeImageIterator interface {
 // ComputeImagesClient is an interface for the Compute Images client
 type ComputeImagesClient interface {
 	Get(ctx context.Context, req *computepb.GetImageRequest, opts ...gax.CallOption) (*computepb.Image, error)
+	GetFromFamily(ctx context.Context, req *computepb.GetFromFamilyImageRequest, opts ...gax.CallOption) (*computepb.Image, error)
 	List(ctx context.Context, req *computepb.ListImagesRequest, opts ...gax.CallOption) ComputeImageIterator
 }
 
@@ -109,6 +110,11 @@ func NewComputeImagesClient(imageClient *compute.ImagesClient) ComputeImagesClie
 // Get retrieves a compute image
 func (c computeImagesClient) Get(ctx context.Context, req *computepb.GetImageRequest, opts ...gax.CallOption) (*computepb.Image, error) {
 	return c.imageClient.Get(ctx, req, opts...)
+}
+
+// GetFromFamily retrieves the latest image from an image family
+func (c computeImagesClient) GetFromFamily(ctx context.Context, req *computepb.GetFromFamilyImageRequest, opts ...gax.CallOption) (*computepb.Image, error) {
+	return c.imageClient.GetFromFamily(ctx, req, opts...)
 }
 
 // List lists compute images and returns an iterator

@@ -379,23 +379,21 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 	// https://cloud.google.com/compute/docs/reference/rest/v1/images/get
 	if sourceImage := disk.GetSourceImage(); sourceImage != "" {
 		if strings.Contains(sourceImage, "/") {
-			imageName := gcpshared.LastPathComponent(sourceImage)
-			if imageName != "" {
-				scope, err := gcpshared.ExtractScopeFromURI(ctx, sourceImage)
-				if err == nil {
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   gcpshared.ComputeImage.String(),
-							Method: sdp.QueryMethod_GET,
-							Query:  imageName,
-							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
-					})
-				}
+			scope, err := gcpshared.ExtractScopeFromURI(ctx, sourceImage)
+			if err == nil {
+				// Use SEARCH for all image references - it handles both family and specific image formats
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputeImage.String(),
+						Method: sdp.QueryMethod_SEARCH,
+						Query:  sourceImage, // Pass full URI so Search can detect format
+						Scope:  scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				})
 			}
 		}
 	}
