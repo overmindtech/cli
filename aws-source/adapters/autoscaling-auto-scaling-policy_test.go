@@ -6,7 +6,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
-	"github.com/overmindtech/cli/aws-source/adapterhelpers"
 	"github.com/overmindtech/cli/sdp-go"
 )
 
@@ -16,86 +15,86 @@ func TestScalingPolicyOutputMapper(t *testing.T) {
 	output := autoscaling.DescribePoliciesOutput{
 		ScalingPolicies: []types.ScalingPolicy{
 			{
-				PolicyName:              adapterhelpers.PtrString("scale-up-policy"),
-				PolicyARN:               adapterhelpers.PtrString("arn:aws:autoscaling:us-east-1:123456789012:scalingPolicy:12345678-1234-1234-1234-123456789012:autoScalingGroupName/my-asg:policyName/scale-up-policy"),
-				AutoScalingGroupName:    adapterhelpers.PtrString("my-asg"),
-				PolicyType:              adapterhelpers.PtrString("TargetTrackingScaling"),
-				AdjustmentType:          adapterhelpers.PtrString("ChangeInCapacity"),
-				MinAdjustmentMagnitude:  adapterhelpers.PtrInt32(1),
-				ScalingAdjustment:       adapterhelpers.PtrInt32(1),
-				Cooldown:                adapterhelpers.PtrInt32(300),
-				MetricAggregationType:   adapterhelpers.PtrString("Average"),
-				EstimatedInstanceWarmup: adapterhelpers.PtrInt32(300),
-				Enabled:                 adapterhelpers.PtrBool(true),
+				PolicyName:              PtrString("scale-up-policy"),
+				PolicyARN:               PtrString("arn:aws:autoscaling:us-east-1:123456789012:scalingPolicy:12345678-1234-1234-1234-123456789012:autoScalingGroupName/my-asg:policyName/scale-up-policy"),
+				AutoScalingGroupName:    PtrString("my-asg"),
+				PolicyType:              PtrString("TargetTrackingScaling"),
+				AdjustmentType:          PtrString("ChangeInCapacity"),
+				MinAdjustmentMagnitude:  PtrInt32(1),
+				ScalingAdjustment:       PtrInt32(1),
+				Cooldown:                PtrInt32(300),
+				MetricAggregationType:   PtrString("Average"),
+				EstimatedInstanceWarmup: PtrInt32(300),
+				Enabled:                 PtrBool(true),
 				TargetTrackingConfiguration: &types.TargetTrackingConfiguration{
 					PredefinedMetricSpecification: &types.PredefinedMetricSpecification{
 						PredefinedMetricType: types.MetricTypeALBRequestCountPerTarget,
-						ResourceLabel:        adapterhelpers.PtrString("app/my-alb/778d41231b141a0f/targetgroup/my-alb-target-group/943f017f100becff"),
+						ResourceLabel:        PtrString("app/my-alb/778d41231b141a0f/targetgroup/my-alb-target-group/943f017f100becff"),
 					},
-					TargetValue: adapterhelpers.PtrFloat64(50.0),
+					TargetValue: PtrFloat64(50.0),
 				},
 				Alarms: []types.Alarm{
 					{
-						AlarmName: adapterhelpers.PtrString("my-alarm-high"),
-						AlarmARN:  adapterhelpers.PtrString("arn:aws:cloudwatch:us-east-1:123456789012:alarm:my-alarm-high"),
+						AlarmName: PtrString("my-alarm-high"),
+						AlarmARN:  PtrString("arn:aws:cloudwatch:us-east-1:123456789012:alarm:my-alarm-high"),
 					},
 					{
-						AlarmName: adapterhelpers.PtrString("my-alarm-low"),
-						AlarmARN:  adapterhelpers.PtrString("arn:aws:cloudwatch:us-east-1:123456789012:alarm:my-alarm-low"),
+						AlarmName: PtrString("my-alarm-low"),
+						AlarmARN:  PtrString("arn:aws:cloudwatch:us-east-1:123456789012:alarm:my-alarm-low"),
 					},
 				},
 			},
 			{
-				PolicyName:              adapterhelpers.PtrString("step-scaling-policy"),
-				PolicyARN:               adapterhelpers.PtrString("arn:aws:autoscaling:us-east-1:123456789012:scalingPolicy:87654321-4321-4321-4321-210987654321:autoScalingGroupName/my-asg:policyName/step-scaling-policy"),
-				AutoScalingGroupName:    adapterhelpers.PtrString("my-asg"),
-				PolicyType:              adapterhelpers.PtrString("StepScaling"),
-				AdjustmentType:          adapterhelpers.PtrString("PercentChangeInCapacity"),
-				MinAdjustmentMagnitude:  adapterhelpers.PtrInt32(2),
-				MetricAggregationType:   adapterhelpers.PtrString("Average"),
-				EstimatedInstanceWarmup: adapterhelpers.PtrInt32(60),
-				Enabled:                 adapterhelpers.PtrBool(true),
+				PolicyName:              PtrString("step-scaling-policy"),
+				PolicyARN:               PtrString("arn:aws:autoscaling:us-east-1:123456789012:scalingPolicy:87654321-4321-4321-4321-210987654321:autoScalingGroupName/my-asg:policyName/step-scaling-policy"),
+				AutoScalingGroupName:    PtrString("my-asg"),
+				PolicyType:              PtrString("StepScaling"),
+				AdjustmentType:          PtrString("PercentChangeInCapacity"),
+				MinAdjustmentMagnitude:  PtrInt32(2),
+				MetricAggregationType:   PtrString("Average"),
+				EstimatedInstanceWarmup: PtrInt32(60),
+				Enabled:                 PtrBool(true),
 				StepAdjustments: []types.StepAdjustment{
 					{
-						MetricIntervalLowerBound: adapterhelpers.PtrFloat64(0.0),
-						MetricIntervalUpperBound: adapterhelpers.PtrFloat64(10.0),
-						ScalingAdjustment:        adapterhelpers.PtrInt32(10),
+						MetricIntervalLowerBound: PtrFloat64(0.0),
+						MetricIntervalUpperBound: PtrFloat64(10.0),
+						ScalingAdjustment:        PtrInt32(10),
 					},
 					{
-						MetricIntervalLowerBound: adapterhelpers.PtrFloat64(10.0),
-						ScalingAdjustment:        adapterhelpers.PtrInt32(20),
+						MetricIntervalLowerBound: PtrFloat64(10.0),
+						ScalingAdjustment:        PtrInt32(20),
 					},
 				},
 				Alarms: []types.Alarm{
 					{
-						AlarmName: adapterhelpers.PtrString("step-alarm"),
-						AlarmARN:  adapterhelpers.PtrString("arn:aws:cloudwatch:us-east-1:123456789012:alarm:step-alarm"),
+						AlarmName: PtrString("step-alarm"),
+						AlarmARN:  PtrString("arn:aws:cloudwatch:us-east-1:123456789012:alarm:step-alarm"),
 					},
 				},
 			},
 			{
-				PolicyName:           adapterhelpers.PtrString("simple-scaling-policy"),
-				PolicyARN:            adapterhelpers.PtrString("arn:aws:autoscaling:us-east-1:123456789012:scalingPolicy:11111111-2222-3333-4444-555555555555:autoScalingGroupName/another-asg:policyName/simple-scaling-policy"),
-				AutoScalingGroupName: adapterhelpers.PtrString("another-asg"),
-				PolicyType:           adapterhelpers.PtrString("SimpleScaling"),
-				AdjustmentType:       adapterhelpers.PtrString("ExactCapacity"),
-				ScalingAdjustment:    adapterhelpers.PtrInt32(5),
-				Cooldown:             adapterhelpers.PtrInt32(600),
-				Enabled:              adapterhelpers.PtrBool(false),
+				PolicyName:           PtrString("simple-scaling-policy"),
+				PolicyARN:            PtrString("arn:aws:autoscaling:us-east-1:123456789012:scalingPolicy:11111111-2222-3333-4444-555555555555:autoScalingGroupName/another-asg:policyName/simple-scaling-policy"),
+				AutoScalingGroupName: PtrString("another-asg"),
+				PolicyType:           PtrString("SimpleScaling"),
+				AdjustmentType:       PtrString("ExactCapacity"),
+				ScalingAdjustment:    PtrInt32(5),
+				Cooldown:             PtrInt32(600),
+				Enabled:              PtrBool(false),
 			},
 			{
-				PolicyName:           adapterhelpers.PtrString("predictive-scaling-policy"),
-				PolicyARN:            adapterhelpers.PtrString("arn:aws:autoscaling:us-east-1:123456789012:scalingPolicy:99999999-8888-7777-6666-555555555555:autoScalingGroupName/predictive-asg:policyName/predictive-scaling-policy"),
-				AutoScalingGroupName: adapterhelpers.PtrString("predictive-asg"),
-				PolicyType:           adapterhelpers.PtrString("PredictiveScaling"),
-				Enabled:              adapterhelpers.PtrBool(true),
+				PolicyName:           PtrString("predictive-scaling-policy"),
+				PolicyARN:            PtrString("arn:aws:autoscaling:us-east-1:123456789012:scalingPolicy:99999999-8888-7777-6666-555555555555:autoScalingGroupName/predictive-asg:policyName/predictive-scaling-policy"),
+				AutoScalingGroupName: PtrString("predictive-asg"),
+				PolicyType:           PtrString("PredictiveScaling"),
+				Enabled:              PtrBool(true),
 				PredictiveScalingConfiguration: &types.PredictiveScalingConfiguration{
 					MetricSpecifications: []types.PredictiveScalingMetricSpecification{
 						{
-							TargetValue: adapterhelpers.PtrFloat64(40.0),
+							TargetValue: PtrFloat64(40.0),
 							PredefinedMetricPairSpecification: &types.PredictiveScalingPredefinedMetricPair{
 								PredefinedMetricType: types.PredefinedMetricPairTypeALBRequestCount,
-								ResourceLabel:        adapterhelpers.PtrString("app/predictive-alb/abc123def456/targetgroup/predictive-tg/789xyz"),
+								ResourceLabel:        PtrString("app/predictive-alb/abc123def456/targetgroup/predictive-tg/789xyz"),
 							},
 						},
 					},
@@ -141,7 +140,7 @@ func TestScalingPolicyOutputMapper(t *testing.T) {
 	}
 
 	// Check linked items
-	tests := adapterhelpers.QueryTests{
+	tests := QueryTests{
 		{
 			ExpectedType:   "autoscaling-auto-scaling-group",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -178,7 +177,7 @@ func TestScalingPolicyOutputMapper(t *testing.T) {
 
 	// Test the second policy (StepScaling)
 	item2 := items[1]
-	tests2 := adapterhelpers.QueryTests{
+	tests2 := QueryTests{
 		{
 			ExpectedType:   "autoscaling-auto-scaling-group",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -197,7 +196,7 @@ func TestScalingPolicyOutputMapper(t *testing.T) {
 
 	// Test the third policy (SimpleScaling with no alarms)
 	item3 := items[2]
-	tests3 := adapterhelpers.QueryTests{
+	tests3 := QueryTests{
 		{
 			ExpectedType:   "autoscaling-auto-scaling-group",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -221,7 +220,7 @@ func TestScalingPolicyOutputMapper(t *testing.T) {
 
 	// Test the fourth policy (PredictiveScaling with ALB ResourceLabel)
 	item4 := items[3]
-	tests4 := adapterhelpers.QueryTests{
+	tests4 := QueryTests{
 		{
 			ExpectedType:   "autoscaling-auto-scaling-group",
 			ExpectedMethod: sdp.QueryMethod_GET,
@@ -284,14 +283,14 @@ func TestParseResourceLabelLinks(t *testing.T) {
 			expectedCount:  2,
 		},
 		{
-			name:           "Too few sections",
-			resourceLabel:  "app/my-alb/targetgroup",
-			expectedCount:  0,
+			name:          "Too few sections",
+			resourceLabel: "app/my-alb/targetgroup",
+			expectedCount: 0,
 		},
 		{
-			name:           "Empty string",
-			resourceLabel:  "",
-			expectedCount:  0,
+			name:          "Empty string",
+			resourceLabel: "",
+			expectedCount: 0,
 		},
 		{
 			name:           "Unknown prefix",
