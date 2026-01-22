@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
 )
 
@@ -25,4 +25,3 @@ type StorageAccountsPagerInterface interface {
 	More() bool
 	NextPage(ctx context.Context) (armstorage.AccountsClientListByResourceGroupResponse, error)
 }
-
