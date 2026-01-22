@@ -388,6 +388,28 @@ func ExtractDNSFromURL(urlStr string) string {
 	return urlStr
 }
 
+// ExtractStorageAccountNameFromBlobURI extracts the storage account name from an Azure blob URI
+// Blob URIs follow the format: https://{accountName}.blob.core.windows.net/{container}/{blob}
+func ExtractStorageAccountNameFromBlobURI(blobURI string) string {
+	if blobURI == "" {
+		return ""
+	}
+
+	parsedURL, err := url.Parse(blobURI)
+	if err != nil {
+		return ""
+	}
+
+	host := parsedURL.Host
+	// Extract account name from hostname: {accountName}.blob.core.windows.net
+	parts := strings.Split(host, ".")
+	if len(parts) > 0 && parts[0] != "" {
+		return parts[0]
+	}
+
+	return ""
+}
+
 // ref: https://learn.microsoft.com/en-us/rest/api/authorization/role-assignments/get?view=rest-authorization-2022-04-01&tabs=HTTP
 // subscriptionIDPattern matches Azure subscription IDs (UUID format: 8-4-4-4-12 hex digits)
 var subscriptionIDPattern = regexp.MustCompile(`^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`)

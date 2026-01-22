@@ -207,6 +207,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create disk encryption sets client: %w", err)
 		}
 
+		imagesClient, err := armcompute.NewImagesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create images client: %w", err)
+		}
+
 		// Create adapters for each resource group
 		for _, resourceGroup := range resourceGroups {
 			// Add Compute Virtual Machine adapter for this resource group
@@ -449,6 +454,14 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					resourceGroup,
 				), cache),
 			)
+			// Add Image adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewComputeImage(
+					clients.NewImagesClient(imagesClient),
+					subscriptionID,
+					resourceGroup,
+				), cache),
+			)
 		}
 
 		log.WithFields(log.Fields{
@@ -597,6 +610,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				"placeholder-resource-group",
 			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewComputeDiskEncryptionSet(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
+			sources.WrapperToAdapter(NewComputeImage(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
