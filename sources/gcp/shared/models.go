@@ -178,7 +178,6 @@ const (
 	DatabaseOperation                            shared.Resource = "database-operation"
 	Session                                      shared.Resource = "session"
 	InstancePartition                            shared.Resource = "instance-partition"
-	RegionBackendService                         shared.Resource = "region-backend-service"
 	NetworkEndpointGroup                         shared.Resource = "network-endpoint-group"
 	SSLCertificate                               shared.Resource = "ssl-certificate"
 	GlobalAddress                                shared.Resource = "global-address"

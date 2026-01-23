@@ -338,6 +338,38 @@ func (c computeHealthCheckClient) List(ctx context.Context, req *computepb.ListH
 	return c.client.List(ctx, req, opts...)
 }
 
+// Interface for iterating over regional compute health checks.
+type ComputeRegionHealthCheckIterator interface {
+	Next() (*computepb.HealthCheck, error)
+}
+
+// Interface for accessing regional compute HealthCheck resources.
+type ComputeRegionHealthCheckClient interface {
+	Get(ctx context.Context, req *computepb.GetRegionHealthCheckRequest, opts ...gax.CallOption) (*computepb.HealthCheck, error)
+	List(ctx context.Context, req *computepb.ListRegionHealthChecksRequest, opts ...gax.CallOption) ComputeRegionHealthCheckIterator
+}
+
+type computeRegionHealthCheckClient struct {
+	client *compute.RegionHealthChecksClient
+}
+
+// NewComputeRegionHealthCheckClient creates a new ComputeRegionHealthCheckClient
+func NewComputeRegionHealthCheckClient(regionHealthChecksClient *compute.RegionHealthChecksClient) ComputeRegionHealthCheckClient {
+	return &computeRegionHealthCheckClient{
+		client: regionHealthChecksClient,
+	}
+}
+
+// Get retrieves a regional compute health check
+func (c computeRegionHealthCheckClient) Get(ctx context.Context, req *computepb.GetRegionHealthCheckRequest, opts ...gax.CallOption) (*computepb.HealthCheck, error) {
+	return c.client.Get(ctx, req, opts...)
+}
+
+// List lists regional compute health checks and returns an iterator
+func (c computeRegionHealthCheckClient) List(ctx context.Context, req *computepb.ListRegionHealthChecksRequest, opts ...gax.CallOption) ComputeRegionHealthCheckIterator {
+	return c.client.List(ctx, req, opts...)
+}
+
 // Interface for interating over compute node groups.
 type ComputeNodeTemplateIterator interface {
 	Next() (*computepb.NodeTemplate, error)

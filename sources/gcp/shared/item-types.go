@@ -155,7 +155,6 @@ var (
 	SpannerSession                                                       = shared.NewItemType(GCP, Spanner, Session)           // https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.databases.sessions/get
 	SpannerInstancePartition                                             = shared.NewItemType(GCP, Spanner, InstancePartition) // https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances.instancePartitions/get
 	BigQueryModel                                                        = shared.NewItemType(GCP, BigQuery, Model)
-	ComputeRegionBackendService                                          = shared.NewItemType(GCP, Compute, RegionBackendService)
 	ComputeNetworkEndpointGroup                                          = shared.NewItemType(GCP, Compute, NetworkEndpointGroup)
 	ComputeSSLCertificate                                                = shared.NewItemType(GCP, Compute, SSLCertificate)
 	ComputeGlobalAddress                                                 = shared.NewItemType(GCP, Compute, GlobalAddress)

@@ -49,6 +49,7 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 		nodeGroupCli              *compute.NodeGroupsClient
 		nodeTemplateCli           *compute.NodeTemplatesClient
 		regionBackendServiceCli   *compute.RegionBackendServicesClient
+		regionHealthCheckCli      *compute.RegionHealthChecksClient
 	)
 
 	if initGCPClients {
@@ -214,6 +215,11 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute region backend services client: %w", err)
 		}
+
+		regionHealthCheckCli, err = compute.NewRegionHealthChecksRESTClient(ctx, opts...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create compute region health checks client: %w", err)
+		}
 	}
 
 	var adapters []discovery.Adapter
@@ -223,7 +229,6 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 		adapters = append(adapters,
 			sources.WrapperToAdapter(NewComputeAddress(shared.NewComputeAddressClient(addressCli), regionLocations), cache),
 			sources.WrapperToAdapter(NewComputeForwardingRule(shared.NewComputeForwardingRuleClient(computeForwardingCli), regionLocations), cache),
-			sources.WrapperToAdapter(NewComputeRegionBackendService(shared.NewComputeRegionBackendServiceClient(regionBackendServiceCli), regionLocations), cache),
 			sources.WrapperToAdapter(NewComputeNodeTemplate(shared.NewComputeNodeTemplateClient(nodeTemplateCli), regionLocations), cache),
 		)
 	}
@@ -242,12 +247,34 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 		)
 	}
 
+	// Dual-scope adapters (handle both global and regional)
+	if len(projectLocations) > 0 || len(regionLocations) > 0 {
+		adapters = append(adapters,
+			sources.WrapperToAdapter(
+				NewComputeBackendService(
+					shared.NewComputeBackendServiceClient(backendServiceCli),
+					shared.NewComputeRegionBackendServiceClient(regionBackendServiceCli),
+					projectLocations,
+					regionLocations,
+				),
+				cache,
+			),
+			sources.WrapperToAdapter(
+				NewComputeHealthCheck(
+					shared.NewComputeHealthCheckClient(computeHealthCheckCli),
+					shared.NewComputeRegionHealthCheckClient(regionHealthCheckCli),
+					projectLocations,
+					regionLocations,
+				),
+				cache,
+			),
+		)
+	}
+
 	// global - project level - adapters
 	if len(projectLocations) > 0 {
 		adapters = append(adapters,
-			sources.WrapperToAdapter(NewComputeBackendService(shared.NewComputeBackendServiceClient(backendServiceCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewComputeImage(shared.NewComputeImagesClient(computeImagesCli), projectLocations), cache),
-			sources.WrapperToAdapter(NewComputeHealthCheck(shared.NewComputeHealthCheckClient(computeHealthCheckCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewComputeSecurityPolicy(shared.NewComputeSecurityPolicyClient(computeSecurityPolicyCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewComputeMachineImage(shared.NewComputeMachineImageClient(computeMachineImageCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewComputeSnapshot(shared.NewComputeSnapshotsClient(computeSnapshotCli), projectLocations), cache),

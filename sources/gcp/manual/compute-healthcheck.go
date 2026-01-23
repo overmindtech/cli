@@ -3,6 +3,7 @@ package manual
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
@@ -20,19 +21,58 @@ import (
 var ComputeHealthCheckLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeHealthCheck)
 
 type computeHealthCheckWrapper struct {
-	client gcpshared.ComputeHealthCheckClient
-	*gcpshared.ProjectBase
+	globalClient     gcpshared.ComputeHealthCheckClient
+	regionalClient   gcpshared.ComputeRegionHealthCheckClient
+	projectLocations []gcpshared.LocationInfo // For global health checks
+	regionLocations  []gcpshared.LocationInfo // For regional health checks
+	*shared.Base
 }
 
-// NewComputeHealthCheck creates a new computeHealthCheckWrapper instance.
-func NewComputeHealthCheck(client gcpshared.ComputeHealthCheckClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
+// NewComputeHealthCheck creates a new computeHealthCheckWrapper instance that handles both global and regional health checks.
+func NewComputeHealthCheck(globalClient gcpshared.ComputeHealthCheckClient, regionalClient gcpshared.ComputeRegionHealthCheckClient, projectLocations []gcpshared.LocationInfo, regionLocations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
+	// Combine all locations for scope generation
+	allLocations := make([]gcpshared.LocationInfo, 0, len(projectLocations)+len(regionLocations))
+	allLocations = append(allLocations, projectLocations...)
+	allLocations = append(allLocations, regionLocations...)
+
+	scopes := make([]string, 0, len(allLocations))
+	for _, location := range allLocations {
+		scopes = append(scopes, location.ToScope())
+	}
+
 	return &computeHealthCheckWrapper{
-		client: client,
-		ProjectBase: gcpshared.NewProjectBase(
-			locations,
-			sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION,
-			gcpshared.ComputeHealthCheck,
-		),
+		globalClient:     globalClient,
+		regionalClient:   regionalClient,
+		projectLocations: projectLocations,
+		regionLocations:  regionLocations,
+		Base:             shared.NewBase(sdp.AdapterCategory_ADAPTER_CATEGORY_CONFIGURATION, gcpshared.ComputeHealthCheck, scopes),
+	}
+}
+
+// validateAndParseScope parses the scope and validates it against configured locations.
+// Returns the LocationInfo if valid, or a QueryError if the scope is invalid or not configured.
+func (c computeHealthCheckWrapper) validateAndParseScope(scope string) (gcpshared.LocationInfo, *sdp.QueryError) {
+	location, err := gcpshared.LocationFromScope(scope)
+	if err != nil {
+		return gcpshared.LocationInfo{}, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
+	// Check if the location is in the adapter's configured locations
+	allLocations := append([]gcpshared.LocationInfo{}, c.projectLocations...)
+	allLocations = append(allLocations, c.regionLocations...)
+
+	for _, configuredLoc := range allLocations {
+		if location.Equals(configuredLoc) {
+			return location, nil
+		}
+	}
+
+	return gcpshared.LocationInfo{}, &sdp.QueryError{
+		ErrorType:   sdp.QueryError_NOSCOPE,
+		ErrorString: fmt.Sprintf("scope %s not found in adapter's configured locations", scope),
 	}
 }
 
@@ -40,6 +80,8 @@ func (c computeHealthCheckWrapper) IAMPermissions() []string {
 	return []string{
 		"compute.healthChecks.get",
 		"compute.healthChecks.list",
+		"compute.regionHealthChecks.get",
+		"compute.regionHealthChecks.list",
 	}
 }
 
@@ -61,6 +103,10 @@ func (c computeHealthCheckWrapper) TerraformMappings() []*sdp.TerraformMapping {
 			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_health_check.name",
 		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "google_compute_region_health_check.name",
+		},
 	}
 }
 
@@ -71,97 +117,169 @@ func (c computeHealthCheckWrapper) GetLookups() sources.ItemTypeLookups {
 }
 
 func (c computeHealthCheckWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
-	location, err := c.LocationFromScope(scope)
+	// Parse and validate the scope
+	location, err := c.validateAndParseScope(scope)
 	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
+		return nil, err
 	}
 
+	// Route to the appropriate API based on whether the scope includes a region
+	if location.Regional() {
+		// Regional health check
+		req := &computepb.GetRegionHealthCheckRequest{
+			Project:     location.ProjectID,
+			Region:      location.Region,
+			HealthCheck: queryParts[0],
+		}
+
+		healthCheck, getErr := c.regionalClient.Get(ctx, req)
+		if getErr != nil {
+			return nil, gcpshared.QueryError(getErr, scope, c.Type())
+		}
+
+		return GcpComputeHealthCheckToSDPItem(healthCheck, location, gcpshared.ComputeHealthCheck)
+	}
+
+	// Global health check
 	req := &computepb.GetHealthCheckRequest{
 		Project:     location.ProjectID,
 		HealthCheck: queryParts[0],
 	}
 
-	healthCheck, getErr := c.client.Get(ctx, req)
+	healthCheck, getErr := c.globalClient.Get(ctx, req)
 	if getErr != nil {
 		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	return c.gcpComputeHealthCheckToSDPItem(healthCheck, location)
+	return GcpComputeHealthCheckToSDPItem(healthCheck, location, gcpshared.ComputeHealthCheck)
 }
 
 func (c computeHealthCheckWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	location, err := c.LocationFromScope(scope)
+	// Parse and validate the scope
+	location, err := c.validateAndParseScope(scope)
 	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
+		return nil, err
 	}
 
-	it := c.client.List(ctx, &computepb.ListHealthChecksRequest{
-		Project: location.ProjectID,
-	})
-
 	var items []*sdp.Item
-	for {
-		healthCheck, iterErr := it.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-		}
 
-		item, sdpErr := c.gcpComputeHealthCheckToSDPItem(healthCheck, location)
-		if sdpErr != nil {
-			return nil, sdpErr
-		}
+	// Route to the appropriate API based on whether the scope includes a region
+	if location.Regional() {
+		// Regional health checks
+		it := c.regionalClient.List(ctx, &computepb.ListRegionHealthChecksRequest{
+			Project: location.ProjectID,
+			Region:  location.Region,
+		})
 
-		items = append(items, item)
+		for {
+			healthCheck, iterErr := it.Next()
+			if errors.Is(iterErr, iterator.Done) {
+				break
+			}
+			if iterErr != nil {
+				return nil, gcpshared.QueryError(iterErr, scope, c.Type())
+			}
+
+			item, sdpErr := GcpComputeHealthCheckToSDPItem(healthCheck, location, gcpshared.ComputeHealthCheck)
+			if sdpErr != nil {
+				return nil, sdpErr
+			}
+
+			items = append(items, item)
+		}
+	} else {
+		// Global health checks
+		it := c.globalClient.List(ctx, &computepb.ListHealthChecksRequest{
+			Project: location.ProjectID,
+		})
+
+		for {
+			healthCheck, iterErr := it.Next()
+			if errors.Is(iterErr, iterator.Done) {
+				break
+			}
+			if iterErr != nil {
+				return nil, gcpshared.QueryError(iterErr, scope, c.Type())
+			}
+
+			item, sdpErr := GcpComputeHealthCheckToSDPItem(healthCheck, location, gcpshared.ComputeHealthCheck)
+			if sdpErr != nil {
+				return nil, sdpErr
+			}
+
+			items = append(items, item)
+		}
 	}
 
 	return items, nil
 }
 
 func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	location, err := c.LocationFromScope(scope)
+	// Parse and validate the scope
+	location, err := c.validateAndParseScope(scope)
 	if err != nil {
-		stream.SendError(&sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		})
+		stream.SendError(err)
 		return
 	}
 
-	it := c.client.List(ctx, &computepb.ListHealthChecksRequest{
-		Project: location.ProjectID,
-	})
+	// Route to the appropriate API based on whether the scope includes a region
+	if location.Regional() {
+		// Regional health checks
+		it := c.regionalClient.List(ctx, &computepb.ListRegionHealthChecksRequest{
+			Project: location.ProjectID,
+			Region:  location.Region,
+		})
 
-	for {
-		healthCheck, iterErr := it.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
-			return
-		}
+		for {
+			healthCheck, iterErr := it.Next()
+			if errors.Is(iterErr, iterator.Done) {
+				break
+			}
+			if iterErr != nil {
+				stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
+				return
+			}
 
-		item, sdpErr := c.gcpComputeHealthCheckToSDPItem(healthCheck, location)
-		if sdpErr != nil {
-			stream.SendError(sdpErr)
-			continue
-		}
+			item, sdpErr := GcpComputeHealthCheckToSDPItem(healthCheck, location, gcpshared.ComputeHealthCheck)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
 
-		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
-		stream.SendItem(item)
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	} else {
+		// Global health checks
+		it := c.globalClient.List(ctx, &computepb.ListHealthChecksRequest{
+			Project: location.ProjectID,
+		})
+
+		for {
+			healthCheck, iterErr := it.Next()
+			if errors.Is(iterErr, iterator.Done) {
+				break
+			}
+			if iterErr != nil {
+				stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
+				return
+			}
+
+			item, sdpErr := GcpComputeHealthCheckToSDPItem(healthCheck, location, gcpshared.ComputeHealthCheck)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
 	}
 }
 
-func (c computeHealthCheckWrapper) gcpComputeHealthCheckToSDPItem(healthCheck *computepb.HealthCheck, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
+// GcpComputeHealthCheckToSDPItem converts a GCP health check to an SDP item.
+// This function is shared by both global and regional health check adapters.
+func GcpComputeHealthCheckToSDPItem(healthCheck *computepb.HealthCheck, location gcpshared.LocationInfo, itemType shared.ItemType) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(healthCheck)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -171,7 +289,7 @@ func (c computeHealthCheckWrapper) gcpComputeHealthCheckToSDPItem(healthCheck *c
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            gcpshared.ComputeHealthCheck.String(),
+		Type:            itemType.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           location.ToScope(),
