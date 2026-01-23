@@ -469,8 +469,11 @@ var PredefinedRoles = map[string]role{
 		IAMPermissions: []string{
 			"cloudkms.cryptoKeys.get",
 			"cloudkms.cryptoKeys.list",
+			"cloudkms.cryptoKeyVersions.get",
+			"cloudkms.cryptoKeyVersions.list",
 			"cloudkms.keyRings.get",
 			"cloudkms.keyRings.list",
+			"cloudkms.locations.list",
 		},
 	},
 }

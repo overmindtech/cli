@@ -55,6 +55,16 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
 					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "global|test-keyring|test-key",
+					ExpectedScope:  "test-project-id",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|1",
 					ExpectedScope:  "test-project-id",
