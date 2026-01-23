@@ -508,7 +508,7 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 
 	// Search already has RLock, so we don't need to add another one here
 	initialSearchStart := time.Now()
-	items, err := c.Search(ck)
+	items, err := c.Search(ctx, ck)
 	initialSearchDuration := time.Since(initialSearchStart)
 	span.SetAttributes(
 		attribute.Float64("ovm.cache.initialSearchDuration_ms", float64(initialSearchDuration.Milliseconds())),
@@ -548,13 +548,13 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 				return false, ck, nil, nil
 			}
 
-			// Work is complete, re-check the cache for results
-			recheckSearchStart := time.Now()
-			items, recheckErr := c.Search(ck)
-			recheckSearchDuration := time.Since(recheckSearchStart)
-			span.SetAttributes(
-				attribute.Float64("ovm.cache.recheckSearchDuration_ms", float64(recheckSearchDuration.Milliseconds())),
-			)
+		// Work is complete, re-check the cache for results
+		recheckSearchStart := time.Now()
+		items, recheckErr := c.Search(ctx, ck)
+		recheckSearchDuration := time.Since(recheckSearchStart)
+		span.SetAttributes(
+			attribute.Float64("ovm.cache.recheckSearchDuration_ms", float64(recheckSearchDuration.Milliseconds())),
+		)
 			if recheckErr != nil {
 				if errors.Is(recheckErr, ErrCacheNotFound) {
 					// Cache still empty after pending work completed
@@ -649,10 +649,14 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 }
 
 // Search performs a lower-level search using a CacheKey.
-func (c *BoltCache) Search(ck CacheKey) ([]*sdp.Item, error) {
+// If ctx contains a span, detailed timing metrics will be added as span attributes.
+func (c *BoltCache) Search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
 	if c == nil {
 		return nil, nil
 	}
+
+	// Get span from context if available
+	span := trace.SpanFromContext(ctx)
 
 	// Acquire read lock to prevent compaction from closing the database, but do not lock out other bbolt operations
 	lockAcquireStart := time.Now()
@@ -712,14 +716,15 @@ func (c *BoltCache) Search(ck CacheKey) ([]*sdp.Item, error) {
 	})
 	txDuration := time.Since(txStart)
 
-	// Log detailed search metrics for performance analysis
-	log.WithFields(log.Fields{
-		"ovm.cache.lockAcquireDuration_ms": lockAcquireDuration.Milliseconds(),
-		"ovm.cache.txDuration_ms":          txDuration.Milliseconds(),
-		"ovm.cache.itemsScanned":           itemsScanned,
-		"ovm.cache.itemsReturned":          len(results),
-		"ovm.cache.cacheKey":               ck.String(),
-	}).Trace("BoltCache.Search completed")
+	// Add detailed search metrics to span if available
+	if span.IsRecording() {
+		span.SetAttributes(
+			attribute.Int64("ovm.cache.lockAcquireDuration_ms", lockAcquireDuration.Milliseconds()),
+			attribute.Int64("ovm.cache.txDuration_ms", txDuration.Milliseconds()),
+			attribute.Int("ovm.cache.itemsScanned", itemsScanned),
+			attribute.Int("ovm.cache.itemsReturned", len(results)),
+		)
+	}
 
 	if err != nil {
 		return nil, fmt.Errorf("search failed: %w", err)

@@ -103,7 +103,7 @@ func BenchmarkCache1SingleItem(b *testing.B) {
 
 	for range b.N {
 		// Search for a single item
-		_, err = c.Search(query)
+		_, err = c.Search(context.Background(), query)
 
 		if err != nil {
 			b.Fatal(err)
@@ -120,7 +120,7 @@ func BenchmarkCache10SingleItem(b *testing.B) {
 
 	for range b.N {
 		// Search for a single item
-		_, err = c.Search(query)
+		_, err = c.Search(context.Background(), query)
 
 		if err != nil {
 			b.Fatal(err)
@@ -137,7 +137,7 @@ func BenchmarkCache100SingleItem(b *testing.B) {
 
 	for range b.N {
 		// Search for a single item
-		_, err = c.Search(query)
+		_, err = c.Search(context.Background(), query)
 
 		if err != nil {
 			b.Fatal(err)
@@ -154,7 +154,7 @@ func BenchmarkCache1000SingleItem(b *testing.B) {
 
 	for range b.N {
 		// Search for a single item
-		_, err = c.Search(query)
+		_, err = c.Search(context.Background(), query)
 
 		if err != nil {
 			b.Fatal(err)
@@ -171,7 +171,7 @@ func BenchmarkCache10_000SingleItem(b *testing.B) {
 
 	for range b.N {
 		// Search for a single item
-		_, err = c.Search(query)
+		_, err = c.Search(context.Background(), query)
 
 		if err != nil {
 			b.Fatal(err)

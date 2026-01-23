@@ -48,7 +48,7 @@ func TestStoreItem(t *testing.T) {
 			ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 			cache.StoreItem(t.Context(), item, 10*time.Second, ck)
 
-			results, err := cache.Search(ck)
+			results, err := cache.Search(t.Context(), ck)
 			if err != nil {
 				t.Error(err)
 			}
@@ -63,7 +63,7 @@ func TestStoreItem(t *testing.T) {
 
 			cache.StoreItem(t.Context(), item, 10*time.Second, ck)
 
-			results, err = cache.Search(ck)
+			results, err = cache.Search(t.Context(), ck)
 			if err != nil {
 				t.Error(err)
 			}
@@ -80,7 +80,7 @@ func TestStoreItem(t *testing.T) {
 
 			ck.SST.Scope = fmt.Sprintf("new scope %v", ck.SST.Scope)
 
-			results, err = cache.Search(ck)
+			results, err = cache.Search(t.Context(), ck)
 			if err != nil {
 				if !errors.Is(err, ErrCacheNotFound) {
 					t.Error(err)
@@ -118,7 +118,7 @@ func TestStoreError(t *testing.T) {
 				Query:  &uav,
 			})
 
-			items, err := cache.Search(CacheKey{
+			items, err := cache.Search(t.Context(), CacheKey{
 				SST:    sst,
 				Method: sdp.QueryMethod_GET.Enum(),
 				Query:  &uav,
@@ -143,7 +143,7 @@ func TestStoreError(t *testing.T) {
 
 			ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
-			items, err = cache.Search(ck)
+			items, err = cache.Search(t.Context(), ck)
 
 			if len(items) > 0 {
 				t.Errorf("expected 0 items, got %v", len(items))
@@ -160,7 +160,7 @@ func TestStoreError(t *testing.T) {
 				Query:  &uav,
 			})
 
-			items, err = cache.Search(CacheKey{
+			items, err = cache.Search(t.Context(), CacheKey{
 				SST:    sst,
 				Method: sdp.QueryMethod_GET.Enum(),
 				Query:  &uav,
@@ -222,7 +222,7 @@ func TestPurge(t *testing.T) {
 			// Make sure all the items are in the cache
 			for _, i := range cachedItems {
 				ck := CacheKeyFromQuery(i.Item.GetMetadata().GetSourceQuery(), i.Item.GetMetadata().GetSourceName())
-				items, err := cache.Search(ck)
+				items, err := cache.Search(t.Context(), ck)
 				if err != nil {
 					t.Error(err)
 				}
@@ -289,7 +289,7 @@ func TestDelete(t *testing.T) {
 			}
 
 			// It should be there
-			items, err := cache.Search(CacheKey{
+			items, err := cache.Search(t.Context(), CacheKey{
 				SST: sst,
 			})
 
@@ -307,7 +307,7 @@ func TestDelete(t *testing.T) {
 			})
 
 			// It should be gone
-			items, err = cache.Search(CacheKey{
+			items, err = cache.Search(t.Context(), CacheKey{
 				SST: sst,
 			})
 
@@ -336,7 +336,7 @@ func TestPointers(t *testing.T) {
 
 			item.Type = "bad"
 
-			items, err := cache.Search(ck)
+			items, err := cache.Search(t.Context(), ck)
 
 			if err != nil {
 				t.Error(err)
@@ -375,7 +375,7 @@ func TestCacheClear(t *testing.T) {
 			cache.StartPurger(ctx)
 
 			// Make sure the cache is populated
-			_, err := cache.Search(ck)
+			_, err := cache.Search(t.Context(), ck)
 			if err != nil {
 				t.Error(err)
 			}
@@ -384,7 +384,7 @@ func TestCacheClear(t *testing.T) {
 			cache.Clear()
 
 			// Make sure the cache is empty
-			_, err = cache.Search(ck)
+			_, err = cache.Search(t.Context(), ck)
 
 			if err == nil {
 				t.Error("expected error, cache not cleared")
@@ -392,7 +392,7 @@ func TestCacheClear(t *testing.T) {
 
 			// Make sure we can populate it again
 			cache.StoreItem(ctx, item, 500*time.Millisecond, ck)
-			_, err = cache.Search(ck)
+			_, err = cache.Search(t.Context(), ck)
 
 			if err != nil {
 				t.Error(err)
@@ -572,7 +572,7 @@ func TestSearchWithListMethod(t *testing.T) {
 			cache.StoreItem(t.Context(), item2, 10*time.Second, ck)
 
 			// Search should return both items
-			items, err := cache.Search(ck)
+			items, err := cache.Search(t.Context(), ck)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -609,7 +609,7 @@ func TestSearchMethodWithDifferentQueries(t *testing.T) {
 			cache.StoreItem(t.Context(), item2, 10*time.Second, ck2)
 
 			// Search with query1 should only return item1
-			items, err := cache.Search(ck1)
+			items, err := cache.Search(t.Context(), ck1)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -618,7 +618,7 @@ func TestSearchMethodWithDifferentQueries(t *testing.T) {
 			}
 
 			// Search with query2 should only return item2
-			items, err = cache.Search(ck2)
+			items, err = cache.Search(t.Context(), ck2)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -657,7 +657,7 @@ func TestSearchWithPartialCacheKey(t *testing.T) {
 
 			// Search with SST only should return both items
 			ckPartial := CacheKey{SST: sst}
-			items, err := cache.Search(ckPartial)
+			items, err := cache.Search(t.Context(), ckPartial)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -694,7 +694,7 @@ func TestDeleteWithPartialCacheKey(t *testing.T) {
 			cache.Delete(CacheKey{SST: sst})
 
 			// Verify all items are gone
-			items, err := cache.Search(CacheKey{SST: sst})
+			items, err := cache.Search(t.Context(), CacheKey{SST: sst})
 			if !errors.Is(err, ErrCacheNotFound) {
 				t.Errorf("expected ErrCacheNotFound after delete, got: %v", err)
 			}
@@ -799,7 +799,7 @@ func TestEmptyCacheOperations(t *testing.T) {
 			ck := CacheKey{SST: sst}
 
 			// Search on empty cache
-			items, err := cache.Search(ck)
+			items, err := cache.Search(t.Context(), ck)
 			if !errors.Is(err, ErrCacheNotFound) {
 				t.Errorf("expected ErrCacheNotFound on empty cache, got: %v", err)
 			}
@@ -862,7 +862,7 @@ func TestMultipleItemsSameSST(t *testing.T) {
 			}
 
 			// Search with SST only should return all 3 items
-			allItems, err := cache.Search(CacheKey{SST: sst})
+			allItems, err := cache.Search(t.Context(), CacheKey{SST: sst})
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -874,7 +874,7 @@ func TestMultipleItemsSameSST(t *testing.T) {
 			for i := range 3 {
 				uav := fmt.Sprintf("item%d", i)
 				ck := CacheKey{SST: sst, Method: &method, UniqueAttributeValue: &uav}
-				foundItems, err := cache.Search(ck)
+				foundItems, err := cache.Search(t.Context(), ck)
 				if err != nil {
 					t.Errorf("unexpected error for item%d: %v", i, err)
 				}
@@ -923,7 +923,7 @@ func TestMemoryCacheStartPurge(t *testing.T) {
 
 	// At this point everything should be been cleaned, and the purger should be
 	// sleeping forever
-	items, err := cache.Search(CacheKeyFromQuery(
+	items, err := cache.Search(t.Context(), CacheKeyFromQuery(
 		cachedItems[1].Item.GetMetadata().GetSourceQuery(),
 		cachedItems[1].Item.GetMetadata().GetSourceName(),
 	))
@@ -950,7 +950,7 @@ func TestMemoryCacheStartPurge(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 
 	// It should be empty again
-	items, err = cache.Search(CacheKeyFromQuery(
+	items, err = cache.Search(t.Context(), CacheKeyFromQuery(
 		cachedItems[1].Item.GetMetadata().GetSourceQuery(),
 		cachedItems[1].Item.GetMetadata().GetSourceName(),
 	))
@@ -986,7 +986,7 @@ func TestMemoryCacheStopPurge(t *testing.T) {
 
 	// Make sure it's not purged
 	time.Sleep(100 * time.Millisecond)
-	items, err := cache.Search(CacheKey{
+	items, err := cache.Search(t.Context(), CacheKey{
 		SST: sst,
 	})
 
@@ -1331,7 +1331,7 @@ func TestBoltCacheExistingFile(t *testing.T) {
 	cache1.StoreItem(ctx, item2, 100*time.Millisecond, ck2)
 
 	// Verify both items are in the cache
-	items, err := cache1.Search(ck1)
+	items, err := cache1.Search(t.Context(), ck1)
 	if err != nil {
 		t.Errorf("failed to search for item1: %v", err)
 	}
@@ -1339,7 +1339,7 @@ func TestBoltCacheExistingFile(t *testing.T) {
 		t.Errorf("expected 1 item for ck1, got %d", len(items))
 	}
 
-	items, err = cache1.Search(ck2)
+	items, err = cache1.Search(t.Context(), ck2)
 	if err != nil {
 		t.Errorf("failed to search for item2: %v", err)
 	}
@@ -1363,7 +1363,7 @@ func TestBoltCacheExistingFile(t *testing.T) {
 	defer cache2.Close()
 
 	// Verify item1 is still accessible (not expired)
-	items, err = cache2.Search(ck1)
+	items, err = cache2.Search(t.Context(), ck1)
 	if err != nil {
 		t.Errorf("failed to search for item1 in existing cache: %v", err)
 	}
@@ -1372,11 +1372,11 @@ func TestBoltCacheExistingFile(t *testing.T) {
 	}
 
 	// Verify item2 is expired (should not be found or should be purged)
-	items, err = cache2.Search(ck2)
+	items, err = cache2.Search(t.Context(), ck2)
 	if err == nil && len(items) > 0 {
 		// Item might still be there if purge hasn't run, so let's purge explicitly
 		cache2.Purge(ctx, time.Now())
-		items, err = cache2.Search(ck2)
+		items, err = cache2.Search(t.Context(), ck2)
 		if err == nil && len(items) > 0 {
 			t.Errorf("expected item2 to be expired and purged, but found %d items", len(items))
 		}
@@ -1387,7 +1387,7 @@ func TestBoltCacheExistingFile(t *testing.T) {
 	if stats.NumPurged == 0 && err == nil {
 		// If we got here, item2 should have been purged
 		// Let's verify it's gone
-		items, err = cache2.Search(ck2)
+		items, err = cache2.Search(t.Context(), ck2)
 		if !errors.Is(err, ErrCacheNotFound) && len(items) > 0 {
 			t.Errorf("expected item2 to be purged, but search returned: err=%v, items=%d", err, len(items))
 		}
@@ -1398,7 +1398,7 @@ func TestBoltCacheExistingFile(t *testing.T) {
 	ck3 := CacheKeyFromQuery(item3.GetMetadata().GetSourceQuery(), item3.GetMetadata().GetSourceName())
 	cache2.StoreItem(ctx, item3, 10*time.Second, ck3)
 
-	items, err = cache2.Search(ck3)
+	items, err = cache2.Search(t.Context(), ck3)
 	if err != nil {
 		t.Errorf("failed to search for newly stored item3: %v", err)
 	}
@@ -1453,7 +1453,7 @@ func TestBoltCacheDeleteOnDiskFull(t *testing.T) {
 	}
 
 	// Verify item is in cache
-	items, err := cache.Search(ck)
+	items, err := cache.Search(t.Context(), ck)
 	if err != nil {
 		t.Errorf("failed to search: %v", err)
 	}
@@ -1472,7 +1472,7 @@ func TestBoltCacheDeleteOnDiskFull(t *testing.T) {
 	}
 
 	// Verify the database is closed (can't search anymore)
-	_, _ = cache.Search(ck)
+	_, _ = cache.Search(t.Context(), ck)
 	// The search might fail or return empty, but the important thing is the file is gone
 	// and we can't use the cache anymore
 }
@@ -1512,7 +1512,7 @@ func TestBoltCacheDiskFullDuringCompact(t *testing.T) {
 	ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 	cache.StoreItem(ctx, item, 10*time.Second, ck)
 
-	items, err := cache.Search(ck)
+	items, err := cache.Search(t.Context(), ck)
 	if err != nil {
 		t.Errorf("failed to search after compaction: %v", err)
 	}

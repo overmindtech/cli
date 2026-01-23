@@ -185,7 +185,8 @@ type Cache interface {
 	// Search performs a lower-level search using a CacheKey.
 	// Returns items that match the cache key, or ErrCacheNotFound if nothing found.
 	// If a cached error exists, it will be returned instead.
-	Search(ck CacheKey) ([]*sdp.Item, error)
+	// If ctx contains a span, detailed timing metrics will be added as span attributes.
+	Search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error)
 
 	// StoreItem stores an item in the cache with the specified duration.
 	StoreItem(ctx context.Context, item *sdp.Item, duration time.Duration, ck CacheKey)
@@ -233,7 +234,7 @@ func (n *NoOpCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 }
 
 // Search always returns ErrCacheNotFound
-func (n *NoOpCache) Search(ck CacheKey) ([]*sdp.Item, error) {
+func (n *NoOpCache) Search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
 	return nil, ErrCacheNotFound
 }
 
@@ -405,7 +406,7 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 		return false, ck, nil, nil
 	}
 
-	items, err := c.Search(ck)
+	items, err := c.Search(ctx, ck)
 
 	if err != nil {
 		var qErr *sdp.QueryError
@@ -434,7 +435,7 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 			}
 
 			// Work is complete, re-check the cache for results
-			items, recheckErr := c.Search(ck)
+			items, recheckErr := c.Search(ctx, ck)
 			if recheckErr != nil {
 				if errors.Is(recheckErr, ErrCacheNotFound) {
 					// Cache still empty after pending work completed
@@ -533,8 +534,9 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 // Search Runs a given query against the cache. If a cached error is found it
 // will be returned immediately, if nothing is found a ErrCacheNotFound will
 // be returned. Otherwise this will return items that match ALL of the given
-// query parameters
-func (c *MemoryCache) Search(ck CacheKey) ([]*sdp.Item, error) {
+// query parameters. Context is accepted for tracing but not currently used
+// by MemoryCache (no I/O operations).
+func (c *MemoryCache) Search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
 	if c == nil {
 		return nil, nil
 	}
