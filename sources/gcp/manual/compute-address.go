@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/sourcegraph/conc/pool"
 	"google.golang.org/api/iterator"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -78,6 +80,12 @@ func (c computeAddressWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
+// SupportsWildcardScope implements the WildcardScopeAdapter interface
+// Always returns true for compute addresses since they use aggregatedList
+func (c computeAddressWrapper) SupportsWildcardScope() bool {
+	return true
+}
+
 func (c computeAddressWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	location, err := c.LocationFromScope(scope)
 	if err != nil {
@@ -102,41 +110,19 @@ func (c computeAddressWrapper) Get(ctx context.Context, scope string, queryParts
 }
 
 func (c computeAddressWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	location, err := c.LocationFromScope(scope)
-	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
-	}
-
-	it := c.client.List(ctx, &computepb.ListAddressesRequest{
-		Project: location.ProjectID,
-		Region:  location.Region,
+	return gcpshared.CollectFromStream(ctx, func(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+		c.ListStream(ctx, stream, cache, cacheKey, scope)
 	})
-
-	var items []*sdp.Item
-	for {
-		address, iterErr := it.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-		}
-
-		item, sdpErr := c.gcpComputeAddressToSDPItem(ctx, address, location)
-		if sdpErr != nil {
-			return nil, sdpErr
-		}
-
-		items = append(items, item)
-	}
-
-	return items, nil
 }
 
 func (c computeAddressWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	// Handle wildcard scope with AggregatedList
+	if scope == "*" {
+		c.listAggregatedStream(ctx, stream, cache, cacheKey)
+		return
+	}
+
+	// Handle specific scope with per-region List
 	location, err := c.LocationFromScope(scope)
 	if err != nil {
 		stream.SendError(&sdp.QueryError{
@@ -170,6 +156,65 @@ func (c computeAddressWrapper) ListStream(ctx context.Context, stream discovery.
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
+}
+
+// listAggregatedStream uses AggregatedList to stream all addresses across all regions
+func (c computeAddressWrapper) listAggregatedStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+	// Get all unique project IDs
+	projectIDs := c.GetProjectIDs()
+
+	// Use a pool with 10x concurrency to parallelize AggregatedList calls
+	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
+
+	for _, projectID := range projectIDs {
+		p.Go(func(ctx context.Context) error {
+			it := c.client.AggregatedList(ctx, &computepb.AggregatedListAddressesRequest{
+				Project:              projectID,
+				ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
+			})
+
+			for {
+				pair, iterErr := it.Next()
+				if errors.Is(iterErr, iterator.Done) {
+					break
+				}
+				if iterErr != nil {
+					stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
+					return iterErr
+				}
+
+				// Parse scope from pair.Key (e.g., "regions/us-central1")
+				scopeLocation, err := gcpshared.ParseAggregatedListScope(projectID, pair.Key)
+				if err != nil {
+					continue // Skip unparseable scopes
+				}
+
+				// Only process if this scope is in our adapter's configured locations
+				if !c.HasLocation(scopeLocation) {
+					continue
+				}
+
+				// Process addresses in this scope
+				if pair.Value != nil && pair.Value.GetAddresses() != nil {
+					for _, address := range pair.Value.GetAddresses() {
+						item, sdpErr := c.gcpComputeAddressToSDPItem(ctx, address, scopeLocation)
+						if sdpErr != nil {
+							stream.SendError(sdpErr)
+							continue
+						}
+
+						cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+						stream.SendItem(item)
+					}
+				}
+			}
+
+			return nil
+		})
+	}
+
+	// Wait for all goroutines to complete
+	_ = p.Wait()
 }
 
 func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, address *computepb.Address, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {

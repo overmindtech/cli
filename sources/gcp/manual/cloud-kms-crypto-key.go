@@ -120,44 +120,9 @@ func (c cloudKMSCryptoKeyWrapper) SearchLookups() []sources.ItemTypeLookups {
 // Search searches KMS CryptoKeys and converts them to sdp.Items.
 // GET https://cloudkms.googleapis.com/v1/{parent=projects/*/locations/*/keyRings/*}/cryptoKeys
 func (c cloudKMSCryptoKeyWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	loc, err := c.LocationFromScope(scope)
-	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
-	}
-
-	location := queryParts[0]
-	keyRing := queryParts[1]
-
-	parent := fmt.Sprintf("projects/%s/locations/%s/keyRings/%s",
-		loc.ProjectID, location, keyRing,
-	)
-
-	it := c.client.List(ctx, &kmspb.ListCryptoKeysRequest{
-		Parent: parent,
+	return gcpshared.CollectFromStream(ctx, func(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+		c.SearchStream(ctx, stream, cache, cacheKey, scope, queryParts...)
 	})
-
-	var items []*sdp.Item
-	for {
-		cryptoKey, iterErr := it.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-		}
-
-		item, sdpErr := c.gcpCryptoKeyToSDPItem(cryptoKey, loc)
-		if sdpErr != nil {
-			return nil, sdpErr
-		}
-
-		items = append(items, item)
-	}
-
-	return items, nil
 }
 
 func (c cloudKMSCryptoKeyWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {

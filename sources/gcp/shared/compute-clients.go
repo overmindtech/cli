@@ -57,10 +57,16 @@ type ComputeAddressIterator interface {
 	Next() (*computepb.Address, error)
 }
 
+// AddressesScopedListPairIterator is an interface for iterating over aggregated address list responses
+type AddressesScopedListPairIterator interface {
+	Next() (compute.AddressesScopedListPair, error)
+}
+
 // ComputeAddressClient is an interface for the Compute Engine Address client
 type ComputeAddressClient interface {
 	Get(ctx context.Context, req *computepb.GetAddressRequest, opts ...gax.CallOption) (*computepb.Address, error)
 	List(ctx context.Context, req *computepb.ListAddressesRequest, opts ...gax.CallOption) ComputeAddressIterator
+	AggregatedList(ctx context.Context, req *computepb.AggregatedListAddressesRequest, opts ...gax.CallOption) AddressesScopedListPairIterator
 }
 
 type computeAddressClient struct {
@@ -82,6 +88,11 @@ func (c computeAddressClient) Get(ctx context.Context, req *computepb.GetAddress
 // List lists compute address and returns an iterator
 func (c computeAddressClient) List(ctx context.Context, req *computepb.ListAddressesRequest, opts ...gax.CallOption) ComputeAddressIterator {
 	return c.addressClient.List(ctx, req, opts...)
+}
+
+// AggregatedList lists compute addresses across all regions using aggregated list
+func (c computeAddressClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListAddressesRequest, opts ...gax.CallOption) AddressesScopedListPairIterator {
+	return c.addressClient.AggregatedList(ctx, req, opts...)
 }
 
 // ComputeImageIterator is an interface for iterating over compute images
@@ -127,10 +138,16 @@ type ComputeInstanceGroupManagerIterator interface {
 	Next() (*computepb.InstanceGroupManager, error)
 }
 
+// InstanceGroupManagersScopedListPairIterator is an interface for iterating over aggregated instance group manager list responses
+type InstanceGroupManagersScopedListPairIterator interface {
+	Next() (compute.InstanceGroupManagersScopedListPair, error)
+}
+
 // ComputeInstanceGroupManagerClient is an interface for the Compute Instance Group Manager client
 type ComputeInstanceGroupManagerClient interface {
 	Get(ctx context.Context, req *computepb.GetInstanceGroupManagerRequest, opts ...gax.CallOption) (*computepb.InstanceGroupManager, error)
 	List(ctx context.Context, req *computepb.ListInstanceGroupManagersRequest, opts ...gax.CallOption) ComputeInstanceGroupManagerIterator
+	AggregatedList(ctx context.Context, req *computepb.AggregatedListInstanceGroupManagersRequest, opts ...gax.CallOption) InstanceGroupManagersScopedListPairIterator
 }
 
 type computeInstanceGroupManagerClient struct {
@@ -154,14 +171,25 @@ func (c computeInstanceGroupManagerClient) List(ctx context.Context, req *comput
 	return c.instanceGroupManagersClient.List(ctx, req, opts...)
 }
 
+// AggregatedList lists compute instance group managers across all zones using aggregated list
+func (c computeInstanceGroupManagerClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListInstanceGroupManagersRequest, opts ...gax.CallOption) InstanceGroupManagersScopedListPairIterator {
+	return c.instanceGroupManagersClient.AggregatedList(ctx, req, opts...)
+}
+
 type ForwardingRuleIterator interface {
 	Next() (*computepb.ForwardingRule, error)
+}
+
+// ForwardingRulesScopedListPairIterator is an interface for iterating over aggregated forwarding rule list responses
+type ForwardingRulesScopedListPairIterator interface {
+	Next() (compute.ForwardingRulesScopedListPair, error)
 }
 
 // ComputeForwardingRuleClient is an interface for the Compute Engine Forwarding Rule client
 type ComputeForwardingRuleClient interface {
 	Get(ctx context.Context, req *computepb.GetForwardingRuleRequest, opts ...gax.CallOption) (*computepb.ForwardingRule, error)
 	List(ctx context.Context, req *computepb.ListForwardingRulesRequest, opts ...gax.CallOption) ForwardingRuleIterator
+	AggregatedList(ctx context.Context, req *computepb.AggregatedListForwardingRulesRequest, opts ...gax.CallOption) ForwardingRulesScopedListPairIterator
 }
 
 type computeForwardingRuleClient struct {
@@ -176,6 +204,11 @@ func (c computeForwardingRuleClient) List(ctx context.Context, req *computepb.Li
 	return c.client.List(ctx, req, opts...)
 }
 
+// AggregatedList lists compute forwarding rules across all regions using aggregated list
+func (c computeForwardingRuleClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListForwardingRulesRequest, opts ...gax.CallOption) ForwardingRulesScopedListPairIterator {
+	return c.client.AggregatedList(ctx, req, opts...)
+}
+
 // NewComputeForwardingRuleClient creates a new ComputeForwardingRuleClient
 func NewComputeForwardingRuleClient(forwardingRuleClient *compute.ForwardingRulesClient) ComputeForwardingRuleClient {
 	return &computeForwardingRuleClient{
@@ -188,10 +221,16 @@ type ComputeAutoscalerIterator interface {
 	Next() (*computepb.Autoscaler, error)
 }
 
+// AutoscalersScopedListPairIterator is an interface for iterating over aggregated autoscaler list responses
+type AutoscalersScopedListPairIterator interface {
+	Next() (compute.AutoscalersScopedListPair, error)
+}
+
 // Interface for accessing compute autoscaler resources.
 type ComputeAutoscalerClient interface {
 	Get(ctx context.Context, req *computepb.GetAutoscalerRequest, opts ...gax.CallOption) (*computepb.Autoscaler, error)
 	List(ctx context.Context, req *computepb.ListAutoscalersRequest, opts ...gax.CallOption) ComputeAutoscalerIterator
+	AggregatedList(ctx context.Context, req *computepb.AggregatedListAutoscalersRequest, opts ...gax.CallOption) AutoscalersScopedListPairIterator
 }
 
 // Wrapper for a ComputeAutoscalerClient implementation.
@@ -212,6 +251,11 @@ func (c computeAutoscalerClient) Get(ctx context.Context, req *computepb.GetAuto
 
 func (c computeAutoscalerClient) List(ctx context.Context, req *computepb.ListAutoscalersRequest, opts ...gax.CallOption) ComputeAutoscalerIterator {
 	return c.autoscalerClient.List(ctx, req, opts...)
+}
+
+// AggregatedList lists compute autoscalers across all zones using aggregated list
+func (c computeAutoscalerClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListAutoscalersRequest, opts ...gax.CallOption) AutoscalersScopedListPairIterator {
+	return c.autoscalerClient.AggregatedList(ctx, req, opts...)
 }
 
 // ComputeBackendServiceClient is an interface for the Compute Engine Backend Service client
@@ -248,10 +292,16 @@ type ComputeInstanceGroupIterator interface {
 	Next() (*computepb.InstanceGroup, error)
 }
 
+// InstanceGroupsScopedListPairIterator is an interface for iterating over aggregated instance group list responses
+type InstanceGroupsScopedListPairIterator interface {
+	Next() (compute.InstanceGroupsScopedListPair, error)
+}
+
 // ComputeInstanceGroupsClient is an interface for the Compute Engine Instance Groups client
 type ComputeInstanceGroupsClient interface {
 	Get(ctx context.Context, req *computepb.GetInstanceGroupRequest, opts ...gax.CallOption) (*computepb.InstanceGroup, error)
 	List(ctx context.Context, req *computepb.ListInstanceGroupsRequest, opts ...gax.CallOption) ComputeInstanceGroupIterator
+	AggregatedList(ctx context.Context, req *computepb.AggregatedListInstanceGroupsRequest, opts ...gax.CallOption) InstanceGroupsScopedListPairIterator
 }
 
 type computeInstanceGroupsClient struct {
@@ -275,15 +325,26 @@ func (c computeInstanceGroupsClient) List(ctx context.Context, req *computepb.Li
 	return c.client.List(ctx, req, opts...)
 }
 
+// AggregatedList lists compute instance groups across all zones using aggregated list
+func (c computeInstanceGroupsClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListInstanceGroupsRequest, opts ...gax.CallOption) InstanceGroupsScopedListPairIterator {
+	return c.client.AggregatedList(ctx, req, opts...)
+}
+
 // Interface for interating over compute node groups.
 type ComputeNodeGroupIterator interface {
 	Next() (*computepb.NodeGroup, error)
+}
+
+// NodeGroupsScopedListPairIterator is an interface for iterating over aggregated node group list responses
+type NodeGroupsScopedListPairIterator interface {
+	Next() (compute.NodeGroupsScopedListPair, error)
 }
 
 // Interface for accessing compute NodeGroup resources.
 type ComputeNodeGroupClient interface {
 	Get(ctx context.Context, req *computepb.GetNodeGroupRequest, opts ...gax.CallOption) (*computepb.NodeGroup, error)
 	List(ctx context.Context, req *computepb.ListNodeGroupsRequest, opts ...gax.CallOption) ComputeNodeGroupIterator
+	AggregatedList(ctx context.Context, req *computepb.AggregatedListNodeGroupsRequest, opts ...gax.CallOption) NodeGroupsScopedListPairIterator
 }
 
 // Wrapper for a ComputeNodeGroupClient implementation.
@@ -304,6 +365,11 @@ func (c computeNodeGroupClient) Get(ctx context.Context, req *computepb.GetNodeG
 
 func (c computeNodeGroupClient) List(ctx context.Context, req *computepb.ListNodeGroupsRequest, opts ...gax.CallOption) ComputeNodeGroupIterator {
 	return c.nodeGroupClient.List(ctx, req, opts...)
+}
+
+// AggregatedList lists compute node groups across all zones using aggregated list
+func (c computeNodeGroupClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListNodeGroupsRequest, opts ...gax.CallOption) NodeGroupsScopedListPairIterator {
+	return c.nodeGroupClient.AggregatedList(ctx, req, opts...)
 }
 
 // ComputeHealthCheckIterator is an interface for iterating over compute health checks
@@ -370,15 +436,21 @@ func (c computeRegionHealthCheckClient) List(ctx context.Context, req *computepb
 	return c.client.List(ctx, req, opts...)
 }
 
-// Interface for interating over compute node groups.
+// Interface for interating over compute node templates.
 type ComputeNodeTemplateIterator interface {
 	Next() (*computepb.NodeTemplate, error)
+}
+
+// NodeTemplatesScopedListPairIterator is an interface for iterating over aggregated node template list responses
+type NodeTemplatesScopedListPairIterator interface {
+	Next() (compute.NodeTemplatesScopedListPair, error)
 }
 
 // Interface for accessing compute NodeTemplate resources.
 type ComputeNodeTemplateClient interface {
 	Get(ctx context.Context, req *computepb.GetNodeTemplateRequest, opts ...gax.CallOption) (*computepb.NodeTemplate, error)
 	List(ctx context.Context, req *computepb.ListNodeTemplatesRequest, opts ...gax.CallOption) ComputeNodeTemplateIterator
+	AggregatedList(ctx context.Context, req *computepb.AggregatedListNodeTemplatesRequest, opts ...gax.CallOption) NodeTemplatesScopedListPairIterator
 }
 
 // Wrapper for a ComputeNodeTemplateClient implementation.
@@ -401,15 +473,26 @@ func (c computeNodeTemplateClient) List(ctx context.Context, req *computepb.List
 	return c.nodeTemplateClient.List(ctx, req, opts...)
 }
 
+// AggregatedList lists compute node templates across all regions using aggregated list
+func (c computeNodeTemplateClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListNodeTemplatesRequest, opts ...gax.CallOption) NodeTemplatesScopedListPairIterator {
+	return c.nodeTemplateClient.AggregatedList(ctx, req, opts...)
+}
+
 // ComputeReservationIterator is an interface for iterating over compute reservations
 type ComputeReservationIterator interface {
 	Next() (*computepb.Reservation, error)
+}
+
+// ReservationsScopedListPairIterator is an interface for iterating over aggregated reservation list responses
+type ReservationsScopedListPairIterator interface {
+	Next() (compute.ReservationsScopedListPair, error)
 }
 
 // ComputeReservationClient is an interface for the Compute Engine Reservations client
 type ComputeReservationClient interface {
 	Get(ctx context.Context, req *computepb.GetReservationRequest, opts ...gax.CallOption) (*computepb.Reservation, error)
 	List(ctx context.Context, req *computepb.ListReservationsRequest, opts ...gax.CallOption) ComputeReservationIterator
+	AggregatedList(ctx context.Context, req *computepb.AggregatedListReservationsRequest, opts ...gax.CallOption) ReservationsScopedListPairIterator
 }
 
 type computeReservationClient struct {
@@ -431,6 +514,11 @@ func (c computeReservationClient) Get(ctx context.Context, req *computepb.GetRes
 // List lists compute reservations and returns an iterator
 func (c computeReservationClient) List(ctx context.Context, req *computepb.ListReservationsRequest, opts ...gax.CallOption) ComputeReservationIterator {
 	return c.client.List(ctx, req, opts...)
+}
+
+// AggregatedList lists compute reservations across all zones using aggregated list
+func (c computeReservationClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListReservationsRequest, opts ...gax.CallOption) ReservationsScopedListPairIterator {
+	return c.client.AggregatedList(ctx, req, opts...)
 }
 
 // ComputeSecurityPolicyIterator is an interface for iterating over compute security policies
@@ -470,10 +558,16 @@ type ComputeInstantSnapshotIterator interface {
 	Next() (*computepb.InstantSnapshot, error)
 }
 
+// InstantSnapshotsScopedListPairIterator is an interface for iterating over aggregated instant snapshot list responses
+type InstantSnapshotsScopedListPairIterator interface {
+	Next() (compute.InstantSnapshotsScopedListPair, error)
+}
+
 // ComputeInstantSnapshotsClient is an interface for the Compute Instant Snapshots client
 type ComputeInstantSnapshotsClient interface {
 	Get(ctx context.Context, req *computepb.GetInstantSnapshotRequest, opts ...gax.CallOption) (*computepb.InstantSnapshot, error)
 	List(ctx context.Context, req *computepb.ListInstantSnapshotsRequest, opts ...gax.CallOption) ComputeInstantSnapshotIterator
+	AggregatedList(ctx context.Context, req *computepb.AggregatedListInstantSnapshotsRequest, opts ...gax.CallOption) InstantSnapshotsScopedListPairIterator
 }
 
 type computeInstantSnapshotsClient struct {
@@ -495,6 +589,11 @@ func (c computeInstantSnapshotsClient) Get(ctx context.Context, req *computepb.G
 // List lists compute instant snapshots and returns an iterator
 func (c computeInstantSnapshotsClient) List(ctx context.Context, req *computepb.ListInstantSnapshotsRequest, opts ...gax.CallOption) ComputeInstantSnapshotIterator {
 	return c.client.List(ctx, req, opts...)
+}
+
+// AggregatedList lists compute instant snapshots across all zones using aggregated list
+func (c computeInstantSnapshotsClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListInstantSnapshotsRequest, opts ...gax.CallOption) InstantSnapshotsScopedListPairIterator {
+	return c.client.AggregatedList(ctx, req, opts...)
 }
 
 // ComputeDiskIterator is an interface for iterating over compute disks

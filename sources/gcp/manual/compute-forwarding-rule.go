@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/sourcegraph/conc/pool"
 	"google.golang.org/api/iterator"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -83,6 +85,12 @@ func (c computeForwardingRuleWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
+// SupportsWildcardScope implements the WildcardScopeAdapter interface
+// Always returns true for compute forwarding rules since they use aggregatedList
+func (c computeForwardingRuleWrapper) SupportsWildcardScope() bool {
+	return true
+}
+
 func (c computeForwardingRuleWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	location, err := c.LocationFromScope(scope)
 	if err != nil {
@@ -107,41 +115,19 @@ func (c computeForwardingRuleWrapper) Get(ctx context.Context, scope string, que
 }
 
 func (c computeForwardingRuleWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	location, err := c.LocationFromScope(scope)
-	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
-	}
-
-	it := c.client.List(ctx, &computepb.ListForwardingRulesRequest{
-		Project: location.ProjectID,
-		Region:  location.Region,
+	return gcpshared.CollectFromStream(ctx, func(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+		c.ListStream(ctx, stream, cache, cacheKey, scope)
 	})
-
-	var items []*sdp.Item
-	for {
-		rule, iterErr := it.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-		}
-
-		item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(ctx, rule, location)
-		if sdpErr != nil {
-			return nil, sdpErr
-		}
-
-		items = append(items, item)
-	}
-
-	return items, nil
 }
 
 func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	// Handle wildcard scope with AggregatedList
+	if scope == "*" {
+		c.listAggregatedStream(ctx, stream, cache, cacheKey)
+		return
+	}
+
+	// Handle specific scope with per-region List
 	location, err := c.LocationFromScope(scope)
 	if err != nil {
 		stream.SendError(&sdp.QueryError{
@@ -175,6 +161,65 @@ func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream dis
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
+}
+
+// listAggregatedStream uses AggregatedList to stream all forwarding rules across all regions
+func (c computeForwardingRuleWrapper) listAggregatedStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+	// Get all unique project IDs
+	projectIDs := c.GetProjectIDs()
+
+	// Use a pool with 10x concurrency to parallelize AggregatedList calls
+	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
+
+	for _, projectID := range projectIDs {
+		p.Go(func(ctx context.Context) error {
+			it := c.client.AggregatedList(ctx, &computepb.AggregatedListForwardingRulesRequest{
+				Project:              projectID,
+				ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
+			})
+
+			for {
+				pair, iterErr := it.Next()
+				if errors.Is(iterErr, iterator.Done) {
+					break
+				}
+				if iterErr != nil {
+					stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
+					return iterErr
+				}
+
+				// Parse scope from pair.Key (e.g., "regions/us-central1")
+				scopeLocation, err := gcpshared.ParseAggregatedListScope(projectID, pair.Key)
+				if err != nil {
+					continue // Skip unparseable scopes
+				}
+
+				// Only process if this scope is in our adapter's configured locations
+				if !c.HasLocation(scopeLocation) {
+					continue
+				}
+
+				// Process forwarding rules in this scope
+				if pair.Value != nil && pair.Value.GetForwardingRules() != nil {
+					for _, rule := range pair.Value.GetForwardingRules() {
+						item, sdpErr := c.gcpComputeForwardingRuleToSDPItem(ctx, rule, scopeLocation)
+						if sdpErr != nil {
+							stream.SendError(sdpErr)
+							continue
+						}
+
+						cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+						stream.SendItem(item)
+					}
+				}
+			}
+
+			return nil
+		})
+	}
+
+	// Wait for all goroutines to complete
+	_ = p.Wait()
 }
 
 func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx context.Context, rule *computepb.ForwardingRule, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
