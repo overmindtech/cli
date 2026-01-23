@@ -43,6 +43,7 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 		iamServiceAccountCli      *iamAdmin.IamClient
 		kmsKeyRingCli             *kms.KeyManagementClient
 		kmsCryptoKeyCli           *kms.KeyManagementClient
+		kmsCryptoKeyVersionCli    *kms.KeyManagementClient
 		bigQueryDatasetCli        *bigquery.Client
 		loggingConfigCli          *logging.ConfigClient
 		nodeGroupCli              *compute.NodeGroupsClient
@@ -153,6 +154,11 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 			return nil, fmt.Errorf("failed to create KMS crypto key client: %w", err)
 		}
 
+		kmsCryptoKeyVersionCli, err = kms.NewKeyManagementClient(ctx, opts...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create KMS crypto key version client: %w", err)
+		}
+
 		// Extract project ID from projectLocations for BigQuery client initialization.
 		//
 		// IMPORTANT: The project ID passed to bigquery.NewClient() is used for:
@@ -249,6 +255,7 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 			sources.WrapperToAdapter(NewIAMServiceAccount(shared.NewIAMServiceAccountClient(iamServiceAccountCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewCloudKMSKeyRing(shared.NewCloudKMSKeyRingClient(kmsKeyRingCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewCloudKMSCryptoKey(shared.NewCloudKMSCryptoKeyClient(kmsCryptoKeyCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewCloudKMSCryptoKeyVersion(shared.NewCloudKMSCryptoKeyVersionClient(kmsCryptoKeyVersionCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewBigQueryDataset(shared.NewBigQueryDatasetClient(bigQueryDatasetCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewLoggingSink(shared.NewLoggingConfigClient(loggingConfigCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewBigQueryRoutine(shared.NewBigQueryRoutineClient(bigQueryDatasetCli), projectLocations), cache),

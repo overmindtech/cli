@@ -17,6 +17,7 @@ import (
 	gax "github.com/googleapis/gax-go/v2"
 	shared "github.com/overmindtech/cli/sources/gcp/shared"
 	gomock "go.uber.org/mock/gomock"
+	location "google.golang.org/genproto/googleapis/cloud/location"
 )
 
 // MockCloudKMSKeyRingIterator is a mock of CloudKMSKeyRingIterator interface.
@@ -56,6 +57,45 @@ func (m *MockCloudKMSKeyRingIterator) Next() (*kmspb.KeyRing, error) {
 func (mr *MockCloudKMSKeyRingIteratorMockRecorder) Next() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockCloudKMSKeyRingIterator)(nil).Next))
+}
+
+// MockCloudKMSLocationIterator is a mock of CloudKMSLocationIterator interface.
+type MockCloudKMSLocationIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockCloudKMSLocationIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockCloudKMSLocationIteratorMockRecorder is the mock recorder for MockCloudKMSLocationIterator.
+type MockCloudKMSLocationIteratorMockRecorder struct {
+	mock *MockCloudKMSLocationIterator
+}
+
+// NewMockCloudKMSLocationIterator creates a new mock instance.
+func NewMockCloudKMSLocationIterator(ctrl *gomock.Controller) *MockCloudKMSLocationIterator {
+	mock := &MockCloudKMSLocationIterator{ctrl: ctrl}
+	mock.recorder = &MockCloudKMSLocationIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockCloudKMSLocationIterator) EXPECT() *MockCloudKMSLocationIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockCloudKMSLocationIterator) Next() (*location.Location, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*location.Location)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockCloudKMSLocationIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockCloudKMSLocationIterator)(nil).Next))
 }
 
 // MockCloudKMSKeyRingClient is a mock of CloudKMSKeyRingClient interface.
@@ -100,6 +140,25 @@ func (mr *MockCloudKMSKeyRingClientMockRecorder) Get(ctx, req any, opts ...any) 
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, req}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockCloudKMSKeyRingClient)(nil).Get), varargs...)
+}
+
+// ListLocations mocks base method.
+func (m *MockCloudKMSKeyRingClient) ListLocations(ctx context.Context, req *location.ListLocationsRequest, opts ...gax.CallOption) shared.CloudKMSLocationIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListLocations", varargs...)
+	ret0, _ := ret[0].(shared.CloudKMSLocationIterator)
+	return ret0
+}
+
+// ListLocations indicates an expected call of ListLocations.
+func (mr *MockCloudKMSKeyRingClientMockRecorder) ListLocations(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListLocations", reflect.TypeOf((*MockCloudKMSKeyRingClient)(nil).ListLocations), varargs...)
 }
 
 // Search mocks base method.

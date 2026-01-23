@@ -1,11 +1,14 @@
 package shared
 
+//go:generate mockgen -destination=./mocks/mock_kms_clients.go -package=mocks -source=kms-clients.go
+
 import (
 	"context"
 
 	kms "cloud.google.com/go/kms/apiv1"
 	"cloud.google.com/go/kms/apiv1/kmspb"
 	"github.com/googleapis/gax-go/v2"
+	locationpb "google.golang.org/genproto/googleapis/cloud/location"
 )
 
 // CloudKMSKeyRingIterator is an interface for iterating over KMS KeyRings
@@ -13,10 +16,16 @@ type CloudKMSKeyRingIterator interface {
 	Next() (*kmspb.KeyRing, error)
 }
 
+// CloudKMSLocationIterator is an interface for iterating over KMS Locations
+type CloudKMSLocationIterator interface {
+	Next() (*locationpb.Location, error)
+}
+
 // CloudKMSKeyRingClient is an interface for the KMS KeyRing client
 type CloudKMSKeyRingClient interface {
 	Get(ctx context.Context, req *kmspb.GetKeyRingRequest, opts ...gax.CallOption) (*kmspb.KeyRing, error)
 	Search(ctx context.Context, req *kmspb.ListKeyRingsRequest, opts ...gax.CallOption) CloudKMSKeyRingIterator
+	ListLocations(ctx context.Context, req *locationpb.ListLocationsRequest, opts ...gax.CallOption) CloudKMSLocationIterator
 }
 
 // cloudKMSKeyRingClient is a concrete implementation of CloudKMSKeyRingClient
@@ -39,6 +48,11 @@ func (c cloudKMSKeyRingClient) Get(ctx context.Context, req *kmspb.GetKeyRingReq
 // List lists KMS KeyRings and returns an iterator
 func (c cloudKMSKeyRingClient) Search(ctx context.Context, req *kmspb.ListKeyRingsRequest, opts ...gax.CallOption) CloudKMSKeyRingIterator {
 	return c.client.ListKeyRings(ctx, req, opts...)
+}
+
+// ListLocations lists KMS Locations and returns an iterator
+func (c cloudKMSKeyRingClient) ListLocations(ctx context.Context, req *locationpb.ListLocationsRequest, opts ...gax.CallOption) CloudKMSLocationIterator {
+	return c.client.ListLocations(ctx, req, opts...)
 }
 
 // CloudKMSCryptoKeyVersionIterator is an interface for iterating over Cloud KMS CryptoKeyVersions
@@ -84,4 +98,26 @@ func (c cloudKMSCryptoKeyClient) Get(ctx context.Context, req *kmspb.GetCryptoKe
 // List lists KMS CryptoKeys and returns an iterator
 func (c cloudKMSCryptoKeyClient) List(ctx context.Context, req *kmspb.ListCryptoKeysRequest, opts ...gax.CallOption) CloudKMSCryptoKeyIterator {
 	return c.client.ListCryptoKeys(ctx, req, opts...)
+}
+
+// cloudKMSCryptoKeyVersionClient is a concrete implementation of CloudKMSCryptoKeyVersionClient
+type cloudKMSCryptoKeyVersionClient struct {
+	client *kms.KeyManagementClient
+}
+
+// NewCloudKMSCryptoKeyVersionClient creates a new CloudKMSCryptoKeyVersionClient
+func NewCloudKMSCryptoKeyVersionClient(client *kms.KeyManagementClient) CloudKMSCryptoKeyVersionClient {
+	return &cloudKMSCryptoKeyVersionClient{
+		client: client,
+	}
+}
+
+// Get retrieves a KMS CryptoKeyVersion
+func (c cloudKMSCryptoKeyVersionClient) Get(ctx context.Context, req *kmspb.GetCryptoKeyVersionRequest, opts ...gax.CallOption) (*kmspb.CryptoKeyVersion, error) {
+	return c.client.GetCryptoKeyVersion(ctx, req, opts...)
+}
+
+// List lists KMS CryptoKeyVersions and returns an iterator
+func (c cloudKMSCryptoKeyVersionClient) List(ctx context.Context, req *kmspb.ListCryptoKeyVersionsRequest, opts ...gax.CallOption) CloudKMSCryptoKeyVersionIterator {
+	return c.client.ListCryptoKeyVersions(ctx, req, opts...)
 }
