@@ -507,7 +507,12 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 	}
 
 	// Search already has RLock, so we don't need to add another one here
+	initialSearchStart := time.Now()
 	items, err := c.Search(ck)
+	initialSearchDuration := time.Since(initialSearchStart)
+	span.SetAttributes(
+		attribute.Float64("ovm.cache.initialSearchDuration_ms", float64(initialSearchDuration.Milliseconds())),
+	)
 
 	if err != nil {
 		var qErr *sdp.QueryError
@@ -525,7 +530,15 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 			}
 
 			// Another goroutine is fetching this data, wait for it to complete
+			pendingWaitStart := time.Now()
 			ok := c.pending.Wait(ctx, entry)
+			pendingWaitDuration := time.Since(pendingWaitStart)
+
+			span.SetAttributes(
+				attribute.Float64("ovm.cache.pendingWaitDuration_ms", float64(pendingWaitDuration.Milliseconds())),
+				attribute.Bool("ovm.cache.pendingWaitSuccess", ok),
+			)
+
 			if !ok {
 				// Context was cancelled or work was cancelled, return miss
 				span.SetAttributes(
@@ -536,7 +549,12 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 			}
 
 			// Work is complete, re-check the cache for results
+			recheckSearchStart := time.Now()
 			items, recheckErr := c.Search(ck)
+			recheckSearchDuration := time.Since(recheckSearchStart)
+			span.SetAttributes(
+				attribute.Float64("ovm.cache.recheckSearchDuration_ms", float64(recheckSearchDuration.Milliseconds())),
+			)
 			if recheckErr != nil {
 				if errors.Is(recheckErr, ErrCacheNotFound) {
 					// Cache still empty after pending work completed
@@ -637,11 +655,15 @@ func (c *BoltCache) Search(ck CacheKey) ([]*sdp.Item, error) {
 	}
 
 	// Acquire read lock to prevent compaction from closing the database, but do not lock out other bbolt operations
+	lockAcquireStart := time.Now()
 	c.compactMutex.RLock()
+	lockAcquireDuration := time.Since(lockAcquireStart)
 	defer c.compactMutex.RUnlock()
 
 	results := make([]*CachedResult, 0)
+	var itemsScanned int
 
+	txStart := time.Now()
 	err := c.db.View(func(tx *bbolt.Tx) error {
 		items := tx.Bucket(itemsBucketName)
 		if items == nil {
@@ -659,6 +681,7 @@ func (c *BoltCache) Search(ck CacheKey) ([]*sdp.Item, error) {
 		// Scan through all entries in this SST bucket
 		cursor := sstBucket.Cursor()
 		for k, v := cursor.First(); k != nil; k, v = cursor.Next() {
+			itemsScanned++
 			entry, err := decodeCachedEntry(v)
 			if err != nil {
 				continue // Skip corrupted entries
@@ -687,6 +710,16 @@ func (c *BoltCache) Search(ck CacheKey) ([]*sdp.Item, error) {
 
 		return nil
 	})
+	txDuration := time.Since(txStart)
+
+	// Log detailed search metrics for performance analysis
+	log.WithFields(log.Fields{
+		"ovm.cache.lockAcquireDuration_ms": lockAcquireDuration.Milliseconds(),
+		"ovm.cache.txDuration_ms":          txDuration.Milliseconds(),
+		"ovm.cache.itemsScanned":           itemsScanned,
+		"ovm.cache.itemsReturned":          len(results),
+		"ovm.cache.cacheKey":               ck.String(),
+	}).Trace("BoltCache.Search completed")
 
 	if err != nil {
 		return nil, fmt.Errorf("search failed: %w", err)
