@@ -154,7 +154,7 @@ func (c computeAutoscalerWrapper) ListStream(ctx context.Context, stream discove
 // listAggregatedStream uses AggregatedList to stream all autoscalers across all zones
 func (c computeAutoscalerWrapper) listAggregatedStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	// Get all unique project IDs
-	projectIDs := c.GetProjectIDs()
+	projectIDs := gcpshared.GetProjectIDsFromLocations(c.Locations())
 
 	// Use a pool with 10x concurrency to parallelize AggregatedList calls
 	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
@@ -183,7 +183,7 @@ func (c computeAutoscalerWrapper) listAggregatedStream(ctx context.Context, stre
 				}
 
 				// Only process if this scope is in our adapter's configured locations
-				if !c.HasLocation(scopeLocation) {
+				if !gcpshared.HasLocationInSlices(scopeLocation, c.Locations()) {
 					continue
 				}
 

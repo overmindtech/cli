@@ -180,6 +180,11 @@ func ValidateScopeForLocations(scope string, locations []LocationInfo) (Location
 //   - "zones/us-central1-a" -> LocationInfo{ProjectID: projectID, Zone: "us-central1-a", Region: "us-central1"}
 //   - "regions/us-central1" -> LocationInfo{ProjectID: projectID, Region: "us-central1"}
 func ParseAggregatedListScope(projectID, scopeKey string) (LocationInfo, error) {
+	// Handle global scope (e.g., "global" for global resources like health checks)
+	if scopeKey == "global" {
+		return NewProjectLocation(projectID), nil
+	}
+
 	parts := strings.Split(scopeKey, "/")
 	if len(parts) != 2 {
 		return LocationInfo{}, fmt.Errorf("invalid scope key format: %s", scopeKey)
@@ -196,4 +201,36 @@ func ParseAggregatedListScope(projectID, scopeKey string) (LocationInfo, error) 
 	default:
 		return LocationInfo{}, fmt.Errorf("unsupported scope type: %s", scopeType)
 	}
+}
+
+// GetProjectIDsFromLocations returns unique project IDs from one or more location slices.
+// This is useful for adapters that manage resources across multiple location types
+// (e.g., both global and regional resources).
+func GetProjectIDsFromLocations(locationSlices ...[]LocationInfo) []string {
+	seen := make(map[string]bool)
+	var projects []string
+
+	for _, locations := range locationSlices {
+		for _, loc := range locations {
+			if !seen[loc.ProjectID] {
+				seen[loc.ProjectID] = true
+				projects = append(projects, loc.ProjectID)
+			}
+		}
+	}
+	return projects
+}
+
+// HasLocationInSlices checks if the given location exists in any of the provided location slices.
+// This is useful for adapters that need to validate locations across multiple slices
+// (e.g., filtering aggregatedList results to only configured locations).
+func HasLocationInSlices(loc LocationInfo, locationSlices ...[]LocationInfo) bool {
+	for _, locations := range locationSlices {
+		for _, configuredLoc := range locations {
+			if loc.Equals(configuredLoc) {
+				return true
+			}
+		}
+	}
+	return false
 }

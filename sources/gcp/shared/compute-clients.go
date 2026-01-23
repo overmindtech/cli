@@ -258,14 +258,21 @@ func (c computeAutoscalerClient) AggregatedList(ctx context.Context, req *comput
 	return c.autoscalerClient.AggregatedList(ctx, req, opts...)
 }
 
+// ComputeBackendServiceIterator is an interface for iterating over compute backend services
+type ComputeBackendServiceIterator interface {
+	Next() (*computepb.BackendService, error)
+}
+
+// BackendServicesScopedListPairIterator is an interface for iterating over aggregated backend service list responses
+type BackendServicesScopedListPairIterator interface {
+	Next() (compute.BackendServicesScopedListPair, error)
+}
+
 // ComputeBackendServiceClient is an interface for the Compute Engine Backend Service client
 type ComputeBackendServiceClient interface {
 	Get(ctx context.Context, req *computepb.GetBackendServiceRequest, opts ...gax.CallOption) (*computepb.BackendService, error)
 	List(ctx context.Context, req *computepb.ListBackendServicesRequest, opts ...gax.CallOption) ComputeBackendServiceIterator
-}
-
-type ComputeBackendServiceIterator interface {
-	Next() (*computepb.BackendService, error)
+	AggregatedList(ctx context.Context, req *computepb.AggregatedListBackendServicesRequest, opts ...gax.CallOption) BackendServicesScopedListPairIterator
 }
 
 type computeBackendServiceClient struct {
@@ -278,6 +285,11 @@ func (c computeBackendServiceClient) Get(ctx context.Context, req *computepb.Get
 
 func (c computeBackendServiceClient) List(ctx context.Context, req *computepb.ListBackendServicesRequest, opts ...gax.CallOption) ComputeBackendServiceIterator {
 	return c.client.List(ctx, req, opts...)
+}
+
+// AggregatedList lists compute backend services across all regions (global and regional) using aggregated list
+func (c computeBackendServiceClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListBackendServicesRequest, opts ...gax.CallOption) BackendServicesScopedListPairIterator {
+	return c.client.AggregatedList(ctx, req, opts...)
 }
 
 // NewComputeBackendServiceClient creates a new ComputeBackendServiceClient
@@ -377,10 +389,16 @@ type ComputeHealthCheckIterator interface {
 	Next() (*computepb.HealthCheck, error)
 }
 
+// HealthChecksScopedListPairIterator is an interface for iterating over aggregated health check list responses
+type HealthChecksScopedListPairIterator interface {
+	Next() (compute.HealthChecksScopedListPair, error)
+}
+
 // ComputeHealthCheckClient is an interface for the Compute Engine Health Checks client
 type ComputeHealthCheckClient interface {
 	Get(ctx context.Context, req *computepb.GetHealthCheckRequest, opts ...gax.CallOption) (*computepb.HealthCheck, error)
 	List(ctx context.Context, req *computepb.ListHealthChecksRequest, opts ...gax.CallOption) ComputeHealthCheckIterator
+	AggregatedList(ctx context.Context, req *computepb.AggregatedListHealthChecksRequest, opts ...gax.CallOption) HealthChecksScopedListPairIterator
 }
 
 type computeHealthCheckClient struct {
@@ -402,6 +420,11 @@ func (c computeHealthCheckClient) Get(ctx context.Context, req *computepb.GetHea
 // List lists compute health checks and returns an iterator
 func (c computeHealthCheckClient) List(ctx context.Context, req *computepb.ListHealthChecksRequest, opts ...gax.CallOption) ComputeHealthCheckIterator {
 	return c.client.List(ctx, req, opts...)
+}
+
+// AggregatedList lists compute health checks across all regions (global and regional) using aggregated list
+func (c computeHealthCheckClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListHealthChecksRequest, opts ...gax.CallOption) HealthChecksScopedListPairIterator {
+	return c.client.AggregatedList(ctx, req, opts...)
 }
 
 // Interface for iterating over regional compute health checks.
