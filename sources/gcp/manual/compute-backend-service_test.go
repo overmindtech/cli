@@ -3,6 +3,7 @@ package manual_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 
@@ -26,13 +27,86 @@ func TestComputeBackendService(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	mockClient := mocks.NewMockComputeBackendServiceClient(ctrl)
+	mockGlobalClient := mocks.NewMockComputeBackendServiceClient(ctrl)
+	mockRegionalClient := mocks.NewMockComputeRegionBackendServiceClient(ctrl)
 	projectID := "test-project"
 
-	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+	t.Run("Get-Scope-Validation-Global", func(t *testing.T) {
+		// Adapter configured for project-level only (global resources)
+		wrapper := manual.NewComputeBackendService(mockGlobalClient, mockRegionalClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)}, nil)
 
-		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeBackendService("test-backend-service"), nil)
+		// Attempt to query a regional scope that wasn't configured
+		unauthorizedScope := fmt.Sprintf("%s.us-central1", projectID)
+		_, qErr := wrapper.Get(ctx, unauthorizedScope, "test-backend-service")
+
+		// Should fail with NOSCOPE error since us-central1 wasn't configured
+		if qErr == nil {
+			t.Fatal("Expected error when querying unconfigured regional scope, got nil")
+		}
+		if qErr.GetErrorType() != sdp.QueryError_NOSCOPE {
+			t.Errorf("Expected NOSCOPE error, got: %v (error: %s)", qErr.GetErrorType(), qErr.GetErrorString())
+		}
+	})
+
+	t.Run("Get-Scope-Validation-Regional", func(t *testing.T) {
+		// Adapter configured for us-west1 only
+		wrapper := manual.NewComputeBackendService(mockGlobalClient, mockRegionalClient, nil, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, "us-west1")})
+
+		// Attempt to query us-central1 which wasn't configured
+		unauthorizedScope := fmt.Sprintf("%s.us-central1", projectID)
+		_, qErr := wrapper.Get(ctx, unauthorizedScope, "test-backend-service")
+
+		// Should fail with NOSCOPE error since us-central1 wasn't configured
+		if qErr == nil {
+			t.Fatal("Expected error when querying unconfigured regional scope, got nil")
+		}
+		if qErr.GetErrorType() != sdp.QueryError_NOSCOPE {
+			t.Errorf("Expected NOSCOPE error, got: %v (error: %s)", qErr.GetErrorType(), qErr.GetErrorString())
+		}
+	})
+
+	t.Run("ListStream-Scope-Validation-Global", func(t *testing.T) {
+		// Adapter configured for project-level only (global resources)
+		wrapper := manual.NewComputeBackendService(mockGlobalClient, mockRegionalClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)}, nil)
+
+		// Attempt to list from a regional scope that wasn't configured
+		unauthorizedScope := fmt.Sprintf("%s.us-central1", projectID)
+
+		var items []*sdp.Item
+		mockItemHandler := func(item *sdp.Item) {
+			items = append(items, item)
+		}
+
+		var errs []error
+		mockErrorHandler := func(err error) {
+			errs = append(errs, err)
+		}
+
+		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
+		cache := sdpcache.NewNoOpCache()
+
+		wrapper.ListStream(ctx, stream, cache, sdpcache.CacheKey{}, unauthorizedScope)
+
+		// Should fail with NOSCOPE error since us-central1 wasn't configured
+		if len(errs) == 0 {
+			t.Fatal("Expected error when listing from unconfigured regional scope, got none")
+		}
+		// The error should contain scope-related error message
+		if len(errs) > 0 {
+			// The first error should be a QueryError about scope
+			expectedError := "scope"
+			if err := errs[0]; err == nil || err.Error() == "" {
+				t.Errorf("Expected error containing '%s', got nil or empty error", expectedError)
+			} else if err := errs[0]; !strings.Contains(err.Error(), expectedError) {
+				t.Errorf("Expected error containing '%s', got: %v", expectedError, err)
+			}
+		}
+	})
+
+	t.Run("Get-Global", func(t *testing.T) {
+		wrapper := manual.NewComputeBackendService(mockGlobalClient, mockRegionalClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)}, nil)
+
+		mockGlobalClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeBackendService("test-backend-service"), nil)
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -109,8 +183,8 @@ func TestComputeBackendService(t *testing.T) {
 		})
 	})
 
-	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+	t.Run("List-Global", func(t *testing.T) {
+		wrapper := manual.NewComputeBackendService(mockGlobalClient, mockRegionalClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)}, nil)
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -120,7 +194,7 @@ func TestComputeBackendService(t *testing.T) {
 		mockBackendServiceIterator.EXPECT().Next().Return(createComputeBackendService("test-backend-service"), nil)
 		mockBackendServiceIterator.EXPECT().Next().Return(nil, iterator.Done)
 
-		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockBackendServiceIterator)
+		mockGlobalClient.EXPECT().List(ctx, gomock.Any()).Return(mockBackendServiceIterator)
 
 		// Check if adapter supports listing
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -149,8 +223,8 @@ func TestComputeBackendService(t *testing.T) {
 		}
 	})
 
-	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+	t.Run("ListStream-Global", func(t *testing.T) {
+		wrapper := manual.NewComputeBackendService(mockGlobalClient, mockRegionalClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)}, nil)
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -162,7 +236,7 @@ func TestComputeBackendService(t *testing.T) {
 		mockBackendServiceIterator.EXPECT().Next().Return(nil, iterator.Done)
 
 		// Mock the List method
-		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockBackendServiceIterator)
+		mockGlobalClient.EXPECT().List(ctx, gomock.Any()).Return(mockBackendServiceIterator)
 
 		wg := &sync.WaitGroup{}
 		wg.Add(2) // we added two items
@@ -203,14 +277,14 @@ func TestComputeBackendService(t *testing.T) {
 	})
 
 	t.Run("GetWithHealthCheck", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		wrapper := manual.NewComputeBackendService(mockGlobalClient, mockRegionalClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)}, nil)
 
 		// Test with global health check
 		healthCheckURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/healthChecks/test-health-check", projectID)
 		backendService := createComputeBackendService("test-backend-service")
 		backendService.HealthChecks = []string{healthCheckURL}
 
-		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
+		mockGlobalClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -298,7 +372,7 @@ func TestComputeBackendService(t *testing.T) {
 	})
 
 	t.Run("GetWithRegionalHealthCheck", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		wrapper := manual.NewComputeBackendService(mockGlobalClient, mockRegionalClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)}, nil)
 
 		// Test with regional health check
 		region := "us-central1"
@@ -306,7 +380,7 @@ func TestComputeBackendService(t *testing.T) {
 		backendService := createComputeBackendService("test-backend-service")
 		backendService.HealthChecks = []string{healthCheckURL}
 
-		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
+		mockGlobalClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -394,7 +468,7 @@ func TestComputeBackendService(t *testing.T) {
 	})
 
 	t.Run("GetWithInstanceGroup", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		wrapper := manual.NewComputeBackendService(mockGlobalClient, mockRegionalClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)}, nil)
 
 		// Test with unmanaged instance group
 		zone := "us-central1-a"
@@ -406,7 +480,7 @@ func TestComputeBackendService(t *testing.T) {
 			},
 		}
 
-		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
+		mockGlobalClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -494,7 +568,7 @@ func TestComputeBackendService(t *testing.T) {
 	})
 
 	t.Run("GetWithHAPolicy", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		wrapper := manual.NewComputeBackendService(mockGlobalClient, mockRegionalClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)}, nil)
 
 		// Test with HA Policy
 		zone := "us-central1-a"
@@ -510,7 +584,7 @@ func TestComputeBackendService(t *testing.T) {
 			},
 		}
 
-		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
+		mockGlobalClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -608,7 +682,7 @@ func TestComputeBackendService(t *testing.T) {
 	})
 
 	t.Run("GetWithRegion", func(t *testing.T) {
-		wrapper := manual.NewComputeBackendService(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		wrapper := manual.NewComputeBackendService(mockGlobalClient, mockRegionalClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)}, nil)
 
 		// Test with region field (output-only, typically for regional backend services)
 		region := "us-central1"
@@ -616,7 +690,7 @@ func TestComputeBackendService(t *testing.T) {
 		backendService := createComputeBackendService("test-backend-service")
 		backendService.Region = ptr.To(regionURL)
 
-		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
+		mockGlobalClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -701,6 +775,77 @@ func TestComputeBackendService(t *testing.T) {
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
+	})
+
+	// Regional backend service tests
+	region := "us-central1"
+
+	t.Run("Get-Regional", func(t *testing.T) {
+		wrapper := manual.NewComputeBackendService(mockGlobalClient, mockRegionalClient, nil, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
+
+		mockRegionalClient.EXPECT().Get(ctx, gomock.Any()).Return(createComputeBackendService("test-regional-backend-service"), nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, fmt.Sprintf("%s.%s", projectID, region), "test-regional-backend-service", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		// Verify the item has the correct type (should be ComputeBackendService, not ComputeRegionBackendService)
+		if sdpItem.GetType() != gcpshared.ComputeBackendService.String() {
+			t.Fatalf("Expected type to be '%s', got: %s", gcpshared.ComputeBackendService.String(), sdpItem.GetType())
+		}
+
+		// Verify the scope is regional
+		if sdpItem.GetScope() != fmt.Sprintf("%s.%s", projectID, region) {
+			t.Fatalf("Expected scope to be '%s.%s', got: %s", projectID, region, sdpItem.GetScope())
+		}
+	})
+
+	t.Run("List-Regional", func(t *testing.T) {
+		wrapper := manual.NewComputeBackendService(mockGlobalClient, mockRegionalClient, nil, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		mockBackendServiceIterator := mocks.NewMockComputeRegionBackendServiceIterator(ctrl)
+
+		mockBackendServiceIterator.EXPECT().Next().Return(createComputeBackendService("test-regional-backend-service-1"), nil)
+		mockBackendServiceIterator.EXPECT().Next().Return(createComputeBackendService("test-regional-backend-service-2"), nil)
+		mockBackendServiceIterator.EXPECT().Next().Return(nil, iterator.Done)
+
+		mockRegionalClient.EXPECT().List(ctx, gomock.Any()).Return(mockBackendServiceIterator)
+
+		// Check if adapter supports listing
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		sdpItems, err := listable.List(ctx, fmt.Sprintf("%s.%s", projectID, region), true)
+		if err != nil {
+			t.Fatalf("Expected no error, got: %v", err)
+		}
+
+		if len(sdpItems) != 2 {
+			t.Fatalf("Expected 2 items, got: %d", len(sdpItems))
+		}
+
+		for _, item := range sdpItems {
+			// Verify each item has the correct type
+			if item.GetType() != gcpshared.ComputeBackendService.String() {
+				t.Fatalf("Expected type to be '%s', got: %s", gcpshared.ComputeBackendService.String(), item.GetType())
+			}
+
+			// Verify each item has the correct regional scope
+			if item.GetScope() != fmt.Sprintf("%s.%s", projectID, region) {
+				t.Fatalf("Expected scope to be '%s.%s', got: %s", projectID, region, item.GetScope())
+			}
+
+			if item.Validate() != nil {
+				t.Fatalf("Expected no validation error, got: %v", item.Validate())
+			}
+		}
 	})
 }
 

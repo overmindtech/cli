@@ -3,6 +3,7 @@ package manual
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
@@ -19,19 +20,58 @@ import (
 var ComputeBackendServiceLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeBackendService)
 
 type computeBackendServiceWrapper struct {
-	client gcpshared.ComputeBackendServiceClient
-	*gcpshared.ProjectBase
+	globalClient     gcpshared.ComputeBackendServiceClient
+	regionalClient   gcpshared.ComputeRegionBackendServiceClient
+	projectLocations []gcpshared.LocationInfo // For global backend services
+	regionLocations  []gcpshared.LocationInfo // For regional backend services
+	*shared.Base
 }
 
-// NewComputeBackendService creates a new computeBackendServiceWrapper instance.
-func NewComputeBackendService(client gcpshared.ComputeBackendServiceClient, locations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
+// NewComputeBackendService creates a new computeBackendServiceWrapper instance that handles both global and regional backend services.
+func NewComputeBackendService(globalClient gcpshared.ComputeBackendServiceClient, regionalClient gcpshared.ComputeRegionBackendServiceClient, projectLocations []gcpshared.LocationInfo, regionLocations []gcpshared.LocationInfo) sources.ListStreamableWrapper {
+	// Combine all locations for scope generation
+	allLocations := make([]gcpshared.LocationInfo, 0, len(projectLocations)+len(regionLocations))
+	allLocations = append(allLocations, projectLocations...)
+	allLocations = append(allLocations, regionLocations...)
+
+	scopes := make([]string, 0, len(allLocations))
+	for _, location := range allLocations {
+		scopes = append(scopes, location.ToScope())
+	}
+
 	return &computeBackendServiceWrapper{
-		client: client,
-		ProjectBase: gcpshared.NewProjectBase(
-			locations,
-			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
-			gcpshared.ComputeBackendService,
-		),
+		globalClient:     globalClient,
+		regionalClient:   regionalClient,
+		projectLocations: projectLocations,
+		regionLocations:  regionLocations,
+		Base:             shared.NewBase(sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION, gcpshared.ComputeBackendService, scopes),
+	}
+}
+
+// validateAndParseScope parses the scope and validates it against configured locations.
+// Returns the LocationInfo if valid, or a QueryError if the scope is invalid or not configured.
+func (c computeBackendServiceWrapper) validateAndParseScope(scope string) (gcpshared.LocationInfo, *sdp.QueryError) {
+	location, err := gcpshared.LocationFromScope(scope)
+	if err != nil {
+		return gcpshared.LocationInfo{}, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		}
+	}
+
+	// Check if the location is in the adapter's configured locations
+	allLocations := append([]gcpshared.LocationInfo{}, c.projectLocations...)
+	allLocations = append(allLocations, c.regionLocations...)
+
+	for _, configuredLoc := range allLocations {
+		if location.Equals(configuredLoc) {
+			return location, nil
+		}
+	}
+
+	return gcpshared.LocationInfo{}, &sdp.QueryError{
+		ErrorType:   sdp.QueryError_NOSCOPE,
+		ErrorString: fmt.Sprintf("scope %s not found in adapter's configured locations", scope),
 	}
 }
 
@@ -39,6 +79,8 @@ func (c computeBackendServiceWrapper) IAMPermissions() []string {
 	return []string{
 		"compute.backendServices.get",
 		"compute.backendServices.list",
+		"compute.regionBackendServices.get",
+		"compute.regionBackendServices.list",
 	}
 }
 
@@ -67,6 +109,10 @@ func (c computeBackendServiceWrapper) TerraformMappings() []*sdp.TerraformMappin
 			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_compute_backend_service.name",
 		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "google_compute_region_backend_service.name",
+		},
 	}
 }
 
@@ -77,97 +123,167 @@ func (c computeBackendServiceWrapper) GetLookups() sources.ItemTypeLookups {
 }
 
 func (c computeBackendServiceWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
-	location, err := c.LocationFromScope(scope)
+	// Parse and validate the scope
+	location, err := c.validateAndParseScope(scope)
 	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
+		return nil, err
 	}
 
+	// Route to the appropriate API based on whether the scope includes a region
+	if location.Regional() {
+		// Regional backend service
+		req := &computepb.GetRegionBackendServiceRequest{
+			Project:        location.ProjectID,
+			Region:         location.Region,
+			BackendService: queryParts[0],
+		}
+
+		service, getErr := c.regionalClient.Get(ctx, req)
+		if getErr != nil {
+			return nil, gcpshared.QueryError(getErr, scope, c.Type())
+		}
+
+		return gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), service, gcpshared.ComputeBackendService)
+	}
+
+	// Global backend service
 	req := &computepb.GetBackendServiceRequest{
 		Project:        location.ProjectID,
 		BackendService: queryParts[0],
 	}
 
-	service, getErr := c.client.Get(ctx, req)
+	service, getErr := c.globalClient.Get(ctx, req)
 	if getErr != nil {
 		return nil, gcpshared.QueryError(getErr, scope, c.Type())
 	}
 
-	return gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), service)
+	return gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), service, gcpshared.ComputeBackendService)
 }
 
 func (c computeBackendServiceWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	location, err := c.LocationFromScope(scope)
+	// Parse and validate the scope
+	location, err := c.validateAndParseScope(scope)
 	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
+		return nil, err
 	}
 
-	it := c.client.List(ctx, &computepb.ListBackendServicesRequest{
-		Project: location.ProjectID,
-	})
-
 	var items []*sdp.Item
-	for {
-		bs, iterErr := it.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-		}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), bs)
-		if sdpErr != nil {
-			return nil, sdpErr
-		}
+	// Route to the appropriate API based on whether the scope includes a region
+	if location.Regional() {
+		// Regional backend services
+		it := c.regionalClient.List(ctx, &computepb.ListRegionBackendServicesRequest{
+			Project: location.ProjectID,
+			Region:  location.Region,
+		})
 
-		items = append(items, item)
+		for {
+			bs, iterErr := it.Next()
+			if errors.Is(iterErr, iterator.Done) {
+				break
+			}
+			if iterErr != nil {
+				return nil, gcpshared.QueryError(iterErr, scope, c.Type())
+			}
+
+			item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), bs, gcpshared.ComputeBackendService)
+			if sdpErr != nil {
+				return nil, sdpErr
+			}
+
+			items = append(items, item)
+		}
+	} else {
+		// Global backend services
+		it := c.globalClient.List(ctx, &computepb.ListBackendServicesRequest{
+			Project: location.ProjectID,
+		})
+
+		for {
+			bs, iterErr := it.Next()
+			if errors.Is(iterErr, iterator.Done) {
+				break
+			}
+			if iterErr != nil {
+				return nil, gcpshared.QueryError(iterErr, scope, c.Type())
+			}
+
+			item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), bs, gcpshared.ComputeBackendService)
+			if sdpErr != nil {
+				return nil, sdpErr
+			}
+
+			items = append(items, item)
+		}
 	}
 
 	return items, nil
 }
 
 func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	location, err := c.LocationFromScope(scope)
+	// Parse and validate the scope
+	location, err := c.validateAndParseScope(scope)
 	if err != nil {
-		stream.SendError(&sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		})
+		stream.SendError(err)
 		return
 	}
 
-	it := c.client.List(ctx, &computepb.ListBackendServicesRequest{
-		Project: location.ProjectID,
-	})
+	// Route to the appropriate API based on whether the scope includes a region
+	if location.Regional() {
+		// Regional backend services
+		it := c.regionalClient.List(ctx, &computepb.ListRegionBackendServicesRequest{
+			Project: location.ProjectID,
+			Region:  location.Region,
+		})
 
-	for {
-		backendService, iterErr := it.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
-			return
-		}
+		for {
+			backendService, iterErr := it.Next()
+			if errors.Is(iterErr, iterator.Done) {
+				break
+			}
+			if iterErr != nil {
+				stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
+				return
+			}
 
-		item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), backendService)
-		if sdpErr != nil {
-			stream.SendError(sdpErr)
-			continue
-		}
+			item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), backendService, gcpshared.ComputeBackendService)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
 
-		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
-		stream.SendItem(item)
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	} else {
+		// Global backend services
+		it := c.globalClient.List(ctx, &computepb.ListBackendServicesRequest{
+			Project: location.ProjectID,
+		})
+
+		for {
+			backendService, iterErr := it.Next()
+			if errors.Is(iterErr, iterator.Done) {
+				break
+			}
+			if iterErr != nil {
+				stream.SendError(gcpshared.QueryError(iterErr, scope, c.Type()))
+				return
+			}
+
+			item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), backendService, gcpshared.ComputeBackendService)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
 	}
 }
 
-func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, scope string, bs *computepb.BackendService) (*sdp.Item, *sdp.QueryError) {
+func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, scope string, bs *computepb.BackendService, itemType shared.ItemType) (*sdp.Item, *sdp.QueryError) {
 	attributes, err := shared.ToAttributesWithExclude(bs)
 	if err != nil {
 		return nil, &sdp.QueryError{
@@ -177,7 +293,7 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 	}
 
 	sdpItem := &sdp.Item{
-		Type:            gcpshared.ComputeBackendService.String(),
+		Type:            itemType.String(),
 		UniqueAttribute: "name",
 		Attributes:      attributes,
 		Scope:           scope,

@@ -470,3 +470,131 @@ func TestMSKClusterLinkByARN(t *testing.T) {
 		})
 	}
 }
+
+func TestHealthCheckLinker(t *testing.T) {
+	projectID := "test-project"
+	blastPropagation := &sdp.BlastPropagation{
+		In:  true,
+		Out: false,
+	}
+
+	tests := []struct {
+		name           string
+		healthCheckURI string
+		want           *sdp.LinkedItemQuery
+	}{
+		// Global Health Check tests
+		{
+			name:           "Global Health Check - full HTTPS URL",
+			healthCheckURI: "https://compute.googleapis.com/compute/v1/projects/test-project/global/healthChecks/my-health-check",
+			want: &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   ComputeHealthCheck.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  "my-health-check",
+					Scope:  projectID,
+				},
+				BlastPropagation: blastPropagation,
+			},
+		},
+		{
+			name:           "Global Health Check - resource name format",
+			healthCheckURI: "projects/test-project/global/healthChecks/my-health-check",
+			want: &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   ComputeHealthCheck.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  "my-health-check",
+					Scope:  projectID,
+				},
+				BlastPropagation: blastPropagation,
+			},
+		},
+		{
+			name:           "Global Health Check - www.googleapis.com URL",
+			healthCheckURI: "https://www.googleapis.com/compute/v1/projects/test-project/global/healthChecks/my-health-check",
+			want: &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   ComputeHealthCheck.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  "my-health-check",
+					Scope:  projectID,
+				},
+				BlastPropagation: blastPropagation,
+			},
+		},
+		// Regional Health Check tests
+		{
+			name:           "Regional Health Check - full HTTPS URL",
+			healthCheckURI: "https://compute.googleapis.com/compute/v1/projects/test-project/regions/us-central1/healthChecks/my-regional-health-check",
+			want: &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   ComputeHealthCheck.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  "my-regional-health-check",
+					Scope:  "test-project.us-central1",
+				},
+				BlastPropagation: blastPropagation,
+			},
+		},
+		{
+			name:           "Regional Health Check - resource name format",
+			healthCheckURI: "projects/test-project/regions/us-west1/healthChecks/my-regional-health-check",
+			want: &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   ComputeHealthCheck.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  "my-regional-health-check",
+					Scope:  "test-project.us-west1",
+				},
+				BlastPropagation: blastPropagation,
+			},
+		},
+		{
+			name:           "Regional Health Check - different region",
+			healthCheckURI: "https://www.googleapis.com/compute/v1/projects/test-project/regions/europe-west1/healthChecks/eu-health-check",
+			want: &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   ComputeHealthCheck.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  "eu-health-check",
+					Scope:  "test-project.europe-west1",
+				},
+				BlastPropagation: blastPropagation,
+			},
+		},
+		// Edge cases
+		{
+			name:           "Empty health check URI",
+			healthCheckURI: "",
+			want:           nil,
+		},
+		{
+			name:           "Not a health check URL",
+			healthCheckURI: "projects/test-project/global/backendServices/my-backend-service",
+			want:           nil,
+		},
+		{
+			name:           "Malformed URI - no resource name",
+			healthCheckURI: "projects/test-project/global/healthChecks/",
+			want: &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   ComputeHealthCheck.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  "healthChecks", // LastPathComponent returns this from trailing slash
+					Scope:  projectID,
+				},
+				BlastPropagation: blastPropagation,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := HealthCheckLinker(projectID, "", tt.healthCheckURI, blastPropagation)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("HealthCheckLinker() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
