@@ -280,6 +280,24 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 		},
 	})
 
+	// Link to all CryptoKeyVersions for this CryptoKey
+	// SEARCH https://cloudkms.googleapis.com/v1/{parent=projects/*/locations/*/keyRings/*/cryptoKeys/*}/cryptoKeyVersions
+	// https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings.cryptoKeys.cryptoKeyVersions/list
+	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  shared.CompositeLookupKey(kmsLocation, keyRing, cryptoKeyName),
+			Scope:  location.ProjectID,
+		},
+		// If all versions of a crypto key are deleted it will become non-functional
+		// CryptoKey can only be deleted if all versions are deleted
+		BlastPropagation: &sdp.BlastPropagation{
+			In:  true,
+			Out: true,
+		},
+	})
+
 	// The resource name of the primary CryptoKeyVersion for this CryptoKey.
 	// GET https://cloudkms.googleapis.com/v1/{name=projects/*/locations/*/keyRings/*/cryptoKeys/*/cryptoKeyVersions/*}
 	// https://cloud.google.com/kms/docs/reference/rest/v1/projects.locations.keyRings.cryptoKeys.cryptoKeyVersions/get
@@ -295,8 +313,8 @@ func (c cloudKMSCryptoKeyWrapper) gcpCryptoKeyToSDPItem(cryptoKey *kmspb.CryptoK
 						Query:  shared.CompositeLookupKey(keyVersionVals...),
 						Scope:  location.ProjectID,
 					},
-					// If all versions of a crypto key are deleted it will become non-functional
-					// CryptoKey can only be deleted if all versions are deleted
+					// Primary version is the default for cryptographic operations
+					// Deleting the primary version requires promoting another version
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: true,

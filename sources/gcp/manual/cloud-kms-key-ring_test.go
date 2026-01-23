@@ -2,12 +2,14 @@ package manual_test
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"testing"
 
 	"cloud.google.com/go/kms/apiv1/kmspb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
+	locationpb "google.golang.org/genproto/googleapis/cloud/location"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -151,20 +153,138 @@ func TestCloudKMSKeyRing(t *testing.T) {
 			}
 		}
 
+		// Verify adapter supports ListStream
 		_, ok = adapter.(discovery.ListStreamableAdapter)
-		if ok {
-			t.Fatalf("Adapter should not support ListStream operation")
+		if !ok {
+			t.Fatalf("Adapter should support ListStream operation")
 		}
 	})
 
-	t.Run("List_Unsupported", func(t *testing.T) {
+	t.Run("List", func(t *testing.T) {
 		wrapper := manual.NewCloudKMSKeyRing(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
-		// Check if adapter supports list - it should not
-		_, ok := adapter.(discovery.ListableAdapter)
-		if ok {
-			t.Fatalf("Expected adapter to not support List operation, but it does")
+		// Mock ListLocations
+		mockLocationIterator := mocks.NewMockCloudKMSLocationIterator(ctrl)
+		mockLocationIterator.EXPECT().Next().Return(createLocation(projectID, "us-central1"), nil)
+		mockLocationIterator.EXPECT().Next().Return(createLocation(projectID, "europe-west1"), nil)
+		mockLocationIterator.EXPECT().Next().Return(nil, iterator.Done)
+
+		mockClient.EXPECT().ListLocations(ctx, gomock.Any()).Return(mockLocationIterator)
+
+		// Mock Search for first location (us-central1)
+		mockKeyRingIterator1 := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
+		mockKeyRingIterator1.EXPECT().Next().Return(createKeyRing(projectID, "us-central1", "keyring-1"), nil)
+		mockKeyRingIterator1.EXPECT().Next().Return(nil, iterator.Done)
+
+		// Mock Search for second location (europe-west1)
+		mockKeyRingIterator2 := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
+		mockKeyRingIterator2.EXPECT().Next().Return(createKeyRing(projectID, "europe-west1", "keyring-2"), nil)
+		mockKeyRingIterator2.EXPECT().Next().Return(createKeyRing(projectID, "europe-west1", "keyring-3"), nil)
+		mockKeyRingIterator2.EXPECT().Next().Return(nil, iterator.Done)
+
+	// Expect Search calls for both locations
+	mockClient.EXPECT().Search(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *kmspb.ListKeyRingsRequest, opts ...any) gcpshared.CloudKMSKeyRingIterator {
+		if strings.Contains(req.GetParent(), "us-central1") {
+			return mockKeyRingIterator1
+		}
+		return mockKeyRingIterator2
+	}).Times(2)
+
+		// Check if adapter supports listing
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support List operation")
+		}
+
+		sdpItems, err := listable.List(ctx, wrapper.Scopes()[0], true)
+		if err != nil {
+			t.Fatalf("Expected no error, got: %v", err)
+		}
+
+		// Expect 3 items total (1 from us-central1, 2 from europe-west1)
+		if len(sdpItems) != 3 {
+			t.Fatalf("Expected 3 items, got: %d", len(sdpItems))
+		}
+
+		for _, item := range sdpItems {
+			if item.Validate() != nil {
+				t.Fatalf("Expected no validation error, got: %v", item.Validate())
+			}
+		}
+	})
+
+	t.Run("ListStream", func(t *testing.T) {
+		wrapper := manual.NewCloudKMSKeyRing(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		// Mock ListLocations
+		mockLocationIterator := mocks.NewMockCloudKMSLocationIterator(ctrl)
+		mockLocationIterator.EXPECT().Next().Return(createLocation(projectID, "us-central1"), nil)
+		mockLocationIterator.EXPECT().Next().Return(createLocation(projectID, "europe-west1"), nil)
+		mockLocationIterator.EXPECT().Next().Return(nil, iterator.Done)
+
+		mockClient.EXPECT().ListLocations(ctx, gomock.Any()).Return(mockLocationIterator)
+
+		// Mock Search for first location (us-central1)
+		mockKeyRingIterator1 := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
+		mockKeyRingIterator1.EXPECT().Next().Return(createKeyRing(projectID, "us-central1", "keyring-1"), nil)
+		mockKeyRingIterator1.EXPECT().Next().Return(nil, iterator.Done)
+
+		// Mock Search for second location (europe-west1)
+		mockKeyRingIterator2 := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
+		mockKeyRingIterator2.EXPECT().Next().Return(createKeyRing(projectID, "europe-west1", "keyring-2"), nil)
+		mockKeyRingIterator2.EXPECT().Next().Return(createKeyRing(projectID, "europe-west1", "keyring-3"), nil)
+		mockKeyRingIterator2.EXPECT().Next().Return(nil, iterator.Done)
+
+	// Expect Search calls for both locations (order may vary due to parallelism)
+	mockClient.EXPECT().Search(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *kmspb.ListKeyRingsRequest, opts ...any) gcpshared.CloudKMSKeyRingIterator {
+		if strings.Contains(req.GetParent(), "us-central1") {
+			return mockKeyRingIterator1
+		}
+		return mockKeyRingIterator2
+	}).Times(2)
+
+		var items []*sdp.Item
+		var itemsMu sync.Mutex
+		var errs []error
+		var errsMu sync.Mutex
+		wg := &sync.WaitGroup{}
+		wg.Add(3) // 3 total items expected
+
+		mockItemHandler := func(item *sdp.Item) {
+			itemsMu.Lock()
+			items = append(items, item)
+			itemsMu.Unlock()
+			wg.Done()
+		}
+		mockErrorHandler := func(err error) {
+			errsMu.Lock()
+			errs = append(errs, err)
+			errsMu.Unlock()
+		}
+
+		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
+
+		// Check if adapter supports list streaming
+		listStreamable, ok := adapter.(discovery.ListStreamableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support ListStream operation")
+		}
+
+		listStreamable.ListStream(ctx, wrapper.Scopes()[0], true, stream)
+		wg.Wait()
+
+		if len(errs) > 0 {
+			t.Fatalf("Expected no errors, got: %v", errs)
+		}
+		if len(items) != 3 {
+			t.Fatalf("Expected 3 items, got: %d", len(items))
+		}
+		for _, item := range items {
+			if item.Validate() != nil {
+				t.Fatalf("Expected no validation error, got: %v", item.Validate())
+			}
 		}
 	})
 }
@@ -174,5 +294,14 @@ func createKeyRing(projectID, location, keyRingName string) *kmspb.KeyRing {
 	return &kmspb.KeyRing{
 		Name:       "projects/" + projectID + "/locations/" + location + "/keyRings/" + keyRingName,
 		CreateTime: nil, // You can set a timestamp if needed
+	}
+}
+
+// createLocation creates a Location with the specified project and location ID.
+func createLocation(projectID, locationID string) *locationpb.Location {
+	return &locationpb.Location{
+		Name:        "projects/" + projectID + "/locations/" + locationID,
+		LocationId:  locationID,
+		DisplayName: locationID,
 	}
 }
