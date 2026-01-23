@@ -12,6 +12,7 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/workspace/logging"
 	"github.com/overmindtech/cli/stdlib-source/adapters"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/spf13/cobra"
@@ -231,7 +232,7 @@ func init() {
 		})
 
 		if viper.GetBool("json-log") {
-			log.SetFormatter(&log.JSONFormatter{})
+			logging.ConfigureLogrusJSON(log.StandardLogger())
 		}
 
 		if err := tracing.InitTracerWithUpstreams("stdlib-source", viper.GetString("honeycomb-api-key"), viper.GetString("sentry-dsn")); err != nil {
