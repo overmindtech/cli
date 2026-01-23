@@ -807,8 +807,7 @@ func (c *BoltCache) StoreItem(ctx context.Context, item *sdp.Item, duration time
 
 	c.storeResult(ctx, res)
 
-	// Signal that work is complete, waking any waiting goroutines.
-	// They will re-check the cache to get the stored item(s).
+	// Signal that work is complete, waking any waiting goroutines
 	c.pending.Complete(ck.String())
 }
 
@@ -857,8 +856,7 @@ func (c *BoltCache) StoreError(ctx context.Context, err error, duration time.Dur
 
 	c.storeResult(ctx, res)
 
-	// Signal that work is complete, waking any waiting goroutines.
-	// They will re-check the cache to get the stored error.
+	// Signal that work is complete, waking any waiting goroutines
 	c.pending.Complete(ck.String())
 }
 
