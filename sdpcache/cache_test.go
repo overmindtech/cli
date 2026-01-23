@@ -14,7 +14,8 @@ import (
 )
 
 // cacheImplementations returns the list of cache implementations to test
-func cacheImplementations(t *testing.T) []struct {
+// Accepts testing.TB so it can be used by both tests and benchmarks
+func cacheImplementations(tb testing.TB) []struct {
 	name    string
 	factory func() Cache
 } {
@@ -24,11 +25,11 @@ func cacheImplementations(t *testing.T) []struct {
 	}{
 		{"MemoryCache", func() Cache { return NewMemoryCache() }},
 		{"BoltCache", func() Cache {
-			c, err := NewBoltCache(filepath.Join(t.TempDir(), "cache.db"))
+			c, err := NewBoltCache(filepath.Join(tb.TempDir(), "cache.db"))
 			if err != nil {
-				t.Fatalf("failed to create BoltCache: %v", err)
+				tb.Fatalf("failed to create BoltCache: %v", err)
 			}
-			t.Cleanup(func() {
+			tb.Cleanup(func() {
 				c.Close()
 			})
 			return c
