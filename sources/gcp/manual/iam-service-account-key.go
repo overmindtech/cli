@@ -109,33 +109,9 @@ func (c iamServiceAccountKeyWrapper) SearchLookups() []sources.ItemTypeLookups {
 
 // Search retrieves Service Account Keys by name (or other supported fields in the future)
 func (c iamServiceAccountKeyWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	location, err := c.LocationFromScope(scope)
-	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
-	}
-
-	serviceAccountIdentifier := queryParts[0]
-
-	it, searchErr := c.client.Search(ctx, &adminpb.ListServiceAccountKeysRequest{
-		Name: "projects/" + location.ProjectID + "/serviceAccounts/" + serviceAccountIdentifier,
+	return gcpshared.CollectFromStream(ctx, func(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+		c.SearchStream(ctx, stream, cache, cacheKey, scope, queryParts...)
 	})
-	if searchErr != nil {
-		return nil, gcpshared.QueryError(searchErr, scope, c.Type())
-	}
-
-	var items []*sdp.Item
-	for _, key := range it.GetKeys() {
-		item, sdpErr := c.gcpIAMServiceAccountKeyToSDPItem(key, location)
-		if sdpErr != nil {
-			return nil, sdpErr
-		}
-		items = append(items, item)
-	}
-
-	return items, nil
 }
 
 // SearchStream streams the search results for Service Account Keys.

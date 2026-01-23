@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/sourcegraph/conc/pool"
 	"google.golang.org/api/iterator"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -77,6 +79,12 @@ func (c computeInstanceGroupManagerWrapper) GetLookups() sources.ItemTypeLookups
 	}
 }
 
+// SupportsWildcardScope implements the WildcardScopeAdapter interface
+// Always returns true for compute instance group managers since they use aggregatedList
+func (c computeInstanceGroupManagerWrapper) SupportsWildcardScope() bool {
+	return true
+}
+
 // Get retrieves a compute instance group manager by its name
 func (c computeInstanceGroupManagerWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	location, err := c.LocationFromScope(scope)
@@ -102,41 +110,19 @@ func (c computeInstanceGroupManagerWrapper) Get(ctx context.Context, scope strin
 }
 
 func (c computeInstanceGroupManagerWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	location, err := c.LocationFromScope(scope)
-	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
-	}
-
-	it := c.client.List(ctx, &computepb.ListInstanceGroupManagersRequest{
-		Project: location.ProjectID,
-		Zone:    location.Zone,
+	return gcpshared.CollectFromStream(ctx, func(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+		c.ListStream(ctx, stream, cache, cacheKey, scope)
 	})
-
-	var items []*sdp.Item
-	for {
-		igm, iterErr := it.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-		}
-
-		item, sdpErr := c.gcpInstanceGroupManagerToSDPItem(ctx, igm, location)
-		if sdpErr != nil {
-			return nil, sdpErr
-		}
-
-		items = append(items, item)
-	}
-
-	return items, nil
 }
 
 func (c computeInstanceGroupManagerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	// Handle wildcard scope with AggregatedList
+	if scope == "*" {
+		c.listAggregatedStream(ctx, stream, cache, cacheKey)
+		return
+	}
+
+	// Handle specific scope with per-zone List
 	location, err := c.LocationFromScope(scope)
 	if err != nil {
 		stream.SendError(&sdp.QueryError{
@@ -170,6 +156,65 @@ func (c computeInstanceGroupManagerWrapper) ListStream(ctx context.Context, stre
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
+}
+
+// listAggregatedStream uses AggregatedList to stream all instance group managers across all zones
+func (c computeInstanceGroupManagerWrapper) listAggregatedStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+	// Get all unique project IDs
+	projectIDs := c.GetProjectIDs()
+
+	// Use a pool with 10x concurrency to parallelize AggregatedList calls
+	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
+
+	for _, projectID := range projectIDs {
+		p.Go(func(ctx context.Context) error {
+			it := c.client.AggregatedList(ctx, &computepb.AggregatedListInstanceGroupManagersRequest{
+				Project:              projectID,
+				ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
+			})
+
+			for {
+				pair, iterErr := it.Next()
+				if errors.Is(iterErr, iterator.Done) {
+					break
+				}
+				if iterErr != nil {
+					stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
+					return iterErr
+				}
+
+				// Parse scope from pair.Key (e.g., "zones/us-central1-a")
+				scopeLocation, err := gcpshared.ParseAggregatedListScope(projectID, pair.Key)
+				if err != nil {
+					continue // Skip unparseable scopes
+				}
+
+				// Only process if this scope is in our adapter's configured locations
+				if !c.HasLocation(scopeLocation) {
+					continue
+				}
+
+				// Process instance group managers in this scope
+				if pair.Value != nil && pair.Value.GetInstanceGroupManagers() != nil {
+					for _, igm := range pair.Value.GetInstanceGroupManagers() {
+						item, sdpErr := c.gcpInstanceGroupManagerToSDPItem(ctx, igm, scopeLocation)
+						if sdpErr != nil {
+							stream.SendError(sdpErr)
+							continue
+						}
+
+						cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+						stream.SendItem(item)
+					}
+				}
+			}
+
+			return nil
+		})
+	}
+
+	// Wait for all goroutines to complete
+	_ = p.Wait()
 }
 
 func (c computeInstanceGroupManagerWrapper) gcpInstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *computepb.InstanceGroupManager, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {

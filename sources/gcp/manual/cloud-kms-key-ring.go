@@ -126,39 +126,9 @@ func (c cloudKMSKeyRingWrapper) SearchLookups() []sources.ItemTypeLookups {
 // Searchable adapter because location parameter needs to be passed as a queryPart.
 // GET https://cloudkms.googleapis.com/v1/{parent=projects/*/locations/*}/keyRings
 func (c cloudKMSKeyRingWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	loc, err := c.LocationFromScope(scope)
-	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
-	}
-
-	parent := fmt.Sprintf("projects/%s/locations/%s", loc.ProjectID, queryParts[0])
-
-	it := c.client.Search(ctx, &kmspb.ListKeyRingsRequest{
-		Parent: parent,
+	return gcpshared.CollectFromStream(ctx, func(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+		c.SearchStream(ctx, stream, cache, cacheKey, scope, queryParts...)
 	})
-
-	var items []*sdp.Item
-	for {
-		keyRing, iterErr := it.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-		}
-
-		item, sdpErr := c.gcpKeyRingToSDPItem(keyRing, loc)
-		if sdpErr != nil {
-			return nil, sdpErr
-		}
-
-		items = append(items, item)
-	}
-
-	return items, nil
 }
 
 // SearchStream streams the search results for KMS KeyRings.
