@@ -18,6 +18,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/k8s-source/adapters"
+	"github.com/overmindtech/cli/logging"
 	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
@@ -495,7 +496,7 @@ func init() {
 		})
 
 		if viper.GetBool("json-log") {
-			log.SetFormatter(&log.JSONFormatter{})
+			logging.ConfigureLogrusJSON(log.StandardLogger())
 		}
 
 		if err := tracing.InitTracerWithUpstreams("k8s-source", viper.GetString("honeycomb-api-key"), viper.GetString("sentry-dsn")); err != nil {
