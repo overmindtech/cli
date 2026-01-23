@@ -124,45 +124,9 @@ func (c cloudKMSCryptoKeyVersionWrapper) SearchLookups() []sources.ItemTypeLooku
 // Search searches KMS CryptoKeyVersions for a given CryptoKey and converts them to sdp.Items.
 // GET https://cloudkms.googleapis.com/v1/{parent=projects/*/locations/*/keyRings/*/cryptoKeys/*}/cryptoKeyVersions
 func (c cloudKMSCryptoKeyVersionWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	loc, err := c.LocationFromScope(scope)
-	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
-	}
-
-	location := queryParts[0]
-	keyRing := queryParts[1]
-	cryptoKey := queryParts[2]
-
-	parent := fmt.Sprintf("projects/%s/locations/%s/keyRings/%s/cryptoKeys/%s",
-		loc.ProjectID, location, keyRing, cryptoKey,
-	)
-
-	it := c.client.List(ctx, &kmspb.ListCryptoKeyVersionsRequest{
-		Parent: parent,
+	return gcpshared.CollectFromStream(ctx, func(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+		c.SearchStream(ctx, stream, cache, cacheKey, scope, queryParts...)
 	})
-
-	var items []*sdp.Item
-	for {
-		cryptoKeyVersion, iterErr := it.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-		}
-
-		item, sdpErr := c.gcpCryptoKeyVersionToSDPItem(cryptoKeyVersion, loc)
-		if sdpErr != nil {
-			return nil, sdpErr
-		}
-
-		items = append(items, item)
-	}
-
-	return items, nil
 }
 
 func (c cloudKMSCryptoKeyVersionWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {

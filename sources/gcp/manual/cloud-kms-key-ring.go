@@ -5,10 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 
 	"cloud.google.com/go/kms/apiv1/kmspb"
-	"github.com/sourcegraph/conc/iter"
+	"github.com/sourcegraph/conc/pool"
 	"google.golang.org/api/iterator"
 	locationpb "google.golang.org/genproto/googleapis/cloud/location"
 
@@ -172,85 +171,9 @@ func (c cloudKMSKeyRingWrapper) SearchStream(ctx context.Context, stream discove
 // List lists all KMS KeyRings across all locations in the project.
 // It first lists all available KMS locations, then lists key rings from each location in parallel.
 func (c cloudKMSKeyRingWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	loc, err := c.LocationFromScope(scope)
-	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
-	}
-
-	// List all available KMS locations
-	parent := fmt.Sprintf("projects/%s", loc.ProjectID)
-	locationIt := c.client.ListLocations(ctx, &locationpb.ListLocationsRequest{
-		Name: parent,
+	return gcpshared.CollectFromStream(ctx, func(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+		c.ListStream(ctx, stream, cache, cacheKey, scope)
 	})
-
-	var locationIDs []string
-	for {
-		location, iterErr := locationIt.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-		}
-
-		// Extract location ID from the full location name
-		// Format: projects/{PROJECT_ID}/locations/{LOCATION_ID}
-		locationName := location.GetName()
-		parts := strings.Split(locationName, "/")
-		if len(parts) >= 4 && parts[len(parts)-2] == "locations" {
-			locationIDs = append(locationIDs, parts[len(parts)-1])
-		}
-	}
-
-	if len(locationIDs) == 0 {
-		return []*sdp.Item{}, nil
-	}
-
-	// Use conc/iter to parallelize key ring listing across locations (10x concurrency)
-	type result struct {
-		items []*sdp.Item
-		err   *sdp.QueryError
-	}
-
-	mapper := iter.Mapper[string, result]{
-		MaxGoroutines: 10,
-	}
-
-	results, mapErr := mapper.MapErr(locationIDs, func(locationIDPtr *string) (result, error) {
-		locationID := *locationIDPtr
-		var locationItems []*sdp.Item
-
-		// Use Search to list key rings in this location
-		searchItems, searchErr := c.Search(ctx, scope, locationID)
-		if searchErr != nil {
-			return result{err: searchErr}, errors.New(searchErr.GetErrorString())
-		}
-
-		locationItems = append(locationItems, searchItems...)
-		return result{items: locationItems}, nil
-	})
-
-	// Check for mapping errors
-	if mapErr != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_OTHER,
-			ErrorString: mapErr.Error(),
-		}
-	}
-
-	// Aggregate all results
-	var allItems []*sdp.Item
-	for _, res := range results {
-		if res.err != nil {
-			return nil, res.err
-		}
-		allItems = append(allItems, res.items...)
-	}
-
-	return allItems, nil
 }
 
 // ListStream streams all KMS KeyRings across all locations in the project.
@@ -296,16 +219,17 @@ func (c cloudKMSKeyRingWrapper) ListStream(ctx context.Context, stream discovery
 	}
 
 	// Use SearchStream for each location in parallel
-	// We'll use a wait group to coordinate streaming from multiple locations
-	var wg sync.WaitGroup
+	// Use conc pool to limit concurrent goroutines
+	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
 	for _, locationID := range locationIDs {
-		wg.Add(1)
-		go func(locID string) {
-			defer wg.Done()
-			c.SearchStream(ctx, stream, cache, cacheKey, scope, locID)
-		}(locationID)
+		p.Go(func(ctx context.Context) error {
+			c.SearchStream(ctx, stream, cache, cacheKey, scope, locationID)
+			return nil
+		})
 	}
-	wg.Wait()
+
+	// Wait for all goroutines to complete
+	_ = p.Wait()
 }
 
 // gcpKeyRingToSDPItem converts a GCP KeyRing to an SDP Item, linking GCP resource fields.

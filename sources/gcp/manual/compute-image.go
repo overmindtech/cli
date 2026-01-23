@@ -18,8 +18,10 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var ComputeImageLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeImage)
-var ComputeImageLookupByFamily = shared.NewItemTypeLookup("family", gcpshared.ComputeImage)
+var (
+	ComputeImageLookupByName   = shared.NewItemTypeLookup("name", gcpshared.ComputeImage)
+	ComputeImageLookupByFamily = shared.NewItemTypeLookup("family", gcpshared.ComputeImage)
+)
 
 type computeImageWrapper struct {
 	client gcpshared.ComputeImagesClient
@@ -180,37 +182,9 @@ func (c computeImageWrapper) Search(ctx context.Context, scope string, queryPart
 }
 
 func (c computeImageWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	location, err := c.LocationFromScope(scope)
-	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
-	}
-
-	it := c.client.List(ctx, &computepb.ListImagesRequest{
-		Project: location.ProjectID,
+	return gcpshared.CollectFromStream(ctx, func(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+		c.ListStream(ctx, stream, cache, cacheKey, scope)
 	})
-
-	var items []*sdp.Item
-	for {
-		image, iterErr := it.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-		}
-
-		item, sdpErr := c.gcpComputeImageToSDPItem(ctx, image, location)
-		if sdpErr != nil {
-			return nil, sdpErr
-		}
-
-		items = append(items, item)
-	}
-
-	return items, nil
 }
 
 func (c computeImageWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {

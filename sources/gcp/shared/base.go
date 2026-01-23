@@ -97,27 +97,9 @@ func (z *ZoneBase) ZoneFromScope(scope string) (string, error) {
 	return location.Zone, nil
 }
 
-// GetProjectIDs returns unique project IDs from locations
-func (z *ZoneBase) GetProjectIDs() []string {
-	seen := make(map[string]bool)
-	var projects []string
-	for _, loc := range z.locations {
-		if !seen[loc.ProjectID] {
-			seen[loc.ProjectID] = true
-			projects = append(projects, loc.ProjectID)
-		}
-	}
-	return projects
-}
-
-// HasLocation checks if the given location is in the adapter's configured locations
-func (z *ZoneBase) HasLocation(loc LocationInfo) bool {
-	for _, configuredLoc := range z.locations {
-		if loc.Equals(configuredLoc) {
-			return true
-		}
-	}
-	return false
+// Locations returns the configured locations for this adapter.
+func (z *ZoneBase) Locations() []LocationInfo {
+	return z.locations
 }
 
 // RegionBase provides shared multi-scope behavior for regional adapters.
@@ -177,27 +159,9 @@ func (r *RegionBase) RegionFromScope(scope string) (string, error) {
 	return location.Region, nil
 }
 
-// GetProjectIDs returns unique project IDs from locations
-func (r *RegionBase) GetProjectIDs() []string {
-	seen := make(map[string]bool)
-	var projects []string
-	for _, loc := range r.locations {
-		if !seen[loc.ProjectID] {
-			seen[loc.ProjectID] = true
-			projects = append(projects, loc.ProjectID)
-		}
-	}
-	return projects
-}
-
-// HasLocation checks if the given location is in the adapter's configured locations
-func (r *RegionBase) HasLocation(loc LocationInfo) bool {
-	for _, configuredLoc := range r.locations {
-		if loc.Equals(configuredLoc) {
-			return true
-		}
-	}
-	return false
+// Locations returns the configured locations for this adapter.
+func (r *RegionBase) Locations() []LocationInfo {
+	return r.locations
 }
 
 // ProjectBase provides shared behavior for project-scoped adapters.
