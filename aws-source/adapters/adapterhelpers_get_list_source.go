@@ -161,6 +161,8 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Get(ctx context.Context
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
 			s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
+		} else {
+			s.Cache().CancelPendingWork(ck)
 		}
 		return nil, err
 	}
@@ -208,7 +210,13 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) List(ctx context.Contex
 
 	awsItems, err := s.ListFunc(ctx, s.Client, scope)
 	if err != nil {
-		return nil, WrapAWSError(err)
+		err := WrapAWSError(err)
+		if !CanRetry(err) {
+			s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
+		} else {
+			s.Cache().CancelPendingWork(ck)
+		}
+		return nil, err
 	}
 
 	items := make([]*sdp.Item, 0)

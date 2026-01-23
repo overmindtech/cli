@@ -3,6 +3,7 @@ package sdpcache
 import (
 	"context"
 	"sync"
+	"time"
 )
 
 // pendingWork tracks in-flight cache lookups to prevent duplicate work.
@@ -13,11 +14,15 @@ type pendingWork struct {
 	pending map[string]*workEntry
 }
 
+// maxPendingWorkAge is a safety timeout for pending work
+const maxPendingWorkAge = 5 * time.Minute
+
 // workEntry represents a pending piece of work that one or more goroutines
 // are waiting on.
 type workEntry struct {
-	done      chan struct{} // closed when work is complete
-	cancelled bool          // true if work was cancelled, not completed normally
+	done      chan struct{}
+	cancelled bool
+	startTime time.Time
 }
 
 // newPendingWork creates a new pendingWork tracker.
@@ -41,7 +46,8 @@ func (p *pendingWork) StartWork(key string) (shouldWork bool, entry *workEntry) 
 	}
 
 	entry = &workEntry{
-		done: make(chan struct{}),
+		done:      make(chan struct{}),
+		startTime: time.Now(),
 	}
 	p.pending[key] = entry
 	return true, entry
@@ -51,10 +57,29 @@ func (p *pendingWork) StartWork(key string) (shouldWork bool, entry *workEntry) 
 // Returns ok=true if the work completed successfully (caller should re-check cache).
 // Returns ok=false if the context was cancelled or work was cancelled.
 func (p *pendingWork) Wait(ctx context.Context, entry *workEntry) (ok bool) {
+	// Calculate safety timeout based on when work started
+	deadline := entry.startTime.Add(maxPendingWorkAge)
+	timeUntilDeadline := time.Until(deadline)
+	
+	// If we're already past the deadline, return immediately
+	if timeUntilDeadline <= 0 {
+		return false
+	}
+	
+	// Create a timer for the safety timeout
+	timer := time.NewTimer(timeUntilDeadline)
+	defer timer.Stop()
+	
 	select {
 	case <-entry.done:
+		// Work completed normally
 		return !entry.cancelled
 	case <-ctx.Done():
+		// Context was cancelled by caller
+		return false
+	case <-timer.C:
+		// SAFETY: Work has been pending too long (worker likely forgot to call Complete/Cancel)
+		// Return false so caller gets a cache miss and can retry
 		return false
 	}
 }

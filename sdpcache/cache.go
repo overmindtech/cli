@@ -180,6 +180,10 @@ type SSTHash string
 type Cache interface {
 	// Lookup performs a cache lookup for the given query parameters.
 	// Returns: (cache hit, cache key, items, query error)
+	//
+	// If hit=false, you must eventually call StoreItem(), StoreError(), or CancelPendingWork()
+	// to complete the work. Other goroutines waiting for the same cache key will block until
+	// you call one of these methods (or their context times out).
 	Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError)
 
 	// Search performs a lower-level search using a CacheKey.
@@ -195,8 +199,7 @@ type Cache interface {
 	StoreError(ctx context.Context, err error, duration time.Duration, ck CacheKey)
 
 	// CancelPendingWork signals that work for a cache key is complete without storing
-	// any result. This should be called when an operation completes but the result
-	// should not be cached (e.g., transient errors). Waiters will receive a cache miss.
+	// any result. Waiters will receive a cache miss and can retry.
 	CancelPendingWork(ck CacheKey)
 
 	// Delete removes all entries matching the given cache key.
@@ -713,8 +716,7 @@ func (c *MemoryCache) StoreItem(ctx context.Context, item *sdp.Item, duration ti
 
 	c.storeResult(ctx, res)
 
-	// Signal that work is complete, waking any waiting goroutines.
-	// They will re-check the cache to get the stored item(s).
+	// Signal that work is complete, waking any waiting goroutines
 	c.pending.Complete(ck.String())
 }
 
@@ -733,8 +735,7 @@ func (c *MemoryCache) StoreError(ctx context.Context, err error, duration time.D
 
 	c.storeResult(ctx, res)
 
-	// Signal that work is complete, waking any waiting goroutines.
-	// They will re-check the cache to get the stored error.
+	// Signal that work is complete, waking any waiting goroutines
 	c.pending.Complete(cacheQuery.String())
 }
 
