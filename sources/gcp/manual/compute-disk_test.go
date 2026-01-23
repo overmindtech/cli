@@ -804,7 +804,7 @@ func TestComputeDisk(t *testing.T) {
 		mockAggregatedIterator.EXPECT().Next().Return(compute.DisksScopedListPair{}, iterator.Done)
 
 		// Mock the AggregatedList method
-		mockClient.EXPECT().AggregatedList(ctx, gomock.Any()).DoAndReturn(
+		mockClient.EXPECT().AggregatedList(gomock.Any(), gomock.Any()).DoAndReturn(
 			func(ctx context.Context, req *computepb.AggregatedListDisksRequest, opts ...any) gcpshared.DisksScopedListPairIterator {
 				// Verify request parameters
 				if req.GetProject() != projectID {

@@ -1,11 +1,44 @@
 package shared
 
 import (
+	"context"
+	"errors"
 	"fmt"
 
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources/shared"
 )
+
+// CollectFromStream executes a streaming function and collects results into a slice.
+// This allows non-streaming implementations (List, Search) to delegate to streaming
+// versions (ListStream, SearchStream) without code duplication.
+func CollectFromStream(
+	ctx context.Context,
+	streamFunc func(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey),
+) ([]*sdp.Item, *sdp.QueryError) {
+	stream := discovery.NewRecordingQueryResultStream()
+	noOpCache := sdpcache.NewNoOpCache()
+	emptyCacheKey := sdpcache.CacheKey{}
+
+	streamFunc(ctx, stream, noOpCache, emptyCacheKey)
+
+	errs := stream.GetErrors()
+	if len(errs) > 0 {
+		// Return first error (preserving existing behavior)
+		var qErr *sdp.QueryError
+		if errors.As(errs[0], &qErr) {
+			return nil, qErr
+		}
+		return nil, &sdp.QueryError{
+			ErrorType:   sdp.QueryError_OTHER,
+			ErrorString: errs[0].Error(),
+		}
+	}
+
+	return stream.GetItems(), nil
+}
 
 // ZoneBase provides shared multi-scope behavior for zonal adapters.
 type ZoneBase struct {

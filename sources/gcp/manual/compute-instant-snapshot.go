@@ -5,7 +5,9 @@ import (
 	"errors"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/sourcegraph/conc/pool"
 	"google.golang.org/api/iterator"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -66,6 +68,12 @@ func (c computeInstantSnapshotWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
+// SupportsWildcardScope implements the WildcardScopeAdapter interface
+// Always returns true for compute instant snapshots since they use aggregatedList
+func (c computeInstantSnapshotWrapper) SupportsWildcardScope() bool {
+	return true
+}
+
 func (c computeInstantSnapshotWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	location, err := c.LocationFromScope(scope)
 	if err != nil {
@@ -90,41 +98,19 @@ func (c computeInstantSnapshotWrapper) Get(ctx context.Context, scope string, qu
 }
 
 func (c computeInstantSnapshotWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	location, err := c.LocationFromScope(scope)
-	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
-	}
-
-	it := c.client.List(ctx, &computepb.ListInstantSnapshotsRequest{
-		Project: location.ProjectID,
-		Zone:    location.Zone,
+	return gcpshared.CollectFromStream(ctx, func(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+		c.ListStream(ctx, stream, cache, cacheKey, scope)
 	})
-
-	var items []*sdp.Item
-	for {
-		instantSnapshot, iterErr := it.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-		}
-
-		item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(ctx, instantSnapshot, location)
-		if sdpErr != nil {
-			return nil, sdpErr
-		}
-
-		items = append(items, item)
-	}
-
-	return items, nil
 }
 
 func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	// Handle wildcard scope with AggregatedList
+	if scope == "*" {
+		c.listAggregatedStream(ctx, stream, cache, cacheKey)
+		return
+	}
+
+	// Handle specific scope with per-zone List
 	location, err := c.LocationFromScope(scope)
 	if err != nil {
 		stream.SendError(&sdp.QueryError{
@@ -158,6 +144,65 @@ func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream di
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
 	}
+}
+
+// listAggregatedStream uses AggregatedList to stream all instant snapshots across all zones
+func (c computeInstantSnapshotWrapper) listAggregatedStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+	// Get all unique project IDs
+	projectIDs := c.GetProjectIDs()
+
+	// Use a pool with 10x concurrency to parallelize AggregatedList calls
+	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
+
+	for _, projectID := range projectIDs {
+		p.Go(func(ctx context.Context) error {
+			it := c.client.AggregatedList(ctx, &computepb.AggregatedListInstantSnapshotsRequest{
+				Project:              projectID,
+				ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
+			})
+
+			for {
+				pair, iterErr := it.Next()
+				if errors.Is(iterErr, iterator.Done) {
+					break
+				}
+				if iterErr != nil {
+					stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
+					return iterErr
+				}
+
+				// Parse scope from pair.Key (e.g., "zones/us-central1-a")
+				scopeLocation, err := gcpshared.ParseAggregatedListScope(projectID, pair.Key)
+				if err != nil {
+					continue // Skip unparseable scopes
+				}
+
+				// Only process if this scope is in our adapter's configured locations
+				if !c.HasLocation(scopeLocation) {
+					continue
+				}
+
+				// Process instant snapshots in this scope
+				if pair.Value != nil && pair.Value.GetInstantSnapshots() != nil {
+					for _, instantSnapshot := range pair.Value.GetInstantSnapshots() {
+						item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(ctx, instantSnapshot, scopeLocation)
+						if sdpErr != nil {
+							stream.SendError(sdpErr)
+							continue
+						}
+
+						cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+						stream.SendItem(item)
+					}
+				}
+			}
+
+			return nil
+		})
+	}
+
+	// Wait for all goroutines to complete
+	_ = p.Wait()
 }
 
 func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(ctx context.Context, instantSnapshot *computepb.InstantSnapshot, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {

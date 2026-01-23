@@ -812,7 +812,7 @@ func TestComputeInstance(t *testing.T) {
 		mockAggregatedIterator.EXPECT().Next().Return(compute.InstancesScopedListPair{}, iterator.Done)
 
 		// Mock the AggregatedList method
-		mockClient.EXPECT().AggregatedList(ctx, gomock.Any()).DoAndReturn(
+		mockClient.EXPECT().AggregatedList(gomock.Any(), gomock.Any()).DoAndReturn(
 			func(ctx context.Context, req *computepb.AggregatedListInstancesRequest, opts ...any) gcpshared.InstancesScopedListPairIterator {
 				// Verify request parameters
 				if req.GetProject() != projectID {
