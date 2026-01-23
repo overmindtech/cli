@@ -27,6 +27,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-keyvault-secret":                     {"vaults", "secrets"},              // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
 		"azure-authorization-role-assignment":       {"roleAssignments"},                // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Authorization/roleAssignments/{roleAssignmentName}",
 		"azure-compute-virtual-machine-run-command": {"virtualMachines", "runCommands"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/runCommands/{runCommandName}",
+		"azure-compute-virtual-machine-extension":   {"virtualMachines", "extensions"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/extensions/{extensionName}",
 	}
 
 	if keys, ok := pathKeysMap[resourceType]; ok {

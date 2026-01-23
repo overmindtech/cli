@@ -66,16 +66,13 @@ func (s storageBlobContainerWrapper) Get(ctx context.Context, scope string, quer
 }
 
 func (s storageBlobContainerWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	if len(queryParts) < 1 {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_OTHER,
-			ErrorString: "Search requires 1 query part: storageAccountName",
-			Scope:       scope,
-			ItemType:    s.Type(),
-		}
+	if len(queryParts) != 1 {
+		return nil, azureshared.QueryError(fmt.Errorf("queryParts must be 1 query part: storageAccountName, got %d", len(queryParts)), scope, s.Type())
 	}
 	storageAccountName := queryParts[0]
-
+	if storageAccountName == "" {
+		return nil, azureshared.QueryError(fmt.Errorf("storageAccountName cannot be empty"), scope, s.Type())
+	}
 	resourceGroup := azureshared.ResourceGroupFromScope(scope)
 	if resourceGroup == "" {
 		resourceGroup = s.ResourceGroup()
