@@ -193,6 +193,11 @@ type Cache interface {
 	// StoreError stores an error in the cache with the specified duration.
 	StoreError(ctx context.Context, err error, duration time.Duration, ck CacheKey)
 
+	// CancelPendingWork signals that work for a cache key is complete without storing
+	// any result. This should be called when an operation completes but the result
+	// should not be cached (e.g., transient errors). Waiters will receive a cache miss.
+	CancelPendingWork(ck CacheKey)
+
 	// Delete removes all entries matching the given cache key.
 	Delete(ck CacheKey)
 
@@ -239,6 +244,11 @@ func (n *NoOpCache) StoreItem(ctx context.Context, item *sdp.Item, duration time
 
 // StoreError does nothing
 func (n *NoOpCache) StoreError(ctx context.Context, err error, duration time.Duration, ck CacheKey) {
+	// No-op
+}
+
+// CancelPendingWork does nothing
+func (n *NoOpCache) CancelPendingWork(ck CacheKey) {
 	// No-op
 }
 
@@ -290,6 +300,10 @@ type MemoryCache struct {
 	// Ensures that purge stats like `purgeTimer` and `nextPurge` aren't being
 	// modified concurrently
 	purgeMutex sync.Mutex
+
+	// Tracks in-flight lookups to prevent duplicate work when multiple
+	// goroutines request the same cache key simultaneously
+	pending *pendingWork
 }
 
 // NewMemoryCache creates a new in-memory cache implementation
@@ -297,6 +311,7 @@ func NewMemoryCache() *MemoryCache {
 	return &MemoryCache{
 		indexes:     make(map[SSTHash]*indexSet),
 		expiryIndex: newExpiryIndex(),
+		pending:     newPendingWork(),
 	}
 }
 
@@ -395,12 +410,63 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 	if err != nil {
 		var qErr *sdp.QueryError
 		if errors.Is(err, ErrCacheNotFound) {
-			// If nothing was found then execute the search against the sources
+			// Cache miss - check if another goroutine is already fetching this data
+			shouldWork, entry := c.pending.StartWork(ck.String())
+			if shouldWork {
+				// We're the first caller, return miss so caller does the work
+				span.SetAttributes(
+					attribute.String("ovm.cache.result", "cache miss"),
+					attribute.Bool("ovm.cache.hit", false),
+					attribute.Bool("ovm.cache.workPending", false),
+				)
+				return false, ck, nil, nil
+			}
+
+			// Another goroutine is fetching this data, wait for it to complete
+			ok := c.pending.Wait(ctx, entry)
+			if !ok {
+				// Context was cancelled or work was cancelled, return miss
+				span.SetAttributes(
+					attribute.String("ovm.cache.result", "pending work cancelled or timeout"),
+					attribute.Bool("ovm.cache.hit", false),
+				)
+				return false, ck, nil, nil
+			}
+
+			// Work is complete, re-check the cache for results
+			items, recheckErr := c.Search(ck)
+			if recheckErr != nil {
+				if errors.Is(recheckErr, ErrCacheNotFound) {
+					// Cache still empty after pending work completed
+					// This is valid - worker may have found nothing or cancelled
+					span.SetAttributes(
+						attribute.String("ovm.cache.result", "pending work completed but cache still empty"),
+						attribute.Bool("ovm.cache.hit", false),
+					)
+					return false, ck, nil, nil
+				}
+				var recheckQErr *sdp.QueryError
+				if errors.As(recheckErr, &recheckQErr) {
+					span.SetAttributes(
+						attribute.String("ovm.cache.result", "cache hit from pending work: error"),
+						attribute.Bool("ovm.cache.hit", true),
+					)
+					return true, ck, nil, recheckQErr
+				}
+				// Truly unexpected error - return miss
+				span.SetAttributes(
+					attribute.String("ovm.cache.result", "unexpected error on re-check"),
+					attribute.Bool("ovm.cache.hit", false),
+				)
+				return false, ck, nil, nil
+			}
+
 			span.SetAttributes(
-				attribute.String("ovm.cache.result", "cache miss"),
-				attribute.Bool("ovm.cache.hit", false),
+				attribute.String("ovm.cache.result", "cache hit from pending work"),
+				attribute.Int("ovm.cache.numItems", len(items)),
+				attribute.Bool("ovm.cache.hit", true),
 			)
-			return false, ck, nil, nil
+			return true, ck, items, nil
 		} else if errors.As(err, &qErr) {
 			if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
 				span.SetAttributes(attribute.String("ovm.cache.result", "cache hit: item not found"))
@@ -644,6 +710,10 @@ func (c *MemoryCache) StoreItem(ctx context.Context, item *sdp.Item, duration ti
 	res.IndexValues.SSTHash = ck.SST.Hash()
 
 	c.storeResult(ctx, res)
+
+	// Signal that work is complete, waking any waiting goroutines.
+	// They will re-check the cache to get the stored item(s).
+	c.pending.Complete(ck.String())
 }
 
 // StoreError Stores an error for the given duration.
@@ -660,6 +730,19 @@ func (c *MemoryCache) StoreError(ctx context.Context, err error, duration time.D
 	}
 
 	c.storeResult(ctx, res)
+
+	// Signal that work is complete, waking any waiting goroutines.
+	// They will re-check the cache to get the stored error.
+	c.pending.Complete(cacheQuery.String())
+}
+
+// CancelPendingWork signals that work for a cache key is complete without storing
+// any result. Waiters will receive a cache miss and can retry.
+func (c *MemoryCache) CancelPendingWork(ck CacheKey) {
+	if c == nil {
+		return
+	}
+	c.pending.Cancel(ck.String())
 }
 
 // Clear Delete all data in cache

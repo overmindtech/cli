@@ -196,6 +196,10 @@ type BoltCache struct {
 	// Ensures that compaction operations aren't running concurrently
 	// Read operations use RLock, write operations and compaction use Lock
 	compactMutex sync.RWMutex
+
+	// Tracks in-flight lookups to prevent duplicate work when multiple
+	// goroutines request the same cache key simultaneously
+	pending *pendingWork
 }
 
 // assert interface
@@ -241,6 +245,7 @@ func NewBoltCache(path string, opts ...BoltCacheOption) (*BoltCache, error) {
 		db:               db,
 		path:             path,
 		CompactThreshold: DefaultCompactThreshold,
+		pending:          newPendingWork(),
 	}
 
 	for _, opt := range opts {
@@ -462,7 +467,6 @@ func (c *BoltCache) deleteCacheFileLocked(ctx context.Context, span trace.Span) 
 
 // Lookup performs a cache lookup for the given query parameters.
 func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError) {
-	//nolint:ineffassign,staticcheck // The output context from Start() contains the span and must be used if passing context to any child functions
 	ctx, span := tracing.Tracer().Start(ctx, "BoltCache.Lookup",
 		trace.WithAttributes(
 			attribute.String("ovm.cache.sourceName", srcName),
@@ -508,11 +512,63 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 	if err != nil {
 		var qErr *sdp.QueryError
 		if errors.Is(err, ErrCacheNotFound) {
+			// Cache miss - check if another goroutine is already fetching this data
+			shouldWork, entry := c.pending.StartWork(ck.String())
+			if shouldWork {
+				// We're the first caller, return miss so caller does the work
+				span.SetAttributes(
+					attribute.String("ovm.cache.result", "cache miss"),
+					attribute.Bool("ovm.cache.hit", false),
+					attribute.Bool("ovm.cache.workPending", false),
+				)
+				return false, ck, nil, nil
+			}
+
+			// Another goroutine is fetching this data, wait for it to complete
+			ok := c.pending.Wait(ctx, entry)
+			if !ok {
+				// Context was cancelled or work was cancelled, return miss
+				span.SetAttributes(
+					attribute.String("ovm.cache.result", "pending work cancelled or timeout"),
+					attribute.Bool("ovm.cache.hit", false),
+				)
+				return false, ck, nil, nil
+			}
+
+			// Work is complete, re-check the cache for results
+			items, recheckErr := c.Search(ck)
+			if recheckErr != nil {
+				if errors.Is(recheckErr, ErrCacheNotFound) {
+					// Cache still empty after pending work completed
+					// This is valid - worker may have found nothing or cancelled
+					span.SetAttributes(
+						attribute.String("ovm.cache.result", "pending work completed but cache still empty"),
+						attribute.Bool("ovm.cache.hit", false),
+					)
+					return false, ck, nil, nil
+				}
+				var recheckQErr *sdp.QueryError
+				if errors.As(recheckErr, &recheckQErr) {
+					span.SetAttributes(
+						attribute.String("ovm.cache.result", "cache hit from pending work: error"),
+						attribute.Bool("ovm.cache.hit", true),
+					)
+					return true, ck, nil, recheckQErr
+				}
+				// Truly unexpected error - return miss
+				span.SetAttributes(
+					attribute.String("ovm.cache.result", "unexpected error on re-check"),
+					attribute.Bool("ovm.cache.hit", false),
+				)
+				return false, ck, nil, nil
+			}
+
 			span.SetAttributes(
-				attribute.String("ovm.cache.result", "cache miss"),
-				attribute.Bool("ovm.cache.hit", false),
+				attribute.String("ovm.cache.result", "cache hit from pending work"),
+				attribute.Int("ovm.cache.numItems", len(items)),
+				attribute.Bool("ovm.cache.hit", true),
 			)
-			return false, ck, nil, nil
+			return true, ck, items, nil
 		} else if errors.As(err, &qErr) {
 			if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
 				span.SetAttributes(attribute.String("ovm.cache.result", "cache hit: item not found"))
@@ -712,6 +768,10 @@ func (c *BoltCache) StoreItem(ctx context.Context, item *sdp.Item, duration time
 	res.IndexValues.SSTHash = ck.SST.Hash()
 
 	c.storeResult(ctx, res)
+
+	// Signal that work is complete, waking any waiting goroutines.
+	// They will re-check the cache to get the stored item(s).
+	c.pending.Complete(ck.String())
 }
 
 // StoreError stores an error in the cache with the specified duration.
@@ -758,6 +818,19 @@ func (c *BoltCache) StoreError(ctx context.Context, err error, duration time.Dur
 	}
 
 	c.storeResult(ctx, res)
+
+	// Signal that work is complete, waking any waiting goroutines.
+	// They will re-check the cache to get the stored error.
+	c.pending.Complete(ck.String())
+}
+
+// CancelPendingWork signals that work for a cache key is complete without storing
+// any result. Waiters will receive a cache miss and can retry.
+func (c *BoltCache) CancelPendingWork(ck CacheKey) {
+	if c == nil {
+		return
+	}
+	c.pending.Cancel(ck.String())
 }
 
 // storeResult stores a CachedResult in the database

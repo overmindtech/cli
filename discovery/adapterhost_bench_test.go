@@ -276,6 +276,7 @@ func (b *BenchmarkListAdapter) List(ctx context.Context, scope string, ignoreCac
 		cache.StoreError(ctx, err, b.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
+		cache.CancelPendingWork(ck)
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Error for testing",
