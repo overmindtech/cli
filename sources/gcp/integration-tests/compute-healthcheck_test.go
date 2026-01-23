@@ -32,15 +32,21 @@ func TestComputeHealthCheckIntegration(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Create a new Compute HealthCheck client
-	client, err := compute.NewHealthChecksRESTClient(ctx)
+	// Create both global and regional Compute HealthCheck clients to avoid nil pointer issues
+	globalClient, err := compute.NewHealthChecksRESTClient(ctx)
 	if err != nil {
 		t.Fatalf("NewHealthChecksRESTClient: %v", err)
 	}
-	defer client.Close()
+	defer globalClient.Close()
+
+	regionalClient, err := compute.NewRegionHealthChecksRESTClient(ctx)
+	if err != nil {
+		t.Fatalf("NewRegionHealthChecksRESTClient: %v", err)
+	}
+	defer regionalClient.Close()
 
 	t.Run("Setup", func(t *testing.T) {
-		err := createComputeHealthCheck(ctx, client, projectID, healthCheckName)
+		err := createComputeHealthCheck(ctx, globalClient, projectID, healthCheckName)
 		if err != nil {
 			t.Fatalf("Failed to create compute health check: %v", err)
 		}
@@ -49,7 +55,12 @@ func TestComputeHealthCheckIntegration(t *testing.T) {
 	t.Run("Run", func(t *testing.T) {
 		log.Printf("Running integration test for Compute HealthCheck in project %s", projectID)
 
-		healthCheckWrapper := manual.NewComputeHealthCheck(gcpshared.NewComputeHealthCheckClient(client), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		healthCheckWrapper := manual.NewComputeHealthCheck(
+			gcpshared.NewComputeHealthCheckClient(globalClient),
+			gcpshared.NewComputeRegionHealthCheckClient(regionalClient),
+			[]gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)},
+			nil, // No regional locations for this test, but regional client is available if needed
+		)
 		scope := healthCheckWrapper.Scopes()[0]
 
 		healthCheckAdapter := sources.WrapperToAdapter(healthCheckWrapper, sdpcache.NewNoOpCache())
@@ -114,7 +125,7 @@ func TestComputeHealthCheckIntegration(t *testing.T) {
 	})
 
 	t.Run("Teardown", func(t *testing.T) {
-		err := deleteComputeHealthCheck(ctx, client, projectID, healthCheckName)
+		err := deleteComputeHealthCheck(ctx, globalClient, projectID, healthCheckName)
 		if err != nil {
 			t.Errorf("Warning: failed to delete compute health check: %v", err)
 		}

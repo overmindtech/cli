@@ -262,16 +262,15 @@ func BackendServiceOrBucketLinker(projectID, fromItemScope, backendURI string, b
 		scope = projectID
 		query = name
 	} else if strings.Contains(normalizedURILower, "/backendservices/") {
-		// Backend Service - check if it's regional or global
+		// Backend Service - always use same type, scope differentiates global vs regional
 		targetType = ComputeBackendService
 		// Use original backendURI for path parameter extraction (case-sensitive)
 		region := ExtractPathParam("regions", backendURI)
 		if region != "" {
-			// Regional backend service
-			targetType = ComputeRegionBackendService
+			// Regional backend service - scope includes region
 			scope = fmt.Sprintf("%s.%s", projectID, region)
 		} else {
-			// Global backend service
+			// Global backend service - scope is project only
 			scope = projectID
 		}
 		query = name
@@ -286,6 +285,60 @@ func BackendServiceOrBucketLinker(projectID, fromItemScope, backendURI string, b
 				Type:   targetType.String(),
 				Method: sdp.QueryMethod_GET,
 				Query:  query,
+				Scope:  scope,
+			},
+			BlastPropagation: blastPropagation,
+		}
+	}
+
+	return nil
+}
+
+// HealthCheckLinker handles polymorphic health check fields in compute resources.
+// Health checks can be either global (project-scoped) or regional (project.region-scoped).
+// This function parses the URI to determine the scope and creates the appropriate link.
+// Supports both full HTTPS URLs and resource name formats.
+func HealthCheckLinker(projectID, fromItemScope, healthCheckURI string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	if healthCheckURI == "" {
+		return nil
+	}
+
+	// Extract the resource name (last component)
+	name := LastPathComponent(healthCheckURI)
+
+	// Normalize URI - remove protocol and domain if present
+	normalizedURI := healthCheckURI
+	if strings.HasPrefix(normalizedURI, "https://") {
+		// Extract path from full URL: https://compute.googleapis.com/compute/v1/projects/{project}/global/healthChecks/{name}
+		if idx := strings.Index(normalizedURI, "/projects/"); idx != -1 {
+			normalizedURI = normalizedURI[idx+1:]
+		}
+	}
+
+	// Check URI path to determine scope (case-insensitive check for robustness)
+	normalizedURILower := strings.ToLower(normalizedURI)
+	if !strings.Contains(normalizedURILower, "/healthchecks/") {
+		// Not a health check URL
+		return nil
+	}
+
+	// Determine if it's regional or global
+	var scope string
+	region := ExtractPathParam("regions", healthCheckURI)
+	if region != "" {
+		// Regional health check - scope includes region
+		scope = fmt.Sprintf("%s.%s", projectID, region)
+	} else {
+		// Global health check - scope is project only
+		scope = projectID
+	}
+
+	if projectID != "" && scope != "" && name != "" {
+		return &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   ComputeHealthCheck.String(),
+				Method: sdp.QueryMethod_GET,
+				Query:  name,
 				Scope:  scope,
 			},
 			BlastPropagation: blastPropagation,
@@ -466,9 +519,8 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 	ComputeMachineImage:           ProjectBaseLinkedItemQueryByName(ComputeMachineImage),
 	ComputeSecurityPolicy:         ProjectBaseLinkedItemQueryByName(ComputeSecurityPolicy),
 	ComputeSnapshot:               ProjectBaseLinkedItemQueryByName(ComputeSnapshot),
-	ComputeHealthCheck:            ProjectBaseLinkedItemQueryByName(ComputeHealthCheck),
-	ComputeBackendService:         BackendServiceOrBucketLinker, // Handles both backend services and backend buckets
-	ComputeRegionBackendService:   RegionBaseLinkedItemQueryByName(ComputeRegionBackendService),
+	ComputeHealthCheck:            HealthCheckLinker,             // Handles both global and regional health checks
+	ComputeBackendService:         BackendServiceOrBucketLinker, // Handles both global and regional backend services, plus backend buckets
 	ComputeImage:                  ComputeImageLinker, // Custom linker that uses SEARCH for all image references (handles both names and families)
 	ComputeAddress:                RegionBaseLinkedItemQueryByName(ComputeAddress),
 	ComputeForwardingRule:         RegionBaseLinkedItemQueryByName(ComputeForwardingRule),
