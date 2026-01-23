@@ -1035,6 +1035,148 @@ func TestMemoryCacheConcurrent(t *testing.T) {
 	wg.Wait()
 }
 
+// TestMemoryCacheLookupDeduplication tests that multiple concurrent Lookup calls
+// for the same cache key in MemoryCache result in only one caller doing work.
+func TestMemoryCacheLookupDeduplication(t *testing.T) {
+	cache := NewMemoryCache()
+	ctx := t.Context()
+
+	// Create a cache key for the test - use LIST method to avoid UniqueAttributeValue matching issues
+	sst := SST{SourceName: "test-source", Scope: "test-scope", Type: "test-type"}
+	method := sdp.QueryMethod_LIST
+
+	// Track how many goroutines actually do work
+	var workCount int32
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	numGoroutines := 10
+	results := make([]struct {
+		hit   bool
+		items []*sdp.Item
+	}, numGoroutines)
+
+	startBarrier := make(chan struct{})
+
+	for i := range numGoroutines {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			<-startBarrier
+
+			hit, ck, items, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)
+
+			if !hit {
+				mu.Lock()
+				workCount++
+				mu.Unlock()
+
+				time.Sleep(50 * time.Millisecond)
+
+				item := GenerateRandomItem()
+				item.Scope = sst.Scope
+				item.Type = sst.Type
+				item.Metadata.SourceName = sst.SourceName
+
+				cache.StoreItem(ctx, item, 10*time.Second, ck)
+				hit, _, items, _ = cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)
+			}
+
+			results[idx] = struct {
+				hit   bool
+				items []*sdp.Item
+			}{hit, items}
+		}(i)
+	}
+
+	close(startBarrier)
+	wg.Wait()
+
+	if workCount != 1 {
+		t.Errorf("expected exactly 1 goroutine to do work, got %d", workCount)
+	}
+
+	for i, r := range results {
+		if !r.hit {
+			t.Errorf("goroutine %d: expected cache hit after dedup, got miss", i)
+		}
+		if len(r.items) != 1 {
+			t.Errorf("goroutine %d: expected 1 item, got %d", i, len(r.items))
+		}
+	}
+}
+
+// TestMemoryCacheLookupDeduplicationCompleteWithoutStore tests the scenario where
+// Complete is called but nothing was stored in the cache. This tests the explicit
+// ErrCacheNotFound check in the re-check logic.
+func TestMemoryCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
+	cache := NewMemoryCache()
+	ctx := t.Context()
+
+	sst := SST{SourceName: "test-source", Scope: "test-scope", Type: "test-type"}
+	method := sdp.QueryMethod_LIST
+	query := "complete-without-store-test"
+
+	var wg sync.WaitGroup
+	startBarrier := make(chan struct{})
+
+	// Track results
+	var waiterHits []bool
+	var waiterMu sync.Mutex
+
+	numWaiters := 3
+
+	// First goroutine: starts work and completes without storing anything
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-startBarrier
+
+		hit, ck, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		if hit {
+			t.Error("first goroutine: expected cache miss")
+			return
+		}
+
+		// Simulate work that completes successfully but returns nothing
+		time.Sleep(50 * time.Millisecond)
+
+		// Complete without storing anything - triggers ErrCacheNotFound on re-check
+		cache.pending.Complete(ck.String())
+	}()
+
+	// Waiter goroutines
+	for range numWaiters {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-startBarrier
+
+			time.Sleep(10 * time.Millisecond)
+
+			hit, _, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+
+			waiterMu.Lock()
+			waiterHits = append(waiterHits, hit)
+			waiterMu.Unlock()
+		}()
+	}
+
+	close(startBarrier)
+	wg.Wait()
+
+	if len(waiterHits) != numWaiters {
+		t.Errorf("expected %d waiter results, got %d", numWaiters, len(waiterHits))
+	}
+
+	// All waiters should get a cache miss since nothing was stored
+	for i, hit := range waiterHits {
+		if hit {
+			t.Errorf("waiter %d: expected cache miss (hit=false), got hit=true", i)
+		}
+	}
+}
+
 func TestToIndexValues(t *testing.T) {
 	ck := CacheKey{
 		SST: SST{
@@ -1376,4 +1518,515 @@ func TestBoltCacheDiskFullDuringCompact(t *testing.T) {
 	if len(items) != 1 {
 		t.Errorf("expected 1 item after compaction, got %d", len(items))
 	}
+}
+
+// TestBoltCacheLookupDeduplication tests that multiple concurrent Lookup calls
+// for the same cache key result in only one caller doing the actual work.
+func TestBoltCacheLookupDeduplication(t *testing.T) {
+	tempDir := t.TempDir()
+	cachePath := filepath.Join(tempDir, "cache.db")
+
+	cache, err := NewBoltCache(cachePath)
+	if err != nil {
+		t.Fatalf("failed to create BoltCache: %v", err)
+	}
+	defer cache.Close()
+
+	ctx := t.Context()
+
+	// Create a cache key for the test - use LIST method to avoid UniqueAttributeValue matching issues
+	sst := SST{SourceName: "test-source", Scope: "test-scope", Type: "test-type"}
+	method := sdp.QueryMethod_LIST
+
+	// Track how many goroutines actually do work (get cache miss as first caller)
+	var workCount int32
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	numGoroutines := 10
+	results := make([]struct {
+		hit   bool
+		items []*sdp.Item
+		err   *sdp.QueryError
+	}, numGoroutines)
+
+	// Start barrier to ensure all goroutines start at roughly the same time
+	startBarrier := make(chan struct{})
+
+	for i := range numGoroutines {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+
+			// Wait for the start signal
+			<-startBarrier
+
+			// Lookup the cache - all should get miss initially
+			hit, ck, items, qErr := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)
+
+			if !hit {
+				// This goroutine is doing the work
+				mu.Lock()
+				workCount++
+				mu.Unlock()
+
+				// Simulate some work
+				time.Sleep(50 * time.Millisecond)
+
+				// Create and store the item
+				item := GenerateRandomItem()
+				item.Scope = sst.Scope
+				item.Type = sst.Type
+				item.Metadata.SourceName = sst.SourceName
+
+				cache.StoreItem(ctx, item, 10*time.Second, ck)
+
+				// Re-lookup to get the stored item for our result
+				hit, _, items, qErr = cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)
+			}
+
+			results[idx] = struct {
+				hit   bool
+				items []*sdp.Item
+				err   *sdp.QueryError
+			}{hit, items, qErr}
+		}(i)
+	}
+
+	// Release all goroutines at once
+	close(startBarrier)
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+
+	// Verify that only one goroutine did the work
+	if workCount != 1 {
+		t.Errorf("expected exactly 1 goroutine to do work, got %d", workCount)
+	}
+
+	// Verify all goroutines got results
+	for i, r := range results {
+		if !r.hit {
+			t.Errorf("goroutine %d: expected cache hit after dedup, got miss", i)
+		}
+		if len(r.items) != 1 {
+			t.Errorf("goroutine %d: expected 1 item, got %d", i, len(r.items))
+		}
+	}
+}
+
+// TestBoltCacheLookupDeduplicationTimeout tests that waiters properly timeout
+// when the context is cancelled.
+func TestBoltCacheLookupDeduplicationTimeout(t *testing.T) {
+	tempDir := t.TempDir()
+	cachePath := filepath.Join(tempDir, "cache.db")
+
+	cache, err := NewBoltCache(cachePath)
+	if err != nil {
+		t.Fatalf("failed to create BoltCache: %v", err)
+	}
+	defer cache.Close()
+
+	ctx := t.Context()
+
+	sst := SST{SourceName: "test-source", Scope: "test-scope", Type: "test-type"}
+	method := sdp.QueryMethod_GET
+	query := "timeout-test"
+
+	var wg sync.WaitGroup
+	startBarrier := make(chan struct{})
+
+	// First goroutine: does the work but takes a long time
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-startBarrier
+
+		hit, ck, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		if hit {
+			t.Error("first goroutine: expected cache miss")
+			return
+		}
+
+		// Simulate slow work
+		time.Sleep(500 * time.Millisecond)
+
+		// Store the item
+		item := GenerateRandomItem()
+		item.Scope = sst.Scope
+		item.Type = sst.Type
+		cache.StoreItem(ctx, item, 10*time.Second, ck)
+	}()
+
+	// Second goroutine: should timeout waiting
+	var secondHit bool
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-startBarrier
+
+		// Small delay to ensure first goroutine starts first
+		time.Sleep(10 * time.Millisecond)
+
+		// Use a short timeout context
+		shortCtx, cancel := context.WithTimeout(ctx, 50*time.Millisecond)
+		defer cancel()
+
+		hit, _, _, _ := cache.Lookup(shortCtx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		secondHit = hit
+	}()
+
+	// Release all goroutines
+	close(startBarrier)
+	wg.Wait()
+
+	// Second goroutine should have timed out and returned miss
+	if secondHit {
+		t.Error("second goroutine should have timed out and returned miss")
+	}
+}
+
+// TestBoltCacheLookupDeduplicationError tests that waiters receive the error
+// when the first caller stores an error.
+func TestBoltCacheLookupDeduplicationError(t *testing.T) {
+	tempDir := t.TempDir()
+	cachePath := filepath.Join(tempDir, "cache.db")
+
+	cache, err := NewBoltCache(cachePath)
+	if err != nil {
+		t.Fatalf("failed to create BoltCache: %v", err)
+	}
+	defer cache.Close()
+
+	ctx := t.Context()
+
+	sst := SST{SourceName: "test-source", Scope: "test-scope", Type: "test-type"}
+	method := sdp.QueryMethod_GET
+	query := "error-test"
+
+	var wg sync.WaitGroup
+	startBarrier := make(chan struct{})
+
+	expectedError := &sdp.QueryError{
+		ErrorType:   sdp.QueryError_NOTFOUND,
+		ErrorString: "item not found",
+		Scope:       sst.Scope,
+		SourceName:  sst.SourceName,
+		ItemType:    sst.Type,
+	}
+
+	// Track results from waiters
+	var waiterErrors []*sdp.QueryError
+	var waiterMu sync.Mutex
+
+	numWaiters := 5
+
+	// First goroutine: does the work and stores an error
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-startBarrier
+
+		hit, ck, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		if hit {
+			t.Error("first goroutine: expected cache miss")
+			return
+		}
+
+		// Simulate work that results in an error
+		time.Sleep(50 * time.Millisecond)
+
+		// Store the error
+		cache.StoreError(ctx, expectedError, 10*time.Second, ck)
+	}()
+
+	// Waiter goroutines: should receive the error
+	for range numWaiters {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-startBarrier
+
+			// Small delay to ensure first goroutine starts first
+			time.Sleep(10 * time.Millisecond)
+
+			hit, _, _, qErr := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+
+			waiterMu.Lock()
+			if hit && qErr != nil {
+				waiterErrors = append(waiterErrors, qErr)
+			}
+			waiterMu.Unlock()
+		}()
+	}
+
+	// Release all goroutines
+	close(startBarrier)
+	wg.Wait()
+
+	// All waiters should have received the error
+	if len(waiterErrors) != numWaiters {
+		t.Errorf("expected %d waiters to receive error, got %d", numWaiters, len(waiterErrors))
+	}
+
+	// Verify the error content
+	for i, qErr := range waiterErrors {
+		if qErr.GetErrorType() != expectedError.GetErrorType() {
+			t.Errorf("waiter %d: expected error type %v, got %v", i, expectedError.GetErrorType(), qErr.GetErrorType())
+		}
+	}
+}
+
+// TestBoltCacheLookupDeduplicationCancel tests the Cancel() path for error recovery.
+func TestBoltCacheLookupDeduplicationCancel(t *testing.T) {
+	tempDir := t.TempDir()
+	cachePath := filepath.Join(tempDir, "cache.db")
+
+	cache, err := NewBoltCache(cachePath)
+	if err != nil {
+		t.Fatalf("failed to create BoltCache: %v", err)
+	}
+	defer cache.Close()
+
+	ctx := t.Context()
+
+	sst := SST{SourceName: "test-source", Scope: "test-scope", Type: "test-type"}
+	method := sdp.QueryMethod_GET
+	query := "cancel-test"
+
+	var wg sync.WaitGroup
+	startBarrier := make(chan struct{})
+
+	// Track results
+	var waiterHits []bool
+	var waiterMu sync.Mutex
+
+	numWaiters := 3
+
+	// First goroutine: starts work but then cancels
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-startBarrier
+
+		hit, ck, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		if hit {
+			t.Error("first goroutine: expected cache miss")
+			return
+		}
+
+		// Simulate work that fails - cancel the pending work
+		time.Sleep(50 * time.Millisecond)
+		cache.CancelPendingWork(ck)
+	}()
+
+	// Waiter goroutines
+	for range numWaiters {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-startBarrier
+
+			// Small delay to ensure first goroutine starts first
+			time.Sleep(10 * time.Millisecond)
+
+			hit, _, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+
+			waiterMu.Lock()
+			waiterHits = append(waiterHits, hit)
+			waiterMu.Unlock()
+		}()
+	}
+
+	// Release all goroutines
+	close(startBarrier)
+	wg.Wait()
+
+	// When work is cancelled, waiters receive ok=false from Wait
+	// (because entry.cancelled is true) and return a cache miss without re-checking.
+	// This is the correct behavior - waiters don't hang forever and can retry.
+	if len(waiterHits) != numWaiters {
+		t.Errorf("expected %d waiter results, got %d", numWaiters, len(waiterHits))
+	}
+}
+
+// TestBoltCacheLookupDeduplicationCompleteWithoutStore tests the scenario where
+// Complete is called but nothing was stored in the cache. This tests the explicit
+// ErrCacheNotFound check in the re-check logic.
+func TestBoltCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
+	tempDir := t.TempDir()
+	cachePath := filepath.Join(tempDir, "cache.db")
+
+	cache, err := NewBoltCache(cachePath)
+	if err != nil {
+		t.Fatalf("failed to create BoltCache: %v", err)
+	}
+	defer cache.Close()
+
+	ctx := t.Context()
+
+	sst := SST{SourceName: "test-source", Scope: "test-scope", Type: "test-type"}
+	method := sdp.QueryMethod_LIST
+	query := "complete-without-store-test"
+
+	var wg sync.WaitGroup
+	startBarrier := make(chan struct{})
+
+	// Track results
+	var waiterHits []bool
+	var waiterMu sync.Mutex
+
+	numWaiters := 3
+
+	// First goroutine: starts work and completes without storing anything
+	// This simulates a LIST query that returns 0 items
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-startBarrier
+
+		hit, ck, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		if hit {
+			t.Error("first goroutine: expected cache miss")
+			return
+		}
+
+		// Simulate work that completes successfully but returns nothing
+		time.Sleep(50 * time.Millisecond)
+
+		// Complete without storing anything - no items, no error
+		// This triggers the ErrCacheNotFound path in waiters' re-check
+		cache.pending.Complete(ck.String())
+	}()
+
+	// Waiter goroutines
+	for range numWaiters {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-startBarrier
+
+			// Small delay to ensure first goroutine starts first
+			time.Sleep(10 * time.Millisecond)
+
+			hit, _, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+
+			waiterMu.Lock()
+			waiterHits = append(waiterHits, hit)
+			waiterMu.Unlock()
+		}()
+	}
+
+	// Release all goroutines
+	close(startBarrier)
+	wg.Wait()
+
+	// When Complete is called without storing anything:
+	// 1. Waiters' Wait returns ok=true (not cancelled)
+	// 2. Waiters re-check the cache and get ErrCacheNotFound
+	// 3. Waiters return hit=false (cache miss)
+	if len(waiterHits) != numWaiters {
+		t.Errorf("expected %d waiter results, got %d", numWaiters, len(waiterHits))
+	}
+
+	// All waiters should get a cache miss since nothing was stored
+	for i, hit := range waiterHits {
+		if hit {
+			t.Errorf("waiter %d: expected cache miss (hit=false), got hit=true", i)
+		}
+	}
+}
+
+// TestPendingWorkUnit tests the pendingWork component in isolation.
+func TestPendingWorkUnit(t *testing.T) {
+	t.Run("StartWork first caller", func(t *testing.T) {
+		pw := newPendingWork()
+		shouldWork, entry := pw.StartWork("key1")
+
+		if !shouldWork {
+			t.Error("first caller should do work")
+		}
+		if entry == nil {
+			t.Error("entry should not be nil")
+		}
+	})
+
+	t.Run("StartWork second caller", func(t *testing.T) {
+		pw := newPendingWork()
+
+		// First caller
+		shouldWork1, entry1 := pw.StartWork("key1")
+		if !shouldWork1 {
+			t.Error("first caller should do work")
+		}
+
+		// Second caller for same key
+		shouldWork2, entry2 := pw.StartWork("key1")
+		if shouldWork2 {
+			t.Error("second caller should not do work")
+		}
+		if entry2 != entry1 {
+			t.Error("second caller should get same entry")
+		}
+	})
+
+	t.Run("Complete wakes waiters", func(t *testing.T) {
+		pw := newPendingWork()
+		ctx := context.Background()
+
+		// First caller
+		_, entry := pw.StartWork("key1")
+
+		// Second caller waits
+		var wg sync.WaitGroup
+		var waitOk bool
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			waitOk = pw.Wait(ctx, entry)
+		}()
+
+		// Give waiter time to start waiting
+		time.Sleep(10 * time.Millisecond)
+
+		// Complete the work
+		pw.Complete("key1")
+
+		wg.Wait()
+
+		if !waitOk {
+			t.Error("wait should succeed")
+		}
+	})
+
+	t.Run("Wait respects context cancellation", func(t *testing.T) {
+		pw := newPendingWork()
+		ctx, cancel := context.WithCancel(context.Background())
+
+		// First caller
+		_, entry := pw.StartWork("key1")
+
+		// Second caller waits with cancellable context
+		var wg sync.WaitGroup
+		var waitOk bool
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			waitOk = pw.Wait(ctx, entry)
+		}()
+
+		// Give waiter time to start waiting
+		time.Sleep(10 * time.Millisecond)
+
+		// Cancel the context
+		cancel()
+
+		wg.Wait()
+
+		if waitOk {
+			t.Error("wait should fail due to context cancellation")
+		}
+	})
 }
