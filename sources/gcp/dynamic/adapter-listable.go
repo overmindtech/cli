@@ -88,14 +88,17 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 
 	listURL, err := g.listEndpointFunc(location)
 	if err != nil {
-		return nil, &sdp.QueryError{
+		err := &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf("failed to construct list endpoint: %v", err),
 		}
+		g.GetCache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		return nil, err
 	}
 
 	items, err := aggregateSDPItems(ctx, g.Adapter, listURL, location)
 	if err != nil {
+		g.GetCache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 
@@ -142,6 +145,7 @@ func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCac
 
 	listURL, err := g.listEndpointFunc(location)
 	if err != nil {
+		g.GetCache().CancelPendingWork(ck)
 		stream.SendError(&sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf("failed to construct list endpoint: %v", err),

@@ -160,7 +160,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 
 	url := g.getURLFunc(query, location)
 	if url == "" {
-		return nil, &sdp.QueryError{
+		err := &sdp.QueryError{
 			ErrorType: sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf(
 				"failed to construct the URL for the query \"%s\". GET method description: %s",
@@ -168,15 +168,19 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 				g.Metadata().GetSupportedQueryMethods().GetGetDescription(),
 			),
 		}
+		g.GetCache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		return nil, err
 	}
 
 	resp, err := externalCallSingle(ctx, g.httpCli, url)
 	if err != nil {
+		g.GetCache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 
 	item, err := externalToSDP(ctx, location, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker, g.nameSelector)
 	if err != nil {
+		g.GetCache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 

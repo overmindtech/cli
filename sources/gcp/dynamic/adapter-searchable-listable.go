@@ -108,14 +108,17 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 
 	searchEndpoint := g.searchEndpointFunc(query, location)
 	if searchEndpoint == "" {
-		return nil, &sdp.QueryError{
+		err := &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf("no search endpoint found for query \"%s\". %s", query, g.Metadata().GetSupportedQueryMethods().GetSearchDescription()),
 		}
+		g.GetCache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		return nil, err
 	}
 
 	items, err := aggregateSDPItems(ctx, g.Adapter, searchEndpoint, location)
 	if err != nil {
+		g.GetCache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 
@@ -166,6 +169,7 @@ func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, quer
 		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
 		items, err := terraformMappingViaSearch(ctx, g.Adapter, query, location, g.GetCache(), ck)
 		if err != nil {
+			g.GetCache().CancelPendingWork(ck)
 			stream.SendError(&sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
 				ErrorString: fmt.Sprintf("failed to execute terraform mapping search for query \"%s\": %v", query, err),
@@ -181,6 +185,7 @@ func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, quer
 
 	searchURL := g.searchEndpointFunc(query, location)
 	if searchURL == "" {
+		g.GetCache().CancelPendingWork(ck)
 		stream.SendError(&sdp.QueryError{
 			ErrorType: sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf(
