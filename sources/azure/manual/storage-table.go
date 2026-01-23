@@ -2,6 +2,7 @@ package manual
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
 	"github.com/overmindtech/cli/sdp-go"
@@ -113,15 +114,13 @@ func (s storageTablesWrapper) GetLookups() sources.ItemTypeLookups {
 }
 
 func (s storageTablesWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
-	if len(queryParts) < 1 {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_OTHER,
-			ErrorString: "Search requires 1 query part: storageAccountName",
-			Scope:       scope,
-			ItemType:    s.Type(),
-		}
+	if len(queryParts) != 1 {
+		return nil, azureshared.QueryError(fmt.Errorf("queryParts must be 1 query part: storageAccountName, got %d", len(queryParts)), scope, s.Type())
 	}
 	storageAccountName := queryParts[0]
+	if storageAccountName == "" {
+		return nil, azureshared.QueryError(fmt.Errorf("storageAccountName cannot be empty"), scope, s.Type())
+	}
 
 	resourceGroup := azureshared.ResourceGroupFromScope(scope)
 	if resourceGroup == "" {
