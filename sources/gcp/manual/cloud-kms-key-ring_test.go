@@ -184,7 +184,8 @@ func TestCloudKMSKeyRing(t *testing.T) {
 		mockKeyRingIterator2.EXPECT().Next().Return(nil, iterator.Done)
 
 	// Expect Search calls for both locations
-	mockClient.EXPECT().Search(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *kmspb.ListKeyRingsRequest, opts ...any) gcpshared.CloudKMSKeyRingIterator {
+	// Use gomock.Any() for ctx because the pool with context wraps it with cancellation
+	mockClient.EXPECT().Search(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, req *kmspb.ListKeyRingsRequest, opts ...any) gcpshared.CloudKMSKeyRingIterator {
 		if strings.Contains(req.GetParent(), "us-central1") {
 			return mockKeyRingIterator1
 		}
@@ -238,7 +239,8 @@ func TestCloudKMSKeyRing(t *testing.T) {
 		mockKeyRingIterator2.EXPECT().Next().Return(nil, iterator.Done)
 
 	// Expect Search calls for both locations (order may vary due to parallelism)
-	mockClient.EXPECT().Search(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *kmspb.ListKeyRingsRequest, opts ...any) gcpshared.CloudKMSKeyRingIterator {
+	// Use gomock.Any() for ctx because the pool with context wraps it with cancellation
+	mockClient.EXPECT().Search(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, req *kmspb.ListKeyRingsRequest, opts ...any) gcpshared.CloudKMSKeyRingIterator {
 		if strings.Contains(req.GetParent(), "us-central1") {
 			return mockKeyRingIterator1
 		}

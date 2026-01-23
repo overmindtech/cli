@@ -942,6 +942,84 @@ func (mr *MockComputeAutoscalerClientMockRecorder) List(ctx, req any, opts ...an
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeAutoscalerClient)(nil).List), varargs...)
 }
 
+// MockComputeBackendServiceIterator is a mock of ComputeBackendServiceIterator interface.
+type MockComputeBackendServiceIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockComputeBackendServiceIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockComputeBackendServiceIteratorMockRecorder is the mock recorder for MockComputeBackendServiceIterator.
+type MockComputeBackendServiceIteratorMockRecorder struct {
+	mock *MockComputeBackendServiceIterator
+}
+
+// NewMockComputeBackendServiceIterator creates a new mock instance.
+func NewMockComputeBackendServiceIterator(ctrl *gomock.Controller) *MockComputeBackendServiceIterator {
+	mock := &MockComputeBackendServiceIterator{ctrl: ctrl}
+	mock.recorder = &MockComputeBackendServiceIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockComputeBackendServiceIterator) EXPECT() *MockComputeBackendServiceIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockComputeBackendServiceIterator) Next() (*computepb.BackendService, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(*computepb.BackendService)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockComputeBackendServiceIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeBackendServiceIterator)(nil).Next))
+}
+
+// MockBackendServicesScopedListPairIterator is a mock of BackendServicesScopedListPairIterator interface.
+type MockBackendServicesScopedListPairIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockBackendServicesScopedListPairIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockBackendServicesScopedListPairIteratorMockRecorder is the mock recorder for MockBackendServicesScopedListPairIterator.
+type MockBackendServicesScopedListPairIteratorMockRecorder struct {
+	mock *MockBackendServicesScopedListPairIterator
+}
+
+// NewMockBackendServicesScopedListPairIterator creates a new mock instance.
+func NewMockBackendServicesScopedListPairIterator(ctrl *gomock.Controller) *MockBackendServicesScopedListPairIterator {
+	mock := &MockBackendServicesScopedListPairIterator{ctrl: ctrl}
+	mock.recorder = &MockBackendServicesScopedListPairIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockBackendServicesScopedListPairIterator) EXPECT() *MockBackendServicesScopedListPairIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockBackendServicesScopedListPairIterator) Next() (compute.BackendServicesScopedListPair, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(compute.BackendServicesScopedListPair)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockBackendServicesScopedListPairIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockBackendServicesScopedListPairIterator)(nil).Next))
+}
+
 // MockComputeBackendServiceClient is a mock of ComputeBackendServiceClient interface.
 type MockComputeBackendServiceClient struct {
 	ctrl     *gomock.Controller
@@ -964,6 +1042,25 @@ func NewMockComputeBackendServiceClient(ctrl *gomock.Controller) *MockComputeBac
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockComputeBackendServiceClient) EXPECT() *MockComputeBackendServiceClientMockRecorder {
 	return m.recorder
+}
+
+// AggregatedList mocks base method.
+func (m *MockComputeBackendServiceClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListBackendServicesRequest, opts ...gax.CallOption) shared.BackendServicesScopedListPairIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AggregatedList", varargs...)
+	ret0, _ := ret[0].(shared.BackendServicesScopedListPairIterator)
+	return ret0
+}
+
+// AggregatedList indicates an expected call of AggregatedList.
+func (mr *MockComputeBackendServiceClientMockRecorder) AggregatedList(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AggregatedList", reflect.TypeOf((*MockComputeBackendServiceClient)(nil).AggregatedList), varargs...)
 }
 
 // Get mocks base method.
@@ -1003,45 +1100,6 @@ func (mr *MockComputeBackendServiceClientMockRecorder) List(ctx, req any, opts .
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]any{ctx, req}, opts...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockComputeBackendServiceClient)(nil).List), varargs...)
-}
-
-// MockComputeBackendServiceIterator is a mock of ComputeBackendServiceIterator interface.
-type MockComputeBackendServiceIterator struct {
-	ctrl     *gomock.Controller
-	recorder *MockComputeBackendServiceIteratorMockRecorder
-	isgomock struct{}
-}
-
-// MockComputeBackendServiceIteratorMockRecorder is the mock recorder for MockComputeBackendServiceIterator.
-type MockComputeBackendServiceIteratorMockRecorder struct {
-	mock *MockComputeBackendServiceIterator
-}
-
-// NewMockComputeBackendServiceIterator creates a new mock instance.
-func NewMockComputeBackendServiceIterator(ctrl *gomock.Controller) *MockComputeBackendServiceIterator {
-	mock := &MockComputeBackendServiceIterator{ctrl: ctrl}
-	mock.recorder = &MockComputeBackendServiceIteratorMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockComputeBackendServiceIterator) EXPECT() *MockComputeBackendServiceIteratorMockRecorder {
-	return m.recorder
-}
-
-// Next mocks base method.
-func (m *MockComputeBackendServiceIterator) Next() (*computepb.BackendService, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Next")
-	ret0, _ := ret[0].(*computepb.BackendService)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Next indicates an expected call of Next.
-func (mr *MockComputeBackendServiceIteratorMockRecorder) Next() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeBackendServiceIterator)(nil).Next))
 }
 
 // MockComputeInstanceGroupIterator is a mock of ComputeInstanceGroupIterator interface.
@@ -1403,6 +1461,45 @@ func (mr *MockComputeHealthCheckIteratorMockRecorder) Next() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockComputeHealthCheckIterator)(nil).Next))
 }
 
+// MockHealthChecksScopedListPairIterator is a mock of HealthChecksScopedListPairIterator interface.
+type MockHealthChecksScopedListPairIterator struct {
+	ctrl     *gomock.Controller
+	recorder *MockHealthChecksScopedListPairIteratorMockRecorder
+	isgomock struct{}
+}
+
+// MockHealthChecksScopedListPairIteratorMockRecorder is the mock recorder for MockHealthChecksScopedListPairIterator.
+type MockHealthChecksScopedListPairIteratorMockRecorder struct {
+	mock *MockHealthChecksScopedListPairIterator
+}
+
+// NewMockHealthChecksScopedListPairIterator creates a new mock instance.
+func NewMockHealthChecksScopedListPairIterator(ctrl *gomock.Controller) *MockHealthChecksScopedListPairIterator {
+	mock := &MockHealthChecksScopedListPairIterator{ctrl: ctrl}
+	mock.recorder = &MockHealthChecksScopedListPairIteratorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockHealthChecksScopedListPairIterator) EXPECT() *MockHealthChecksScopedListPairIteratorMockRecorder {
+	return m.recorder
+}
+
+// Next mocks base method.
+func (m *MockHealthChecksScopedListPairIterator) Next() (compute.HealthChecksScopedListPair, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Next")
+	ret0, _ := ret[0].(compute.HealthChecksScopedListPair)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Next indicates an expected call of Next.
+func (mr *MockHealthChecksScopedListPairIteratorMockRecorder) Next() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Next", reflect.TypeOf((*MockHealthChecksScopedListPairIterator)(nil).Next))
+}
+
 // MockComputeHealthCheckClient is a mock of ComputeHealthCheckClient interface.
 type MockComputeHealthCheckClient struct {
 	ctrl     *gomock.Controller
@@ -1425,6 +1522,25 @@ func NewMockComputeHealthCheckClient(ctrl *gomock.Controller) *MockComputeHealth
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockComputeHealthCheckClient) EXPECT() *MockComputeHealthCheckClientMockRecorder {
 	return m.recorder
+}
+
+// AggregatedList mocks base method.
+func (m *MockComputeHealthCheckClient) AggregatedList(ctx context.Context, req *computepb.AggregatedListHealthChecksRequest, opts ...gax.CallOption) shared.HealthChecksScopedListPairIterator {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, req}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AggregatedList", varargs...)
+	ret0, _ := ret[0].(shared.HealthChecksScopedListPairIterator)
+	return ret0
+}
+
+// AggregatedList indicates an expected call of AggregatedList.
+func (mr *MockComputeHealthCheckClientMockRecorder) AggregatedList(ctx, req any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, req}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AggregatedList", reflect.TypeOf((*MockComputeHealthCheckClient)(nil).AggregatedList), varargs...)
 }
 
 // Get mocks base method.

@@ -163,7 +163,7 @@ func (c computeInstanceWrapper) ListStream(ctx context.Context, stream discovery
 // listAggregatedStream uses AggregatedList to stream all instances across all zones
 func (c computeInstanceWrapper) listAggregatedStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	// Get all unique project IDs
-	projectIDs := c.GetProjectIDs()
+	projectIDs := gcpshared.GetProjectIDsFromLocations(c.Locations())
 
 	// Use a pool with 10x concurrency to parallelize AggregatedList calls
 	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
@@ -192,7 +192,7 @@ func (c computeInstanceWrapper) listAggregatedStream(ctx context.Context, stream
 				}
 
 				// Only process if this scope is in our adapter's configured locations
-				if !c.HasLocation(scopeLocation) {
+				if !gcpshared.HasLocationInSlices(scopeLocation, c.Locations()) {
 					continue
 				}
 

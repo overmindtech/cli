@@ -93,37 +93,9 @@ func (c computeSnapshotWrapper) Get(ctx context.Context, scope string, queryPart
 }
 
 func (c computeSnapshotWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	location, err := c.LocationFromScope(scope)
-	if err != nil {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: err.Error(),
-		}
-	}
-
-	it := c.client.List(ctx, &computepb.ListSnapshotsRequest{
-		Project: location.ProjectID,
+	return gcpshared.CollectFromStream(ctx, func(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+		c.ListStream(ctx, stream, cache, cacheKey, scope)
 	})
-
-	var items []*sdp.Item
-	for {
-		snapshot, iterErr := it.Next()
-		if errors.Is(iterErr, iterator.Done) {
-			break
-		}
-		if iterErr != nil {
-			return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-		}
-
-		item, sdpErr := c.gcpComputeSnapshotToSDPItem(ctx, snapshot, location)
-		if sdpErr != nil {
-			return nil, sdpErr
-		}
-
-		items = append(items, item)
-	}
-
-	return items, nil
 }
 
 func (c computeSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {

@@ -7,7 +7,9 @@ import (
 	"net"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
+	"github.com/sourcegraph/conc/pool"
 	"google.golang.org/api/iterator"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -116,6 +118,12 @@ func (c computeHealthCheckWrapper) GetLookups() sources.ItemTypeLookups {
 	}
 }
 
+// SupportsWildcardScope implements the WildcardScopeAdapter interface
+// Always returns true for health checks since they use aggregatedList
+func (c computeHealthCheckWrapper) SupportsWildcardScope() bool {
+	return true
+}
+
 func (c computeHealthCheckWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	// Parse and validate the scope
 	location, err := c.validateAndParseScope(scope)
@@ -155,66 +163,18 @@ func (c computeHealthCheckWrapper) Get(ctx context.Context, scope string, queryP
 }
 
 func (c computeHealthCheckWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	// Parse and validate the scope
-	location, err := c.validateAndParseScope(scope)
-	if err != nil {
-		return nil, err
-	}
-
-	var items []*sdp.Item
-
-	// Route to the appropriate API based on whether the scope includes a region
-	if location.Regional() {
-		// Regional health checks
-		it := c.regionalClient.List(ctx, &computepb.ListRegionHealthChecksRequest{
-			Project: location.ProjectID,
-			Region:  location.Region,
-		})
-
-		for {
-			healthCheck, iterErr := it.Next()
-			if errors.Is(iterErr, iterator.Done) {
-				break
-			}
-			if iterErr != nil {
-				return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-			}
-
-			item, sdpErr := GcpComputeHealthCheckToSDPItem(healthCheck, location, gcpshared.ComputeHealthCheck)
-			if sdpErr != nil {
-				return nil, sdpErr
-			}
-
-			items = append(items, item)
-		}
-	} else {
-		// Global health checks
-		it := c.globalClient.List(ctx, &computepb.ListHealthChecksRequest{
-			Project: location.ProjectID,
-		})
-
-		for {
-			healthCheck, iterErr := it.Next()
-			if errors.Is(iterErr, iterator.Done) {
-				break
-			}
-			if iterErr != nil {
-				return nil, gcpshared.QueryError(iterErr, scope, c.Type())
-			}
-
-			item, sdpErr := GcpComputeHealthCheckToSDPItem(healthCheck, location, gcpshared.ComputeHealthCheck)
-			if sdpErr != nil {
-				return nil, sdpErr
-			}
-
-			items = append(items, item)
-		}
-	}
-
-	return items, nil
+	return gcpshared.CollectFromStream(ctx, func(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+		c.ListStream(ctx, stream, cache, cacheKey, scope)
+	})
 }
 
 func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	// Handle wildcard scope with AggregatedList
+	if scope == "*" {
+		c.listAggregatedStream(ctx, stream, cache, cacheKey)
+		return
+	}
+
 	// Parse and validate the scope
 	location, err := c.validateAndParseScope(scope)
 	if err != nil {
@@ -275,6 +235,65 @@ func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discov
 			stream.SendItem(item)
 		}
 	}
+}
+
+// listAggregatedStream uses AggregatedList to stream all health checks across all regions (global and regional)
+func (c computeHealthCheckWrapper) listAggregatedStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
+	// Get all unique project IDs
+	projectIDs := gcpshared.GetProjectIDsFromLocations(c.projectLocations, c.regionLocations)
+
+	// Use a pool with 10x concurrency to parallelize AggregatedList calls
+	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
+
+	for _, projectID := range projectIDs {
+		p.Go(func(ctx context.Context) error {
+			it := c.globalClient.AggregatedList(ctx, &computepb.AggregatedListHealthChecksRequest{
+				Project:              projectID,
+				ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
+			})
+
+			for {
+				pair, iterErr := it.Next()
+				if errors.Is(iterErr, iterator.Done) {
+					break
+				}
+				if iterErr != nil {
+					stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
+					return iterErr
+				}
+
+				// Parse scope from pair.Key (e.g., "global" or "regions/us-central1")
+				scopeLocation, err := gcpshared.ParseAggregatedListScope(projectID, pair.Key)
+				if err != nil {
+					continue // Skip unparseable scopes
+				}
+
+				// Only process if this scope is in our adapter's configured locations
+				if !gcpshared.HasLocationInSlices(scopeLocation, c.projectLocations, c.regionLocations) {
+					continue
+				}
+
+				// Process health checks in this scope
+				if pair.Value != nil && pair.Value.GetHealthChecks() != nil {
+					for _, healthCheck := range pair.Value.GetHealthChecks() {
+						item, sdpErr := GcpComputeHealthCheckToSDPItem(healthCheck, scopeLocation, gcpshared.ComputeHealthCheck)
+						if sdpErr != nil {
+							stream.SendError(sdpErr)
+							continue
+						}
+
+						cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+						stream.SendItem(item)
+					}
+				}
+			}
+
+			return nil
+		})
+	}
+
+	// Wait for all goroutines to complete
+	_ = p.Wait()
 }
 
 // GcpComputeHealthCheckToSDPItem converts a GCP health check to an SDP item.
