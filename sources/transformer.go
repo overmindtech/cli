@@ -309,6 +309,7 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 
 	item, err := s.wrapper.Get(ctx, scope, queryParts...)
 	if err != nil {
+		s.Cache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 
@@ -408,6 +409,7 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 
 	items, err := s.listable.List(ctx, scope)
 	if err != nil {
+		s.Cache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 
@@ -673,6 +675,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 		// We need to extract the path parameters based on the number of lookups
 		queryParts = gcpshared.ExtractPathParamsWithCount(query, len(s.wrapper.GetLookups()))
 		if len(queryParts) != len(s.wrapper.GetLookups()) {
+			s.Cache().CancelPendingWork(ck)
 			stream.SendError(&sdp.QueryError{
 				ErrorType: sdp.QueryError_OTHER,
 				ErrorString: fmt.Sprintf(
@@ -686,6 +689,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 
 		item, err := s.Get(ctx, scope, shared.CompositeLookupKey(queryParts...), ignoreCache)
 		if err != nil {
+			s.Cache().CancelPendingWork(ck)
 			stream.SendError(fmt.Errorf("failed to get item from terraform mapping: %w", err))
 			return
 		}
@@ -703,6 +707,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 		// Extract the relevant parts from the resource ID based on the resource type
 		pathKeys := azureshared.GetResourceIDPathKeys(s.wrapper.Type())
 		if pathKeys == nil {
+			s.Cache().CancelPendingWork(ck)
 			stream.SendError(&sdp.QueryError{
 				ErrorType: sdp.QueryError_OTHER,
 				ErrorString: fmt.Sprintf(
@@ -716,6 +721,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 
 		queryParts = azureshared.ExtractPathParamsFromResourceID(query, pathKeys)
 		if len(queryParts) != len(s.wrapper.GetLookups()) {
+			s.Cache().CancelPendingWork(ck)
 			stream.SendError(&sdp.QueryError{
 				ErrorType: sdp.QueryError_OTHER,
 				ErrorString: fmt.Sprintf(
@@ -731,6 +737,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 
 		item, err := s.Get(ctx, scope, shared.CompositeLookupKey(queryParts...), ignoreCache)
 		if err != nil {
+			s.Cache().CancelPendingWork(ck)
 			stream.SendError(fmt.Errorf("failed to get item from terraform mapping: %w", err))
 			return
 		}
