@@ -366,6 +366,7 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, location gcpshar
 		return nil
 	})
 
+	itemsSent := 0
 	for resp := range out {
 		item, err := externalToSDP(ctx, location, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
 		if err != nil {
@@ -374,13 +375,18 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, location gcpshar
 		}
 
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+		itemsSent++
 
 		stream.SendItem(item)
 	}
 
 	err := p.Wait()
 	if err != nil {
+		cache.StoreError(ctx, err, shared.DefaultCacheDuration, cacheKey)
 		stream.SendError(err)
+	} else if itemsSent == 0 {
+		// No items found - this is valid, but we need to release the pending work
+		cache.CancelPendingWork(cacheKey)
 	}
 }
 
@@ -396,7 +402,7 @@ func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, loc
 	// if the unique attribute keys are ["serviceAccounts", "keys"]
 	queryParts := gcpshared.ExtractPathParamsWithCount(query, len(a.uniqueAttributeKeys))
 	if len(queryParts) != len(a.uniqueAttributeKeys) {
-		return nil, &sdp.QueryError{
+		err := &sdp.QueryError{
 			ErrorType: sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf(
 				"failed to handle terraform mapping from query %s for %s",
@@ -404,6 +410,8 @@ func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, loc
 				a.sdpAssetType,
 			),
 		}
+		cache.StoreError(ctx, err, shared.DefaultCacheDuration, cacheKey)
+		return nil, err
 	}
 
 	// Reconstruct the query from the parts with default separator
@@ -414,7 +422,7 @@ func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, loc
 	// We use the GET endpoint for this query. Because the terraform mappings are for single items,
 	getURL := a.getURLFunc(query, location)
 	if getURL == "" {
-		return nil, &sdp.QueryError{
+		err := &sdp.QueryError{
 			ErrorType: sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf(
 				"failed to construct the URL for the query \"%s\". SEARCH method description: %s",
@@ -422,16 +430,21 @@ func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, loc
 				a.Metadata().GetSupportedQueryMethods().GetSearchDescription(),
 			),
 		}
+		cache.StoreError(ctx, err, shared.DefaultCacheDuration, cacheKey)
+		return nil, err
 	}
 
 	resp, err := externalCallSingle(ctx, a.httpCli, getURL)
 	if err != nil {
+		cache.StoreError(ctx, err, shared.DefaultCacheDuration, cacheKey)
 		return nil, err
 	}
 
 	item, err := externalToSDP(ctx, location, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert response to SDP: %w", err)
+		wrappedErr := fmt.Errorf("failed to convert response to SDP: %w", err)
+		cache.StoreError(ctx, wrappedErr, shared.DefaultCacheDuration, cacheKey)
+		return nil, wrappedErr
 	}
 
 	cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
