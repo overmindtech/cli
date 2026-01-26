@@ -465,8 +465,24 @@ func (c *BoltCache) deleteCacheFileLocked(ctx context.Context, span trace.Span) 
 	return nil
 }
 
+// createDoneFunc returns a done function that calls pending.Complete for the given cache key.
+// The done function releases resources and unblocks waiting goroutines.
+// The done function is safe to call multiple times (idempotent via sync.Once).
+func (c *BoltCache) createDoneFunc(ck CacheKey) func() {
+	if c == nil || c.pending == nil {
+		return noopDone
+	}
+	key := ck.String()
+	var once sync.Once
+	return func() {
+		once.Do(func() {
+			c.pending.Complete(key)
+		})
+	}
+}
+
 // Lookup performs a cache lookup for the given query parameters.
-func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError) {
+func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError, func()) {
 	ctx, span := tracing.Tracer().Start(ctx, "BoltCache.Lookup",
 		trace.WithAttributes(
 			attribute.String("ovm.cache.sourceName", srcName),
@@ -495,7 +511,7 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 			Scope:       scope,
 			SourceName:  srcName,
 			ItemType:    typ,
-		}
+		}, noopDone
 	}
 
 	if ignoreCache {
@@ -503,12 +519,12 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 			attribute.String("ovm.cache.result", "ignore cache"),
 			attribute.Bool("ovm.cache.hit", false),
 		)
-		return false, ck, nil, nil
+		return false, ck, nil, nil, noopDone
 	}
 
 	// Search already has RLock, so we don't need to add another one here
 	initialSearchStart := time.Now()
-	items, err := c.Search(ctx, ck)
+	items, err := c.search(ctx, ck)
 	initialSearchDuration := time.Since(initialSearchStart)
 	span.SetAttributes(
 		attribute.Float64("ovm.cache.initialSearchDuration_ms", float64(initialSearchDuration.Milliseconds())),
@@ -526,7 +542,7 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 					attribute.Bool("ovm.cache.hit", false),
 					attribute.Bool("ovm.cache.workPending", false),
 				)
-				return false, ck, nil, nil
+				return false, ck, nil, nil, c.createDoneFunc(ck)
 			}
 
 			// Another goroutine is fetching this data, wait for it to complete
@@ -539,55 +555,55 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 				attribute.Bool("ovm.cache.pendingWaitSuccess", ok),
 			)
 
-			if !ok {
-				// Context was cancelled or work was cancelled, return miss
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "pending work cancelled or timeout"),
-					attribute.Bool("ovm.cache.hit", false),
-				)
-				return false, ck, nil, nil
-			}
+		if !ok {
+			// Context was cancelled or work was cancelled, return miss
+			span.SetAttributes(
+				attribute.String("ovm.cache.result", "pending work cancelled or timeout"),
+				attribute.Bool("ovm.cache.hit", false),
+			)
+			return false, ck, nil, nil, noopDone
+		}
 
 		// Work is complete, re-check the cache for results
 		recheckSearchStart := time.Now()
-		items, recheckErr := c.Search(ctx, ck)
+		items, recheckErr := c.search(ctx, ck)
 		recheckSearchDuration := time.Since(recheckSearchStart)
 		span.SetAttributes(
 			attribute.Float64("ovm.cache.recheckSearchDuration_ms", float64(recheckSearchDuration.Milliseconds())),
 		)
-			if recheckErr != nil {
-				if errors.Is(recheckErr, ErrCacheNotFound) {
-					// Cache still empty after pending work completed
-					// This is valid - worker may have found nothing or cancelled
-					span.SetAttributes(
-						attribute.String("ovm.cache.result", "pending work completed but cache still empty"),
-						attribute.Bool("ovm.cache.hit", false),
-					)
-					return false, ck, nil, nil
-				}
-				var recheckQErr *sdp.QueryError
-				if errors.As(recheckErr, &recheckQErr) {
-					span.SetAttributes(
-						attribute.String("ovm.cache.result", "cache hit from pending work: error"),
-						attribute.Bool("ovm.cache.hit", true),
-					)
-					return true, ck, nil, recheckQErr
-				}
-				// Truly unexpected error - return miss
+		if recheckErr != nil {
+			if errors.Is(recheckErr, ErrCacheNotFound) {
+				// Cache still empty after pending work completed
+				// This is valid - worker may have found nothing or cancelled
 				span.SetAttributes(
-					attribute.String("ovm.cache.result", "unexpected error on re-check"),
+					attribute.String("ovm.cache.result", "pending work completed but cache still empty"),
 					attribute.Bool("ovm.cache.hit", false),
 				)
-				return false, ck, nil, nil
+				return false, ck, nil, nil, noopDone
 			}
-
+			var recheckQErr *sdp.QueryError
+			if errors.As(recheckErr, &recheckQErr) {
+				span.SetAttributes(
+					attribute.String("ovm.cache.result", "cache hit from pending work: error"),
+					attribute.Bool("ovm.cache.hit", true),
+				)
+				return true, ck, nil, recheckQErr, noopDone
+			}
+			// Truly unexpected error - return miss
 			span.SetAttributes(
-				attribute.String("ovm.cache.result", "cache hit from pending work"),
-				attribute.Int("ovm.cache.numItems", len(items)),
-				attribute.Bool("ovm.cache.hit", true),
+				attribute.String("ovm.cache.result", "unexpected error on re-check"),
+				attribute.Bool("ovm.cache.hit", false),
 			)
-			return true, ck, items, nil
-		} else if errors.As(err, &qErr) {
+			return false, ck, nil, nil, noopDone
+		}
+
+		span.SetAttributes(
+			attribute.String("ovm.cache.result", "cache hit from pending work"),
+			attribute.Int("ovm.cache.numItems", len(items)),
+			attribute.Bool("ovm.cache.hit", true),
+		)
+		return true, ck, items, nil, noopDone
+	} else if errors.As(err, &qErr) {
 			if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
 				span.SetAttributes(attribute.String("ovm.cache.result", "cache hit: item not found"))
 			} else {
@@ -595,11 +611,11 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 					attribute.String("ovm.cache.result", "cache hit: QueryError"),
 					attribute.String("ovm.cache.error", err.Error()),
 				)
-			}
+		}
 
-			span.SetAttributes(attribute.Bool("ovm.cache.hit", true))
-			return true, ck, nil, qErr
-		} else {
+		span.SetAttributes(attribute.Bool("ovm.cache.hit", true))
+		return true, ck, nil, qErr, noopDone
+	} else {
 			qErr = &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
 				ErrorString: err.Error(),
@@ -608,15 +624,15 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 				ItemType:    typ,
 			}
 
-			span.SetAttributes(
-				attribute.String("ovm.cache.error", err.Error()),
-				attribute.String("ovm.cache.result", "cache hit: unknown QueryError"),
-				attribute.Bool("ovm.cache.hit", true),
-			)
+		span.SetAttributes(
+			attribute.String("ovm.cache.error", err.Error()),
+			attribute.String("ovm.cache.result", "cache hit: unknown QueryError"),
+			attribute.Bool("ovm.cache.hit", true),
+		)
 
-			return true, ck, nil, qErr
-		}
+		return true, ck, nil, qErr, noopDone
 	}
+}
 
 	if method == sdp.QueryMethod_GET {
 		if len(items) < 2 {
@@ -625,7 +641,7 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 				attribute.Int("ovm.cache.numItems", len(items)),
 				attribute.Bool("ovm.cache.hit", true),
 			)
-			return true, ck, items, nil
+			return true, ck, items, nil, noopDone
 		} else {
 			span.SetAttributes(
 				attribute.String("ovm.cache.result", "cache returned >1 value, purging and continuing"),
@@ -634,7 +650,7 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 			)
 			// Delete already has Lock(), so we can call it directly
 			c.Delete(ck)
-			return false, ck, nil, nil
+			return false, ck, nil, nil, noopDone
 		}
 	}
 
@@ -645,12 +661,12 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 	)
 
 	// RLock already released above
-	return true, ck, items, nil
+	return true, ck, items, nil, noopDone
 }
 
 // Search performs a lower-level search using a CacheKey.
 // If ctx contains a span, detailed timing metrics will be added as span attributes.
-func (c *BoltCache) Search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
+func (c *BoltCache) search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
 	if c == nil {
 		return nil, nil
 	}
@@ -806,9 +822,6 @@ func (c *BoltCache) StoreItem(ctx context.Context, item *sdp.Item, duration time
 	res.IndexValues.SSTHash = ck.SST.Hash()
 
 	c.storeResult(ctx, res)
-
-	// Signal that work is complete, waking any waiting goroutines
-	c.pending.Complete(ck.String())
 }
 
 // StoreError stores an error in the cache with the specified duration.
@@ -855,20 +868,10 @@ func (c *BoltCache) StoreError(ctx context.Context, err error, duration time.Dur
 	}
 
 	c.storeResult(ctx, res)
-
-	// Signal that work is complete, waking any waiting goroutines
-	c.pending.Complete(ck.String())
 }
 
 // CancelPendingWork signals that work for a cache key is complete without storing
 // any result. Waiters will receive a cache miss and can retry.
-func (c *BoltCache) CancelPendingWork(ck CacheKey) {
-	if c == nil {
-		return
-	}
-	c.pending.Cancel(ck.String())
-}
-
 // storeResult stores a CachedResult in the database
 func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
 	span := trace.SpanFromContext(ctx)

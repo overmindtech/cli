@@ -53,7 +53,8 @@ var rdapIPNetworkMetadata = Metadata.Register(&sdp.AdapterMetadata{
 })
 
 func (s *RdapIPNetworkAdapter) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
-	hit, _, items, sdpErr := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	hit, _, items, sdpErr, done := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	defer done()
 
 	if sdpErr != nil {
 		return nil, sdpErr
@@ -83,7 +84,8 @@ func (s *RdapIPNetworkAdapter) List(ctx context.Context, scope string, ignoreCac
 
 // Search for the most specific network that contains the specified IP or CIDR
 func (s *RdapIPNetworkAdapter) Search(ctx context.Context, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
-	hit, ck, items, sdpErr := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.Type(), query, ignoreCache)
+	hit, ck, items, sdpErr, done := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.Type(), query, ignoreCache)
+	defer done()
 
 	if sdpErr != nil {
 		return nil, sdpErr

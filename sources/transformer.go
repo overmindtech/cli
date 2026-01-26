@@ -275,7 +275,7 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 		return nil, err
 	}
 
-	cacheHit, ck, cachedItem, qErr := s.Cache().Lookup(
+	cacheHit, ck, cachedItem, qErr, done := s.Cache().Lookup(
 		ctx,
 		s.Name(),
 		sdp.QueryMethod_GET,
@@ -284,6 +284,8 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 		query,
 		ignoreCache,
 	)
+	defer done()
+
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      s.sourceType,
@@ -384,7 +386,7 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 		return nil, nil
 	}
 
-	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(
+	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(
 		ctx,
 		s.Name(),
 		sdp.QueryMethod_LIST,
@@ -393,6 +395,8 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 		"",
 		ignoreCache,
 	)
+	defer done()
+
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      s.sourceType,
@@ -431,7 +435,7 @@ func (s *standardListableAdapterImpl) ListStream(ctx context.Context, scope stri
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(
+	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(
 		ctx,
 		s.Name(),
 		sdp.QueryMethod_LIST,
@@ -440,6 +444,8 @@ func (s *standardListableAdapterImpl) ListStream(ctx context.Context, scope stri
 		"",
 		ignoreCache,
 	)
+	defer done()
+
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      s.sourceType,
@@ -638,7 +644,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(
+	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(
 		ctx,
 		s.Name(),
 		sdp.QueryMethod_SEARCH,
@@ -647,6 +653,8 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 		query,
 		ignoreCache,
 	)
+	defer done()
+
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      s.sourceType,

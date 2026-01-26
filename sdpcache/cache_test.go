@@ -13,6 +13,19 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 )
 
+// testSearch is a helper function that calls the internal search method
+// on either MemoryCache or BoltCache implementations for testing purposes
+func testSearch(ctx context.Context, cache Cache, ck CacheKey) ([]*sdp.Item, error) {
+	switch c := cache.(type) {
+	case *MemoryCache:
+		return c.search(ctx, ck)
+	case *BoltCache:
+		return c.search(ctx, ck)
+	default:
+		return nil, fmt.Errorf("unsupported cache type for search: %T", cache)
+	}
+}
+
 // cacheImplementations returns the list of cache implementations to test
 // Accepts testing.TB so it can be used by both tests and benchmarks
 func cacheImplementations(tb testing.TB) []struct {
@@ -44,11 +57,11 @@ func TestStoreItem(t *testing.T) {
 		t.Run(impl.name, func(t *testing.T) {
 			cache := impl.factory()
 
-			item := GenerateRandomItem()
-			ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
-			cache.StoreItem(t.Context(), item, 10*time.Second, ck)
+		item := GenerateRandomItem()
+		ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
+		cache.StoreItem(t.Context(), item, 10*time.Second, ck)
 
-			results, err := cache.Search(t.Context(), ck)
+		results, err := testSearch(t.Context(), cache, ck)
 			if err != nil {
 				t.Error(err)
 			}
@@ -61,9 +74,9 @@ func TestStoreItem(t *testing.T) {
 			item = GenerateRandomItem()
 			ck = CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
-			cache.StoreItem(t.Context(), item, 10*time.Second, ck)
+		cache.StoreItem(t.Context(), item, 10*time.Second, ck)
 
-			results, err = cache.Search(t.Context(), ck)
+		results, err = testSearch(t.Context(), cache, ck)
 			if err != nil {
 				t.Error(err)
 			}
@@ -78,9 +91,9 @@ func TestStoreItem(t *testing.T) {
 
 			cache.StoreItem(t.Context(), item, 10*time.Second, ck)
 
-			ck.SST.Scope = fmt.Sprintf("new scope %v", ck.SST.Scope)
+		ck.SST.Scope = fmt.Sprintf("new scope %v", ck.SST.Scope)
 
-			results, err = cache.Search(t.Context(), ck)
+		results, err = testSearch(t.Context(), cache, ck)
 			if err != nil {
 				if !errors.Is(err, ErrCacheNotFound) {
 					t.Error(err)
@@ -115,10 +128,10 @@ func TestStoreError(t *testing.T) {
 			cache.StoreError(t.Context(), errors.New("arse"), 10*time.Second, CacheKey{
 				SST:    sst,
 				Method: sdp.QueryMethod_GET.Enum(),
-				Query:  &uav,
-			})
+			Query:  &uav,
+		})
 
-			items, err := cache.Search(t.Context(), CacheKey{
+		items, err := testSearch(t.Context(), cache, CacheKey{
 				SST:    sst,
 				Method: sdp.QueryMethod_GET.Enum(),
 				Query:  &uav,
@@ -141,9 +154,9 @@ func TestStoreError(t *testing.T) {
 			item.Scope = "foo"
 			item.Type = "foo"
 
-			ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
+		ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
-			items, err = cache.Search(t.Context(), ck)
+		items, err = testSearch(t.Context(), cache, ck)
 
 			if len(items) > 0 {
 				t.Errorf("expected 0 items, got %v", len(items))
@@ -157,10 +170,10 @@ func TestStoreError(t *testing.T) {
 			cache.StoreError(t.Context(), errors.New("nope"), 10*time.Second, CacheKey{
 				SST:    sst,
 				Method: sdp.QueryMethod_GET.Enum(),
-				Query:  &uav,
-			})
+			Query:  &uav,
+		})
 
-			items, err = cache.Search(t.Context(), CacheKey{
+		items, err = testSearch(t.Context(), cache, CacheKey{
 				SST:    sst,
 				Method: sdp.QueryMethod_GET.Enum(),
 				Query:  &uav,
@@ -219,10 +232,10 @@ func TestPurge(t *testing.T) {
 				cache.StoreItem(t.Context(), i.Item, time.Until(i.Expiry), ck)
 			}
 
-			// Make sure all the items are in the cache
-			for _, i := range cachedItems {
-				ck := CacheKeyFromQuery(i.Item.GetMetadata().GetSourceQuery(), i.Item.GetMetadata().GetSourceName())
-				items, err := cache.Search(t.Context(), ck)
+		// Make sure all the items are in the cache
+		for _, i := range cachedItems {
+			ck := CacheKeyFromQuery(i.Item.GetMetadata().GetSourceQuery(), i.Item.GetMetadata().GetSourceName())
+			items, err := testSearch(t.Context(), cache, ck)
 				if err != nil {
 					t.Error(err)
 				}
@@ -286,10 +299,10 @@ func TestDelete(t *testing.T) {
 				SourceName: item.GetMetadata().GetSourceName(),
 				Scope:      item.GetScope(),
 				Type:       item.GetType(),
-			}
+		}
 
-			// It should be there
-			items, err := cache.Search(t.Context(), CacheKey{
+		// It should be there
+		items, err := testSearch(t.Context(), cache, CacheKey{
 				SST: sst,
 			})
 
@@ -304,10 +317,10 @@ func TestDelete(t *testing.T) {
 			// Delete it
 			cache.Delete(CacheKey{
 				SST: sst,
-			})
+		})
 
-			// It should be gone
-			items, err = cache.Search(t.Context(), CacheKey{
+		// It should be gone
+		items, err = testSearch(t.Context(), cache, CacheKey{
 				SST: sst,
 			})
 
@@ -334,9 +347,9 @@ func TestPointers(t *testing.T) {
 
 			cache.StoreItem(t.Context(), item, time.Minute, ck)
 
-			item.Type = "bad"
+		item.Type = "bad"
 
-			items, err := cache.Search(t.Context(), ck)
+		items, err := testSearch(t.Context(), cache, ck)
 
 			if err != nil {
 				t.Error(err)
@@ -370,29 +383,29 @@ func TestCacheClear(t *testing.T) {
 			cache.StoreItem(ctx, item, 500*time.Millisecond, ck)
 
 			// Start purging just to make sure it doesn't break
-			ctx, cancel := context.WithCancel(ctx)
-			defer cancel()
-			cache.StartPurger(ctx)
+			ctx, done := context.WithCancel(ctx)
+			defer done()
+		cache.StartPurger(ctx)
 
-			// Make sure the cache is populated
-			_, err := cache.Search(t.Context(), ck)
+		// Make sure the cache is populated
+		_, err := testSearch(t.Context(), cache, ck)
 			if err != nil {
 				t.Error(err)
 			}
 
 			// Clear the cache
-			cache.Clear()
+		cache.Clear()
 
-			// Make sure the cache is empty
-			_, err = cache.Search(t.Context(), ck)
+		// Make sure the cache is empty
+		_, err = testSearch(t.Context(), cache, ck)
 
 			if err == nil {
 				t.Error("expected error, cache not cleared")
 			}
 
-			// Make sure we can populate it again
-			cache.StoreItem(ctx, item, 500*time.Millisecond, ck)
-			_, err = cache.Search(t.Context(), ck)
+		// Make sure we can populate it again
+		cache.StoreItem(ctx, item, 500*time.Millisecond, ck)
+		_, err = testSearch(t.Context(), cache, ck)
 
 			if err != nil {
 				t.Error(err)
@@ -414,8 +427,9 @@ func TestLookup(t *testing.T) {
 
 			cache.StoreItem(ctx, item, 10*time.Second, ck)
 
-			// ignore the cache
-			cacheHit, _, cachedItems, err := cache.Lookup(ctx, item.GetMetadata().GetSourceName(), sdp.QueryMethod_GET, item.GetScope(), item.GetType(), item.UniqueAttributeValue(), true)
+		// ignore the cache
+		cacheHit, _, cachedItems, err, done := cache.Lookup(ctx, item.GetMetadata().GetSourceName(), sdp.QueryMethod_GET, item.GetScope(), item.GetType(), item.UniqueAttributeValue(), true)
+		defer done()
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -426,8 +440,9 @@ func TestLookup(t *testing.T) {
 				t.Errorf("expected nil items, got %v", cachedItems)
 			}
 
-			// Lookup the item
-			cacheHit, _, cachedItems, err = cache.Lookup(ctx, item.GetMetadata().GetSourceName(), sdp.QueryMethod_GET, item.GetScope(), item.GetType(), item.UniqueAttributeValue(), false)
+		// Lookup the item
+		cacheHit, _, cachedItems, err, done = cache.Lookup(ctx, item.GetMetadata().GetSourceName(), sdp.QueryMethod_GET, item.GetScope(), item.GetType(), item.UniqueAttributeValue(), false)
+		defer done()
 
 			if err != nil {
 				t.Fatal(err)
@@ -456,8 +471,9 @@ func TestLookup(t *testing.T) {
 				t.Errorf("expected 1 item purged, got %v", stats.NumPurged)
 			}
 
-			// Lookup the item
-			cacheHit, _, cachedItems, err = cache.Lookup(ctx, item.GetMetadata().GetSourceName(), sdp.QueryMethod_GET, item.GetScope(), item.GetType(), item.UniqueAttributeValue(), false)
+		// Lookup the item
+		cacheHit, _, cachedItems, err, done = cache.Lookup(ctx, item.GetMetadata().GetSourceName(), sdp.QueryMethod_GET, item.GetScope(), item.GetType(), item.UniqueAttributeValue(), false)
+		defer done()
 
 			if err != nil {
 				t.Fatal(err)
@@ -486,8 +502,9 @@ func TestStoreSearch(t *testing.T) {
 
 			cache.StoreItem(ctx, item, 10*time.Second, ck)
 
-			// Lookup the item as GET request
-			cacheHit, _, cachedItems, err := cache.Lookup(ctx, item.GetMetadata().GetSourceName(), sdp.QueryMethod_GET, item.GetScope(), item.GetType(), item.UniqueAttributeValue(), false)
+		// Lookup the item as GET request
+		cacheHit, _, cachedItems, err, done := cache.Lookup(ctx, item.GetMetadata().GetSourceName(), sdp.QueryMethod_GET, item.GetScope(), item.GetType(), item.UniqueAttributeValue(), false)
+		defer done()
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -533,8 +550,9 @@ func TestLookupWithListMethod(t *testing.T) {
 			ck2 := CacheKey{SST: sst, Method: &listMethod}
 			cache.StoreItem(ctx, item2, 10*time.Second, ck2)
 
-			// Lookup with LIST should return both items
-			cacheHit, _, cachedItems, err := cache.Lookup(ctx, sst.SourceName, sdp.QueryMethod_LIST, sst.Scope, sst.Type, "", false)
+		// Lookup with LIST should return both items
+		cacheHit, _, cachedItems, err, done := cache.Lookup(ctx, sst.SourceName, sdp.QueryMethod_LIST, sst.Scope, sst.Type, "", false)
+		defer done()
 
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -569,10 +587,10 @@ func TestSearchWithListMethod(t *testing.T) {
 			item2 := GenerateRandomItem()
 			item2.Scope = sst.Scope
 			item2.Type = sst.Type
-			cache.StoreItem(t.Context(), item2, 10*time.Second, ck)
+		cache.StoreItem(t.Context(), item2, 10*time.Second, ck)
 
-			// Search should return both items
-			items, err := cache.Search(t.Context(), ck)
+		// Search should return both items
+		items, err := testSearch(t.Context(), cache, ck)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -606,19 +624,19 @@ func TestSearchMethodWithDifferentQueries(t *testing.T) {
 			item2 := GenerateRandomItem()
 			item2.Scope = sst.Scope
 			item2.Type = sst.Type
-			cache.StoreItem(t.Context(), item2, 10*time.Second, ck2)
+		cache.StoreItem(t.Context(), item2, 10*time.Second, ck2)
 
-			// Search with query1 should only return item1
-			items, err := cache.Search(t.Context(), ck1)
+		// Search with query1 should only return item1
+		items, err := testSearch(t.Context(), cache, ck1)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			if len(items) != 1 {
 				t.Errorf("expected 1 item for query1, got %v", len(items))
-			}
+		}
 
-			// Search with query2 should only return item2
-			items, err = cache.Search(t.Context(), ck2)
+		// Search with query2 should only return item2
+		items, err = testSearch(t.Context(), cache, ck2)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -655,9 +673,9 @@ func TestSearchWithPartialCacheKey(t *testing.T) {
 			ck2 := CacheKey{SST: sst, Method: &listMethod}
 			cache.StoreItem(t.Context(), item2, 10*time.Second, ck2)
 
-			// Search with SST only should return both items
-			ckPartial := CacheKey{SST: sst}
-			items, err := cache.Search(t.Context(), ckPartial)
+		// Search with SST only should return both items
+		ckPartial := CacheKey{SST: sst}
+		items, err := testSearch(t.Context(), cache, ckPartial)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -691,10 +709,10 @@ func TestDeleteWithPartialCacheKey(t *testing.T) {
 			cache.StoreItem(t.Context(), item2, 10*time.Second, ck2)
 
 			// Delete with SST only should remove all items
-			cache.Delete(CacheKey{SST: sst})
+		cache.Delete(CacheKey{SST: sst})
 
-			// Verify all items are gone
-			items, err := cache.Search(t.Context(), CacheKey{SST: sst})
+		// Verify all items are gone
+		items, err := testSearch(t.Context(), cache, CacheKey{SST: sst})
 			if !errors.Is(err, ErrCacheNotFound) {
 				t.Errorf("expected ErrCacheNotFound after delete, got: %v", err)
 			}
@@ -745,8 +763,9 @@ func TestLookupWithCachedError(t *testing.T) {
 					}
 					cache.StoreError(ctx, qErr, 10*time.Second, ck)
 
-					// Lookup should return cached error
-					cacheHit, _, items, returnedErr := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+				// Lookup should return cached error
+				cacheHit, _, items, returnedErr, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+				defer done()
 
 					if !cacheHit {
 						t.Error("expected cache hit for cached error")
@@ -796,10 +815,10 @@ func TestEmptyCacheOperations(t *testing.T) {
 			cache := impl.factory()
 
 			sst := SST{SourceName: "test", Scope: "scope", Type: "type"}
-			ck := CacheKey{SST: sst}
+		ck := CacheKey{SST: sst}
 
-			// Search on empty cache
-			items, err := cache.Search(t.Context(), ck)
+		// Search on empty cache
+		items, err := testSearch(t.Context(), cache, ck)
 			if !errors.Is(err, ErrCacheNotFound) {
 				t.Errorf("expected ErrCacheNotFound on empty cache, got: %v", err)
 			}
@@ -859,10 +878,10 @@ func TestMultipleItemsSameSST(t *testing.T) {
 				ck := CacheKey{SST: sst, Method: &method, UniqueAttributeValue: &uav}
 				cache.StoreItem(ctx, item, 10*time.Second, ck)
 				items[i] = item
-			}
+		}
 
-			// Search with SST only should return all 3 items
-			allItems, err := cache.Search(t.Context(), CacheKey{SST: sst})
+		// Search with SST only should return all 3 items
+		allItems, err := testSearch(t.Context(), cache, CacheKey{SST: sst})
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -871,10 +890,10 @@ func TestMultipleItemsSameSST(t *testing.T) {
 			}
 
 			// Search with specific unique attribute should return only that item
-			for i := range 3 {
-				uav := fmt.Sprintf("item%d", i)
-				ck := CacheKey{SST: sst, Method: &method, UniqueAttributeValue: &uav}
-				foundItems, err := cache.Search(t.Context(), ck)
+		for i := range 3 {
+			uav := fmt.Sprintf("item%d", i)
+			ck := CacheKey{SST: sst, Method: &method, UniqueAttributeValue: &uav}
+			foundItems, err := testSearch(t.Context(), cache, ck)
 				if err != nil {
 					t.Errorf("unexpected error for item%d: %v", i, err)
 				}
@@ -913,8 +932,8 @@ func TestMemoryCacheStartPurge(t *testing.T) {
 		cache.StoreItem(ctx, i.Item, time.Until(i.Expiry), ck)
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	ctx, done := context.WithCancel(ctx)
+	defer done()
 
 	cache.StartPurger(ctx)
 
@@ -923,7 +942,7 @@ func TestMemoryCacheStartPurge(t *testing.T) {
 
 	// At this point everything should be been cleaned, and the purger should be
 	// sleeping forever
-	items, err := cache.Search(t.Context(), CacheKeyFromQuery(
+	items, err := testSearch(t.Context(), cache, CacheKeyFromQuery(
 		cachedItems[1].Item.GetMetadata().GetSourceQuery(),
 		cachedItems[1].Item.GetMetadata().GetSourceName(),
 	))
@@ -950,7 +969,7 @@ func TestMemoryCacheStartPurge(t *testing.T) {
 	time.Sleep(200 * time.Millisecond)
 
 	// It should be empty again
-	items, err = cache.Search(t.Context(), CacheKeyFromQuery(
+	items, err = testSearch(t.Context(), cache, CacheKeyFromQuery(
 		cachedItems[1].Item.GetMetadata().GetSourceQuery(),
 		cachedItems[1].Item.GetMetadata().GetSourceName(),
 	))
@@ -966,12 +985,12 @@ func TestMemoryCacheStopPurge(t *testing.T) {
 	cache := NewMemoryCache()
 	cache.MinWaitTime = 1 * time.Millisecond
 
-	ctx, cancel := context.WithCancel(t.Context())
+	ctx, done := context.WithCancel(t.Context())
 
 	cache.StartPurger(ctx)
 
 	// Stop the purger
-	cancel()
+	done()
 
 	// Insert an item
 	item := GenerateRandomItem()
@@ -986,7 +1005,7 @@ func TestMemoryCacheStopPurge(t *testing.T) {
 
 	// Make sure it's not purged
 	time.Sleep(100 * time.Millisecond)
-	items, err := cache.Search(t.Context(), CacheKey{
+	items, err := testSearch(t.Context(), cache, CacheKey{
 		SST: sst,
 	})
 
@@ -1007,8 +1026,8 @@ func TestMemoryCacheConcurrent(t *testing.T) {
 	// Run the purger super fast to generate a worst-case scenario
 	cache.MinWaitTime = 1 * time.Millisecond
 
-	ctx, cancel := context.WithCancel(t.Context())
-	defer cancel()
+	ctx, done := context.WithCancel(t.Context())
+	defer done()
 	cache.StartPurger(ctx)
 	var wg sync.WaitGroup
 
@@ -1065,7 +1084,8 @@ func TestMemoryCacheLookupDeduplication(t *testing.T) {
 			defer wg.Done()
 			<-startBarrier
 
-			hit, ck, items, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)
+			hit, ck, items, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)
+		defer done()
 
 			if !hit {
 				mu.Lock()
@@ -1079,8 +1099,9 @@ func TestMemoryCacheLookupDeduplication(t *testing.T) {
 				item.Type = sst.Type
 				item.Metadata.SourceName = sst.SourceName
 
-				cache.StoreItem(ctx, item, 10*time.Second, ck)
-				hit, _, items, _ = cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)
+			cache.StoreItem(ctx, item, 10*time.Second, ck)
+			hit, _, items, _, done = cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)
+			defer done()
 			}
 
 			results[idx] = struct {
@@ -1133,7 +1154,8 @@ func TestMemoryCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
 		defer wg.Done()
 		<-startBarrier
 
-		hit, ck, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+	defer done()
 		if hit {
 			t.Error("first goroutine: expected cache miss")
 			return
@@ -1155,7 +1177,8 @@ func TestMemoryCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
 
 			time.Sleep(10 * time.Millisecond)
 
-			hit, _, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+			hit, _, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		defer done()
 
 			waiterMu.Lock()
 			waiterHits = append(waiterHits, hit)
@@ -1331,7 +1354,7 @@ func TestBoltCacheExistingFile(t *testing.T) {
 	cache1.StoreItem(ctx, item2, 100*time.Millisecond, ck2)
 
 	// Verify both items are in the cache
-	items, err := cache1.Search(t.Context(), ck1)
+	items, err := testSearch(t.Context(), cache1, ck1)
 	if err != nil {
 		t.Errorf("failed to search for item1: %v", err)
 	}
@@ -1339,7 +1362,7 @@ func TestBoltCacheExistingFile(t *testing.T) {
 		t.Errorf("expected 1 item for ck1, got %d", len(items))
 	}
 
-	items, err = cache1.Search(t.Context(), ck2)
+	items, err = testSearch(t.Context(), cache1, ck2)
 	if err != nil {
 		t.Errorf("failed to search for item2: %v", err)
 	}
@@ -1363,7 +1386,7 @@ func TestBoltCacheExistingFile(t *testing.T) {
 	defer cache2.Close()
 
 	// Verify item1 is still accessible (not expired)
-	items, err = cache2.Search(t.Context(), ck1)
+	items, err = testSearch(t.Context(), cache2, ck1)
 	if err != nil {
 		t.Errorf("failed to search for item1 in existing cache: %v", err)
 	}
@@ -1372,11 +1395,11 @@ func TestBoltCacheExistingFile(t *testing.T) {
 	}
 
 	// Verify item2 is expired (should not be found or should be purged)
-	items, err = cache2.Search(t.Context(), ck2)
+	items, err = testSearch(t.Context(), cache2, ck2)
 	if err == nil && len(items) > 0 {
 		// Item might still be there if purge hasn't run, so let's purge explicitly
 		cache2.Purge(ctx, time.Now())
-		items, err = cache2.Search(t.Context(), ck2)
+		items, err = testSearch(t.Context(), cache2, ck2)
 		if err == nil && len(items) > 0 {
 			t.Errorf("expected item2 to be expired and purged, but found %d items", len(items))
 		}
@@ -1387,7 +1410,7 @@ func TestBoltCacheExistingFile(t *testing.T) {
 	if stats.NumPurged == 0 && err == nil {
 		// If we got here, item2 should have been purged
 		// Let's verify it's gone
-		items, err = cache2.Search(t.Context(), ck2)
+		items, err = testSearch(t.Context(), cache2, ck2)
 		if !errors.Is(err, ErrCacheNotFound) && len(items) > 0 {
 			t.Errorf("expected item2 to be purged, but search returned: err=%v, items=%d", err, len(items))
 		}
@@ -1398,7 +1421,7 @@ func TestBoltCacheExistingFile(t *testing.T) {
 	ck3 := CacheKeyFromQuery(item3.GetMetadata().GetSourceQuery(), item3.GetMetadata().GetSourceName())
 	cache2.StoreItem(ctx, item3, 10*time.Second, ck3)
 
-	items, err = cache2.Search(t.Context(), ck3)
+	items, err = testSearch(t.Context(), cache2, ck3)
 	if err != nil {
 		t.Errorf("failed to search for newly stored item3: %v", err)
 	}
@@ -1453,7 +1476,7 @@ func TestBoltCacheDeleteOnDiskFull(t *testing.T) {
 	}
 
 	// Verify item is in cache
-	items, err := cache.Search(t.Context(), ck)
+	items, err := testSearch(t.Context(), cache, ck)
 	if err != nil {
 		t.Errorf("failed to search: %v", err)
 	}
@@ -1472,7 +1495,7 @@ func TestBoltCacheDeleteOnDiskFull(t *testing.T) {
 	}
 
 	// Verify the database is closed (can't search anymore)
-	_, _ = cache.Search(t.Context(), ck)
+	_, _ = testSearch(t.Context(), cache, ck)
 	// The search might fail or return empty, but the important thing is the file is gone
 	// and we can't use the cache anymore
 }
@@ -1512,7 +1535,7 @@ func TestBoltCacheDiskFullDuringCompact(t *testing.T) {
 	ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 	cache.StoreItem(ctx, item, 10*time.Second, ck)
 
-	items, err := cache.Search(t.Context(), ck)
+	items, err := testSearch(t.Context(), cache, ck)
 	if err != nil {
 		t.Errorf("failed to search after compaction: %v", err)
 	}
@@ -1562,8 +1585,9 @@ func TestBoltCacheLookupDeduplication(t *testing.T) {
 			// Wait for the start signal
 			<-startBarrier
 
-			// Lookup the cache - all should get miss initially
-			hit, ck, items, qErr := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)
+		// Lookup the cache - all should get miss initially
+		hit, ck, items, qErr, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)
+		defer done()
 
 			if !hit {
 				// This goroutine is doing the work
@@ -1582,8 +1606,9 @@ func TestBoltCacheLookupDeduplication(t *testing.T) {
 
 				cache.StoreItem(ctx, item, 10*time.Second, ck)
 
-				// Re-lookup to get the stored item for our result
-				hit, _, items, qErr = cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)
+			// Re-lookup to get the stored item for our result
+			hit, _, items, qErr, done = cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)
+			defer done()
 			}
 
 			results[idx] = struct {
@@ -1617,7 +1642,7 @@ func TestBoltCacheLookupDeduplication(t *testing.T) {
 }
 
 // TestBoltCacheLookupDeduplicationTimeout tests that waiters properly timeout
-// when the context is cancelled.
+// when the context is doneled.
 func TestBoltCacheLookupDeduplicationTimeout(t *testing.T) {
 	tempDir := t.TempDir()
 	cachePath := filepath.Join(tempDir, "cache.db")
@@ -1643,7 +1668,8 @@ func TestBoltCacheLookupDeduplicationTimeout(t *testing.T) {
 		defer wg.Done()
 		<-startBarrier
 
-		hit, ck, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+	defer done()
 		if hit {
 			t.Error("first goroutine: expected cache miss")
 			return
@@ -1670,10 +1696,11 @@ func TestBoltCacheLookupDeduplicationTimeout(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 
 		// Use a short timeout context
-		shortCtx, cancel := context.WithTimeout(ctx, 50*time.Millisecond)
-		defer cancel()
+		shortCtx, done := context.WithTimeout(ctx, 50*time.Millisecond)
+		defer done()
 
-		hit, _, _, _ := cache.Lookup(shortCtx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		hit, _, _, _, done := cache.Lookup(shortCtx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+	defer done()
 		secondHit = hit
 	}()
 
@@ -1728,7 +1755,8 @@ func TestBoltCacheLookupDeduplicationError(t *testing.T) {
 		defer wg.Done()
 		<-startBarrier
 
-		hit, ck, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+	defer done()
 		if hit {
 			t.Error("first goroutine: expected cache miss")
 			return
@@ -1751,7 +1779,8 @@ func TestBoltCacheLookupDeduplicationError(t *testing.T) {
 			// Small delay to ensure first goroutine starts first
 			time.Sleep(10 * time.Millisecond)
 
-			hit, _, _, qErr := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+			hit, _, _, qErr, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		defer done()
 
 			waiterMu.Lock()
 			if hit && qErr != nil {
@@ -1793,7 +1822,7 @@ func TestBoltCacheLookupDeduplicationCancel(t *testing.T) {
 
 	sst := SST{SourceName: "test-source", Scope: "test-scope", Type: "test-type"}
 	method := sdp.QueryMethod_GET
-	query := "cancel-test"
+	query := "done-test"
 
 	var wg sync.WaitGroup
 	startBarrier := make(chan struct{})
@@ -1804,21 +1833,22 @@ func TestBoltCacheLookupDeduplicationCancel(t *testing.T) {
 
 	numWaiters := 3
 
-	// First goroutine: starts work but then cancels
+	// First goroutine: starts work but then dones
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		<-startBarrier
 
-		hit, ck, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		hit, _, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
 		if hit {
 			t.Error("first goroutine: expected cache miss")
+			done()
 			return
 		}
 
-		// Simulate work that fails - cancel the pending work
+		// Simulate work that fails - done the pending work
 		time.Sleep(50 * time.Millisecond)
-		cache.CancelPendingWork(ck)
+		done()
 	}()
 
 	// Waiter goroutines
@@ -1831,7 +1861,8 @@ func TestBoltCacheLookupDeduplicationCancel(t *testing.T) {
 			// Small delay to ensure first goroutine starts first
 			time.Sleep(10 * time.Millisecond)
 
-			hit, _, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+			hit, _, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		defer done()
 
 			waiterMu.Lock()
 			waiterHits = append(waiterHits, hit)
@@ -1843,8 +1874,8 @@ func TestBoltCacheLookupDeduplicationCancel(t *testing.T) {
 	close(startBarrier)
 	wg.Wait()
 
-	// When work is cancelled, waiters receive ok=false from Wait
-	// (because entry.cancelled is true) and return a cache miss without re-checking.
+	// When work is doneled, waiters receive ok=false from Wait
+	// (because entry.doneled is true) and return a cache miss without re-checking.
 	// This is the correct behavior - waiters don't hang forever and can retry.
 	if len(waiterHits) != numWaiters {
 		t.Errorf("expected %d waiter results, got %d", numWaiters, len(waiterHits))
@@ -1886,7 +1917,8 @@ func TestBoltCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
 		defer wg.Done()
 		<-startBarrier
 
-		hit, ck, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+	defer done()
 		if hit {
 			t.Error("first goroutine: expected cache miss")
 			return
@@ -1910,7 +1942,8 @@ func TestBoltCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
 			// Small delay to ensure first goroutine starts first
 			time.Sleep(10 * time.Millisecond)
 
-			hit, _, _, _ := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+			hit, _, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+		defer done()
 
 			waiterMu.Lock()
 			waiterHits = append(waiterHits, hit)
@@ -1923,7 +1956,7 @@ func TestBoltCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
 	wg.Wait()
 
 	// When Complete is called without storing anything:
-	// 1. Waiters' Wait returns ok=true (not cancelled)
+	// 1. Waiters' Wait returns ok=true (not doneled)
 	// 2. Waiters re-check the cache and get ErrCacheNotFound
 	// 3. Waiters return hit=false (cache miss)
 	if len(waiterHits) != numWaiters {
@@ -2001,14 +2034,14 @@ func TestPendingWorkUnit(t *testing.T) {
 		}
 	})
 
-	t.Run("Wait respects context cancellation", func(t *testing.T) {
+	t.Run("Wait respects context donelation", func(t *testing.T) {
 		pw := newPendingWork()
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, done := context.WithCancel(context.Background())
 
 		// First caller
 		_, entry := pw.StartWork("key1")
 
-		// Second caller waits with cancellable context
+		// Second caller waits with donelable context
 		var wg sync.WaitGroup
 		var waitOk bool
 
@@ -2022,12 +2055,12 @@ func TestPendingWorkUnit(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 
 		// Cancel the context
-		cancel()
+		done()
 
 		wg.Wait()
 
 		if waitOk {
-			t.Error("wait should fail due to context cancellation")
+			t.Error("wait should fail due to context donelation")
 		}
 	})
 }

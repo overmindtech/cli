@@ -135,7 +135,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		return nil, err
 	}
 
-	cacheHit, ck, cachedItem, qErr := g.GetCache().Lookup(
+	cacheHit, ck, cachedItem, qErr, done := g.GetCache().Lookup(
 		ctx,
 		g.Name(),
 		sdp.QueryMethod_GET,
@@ -144,6 +144,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		query,
 		ignoreCache,
 	)
+	defer done()
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      "gcp",

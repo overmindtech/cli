@@ -144,7 +144,8 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Get(ctx context.Context
 		}
 	}
 
-	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
+	defer done()
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -161,8 +162,6 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Get(ctx context.Context
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
 			s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
-		} else {
-			s.Cache().CancelPendingWork(ck)
 		}
 		return nil, err
 	}
@@ -200,7 +199,8 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) List(ctx context.Contex
 		return []*sdp.Item{}, nil
 	}
 
-	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
+	defer done()
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -213,8 +213,6 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) List(ctx context.Contex
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
 			s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
-		} else {
-			s.Cache().CancelPendingWork(ck)
 		}
 		return nil, err
 	}
@@ -304,7 +302,8 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchARN(ctx context.C
 // Custom search function that can be used to search for items in a different,
 // adapter-specific way
 func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchCustom(ctx context.Context, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
-	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
+	defer done()
 	if qErr != nil {
 		return nil, qErr
 	}

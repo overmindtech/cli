@@ -52,7 +52,8 @@ func (s *RdapASNAdapter) Scopes() []string {
 }
 
 func (s *RdapASNAdapter) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
-	hit, ck, items, sdpErr := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	hit, ck, items, sdpErr, done := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	defer done()
 
 	if sdpErr != nil {
 		return nil, sdpErr

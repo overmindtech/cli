@@ -193,7 +193,8 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 		return nil, WrapAWSError(err)
 	}
 
-	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
+	defer done()
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -308,7 +309,8 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) ListStream(c
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
+	defer done()
 	if qErr != nil {
 		stream.SendError(qErr)
 		return
@@ -389,7 +391,8 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchARN(ct
 
 // searchCustom Runs custom search logic using the `InputMapperSearch` function
 func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchCustom(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
-	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
+	defer done()
 	if qErr != nil {
 		stream.SendError(qErr)
 		return

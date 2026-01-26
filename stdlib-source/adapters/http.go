@@ -183,8 +183,10 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 	var ck sdpcache.CacheKey
 	var cachedItems []*sdp.Item
 	var qErr *sdp.QueryError
+	var done func()
 
-	cacheHit, ck, cachedItems, qErr = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	defer done()
 	if qErr != nil {
 		return nil, qErr
 	}

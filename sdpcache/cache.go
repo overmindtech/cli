@@ -19,6 +19,9 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
+// noopDone is a reusable no-op done function returned when no cleanup is needed
+var noopDone = func() {}
+
 type IndexValues struct {
 	SSTHash              SSTHash
 	UniqueAttributeValue string
@@ -179,28 +182,32 @@ type SSTHash string
 // Cache provides operations for caching SDP items and errors
 type Cache interface {
 	// Lookup performs a cache lookup for the given query parameters.
-	// Returns: (cache hit, cache key, items, query error)
+	// Returns: (cache hit, cache key, items, query error, done function)
 	//
-	// If hit=false, you must eventually call StoreItem(), StoreError(), or CancelPendingWork()
-	// to complete the work. Other goroutines waiting for the same cache key will block until
-	// you call one of these methods (or their context times out).
-	Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError)
-
-	// Search performs a lower-level search using a CacheKey.
-	// Returns items that match the cache key, or ErrCacheNotFound if nothing found.
-	// If a cached error exists, it will be returned instead.
-	// If ctx contains a span, detailed timing metrics will be added as span attributes.
-	Search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error)
+	// If hit=false, you MUST call the returned done function when finished, after storing all
+	// items/errors. The done function releases resources and unblocks waiting goroutines.
+	// You should defer the done function immediately after calling Lookup to ensure it's called.
+	//
+	// Example usage for cache miss:
+	//   hit, ck, _, _, done := cache.Lookup(...)
+	//   defer done()  // MUST be called when finished
+	//   if !hit {
+	//       // Store all items first
+	//       for _, item := range items {
+	//           cache.StoreItem(ctx, item, duration, ck)
+	//       }
+	//       // done() is called via defer, releasing waiters
+	//   }
+	//
+	// The done function is safe to call multiple times (idempotent).
+	// For cache hits or waiting goroutines, the done function is a no-op.
+	Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError, func())
 
 	// StoreItem stores an item in the cache with the specified duration.
 	StoreItem(ctx context.Context, item *sdp.Item, duration time.Duration, ck CacheKey)
 
 	// StoreError stores an error in the cache with the specified duration.
 	StoreError(ctx context.Context, err error, duration time.Duration, ck CacheKey)
-
-	// CancelPendingWork signals that work for a cache key is complete without storing
-	// any result. Waiters will receive a cache miss and can retry.
-	CancelPendingWork(ck CacheKey)
 
 	// Delete removes all entries matching the given cache key.
 	Delete(ck CacheKey)
@@ -231,14 +238,9 @@ func NewNoOpCache() Cache {
 }
 
 // Lookup always returns a cache miss
-func (n *NoOpCache) Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError) {
+func (n *NoOpCache) Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError, func()) {
 	ck := CacheKeyFromParts(srcName, method, scope, typ, query)
-	return false, ck, nil, nil
-}
-
-// Search always returns ErrCacheNotFound
-func (n *NoOpCache) Search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
-	return nil, ErrCacheNotFound
+	return false, ck, nil, nil, noopDone
 }
 
 // StoreItem does nothing
@@ -248,11 +250,6 @@ func (n *NoOpCache) StoreItem(ctx context.Context, item *sdp.Item, duration time
 
 // StoreError does nothing
 func (n *NoOpCache) StoreError(ctx context.Context, err error, duration time.Duration, ck CacheKey) {
-	// No-op
-}
-
-// CancelPendingWork does nothing
-func (n *NoOpCache) CancelPendingWork(ck CacheKey) {
 	// No-op
 }
 
@@ -379,11 +376,27 @@ func newIndexSet() *indexSet {
 	}
 }
 
+// createDoneFunc returns a done function that calls pending.Complete for the given cache key.
+// The done function releases resources and unblocks waiting goroutines.
+// The done function is safe to call multiple times (idempotent via sync.Once).
+func (c *MemoryCache) createDoneFunc(ck CacheKey) func() {
+	if c == nil || c.pending == nil {
+		return noopDone
+	}
+	key := ck.String()
+	var once sync.Once
+	return func() {
+		once.Do(func() {
+			c.pending.Complete(key)
+		})
+	}
+}
+
 // Lookup returns true/false whether or not the cache has a result for the given
 // query. If there are results, they will be returned as slice of `sdp.Item`s or
 // an `*sdp.QueryError`.
 // The CacheKey is always returned, even if the lookup otherwise fails or errors
-func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError) {
+func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError, func()) {
 	span := trace.SpanFromContext(ctx)
 	ck := CacheKeyFromParts(srcName, method, scope, typ, query)
 
@@ -398,7 +411,7 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 			Scope:       scope,
 			SourceName:  srcName,
 			ItemType:    typ,
-		}
+		}, noopDone
 	}
 
 	if ignoreCache {
@@ -406,10 +419,10 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 			attribute.String("ovm.cache.result", "ignore cache"),
 			attribute.Bool("ovm.cache.hit", false),
 		)
-		return false, ck, nil, nil
+		return false, ck, nil, nil, noopDone
 	}
 
-	items, err := c.Search(ctx, ck)
+	items, err := c.search(ctx, ck)
 
 	if err != nil {
 		var qErr *sdp.QueryError
@@ -423,7 +436,7 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 					attribute.Bool("ovm.cache.hit", false),
 					attribute.Bool("ovm.cache.workPending", false),
 				)
-				return false, ck, nil, nil
+				return false, ck, nil, nil, c.createDoneFunc(ck)
 			}
 
 			// Another goroutine is fetching this data, wait for it to complete
@@ -434,11 +447,11 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 					attribute.String("ovm.cache.result", "pending work cancelled or timeout"),
 					attribute.Bool("ovm.cache.hit", false),
 				)
-				return false, ck, nil, nil
+				return false, ck, nil, nil, noopDone
 			}
 
 			// Work is complete, re-check the cache for results
-			items, recheckErr := c.Search(ctx, ck)
+			items, recheckErr := c.search(ctx, ck)
 			if recheckErr != nil {
 				if errors.Is(recheckErr, ErrCacheNotFound) {
 					// Cache still empty after pending work completed
@@ -447,7 +460,7 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 						attribute.String("ovm.cache.result", "pending work completed but cache still empty"),
 						attribute.Bool("ovm.cache.hit", false),
 					)
-					return false, ck, nil, nil
+					return false, ck, nil, nil, noopDone
 				}
 				var recheckQErr *sdp.QueryError
 				if errors.As(recheckErr, &recheckQErr) {
@@ -455,14 +468,14 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 						attribute.String("ovm.cache.result", "cache hit from pending work: error"),
 						attribute.Bool("ovm.cache.hit", true),
 					)
-					return true, ck, nil, recheckQErr
+					return true, ck, nil, recheckQErr, noopDone
 				}
 				// Truly unexpected error - return miss
 				span.SetAttributes(
 					attribute.String("ovm.cache.result", "unexpected error on re-check"),
 					attribute.Bool("ovm.cache.hit", false),
 				)
-				return false, ck, nil, nil
+				return false, ck, nil, nil, noopDone
 			}
 
 			span.SetAttributes(
@@ -470,7 +483,7 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 				attribute.Int("ovm.cache.numItems", len(items)),
 				attribute.Bool("ovm.cache.hit", true),
 			)
-			return true, ck, items, nil
+			return true, ck, items, nil, noopDone
 		} else if errors.As(err, &qErr) {
 			if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
 				span.SetAttributes(attribute.String("ovm.cache.result", "cache hit: item not found"))
@@ -482,7 +495,7 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 			}
 
 			span.SetAttributes(attribute.Bool("ovm.cache.hit", true))
-			return true, ck, nil, qErr
+			return true, ck, nil, qErr, noopDone
 		} else {
 			// If it's an unknown error, convert it to SDP and skip this source
 			qErr = &sdp.QueryError{
@@ -499,7 +512,7 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 				attribute.Bool("ovm.cache.hit", true),
 			)
 
-			return true, ck, nil, qErr
+			return true, ck, nil, qErr, noopDone
 		}
 	}
 
@@ -513,7 +526,7 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 				attribute.Int("ovm.cache.numItems", len(items)),
 				attribute.Bool("ovm.cache.hit", true),
 			)
-			return true, ck, items, nil
+			return true, ck, items, nil, noopDone
 		} else {
 			span.SetAttributes(
 				attribute.String("ovm.cache.result", "cache returned >1 value, purging and continuing"),
@@ -521,7 +534,7 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 				attribute.Bool("ovm.cache.hit", false),
 			)
 			c.Delete(ck)
-			return false, ck, nil, nil
+			return false, ck, nil, nil, noopDone
 		}
 	}
 
@@ -531,7 +544,7 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 		attribute.Bool("ovm.cache.hit", true),
 	)
 
-	return true, ck, items, nil
+	return true, ck, items, nil, noopDone
 }
 
 // Search Runs a given query against the cache. If a cached error is found it
@@ -539,7 +552,7 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 // be returned. Otherwise this will return items that match ALL of the given
 // query parameters. Context is accepted for tracing but not currently used
 // by MemoryCache (no I/O operations).
-func (c *MemoryCache) Search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
+func (c *MemoryCache) search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
 	if c == nil {
 		return nil, nil
 	}
@@ -715,9 +728,6 @@ func (c *MemoryCache) StoreItem(ctx context.Context, item *sdp.Item, duration ti
 	res.IndexValues.SSTHash = ck.SST.Hash()
 
 	c.storeResult(ctx, res)
-
-	// Signal that work is complete, waking any waiting goroutines
-	c.pending.Complete(ck.String())
 }
 
 // StoreError Stores an error for the given duration.
@@ -734,20 +744,10 @@ func (c *MemoryCache) StoreError(ctx context.Context, err error, duration time.D
 	}
 
 	c.storeResult(ctx, res)
-
-	// Signal that work is complete, waking any waiting goroutines
-	c.pending.Complete(cacheQuery.String())
 }
 
 // CancelPendingWork signals that work for a cache key is complete without storing
 // any result. Waiters will receive a cache miss and can retry.
-func (c *MemoryCache) CancelPendingWork(ck CacheKey) {
-	if c == nil {
-		return
-	}
-	c.pending.Cancel(ck.String())
-}
-
 // Clear Delete all data in cache
 func (c *MemoryCache) Clear() {
 	if c == nil {

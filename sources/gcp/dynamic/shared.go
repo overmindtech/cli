@@ -388,6 +388,7 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, location gcpshar
 		// No items found - this is valid, but we need to release the pending work
 		cache.CancelPendingWork(cacheKey)
 	}
+	// Note: No items found is valid. The caller's defer done() will release pending work.
 }
 
 func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, location gcpshared.LocationInfo, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) ([]*sdp.Item, error) {

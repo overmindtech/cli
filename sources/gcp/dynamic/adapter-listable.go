@@ -63,7 +63,7 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 		return nil, err
 	}
 
-	cacheHit, ck, cachedItems, qErr := g.GetCache().Lookup(
+	cacheHit, ck, cachedItems, qErr, done := g.GetCache().Lookup(
 		ctx,
 		g.Name(),
 		sdp.QueryMethod_LIST,
@@ -72,6 +72,8 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 		"",
 		ignoreCache,
 	)
+	defer done()
+
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      "gcp",
@@ -116,7 +118,7 @@ func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCac
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr := g.GetCache().Lookup(
+	cacheHit, ck, cachedItems, qErr, done := g.GetCache().Lookup(
 		ctx,
 		g.Name(),
 		sdp.QueryMethod_LIST,
@@ -125,6 +127,8 @@ func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCac
 		"",
 		ignoreCache,
 	)
+	defer done()
+
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      "gcp",
@@ -145,7 +149,6 @@ func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCac
 
 	listURL, err := g.listEndpointFunc(location)
 	if err != nil {
-		g.GetCache().CancelPendingWork(ck)
 		stream.SendError(&sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf("failed to construct list endpoint: %v", err),
