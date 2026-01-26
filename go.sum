@@ -874,6 +874,8 @@ github.com/riverqueue/river/rivershared v0.30.1 h1:ytYlTtMppDV2rJRJ2j55mNf9uQDMP
 github.com/riverqueue/river/rivershared v0.30.1/go.mod h1:PfmUHWkF6/fJ1CpjC4cG8eKciBXgMuIHgcRcIuHMc34=
 github.com/riverqueue/river/rivertype v0.30.1 h1:jR7M5UlkA7KRxEbII+LOkD9oQMMz60AEdHh2We1APHY=
 github.com/riverqueue/river/rivertype v0.30.1/go.mod h1:rWpgI59doOWS6zlVocROcwc00fZ1RbzRwsRTU8CDguw=
+github.com/riverqueue/rivercontrib/otelriver v0.7.0 h1:zLjPf674dcGrz7OPG2JF5xea0fyitFax6Cc6q370Xzo=
+github.com/riverqueue/rivercontrib/otelriver v0.7.0/go.mod h1:MuyMZmYBz3JXC8ZLP0dH9IqXK95qRY6gCQSoJGh9h7E=
 github.com/rivo/uniseg v0.1.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=
