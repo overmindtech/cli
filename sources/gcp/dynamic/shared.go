@@ -384,9 +384,6 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, location gcpshar
 	if err != nil {
 		cache.StoreError(ctx, err, shared.DefaultCacheDuration, cacheKey)
 		stream.SendError(err)
-	} else if itemsSent == 0 {
-		// No items found - this is valid, but we need to release the pending work
-		cache.CancelPendingWork(cacheKey)
 	}
 	// Note: No items found is valid. The caller's defer done() will release pending work.
 }

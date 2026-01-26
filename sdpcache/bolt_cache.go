@@ -229,12 +229,12 @@ func WithCompactThreshold(bytes int64) BoltCacheOption {
 func NewBoltCache(path string, opts ...BoltCacheOption) (*BoltCache, error) {
 	// Ensure the directory exists
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, fmt.Errorf("failed to create directory: %w", err)
 	}
 
 	// bbolt.Open will open an existing file if present, or create a new one
-	db, err := bbolt.Open(path, 0600, &bbolt.Options{
+	db, err := bbolt.Open(path, 0o600, &bbolt.Options{
 		Timeout: 5 * time.Second,
 	})
 	if err != nil {
@@ -447,7 +447,7 @@ func (c *BoltCache) deleteCacheFileLocked(ctx context.Context, span trace.Span) 
 	c.resetDeletedBytes()
 
 	// Reopen the database
-	db, err := bbolt.Open(c.path, 0600, &bbolt.Options{Timeout: 5 * time.Second})
+	db, err := bbolt.Open(c.path, 0o600, &bbolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "failed to reopen database")
@@ -555,55 +555,55 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 				attribute.Bool("ovm.cache.pendingWaitSuccess", ok),
 			)
 
-		if !ok {
-			// Context was cancelled or work was cancelled, return miss
-			span.SetAttributes(
-				attribute.String("ovm.cache.result", "pending work cancelled or timeout"),
-				attribute.Bool("ovm.cache.hit", false),
-			)
-			return false, ck, nil, nil, noopDone
-		}
-
-		// Work is complete, re-check the cache for results
-		recheckSearchStart := time.Now()
-		items, recheckErr := c.search(ctx, ck)
-		recheckSearchDuration := time.Since(recheckSearchStart)
-		span.SetAttributes(
-			attribute.Float64("ovm.cache.recheckSearchDuration_ms", float64(recheckSearchDuration.Milliseconds())),
-		)
-		if recheckErr != nil {
-			if errors.Is(recheckErr, ErrCacheNotFound) {
-				// Cache still empty after pending work completed
-				// This is valid - worker may have found nothing or cancelled
+			if !ok {
+				// Context was cancelled or work was cancelled, return miss
 				span.SetAttributes(
-					attribute.String("ovm.cache.result", "pending work completed but cache still empty"),
+					attribute.String("ovm.cache.result", "pending work cancelled or timeout"),
 					attribute.Bool("ovm.cache.hit", false),
 				)
 				return false, ck, nil, nil, noopDone
 			}
-			var recheckQErr *sdp.QueryError
-			if errors.As(recheckErr, &recheckQErr) {
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "cache hit from pending work: error"),
-					attribute.Bool("ovm.cache.hit", true),
-				)
-				return true, ck, nil, recheckQErr, noopDone
-			}
-			// Truly unexpected error - return miss
-			span.SetAttributes(
-				attribute.String("ovm.cache.result", "unexpected error on re-check"),
-				attribute.Bool("ovm.cache.hit", false),
-			)
-			return false, ck, nil, nil, noopDone
-		}
 
-		span.SetAttributes(
-			attribute.String("ovm.cache.result", "cache hit from pending work"),
-			attribute.Int("ovm.cache.numItems", len(items)),
-			attribute.Bool("ovm.cache.hit", true),
-		)
-		return true, ck, items, nil, noopDone
-	} else if errors.As(err, &qErr) {
+			// Work is complete, re-check the cache for results
+			recheckSearchStart := time.Now()
+			items, recheckErr := c.search(ctx, ck)
+			recheckSearchDuration := time.Since(recheckSearchStart)
+			span.SetAttributes(
+				attribute.Float64("ovm.cache.recheckSearchDuration_ms", float64(recheckSearchDuration.Milliseconds())),
+			)
+			if recheckErr != nil {
+				if errors.Is(recheckErr, ErrCacheNotFound) {
+					// Cache still empty after pending work completed
+					// This is valid - worker may have found nothing or cancelled
+					span.SetAttributes(
+						attribute.String("ovm.cache.result", "pending work completed but cache still empty"),
+						attribute.Bool("ovm.cache.hit", false),
+					)
+					return false, ck, nil, nil, noopDone
+				}
+				var recheckQErr *sdp.QueryError
+				if errors.As(recheckErr, &recheckQErr) {
+					span.SetAttributes(
+						attribute.String("ovm.cache.result", "cache hit from pending work: error"),
+						attribute.Bool("ovm.cache.hit", true),
+					)
+					return true, ck, nil, recheckQErr, noopDone
+				}
+				// Truly unexpected error - return miss
+				span.SetAttributes(
+					attribute.String("ovm.cache.result", "unexpected error on re-check"),
+					attribute.Bool("ovm.cache.hit", false),
+				)
+				return false, ck, nil, nil, noopDone
+			}
+
+			span.SetAttributes(
+				attribute.String("ovm.cache.result", "cache hit from pending work"),
+				attribute.Int("ovm.cache.numItems", len(items)),
+				attribute.Bool("ovm.cache.hit", true),
+			)
+			return true, ck, items, nil, noopDone
+		} else if errors.As(err, &qErr) {
 			if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
 				span.SetAttributes(attribute.String("ovm.cache.result", "cache hit: item not found"))
 			} else {
@@ -611,11 +611,11 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 					attribute.String("ovm.cache.result", "cache hit: QueryError"),
 					attribute.String("ovm.cache.error", err.Error()),
 				)
-		}
+			}
 
-		span.SetAttributes(attribute.Bool("ovm.cache.hit", true))
-		return true, ck, nil, qErr, noopDone
-	} else {
+			span.SetAttributes(attribute.Bool("ovm.cache.hit", true))
+			return true, ck, nil, qErr, noopDone
+		} else {
 			qErr = &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
 				ErrorString: err.Error(),
@@ -624,15 +624,15 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 				ItemType:    typ,
 			}
 
-		span.SetAttributes(
-			attribute.String("ovm.cache.error", err.Error()),
-			attribute.String("ovm.cache.result", "cache hit: unknown QueryError"),
-			attribute.Bool("ovm.cache.hit", true),
-		)
+			span.SetAttributes(
+				attribute.String("ovm.cache.error", err.Error()),
+				attribute.String("ovm.cache.result", "cache hit: unknown QueryError"),
+				attribute.Bool("ovm.cache.hit", true),
+			)
 
-		return true, ck, nil, qErr, noopDone
+			return true, ck, nil, qErr, noopDone
+		}
 	}
-}
 
 	if method == sdp.QueryMethod_GET {
 		if len(items) < 2 {
@@ -870,8 +870,6 @@ func (c *BoltCache) StoreError(ctx context.Context, err error, duration time.Dur
 	c.storeResult(ctx, res)
 }
 
-// CancelPendingWork signals that work for a cache key is complete without storing
-// any result. Waiters will receive a cache miss and can retry.
 // storeResult stores a CachedResult in the database
 func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
 	span := trace.SpanFromContext(ctx)
@@ -1327,13 +1325,13 @@ func (c *BoltCache) compact(ctx context.Context) error {
 	}
 
 	// Open the destination database
-	dstDB, err := bbolt.Open(tempPath, 0600, &bbolt.Options{Timeout: 5 * time.Second})
+	dstDB, err := bbolt.Open(tempPath, 0o600, &bbolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
 		if isDiskFullError(err) {
 			// Attempt cleanup first - use locked version since we already hold the lock
 			c.purgeLocked(ctx, time.Now())
 			// Try again
-			dstDB, err = bbolt.Open(tempPath, 0600, &bbolt.Options{Timeout: 5 * time.Second})
+			dstDB, err = bbolt.Open(tempPath, 0o600, &bbolt.Options{Timeout: 5 * time.Second})
 			if err != nil {
 				return handleDiskFull(err, "temp database creation")
 			}
@@ -1350,7 +1348,7 @@ func (c *BoltCache) compact(ctx context.Context) error {
 			// Attempt cleanup first - use locked version since we already hold the lock
 			c.purgeLocked(ctx, time.Now())
 			// Try compaction again
-			dstDB2, retryErr := bbolt.Open(tempPath, 0600, &bbolt.Options{Timeout: 5 * time.Second})
+			dstDB2, retryErr := bbolt.Open(tempPath, 0o600, &bbolt.Options{Timeout: 5 * time.Second})
 			if retryErr != nil {
 				return handleDiskFull(retryErr, "temp database creation after cleanup")
 			}
@@ -1381,12 +1379,12 @@ func (c *BoltCache) compact(ctx context.Context) error {
 	// Replace the old file with the compacted one
 	if err := os.Rename(tempPath, c.path); err != nil {
 		// Try to reopen the original database
-		c.db, _ = bbolt.Open(c.path, 0600, &bbolt.Options{Timeout: 5 * time.Second})
+		c.db, _ = bbolt.Open(c.path, 0o600, &bbolt.Options{Timeout: 5 * time.Second})
 		return handleDiskFull(err, "rename")
 	}
 
 	// Reopen the database
-	db, err := bbolt.Open(c.path, 0600, &bbolt.Options{Timeout: 5 * time.Second})
+	db, err := bbolt.Open(c.path, 0o600, &bbolt.Options{Timeout: 5 * time.Second})
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "failed to reopen database")
