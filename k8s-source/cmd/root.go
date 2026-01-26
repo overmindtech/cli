@@ -142,22 +142,9 @@ func run(_ *cobra.Command, _ []string) int {
 	if clusterName == "" {
 		clusterName = k8sURL.Host
 	}
-	healthCheck := func(ctx context.Context) error {
-		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-		defer cancel()
-		// Make sure we can list nodes in the cluster
-		_, err := clientSet.CoreV1().Nodes().List(ctx, metav1.ListOptions{
-			Limit: 1,
-		})
-		if err != nil {
-			return fmt.Errorf("health check (listing nodes) failed: %w", err)
-		}
-		return nil
-	}
 	if engineConfig.HeartbeatOptions == nil {
 		engineConfig.HeartbeatOptions = &discovery.HeartbeatOptions{}
 	}
-	engineConfig.HeartbeatOptions.HealthCheck = healthCheck
 
 	e, err := discovery.NewEngine(engineConfig)
 	if err != nil {
@@ -167,32 +154,49 @@ func run(_ *cobra.Command, _ []string) int {
 		return 1
 	}
 
-	// Start HTTP server for status
+	// ReadinessCheck verifies adapters are healthy by using a Node adapter
+	// Timeout is handled by SendHeartbeat, HTTP handlers rely on request context
+	e.SetReadinessCheck(func(ctx context.Context) error {
+		// Find a Node adapter to verify adapter health
+		adapters := e.AdaptersByType("Node")
+		if len(adapters) == 0 {
+			return fmt.Errorf("readiness check failed: no Node adapters available")
+		}
+		// Use first adapter and try to list from first scope
+		adapter := adapters[0]
+		scopes := adapter.Scopes()
+		if len(scopes) == 0 {
+			return fmt.Errorf("readiness check failed: no scopes available for Node adapter")
+		}
+		listableAdapter, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			return fmt.Errorf("readiness check failed: Node adapter is not listable")
+		}
+		_, err := listableAdapter.List(ctx, scopes[0], true)
+		if err != nil {
+			return fmt.Errorf("readiness check (listing nodes) failed: %w", err)
+		}
+		return nil
+	})
+
+	// Start HTTP server for health checks
 	healthCheckPort := viper.GetInt("health-check-port")
-	healthCheckPath := "/healthz"
 
-	log.WithFields(log.Fields{
-		"port": healthCheckPort,
-		"path": healthCheckPath,
-	}).Debug("Starting healthcheck server")
+		log.WithFields(log.Fields{
+			"port": healthCheckPort,
+		}).Debug("Starting healthcheck server with endpoints: /healthz/alive, /healthz/ready, /healthz")
 
-	go func() {
-		defer sentry.Recover()
+		go func() {
+			defer sentry.Recover()
 
-		mux := http.NewServeMux()
-		mux.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
-			ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck")
-			defer span.End()
+			mux := http.NewServeMux()
 
-			// Check engine status
-			err := e.HealthCheck(ctx)
-			if err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			fmt.Fprint(rw, "ok")
-		})
+			// Liveness: Check only engine initialization (NATS, heartbeats)
+			mux.HandleFunc("/healthz/alive", e.LivenessProbeHandlerFunc())
+			// Readiness: Check if adapters are healthy and ready to handle requests
+			mux.HandleFunc("/healthz/ready", e.ReadinessProbeHandlerFunc())
+			// Backward compatibility - maps to liveness check (matches old behavior)
+			mux.HandleFunc("/healthz", e.LivenessProbeHandlerFunc())
 
 		server := &http.Server{
 			Addr:         fmt.Sprintf(":%v", healthCheckPort),
@@ -204,8 +208,7 @@ func run(_ *cobra.Command, _ []string) int {
 
 		log.WithError(err).WithFields(log.Fields{
 			"port": healthCheckPort,
-			"path": healthCheckPath,
-		}).Error("Could not start HTTP server for /healthz health checks")
+		}).Error("Could not start HTTP server for health checks")
 	}()
 
 	// Create channels for interrupts
@@ -450,7 +453,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "/etc/srcman/config/k8s-source.yaml", "config file path")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
-	rootCmd.PersistentFlags().Int("health-check-port", 8080, "The port on which to serve the /healthz endpoint")
+	rootCmd.PersistentFlags().Int("health-check-port", 8080, "The port on which to serve health check endpoints (/healthz/alive, /healthz/ready, /healthz)")
 
 	// engine flags
 	discovery.AddEngineFlags(rootCmd)
