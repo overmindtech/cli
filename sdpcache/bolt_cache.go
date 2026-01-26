@@ -390,8 +390,9 @@ func (c *BoltCache) setDiskUsageAttributes(span trace.Span) {
 	)
 }
 
-// Close closes the database
-func (c *BoltCache) Close() error {
+// CloseAndDestroy closes the database and deletes the cache file.
+// This method makes the destructive behavior explicit.
+func (c *BoltCache) CloseAndDestroy() error {
 	if c == nil {
 		return nil
 	}
@@ -399,7 +400,16 @@ func (c *BoltCache) Close() error {
 	c.compactMutex.Lock()
 	defer c.compactMutex.Unlock()
 
-	return c.db.Close()
+	// Get the file path before closing
+	path := c.db.Path()
+	
+	// Close the database
+	if err := c.db.Close(); err != nil {
+		return err
+	}
+	
+	// Delete the cache file
+	return os.Remove(path)
 }
 
 // deleteCacheFile removes the cache file entirely. This is used as a last resort
