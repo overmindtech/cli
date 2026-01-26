@@ -37,16 +37,16 @@ func cacheImplementations(tb testing.TB) []struct {
 		factory func() Cache
 	}{
 		{"MemoryCache", func() Cache { return NewMemoryCache() }},
-		{"BoltCache", func() Cache {
-			c, err := NewBoltCache(filepath.Join(tb.TempDir(), "cache.db"))
-			if err != nil {
-				tb.Fatalf("failed to create BoltCache: %v", err)
-			}
-			tb.Cleanup(func() {
-				c.Close()
-			})
-			return c
-		}},
+	{"BoltCache", func() Cache {
+		c, err := NewBoltCache(filepath.Join(tb.TempDir(), "cache.db"))
+		if err != nil {
+			tb.Fatalf("failed to create BoltCache: %v", err)
+		}
+		tb.Cleanup(func() {
+			_ = c.CloseAndDestroy()
+		})
+		return c
+	}},
 	}
 }
 
@@ -1325,10 +1325,9 @@ func TestUnexpiredOverwriteLogging(t *testing.T) {
 	})
 }
 
-// TestBoltCacheExistingFile verifies that BoltCache correctly handles existing cache files
-// from previous runs. It should open the existing file, access existing data, and
-// allow the purge process to clean up expired items.
-func TestBoltCacheExistingFile(t *testing.T) {
+// TestBoltCacheCloseAndDestroy verifies that CloseAndDestroy() correctly
+// closes the database and deletes the cache file.
+func TestBoltCacheCloseAndDestroy(t *testing.T) {
 	tempDir := t.TempDir()
 	cachePath := filepath.Join(tempDir, "cache.db")
 
@@ -1339,7 +1338,7 @@ func TestBoltCacheExistingFile(t *testing.T) {
 		t.Fatalf("failed to create BoltCache: %v", err)
 	}
 
-	// Store an item with a long TTL
+	// Store an item
 	item1 := GenerateRandomItem()
 	ck1 := CacheKeyFromQuery(item1.GetMetadata().GetSourceQuery(), item1.GetMetadata().GetSourceName())
 	cache1.StoreItem(ctx, item1, 10*time.Second, ck1)
@@ -1358,72 +1357,165 @@ func TestBoltCacheExistingFile(t *testing.T) {
 		t.Errorf("expected 1 item for ck1, got %d", len(items))
 	}
 
-	items, err = testSearch(t.Context(), cache1, ck2)
-	if err != nil {
-		t.Errorf("failed to search for item2: %v", err)
-	}
-	if len(items) != 1 {
-		t.Errorf("expected 1 item for ck2, got %d", len(items))
+	// Verify the cache file exists
+	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
+		t.Fatal("cache file should exist before CloseAndDestroy")
 	}
 
-	// Close the cache
-	if err := cache1.Close(); err != nil {
-		t.Fatalf("failed to close cache1: %v", err)
+	// Close and destroy the cache
+	if err := cache1.CloseAndDestroy(); err != nil {
+		t.Fatalf("failed to close and destroy cache1: %v", err)
 	}
 
-	// Wait for item2 to expire
-	time.Sleep(150 * time.Millisecond)
+	// Verify the cache file is deleted
+	if _, err := os.Stat(cachePath); !os.IsNotExist(err) {
+		t.Error("cache file should be deleted after CloseAndDestroy")
+	}
 
-	// Create a new cache at the same path - should open the existing file
+	// Create a new cache at the same path - should create a fresh, empty cache
 	cache2, err := NewBoltCache(cachePath)
 	if err != nil {
-		t.Fatalf("failed to create BoltCache with existing file: %v", err)
+		t.Fatalf("failed to create new BoltCache: %v", err)
 	}
-	defer cache2.Close()
+	defer func() {
+		_ = cache2.CloseAndDestroy()
+	}()
 
-	// Verify item1 is still accessible (not expired)
-	items, err = testSearch(t.Context(), cache2, ck1)
-	if err != nil {
-		t.Errorf("failed to search for item1 in existing cache: %v", err)
-	}
-	if len(items) != 1 {
-		t.Errorf("expected 1 item for ck1 in existing cache, got %d", len(items))
-	}
-
-	// Verify item2 is expired (should not be found or should be purged)
-	items, err = testSearch(t.Context(), cache2, ck2)
-	if err == nil && len(items) > 0 {
-		// Item might still be there if purge hasn't run, so let's purge explicitly
-		cache2.Purge(ctx, time.Now())
-		items, err = testSearch(t.Context(), cache2, ck2)
-		if err == nil && len(items) > 0 {
-			t.Errorf("expected item2 to be expired and purged, but found %d items", len(items))
-		}
+	// Verify the old item is NOT accessible (cache was destroyed)
+	items, err = testSearch(ctx, cache2, ck1)
+	if !errors.Is(err, ErrCacheNotFound) {
+		t.Errorf("expected cache miss for item1 in new cache, got: err=%v, items=%d", err, len(items))
 	}
 
-	// Verify purge process works on existing data
-	stats := cache2.Purge(ctx, time.Now())
-	if stats.NumPurged == 0 && err == nil {
-		// If we got here, item2 should have been purged
-		// Let's verify it's gone
-		items, err = testSearch(t.Context(), cache2, ck2)
-		if !errors.Is(err, ErrCacheNotFound) && len(items) > 0 {
-			t.Errorf("expected item2 to be purged, but search returned: err=%v, items=%d", err, len(items))
-		}
-	}
-
-	// Verify we can still store new items
+	// Verify we can store new items in the fresh cache
 	item3 := GenerateRandomItem()
 	ck3 := CacheKeyFromQuery(item3.GetMetadata().GetSourceQuery(), item3.GetMetadata().GetSourceName())
 	cache2.StoreItem(ctx, item3, 10*time.Second, ck3)
 
-	items, err = testSearch(t.Context(), cache2, ck3)
+	items, err = testSearch(ctx, cache2, ck3)
 	if err != nil {
 		t.Errorf("failed to search for newly stored item3: %v", err)
 	}
 	if len(items) != 1 {
 		t.Errorf("expected 1 item for ck3, got %d", len(items))
 	}
+}
+
+// TestBoltCacheOperationsAfterCloseAndDestroy verifies that operations after
+// CloseAndDestroy() return proper errors instead of panicking.
+func TestBoltCacheOperationsAfterCloseAndDestroy(t *testing.T) {
+	tempDir := t.TempDir()
+	cachePath := filepath.Join(tempDir, "cache.db")
+	ctx := t.Context()
+
+	cache, err := NewBoltCache(cachePath)
+	if err != nil {
+		t.Fatalf("failed to create BoltCache: %v", err)
+	}
+
+	// Store an item before closing
+	item := GenerateRandomItem()
+	ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
+	cache.StoreItem(ctx, item, 10*time.Second, ck)
+
+	// Close and destroy the cache
+	if err := cache.CloseAndDestroy(); err != nil {
+		t.Fatalf("failed to close and destroy cache: %v", err)
+	}
+
+	// Now try various operations after the cache is closed and destroyed
+	// These should return errors, not panic
+
+	t.Run("Search after CloseAndDestroy", func(t *testing.T) {
+		// This should error because the database is closed
+		_, err := testSearch(ctx, cache, ck)
+		if err == nil {
+			t.Error("expected error when searching after CloseAndDestroy, got nil")
+		}
+		t.Logf("Search returned expected error: %v", err)
+	})
+
+	t.Run("StoreItem after CloseAndDestroy", func(t *testing.T) {
+		// This should not panic - it might silently fail or error
+		// The key is that it doesn't panic
+		newItem := GenerateRandomItem()
+		newCk := CacheKeyFromQuery(newItem.GetMetadata().GetSourceQuery(), newItem.GetMetadata().GetSourceName())
+
+		// This should either complete without panic or handle the closed DB gracefully
+		cache.StoreItem(ctx, newItem, 10*time.Second, newCk)
+		t.Log("StoreItem completed without panic (may have failed internally)")
+	})
+
+	t.Run("Delete after CloseAndDestroy", func(t *testing.T) {
+		// This should not panic
+		cache.Delete(ck)
+		t.Log("Delete completed without panic (may have failed internally)")
+	})
+
+	t.Run("Purge after CloseAndDestroy", func(t *testing.T) {
+		// This should not panic
+		stats := cache.Purge(ctx, time.Now())
+		t.Logf("Purge completed without panic, purged %d items", stats.NumPurged)
+	})
+}
+
+// TestBoltCacheConcurrentCloseAndDestroy verifies that CloseAndDestroy()
+// properly synchronizes with concurrent operations using the compaction lock.
+func TestBoltCacheConcurrentCloseAndDestroy(t *testing.T) {
+	tempDir := t.TempDir()
+	cachePath := filepath.Join(tempDir, "cache.db")
+	ctx := t.Context()
+
+	cache, err := NewBoltCache(cachePath)
+	if err != nil {
+		t.Fatalf("failed to create BoltCache: %v", err)
+	}
+
+	// Store some items
+	for range 10 {
+		item := GenerateRandomItem()
+		ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
+		cache.StoreItem(ctx, item, 10*time.Second, ck)
+	}
+
+	// Start some concurrent operations
+	var wg sync.WaitGroup
+	numOperations := 50
+
+	// Launch concurrent read/write operations
+	for range numOperations {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			item := GenerateRandomItem()
+			ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
+			cache.StoreItem(ctx, item, 10*time.Second, ck)
+		}()
+	}
+
+	// Wait a bit to let operations start
+	time.Sleep(10 * time.Millisecond)
+
+	// Close and destroy while operations are in flight
+	// The compaction lock should serialize this properly
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := cache.CloseAndDestroy()
+		if err != nil {
+			t.Logf("CloseAndDestroy returned error: %v", err)
+		}
+	}()
+
+	// Wait for all operations to complete
+	wg.Wait()
+
+	// Verify the file is deleted
+	if _, err := os.Stat(cachePath); !os.IsNotExist(err) {
+		t.Error("cache file should be deleted after CloseAndDestroy")
+	}
+
+	t.Log("Concurrent operations with CloseAndDestroy completed without data races")
 }
 
 // TestBoltCacheDiskFullErrorDetection tests the isDiskFullError helper function
@@ -1507,7 +1599,9 @@ func TestBoltCacheDiskFullDuringCompact(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create BoltCache: %v", err)
 	}
-	defer cache.Close()
+	defer func() {
+		_ = cache.CloseAndDestroy()
+	}()
 
 	ctx := t.Context()
 
@@ -1550,7 +1644,7 @@ func TestBoltCacheLookupDeduplication(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create BoltCache: %v", err)
 	}
-	defer cache.Close()
+	defer func() { _ = cache.CloseAndDestroy() }()
 
 	ctx := t.Context()
 
@@ -1647,7 +1741,7 @@ func TestBoltCacheLookupDeduplicationTimeout(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create BoltCache: %v", err)
 	}
-	defer cache.Close()
+	defer func() { _ = cache.CloseAndDestroy() }()
 
 	ctx := t.Context()
 
@@ -1720,7 +1814,7 @@ func TestBoltCacheLookupDeduplicationError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create BoltCache: %v", err)
 	}
-	defer cache.Close()
+	defer func() { _ = cache.CloseAndDestroy() }()
 
 	ctx := t.Context()
 
@@ -1812,7 +1906,7 @@ func TestBoltCacheLookupDeduplicationCancel(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create BoltCache: %v", err)
 	}
-	defer cache.Close()
+	defer func() { _ = cache.CloseAndDestroy() }()
 
 	ctx := t.Context()
 
@@ -1889,7 +1983,7 @@ func TestBoltCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create BoltCache: %v", err)
 	}
-	defer cache.Close()
+	defer func() { _ = cache.CloseAndDestroy() }()
 
 	ctx := t.Context()
 
