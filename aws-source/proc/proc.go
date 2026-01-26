@@ -237,13 +237,16 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 		if len(scopes) == 0 {
 			return fmt.Errorf("readiness check failed: no scopes available for ec2-vpc adapter")
 		}
-		listableAdapter, ok := adapter.(discovery.ListableAdapter)
+		listableAdapter, ok := adapter.(discovery.ListStreamableAdapter)
 		if !ok {
 			return fmt.Errorf("readiness check failed: ec2-vpc adapter is not listable")
 		}
-		_, err := listableAdapter.List(ctx, scopes[0], true)
-		if err != nil {
-			return fmt.Errorf("readiness check (listing VPCs) failed: %w", err)
+		stream := discovery.NewRecordingQueryResultStream()
+		listableAdapter.ListStream(ctx, scopes[0], true, stream)
+		for _, err := range stream.GetErrors() {
+			if err != nil {
+				return fmt.Errorf("readiness check (listing VPCs) failed: %w", err)
+			}
 		}
 		return nil
 	})
