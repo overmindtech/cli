@@ -338,26 +338,28 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 
 	var healthChecker *ProjectHealthChecker
 
-	var startupErrorMutex sync.Mutex
-	startupError := errors.New("source is starting")
-	if ec.HeartbeatOptions == nil {
-		ec.HeartbeatOptions = &discovery.HeartbeatOptions{}
-	}
-	ec.HeartbeatOptions.HealthCheck = func(ctx context.Context) error {
-		startupErrorMutex.Lock()
-		defer startupErrorMutex.Unlock()
-		if startupError != nil {
-			// If there is a startup error, return it
-			return startupError
+	// ReadinessCheck verifies adapters are healthy by using a CloudResourceManagerProject adapter
+	// Timeout is handled by SendHeartbeat, HTTP handlers rely on request context
+	engine.SetReadinessCheck(func(ctx context.Context) error {
+		// Find a CloudResourceManagerProject adapter to verify adapter health
+		adapters := engine.AdaptersByType(gcpshared.CloudResourceManagerProject.String())
+		if len(adapters) == 0 {
+			return fmt.Errorf("readiness check failed: no %s adapters available", gcpshared.CloudResourceManagerProject.String())
 		}
-
-		// Permission check removed from liveness probe to prevent false failures
-		// The permission check is still performed during startup and can be
-		// monitored via heartbeats, but should not cause pod restarts.
+		// Use first adapter and try to get from first scope
+		adapter := adapters[0]
+		scopes := adapter.Scopes()
+		if len(scopes) == 0 {
+			return fmt.Errorf("readiness check failed: no scopes available for %s adapter", gcpshared.CloudResourceManagerProject.String())
+		}
+		// Use the first scope's project ID to verify adapter health
+		scope := scopes[0]
+		_, err := adapter.Get(ctx, scope, scope, true)
+		if err != nil {
+			return fmt.Errorf("readiness check (getting project) failed: %w", err)
+		}
 		return nil
-	}
-
-	engine.StartSendingHeartbeats(ctx)
+	})
 
 	// Create a shared cache for all adapters in this source
 	sharedCache := sdpcache.NewCache(ctx)
@@ -555,18 +557,17 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 		return nil
 	}()
 
-	startupErrorMutex.Lock()
-	startupError = err
-	startupErrorMutex.Unlock()
+	if err != nil {
+		log.WithError(err).Debug("Error initializing GCP source")
+		return nil, fmt.Errorf("error initializing GCP source: %w", err)
+	}
+
+	// Start sending heartbeats after adapters are successfully added
+	// This ensures the first heartbeat has adapters available for readiness checks
+	engine.StartSendingHeartbeats(ctx)
 	brokenHeart := engine.SendHeartbeat(ctx, nil) // Send the error immediately through the custom health check func
 	if brokenHeart != nil {
 		log.WithError(brokenHeart).Error("Error sending heartbeat")
-	}
-
-	if err != nil {
-		log.WithError(err).Debug("Error initializing GCP source")
-
-		return nil, fmt.Errorf("error initializing GCP source: %w", err)
 	}
 
 	log.Debug("Sources initialized")

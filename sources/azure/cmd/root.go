@@ -53,27 +53,18 @@ var rootCmd = &cobra.Command{
 
 		e.StartSendingHeartbeats(ctx)
 
-		// Start HTTP server for status
-		healthCheckPath := "/healthz"
-
-		http.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
-			ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck")
-			defer span.End()
-
-			err := e.HealthCheck(ctx)
-			if err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			fmt.Fprint(rw, "ok")
-		})
+		// Start HTTP server for health checks
+		// Liveness: Check only engine initialization (NATS, heartbeats)
+		http.HandleFunc("/healthz/alive", e.LivenessProbeHandlerFunc())
+		// Readiness: Check if adapters are healthy and ready to handle requests
+		http.HandleFunc("/healthz/ready", e.ReadinessProbeHandlerFunc())
+		// Backward compatibility - maps to liveness check (matches old behavior)
+		http.HandleFunc("/healthz", e.LivenessProbeHandlerFunc())
 
 		log.WithFields(log.Fields{
 			"ovm.source.type": "azure",
 			"ovm.source.port": healthCheckPort,
-			"ovm.source.path": healthCheckPath,
-		}).Debug("Starting healthcheck server")
+		}).Debug("Starting healthcheck server with endpoints: /healthz/alive, /healthz/ready, /healthz")
 
 		go func() {
 			defer sentry.Recover()
@@ -89,8 +80,7 @@ var rootCmd = &cobra.Command{
 			log.WithError(err).WithFields(log.Fields{
 				"ovm.source.type": "azure",
 				"ovm.source.port": healthCheckPort,
-				"ovm.source.path": healthCheckPath,
-			}).Error("Could not start HTTP server for /healthz health checks")
+			}).Error("Could not start HTTP server for health checks")
 		}()
 
 		err = e.Start(ctx)

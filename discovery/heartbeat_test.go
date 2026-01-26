@@ -63,7 +63,7 @@ func TestHeartbeats(t *testing.T) {
 	}
 
 	t.Run("sendHeartbeat when healthy", func(t *testing.T) {
-		ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
+		ec.HeartbeatOptions.ReadinessCheck = func(_ context.Context) error {
 			return nil
 		}
 		responses <- &connect.Response[sdp.SubmitSourceHeartbeatResponse]{
@@ -123,7 +123,7 @@ func TestHeartbeats(t *testing.T) {
 	})
 
 	t.Run("sendHeartbeat when unhealthy", func(t *testing.T) {
-		e.EngineConfig.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
+		e.EngineConfig.HeartbeatOptions.ReadinessCheck = func(_ context.Context) error {
 			return ErrNoHealthcheckDefined
 		}
 
@@ -138,14 +138,16 @@ func TestHeartbeats(t *testing.T) {
 
 		req := <-requests
 
-		if req.Msg.GetError() != ErrNoHealthcheckDefined.Error() {
-			t.Errorf("expected error %v, got %v", ErrNoHealthcheckDefined, req.Msg.GetError())
+		// Error message is no longer wrapped (wrapping removed to avoid double-prefixing)
+		expectedError := "no healthcheck defined"
+		if req.Msg.GetError() != expectedError {
+			t.Errorf("expected error %q, got %q", expectedError, req.Msg.GetError())
 		}
 	})
 
 	t.Run("startSendingHeartbeats", func(t *testing.T) {
 		e.EngineConfig.HeartbeatOptions.Frequency = time.Millisecond * 250
-		e.EngineConfig.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
+		e.EngineConfig.HeartbeatOptions.ReadinessCheck = func(_ context.Context) error {
 			return nil
 		}
 

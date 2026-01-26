@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -224,18 +223,30 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 	// Create a shared cache for all adapters in this source
 	sharedCache := sdpcache.NewCache(ctx)
 
-	var startupErrorMutex sync.Mutex
-	startupError := errors.New("source is starting")
-	if ec.HeartbeatOptions == nil {
-		ec.HeartbeatOptions = &discovery.HeartbeatOptions{}
-	}
-	ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
-		startupErrorMutex.Lock()
-		defer startupErrorMutex.Unlock()
-		return startupError
-	}
-
-	e.StartSendingHeartbeats(ctx)
+	// ReadinessCheck verifies adapters are healthy by using an EC2VpcAdapter
+	// Timeout is handled by SendHeartbeat, HTTP handlers rely on request context
+	e.SetReadinessCheck(func(ctx context.Context) error {
+		// Find an EC2VpcAdapter to verify adapter health
+		adapters := e.AdaptersByType("ec2-vpc")
+		if len(adapters) == 0 {
+			return fmt.Errorf("readiness check failed: no ec2-vpc adapters available")
+		}
+		// Use first adapter and try to list from first scope
+		adapter := adapters[0]
+		scopes := adapter.Scopes()
+		if len(scopes) == 0 {
+			return fmt.Errorf("readiness check failed: no scopes available for ec2-vpc adapter")
+		}
+		listableAdapter, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			return fmt.Errorf("readiness check failed: ec2-vpc adapter is not listable")
+		}
+		_, err := listableAdapter.List(ctx, scopes[0], true)
+		if err != nil {
+			return fmt.Errorf("readiness check (listing VPCs) failed: %w", err)
+		}
+		return nil
+	})
 	if len(configs) == 0 {
 		return nil, errors.New("No configs specified")
 	}
@@ -581,10 +592,7 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 			}
 
 			err = p.Wait()
-			startupErrorMutex.Lock()
-			startupError = err
-			startupErrorMutex.Unlock()
-			brokenHeart := e.SendHeartbeat(ctx, nil) // Send the error immediately through the custom health check func
+			brokenHeart := e.SendHeartbeat(ctx, nil) // Send heartbeat with any errors
 			if brokenHeart != nil {
 				log.WithError(brokenHeart).Error("Error sending heartbeat")
 			}
@@ -593,6 +601,9 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 				log.WithError(err).Debug("Error initializing sources")
 			} else {
 				log.Debug("Sources initialized")
+				// Start sending heartbeats after adapters are successfully added
+				// This ensures the first heartbeat has adapters available for readiness checks
+				e.StartSendingHeartbeats(ctx)
 				// If there is no error then return the engine
 				return e, nil
 			}
