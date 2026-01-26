@@ -338,8 +338,8 @@ func NewCache(ctx context.Context) Cache {
 	cache, err := NewBoltCache(
 		tmpFile.Name(),
 		WithMinWaitTime(30*time.Second),
-		// allocate 2GB of disk space for the cache
-		WithCompactThreshold(2*1024*1024*1024),
+		// allocate 1GB of disk space for the cache (with 1GB additional for compaction temp file)
+		WithCompactThreshold(1*1024*1024*1024),
 	)
 	if err != nil {
 		sentry.CaptureException(err)
