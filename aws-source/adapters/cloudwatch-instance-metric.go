@@ -258,7 +258,8 @@ func (a *CloudwatchInstanceMetricAdapter) Get(ctx context.Context, scope string,
 	var cachedItems []*sdp.Item
 	var qErr *sdp.QueryError
 
-	cacheHit, ck, cachedItems, qErr = a.Cache().Lookup(ctx, a.Name(), sdp.QueryMethod_GET, scope, a.Type(), query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := a.Cache().Lookup(ctx, a.Name(), sdp.QueryMethod_GET, scope, a.Type(), query, ignoreCache)
+	defer done()
 	if qErr != nil {
 		return nil, qErr
 	}

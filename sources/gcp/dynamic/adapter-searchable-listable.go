@@ -76,7 +76,7 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 		return nil, err
 	}
 
-	cacheHit, ck, cachedItems, qErr := g.GetCache().Lookup(
+	cacheHit, ck, cachedItems, qErr, done := g.GetCache().Lookup(
 		ctx,
 		g.Name(),
 		sdp.QueryMethod_SEARCH,
@@ -85,6 +85,8 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 		query,
 		ignoreCache,
 	)
+	defer done()
+
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      "gcp",
@@ -136,7 +138,7 @@ func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, quer
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr := g.GetCache().Lookup(
+	cacheHit, ck, cachedItems, qErr, done := g.GetCache().Lookup(
 		ctx,
 		g.Name(),
 		sdp.QueryMethod_SEARCH,
@@ -145,6 +147,8 @@ func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, quer
 		query,
 		ignoreCache,
 	)
+	defer done()
+
 	if qErr != nil {
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      "gcp",
@@ -169,7 +173,6 @@ func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, quer
 		// projects/{{project}}/serviceAccounts/{{account}}/keys/{{key}}
 		items, err := terraformMappingViaSearch(ctx, g.Adapter, query, location, g.GetCache(), ck)
 		if err != nil {
-			g.GetCache().CancelPendingWork(ck)
 			stream.SendError(&sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
 				ErrorString: fmt.Sprintf("failed to execute terraform mapping search for query \"%s\": %v", query, err),
@@ -185,7 +188,6 @@ func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, quer
 
 	searchURL := g.searchEndpointFunc(query, location)
 	if searchURL == "" {
-		g.GetCache().CancelPendingWork(ck)
 		stream.SendError(&sdp.QueryError{
 			ErrorType: sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf(

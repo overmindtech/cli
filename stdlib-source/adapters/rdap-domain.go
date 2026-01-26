@@ -54,7 +54,8 @@ func (s *RdapDomainAdapter) Scopes() []string {
 func (s *RdapDomainAdapter) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
 	// While we can't actually run GET queries, we can return them if they are
 	// cached
-	hit, _, items, sdpErr := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	hit, _, items, sdpErr, done := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	defer done()
 
 	if sdpErr != nil {
 		return nil, sdpErr
@@ -92,7 +93,8 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 	// Strip the trailing dot if it exists
 	query = strings.TrimSuffix(query, ".")
 
-	hit, ck, items, sdpErr := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.Type(), query, ignoreCache)
+	hit, ck, items, sdpErr, done := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.Type(), query, ignoreCache)
+	defer done()
 
 	if sdpErr != nil {
 		return nil, sdpErr
