@@ -43,7 +43,7 @@ func TestListErrorWithProperCleanup(t *testing.T) {
 				<-startBarrier
 
 				hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
-			defer done()
+				defer done()
 
 				if hit {
 					t.Error("first goroutine: expected cache miss")
@@ -75,9 +75,9 @@ func TestListErrorWithProperCleanup(t *testing.T) {
 				timeoutCtx, done := context.WithTimeout(ctx, 500*time.Millisecond)
 				defer done()
 
-			start := time.Now()
-			hit, _, _, qErr, done := cache.Lookup(timeoutCtx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
-			defer done()
+				start := time.Now()
+				hit, _, _, qErr, done := cache.Lookup(timeoutCtx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+				defer done()
 				secondCallDuration = time.Since(start)
 
 				if !hit {
@@ -175,7 +175,7 @@ func TestListErrorWithProperDone(t *testing.T) {
 			wg.Wait()
 
 			// The second call should NOT block for long
-			// It should get a cache miss shortly after the first call dones (~100ms)
+			// It should get a cache miss shortly after the first call done() (~100ms)
 			if secondCallDuration > 300*time.Millisecond {
 				t.Errorf("Expected second call to return quickly after cancellation, but it took %v", secondCallDuration)
 			}
@@ -226,7 +226,7 @@ func TestListErrorWithStoreError(t *testing.T) {
 				<-startBarrier
 
 				hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
-			defer done()
+				defer done()
 
 				if hit {
 					t.Error("first goroutine: expected cache miss")
@@ -250,12 +250,12 @@ func TestListErrorWithStoreError(t *testing.T) {
 				// Small delay to ensure first goroutine starts first
 				time.Sleep(10 * time.Millisecond)
 
-		start := time.Now()
-		var items []*sdp.Item
-		var done func()
-		secondCallHit, _, items, secondCallError, done = cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
-		defer done()
-		secondCallDuration = time.Since(start)
+				start := time.Now()
+				var items []*sdp.Item
+				var done func()
+				secondCallHit, _, items, secondCallError, done = cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+				defer done()
+				secondCallDuration = time.Since(start)
 
 				if items != nil {
 					t.Error("second goroutine: expected nil items with error")
@@ -320,7 +320,7 @@ func TestListReturnsEmptyButNoStore(t *testing.T) {
 				<-startBarrier
 
 				hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
-			defer done()
+				defer done()
 
 				if hit {
 					t.Error("first goroutine: expected cache miss")
@@ -351,10 +351,10 @@ func TestListReturnsEmptyButNoStore(t *testing.T) {
 				// Small delay to ensure first goroutine starts first
 				time.Sleep(10 * time.Millisecond)
 
-			start := time.Now()
-			secondCallHit, _, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
-			defer done()
-			secondCallDuration = time.Since(start)
+				start := time.Now()
+				secondCallHit, _, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
+				defer done()
+				secondCallDuration = time.Since(start)
 
 				t.Logf("Second goroutine: hit=%v, duration=%v", secondCallHit, secondCallDuration)
 			}()

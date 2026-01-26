@@ -115,7 +115,7 @@ func (w *errorReturningListableWrapper) List(ctx context.Context, scope string) 
 }
 
 // TestListErrorCausesCacheHang tests that when List() returns an error,
-// CancelPendingWork() is called so that concurrent waiters are woken up
+// done() is called so that concurrent waiters are woken up
 // immediately rather than hanging until their context timeout.
 //
 // This test will FAIL when the bug is present because:
@@ -123,7 +123,7 @@ func (w *errorReturningListableWrapper) List(ctx context.Context, scope string) 
 // - Test expects second goroutine to complete quickly (<100ms)
 //
 // This test will PASS after the bug is fixed because:
-// - First goroutine calls CancelPendingWork() on error
+// - First goroutine calls done() on error
 // - Second goroutine is woken immediately and completes quickly
 func TestListErrorCausesCacheHang(t *testing.T) {
 	ctx := context.Background()
@@ -163,7 +163,7 @@ func TestListErrorCausesCacheHang(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 
 	// Second goroutine: calls List() after first has hit error
-	// Should be woken immediately by CancelPendingWork() and retry quickly
+	// Should be woken immediately by done() and retry quickly
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -196,11 +196,11 @@ func TestListErrorCausesCacheHang(t *testing.T) {
 
 	// CRITICAL ASSERTION: Second goroutine should complete quickly
 	// With the bug: takes ~200ms+ waiting for timeout
-	// With the fix: takes <100ms because CancelPendingWork() wakes it immediately
+	// With the fix: takes <100ms because done() wakes it immediately
 	if secondDuration > 100*time.Millisecond {
 		t.Errorf("Second goroutine took too long (%v), indicating pending work was not cancelled. "+
-			"Expected <100ms after CancelPendingWork() wakes waiting goroutines.", secondDuration)
-		t.Logf("BUG PRESENT: First goroutine returned error without calling CancelPendingWork()")
+			"Expected <100ms after done() wakes waiting goroutines.", secondDuration)
+		t.Logf("BUG PRESENT: First goroutine returned error without calling done()")
 		t.Logf("  First: completed in %v", firstDuration)
 		t.Logf("  Second: hung for %v waiting on pending work timeout", secondDuration)
 		t.Logf("  List() called %d times", mockWrapper.callCount.Load())
