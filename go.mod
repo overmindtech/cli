@@ -144,6 +144,7 @@ require (
 	github.com/riverqueue/river v0.30.1
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.30.1
 	github.com/riverqueue/river/rivertype v0.30.1
+	github.com/riverqueue/rivercontrib/otelriver v0.7.0
 	github.com/rs/cors v1.11.1
 	github.com/sashabaranov/go-openai v1.41.2
 	github.com/serpapi/serpapi-golang v0.0.0-20251209060603-5a12868f380a
