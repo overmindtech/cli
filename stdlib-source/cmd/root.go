@@ -66,47 +66,36 @@ var rootCmd = &cobra.Command{
 			return
 		}
 
-		// Start HTTP server for status
+		// Start HTTP server for health checks
 		healthCheckPort := viper.GetString("service-port")
-		healthCheckPath := "/healthz"
 
 		healthCheckDNSAdapter := adapters.DNSAdapter{}
 
-		// Set up the health check
+		// Set up health checks
 		if e.EngineConfig.HeartbeatOptions == nil {
 			e.EngineConfig.HeartbeatOptions = &discovery.HeartbeatOptions{}
 		}
-		e.EngineConfig.HeartbeatOptions.HealthCheck = func(ctx context.Context) error {
-			// We have seen some issues with DNS lookups within kube where the
-			// stdlib container will just start timing out on DNS requests. We
-			// should check that the DNS adapter is working so that the
-			// container can die if this happens to it
-			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-			defer cancel()
+
+		// ReadinessCheck verifies the DNS adapter is working
+		// Timeout is handled by SendHeartbeat, HTTP handlers rely on request context
+		e.SetReadinessCheck(func(ctx context.Context) error {
 			_, err := healthCheckDNSAdapter.Search(ctx, "global", "www.google.com", true)
 			if err != nil {
 				return fmt.Errorf("test dns lookup failed: %w", err)
 			}
-
 			return nil
-		}
-		http.HandleFunc(healthCheckPath, func(rw http.ResponseWriter, r *http.Request) {
-			ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck")
-			defer span.End()
-
-			err := e.HealthCheck(ctx)
-			if err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			fmt.Fprint(rw, "ok")
 		})
+
+		// Liveness: Check only engine initialization (NATS, heartbeats)
+		http.HandleFunc("/healthz/alive", e.LivenessProbeHandlerFunc())
+		// Readiness: Check if adapters are healthy and ready to handle requests
+		http.HandleFunc("/healthz/ready", e.ReadinessProbeHandlerFunc())
+		// Backward compatibility - maps to liveness check (matches old behavior)
+		http.HandleFunc("/healthz", e.LivenessProbeHandlerFunc())
 
 		log.WithFields(log.Fields{
 			"port": healthCheckPort,
-			"path": healthCheckPath,
-		}).Debug("Starting healthcheck server")
+		}).Debug("Starting healthcheck server with endpoints: /healthz/alive, /healthz/ready, /healthz")
 
 		go func() {
 			defer sentry.Recover()
@@ -123,8 +112,7 @@ var rootCmd = &cobra.Command{
 
 			log.WithError(err).WithFields(log.Fields{
 				"port": healthCheckPort,
-				"path": healthCheckPath,
-			}).Error("Could not start HTTP server for /healthz health checks")
+			}).Error("Could not start HTTP server for health checks")
 		}()
 
 		err = e.Start(ctx)

@@ -2,10 +2,8 @@ package proc
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
-	"sync"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
@@ -69,29 +67,30 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *AzureConfi
 		return nil, fmt.Errorf("error initializing Engine: %w", err)
 	}
 
-	var permissionCheck func(context.Context) error
-
-	var startupErrorMutex sync.Mutex
-	startupError := errors.New("source is starting")
-	if ec.HeartbeatOptions == nil {
-		ec.HeartbeatOptions = &discovery.HeartbeatOptions{}
-	}
-	ec.HeartbeatOptions.HealthCheck = func(ctx context.Context) error {
-		startupErrorMutex.Lock()
-		defer startupErrorMutex.Unlock()
-		if startupError != nil {
-			// If there is a startup error, return it
-			return startupError
+	// ReadinessCheck verifies adapters are healthy by using a StorageAccount adapter
+	// Timeout is handled by SendHeartbeat, HTTP handlers rely on request context
+	engine.SetReadinessCheck(func(ctx context.Context) error {
+		// Find a StorageAccount adapter to verify adapter health
+		adapters := engine.AdaptersByType("azure-storage-account")
+		if len(adapters) == 0 {
+			return fmt.Errorf("readiness check failed: no azure-storage-account adapters available")
 		}
-
-		if permissionCheck != nil {
-			// If the permission check is set, run it
-			return permissionCheck(ctx)
+		// Use first adapter and try to list from first scope
+		adapter := adapters[0]
+		scopes := adapter.Scopes()
+		if len(scopes) == 0 {
+			return fmt.Errorf("readiness check failed: no scopes available for azure-storage-account adapter")
+		}
+		listableAdapter, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			return fmt.Errorf("readiness check failed: azure-storage-account adapter is not listable")
+		}
+		_, err := listableAdapter.List(ctx, scopes[0], true)
+		if err != nil {
+			return fmt.Errorf("readiness check (listing storage accounts) failed: %w", err)
 		}
 		return nil
-	}
-
-	engine.StartSendingHeartbeats(ctx)
+	})
 
 	// Create a shared cache for all adapters in this source
 	sharedCache := sdpcache.NewCache(ctx)
@@ -154,12 +153,8 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *AzureConfi
 			return fmt.Errorf("error creating discovery adapters: %w", err)
 		}
 
-		// Set up permission check that verifies subscription access
-		permissionCheck = func(ctx context.Context) error {
-			return checkSubscriptionAccess(ctx, cfg.SubscriptionID, cred)
-		}
-
-		err = permissionCheck(ctx)
+		// Verify subscription access before adding adapters
+		err = checkSubscriptionAccess(ctx, cfg.SubscriptionID, cred)
 		if err != nil {
 			return fmt.Errorf("error checking permissions: %w", err)
 		}
@@ -173,18 +168,17 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *AzureConfi
 		return nil
 	}()
 
-	startupErrorMutex.Lock()
-	startupError = err
-	startupErrorMutex.Unlock()
+	if err != nil {
+		log.WithError(err).Debug("Error initializing Azure source")
+		return nil, fmt.Errorf("error initializing Azure source: %w", err)
+	}
+
+	// Start sending heartbeats after adapters are successfully added
+	// This ensures the first heartbeat has adapters available for readiness checks
+	engine.StartSendingHeartbeats(ctx)
 	brokenHeart := engine.SendHeartbeat(ctx, nil) // Send the error immediately through the custom health check func
 	if brokenHeart != nil {
 		log.WithError(brokenHeart).Error("Error sending heartbeat")
-	}
-
-	if err != nil {
-		log.WithError(err).Debug("Error initializing Azure source")
-
-		return nil, fmt.Errorf("error initializing Azure source: %w", err)
 	}
 
 	log.Debug("Sources initialized")

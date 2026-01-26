@@ -730,13 +730,13 @@ func assertHealthCheckDoesNotPanic(t *testing.T, e *Engine) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			t.Fatalf("HealthCheck panic: %v", r)
+			t.Fatalf("LivenessHealthCheck panic: %v", r)
 		}
 	}()
 
 	ctx := context.Background()
-	if err := e.HealthCheck(ctx); err == nil {
-		t.Fatalf("expected HealthCheck to report disconnected NATS")
+	if err := e.LivenessHealthCheck(ctx); err == nil {
+		t.Fatalf("expected LivenessHealthCheck to report disconnected NATS")
 	}
 }
 

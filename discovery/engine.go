@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"slices"
 	"strings"
 	"sync"
@@ -37,10 +38,11 @@ type HeartbeatOptions struct {
 	// The client that will be used to send heartbeats
 	ManagementClient HeartbeatClient
 
-	// The function that should be run to check if the adapter is healthy. It
-	// will be executed each time a heartbeat is sent and should return an error
-	// if the adapter is unhealthy.
-	HealthCheck func(context.Context) error
+	// ReadinessCheck is called during readiness probes to verify adapters are healthy and ready.
+	// This should be a lightweight, adapter-only check (do NOT include engine/liveness checks).
+	// Timeouts are controlled by the caller (e.g., Kubernetes probe timeout / SendHeartbeat).
+	// See: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes
+	ReadinessCheck func(context.Context) error
 
 	// How frequently to send a heartbeat
 	Frequency time.Duration
@@ -409,9 +411,10 @@ func (e *Engine) IsNATSConnected() bool {
 	return false
 }
 
-// HealthCheck returns an error if the Engine is not healthy. Call this inside
-// an opentelemetry span to capture default metrics from the engine.
-func (e *Engine) HealthCheck(ctx context.Context) error {
+// LivenessHealthCheck reports only engine initialization/health (NATS + heartbeat status).
+// Kubernetes runs liveness/startup independently from readiness; adapter checks do NOT belong here.
+// See: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+func (e *Engine) LivenessHealthCheck(ctx context.Context) error {
 	span := trace.SpanFromContext(ctx)
 
 	e.natsConnectionMutex.Lock()
@@ -450,13 +453,6 @@ func (e *Engine) HealthCheck(ctx context.Context) error {
 		return errors.New("NATS connection is not connected")
 	}
 
-	if e.EngineConfig.HeartbeatOptions != nil && e.EngineConfig.HeartbeatOptions.HealthCheck != nil {
-		healthCheckError := e.EngineConfig.HeartbeatOptions.HealthCheck(ctx)
-		if healthCheckError != nil {
-			return fmt.Errorf("source heartbeat check failed: %w", healthCheckError)
-		}
-	}
-
 	// Check if heartbeats are failing to submit to api-server
 	// This fails healthz faster than api-server marks sources as DISCONNECTED,
 	// allowing seamless pod recycling without customer-visible downtime
@@ -477,6 +473,25 @@ func (e *Engine) HealthCheck(ctx context.Context) error {
 			if now.After(healthzFailureThreshold) && lastHeartbeatError != nil {
 				return fmt.Errorf("heartbeat submission to api-server has been failing: %w (last successful heartbeat: %v, threshold: %v)", lastHeartbeatError, lastSuccessfulHeartbeat, healthzFailureThreshold)
 			}
+		}
+	}
+
+	return nil
+}
+
+// ReadinessHealthCheck reports whether adapters are ready to serve requests.
+// It must not call LivenessHealthCheck; readiness should reflect adapter health only.
+// See: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes
+func (e *Engine) ReadinessHealthCheck(ctx context.Context) error {
+	span := trace.SpanFromContext(ctx)
+	span.SetAttributes(
+		attribute.String("ovm.healthcheck.type", "readiness"),
+	)
+
+	// Check adapter-specific health using the ReadinessCheck function
+	if e.EngineConfig.HeartbeatOptions != nil && e.EngineConfig.HeartbeatOptions.ReadinessCheck != nil {
+		if err := e.EngineConfig.HeartbeatOptions.ReadinessCheck(ctx); err != nil {
+			return err
 		}
 	}
 
@@ -703,4 +718,51 @@ func (e *Engine) GetAvailableScopesAndMetadata() ([]string, []*sdp.AdapterMetada
 	}
 
 	return availableScopes, adapterMetadata
+}
+
+// AdaptersByType returns adapters of the specified type. This is useful for health checks.
+func (e *Engine) AdaptersByType(typ string) []Adapter {
+	return e.sh.AdaptersByType(typ)
+}
+
+// LivenessProbeHandlerFunc returns an HTTP handler function for liveness probes.
+// This checks only engine initialization (NATS connection, heartbeats) and does NOT check adapter-specific health.
+func (e *Engine) LivenessProbeHandlerFunc() func(http.ResponseWriter, *http.Request) {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck.liveness")
+		defer span.End()
+
+		err := e.LivenessHealthCheck(ctx)
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusServiceUnavailable)
+			return
+		}
+
+		fmt.Fprint(rw, "ok")
+	}
+}
+
+// SetReadinessCheck sets the readiness check and ensures HeartbeatOptions is initialized.
+func (e *Engine) SetReadinessCheck(check func(context.Context) error) {
+	if e.EngineConfig.HeartbeatOptions == nil {
+		e.EngineConfig.HeartbeatOptions = &HeartbeatOptions{}
+	}
+	e.EngineConfig.HeartbeatOptions.ReadinessCheck = check
+}
+
+// ReadinessProbeHandlerFunc returns an HTTP handler function for readiness probes.
+// This checks adapter-specific health only (not engine/liveness).
+func (e *Engine) ReadinessProbeHandlerFunc() func(http.ResponseWriter, *http.Request) {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck.readiness")
+		defer span.End()
+
+		err := e.ReadinessHealthCheck(ctx)
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusServiceUnavailable)
+			return
+		}
+
+		fmt.Fprint(rw, "ok")
+	}
 }

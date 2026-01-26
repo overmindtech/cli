@@ -31,13 +31,6 @@ func InitializeEngine(ctx context.Context, ec *discovery.EngineConfig, reverseDN
 		}).Fatal("Error initializing Engine")
 	}
 
-	if ec.HeartbeatOptions == nil {
-		ec.HeartbeatOptions = &discovery.HeartbeatOptions{}
-	}
-	ec.HeartbeatOptions.HealthCheck = func(_ context.Context) error {
-		// This can't fail, it's always healthy
-		return nil
-	}
 
 	// Create a shared cache for all adapters in this source
 	sharedCache := sdpcache.NewCache(ctx)

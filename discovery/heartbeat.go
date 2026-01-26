@@ -38,7 +38,7 @@ func (e *Engine) SendHeartbeat(ctx context.Context, customErr error) error {
 		attribute.String("ovm.engine.version", e.EngineConfig.Version),
 	)
 
-	if e.EngineConfig.HeartbeatOptions == nil || e.EngineConfig.HeartbeatOptions.HealthCheck == nil {
+	if e.EngineConfig.HeartbeatOptions == nil {
 		return ErrNoHealthcheckDefined
 	}
 
@@ -46,14 +46,28 @@ func (e *Engine) SendHeartbeat(ctx context.Context, customErr error) error {
 		return errors.New("management client is not set")
 	}
 
-	healthCheckError := e.EngineConfig.HeartbeatOptions.HealthCheck(ctx)
-	healthCheckError = errors.Join(healthCheckError, customErr)
+	// Collect all health check errors
+	var allErrors []error
+	if customErr != nil {
+		allErrors = append(allErrors, customErr)
+	}
 
+	// Check adapter readiness (ReadinessCheck) - with timeout to prevent hanging
+	if e.EngineConfig.HeartbeatOptions.ReadinessCheck != nil {
+		// Add timeout for readiness checks to prevent hanging heartbeats
+		readinessCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		if err := e.EngineConfig.HeartbeatOptions.ReadinessCheck(readinessCtx); err != nil {
+			allErrors = append(allErrors, err)
+		}
+	}
+
+	// Combine all errors
 	var heartbeatError *string
-
-	if healthCheckError != nil {
+	if len(allErrors) > 0 {
+		combinedError := errors.Join(allErrors...)
 		heartbeatError = new(string)
-		*heartbeatError = healthCheckError.Error()
+		*heartbeatError = combinedError.Error()
 	}
 
 	var engineUUID []byte
