@@ -137,8 +137,10 @@ func (d *DNSAdapter) Get(ctx context.Context, scope string, query string, ignore
 	var ck sdpcache.CacheKey
 	var cachedItems []*sdp.Item
 	var qErr *sdp.QueryError
+	var done func()
 
-	cacheHit, ck, cachedItems, qErr = d.Cache().Lookup(ctx, d.Name(), sdp.QueryMethod_GET, scope, d.Type(), query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done = d.Cache().Lookup(ctx, d.Name(), sdp.QueryMethod_GET, scope, d.Type(), query, ignoreCache)
+	defer done()
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -206,8 +208,10 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 	var ck sdpcache.CacheKey
 	var cachedItems []*sdp.Item
 	var qErr *sdp.QueryError
+	var done func()
 	if !ignoreCache {
-		cacheHit, _, cachedItems, qErr = d.Cache().Lookup(ctx, d.Name(), sdp.QueryMethod_SEARCH, scope, d.Type(), query, ignoreCache)
+		cacheHit, _, cachedItems, qErr, done = d.Cache().Lookup(ctx, d.Name(), sdp.QueryMethod_SEARCH, scope, d.Type(), query, ignoreCache)
+		defer done()
 		if qErr != nil {
 			return nil, qErr
 		}

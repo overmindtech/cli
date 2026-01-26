@@ -211,7 +211,8 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 	var cachedItems []*sdp.Item
 	var qErr *sdp.QueryError
 
-	cacheHit, ck, cachedItems, qErr = cache.Lookup(ctx, "aws-s3-adapter", sdp.QueryMethod_GET, scope, "s3-bucket", query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := cache.Lookup(ctx, "aws-s3-adapter", sdp.QueryMethod_GET, scope, "s3-bucket", query, ignoreCache)
+	defer done()
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -615,7 +616,8 @@ func listImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope 
 	var cachedItems []*sdp.Item
 	var qErr *sdp.QueryError
 
-	cacheHit, ck, cachedItems, qErr = cache.Lookup(ctx, "aws-s3-adapter", sdp.QueryMethod_LIST, scope, "s3-bucket", "", ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := cache.Lookup(ctx, "aws-s3-adapter", sdp.QueryMethod_LIST, scope, "s3-bucket", "", ignoreCache)
+	defer done()
 	if qErr != nil {
 		return nil, qErr
 	}

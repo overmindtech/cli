@@ -57,7 +57,8 @@ func (s *RdapEntityAdapter) Scopes() []string {
 // bootstrapping in RDAP isn't comprehensive and might not be able to find the
 // correct registry to search
 func (s *RdapEntityAdapter) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
-	hit, ck, items, sdpErr := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	hit, ck, items, sdpErr, done := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	defer done()
 
 	if sdpErr != nil {
 		return nil, sdpErr
@@ -82,7 +83,8 @@ func (s *RdapEntityAdapter) List(ctx context.Context, scope string, ignoreCache 
 // able to do a lookup using that which will also tell us which server to use
 // for the lookup
 func (s *RdapEntityAdapter) Search(ctx context.Context, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
-	hit, ck, items, sdpErr := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.Type(), query, ignoreCache)
+	hit, ck, items, sdpErr, done := s.Cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.Type(), query, ignoreCache)
+	defer done()
 
 	if sdpErr != nil {
 		return nil, sdpErr

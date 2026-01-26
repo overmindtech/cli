@@ -161,8 +161,10 @@ func (s *TestAdapter) Get(ctx context.Context, scope string, query string, ignor
 	var ck sdpcache.CacheKey
 	var cachedItems []*sdp.Item
 	var qErr *sdp.QueryError
+	var done func()
 
-	cacheHit, ck, cachedItems, qErr = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	defer done()
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -186,8 +188,6 @@ func (s *TestAdapter) Get(ctx context.Context, scope string, query string, ignor
 		s.Cache().StoreError(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
-		// Cancel pending work since we're not caching this error
-		s.Cache().CancelPendingWork(ck)
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Error for testing",
@@ -208,8 +208,10 @@ func (s *TestAdapter) List(ctx context.Context, scope string, ignoreCache bool) 
 	var ck sdpcache.CacheKey
 	var cachedItems []*sdp.Item
 	var qErr *sdp.QueryError
+	var done func()
 
-	cacheHit, ck, cachedItems, qErr = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.Type(), "", ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.Type(), "", ignoreCache)
+	defer done()
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -229,8 +231,6 @@ func (s *TestAdapter) List(ctx context.Context, scope string, ignoreCache bool) 
 		s.Cache().StoreError(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
-		// Cancel pending work since we're not caching this error
-		s.Cache().CancelPendingWork(ck)
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Error for testing",
@@ -252,8 +252,10 @@ func (s *TestAdapter) Search(ctx context.Context, scope string, query string, ig
 	var ck sdpcache.CacheKey
 	var cachedItems []*sdp.Item
 	var qErr *sdp.QueryError
+	var done func()
 
-	cacheHit, ck, cachedItems, qErr = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.Type(), query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.Type(), query, ignoreCache)
+	defer done()
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -273,8 +275,6 @@ func (s *TestAdapter) Search(ctx context.Context, scope string, query string, ig
 		s.Cache().StoreError(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
-		// Cancel pending work since we're not caching this error
-		s.Cache().CancelPendingWork(ck)
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "Error for testing",

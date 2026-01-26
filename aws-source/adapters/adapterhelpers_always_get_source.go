@@ -80,7 +80,7 @@ type AlwaysGetAdapter[ListInput InputType, ListOutput OutputType, GetInput Input
 	ListFuncOutputMapper func(output ListOutput, input ListInput) ([]GetInput, error)
 
 	CacheDuration time.Duration  // How long to cache items for
-	cache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+	cache         sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 }
 
 func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) cacheDuration() time.Duration {
@@ -168,7 +168,8 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		return nil, WrapAWSError(err)
 	}
 
-	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
+	defer done()
 	if qErr != nil {
 		return nil, qErr
 	}
@@ -217,7 +218,8 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
+	defer done()
 	if qErr != nil {
 		stream.SendError(qErr)
 		return
@@ -320,7 +322,8 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 // SearchCustom Searches using custom mapping logic. The SearchInputMapper is
 // used to create an input for ListFunc, at which point the usual logic is used
 func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStruct, Options]) SearchCustom(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
-	cacheHit, ck, cachedItems, qErr := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
+	defer done()
 	if qErr != nil {
 		stream.SendError(qErr)
 		return
