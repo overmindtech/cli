@@ -734,6 +734,7 @@ func (e *Engine) LivenessProbeHandlerFunc() func(http.ResponseWriter, *http.Requ
 
 		err := e.LivenessHealthCheck(ctx)
 		if err != nil {
+			log.WithContext(ctx).WithError(err).Error("Liveness check failed")
 			http.Error(rw, err.Error(), http.StatusServiceUnavailable)
 			return
 		}
@@ -759,6 +760,7 @@ func (e *Engine) ReadinessProbeHandlerFunc() func(http.ResponseWriter, *http.Req
 
 		err := e.ReadinessHealthCheck(ctx)
 		if err != nil {
+			log.WithContext(ctx).WithError(err).Error("Readiness check failed")
 			http.Error(rw, err.Error(), http.StatusServiceUnavailable)
 			return
 		}
