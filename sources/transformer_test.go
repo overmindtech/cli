@@ -129,7 +129,7 @@ func TestListErrorCausesCacheHang(t *testing.T) {
 	ctx := context.Background()
 	cache := sdpcache.NewCache(ctx)
 	if boltCache, ok := cache.(*sdpcache.BoltCache); ok {
-		defer boltCache.Close()
+		defer func() { _ = boltCache.CloseAndDestroy() }()
 	}
 
 	scope := "test-scope"
