@@ -423,7 +423,6 @@ func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.Que
 	}
 
 	items, err := c.search(ctx, ck)
-
 	if err != nil {
 		var qErr *sdp.QueryError
 		if errors.Is(err, ErrCacheNotFound) {
@@ -746,8 +745,6 @@ func (c *MemoryCache) StoreError(ctx context.Context, err error, duration time.D
 	c.storeResult(ctx, res)
 }
 
-// CancelPendingWork signals that work for a cache key is complete without storing
-// any result. Waiters will receive a cache miss and can retry.
 // Clear Delete all data in cache
 func (c *MemoryCache) Clear() {
 	if c == nil {
