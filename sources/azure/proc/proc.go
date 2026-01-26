@@ -156,7 +156,15 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *AzureConfi
 		// Verify subscription access before adding adapters
 		err = checkSubscriptionAccess(ctx, cfg.SubscriptionID, cred)
 		if err != nil {
-			return fmt.Errorf("error checking permissions: %w", err)
+			log.WithContext(ctx).WithError(err).WithFields(log.Fields{
+				"ovm.source.type":            "azure",
+				"ovm.source.subscription_id": cfg.SubscriptionID,
+			}).Error("Permission check failed for subscription")
+		} else {
+			log.WithContext(ctx).WithFields(log.Fields{
+				"ovm.source.type":            "azure",
+				"ovm.source.subscription_id": cfg.SubscriptionID,
+			}).Info("Permission check passed for subscription")
 		}
 
 		// Add the adapters to the engine

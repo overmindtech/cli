@@ -531,22 +531,19 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 		// the Cloud Resource Manager API for all configured projects.
 		result, err := healthChecker.Check(ctx)
 		if err != nil {
-			// Log detailed results even on failure
-			log.WithFields(log.Fields{
+			log.WithContext(ctx).WithError(err).WithFields(log.Fields{
 				"ovm.source.type":          "gcp",
 				"ovm.source.success_count": result.SuccessCount,
 				"ovm.source.failure_count": result.FailureCount,
 				"ovm.source.project_count": len(projectIDs),
 			}).Error("Permission check failed for some projects")
-			return fmt.Errorf("error checking permissions: %w", err)
+		} else {
+			log.WithFields(log.Fields{
+				"ovm.source.type":          "gcp",
+				"ovm.source.success_count": result.SuccessCount,
+				"ovm.source.project_count": len(projectIDs),
+			}).Info("All projects passed permission checks")
 		}
-
-		// Log successful permission check
-		log.WithFields(log.Fields{
-			"ovm.source.type":          "gcp",
-			"ovm.source.success_count": result.SuccessCount,
-			"ovm.source.project_count": len(projectIDs),
-		}).Info("All projects passed permission checks")
 
 		// Add the adapters to the engine
 		err = engine.AddAdapters(allAdapters...)
