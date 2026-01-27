@@ -11,17 +11,17 @@ func ConfigureLogrusJSON(logger *log.Logger) {
 	}
 
 	logger.SetFormatter(&log.JSONFormatter{})
-	logger.AddHook(GCPSeverityHook{})
+	logger.AddHook(OtelSeverityHook{})
 }
 
-// GCPSeverityHook adds a GCP-compatible severity field to log entries.
-type GCPSeverityHook struct{}
+// OtelSeverityHook adds a GCP-compatible severity field to log entries.
+type OtelSeverityHook struct{}
 
-func (GCPSeverityHook) Levels() []log.Level {
+func (OtelSeverityHook) Levels() []log.Level {
 	return log.AllLevels
 }
 
-func (GCPSeverityHook) Fire(entry *log.Entry) error {
+func (OtelSeverityHook) Fire(entry *log.Entry) error {
 	if entry == nil {
 		return nil
 	}
@@ -36,18 +36,18 @@ func (GCPSeverityHook) Fire(entry *log.Entry) error {
 func severityForLevel(level log.Level) string {
 	switch level {
 	case log.PanicLevel:
-		return "EMERGENCY"
+		return "emergency"
 	case log.FatalLevel:
-		return "CRITICAL"
+		return "critical"
 	case log.ErrorLevel:
-		return "ERROR"
+		return "error"
 	case log.WarnLevel:
-		return "WARNING"
+		return "warning"
 	case log.InfoLevel:
-		return "INFO"
+		return "info"
 	case log.DebugLevel, log.TraceLevel:
-		return "DEBUG"
+		return "debug"
 	default:
-		return "DEFAULT"
+		return "default"
 	}
 }

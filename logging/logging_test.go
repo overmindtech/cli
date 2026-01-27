@@ -16,13 +16,13 @@ func TestSeverityForLevel(t *testing.T) {
 		level log.Level
 		want  string
 	}{
-		{name: "panic", level: log.PanicLevel, want: "EMERGENCY"},
-		{name: "fatal", level: log.FatalLevel, want: "CRITICAL"},
-		{name: "error", level: log.ErrorLevel, want: "ERROR"},
-		{name: "warn", level: log.WarnLevel, want: "WARNING"},
-		{name: "info", level: log.InfoLevel, want: "INFO"},
-		{name: "debug", level: log.DebugLevel, want: "DEBUG"},
-		{name: "trace", level: log.TraceLevel, want: "DEBUG"},
+		{name: "panic", level: log.PanicLevel, want: "emergency"},
+		{name: "fatal", level: log.FatalLevel, want: "critical"},
+		{name: "error", level: log.ErrorLevel, want: "error"},
+		{name: "warn", level: log.WarnLevel, want: "warning"},
+		{name: "info", level: log.InfoLevel, want: "info"},
+		{name: "debug", level: log.DebugLevel, want: "debug"},
+		{name: "trace", level: log.TraceLevel, want: "debug"},
 	}
 
 	for _, tt := range tests {
@@ -56,8 +56,8 @@ func TestConfigureLogrusJSONAddsSeverity(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected severity field in log payload, got: %#v", payload)
 	}
-	if got != "INFO" {
-		t.Fatalf("expected severity %q, got %v", "INFO", got)
+	if got != "info" {
+		t.Fatalf("expected severity %q, got %v", "info", got)
 	}
 }
 
@@ -69,7 +69,7 @@ func TestConfigureLogrusJSONRespectsExistingSeverity(t *testing.T) {
 	logger.SetOutput(&buf)
 
 	ConfigureLogrusJSON(logger)
-	logger.WithField("severity", "NOTICE").Info("hello")
+	logger.WithField("severity", "SPECIAL").Info("hello")
 
 	var payload map[string]any
 	if err := json.Unmarshal(buf.Bytes(), &payload); err != nil {
@@ -80,7 +80,7 @@ func TestConfigureLogrusJSONRespectsExistingSeverity(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected severity field in log payload, got: %#v", payload)
 	}
-	if got != "NOTICE" {
-		t.Fatalf("expected severity %q, got %v", "NOTICE", got)
+	if got != "SPECIAL" {
+		t.Fatalf("expected severity %q, got %v", "SPECIAL", got)
 	}
 }
