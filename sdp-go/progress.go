@@ -118,7 +118,6 @@ func (rs *ResponseSender) Start(ctx context.Context, ec EncodedConnection, respo
 					rs.ResponseSubject,
 					&QueryResponse{ResponseType: &QueryResponse_Response{Response: &resp}},
 				)
-
 				if err != nil {
 					log.WithContext(ctx).WithError(err).Error("Error publishing response")
 				}
@@ -365,6 +364,12 @@ func RunSourceQuery(ctx context.Context, query *Query, startTimeout time.Duratio
 		for {
 			select {
 			case <-ctx.Done():
+				// If the connection is closed, we do not need to send a cancel message
+				if u := ec.Underlying(); u == nil || u.IsClosed() {
+					sq.markWorkingRespondersCancelled()
+					sq.cleanup(ctx)
+					return
+				}
 				// Since this context is done, we need a new context just to
 				// send the cancellation message
 				cancelCtx, cancelCtxCancel := context.WithTimeout(context.WithoutCancel(ctx), 3*time.Second)
@@ -383,7 +388,6 @@ func RunSourceQuery(ctx context.Context, query *Query, startTimeout time.Duratio
 				}
 
 				err := ec.Publish(cancelCtx, cancelSubject, &cancelRequest)
-
 				if err != nil {
 					log.WithContext(ctx).WithError(err).Error("Error sending cancel message")
 					span.RecordError(err)
@@ -526,7 +530,7 @@ func (sq *SourceQuery) finished() bool {
 // response channel
 func (sq *SourceQuery) cleanup(ctx context.Context) {
 	span := trace.SpanFromContext(ctx)
-	if sq.querySub != nil {
+	if sq.querySub != nil && sq.querySub.IsValid() {
 		err := sq.querySub.Unsubscribe()
 		if err != nil {
 			log.WithField("error", err).Error("Error unsubscribing from query subject")
