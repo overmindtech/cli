@@ -141,9 +141,9 @@ require (
 	github.com/posthog/posthog-go v1.9.1
 	github.com/projectdiscovery/subfinder/v2 v2.12.0
 	github.com/qhenkart/anthropic-tokenizer-go v0.0.0-20231011194518-5519949e0faf
-	github.com/riverqueue/river v0.30.1
-	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.30.1
-	github.com/riverqueue/river/rivertype v0.30.1
+	github.com/riverqueue/river v0.30.2
+	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.30.2
+	github.com/riverqueue/river/rivertype v0.30.2
 	github.com/riverqueue/rivercontrib/otelriver v0.7.0
 	github.com/rs/cors v1.11.1
 	github.com/sashabaranov/go-openai v1.41.2
@@ -379,8 +379,8 @@ require (
 	github.com/refraction-networking/utls v1.7.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/riverqueue/apiframe v0.0.0-20251229202423-2b52ce1c482e // indirect
-	github.com/riverqueue/river/riverdriver v0.30.1 // indirect
-	github.com/riverqueue/river/rivershared v0.30.1 // indirect
+	github.com/riverqueue/river/riverdriver v0.30.2 // indirect
+	github.com/riverqueue/river/rivershared v0.30.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
