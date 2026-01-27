@@ -102,6 +102,10 @@ func GetTestOAuthTokenClient(t *testing.T) *natsTokenClient {
 }
 
 func TestOAuthTokenClient(t *testing.T) {
+	if os.Getenv("CI") == "true" {
+		t.Skip("Skipping test in CI environment, missing nats token exchange server")
+	}
+
 	c := GetTestOAuthTokenClient(t)
 
 	var err error

@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"os"
 	"testing"
 	"time"
 
@@ -203,6 +204,10 @@ func TestToNatsOptions(t *testing.T) {
 }
 
 func TestNATSConnect(t *testing.T) {
+	if os.Getenv("CI") == "true" {
+		t.Skip("Skipping test in CI environment, missing nats token exchange server")
+	}
+
 	t.Run("with a bad URL", func(t *testing.T) {
 		o := NATSOptions{
 			Servers:    []string{"nats://badname.dontresolve.com"},
@@ -319,6 +324,10 @@ func TestNATSConnect(t *testing.T) {
 }
 
 func TestTokenRefresh(t *testing.T) {
+	if os.Getenv("CI") == "true" {
+		t.Skip("Skipping test in CI environment, missing nats token exchange server")
+	}
+
 	tk := GetTestOAuthTokenClient(t)
 
 	// Get a token
