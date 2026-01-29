@@ -108,6 +108,13 @@ func (e *Engine) HandleQuery(ctx context.Context, query *sdp.Query) {
 	))
 	defer span.End()
 
+	deadline, ok := ctx.Deadline()
+	if ok {
+		span.SetAttributes(
+			attribute.String("ovm.sdp.ctxDeadline", deadline.String()),
+		)
+	}
+
 	if query.GetRecursionBehaviour() != nil {
 		span.SetAttributes(
 			attribute.Int("ovm.sdp.linkDepth", int(query.GetRecursionBehaviour().GetLinkDepth())),
