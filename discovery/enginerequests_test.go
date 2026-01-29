@@ -58,7 +58,9 @@ func TestExecuteQuery(t *testing.T) {
 	)
 
 	t.Run("Basic happy-path Get query", func(t *testing.T) {
+		u := uuid.New()
 		q := &sdp.Query{
+			UUID:   u[:],
 			Type:   "person",
 			Method: sdp.QueryMethod_GET,
 			Query:  "foo",
@@ -92,6 +94,8 @@ func TestExecuteQuery(t *testing.T) {
 		item := items[0]
 
 		if !reflect.DeepEqual(item.GetMetadata().GetSourceQuery(), q) {
+			t.Logf("adapter query: %+v", item.GetMetadata().GetSourceQuery())
+			t.Logf("expected query: %+v", q)
 			t.Error("adapter query mismatch")
 		}
 	})

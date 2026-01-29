@@ -94,19 +94,14 @@ func (e *Engine) HandleQuery(ctx context.Context, query *sdp.Query) {
 	// Only start the span if we actually have something that will respond
 	ctx, span := tracer.Start(ctx, "HandleQuery", trace.WithAttributes(
 		attribute.Int("ovm.discovery.numExpandedQueries", numExpandedQueries),
-		attribute.String("ovm.sdp.uuid", u.String()),
-		attribute.String("ovm.sdp.type", query.GetType()),
-		attribute.String("ovm.sdp.method", query.GetMethod().String()),
-		attribute.String("ovm.sdp.query", query.GetQuery()),
-		attribute.String("ovm.sdp.scope", query.GetScope()),
-		attribute.String("ovm.sdp.deadline", query.GetDeadline().AsTime().String()),
 		attribute.Bool("ovm.sdp.deadlineOverridden", deadlineOverride),
-		attribute.Bool("ovm.sdp.queryIgnoreCache", query.GetIgnoreCache()),
 		attribute.String("ovm.sdp.source_name", e.EngineConfig.SourceName),
 		attribute.String("ovm.engine.type", e.EngineConfig.EngineType),
 		attribute.String("ovm.engine.version", e.EngineConfig.Version),
 	))
 	defer span.End()
+
+	query.SetSpanAttributes(span)
 
 	deadline, ok := ctx.Deadline()
 	if ok {
@@ -301,11 +296,11 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 						// could indicate a bug in the adapter. Make sure to
 						// keep the trigger and this message in sync.
 						log.WithContext(ctx).WithFields(log.Fields{
-							"ovm.query.uuid":    q.GetUUIDParsed().String(),
-							"ovm.query.type":    q.GetType(),
-							"ovm.query.scope":   q.GetScope(),
-							"ovm.query.method":  q.GetMethod().String(),
-							"ovm.query.adapter": adapter.Name(),
+							"ovm.sdp.uuid":     q.GetUUIDParsed().String(),
+							"ovm.sdp.type":     q.GetType(),
+							"ovm.sdp.scope":    q.GetScope(),
+							"ovm.sdp.method":   q.GetMethod().String(),
+							"ovm.adapter.name": adapter.Name(),
 						}).Errorf("Wait group still running %v after context cancelled", longRunningAdaptersTimeout)
 					}
 					expandedMutex.RUnlock()
@@ -331,16 +326,20 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 // called in parallel with other queries and the results should be merged
 func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, responses chan<- *sdp.QueryResponse) {
 	ctx, span := tracer.Start(ctx, "Execute", trace.WithAttributes(
+		attribute.String("ovm.adapter.name", adapter.Name()),
+		attribute.String("ovm.engine.type", e.EngineConfig.EngineType),
+		attribute.String("ovm.engine.version", e.EngineConfig.Version),
+		attribute.String("ovm.sdp.source_name", e.EngineConfig.SourceName),
+
+		// deprecated, we are keeping these here for data integrity of old queries until 2026-03-01
 		attribute.String("ovm.adapter.queryMethod", q.GetMethod().String()),
 		attribute.String("ovm.adapter.queryType", q.GetType()),
 		attribute.String("ovm.adapter.queryScope", q.GetScope()),
-		attribute.String("ovm.adapter.name", adapter.Name()),
 		attribute.String("ovm.adapter.query", q.GetQuery()),
-		attribute.String("ovm.sdp.source_name", e.EngineConfig.SourceName),
-		attribute.String("ovm.engine.type", e.EngineConfig.EngineType),
-		attribute.String("ovm.engine.version", e.EngineConfig.Version),
 	))
 	defer span.End()
+
+	q.SetSpanAttributes(span)
 
 	// We want to avoid having a Get and a List running at the same time, we'd
 	// rather run the List first, populate the cache, then have the Get just
@@ -479,9 +478,9 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 		} else {
 			// Log the error instead of sending it over the stream
 			log.WithContext(ctx).WithFields(log.Fields{
-				"ovm.adapter.name":  adapter.Name(),
-				"ovm.adapter.type":  q.GetType(),
-				"ovm.adapter.scope": q.GetScope(),
+				"ovm.adapter.name": adapter.Name(),
+				"ovm.sdp.type":     q.GetType(),
+				"ovm.sdp.scope":    q.GetScope(),
 			}).Warn("adapter is not listable")
 		}
 	case sdp.QueryMethod_SEARCH:
@@ -503,9 +502,9 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 		} else {
 			// Log the error instead of sending it over the stream
 			log.WithContext(ctx).WithFields(log.Fields{
-				"ovm.adapter.name":  adapter.Name(),
-				"ovm.adapter.type":  q.GetType(),
-				"ovm.adapter.scope": q.GetScope(),
+				"ovm.adapter.name": adapter.Name(),
+				"ovm.sdp.type":     q.GetType(),
+				"ovm.sdp.scope":    q.GetScope(),
 			}).Warn("adapter is not searchable")
 		}
 	}

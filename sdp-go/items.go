@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -271,6 +273,18 @@ func (r *Query) GetUUIDParsed() uuid.UUID {
 		r.UUID = reqUUID[:]
 	}
 	return reqUUID
+}
+
+func (q *Query) SetSpanAttributes(span trace.Span) {
+	span.SetAttributes(
+		attribute.String("ovm.sdp.method", q.GetMethod().String()),
+		attribute.String("ovm.sdp.type", q.GetType()),
+		attribute.String("ovm.sdp.scope", q.GetScope()),
+		attribute.String("ovm.sdp.query", q.GetQuery()),
+		attribute.String("ovm.sdp.uuid", q.GetUUIDParsed().String()),
+		attribute.String("ovm.sdp.deadline", q.GetDeadline().AsTime().String()),
+		attribute.Bool("ovm.sdp.queryIgnoreCache", q.GetIgnoreCache()),
+	)
 }
 
 func NewQueryResponseFromItem(item *Item) *QueryResponse {
