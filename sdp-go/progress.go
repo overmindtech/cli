@@ -13,7 +13,6 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/overmindtech/cli/tracing"
 	log "github.com/sirupsen/logrus"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
@@ -353,13 +352,7 @@ func RunSourceQuery(ctx context.Context, query *Query, startTimeout time.Duratio
 		ctx, span := tracing.Tracer().Start(ctx, "QueryProgress")
 		defer span.End()
 
-		// Attach query information to the span
-		span.SetAttributes(
-			attribute.String("ovm.sdp.type", query.GetType()),
-			attribute.String("ovm.sdp.scope", query.GetScope()),
-			attribute.String("ovm.sdp.uuid", uuid.UUID(query.GetUUID()).String()),
-			attribute.String("ovm.sdp.method", query.GetMethod().String()),
-		)
+		query.SetSpanAttributes(span)
 
 		for {
 			select {
