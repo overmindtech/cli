@@ -27,8 +27,8 @@ const (
 type AccountConfig_BlastRadiusPreset int32
 
 const (
-	// Customise advanced limits.
-	AccountConfig_CUSTOM AccountConfig_BlastRadiusPreset = 0
+	// Unspecified preset - will be treated as DETAILED
+	AccountConfig_UNSPECIFIED AccountConfig_BlastRadiusPreset = 0
 	// Runs a shallow scan for dependencies. Reduces time takes to calculate
 	// blast radius, but might mean some dependencies are missed
 	AccountConfig_QUICK AccountConfig_BlastRadiusPreset = 1
@@ -42,16 +42,16 @@ const (
 // Enum value maps for AccountConfig_BlastRadiusPreset.
 var (
 	AccountConfig_BlastRadiusPreset_name = map[int32]string{
-		0: "CUSTOM",
+		0: "UNSPECIFIED",
 		1: "QUICK",
 		2: "DETAILED",
 		3: "FULL",
 	}
 	AccountConfig_BlastRadiusPreset_value = map[string]int32{
-		"CUSTOM":   0,
-		"QUICK":    1,
-		"DETAILED": 2,
-		"FULL":     3,
+		"UNSPECIFIED": 0,
+		"QUICK":       1,
+		"DETAILED":    2,
+		"FULL":        3,
 	}
 )
 
@@ -257,19 +257,17 @@ func (x *BlastRadiusConfig) GetChangeAnalysisMaxTimeout() *durationpb.Duration {
 	return nil
 }
 
-// This account config is stored in the `kv.Store` protobuf key-value store in
-// the api-server database. This means that as long as we don't have any
-// *breaking* changes to the protobuf, we shouldn't need to do a migration. If
-// however we do need to change this message in a breaking way, we will need to
-// do some kind of a migration (depending on the change)
+// Account configuration for blast radius settings. The blast radius preset
+// is stored in the accounts table. Custom blast radius values are no longer
+// supported - only preset values are used.
 type AccountConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The preset that we should use when calculating the blast radius for a
-	// change. If this is set to "CUSTOM" then the `blastRadius` config should be
-	// set
+	// change. UNSPECIFIED is treated as DETAILED.
 	BlastRadiusPreset AccountConfig_BlastRadiusPreset `protobuf:"varint,2,opt,name=blastRadiusPreset,proto3,enum=config.AccountConfig_BlastRadiusPreset" json:"blastRadiusPreset,omitempty"`
-	// The blast radius config for this account, this is only required if the
-	// preset is "CUSTOM"
+	// The blast radius config for this account. This field is populated with
+	// hardcoded values based on the preset when reading. Custom values are
+	// ignored when writing - only the preset is stored.
 	BlastRadius *BlastRadiusConfig `protobuf:"bytes,1,opt,name=blastRadius,proto3,oneof" json:"blastRadius,omitempty"`
 	// If this is set to true, changes that weren't able to be mapped to real
 	// infrastructure won't be considered for risk calculations. This usually
@@ -315,7 +313,7 @@ func (x *AccountConfig) GetBlastRadiusPreset() AccountConfig_BlastRadiusPreset {
 	if x != nil {
 		return x.BlastRadiusPreset
 	}
-	return AccountConfig_CUSTOM
+	return AccountConfig_UNSPECIFIED
 }
 
 func (x *AccountConfig) GetBlastRadius() *BlastRadiusConfig {
@@ -1590,14 +1588,13 @@ const file_config_proto_rawDesc = "" +
 	"\bmaxItems\x18\x01 \x01(\x05R\bmaxItems\x12\x1c\n" +
 	"\tlinkDepth\x18\x02 \x01(\x05R\tlinkDepth\x12Z\n" +
 	"\x18changeAnalysisMaxTimeout\x18\x04 \x01(\v2\x19.google.protobuf.DurationH\x00R\x18changeAnalysisMaxTimeout\x88\x01\x01B\x1b\n" +
-	"\x19_changeAnalysisMaxTimeoutJ\x04\b\x03\x10\x04\"\xbe\x02\n" +
+	"\x19_changeAnalysisMaxTimeoutJ\x04\b\x03\x10\x04\"\xc3\x02\n" +
 	"\rAccountConfig\x12U\n" +
 	"\x11blastRadiusPreset\x18\x02 \x01(\x0e2'.config.AccountConfig.BlastRadiusPresetR\x11blastRadiusPreset\x12@\n" +
 	"\vblastRadius\x18\x01 \x01(\v2\x19.config.BlastRadiusConfigH\x00R\vblastRadius\x88\x01\x01\x12@\n" +
-	"\x1bskipUnmappedChangesForRisks\x18\x03 \x01(\bR\x1bskipUnmappedChangesForRisks\"B\n" +
-	"\x11BlastRadiusPreset\x12\n" +
-	"\n" +
-	"\x06CUSTOM\x10\x00\x12\t\n" +
+	"\x1bskipUnmappedChangesForRisks\x18\x03 \x01(\bR\x1bskipUnmappedChangesForRisks\"G\n" +
+	"\x11BlastRadiusPreset\x12\x0f\n" +
+	"\vUNSPECIFIED\x10\x00\x12\t\n" +
 	"\x05QUICK\x10\x01\x12\f\n" +
 	"\bDETAILED\x10\x02\x12\b\n" +
 	"\x04FULL\x10\x03B\x0e\n" +
