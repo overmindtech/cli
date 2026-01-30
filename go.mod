@@ -147,7 +147,7 @@ require (
 	github.com/riverqueue/rivercontrib/otelriver v0.7.0
 	github.com/rs/cors v1.11.1
 	github.com/sashabaranov/go-openai v1.41.2
-	github.com/serpapi/serpapi-golang v0.0.0-20251209060603-5a12868f380a
+	github.com/serpapi/serpapi-golang v0.0.0-20260126142127-0e41c7993cda
 	github.com/sirupsen/logrus v1.9.4
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8
 	github.com/spf13/cobra v1.10.2
