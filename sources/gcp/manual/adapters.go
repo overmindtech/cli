@@ -7,7 +7,6 @@ import (
 	"cloud.google.com/go/bigquery"
 	compute "cloud.google.com/go/compute/apiv1"
 	iamAdmin "cloud.google.com/go/iam/admin/apiv1"
-	kms "cloud.google.com/go/kms/apiv1"
 	logging "cloud.google.com/go/logging/apiv2"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
@@ -41,9 +40,7 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 		diskCli                   *compute.DisksClient
 		iamServiceAccountKeyCli   *iamAdmin.IamClient
 		iamServiceAccountCli      *iamAdmin.IamClient
-		kmsKeyRingCli             *kms.KeyManagementClient
-		kmsCryptoKeyCli           *kms.KeyManagementClient
-		kmsCryptoKeyVersionCli    *kms.KeyManagementClient
+		kmsLoader                 *shared.CloudKMSAssetLoader
 		bigQueryDatasetCli        *bigquery.Client
 		loggingConfigCli          *logging.ConfigClient
 		nodeGroupCli              *compute.NodeGroupsClient
@@ -144,22 +141,6 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 			return nil, fmt.Errorf("failed to create IAM service account client: %w", err)
 		}
 
-		// KMS
-		kmsKeyRingCli, err = kms.NewKeyManagementClient(ctx, opts...)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create KMS key ring client: %w", err)
-		}
-
-		kmsCryptoKeyCli, err = kms.NewKeyManagementClient(ctx, opts...)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create KMS crypto key client: %w", err)
-		}
-
-		kmsCryptoKeyVersionCli, err = kms.NewKeyManagementClient(ctx, opts...)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create KMS crypto key version client: %w", err)
-		}
-
 		// Extract project ID from projectLocations for BigQuery client initialization.
 		//
 		// IMPORTANT: The project ID passed to bigquery.NewClient() is used for:
@@ -195,6 +176,13 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 		if err != nil {
 			return nil, fmt.Errorf("failed to create bigquery client: %w", err)
 		}
+
+		// Create KMS asset loader (uses Cloud Asset API for bulk loading)
+		httpClient, err := shared.GCPHTTPClientWithOtel(ctx, "")
+		if err != nil {
+			return nil, fmt.Errorf("failed to create HTTP client for KMS loader: %w", err)
+		}
+		kmsLoader = shared.NewCloudKMSAssetLoader(httpClient, bigQueryProjectID, cache, "gcp-source", projectLocations)
 
 		loggingConfigCli, err = logging.NewConfigClient(ctx, opts...)
 		if err != nil {
@@ -280,9 +268,9 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 			sources.WrapperToAdapter(NewComputeSnapshot(shared.NewComputeSnapshotsClient(computeSnapshotCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewIAMServiceAccountKey(shared.NewIAMServiceAccountKeyClient(iamServiceAccountKeyCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewIAMServiceAccount(shared.NewIAMServiceAccountClient(iamServiceAccountCli), projectLocations), cache),
-			sources.WrapperToAdapter(NewCloudKMSKeyRing(shared.NewCloudKMSKeyRingClient(kmsKeyRingCli), projectLocations), cache),
-			sources.WrapperToAdapter(NewCloudKMSCryptoKey(shared.NewCloudKMSCryptoKeyClient(kmsCryptoKeyCli), projectLocations), cache),
-			sources.WrapperToAdapter(NewCloudKMSCryptoKeyVersion(shared.NewCloudKMSCryptoKeyVersionClient(kmsCryptoKeyVersionCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewCloudKMSKeyRing(kmsLoader, projectLocations), cache),
+			sources.WrapperToAdapter(NewCloudKMSCryptoKey(kmsLoader, projectLocations), cache),
+			sources.WrapperToAdapter(NewCloudKMSCryptoKeyVersion(kmsLoader, projectLocations), cache),
 			sources.WrapperToAdapter(NewBigQueryDataset(shared.NewBigQueryDatasetClient(bigQueryDatasetCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewLoggingSink(shared.NewLoggingConfigClient(loggingConfigCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewBigQueryRoutine(shared.NewBigQueryRoutineClient(bigQueryDatasetCli), projectLocations), cache),

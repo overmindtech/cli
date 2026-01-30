@@ -20,6 +20,8 @@ For example, `TestComputeInstanceIntegration` tests the Compute API's Instance r
         cloudresourcemanager.googleapis.com \
         iam.googleapis.com \
         iamcredentials.googleapis.com \
+        cloudkms.googleapis.com \
+        cloudasset.googleapis.com \
         --project=integration-tests-484908
     ```
 

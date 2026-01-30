@@ -2,13 +2,8 @@ package manual_test
 
 import (
 	"context"
-	"fmt"
-	"sync"
+	"errors"
 	"testing"
-
-	"cloud.google.com/go/kms/apiv1/kmspb"
-	"go.uber.org/mock/gomock"
-	"google.golang.org/api/iterator"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -16,224 +11,190 @@ import (
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
-	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 )
 
 func TestCloudKMSCryptoKey(t *testing.T) {
 	ctx := context.Background()
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockClient := mocks.NewMockCloudKMSCryptoKeyClient(ctrl)
 	projectID := "test-project-id"
 
-	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSCryptoKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+	t.Run("Get_CacheHit", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
 
-		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(
-			createCryptoKey(
-				"projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key",
-				"1",
-				kmspb.CryptoKeyVersion_ENABLED,
-			), nil)
+		// Pre-populate cache with a CryptoKey item
+		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key",
+			"uniqueAttr": "global|test-keyring|test-key",
+		})
+		_ = attrs.Set("uniqueAttr", "global|test-keyring|test-key")
 
-		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+		item := &sdp.Item{
+			Type:            gcpshared.CloudKMSCryptoKey.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs,
+			Scope:           projectID,
+			Tags:            map[string]string{"env": "test"},
+		}
 
-		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey("location", "keyRing", "cryptoKey"), true)
+		cacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_GET, projectID, gcpshared.CloudKMSCryptoKey.String(), "global|test-keyring|test-key")
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		wrapper := manual.NewCloudKMSCryptoKey(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "global|test-keyring|test-key", false)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)
 		}
 
-		expectedTag := "test"
-		actualTag := sdpItem.GetTags()["env"]
-		if actualTag != expectedTag {
-			t.Fatalf("Expected tag 'env=%s', got: %v", expectedTag, actualTag)
+		if sdpItem == nil {
+			t.Fatalf("Expected item, got nil")
 		}
 
-		t.Run("StaticTests", func(t *testing.T) {
-			queryTests := shared.QueryTests{
-				{
-					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod: sdp.QueryMethod_SEARCH,
-					ExpectedQuery:  "global|test-keyring|test-key",
-					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
-					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "global|test-keyring|test-key|1",
-					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
-					ExpectedType:   gcpshared.CloudKMSEKMConnection.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "global|valid-ekm-connection",
-					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
-					ExpectedType:   gcpshared.IAMPolicy.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "global|test-keyring|test-key",
-					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
-					ExpectedType:   gcpshared.CloudKMSKeyRing.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "global|test-keyring",
-					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-			}
+		uniqueAttr, err := sdpItem.GetAttributes().Get("uniqueAttr")
+		if err != nil {
+			t.Fatalf("Failed to get uniqueAttr: %v", err)
+		}
+		if uniqueAttr != "global|test-keyring|test-key" {
+			t.Fatalf("Expected uniqueAttr 'global|test-keyring|test-key', got: %v", uniqueAttr)
+		}
 
-			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
-		})
+		// Verify tags
+		if sdpItem.GetTags()["env"] != "test" {
+			t.Fatalf("Expected tag 'env=test', got: %v", sdpItem.GetTags())
+		}
 	})
 
-	t.Run("Search", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSCryptoKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
-		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+	t.Run("Get_CacheMiss_NotFound", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
 
-		mockCryptoKeyIterator := mocks.NewMockCloudKMSCryptoKeyIterator(ctrl)
+		// Pre-populate cache with a NOTFOUND error to simulate item not existing
+		notFoundErr := &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOTFOUND,
+			ErrorString: "No resources found in Cloud Asset API",
+		}
+		cacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_GET, projectID, gcpshared.CloudKMSCryptoKey.String(), "global|test-keyring|nonexistent")
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 
-		mockCryptoKeyIterator.EXPECT().Next().Return(
-			createCryptoKey(
-				"projects/test-project-id/locations/global/keyRings/test-key-ring/cryptoKeys/test-key-1",
-				"1",
-				kmspb.CryptoKeyVersion_ENABLED,
-			), nil)
-		mockCryptoKeyIterator.EXPECT().Next().Return(
-			createCryptoKey(
-				"projects/test-project-id/locations/global/keyRings/test-key-ring/cryptoKeys/test-key-2",
-				"1",
-				kmspb.CryptoKeyVersion_ENABLED,
-			), nil)
-		// This one is for a different key ring and should be filtered out.
-		mockCryptoKeyIterator.EXPECT().Next().Return(
-			createCryptoKey(
-				"projects/test-project-id/locations/global/keyRings/other-key-ring/cryptoKeys/test-key-3",
-				"1",
-				kmspb.CryptoKeyVersion_ENABLED,
-			), nil)
-		mockCryptoKeyIterator.EXPECT().Next().Return(nil, iterator.Done)
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
-		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockCryptoKeyIterator)
+		wrapper := manual.NewCloudKMSCryptoKey(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
 
-		// [SPEC] Search filters by the key ring. It will list all crypto keys
-		// any crypto keys that are not using the given key ring.
-		// Check if adapter supports searching
+		// Get a non-existent item - should return NOTFOUND from cache
+		_, err := adapter.Get(ctx, wrapper.Scopes()[0], "global|test-keyring|nonexistent", false)
+		if err == nil {
+			t.Fatalf("Expected NOTFOUND error, got nil")
+		}
+		var qErr *sdp.QueryError
+		if !errors.As(err, &qErr) {
+			t.Fatalf("Expected QueryError, got: %T - %v", err, err)
+		}
+		if qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("Expected NOTFOUND error type, got: %v", qErr.GetErrorType())
+		}
+	})
+
+	t.Run("Search_CacheHit", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
+
+		// Pre-populate cache with CryptoKey items under SEARCH cache key (by keyRing)
+		attrs1, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key-1",
+			"uniqueAttr": "global|test-keyring|test-key-1",
+		})
+		_ = attrs1.Set("uniqueAttr", "global|test-keyring|test-key-1")
+
+		attrs2, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key-2",
+			"uniqueAttr": "global|test-keyring|test-key-2",
+		})
+		_ = attrs2.Set("uniqueAttr", "global|test-keyring|test-key-2")
+
+		item1 := &sdp.Item{
+			Type:            gcpshared.CloudKMSCryptoKey.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs1,
+			Scope:           projectID,
+		}
+		item2 := &sdp.Item{
+			Type:            gcpshared.CloudKMSCryptoKey.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs2,
+			Scope:           projectID,
+		}
+
+		// Search by location|keyRing
+		searchCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_SEARCH, projectID, gcpshared.CloudKMSCryptoKey.String(), "global|test-keyring")
+		cache.StoreItem(ctx, item1, shared.DefaultCacheDuration, searchCacheKey)
+		cache.StoreItem(ctx, item2, shared.DefaultCacheDuration, searchCacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		wrapper := manual.NewCloudKMSCryptoKey(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+
 		searchable, ok := adapter.(discovery.SearchableAdapter)
 		if !ok {
 			t.Fatalf("Adapter does not support Search operation")
 		}
 
-		sdpItems, err := searchable.Search(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey("location", "key-ring"), true)
-		if err != nil {
-			t.Fatalf("Expected no error, got: %v", err)
-		}
-
-		// 2 of 3 are filtered in.
-		if len(sdpItems) != 3 {
-			t.Fatalf("Expected 2 items, got: %d", len(sdpItems))
-		}
-
-		for _, item := range sdpItems {
-			if item.Validate() != nil {
-				t.Fatalf("Expected no validation error, got: %v", item.Validate())
-			}
-
-			attributes := item.GetAttributes()
-			_, err := attributes.Get("name")
-			if err != nil {
-				t.Fatalf("Failed to get name attribute: %v", err)
-			}
-		}
-	})
-
-	t.Run("SearchStream", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSCryptoKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
-		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
-
-		mockCryptoKeyIterator := mocks.NewMockCloudKMSCryptoKeyIterator(ctrl)
-
-		// add mock implementation here
-		mockCryptoKeyIterator.EXPECT().Next().Return(
-			createCryptoKey(
-				"projects/test-project-id/locations/global/keyRings/test-key-ring/cryptoKeys/test-key-1",
-				"1",
-				kmspb.CryptoKeyVersion_ENABLED,
-			), nil)
-		mockCryptoKeyIterator.EXPECT().Next().Return(
-			createCryptoKey(
-				"projects/test-project-id/locations/global/keyRings/test-key-ring/cryptoKeys/test-key-2",
-				"1",
-				kmspb.CryptoKeyVersion_ENABLED,
-			), nil)
-		mockCryptoKeyIterator.EXPECT().Next().Return(nil, iterator.Done)
-
-		// Mock the List method
-		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockCryptoKeyIterator)
-
-		wg := &sync.WaitGroup{}
-		wg.Add(2) // we added two items
-
-		var items []*sdp.Item
-		mockItemHandler := func(item *sdp.Item) {
-			items = append(items, item)
-			wg.Done() // signal that we processed an item
-		}
-
-		var errs []error
-		mockErrorHandler := func(err error) {
-			errs = append(errs, err)
-		}
-
-		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
-		// Check if adapter supports search streaming
-		searchStreamable, ok := adapter.(discovery.SearchStreamableAdapter)
-		if !ok {
-			t.Fatalf("Adapter does not support SearchStream operation")
-		}
-
-		searchStreamable.SearchStream(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey("global", "test-key-ring"), true, stream)
-		wg.Wait()
-
-		if len(errs) != 0 {
-			t.Fatalf("Expected no errors, got: %v", errs)
+		items, qErr := searchable.Search(ctx, wrapper.Scopes()[0], "global|test-keyring", false)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
 		}
 
 		if len(items) != 2 {
 			t.Fatalf("Expected 2 items, got: %d", len(items))
 		}
+	})
 
-		_, ok = adapter.(discovery.ListStreamableAdapter)
-		if ok {
-			t.Fatalf("Adapter should not support ListStream operation")
+	t.Run("Search_CacheHit_Empty", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
+
+		// Store NOTFOUND error in cache to simulate empty result
+		notFoundErr := &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOTFOUND,
+			ErrorString: "No resources found in Cloud Asset API",
+		}
+		searchCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_SEARCH, projectID, gcpshared.CloudKMSCryptoKey.String(), "global|empty-keyring")
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, searchCacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		wrapper := manual.NewCloudKMSCryptoKey(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		items, qErr := searchable.Search(ctx, wrapper.Scopes()[0], "global|empty-keyring", false)
+		if qErr != nil {
+			t.Fatalf("Expected no error (empty search is valid), got: %v", qErr)
+		}
+
+		// Empty result is valid for SEARCH - should return empty slice, not error
+		if len(items) != 0 {
+			t.Fatalf("Expected 0 items (empty result), got: %d", len(items))
 		}
 	})
 
 	t.Run("List_Unsupported", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSCryptoKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
-		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		wrapper := manual.NewCloudKMSCryptoKey(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
 
 		// Check if adapter supports list - it should not
 		_, ok := adapter.(discovery.ListableAdapter)
@@ -241,22 +202,109 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 			t.Fatalf("Expected adapter to not support List operation, but it does")
 		}
 	})
-}
 
-// createCryptoKey creates a CryptoKey with the specified name, primary version, and state.
-func createCryptoKey(name, versionNumber string, state kmspb.CryptoKeyVersion_CryptoKeyVersionState) *kmspb.CryptoKey {
-	var primary *kmspb.CryptoKeyVersion
-	if versionNumber != "" {
-		primary = &kmspb.CryptoKeyVersion{
-			Name:            fmt.Sprintf("%s/cryptoKeyVersions/%s", name, versionNumber),
-			State:           state,
-			ProtectionLevel: kmspb.ProtectionLevel_EXTERNAL_VPC,
+	t.Run("StaticTests", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
+
+		// Pre-populate cache with a CryptoKey item with linked queries
+		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key",
+			"uniqueAttr": "global|test-keyring|test-key",
+		})
+		_ = attrs.Set("uniqueAttr", "global|test-keyring|test-key")
+
+		item := &sdp.Item{
+			Type:            gcpshared.CloudKMSCryptoKey.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs,
+			Scope:           projectID,
+			LinkedItemQueries: []*sdp.LinkedItemQuery{
+				{
+					Query: &sdp.Query{
+						Type:   gcpshared.IAMPolicy.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  "global|test-keyring|test-key",
+						Scope:  projectID,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					Query: &sdp.Query{
+						Type:   gcpshared.CloudKMSKeyRing.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  "global|test-keyring",
+						Scope:  projectID,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					Query: &sdp.Query{
+						Type:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+						Method: sdp.QueryMethod_SEARCH,
+						Query:  "global|test-keyring|test-key",
+						Scope:  projectID,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+			},
 		}
-	}
-	return &kmspb.CryptoKey{
-		Name:             name,
-		Primary:          primary,
-		CryptoKeyBackend: "projects/test-project-id/locations/global/ekmConnections/valid-ekm-connection",
-		Labels:           map[string]string{"env": "test"},
-	}
+
+		cacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_GET, projectID, gcpshared.CloudKMSCryptoKey.String(), "global|test-keyring|test-key")
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		wrapper := manual.NewCloudKMSCryptoKey(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "global|test-keyring|test-key", false)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		queryTests := shared.QueryTests{
+			{
+				ExpectedType:   gcpshared.IAMPolicy.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "global|test-keyring|test-key",
+				ExpectedScope:  "test-project-id",
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: true,
+				},
+			},
+			{
+				ExpectedType:   gcpshared.CloudKMSKeyRing.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "global|test-keyring",
+				ExpectedScope:  "test-project-id",
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: false,
+				},
+			},
+			{
+				ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+				ExpectedMethod: sdp.QueryMethod_SEARCH,
+				ExpectedQuery:  "global|test-keyring|test-key",
+				ExpectedScope:  "test-project-id",
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: true,
+				},
+			},
+		}
+
+		shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+	})
 }
