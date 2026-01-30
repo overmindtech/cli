@@ -90,30 +90,30 @@ func tryLoadText(ctx context.Context, fileName string) string {
 	return strings.TrimSpace(string(bytes))
 }
 
-func createBlastRadiusConfig(maxDepth, maxItems int32, maxTime, changeAnalysisMaxTimeout time.Duration) (*sdp.BlastRadiusConfig, error) {
+func createBlastRadiusConfig(maxDepth, maxItems int32, maxTime, changeAnalysisTargetDuration time.Duration) (*sdp.BlastRadiusConfig, error) {
 	var blastRadiusConfigOverride *sdp.BlastRadiusConfig
-	if maxDepth > 0 || maxItems > 0 || maxTime > 0 || changeAnalysisMaxTimeout > 0 {
+	if maxDepth > 0 || maxItems > 0 || maxTime > 0 || changeAnalysisTargetDuration > 0 {
 		blastRadiusConfigOverride = &sdp.BlastRadiusConfig{
 			MaxItems:  maxItems,
 			LinkDepth: maxDepth,
 		}
 		// this is for backward compatibility, remove in a future release
 		if maxTime > 0 {
-			// we convert the maxTime to changeAnalysisMaxTimeout, this means multiplying the (blast radius calculation timeout) maxTime by 1.5
-			// eg 10 minute max (blast radius calculation) -> 15 minute changeanalysis max timeout
-			blastRadiusConfigOverride.ChangeAnalysisMaxTimeout = durationpb.New(time.Duration(float64(maxTime) * 1.5))
+			// we convert the maxTime to changeAnalysisTargetDuration, this means multiplying the (blast radius calculation timeout) maxTime by 1.5
+			// eg 10 minute max (blast radius calculation) -> 15 minute target duration
+			blastRadiusConfigOverride.ChangeAnalysisTargetDuration = durationpb.New(time.Duration(float64(maxTime) * 1.5))
 		}
-		// Add changeAnalysisMaxTimeout if specified
-		if changeAnalysisMaxTimeout > 0 {
-			blastRadiusConfigOverride.ChangeAnalysisMaxTimeout = durationpb.New(changeAnalysisMaxTimeout)
+		// Add changeAnalysisTargetDuration if specified
+		if changeAnalysisTargetDuration > 0 {
+			blastRadiusConfigOverride.ChangeAnalysisTargetDuration = durationpb.New(changeAnalysisTargetDuration)
 		}
 	}
 
-	// validate the ChangeAnalysisMaxTimeout
-	if blastRadiusConfigOverride != nil && blastRadiusConfigOverride.GetChangeAnalysisMaxTimeout() != nil {
-		changeAnalysisMaxTimeout = blastRadiusConfigOverride.GetChangeAnalysisMaxTimeout().AsDuration()
-		if changeAnalysisMaxTimeout < 1*time.Minute || changeAnalysisMaxTimeout > 30*time.Minute {
-			return nil, flagError{"--change-analysis-max-timeout must be between 1 minute and 30 minutes"}
+	// validate the ChangeAnalysisTargetDuration
+	if blastRadiusConfigOverride != nil && blastRadiusConfigOverride.GetChangeAnalysisTargetDuration() != nil {
+		changeAnalysisTargetDuration = blastRadiusConfigOverride.GetChangeAnalysisTargetDuration().AsDuration()
+		if changeAnalysisTargetDuration < 1*time.Minute || changeAnalysisTargetDuration > 30*time.Minute {
+			return nil, flagError{"--change-analysis-target-duration must be between 1 minute and 30 minutes"}
 		}
 	}
 
@@ -261,9 +261,9 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	maxDepth := viper.GetInt32("blast-radius-link-depth")
 	maxItems := viper.GetInt32("blast-radius-max-items")
 	maxTime := viper.GetDuration("blast-radius-max-time")
-	changeAnalysisMaxTimeout := viper.GetDuration("change-analysis-max-timeout")
+	changeAnalysisTargetDuration := viper.GetDuration("change-analysis-target-duration")
 
-	blastRadiusConfigOverride, err := createBlastRadiusConfig(maxDepth, maxItems, maxTime, changeAnalysisMaxTimeout)
+	blastRadiusConfigOverride, err := createBlastRadiusConfig(maxDepth, maxItems, maxTime, changeAnalysisTargetDuration)
 	if err != nil {
 		return err
 	}
@@ -394,8 +394,8 @@ func init() {
 	submitPlanCmd.PersistentFlags().Int32("blast-radius-max-items", 0, "Used in combination with '--blast-radius-link-depth' to customise how many items are included in the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
 
 	submitPlanCmd.PersistentFlags().Duration("blast-radius-max-time", 0, "Maximum time duration for blast radius calculation (e.g., '5m', '15m', '30m'). When the time limit is reached, the analysis continues with risks identified up to that point. Defaults to the account level settings (QUICK: 10m, DETAILED: 15m, FULL: 30m). Valid range: 1m to 30m.")
-	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("blast-radius-max-time", "This flag is no longer used and will be removed in a future release. Use the '--change-analysis-max-timeout' flag instead.")
-	submitPlanCmd.PersistentFlags().Duration("change-analysis-max-timeout", 0, "Maximum time duration for change analysis (e.g., '5m', '15m', '30m'). When the time limit is reached, the analysis continues with risks identified up to that point. Defaults to the account level settings (QUICK: 10m, DETAILED: 15m, FULL: 30m). Valid range: 1m to 30m.")
+	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("blast-radius-max-time", "This flag is no longer used and will be removed in a future release. Use the '--change-analysis-target-duration' flag instead.")
+	submitPlanCmd.PersistentFlags().Duration("change-analysis-target-duration", 0, "Target duration for change analysis planning (e.g., '5m', '15m', '30m'). This is NOT a hard deadline - the blast radius phase uses 67% of this target to stop gracefully. The job can run slightly past this target and is only hard-stopped at 30 minutes. Defaults to the account level settings (QUICK: 10m, DETAILED: 15m, FULL: 30m). Valid range: 1m to 30m.")
 	submitPlanCmd.PersistentFlags().String("auto-tag-rules", "", "The path to the auto-tag rules file. If not provided, it will check the default location which is '.overmind/auto-tag-rules.yaml'. If no rules are found locally, the rules configured through the UI are used.")
 	submitPlanCmd.PersistentFlags().String("signal-config", "", "The path to the signal config file. If not provided, it will check the default location which is '.overmind/signal-config.yaml'. If no config is found locally, the config configured through the UI is used.")
 }
