@@ -478,4 +478,12 @@ var PredefinedRoles = map[string]role{
 			"cloudkms.locations.list",
 		},
 	},
+	"roles/cloudasset.viewer": {
+		Role: "roles/cloudasset.viewer",
+		// Read-only access to Cloud Asset Inventory.
+		Link: "https://cloud.google.com/iam/docs/roles-permissions/cloudasset#cloudasset.viewer",
+		IAMPermissions: []string{
+			"cloudasset.assets.listResource",
+		},
+	},
 }

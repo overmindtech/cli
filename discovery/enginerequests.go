@@ -357,11 +357,6 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 		// will only ever have a cache hit if the query is identical
 	}
 
-	span.SetAttributes(
-		attribute.String("ovm.adapter.queryType", q.GetType()),
-		attribute.String("ovm.adapter.queryScope", q.GetScope()),
-	)
-
 	// Ensure that the span is closed when the context is done. This is based on
 	// the assumption that some adapters may not respect the context deadline and
 	// may run indefinitely. This ensures that we at least get notified about

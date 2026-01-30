@@ -261,38 +261,6 @@ func (l *Linker) linkIPOrDNS(ctx context.Context, fromSDPItem *sdp.Item, toItemV
 	}
 }
 
-func (l *Linker) tryGlobalResources(fromSDPItem *sdp.Item, toItemValue string) { //nolint: unused
-	if isIPAddress(toItemValue) {
-		fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-			Query: &sdp.Query{
-				Type:   "ip",
-				Method: sdp.QueryMethod_GET,
-				Query:  toItemValue,
-				Scope:  "global",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
-		})
-	}
-
-	if isDNSName(toItemValue) {
-		fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-			Query: &sdp.Query{
-				Type:   "dns",
-				Method: sdp.QueryMethod_SEARCH,
-				Query:  toItemValue,
-				Scope:  "global",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
-		})
-	}
-}
-
 func isIPAddress(s string) bool {
 	return net.ParseIP(s) != nil
 }

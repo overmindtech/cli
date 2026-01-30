@@ -2,14 +2,8 @@ package manual_test
 
 import (
 	"context"
-	"strings"
-	"sync"
+	"errors"
 	"testing"
-
-	"cloud.google.com/go/kms/apiv1/kmspb"
-	"go.uber.org/mock/gomock"
-	"google.golang.org/api/iterator"
-	locationpb "google.golang.org/genproto/googleapis/cloud/location"
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
@@ -17,293 +11,297 @@ import (
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/manual"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
-	"github.com/overmindtech/cli/sources/gcp/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 )
 
 func TestCloudKMSKeyRing(t *testing.T) {
 	ctx := context.Background()
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-
-	mockClient := mocks.NewMockCloudKMSKeyRingClient(ctrl)
 	projectID := "test-project-id"
-	location := "us"
-	keyRingName := "test-keyring"
 
-	t.Run("Get", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSKeyRing(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+	t.Run("Get_CacheHit", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
 
-		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createKeyRing(projectID, location, keyRingName), nil)
+		// Pre-populate cache with a KeyRing item (simulating what the loader would do)
+		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring",
+			"uniqueAttr": "us|test-keyring",
+		})
+		_ = attrs.Set("uniqueAttr", "us|test-keyring")
 
-		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+		item := &sdp.Item{
+			Type:            gcpshared.CloudKMSKeyRing.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs,
+			Scope:           projectID,
+		}
 
-		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], shared.CompositeLookupKey(location, keyRingName), true)
+		cacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_GET, projectID, gcpshared.CloudKMSKeyRing.String(), "us|test-keyring")
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+
+		// Create loader that won't need to make API calls since cache is populated
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		wrapper := manual.NewCloudKMSKeyRing(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "us|test-keyring", false)
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)
 		}
 
-		t.Run("StaticTests", func(t *testing.T) {
-			queryTests := shared.QueryTests{
-				{
-					ExpectedType:   gcpshared.IAMPolicy.String(),
-					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "us|test-keyring",
-					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
-					ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
-					ExpectedMethod: sdp.QueryMethod_SEARCH,
-					ExpectedQuery:  "us|test-keyring",
-					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
-				},
-			}
-
-			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
-		})
-	})
-
-	t.Run("Search", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSKeyRing(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
-		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
-
-		mockIterator := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
-
-		mockIterator.EXPECT().Next().Return(createKeyRing(projectID, location, "test-keyring-1"), nil)
-		mockIterator.EXPECT().Next().Return(createKeyRing(projectID, location, "test-keyring-2"), nil)
-		mockIterator.EXPECT().Next().Return(nil, iterator.Done)
-
-		mockClient.EXPECT().Search(ctx, gomock.Any()).Return(mockIterator)
-
-		// Check if adapter supports searching
-		searchable, ok := adapter.(discovery.SearchableAdapter)
-		if !ok {
-			t.Fatalf("Adapter does not support Search operation")
+		if sdpItem == nil {
+			t.Fatalf("Expected item, got nil")
 		}
 
-		sdpItems, err := searchable.Search(ctx, wrapper.Scopes()[0], location, true)
+		uniqueAttr, err := sdpItem.GetAttributes().Get("uniqueAttr")
 		if err != nil {
-			t.Fatalf("Expected no error, got: %v", err)
+			t.Fatalf("Failed to get uniqueAttr: %v", err)
 		}
-
-		expectedCount := 2
-		actualCount := len(sdpItems)
-		if actualCount != expectedCount {
-			t.Fatalf("Expected %d items, got: %d", expectedCount, actualCount)
-		}
-		for _, item := range sdpItems {
-			if item.Validate() != nil {
-				t.Fatalf("Expected no validation error, got: %v", item.Validate())
-			}
+		if uniqueAttr != "us|test-keyring" {
+			t.Fatalf("Expected uniqueAttr 'us|test-keyring', got: %v", uniqueAttr)
 		}
 	})
 
-	t.Run("SearchStream", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSKeyRing(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
-		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+	t.Run("Get_CacheMiss_NotFound", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
 
-		mockIterator := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
-
-		mockIterator.EXPECT().Next().Return(createKeyRing(projectID, location, "test-keyring-1"), nil)
-		mockIterator.EXPECT().Next().Return(createKeyRing(projectID, location, "test-keyring-2"), nil)
-		mockIterator.EXPECT().Next().Return(nil, iterator.Done)
-
-		mockClient.EXPECT().Search(ctx, gomock.Any()).Return(mockIterator)
-
-		var items []*sdp.Item
-		var errs []error
-		wg := &sync.WaitGroup{}
-		wg.Add(2)
-
-		mockItemHandler := func(item *sdp.Item) {
-			items = append(items, item)
-			wg.Done()
+		// Pre-populate cache with a NOTFOUND error to simulate item not existing
+		notFoundErr := &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOTFOUND,
+			ErrorString: "No resources found in Cloud Asset API",
 		}
-		mockErrorHandler := func(err error) {
-			errs = append(errs, err)
-		}
+		cacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_GET, projectID, gcpshared.CloudKMSKeyRing.String(), "us|nonexistent")
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 
-		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
-		// Check if adapter supports search streaming
-		searchStreamable, ok := adapter.(discovery.SearchStreamableAdapter)
-		if !ok {
-			t.Fatalf("Adapter does not support SearchStream operation")
-		}
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
-		searchStreamable.SearchStream(ctx, wrapper.Scopes()[0], location, true, stream)
-		wg.Wait()
+		wrapper := manual.NewCloudKMSKeyRing(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
 
-		if len(errs) > 0 {
-			t.Fatalf("Expected no errors, got: %v", errs)
+		// Get a non-existent item - should return NOTFOUND from cache
+		_, err := adapter.Get(ctx, wrapper.Scopes()[0], "us|nonexistent", false)
+		if err == nil {
+			t.Fatalf("Expected NOTFOUND error, got nil")
 		}
-		if len(items) != 2 {
-			t.Fatalf("Expected 2 items, got: %d", len(items))
+		var qErr *sdp.QueryError
+		if !errors.As(err, &qErr) {
+			t.Fatalf("Expected QueryError, got: %T - %v", err, err)
 		}
-		for _, item := range items {
-			if item.Validate() != nil {
-				t.Fatalf("Expected no validation error, got: %v", item.Validate())
-			}
-		}
-
-		// Verify adapter supports ListStream
-		_, ok = adapter.(discovery.ListStreamableAdapter)
-		if !ok {
-			t.Fatalf("Adapter should support ListStream operation")
+		if qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("Expected NOTFOUND error type, got: %v", qErr.GetErrorType())
 		}
 	})
 
-	t.Run("List", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSKeyRing(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
-		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+	t.Run("List_CacheHit", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
 
-		// Mock ListLocations
-		mockLocationIterator := mocks.NewMockCloudKMSLocationIterator(ctrl)
-		mockLocationIterator.EXPECT().Next().Return(createLocation(projectID, "us-central1"), nil)
-		mockLocationIterator.EXPECT().Next().Return(createLocation(projectID, "europe-west1"), nil)
-		mockLocationIterator.EXPECT().Next().Return(nil, iterator.Done)
+		// Pre-populate cache with KeyRing items under LIST cache key
+		attrs1, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring-1",
+			"uniqueAttr": "us|test-keyring-1",
+		})
+		_ = attrs1.Set("uniqueAttr", "us|test-keyring-1")
 
-		mockClient.EXPECT().ListLocations(ctx, gomock.Any()).Return(mockLocationIterator)
+		attrs2, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring-2",
+			"uniqueAttr": "us|test-keyring-2",
+		})
+		_ = attrs2.Set("uniqueAttr", "us|test-keyring-2")
 
-		// Mock Search for first location (us-central1)
-		mockKeyRingIterator1 := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
-		mockKeyRingIterator1.EXPECT().Next().Return(createKeyRing(projectID, "us-central1", "keyring-1"), nil)
-		mockKeyRingIterator1.EXPECT().Next().Return(nil, iterator.Done)
-
-		// Mock Search for second location (europe-west1)
-		mockKeyRingIterator2 := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
-		mockKeyRingIterator2.EXPECT().Next().Return(createKeyRing(projectID, "europe-west1", "keyring-2"), nil)
-		mockKeyRingIterator2.EXPECT().Next().Return(createKeyRing(projectID, "europe-west1", "keyring-3"), nil)
-		mockKeyRingIterator2.EXPECT().Next().Return(nil, iterator.Done)
-
-	// Expect Search calls for both locations
-	// Use gomock.Any() for ctx because the pool with context wraps it with cancellation
-	mockClient.EXPECT().Search(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, req *kmspb.ListKeyRingsRequest, opts ...any) gcpshared.CloudKMSKeyRingIterator {
-		if strings.Contains(req.GetParent(), "us-central1") {
-			return mockKeyRingIterator1
+		item1 := &sdp.Item{
+			Type:            gcpshared.CloudKMSKeyRing.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs1,
+			Scope:           projectID,
 		}
-		return mockKeyRingIterator2
-	}).Times(2)
+		item2 := &sdp.Item{
+			Type:            gcpshared.CloudKMSKeyRing.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs2,
+			Scope:           projectID,
+		}
 
-		// Check if adapter supports listing
+		listCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_LIST, projectID, gcpshared.CloudKMSKeyRing.String(), "")
+		cache.StoreItem(ctx, item1, shared.DefaultCacheDuration, listCacheKey)
+		cache.StoreItem(ctx, item2, shared.DefaultCacheDuration, listCacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		wrapper := manual.NewCloudKMSKeyRing(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+
 		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
 			t.Fatalf("Adapter does not support List operation")
 		}
 
-		sdpItems, err := listable.List(ctx, wrapper.Scopes()[0], true)
-		if err != nil {
-			t.Fatalf("Expected no error, got: %v", err)
+		items, qErr := listable.List(ctx, wrapper.Scopes()[0], false)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
 		}
 
-		// Expect 3 items total (1 from us-central1, 2 from europe-west1)
-		if len(sdpItems) != 3 {
-			t.Fatalf("Expected 3 items, got: %d", len(sdpItems))
-		}
-
-		for _, item := range sdpItems {
-			if item.Validate() != nil {
-				t.Fatalf("Expected no validation error, got: %v", item.Validate())
-			}
+		if len(items) != 2 {
+			t.Fatalf("Expected 2 items, got: %d", len(items))
 		}
 	})
 
-	t.Run("ListStream", func(t *testing.T) {
-		wrapper := manual.NewCloudKMSKeyRing(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
-		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+	t.Run("List_CacheHit_Empty", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
 
-		// Mock ListLocations
-		mockLocationIterator := mocks.NewMockCloudKMSLocationIterator(ctrl)
-		mockLocationIterator.EXPECT().Next().Return(createLocation(projectID, "us-central1"), nil)
-		mockLocationIterator.EXPECT().Next().Return(createLocation(projectID, "europe-west1"), nil)
-		mockLocationIterator.EXPECT().Next().Return(nil, iterator.Done)
-
-		mockClient.EXPECT().ListLocations(ctx, gomock.Any()).Return(mockLocationIterator)
-
-		// Mock Search for first location (us-central1)
-		mockKeyRingIterator1 := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
-		mockKeyRingIterator1.EXPECT().Next().Return(createKeyRing(projectID, "us-central1", "keyring-1"), nil)
-		mockKeyRingIterator1.EXPECT().Next().Return(nil, iterator.Done)
-
-		// Mock Search for second location (europe-west1)
-		mockKeyRingIterator2 := mocks.NewMockCloudKMSKeyRingIterator(ctrl)
-		mockKeyRingIterator2.EXPECT().Next().Return(createKeyRing(projectID, "europe-west1", "keyring-2"), nil)
-		mockKeyRingIterator2.EXPECT().Next().Return(createKeyRing(projectID, "europe-west1", "keyring-3"), nil)
-		mockKeyRingIterator2.EXPECT().Next().Return(nil, iterator.Done)
-
-	// Expect Search calls for both locations (order may vary due to parallelism)
-	// Use gomock.Any() for ctx because the pool with context wraps it with cancellation
-	mockClient.EXPECT().Search(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, req *kmspb.ListKeyRingsRequest, opts ...any) gcpshared.CloudKMSKeyRingIterator {
-		if strings.Contains(req.GetParent(), "us-central1") {
-			return mockKeyRingIterator1
+		// Store NOTFOUND error in cache to simulate empty result
+		notFoundErr := &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOTFOUND,
+			ErrorString: "No resources found in Cloud Asset API",
 		}
-		return mockKeyRingIterator2
-	}).Times(2)
+		listCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_LIST, projectID, gcpshared.CloudKMSKeyRing.String(), "")
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, listCacheKey)
 
-		var items []*sdp.Item
-		var itemsMu sync.Mutex
-		var errs []error
-		var errsMu sync.Mutex
-		wg := &sync.WaitGroup{}
-		wg.Add(3) // 3 total items expected
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
-		mockItemHandler := func(item *sdp.Item) {
-			itemsMu.Lock()
-			items = append(items, item)
-			itemsMu.Unlock()
-			wg.Done()
-		}
-		mockErrorHandler := func(err error) {
-			errsMu.Lock()
-			errs = append(errs, err)
-			errsMu.Unlock()
-		}
+		wrapper := manual.NewCloudKMSKeyRing(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
 
-		stream := discovery.NewQueryResultStream(mockItemHandler, mockErrorHandler)
-
-		// Check if adapter supports list streaming
-		listStreamable, ok := adapter.(discovery.ListStreamableAdapter)
+		listable, ok := adapter.(discovery.ListableAdapter)
 		if !ok {
-			t.Fatalf("Adapter does not support ListStream operation")
+			t.Fatalf("Adapter does not support List operation")
 		}
 
-		listStreamable.ListStream(ctx, wrapper.Scopes()[0], true, stream)
-		wg.Wait()
+		items, qErr := listable.List(ctx, wrapper.Scopes()[0], false)
+		if qErr != nil {
+			t.Fatalf("Expected no error (empty list is valid), got: %v", qErr)
+		}
 
-		if len(errs) > 0 {
-			t.Fatalf("Expected no errors, got: %v", errs)
-		}
-		if len(items) != 3 {
-			t.Fatalf("Expected 3 items, got: %d", len(items))
-		}
-		for _, item := range items {
-			if item.Validate() != nil {
-				t.Fatalf("Expected no validation error, got: %v", item.Validate())
-			}
+		// Empty result is valid for LIST - should return empty slice, not error
+		if len(items) != 0 {
+			t.Fatalf("Expected 0 items (empty result), got: %d", len(items))
 		}
 	})
-}
 
-// createKeyRing creates a KeyRing with the specified project, location, and keyRing name.
-func createKeyRing(projectID, location, keyRingName string) *kmspb.KeyRing {
-	return &kmspb.KeyRing{
-		Name:       "projects/" + projectID + "/locations/" + location + "/keyRings/" + keyRingName,
-		CreateTime: nil, // You can set a timestamp if needed
-	}
-}
+	t.Run("Search_CacheHit", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
 
-// createLocation creates a Location with the specified project and location ID.
-func createLocation(projectID, locationID string) *locationpb.Location {
-	return &locationpb.Location{
-		Name:        "projects/" + projectID + "/locations/" + locationID,
-		LocationId:  locationID,
-		DisplayName: locationID,
-	}
+		// Pre-populate cache with KeyRing items under SEARCH cache key (by location)
+		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring",
+			"uniqueAttr": "us|test-keyring",
+		})
+		_ = attrs.Set("uniqueAttr", "us|test-keyring")
+
+		item := &sdp.Item{
+			Type:            gcpshared.CloudKMSKeyRing.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs,
+			Scope:           projectID,
+		}
+
+		searchCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_SEARCH, projectID, gcpshared.CloudKMSKeyRing.String(), "us")
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, searchCacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		wrapper := manual.NewCloudKMSKeyRing(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		items, qErr := searchable.Search(ctx, wrapper.Scopes()[0], "us", false)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		if len(items) != 1 {
+			t.Fatalf("Expected 1 item, got: %d", len(items))
+		}
+	})
+
+	t.Run("StaticTests", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
+
+		// Pre-populate cache with a KeyRing item
+		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring",
+			"uniqueAttr": "us|test-keyring",
+		})
+		_ = attrs.Set("uniqueAttr", "us|test-keyring")
+
+		item := &sdp.Item{
+			Type:            gcpshared.CloudKMSKeyRing.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs,
+			Scope:           projectID,
+			LinkedItemQueries: []*sdp.LinkedItemQuery{
+				{
+					Query: &sdp.Query{
+						Type:   gcpshared.IAMPolicy.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  "us|test-keyring",
+						Scope:  projectID,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					Query: &sdp.Query{
+						Type:   gcpshared.CloudKMSCryptoKey.String(),
+						Method: sdp.QueryMethod_SEARCH,
+						Query:  "us|test-keyring",
+						Scope:  projectID,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  false,
+						Out: true,
+					},
+				},
+			},
+		}
+
+		cacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_GET, projectID, gcpshared.CloudKMSKeyRing.String(), "us|test-keyring")
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		wrapper := manual.NewCloudKMSKeyRing(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "us|test-keyring", false)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		queryTests := shared.QueryTests{
+			{
+				ExpectedType:   gcpshared.IAMPolicy.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "us|test-keyring",
+				ExpectedScope:  "test-project-id",
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: true,
+				},
+			},
+			{
+				ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
+				ExpectedMethod: sdp.QueryMethod_SEARCH,
+				ExpectedQuery:  "us|test-keyring",
+				ExpectedScope:  "test-project-id",
+				ExpectedBlastPropagation: &sdp.BlastPropagation{
+					In:  false,
+					Out: true,
+				},
+			},
+		}
+
+		shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+	})
 }
