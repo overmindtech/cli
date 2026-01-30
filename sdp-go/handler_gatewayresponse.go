@@ -6,8 +6,8 @@ import (
 	"context"
 
 	"github.com/nats-io/nats.go"
-	"github.com/overmindtech/cli/tracing"
 	"go.opentelemetry.io/otel/trace"
+	"github.com/overmindtech/cli/tracing"
 )
 
 func NewGatewayResponseHandler(spanName string, h func(ctx context.Context, i *GatewayResponse), spanOpts ...trace.SpanStartOption) nats.MsgHandler {
