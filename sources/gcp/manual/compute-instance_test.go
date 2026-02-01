@@ -751,6 +751,240 @@ func TestComputeInstance(t *testing.T) {
 		})
 	})
 
+	t.Run("GetWithMetadata", func(t *testing.T) {
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
+
+		// Test with instance-template and created-by metadata
+		instanceTemplateName := "my-template"
+		instanceTemplateURI := fmt.Sprintf("projects/%s/global/instanceTemplates/%s", projectID, instanceTemplateName)
+		igmName := "my-mig"
+		igmURI := fmt.Sprintf("projects/%s/regions/us-central1/instanceGroupManagers/%s", projectID, igmName)
+
+		instance := createComputeInstance("test-instance", computepb.Instance_RUNNING)
+		instance.Metadata = &computepb.Metadata{
+			Items: []*computepb.Items{
+				{
+					Key:   ptr.To("instance-template"),
+					Value: ptr.To(instanceTemplateURI),
+				},
+				{
+					Key:   ptr.To("created-by"),
+					Value: ptr.To(igmURI),
+				},
+			},
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(instance, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:   gcpshared.ComputeDisk.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-instance",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.3",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "default",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			// Add the metadata-based links
+			queryTests := append(baseQueries,
+				shared.QueryTest{
+					ExpectedType:   gcpshared.ComputeInstanceTemplate.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  instanceTemplateName,
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				shared.QueryTest{
+					ExpectedType:   gcpshared.ComputeInstanceGroupManager.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  igmName,
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			)
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("GetWithRegionalInstanceTemplate", func(t *testing.T) {
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
+
+		// Test with regional instance template
+		instanceTemplateName := "my-regional-template"
+		instanceTemplateURI := fmt.Sprintf("projects/%s/regions/us-central1/instanceTemplates/%s", projectID, instanceTemplateName)
+
+		instance := createComputeInstance("test-instance", computepb.Instance_RUNNING)
+		instance.Metadata = &computepb.Metadata{
+			Items: []*computepb.Items{
+				{
+					Key:   ptr.To("instance-template"),
+					Value: ptr.To(instanceTemplateURI),
+				},
+			},
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(instance, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			// Base queries that are always present
+			baseQueries := shared.QueryTests{
+				{
+					ExpectedType:   gcpshared.ComputeDisk.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-instance",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.3",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "default",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeNetwork.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "network",
+					ExpectedScope:  projectID,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			}
+
+			// Add the metadata-based link for regional instance template
+			queryTests := append(baseQueries,
+				shared.QueryTest{
+					ExpectedType:   gcpshared.ComputeRegionInstanceTemplate.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  instanceTemplateName,
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+			)
+
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
 	t.Run("SupportsWildcardScope", func(t *testing.T) {
 		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
