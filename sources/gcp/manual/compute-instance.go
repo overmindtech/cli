@@ -63,6 +63,9 @@ func (c computeInstanceWrapper) PotentialLinks() map[shared.ItemType]bool {
 		gcpshared.CloudKMSCryptoKey,
 		gcpshared.CloudKMSCryptoKeyVersion,
 		gcpshared.ComputeZone,
+		gcpshared.ComputeInstanceTemplate,
+		gcpshared.ComputeRegionInstanceTemplate,
+		gcpshared.ComputeInstanceGroupManager,
 	)
 }
 
@@ -579,6 +582,61 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 					Out: false,
 				},
 			})
+		}
+	}
+
+	// Link to instance template and instance group manager from metadata
+	if metadata := instance.GetMetadata(); metadata != nil {
+		for _, item := range metadata.GetItems() {
+			key := item.GetKey()
+			value := item.GetValue()
+
+			switch key {
+			case "instance-template":
+				// Link to instance template (global or regional)
+				if value != "" {
+					templateName := gcpshared.LastPathComponent(value)
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, value)
+					if err == nil && templateName != "" {
+						templateType := gcpshared.ComputeInstanceTemplate
+						if strings.Contains(value, "/regions/") {
+							templateType = gcpshared.ComputeRegionInstanceTemplate
+						}
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   templateType.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  templateName,
+								Scope:  scope,
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
+				}
+			case "created-by":
+				// Link to instance group manager (zonal or regional)
+				if value != "" {
+					igmName := gcpshared.LastPathComponent(value)
+					scope, err := gcpshared.ExtractScopeFromURI(ctx, value)
+					if err == nil && igmName != "" {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   gcpshared.ComputeInstanceGroupManager.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  igmName,
+								Scope:  scope,
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: false,
+							},
+						})
+					}
+				}
+			}
 		}
 	}
 
