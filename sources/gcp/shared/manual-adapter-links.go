@@ -508,24 +508,25 @@ func AWSLinkByARN(awsItem string) func(_, _, arn string, blastPropagation *sdp.B
 //
 // Expects that the query will have all the necessary information to create the linked item query.
 var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery{
-	ComputeInstance:               ZoneBaseLinkedItemQueryByName(ComputeInstance),
-	ComputeInstanceGroup:          ZoneBaseLinkedItemQueryByName(ComputeInstanceGroup),
-	ComputeInstanceGroupManager:   ZoneBaseLinkedItemQueryByName(ComputeInstanceGroupManager),
-	ComputeAutoscaler:             ZoneBaseLinkedItemQueryByName(ComputeAutoscaler),
-	ComputeDisk:                   ZoneBaseLinkedItemQueryByName(ComputeDisk),
-	ComputeReservation:            ZoneBaseLinkedItemQueryByName(ComputeReservation),
-	ComputeNodeGroup:              ZoneBaseLinkedItemQueryByName(ComputeNodeGroup),
-	ComputeInstantSnapshot:        ZoneBaseLinkedItemQueryByName(ComputeInstantSnapshot),
-	ComputeMachineImage:           ProjectBaseLinkedItemQueryByName(ComputeMachineImage),
-	ComputeSecurityPolicy:         ProjectBaseLinkedItemQueryByName(ComputeSecurityPolicy),
-	ComputeSnapshot:               ProjectBaseLinkedItemQueryByName(ComputeSnapshot),
-	ComputeHealthCheck:            HealthCheckLinker,             // Handles both global and regional health checks
-	ComputeBackendService:         BackendServiceOrBucketLinker, // Handles both global and regional backend services, plus backend buckets
-	ComputeImage:                  ComputeImageLinker, // Custom linker that uses SEARCH for all image references (handles both names and families)
-	ComputeAddress:                RegionBaseLinkedItemQueryByName(ComputeAddress),
-	ComputeForwardingRule:         RegionBaseLinkedItemQueryByName(ComputeForwardingRule),
-	ComputeInterconnectAttachment: RegionBaseLinkedItemQueryByName(ComputeInterconnectAttachment),
-	ComputeNodeTemplate:           RegionBaseLinkedItemQueryByName(ComputeNodeTemplate),
+	ComputeInstance:                   ZoneBaseLinkedItemQueryByName(ComputeInstance),
+	ComputeInstanceGroup:              ZoneBaseLinkedItemQueryByName(ComputeInstanceGroup),
+	ComputeInstanceGroupManager:       ZoneBaseLinkedItemQueryByName(ComputeInstanceGroupManager),
+	ComputeRegionInstanceGroupManager: RegionBaseLinkedItemQueryByName(ComputeRegionInstanceGroupManager),
+	ComputeAutoscaler:                 ZoneBaseLinkedItemQueryByName(ComputeAutoscaler),
+	ComputeDisk:                       ZoneBaseLinkedItemQueryByName(ComputeDisk),
+	ComputeReservation:                ZoneBaseLinkedItemQueryByName(ComputeReservation),
+	ComputeNodeGroup:                  ZoneBaseLinkedItemQueryByName(ComputeNodeGroup),
+	ComputeInstantSnapshot:            ZoneBaseLinkedItemQueryByName(ComputeInstantSnapshot),
+	ComputeMachineImage:               ProjectBaseLinkedItemQueryByName(ComputeMachineImage),
+	ComputeSecurityPolicy:             ProjectBaseLinkedItemQueryByName(ComputeSecurityPolicy),
+	ComputeSnapshot:                   ProjectBaseLinkedItemQueryByName(ComputeSnapshot),
+	ComputeHealthCheck:                HealthCheckLinker,            // Handles both global and regional health checks
+	ComputeBackendService:             BackendServiceOrBucketLinker, // Handles both global and regional backend services, plus backend buckets
+	ComputeImage:                      ComputeImageLinker,           // Custom linker that uses SEARCH for all image references (handles both names and families)
+	ComputeAddress:                    RegionBaseLinkedItemQueryByName(ComputeAddress),
+	ComputeForwardingRule:             RegionBaseLinkedItemQueryByName(ComputeForwardingRule),
+	ComputeInterconnectAttachment:     RegionBaseLinkedItemQueryByName(ComputeInterconnectAttachment),
+	ComputeNodeTemplate:               RegionBaseLinkedItemQueryByName(ComputeNodeTemplate),
 	// Target proxy types (global, project-scoped) - use polymorphic linker for forwarding rule target field
 	ComputeTargetHttpProxy:  ForwardingRuleTargetLinker,
 	ComputeTargetHttpsProxy: ForwardingRuleTargetLinker,

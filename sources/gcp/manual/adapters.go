@@ -34,10 +34,11 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 		computeSnapshotCli        *compute.SnapshotsClient
 		computeInstantSnapshotCli *compute.InstantSnapshotsClient
 		computeMachineImageCli    *compute.MachineImagesClient
-		backendServiceCli         *compute.BackendServicesClient
-		instanceGroupCli          *compute.InstanceGroupsClient
-		instanceGroupManagerCli   *compute.InstanceGroupManagersClient
-		diskCli                   *compute.DisksClient
+		backendServiceCli              *compute.BackendServicesClient
+		instanceGroupCli               *compute.InstanceGroupsClient
+		instanceGroupManagerCli        *compute.InstanceGroupManagersClient
+		regionInstanceGroupManagerCli  *compute.RegionInstanceGroupManagersClient
+		diskCli                        *compute.DisksClient
 		iamServiceAccountKeyCli   *iamAdmin.IamClient
 		iamServiceAccountCli      *iamAdmin.IamClient
 		kmsLoader                 *shared.CloudKMSAssetLoader
@@ -123,6 +124,11 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 		instanceGroupManagerCli, err = compute.NewInstanceGroupManagersRESTClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute instance group managers client: %w", err)
+		}
+
+		regionInstanceGroupManagerCli, err = compute.NewRegionInstanceGroupManagersRESTClient(ctx, opts...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create compute region instance group managers client: %w", err)
 		}
 
 		diskCli, err = compute.NewDisksRESTClient(ctx, opts...)
@@ -218,6 +224,7 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 			sources.WrapperToAdapter(NewComputeAddress(shared.NewComputeAddressClient(addressCli), regionLocations), cache),
 			sources.WrapperToAdapter(NewComputeForwardingRule(shared.NewComputeForwardingRuleClient(computeForwardingCli), regionLocations), cache),
 			sources.WrapperToAdapter(NewComputeNodeTemplate(shared.NewComputeNodeTemplateClient(nodeTemplateCli), regionLocations), cache),
+			sources.WrapperToAdapter(NewComputeRegionInstanceGroupManager(shared.NewRegionInstanceGroupManagerClient(regionInstanceGroupManagerCli), regionLocations), cache),
 		)
 	}
 

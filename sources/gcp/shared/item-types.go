@@ -7,6 +7,7 @@ var (
 	ComputeInstanceTemplate                                              = shared.NewItemType(GCP, Compute, InstanceTemplate)
 	ComputeMachineImage                                                  = shared.NewItemType(GCP, Compute, MachineImage)
 	ComputeInstanceGroupManager                                          = shared.NewItemType(GCP, Compute, InstanceGroupManager)
+	ComputeRegionInstanceGroupManager                                    = shared.NewItemType(GCP, Compute, RegionalInstanceGroupManager)
 	ComputeSubnetwork                                                    = shared.NewItemType(GCP, Compute, Subnetwork)
 	ComputeNetwork                                                       = shared.NewItemType(GCP, Compute, Network)
 	ComputeImage                                                         = shared.NewItemType(GCP, Compute, Image)
