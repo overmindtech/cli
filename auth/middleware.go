@@ -41,8 +41,8 @@ type UserTokenContextKey struct{}
 // This will be the auth0 `user_id` from the tokens `sub` claim.
 type CurrentSubjectContextKey struct{}
 
-// AuthConfig Configuration for the auth middleware
-type AuthConfig struct {
+// MiddlewareConfig Configuration for the auth middleware
+type MiddlewareConfig struct {
 	Auth0Domain   string
 	Auth0Audience string
 	// The names of the cookies that will be used to authenticate, these will be
@@ -169,7 +169,7 @@ func ExtractAccount(ctx context.Context) (string, error) {
 // therefore the following environment variables must be set: AUTH0_DOMAIN,
 // AUTH0_AUDIENCE. If cookie auth is intended to be used, then AUTH_COOKIE_NAME
 // must also be set.
-func NewAuthMiddleware(config AuthConfig, next http.Handler) http.Handler {
+func NewAuthMiddleware(config MiddlewareConfig, next http.Handler) http.Handler {
 	processOverrides := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		options := []OverrideAuthOptionFunc{}
 
@@ -281,7 +281,7 @@ func withCustomClaims(modify func(*CustomClaims)) OverrideAuthOptionFunc {
 //
 // This middleware also extract custom claims form the token and stores them in
 // CustomClaimsContextKey
-func ensureValidTokenHandler(config AuthConfig, next http.Handler) http.Handler {
+func ensureValidTokenHandler(config MiddlewareConfig, next http.Handler) http.Handler {
 	if config.Auth0Domain == "" && config.IssuerURL == "" && config.Auth0Audience == "" {
 		log.Fatalf("Auth0 configuration is missing")
 	}

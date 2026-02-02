@@ -123,6 +123,36 @@ func (flowConfig ClientCredentialsConfig) TokenSource(ctx context.Context, oAuth
 	return conf.TokenSource(ctx)
 }
 
+// Auth0Config contains credentials for creating impersonation HTTP clients
+// using Auth0's client credentials flow with account impersonation.
+type Auth0Config struct {
+	Domain       string
+	ClientID     string
+	ClientSecret string
+	Audience     string
+}
+
+// ImpersonationHTTPClient creates an HTTP client that can impersonate the specified account.
+// If the config is nil or ClientID is empty, returns a basic tracing HTTP client.
+func (c *Auth0Config) ImpersonationHTTPClient(ctx context.Context, accountName string) *http.Client {
+	if c == nil || c.ClientID == "" {
+		return tracing.HTTPClient()
+	}
+	creds := ClientCredentialsConfig{
+		ClientID:     c.ClientID,
+		ClientSecret: c.ClientSecret,
+	}
+	ts := creds.TokenSource(
+		ctx,
+		fmt.Sprintf("https://%s/oauth/token", c.Domain),
+		c.Audience,
+		WithImpersonateAccount(accountName),
+	)
+	// inject otel into oauth2
+	ctx = context.WithValue(ctx, oauth2.HTTPClient, tracing.HTTPClient())
+	return oauth2.NewClient(ctx, ts)
+}
+
 // natsTokenClient A client that is capable of getting NATS JWTs and signing the
 // required nonce to prove ownership of the NKeys. Satisfies the `TokenClient`
 // interface
@@ -161,7 +191,6 @@ func (n *natsTokenClient) generateJWT(ctx context.Context) error {
 	// If we don't yet have keys generate them
 	if n.keys == nil {
 		err := n.generateKeys()
-
 		if err != nil {
 			return err
 		}
@@ -257,7 +286,6 @@ func (n *natsTokenClient) GetJWT() (string, error) {
 func (n *natsTokenClient) Sign(in []byte) ([]byte, error) {
 	if n.keys == nil {
 		err := n.generateKeys()
-
 		if err != nil {
 			return []byte{}, err
 		}
@@ -303,7 +331,6 @@ func (ats *APIKeyTokenSource) Token() (*oauth2.Token, error) {
 	res, err := ats.apiKeyClient.ExchangeKeyForToken(context.Background(), connect.NewRequest(&sdp.ExchangeKeyForTokenRequest{
 		ApiKey: ats.ApiKey,
 	}))
-
 	if err != nil {
 		return nil, fmt.Errorf("error exchanging API key: %w", err)
 	}
@@ -314,7 +341,6 @@ func (ats *APIKeyTokenSource) Token() (*oauth2.Token, error) {
 
 	// Parse the expiry out of the token
 	token, err := josejwt.ParseSigned(res.Msg.GetAccessToken(), []jose.SignatureAlgorithm{jose.RS256})
-
 	if err != nil {
 		return nil, fmt.Errorf("error parsing JWT: %w", err)
 	}
@@ -322,7 +348,6 @@ func (ats *APIKeyTokenSource) Token() (*oauth2.Token, error) {
 	claims := josejwt.Claims{}
 
 	err = token.UnsafeClaimsWithoutVerification(&claims)
-
 	if err != nil {
 		return nil, fmt.Errorf("error parsing JWT claims: %w", err)
 	}

@@ -127,12 +127,12 @@ func TestNewAuthMiddleware(t *testing.T) {
 
 	jwksURL := server.Start(ctx)
 
-	defaultConfig := AuthConfig{
+	defaultConfig := MiddlewareConfig{
 		IssuerURL:     jwksURL,
 		Auth0Audience: "https://api.overmind.tech",
 	}
 
-	bypassHealthConfig := AuthConfig{
+	bypassHealthConfig := MiddlewareConfig{
 		IssuerURL:          jwksURL,
 		Auth0Audience:      "https://api.overmind.tech",
 		BypassAuthForPaths: regexp.MustCompile("/health"),
@@ -145,7 +145,7 @@ func TestNewAuthMiddleware(t *testing.T) {
 		Name         string
 		TokenOptions *TestTokenOptions
 		ExpectedCode int
-		AuthConfig   AuthConfig
+		AuthConfig   MiddlewareConfig
 		Path         string
 	}{
 		{
@@ -263,7 +263,7 @@ func TestNewAuthMiddleware(t *testing.T) {
 					Scope:       "test:pass",
 				},
 			},
-			AuthConfig: AuthConfig{
+			AuthConfig: MiddlewareConfig{
 				IssuerURL:          jwksURL,
 				Auth0Audience:      "https://api.overmind.tech",
 				BypassAuthForPaths: regexp.MustCompile("/health"),
@@ -322,7 +322,7 @@ func TestNewAuthMiddleware(t *testing.T) {
 				},
 			},
 			ExpectedCode: http.StatusOK,
-			AuthConfig: AuthConfig{
+			AuthConfig: MiddlewareConfig{
 				IssuerURL:     jwksURL,
 				Auth0Audience: "https://api.overmind.tech",
 				BypassAuth:    true,
@@ -340,7 +340,7 @@ func TestNewAuthMiddleware(t *testing.T) {
 				},
 			},
 			ExpectedCode: http.StatusOK,
-			AuthConfig: AuthConfig{
+			AuthConfig: MiddlewareConfig{
 				IssuerURL:     jwksURL,
 				Auth0Audience: "https://api.overmind.tech",
 				BypassAuth:    true,
@@ -358,7 +358,7 @@ func TestNewAuthMiddleware(t *testing.T) {
 				},
 			},
 			ExpectedCode: http.StatusOK,
-			AuthConfig: AuthConfig{
+			AuthConfig: MiddlewareConfig{
 				IssuerURL:       jwksURL,
 				Auth0Audience:   "https://api.overmind.tech",
 				AccountOverride: &correctAccount,
@@ -376,7 +376,7 @@ func TestNewAuthMiddleware(t *testing.T) {
 				},
 			},
 			ExpectedCode: http.StatusOK,
-			AuthConfig: AuthConfig{
+			AuthConfig: MiddlewareConfig{
 				IssuerURL:     jwksURL,
 				Auth0Audience: "https://api.overmind.tech",
 				ScopeOverride: &correctScope,
@@ -536,7 +536,7 @@ func TestOverrideAuth(t *testing.T) {
 }
 
 func BenchmarkAuthMiddleware(b *testing.B) {
-	config := AuthConfig{
+	config := MiddlewareConfig{
 		Auth0Domain:   "auth.overmind-demo.com",
 		Auth0Audience: "https://api.overmind.tech",
 	}
@@ -705,7 +705,7 @@ func TestConnectErrorHandling(t *testing.T) {
 	jwksURL := server.Start(ctx)
 
 	// Create the middleware
-	handler := NewAuthMiddleware(AuthConfig{
+	handler := NewAuthMiddleware(MiddlewareConfig{
 		Auth0Domain:   "",
 		Auth0Audience: "test",
 		IssuerURL:     jwksURL,
