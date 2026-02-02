@@ -31,7 +31,6 @@ func InitializeEngine(ctx context.Context, ec *discovery.EngineConfig, reverseDN
 		}).Fatal("Error initializing Engine")
 	}
 
-
 	// Create a shared cache for all adapters in this source
 	sharedCache := sdpcache.NewCache(ctx)
 
@@ -40,10 +39,10 @@ func InitializeEngine(ctx context.Context, ec *discovery.EngineConfig, reverseDN
 		&CertificateAdapter{},
 		&DNSAdapter{
 			ReverseLookup: reverseDNS,
-			cacheField:    sharedCache,
+			cache:         sharedCache,
 		},
 		&HTTPAdapter{
-			cacheField: sharedCache,
+			cache: sharedCache,
 		},
 		&IPAdapter{},
 		&test.TestDogAdapter{},

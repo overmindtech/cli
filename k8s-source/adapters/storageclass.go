@@ -13,7 +13,7 @@ func newStorageClassAdapter(cs *kubernetes.Clientset, cluster string, namespaces
 	return &KubeTypeAdapter[*v1.StorageClass, *v1.StorageClassList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "StorageClass",
 		ClusterInterfaceBuilder: func() ItemInterface[*v1.StorageClass, *v1.StorageClassList] {
 			return cs.StorageV1().StorageClasses()

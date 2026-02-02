@@ -103,7 +103,7 @@ func newEndpointSliceAdapter(cs *kubernetes.Clientset, cluster string, namespace
 	return &KubeTypeAdapter[*v1.EndpointSlice, *v1.EndpointSliceList]{
 		ClusterName:   cluster,
 		Namespaces:    namespaces,
-		cacheField:    cache,
+		cache:         cache,
 		TypeName:      "EndpointSlice",
 		CacheDuration: 1 * time.Minute, // very low since this changes a lot
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.EndpointSlice, *v1.EndpointSliceList] {

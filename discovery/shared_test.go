@@ -77,13 +77,13 @@ type TestAdapter struct {
 	mutex        sync.Mutex
 
 	CacheDuration time.Duration  // How long to cache items for
-	cacheField    sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+	cache         sdpcache.Cache // This is mandatory
 }
 
 // NewTestAdapter creates a new TestAdapter with cache initialized
 func NewTestAdapter() *TestAdapter {
 	return &TestAdapter{
-		cacheField: sdpcache.NewNoOpCache(), // Initialize with NoOpCache to avoid nil pointer dereferences
+		cache: sdpcache.NewNoOpCache(), // Initialize with NoOpCache to avoid nil pointer dereferences
 	}
 }
 
@@ -98,8 +98,8 @@ func (s *TestAdapter) ClearCalls() {
 	s.ListCalls = make([][]string, 0)
 	s.SearchCalls = make([][]string, 0)
 	s.GetCalls = make([][]string, 0)
-	if s.cacheField != nil {
-		s.cacheField.Clear()
+	if s.cache != nil {
+		s.cache.Clear()
 	}
 }
 
@@ -132,13 +132,13 @@ var (
 )
 
 func (s *TestAdapter) Cache() sdpcache.Cache {
-	if s.cacheField == nil {
+	if s.cache == nil {
 		noOpCacheTestOnce.Do(func() {
 			noOpCacheTest = sdpcache.NewNoOpCache()
 		})
 		return noOpCacheTest
 	}
-	return s.cacheField
+	return s.cache
 }
 
 func (s *TestAdapter) Scopes() []string {

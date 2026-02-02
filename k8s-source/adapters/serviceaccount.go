@@ -54,7 +54,7 @@ func newServiceAccountAdapter(cs *kubernetes.Clientset, cluster string, namespac
 	return &KubeTypeAdapter[*v1.ServiceAccount, *v1.ServiceAccountList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "ServiceAccount",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.ServiceAccount, *v1.ServiceAccountList] {
 			return cs.CoreV1().ServiceAccounts(namespace)

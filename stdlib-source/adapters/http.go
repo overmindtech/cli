@@ -75,7 +75,7 @@ func validateHostname(ctx context.Context, hostname string) error {
 }
 
 type HTTPAdapter struct {
-	cacheField sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+	cache sdpcache.Cache // This is mandatory
 }
 
 const httpCacheDuration = 5 * time.Minute
@@ -86,13 +86,13 @@ var (
 )
 
 func (s *HTTPAdapter) Cache() sdpcache.Cache {
-	if s.cacheField == nil {
+	if s.cache == nil {
 		noOpCacheHTTPOnce.Do(func() {
 			noOpCacheHTTP = sdpcache.NewNoOpCache()
 		})
 		return noOpCacheHTTP
 	}
-	return s.cacheField
+	return s.cache
 }
 
 // Type The type of items that this adapter is capable of finding

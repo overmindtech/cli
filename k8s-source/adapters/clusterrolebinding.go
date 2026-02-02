@@ -78,7 +78,7 @@ func newClusterRoleBindingAdapter(cs *kubernetes.Clientset, cluster string, name
 	return &KubeTypeAdapter[*v1.ClusterRoleBinding, *v1.ClusterRoleBindingList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "ClusterRoleBinding",
 		ClusterInterfaceBuilder: func() ItemInterface[*v1.ClusterRoleBinding, *v1.ClusterRoleBindingList] {
 			return cs.RbacV1().ClusterRoleBindings()

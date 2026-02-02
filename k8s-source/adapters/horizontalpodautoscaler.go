@@ -34,7 +34,7 @@ func newHorizontalPodAutoscalerAdapter(cs *kubernetes.Clientset, cluster string,
 	return &KubeTypeAdapter[*v2.HorizontalPodAutoscaler, *v2.HorizontalPodAutoscalerList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "HorizontalPodAutoscaler",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v2.HorizontalPodAutoscaler, *v2.HorizontalPodAutoscalerList] {
 			return cs.AutoscalingV2().HorizontalPodAutoscalers(namespace)

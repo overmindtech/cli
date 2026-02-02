@@ -29,7 +29,7 @@ type DNSAdapter struct {
 
 	client dns.Client
 
-	cacheField sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+	cache sdpcache.Cache // This is mandatory
 }
 
 const dnsCacheDuration = 5 * time.Minute
@@ -40,13 +40,13 @@ var (
 )
 
 func (d *DNSAdapter) Cache() sdpcache.Cache {
-	if d.cacheField == nil {
+	if d.cache == nil {
 		noOpCacheDNSOnce.Do(func() {
 			noOpCacheDNS = sdpcache.NewNoOpCache()
 		})
 		return noOpCacheDNS
 	}
-	return d.cacheField
+	return d.cache
 }
 
 var DefaultServers = []string{

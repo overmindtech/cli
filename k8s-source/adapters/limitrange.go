@@ -12,7 +12,7 @@ func newLimitRangeAdapter(cs *kubernetes.Clientset, cluster string, namespaces [
 	return &KubeTypeAdapter[*v1.LimitRange, *v1.LimitRangeList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "LimitRange",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.LimitRange, *v1.LimitRangeList] {
 			return cs.CoreV1().LimitRanges(namespace)

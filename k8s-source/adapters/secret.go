@@ -14,7 +14,7 @@ func newSecretAdapter(cs *kubernetes.Clientset, cluster string, namespaces []str
 	return &KubeTypeAdapter[*v1.Secret, *v1.SecretList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "Secret",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Secret, *v1.SecretList] {
 			return cs.CoreV1().Secrets(namespace)

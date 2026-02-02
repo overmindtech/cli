@@ -15,7 +15,7 @@ func newDaemonSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces []
 		Namespaces:       namespaces,
 		TypeName:         "DaemonSet",
 		AutoQueryExtract: true,
-		cacheField:       cache,
+		cache:            cache,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.DaemonSet, *v1.DaemonSetList] {
 			return cs.AppsV1().DaemonSets(namespace)
 		},

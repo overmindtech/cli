@@ -71,7 +71,7 @@ func newNetworkPolicyAdapter(cs *kubernetes.Clientset, cluster string, namespace
 	return &KubeTypeAdapter[*v1.NetworkPolicy, *v1.NetworkPolicyList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "NetworkPolicy",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.NetworkPolicy, *v1.NetworkPolicyList] {
 			return cs.NetworkingV1().NetworkPolicies(namespace)

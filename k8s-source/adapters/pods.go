@@ -332,7 +332,7 @@ func newPodAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string
 		TypeName:         "Pod",
 		CacheDuration:    10 * time.Minute, // somewhat low since pods are replaced a lot
 		AutoQueryExtract: true,
-		cacheField:       cache,
+		cache:            cache,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Pod, *v1.PodList] {
 			return cs.CoreV1().Pods(namespace)
 		},

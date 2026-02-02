@@ -81,7 +81,7 @@ func newNodeAdapter(cs *kubernetes.Clientset, cluster string, namespaces []strin
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Node",
-		cacheField:  cache,
+		cache:       cache,
 		ClusterInterfaceBuilder: func() ItemInterface[*v1.Node, *v1.NodeList] {
 			return cs.CoreV1().Nodes()
 		},
