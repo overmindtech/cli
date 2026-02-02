@@ -70,6 +70,7 @@ const (
 	UrlMap                                       shared.Resource = "url-map"
 	Autoscaler                                   shared.Resource = "autoscaler"
 	InstanceGroupManager                         shared.Resource = "instance-group-manager"
+	RegionalInstanceGroupManager                 shared.Resource = "regional-instance-group-manager"
 	SecurityPolicy                               shared.Resource = "security-policy"
 	ClientTlsPolicy                              shared.Resource = "client-tls-policy"
 	ServiceLbPolicy                              shared.Resource = "service-lb-policy"

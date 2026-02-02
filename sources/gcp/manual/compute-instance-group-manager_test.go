@@ -83,6 +83,16 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						},
 					},
 					{
+						ExpectedType:   gcpshared.ComputeZone.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "us-central1-a",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
+						},
+					},
+					{
 						ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-policy",
@@ -139,6 +149,16 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						ExpectedBlastPropagation: &sdp.BlastPropagation{
 							In:  true,
 							Out: true,
+						},
+					},
+					{
+						ExpectedType:   gcpshared.ComputeZone.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "us-central1-a",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
 						},
 					},
 					{
@@ -266,6 +286,7 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 					Status: &computepb.InstanceGroupManagerStatus{
 						IsStable: ptr.To(true),
 					},
+					Zone:             ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a"),
 					InstanceTemplate: ptr.To(instanceTemplateName),
 					InstanceGroup:    ptr.To("projects/test-project-id/zones/us-central1-a/instanceGroups/test-group"),
 					AutoHealingPolicies: []*computepb.InstanceGroupManagerAutoHealingPolicy{
@@ -321,6 +342,16 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						ExpectedBlastPropagation: &sdp.BlastPropagation{
 							In:  true,
 							Out: true,
+						},
+					},
+					{
+						ExpectedType:   gcpshared.ComputeZone.String(),
+						ExpectedMethod: sdp.QueryMethod_GET,
+						ExpectedQuery:  "us-central1-a",
+						ExpectedScope:  projectID,
+						ExpectedBlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: false,
 						},
 					},
 					{
@@ -485,6 +516,7 @@ func createInstanceGroupManager(name string, isStable bool, instanceTemplate str
 		Status: &computepb.InstanceGroupManagerStatus{
 			IsStable: ptr.To(isStable),
 		},
+		Zone:             ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a"),
 		InstanceTemplate: ptr.To(instanceTemplate),
 		InstanceGroup:    ptr.To("projects/test-project-id/zones/us-central1-a/instanceGroups/test-group"),
 		TargetPools: []string{

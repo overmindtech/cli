@@ -176,6 +176,38 @@ func (c computeInstanceGroupManagerClient) AggregatedList(ctx context.Context, r
 	return c.instanceGroupManagersClient.AggregatedList(ctx, req, opts...)
 }
 
+// RegionInstanceGroupManagerIterator is an interface for iterating over regional instance group managers
+type RegionInstanceGroupManagerIterator interface {
+	Next() (*computepb.InstanceGroupManager, error)
+}
+
+// RegionInstanceGroupManagerClient is an interface for the Compute Region Instance Group Manager client
+type RegionInstanceGroupManagerClient interface {
+	Get(ctx context.Context, req *computepb.GetRegionInstanceGroupManagerRequest, opts ...gax.CallOption) (*computepb.InstanceGroupManager, error)
+	List(ctx context.Context, req *computepb.ListRegionInstanceGroupManagersRequest, opts ...gax.CallOption) RegionInstanceGroupManagerIterator
+}
+
+type regionInstanceGroupManagerClient struct {
+	regionInstanceGroupManagersClient *compute.RegionInstanceGroupManagersClient
+}
+
+// NewRegionInstanceGroupManagerClient creates a new RegionInstanceGroupManagerClient
+func NewRegionInstanceGroupManagerClient(regionInstanceGroupManagersClient *compute.RegionInstanceGroupManagersClient) RegionInstanceGroupManagerClient {
+	return &regionInstanceGroupManagerClient{
+		regionInstanceGroupManagersClient: regionInstanceGroupManagersClient,
+	}
+}
+
+// Get retrieves a regional compute instance group manager
+func (c regionInstanceGroupManagerClient) Get(ctx context.Context, req *computepb.GetRegionInstanceGroupManagerRequest, opts ...gax.CallOption) (*computepb.InstanceGroupManager, error) {
+	return c.regionInstanceGroupManagersClient.Get(ctx, req, opts...)
+}
+
+// List lists regional compute instance group managers and returns an iterator
+func (c regionInstanceGroupManagerClient) List(ctx context.Context, req *computepb.ListRegionInstanceGroupManagersRequest, opts ...gax.CallOption) RegionInstanceGroupManagerIterator {
+	return c.regionInstanceGroupManagersClient.List(ctx, req, opts...)
+}
+
 type ForwardingRuleIterator interface {
 	Next() (*computepb.ForwardingRule, error)
 }

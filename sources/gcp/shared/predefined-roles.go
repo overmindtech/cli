@@ -164,6 +164,8 @@ var PredefinedRoles = map[string]role{
 			"compute.regionBackendServices.list",
 			"compute.regionHealthChecks.get",
 			"compute.regionHealthChecks.list",
+			"compute.regionInstanceGroupManagers.get",
+			"compute.regionInstanceGroupManagers.list",
 			"compute.reservations.get",
 			"compute.reservations.list",
 			"compute.resourcePolicies.get",
