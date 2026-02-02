@@ -13,7 +13,7 @@ func newClusterRoleAdapter(cs *kubernetes.Clientset, cluster string, namespaces 
 	return &KubeTypeAdapter[*v1.ClusterRole, *v1.ClusterRoleList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "ClusterRole",
 		ClusterInterfaceBuilder: func() ItemInterface[*v1.ClusterRole, *v1.ClusterRoleList] {
 			return cs.RbacV1().ClusterRoles()

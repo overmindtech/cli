@@ -51,7 +51,7 @@ func newVolumeAttachmentAdapter(cs *kubernetes.Clientset, cluster string, namesp
 	return &KubeTypeAdapter[*v1.VolumeAttachment, *v1.VolumeAttachmentList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "VolumeAttachment",
 		ClusterInterfaceBuilder: func() ItemInterface[*v1.VolumeAttachment, *v1.VolumeAttachmentList] {
 			return cs.StorageV1().VolumeAttachments()

@@ -134,7 +134,7 @@ func newServiceAdapter(cs *kubernetes.Clientset, cluster string, namespaces []st
 		ClusterName: cluster,
 		Namespaces:  namespaces,
 		TypeName:    "Service",
-		cacheField:  cache,
+		cache:       cache,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Service, *v1.ServiceList] {
 			return cs.CoreV1().Services(namespace)
 		},

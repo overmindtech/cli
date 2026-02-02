@@ -14,7 +14,7 @@ func newConfigMapAdapter(cs *kubernetes.Clientset, cluster string, namespaces []
 		Namespaces:       namespaces,
 		TypeName:         "ConfigMap",
 		AutoQueryExtract: true,
-		cacheField:       cache,
+		cache:            cache,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.ConfigMap, *v1.ConfigMapList] {
 			return cs.CoreV1().ConfigMaps(namespace)
 		},

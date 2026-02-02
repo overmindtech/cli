@@ -36,7 +36,7 @@ func newReplicaSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces [
 	return &KubeTypeAdapter[*v1.ReplicaSet, *v1.ReplicaSetList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,
-		cacheField:       cache,
+		cache:            cache,
 		TypeName:         "ReplicaSet",
 		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.ReplicaSet, *v1.ReplicaSetList] {

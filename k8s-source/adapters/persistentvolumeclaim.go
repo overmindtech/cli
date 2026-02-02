@@ -42,7 +42,7 @@ func newPersistentVolumeClaimAdapter(cs *kubernetes.Clientset, cluster string, n
 	return &KubeTypeAdapter[*v1.PersistentVolumeClaim, *v1.PersistentVolumeClaimList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "PersistentVolumeClaim",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.PersistentVolumeClaim, *v1.PersistentVolumeClaimList] {
 			return cs.CoreV1().PersistentVolumeClaims(namespace)

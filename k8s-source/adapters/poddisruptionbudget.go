@@ -35,7 +35,7 @@ func newPodDisruptionBudgetAdapter(cs *kubernetes.Clientset, cluster string, nam
 	return &KubeTypeAdapter[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "PodDisruptionBudget",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.PodDisruptionBudget, *v1.PodDisruptionBudgetList] {
 			return cs.PolicyV1().PodDisruptionBudgets(namespace)

@@ -132,7 +132,7 @@ func newIngressAdapter(cs *kubernetes.Clientset, cluster string, namespaces []st
 	return &KubeTypeAdapter[*v1.Ingress, *v1.IngressList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "Ingress",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Ingress, *v1.IngressList] {
 			return cs.NetworkingV1().Ingresses(namespace)

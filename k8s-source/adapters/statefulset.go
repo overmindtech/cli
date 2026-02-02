@@ -71,7 +71,7 @@ func newStatefulSetAdapter(cs *kubernetes.Clientset, cluster string, namespaces 
 	return &KubeTypeAdapter[*v1.StatefulSet, *v1.StatefulSetList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,
-		cacheField:       cache,
+		cache:            cache,
 		TypeName:         "StatefulSet",
 		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.StatefulSet, *v1.StatefulSetList] {

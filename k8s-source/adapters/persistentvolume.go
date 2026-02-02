@@ -96,7 +96,7 @@ func newPersistentVolumeAdapter(cs *kubernetes.Clientset, cluster string, namesp
 	return &KubeTypeAdapter[*v1.PersistentVolume, *v1.PersistentVolumeList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "PersistentVolume",
 		ClusterInterfaceBuilder: func() ItemInterface[*v1.PersistentVolume, *v1.PersistentVolumeList] {
 			return cs.CoreV1().PersistentVolumes()

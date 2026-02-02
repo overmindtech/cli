@@ -12,7 +12,7 @@ func newResourceQuotaAdapter(cs *kubernetes.Clientset, cluster string, namespace
 	return &KubeTypeAdapter[*v1.ResourceQuota, *v1.ResourceQuotaList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "ResourceQuota",
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.ResourceQuota, *v1.ResourceQuotaList] {
 			return cs.CoreV1().ResourceQuotas(namespace)

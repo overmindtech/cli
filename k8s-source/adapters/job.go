@@ -36,7 +36,7 @@ func newJobAdapter(cs *kubernetes.Clientset, cluster string, namespaces []string
 	return &KubeTypeAdapter[*v1.Job, *v1.JobList]{
 		ClusterName:      cluster,
 		Namespaces:       namespaces,
-		cacheField:       cache,
+		cache:            cache,
 		TypeName:         "Job",
 		AutoQueryExtract: true,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Job, *v1.JobList] {

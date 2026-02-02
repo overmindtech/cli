@@ -76,7 +76,7 @@ type KubeTypeAdapter[Resource metav1.Object, ResourceList any] struct {
 	AdapterMetadata *sdp.AdapterMetadata
 
 	CacheDuration time.Duration  // How long to cache items for
-	cacheField    sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+	cache         sdpcache.Cache // This is mandatory
 }
 
 func (s *KubeTypeAdapter[Resource, ResourceList]) cacheDuration() time.Duration {
@@ -93,13 +93,13 @@ var (
 )
 
 func (s *KubeTypeAdapter[Resource, ResourceList]) Cache() sdpcache.Cache {
-	if s.cacheField == nil {
+	if s.cache == nil {
 		noOpCacheK8sOnce.Do(func() {
 			noOpCacheK8s = sdpcache.NewNoOpCache()
 		})
 		return noOpCacheK8s
 	}
-	return s.cacheField
+	return s.cache
 }
 
 // validate Validates that the adapter is correctly set up

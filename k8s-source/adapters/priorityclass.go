@@ -13,7 +13,7 @@ func newPriorityClassAdapter(cs *kubernetes.Clientset, cluster string, namespace
 	return &KubeTypeAdapter[*v1.PriorityClass, *v1.PriorityClassList]{
 		ClusterName: cluster,
 		Namespaces:  namespaces,
-		cacheField:  cache,
+		cache:       cache,
 		TypeName:    "PriorityClass",
 		ClusterInterfaceBuilder: func() ItemInterface[*v1.PriorityClass, *v1.PriorityClassList] {
 			return cs.SchedulingV1().PriorityClasses()

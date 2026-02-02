@@ -19,7 +19,7 @@ func newDeploymentAdapter(cs *kubernetes.Clientset, cluster string, namespaces [
 		Namespaces:       namespaces,
 		TypeName:         "Deployment",
 		AutoQueryExtract: true,
-		cacheField:       cache,
+		cache:            cache,
 		NamespacedInterfaceBuilder: func(namespace string) ItemInterface[*v1.Deployment, *v1.DeploymentList] {
 			return cs.AppsV1().Deployments(namespace)
 		},
