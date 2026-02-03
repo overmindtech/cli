@@ -1005,6 +1005,75 @@ func (x *Signal) GetProperties() *SignalProperties {
 	return nil
 }
 
+// Structured output for GetChangeSummary JSON format
+type ChangeSummaryJSONOutput struct {
+	state         protoimpl.MessageState            `protogen:"open.v1"`
+	Change        *Change                           `protobuf:"bytes,1,opt,name=change,proto3" json:"change,omitempty"`
+	Risks         []*Risk                           `protobuf:"bytes,2,rep,name=risks,proto3" json:"risks,omitempty"`
+	Signals       *GetChangeOverviewSignalsResponse `protobuf:"bytes,3,opt,name=signals,proto3" json:"signals,omitempty"`
+	Hypotheses    []*HypothesesDetails              `protobuf:"bytes,4,rep,name=hypotheses,proto3" json:"hypotheses,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChangeSummaryJSONOutput) Reset() {
+	*x = ChangeSummaryJSONOutput{}
+	mi := &file_signal_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChangeSummaryJSONOutput) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChangeSummaryJSONOutput) ProtoMessage() {}
+
+func (x *ChangeSummaryJSONOutput) ProtoReflect() protoreflect.Message {
+	mi := &file_signal_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChangeSummaryJSONOutput.ProtoReflect.Descriptor instead.
+func (*ChangeSummaryJSONOutput) Descriptor() ([]byte, []int) {
+	return file_signal_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *ChangeSummaryJSONOutput) GetChange() *Change {
+	if x != nil {
+		return x.Change
+	}
+	return nil
+}
+
+func (x *ChangeSummaryJSONOutput) GetRisks() []*Risk {
+	if x != nil {
+		return x.Risks
+	}
+	return nil
+}
+
+func (x *ChangeSummaryJSONOutput) GetSignals() *GetChangeOverviewSignalsResponse {
+	if x != nil {
+		return x.Signals
+	}
+	return nil
+}
+
+func (x *ChangeSummaryJSONOutput) GetHypotheses() []*HypothesesDetails {
+	if x != nil {
+		return x.Hypotheses
+	}
+	return nil
+}
+
 var File_signal_proto protoreflect.FileDescriptor
 
 const file_signal_proto_rawDesc = "" +
@@ -1087,7 +1156,14 @@ const file_signal_proto_rawDesc = "" +
 	"\bmetadata\x18\x01 \x01(\v2\x16.signal.SignalMetadataR\bmetadata\x128\n" +
 	"\n" +
 	"properties\x18\x02 \x01(\v2\x18.signal.SignalPropertiesR\n" +
-	"properties2\xbb\x05\n" +
+	"properties\"\xe7\x01\n" +
+	"\x17ChangeSummaryJSONOutput\x12'\n" +
+	"\x06change\x18\x01 \x01(\v2\x0f.changes.ChangeR\x06change\x12#\n" +
+	"\x05risks\x18\x02 \x03(\v2\r.changes.RiskR\x05risks\x12B\n" +
+	"\asignals\x18\x03 \x01(\v2(.signal.GetChangeOverviewSignalsResponseR\asignals\x12:\n" +
+	"\n" +
+	"hypotheses\x18\x04 \x03(\v2\x1a.changes.HypothesesDetailsR\n" +
+	"hypotheses2\xbb\x05\n" +
 	"\rSignalService\x12@\n" +
 	"\tAddSignal\x12\x18.signal.AddSignalRequest\x1a\x19.signal.AddSignalResponse\x12y\n" +
 	"\x1cGetSignalsByChangeExternalID\x12+.signal.GetSignalsByChangeExternalIDRequest\x1a,.signal.GetSignalsByChangeExternalIDResponse\x12m\n" +
@@ -1109,7 +1185,7 @@ func file_signal_proto_rawDescGZIP() []byte {
 	return file_signal_proto_rawDescData
 }
 
-var file_signal_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_signal_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_signal_proto_goTypes = []any{
 	(*AddSignalRequest)(nil),                     // 0: signal.AddSignalRequest
 	(*AddSignalResponse)(nil),                    // 1: signal.AddSignalResponse
@@ -1130,9 +1206,13 @@ var file_signal_proto_goTypes = []any{
 	(*SignalMetadata)(nil),                       // 16: signal.SignalMetadata
 	(*SignalProperties)(nil),                     // 17: signal.SignalProperties
 	(*Signal)(nil),                               // 18: signal.Signal
-	nil,                                          // 19: signal.GetItemSignalsResponse.ItemAggregationsEntry
-	(*Reference)(nil),                            // 20: Reference
-	(ItemDiffStatus)(0),                          // 21: changes.ItemDiffStatus
+	(*ChangeSummaryJSONOutput)(nil),              // 19: signal.ChangeSummaryJSONOutput
+	nil,                                          // 20: signal.GetItemSignalsResponse.ItemAggregationsEntry
+	(*Reference)(nil),                            // 21: Reference
+	(ItemDiffStatus)(0),                          // 22: changes.ItemDiffStatus
+	(*Change)(nil),                               // 23: changes.Change
+	(*Risk)(nil),                                 // 24: changes.Risk
+	(*HypothesesDetails)(nil),                    // 25: changes.HypothesesDetails
 }
 var file_signal_proto_depIdxs = []int32{
 	17, // 0: signal.AddSignalRequest.properties:type_name -> signal.SignalProperties
@@ -1140,38 +1220,42 @@ var file_signal_proto_depIdxs = []int32{
 	18, // 2: signal.GetSignalsByChangeExternalIDResponse.signals:type_name -> signal.Signal
 	18, // 3: signal.GetChangeOverviewSignalsResponse.signals:type_name -> signal.Signal
 	18, // 4: signal.ItemAggregation.signals:type_name -> signal.Signal
-	19, // 5: signal.GetItemSignalsResponse.itemAggregations:type_name -> signal.GetItemSignalsResponse.ItemAggregationsEntry
+	20, // 5: signal.GetItemSignalsResponse.itemAggregations:type_name -> signal.GetItemSignalsResponse.ItemAggregationsEntry
 	18, // 6: signal.ItemAggregationV2.signals:type_name -> signal.Signal
-	20, // 7: signal.ItemAggregationV2.mappedRef:type_name -> Reference
-	20, // 8: signal.ItemAggregationV2.afterRef:type_name -> Reference
-	21, // 9: signal.ItemAggregationV2.status:type_name -> changes.ItemDiffStatus
+	21, // 7: signal.ItemAggregationV2.mappedRef:type_name -> Reference
+	21, // 8: signal.ItemAggregationV2.afterRef:type_name -> Reference
+	22, // 9: signal.ItemAggregationV2.status:type_name -> changes.ItemDiffStatus
 	10, // 10: signal.GetItemSignalsResponseV2.itemAggregations:type_name -> signal.ItemAggregationV2
 	18, // 11: signal.GetCustomSignalsByCategoryResponse.signals:type_name -> signal.Signal
-	20, // 12: signal.GetItemSignalDetailsRequest.item:type_name -> Reference
+	21, // 12: signal.GetItemSignalDetailsRequest.item:type_name -> Reference
 	18, // 13: signal.GetItemSignalDetailsResponse.signals:type_name -> signal.Signal
-	20, // 14: signal.SignalProperties.item:type_name -> Reference
+	21, // 14: signal.SignalProperties.item:type_name -> Reference
 	16, // 15: signal.Signal.metadata:type_name -> signal.SignalMetadata
 	17, // 16: signal.Signal.properties:type_name -> signal.SignalProperties
-	6,  // 17: signal.GetItemSignalsResponse.ItemAggregationsEntry.value:type_name -> signal.ItemAggregation
-	0,  // 18: signal.SignalService.AddSignal:input_type -> signal.AddSignalRequest
-	2,  // 19: signal.SignalService.GetSignalsByChangeExternalID:input_type -> signal.GetSignalsByChangeExternalIDRequest
-	4,  // 20: signal.SignalService.GetChangeOverviewSignals:input_type -> signal.GetChangeOverviewSignalsRequest
-	7,  // 21: signal.SignalService.GetItemSignals:input_type -> signal.GetItemSignalsRequest
-	9,  // 22: signal.SignalService.GetItemSignalsV2:input_type -> signal.GetItemSignalsRequestV2
-	12, // 23: signal.SignalService.GetCustomSignalsByCategory:input_type -> signal.GetCustomSignalsByCategoryRequest
-	14, // 24: signal.SignalService.GetItemSignalDetails:input_type -> signal.GetItemSignalDetailsRequest
-	1,  // 25: signal.SignalService.AddSignal:output_type -> signal.AddSignalResponse
-	3,  // 26: signal.SignalService.GetSignalsByChangeExternalID:output_type -> signal.GetSignalsByChangeExternalIDResponse
-	5,  // 27: signal.SignalService.GetChangeOverviewSignals:output_type -> signal.GetChangeOverviewSignalsResponse
-	8,  // 28: signal.SignalService.GetItemSignals:output_type -> signal.GetItemSignalsResponse
-	11, // 29: signal.SignalService.GetItemSignalsV2:output_type -> signal.GetItemSignalsResponseV2
-	13, // 30: signal.SignalService.GetCustomSignalsByCategory:output_type -> signal.GetCustomSignalsByCategoryResponse
-	15, // 31: signal.SignalService.GetItemSignalDetails:output_type -> signal.GetItemSignalDetailsResponse
-	25, // [25:32] is the sub-list for method output_type
-	18, // [18:25] is the sub-list for method input_type
-	18, // [18:18] is the sub-list for extension type_name
-	18, // [18:18] is the sub-list for extension extendee
-	0,  // [0:18] is the sub-list for field type_name
+	23, // 17: signal.ChangeSummaryJSONOutput.change:type_name -> changes.Change
+	24, // 18: signal.ChangeSummaryJSONOutput.risks:type_name -> changes.Risk
+	5,  // 19: signal.ChangeSummaryJSONOutput.signals:type_name -> signal.GetChangeOverviewSignalsResponse
+	25, // 20: signal.ChangeSummaryJSONOutput.hypotheses:type_name -> changes.HypothesesDetails
+	6,  // 21: signal.GetItemSignalsResponse.ItemAggregationsEntry.value:type_name -> signal.ItemAggregation
+	0,  // 22: signal.SignalService.AddSignal:input_type -> signal.AddSignalRequest
+	2,  // 23: signal.SignalService.GetSignalsByChangeExternalID:input_type -> signal.GetSignalsByChangeExternalIDRequest
+	4,  // 24: signal.SignalService.GetChangeOverviewSignals:input_type -> signal.GetChangeOverviewSignalsRequest
+	7,  // 25: signal.SignalService.GetItemSignals:input_type -> signal.GetItemSignalsRequest
+	9,  // 26: signal.SignalService.GetItemSignalsV2:input_type -> signal.GetItemSignalsRequestV2
+	12, // 27: signal.SignalService.GetCustomSignalsByCategory:input_type -> signal.GetCustomSignalsByCategoryRequest
+	14, // 28: signal.SignalService.GetItemSignalDetails:input_type -> signal.GetItemSignalDetailsRequest
+	1,  // 29: signal.SignalService.AddSignal:output_type -> signal.AddSignalResponse
+	3,  // 30: signal.SignalService.GetSignalsByChangeExternalID:output_type -> signal.GetSignalsByChangeExternalIDResponse
+	5,  // 31: signal.SignalService.GetChangeOverviewSignals:output_type -> signal.GetChangeOverviewSignalsResponse
+	8,  // 32: signal.SignalService.GetItemSignals:output_type -> signal.GetItemSignalsResponse
+	11, // 33: signal.SignalService.GetItemSignalsV2:output_type -> signal.GetItemSignalsResponseV2
+	13, // 34: signal.SignalService.GetCustomSignalsByCategory:output_type -> signal.GetCustomSignalsByCategoryResponse
+	15, // 35: signal.SignalService.GetItemSignalDetails:output_type -> signal.GetItemSignalDetailsResponse
+	29, // [29:36] is the sub-list for method output_type
+	22, // [22:29] is the sub-list for method input_type
+	22, // [22:22] is the sub-list for extension type_name
+	22, // [22:22] is the sub-list for extension extendee
+	0,  // [0:22] is the sub-list for field type_name
 }
 
 func init() { file_signal_proto_init() }
@@ -1188,7 +1272,7 @@ func file_signal_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_signal_proto_rawDesc), len(file_signal_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
