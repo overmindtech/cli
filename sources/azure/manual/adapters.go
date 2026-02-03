@@ -221,6 +221,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create virtual machine extensions client: %w", err)
 		}
 
+		proximityPlacementGroupsClient, err := armcompute.NewProximityPlacementGroupsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create proximity placement groups client: %w", err)
+		}
+
 		// Create adapters for each resource group
 		for _, resourceGroup := range resourceGroups {
 			// Add Compute Virtual Machine adapter for this resource group
@@ -487,6 +492,14 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					resourceGroup,
 				), cache),
 			)
+			// Add Proximity Placement Group adapter for this resource group
+			adapters = append(adapters,
+				sources.WrapperToAdapter(NewComputeProximityPlacementGroup(
+					clients.NewProximityPlacementGroupsClient(proximityPlacementGroupsClient),
+					subscriptionID,
+					resourceGroup,
+				), cache),
+			)
 		}
 
 		log.WithFields(log.Fields{
@@ -650,6 +663,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				"placeholder-resource-group",
 			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
 			sources.WrapperToAdapter(NewComputeVirtualMachineExtension(
+				nil, // nil client is okay for metadata registration
+				subscriptionID,
+				"placeholder-resource-group",
+			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
+			sources.WrapperToAdapter(NewComputeProximityPlacementGroup(
 				nil, // nil client is okay for metadata registration
 				subscriptionID,
 				"placeholder-resource-group",
