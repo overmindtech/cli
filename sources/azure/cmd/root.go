@@ -3,12 +3,10 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/cli/logging"
@@ -53,35 +51,7 @@ var rootCmd = &cobra.Command{
 
 		e.StartSendingHeartbeats(ctx)
 
-		// Start HTTP server for health checks
-		// Liveness: Check only engine initialization (NATS, heartbeats)
-		http.HandleFunc("/healthz/alive", e.LivenessProbeHandlerFunc())
-		// Readiness: Check if adapters are healthy and ready to handle requests
-		http.HandleFunc("/healthz/ready", e.ReadinessProbeHandlerFunc())
-		// Backward compatibility - maps to liveness check (matches old behavior)
-		http.HandleFunc("/healthz", e.LivenessProbeHandlerFunc())
-
-		log.WithFields(log.Fields{
-			"ovm.source.type": "azure",
-			"ovm.source.port": healthCheckPort,
-		}).Debug("Starting healthcheck server with endpoints: /healthz/alive, /healthz/ready, /healthz")
-
-		go func() {
-			defer sentry.Recover()
-
-			server := &http.Server{
-				Addr:         fmt.Sprintf(":%v", healthCheckPort),
-				Handler:      nil,
-				ReadTimeout:  5 * time.Second,
-				WriteTimeout: 10 * time.Second,
-			}
-			err := server.ListenAndServe()
-
-			log.WithError(err).WithFields(log.Fields{
-				"ovm.source.type": "azure",
-				"ovm.source.port": healthCheckPort,
-			}).Error("Could not start HTTP server for health checks")
-		}()
+		e.ServeHealthProbes(healthCheckPort)
 
 		err = e.Start(ctx)
 		if err != nil {

@@ -181,35 +181,7 @@ func run(_ *cobra.Command, _ []string) int {
 
 	// Start HTTP server for health checks
 	healthCheckPort := viper.GetInt("health-check-port")
-
-		log.WithFields(log.Fields{
-			"port": healthCheckPort,
-		}).Debug("Starting healthcheck server with endpoints: /healthz/alive, /healthz/ready, /healthz")
-
-		go func() {
-			defer sentry.Recover()
-
-			mux := http.NewServeMux()
-
-			// Liveness: Check only engine initialization (NATS, heartbeats)
-			mux.HandleFunc("/healthz/alive", e.LivenessProbeHandlerFunc())
-			// Readiness: Check if adapters are healthy and ready to handle requests
-			mux.HandleFunc("/healthz/ready", e.ReadinessProbeHandlerFunc())
-			// Backward compatibility - maps to liveness check (matches old behavior)
-			mux.HandleFunc("/healthz", e.LivenessProbeHandlerFunc())
-
-		server := &http.Server{
-			Addr:         fmt.Sprintf(":%v", healthCheckPort),
-			Handler:      mux,
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 10 * time.Second,
-		}
-		err := server.ListenAndServe()
-
-		log.WithError(err).WithFields(log.Fields{
-			"port": healthCheckPort,
-		}).Error("Could not start HTTP server for health checks")
-	}()
+	e.ServeHealthProbes(healthCheckPort)
 
 	// Create channels for interrupts
 	quit := make(chan os.Signal, 1)
