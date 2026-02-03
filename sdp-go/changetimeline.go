@@ -2,8 +2,8 @@ package sdp
 
 // If you add/delete/move an entry here, make sure to update/check the following:
 // - the PopulateChangeTimelineV2 function
-// - GetChangeTimelineV2 in api-server/server/changesservice.go
-// - resetChangeAnalysisTables in api-server/server/changeanalysis/shared.go
+// - GetChangeTimelineV2 in api-server/service/changesservice.go
+// - resetChangeAnalysisTables in api-server/service/changeanalysis/shared.go
 // - the cli tool if we are waiting for a change analysis to finish
 // - frontend/src/features/changes-v2/change-timeline/ChangeTimeline.tsx - also update the entryNames object as this is used for comparing entry names
 // All timeline entries are now defined using ChangeTimelineEntryV2ID variables below.
