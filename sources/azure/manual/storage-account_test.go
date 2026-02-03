@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/discovery"
@@ -104,6 +104,17 @@ func TestStorageAccount(t *testing.T) {
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  false,
+						Out: true,
+					},
+				},
+				{
+					// Storage private endpoint connection link (child resource)
+					ExpectedType:   azureshared.StoragePrivateEndpointConnection.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  accountName,
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
 						Out: true,
 					},
 				},

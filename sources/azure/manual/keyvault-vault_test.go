@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/discovery"
@@ -18,6 +18,7 @@ import (
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/azure/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 // mockVaultsPager is a simple mock implementation of VaultsPager
@@ -159,6 +160,39 @@ func TestKeyVaultVault(t *testing.T) {
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
 						Out: false,
+					},
+				},
+				{
+					// stdlib.NetworkIP (GET) - from NetworkACLs IPRules
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.100",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					// stdlib.NetworkIP (GET) - from NetworkACLs IPRules (CIDR range)
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "10.0.0.0/24",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					// stdlib.NetworkHTTP (SEARCH) - from VaultURI
+					ExpectedType:   stdlib.NetworkHTTP.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "https://test-keyvault.vault.azure.net/",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
 					},
 				},
 			}
@@ -351,6 +385,29 @@ func TestKeyVaultVault(t *testing.T) {
 			t.Error("Expected to find at least one linked item query with a different scope, but all used default scope")
 		}
 	})
+
+	t.Run("PotentialLinks", func(t *testing.T) {
+		mockClient := mocks.NewMockVaultsClient(ctrl)
+		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
+
+		links := wrapper.PotentialLinks()
+		if len(links) == 0 {
+			t.Error("Expected potential links to be defined")
+		}
+
+		expectedLinks := map[shared.ItemType]bool{
+			azureshared.NetworkPrivateEndpoint: true,
+			azureshared.NetworkSubnet:          true,
+			azureshared.KeyVaultManagedHSM:     true,
+			stdlib.NetworkIP:                   true,
+			stdlib.NetworkHTTP:                 true,
+		}
+		for expectedType, expectedValue := range expectedLinks {
+			if links[expectedType] != expectedValue {
+				t.Errorf("Expected PotentialLinks[%s] = %v, got %v", expectedType.String(), expectedValue, links[expectedType])
+			}
+		}
+	})
 }
 
 // createAzureKeyVault creates a mock Azure Key Vault with linked resources
@@ -381,7 +438,7 @@ func createAzureKeyVault(vaultName, subscriptionID, resourceGroup string) *armke
 					},
 				},
 			},
-			// Network ACLs with Virtual Network Rules
+			// Network ACLs with Virtual Network Rules and IP Rules
 			NetworkACLs: &armkeyvault.NetworkRuleSet{
 				VirtualNetworkRules: []*armkeyvault.VirtualNetworkRule{
 					{
@@ -391,7 +448,13 @@ func createAzureKeyVault(vaultName, subscriptionID, resourceGroup string) *armke
 						ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/virtualNetworks/test-vnet-diff-rg/subnets/test-subnet-diff-rg"),
 					},
 				},
+				IPRules: []*armkeyvault.IPRule{
+					{Value: to.Ptr("192.168.1.100")},
+					{Value: to.Ptr("10.0.0.0/24")},
+				},
 			},
+			// Vault URI for keys and secrets operations
+			VaultURI: to.Ptr("https://" + vaultName + ".vault.azure.net/"),
 			// Managed HSM Pool Resource ID
 			HsmPoolResourceID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/hsm-rg/providers/Microsoft.KeyVault/managedHSMs/test-managed-hsm"),
 		},

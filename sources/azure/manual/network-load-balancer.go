@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
@@ -170,23 +170,69 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 					// Subnet ID format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}
 					parts := strings.Split(strings.Trim(subnetID, "/"), "/")
 					if len(parts) >= 10 && parts[0] == "subscriptions" && parts[2] == "resourceGroups" && parts[4] == "providers" && parts[5] == "Microsoft.Network" && parts[6] == "virtualNetworks" && parts[8] == "subnets" {
-						subscriptionID := parts[1]
-						resourceGroup := parts[3]
 						vnetName := parts[7]
 						subnetName := parts[9]
-						scope := fmt.Sprintf("%s.%s", subscriptionID, resourceGroup)
+						linkedScope := fmt.Sprintf("%s.%s", parts[1], parts[3])
 
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   azureshared.NetworkSubnet.String(),
-								Method: sdp.QueryMethod_GET, // Field is an ID, so use GET with composite lookup key
+								Method: sdp.QueryMethod_GET,
 								Query:  shared.CompositeLookupKey(vnetName, subnetName),
-								Scope:  scope,
+								Scope:  linkedScope,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,  // Subnet changes (like address space modifications) affect the load balancer's network configuration
 								Out: false, // Load balancer changes don't affect the subnet itself
-							}, // Subnet provides the network location for the load balancer's frontend
+							},
+						})
+					}
+				}
+
+				// Link to Gateway Load Balancer frontend IP if referenced (e.g. LB chained to Gateway LB)
+				// Reference: https://learn.microsoft.com/en-us/rest/api/load-balancer/load-balancer-frontend-ip-configurations/get?view=rest-load-balancer-2025-03-01&tabs=HTTP
+				if frontendIPConfig.Properties.GatewayLoadBalancer != nil && frontendIPConfig.Properties.GatewayLoadBalancer.ID != nil {
+					params := azureshared.ExtractPathParamsFromResourceID(*frontendIPConfig.Properties.GatewayLoadBalancer.ID, []string{"loadBalancers", "frontendIPConfigurations"})
+					if len(params) >= 2 {
+						linkedScope := azureshared.ExtractScopeFromResourceID(*frontendIPConfig.Properties.GatewayLoadBalancer.ID)
+						if linkedScope == "" {
+							linkedScope = scope
+						}
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   azureshared.NetworkLoadBalancerFrontendIPConfiguration.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  shared.CompositeLookupKey(params[0], params[1]),
+								Scope:  linkedScope,
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,  // Gateway LB frontend changes affect this load balancer's chained configuration
+								Out: false, // This LB changes don't affect the gateway LB frontend
+							},
+						})
+					}
+				}
+
+				// Link to Public IP Prefix if referenced
+				// Reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/public-ip-prefixes/get?view=rest-virtualnetwork-2025-03-01&tabs=HTTP
+				if frontendIPConfig.Properties.PublicIPPrefix != nil && frontendIPConfig.Properties.PublicIPPrefix.ID != nil {
+					publicIPPrefixName := azureshared.ExtractResourceName(*frontendIPConfig.Properties.PublicIPPrefix.ID)
+					if publicIPPrefixName != "" {
+						linkedScope := azureshared.ExtractScopeFromResourceID(*frontendIPConfig.Properties.PublicIPPrefix.ID)
+						if linkedScope == "" {
+							linkedScope = scope
+						}
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   azureshared.NetworkPublicIPPrefix.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  publicIPPrefixName,
+								Scope:  linkedScope,
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,  // Public IP prefix changes affect the load balancer's frontend allocation
+								Out: false, // Load balancer changes don't affect the public IP prefix
+							},
 						})
 					}
 				}
@@ -195,7 +241,7 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 				if frontendIPConfig.Properties.PrivateIPAddress != nil && *frontendIPConfig.Properties.PrivateIPAddress != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   "ip",
+							Type:   stdlib.NetworkIP.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  *frontendIPConfig.Properties.PrivateIPAddress,
 							Scope:  "global",
@@ -227,8 +273,122 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true, // BackendAddressPool changes affect which backends receive traffic
 						Out: true, // Load balancer changes (like deletion) affect the backend address pool
-					}, // BackendAddressPool is a child resource of the Load Balancer; bidirectional dependency
+					},
 				})
+			}
+
+			// Link to Virtual Network if backend pool references one
+			// Reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/virtual-networks/get?view=rest-virtualnetwork-2025-03-01&tabs=HTTP
+			if backendPool.Properties != nil && backendPool.Properties.VirtualNetwork != nil && backendPool.Properties.VirtualNetwork.ID != nil {
+				vnetName := azureshared.ExtractResourceName(*backendPool.Properties.VirtualNetwork.ID)
+				if vnetName != "" {
+					linkedScope := azureshared.ExtractScopeFromResourceID(*backendPool.Properties.VirtualNetwork.ID)
+					if linkedScope == "" {
+						linkedScope = scope
+					}
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   azureshared.NetworkVirtualNetwork.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  vnetName,
+							Scope:  linkedScope,
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,  // VNet changes affect backend pool scope/connectivity
+							Out: false, // Load balancer changes don't affect the virtual network
+						},
+					})
+				}
+			}
+
+			// Link from backend addresses (LoadBalancerBackendAddress) to frontend IP config, subnet, VNet, and IP
+			if backendPool.Properties != nil && backendPool.Properties.LoadBalancerBackendAddresses != nil {
+				for _, addr := range backendPool.Properties.LoadBalancerBackendAddresses {
+					if addr == nil || addr.Properties == nil {
+						continue
+					}
+					// Link to Frontend IP Configuration (regional LB) if referenced
+					if addr.Properties.LoadBalancerFrontendIPConfiguration != nil && addr.Properties.LoadBalancerFrontendIPConfiguration.ID != nil {
+						params := azureshared.ExtractPathParamsFromResourceID(*addr.Properties.LoadBalancerFrontendIPConfiguration.ID, []string{"loadBalancers", "frontendIPConfigurations"})
+						if len(params) >= 2 {
+							linkedScope := azureshared.ExtractScopeFromResourceID(*addr.Properties.LoadBalancerFrontendIPConfiguration.ID)
+							if linkedScope == "" {
+								linkedScope = scope
+							}
+							sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+								Query: &sdp.Query{
+									Type:   azureshared.NetworkLoadBalancerFrontendIPConfiguration.String(),
+									Method: sdp.QueryMethod_GET,
+									Query:  shared.CompositeLookupKey(params[0], params[1]),
+									Scope:  linkedScope,
+								},
+								BlastPropagation: &sdp.BlastPropagation{
+									In:  true,
+									Out: true,
+								},
+							})
+						}
+					}
+					// Link to Subnet if referenced
+					if addr.Properties.Subnet != nil && addr.Properties.Subnet.ID != nil {
+						params := azureshared.ExtractPathParamsFromResourceID(*addr.Properties.Subnet.ID, []string{"virtualNetworks", "subnets"})
+						if len(params) >= 2 {
+							linkedScope := azureshared.ExtractScopeFromResourceID(*addr.Properties.Subnet.ID)
+							if linkedScope == "" {
+								linkedScope = scope
+							}
+							sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+								Query: &sdp.Query{
+									Type:   azureshared.NetworkSubnet.String(),
+									Method: sdp.QueryMethod_GET,
+									Query:  shared.CompositeLookupKey(params[0], params[1]),
+									Scope:  linkedScope,
+								},
+								BlastPropagation: &sdp.BlastPropagation{
+									In:  true,
+									Out: false,
+								},
+							})
+						}
+					}
+					// Link to Virtual Network if referenced
+					if addr.Properties.VirtualNetwork != nil && addr.Properties.VirtualNetwork.ID != nil {
+						vnetName := azureshared.ExtractResourceName(*addr.Properties.VirtualNetwork.ID)
+						if vnetName != "" {
+							linkedScope := azureshared.ExtractScopeFromResourceID(*addr.Properties.VirtualNetwork.ID)
+							if linkedScope == "" {
+								linkedScope = scope
+							}
+							sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+								Query: &sdp.Query{
+									Type:   azureshared.NetworkVirtualNetwork.String(),
+									Method: sdp.QueryMethod_GET,
+									Query:  vnetName,
+									Scope:  linkedScope,
+								},
+								BlastPropagation: &sdp.BlastPropagation{
+									In:  true,
+									Out: false,
+								},
+							})
+						}
+					}
+					// Link to stdlib IP if backend address has IP
+					if addr.Properties.IPAddress != nil && *addr.Properties.IPAddress != "" {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   stdlib.NetworkIP.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  *addr.Properties.IPAddress,
+								Scope:  "global",
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: true,
+							},
+						})
+					}
+				}
 			}
 		}
 	}
@@ -392,7 +552,9 @@ func (n networkLoadBalancerWrapper) PotentialLinks() map[shared.ItemType]bool {
 		azureshared.NetworkLoadBalancerInboundNatPool:          true,
 		// External resources
 		azureshared.NetworkPublicIPAddress:  true,
+		azureshared.NetworkPublicIPPrefix:   true,
 		azureshared.NetworkSubnet:           true,
+		azureshared.NetworkVirtualNetwork:   true,
 		azureshared.NetworkNetworkInterface: true,
 		// Standard library resources
 		stdlib.NetworkIP: true,

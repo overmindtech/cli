@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/discovery"
@@ -402,6 +402,12 @@ func TestNetworkLoadBalancer(t *testing.T) {
 		}
 		if !potentialLinks[azureshared.NetworkNetworkInterface] {
 			t.Error("Expected PotentialLinks to include NetworkNetworkInterface")
+		}
+		if !potentialLinks[azureshared.NetworkPublicIPPrefix] {
+			t.Error("Expected PotentialLinks to include NetworkPublicIPPrefix")
+		}
+		if !potentialLinks[azureshared.NetworkVirtualNetwork] {
+			t.Error("Expected PotentialLinks to include NetworkVirtualNetwork")
 		}
 
 		// Verify TerraformMappings

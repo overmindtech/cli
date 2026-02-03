@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_public_ip_addresses_client.go -package=mocks -source=public-ip-addresses.go

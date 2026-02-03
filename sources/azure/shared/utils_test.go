@@ -355,29 +355,29 @@ func TestExtractSQLServerNameFromDatabaseID(t *testing.T) {
 
 func TestExtractSQLElasticPoolNameFromID(t *testing.T) {
 	tests := []struct {
-		name         string
+		name          string
 		elasticPoolID string
-		expected     string
+		expected      string
 	}{
 		{
-			name:         "valid SQL elastic pool resource ID",
+			name:          "valid SQL elastic pool resource ID",
 			elasticPoolID: "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/elasticPools/test-pool",
-			expected:     "test-pool",
+			expected:      "test-pool",
 		},
 		{
-			name:         "empty elastic pool ID",
+			name:          "empty elastic pool ID",
 			elasticPoolID: "",
-			expected:     "",
+			expected:      "",
 		},
 		{
-			name:         "invalid resource ID format",
+			name:          "invalid resource ID format",
 			elasticPoolID: "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/test-account",
-			expected:     "",
+			expected:      "",
 		},
 		{
-			name:         "resource ID without elasticPools segment",
+			name:          "resource ID without elasticPools segment",
 			elasticPoolID: "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server",
-			expected:     "",
+			expected:      "",
 		},
 	}
 
@@ -393,34 +393,34 @@ func TestExtractSQLElasticPoolNameFromID(t *testing.T) {
 
 func TestExtractSQLDatabaseInfoFromResourceID(t *testing.T) {
 	tests := []struct {
-		name         string
-		resourceID   string
+		name           string
+		resourceID     string
 		expectedServer string
-		expectedDB    string
+		expectedDB     string
 	}{
 		{
 			name:           "valid SQL database resource ID",
 			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/databases/test-db",
 			expectedServer: "test-server",
-			expectedDB:    "test-db",
+			expectedDB:     "test-db",
 		},
 		{
 			name:           "empty resource ID",
 			resourceID:     "",
 			expectedServer: "",
-			expectedDB:    "",
+			expectedDB:     "",
 		},
 		{
 			name:           "invalid resource ID format",
 			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/test-account",
 			expectedServer: "",
-			expectedDB:    "",
+			expectedDB:     "",
 		},
 		{
 			name:           "resource ID missing databases segment",
 			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server",
 			expectedServer: "",
-			expectedDB:    "",
+			expectedDB:     "",
 		},
 	}
 
@@ -439,34 +439,34 @@ func TestExtractSQLDatabaseInfoFromResourceID(t *testing.T) {
 
 func TestExtractSQLRecoverableDatabaseInfoFromResourceID(t *testing.T) {
 	tests := []struct {
-		name         string
-		resourceID   string
+		name           string
+		resourceID     string
 		expectedServer string
-		expectedDB    string
+		expectedDB     string
 	}{
 		{
 			name:           "valid recoverable database resource ID",
 			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/recoverableDatabases/test-db",
 			expectedServer: "test-server",
-			expectedDB:    "test-db",
+			expectedDB:     "test-db",
 		},
 		{
 			name:           "empty resource ID",
 			resourceID:     "",
 			expectedServer: "",
-			expectedDB:    "",
+			expectedDB:     "",
 		},
 		{
 			name:           "invalid resource ID format",
 			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/test-account",
 			expectedServer: "",
-			expectedDB:    "",
+			expectedDB:     "",
 		},
 		{
 			name:           "resource ID missing recoverableDatabases segment",
 			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server",
 			expectedServer: "",
-			expectedDB:    "",
+			expectedDB:     "",
 		},
 	}
 
@@ -485,34 +485,34 @@ func TestExtractSQLRecoverableDatabaseInfoFromResourceID(t *testing.T) {
 
 func TestExtractSQLRestorableDroppedDatabaseInfoFromResourceID(t *testing.T) {
 	tests := []struct {
-		name         string
-		resourceID   string
+		name           string
+		resourceID     string
 		expectedServer string
-		expectedDB    string
+		expectedDB     string
 	}{
 		{
 			name:           "valid restorable dropped database resource ID",
 			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/restorableDroppedDatabases/test-db",
 			expectedServer: "test-server",
-			expectedDB:    "test-db",
+			expectedDB:     "test-db",
 		},
 		{
 			name:           "empty resource ID",
 			resourceID:     "",
 			expectedServer: "",
-			expectedDB:    "",
+			expectedDB:     "",
 		},
 		{
 			name:           "invalid resource ID format",
 			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/test-account",
 			expectedServer: "",
-			expectedDB:    "",
+			expectedDB:     "",
 		},
 		{
 			name:           "resource ID missing restorableDroppedDatabases segment",
 			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server",
 			expectedServer: "",
-			expectedDB:    "",
+			expectedDB:     "",
 		},
 	}
 
@@ -531,34 +531,34 @@ func TestExtractSQLRestorableDroppedDatabaseInfoFromResourceID(t *testing.T) {
 
 func TestExtractSQLElasticPoolInfoFromResourceID(t *testing.T) {
 	tests := []struct {
-		name         string
-		resourceID   string
+		name           string
+		resourceID     string
 		expectedServer string
-		expectedPool string
+		expectedPool   string
 	}{
 		{
 			name:           "valid SQL elastic pool resource ID",
 			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/elasticPools/test-pool",
 			expectedServer: "test-server",
-			expectedPool:  "test-pool",
+			expectedPool:   "test-pool",
 		},
 		{
 			name:           "empty resource ID",
 			resourceID:     "",
 			expectedServer: "",
-			expectedPool:  "",
+			expectedPool:   "",
 		},
 		{
 			name:           "invalid resource ID format",
 			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/test-account",
 			expectedServer: "",
-			expectedPool:  "",
+			expectedPool:   "",
 		},
 		{
 			name:           "resource ID missing elasticPools segment",
 			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server",
 			expectedServer: "",
-			expectedPool:  "",
+			expectedPool:   "",
 		},
 	}
 
@@ -575,6 +575,60 @@ func TestExtractSQLElasticPoolInfoFromResourceID(t *testing.T) {
 	}
 }
 
+func TestExtractSQLLongTermRetentionBackupInfoFromResourceID(t *testing.T) {
+	tests := []struct {
+		name               string
+		resourceID         string
+		expectedLocation   string
+		expectedServer     string
+		expectedDatabase   string
+		expectedBackupName string
+	}{
+		{
+			name:               "valid SQL long term retention backup resource ID",
+			resourceID:         "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/locations/eastus/longTermRetentionServers/test-server/longTermRetentionDatabases/test-db/longTermRetentionBackups/1234567890;1234567890",
+			expectedLocation:   "eastus",
+			expectedServer:     "test-server",
+			expectedDatabase:   "test-db",
+			expectedBackupName: "1234567890;1234567890",
+		},
+		{
+			name:               "empty resource ID",
+			resourceID:         "",
+			expectedLocation:   "",
+			expectedServer:     "",
+			expectedDatabase:   "",
+			expectedBackupName: "",
+		},
+		{
+			name:               "invalid resource ID format",
+			resourceID:         "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/databases/test-db",
+			expectedLocation:   "",
+			expectedServer:     "",
+			expectedDatabase:   "",
+			expectedBackupName: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actualLocation, actualServer, actualDatabase, actualBackupName := azureshared.ExtractSQLLongTermRetentionBackupInfoFromResourceID(tc.resourceID)
+			if actualLocation != tc.expectedLocation {
+				t.Errorf("ExtractSQLLongTermRetentionBackupInfoFromResourceID(%q) location = %q; want %q", tc.resourceID, actualLocation, tc.expectedLocation)
+			}
+			if actualServer != tc.expectedServer {
+				t.Errorf("ExtractSQLLongTermRetentionBackupInfoFromResourceID(%q) server = %q; want %q", tc.resourceID, actualServer, tc.expectedServer)
+			}
+			if actualDatabase != tc.expectedDatabase {
+				t.Errorf("ExtractSQLLongTermRetentionBackupInfoFromResourceID(%q) database = %q; want %q", tc.resourceID, actualDatabase, tc.expectedDatabase)
+			}
+			if actualBackupName != tc.expectedBackupName {
+				t.Errorf("ExtractSQLLongTermRetentionBackupInfoFromResourceID(%q) backupName = %q; want %q", tc.resourceID, actualBackupName, tc.expectedBackupName)
+			}
+		})
+	}
+}
+
 func TestDetermineSourceResourceType(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -583,8 +637,8 @@ func TestDetermineSourceResourceType(t *testing.T) {
 		expectedParams map[string]string
 	}{
 		{
-			name:       "SQL database resource ID",
-			resourceID: "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/databases/test-db",
+			name:         "SQL database resource ID",
+			resourceID:   "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/databases/test-db",
 			expectedType: azureshared.SourceResourceTypeSQLDatabase,
 			expectedParams: map[string]string{
 				"serverName":   "test-server",
@@ -592,8 +646,8 @@ func TestDetermineSourceResourceType(t *testing.T) {
 			},
 		},
 		{
-			name:       "SQL elastic pool resource ID",
-			resourceID: "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/elasticPools/test-pool",
+			name:         "SQL elastic pool resource ID",
+			resourceID:   "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/elasticPools/test-pool",
 			expectedType: azureshared.SourceResourceTypeSQLElasticPool,
 			expectedParams: map[string]string{
 				"serverName":      "test-server",
@@ -601,21 +655,21 @@ func TestDetermineSourceResourceType(t *testing.T) {
 			},
 		},
 		{
-			name:       "empty resource ID",
-			resourceID: "",
-			expectedType: azureshared.SourceResourceTypeUnknown,
+			name:           "empty resource ID",
+			resourceID:     "",
+			expectedType:   azureshared.SourceResourceTypeUnknown,
 			expectedParams: nil,
 		},
 		{
-			name:       "unknown resource type",
-			resourceID: "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/test-account",
-			expectedType: azureshared.SourceResourceTypeUnknown,
+			name:           "unknown resource type",
+			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/test-account",
+			expectedType:   azureshared.SourceResourceTypeUnknown,
 			expectedParams: nil,
 		},
 		{
-			name:       "Synapse SQL pool (not yet supported)",
-			resourceID: "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Synapse/workspaces/test-workspace/sqlPools/test-pool",
-			expectedType: azureshared.SourceResourceTypeUnknown,
+			name:           "Synapse SQL pool (not yet supported)",
+			resourceID:     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.Synapse/workspaces/test-workspace/sqlPools/test-pool",
+			expectedType:   azureshared.SourceResourceTypeUnknown,
 			expectedParams: nil,
 		},
 	}

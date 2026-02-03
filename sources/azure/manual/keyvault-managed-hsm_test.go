@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/discovery"
@@ -109,6 +109,28 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
+					// MHSM Private Endpoint Connection (GET) - child resource
+					ExpectedType:   azureshared.KeyVaultManagedHSMPrivateEndpointConnection.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  shared.CompositeLookupKey(hsmName, "test-pec-1"),
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					// MHSM Private Endpoint Connection (GET) - child resource
+					ExpectedType:   azureshared.KeyVaultManagedHSMPrivateEndpointConnection.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  shared.CompositeLookupKey(hsmName, "test-pec-2"),
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
 					// Private Endpoint (GET) - same resource group
 					ExpectedType:   azureshared.NetworkPrivateEndpoint.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -176,9 +198,20 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 				},
 				{
 					// DNS (SEARCH) - from HsmURI
-					ExpectedType:   "dns",
+					ExpectedType:   stdlib.NetworkDNS.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  hsmName + ".managedhsm.azure.net",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					// HTTP (SEARCH) - from HsmURI
+					ExpectedType:   stdlib.NetworkHTTP.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "https://" + hsmName + ".managedhsm.azure.net",
 					ExpectedScope:  "global",
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,
@@ -640,9 +673,10 @@ func createAzureManagedHSM(hsmName, subscriptionID, resourceGroup string) *armke
 		Properties: &armkeyvault.ManagedHsmProperties{
 			TenantID: to.Ptr("test-tenant-id"),
 			HsmURI:   to.Ptr("https://" + hsmName + ".managedhsm.azure.net"),
-			// Private Endpoint Connections
+			// Private Endpoint Connections (ID is the connection resource ID for child resource linking)
 			PrivateEndpointConnections: []*armkeyvault.MHSMPrivateEndpointConnectionItem{
 				{
+					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/managedHSMs/" + hsmName + "/privateEndpointConnections/test-pec-1"),
 					Properties: &armkeyvault.MHSMPrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armkeyvault.MHSMPrivateEndpoint{
 							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/privateEndpoints/test-private-endpoint"),
@@ -650,6 +684,7 @@ func createAzureManagedHSM(hsmName, subscriptionID, resourceGroup string) *armke
 					},
 				},
 				{
+					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/managedHSMs/" + hsmName + "/privateEndpointConnections/test-pec-2"),
 					Properties: &armkeyvault.MHSMPrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armkeyvault.MHSMPrivateEndpoint{
 							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/privateEndpoints/test-private-endpoint-diff-rg"),

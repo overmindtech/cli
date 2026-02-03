@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/discovery"
@@ -470,7 +470,6 @@ func TestNetworkRouteTable(t *testing.T) {
 		expectedLinks := []shared.ItemType{
 			azureshared.NetworkRoute,
 			azureshared.NetworkSubnet,
-			azureshared.NetworkVirtualNetworkGateway,
 			stdlib.NetworkIP,
 		}
 		for _, expectedLink := range expectedLinks {

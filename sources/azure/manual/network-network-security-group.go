@@ -3,9 +3,10 @@ package manual
 import (
 	"context"
 	"errors"
+	"net"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
@@ -13,9 +14,23 @@ import (
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 var NetworkNetworkSecurityGroupLookupByName = shared.NewItemTypeLookup("name", azureshared.NetworkNetworkSecurityGroup)
+
+// appendIPOrCIDRLinkIfValid appends a linked item query to stdlib.NetworkIP when the prefix is an IP address or CIDR (not a service tag like VirtualNetwork, Internet, *).
+func appendIPOrCIDRLinkIfValid(queries *[]*sdp.LinkedItemQuery, prefix string) {
+	appendLinkIfValid(queries, prefix, []string{"*"}, func(p string) *sdp.LinkedItemQuery {
+		if net.ParseIP(p) != nil {
+			return networkIPQuery(p)
+		}
+		if _, _, err := net.ParseCIDR(p); err == nil {
+			return networkIPQuery(p)
+		}
+		return nil
+	})
+}
 
 type networkNetworkSecurityGroupWrapper struct {
 	client clients.NetworkSecurityGroupsClient
@@ -238,6 +253,40 @@ func (n networkNetworkSecurityGroupWrapper) azureNetworkSecurityGroupToSDPItem(n
 		}
 	}
 
+	// Link to FlowLogs (external resources)
+	// Reference: https://learn.microsoft.com/en-us/rest/api/network-watcher/flow-logs/get
+	if networkSecurityGroup.Properties != nil && networkSecurityGroup.Properties.FlowLogs != nil {
+		for _, flowLogRef := range networkSecurityGroup.Properties.FlowLogs {
+			if flowLogRef != nil && flowLogRef.ID != nil && *flowLogRef.ID != "" {
+				flowLogID := *flowLogRef.ID
+				params := azureshared.ExtractPathParamsFromResourceID(flowLogID, []string{"networkWatchers", "flowLogs"})
+				if len(params) < 2 {
+					params = azureshared.ExtractPathParamsFromResourceID(flowLogID, []string{"networkWatchers", "FlowLogs"})
+				}
+				if len(params) >= 2 {
+					networkWatcherName := params[0]
+					flowLogName := params[1]
+					scope := n.DefaultScope()
+					if extractedScope := azureshared.ExtractScopeFromResourceID(flowLogID); extractedScope != "" {
+						scope = extractedScope
+					}
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   azureshared.NetworkFlowLog.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  shared.CompositeLookupKey(networkWatcherName, flowLogName),
+							Scope:  scope,
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,  // Flow log config changes affect the NSG's observability
+							Out: false, // NSG changes don't affect the flow log resource
+						},
+					})
+				}
+			}
+		}
+	}
+
 	// Link to ApplicationSecurityGroups and IPGroups from SecurityRules
 	// Reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/application-security-groups/get
 	// Reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/ip-groups/get
@@ -302,8 +351,23 @@ func (n networkNetworkSecurityGroupWrapper) azureNetworkSecurityGroupToSDPItem(n
 						}
 					}
 
-					// Note: IPGroups (SourceIPGroups/DestinationIPGroups) are not available in the current Azure SDK version
-					// These fields may be available in future SDK versions or may require a different SDK package
+					// Link to stdlib.NetworkIP for source/destination address prefixes when they are IPs or CIDRs
+					if securityRule.Properties.SourceAddressPrefix != nil {
+						appendIPOrCIDRLinkIfValid(&sdpItem.LinkedItemQueries, *securityRule.Properties.SourceAddressPrefix)
+					}
+					for _, p := range securityRule.Properties.SourceAddressPrefixes {
+						if p != nil {
+							appendIPOrCIDRLinkIfValid(&sdpItem.LinkedItemQueries, *p)
+						}
+					}
+					if securityRule.Properties.DestinationAddressPrefix != nil {
+						appendIPOrCIDRLinkIfValid(&sdpItem.LinkedItemQueries, *securityRule.Properties.DestinationAddressPrefix)
+					}
+					for _, p := range securityRule.Properties.DestinationAddressPrefixes {
+						if p != nil {
+							appendIPOrCIDRLinkIfValid(&sdpItem.LinkedItemQueries, *p)
+						}
+					}
 				}
 			}
 		}
@@ -368,8 +432,23 @@ func (n networkNetworkSecurityGroupWrapper) azureNetworkSecurityGroupToSDPItem(n
 						}
 					}
 
-					// Note: IPGroups (SourceIPGroups/DestinationIPGroups) are not available in the current Azure SDK version
-					// These fields may be available in future SDK versions or may require a different SDK package
+					// Link to stdlib.NetworkIP for source/destination address prefixes when they are IPs or CIDRs
+					if defaultSecurityRule.Properties.SourceAddressPrefix != nil {
+						appendIPOrCIDRLinkIfValid(&sdpItem.LinkedItemQueries, *defaultSecurityRule.Properties.SourceAddressPrefix)
+					}
+					for _, p := range defaultSecurityRule.Properties.SourceAddressPrefixes {
+						if p != nil {
+							appendIPOrCIDRLinkIfValid(&sdpItem.LinkedItemQueries, *p)
+						}
+					}
+					if defaultSecurityRule.Properties.DestinationAddressPrefix != nil {
+						appendIPOrCIDRLinkIfValid(&sdpItem.LinkedItemQueries, *defaultSecurityRule.Properties.DestinationAddressPrefix)
+					}
+					for _, p := range defaultSecurityRule.Properties.DestinationAddressPrefixes {
+						if p != nil {
+							appendIPOrCIDRLinkIfValid(&sdpItem.LinkedItemQueries, *p)
+						}
+					}
 				}
 			}
 		}
@@ -390,8 +469,10 @@ func (n networkNetworkSecurityGroupWrapper) PotentialLinks() map[shared.ItemType
 		azureshared.NetworkDefaultSecurityRule:      true,
 		azureshared.NetworkSubnet:                   true,
 		azureshared.NetworkNetworkInterface:         true,
+		azureshared.NetworkFlowLog:                  true,
 		azureshared.NetworkApplicationSecurityGroup: true,
 		azureshared.NetworkIPGroup:                  true,
+		stdlib.NetworkIP:                            true,
 	}
 }
 

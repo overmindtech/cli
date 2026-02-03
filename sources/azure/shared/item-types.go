@@ -70,13 +70,20 @@ var (
 	NetworkZone                                           = shared.NewItemType(Azure, Network, Zone)
 	NetworkDNSRecordSet                                   = shared.NewItemType(Azure, Network, DNSRecordSet)
 	NetworkDNSVirtualNetworkLink                          = shared.NewItemType(Azure, Network, DNSVirtualNetworkLink)
+	NetworkFlowLog                                        = shared.NewItemType(Azure, Network, FlowLog)
+	NetworkPrivateLinkService                             = shared.NewItemType(Azure, Network, PrivateLinkService)
+	NetworkDscpConfiguration                              = shared.NewItemType(Azure, Network, DscpConfiguration)
+	NetworkVirtualNetworkTap                              = shared.NewItemType(Azure, Network, VirtualNetworkTap)
+	NetworkNetworkInterfaceTapConfiguration               = shared.NewItemType(Azure, Network, NetworkInterfaceTapConfiguration)
 
 	//Storage item types
-	StorageAccount       = shared.NewItemType(Azure, Storage, Account)
-	StorageBlobContainer = shared.NewItemType(Azure, Storage, BlobContainer)
-	StorageFileShare     = shared.NewItemType(Azure, Storage, FileShare)
-	StorageTable         = shared.NewItemType(Azure, Storage, Table)
-	StorageQueue         = shared.NewItemType(Azure, Storage, Queue)
+	StorageAccount                   = shared.NewItemType(Azure, Storage, Account)
+	StorageBlobContainer             = shared.NewItemType(Azure, Storage, BlobContainer)
+	StorageEncryptionScope           = shared.NewItemType(Azure, Storage, EncryptionScope)
+	StorageFileShare                 = shared.NewItemType(Azure, Storage, FileShare)
+	StorageTable                     = shared.NewItemType(Azure, Storage, Table)
+	StorageQueue                     = shared.NewItemType(Azure, Storage, Queue)
+	StoragePrivateEndpointConnection = shared.NewItemType(Azure, Storage, StorageAccountPrivateEndpointConnection)
 
 	// SQL item types
 	SQLDatabase                              = shared.NewItemType(Azure, SQL, Database)
@@ -109,6 +116,11 @@ var (
 	SQLServerTrustGroup                      = shared.NewItemType(Azure, SQL, ServerTrustGroup)
 	SQLServerOutboundFirewallRule            = shared.NewItemType(Azure, SQL, ServerOutboundFirewallRule)
 	SQLServerPrivateLinkResource             = shared.NewItemType(Azure, SQL, ServerPrivateLinkResource)
+	SQLLongTermRetentionBackup               = shared.NewItemType(Azure, SQL, LongTermRetentionBackup)
+	SQLDatabaseSchema                        = shared.NewItemType(Azure, SQL, DatabaseSchema)
+
+	// Maintenance item types
+	MaintenanceMaintenanceConfiguration = shared.NewItemType(Azure, Maintenance, MaintenanceConfiguration)
 
 	// DBforPostgreSQL item types
 	DBforPostgreSQLFlexibleServer                          = shared.NewItemType(Azure, DBforPostgreSQL, FlexibleServer)
@@ -128,10 +140,11 @@ var (
 	DocumentDBPrivateEndpointConnection = shared.NewItemType(Azure, DocumentDB, PrivateEndpointConnection)
 
 	// KeyVault item types
-	KeyVaultVault      = shared.NewItemType(Azure, KeyVault, Vault)
-	KeyVaultSecret     = shared.NewItemType(Azure, KeyVault, Secret)
-	KeyVaultKey        = shared.NewItemType(Azure, KeyVault, Key)
-	KeyVaultManagedHSM = shared.NewItemType(Azure, KeyVault, ManagedHSM)
+	KeyVaultVault                               = shared.NewItemType(Azure, KeyVault, Vault)
+	KeyVaultSecret                              = shared.NewItemType(Azure, KeyVault, Secret)
+	KeyVaultKey                                 = shared.NewItemType(Azure, KeyVault, Key)
+	KeyVaultManagedHSM                          = shared.NewItemType(Azure, KeyVault, ManagedHSM)
+	KeyVaultManagedHSMPrivateEndpointConnection = shared.NewItemType(Azure, KeyVault, ManagedHSMPrivateEndpointConnection)
 
 	// ManagedIdentity item types
 	ManagedIdentityUserAssignedIdentity        = shared.NewItemType(Azure, ManagedIdentity, UserAssignedIdentity)

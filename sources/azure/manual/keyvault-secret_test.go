@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/discovery"
@@ -126,6 +126,28 @@ func TestKeyVaultSecret(t *testing.T) {
 					ExpectedBlastPropagation: &sdp.BlastPropagation{
 						In:  true,  // If Key Vault is deleted/modified → secret access and configuration are affected
 						Out: false, // If secret is deleted → Key Vault remains
+					},
+				},
+				{
+					// stdlib.NetworkDNS from SecretURI hostname
+					ExpectedType:   stdlib.NetworkDNS.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  vaultName + ".vault.azure.net",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					// stdlib.NetworkHTTP from SecretURI
+					ExpectedType:   stdlib.NetworkHTTP.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  fmt.Sprintf("https://%s.vault.azure.net/secrets/%s", vaultName, secretName),
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
 					},
 				},
 			}
@@ -447,6 +469,10 @@ func TestKeyVaultSecret(t *testing.T) {
 		if !links[stdlib.NetworkDNS] {
 			t.Error("Expected stdlib.NetworkDNS to be in potential links")
 		}
+
+		if !links[stdlib.NetworkHTTP] {
+			t.Error("Expected stdlib.NetworkHTTP to be in potential links")
+		}
 	})
 
 	t.Run("TerraformMappings", func(t *testing.T) {
@@ -575,7 +601,8 @@ func createAzureSecret(secretName, subscriptionID, resourceGroup, vaultName stri
 			"project": to.Ptr("testing"),
 		},
 		Properties: &armkeyvault.SecretProperties{
-			Value: to.Ptr("secret-value"),
+			Value:     to.Ptr("secret-value"),
+			SecretURI: to.Ptr(fmt.Sprintf("https://%s.vault.azure.net/secrets/%s", vaultName, secretName)),
 		},
 	}
 }

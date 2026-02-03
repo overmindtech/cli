@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql/v2"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
@@ -580,6 +580,22 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Out: false, // Private link resources are metadata about available private endpoints
 			}, // SQL Server Private Link Resources are child resources that provide private link metadata
 		})
+
+		// Link to Long Term Retention Backups (child resource)
+		// Reference: https://learn.microsoft.com/en-us/rest/api/sql/2021-11-01/long-term-retention-backups/list-by-server
+		// GET /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Sql/servers/{serverName}/longTermRetentionBackups
+		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   azureshared.SQLLongTermRetentionBackup.String(),
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  serverName,
+				Scope:  scope,
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  false, // LTR backup changes don't affect the SQL Server itself
+				Out: true,  // SQL Server changes (deletion) affect LTR backups
+			}, // SQL Server Long Term Retention Backups are child resources that can be listed by server
+		})
 	}
 
 	// External resources - extracted from IDs in the server response
@@ -730,6 +746,7 @@ func (s sqlServerWrapper) PotentialLinks() map[shared.ItemType]bool {
 		azureshared.SQLServerTrustGroup,
 		azureshared.SQLServerOutboundFirewallRule,
 		azureshared.SQLServerPrivateLinkResource,
+		azureshared.SQLLongTermRetentionBackup,
 		// External resources
 		azureshared.ManagedIdentityUserAssignedIdentity,
 		azureshared.NetworkPrivateEndpoint,

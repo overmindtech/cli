@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/discovery"
@@ -18,6 +18,7 @@ import (
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/azure/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 func TestNetworkNetworkInterface(t *testing.T) {
@@ -97,8 +98,101 @@ func TestNetworkNetworkInterface(t *testing.T) {
 						Out: false,
 					},
 				},
+				{
+					// NetworkNetworkInterfaceTapConfiguration link (child resource)
+					ExpectedType:   azureshared.NetworkNetworkInterfaceTapConfiguration.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  nicName,
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  false,
+						Out: true,
+					},
+				},
 			}
 
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+
+		t.Run("DNSServers_IP_and_hostname", func(t *testing.T) {
+			nicWithDNS := createAzureNetworkInterfaceWithDNSServers(nicName, "test-vm", "test-nsg", []string{"10.0.0.1", "dns.internal"})
+			mockClient := mocks.NewMockNetworkInterfacesClient(ctrl)
+			mockClient.EXPECT().Get(ctx, resourceGroup, nicName).Return(
+				armnetwork.InterfacesClientGetResponse{
+					Interface: *nicWithDNS,
+				}, nil)
+
+			wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
+			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+			sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], nicName, true)
+			if qErr != nil {
+				t.Fatalf("Expected no error, got: %v", qErr)
+			}
+
+			// Same base links as main Get test, plus DNS server links (IP → NetworkIP, hostname → NetworkDNS)
+			queryTests := shared.QueryTests{
+				{
+					ExpectedType:   azureshared.NetworkNetworkInterfaceIPConfiguration.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  nicName,
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  false,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   azureshared.ComputeVirtualMachine.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-vm",
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  false,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   azureshared.NetworkNetworkSecurityGroup.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-nsg",
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   azureshared.NetworkNetworkInterfaceTapConfiguration.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  nicName,
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  false,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "10.0.0.1",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkDNS.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "dns.internal",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
 	})
@@ -401,4 +495,17 @@ func createAzureNetworkInterface(nicName, vmName, nsgName string) *armnetwork.In
 			},
 		},
 	}
+}
+
+// createAzureNetworkInterfaceWithDNSServers creates a mock Azure network interface with DNSSettings for testing DNS server links (IP vs hostname).
+func createAzureNetworkInterfaceWithDNSServers(nicName, vmName, nsgName string, dnsServers []string) *armnetwork.Interface {
+	nic := createAzureNetworkInterface(nicName, vmName, nsgName)
+	ptrs := make([]*string, len(dnsServers))
+	for i := range dnsServers {
+		ptrs[i] = to.Ptr(dnsServers[i])
+	}
+	nic.Properties.DNSSettings = &armnetwork.InterfaceDNSSettings{
+		DNSServers: ptrs,
+	}
+	return nic
 }

@@ -3,7 +3,7 @@ package manual
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
@@ -156,6 +156,8 @@ func (s storageFileShareWrapper) azureFileShareToSDPItem(fileShare *armstorage.F
 			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
+			// File Share depends on Storage Account (parent); deletion/change of Storage Account affects File Share.
+			// Storage Account is not affected when a child File Share is deleted.
 			In:  true,
 			Out: false,
 		},

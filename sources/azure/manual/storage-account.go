@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
@@ -157,6 +157,24 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 		BlastPropagation: &sdp.BlastPropagation{
 			In:  false, // Storage account is NOT affected if queues change
 			Out: true,  // Queues ARE affected if storage account changes/deletes
+		},
+	})
+
+	// Link to Private Endpoint Connections (child resource)
+	// Reference: https://learn.microsoft.com/en-us/rest/api/storagerp/private-endpoint-connections/list?view=rest-storagerp-2025-06-01
+	// Private endpoint connections can be listed using the storage account name
+	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   azureshared.StoragePrivateEndpointConnection.String(),
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  accountName,
+			Scope:  scope,
+		},
+		BlastPropagation: &sdp.BlastPropagation{
+			// Private endpoint connections are child resources of the storage account
+			// Changes to storage account affect connections, and connection state affects storage access
+			In:  true,
+			Out: true,
 		},
 	})
 
@@ -470,10 +488,11 @@ func (s storageAccountWrapper) GetLookups() sources.ItemTypeLookups {
 func (s storageAccountWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
 		// Child resources
-		azureshared.StorageBlobContainer: true,
-		azureshared.StorageFileShare:     true,
-		azureshared.StorageTable:         true,
-		azureshared.StorageQueue:         true,
+		azureshared.StorageBlobContainer:             true,
+		azureshared.StorageFileShare:                 true,
+		azureshared.StorageTable:                     true,
+		azureshared.StorageQueue:                     true,
+		azureshared.StoragePrivateEndpointConnection: true,
 		// External resources
 		azureshared.ManagedIdentityUserAssignedIdentity: true,
 		azureshared.KeyVaultVault:                       true,

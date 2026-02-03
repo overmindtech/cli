@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	armbatch "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch"
+	armbatch "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v3"
 	clients "github.com/overmindtech/cli/sources/azure/clients"
 	gomock "go.uber.org/mock/gomock"
 )
