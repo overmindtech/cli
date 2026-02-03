@@ -3,12 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/cli/discovery"
@@ -68,6 +67,10 @@ var rootCmd = &cobra.Command{
 
 		// Start HTTP server for health checks
 		healthCheckPort := viper.GetString("service-port")
+		healthCheckPortInt, err := strconv.Atoi(healthCheckPort)
+		if err != nil {
+			log.WithError(err).WithFields(log.Fields{"service-port": healthCheckPort}).Fatal("Invalid service-port")
+		}
 
 		healthCheckDNSAdapter := adapters.DNSAdapter{}
 
@@ -86,34 +89,7 @@ var rootCmd = &cobra.Command{
 			return nil
 		})
 
-		// Liveness: Check only engine initialization (NATS, heartbeats)
-		http.HandleFunc("/healthz/alive", e.LivenessProbeHandlerFunc())
-		// Readiness: Check if adapters are healthy and ready to handle requests
-		http.HandleFunc("/healthz/ready", e.ReadinessProbeHandlerFunc())
-		// Backward compatibility - maps to liveness check (matches old behavior)
-		http.HandleFunc("/healthz", e.LivenessProbeHandlerFunc())
-
-		log.WithFields(log.Fields{
-			"port": healthCheckPort,
-		}).Debug("Starting healthcheck server with endpoints: /healthz/alive, /healthz/ready, /healthz")
-
-		go func() {
-			defer sentry.Recover()
-
-			server := &http.Server{
-				Addr:    fmt.Sprintf(":%v", healthCheckPort),
-				Handler: nil,
-				// due to https://github.com/securego/gosec/pull/842
-				ReadTimeout:  5 * time.Second, // Set the read timeout to 5 seconds
-				WriteTimeout: 5 * time.Second, // Set the write timeout to 5 seconds
-			}
-
-			err := server.ListenAndServe()
-
-			log.WithError(err).WithFields(log.Fields{
-				"port": healthCheckPort,
-			}).Error("Could not start HTTP server for health checks")
-		}()
+		e.ServeHealthProbes(healthCheckPortInt)
 
 		err = e.Start(ctx)
 		if err != nil {

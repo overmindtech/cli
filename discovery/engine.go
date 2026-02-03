@@ -768,3 +768,32 @@ func (e *Engine) ReadinessProbeHandlerFunc() func(http.ResponseWriter, *http.Req
 		fmt.Fprint(rw, "ok")
 	}
 }
+
+// ServeHealthProbes starts an HTTP server for Kubernetes health probes on the given port.
+// Registers /healthz/alive (liveness), /healthz/ready (readiness), and /healthz (backward compat).
+// Runs in a goroutine. Use for sources that only need health checks on the given port.
+func (e *Engine) ServeHealthProbes(port int) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz/alive", e.LivenessProbeHandlerFunc())
+	mux.HandleFunc("/healthz/ready", e.ReadinessProbeHandlerFunc())
+	mux.HandleFunc("/healthz", e.LivenessProbeHandlerFunc())
+
+	logFields := log.Fields{"port": port}
+	if e.EngineConfig != nil {
+		logFields["ovm.engine.type"] = e.EngineConfig.EngineType
+		logFields["ovm.engine.name"] = e.EngineConfig.SourceName
+	}
+	log.WithFields(logFields).Debug("Starting healthcheck server with endpoints: /healthz/alive, /healthz/ready, /healthz")
+
+	go func() {
+		defer sentry.Recover()
+		server := &http.Server{
+			Addr:         fmt.Sprintf(":%d", port),
+			Handler:      mux,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+		}
+		err := server.ListenAndServe()
+		log.WithError(err).WithFields(logFields).Error("Could not start HTTP server for health checks")
+	}()
+}
