@@ -43,6 +43,9 @@ const (
 
 	// Authorization
 	Authorization shared.API = "authorization" // Microsoft.Authorization
+
+	// Maintenance
+	Maintenance shared.API = "maintenance" // Microsoft.Maintenance
 )
 
 // Resources
@@ -112,13 +115,20 @@ const (
 	Zone                                           shared.Resource = "zone"
 	DNSRecordSet                                   shared.Resource = "dns-record-set"
 	DNSVirtualNetworkLink                          shared.Resource = "dns-virtual-network-link"
+	FlowLog                                        shared.Resource = "flow-log"
+	PrivateLinkService                             shared.Resource = "private-link-service"
+	DscpConfiguration                              shared.Resource = "dscp-configuration"
+	VirtualNetworkTap                              shared.Resource = "virtual-network-tap"
+	NetworkInterfaceTapConfiguration               shared.Resource = "network-interface-tap-configuration"
 
 	// Storage resources
-	Account       shared.Resource = "account"
-	BlobContainer shared.Resource = "blob-container"
-	FileShare     shared.Resource = "file-share"
-	Table         shared.Resource = "table"
-	Queue         shared.Resource = "queue"
+	Account                                 shared.Resource = "account"
+	BlobContainer                           shared.Resource = "blob-container"
+	EncryptionScope                         shared.Resource = "encryption-scope"
+	FileShare                               shared.Resource = "file-share"
+	Table                                   shared.Resource = "table"
+	Queue                                   shared.Resource = "queue"
+	StorageAccountPrivateEndpointConnection shared.Resource = "storage-account-private-endpoint-connection"
 
 	// SQL resources
 	Database                              shared.Resource = "database"
@@ -151,6 +161,11 @@ const (
 	ServerTrustGroup                      shared.Resource = "server-trust-group"
 	ServerOutboundFirewallRule            shared.Resource = "server-outbound-firewall-rule"
 	ServerPrivateLinkResource             shared.Resource = "server-private-link-resource"
+	LongTermRetentionBackup               shared.Resource = "long-term-retention-backup"
+	DatabaseSchema                        shared.Resource = "database-schema"
+
+	// Maintenance resources
+	MaintenanceConfiguration shared.Resource = "maintenance-configuration"
 
 	// DBforPostgreSQL resources
 	FlexibleServer                          shared.Resource = "flexible-server"
@@ -169,10 +184,11 @@ const (
 	PrivateEndpointConnection shared.Resource = "private-endpoint-connection"
 
 	// KeyVault resources
-	Vault      shared.Resource = "vault"
-	Secret     shared.Resource = "secret"
-	Key        shared.Resource = "key"
-	ManagedHSM shared.Resource = "managed-hsm"
+	Vault                               shared.Resource = "vault"
+	Secret                              shared.Resource = "secret"
+	Key                                 shared.Resource = "key"
+	ManagedHSM                          shared.Resource = "managed-hsm"
+	ManagedHSMPrivateEndpointConnection shared.Resource = "managed-hsm-private-endpoint-connection"
 
 	// ManagedIdentity resources
 	UserAssignedIdentity        shared.Resource = "user-assigned-identity"

@@ -27,7 +27,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-keyvault-secret":                     {"vaults", "secrets"},              // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
 		"azure-authorization-role-assignment":       {"roleAssignments"},                // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Authorization/roleAssignments/{roleAssignmentName}",
 		"azure-compute-virtual-machine-run-command": {"virtualMachines", "runCommands"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/runCommands/{runCommandName}",
-		"azure-compute-virtual-machine-extension":   {"virtualMachines", "extensions"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/extensions/{extensionName}",
+		"azure-compute-virtual-machine-extension":   {"virtualMachines", "extensions"},  // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/extensions/{extensionName}",
 	}
 
 	if keys, ok := pathKeysMap[resourceType]; ok {
@@ -174,6 +174,22 @@ func ExtractSQLRestorableDroppedDatabaseInfoFromResourceID(resourceID string) (s
 	}
 
 	return "", ""
+}
+
+// ExtractSQLLongTermRetentionBackupInfoFromResourceID extracts parameters from a long term retention backup resource ID.
+// Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/locations/{location}/longTermRetentionServers/{server}/longTermRetentionDatabases/{db}/longTermRetentionBackups/{backupName}
+// Returns locationName, serverName, databaseName, backupName if valid, otherwise empty strings.
+func ExtractSQLLongTermRetentionBackupInfoFromResourceID(resourceID string) (locationName, serverName, databaseName, backupName string) {
+	if resourceID == "" {
+		return "", "", "", ""
+	}
+
+	params := ExtractPathParamsFromResourceID(resourceID, []string{"locations", "longTermRetentionServers", "longTermRetentionDatabases", "longTermRetentionBackups"})
+	if len(params) >= 4 {
+		return params[0], params[1], params[2], params[3]
+	}
+
+	return "", "", "", ""
 }
 
 // ExtractSQLElasticPoolInfoFromResourceID extracts SQL server name and elastic pool name from a SQL elastic pool resource ID.

@@ -4,12 +4,13 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 var NetworkVirtualNetworkLookupByName = shared.NewItemTypeLookup("name", azureshared.NetworkVirtualNetwork)
@@ -301,6 +302,42 @@ func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armn
 		}
 	}
 
+	// Link to default public NAT Gateway (VNet-level)
+	// Reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/nat-gateways/get
+	if network.Properties != nil && network.Properties.DefaultPublicNatGateway != nil && network.Properties.DefaultPublicNatGateway.ID != nil {
+		natGatewayID := *network.Properties.DefaultPublicNatGateway.ID
+		natGatewayName := azureshared.ExtractResourceName(natGatewayID)
+		if natGatewayName != "" {
+			scope := n.DefaultScope()
+			if extractedScope := azureshared.ExtractScopeFromResourceID(natGatewayID); extractedScope != "" {
+				scope = extractedScope
+			}
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   azureshared.NetworkNatGateway.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  natGatewayName,
+					Scope:  scope,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,  // If NAT Gateway changes → VNet outbound connectivity affected (In: true)
+					Out: false, // If Virtual Network is deleted → NAT Gateway remains (Out: false)
+				},
+			})
+		}
+	}
+
+	// Link DHCP DNS servers to stdlib ip (IP addresses) or stdlib dns (hostnames)
+	// Reference: DhcpOptions contains DNS servers available to VMs in the VNet
+	if network.Properties != nil && network.Properties.DhcpOptions != nil && network.Properties.DhcpOptions.DNSServers != nil {
+		for _, dnsServerPtr := range network.Properties.DhcpOptions.DNSServers {
+			if dnsServerPtr == nil {
+				continue
+			}
+			appendDNSServerLinkIfValid(&sdpItem.LinkedItemQueries, *dnsServerPtr, "AzureProvidedDNS")
+		}
+	}
+
 	return sdpItem, nil
 }
 
@@ -320,6 +357,8 @@ func (n networkVirtualNetworkWrapper) PotentialLinks() map[shared.ItemType]bool 
 		azureshared.NetworkRouteTable,
 		azureshared.NetworkPrivateEndpoint,
 		azureshared.NetworkVirtualNetwork,
+		stdlib.NetworkIP,
+		stdlib.NetworkDNS,
 	)
 }
 

@@ -5,12 +5,13 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 var KeyVaultVaultLookupByName = shared.NewItemTypeLookup("name", azureshared.KeyVaultVault)
@@ -185,6 +186,46 @@ func (k keyvaultVaultWrapper) azureKeyVaultToSDPItem(vault *armkeyvault.Vault, s
 		}
 	}
 
+	// Link to IP addresses (standard library) from NetworkACLs IPRules
+	// Reference: https://learn.microsoft.com/en-us/rest/api/keyvault/vaults/get
+	if vault.Properties != nil && vault.Properties.NetworkACLs != nil && vault.Properties.NetworkACLs.IPRules != nil {
+		for _, ipRule := range vault.Properties.NetworkACLs.IPRules {
+			if ipRule != nil && ipRule.Value != nil && *ipRule.Value != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   stdlib.NetworkIP.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  *ipRule.Value,
+						Scope:  "global",
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						// IPs are always linked - IP rule changes affect Key Vault network accessibility
+						In:  true,
+						Out: true,
+					},
+				})
+			}
+		}
+	}
+
+	// Link to stdlib.NetworkHTTP for the vault URI (HTTPS endpoint for keys and secrets operations)
+	if vault.Properties != nil && vault.Properties.VaultURI != nil && *vault.Properties.VaultURI != "" {
+		vaultURI := *vault.Properties.VaultURI
+		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   stdlib.NetworkHTTP.String(),
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  vaultURI,
+				Scope:  "global",
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// Vault endpoint connectivity affects Key Vault operations; Key Vault changes may affect endpoint
+				In:  true,
+				Out: true,
+			},
+		})
+	}
+
 	// Link to Managed HSM from HsmPoolResourceID
 	// Reference: https://learn.microsoft.com/en-us/rest/api/keyvault/keyvault/managed-hsms/get
 	// GET /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.KeyVault/managedHSMs/{name}
@@ -243,6 +284,8 @@ func (k keyvaultVaultWrapper) PotentialLinks() map[shared.ItemType]bool {
 		azureshared.NetworkPrivateEndpoint,
 		azureshared.NetworkSubnet,
 		azureshared.KeyVaultManagedHSM,
+		stdlib.NetworkIP,
+		stdlib.NetworkHTTP,
 	)
 }
 

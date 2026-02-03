@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
@@ -171,12 +171,14 @@ func (k keyvaultSecretWrapper) azureSecretToSDPItem(secret *armkeyvault.Secret, 
 		}
 	}
 
-	// Link to DNS name (standard library) from SecretURI
-	// The SecretURI contains the Key Vault secret endpoint URL (e.g., https://myvault.vault.azure.net/secrets/mysecret)
+	// Link to DNS name and HTTP endpoints (standard library) from SecretURI and SecretURIWithVersion.
+	// Both URIs share the same Key Vault hostname (e.g., myvault.vault.azure.net), so we add the DNS link only once.
+	var linkedDNSName string
 	if secret.Properties != nil && secret.Properties.SecretURI != nil && *secret.Properties.SecretURI != "" {
-		// Extract DNS name from URL (e.g., https://myvault.vault.azure.net/secrets/mysecret -> myvault.vault.azure.net)
-		dnsName := azureshared.ExtractDNSFromURL(*secret.Properties.SecretURI)
+		secretURI := *secret.Properties.SecretURI
+		dnsName := azureshared.ExtractDNSFromURL(secretURI)
 		if dnsName != "" {
+			linkedDNSName = dnsName
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   stdlib.NetworkDNS.String(),
@@ -185,12 +187,55 @@ func (k keyvaultSecretWrapper) azureSecretToSDPItem(secret *armkeyvault.Secret, 
 					Scope:  "global",
 				},
 				BlastPropagation: &sdp.BlastPropagation{
-					// DNS names are always linked bidirectionally
 					In:  true,
 					Out: true,
 				},
 			})
 		}
+		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   stdlib.NetworkHTTP.String(),
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  secretURI,
+				Scope:  "global",
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
+		})
+	}
+
+	// SecretURIWithVersion is the versioned URL; add HTTP link. Skip DNS link if same hostname already linked.
+	if secret.Properties != nil && secret.Properties.SecretURIWithVersion != nil && *secret.Properties.SecretURIWithVersion != "" {
+		secretURIWithVersion := *secret.Properties.SecretURIWithVersion
+		dnsName := azureshared.ExtractDNSFromURL(secretURIWithVersion)
+		if dnsName != "" && dnsName != linkedDNSName {
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   stdlib.NetworkDNS.String(),
+					Method: sdp.QueryMethod_SEARCH,
+					Query:  dnsName,
+					Scope:  "global",
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,
+					Out: true,
+				},
+			})
+		}
+		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   stdlib.NetworkHTTP.String(),
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  secretURIWithVersion,
+				Scope:  "global",
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,
+				Out: true,
+			},
+		})
 	}
 
 	return sdpItem, nil
@@ -225,6 +270,7 @@ func (k keyvaultSecretWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		azureshared.KeyVaultVault,
 		stdlib.NetworkDNS,
+		stdlib.NetworkHTTP,
 	)
 }
 

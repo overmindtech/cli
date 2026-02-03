@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v3"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
@@ -372,13 +372,13 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 	if account.Properties != nil && account.Properties.AccountEndpoint != nil && *account.Properties.AccountEndpoint != "" {
 		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 			Query: &sdp.Query{
-				Type:   "dns",
+				Type:   stdlib.NetworkDNS.String(),
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  *account.Properties.AccountEndpoint,
 				Scope:  "global",
 			},
 			BlastPropagation: &sdp.BlastPropagation{
-				// DNS names are always linked
+				// DNS names are shared resources; changes can affect connectivity both ways
 				In:  true,
 				Out: true,
 			},
@@ -392,16 +392,15 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 				if ipRule != nil && ipRule.Value != nil && *ipRule.Value != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   "ip",
+							Type:   stdlib.NetworkIP.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  *ipRule.Value,
 							Scope:  "global",
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							// Batch account depends on IP rules for network access control
-							// If IP rules change, batch account access may be affected
+							// IPs are shared resources; changes can affect connectivity both ways
 							In:  true,
-							Out: false,
+							Out: true,
 						},
 					})
 				}
@@ -416,16 +415,15 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 				if ipRule != nil && ipRule.Value != nil && *ipRule.Value != "" {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   "ip",
+							Type:   stdlib.NetworkIP.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  *ipRule.Value,
 							Scope:  "global",
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							// Batch account depends on IP rules for node management access control
-							// If IP rules change, batch account node management access may be affected
+							// IPs are shared resources; changes can affect connectivity both ways
 							In:  true,
-							Out: false,
+							Out: true,
 						},
 					})
 				}

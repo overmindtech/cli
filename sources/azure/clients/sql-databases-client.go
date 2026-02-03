@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql/v2"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_sql_databases_client.go -package=mocks -source=sql-databases-client.go

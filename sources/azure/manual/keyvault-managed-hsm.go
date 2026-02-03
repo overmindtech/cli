@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
@@ -114,6 +114,31 @@ func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.Ma
 		LinkedItemQueries: []*sdp.LinkedItemQuery{},
 	}
 
+	// Link to MHSM Private Endpoint Connections (child resources with their own GET endpoint)
+	// Reference: https://learn.microsoft.com/en-us/rest/api/keyvault/managedhsm/mhsm-private-endpoint-connections/get
+	// GET .../managedHSMs/{name}/privateEndpointConnections/{privateEndpointConnectionName}
+	if hsm.Properties != nil && hsm.Properties.PrivateEndpointConnections != nil && hsm.Name != nil {
+		for _, conn := range hsm.Properties.PrivateEndpointConnections {
+			if conn != nil && conn.ID != nil && *conn.ID != "" {
+				connectionName := azureshared.ExtractResourceName(*conn.ID)
+				if connectionName != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   azureshared.KeyVaultManagedHSMPrivateEndpointConnection.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  shared.CompositeLookupKey(*hsm.Name, connectionName),
+							Scope:  scope,
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true, // Connection state changes affect the Managed HSM's private connectivity
+							Out: true, // Managed HSM deletion removes the connection
+						},
+					})
+				}
+			}
+		}
+	}
+
 	// Link to Private Endpoints from Private Endpoint Connections
 	// Reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/private-endpoints/get
 	// GET /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/privateEndpoints/{privateEndpointName}
@@ -134,18 +159,18 @@ func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.Ma
 					if privateEndpointName != "" {
 						// Construct scope in format: {subscriptionID}.{resourceGroupName}
 						// This ensures we query the correct resource group where the private endpoint actually exists
-						scope := fmt.Sprintf("%s.%s", subscriptionID, resourceGroupName)
+						peScope := fmt.Sprintf("%s.%s", subscriptionID, resourceGroupName)
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   azureshared.NetworkPrivateEndpoint.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  privateEndpointName,
-								Scope:  scope, // Use the private endpoint's scope, not the Managed HSM's scope
+								Scope:  peScope, // Use the private endpoint's scope, not the Managed HSM's scope
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true, // Private endpoint changes (deletion, network configuration) affect the Managed HSM's private connectivity
 								Out: true, // Managed HSM deletion or configuration changes may affect the private endpoint's connection state
-							}, // Private endpoints are tightly coupled to the Managed HSM - changes affect connectivity
+							},
 						})
 					}
 				}
@@ -254,12 +279,13 @@ func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.Ma
 	// Link to DNS name (standard library) from HsmURI
 	// The HsmURI contains the Managed HSM endpoint URL (e.g., https://myhsm.managedhsm.azure.net)
 	if hsm.Properties != nil && hsm.Properties.HsmURI != nil && *hsm.Properties.HsmURI != "" {
+		hsmURI := *hsm.Properties.HsmURI
 		// Extract DNS name from URL (e.g., https://myhsm.managedhsm.azure.net -> myhsm.managedhsm.azure.net)
-		dnsName := azureshared.ExtractDNSFromURL(*hsm.Properties.HsmURI)
+		dnsName := azureshared.ExtractDNSFromURL(hsmURI)
 		if dnsName != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
-					Type:   "dns",
+					Type:   stdlib.NetworkDNS.String(),
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  dnsName,
 					Scope:  "global",
@@ -271,6 +297,20 @@ func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.Ma
 				},
 			})
 		}
+		// Link to HTTP/HTTPS endpoint (standard library) from HsmURI
+		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   stdlib.NetworkHTTP.String(),
+				Method: sdp.QueryMethod_SEARCH,
+				Query:  hsmURI,
+				Scope:  "global",
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				// Endpoint connectivity affects HSM access and vice versa
+				In:  true,
+				Out: true,
+			},
+		})
 	}
 
 	return sdpItem, nil
@@ -317,11 +357,13 @@ func (k keyvaultManagedHSMsWrapper) TerraformMappings() []*sdp.TerraformMapping 
 
 func (k keyvaultManagedHSMsWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
-		azureshared.NetworkPrivateEndpoint:              true,
-		azureshared.NetworkSubnet:                       true,
-		azureshared.ManagedIdentityUserAssignedIdentity: true,
-		stdlib.NetworkDNS:                               true,
-		stdlib.NetworkIP:                                true,
+		azureshared.KeyVaultManagedHSMPrivateEndpointConnection: true,
+		azureshared.NetworkPrivateEndpoint:                      true,
+		azureshared.NetworkSubnet:                               true,
+		azureshared.ManagedIdentityUserAssignedIdentity:         true,
+		stdlib.NetworkDNS:                                       true,
+		stdlib.NetworkHTTP:                                      true,
+		stdlib.NetworkIP:                                        true,
 	}
 }
 

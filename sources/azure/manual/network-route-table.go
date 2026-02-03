@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
@@ -193,7 +193,6 @@ func (n networkRouteTableWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		azureshared.NetworkRoute,
 		azureshared.NetworkSubnet,
-		azureshared.NetworkVirtualNetworkGateway,
 		stdlib.NetworkIP,
 	)
 }

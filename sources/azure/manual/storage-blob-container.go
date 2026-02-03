@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
@@ -127,6 +127,7 @@ func (s storageBlobContainerWrapper) SearchLookups() []sources.ItemTypeLookups {
 func (s storageBlobContainerWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		azureshared.StorageAccount,
+		azureshared.StorageEncryptionScope,
 		stdlib.NetworkHTTP,
 		stdlib.NetworkDNS,
 	)
@@ -196,6 +197,22 @@ func (s storageBlobContainerWrapper) azureBlobContainerToSDPItem(container *arms
 				In:  true, // If HTTP endpoint is unavailable → blob container becomes inaccessible (In: true)
 				Out: true, // If blob container is deleted → HTTP endpoint may still be used by other resources (Out: true)
 			}, // Blob container depends on HTTP endpoint for access
+		})
+	}
+
+	// Link to Storage Encryption Scope when container uses a default encryption scope
+	if container.ContainerProperties != nil && container.ContainerProperties.DefaultEncryptionScope != nil && *container.ContainerProperties.DefaultEncryptionScope != "" {
+		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   azureshared.StorageEncryptionScope.String(),
+				Method: sdp.QueryMethod_GET,
+				Query:  shared.CompositeLookupKey(storageAccountName, *container.ContainerProperties.DefaultEncryptionScope),
+				Scope:  scope,
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,  // If encryption scope is removed or changed → container's default encryption is affected
+				Out: false, // Container deletion does not affect the encryption scope
+			},
 		})
 	}
 

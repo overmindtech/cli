@@ -3,7 +3,7 @@ package manual
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
@@ -73,6 +73,7 @@ func (s storageQueuesWrapper) azureQueueToSDPItem(queue *armstorage.Queue, stora
 		Scope:           scope,
 	}
 
+	// Queue is a child of the storage account; queue is affected if account changes, account is not affected by queue changes.
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
 			Type:   azureshared.StorageAccount.String(),
@@ -81,8 +82,8 @@ func (s storageQueuesWrapper) azureQueueToSDPItem(queue *armstorage.Queue, stora
 			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,
-			Out: false,
+			In:  true,  // Queue depends on storage account; account deletion/change affects the queue.
+			Out: false, // Storage account is not affected by queue create/update/delete.
 		},
 	})
 

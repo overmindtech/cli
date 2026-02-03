@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v6"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/discovery"
@@ -18,6 +18,7 @@ import (
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/azure/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 func TestNetworkVirtualNetwork(t *testing.T) {
@@ -88,6 +89,81 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 				},
 			}
 
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+		})
+	})
+
+	t.Run("Get_WithDefaultPublicNatGatewayAndDhcpOptions", func(t *testing.T) {
+		vnetName := "test-vnet-with-links"
+		vnet := createAzureVirtualNetworkWithDefaultNatGatewayAndDhcpOptions(vnetName, subscriptionID, resourceGroup)
+
+		mockClient := mocks.NewMockVirtualNetworksClient(ctrl)
+		mockClient.EXPECT().Get(ctx, resourceGroup, vnetName, nil).Return(
+			armnetwork.VirtualNetworksClientGetResponse{
+				VirtualNetwork: *vnet,
+			}, nil)
+
+		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vnetName, true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		t.Run("StaticTests", func(t *testing.T) {
+			queryTests := shared.QueryTests{
+				{
+					ExpectedType:   azureshared.NetworkSubnet.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  vnetName,
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  false,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   azureshared.NetworkVirtualNetworkPeering.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  vnetName,
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  false,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   azureshared.NetworkNatGateway.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-nat-gateway",
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: false,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "10.0.0.1",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+				{
+					ExpectedType:   stdlib.NetworkDNS.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "dns.internal",
+					ExpectedScope:  "global",
+					ExpectedBlastPropagation: &sdp.BlastPropagation{
+						In:  true,
+						Out: true,
+					},
+				},
+			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
 	})
@@ -294,6 +370,12 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 		if !potentialLinks[azureshared.NetworkVirtualNetworkPeering] {
 			t.Error("Expected PotentialLinks to include NetworkVirtualNetworkPeering")
 		}
+		if !potentialLinks[stdlib.NetworkIP] {
+			t.Error("Expected PotentialLinks to include stdlib.NetworkIP")
+		}
+		if !potentialLinks[stdlib.NetworkDNS] {
+			t.Error("Expected PotentialLinks to include stdlib.NetworkDNS")
+		}
 
 		// Verify TerraformMappings
 		mappings := w.TerraformMappings()
@@ -372,6 +454,41 @@ func createAzureVirtualNetwork(vnetName string) *armnetwork.VirtualNetwork {
 		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
 			AddressSpace: &armnetwork.AddressSpace{
 				AddressPrefixes: []*string{to.Ptr("10.0.0.0/16")},
+			},
+			Subnets: []*armnetwork.Subnet{
+				{
+					Name: to.Ptr("default"),
+					Properties: &armnetwork.SubnetPropertiesFormat{
+						AddressPrefix: to.Ptr("10.0.0.0/24"),
+					},
+				},
+			},
+		},
+	}
+}
+
+// createAzureVirtualNetworkWithDefaultNatGatewayAndDhcpOptions creates a VNet with
+// DefaultPublicNatGateway and DhcpOptions.DNSServers (IP and hostname) for testing linked queries.
+func createAzureVirtualNetworkWithDefaultNatGatewayAndDhcpOptions(vnetName, subscriptionID, resourceGroup string) *armnetwork.VirtualNetwork {
+	natGatewayID := "/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/natGateways/test-nat-gateway"
+	return &armnetwork.VirtualNetwork{
+		Name:     to.Ptr(vnetName),
+		Location: to.Ptr("eastus"),
+		Tags: map[string]*string{
+			"env": to.Ptr("test"),
+		},
+		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
+			AddressSpace: &armnetwork.AddressSpace{
+				AddressPrefixes: []*string{to.Ptr("10.0.0.0/16")},
+			},
+			DefaultPublicNatGateway: &armnetwork.SubResource{
+				ID: to.Ptr(natGatewayID),
+			},
+			DhcpOptions: &armnetwork.DhcpOptions{
+				DNSServers: []*string{
+					to.Ptr("10.0.0.1"),     // IP address → stdlib.NetworkIP
+					to.Ptr("dns.internal"), // hostname → stdlib.NetworkDNS
+				},
 			},
 			Subnets: []*armnetwork.Subnet{
 				{

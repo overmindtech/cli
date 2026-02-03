@@ -2,8 +2,9 @@ package manual
 
 import (
 	"context"
+	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql/v2"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
@@ -233,6 +234,156 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 		}
 	}
 
+	if database.Properties != nil && database.Properties.FailoverGroupID != nil {
+		// FailoverGroupID format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/servers/{serverName}/failoverGroups/{failoverGroupName}
+		params := azureshared.ExtractPathParamsFromResourceID(*database.Properties.FailoverGroupID, []string{"servers", "failoverGroups"})
+		if len(params) >= 2 {
+			failoverServerName := params[0]
+			failoverGroupName := params[1]
+			linkedScope := azureshared.ExtractScopeFromResourceID(*database.Properties.FailoverGroupID)
+			if linkedScope == "" {
+				linkedScope = scope
+			}
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   azureshared.SQLServerFailoverGroup.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  shared.CompositeLookupKey(failoverServerName, failoverGroupName),
+					Scope:  linkedScope,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,  // Failover group deletion or failover affects the database's availability and replication
+					Out: false, // Database membership in the group doesn't change the failover group configuration
+				}, // SQL Database belongs to a Failover Group for high availability
+			})
+		}
+	}
+
+	if database.Properties != nil && database.Properties.LongTermRetentionBackupResourceID != nil {
+		locationName, ltrServerName, ltrDatabaseName, backupName := azureshared.ExtractSQLLongTermRetentionBackupInfoFromResourceID(*database.Properties.LongTermRetentionBackupResourceID)
+		if locationName != "" && ltrServerName != "" && ltrDatabaseName != "" && backupName != "" {
+			linkedScope := azureshared.ExtractScopeFromResourceID(*database.Properties.LongTermRetentionBackupResourceID)
+			if linkedScope == "" {
+				linkedScope = scope
+			}
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   azureshared.SQLLongTermRetentionBackup.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  shared.CompositeLookupKey(locationName, ltrServerName, ltrDatabaseName, backupName),
+					Scope:  linkedScope,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,  // LTR backup deletion affects the database's ability to restore from that backup
+					Out: false, // SQL Database changes don't affect the LTR backup itself
+				}, // SQL Database depends on LTR backup for long-term retention restore
+			})
+		}
+	}
+
+	if database.Properties != nil && database.Properties.MaintenanceConfigurationID != nil && *database.Properties.MaintenanceConfigurationID != "" {
+		configName := azureshared.ExtractResourceName(*database.Properties.MaintenanceConfigurationID)
+		if configName != "" {
+			linkedScope := azureshared.ExtractScopeFromResourceID(*database.Properties.MaintenanceConfigurationID)
+			if linkedScope == "" && strings.Contains(*database.Properties.MaintenanceConfigurationID, "publicMaintenanceConfigurations") {
+				linkedScope = azureshared.ExtractSubscriptionIDFromResourceID(*database.Properties.MaintenanceConfigurationID)
+			}
+			if linkedScope == "" {
+				linkedScope = scope
+			}
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   azureshared.MaintenanceMaintenanceConfiguration.String(),
+					Method: sdp.QueryMethod_GET,
+					Query:  configName,
+					Scope:  linkedScope,
+				},
+				BlastPropagation: &sdp.BlastPropagation{
+					In:  true,  // Maintenance config changes affect when maintenance updates occur for the database
+					Out: false, // Database changes don't affect the maintenance configuration itself
+				}, // SQL Database uses Maintenance Configuration for update scheduling
+			})
+		}
+	}
+
+	// Link Key Vault Keys from EncryptionProtector and Keys map (deduplicate by vaultName+keyName)
+	seenKeyVaultKeys := make(map[string]bool)
+	addKeyVaultKeyLink := func(vaultName, keyName string) {
+		if vaultName == "" || keyName == "" {
+			return
+		}
+		key := vaultName + "|" + keyName
+		if seenKeyVaultKeys[key] {
+			return
+		}
+		seenKeyVaultKeys[key] = true
+		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   azureshared.KeyVaultKey.String(),
+				Method: sdp.QueryMethod_GET,
+				Query:  shared.CompositeLookupKey(vaultName, keyName),
+				Scope:  scope,
+			},
+			BlastPropagation: &sdp.BlastPropagation{
+				In:  true,  // Key Vault Key deletion/rotation affects database encryption
+				Out: false, // Database changes don't affect the Key Vault Key
+			}, // SQL Database uses Key Vault Key for per-database CMK and encryption at rest
+		})
+	}
+	if database.Properties != nil && database.Properties.EncryptionProtector != nil && *database.Properties.EncryptionProtector != "" {
+		addKeyVaultKeyLink(
+			azureshared.ExtractVaultNameFromURI(*database.Properties.EncryptionProtector),
+			azureshared.ExtractKeyNameFromURI(*database.Properties.EncryptionProtector),
+		)
+	}
+	if database.Properties != nil && database.Properties.Keys != nil {
+		for keyURI := range database.Properties.Keys {
+			addKeyVaultKeyLink(
+				azureshared.ExtractVaultNameFromURI(keyURI),
+				azureshared.ExtractKeyNameFromURI(keyURI),
+			)
+		}
+	}
+
+	if database.Identity != nil && database.Identity.UserAssignedIdentities != nil {
+		for identityResourceID := range database.Identity.UserAssignedIdentities {
+			if identityResourceID == "" {
+				continue
+			}
+			identityName := azureshared.ExtractResourceName(identityResourceID)
+			linkedScope := azureshared.ExtractScopeFromResourceID(identityResourceID)
+			if identityName != "" && linkedScope != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  identityName,
+						Scope:  linkedScope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,  // User Assigned Identity deletion affects database identity and CMK access
+						Out: false, // Database changes don't affect the User Assigned Identity
+					}, // SQL Database uses User Assigned Identity for Azure AD auth and CMK
+				})
+			}
+		}
+	}
+
+	// Database Schemas - child resource with LIST endpoint
+	// GET /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/servers/{serverName}/databases/{databaseName}/schemas
+	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   azureshared.SQLDatabaseSchema.String(),
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  shared.CompositeLookupKey(serverName, databaseName),
+			Scope:  scope,
+		},
+		BlastPropagation: &sdp.BlastPropagation{
+			In:  false, // Schema changes don't affect the parent database resource
+			Out: true,  // Database deletion removes all schemas
+		}, // Database Schemas are child resources of the SQL Database
+	})
+
 	return sdpItem, nil
 }
 
@@ -291,11 +442,18 @@ func (s sqlDatabaseWrapper) SearchLookups() []sources.ItemTypeLookups {
 
 func (s sqlDatabaseWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
-		azureshared.SQLServer:                        true,
-		azureshared.SQLElasticPool:                   true,
-		azureshared.SQLRecoverableDatabase:           true,
-		azureshared.SQLRestorableDroppedDatabase:     true,
-		azureshared.SQLRecoveryServicesRecoveryPoint: true,
+		azureshared.SQLServer:                           true,
+		azureshared.SQLDatabase:                         true, // source database / copy source
+		azureshared.SQLElasticPool:                      true,
+		azureshared.SQLRecoverableDatabase:              true,
+		azureshared.SQLRestorableDroppedDatabase:        true,
+		azureshared.SQLRecoveryServicesRecoveryPoint:    true,
+		azureshared.SQLServerFailoverGroup:              true,
+		azureshared.SQLLongTermRetentionBackup:          true,
+		azureshared.MaintenanceMaintenanceConfiguration: true,
+		azureshared.KeyVaultKey:                         true,
+		azureshared.ManagedIdentityUserAssignedIdentity: true,
+		azureshared.SQLDatabaseSchema:                   true,
 	}
 }
 

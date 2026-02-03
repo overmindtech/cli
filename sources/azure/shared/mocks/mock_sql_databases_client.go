@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	armsql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql"
+	armsql "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql/v2"
 	clients "github.com/overmindtech/cli/sources/azure/clients"
 	gomock "go.uber.org/mock/gomock"
 )

@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/discovery"
@@ -173,6 +173,58 @@ func TestStorageBlobContainer(t *testing.T) {
 				t.Error("Expected HTTP linked query, but didn't find one")
 			}
 		})
+	})
+
+	t.Run("Get_WithDefaultEncryptionScope", func(t *testing.T) {
+		container := createAzureBlobContainerWithEncryptionScope(containerName, "test-encryption-scope")
+
+		mockClient := mocks.NewMockBlobContainersClient(ctrl)
+		mockClient.EXPECT().Get(ctx, resourceGroup, storageAccountName, containerName).Return(
+			armstorage.BlobContainersClientGetResponse{
+				BlobContainer: *container,
+			}, nil)
+
+		testClient := &testBlobContainersClient{MockBlobContainersClient: mockClient}
+		wrapper := manual.NewStorageBlobContainer(testClient, subscriptionID, resourceGroup)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		query := storageAccountName + shared.QuerySeparator + containerName
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], query, true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		linkedQueries := sdpItem.GetLinkedItemQueries()
+		if len(linkedQueries) != 4 {
+			t.Fatalf("Expected 4 linked queries (StorageAccount, DNS, HTTP, EncryptionScope), got: %d", len(linkedQueries))
+		}
+
+		var hasEncryptionScopeLink bool
+		for _, linkedQuery := range linkedQueries {
+			if linkedQuery.GetQuery().GetType() == azureshared.StorageEncryptionScope.String() {
+				hasEncryptionScopeLink = true
+				if linkedQuery.GetQuery().GetMethod() != sdp.QueryMethod_GET {
+					t.Errorf("Expected StorageEncryptionScope linked query method GET, got %s", linkedQuery.GetQuery().GetMethod())
+				}
+				expectedQuery := shared.CompositeLookupKey(storageAccountName, "test-encryption-scope")
+				if linkedQuery.GetQuery().GetQuery() != expectedQuery {
+					t.Errorf("Expected StorageEncryptionScope linked query %s, got %s", expectedQuery, linkedQuery.GetQuery().GetQuery())
+				}
+				if linkedQuery.GetQuery().GetScope() != subscriptionID+"."+resourceGroup {
+					t.Errorf("Expected StorageEncryptionScope scope %s, got %s", subscriptionID+"."+resourceGroup, linkedQuery.GetQuery().GetScope())
+				}
+				if !linkedQuery.GetBlastPropagation().GetIn() {
+					t.Error("Expected StorageEncryptionScope BlastPropagation.In to be true")
+				}
+				if linkedQuery.GetBlastPropagation().GetOut() {
+					t.Error("Expected StorageEncryptionScope BlastPropagation.Out to be false")
+				}
+				break
+			}
+		}
+		if !hasEncryptionScopeLink {
+			t.Error("Expected StorageEncryptionScope linked query when DefaultEncryptionScope is set, but didn't find one")
+		}
 	})
 
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
@@ -376,6 +428,21 @@ func createAzureBlobContainer(containerName string) *armstorage.BlobContainer {
 		Type: to.Ptr("Microsoft.Storage/storageAccounts/blobServices/containers"),
 		ContainerProperties: &armstorage.ContainerProperties{
 			PublicAccess: to.Ptr(armstorage.PublicAccessNone),
+		},
+		Etag: to.Ptr("\"0x8D1234567890ABC\""),
+	}
+}
+
+// createAzureBlobContainerWithEncryptionScope creates a mock Azure blob container with a default encryption scope
+func createAzureBlobContainerWithEncryptionScope(containerName, encryptionScopeName string) *armstorage.BlobContainer {
+	return &armstorage.BlobContainer{
+		ID:   to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/blobServices/default/containers/" + containerName),
+		Name: to.Ptr(containerName),
+		Type: to.Ptr("Microsoft.Storage/storageAccounts/blobServices/containers"),
+		ContainerProperties: &armstorage.ContainerProperties{
+			PublicAccess:                to.Ptr(armstorage.PublicAccessNone),
+			DefaultEncryptionScope:      to.Ptr(encryptionScopeName),
+			DenyEncryptionScopeOverride: to.Ptr(false),
 		},
 		Etag: to.Ptr("\"0x8D1234567890ABC\""),
 	}

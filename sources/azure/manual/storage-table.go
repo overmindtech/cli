@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
@@ -79,6 +79,7 @@ func (s storageTablesWrapper) azureTableToSDPItem(table *armstorage.Table, stora
 		Scope:           scope,
 	}
 
+	// Link to parent Storage Account (table is a child under tableServices/default/tables).
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
 			Type:   azureshared.StorageAccount.String(),
@@ -87,8 +88,8 @@ func (s storageTablesWrapper) azureTableToSDPItem(table *armstorage.Table, stora
 			Scope:  scope,
 		},
 		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,  // Tables ARE affected if storage account changes/deletes
-			Out: false, // Tables changes/deletes don't affect storage account
+			In:  true,  // Table is affected if parent storage account changes or is deleted
+			Out: false, // Table changes/deletes do not affect the storage account
 		},
 	})
 
