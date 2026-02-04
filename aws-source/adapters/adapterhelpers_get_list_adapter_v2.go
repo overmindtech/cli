@@ -24,7 +24,7 @@ type GetListAdapterV2[ListInput InputType, ListOutput OutputType, AWSItem AWSIte
 	AdapterMetadata        *sdp.AdapterMetadata
 
 	CacheDuration time.Duration  // How long to cache items for
-	cache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+	cache         sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 
 	// Disables List(), meaning all calls will return empty results. This does
 	// not affect Search()
@@ -238,6 +238,10 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
 	defer done()
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return
+		}
 		stream.SendError(qErr)
 		return
 	}
@@ -254,11 +258,16 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 		return
 	}
 
+	// Track whether any items were found and if we had an error
+	itemsSent := 0
+	hadError := false
+
 	// Define the function to send the outputs
 	sendOutputs := func(out ListOutput) {
 		// Extract the items in the correct format
 		awsItems, err := s.ListExtractor(ctx, out, s.Client)
 		if err != nil {
+			hadError = true
 			stream.SendError(WrapAWSError(err))
 			return
 		}
@@ -268,6 +277,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 		for _, awsItem := range awsItems {
 			item, err := s.ItemMapper(nil, scope, awsItem)
 			if err != nil {
+				hadError = true
 				stream.SendError(WrapAWSError(err))
 				continue
 			}
@@ -281,6 +291,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 
 			stream.SendItem(item)
 			s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
+			itemsSent++
 		}
 	}
 
@@ -291,6 +302,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 		for paginator.HasMorePages() {
 			out, err := paginator.NextPage(ctx)
 			if err != nil {
+				hadError = true
 				stream.SendError(WrapAWSError(err))
 				return
 			}
@@ -300,11 +312,26 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 	} else if s.ListFunc != nil {
 		out, err := s.ListFunc(ctx, s.Client, listInput)
 		if err != nil {
+			hadError = true
 			stream.SendError(WrapAWSError(err))
 			return
 		}
 
 		sendOutputs(out)
+	}
+
+	// Cache not-found only when no items were found AND no error occurred
+	// If we had an error, that error is already sent to the stream, don't overwrite it
+	if itemsSent == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("no %s found in scope %s", s.ItemType, scope),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
+		}
+		s.Cache().StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
 	}
 }
 

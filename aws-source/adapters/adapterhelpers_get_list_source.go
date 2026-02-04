@@ -23,7 +23,7 @@ type GetListAdapter[AWSItem AWSItemType, ClientStruct ClientStructType, Options 
 	AdapterMetadata        *sdp.AdapterMetadata
 
 	CacheDuration time.Duration  // How long to cache items for
-	cache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+	cache         sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 
 	// Disables List(), meaning all calls will return empty results. This does
 	// not affect Search()
@@ -202,6 +202,10 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) List(ctx context.Contex
 	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
 	defer done()
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return []*sdp.Item{}, nil
+		}
 		return nil, qErr
 	}
 	if cacheHit {
@@ -218,9 +222,11 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) List(ctx context.Contex
 	}
 
 	items := make([]*sdp.Item, 0)
+	hadError := false
 	for _, awsItem := range awsItems {
 		item, err := s.ItemMapper("", scope, awsItem)
 		if err != nil {
+			hadError = true
 			continue
 		}
 
@@ -233,6 +239,19 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) List(ctx context.Contex
 
 		items = append(items, item)
 		s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
+	}
+
+	// Cache not-found only when no items were found AND no error occurred
+	if len(items) == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("no %s found in scope %s", s.ItemType, scope),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
+		}
+		s.Cache().StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
 	}
 
 	return items, nil
@@ -296,7 +315,10 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchARN(ctx context.C
 		return nil, WrapAWSError(err)
 	}
 
-	return []*sdp.Item{item}, nil
+	if item != nil {
+		return []*sdp.Item{item}, nil
+	}
+	return []*sdp.Item{}, nil
 }
 
 // Custom search function that can be used to search for items in a different,
@@ -305,6 +327,10 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchCustom(ctx contex
 	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
 	defer done()
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return []*sdp.Item{}, nil
+		}
 		return nil, qErr
 	}
 	if cacheHit {
@@ -319,16 +345,31 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchCustom(ctx contex
 	}
 
 	items := make([]*sdp.Item, 0)
+	hadError := false
 	var item *sdp.Item
 
 	for _, awsItem := range awsItems {
 		item, err = s.ItemMapper(query, scope, awsItem)
 		if err != nil {
+			hadError = true
 			continue
 		}
 
 		items = append(items, item)
 		s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
+	}
+
+	// Cache not-found only when no items were found AND no error occurred
+	if len(items) == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("no %s found for search query '%s' in scope %s", s.ItemType, query, scope),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
+		}
+		s.Cache().StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
 	}
 
 	return items, nil

@@ -837,3 +837,82 @@ func TestDescribeOnlySourceCaching(t *testing.T) {
 		}
 	})
 }
+
+// TestListCachingZeroItems demonstrates that LIST caching works when 0 items are returned.
+// This is a simple test to verify that repeated LIST calls don't hit the backend when
+// the first call returned no items.
+func TestListCachingZeroItems(t *testing.T) {
+	ctx := context.Background()
+	describeCalls := 0
+	cache := sdpcache.NewMemoryCache()
+
+	adapter := &DescribeOnlyAdapter[string, string, struct{}, struct{}]{
+		ItemType:  "ec2-instance",
+		Region:    "us-east-1",
+		AccountID: "123456789012",
+		cache:     cache,
+		AdapterMetadata: &sdp.AdapterMetadata{
+			Type:            "ec2-instance",
+			DescriptiveName: "EC2 Instance",
+			SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
+				Get:             true,
+				List:            true,
+				GetDescription:  "Get an EC2 instance by ID",
+				ListDescription: "List all EC2 instances",
+			},
+		},
+		InputMapperGet: func(scope, query string) (string, error) {
+			return query, nil
+		},
+		InputMapperList: func(scope string) (string, error) {
+			return "", nil
+		},
+		DescribeFunc: func(ctx context.Context, client struct{}, input string) (string, error) {
+			describeCalls++
+			t.Logf("DescribeFunc called (call #%d)", describeCalls)
+			return "", nil
+		},
+		OutputMapper: func(ctx context.Context, client struct{}, scope, input, output string) ([]*sdp.Item, error) {
+			// Return empty slice - simulates no EC2 instances found
+			return []*sdp.Item{}, nil
+		},
+	}
+
+	// First LIST call - should hit the backend
+	stream1 := discovery.NewRecordingQueryResultStream()
+	adapter.ListStream(ctx, "123456789012.us-east-1", false, stream1)
+
+	if describeCalls != 1 {
+		t.Errorf("First call: expected 1 DescribeFunc call, got %d", describeCalls)
+	}
+	if len(stream1.GetItems()) != 0 {
+		t.Errorf("First call: expected 0 items, got %d", len(stream1.GetItems()))
+	}
+	t.Logf("First call complete: %d items, %d errors", len(stream1.GetItems()), len(stream1.GetErrors()))
+
+	// Second LIST call - should hit cache, NOT the backend
+	stream2 := discovery.NewRecordingQueryResultStream()
+	adapter.ListStream(ctx, "123456789012.us-east-1", false, stream2)
+
+	if describeCalls != 1 {
+		t.Errorf("Second call: expected still 1 DescribeFunc call (cache hit), got %d", describeCalls)
+	}
+	if len(stream2.GetItems()) != 0 {
+		t.Errorf("Second call: expected 0 items, got %d", len(stream2.GetItems()))
+	}
+	// For backward compatibility, cached NOTFOUND is treated as empty result (no error)
+	// This matches the behavior of the first call which returns empty stream with no errors
+	if len(stream2.GetErrors()) != 0 {
+		t.Errorf("Second call: expected 0 errors from cache (backward compatibility), got %d errors", len(stream2.GetErrors()))
+	}
+	t.Logf("Second call complete: %d items, %d errors (cache hit!)", len(stream2.GetItems()), len(stream2.GetErrors()))
+
+	// Third LIST call with ignoreCache=true - should bypass cache and hit backend
+	stream3 := discovery.NewRecordingQueryResultStream()
+	adapter.ListStream(ctx, "123456789012.us-east-1", true, stream3) // ignoreCache=true
+
+	if describeCalls != 2 {
+		t.Errorf("Third call (ignoreCache): expected 2 DescribeFunc calls, got %d", describeCalls)
+	}
+	t.Logf("Third call (ignoreCache=true) complete: %d items, %d errors", len(stream3.GetItems()), len(stream3.GetErrors()))
+}
