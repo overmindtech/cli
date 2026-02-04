@@ -61,9 +61,11 @@ func (b BigQueryTableWrapper) PotentialLinks() map[shared.ItemType]bool {
 func (b BigQueryTableWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_SEARCH,
 			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_table
-			// projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
+			// ID format: projects/{{project}}/datasets/{{dataset}}/tables/{{name}}
+			// The framework automatically intercepts queries starting with "projects/" and converts
+			// them to GET operations by extracting the last N path parameters (based on GetLookups count).
 			TerraformQueryMap: "google_bigquery_table.id",
 		},
 	}

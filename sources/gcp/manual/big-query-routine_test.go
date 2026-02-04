@@ -183,6 +183,71 @@ func TestBigQueryRoutine(t *testing.T) {
 			t.Fatalf("Expected error, got nil")
 		}
 	})
+
+	t.Run("Search with terraform format", func(t *testing.T) {
+		wrapper := manual.NewBigQueryRoutine(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		// Use terraform-style path format
+		terraformStyleQuery := "projects/test-project/datasets/test_dataset/routines/test_routine"
+
+		// Mock Get (called internally when terraform format is detected)
+		mockClient.EXPECT().Get(ctx, projectID, datasetID, routineID).Return(createRoutineMetadata("terraform format test"), nil)
+
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		items, qErr := searchable.Search(ctx, wrapper.Scopes()[0], terraformStyleQuery, true)
+		if qErr != nil {
+			t.Fatalf("Expected no error with terraform format, got: %v", qErr)
+		}
+		if len(items) != 1 {
+			t.Fatalf("Expected 1 item, got: %d", len(items))
+		}
+		if items[0].GetType() != gcpshared.BigQueryRoutine.String() {
+			t.Fatalf("Expected type %s, got: %s", gcpshared.BigQueryRoutine.String(), items[0].GetType())
+		}
+	})
+
+	t.Run("Search with legacy pipe format", func(t *testing.T) {
+		wrapper := manual.NewBigQueryRoutine(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		// Use legacy dataset ID format
+		legacyQuery := datasetID
+
+		// Mock the List function
+		mockClient.EXPECT().List(
+			gomock.Any(),
+			projectID,
+			datasetID,
+			gomock.Any(),
+		).DoAndReturn(func(ctx context.Context, projectID string, datasetID string, converter func(routine *bigquery.RoutineMetadata, datasetID, routineID string) (*sdp.Item, *sdp.QueryError)) ([]*sdp.Item, *sdp.QueryError) {
+			items := make([]*sdp.Item, 0, 1)
+			routine := createRoutineMetadata("legacy format test")
+			item, qErr := converter(routine, datasetID, routineID)
+			if qErr != nil {
+				return nil, qErr
+			}
+			items = append(items, item)
+			return items, nil
+		})
+
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		items, qErr := searchable.Search(ctx, wrapper.Scopes()[0], legacyQuery, true)
+		if qErr != nil {
+			t.Fatalf("Expected no error with legacy format, got: %v", qErr)
+		}
+		if len(items) != 1 {
+			t.Fatalf("Expected 1 item, got: %d", len(items))
+		}
+	})
 }
 
 func createRoutineMetadata(description string) *bigquery.RoutineMetadata {

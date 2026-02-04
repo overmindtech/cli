@@ -187,6 +187,128 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 		}
 	})
 
+	t.Run("Search_TerraformFormat", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
+
+		// Pre-populate cache with a specific CryptoKey item
+		// Note: Terraform queries with full path are converted to GET operations by the adapter framework
+		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/us-central1/keyRings/my-keyring/cryptoKeys/my-key-1",
+			"uniqueAttr": "us-central1|my-keyring|my-key-1",
+		})
+		_ = attrs.Set("uniqueAttr", "us-central1|my-keyring|my-key-1")
+
+		item := &sdp.Item{
+			Type:            gcpshared.CloudKMSCryptoKey.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs,
+			Scope:           projectID,
+		}
+
+		// Store with GET cache key (terraform queries are converted to GET operations)
+		getCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_GET, projectID, gcpshared.CloudKMSCryptoKey.String(), "us-central1|my-keyring|my-key-1")
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, getCacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		wrapper := manual.NewCloudKMSCryptoKey(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		// Search using terraform-style path format
+		// The adapter framework detects this and converts it to a GET operation
+		terraformID := "projects/test-project-id/locations/us-central1/keyRings/my-keyring/cryptoKeys/my-key-1"
+		items, qErr := searchable.Search(ctx, wrapper.Scopes()[0], terraformID, false)
+		if qErr != nil {
+			t.Fatalf("Expected no error with terraform format, got: %v", qErr)
+		}
+
+		// Terraform queries with full path return 1 specific item (converted to GET)
+		if len(items) != 1 {
+			t.Fatalf("Expected 1 item with terraform format (converted to GET), got: %d", len(items))
+		}
+
+		// Verify the returned item has the correct unique attribute
+		uniqueAttr, err := items[0].GetAttributes().Get("uniqueAttr")
+		if err != nil {
+			t.Fatalf("Failed to get uniqueAttr: %v", err)
+		}
+		if uniqueAttr != "us-central1|my-keyring|my-key-1" {
+			t.Fatalf("Expected uniqueAttr 'us-central1|my-keyring|my-key-1', got: %v", uniqueAttr)
+		}
+	})
+
+	t.Run("Search_LegacyFormat", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
+
+		// Pre-populate cache with CryptoKey items
+		attrs1, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/us-central1/keyRings/my-keyring/cryptoKeys/my-key-1",
+			"uniqueAttr": "us-central1|my-keyring|my-key-1",
+		})
+		_ = attrs1.Set("uniqueAttr", "us-central1|my-keyring|my-key-1")
+
+		attrs2, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/us-central1/keyRings/my-keyring/cryptoKeys/my-key-2",
+			"uniqueAttr": "us-central1|my-keyring|my-key-2",
+		})
+		_ = attrs2.Set("uniqueAttr", "us-central1|my-keyring|my-key-2")
+
+		item1 := &sdp.Item{
+			Type:            gcpshared.CloudKMSCryptoKey.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs1,
+			Scope:           projectID,
+		}
+		item2 := &sdp.Item{
+			Type:            gcpshared.CloudKMSCryptoKey.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs2,
+			Scope:           projectID,
+		}
+
+		// Store with location|keyRing search key
+		searchCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_SEARCH, projectID, gcpshared.CloudKMSCryptoKey.String(), "us-central1|my-keyring")
+		cache.StoreItem(ctx, item1, shared.DefaultCacheDuration, searchCacheKey)
+		cache.StoreItem(ctx, item2, shared.DefaultCacheDuration, searchCacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		wrapper := manual.NewCloudKMSCryptoKey(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		// Search using legacy pipe format
+		legacyQuery := "us-central1|my-keyring"
+		items, qErr := searchable.Search(ctx, wrapper.Scopes()[0], legacyQuery, false)
+		if qErr != nil {
+			t.Fatalf("Expected no error with legacy format, got: %v", qErr)
+		}
+
+		if len(items) != 2 {
+			t.Fatalf("Expected 2 items with legacy format, got: %d", len(items))
+		}
+
+		// Verify the returned items have the correct unique attributes
+		uniqueAttr1, err := items[0].GetAttributes().Get("uniqueAttr")
+		if err != nil {
+			t.Fatalf("Failed to get uniqueAttr from item 1: %v", err)
+		}
+		if uniqueAttr1 != "us-central1|my-keyring|my-key-1" {
+			t.Fatalf("Expected uniqueAttr 'us-central1|my-keyring|my-key-1', got: %v", uniqueAttr1)
+		}
+	})
+
 	t.Run("List_Unsupported", func(t *testing.T) {
 		cache := sdpcache.NewCache(ctx)
 		defer cache.Clear()

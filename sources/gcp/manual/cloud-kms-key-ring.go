@@ -57,8 +57,12 @@ func (c cloudKMSKeyRingWrapper) PotentialLinks() map[shared.ItemType]bool {
 func (c cloudKMSKeyRingWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_GET,
-			TerraformQueryMap: "google_kms_key_ring.name",
+			TerraformMethod: sdp.QueryMethod_SEARCH,
+			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/kms_key_ring
+			// ID format: projects/{{project}}/locations/{{location}}/keyRings/{{name}}
+			// The framework automatically intercepts queries starting with "projects/" and converts
+			// them to GET operations by extracting the last N path parameters (based on GetLookups count).
+			TerraformQueryMap: "google_kms_key_ring.id",
 		},
 	}
 }

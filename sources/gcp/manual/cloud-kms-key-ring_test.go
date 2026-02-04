@@ -181,8 +181,8 @@ func TestCloudKMSKeyRing(t *testing.T) {
 		}
 	})
 
-	t.Run("Search_CacheHit", func(t *testing.T) {
-		cache := sdpcache.NewMemoryCache()
+	t.Run("Search_CacheHit_ByLocation", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
 		defer cache.Clear()
 
 		// Pre-populate cache with KeyRing items under SEARCH cache key (by location)
@@ -219,6 +219,113 @@ func TestCloudKMSKeyRing(t *testing.T) {
 
 		if len(items) != 1 {
 			t.Fatalf("Expected 1 item, got: %d", len(items))
+		}
+	})
+
+	t.Run("Search_TerraformFormat", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
+
+		// Pre-populate cache with KeyRing item
+		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/us-central1/keyRings/my-keyring",
+			"uniqueAttr": "us-central1|my-keyring",
+		})
+		_ = attrs.Set("uniqueAttr", "us-central1|my-keyring")
+
+		item := &sdp.Item{
+			Type:            gcpshared.CloudKMSKeyRing.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs,
+			Scope:           projectID,
+		}
+
+		// Store with location-based search key (terraform format is converted to location)
+		searchCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_SEARCH, projectID, gcpshared.CloudKMSKeyRing.String(), "us-central1")
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, searchCacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		wrapper := manual.NewCloudKMSKeyRing(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		// Search using terraform-style path format
+		// The SearchStream will extract the location and search by that
+		terraformID := "projects/test-project-id/locations/us-central1/keyRings/my-keyring"
+		items, qErr := searchable.Search(ctx, wrapper.Scopes()[0], terraformID, false)
+		if qErr != nil {
+			t.Fatalf("Expected no error with terraform format, got: %v", qErr)
+		}
+
+		if len(items) != 1 {
+			t.Fatalf("Expected 1 item with terraform format, got: %d", len(items))
+		}
+
+		// Verify the returned item has the correct unique attribute
+		uniqueAttr, err := items[0].GetAttributes().Get("uniqueAttr")
+		if err != nil {
+			t.Fatalf("Failed to get uniqueAttr: %v", err)
+		}
+		if uniqueAttr != "us-central1|my-keyring" {
+			t.Fatalf("Expected uniqueAttr 'us-central1|my-keyring', got: %v", uniqueAttr)
+		}
+	})
+
+	t.Run("Search_LegacyLocationFormat", func(t *testing.T) {
+		cache := sdpcache.NewCache(ctx)
+		defer cache.Clear()
+
+		// Pre-populate cache with KeyRing item
+		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+			"name":       "projects/test-project-id/locations/us-central1/keyRings/my-keyring",
+			"uniqueAttr": "us-central1|my-keyring",
+		})
+		_ = attrs.Set("uniqueAttr", "us-central1|my-keyring")
+
+		item := &sdp.Item{
+			Type:            gcpshared.CloudKMSKeyRing.String(),
+			UniqueAttribute: "uniqueAttr",
+			Attributes:      attrs,
+			Scope:           projectID,
+		}
+
+		// Store with location-based search key
+		searchCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_SEARCH, projectID, gcpshared.CloudKMSKeyRing.String(), "us-central1")
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, searchCacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		wrapper := manual.NewCloudKMSKeyRing(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not support Search operation")
+		}
+
+		// Search using legacy location format
+		legacyQuery := "us-central1"
+		items, qErr := searchable.Search(ctx, wrapper.Scopes()[0], legacyQuery, false)
+		if qErr != nil {
+			t.Fatalf("Expected no error with legacy format, got: %v", qErr)
+		}
+
+		if len(items) != 1 {
+			t.Fatalf("Expected 1 item with legacy format, got: %d", len(items))
+		}
+
+		// Verify the returned item has the correct unique attribute
+		uniqueAttr, err := items[0].GetAttributes().Get("uniqueAttr")
+		if err != nil {
+			t.Fatalf("Failed to get uniqueAttr: %v", err)
+		}
+		if uniqueAttr != "us-central1|my-keyring" {
+			t.Fatalf("Expected uniqueAttr 'us-central1|my-keyring', got: %v", uniqueAttr)
 		}
 	})
 
