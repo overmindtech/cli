@@ -146,6 +146,7 @@ require (
 	github.com/riverqueue/river/rivertype v0.30.2
 	github.com/riverqueue/rivercontrib/otelriver v0.7.0
 	github.com/rs/cors v1.11.1
+	github.com/samber/slog-logrus/v2 v2.5.2
 	github.com/sashabaranov/go-openai v1.41.2
 	github.com/serpapi/serpapi-golang v0.0.0-20260126142127-0e41c7993cda
 	github.com/sirupsen/logrus v1.9.4
@@ -385,6 +386,8 @@ require (
 	github.com/rs/xid v1.5.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
 	github.com/saintfish/chardet v0.0.0-20230101081208-5e3ef4b5456d // indirect
+	github.com/samber/lo v1.47.0 // indirect
+	github.com/samber/slog-common v0.18.1 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.7 // indirect
