@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 // TestCloudwatchInstanceMetricIntegration fetches real CloudWatch metrics for an EC2 instance
@@ -22,7 +23,7 @@ func TestCloudwatchInstanceMetricIntegration(t *testing.T) {
 	config, account, region := GetAutoConfig(t)
 	client := cloudwatch.NewFromConfig(config)
 
-	adapter := NewCloudwatchInstanceMetricAdapter(client, account, region, nil)
+	adapter := NewCloudwatchInstanceMetricAdapter(client, account, region, sdpcache.NewNoOpCache())
 	scope := FormatScope(account, region)
 
 	// Query is just the instance ID

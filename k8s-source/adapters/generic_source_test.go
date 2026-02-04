@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -179,6 +180,7 @@ func createAdapter(namespaced bool) *KubeTypeAdapter[*v1.Pod, *v1.PodList] {
 		TypeName:         "Pod",
 		ClusterName:      "minikube",
 		Namespaces:       []string{"default", "app1"},
+		cache:            sdpcache.NewNoOpCache(),
 	}
 }
 

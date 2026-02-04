@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/auth"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/tracing"
 	"github.com/sourcegraph/conc/pool"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -44,6 +45,7 @@ func TestExecuteQuery(t *testing.T) {
 	adapter := TestAdapter{
 		ReturnType:   "person",
 		ReturnScopes: []string{"test"},
+		cache:        sdpcache.NewNoOpCache(),
 	}
 
 	e := newStartedEngine(t, "TestExecuteQuery",
@@ -209,6 +211,7 @@ func TestHandleQuery(t *testing.T) {
 			"test1",
 			"test2",
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	dogAdapter := TestAdapter{
@@ -218,6 +221,7 @@ func TestHandleQuery(t *testing.T) {
 			"testA",
 			"testB",
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	e := newStartedEngine(t, "TestHandleQuery", nil, nil, &personAdapter, &dogAdapter)
@@ -286,6 +290,7 @@ func TestWildcardAdapterExpansion(t *testing.T) {
 		ReturnScopes: []string{
 			sdp.WILDCARD,
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	e := newStartedEngine(t, "TestWildcardAdapterExpansion", nil, nil, &personAdapter)
@@ -337,6 +342,7 @@ func TestSendQuerySync(t *testing.T) {
 		ReturnScopes: []string{
 			"test",
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	e := newStartedEngine(t, "TestSendQuerySync", nil, nil, &adapter)
@@ -388,6 +394,7 @@ func TestExpandQuery(t *testing.T) {
 			ReturnScopes: []string{
 				"test1",
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 		e := newStartedEngine(t, "TestExpandQuery", nil, nil, &simple)
 
@@ -411,6 +418,7 @@ func TestExpandQuery(t *testing.T) {
 				"test2",
 				"test3",
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 		e := newStartedEngine(t, "TestExpandQuery", nil, nil, &many)
 
@@ -433,6 +441,7 @@ func TestExpandQuery(t *testing.T) {
 			ReturnScopes: []string{
 				sdp.WILDCARD,
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		e := newStartedEngine(t, "TestExpandQuery", nil, nil, &sx)

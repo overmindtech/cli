@@ -26,7 +26,7 @@ func NewListableAdapter(listEndpointFunc gcpshared.ListEndpointFunc, config *Ada
 		Adapter: Adapter{
 			locations:            config.Locations,
 			httpCli:              config.HTTPClient,
-			Cache:                cache,
+			cache:                cache,
 			getURLFunc:           config.GetURLFunc,
 			sdpAssetType:         config.SDPAssetType,
 			sdpAdapterCategory:   config.SDPAdapterCategory,
@@ -63,7 +63,7 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 		return nil, err
 	}
 
-	cacheHit, ck, cachedItems, qErr, done := g.GetCache().Lookup(
+	cacheHit, ck, cachedItems, qErr, done := g.cache.Lookup(
 		ctx,
 		g.Name(),
 		sdp.QueryMethod_LIST,
@@ -94,18 +94,18 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf("failed to construct list endpoint: %v", err),
 		}
-		g.GetCache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 
 	items, err := aggregateSDPItems(ctx, g.Adapter, listURL, location)
 	if err != nil {
-		g.GetCache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 
 	for _, item := range items {
-		g.GetCache().StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
+		g.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 	}
 
 	return items, nil
@@ -118,7 +118,7 @@ func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCac
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr, done := g.GetCache().Lookup(
+	cacheHit, ck, cachedItems, qErr, done := g.cache.Lookup(
 		ctx,
 		g.Name(),
 		sdp.QueryMethod_LIST,
@@ -156,5 +156,5 @@ func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCac
 		return
 	}
 
-	streamSDPItems(ctx, g.Adapter, listURL, location, stream, g.GetCache(), ck)
+	streamSDPItems(ctx, g.Adapter, listURL, location, stream, g.cache, ck)
 }

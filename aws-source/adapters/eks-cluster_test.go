@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var ClusterClient = EKSTestClient{
@@ -206,7 +207,7 @@ func TestClusterGetFunc(t *testing.T) {
 func TestNewEKSClusterAdapter(t *testing.T) {
 	client, account, region := eksGetAutoConfig(t)
 
-	adapter := NewEKSClusterAdapter(client, account, region, nil)
+	adapter := NewEKSClusterAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestVirtualInterfaceOutputMapper(t *testing.T) {
@@ -90,7 +91,7 @@ func TestVirtualInterfaceOutputMapper(t *testing.T) {
 func TestNewDirectConnectVirtualInterfaceAdapter(t *testing.T) {
 	client, account, region := directconnectGetAutoConfig(t)
 
-	adapter := NewDirectConnectVirtualInterfaceAdapter(client, account, region, nil)
+	adapter := NewDirectConnectVirtualInterfaceAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

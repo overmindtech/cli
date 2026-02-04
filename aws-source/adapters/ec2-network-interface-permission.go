@@ -73,7 +73,7 @@ func NewEC2NetworkInterfacePermissionAdapter(client *ec2.Client, accountID strin
 		AccountID:       accountID,
 		ItemType:        "ec2-network-interface-permission",
 		AdapterMetadata: networkInterfacePermissionAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeNetworkInterfacePermissionsInput) (*ec2.DescribeNetworkInterfacePermissionsOutput, error) {
 			return client.DescribeNetworkInterfacePermissions(ctx, input)
 		},

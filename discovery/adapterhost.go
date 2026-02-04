@@ -1,12 +1,10 @@
 package discovery
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/overmindtech/cli/sdp-go"
 	log "github.com/sirupsen/logrus"
@@ -199,27 +197,4 @@ func (sh *AdapterHost) ClearAllAdapters() {
 	sh.adapters = make([]Adapter, 0)
 	sh.adapterIndex = make(map[string]map[string]bool)
 	sh.mutex.Unlock()
-}
-
-func (sh *AdapterHost) Purge(ctx context.Context) {
-	for _, s := range sh.Adapters() {
-		if c, ok := s.(CachingAdapter); ok {
-			cache := c.Cache()
-			if cache != nil {
-				cache.Purge(ctx, time.Now())
-			}
-		}
-	}
-}
-
-// ClearCaches Clears caches for all caching adapters
-func (sh *AdapterHost) ClearCaches() {
-	for _, s := range sh.Adapters() {
-		if c, ok := s.(CachingAdapter); ok {
-			cache := c.Cache()
-			if cache != nil {
-				cache.Clear()
-			}
-		}
-	}
 }

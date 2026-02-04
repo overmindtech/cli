@@ -337,6 +337,7 @@ func (e E2ETest) Run(t *testing.T) {
 
 			if streamingAdapter, ok := e.Adapter.(discovery.ListStreamableAdapter); ok {
 				stream := discovery.NewRecordingQueryResultStream()
+
 				streamingAdapter.ListStream(context.Background(), scope, false, stream)
 				items = stream.GetItems()
 				errs = stream.GetErrors()

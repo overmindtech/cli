@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestContinuousDeploymentPolicyItemMapper(t *testing.T) {
@@ -60,7 +61,7 @@ func TestContinuousDeploymentPolicyItemMapper(t *testing.T) {
 func TestNewCloudfrontContinuousDeploymentPolicyAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontContinuousDeploymentPolicyAdapter(client, account, nil)
+	adapter := NewCloudfrontContinuousDeploymentPolicyAdapter(client, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

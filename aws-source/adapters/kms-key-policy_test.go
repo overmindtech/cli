@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 /*
@@ -108,7 +109,7 @@ func TestNewKMSKeyPolicyAdapter(t *testing.T) {
 
 	client := kms.NewFromConfig(config)
 
-	adapter := NewKMSKeyPolicyAdapter(client, account, region, nil)
+	adapter := NewKMSKeyPolicyAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter:  adapter,

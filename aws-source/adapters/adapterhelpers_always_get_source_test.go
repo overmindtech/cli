@@ -76,6 +76,7 @@ func TestAlwaysGetSourceGet(t *testing.T) {
 			GetInputMapper: func(scope, query string) string {
 				return ""
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		_, err := lgs.Get(context.Background(), "foo.bar", "", false)
@@ -108,6 +109,7 @@ func TestAlwaysGetSourceGet(t *testing.T) {
 			GetInputMapper: func(scope, query string) string {
 				return ""
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		_, err := lgs.Get(context.Background(), "foo.bar", "", false)
@@ -144,6 +146,7 @@ func TestAlwaysGetSourceList(t *testing.T) {
 			GetInputMapper: func(scope, query string) string {
 				return ""
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		stream := discovery.NewRecordingQueryResultStream()
@@ -183,6 +186,7 @@ func TestAlwaysGetSourceList(t *testing.T) {
 			GetInputMapper: func(scope, query string) string {
 				return ""
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		stream := discovery.NewRecordingQueryResultStream()
@@ -228,6 +232,7 @@ func TestAlwaysGetSourceList(t *testing.T) {
 			GetInputMapper: func(scope, query string) string {
 				return ""
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		stream := discovery.NewRecordingQueryResultStream()
@@ -275,6 +280,7 @@ func TestAlwaysGetSourceSearch(t *testing.T) {
 			GetInputMapper: func(scope, query string) string {
 				return scope + "." + query
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		t.Run("bad ARN", func(t *testing.T) {
@@ -338,6 +344,7 @@ func TestAlwaysGetSourceSearch(t *testing.T) {
 			GetInputMapper: func(scope, query string) string {
 				return scope + "." + query
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		t.Run("ARN", func(t *testing.T) {
@@ -400,6 +407,7 @@ func TestAlwaysGetSourceSearch(t *testing.T) {
 			GetInputMapper: func(scope, query string) string {
 				return ""
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		stream := discovery.NewRecordingQueryResultStream()
@@ -448,6 +456,7 @@ func TestAlwaysGetSourceSearch(t *testing.T) {
 			GetInputMapper: func(scope, query string) string {
 				return scope + "." + query
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		stream := discovery.NewRecordingQueryResultStream()
@@ -475,7 +484,7 @@ func TestAlwaysGetSourceCaching(t *testing.T) {
 		Region:          "eu-west-2",
 		Client:          struct{}{},
 		ListInput:       "",
-		cache:        sdpcache.NewCache(ctx),
+		cache:           sdpcache.NewMemoryCache(),
 		ListFuncPaginatorBuilder: func(client struct{}, input string) Paginator[string, struct{}] {
 			return &TestPaginator{
 				DataFunc: func() string {

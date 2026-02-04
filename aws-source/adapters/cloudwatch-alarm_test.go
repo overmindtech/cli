@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type testCloudwatchClient struct{}
@@ -218,7 +219,7 @@ func TestNewCloudwatchAlarmAdapter(t *testing.T) {
 	config, account, region := GetAutoConfig(t)
 	client := cloudwatch.NewFromConfig(config)
 
-	adapter := NewCloudwatchAlarmAdapter(client, account, region, nil)
+	adapter := NewCloudwatchAlarmAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

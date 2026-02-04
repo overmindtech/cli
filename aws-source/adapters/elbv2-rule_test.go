@@ -11,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestRuleOutputMapper(t *testing.T) {
@@ -96,9 +97,9 @@ func TestNewELBv2RuleAdapter(t *testing.T) {
 	config, account, region := GetAutoConfig(t)
 	client := elbv2.NewFromConfig(config)
 
-	lbSource := NewELBv2LoadBalancerAdapter(client, account, region, nil)
-	listenerSource := NewELBv2ListenerAdapter(client, account, region, nil)
-	ruleSource := NewELBv2RuleAdapter(client, account, region, nil)
+	lbSource := NewELBv2LoadBalancerAdapter(client, account, region, sdpcache.NewNoOpCache())
+	listenerSource := NewELBv2ListenerAdapter(client, account, region, sdpcache.NewNoOpCache())
+	ruleSource := NewELBv2RuleAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	stream := discovery.NewRecordingQueryResultStream()
 	lbSource.ListStream(context.Background(), lbSource.Scopes()[0], false, stream)

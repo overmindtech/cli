@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type mockDataProtectionPolicyClient struct{}
@@ -36,7 +37,7 @@ func TestNewSNSDataProtectionPolicyAdapter(t *testing.T) {
 	config, account, region := GetAutoConfig(t)
 	client := sns.NewFromConfig(config)
 
-	adapter := NewSNSDataProtectionPolicyAdapter(client, account, region, nil)
+	adapter := NewSNSDataProtectionPolicyAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter:  adapter,

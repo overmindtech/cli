@@ -131,7 +131,7 @@ func NewAPIGatewayMethodAdapter(client apigatewayClient, accountID string, regio
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: apiGatewayMethodAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetFunc:         apiGatewayMethodGetFunc,
 		GetInputMapper: func(scope, query string) *apigateway.GetMethodInput {
 			// We are using a custom id of {rest-api-id}/{resource-id}/{http-method} e.g.

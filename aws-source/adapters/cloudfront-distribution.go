@@ -637,7 +637,7 @@ func NewCloudfrontDistributionAdapter(client CloudFrontClient, accountID string,
 		Client:          client,
 		AccountID:       accountID,
 		AdapterMetadata: distributionAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		ListInput:       &cloudfront.ListDistributionsInput{},
 		ListFuncPaginatorBuilder: func(client CloudFrontClient, input *cloudfront.ListDistributionsInput) Paginator[*cloudfront.ListDistributionsOutput, *cloudfront.Options] {

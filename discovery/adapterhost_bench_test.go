@@ -252,9 +252,7 @@ func (b *BenchmarkListAdapter) List(ctx context.Context, scope string, ignoreCac
 		itemsPerList = 10 // Default to 10 items
 	}
 
-	// Check cache first using the embedded TestAdapter's cache
-	cache := b.Cache()
-	cacheHit, ck, cachedItems, qErr, done := cache.Lookup(ctx, b.Name(), sdp.QueryMethod_LIST, scope, b.Type(), "", ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := b.cache.Lookup(ctx, b.Name(), sdp.QueryMethod_LIST, scope, b.Type(), "", ignoreCache)
 	defer done()
 	if qErr != nil {
 		return nil, qErr
@@ -274,7 +272,7 @@ func (b *BenchmarkListAdapter) List(ctx context.Context, scope string, ignoreCac
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		cache.StoreError(ctx, err, b.DefaultCacheDuration(), ck)
+		b.cache.StoreError(ctx, err, b.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{
@@ -288,7 +286,7 @@ func (b *BenchmarkListAdapter) List(ctx context.Context, scope string, ignoreCac
 		for i := range itemsPerList {
 			item := b.NewTestItem(scope, fmt.Sprintf("item-%d", i))
 			items = append(items, item)
-			cache.StoreItem(ctx, item, b.DefaultCacheDuration(), ck)
+			b.cache.StoreItem(ctx, item, b.DefaultCacheDuration(), ck)
 		}
 		return items, nil
 	}

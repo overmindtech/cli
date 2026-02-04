@@ -279,7 +279,7 @@ func NewIAMPolicyAdapter(client IAMClient, accountID string, cache sdpcache.Cach
 		Region:                 "",            // IAM policies aren't tied to a region
 		CacheDuration:          3 * time.Hour, // IAM has very low rate limits, we need to cache for a long time
 		AdapterMetadata:        policyAdapterMetadata,
-		cache:               cache,
+		cache:                  cache,
 		SupportGlobalResources: true,
 		InputMapperList: func(scope string) (*iam.ListPoliciesInput, error) {
 			var iamScope types.PolicyScopeType

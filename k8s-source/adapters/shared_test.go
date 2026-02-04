@@ -210,11 +210,10 @@ func TestMain(m *testing.M) {
 
 	// log.Println("🎁 Creating resources in cluster for testing")
 	// err = CurrentCluster.ApplyBaselineConfig()
-
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
-	}
+	// if err != nil {
+	// 	log.Fatal(err)
+	// 	os.Exit(1)
+	// }
 
 	log.Println("✅ Running tests")
 	code := m.Run()

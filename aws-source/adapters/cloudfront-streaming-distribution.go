@@ -163,7 +163,7 @@ func NewCloudfrontStreamingDistributionAdapter(client CloudFrontClient, accountI
 		AccountID:       accountID,
 		Region:          "", // Cloudfront resources aren't tied to a region
 		AdapterMetadata: streamingDistributionAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		ListInput:       &cloudfront.ListStreamingDistributionsInput{},
 		ListFuncPaginatorBuilder: func(client CloudFrontClient, input *cloudfront.ListStreamingDistributionsInput) Paginator[*cloudfront.ListStreamingDistributionsOutput, *cloudfront.Options] {
 			return cloudfront.NewListStreamingDistributionsPaginator(client, input)

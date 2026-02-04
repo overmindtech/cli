@@ -13,6 +13,7 @@ import (
 	"github.com/nats-io/nats-server/v2/test"
 	"github.com/overmindtech/cli/auth"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"golang.org/x/oauth2"
 )
 
@@ -211,7 +212,7 @@ func TestNats(t *testing.T) {
 	}
 
 	adapter := TestAdapter{}
-
+	adapter.cache = sdpcache.NewNoOpCache()
 	err = e.AddAdapters(
 		&adapter,
 		&TestAdapter{
@@ -220,6 +221,7 @@ func TestNats(t *testing.T) {
 			},
 			ReturnName: "test-adapter",
 			ReturnType: "test",
+			cache:      sdpcache.NewNoOpCache(),
 		},
 	)
 	if err != nil {
@@ -256,7 +258,6 @@ func TestNats(t *testing.T) {
 	t.Run("Handling a basic query", func(t *testing.T) {
 		t.Cleanup(func() {
 			adapter.ClearCalls()
-			e.ClearCache()
 		})
 
 		query := &sdp.Query{
@@ -621,6 +622,7 @@ func TestNatsAuth(t *testing.T) {
 	}
 
 	adapter := TestAdapter{}
+	adapter.cache = sdpcache.NewNoOpCache()
 	if err := e.AddAdapters(
 		&adapter,
 		&TestAdapter{
@@ -629,6 +631,7 @@ func TestNatsAuth(t *testing.T) {
 			},
 			ReturnType: "test",
 			ReturnName: "test-adapter",
+			cache:      sdpcache.NewNoOpCache(),
 		},
 	); err != nil {
 		t.Fatalf("Error adding adapters: %v", err)
@@ -648,7 +651,6 @@ func TestNatsAuth(t *testing.T) {
 	t.Run("Handling a basic query", func(t *testing.T) {
 		t.Cleanup(func() {
 			adapter.ClearCalls()
-			e.ClearCache()
 		})
 
 		query := &sdp.Query{

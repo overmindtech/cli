@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestPlacementGroupInputMapperGet(t *testing.T) {
@@ -74,7 +75,7 @@ func TestPlacementGroupOutputMapper(t *testing.T) {
 func TestNewEC2PlacementGroupAdapter(t *testing.T) {
 	client, account, region := ec2GetAutoConfig(t)
 
-	adapter := NewEC2PlacementGroupAdapter(client, account, region, nil)
+	adapter := NewEC2PlacementGroupAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

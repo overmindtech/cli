@@ -19,7 +19,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 	projectID := "test-project-id"
 
 	t.Run("Get_CacheHit", func(t *testing.T) {
-		cache := sdpcache.NewCache(ctx)
+		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()
 
 		// Pre-populate cache with a KeyRing item (simulating what the loader would do)
@@ -64,7 +64,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 	})
 
 	t.Run("Get_CacheMiss_NotFound", func(t *testing.T) {
-		cache := sdpcache.NewCache(ctx)
+		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()
 
 		// Pre-populate cache with a NOTFOUND error to simulate item not existing
@@ -95,7 +95,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 	})
 
 	t.Run("List_CacheHit", func(t *testing.T) {
-		cache := sdpcache.NewCache(ctx)
+		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()
 
 		// Pre-populate cache with KeyRing items under LIST cache key
@@ -149,7 +149,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 	})
 
 	t.Run("List_CacheHit_Empty", func(t *testing.T) {
-		cache := sdpcache.NewCache(ctx)
+		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()
 
 		// Store NOTFOUND error in cache to simulate empty result
@@ -182,7 +182,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 	})
 
 	t.Run("Search_CacheHit", func(t *testing.T) {
-		cache := sdpcache.NewCache(ctx)
+		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()
 
 		// Pre-populate cache with KeyRing items under SEARCH cache key (by location)
@@ -223,7 +223,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 	})
 
 	t.Run("StaticTests", func(t *testing.T) {
-		cache := sdpcache.NewCache(ctx)
+		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()
 
 		// Pre-populate cache with a KeyRing item

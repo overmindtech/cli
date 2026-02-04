@@ -10,6 +10,7 @@ import (
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func searchSync(adapter discovery.SearchStreamableAdapter, ctx context.Context, scope, query string, ignoreCache bool) ([]*sdp.Item, error) {
@@ -42,32 +43,32 @@ func NetworkManager(t *testing.T) {
 
 	t.Logf("Running NetworkManager integration tests")
 
-	globalNetworkSource := adapters.NewNetworkManagerGlobalNetworkAdapter(testClient, accountID, nil)
+	globalNetworkSource := adapters.NewNetworkManagerGlobalNetworkAdapter(testClient, accountID, sdpcache.NewNoOpCache())
 	if err := globalNetworkSource.Validate(); err != nil {
 		t.Fatalf("failed to validate NetworkManager global network adapter: %v", err)
 	}
 
-	siteSource := adapters.NewNetworkManagerSiteAdapter(testClient, accountID, nil)
+	siteSource := adapters.NewNetworkManagerSiteAdapter(testClient, accountID, sdpcache.NewNoOpCache())
 	if err := siteSource.Validate(); err != nil {
 		t.Fatalf("failed to validate NetworkManager site adapter: %v", err)
 	}
 
-	linkSource := adapters.NewNetworkManagerLinkAdapter(testClient, accountID, nil)
+	linkSource := adapters.NewNetworkManagerLinkAdapter(testClient, accountID, sdpcache.NewNoOpCache())
 	if err := linkSource.Validate(); err != nil {
 		t.Fatalf("failed to validate NetworkManager link adapter: %v", err)
 	}
 
-	linkAssociationSource := adapters.NewNetworkManagerLinkAssociationAdapter(testClient, accountID, nil)
+	linkAssociationSource := adapters.NewNetworkManagerLinkAssociationAdapter(testClient, accountID, sdpcache.NewNoOpCache())
 	if err := linkAssociationSource.Validate(); err != nil {
 		t.Fatalf("failed to validate NetworkManager link association adapter: %v", err)
 	}
 
-	connectionSource := adapters.NewNetworkManagerConnectionAdapter(testClient, accountID, nil)
+	connectionSource := adapters.NewNetworkManagerConnectionAdapter(testClient, accountID, sdpcache.NewNoOpCache())
 	if err := connectionSource.Validate(); err != nil {
 		t.Fatalf("failed to validate NetworkManager connection adapter: %v", err)
 	}
 
-	deviceSource := adapters.NewNetworkManagerDeviceAdapter(testClient, accountID, nil)
+	deviceSource := adapters.NewNetworkManagerDeviceAdapter(testClient, accountID, sdpcache.NewNoOpCache())
 	if err := deviceSource.Validate(); err != nil {
 		t.Fatalf("failed to validate NetworkManager device adapter: %v", err)
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func searchSync(adapter discovery.SearchStreamableAdapter, ctx context.Context, scope, query string, ignoreCache bool) ([]*sdp.Item, error) {
@@ -54,13 +55,13 @@ func KMS(t *testing.T) {
 
 	t.Log("Running KMS integration test")
 
-	keySource := adapters.NewKMSKeyAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	keySource := adapters.NewKMSKeyAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
-	aliasSource := adapters.NewKMSAliasAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	aliasSource := adapters.NewKMSAliasAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
-	grantSource := adapters.NewKMSGrantAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	grantSource := adapters.NewKMSGrantAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
-	keyPolicySource := adapters.NewKMSKeyPolicyAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	keyPolicySource := adapters.NewKMSKeyPolicyAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
 	err = keySource.Validate()
 	if err != nil {

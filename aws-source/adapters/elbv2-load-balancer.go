@@ -257,7 +257,7 @@ func NewELBv2LoadBalancerAdapter(client elbv2Client, accountID string, region st
 		AccountID:       accountID,
 		ItemType:        "elbv2-load-balancer",
 		AdapterMetadata: loadBalancerAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		DescribeFunc: func(ctx context.Context, client elbv2Client, input *elbv2.DescribeLoadBalancersInput) (*elbv2.DescribeLoadBalancersOutput, error) {
 			return client.DescribeLoadBalancers(ctx, input)
 		},

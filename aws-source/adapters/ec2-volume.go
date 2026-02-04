@@ -74,7 +74,7 @@ func NewEC2VolumeAdapter(client *ec2.Client, accountID string, region string, ca
 		AccountID:       accountID,
 		ItemType:        "ec2-volume",
 		AdapterMetadata: volumeAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		DescribeFunc: func(ctx context.Context, client *ec2.Client, input *ec2.DescribeVolumesInput) (*ec2.DescribeVolumesOutput, error) {
 			return client.DescribeVolumes(ctx, input)
 		},

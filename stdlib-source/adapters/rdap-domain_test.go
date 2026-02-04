@@ -13,7 +13,7 @@ func TestDomainAdapterGet(t *testing.T) {
 
 	src := &RdapDomainAdapter{
 		ClientFac: func() *rdap.Client { return testRdapClient(t) },
-		Cache:     sdpcache.NewCache(t.Context()),
+		Cache:     sdpcache.NewNoOpCache(),
 	}
 
 	t.Run("without a dot", func(t *testing.T) {

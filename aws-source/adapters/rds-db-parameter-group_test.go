@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestDBParameterGroupOutputMapper(t *testing.T) {
@@ -74,7 +75,7 @@ func TestDBParameterGroupOutputMapper(t *testing.T) {
 func TestNewRDSDBParameterGroupAdapter(t *testing.T) {
 	client, account, region := rdsGetAutoConfig(t)
 
-	adapter := NewRDSDBParameterGroupAdapter(client, account, region, nil)
+	adapter := NewRDSDBParameterGroupAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

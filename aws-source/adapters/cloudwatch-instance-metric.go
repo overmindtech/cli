@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -197,21 +196,6 @@ func (a *CloudwatchInstanceMetricAdapter) cacheDuration() time.Duration {
 	return a.CacheDuration
 }
 
-var (
-	noOpCacheCloudwatchOnce sync.Once
-	noOpCacheCloudwatch     sdpcache.Cache
-)
-
-func (a *CloudwatchInstanceMetricAdapter) Cache() sdpcache.Cache {
-	if a.cache == nil {
-		noOpCacheCloudwatchOnce.Do(func() {
-			noOpCacheCloudwatch = sdpcache.NewNoOpCache()
-		})
-		return noOpCacheCloudwatch
-	}
-	return a.cache
-}
-
 // Type returns the type of items this adapter returns
 func (a *CloudwatchInstanceMetricAdapter) Type() string {
 	return "cloudwatch-instance-metric"
@@ -258,7 +242,7 @@ func (a *CloudwatchInstanceMetricAdapter) Get(ctx context.Context, scope string,
 	var cachedItems []*sdp.Item
 	var qErr *sdp.QueryError
 
-	cacheHit, ck, cachedItems, qErr, done := a.Cache().Lookup(ctx, a.Name(), sdp.QueryMethod_GET, scope, a.Type(), query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := a.cache.Lookup(ctx, a.Name(), sdp.QueryMethod_GET, scope, a.Type(), query, ignoreCache)
 	defer done()
 	if qErr != nil {
 		return nil, qErr
@@ -309,7 +293,7 @@ func (a *CloudwatchInstanceMetricAdapter) Get(ctx context.Context, scope string,
 			Scope:       scope,
 		}
 		// Cache the error
-		a.Cache().StoreError(ctx, qErr, a.cacheDuration(), ck)
+		a.cache.StoreError(ctx, qErr, a.cacheDuration(), ck)
 		return nil, qErr
 	}
 
@@ -321,12 +305,12 @@ func (a *CloudwatchInstanceMetricAdapter) Get(ctx context.Context, scope string,
 			Scope:       scope,
 		}
 		// Cache the error
-		a.Cache().StoreError(ctx, qErr, a.cacheDuration(), ck)
+		a.cache.StoreError(ctx, qErr, a.cacheDuration(), ck)
 		return nil, qErr
 	}
 
 	// Store in cache
-	a.Cache().StoreItem(ctx, item, a.cacheDuration(), ck)
+	a.cache.StoreItem(ctx, item, a.cacheDuration(), ck)
 	return item, nil
 }
 
@@ -358,7 +342,7 @@ func NewCloudwatchInstanceMetricAdapter(client *cloudwatch.Client, accountID str
 		Client:    client,
 		AccountID: accountID,
 		Region:    region,
-		cache:  cache,
+		cache:     cache,
 	}
 }
 

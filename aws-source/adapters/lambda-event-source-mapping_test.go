@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type TestLambdaEventSourceMappingClient struct{}
@@ -88,7 +89,7 @@ func stringPtr(s string) *string {
 }
 
 func TestLambdaEventSourceMappingAdapter(t *testing.T) {
-	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", nil)
+	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", sdpcache.NewNoOpCache())
 
 	// Test adapter metadata
 	if adapter.Type() != "lambda-event-source-mapping" {
@@ -110,7 +111,7 @@ func TestLambdaEventSourceMappingAdapter(t *testing.T) {
 }
 
 func TestLambdaEventSourceMappingGetFunc(t *testing.T) {
-	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", nil)
+	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", sdpcache.NewNoOpCache())
 
 	// Test getting existing event source mapping
 	item, err := adapter.Get(context.Background(), "123456789012.us-east-1", "test-uuid-1", false)
@@ -145,7 +146,7 @@ func TestLambdaEventSourceMappingGetFunc(t *testing.T) {
 }
 
 func TestLambdaEventSourceMappingItemMapper(t *testing.T) {
-	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", nil)
+	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", sdpcache.NewNoOpCache())
 
 	// Test mapping with SQS event source
 	awsItem := &types.EventSourceMappingConfiguration{
@@ -208,7 +209,7 @@ func TestLambdaEventSourceMappingItemMapper(t *testing.T) {
 }
 
 func TestLambdaEventSourceMappingItemMapperWithDynamoDB(t *testing.T) {
-	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", nil)
+	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", sdpcache.NewNoOpCache())
 
 	// Test mapping with DynamoDB event source
 	awsItem := &types.EventSourceMappingConfiguration{
@@ -241,7 +242,7 @@ func TestLambdaEventSourceMappingItemMapperWithDynamoDB(t *testing.T) {
 }
 
 func TestLambdaEventSourceMappingItemMapperWithRDS(t *testing.T) {
-	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", nil)
+	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", sdpcache.NewNoOpCache())
 
 	// Test mapping with RDS/DocumentDB event source
 	awsItem := &types.EventSourceMappingConfiguration{
@@ -274,7 +275,7 @@ func TestLambdaEventSourceMappingItemMapperWithRDS(t *testing.T) {
 }
 
 func TestLambdaEventSourceMappingSearchByEventSourceARN(t *testing.T) {
-	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", nil)
+	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", sdpcache.NewNoOpCache())
 
 	// Test search by SQS queue ARN
 	sqsQueueARN := "arn:aws:sqs:us-east-1:123456789012:test-queue"
@@ -294,7 +295,7 @@ func TestLambdaEventSourceMappingSearchByEventSourceARN(t *testing.T) {
 }
 
 func TestLambdaEventSourceMappingSearchWrongScope(t *testing.T) {
-	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", nil)
+	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", sdpcache.NewNoOpCache())
 
 	// Test search with wrong scope
 	_, err := adapter.Search(context.Background(), "wrong-scope", "arn:aws:sqs:us-east-1:123456789012:test-queue", false)
@@ -304,7 +305,7 @@ func TestLambdaEventSourceMappingSearchWrongScope(t *testing.T) {
 }
 
 func TestLambdaEventSourceMappingAdapterList(t *testing.T) {
-	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", nil)
+	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", sdpcache.NewNoOpCache())
 
 	// Test List
 	items, err := adapter.List(context.Background(), "123456789012.us-east-1", false)
@@ -338,7 +339,7 @@ func TestLambdaEventSourceMappingAdapterList(t *testing.T) {
 }
 
 func TestLambdaEventSourceMappingAdapterListWrongScope(t *testing.T) {
-	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", nil)
+	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", sdpcache.NewNoOpCache())
 
 	// Test List with wrong scope
 	_, err := adapter.List(context.Background(), "wrong-scope", false)
@@ -348,7 +349,7 @@ func TestLambdaEventSourceMappingAdapterListWrongScope(t *testing.T) {
 }
 
 func TestLambdaEventSourceMappingAdapterIntegration(t *testing.T) {
-	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", nil)
+	adapter := NewLambdaEventSourceMappingAdapter(&TestLambdaEventSourceMappingClient{}, "123456789012", "us-east-1", sdpcache.NewNoOpCache())
 
 	// Test Get
 	item, err := adapter.Get(context.Background(), "123456789012.us-east-1", "test-uuid-1", false)

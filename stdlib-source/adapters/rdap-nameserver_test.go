@@ -13,7 +13,7 @@ func TestNameserverAdapterSearch(t *testing.T) {
 
 	src := &RdapNameserverAdapter{
 		ClientFac: func() *rdap.Client { return testRdapClient(t) },
-		Cache:     sdpcache.NewCache(t.Context()),
+		Cache:     sdpcache.NewNoOpCache(),
 	}
 
 	items, err := src.Search(context.Background(), "global", "https://rdap.verisign.com/com/v1/nameserver/NS4.GOOGLE.COM", false)

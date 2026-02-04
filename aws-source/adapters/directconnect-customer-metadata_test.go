@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestCustomerMetadataOutputMapper(t *testing.T) {
@@ -38,7 +39,7 @@ func TestCustomerMetadataOutputMapper(t *testing.T) {
 func TestNewDirectConnectCustomerMetadataAdapter(t *testing.T) {
 	client, account, region := directconnectGetAutoConfig(t)
 
-	adapter := NewDirectConnectCustomerMetadataAdapter(client, account, region, nil)
+	adapter := NewDirectConnectCustomerMetadataAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

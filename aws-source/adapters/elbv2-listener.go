@@ -140,7 +140,7 @@ func NewELBv2ListenerAdapter(client elbv2Client, accountID string, region string
 		AccountID:       accountID,
 		ItemType:        "elbv2-listener",
 		AdapterMetadata: elbv2ListenerAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		DescribeFunc: func(ctx context.Context, client elbv2Client, input *elbv2.DescribeListenersInput) (*elbv2.DescribeListenersOutput, error) {
 			return client.DescribeListeners(ctx, input)
 		},

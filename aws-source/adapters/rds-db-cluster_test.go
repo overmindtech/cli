@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestDBClusterOutputMapper(t *testing.T) {
@@ -253,7 +254,7 @@ func TestDBClusterOutputMapper(t *testing.T) {
 func TestNewRDSDBClusterAdapter(t *testing.T) {
 	client, account, region := rdsGetAutoConfig(t)
 
-	adapter := NewRDSDBClusterAdapter(client, account, region, nil)
+	adapter := NewRDSDBClusterAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

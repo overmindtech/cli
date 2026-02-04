@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func (t *ecsTestClient) DescribeClusters(ctx context.Context, params *ecs.DescribeClustersInput, optFns ...func(*ecs.Options)) (*ecs.DescribeClustersOutput, error) {
@@ -147,7 +148,7 @@ func TestECSClusterGetFunc(t *testing.T) {
 func TestECSNewECSClusterAdapter(t *testing.T) {
 	client, account, region := ecsGetAutoConfig(t)
 
-	adapter := NewECSClusterAdapter(client, account, region, nil)
+	adapter := NewECSClusterAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

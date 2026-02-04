@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestLayerVersionGetInputMapper(t *testing.T) {
@@ -115,7 +116,7 @@ func TestLayerVersionGetFunc(t *testing.T) {
 func TestNewLambdaLayerVersionAdapter(t *testing.T) {
 	client, account, region := lambdaGetAutoConfig(t)
 
-	adapter := NewLambdaLayerVersionAdapter(client, account, region, nil)
+	adapter := NewLambdaLayerVersionAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

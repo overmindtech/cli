@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var testFuncConfig = &types.FunctionConfiguration{
@@ -375,7 +376,7 @@ func TestGetEventLinkedItem(t *testing.T) {
 func TestNewLambdaFunctionAdapter(t *testing.T) {
 	client, account, region := lambdaGetAutoConfig(t)
 
-	adapter := NewLambdaFunctionAdapter(client, account, region, nil)
+	adapter := NewLambdaFunctionAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

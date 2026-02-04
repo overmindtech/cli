@@ -15,6 +15,7 @@ import (
 	"github.com/overmindtech/cli/aws-source/adapters"
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/tracing"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -120,7 +121,7 @@ func TestIntegrationSSM(t *testing.T) {
 		client := ssm.NewFromConfig(testAWSConfig.Config)
 		scope := testAWSConfig.AccountID + "." + testAWSConfig.Region
 
-		adapter := adapters.NewSSMParameterAdapter(client, testAWSConfig.AccountID, testAWSConfig.Region, nil)
+		adapter := adapters.NewSSMParameterAdapter(client, testAWSConfig.AccountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
 		ctx, span := tracer.Start(ctx, "SSM.List")
 		defer span.End()

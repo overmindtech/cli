@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var AddonTestClient = EKSTestClient{
@@ -49,7 +50,7 @@ func TestAddonGetFunc(t *testing.T) {
 func TestNewEKSAddonAdapter(t *testing.T) {
 	client, account, region := eksGetAutoConfig(t)
 
-	adapter := NewEKSAddonAdapter(client, account, region, nil)
+	adapter := NewEKSAddonAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter:           adapter,

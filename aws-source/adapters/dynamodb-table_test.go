@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func (t *DynamoDBTestClient) DescribeTable(context.Context, *dynamodb.DescribeTableInput, ...func(*dynamodb.Options)) (*dynamodb.DescribeTableOutput, error) {
@@ -223,7 +224,7 @@ func TestNewDynamoDBTableAdapter(t *testing.T) {
 	config, account, region := GetAutoConfig(t)
 	client := dynamodb.NewFromConfig(config)
 
-	adapter := NewDynamoDBTableAdapter(client, account, region, nil)
+	adapter := NewDynamoDBTableAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

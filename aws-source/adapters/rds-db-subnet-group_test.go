@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestDBSubnetGroupOutputMapper(t *testing.T) {
@@ -85,7 +86,7 @@ func TestDBSubnetGroupOutputMapper(t *testing.T) {
 func TestNewRDSDBSubnetGroupAdapter(t *testing.T) {
 	client, account, region := rdsGetAutoConfig(t)
 
-	adapter := NewRDSDBSubnetGroupAdapter(client, account, region, nil)
+	adapter := NewRDSDBSubnetGroupAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

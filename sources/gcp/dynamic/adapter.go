@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sync"
 
 	"buf.build/go/protovalidate"
 	log "github.com/sirupsen/logrus"
@@ -35,7 +34,7 @@ type AdapterConfig struct {
 type Adapter struct {
 	locations            []gcpshared.LocationInfo
 	httpCli              *http.Client
-	Cache                sdpcache.Cache
+	cache                sdpcache.Cache
 	getURLFunc           gcpshared.EndpointFunc
 	sdpAssetType         shared.ItemType
 	sdpAdapterCategory   sdp.AdapterCategory
@@ -53,7 +52,7 @@ func NewAdapter(config *AdapterConfig, cache sdpcache.Cache) discovery.Adapter {
 	return Adapter{
 		locations:            config.Locations,
 		httpCli:              config.HTTPClient,
-		Cache:                cache,
+		cache:                cache,
 		getURLFunc:           config.GetURLFunc,
 		sdpAssetType:         config.SDPAssetType,
 		sdpAdapterCategory:   config.SDPAdapterCategory,
@@ -93,21 +92,6 @@ func (g Adapter) Scopes() []string {
 	return gcpshared.LocationsToScopes(g.locations)
 }
 
-var (
-	noOpCacheGCPOnce sync.Once
-	noOpCacheGCP     sdpcache.Cache
-)
-
-func (g Adapter) GetCache() sdpcache.Cache {
-	if g.Cache == nil {
-		noOpCacheGCPOnce.Do(func() {
-			noOpCacheGCP = sdpcache.NewNoOpCache()
-		})
-		return noOpCacheGCP
-	}
-	return g.Cache
-}
-
 // validateScope checks if the requested scope matches one of the adapter's locations.
 func (g Adapter) validateScope(scope string) (gcpshared.LocationInfo, error) {
 	requestedLoc, err := gcpshared.LocationFromScope(scope)
@@ -135,7 +119,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 		return nil, err
 	}
 
-	cacheHit, ck, cachedItem, qErr, done := g.GetCache().Lookup(
+	cacheHit, ck, cachedItem, qErr, done := g.cache.Lookup(
 		ctx,
 		g.Name(),
 		sdp.QueryMethod_GET,
@@ -169,23 +153,23 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 				g.Metadata().GetSupportedQueryMethods().GetGetDescription(),
 			),
 		}
-		g.GetCache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 
 	resp, err := externalCallSingle(ctx, g.httpCli, url)
 	if err != nil {
-		g.GetCache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 
 	item, err := externalToSDP(ctx, location, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker, g.nameSelector)
 	if err != nil {
-		g.GetCache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 
-	g.GetCache().StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
+	g.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 
 	return item, nil
 }

@@ -13,6 +13,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func (t *TestIAMClient) ListGroupsForUser(ctx context.Context, params *iam.ListGroupsForUserInput, optFns ...func(*iam.Options)) (*iam.ListGroupsForUserOutput, error) {
@@ -139,7 +140,7 @@ func TestUserGetFunc(t *testing.T) {
 }
 
 func TestUserListFunc(t *testing.T) {
-	adapter := NewIAMUserAdapter(&TestIAMClient{}, "foo", nil)
+	adapter := NewIAMUserAdapter(&TestIAMClient{}, "foo", sdpcache.NewNoOpCache())
 
 	stream := discovery.NewRecordingQueryResultStream()
 	adapter.ListStream(context.Background(), "foo", false, stream)
@@ -227,7 +228,7 @@ func TestNewIAMUserAdapter(t *testing.T) {
 		o.RetryMaxAttempts = 10
 	})
 
-	adapter := NewIAMUserAdapter(client, account, nil)
+	adapter := NewIAMUserAdapter(client, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

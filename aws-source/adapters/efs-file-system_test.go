@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestFileSystemOutputMapper(t *testing.T) {
@@ -93,7 +94,7 @@ func TestFileSystemOutputMapper(t *testing.T) {
 func TestNewEFSFileSystemAdapter(t *testing.T) {
 	client, account, region := efsGetAutoConfig(t)
 
-	adapter := NewEFSFileSystemAdapter(client, account, region, nil)
+	adapter := NewEFSFileSystemAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

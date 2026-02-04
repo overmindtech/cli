@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestAccessPointOutputMapper(t *testing.T) {
@@ -82,7 +83,7 @@ func TestAccessPointOutputMapper(t *testing.T) {
 func TestNewEFSAccessPointAdapter(t *testing.T) {
 	client, account, region := efsGetAutoConfig(t)
 
-	adapter := NewEFSAccessPointAdapter(client, account, region, nil)
+	adapter := NewEFSAccessPointAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

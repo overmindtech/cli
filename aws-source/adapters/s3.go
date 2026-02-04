@@ -18,11 +18,6 @@ import (
 
 const CacheDuration = 10 * time.Minute
 
-var (
-	noOpCacheS3Once sync.Once
-	noOpCacheS3     sdpcache.Cache
-)
-
 // NewS3Source Creates a new S3 adapter
 func NewS3Adapter(config aws.Config, accountID string, cache sdpcache.Cache) *S3Source {
 	return &S3Source{
@@ -88,16 +83,6 @@ type S3Source struct {
 
 	CacheDuration time.Duration  // How long to cache items for
 	cache         sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
-}
-
-func (s *S3Source) Cache() sdpcache.Cache {
-	if s.cache == nil {
-		noOpCacheS3Once.Do(func() {
-			noOpCacheS3 = sdpcache.NewNoOpCache()
-		})
-		return noOpCacheS3
-	}
-	return s.cache
 }
 
 func (s *S3Source) Client() *s3.Client {
@@ -203,7 +188,7 @@ func (s *S3Source) Get(ctx context.Context, scope string, query string, ignoreCa
 		}
 	}
 
-	return getImpl(ctx, s.Cache(), s.Client(), scope, query, ignoreCache)
+	return getImpl(ctx, s.cache, s.Client(), scope, query, ignoreCache)
 }
 
 func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
@@ -614,7 +599,7 @@ func (s *S3Source) List(ctx context.Context, scope string, ignoreCache bool) ([]
 		}
 	}
 
-	return listImpl(ctx, s.Cache(), s.Client(), scope, ignoreCache)
+	return listImpl(ctx, s.cache, s.Client(), scope, ignoreCache)
 }
 
 func listImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope string, ignoreCache bool) ([]*sdp.Item, error) {
@@ -695,7 +680,7 @@ func (s *S3Source) Search(ctx context.Context, scope string, query string, ignor
 		}
 	}
 
-	return searchImpl(ctx, s.Cache(), s.Client(), scope, query, ignoreCache)
+	return searchImpl(ctx, s.cache, s.Client(), scope, query, ignoreCache)
 }
 
 func searchImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {

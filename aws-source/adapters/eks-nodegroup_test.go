@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var NodeGroupClient = EKSTestClient{
@@ -132,7 +133,7 @@ func TestNodegroupGetFunc(t *testing.T) {
 func TestNewEKSNodegroupAdapter(t *testing.T) {
 	client, account, region := eksGetAutoConfig(t)
 
-	adapter := NewEKSNodegroupAdapter(client, account, region, nil)
+	adapter := NewEKSNodegroupAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter:           adapter,

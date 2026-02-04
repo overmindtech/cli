@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestLayerItemMapper(t *testing.T) {
@@ -53,7 +54,7 @@ func TestLayerItemMapper(t *testing.T) {
 func TestNewLambdaLayerAdapter(t *testing.T) {
 	client, account, region := lambdaGetAutoConfig(t)
 
-	adapter := NewLambdaLayerAdapter(client, account, region, nil)
+	adapter := NewLambdaLayerAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func (t *ecsTestClient) DescribeContainerInstances(ctx context.Context, params *ecs.DescribeContainerInstancesInput, optFns ...func(*ecs.Options)) (*ecs.DescribeContainerInstancesOutput, error) {
@@ -349,7 +350,7 @@ func TestContainerInstanceGetFunc(t *testing.T) {
 func TestNewECSContainerInstanceAdapter(t *testing.T) {
 	client, account, region := ecsGetAutoConfig(t)
 
-	adapter := NewECSContainerInstanceAdapter(client, account, region, nil)
+	adapter := NewECSContainerInstanceAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter:           adapter,

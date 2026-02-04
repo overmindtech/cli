@@ -60,6 +60,7 @@ func TestGetListAdapterV2Get(t *testing.T) {
 					"foo": "bar",
 				}, nil
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		item, err := s.Get(context.Background(), "12345.eu-west-2", "", false)
@@ -83,6 +84,7 @@ func TestGetListAdapterV2Get(t *testing.T) {
 			ItemMapper: func(query *string, scope, awsItem string) (*sdp.Item, error) {
 				return &sdp.Item{}, nil
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		if _, err := s.Get(context.Background(), "12345.eu-west-2", "", false); err == nil {
@@ -101,6 +103,7 @@ func TestGetListAdapterV2Get(t *testing.T) {
 			ItemMapper: func(query *string, scope, awsItem string) (*sdp.Item, error) {
 				return &sdp.Item{}, errors.New("mapper error")
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		if _, err := s.Get(context.Background(), "12345.eu-west-2", "", false); err == nil {
@@ -135,6 +138,7 @@ func TestGetListAdapterV2ListStream(t *testing.T) {
 			InputMapperList: func(scope string) (string, error) {
 				return "input", nil
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		stream := discovery.NewRecordingQueryResultStream()
@@ -165,6 +169,7 @@ func TestGetListAdapterV2ListStream(t *testing.T) {
 			ItemMapper: func(query *string, scope, awsItem string) (*sdp.Item, error) {
 				return &sdp.Item{}, nil
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		stream := discovery.NewRecordingQueryResultStream()
@@ -196,6 +201,7 @@ func TestGetListAdapterV2ListStream(t *testing.T) {
 			InputMapperList: func(scope string) (string, error) {
 				return "input", nil
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		stream := discovery.NewRecordingQueryResultStream()
@@ -268,6 +274,7 @@ func TestListFuncPaginatorBuilder(t *testing.T) {
 		GetFunc: func(ctx context.Context, client struct{}, scope, query string) (string, error) {
 			return "", nil
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	stream := discovery.NewRecordingQueryResultStream()
@@ -291,7 +298,7 @@ func TestGetListAdapterV2Caching(t *testing.T) {
 		ItemType:  "test-type",
 		Region:    "eu-west-2",
 		AccountID: "foo",
-		cache:  sdpcache.NewCache(ctx),
+		cache:     sdpcache.NewCache(ctx),
 		GetFunc: func(ctx context.Context, client struct{}, scope, query string) (string, error) {
 			generation += 1
 			return fmt.Sprintf("%v", generation), nil

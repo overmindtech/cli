@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var testCachePolicy = &types.CachePolicy{
@@ -86,7 +87,7 @@ func TestCachePolicyListFunc(t *testing.T) {
 func TestNewCloudfrontCachePolicyAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontCachePolicyAdapter(client, account, nil)
+	adapter := NewCloudfrontCachePolicyAdapter(client, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

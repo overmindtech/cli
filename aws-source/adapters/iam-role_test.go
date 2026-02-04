@@ -13,6 +13,7 @@ import (
 	"github.com/micahhausler/aws-iam-policy/policy"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func (t *TestIAMClient) GetRole(ctx context.Context, params *iam.GetRoleInput, optFns ...func(*iam.Options)) (*iam.GetRoleOutput, error) {
@@ -140,7 +141,7 @@ func TestRoleGetFunc(t *testing.T) {
 }
 
 func TestRoleListFunc(t *testing.T) {
-	adapter := NewIAMRoleAdapter(&TestIAMClient{}, "foo", nil)
+	adapter := NewIAMRoleAdapter(&TestIAMClient{}, "foo", sdpcache.NewNoOpCache())
 
 	stream := discovery.NewRecordingQueryResultStream()
 	adapter.ListStream(context.Background(), "foo", false, stream)
@@ -253,7 +254,7 @@ func TestNewIAMRoleAdapter(t *testing.T) {
 		o.RetryMaxAttempts = 10
 	})
 
-	adapter := NewIAMRoleAdapter(client, account, nil)
+	adapter := NewIAMRoleAdapter(client, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

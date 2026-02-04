@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestRealtimeLogConfigsItemMapper(t *testing.T) {
@@ -58,7 +59,7 @@ func TestRealtimeLogConfigsItemMapper(t *testing.T) {
 func TestNewCloudfrontRealtimeLogConfigsAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontRealtimeLogConfigsAdapter(client, account, nil)
+	adapter := NewCloudfrontRealtimeLogConfigsAdapter(client, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

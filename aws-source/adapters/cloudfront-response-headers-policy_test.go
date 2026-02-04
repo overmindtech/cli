@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestResponseHeadersPolicyItemMapper(t *testing.T) {
@@ -89,7 +90,7 @@ func TestResponseHeadersPolicyItemMapper(t *testing.T) {
 func TestNewCloudfrontResponseHeadersPolicyAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontResponseHeadersPolicyAdapter(client, account, nil)
+	adapter := NewCloudfrontResponseHeadersPolicyAdapter(client, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

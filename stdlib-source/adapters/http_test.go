@@ -13,6 +13,7 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 const TestHTTPTimeout = 3 * time.Second
@@ -115,7 +116,9 @@ func (t *TestHTTPServer) Close() {
 }
 
 func TestHTTPGet(t *testing.T) {
-	src := HTTPAdapter{}
+	src := HTTPAdapter{
+		cache: sdpcache.NewNoOpCache(),
+	}
 	server, err := NewTestServer()
 	if err != nil {
 		t.Fatal(err)
@@ -433,7 +436,9 @@ func TestHTTPGet(t *testing.T) {
 }
 
 func TestHTTPSearch(t *testing.T) {
-	src := HTTPAdapter{}
+	src := HTTPAdapter{
+		cache: sdpcache.NewNoOpCache(),
+	}
 	server, err := NewTestServer()
 	if err != nil {
 		t.Fatal(err)

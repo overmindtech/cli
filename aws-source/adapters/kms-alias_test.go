@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestAliasOutputMapper(t *testing.T) {
@@ -56,7 +57,7 @@ func TestNewKMSAliasAdapter(t *testing.T) {
 	config, account, region := GetAutoConfig(t)
 	client := kms.NewFromConfig(config)
 
-	adapter := NewKMSAliasAdapter(client, account, region, nil)
+	adapter := NewKMSAliasAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

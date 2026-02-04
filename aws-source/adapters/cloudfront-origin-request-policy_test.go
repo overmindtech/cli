@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestOriginRequestPolicyItemMapper(t *testing.T) {
@@ -52,7 +53,7 @@ func TestOriginRequestPolicyItemMapper(t *testing.T) {
 func TestNewCloudfrontOriginRequestPolicyAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontOriginRequestPolicyAdapter(client, account, nil)
+	adapter := NewCloudfrontOriginRequestPolicyAdapter(client, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

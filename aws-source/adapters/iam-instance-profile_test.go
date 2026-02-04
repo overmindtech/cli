@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestInstanceProfileItemMapper(t *testing.T) {
@@ -57,7 +58,7 @@ func TestNewIAMInstanceProfileAdapter(t *testing.T) {
 		o.RetryMaxAttempts = 10
 	})
 
-	adapter := NewIAMInstanceProfileAdapter(client, account, nil)
+	adapter := NewIAMInstanceProfileAdapter(client, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,
