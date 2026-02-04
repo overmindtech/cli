@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestHostedZoneItemMapper(t *testing.T) {
@@ -49,7 +50,7 @@ func TestHostedZoneItemMapper(t *testing.T) {
 func TestNewRoute53HostedZoneAdapter(t *testing.T) {
 	client, account, region := route53GetAutoConfig(t)
 
-	adapter := NewRoute53HostedZoneAdapter(client, account, region, nil)
+	adapter := NewRoute53HostedZoneAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

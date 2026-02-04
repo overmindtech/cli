@@ -187,7 +187,7 @@ func NewAPIGatewayDomainNameAdapter(client *apigateway.Client, accountID string,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: apiGatewayDomainNameAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.DomainName, error) {
 			if query == "" {
 				return nil, &sdp.QueryError{

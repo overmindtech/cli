@@ -8,12 +8,14 @@ import (
 
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestSearch(t *testing.T) {
 	t.Parallel()
 
 	s := DNSAdapter{
+		cache: sdpcache.NewNoOpCache(),
 		Servers: []string{
 			"1.1.1.1:53",
 			"8.8.8.8:53",
@@ -112,7 +114,9 @@ func TestDnsGet(t *testing.T) {
 		t.Skip("No internet connection detected")
 	}
 
-	src := DNSAdapter{}
+	src := DNSAdapter{
+		cache: sdpcache.NewNoOpCache(),
+	}
 
 	t.Run("working request", func(t *testing.T) {
 		item, err := src.Get(context.Background(), "global", "one.one.one.one", false)

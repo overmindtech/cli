@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func (m *mockAPIGatewayClient) GetMethodResponse(ctx context.Context, params *apigateway.GetMethodResponseInput, optFns ...func(*apigateway.Options)) (*apigateway.GetMethodResponseOutput, error) {
@@ -59,7 +60,7 @@ func TestNewAPIGatewayMethodResponseAdapter(t *testing.T) {
 
 	client := apigateway.NewFromConfig(config)
 
-	adapter := NewAPIGatewayMethodResponseAdapter(client, account, region, nil)
+	adapter := NewAPIGatewayMethodResponseAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter:  adapter,

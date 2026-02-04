@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestScalingPolicyOutputMapper(t *testing.T) {
@@ -360,7 +361,7 @@ func TestParseResourceLabelLinks(t *testing.T) {
 func TestScalingPolicyInputMapperSearch(t *testing.T) {
 	t.Parallel()
 
-	adapter := NewAutoScalingPolicyAdapter(&autoscaling.Client{}, "123456789012", "us-east-1", nil)
+	adapter := NewAutoScalingPolicyAdapter(&autoscaling.Client{}, "123456789012", "us-east-1", sdpcache.NewNoOpCache())
 
 	tests := []struct {
 		name               string
@@ -464,7 +465,7 @@ func TestScalingPolicyInputMapperSearch(t *testing.T) {
 func TestScalingPolicyInputMapperGet(t *testing.T) {
 	t.Parallel()
 
-	adapter := NewAutoScalingPolicyAdapter(&autoscaling.Client{}, "123456789012", "us-east-1", nil)
+	adapter := NewAutoScalingPolicyAdapter(&autoscaling.Client{}, "123456789012", "us-east-1", sdpcache.NewNoOpCache())
 
 	tests := []struct {
 		name               string

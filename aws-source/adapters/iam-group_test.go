@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestGroupItemMapper(t *testing.T) {
@@ -37,7 +38,7 @@ func TestNewIAMGroupAdapter(t *testing.T) {
 		o.RetryMaxAttempts = 10
 	})
 
-	adapter := NewIAMGroupAdapter(client, account, nil)
+	adapter := NewIAMGroupAdapter(client, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

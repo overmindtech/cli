@@ -139,6 +139,7 @@ func NewIAMUserAdapter(client IAMClient, accountID string, cache sdpcache.Cache)
 	return &GetListAdapterV2[*iam.ListUsersInput, *iam.ListUsersOutput, *UserDetails, IAMClient, *iam.Options]{
 		ItemType:      "iam-user",
 		Client:        client,
+		cache:         cache,
 		CacheDuration: 3 * time.Hour, // IAM has very low rate limits, we need to cache for a long time
 		AccountID:     accountID,
 		GetFunc: func(ctx context.Context, client IAMClient, scope, query string) (*UserDetails, error) {

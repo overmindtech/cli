@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func (t *DynamoDBTestClient) DescribeBackup(ctx context.Context, params *dynamodb.DescribeBackupInput, optFns ...func(*dynamodb.Options)) (*dynamodb.DescribeBackupOutput, error) {
@@ -113,7 +114,7 @@ func TestNewDynamoDBBackupAdapter(t *testing.T) {
 	config, account, region := GetAutoConfig(t)
 	client := dynamodb.NewFromConfig(config)
 
-	adapter := NewDynamoDBBackupAdapter(client, account, region, nil)
+	adapter := NewDynamoDBBackupAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

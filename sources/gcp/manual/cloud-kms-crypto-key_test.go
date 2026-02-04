@@ -19,7 +19,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 	projectID := "test-project-id"
 
 	t.Run("Get_CacheHit", func(t *testing.T) {
-		cache := sdpcache.NewCache(ctx)
+		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()
 
 		// Pre-populate cache with a CryptoKey item

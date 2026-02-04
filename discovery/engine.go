@@ -374,9 +374,6 @@ func (e *Engine) Stop() error {
 	if e.heartbeatCancel != nil {
 		e.heartbeatCancel()
 	}
-
-	e.sh.ClearCaches()
-
 	return nil
 }
 
@@ -658,11 +655,6 @@ func (e *Engine) HandleLogRecordsRequestWithErrors(ctx context.Context, replyTo 
 	}
 
 	return nil
-}
-
-// ClearCache Completely clears the cache
-func (e *Engine) ClearCache() {
-	e.sh.ClearCaches()
 }
 
 // ClearAdapters Deletes all adapters from the engine, allowing new adapters to be

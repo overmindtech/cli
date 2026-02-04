@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestAuthorizerOutputMapper(t *testing.T) {
@@ -50,7 +51,7 @@ func TestNewAPIGatewayAuthorizerAdapter(t *testing.T) {
 
 	client := apigateway.NewFromConfig(config)
 
-	adapter := NewAPIGatewayAuthorizerAdapter(client, account, region, nil)
+	adapter := NewAPIGatewayAuthorizerAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter:  adapter,

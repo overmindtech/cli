@@ -199,7 +199,7 @@ func NewRoute53ResourceRecordSetAdapter(client *route53.Client, accountID string
 		ItemMapper:      resourceRecordSetItemMapper,
 		SearchFunc:      resourceRecordSetSearchFunc,
 		AdapterMetadata: resourceRecordSetAdapterMetadata,
-		cache:        cache}
+		cache:           cache}
 }
 
 var resourceRecordSetAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{

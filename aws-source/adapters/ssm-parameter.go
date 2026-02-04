@@ -226,7 +226,7 @@ func NewSSMParameterAdapter(client ssmClient, accountID string, region string, c
 		Region:          region,
 		ItemType:        "ssm-parameter",
 		AdapterMetadata: ssmParameterAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		InputMapperGet: func(scope, query string) (*ssm.DescribeParametersInput, error) {
 			return &ssm.DescribeParametersInput{
 				ParameterFilters: []types.ParameterStringFilter{

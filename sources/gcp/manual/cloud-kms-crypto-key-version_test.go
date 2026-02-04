@@ -19,7 +19,7 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 	projectID := "test-project-id"
 
 	t.Run("Get_CacheHit", func(t *testing.T) {
-		cache := sdpcache.NewCache(ctx)
+		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()
 
 		// Pre-populate cache with a CryptoKeyVersion item
@@ -70,7 +70,7 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 	})
 
 	t.Run("Get_CacheMiss_NotFound", func(t *testing.T) {
-		cache := sdpcache.NewCache(ctx)
+		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()
 
 		// Pre-populate cache with a NOTFOUND error to simulate item not existing
@@ -101,7 +101,7 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 	})
 
 	t.Run("Search_CacheHit", func(t *testing.T) {
-		cache := sdpcache.NewCache(ctx)
+		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()
 
 		// Pre-populate cache with CryptoKeyVersion items under SEARCH cache key (by cryptoKey)
@@ -158,7 +158,7 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 	})
 
 	t.Run("Search_CacheHit_Empty", func(t *testing.T) {
-		cache := sdpcache.NewCache(ctx)
+		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()
 
 		// Store NOTFOUND error in cache to simulate empty result
@@ -191,7 +191,7 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 	})
 
 	t.Run("List_Unsupported", func(t *testing.T) {
-		cache := sdpcache.NewCache(ctx)
+		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()
 
 		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
@@ -207,7 +207,7 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 	})
 
 	t.Run("StaticTests", func(t *testing.T) {
-		cache := sdpcache.NewCache(ctx)
+		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()
 
 		// Pre-populate cache with a CryptoKeyVersion item with linked queries

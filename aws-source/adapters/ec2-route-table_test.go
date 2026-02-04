@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestRouteTableInputMapperGet(t *testing.T) {
@@ -197,7 +198,7 @@ func TestRouteTableOutputMapper(t *testing.T) {
 func TestNewEC2RouteTableAdapter(t *testing.T) {
 	client, account, region := ec2GetAutoConfig(t)
 
-	adapter := NewEC2RouteTableAdapter(client, account, region, nil)
+	adapter := NewEC2RouteTableAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

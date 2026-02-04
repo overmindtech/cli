@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync"
 
 	"buf.build/go/protovalidate"
 	log "github.com/sirupsen/logrus"
@@ -218,22 +217,6 @@ type standardSearchableListableAdapterImpl struct {
 // Standard Adapter Core methods
 // *****************************
 
-var (
-	noOpCacheTransformerOnce sync.Once
-	noOpCacheTransformer     sdpcache.Cache
-)
-
-// Cache returns the cache of the adapter.
-func (s *standardAdapterCore) Cache() sdpcache.Cache {
-	if s.cache == nil {
-		noOpCacheTransformerOnce.Do(func() {
-			noOpCacheTransformer = sdpcache.NewNoOpCache()
-		})
-		return noOpCacheTransformer
-	}
-	return s.cache
-}
-
 // Type returns the type of the adapter.
 func (s *standardAdapterCore) Type() string {
 	return s.wrapper.Type()
@@ -275,7 +258,7 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 		return nil, err
 	}
 
-	cacheHit, ck, cachedItem, qErr, done := s.Cache().Lookup(
+	cacheHit, ck, cachedItem, qErr, done := s.cache.Lookup(
 		ctx,
 		s.Name(),
 		sdp.QueryMethod_GET,
@@ -311,12 +294,12 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 
 	item, err := s.wrapper.Get(ctx, scope, queryParts...)
 	if err != nil {
-		s.Cache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		s.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 
 	// Store in cache after successful get
-	s.Cache().StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
+	s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 	return item, nil
 }
 
@@ -386,7 +369,7 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 		return nil, nil
 	}
 
-	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(
+	cacheHit, ck, cachedItems, qErr, done := s.cache.Lookup(
 		ctx,
 		s.Name(),
 		sdp.QueryMethod_LIST,
@@ -413,12 +396,12 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 
 	items, err := s.listable.List(ctx, scope)
 	if err != nil {
-		s.Cache().StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		s.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 
 	for _, item := range items {
-		s.Cache().StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
+		s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 	}
 
 	return items, nil
@@ -435,7 +418,7 @@ func (s *standardListableAdapterImpl) ListStream(ctx context.Context, scope stri
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(
+	cacheHit, ck, cachedItems, qErr, done := s.cache.Lookup(
 		ctx,
 		s.Name(),
 		sdp.QueryMethod_LIST,
@@ -644,7 +627,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(
+	cacheHit, ck, cachedItems, qErr, done := s.cache.Lookup(
 		ctx,
 		s.Name(),
 		sdp.QueryMethod_SEARCH,
@@ -700,7 +683,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 			return
 		}
 
-		s.Cache().StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
+		s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 
 		stream.SendItem(item)
 		return
@@ -745,7 +728,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 			return
 		}
 
-		s.Cache().StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
+		s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 
 		stream.SendItem(item)
 		return

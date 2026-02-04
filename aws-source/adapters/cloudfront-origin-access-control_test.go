@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestOriginAccessControlItemMapper(t *testing.T) {
@@ -33,7 +34,7 @@ func TestOriginAccessControlItemMapper(t *testing.T) {
 func TestNewCloudfrontOriginAccessControlAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontOriginAccessControlAdapter(client, account, nil)
+	adapter := NewCloudfrontOriginAccessControlAdapter(client, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

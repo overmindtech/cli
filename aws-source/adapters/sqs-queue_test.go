@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type testClient struct{}
@@ -164,7 +165,7 @@ func TestNewQueueAdapter(t *testing.T) {
 	config, account, region := GetAutoConfig(t)
 	client := sqs.NewFromConfig(config)
 
-	adapter := NewSQSQueueAdapter(client, account, region, nil)
+	adapter := NewSQSQueueAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

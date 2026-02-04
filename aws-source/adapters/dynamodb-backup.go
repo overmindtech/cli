@@ -83,7 +83,7 @@ func NewDynamoDBBackupAdapter(client Client, accountID string, region string, ca
 		GetFunc:         backupGetFunc,
 		ListInput:       &dynamodb.ListBackupsInput{},
 		AdapterMetadata: dynamodbBackupAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetInputMapper: func(scope, query string) *dynamodb.DescribeBackupInput {
 			// Get is not supported since you can't search by name
 			return nil

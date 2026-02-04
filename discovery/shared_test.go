@@ -87,9 +87,6 @@ func NewTestAdapter() *TestAdapter {
 	}
 }
 
-// assert interface implementation
-var _ CachingAdapter = (*TestAdapter)(nil)
-
 // ClearCalls Clears the call counters between tests
 func (s *TestAdapter) ClearCalls() {
 	s.mutex.Lock()
@@ -126,21 +123,6 @@ func (s *TestAdapter) Metadata() *sdp.AdapterMetadata {
 	}
 }
 
-var (
-	noOpCacheTestOnce sync.Once
-	noOpCacheTest     sdpcache.Cache
-)
-
-func (s *TestAdapter) Cache() sdpcache.Cache {
-	if s.cache == nil {
-		noOpCacheTestOnce.Do(func() {
-			noOpCacheTest = sdpcache.NewNoOpCache()
-		})
-		return noOpCacheTest
-	}
-	return s.cache
-}
-
 func (s *TestAdapter) Scopes() []string {
 	if len(s.ReturnScopes) > 0 {
 		return s.ReturnScopes
@@ -163,7 +145,7 @@ func (s *TestAdapter) Get(ctx context.Context, scope string, query string, ignor
 	var qErr *sdp.QueryError
 	var done func()
 
-	cacheHit, ck, cachedItems, qErr, done = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done = s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
 	defer done()
 	if qErr != nil {
 		return nil, qErr
@@ -185,7 +167,7 @@ func (s *TestAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		s.Cache().StoreError(ctx, err, s.DefaultCacheDuration(), ck)
+		s.cache.StoreError(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{
@@ -195,7 +177,7 @@ func (s *TestAdapter) Get(ctx context.Context, scope string, query string, ignor
 		}
 	default:
 		item := s.NewTestItem(scope, query)
-		s.Cache().StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
+		s.cache.StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
 		return item, nil
 	}
 }
@@ -210,7 +192,7 @@ func (s *TestAdapter) List(ctx context.Context, scope string, ignoreCache bool) 
 	var qErr *sdp.QueryError
 	var done func()
 
-	cacheHit, ck, cachedItems, qErr, done = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.Type(), "", ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done = s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.Type(), "", ignoreCache)
 	defer done()
 	if qErr != nil {
 		return nil, qErr
@@ -228,7 +210,7 @@ func (s *TestAdapter) List(ctx context.Context, scope string, ignoreCache bool) 
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		s.Cache().StoreError(ctx, err, s.DefaultCacheDuration(), ck)
+		s.cache.StoreError(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{
@@ -239,7 +221,7 @@ func (s *TestAdapter) List(ctx context.Context, scope string, ignoreCache bool) 
 	default:
 		item := s.NewTestItem(scope, "Dylan")
 		items := []*sdp.Item{item}
-		s.Cache().StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
+		s.cache.StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
 		return items, nil
 	}
 }
@@ -254,7 +236,7 @@ func (s *TestAdapter) Search(ctx context.Context, scope string, query string, ig
 	var qErr *sdp.QueryError
 	var done func()
 
-	cacheHit, ck, cachedItems, qErr, done = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.Type(), query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done = s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.Type(), query, ignoreCache)
 	defer done()
 	if qErr != nil {
 		return nil, qErr
@@ -272,7 +254,7 @@ func (s *TestAdapter) Search(ctx context.Context, scope string, query string, ig
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		s.Cache().StoreError(ctx, err, s.DefaultCacheDuration(), ck)
+		s.cache.StoreError(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{
@@ -283,7 +265,7 @@ func (s *TestAdapter) Search(ctx context.Context, scope string, query string, ig
 	default:
 		item := s.NewTestItem(scope, "Dylan")
 		items := []*sdp.Item{item}
-		s.Cache().StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
+		s.cache.StoreItem(ctx, item, s.DefaultCacheDuration(), ck)
 		return items, nil
 	}
 }

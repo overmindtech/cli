@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type mockSSMClient struct{}
@@ -68,7 +69,7 @@ func (m *mockSSMClient) GetParameter(ctx context.Context, input *ssm.GetParamete
 }
 
 func TestSSMParameterAdapter(t *testing.T) {
-	adapter := NewSSMParameterAdapter(&mockSSMClient{}, "123456789", "us-east-1", nil)
+	adapter := NewSSMParameterAdapter(&mockSSMClient{}, "123456789", "us-east-1", sdpcache.NewNoOpCache())
 
 	t.Run("Get", func(t *testing.T) {
 		item, err := adapter.Get(context.Background(), "123456789.us-east-1", "test", false)
@@ -122,7 +123,7 @@ func TestSSMParameterAdapterE2E(t *testing.T) {
 	config, account, region := GetAutoConfig(t)
 	client := ssm.NewFromConfig(config)
 
-	adapter := NewSSMParameterAdapter(client, account, region, nil)
+	adapter := NewSSMParameterAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

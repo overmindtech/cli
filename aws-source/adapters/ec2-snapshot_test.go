@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestSnapshotInputMapperGet(t *testing.T) {
@@ -93,7 +94,7 @@ func TestSnapshotOutputMapper(t *testing.T) {
 func TestNewEC2SnapshotAdapter(t *testing.T) {
 	client, account, region := ec2GetAutoConfig(t)
 
-	adapter := NewEC2SnapshotAdapter(client, account, region, nil)
+	adapter := NewEC2SnapshotAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

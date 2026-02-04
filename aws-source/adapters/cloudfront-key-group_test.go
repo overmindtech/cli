@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestKeyGroupItemMapper(t *testing.T) {
@@ -34,7 +35,7 @@ func TestKeyGroupItemMapper(t *testing.T) {
 func TestNewCloudfrontKeyGroupAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontKeyGroupAdapter(client, account, nil)
+	adapter := NewCloudfrontKeyGroupAdapter(client, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

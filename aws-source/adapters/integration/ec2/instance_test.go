@@ -9,6 +9,7 @@ import (
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func searchSync(adapter discovery.SearchStreamableAdapter, ctx context.Context, scope, query string, ignoreCache bool) ([]*sdp.Item, error) {
@@ -53,7 +54,7 @@ func EC2(t *testing.T) {
 
 	t.Log("Running EC2 integration test")
 
-	instanceAdapter := adapters.NewEC2InstanceAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	instanceAdapter := adapters.NewEC2InstanceAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
 	err = instanceAdapter.Validate()
 	if err != nil {

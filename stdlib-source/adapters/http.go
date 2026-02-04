@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"runtime"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/overmindtech/cli/sdp-go"
@@ -79,21 +78,6 @@ type HTTPAdapter struct {
 }
 
 const httpCacheDuration = 5 * time.Minute
-
-var (
-	noOpCacheHTTPOnce sync.Once
-	noOpCacheHTTP     sdpcache.Cache
-)
-
-func (s *HTTPAdapter) Cache() sdpcache.Cache {
-	if s.cache == nil {
-		noOpCacheHTTPOnce.Do(func() {
-			noOpCacheHTTP = sdpcache.NewNoOpCache()
-		})
-		return noOpCacheHTTP
-	}
-	return s.cache
-}
 
 // Type The type of items that this adapter is capable of finding
 func (s *HTTPAdapter) Type() string {
@@ -174,7 +158,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 				ErrorString: err.Error(),
 				Scope:       scope,
 			}
-			s.Cache().StoreError(ctx, err, httpCacheDuration, ck)
+			s.cache.StoreError(ctx, err, httpCacheDuration, ck)
 			return nil, err
 		}
 	}
@@ -185,7 +169,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 	var qErr *sdp.QueryError
 	var done func()
 
-	cacheHit, ck, cachedItems, qErr, done = s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done = s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query, ignoreCache)
 	defer done()
 	if qErr != nil {
 		return nil, qErr
@@ -221,7 +205,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		s.Cache().StoreError(ctx, err, httpCacheDuration, ck)
+		s.cache.StoreError(ctx, err, httpCacheDuration, ck)
 		return nil, err
 	}
 
@@ -238,7 +222,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		s.Cache().StoreError(ctx, err, httpCacheDuration, ck)
+		s.cache.StoreError(ctx, err, httpCacheDuration, ck)
 		return nil, err
 	}
 
@@ -270,7 +254,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		s.Cache().StoreError(ctx, err, httpCacheDuration, ck)
+		s.cache.StoreError(ctx, err, httpCacheDuration, ck)
 		return nil, err
 	}
 
@@ -418,7 +402,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			}
 		}
 	}
-	s.Cache().StoreItem(ctx, &item, httpCacheDuration, ck)
+	s.cache.StoreItem(ctx, &item, httpCacheDuration, ck)
 	return &item, nil
 }
 

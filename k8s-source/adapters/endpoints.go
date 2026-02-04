@@ -100,6 +100,7 @@ func newEndpointsAdapter(cs *kubernetes.Clientset, cluster string, namespaces []
 		},
 		LinkedItemQueryExtractor: EndpointsExtractor,
 		AdapterMetadata:          endpointsAdapterMetadata,
+		cache:                    cache,
 	}
 }
 

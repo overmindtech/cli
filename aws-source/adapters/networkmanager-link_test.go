@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestLinkOutputMapper(t *testing.T) {
@@ -82,7 +83,7 @@ func TestLinkOutputMapper(t *testing.T) {
 }
 
 func TestLinkInputMapperSearch(t *testing.T) {
-	adapter := NewNetworkManagerLinkAdapter(&networkmanager.Client{}, "123456789012", nil)
+	adapter := NewNetworkManagerLinkAdapter(&networkmanager.Client{}, "123456789012", sdpcache.NewNoOpCache())
 
 	tests := []struct {
 		name          string

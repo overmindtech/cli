@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestTargetGroupOutputMapper(t *testing.T) {
@@ -88,7 +89,7 @@ func TestNewELBv2TargetGroupAdapter(t *testing.T) {
 	config, account, region := GetAutoConfig(t)
 	client := elbv2.NewFromConfig(config)
 
-	adapter := NewELBv2TargetGroupAdapter(client, account, region, nil)
+	adapter := NewELBv2TargetGroupAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

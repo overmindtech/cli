@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestEgressOnlyInternetGatewayInputMapperGet(t *testing.T) {
@@ -89,7 +90,7 @@ func TestEgressOnlyInternetGatewayOutputMapper(t *testing.T) {
 func TestNewEC2EgressOnlyInternetGatewayAdapter(t *testing.T) {
 	client, account, region := ec2GetAutoConfig(t)
 
-	adapter := NewEC2EgressOnlyInternetGatewayAdapter(client, account, region, nil)
+	adapter := NewEC2EgressOnlyInternetGatewayAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

@@ -184,7 +184,7 @@ func NewLambdaEventSourceMappingAdapter(client lambdaEventSourceMappingClient, a
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: lambdaEventSourceMappingAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetFunc: func(ctx context.Context, client lambdaEventSourceMappingClient, scope, query string) (*types.EventSourceMappingConfiguration, error) {
 			out, err := client.GetEventSourceMapping(ctx, &lambda.GetEventSourceMappingInput{
 				UUID: &query,

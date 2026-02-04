@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect/types"
@@ -167,7 +168,7 @@ func TestLagOutputMapper(t *testing.T) {
 func TestNewDirectConnectLagAdapter(t *testing.T) {
 	client, account, region := directconnectGetAutoConfig(t)
 
-	adapter := NewDirectConnectLagAdapter(client, account, region, nil)
+	adapter := NewDirectConnectLagAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

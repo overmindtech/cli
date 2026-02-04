@@ -72,7 +72,7 @@ var rootCmd = &cobra.Command{
 			log.WithError(err).WithFields(log.Fields{"service-port": healthCheckPort}).Fatal("Invalid service-port")
 		}
 
-		healthCheckDNSAdapter := adapters.DNSAdapter{}
+		healthCheckDNSAdapter := adapters.NewDNSAdapterForHealthCheck()
 
 		// Set up health checks
 		if e.EngineConfig.HeartbeatOptions == nil {

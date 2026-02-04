@@ -174,7 +174,7 @@ func NewDynamoDBTableAdapter(client Client, accountID string, region string, cac
 		GetFunc:         tableGetFunc,
 		ListInput:       &dynamodb.ListTablesInput{},
 		AdapterMetadata: dynamodbTableAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetInputMapper: func(scope, query string) *dynamodb.DescribeTableInput {
 			return &dynamodb.DescribeTableInput{
 				TableName: &query,

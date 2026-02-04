@@ -8,6 +8,7 @@ import (
 	"github.com/overmindtech/cli/aws-source/adapters"
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func APIGateway(t *testing.T) {
@@ -30,70 +31,70 @@ func APIGateway(t *testing.T) {
 
 	// Resources ------------------------------------------------------------------------------------------------------
 
-	restApiSource := adapters.NewAPIGatewayRestApiAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	restApiSource := adapters.NewAPIGatewayRestApiAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
 	err = restApiSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway restApi adapter: %v", err)
 	}
 
-	resourceApiSource := adapters.NewAPIGatewayResourceAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	resourceApiSource := adapters.NewAPIGatewayResourceAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
 	err = resourceApiSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway resource adapter: %v", err)
 	}
 
-	methodSource := adapters.NewAPIGatewayMethodAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	methodSource := adapters.NewAPIGatewayMethodAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
 	err = methodSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway method adapter: %v", err)
 	}
 
-	methodResponseSource := adapters.NewAPIGatewayMethodResponseAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	methodResponseSource := adapters.NewAPIGatewayMethodResponseAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
 	err = methodResponseSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway method response adapter: %v", err)
 	}
 
-	integrationSource := adapters.NewAPIGatewayIntegrationAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	integrationSource := adapters.NewAPIGatewayIntegrationAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
 	err = integrationSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway integration adapter: %v", err)
 	}
 
-	apiKeySource := adapters.NewAPIGatewayApiKeyAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	apiKeySource := adapters.NewAPIGatewayApiKeyAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
 	err = apiKeySource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway API key adapter: %v", err)
 	}
 
-	authorizerSource := adapters.NewAPIGatewayAuthorizerAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	authorizerSource := adapters.NewAPIGatewayAuthorizerAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
 	err = authorizerSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway authorizer adapter: %v", err)
 	}
 
-	deploymentSource := adapters.NewAPIGatewayDeploymentAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	deploymentSource := adapters.NewAPIGatewayDeploymentAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
 	err = deploymentSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway deployment adapter: %v", err)
 	}
 
-	stageSource := adapters.NewAPIGatewayStageAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	stageSource := adapters.NewAPIGatewayStageAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
 	err = stageSource.Validate()
 	if err != nil {
 		t.Fatalf("failed to validate APIGateway stage adapter: %v", err)
 	}
 
-	modelSource := adapters.NewAPIGatewayModelAdapter(testClient, accountID, testAWSConfig.Region, nil)
+	modelSource := adapters.NewAPIGatewayModelAdapter(testClient, accountID, testAWSConfig.Region, sdpcache.NewNoOpCache())
 
 	err = modelSource.Validate()
 	if err != nil {

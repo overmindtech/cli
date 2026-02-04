@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestRouterConfigurationOutputMapper(t *testing.T) {
@@ -57,7 +58,7 @@ func TestRouterConfigurationOutputMapper(t *testing.T) {
 func TestNewDirectConnectRouterConfigurationAdapter(t *testing.T) {
 	client, account, region := directconnectGetAutoConfig(t)
 
-	adapter := NewDirectConnectRouterConfigurationAdapter(client, account, region, nil)
+	adapter := NewDirectConnectRouterConfigurationAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter:  adapter,

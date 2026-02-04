@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestAddressInputMapperGet(t *testing.T) {
@@ -121,7 +122,7 @@ func TestAddressOutputMapper(t *testing.T) {
 func TestNewEC2AddressAdapter(t *testing.T) {
 	client, account, region := ec2GetAutoConfig(t)
 
-	adapter := NewEC2AddressAdapter(client, account, region, nil)
+	adapter := NewEC2AddressAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

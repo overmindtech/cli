@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestSecurityGroupInputMapperGet(t *testing.T) {
@@ -120,7 +121,7 @@ func TestSecurityGroupOutputMapper(t *testing.T) {
 func TestNewEC2SecurityGroupAdapter(t *testing.T) {
 	client, account, region := ec2GetAutoConfig(t)
 
-	adapter := NewEC2SecurityGroupAdapter(client, account, region, nil)
+	adapter := NewEC2SecurityGroupAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

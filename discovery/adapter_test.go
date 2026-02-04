@@ -36,7 +36,7 @@ func TestGet(t *testing.T) {
 			"test",
 			"empty",
 		},
-		cache: sdpcache.NewCache(t.Context()),
+		cache: sdpcache.NewMemoryCache(),
 	}
 
 	e := newStartedEngine(t, "TestGet", nil, nil, &adapter)
@@ -146,7 +146,6 @@ func TestGet(t *testing.T) {
 		}
 
 		time.Sleep(10 * time.Millisecond)
-		e.sh.Purge(t.Context())
 
 		item3, _, _, err = e.executeQuerySync(context.Background(), &req)
 		if err != nil {
@@ -251,6 +250,7 @@ func TestGet(t *testing.T) {
 
 func TestList(t *testing.T) {
 	adapter := TestAdapter{}
+	adapter.cache = sdpcache.NewMemoryCache()
 
 	e := newStartedEngine(t, "TestList", nil, nil, &adapter)
 
@@ -276,6 +276,7 @@ func TestList(t *testing.T) {
 
 func TestSearch(t *testing.T) {
 	adapter := TestAdapter{}
+	adapter.cache = sdpcache.NewMemoryCache()
 
 	e := newStartedEngine(t, "TestSearch", nil, nil, &adapter)
 
@@ -307,7 +308,7 @@ func TestListSearchCaching(t *testing.T) {
 			"empty",
 			"error",
 		},
-		cache: sdpcache.NewCache(t.Context()),
+		cache: sdpcache.NewMemoryCache(),
 	}
 
 	e := newStartedEngine(t, "TestListSearchCaching", nil, nil, &adapter)
@@ -344,7 +345,6 @@ func TestListSearchCaching(t *testing.T) {
 		}
 
 		time.Sleep(10 * time.Millisecond)
-		e.sh.Purge(t.Context())
 
 		list3, _, _, err = e.executeQuerySync(context.Background(), &q)
 		if err != nil {
@@ -619,7 +619,7 @@ func TestSearchGetCaching(t *testing.T) {
 		ReturnScopes: []string{
 			"test",
 		},
-		cache: sdpcache.NewCache(t.Context()),
+		cache: sdpcache.NewMemoryCache(),
 	}
 
 	e := newStartedEngine(t, "TestSearchGetCaching", nil, nil, &adapter)

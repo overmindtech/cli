@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.DescribeTaskDefinitionInput, optFns ...func(*ecs.Options)) (*ecs.DescribeTaskDefinitionOutput, error) {
@@ -255,7 +256,7 @@ func TestTaskDefinitionGetFunc(t *testing.T) {
 func TestNewECSTaskDefinitionAdapter(t *testing.T) {
 	client, account, region := ecsGetAutoConfig(t)
 
-	adapter := NewECSTaskDefinitionAdapter(client, account, region, nil)
+	adapter := NewECSTaskDefinitionAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

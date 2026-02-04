@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	"buf.build/go/protovalidate"
@@ -108,21 +107,6 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) cacheDuratio
 	return s.CacheDuration
 }
 
-var (
-	noOpCacheDescribeOnce sync.Once
-	noOpCacheDescribe     sdpcache.Cache
-)
-
-func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Cache() sdpcache.Cache {
-	if s.cache == nil {
-		noOpCacheDescribeOnce.Do(func() {
-			noOpCacheDescribe = sdpcache.NewNoOpCache()
-		})
-		return noOpCacheDescribe
-	}
-	return s.cache
-}
-
 // Validate Checks that the adapter is correctly set up and returns an error if
 // not
 func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Validate() error {
@@ -193,7 +177,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 		return nil, WrapAWSError(err)
 	}
 
-	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
 	defer done()
 	if qErr != nil {
 		return nil, qErr
@@ -257,7 +241,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 			ItemType:      s.ItemType,
 			ResponderName: s.Name(),
 		}
-		s.Cache().StoreError(ctx, qErr, s.cacheDuration(), ck)
+		s.cache.StoreError(ctx, qErr, s.cacheDuration(), ck)
 
 		return nil, qErr
 	case numItems == 0:
@@ -269,11 +253,11 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 			ItemType:      s.ItemType,
 			ResponderName: s.Name(),
 		}
-		s.Cache().StoreError(ctx, qErr, s.cacheDuration(), ck)
+		s.cache.StoreError(ctx, qErr, s.cacheDuration(), ck)
 		return nil, qErr
 	}
 
-	s.Cache().StoreItem(ctx, items[0], s.cacheDuration(), ck)
+	s.cache.StoreItem(ctx, items[0], s.cacheDuration(), ck)
 	return items[0], nil
 }
 
@@ -309,7 +293,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) ListStream(c
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
 	defer done()
 	if qErr != nil {
 		// For better semantics, convert cached NOTFOUND into empty result
@@ -397,7 +381,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchARN(ct
 
 // searchCustom Runs custom search logic using the `InputMapperSearch` function
 func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchCustom(ctx context.Context, scope string, query string, ignoreCache bool, stream discovery.QueryResultStream) {
-	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
 	defer done()
 	if qErr != nil {
 		// For better semantics, convert cached NOTFOUND into empty result
@@ -434,7 +418,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) processError
 
 		// Only cache the error if is something that won't be fixed by retrying
 		if sdpErr.GetErrorType() == sdp.QueryError_NOTFOUND || sdpErr.GetErrorType() == sdp.QueryError_NOSCOPE {
-			s.Cache().StoreError(ctx, sdpErr, s.cacheDuration(), cacheKey)
+			s.cache.StoreError(ctx, sdpErr, s.cacheDuration(), cacheKey)
 		}
 	}
 
@@ -473,7 +457,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) describe(ctx
 			}
 
 			for _, item := range items {
-				s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
+				s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 				stream.SendItem(item)
 				itemsSent++
 			}
@@ -500,7 +484,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) describe(ctx
 		}
 
 		for _, item := range items {
-			s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
+			s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 			stream.SendItem(item)
 			itemsSent++
 		}
@@ -523,7 +507,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) describe(ctx
 			ItemType:      s.ItemType,
 			ResponderName: s.Name(),
 		}
-		s.Cache().StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
+		s.cache.StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
 	}
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var FargateTestClient = EKSTestClient{
@@ -67,7 +68,7 @@ func TestFargateProfileGetFunc(t *testing.T) {
 func TestNewEKSFargateProfileAdapter(t *testing.T) {
 	client, account, region := eksGetAutoConfig(t)
 
-	adapter := NewEKSFargateProfileAdapter(client, account, region, nil)
+	adapter := NewEKSFargateProfileAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter:           adapter,

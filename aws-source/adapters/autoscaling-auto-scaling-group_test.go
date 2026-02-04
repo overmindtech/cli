@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestAutoScalingGroupOutputMapper(t *testing.T) {
@@ -226,7 +227,7 @@ func TestAutoScalingGroupOutputMapper(t *testing.T) {
 func TestAutoScalingGroupInputMapperSearch(t *testing.T) {
 	t.Parallel()
 
-	adapter := NewAutoScalingGroupAdapter(&autoscaling.Client{}, "123456789012", "us-east-1", nil)
+	adapter := NewAutoScalingGroupAdapter(&autoscaling.Client{}, "123456789012", "us-east-1", sdpcache.NewNoOpCache())
 
 	tests := []struct {
 		name          string

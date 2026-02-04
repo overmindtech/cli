@@ -62,6 +62,7 @@ func TestGetListSourceGet(t *testing.T) {
 					"foo": "bar",
 				}, nil
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		item, err := s.Get(context.Background(), "12345.eu-west-2", "", false)
@@ -88,6 +89,7 @@ func TestGetListSourceGet(t *testing.T) {
 			ItemMapper: func(query, scope string, awsItem string) (*sdp.Item, error) {
 				return &sdp.Item{}, nil
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		if _, err := s.Get(context.Background(), "12345.eu-west-2", "", false); err == nil {
@@ -109,6 +111,7 @@ func TestGetListSourceGet(t *testing.T) {
 			ItemMapper: func(query, scope string, awsItem string) (*sdp.Item, error) {
 				return &sdp.Item{}, errors.New("mapper error")
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		if _, err := s.Get(context.Background(), "12345.eu-west-2", "", false); err == nil {
@@ -137,6 +140,7 @@ func TestGetListSourceList(t *testing.T) {
 					"foo": "bar",
 				}, nil
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		if items, err := s.List(context.Background(), "12345.eu-west-2", false); err != nil {
@@ -166,6 +170,7 @@ func TestGetListSourceList(t *testing.T) {
 			ItemMapper: func(query, scope string, awsItem string) (*sdp.Item, error) {
 				return &sdp.Item{}, nil
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		if _, err := s.List(context.Background(), "12345.eu-west-2", false); err == nil {
@@ -187,6 +192,7 @@ func TestGetListSourceList(t *testing.T) {
 			ItemMapper: func(query, scope string, awsItem string) (*sdp.Item, error) {
 				return &sdp.Item{}, errors.New("mapper error")
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		if items, err := s.List(context.Background(), "12345.eu-west-2", false); err != nil {
@@ -214,6 +220,7 @@ func TestGetListSourceSearch(t *testing.T) {
 			ItemMapper: func(query, scope string, awsItem string) (*sdp.Item, error) {
 				return &sdp.Item{}, nil
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		t.Run("bad ARN", func(t *testing.T) {
@@ -248,7 +255,7 @@ func TestGetListSourceCaching(t *testing.T) {
 		ItemType:  "test-type",
 		Region:    "eu-west-2",
 		AccountID: "foo",
-		cache:  sdpcache.NewMemoryCache(),
+		cache:     sdpcache.NewMemoryCache(),
 		GetFunc: func(ctx context.Context, client struct{}, scope, query string) (string, error) {
 			generation += 1
 			return fmt.Sprintf("%v", generation), nil

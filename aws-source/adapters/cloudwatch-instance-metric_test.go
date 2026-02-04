@@ -266,6 +266,7 @@ func TestCloudwatchInstanceMetricAdapterGet(t *testing.T) {
 		Client:    testCloudwatchMetricClient{},
 		AccountID: "123456789012",
 		Region:    "eu-west-2",
+		cache:     sdpcache.NewNoOpCache(),
 	}
 
 	scope := "123456789012.eu-west-2"
@@ -298,6 +299,7 @@ func TestCloudwatchInstanceMetricAdapterGetWrongScope(t *testing.T) {
 		Client:    testCloudwatchMetricClient{},
 		AccountID: "123456789012",
 		Region:    "eu-west-2",
+		cache:     sdpcache.NewNoOpCache(),
 	}
 
 	wrongScope := "999999999999.us-east-1"
@@ -314,6 +316,7 @@ func TestCloudwatchInstanceMetricAdapterGetInvalidQuery(t *testing.T) {
 		Client:    testCloudwatchMetricClient{},
 		AccountID: "123456789012",
 		Region:    "eu-west-2",
+		cache:     sdpcache.NewNoOpCache(),
 	}
 
 	scope := "123456789012.eu-west-2"
@@ -343,6 +346,7 @@ func TestCloudwatchInstanceMetricAdapterList(t *testing.T) {
 		Client:    testCloudwatchMetricClient{},
 		AccountID: "123456789012",
 		Region:    "eu-west-2",
+		cache:     sdpcache.NewNoOpCache(),
 	}
 
 	scope := "123456789012.eu-west-2"
@@ -394,7 +398,7 @@ func TestNewCloudwatchInstanceMetricAdapter(t *testing.T) {
 	config, account, region := GetAutoConfig(t)
 	client := cloudwatch.NewFromConfig(config)
 
-	adapter := NewCloudwatchInstanceMetricAdapter(client, account, region, nil)
+	adapter := NewCloudwatchInstanceMetricAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	if adapter.Type() != "cloudwatch-instance-metric" {
 		t.Errorf("expected type cloudwatch-instance-metric, got %s", adapter.Type())
@@ -406,13 +410,12 @@ func TestNewCloudwatchInstanceMetricAdapter(t *testing.T) {
 }
 
 func TestCloudwatchInstanceMetricAdapterCaching(t *testing.T) {
-	ctx := t.Context()
 	client := &testCloudwatchMetricClientWithCallCount{}
 	adapter := &CloudwatchInstanceMetricAdapter{
 		Client:    client,
 		AccountID: "123456789012",
 		Region:    "eu-west-2",
-		cache:  sdpcache.NewCache(ctx),
+		cache:     sdpcache.NewMemoryCache(),
 	}
 
 	scope := "123456789012.eu-west-2"
@@ -458,6 +461,7 @@ func TestCloudwatchInstanceMetricAdapterIgnoreCache(t *testing.T) {
 		Client:    client,
 		AccountID: "123456789012",
 		Region:    "eu-west-2",
+		cache:     sdpcache.NewNoOpCache(),
 	}
 
 	scope := "123456789012.eu-west-2"
@@ -495,6 +499,7 @@ func TestCloudwatchInstanceMetricAdapterErrorCaching(t *testing.T) {
 		Client:    testCloudwatchMetricClientError{},
 		AccountID: "123456789012",
 		Region:    "eu-west-2",
+		cache:     sdpcache.NewNoOpCache(),
 	}
 
 	scope := "123456789012.eu-west-2"

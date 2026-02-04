@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestFunctionItemMapper(t *testing.T) {
@@ -37,7 +38,7 @@ func TestFunctionItemMapper(t *testing.T) {
 func TestNewCloudfrontCloudfrontFunctionAdapter(t *testing.T) {
 	client, account, _ := CloudfrontGetAutoConfig(t)
 
-	adapter := NewCloudfrontCloudfrontFunctionAdapter(client, account, nil)
+	adapter := NewCloudfrontCloudfrontFunctionAdapter(client, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

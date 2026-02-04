@@ -7,7 +7,6 @@ import (
 	"net"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/cenkalti/backoff/v5"
@@ -32,22 +31,15 @@ type DNSAdapter struct {
 	cache sdpcache.Cache // This is mandatory
 }
 
-const dnsCacheDuration = 5 * time.Minute
-
-var (
-	noOpCacheDNSOnce sync.Once
-	noOpCacheDNS     sdpcache.Cache
-)
-
-func (d *DNSAdapter) Cache() sdpcache.Cache {
-	if d.cache == nil {
-		noOpCacheDNSOnce.Do(func() {
-			noOpCacheDNS = sdpcache.NewNoOpCache()
-		})
-		return noOpCacheDNS
+// NewDNSAdapterForHealthCheck creates a DNSAdapter with a NoOpCache for use in health checks.
+// This is useful when you need a DNSAdapter but don't need caching functionality.
+func NewDNSAdapterForHealthCheck() *DNSAdapter {
+	return &DNSAdapter{
+		cache: sdpcache.NewNoOpCache(),
 	}
-	return d.cache
 }
+
+const dnsCacheDuration = 5 * time.Minute
 
 var DefaultServers = []string{
 	"169.254.169.253:53", // Route 53 default resolver. See https://docs.aws.amazon.com/vpc/latest/userguide/AmazonDNS-concepts.html#AmazonDNS
@@ -139,7 +131,7 @@ func (d *DNSAdapter) Get(ctx context.Context, scope string, query string, ignore
 	var qErr *sdp.QueryError
 	var done func()
 
-	cacheHit, ck, cachedItems, qErr, done = d.Cache().Lookup(ctx, d.Name(), sdp.QueryMethod_GET, scope, d.Type(), query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done = d.cache.Lookup(ctx, d.Name(), sdp.QueryMethod_GET, scope, d.Type(), query, ignoreCache)
 	defer done()
 	if qErr != nil {
 		return nil, qErr
@@ -169,7 +161,7 @@ func (d *DNSAdapter) Get(ctx context.Context, scope string, query string, ignore
 			ItemType:    d.Type(),
 		}
 	}
-	d.Cache().StoreItem(ctx, items[0], dnsCacheDuration, ck)
+	d.cache.StoreItem(ctx, items[0], dnsCacheDuration, ck)
 	return items[0], nil
 }
 
@@ -210,7 +202,7 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 	var qErr *sdp.QueryError
 	var done func()
 	if !ignoreCache {
-		cacheHit, _, cachedItems, qErr, done = d.Cache().Lookup(ctx, d.Name(), sdp.QueryMethod_SEARCH, scope, d.Type(), query, ignoreCache)
+		cacheHit, _, cachedItems, qErr, done = d.cache.Lookup(ctx, d.Name(), sdp.QueryMethod_SEARCH, scope, d.Type(), query, ignoreCache)
 		defer done()
 		if qErr != nil {
 			return nil, qErr
@@ -228,7 +220,7 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 			// If it's an IP then we want to run a reverse lookup
 			items, err := d.MakeReverseQuery(ctx, query)
 			if err != nil {
-				d.Cache().StoreError(ctx, err, dnsCacheDuration, ck)
+				d.cache.StoreError(ctx, err, dnsCacheDuration, ck)
 				return nil, err
 			}
 
@@ -241,12 +233,12 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 					SourceName:  d.Name(),
 					ItemType:    d.Type(),
 				}
-				d.Cache().StoreError(ctx, notFoundErr, dnsCacheDuration, ck)
+				d.cache.StoreError(ctx, notFoundErr, dnsCacheDuration, ck)
 				return nil, notFoundErr
 			}
 
 			for _, item := range items {
-				d.Cache().StoreItem(ctx, item, dnsCacheDuration, ck)
+				d.cache.StoreItem(ctx, item, dnsCacheDuration, ck)
 			}
 
 			return items, nil
@@ -259,12 +251,12 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 
 	items, err := d.MakeQuery(ctx, query)
 	if err != nil {
-		d.Cache().StoreError(ctx, err, dnsCacheDuration, ck)
+		d.cache.StoreError(ctx, err, dnsCacheDuration, ck)
 		return nil, err
 	}
 
 	for _, item := range items {
-		d.Cache().StoreItem(ctx, item, dnsCacheDuration, ck)
+		d.cache.StoreItem(ctx, item, dnsCacheDuration, ck)
 	}
 
 	return items, nil

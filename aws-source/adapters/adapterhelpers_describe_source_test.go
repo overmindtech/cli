@@ -81,6 +81,7 @@ func TestGet(t *testing.T) {
 				describeFuncCalled = true
 				return "", nil
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		item, err := s.Get(context.Background(), "foo.eu-west-2", "bar", false)
@@ -154,6 +155,7 @@ func TestGet(t *testing.T) {
 				return "", nil
 			},
 			UseListForGet: true,
+			cache:         sdpcache.NewNoOpCache(),
 		}
 
 		item, err := s.Get(context.Background(), "foo.eu-west-2", uniqueAttributeValue, false)
@@ -199,6 +201,7 @@ func TestGet(t *testing.T) {
 			DescribeFunc: func(ctx context.Context, client struct{}, input string) (string, error) {
 				return "", nil
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		_, err := s.Get(context.Background(), "foo.eu-west-2", "bar", false)
@@ -225,6 +228,7 @@ func TestGet(t *testing.T) {
 			DescribeFunc: func(ctx context.Context, client struct{}, input string) (string, error) {
 				return "", nil
 			},
+			cache: sdpcache.NewNoOpCache(),
 		}
 
 		_, err := s.Get(context.Background(), "foo.eu-west-2", "bar", false)
@@ -254,6 +258,7 @@ func TestSearchARN(t *testing.T) {
 		DescribeFunc: func(ctx context.Context, client struct{}, input string) (string, error) {
 			return "fancy", nil
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	stream := discovery.NewRecordingQueryResultStream()
@@ -302,6 +307,7 @@ func TestSearchCustom(t *testing.T) {
 		DescribeFunc: func(ctx context.Context, client struct{}, input string) (string, error) {
 			return input, nil
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	stream := discovery.NewRecordingQueryResultStream()
@@ -354,6 +360,7 @@ func TestNoInputMapper(t *testing.T) {
 		DescribeFunc: func(ctx context.Context, client struct{}, input string) (string, error) {
 			return "", nil
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	t.Run("Get", func(t *testing.T) {
@@ -388,6 +395,7 @@ func TestNoOutputMapper(t *testing.T) {
 		DescribeFunc: func(ctx context.Context, client struct{}, input string) (string, error) {
 			return "", nil
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	t.Run("Get", func(t *testing.T) {
@@ -424,6 +432,7 @@ func TestNoDescribeFunc(t *testing.T) {
 				{},
 			}, nil
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	t.Run("Get", func(t *testing.T) {
@@ -463,6 +472,7 @@ func TestFailingInputMapper(t *testing.T) {
 		DescribeFunc: func(ctx context.Context, client struct{}, input string) (string, error) {
 			return "", nil
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	fooBar := regexp.MustCompile("foobar")
@@ -511,6 +521,7 @@ func TestFailingOutputMapper(t *testing.T) {
 		DescribeFunc: func(ctx context.Context, client struct{}, input string) (string, error) {
 			return "", nil
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	fooBar := regexp.MustCompile("foobar")
@@ -561,6 +572,7 @@ func TestFailingDescribeFunc(t *testing.T) {
 		DescribeFunc: func(ctx context.Context, client struct{}, input string) (string, error) {
 			return "", errors.New("foobar")
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	fooBar := regexp.MustCompile("foobar")
@@ -638,6 +650,7 @@ func TestPaginated(t *testing.T) {
 		DescribeFunc: func(ctx context.Context, client struct{}, input string) (string, error) {
 			return "", nil
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	t.Run("detecting pagination", func(t *testing.T) {
@@ -675,7 +688,7 @@ func TestDescribeOnlySourceCaching(t *testing.T) {
 		MaxResultsPerPage: 1,
 		Region:            "eu-west-2",
 		AccountID:         "foo",
-		cache:          sdpcache.NewCache(ctx),
+		cache:             sdpcache.NewMemoryCache(),
 		InputMapperGet: func(scope, query string) (string, error) {
 			return "input", nil
 		},

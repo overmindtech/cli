@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53/types"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestResourceRecordSetItemMapper(t *testing.T) {
@@ -208,7 +209,7 @@ func TestConstructRecordFQDN(t *testing.T) {
 func TestNewRoute53ResourceRecordSetAdapter(t *testing.T) {
 	client, account, region := route53GetAutoConfig(t)
 
-	zoneSource := NewRoute53HostedZoneAdapter(client, account, region, nil)
+	zoneSource := NewRoute53HostedZoneAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	zones, err := zoneSource.List(context.Background(), zoneSource.Scopes()[0], true)
 	if err != nil {
@@ -219,7 +220,7 @@ func TestNewRoute53ResourceRecordSetAdapter(t *testing.T) {
 		t.Skip("no zones found")
 	}
 
-	adapter := NewRoute53ResourceRecordSetAdapter(client, account, region, nil)
+	adapter := NewRoute53ResourceRecordSetAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	search := zones[0].UniqueAttributeValue()
 	test := E2ETest{

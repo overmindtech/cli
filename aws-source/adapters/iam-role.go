@@ -254,6 +254,7 @@ func NewIAMRoleAdapter(client IAMClient, accountID string, cache sdpcache.Cache)
 		ItemType:      "iam-role",
 		Client:        client,
 		CacheDuration: 3 * time.Hour, // IAM has very low rate limits, we need to cache for a long time
+		cache:         cache,
 		AccountID:     accountID,
 		GetFunc: func(ctx context.Context, client IAMClient, scope, query string) (*RoleDetails, error) {
 			return roleGetFunc(ctx, client, scope, query)

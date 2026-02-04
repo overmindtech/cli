@@ -21,7 +21,7 @@ func TestEntityAdapterSearch(t *testing.T) {
 
 	src := &RdapEntityAdapter{
 		ClientFac: func() *rdap.Client { return testRdapClient(t) },
-		Cache:     sdpcache.NewCache(t.Context()),
+		Cache:     sdpcache.NewNoOpCache(),
 	}
 
 	for _, realUrl := range realUrls {

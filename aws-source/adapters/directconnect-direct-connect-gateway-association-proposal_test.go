@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestDirectConnectGatewayAssociationProposalOutputMapper(t *testing.T) {
@@ -75,7 +76,7 @@ func TestDirectConnectGatewayAssociationProposalOutputMapper(t *testing.T) {
 func TestNewDirectConnectGatewayAssociationProposalAdapter(t *testing.T) {
 	client, account, region := directconnectGetAutoConfig(t)
 
-	adapter := NewDirectConnectGatewayAssociationProposalAdapter(client, account, region, nil)
+	adapter := NewDirectConnectGatewayAssociationProposalAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

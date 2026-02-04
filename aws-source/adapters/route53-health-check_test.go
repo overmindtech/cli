@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestHealthCheckItemMapper(t *testing.T) {
@@ -72,7 +73,7 @@ func TestHealthCheckItemMapper(t *testing.T) {
 func TestNewRoute53HealthCheckAdapter(t *testing.T) {
 	client, account, region := route53GetAutoConfig(t)
 
-	adapter := NewRoute53HealthCheckAdapter(client, account, region, nil)
+	adapter := NewRoute53HealthCheckAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

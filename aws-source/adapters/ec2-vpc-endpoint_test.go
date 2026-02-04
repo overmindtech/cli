@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func TestVpcEndpointInputMapperGet(t *testing.T) {
@@ -147,7 +148,7 @@ func TestVpcEndpointOutputMapper(t *testing.T) {
 func TestNewEC2VpcEndpointAdapter(t *testing.T) {
 	client, account, region := ec2GetAutoConfig(t)
 
-	adapter := NewEC2VpcEndpointAdapter(client, account, region, nil)
+	adapter := NewEC2VpcEndpointAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

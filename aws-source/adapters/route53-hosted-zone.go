@@ -82,7 +82,7 @@ func NewRoute53HostedZoneAdapter(client *route53.Client, accountID string, regio
 		ListFunc:        hostedZoneListFunc,
 		ItemMapper:      hostedZoneItemMapper,
 		AdapterMetadata: hostedZoneAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		ListTagsFunc: func(ctx context.Context, hz *types.HostedZone, c *route53.Client) (map[string]string, error) {
 			if hz.Id == nil {
 				return nil, nil

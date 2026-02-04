@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type mockPlatformApplicationClient struct{}
@@ -70,7 +71,7 @@ func TestNewSNSPlatformApplicationAdapter(t *testing.T) {
 	config, account, region := GetAutoConfig(t)
 	client := sns.NewFromConfig(config)
 
-	adapter := NewSNSPlatformApplicationAdapter(client, account, region, nil)
+	adapter := NewSNSPlatformApplicationAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

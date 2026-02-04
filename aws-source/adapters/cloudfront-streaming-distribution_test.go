@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 func (t TestCloudFrontClient) GetStreamingDistribution(ctx context.Context, params *cloudfront.GetStreamingDistributionInput, optFns ...func(*cloudfront.Options)) (*cloudfront.GetStreamingDistributionOutput, error) {
@@ -110,7 +111,7 @@ func TestNewCloudfrontStreamingDistributionAdapter(t *testing.T) {
 	config, account, _ := GetAutoConfig(t)
 	client := cloudfront.NewFromConfig(config)
 
-	adapter := NewCloudfrontStreamingDistributionAdapter(client, account, nil)
+	adapter := NewCloudfrontStreamingDistributionAdapter(client, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

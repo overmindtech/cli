@@ -83,7 +83,7 @@ func NewELBv2RuleAdapter(client elbv2Client, accountID string, region string, ca
 		AccountID:       accountID,
 		ItemType:        "elbv2-rule",
 		AdapterMetadata: ruleAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		DescribeFunc: func(ctx context.Context, client elbv2Client, input *elbv2.DescribeRulesInput) (*elbv2.DescribeRulesOutput, error) {
 			return client.DescribeRules(ctx, input)
 		},

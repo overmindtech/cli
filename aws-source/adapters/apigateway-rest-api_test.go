@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 /*
@@ -120,7 +121,7 @@ func TestNewAPIGatewayRestApiAdapter(t *testing.T) {
 
 	client := apigateway.NewFromConfig(config)
 
-	adapter := NewAPIGatewayRestApiAdapter(client, account, region, nil)
+	adapter := NewAPIGatewayRestApiAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

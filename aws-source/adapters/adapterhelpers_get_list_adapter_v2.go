@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/overmindtech/cli/discovery"
@@ -73,21 +72,6 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 	}
 
 	return s.CacheDuration
-}
-
-var (
-	noOpCacheV2Once sync.Once
-	noOpCacheV2     sdpcache.Cache
-)
-
-func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]) Cache() sdpcache.Cache {
-	if s.cache == nil {
-		noOpCacheV2Once.Do(func() {
-			noOpCacheV2 = sdpcache.NewNoOpCache()
-		})
-		return noOpCacheV2
-	}
-	return s.cache
 }
 
 // Validate Checks that the adapter has been set up correctly
@@ -171,7 +155,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 		}
 	}
 
-	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_GET, scope, s.ItemType, query, ignoreCache)
 	defer done()
 	if qErr != nil {
 		return nil, qErr
@@ -188,7 +172,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 	if err != nil {
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
-			s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
+			s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
 		}
 		return nil, err
 	}
@@ -207,7 +191,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 		}
 	}
 
-	s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
+	s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 
 	return item, nil
 }
@@ -235,7 +219,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 		return
 	}
 
-	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
+	cacheHit, ck, cachedItems, qErr, done := s.cache.Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
 	defer done()
 	if qErr != nil {
 		// For better semantics, convert cached NOTFOUND into empty result
@@ -290,8 +274,8 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 			}
 
 			stream.SendItem(item)
-			s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 			itemsSent++
+			s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
 		}
 	}
 
@@ -331,7 +315,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 			ItemType:      s.ItemType,
 			ResponderName: s.Name(),
 		}
-		s.Cache().StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
+		s.cache.StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
 	}
 }
 

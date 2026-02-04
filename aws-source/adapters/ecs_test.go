@@ -1,8 +1,9 @@
 package adapters
 
 import (
-	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"testing"
+
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 )
 
 type ecsTestClient struct{}

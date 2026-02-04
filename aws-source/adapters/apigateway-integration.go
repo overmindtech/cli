@@ -95,7 +95,7 @@ func NewAPIGatewayIntegrationAdapter(client apiGatewayIntegrationGetter, account
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: apiGatewayIntegrationAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetFunc:         apiGatewayIntegrationGetFunc,
 		GetInputMapper: func(scope, query string) *apigateway.GetIntegrationInput {
 			// We are using a custom id of {rest-api-id}/{resource-id}/{http-method} e.g.

@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 type testTopicClient struct{}
@@ -64,7 +65,7 @@ func TestNewSNSTopicAdapter(t *testing.T) {
 	config, account, region := GetAutoConfig(t)
 	client := sns.NewFromConfig(config)
 
-	adapter := NewSNSTopicAdapter(client, account, region, nil)
+	adapter := NewSNSTopicAdapter(client, account, region, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,

@@ -3,18 +3,18 @@ package adapters
 import (
 	"context"
 	"errors"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
-	"strings"
-	"testing"
-	"time"
 )
 
 func TestS3SearchImpl(t *testing.T) {
-	cache := sdpcache.NewCache(t.Context())
-
+	cache := sdpcache.NewNoOpCache()
 	t.Run("with S3 bucket ARN format (empty account ID and region)", func(t *testing.T) {
 		// This test verifies that S3 bucket ARNs with empty account ID and region work correctly
 		// Format: arn:aws:s3:::bucket-name
@@ -61,7 +61,7 @@ func TestS3SearchImpl(t *testing.T) {
 }
 
 func TestS3ListImpl(t *testing.T) {
-	cache := sdpcache.NewCache(t.Context())
+	cache := sdpcache.NewNoOpCache()
 	items, err := listImpl(context.Background(), cache, TestS3Client{}, "foo", false)
 
 	if err != nil {
@@ -73,7 +73,7 @@ func TestS3ListImpl(t *testing.T) {
 }
 
 func TestS3GetImpl(t *testing.T) {
-	cache := sdpcache.NewCache(t.Context())
+	cache := sdpcache.NewNoOpCache()
 	item, err := getImpl(context.Background(), cache, TestS3Client{}, "foo", "bar", false)
 
 	if err != nil {
@@ -129,7 +129,7 @@ func TestS3GetImpl(t *testing.T) {
 }
 
 func TestS3SourceCaching(t *testing.T) {
-	cache := sdpcache.NewCache(t.Context())
+	cache := sdpcache.NewMemoryCache()
 	first, err := getImpl(context.Background(), cache, TestS3Client{}, "foo", "bar", false)
 	if err != nil {
 		t.Fatal(err)
@@ -664,7 +664,7 @@ func (t TestS3FailClient) PutObject(ctx context.Context, params *s3.PutObjectInp
 func TestNewS3Adapter(t *testing.T) {
 	config, account, _ := GetAutoConfig(t)
 
-	adapter := NewS3Adapter(config, account, nil)
+	adapter := NewS3Adapter(config, account, sdpcache.NewNoOpCache())
 
 	test := E2ETest{
 		Adapter: adapter,
@@ -683,7 +683,7 @@ func TestS3SearchWithARNFormat(t *testing.T) {
 	// CURRENT BEHAVIOR: Get works, Search fails with NOSCOPE error - THIS IS THE BUG
 	config, account, _ := GetAutoConfig(t)
 
-	adapter := NewS3Adapter(config, account, nil)
+	adapter := NewS3Adapter(config, account, sdpcache.NewNoOpCache())
 	scope := adapter.Scopes()[0]
 
 	bucketName := "harness-sample-three-qa-us-west-2-20251022151048279100000001"

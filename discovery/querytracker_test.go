@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -96,6 +97,7 @@ func TestExecute(t *testing.T) {
 		ReturnScopes: []string{
 			"test",
 		},
+		cache: sdpcache.NewNoOpCache(),
 	}
 
 	e := newStartedEngine(t, "TestExecute", nil, nil, &adapter)
