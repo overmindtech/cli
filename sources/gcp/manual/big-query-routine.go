@@ -57,10 +57,12 @@ func (b BigQueryRoutineWrapper) PotentialLinks() map[shared.ItemType]bool {
 func (b BigQueryRoutineWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_SEARCH,
 			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_routine
-			// projects/{{project}}/datasets/{{dataset_id}}/routines/{{routine_id}}
-			TerraformQueryMap: "google_bigquery_routine.routine_id",
+			// ID format: projects/{{project}}/datasets/{{dataset_id}}/routines/{{routine_id}}
+			// The framework automatically intercepts queries starting with "projects/" and converts
+			// them to GET operations by extracting the last N path parameters (based on GetLookups count).
+			TerraformQueryMap: "google_bigquery_routine.id",
 		},
 	}
 }
@@ -121,7 +123,32 @@ func (b BigQueryRoutineWrapper) Search(ctx context.Context, scope string, queryP
 }
 
 func (b BigQueryRoutineWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
-	// SearchStream not implemented for BigQueryRoutine
+	location, err := b.LocationFromScope(scope)
+	if err != nil {
+		stream.SendError(&sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOSCOPE,
+			ErrorString: err.Error(),
+		})
+		return
+	}
+
+	toItem := func(metadata *bigquery.RoutineMetadata, datasetID, routineID string) (*sdp.Item, *sdp.QueryError) {
+		item, qerr := b.gcpBigQueryRoutineToItem(metadata, datasetID, routineID, location)
+		if qerr == nil && item != nil {
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+		}
+		return item, qerr
+	}
+
+	items, listErr := b.client.List(ctx, location.ProjectID, queryParts[0], toItem)
+	if listErr != nil {
+		stream.SendError(gcpshared.QueryError(listErr, scope, b.Type()))
+		return
+	}
+
+	for _, item := range items {
+		stream.SendItem(item)
+	}
 }
 
 func (b BigQueryRoutineWrapper) gcpBigQueryRoutineToItem(metadata *bigquery.RoutineMetadata, datasetID, routineID string, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {

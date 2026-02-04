@@ -55,7 +55,11 @@ func (c cloudKMSCryptoKeyVersionWrapper) PotentialLinks() map[shared.ItemType]bo
 func (c cloudKMSCryptoKeyVersionWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_SEARCH,
+			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/kms_crypto_key_version
+			// ID format: projects/{project}/locations/{location}/keyRings/{keyRing}/cryptoKeys/{cryptoKey}/cryptoKeyVersions/{version}
+			// The framework automatically intercepts queries starting with "projects/" and converts
+			// them to GET operations by extracting the last N path parameters (based on GetLookups count).
 			TerraformQueryMap: "google_kms_crypto_key_version.id",
 		},
 	}

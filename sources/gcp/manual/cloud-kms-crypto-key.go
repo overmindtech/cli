@@ -55,9 +55,16 @@ func (c cloudKMSCryptoKeyWrapper) PotentialLinks() map[shared.ItemType]bool {
 
 // TerraformMappings returns the Terraform mappings for the CryptoKey wrapper.
 func (c cloudKMSCryptoKeyWrapper) TerraformMappings() []*sdp.TerraformMapping {
-	// TODO: Revisit this when working on this ticket:
-	// https://linear.app/overmind/issue/ENG-706/fix-terraform-mappings-for-crypto-key
-	return nil
+	return []*sdp.TerraformMapping{
+		{
+			TerraformMethod: sdp.QueryMethod_SEARCH,
+			// https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/kms_crypto_key
+			// ID format: projects/{{project}}/locations/{{location}}/keyRings/{{keyRing}}/cryptoKeys/{{name}}
+			// The framework automatically intercepts queries starting with "projects/" and converts
+			// them to GET operations by extracting the last N path parameters (based on GetLookups count).
+			TerraformQueryMap: "google_kms_crypto_key.id",
+		},
+	}
 }
 
 // GetLookups returns the lookups for the CryptoKey wrapper.
