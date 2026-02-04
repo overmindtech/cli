@@ -111,6 +111,15 @@ func Execute() {
 	formatter := new(log.TextFormatter)
 	formatter.DisableTimestamp = true
 	log.SetFormatter(formatter)
+	log.SetOutput(os.Stderr)
+
+	// Configure pterm to output to stderr instead of stdout
+	// This ensures status messages don't interfere with piped output
+	pterm.SetDefaultOutput(os.Stderr)
+	pterm.Info.Writer = os.Stderr
+	pterm.Success.Writer = os.Stderr
+	pterm.Warning.Writer = os.Stderr
+	pterm.Error.Writer = os.Stderr
 
 	// create a sub-scope to run deferred cleanups before shutting down the tracer
 	err := func() error {

@@ -51,7 +51,7 @@ func ListChanges(cmd *cobra.Command, args []string) error {
 			"change-status":      change.GetMetadata().GetStatus().String(),
 			"change-name":        change.GetProperties().GetTitle(),
 			"change-description": change.GetProperties().GetDescription(),
-		}).Info("found change")
+		}).Debug("found change")
 
 		b, err := json.MarshalIndent(change.ToMap(), "", "  ")
 		if err != nil {
