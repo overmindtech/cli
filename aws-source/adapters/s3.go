@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -236,7 +237,13 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 
 	if err != nil {
 		err = WrapAWSError(err)
-		cache.StoreError(ctx, err, CacheDuration, ck)
+		var queryErr *sdp.QueryError
+		if errors.As(err, &queryErr) {
+			// Cache not-found errors and other non-retryable errors
+			if queryErr.GetErrorType() == sdp.QueryError_NOTFOUND || !CanRetry(queryErr) {
+				cache.StoreError(ctx, err, CacheDuration, ck)
+			}
+		}
 		return nil, err
 	}
 
@@ -619,6 +626,10 @@ func listImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope 
 	cacheHit, ck, cachedItems, qErr, done := cache.Lookup(ctx, "aws-s3-adapter", sdp.QueryMethod_LIST, scope, "s3-bucket", "", ignoreCache)
 	defer done()
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return []*sdp.Item{}, nil
+		}
 		return nil, qErr
 	}
 	if cacheHit {
@@ -639,14 +650,33 @@ func listImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope 
 		return nil, err
 	}
 
+	hadErrors := false
 	for _, bucket := range buckets.Buckets {
 		item, err := getImpl(ctx, cache, client, scope, *bucket.Name, ignoreCache)
 
 		if err != nil {
+			hadErrors = true
 			continue
 		}
 
-		items = append(items, item)
+		if item != nil {
+			items = append(items, item)
+		}
+	}
+
+	// Cache not-found only when no buckets were returned AND no errors occurred
+	// If we had errors, buckets may exist but we couldn't fetch them
+	if len(items) == 0 && !hadErrors && len(buckets.Buckets) == 0 {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no s3-bucket found in scope " + scope,
+			Scope:         scope,
+			SourceName:    "aws-s3-adapter",
+			ItemType:      "s3-bucket",
+			ResponderName: "aws-s3-adapter",
+		}
+		cache.StoreError(ctx, notFoundErr, CacheDuration, ck)
+		return items, nil
 	}
 
 	for _, item := range items {
@@ -695,7 +725,10 @@ func searchImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scop
 		return nil, err
 	}
 
-	return []*sdp.Item{item}, nil
+	if item != nil {
+		return []*sdp.Item{item}, nil
+	}
+	return []*sdp.Item{}, nil
 }
 
 // Weight Returns the priority weighting of items returned by this adapter.

@@ -29,7 +29,7 @@ type DescribeOnlyAdapter[Input InputType, Output OutputType, ClientStruct Client
 	AdapterMetadata   *sdp.AdapterMetadata
 
 	CacheDuration time.Duration  // How long to cache items for
-	cache      sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
+	cache         sdpcache.Cache // The cache for this adapter (set during creation, can be nil for tests)
 
 	// The function that should be used to describe the resources that this
 	// adapter is related to
@@ -312,6 +312,10 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) ListStream(c
 	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
 	defer done()
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return
+		}
 		stream.SendError(qErr)
 		return
 	}
@@ -386,7 +390,9 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchARN(ct
 		return
 	}
 
-	stream.SendItem(item)
+	if item != nil {
+		stream.SendItem(item)
+	}
 }
 
 // searchCustom Runs custom search logic using the `InputMapperSearch` function
@@ -394,6 +400,10 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) searchCustom
 	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
 	defer done()
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return
+		}
 		stream.SendError(qErr)
 		return
 	}
@@ -435,6 +445,9 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) processError
 // run the paginated or unpaginated query. This handles caching, error handling,
 // and post-search filtering if the query param is passed
 func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) describe(ctx context.Context, query *string, input Input, scope string, ck sdpcache.CacheKey, stream discovery.QueryResultStream) {
+	// Track whether any items were found
+	itemsSent := 0
+
 	if s.Paginated() {
 		paginator := s.PaginatorBuilder(s.Client, input)
 
@@ -462,6 +475,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) describe(ctx
 			for _, item := range items {
 				s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 				stream.SendItem(item)
+				itemsSent++
 			}
 		}
 	} else {
@@ -488,7 +502,28 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) describe(ctx
 		for _, item := range items {
 			s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 			stream.SendItem(item)
+			itemsSent++
 		}
+	}
+
+	// Cache not-found when no items were found
+	if itemsSent == 0 {
+		var errorString string
+		if query != nil {
+			errorString = fmt.Sprintf("no %s found for search query '%s' in scope %s", s.ItemType, *query, scope)
+		} else {
+			errorString = fmt.Sprintf("no %s found in scope %s", s.ItemType, scope)
+		}
+
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   errorString,
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.ItemType,
+			ResponderName: s.Name(),
+		}
+		s.Cache().StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
 	}
 }
 

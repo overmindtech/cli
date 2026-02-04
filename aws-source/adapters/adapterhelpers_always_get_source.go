@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"buf.build/go/protovalidate"
@@ -221,6 +222,10 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_LIST, scope, s.ItemType, "", ignoreCache)
 	defer done()
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return
+		}
 		stream.SendError(qErr)
 		return
 	}
@@ -238,17 +243,39 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 	paginator := s.ListFuncPaginatorBuilder(s.Client, input)
 	var newGetInputs []GetInput
 	p := pool.New().WithContext(ctx).WithMaxGoroutines(s.MaxParallel.Value())
+
+	// Track whether any items were found and if we had an error
+	var itemsSent atomic.Int64
+	var hadError atomic.Bool
+
 	defer func() {
 		// Always wait for everything to be completed before returning
 		err := p.Wait()
 		if err != nil {
 			sentry.CaptureException(err)
 		}
+
+		// Only cache not-found when no items were found AND no error occurred
+		// If we had an error, that error is already cached, don't overwrite it
+		shouldCacheNotFound := itemsSent.Load() == 0 && !hadError.Load()
+
+		if shouldCacheNotFound {
+			notFoundErr := &sdp.QueryError{
+				ErrorType:     sdp.QueryError_NOTFOUND,
+				ErrorString:   fmt.Sprintf("no %s found in scope %s", s.ItemType, scope),
+				Scope:         scope,
+				SourceName:    s.Name(),
+				ItemType:      s.ItemType,
+				ResponderName: s.Name(),
+			}
+			s.Cache().StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
+		}
 	}()
 
 	for paginator.HasMorePages() {
 		output, err := paginator.NextPage(ctx)
 		if err != nil {
+			hadError.Store(true)
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
 				s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
@@ -259,6 +286,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 
 		newGetInputs, err = s.ListFuncOutputMapper(output, input)
 		if err != nil {
+			hadError.Store(true)
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
 				s.Cache().StoreError(ctx, err, s.cacheDuration(), ck)
@@ -276,10 +304,13 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 				if err != nil {
 					// Don't cache individual errors as they are cheap to re-run
 					stream.SendError(WrapAWSError(err))
+					// Mark that we had an error so we don't cache NOTFOUND
+					hadError.Store(true)
 				}
 				if item != nil {
 					s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 					stream.SendItem(item)
+					itemsSent.Add(1)
 				}
 
 				return nil
@@ -325,6 +356,10 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 	cacheHit, ck, cachedItems, qErr, done := s.Cache().Lookup(ctx, s.Name(), sdp.QueryMethod_SEARCH, scope, s.ItemType, query, ignoreCache)
 	defer done()
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return
+		}
 		stream.SendError(qErr)
 		return
 	}
@@ -365,6 +400,17 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		if item != nil {
 			s.Cache().StoreItem(ctx, item, s.cacheDuration(), ck)
 			stream.SendItem(item)
+		} else {
+			// Cache not-found when item is nil
+			notFoundErr := &sdp.QueryError{
+				ErrorType:     sdp.QueryError_NOTFOUND,
+				ErrorString:   fmt.Sprintf("%s not found for search query '%s'", s.ItemType, query),
+				Scope:         scope,
+				SourceName:    s.Name(),
+				ItemType:      s.ItemType,
+				ResponderName: s.Name(),
+			}
+			s.Cache().StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
 		}
 	} else {
 		stream.SendError(errors.New("SearchCustom called without SearchInputMapper or SearchGetInputMapper"))

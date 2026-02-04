@@ -400,3 +400,84 @@ func TestGetListAdapterV2Caching(t *testing.T) {
 		}
 	})
 }
+
+// TestGetListAdapterV2_ListExtractorErrorNoNotFoundCache tests that when ListExtractor fails,
+// we don't incorrectly cache NOTFOUND. The error should be sent, but NOTFOUND should not be cached
+// because the failure was due to extraction errors, not because items don't exist.
+func TestGetListAdapterV2_ListExtractorErrorNoNotFoundCache(t *testing.T) {
+	ctx := context.Background()
+	cache := sdpcache.NewMemoryCache()
+	listCalls := 0
+
+	type MockAWSItem struct {
+		Name string
+	}
+
+	adapter := &GetListAdapterV2[*MockInput, *MockOutput, *MockAWSItem, *MockClient, *MockOptions]{
+		ItemType:  "test-item",
+		cache:     cache,
+		AccountID: "123456789012",
+		Region:    "us-east-1",
+		GetFunc: func(ctx context.Context, client *MockClient, scope string, query string) (*MockAWSItem, error) {
+			return nil, errors.New("should not be called in LIST test")
+		},
+		InputMapperList: func(scope string) (*MockInput, error) {
+			return &MockInput{}, nil
+		},
+		ListFunc: func(ctx context.Context, client *MockClient, input *MockInput) (*MockOutput, error) {
+			listCalls++
+			// Return a valid output that indicates items exist
+			return &MockOutput{}, nil
+		},
+		ListExtractor: func(ctx context.Context, output *MockOutput, client *MockClient) ([]*MockAWSItem, error) {
+			// Simulate extraction failure - this should NOT result in NOTFOUND caching
+			return nil, errors.New("extraction failed")
+		},
+		ItemMapper: func(query *string, scope string, awsItem *MockAWSItem) (*sdp.Item, error) {
+			return &sdp.Item{
+				Type:            "test-item",
+				UniqueAttribute: "name",
+				Attributes:      &sdp.ItemAttributes{},
+				Scope:           scope,
+			}, nil
+		},
+		AdapterMetadata: &sdp.AdapterMetadata{
+			Type:            "test-item",
+			DescriptiveName: "Test Item",
+			SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
+				Get:             true,
+				List:            true,
+				GetDescription:  "Get a test item",
+				ListDescription: "List all test items",
+			},
+		},
+	}
+
+	// First call - ListExtractor fails, should send error but NOT cache NOTFOUND
+	stream1 := discovery.NewRecordingQueryResultStream()
+	adapter.ListStream(ctx, "123456789012.us-east-1", false, stream1)
+
+	if len(stream1.GetItems()) != 0 {
+		t.Errorf("Expected 0 items, got %d", len(stream1.GetItems()))
+	}
+	if len(stream1.GetErrors()) != 1 {
+		t.Errorf("Expected 1 error from ListExtractor failure, got %d", len(stream1.GetErrors()))
+	}
+	if listCalls != 1 {
+		t.Errorf("Expected 1 ListFunc call, got %d", listCalls)
+	}
+
+	// Second call - should NOT hit cache (NOTFOUND was not cached), should try again
+	stream2 := discovery.NewRecordingQueryResultStream()
+	adapter.ListStream(ctx, "123456789012.us-east-1", false, stream2)
+
+	if listCalls != 2 {
+		t.Errorf("Expected 2 ListFunc calls (no cache hit because NOTFOUND was not cached), got %d", listCalls)
+	}
+	if len(stream2.GetItems()) != 0 {
+		t.Errorf("Expected 0 items, got %d", len(stream2.GetItems()))
+	}
+	if len(stream2.GetErrors()) != 1 {
+		t.Errorf("Expected 1 error from ListExtractor failure, got %d", len(stream2.GetErrors()))
+	}
+}
