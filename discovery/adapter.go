@@ -86,11 +86,15 @@ type HiddenAdapter interface {
 }
 
 // WildcardScopeAdapter is an optional interface that adapters can implement
-// to declare they can handle "*" wildcard scopes efficiently (e.g., using
-// GCP's aggregatedList API). When an adapter implements this interface and
-// returns true from SupportsWildcardScope(), the engine will pass wildcard
-// scopes directly to the adapter instead of expanding them to all configured
-// scopes.
+// to declare they can handle "*" wildcard scopes efficiently for LIST queries
+// (e.g., using GCP's aggregatedList API). When an adapter implements this
+// interface and returns true from SupportsWildcardScope(), the engine will
+// pass wildcard scopes directly to the adapter instead of expanding them to
+// all configured scopes—but only for LIST queries.
+//
+// For GET and SEARCH, the engine always expands wildcard scope so that
+// multiple results can be returned when a resource exists in multiple scopes.
+// Future work may extend this optimization to SEARCH once adapters support it.
 type WildcardScopeAdapter interface {
 	Adapter
 	SupportsWildcardScope() bool
