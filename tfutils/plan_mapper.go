@@ -33,6 +33,8 @@ func (m MapStatus) String() string {
 		return "not enough info"
 	case MapStatusUnsupported:
 		return "unsupported"
+	case MapStatusPendingCreation:
+		return "pending creation"
 	default:
 		return "unknown"
 	}
@@ -42,6 +44,7 @@ const (
 	MapStatusSuccess MapStatus = iota
 	MapStatusNotEnoughInfo
 	MapStatusUnsupported
+	MapStatusPendingCreation
 )
 
 const KnownAfterApply = `(known after apply)`
@@ -78,6 +81,10 @@ func (r *PlanMappingResult) NumNotEnoughInfo() int {
 
 func (r *PlanMappingResult) NumUnsupported() int {
 	return r.numStatus(MapStatusUnsupported)
+}
+
+func (r *PlanMappingResult) NumPendingCreation() int {
+	return r.numStatus(MapStatusPendingCreation)
 }
 
 func (r *PlanMappingResult) NumTotal() int {
@@ -250,7 +257,7 @@ func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 	// Attach failed mappings to the span
 	for _, result := range results.Results {
 		switch result.Status {
-		case MapStatusUnsupported, MapStatusNotEnoughInfo:
+		case MapStatusUnsupported, MapStatusNotEnoughInfo, MapStatusPendingCreation:
 			span.AddEvent("UnmappedResource", trace.WithAttributes(
 				attribute.String("ovm.climap.status", result.Status.String()),
 				attribute.String("ovm.climap.message", result.Message),
@@ -274,14 +281,16 @@ func mapResourceToQuery(itemDiff *sdp.ItemDiff, terraformResource *Resource, map
 	attemptedMappings := make([]string, 0)
 
 	if len(mappings) == 0 {
+		mappingStatus := sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_UNSUPPORTED
 		return PlannedChangeMapResult{
 			TerraformName: terraformResource.Address,
 			TerraformType: terraformResource.Type,
 			Status:        MapStatusUnsupported,
 			Message:       "unsupported",
 			MappedItemDiff: &sdp.MappedItemDiff{
-				Item:         itemDiff,
-				MappingQuery: nil, // unmapped item has no mapping query
+				Item:          itemDiff,
+				MappingQuery:  nil, // unmapped item has no mapping query
+				MappingStatus: &mappingStatus,
 			},
 		}
 	}
@@ -312,14 +321,16 @@ func mapResourceToQuery(itemDiff *sdp.ItemDiff, terraformResource *Resource, map
 				itemDiff.After.Type = mapping.OvermindType
 			}
 
+			mappingStatus := sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_SUCCESS
 			return PlannedChangeMapResult{
 				TerraformName: terraformResource.Address,
 				TerraformType: terraformResource.Type,
 				Status:        MapStatusSuccess,
 				Message:       "mapped",
 				MappedItemDiff: &sdp.MappedItemDiff{
-					Item:         itemDiff,
-					MappingQuery: newQuery,
+					Item:          itemDiff,
+					MappingQuery:  newQuery,
+					MappingStatus: &mappingStatus,
 				},
 			}
 		}
@@ -331,14 +342,36 @@ func mapResourceToQuery(itemDiff *sdp.ItemDiff, terraformResource *Resource, map
 
 	// If we get to this point, we haven't found a mapping
 	message := fmt.Sprintf("missing mapping attribute: %v", strings.Join(attemptedMappings, ", "))
+	
+	// Check if this is a newly created resource - these don't exist yet so missing
+	// attributes are expected, not an error
+	if itemDiff.GetStatus() == sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED {
+		mappingStatus := sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_PENDING_CREATION
+		return PlannedChangeMapResult{
+			TerraformName: terraformResource.Address,
+			TerraformType: terraformResource.Type,
+			Status:        MapStatusPendingCreation,
+			Message:       "pending creation",
+			MappedItemDiff: &sdp.MappedItemDiff{
+				Item:          itemDiff,
+				MappingQuery:  nil, // unmapped item has no mapping query
+				MappingStatus: &mappingStatus,
+				// No MappingError - this is expected, not an error
+			},
+		}
+	}
+	
+	// For other statuses (REPLACED, UPDATED, DELETED), missing attributes are a real error
+	mappingStatus := sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_ERROR
 	return PlannedChangeMapResult{
 		TerraformName: terraformResource.Address,
 		TerraformType: terraformResource.Type,
 		Status:        MapStatusNotEnoughInfo,
 		Message:       message,
 		MappedItemDiff: &sdp.MappedItemDiff{
-			Item:         itemDiff,
-			MappingQuery: nil, // unmapped item has no mapping query
+			Item:          itemDiff,
+			MappingQuery:  nil, // unmapped item has no mapping query
+			MappingStatus: &mappingStatus,
 			MappingError: &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
 				ErrorString: message,

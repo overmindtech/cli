@@ -152,11 +152,12 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 
 	removingSecretsSpinner.Success(fmt.Sprintf("Removed %v secrets", mappingResponse.RemovedSecrets))
 
-	resourceExtractionSpinner.UpdateText(fmt.Sprintf("Extracted %v changing resources: %v supported %v skipped %v unsupported\n",
+	resourceExtractionSpinner.UpdateText(fmt.Sprintf("Extracted %v changing resources: %v supported %v skipped %v unsupported %v pending creation\n",
 		mappingResponse.NumTotal(),
 		mappingResponse.NumSuccess(),
 		mappingResponse.NumNotEnoughInfo(),
 		mappingResponse.NumUnsupported(),
+		mappingResponse.NumPendingCreation(),
 	))
 
 	// Sort the supported and unsupported changes so that they display nicely
@@ -174,6 +175,8 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 			printer = pterm.Warning
 		case tfutils.MapStatusUnsupported:
 			printer = pterm.Error
+		case tfutils.MapStatusPendingCreation:
+			printer = pterm.Info
 		}
 
 		line := printer.Sprintf("%v (%v)", mapping.TerraformName, mapping.Message)
