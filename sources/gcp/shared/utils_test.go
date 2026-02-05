@@ -590,6 +590,27 @@ func TestExtractScopeFromURI(t *testing.T) {
 			uri:      "https://pubsub.googleapis.com/v1/projects/my-project/topics/my-topic",
 			expected: "my-project",
 		},
+		// Project number cases (wildcard scope)
+		{
+			name:     "Project number - Global resource",
+			uri:      "projects/96771641962/global/instanceTemplates/my-template",
+			expected: "*",
+		},
+		{
+			name:     "Project number - Regional resource",
+			uri:      "projects/96771641962/regions/us-central1/subnetworks/my-subnet",
+			expected: "*",
+		},
+		{
+			name:     "Project number - Zonal resource",
+			uri:      "projects/96771641962/zones/us-central1-a/disks/my-disk",
+			expected: "*",
+		},
+		{
+			name:     "Project number - Short numeric",
+			uri:      "projects/123/global/networks/my-network",
+			expected: "*",
+		},
 		// Error cases
 		{
 			name:        "Error - Empty URI",

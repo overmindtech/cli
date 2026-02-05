@@ -234,10 +234,11 @@ func TestAdapterHostExpandQuery_WildcardScope(t *testing.T) {
 		}
 	})
 
-	t.Run("Wildcard-supporting adapter with wildcard scope does not expand", func(t *testing.T) {
+	t.Run("Wildcard-supporting adapter with wildcard scope does not expand for LIST", func(t *testing.T) {
 		req := sdp.Query{
-			Type:  "wildcard-type",
-			Scope: sdp.WILDCARD,
+			Type:   "wildcard-type",
+			Method: sdp.QueryMethod_LIST,
+			Scope:  sdp.WILDCARD,
 		}
 
 		expanded := sh.ExpandQuery(&req)
@@ -251,6 +252,50 @@ func TestAdapterHostExpandQuery_WildcardScope(t *testing.T) {
 		for q := range expanded {
 			if q.GetScope() != sdp.WILDCARD {
 				t.Errorf("Expected wildcard scope to be preserved, got %v", q.GetScope())
+			}
+		}
+	})
+
+	t.Run("Wildcard-supporting adapter with wildcard scope expands for GET", func(t *testing.T) {
+		req := sdp.Query{
+			Type:   "wildcard-type",
+			Method: sdp.QueryMethod_GET,
+			Scope:  sdp.WILDCARD,
+		}
+
+		expanded := sh.ExpandQuery(&req)
+
+		// Should expand to 2 queries (one per scope) for GET
+		if len(expanded) != 2 {
+			t.Fatalf("Expected 2 expanded queries for wildcard adapter with GET, got %v", len(expanded))
+		}
+
+		// Check that scopes are specific, not wildcard
+		for q := range expanded {
+			if q.GetScope() == sdp.WILDCARD {
+				t.Errorf("Expected specific scope for GET, got wildcard")
+			}
+		}
+	})
+
+	t.Run("Wildcard-supporting adapter with wildcard scope expands for SEARCH", func(t *testing.T) {
+		req := sdp.Query{
+			Type:   "wildcard-type",
+			Method: sdp.QueryMethod_SEARCH,
+			Scope:  sdp.WILDCARD,
+		}
+
+		expanded := sh.ExpandQuery(&req)
+
+		// Should expand to 2 queries (one per scope) for SEARCH
+		if len(expanded) != 2 {
+			t.Fatalf("Expected 2 expanded queries for wildcard adapter with SEARCH, got %v", len(expanded))
+		}
+
+		// Check that scopes are specific, not wildcard
+		for q := range expanded {
+			if q.GetScope() == sdp.WILDCARD {
+				t.Errorf("Expected specific scope for SEARCH, got wildcard")
 			}
 		}
 	})

@@ -130,6 +130,27 @@ func ZoneToRegion(zone string) string {
 	return strings.Join(parts[:len(parts)-1], "-")
 }
 
+// isProjectNumber returns true if the project identifier appears to be a
+// GCP project number (all digits) rather than a project ID. Project IDs
+// must start with a letter per GCP rules.
+//
+// We use a simple loop instead of a regex (e.g., `^\d+$`) because:
+// - It's more idiomatic Go for simple character validation
+// - Avoids regex compilation/matching overhead (even pre-compiled)
+// - More readable for maintainers unfamiliar with regex
+// - Sufficient for the straightforward "all digits" check
+func isProjectNumber(projectID string) bool {
+	if projectID == "" {
+		return false
+	}
+	for _, r := range projectID {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
+}
+
 // ExtractScopeFromURI extracts the scope from a GCP resource URI.
 // It supports various URL formats including full HTTPS URLs, full resource names,
 // service destination formats, and bare paths.
@@ -181,6 +202,13 @@ func ExtractScopeFromURI(ctx context.Context, uri string) (string, error) {
 		err := fmt.Errorf("cannot determine scope: project ID not found in URI: %s", uri)
 		RecordExtractScopeFromURIError(ctx, uri, err)
 		return "", err
+	}
+
+	// When URI uses project number instead of project ID, we cannot map to
+	// adapter scopes (which use project IDs). Return wildcard so the query
+	// is broadcast to all adapters.
+	if isProjectNumber(projectID) {
+		return "*", nil
 	}
 
 	// Check for conflicting location specifiers

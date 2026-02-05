@@ -123,9 +123,10 @@ func (sh *AdapterHost) AdaptersByType(typ string) []Adapter {
 //
 // The same goes for scopes, if we have a query with a wildcard scope, and
 // a single adapter that supports 5 scopes, we will end up with 5 queries. The
-// exception to this is if we have a adapter that supports all scopes, but is
-// unable to list them. In this case there will still be some queries with
-// wildcard scopes as they can't be expanded
+// exception to this is if we have an adapter that supports all scopes
+// (implements WildcardScopeAdapter) and the query method is LIST. In that
+// case we pass the wildcard scope directly to the adapter. For GET and
+// SEARCH, we always expand so multiple results can be returned.
 //
 // This functions returns a map of queries with the adapters that they should be
 // run against
@@ -157,8 +158,10 @@ func (sh *AdapterHost) ExpandQuery(q *sdp.Query) map[*sdp.Query]Adapter {
 		}
 
 		// If query has wildcard scope and adapter supports wildcards,
-		// create ONE query with wildcard scope (no expansion)
-		if supportsWildcard && IsWildcard(q.GetScope()) && !isHidden {
+		// create ONE query with wildcard scope (no expansion).
+		// Only for LIST: GET and SEARCH must expand so we can return
+		// multiple results when a resource exists in multiple scopes.
+		if supportsWildcard && IsWildcard(q.GetScope()) && !isHidden && q.GetMethod() == sdp.QueryMethod_LIST {
 			dest := proto.Clone(q).(*sdp.Query)
 			dest.Type = adapter.Type() // specialise the query to the adapter type
 			expandedQueries[dest] = adapter
