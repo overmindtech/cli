@@ -23,6 +23,117 @@ func TestWithStateFile(t *testing.T) {
 	}
 }
 
+func TestMapResourceToQuery_PendingCreation(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name                string
+		itemDiffStatus      sdp.ItemDiffStatus
+		hasMappings         bool
+		expectedMapStatus   MapStatus
+		expectedMappingStatus sdp.MappedItemMappingStatus
+		expectMappingError  bool
+	}{
+		{
+			name:                "CREATED with missing attributes - pending creation",
+			itemDiffStatus:      sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED,
+			hasMappings:         true,
+			expectedMapStatus:   MapStatusPendingCreation,
+			expectedMappingStatus: sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_PENDING_CREATION,
+			expectMappingError:  false,
+		},
+		{
+			name:                "UPDATED with missing attributes - error",
+			itemDiffStatus:      sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED,
+			hasMappings:         true,
+			expectedMapStatus:   MapStatusNotEnoughInfo,
+			expectedMappingStatus: sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_ERROR,
+			expectMappingError:  true,
+		},
+		{
+			name:                "DELETED with missing attributes - error",
+			itemDiffStatus:      sdp.ItemDiffStatus_ITEM_DIFF_STATUS_DELETED,
+			hasMappings:         true,
+			expectedMapStatus:   MapStatusNotEnoughInfo,
+			expectedMappingStatus: sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_ERROR,
+			expectMappingError:  true,
+		},
+		{
+			name:                "REPLACED with missing attributes - error",
+			itemDiffStatus:      sdp.ItemDiffStatus_ITEM_DIFF_STATUS_REPLACED,
+			hasMappings:         true,
+			expectedMapStatus:   MapStatusNotEnoughInfo,
+			expectedMappingStatus: sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_ERROR,
+			expectMappingError:  true,
+		},
+		{
+			name:                "No mappings - unsupported",
+			itemDiffStatus:      sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED,
+			hasMappings:         false,
+			expectedMapStatus:   MapStatusUnsupported,
+			expectedMappingStatus: sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_UNSUPPORTED,
+			expectMappingError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create an itemDiff with the specified status
+			itemDiff := &sdp.ItemDiff{
+				Status: tt.itemDiffStatus,
+			}
+
+			// Create a terraform resource without the mapping attribute (simulating missing id/arn)
+			terraformResource := &Resource{
+				Address: "test_resource.example",
+				Type:    "test_resource",
+				AttributeValues: AttributeValues{
+					// No "id" field - simulating missing mapping attribute
+					"name": "test-name",
+				},
+			}
+
+			// Setup mappings - empty if testing unsupported, otherwise include one
+			var mappings []TfMapData
+			if tt.hasMappings {
+				mappings = []TfMapData{
+					{
+						OvermindType: "test-type",
+						Method:       sdp.QueryMethod_GET,
+						QueryField:   "id", // This field doesn't exist in AttributeValues
+					},
+				}
+			}
+
+			// Call the function
+			result := mapResourceToQuery(itemDiff, terraformResource, mappings)
+
+			// Verify the MapStatus
+			if result.Status != tt.expectedMapStatus {
+				t.Errorf("Expected MapStatus %v, got %v", tt.expectedMapStatus, result.Status)
+			}
+
+			// Verify the MappingStatus
+			if result.MappedItemDiff.GetMappingStatus() != tt.expectedMappingStatus {
+				t.Errorf("Expected MappingStatus %v, got %v", tt.expectedMappingStatus, result.MappedItemDiff.GetMappingStatus())
+			}
+
+			// Verify MappingError presence
+			if tt.expectMappingError && result.MappedItemDiff.GetMappingError() == nil {
+				t.Error("Expected MappingError to be set, but it was nil")
+			}
+			if !tt.expectMappingError && result.MappedItemDiff.GetMappingError() != nil {
+				t.Errorf("Expected MappingError to be nil, but got: %v", result.MappedItemDiff.GetMappingError())
+			}
+
+			// Verify MappingQuery is nil (no query should be created when mapping fails)
+			if result.MappedItemDiff.GetMappingQuery() != nil {
+				t.Errorf("Expected MappingQuery to be nil, but got: %v", result.MappedItemDiff.GetMappingQuery())
+			}
+		})
+	}
+}
+
 func TestExtractProviderNameFromConfigKey(t *testing.T) {
 	tests := []struct {
 		ConfigKey string
@@ -317,6 +428,9 @@ func TestPlanMappingResultNumFuncs(t *testing.T) {
 			{
 				Status: MapStatusUnsupported,
 			},
+			{
+				Status: MapStatusPendingCreation,
+			},
 		},
 	}
 
@@ -330,6 +444,16 @@ func TestPlanMappingResultNumFuncs(t *testing.T) {
 
 	if result.NumUnsupported() != 1 {
 		t.Errorf("Expected 1 unsupported, got %v", result.NumUnsupported())
+	}
+
+	if result.NumPendingCreation() != 1 {
+		t.Errorf("Expected 1 pending creation, got %v", result.NumPendingCreation())
+	}
+
+	// Sum of individual counts should equal NumTotal
+	sum := result.NumSuccess() + result.NumNotEnoughInfo() + result.NumUnsupported() + result.NumPendingCreation()
+	if sum != result.NumTotal() {
+		t.Errorf("Sum of status counts (%v) should equal NumTotal (%v)", sum, result.NumTotal())
 	}
 }
 
