@@ -3,9 +3,11 @@ package proc
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
+	"github.com/aws/smithy-go"
 	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/stretchr/testify/assert"
@@ -99,6 +101,93 @@ func TestInitializeAwsSourceEngine_RetryClearsAdapters(t *testing.T) {
 	assert.Contains(t, scopes, "123456789012.us-east-1", "Scope should be present after re-adding")
 }
 
+// mockAPIError implements smithy.APIError for testing
+type mockAPIError struct {
+	code    string
+	message string
+}
+
+func (m *mockAPIError) Error() string {
+	return m.message
+}
+
+func (m *mockAPIError) ErrorCode() string {
+	return m.code
+}
+
+func (m *mockAPIError) ErrorMessage() string {
+	return m.message
+}
+
+func (m *mockAPIError) ErrorFault() smithy.ErrorFault {
+	return smithy.FaultUnknown
+}
+
+func TestIsOptInRegionError(t *testing.T) {
+	tests := []struct {
+		name           string
+		err            error
+		expectedResult bool
+	}{
+		{
+			name:           "nil error returns false",
+			err:            nil,
+			expectedResult: false,
+		},
+		{
+			name: "InvalidIdentityToken with OIDC message returns true",
+			err: &mockAPIError{
+				code:    "InvalidIdentityToken",
+				message: "InvalidIdentityToken: No OpenIDConnect provider found in your account for https://oidc.eks.eu-west-2.amazonaws.com/id/ABC123",
+			},
+			expectedResult: true,
+		},
+		{
+			name: "wrapped InvalidIdentityToken with OIDC message returns true",
+			err: fmt.Errorf("operation error STS: AssumeRoleWithWebIdentity: %w", &mockAPIError{
+				code:    "InvalidIdentityToken",
+				message: "No OpenIDConnect provider found in your account",
+			}),
+			expectedResult: true,
+		},
+		{
+			name: "InvalidIdentityToken without OIDC message returns false",
+			err: &mockAPIError{
+				code:    "InvalidIdentityToken",
+				message: "Invalid identity token for some other reason",
+			},
+			expectedResult: false,
+		},
+		{
+			name: "different error code returns false",
+			err: &mockAPIError{
+				code:    "AccessDenied",
+				message: "Access denied",
+			},
+			expectedResult: false,
+		},
+		{
+			name:           "non-AWS error returns false",
+			err:            errors.New("some random error"),
+			expectedResult: false,
+		},
+		{
+			name:           "error with OIDC text but not API error returns false",
+			err:            errors.New("No OpenIDConnect provider found"),
+			expectedResult: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isOptInRegionError(tt.err)
+			if result != tt.expectedResult {
+				t.Errorf("isOptInRegionError() = %v, want %v for error: %v", result, tt.expectedResult, tt.err)
+			}
+		})
+	}
+}
+
 func TestWrapRegionError(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -115,22 +204,31 @@ func TestWrapRegionError(t *testing.T) {
 			expectedText: "",
 		},
 		{
-			name:         "OIDC provider error gets wrapped",
-			err:          errors.New("InvalidIdentityToken: No OpenIDConnect provider found in your account"),
+			name: "opt-in region error gets wrapped",
+			err: &mockAPIError{
+				code:    "InvalidIdentityToken",
+				message: "No OpenIDConnect provider found in your account",
+			},
 			region:       "eu-central-2",
 			shouldWrap:   true,
 			expectedText: "region 'eu-central-2' is not enabled",
 		},
 		{
-			name:         "InvalidIdentityToken error without OIDC text not wrapped",
-			err:          errors.New("InvalidIdentityToken: some other message"),
+			name: "wrapped opt-in region error gets additional context",
+			err: fmt.Errorf("operation error STS: AssumeRoleWithWebIdentity: %w", &mockAPIError{
+				code:    "InvalidIdentityToken",
+				message: "No OpenIDConnect provider found in your account",
+			}),
 			region:       "ap-south-2",
-			shouldWrap:   false,
-			expectedText: "",
+			shouldWrap:   true,
+			expectedText: "region 'ap-south-2' is not enabled",
 		},
 		{
-			name:         "AssumeRoleWithWebIdentity exceeded attempts not wrapped",
-			err:          errors.New("operation error STS: AssumeRoleWithWebIdentity, exceeded maximum number of attempts"),
+			name: "InvalidIdentityToken without OIDC text not wrapped",
+			err: &mockAPIError{
+				code:    "InvalidIdentityToken",
+				message: "some other message",
+			},
 			region:       "me-central-1",
 			shouldWrap:   false,
 			expectedText: "",
@@ -165,6 +263,10 @@ func TestWrapRegionError(t *testing.T) {
 			if tt.shouldWrap {
 				if !strings.Contains(resultMsg, tt.expectedText) {
 					t.Errorf("expected wrapped error to contain '%s', got: %v", tt.expectedText, resultMsg)
+				}
+				// Verify the original error is preserved (wrapped with %w)
+				if !errors.Is(result, tt.err) {
+					t.Errorf("expected wrapped error to contain original error")
 				}
 			} else {
 				if strings.Contains(resultMsg, "region") && strings.Contains(resultMsg, "not enabled") {
