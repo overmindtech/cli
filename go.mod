@@ -113,7 +113,7 @@ require (
 	github.com/harness/harness-go-sdk v0.7.4
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/hcl/v2 v2.24.0
-	github.com/hashicorp/terraform-config-inspect v0.0.0-20260120201749-785479628bd7
+	github.com/hashicorp/terraform-config-inspect v0.0.0-20260204111900-477360eb0c77
 	github.com/invopop/jsonschema v0.13.0
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/jedib0t/go-pretty/v6 v6.7.8
