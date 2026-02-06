@@ -330,12 +330,12 @@ func init() {
 	log.Debug("Registered GCP source metadata", " with ", len(Metadata.AllAdapterMetadata()), " adapters")
 }
 
-func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig) (*discovery.Engine, error) {
-	engine, err := discovery.NewEngine(ec)
-	if err != nil {
-		return nil, fmt.Errorf("error initializing Engine: %w", err)
-	}
-
+// InitializeAdapters adds GCP adapters to an existing engine. This allows the engine
+// to be created and serve health probes even if adapter initialization fails.
+//
+// If initialization fails due to configuration errors (e.g. invalid credentials, project access denied),
+// the error is returned but the engine remains operational for health probes and heartbeats.
+func InitializeAdapters(ctx context.Context, engine *discovery.Engine, cfg *GCPConfig) error {
 	var healthChecker *ProjectHealthChecker
 
 	// ReadinessCheck verifies adapters are healthy by using a CloudResourceManagerProject adapter
@@ -364,16 +364,16 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 	// Create a shared cache for all adapters in this source
 	sharedCache := sdpcache.NewCache(ctx)
 
-	err = func() error {
+	initErr := func() error {
 		var logmsg string
 		// Use provided config, otherwise fall back to viper
 		if cfg != nil {
 			logmsg = "Using directly provided config"
 		} else {
-			var err error
-			cfg, err = readConfig()
-			if err != nil {
-				return fmt.Errorf("error creating config from command line: %w", err)
+			var configErr error
+			cfg, configErr = readConfig()
+			if configErr != nil {
+				return fmt.Errorf("error creating config from command line: %w", configErr)
 			}
 			logmsg = "Using config from viper"
 
@@ -554,9 +554,11 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 		return nil
 	}()
 
-	if err != nil {
-		log.WithError(err).Debug("Error initializing GCP source")
-		return nil, fmt.Errorf("error initializing GCP source: %w", err)
+	if initErr != nil {
+		log.WithError(initErr).Debug("Error initializing GCP source")
+		// Attempt heartbeat so unauthenticated mode logs and management API sees init error
+		_ = engine.SendHeartbeat(ctx, initErr)
+		return fmt.Errorf("error initializing GCP source: %w", initErr)
 	}
 
 	// Start sending heartbeats after adapters are successfully added
@@ -568,8 +570,7 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *GCPConfig)
 	}
 
 	log.Debug("Sources initialized")
-	// If there is no error then return the engine
-	return engine, nil
+	return nil
 }
 
 func readConfig() (*GCPConfig, error) {

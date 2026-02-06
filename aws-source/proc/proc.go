@@ -234,16 +234,14 @@ func CreateAWSConfigs(awsAuthConfig AwsAuthConfig) ([]aws.Config, error) {
 	return configs, nil
 }
 
-// InitializeAwsSourceEngine initializes an Engine with AWS sources, returns the
-// engine, and an error if any. The context provided will be used for the rate
-// limit buckets and should not be cancelled until the source is shut down. AWS
-// configs should be provided for each region that is enabled
-func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, maxRetries int, configs ...aws.Config) (*discovery.Engine, error) {
-	e, err := discovery.NewEngine(ec)
-	if err != nil {
-		return nil, fmt.Errorf("error initializing Engine: %w", err)
-	}
-
+// InitializeAwsSourceAdapters adds AWS adapters to an existing engine. This allows the engine
+// to be created and serve health probes even if adapter initialization fails. The context provided
+// will be used for the rate limit buckets and should not be cancelled until the source is shut down.
+// AWS configs should be provided for each region that is enabled.
+//
+// If initialization fails due to configuration errors (e.g. invalid credentials, assume role failures),
+// the error is returned but the engine remains operational for health probes and heartbeats.
+func InitializeAwsSourceAdapters(ctx context.Context, e *discovery.Engine, maxRetries int, configs ...aws.Config) error {
 	// Create a shared cache for all adapters in this source
 	sharedCache := sdpcache.NewCache(ctx)
 
@@ -275,7 +273,7 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 		return nil
 	})
 	if len(configs) == 0 {
-		return nil, errors.New("No configs specified")
+		return errors.New("no configs specified")
 	}
 
 	var globalDone atomic.Bool
@@ -283,77 +281,85 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 	b.MaxInterval = 30 * time.Second
 	tick := backoff.NewTicker(b)
 
+	// Retry loop: maxRetries is set very high (999,999) because the real limit
+	// is the Kubernetes pod startup timeout set in the Deployment. This allows
+	// transient errors (network issues, rate limits) to be retried while
+	// permanent errors (auth failures) are still captured and reported.
 	try := 0
+	var lastErr error
 
 	for {
 		try++
 		if try > maxRetries {
-			return nil, fmt.Errorf("maximum retries (%d) exceeded", maxRetries)
+			return fmt.Errorf("maximum retries (%d) exceeded", maxRetries)
 		}
 
 		select {
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			return ctx.Err()
 		case _, ok := <-tick.C:
 			if !ok {
 				// If the backoff stops, then we should stop trying to
 				// initialize and just return the error
-				return nil, err
+				if lastErr != nil {
+					return lastErr
+				}
+				return fmt.Errorf("backoff stopped without successful initialization")
 			}
 
-		// Clear any adapters from previous retry attempts to avoid
-		// duplicate registration errors
-		e.ClearAdapters()
-		globalDone.Store(false)
+			// Clear any adapters from previous retry attempts to avoid
+			// duplicate registration errors
+			e.ClearAdapters()
+			globalDone.Store(false)
 
-		// Track regions that are skipped due to not being enabled (opt-in regions)
-		type skippedRegion struct {
-			region string
-			err    error
-		}
-		var skippedRegions []skippedRegion
-		var skippedRegionsMu sync.Mutex
+			// Track regions that are skipped due to not being enabled (opt-in regions)
+			type skippedRegion struct {
+				region string
+				err    error
+			}
+			var skippedRegions []skippedRegion
+			var skippedRegionsMu sync.Mutex
 
-		p := pool.New().WithContext(ctx)
+			p := pool.New().WithContext(ctx)
 
-		for _, cfg := range configs {
-			p.Go(func(ctx context.Context) error {
-				configCtx, configCancel := context.WithTimeout(ctx, 10*time.Second)
-				defer configCancel()
+			for _, cfg := range configs {
+				p.Go(func(ctx context.Context) error {
+					configCtx, configCancel := context.WithTimeout(ctx, 10*time.Second)
+					defer configCancel()
 
-				log.WithFields(log.Fields{
-					"region": cfg.Region,
-				}).Info("Initializing AWS source")
-
-				// Work out what account we're using. This will be used in item scopes
-				stsClient := sts.NewFromConfig(cfg)
-
-				callerID, err := stsClient.GetCallerIdentity(configCtx, &sts.GetCallerIdentityInput{})
-				if err != nil {
-					lf := log.Fields{
+					log.WithFields(log.Fields{
 						"region": cfg.Region,
-					}
+					}).Info("Initializing AWS source")
 
-					// Check if this is an opt-in region error
-					if isOptInRegionError(err) {
-						// This region is not enabled in the account - skip it but don't fail
+					// Work out what account we're using. This will be used in item scopes
+					stsClient := sts.NewFromConfig(cfg)
+
+					callerID, err := stsClient.GetCallerIdentity(configCtx, &sts.GetCallerIdentityInput{})
+					if err != nil {
+						lf := log.Fields{
+							"region": cfg.Region,
+						}
+
+						// Check if this is an opt-in region error
+						if isOptInRegionError(err) {
+							// This region is not enabled in the account - skip it but don't fail
+							wrappedErr := wrapRegionError(err, cfg.Region)
+							skippedRegionsMu.Lock()
+							skippedRegions = append(skippedRegions, skippedRegion{
+								region: cfg.Region,
+								err:    wrappedErr,
+							})
+							skippedRegionsMu.Unlock()
+							log.WithError(wrappedErr).WithFields(lf).Warn("Skipping region - not enabled in account")
+							return nil // Don't fail the pool for opt-in regions
+						}
+
+						// Wrap misleading OIDC errors with helpful region enablement context
 						wrappedErr := wrapRegionError(err, cfg.Region)
-						skippedRegionsMu.Lock()
-						skippedRegions = append(skippedRegions, skippedRegion{
-							region: cfg.Region,
-							err:    wrappedErr,
-						})
-						skippedRegionsMu.Unlock()
-						log.WithError(wrappedErr).WithFields(lf).Warn("Skipping region - not enabled in account")
-						return nil // Don't fail the pool for opt-in regions
+
+						log.WithError(wrappedErr).WithFields(lf).Error("Error retrieving account information")
+						return fmt.Errorf("error getting caller identity for region %v: %w", cfg.Region, wrappedErr)
 					}
-
-					// Wrap misleading OIDC errors with helpful region enablement context
-					wrappedErr := wrapRegionError(err, cfg.Region)
-
-					log.WithError(wrappedErr).WithFields(lf).Error("Error retrieving account information")
-					return fmt.Errorf("error getting caller identity for region %v: %w", cfg.Region, wrappedErr)
-				}
 
 					// Create shared clients for each API
 					autoscalingClient := awsautoscaling.NewFromConfig(cfg, func(o *awsautoscaling.Options) {
@@ -640,34 +646,34 @@ func InitializeAwsSourceEngine(ctx context.Context, ec *discovery.EngineConfig, 
 				})
 			}
 
-		err = p.Wait()
-		brokenHeart := e.SendHeartbeat(ctx, nil) // Send heartbeat with any errors
-		if brokenHeart != nil {
-			log.WithError(brokenHeart).Error("Error sending heartbeat")
-		}
-
-		if err != nil {
-			log.WithError(err).Debug("Error initializing sources")
-		} else {
-			// Log summary of skipped regions if any
-			if len(skippedRegions) > 0 {
-				skippedRegionNames := make([]string, 0, len(skippedRegions))
-				for _, sr := range skippedRegions {
-					skippedRegionNames = append(skippedRegionNames, sr.region)
-				}
-				log.WithFields(log.Fields{
-					"skipped_regions": skippedRegionNames,
-					"count":           len(skippedRegions),
-				}).Warn("Some regions were skipped because they are not enabled in the AWS account. The source will operate normally with the remaining regions.")
+			lastErr = p.Wait()
+			brokenHeart := e.SendHeartbeat(ctx, nil) // Send heartbeat with any errors
+			if brokenHeart != nil {
+				log.WithError(brokenHeart).Error("Error sending heartbeat")
 			}
 
-			log.Debug("Sources initialized")
-			// Start sending heartbeats after adapters are successfully added
-			// This ensures the first heartbeat has adapters available for readiness checks
-			e.StartSendingHeartbeats(ctx)
-			// If there is no error then return the engine
-			return e, nil
-		}
+			if lastErr != nil {
+				log.WithError(lastErr).Debug("Error initializing sources")
+			} else {
+				// Log summary of skipped regions if any
+				if len(skippedRegions) > 0 {
+					skippedRegionNames := make([]string, 0, len(skippedRegions))
+					for _, sr := range skippedRegions {
+						skippedRegionNames = append(skippedRegionNames, sr.region)
+					}
+					log.WithFields(log.Fields{
+						"skipped_regions": skippedRegionNames,
+						"count":           len(skippedRegions),
+					}).Warn("Some regions were skipped because they are not enabled in the AWS account. The source will operate normally with the remaining regions.")
+				}
+
+				log.Debug("Sources initialized")
+				// Start sending heartbeats after adapters are successfully added
+				// This ensures the first heartbeat has adapters available for readiness checks
+				e.StartSendingHeartbeats(ctx)
+				// If there is no error then return success
+				return nil
+			}
 		}
 	}
 }
