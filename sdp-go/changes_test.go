@@ -109,7 +109,7 @@ func TestFindInProgressEntry(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			name, status, err := TimelineFindInProgressEntry(tt.entries)
+			name, _, status, err := TimelineFindInProgressEntry(tt.entries)
 
 			if tt.expectError && err == nil {
 				t.Errorf("Expected an error, got nil")
@@ -125,6 +125,151 @@ func TestFindInProgressEntry(t *testing.T) {
 
 			if status != tt.expectedStatus {
 				t.Errorf("Expected status %s, got %s", tt.expectedStatus, status)
+			}
+		})
+	}
+}
+
+func TestTimelineEntryContentDescription(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		entry    *ChangeTimelineEntryV2
+		expected string
+	}{
+		{
+			name: "mapped items",
+			entry: &ChangeTimelineEntryV2{
+				Content: &ChangeTimelineEntryV2_MappedItems{
+					MappedItems: &MappedItemsTimelineEntry{
+						MappedItems: []*MappedItemDiff{{}, {}, {}},
+					},
+				},
+			},
+			expected: "3 mapped items",
+		},
+		{
+			name: "calculated blast radius",
+			entry: &ChangeTimelineEntryV2{
+				Content: &ChangeTimelineEntryV2_CalculatedBlastRadius{
+					CalculatedBlastRadius: &CalculatedBlastRadiusTimelineEntry{
+						NumItems: 10,
+						NumEdges: 25,
+					},
+				},
+			},
+			expected: "10 items, 25 edges",
+		},
+		{
+			name: "calculated risks",
+			entry: &ChangeTimelineEntryV2{
+				Content: &ChangeTimelineEntryV2_CalculatedRisks{
+					CalculatedRisks: &CalculatedRisksTimelineEntry{
+						Risks: []*Risk{{}, {}},
+					},
+				},
+			},
+			expected: "2 risks",
+		},
+		{
+			name: "calculated labels",
+			entry: &ChangeTimelineEntryV2{
+				Content: &ChangeTimelineEntryV2_CalculatedLabels{
+					CalculatedLabels: &CalculatedLabelsTimelineEntry{
+						Labels: []*Label{{}, {}, {}, {}},
+					},
+				},
+			},
+			expected: "4 labels",
+		},
+		{
+			name: "change validation",
+			entry: &ChangeTimelineEntryV2{
+				Content: &ChangeTimelineEntryV2_ChangeValidation{
+					ChangeValidation: &ChangeValidationTimelineEntry{
+						ValidationChecklist: []*ChangeValidationCategory{{}},
+					},
+				},
+			},
+			expected: "1 validation categories",
+		},
+		{
+			name: "form hypotheses",
+			entry: &ChangeTimelineEntryV2{
+				Content: &ChangeTimelineEntryV2_FormHypotheses{
+					FormHypotheses: &FormHypothesesTimelineEntry{
+						NumHypotheses: 5,
+					},
+				},
+			},
+			expected: "5 hypotheses",
+		},
+		{
+			name: "investigate hypotheses",
+			entry: &ChangeTimelineEntryV2{
+				Content: &ChangeTimelineEntryV2_InvestigateHypotheses{
+					InvestigateHypotheses: &InvestigateHypothesesTimelineEntry{
+						NumProven:        2,
+						NumDisproven:     3,
+						NumInvestigating: 1,
+					},
+				},
+			},
+			expected: "2 proven, 3 disproven, 1 investigating",
+		},
+		{
+			name: "record observations",
+			entry: &ChangeTimelineEntryV2{
+				Content: &ChangeTimelineEntryV2_RecordObservations{
+					RecordObservations: &RecordObservationsTimelineEntry{
+						NumObservations: 42,
+					},
+				},
+			},
+			expected: "42 observations",
+		},
+		{
+			name: "error content",
+			entry: &ChangeTimelineEntryV2{
+				Content: &ChangeTimelineEntryV2_Error{
+					Error: "something went wrong",
+				},
+			},
+			expected: "something went wrong",
+		},
+		{
+			name: "status message",
+			entry: &ChangeTimelineEntryV2{
+				Content: &ChangeTimelineEntryV2_StatusMessage{
+					StatusMessage: "processing data",
+				},
+			},
+			expected: "processing data",
+		},
+		{
+			name: "empty content",
+			entry: &ChangeTimelineEntryV2{
+				Content: &ChangeTimelineEntryV2_Empty{
+					Empty: &EmptyContent{},
+				},
+			},
+			expected: "",
+		},
+		{
+			name: "nil content",
+			entry: &ChangeTimelineEntryV2{
+				Content: nil,
+			},
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := TimelineEntryContentDescription(tt.entry)
+			if result != tt.expected {
+				t.Errorf("Expected %q, got %q", tt.expected, result)
 			}
 		})
 	}
