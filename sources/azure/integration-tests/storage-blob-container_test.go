@@ -99,8 +99,7 @@ func TestStorageBlobContainerIntegration(t *testing.T) {
 
 			bcWrapper := manual.NewStorageBlobContainer(
 				clients.NewBlobContainersClient(bcClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := bcWrapper.Scopes()[0]
 
@@ -136,8 +135,7 @@ func TestStorageBlobContainerIntegration(t *testing.T) {
 
 			bcWrapper := manual.NewStorageBlobContainer(
 				clients.NewBlobContainersClient(bcClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := bcWrapper.Scopes()[0]
 
@@ -181,8 +179,7 @@ func TestStorageBlobContainerIntegration(t *testing.T) {
 
 			bcWrapper := manual.NewStorageBlobContainer(
 				clients.NewBlobContainersClient(bcClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := bcWrapper.Scopes()[0]
 

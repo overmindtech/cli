@@ -119,7 +119,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 				VirtualMachineRunCommand: *runCommand,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		scope := subscriptionID + "." + resourceGroup
@@ -170,7 +170,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 				VirtualMachineRunCommand: *runCommand,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		scope := subscriptionID + "." + resourceGroup
@@ -267,7 +267,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 				VirtualMachineRunCommand: *runCommand,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		scope := subscriptionID + "." + resourceGroup
@@ -317,7 +317,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 				VirtualMachineRunCommand: *runCommand,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		scope := subscriptionID + "." + resourceGroup
@@ -342,7 +342,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 	t.Run("Get_ErrorHandling", func(t *testing.T) {
 		t.Run("EmptyScope", func(t *testing.T) {
 			mockClient := mocks.NewMockVirtualMachineRunCommandsClient(ctrl)
-			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			_, qErr := adapter.Get(ctx, "", shared.CompositeLookupKey(vmName, runCommandName), true)
@@ -353,7 +353,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 
 		t.Run("WrongQueryPartsCount", func(t *testing.T) {
 			mockClient := mocks.NewMockVirtualMachineRunCommandsClient(ctrl)
-			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			scope := subscriptionID + "." + resourceGroup
@@ -365,7 +365,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 
 		t.Run("EmptyVirtualMachineName", func(t *testing.T) {
 			mockClient := mocks.NewMockVirtualMachineRunCommandsClient(ctrl)
-			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			scope := subscriptionID + "." + resourceGroup
@@ -377,7 +377,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 
 		t.Run("EmptyRunCommandName", func(t *testing.T) {
 			mockClient := mocks.NewMockVirtualMachineRunCommandsClient(ctrl)
-			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			scope := subscriptionID + "." + resourceGroup
@@ -393,7 +393,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 				armcompute.VirtualMachineRunCommandsClientGetByVirtualMachineResponse{},
 				errors.New("client error"))
 
-			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			scope := subscriptionID + "." + resourceGroup
@@ -425,7 +425,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 			pager:                               mockPager,
 		}
 
-		wrapper := manual.NewComputeVirtualMachineRunCommand(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineRunCommand(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -454,7 +454,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 	t.Run("Search_ErrorHandling", func(t *testing.T) {
 		t.Run("WrongQueryPartsCount", func(t *testing.T) {
 			mockClient := mocks.NewMockVirtualMachineRunCommandsClient(ctrl)
-			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -471,7 +471,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 
 		t.Run("EmptyVirtualMachineName", func(t *testing.T) {
 			mockClient := mocks.NewMockVirtualMachineRunCommandsClient(ctrl)
-			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -495,7 +495,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 				pager:                               errorPager,
 			}
 
-			wrapper := manual.NewComputeVirtualMachineRunCommand(testClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineRunCommand(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -536,7 +536,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 				pager:                               mockPager,
 			}
 
-			wrapper := manual.NewComputeVirtualMachineRunCommand(testClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineRunCommand(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -559,7 +559,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 
 	t.Run("PotentialLinks", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineRunCommandsClient(ctrl)
-		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		potentialLinks := wrapper.PotentialLinks()
 		expectedLinks := map[shared.ItemType]bool{
@@ -587,7 +587,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 
 	t.Run("IAMPermissions", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineRunCommandsClient(ctrl)
-		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		permissions := wrapper.IAMPermissions()
 		expectedPermission := "Microsoft.Compute/virtualMachines/runCommands/read"
@@ -603,7 +603,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 
 	t.Run("TerraformMappings", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineRunCommandsClient(ctrl)
-		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		mappings := wrapper.TerraformMappings()
 		if len(mappings) != 1 {
@@ -621,7 +621,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 
 	t.Run("GetLookups", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineRunCommandsClient(ctrl)
-		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		lookups := wrapper.GetLookups()
 		if len(lookups) != 2 {
@@ -631,7 +631,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 
 	t.Run("SearchLookups", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineRunCommandsClient(ctrl)
-		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineRunCommand(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		searchLookups := wrapper.SearchLookups()
 		if len(searchLookups) != 1 {

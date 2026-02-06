@@ -39,7 +39,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 				LoadBalancer: *loadBalancer,
 			}, nil)
 
-		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkLoadBalancer(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], lbName, true)
@@ -195,7 +195,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 	t.Run("Get_EmptyName", func(t *testing.T) {
 		mockClient := mocks.NewMockLoadBalancersClient(ctrl)
 
-		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkLoadBalancer(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name - the wrapper validates this before calling the client
@@ -227,7 +227,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 
 		mockClient.EXPECT().List(resourceGroup).Return(mockPager)
 
-		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkLoadBalancer(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -288,7 +288,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 
 		mockClient.EXPECT().List(resourceGroup).Return(mockPager)
 
-		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkLoadBalancer(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -318,7 +318,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-lb").Return(
 			armnetwork.LoadBalancersClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkLoadBalancer(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-lb", true)
@@ -342,7 +342,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 
 		mockClient.EXPECT().List(resourceGroup).Return(mockPager)
 
-		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkLoadBalancer(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -358,7 +358,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 
 	t.Run("InterfaceCompliance", func(t *testing.T) {
 		mockClient := mocks.NewMockLoadBalancersClient(ctrl)
-		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkLoadBalancer(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Verify wrapper implements ListableWrapper interface
 		var _ = wrapper
@@ -457,7 +457,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 				LoadBalancer: *loadBalancer,
 			}, nil)
 
-		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkLoadBalancer(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], lbName, true)
@@ -493,7 +493,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 				LoadBalancer: *loadBalancer,
 			}, nil)
 
-		wrapper := manual.NewNetworkLoadBalancer(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkLoadBalancer(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], lbName, true)

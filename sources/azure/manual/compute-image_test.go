@@ -40,7 +40,7 @@ func TestComputeImage(t *testing.T) {
 				Image: *image,
 			}, nil)
 
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], imageName, true)
@@ -75,7 +75,7 @@ func TestComputeImage(t *testing.T) {
 				Image: *image,
 			}, nil)
 
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], imageName, true)
@@ -244,7 +244,7 @@ func TestComputeImage(t *testing.T) {
 				Image: *image,
 			}, nil)
 
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], imageName, true)
@@ -279,7 +279,7 @@ func TestComputeImage(t *testing.T) {
 
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -316,7 +316,7 @@ func TestComputeImage(t *testing.T) {
 
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
@@ -374,7 +374,7 @@ func TestComputeImage(t *testing.T) {
 
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -400,7 +400,7 @@ func TestComputeImage(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-image", nil).Return(
 			armcompute.ImagesClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-image", true)
@@ -412,7 +412,7 @@ func TestComputeImage(t *testing.T) {
 	t.Run("GetWithInsufficientQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockImagesClient(ctrl)
 
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		// Test the wrapper's Get method directly with insufficient query parts
 		_, qErr := wrapper.Get(ctx, wrapper.Scopes()[0])
 		if qErr == nil {
@@ -426,7 +426,7 @@ func TestComputeImage(t *testing.T) {
 
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(errorPager)
 
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -446,7 +446,7 @@ func TestComputeImage(t *testing.T) {
 
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(errorPager)
 
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		var errs []error
@@ -470,7 +470,7 @@ func TestComputeImage(t *testing.T) {
 
 	t.Run("GetLookups", func(t *testing.T) {
 		mockClient := mocks.NewMockImagesClient(ctrl)
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		lookups := wrapper.GetLookups()
 		if len(lookups) != 1 {
@@ -485,7 +485,7 @@ func TestComputeImage(t *testing.T) {
 
 	t.Run("PotentialLinks", func(t *testing.T) {
 		mockClient := mocks.NewMockImagesClient(ctrl)
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		potentialLinks := wrapper.PotentialLinks()
 		expectedLinks := []shared.ItemType{
@@ -507,7 +507,7 @@ func TestComputeImage(t *testing.T) {
 
 	t.Run("TerraformMappings", func(t *testing.T) {
 		mockClient := mocks.NewMockImagesClient(ctrl)
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		mappings := wrapper.TerraformMappings()
 		if len(mappings) != 1 {
@@ -525,7 +525,7 @@ func TestComputeImage(t *testing.T) {
 
 	t.Run("IAMPermissions", func(t *testing.T) {
 		mockClient := mocks.NewMockImagesClient(ctrl)
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		permissions := wrapper.IAMPermissions()
 		expectedPermissions := []string{
@@ -545,7 +545,7 @@ func TestComputeImage(t *testing.T) {
 
 	t.Run("PredefinedRole", func(t *testing.T) {
 		mockClient := mocks.NewMockImagesClient(ctrl)
-		wrapper := manual.NewComputeImage(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// PredefinedRole is available on the wrapper, not the adapter
 		if roleInterface, ok := interface{}(wrapper).(interface{ PredefinedRole() string }); ok {

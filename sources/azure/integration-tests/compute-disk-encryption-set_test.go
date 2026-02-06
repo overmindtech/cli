@@ -143,8 +143,7 @@ func TestComputeDiskEncryptionSetIntegration(t *testing.T) {
 
 			desWrapper := manual.NewComputeDiskEncryptionSet(
 				clients.NewDiskEncryptionSetsClient(desClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := desWrapper.Scopes()[0]
 
@@ -176,8 +175,7 @@ func TestComputeDiskEncryptionSetIntegration(t *testing.T) {
 
 			desWrapper := manual.NewComputeDiskEncryptionSet(
 				clients.NewDiskEncryptionSetsClient(desClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := desWrapper.Scopes()[0]
 
@@ -214,8 +212,7 @@ func TestComputeDiskEncryptionSetIntegration(t *testing.T) {
 
 			desWrapper := manual.NewComputeDiskEncryptionSet(
 				clients.NewDiskEncryptionSetsClient(desClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := desWrapper.Scopes()[0]
 
@@ -245,8 +242,7 @@ func TestComputeDiskEncryptionSetIntegration(t *testing.T) {
 
 			desWrapper := manual.NewComputeDiskEncryptionSet(
 				clients.NewDiskEncryptionSetsClient(desClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := desWrapper.Scopes()[0]
 

@@ -13,6 +13,8 @@ import (
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
+	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/cli/discovery"
 )
 
 var NetworkLoadBalancerLookupByName = shared.NewItemTypeLookup("name", azureshared.NetworkLoadBalancer)
@@ -20,15 +22,14 @@ var NetworkLoadBalancerLookupByName = shared.NewItemTypeLookup("name", azureshar
 type networkLoadBalancerWrapper struct {
 	client clients.LoadBalancersClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewNetworkLoadBalancer(client clients.LoadBalancersClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewNetworkLoadBalancer(client clients.LoadBalancersClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &networkLoadBalancerWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 			azureshared.NetworkLoadBalancer,
 		),
@@ -36,11 +37,11 @@ func NewNetworkLoadBalancer(client clients.LoadBalancersClient, subscriptionID, 
 }
 
 func (n networkLoadBalancerWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	pager := n.client.List(resourceGroup)
+	pager := n.client.List(rgScope.ResourceGroup)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -65,6 +66,35 @@ func (n networkLoadBalancerWrapper) List(ctx context.Context, scope string) ([]*
 	return items, nil
 }
 
+
+func (n networkLoadBalancerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, n.Type()))
+		return
+	}
+	pager := n.client.List(rgScope.ResourceGroup)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, n.Type()))
+			return
+		}
+		for _, loadBalancer := range page.Value {
+			if loadBalancer.Name == nil {
+				continue
+			}
+			item, sdpErr := n.azureLoadBalancerToSDPItem(loadBalancer, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
+}
+
 func (n networkLoadBalancerWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) != 1 {
 		return nil, azureshared.QueryError(errors.New("query must be a load balancer name"), scope, n.Type())
@@ -75,11 +105,11 @@ func (n networkLoadBalancerWrapper) Get(ctx context.Context, scope string, query
 		return nil, azureshared.QueryError(errors.New("load balancer name cannot be empty"), scope, n.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	resp, err := n.client.Get(ctx, resourceGroup, loadBalancerName)
+	resp, err := n.client.Get(ctx, rgScope.ResourceGroup, loadBalancerName)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, n.Type())
 	}

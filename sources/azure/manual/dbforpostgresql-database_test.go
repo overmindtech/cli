@@ -80,7 +80,7 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 			}, nil)
 
 		testClient := &testPostgreSQLDatabasesClient{MockPostgreSQLDatabasesClient: mockClient}
-		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Get requires serverName and databaseName as query parts
@@ -135,7 +135,7 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 		mockClient := mocks.NewMockPostgreSQLDatabasesClient(ctrl)
 		testClient := &testPostgreSQLDatabasesClient{MockPostgreSQLDatabasesClient: mockClient}
 
-		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (only server name)
@@ -165,7 +165,7 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 			pager:                         mockPager,
 		}
 
-		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -219,7 +219,7 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 			pager:                         mockPager,
 		}
 
-		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -246,7 +246,7 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 		mockClient := mocks.NewMockPostgreSQLDatabasesClient(ctrl)
 		testClient := &testPostgreSQLDatabasesClient{MockPostgreSQLDatabasesClient: mockClient}
 
-		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Test Search directly with no query parts - should return error before calling ListByServer
 		_, qErr := wrapper.Search(ctx, wrapper.Scopes()[0])
@@ -263,7 +263,7 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 			armpostgresqlflexibleservers.DatabasesClientGetResponse{}, expectedErr)
 
 		testClient := &testPostgreSQLDatabasesClient{MockPostgreSQLDatabasesClient: mockClient}
-		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := shared.CompositeLookupKey(serverName, "nonexistent-database")
@@ -283,7 +283,7 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 			pager:                         errorPager,
 		}
 
-		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)

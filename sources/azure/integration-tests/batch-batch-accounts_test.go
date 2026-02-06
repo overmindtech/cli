@@ -116,8 +116,7 @@ func TestBatchAccountIntegration(t *testing.T) {
 
 			batchWrapper := manual.NewBatchAccount(
 				clients.NewBatchAccountsClient(batchClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := batchWrapper.Scopes()[0]
 
@@ -155,8 +154,7 @@ func TestBatchAccountIntegration(t *testing.T) {
 
 			batchWrapper := manual.NewBatchAccount(
 				clients.NewBatchAccountsClient(batchClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := batchWrapper.Scopes()[0]
 
@@ -203,8 +201,7 @@ func TestBatchAccountIntegration(t *testing.T) {
 
 			batchWrapper := manual.NewBatchAccount(
 				clients.NewBatchAccountsClient(batchClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := batchWrapper.Scopes()[0]
 

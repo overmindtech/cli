@@ -21,15 +21,14 @@ var KeyVaultManagedHSMsLookupByName = shared.NewItemTypeLookup("name", azureshar
 type keyvaultManagedHSMsWrapper struct {
 	client clients.ManagedHSMsClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewKeyVaultManagedHSM(client clients.ManagedHSMsClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewKeyVaultManagedHSM(client clients.ManagedHSMsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &keyvaultManagedHSMsWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 			azureshared.KeyVaultManagedHSM,
 		),
@@ -38,11 +37,11 @@ func NewKeyVaultManagedHSM(client clients.ManagedHSMsClient, subscriptionID, res
 
 // ref: https://learn.microsoft.com/en-us/rest/api/keyvault/managedhsm/managed-hsms/list-by-resource-group?view=rest-keyvault-managedhsm-2024-11-01&tabs=HTTP
 func (k keyvaultManagedHSMsWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = k.ResourceGroup()
+	rgScope, err := k.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
-	pager := k.client.NewListByResourceGroupPager(resourceGroup, nil)
+	pager := k.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -68,11 +67,12 @@ func (k keyvaultManagedHSMsWrapper) List(ctx context.Context, scope string) ([]*
 }
 
 func (k keyvaultManagedHSMsWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = k.ResourceGroup()
+	rgScope, err := k.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, k.Type()))
+		return
 	}
-	pager := k.client.NewListByResourceGroupPager(resourceGroup, nil)
+	pager := k.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -327,11 +327,11 @@ func (k keyvaultManagedHSMsWrapper) Get(ctx context.Context, scope string, query
 		return nil, azureshared.QueryError(errors.New("name cannot be empty"), scope, k.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = k.ResourceGroup()
+	rgScope, err := k.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
-	resp, err := k.client.Get(ctx, resourceGroup, name, nil)
+	resp, err := k.client.Get(ctx, rgScope.ResourceGroup, name, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, k.Type())
 	}

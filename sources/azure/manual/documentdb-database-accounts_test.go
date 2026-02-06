@@ -80,7 +80,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 				DatabaseAccountGetResults: *account,
 			}, nil)
 
-		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
@@ -203,7 +203,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockDocumentDBDatabaseAccountsClient(ctrl)
 
-		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty name
@@ -227,7 +227,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 				DatabaseAccountGetResults: *account,
 			}, nil)
 
-		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
@@ -245,7 +245,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 				DatabaseAccountGetResults: *account,
 			}, nil)
 
-		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
@@ -281,7 +281,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 			pager:                                mockPager,
 		}
 
-		wrapper := manual.NewDocumentDBDatabaseAccounts(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDocumentDBDatabaseAccounts(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -316,7 +316,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-account").Return(
 			armcosmos.DatabaseAccountsClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-account", true)
@@ -336,7 +336,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 
 		mockClient.EXPECT().ListByResourceGroup(resourceGroup).Return(errorPager)
 
-		wrapper := manual.NewDocumentDBDatabaseAccounts(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDocumentDBDatabaseAccounts(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -360,7 +360,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 				DatabaseAccountGetResults: *account,
 			}, nil)
 
-		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDocumentDBDatabaseAccounts(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)

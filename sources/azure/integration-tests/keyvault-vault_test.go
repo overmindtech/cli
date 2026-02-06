@@ -87,8 +87,7 @@ func TestKeyVaultVaultIntegration(t *testing.T) {
 
 			kvWrapper := manual.NewKeyVaultVault(
 				clients.NewVaultsClient(keyVaultClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := kvWrapper.Scopes()[0]
 
@@ -128,8 +127,7 @@ func TestKeyVaultVaultIntegration(t *testing.T) {
 
 			kvWrapper := manual.NewKeyVaultVault(
 				clients.NewVaultsClient(keyVaultClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := kvWrapper.Scopes()[0]
 

@@ -80,7 +80,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 			}, nil)
 
 		testClient := &testPostgreSQLFlexibleServersClient{MockPostgreSQLFlexibleServersClient: mockClient}
-		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
@@ -229,7 +229,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 			}, nil)
 
 		testClient := &testPostgreSQLFlexibleServersClient{MockPostgreSQLFlexibleServersClient: mockClient}
-		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
@@ -292,7 +292,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 			}, nil)
 
 		testClient := &testPostgreSQLFlexibleServersClient{MockPostgreSQLFlexibleServersClient: mockClient}
-		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
@@ -332,7 +332,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 		mockClient := mocks.NewMockPostgreSQLFlexibleServersClient(ctrl)
 		testClient := &testPostgreSQLFlexibleServersClient{MockPostgreSQLFlexibleServersClient: mockClient}
 
-		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty query
@@ -362,7 +362,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 			pager:                               mockPager,
 		}
 
-		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -415,7 +415,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 			pager:                               mockPager,
 		}
 
-		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -446,7 +446,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 			armpostgresqlflexibleservers.ServersClientGetResponse{}, expectedErr)
 
 		testClient := &testPostgreSQLFlexibleServersClient{MockPostgreSQLFlexibleServersClient: mockClient}
-		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-server", true)
@@ -465,7 +465,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 			pager:                               errorPager,
 		}
 
-		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -502,7 +502,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 			}, nil)
 
 		testClient := &testPostgreSQLFlexibleServersClient{MockPostgreSQLFlexibleServersClient: mockClient}
-		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
@@ -610,7 +610,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 			}, nil)
 
 		testClient := &testPostgreSQLFlexibleServersClient{MockPostgreSQLFlexibleServersClient: mockClient}
-		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], replicaServerName, true)
@@ -648,7 +648,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 		mockClient := mocks.NewMockPostgreSQLFlexibleServersClient(ctrl)
 		testClient := &testPostgreSQLFlexibleServersClient{MockPostgreSQLFlexibleServersClient: mockClient}
 
-		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewDBforPostgreSQLFlexibleServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		potentialLinks := wrapper.PotentialLinks()
 
 		expectedLinks := map[shared.ItemType]bool{

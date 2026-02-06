@@ -82,7 +82,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 				ManagedHsm: *hsm,
 			}, nil)
 
-		wrapper := manual.NewKeyVaultManagedHSM(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultManagedHSM(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], hsmName, true)
@@ -249,7 +249,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockManagedHSMsClient(ctrl)
 
-		wrapper := manual.NewKeyVaultManagedHSM(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultManagedHSM(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty name
@@ -273,7 +273,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 				ManagedHsm: *hsm,
 			}, nil)
 
-		wrapper := manual.NewKeyVaultManagedHSM(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultManagedHSM(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], hsmName, true)
@@ -291,7 +291,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 				ManagedHsm: *hsm,
 			}, nil)
 
-		wrapper := manual.NewKeyVaultManagedHSM(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultManagedHSM(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], hsmName, true)
@@ -327,7 +327,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 			pager:                 mockPager,
 		}
 
-		wrapper := manual.NewKeyVaultManagedHSM(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultManagedHSM(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -366,7 +366,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 			pager:                 errorPager,
 		}
 
-		wrapper := manual.NewKeyVaultManagedHSM(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultManagedHSM(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -408,7 +408,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 			pager:                 mockPager,
 		}
 
-		wrapper := manual.NewKeyVaultManagedHSM(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultManagedHSM(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -449,7 +449,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 			pager:                 mockPager,
 		}
 
-		wrapper := manual.NewKeyVaultManagedHSM(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultManagedHSM(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
@@ -513,7 +513,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 			pager:                 errorPager,
 		}
 
-		wrapper := manual.NewKeyVaultManagedHSM(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultManagedHSM(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		var errs []error
@@ -563,7 +563,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 			pager:                 mockPager,
 		}
 
-		wrapper := manual.NewKeyVaultManagedHSM(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultManagedHSM(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
@@ -615,7 +615,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 			armkeyvault.ManagedHsmsClientGetResponse{},
 			errors.New("client error"))
 
-		wrapper := manual.NewKeyVaultManagedHSM(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultManagedHSM(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], hsmName, true)
@@ -634,7 +634,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 				ManagedHsm: *hsm,
 			}, nil)
 
-		wrapper := manual.NewKeyVaultManagedHSM(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultManagedHSM(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], hsmName, true)

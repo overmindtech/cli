@@ -40,7 +40,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 				RoleAssignment: *roleAssignment,
 			}, nil)
 
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, scope, roleAssignmentName, true)
@@ -88,7 +88,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 	t.Run("Get_EmptyScope", func(t *testing.T) {
 		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
 
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, "", "test-role-assignment", true)
@@ -100,7 +100,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
 
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (empty)
@@ -119,7 +119,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 	t.Run("Get_EmptyRoleAssignmentName", func(t *testing.T) {
 		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
 
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, scope, "", true)
@@ -138,7 +138,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 			armauthorization.RoleAssignmentsClientGetResponse{},
 			expectedError)
 
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, scope, roleAssignmentName, true)
@@ -163,7 +163,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 				RoleAssignment: *roleAssignment,
 			}, nil)
 
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, scope, roleAssignmentName, true)
@@ -193,7 +193,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 
 		mockClient.EXPECT().ListForResourceGroup(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -230,7 +230,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 	t.Run("List_EmptyScope", func(t *testing.T) {
 		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
 
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -260,7 +260,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 
 		mockClient.EXPECT().ListForResourceGroup(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -300,7 +300,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 
 		mockClient.EXPECT().ListForResourceGroup(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -316,7 +316,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 
 	t.Run("GetLookups", func(t *testing.T) {
 		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		lookups := wrapper.GetLookups()
 		if len(lookups) != 1 {
@@ -337,7 +337,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 
 	t.Run("TerraformMappings", func(t *testing.T) {
 		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		mappings := wrapper.TerraformMappings()
 		if len(mappings) == 0 {
@@ -362,7 +362,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 
 	t.Run("PotentialLinks", func(t *testing.T) {
 		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		potentialLinks := wrapper.PotentialLinks()
 		if len(potentialLinks) == 0 {
@@ -378,7 +378,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 
 	t.Run("IAMPermissions", func(t *testing.T) {
 		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		permissions := wrapper.IAMPermissions()
 		if len(permissions) != 1 {
@@ -393,7 +393,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 
 	t.Run("PredefinedRole", func(t *testing.T) {
 		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Use interface assertion to access PredefinedRole method
 		if roleInterface, ok := interface{}(wrapper).(interface{ PredefinedRole() string }); ok {
@@ -420,7 +420,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 				RoleAssignment: *roleAssignment,
 			}, nil)
 
-		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, scope, roleAssignmentName, true)

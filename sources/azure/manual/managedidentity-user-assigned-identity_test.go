@@ -39,7 +39,7 @@ func TestManagedIdentityUserAssignedIdentity(t *testing.T) {
 				Identity: *identity,
 			}, nil)
 
-		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], identityName, true)
@@ -85,7 +85,7 @@ func TestManagedIdentityUserAssignedIdentity(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockUserAssignedIdentitiesClient(ctrl)
 
-		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty name
@@ -104,7 +104,7 @@ func TestManagedIdentityUserAssignedIdentity(t *testing.T) {
 
 		mockClient.EXPECT().ListByResourceGroup(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -157,7 +157,7 @@ func TestManagedIdentityUserAssignedIdentity(t *testing.T) {
 
 		mockClient.EXPECT().ListByResourceGroup(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -189,7 +189,7 @@ func TestManagedIdentityUserAssignedIdentity(t *testing.T) {
 
 		mockClient.EXPECT().ListByResourceGroup(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
@@ -240,7 +240,7 @@ func TestManagedIdentityUserAssignedIdentity(t *testing.T) {
 
 		mockClient.EXPECT().ListByResourceGroup(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		var errs []error
@@ -269,7 +269,7 @@ func TestManagedIdentityUserAssignedIdentity(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-identity", nil).Return(
 			armmsi.UserAssignedIdentitiesClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-identity", true)
@@ -286,7 +286,7 @@ func TestManagedIdentityUserAssignedIdentity(t *testing.T) {
 
 		mockClient.EXPECT().ListByResourceGroup(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewManagedIdentityUserAssignedIdentity(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)

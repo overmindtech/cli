@@ -39,7 +39,7 @@ func TestNetworkRouteTable(t *testing.T) {
 				RouteTable: *routeTable,
 			}, nil)
 
-		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkRouteTable(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], routeTableName, true)
@@ -107,7 +107,7 @@ func TestNetworkRouteTable(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockRouteTablesClient(ctrl)
 
-		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkRouteTable(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name - validation happens before client.Get is called
@@ -133,7 +133,7 @@ func TestNetworkRouteTable(t *testing.T) {
 				RouteTable: *routeTable,
 			}, nil)
 
-		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkRouteTable(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-route-table", true)
@@ -163,7 +163,7 @@ func TestNetworkRouteTable(t *testing.T) {
 
 		mockClient.EXPECT().List(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkRouteTable(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -223,7 +223,7 @@ func TestNetworkRouteTable(t *testing.T) {
 
 		mockClient.EXPECT().List(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkRouteTable(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -257,7 +257,7 @@ func TestNetworkRouteTable(t *testing.T) {
 
 		mockClient.EXPECT().List(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkRouteTable(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -278,7 +278,7 @@ func TestNetworkRouteTable(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-route-table", nil).Return(
 			armnetwork.RouteTablesClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkRouteTable(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-route-table", true)
@@ -314,7 +314,7 @@ func TestNetworkRouteTable(t *testing.T) {
 				RouteTable: *routeTable,
 			}, nil)
 
-		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkRouteTable(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], routeTableName, true)
@@ -367,7 +367,7 @@ func TestNetworkRouteTable(t *testing.T) {
 				RouteTable: *routeTable,
 			}, nil)
 
-		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkRouteTable(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], routeTableName, true)
@@ -422,7 +422,7 @@ func TestNetworkRouteTable(t *testing.T) {
 				RouteTable: *routeTable,
 			}, nil)
 
-		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkRouteTable(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], routeTableName, true)
@@ -440,7 +440,7 @@ func TestNetworkRouteTable(t *testing.T) {
 
 	t.Run("InterfaceCompliance", func(t *testing.T) {
 		mockClient := mocks.NewMockRouteTablesClient(ctrl)
-		wrapper := manual.NewNetworkRouteTable(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkRouteTable(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Verify wrapper implements ListableWrapper interface
 		var _ sources.ListableWrapper = wrapper

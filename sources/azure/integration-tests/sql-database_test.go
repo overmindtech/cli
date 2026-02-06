@@ -106,8 +106,7 @@ func TestSQLDatabaseIntegration(t *testing.T) {
 
 			sqlDbWrapper := manual.NewSqlDatabase(
 				clients.NewSqlDatabasesClient(sqlDatabaseClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := sqlDbWrapper.Scopes()[0]
 
@@ -160,8 +159,7 @@ func TestSQLDatabaseIntegration(t *testing.T) {
 
 			sqlDbWrapper := manual.NewSqlDatabase(
 				clients.NewSqlDatabasesClient(sqlDatabaseClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := sqlDbWrapper.Scopes()[0]
 
@@ -208,8 +206,7 @@ func TestSQLDatabaseIntegration(t *testing.T) {
 
 			sqlDbWrapper := manual.NewSqlDatabase(
 				clients.NewSqlDatabasesClient(sqlDatabaseClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := sqlDbWrapper.Scopes()[0]
 

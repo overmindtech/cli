@@ -11,6 +11,8 @@ import (
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
+	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/cli/discovery"
 )
 
 var BatchAccountLookupByName = shared.NewItemTypeLookup("name", azureshared.BatchBatchAccount)
@@ -18,15 +20,14 @@ var BatchAccountLookupByName = shared.NewItemTypeLookup("name", azureshared.Batc
 type batchAccountWrapper struct {
 	client clients.BatchAccountsClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewBatchAccount(client clients.BatchAccountsClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewBatchAccount(client clients.BatchAccountsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &batchAccountWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			azureshared.BatchBatchAccount,
 		),
@@ -34,11 +35,11 @@ func NewBatchAccount(client clients.BatchAccountsClient, subscriptionID, resourc
 }
 
 func (b batchAccountWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = b.ResourceGroup()
+	rgScope, err := b.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, b.Type())
 	}
-	pager := b.client.ListByResourceGroup(ctx, resourceGroup)
+	pager := b.client.ListByResourceGroup(ctx, rgScope.ResourceGroup)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -63,6 +64,33 @@ func (b batchAccountWrapper) List(ctx context.Context, scope string) ([]*sdp.Ite
 	return items, nil
 }
 
+func (b batchAccountWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	rgScope, err := b.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, b.Type()))
+		return
+	}
+	pager := b.client.ListByResourceGroup(ctx, rgScope.ResourceGroup)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, b.Type()))
+			return
+		}
+		for _, account := range page.Value {
+			if account.Name == nil {
+				continue
+			}
+			item, sdpErr := b.azureBatchAccountToSDPItem(account, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
+}
 func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Account, scope string) (*sdp.Item, *sdp.QueryError) {
 	if account.Name == nil {
 		return nil, azureshared.QueryError(errors.New("name is nil"), scope, b.Type())
@@ -449,11 +477,11 @@ func (b batchAccountWrapper) Get(ctx context.Context, scope string, queryParts .
 		return nil, azureshared.QueryError(errors.New("accountName is empty"), scope, b.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = b.ResourceGroup()
+	rgScope, err := b.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, b.Type())
 	}
-	resp, err := b.client.Get(ctx, resourceGroup, accountName)
+	resp, err := b.client.Get(ctx, rgScope.ResourceGroup, accountName)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, b.Type())
 	}

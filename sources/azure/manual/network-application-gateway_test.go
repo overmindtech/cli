@@ -40,7 +40,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 				ApplicationGateway: *applicationGateway,
 			}, nil)
 
-		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkApplicationGateway(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], agName, true)
@@ -339,7 +339,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockApplicationGatewaysClient(ctrl)
 
-		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkApplicationGateway(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Test with wrong number of query parts - need to call through the wrapper directly
 		_, qErr := wrapper.Get(ctx, wrapper.Scopes()[0], "part1", "part2")
@@ -351,7 +351,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 	t.Run("Get_EmptyName", func(t *testing.T) {
 		mockClient := mocks.NewMockApplicationGatewaysClient(ctrl)
 
-		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkApplicationGateway(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name - validation happens before client.Get is called
@@ -377,7 +377,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 				ApplicationGateway: *applicationGateway,
 			}, nil)
 
-		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkApplicationGateway(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-ag", true)
@@ -391,7 +391,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "test-ag", nil).Return(
 			armnetwork.ApplicationGatewaysClientGetResponse{}, errors.New("not found"))
 
-		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkApplicationGateway(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-ag", true)
@@ -421,7 +421,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 
 		mockClient.EXPECT().List(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkApplicationGateway(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -480,7 +480,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 
 		mockClient.EXPECT().List(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkApplicationGateway(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -511,7 +511,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 
 		mockClient.EXPECT().List(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkApplicationGateway(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -535,7 +535,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 				ApplicationGateway: *applicationGateway,
 			}, nil)
 
-		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkApplicationGateway(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], agName, true)
@@ -562,7 +562,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 
 	t.Run("InterfaceCompliance", func(t *testing.T) {
 		mockClient := mocks.NewMockApplicationGatewaysClient(ctrl)
-		wrapper := manual.NewNetworkApplicationGateway(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkApplicationGateway(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Verify adapter implements ListableAdapter interface

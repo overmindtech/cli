@@ -145,8 +145,7 @@ func TestComputeVirtualMachineRunCommandIntegration(t *testing.T) {
 
 			runCommandWrapper := manual.NewComputeVirtualMachineRunCommand(
 				clients.NewVirtualMachineRunCommandsClient(runCommandClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := runCommandWrapper.Scopes()[0]
 
@@ -192,8 +191,7 @@ func TestComputeVirtualMachineRunCommandIntegration(t *testing.T) {
 
 			runCommandWrapper := manual.NewComputeVirtualMachineRunCommand(
 				clients.NewVirtualMachineRunCommandsClient(runCommandClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := runCommandWrapper.Scopes()[0]
 
@@ -242,8 +240,7 @@ func TestComputeVirtualMachineRunCommandIntegration(t *testing.T) {
 
 			runCommandWrapper := manual.NewComputeVirtualMachineRunCommand(
 				clients.NewVirtualMachineRunCommandsClient(runCommandClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := runCommandWrapper.Scopes()[0]
 

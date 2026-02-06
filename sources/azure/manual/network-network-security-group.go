@@ -35,15 +35,14 @@ func appendIPOrCIDRLinkIfValid(queries *[]*sdp.LinkedItemQuery, prefix string) {
 type networkNetworkSecurityGroupWrapper struct {
 	client clients.NetworkSecurityGroupsClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewNetworkNetworkSecurityGroup(client clients.NetworkSecurityGroupsClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewNetworkNetworkSecurityGroup(client clients.NetworkSecurityGroupsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &networkNetworkSecurityGroupWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 			azureshared.NetworkNetworkSecurityGroup,
 		),
@@ -52,11 +51,11 @@ func NewNetworkNetworkSecurityGroup(client clients.NetworkSecurityGroupsClient, 
 
 // reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-security-groups/list?view=rest-virtualnetwork-2025-03-01&tabs=HTTP
 func (n networkNetworkSecurityGroupWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	pager := n.client.List(ctx, resourceGroup, nil)
+	pager := n.client.List(ctx, rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -79,11 +78,12 @@ func (n networkNetworkSecurityGroupWrapper) List(ctx context.Context, scope stri
 }
 
 func (n networkNetworkSecurityGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, n.Type()))
+		return
 	}
-	pager := n.client.List(ctx, resourceGroup, nil)
+	pager := n.client.List(ctx, rgScope.ResourceGroup, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -112,11 +112,11 @@ func (n networkNetworkSecurityGroupWrapper) Get(ctx context.Context, scope strin
 	}
 	networkSecurityGroupName := queryParts[0]
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	networkSecurityGroup, err := n.client.Get(ctx, resourceGroup, networkSecurityGroupName, nil)
+	networkSecurityGroup, err := n.client.Get(ctx, rgScope.ResourceGroup, networkSecurityGroupName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
 	}

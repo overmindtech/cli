@@ -82,8 +82,7 @@ func TestNetworkNetworkSecurityGroupIntegration(t *testing.T) {
 
 			nsgWrapper := manual.NewNetworkNetworkSecurityGroup(
 				clients.NewNetworkSecurityGroupsClient(nsgClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := nsgWrapper.Scopes()[0]
 
@@ -118,8 +117,7 @@ func TestNetworkNetworkSecurityGroupIntegration(t *testing.T) {
 
 			nsgWrapper := manual.NewNetworkNetworkSecurityGroup(
 				clients.NewNetworkSecurityGroupsClient(nsgClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := nsgWrapper.Scopes()[0]
 
@@ -163,8 +161,7 @@ func TestNetworkNetworkSecurityGroupIntegration(t *testing.T) {
 
 			nsgWrapper := manual.NewNetworkNetworkSecurityGroup(
 				clients.NewNetworkSecurityGroupsClient(nsgClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := nsgWrapper.Scopes()[0]
 
@@ -205,8 +202,7 @@ func TestNetworkNetworkSecurityGroupIntegration(t *testing.T) {
 
 			nsgWrapper := manual.NewNetworkNetworkSecurityGroup(
 				clients.NewNetworkSecurityGroupsClient(nsgClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := nsgWrapper.Scopes()[0]
 

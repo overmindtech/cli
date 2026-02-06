@@ -19,15 +19,14 @@ var ComputeAvailabilitySetLookupByName = shared.NewItemTypeLookup("name", azures
 type computeAvailabilitySetWrapper struct {
 	client clients.AvailabilitySetsClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewComputeAvailabilitySet(client clients.AvailabilitySetsClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewComputeAvailabilitySet(client clients.AvailabilitySetsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &computeAvailabilitySetWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			azureshared.ComputeAvailabilitySet,
 		),
@@ -36,11 +35,11 @@ func NewComputeAvailabilitySet(client clients.AvailabilitySetsClient, subscripti
 
 // ref: https://learn.microsoft.com/en-us/rest/api/compute/availability-sets/list?view=rest-compute-2025-04-01&tabs=HTTP
 func (c computeAvailabilitySetWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	pager := c.client.NewListPager(resourceGroup, nil)
+	pager := c.client.NewListPager(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -64,11 +63,12 @@ func (c computeAvailabilitySetWrapper) List(ctx context.Context, scope string) (
 }
 
 func (c computeAvailabilitySetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+		return
 	}
-	pager := c.client.NewListPager(resourceGroup, nil)
+	pager := c.client.NewListPager(rgScope.ResourceGroup, nil)
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -104,11 +104,11 @@ func (c computeAvailabilitySetWrapper) Get(ctx context.Context, scope string, qu
 		return nil, azureshared.QueryError(errors.New("availabilitySetName cannot be empty"), scope, c.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	availabilitySet, err := c.client.Get(ctx, resourceGroup, availabilitySetName, nil)
+	availabilitySet, err := c.client.Get(ctx, rgScope.ResourceGroup, availabilitySetName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}

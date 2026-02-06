@@ -19,15 +19,14 @@ var DBforPostgreSQLFlexibleServerLookupByName = shared.NewItemTypeLookup("name",
 type dbforPostgreSQLFlexibleServerWrapper struct {
 	client clients.PostgreSQLFlexibleServersClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewDBforPostgreSQLFlexibleServer(client clients.PostgreSQLFlexibleServersClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewDBforPostgreSQLFlexibleServer(client clients.PostgreSQLFlexibleServersClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &dbforPostgreSQLFlexibleServerWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 			azureshared.DBforPostgreSQLFlexibleServer,
 		),
@@ -44,11 +43,11 @@ func (s dbforPostgreSQLFlexibleServerWrapper) Get(ctx context.Context, scope str
 		return nil, azureshared.QueryError(errors.New("serverName is empty"), scope, s.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	resp, err := s.client.Get(ctx, resourceGroup, serverName, nil)
+	resp, err := s.client.Get(ctx, rgScope.ResourceGroup, serverName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
@@ -58,11 +57,11 @@ func (s dbforPostgreSQLFlexibleServerWrapper) Get(ctx context.Context, scope str
 
 // ref: https://learn.microsoft.com/en-us/rest/api/postgresql/servers/list-by-resource-group?view=rest-postgresql-2025-08-01&tabs=HTTP
 func (s dbforPostgreSQLFlexibleServerWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	pager := s.client.ListByResourceGroup(ctx, resourceGroup, nil)
+	pager := s.client.ListByResourceGroup(ctx, rgScope.ResourceGroup, nil)
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)

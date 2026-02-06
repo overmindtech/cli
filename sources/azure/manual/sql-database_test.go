@@ -80,7 +80,7 @@ func TestSqlDatabase(t *testing.T) {
 			}, nil)
 
 		testClient := &testSqlDatabasesClient{MockSqlDatabasesClient: mockClient}
-		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Get requires serverName and databaseName as query parts
@@ -153,7 +153,7 @@ func TestSqlDatabase(t *testing.T) {
 			}, nil)
 
 		testClient := &testSqlDatabasesClient{MockSqlDatabasesClient: mockClient}
-		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := serverName + shared.QuerySeparator + databaseName
@@ -207,7 +207,7 @@ func TestSqlDatabase(t *testing.T) {
 		mockClient := mocks.NewMockSqlDatabasesClient(ctrl)
 		testClient := &testSqlDatabasesClient{MockSqlDatabasesClient: mockClient}
 
-		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (only server name)
@@ -237,7 +237,7 @@ func TestSqlDatabase(t *testing.T) {
 			pager:                  mockPager,
 		}
 
-		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -295,7 +295,7 @@ func TestSqlDatabase(t *testing.T) {
 			pager:                  mockPager,
 		}
 
-		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -322,7 +322,7 @@ func TestSqlDatabase(t *testing.T) {
 		mockClient := mocks.NewMockSqlDatabasesClient(ctrl)
 		testClient := &testSqlDatabasesClient{MockSqlDatabasesClient: mockClient}
 
-		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Test Search directly with no query parts - should return error before calling ListByServer
 		_, qErr := wrapper.Search(ctx, wrapper.Scopes()[0])
@@ -339,7 +339,7 @@ func TestSqlDatabase(t *testing.T) {
 			armsql.DatabasesClientGetResponse{}, expectedErr)
 
 		testClient := &testSqlDatabasesClient{MockSqlDatabasesClient: mockClient}
-		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := serverName + shared.QuerySeparator + "nonexistent-database"
@@ -359,7 +359,7 @@ func TestSqlDatabase(t *testing.T) {
 			pager:                  errorPager,
 		}
 
-		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -377,7 +377,7 @@ func TestSqlDatabase(t *testing.T) {
 	t.Run("InterfaceCompliance", func(t *testing.T) {
 		mockClient := mocks.NewMockSqlDatabasesClient(ctrl)
 		testClient := &testSqlDatabasesClient{MockSqlDatabasesClient: mockClient}
-		wrapper := manual.NewSqlDatabase(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlDatabase(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Cast to sources.Wrapper to access interface methods
 		w := wrapper.(sources.Wrapper)

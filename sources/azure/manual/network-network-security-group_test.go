@@ -39,7 +39,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 				SecurityGroup: *nsg,
 			}, nil)
 
-		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], nsgName, true)
@@ -151,7 +151,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockNetworkSecurityGroupsClient(ctrl)
 
-		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name - Get will still be called with empty string
@@ -180,7 +180,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 				SecurityGroup: *nsg,
 			}, nil)
 
-		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-nsg", true)
@@ -210,7 +210,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 
 		mockClient.EXPECT().List(ctx, resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -270,7 +270,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 
 		mockClient.EXPECT().List(ctx, resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -304,7 +304,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 
 		mockClient.EXPECT().List(ctx, resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -325,7 +325,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-nsg", nil).Return(
 			armnetwork.SecurityGroupsClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-nsg", true)
@@ -366,7 +366,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 				SecurityGroup: *nsg,
 			}, nil)
 
-		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], nsgName, true)
@@ -407,7 +407,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 
 	t.Run("InterfaceCompliance", func(t *testing.T) {
 		mockClient := mocks.NewMockNetworkSecurityGroupsClient(ctrl)
-		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkSecurityGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Verify wrapper implements ListableWrapper interface
 		var _ = wrapper

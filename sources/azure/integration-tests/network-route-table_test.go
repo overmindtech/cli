@@ -100,8 +100,7 @@ func TestNetworkRouteTableIntegration(t *testing.T) {
 
 			routeTableWrapper := manual.NewNetworkRouteTable(
 				clients.NewRouteTablesClient(routeTableClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := routeTableWrapper.Scopes()[0]
 
@@ -136,8 +135,7 @@ func TestNetworkRouteTableIntegration(t *testing.T) {
 
 			routeTableWrapper := manual.NewNetworkRouteTable(
 				clients.NewRouteTablesClient(routeTableClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := routeTableWrapper.Scopes()[0]
 
@@ -181,8 +179,7 @@ func TestNetworkRouteTableIntegration(t *testing.T) {
 
 			routeTableWrapper := manual.NewNetworkRouteTable(
 				clients.NewRouteTablesClient(routeTableClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := routeTableWrapper.Scopes()[0]
 
@@ -223,8 +220,7 @@ func TestNetworkRouteTableIntegration(t *testing.T) {
 
 			routeTableWrapper := manual.NewNetworkRouteTable(
 				clients.NewRouteTablesClient(routeTableClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := routeTableWrapper.Scopes()[0]
 

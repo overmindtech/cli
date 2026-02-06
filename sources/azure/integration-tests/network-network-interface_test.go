@@ -100,8 +100,7 @@ func TestNetworkNetworkInterfaceIntegration(t *testing.T) {
 
 			nicWrapper := manual.NewNetworkNetworkInterface(
 				clients.NewNetworkInterfacesClient(nicClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := nicWrapper.Scopes()[0]
 
@@ -136,8 +135,7 @@ func TestNetworkNetworkInterfaceIntegration(t *testing.T) {
 
 			nicWrapper := manual.NewNetworkNetworkInterface(
 				clients.NewNetworkInterfacesClient(nicClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := nicWrapper.Scopes()[0]
 
@@ -178,8 +176,7 @@ func TestNetworkNetworkInterfaceIntegration(t *testing.T) {
 
 			nicWrapper := manual.NewNetworkNetworkInterface(
 				clients.NewNetworkInterfacesClient(nicClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := nicWrapper.Scopes()[0]
 

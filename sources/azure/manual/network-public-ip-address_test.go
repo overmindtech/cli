@@ -39,7 +39,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 				PublicIPAddress: *publicIP,
 			}, nil)
 
-		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkPublicIPAddress(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], publicIPName, true)
@@ -137,7 +137,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 				PublicIPAddress: *publicIP,
 			}, nil)
 
-		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkPublicIPAddress(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], publicIPName, true)
@@ -170,7 +170,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 				PublicIPAddress: *publicIP,
 			}, nil)
 
-		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkPublicIPAddress(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], publicIPName, true)
@@ -206,7 +206,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 				PublicIPAddress: *publicIP,
 			}, nil)
 
-		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkPublicIPAddress(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], publicIPName, true)
@@ -234,7 +234,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockPublicIPAddressesClient(ctrl)
 
-		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkPublicIPAddress(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty name - Get will still be called with empty string
@@ -269,7 +269,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 
 		mockClient.EXPECT().List(ctx, resourceGroup).Return(mockPager)
 
-		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkPublicIPAddress(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -332,7 +332,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 
 		mockClient.EXPECT().List(ctx, resourceGroup).Return(mockPager)
 
-		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkPublicIPAddress(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -361,7 +361,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-ip").Return(
 			armnetwork.PublicIPAddressesClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkPublicIPAddress(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-ip", true)
@@ -385,7 +385,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 
 		mockClient.EXPECT().List(ctx, resourceGroup).Return(mockPager)
 
-		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkPublicIPAddress(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -401,7 +401,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 
 	t.Run("InterfaceCompliance", func(t *testing.T) {
 		mockClient := mocks.NewMockPublicIPAddressesClient(ctrl)
-		wrapper := manual.NewNetworkPublicIPAddress(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkPublicIPAddress(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Verify wrapper implements ListableWrapper interface
 		var _ = wrapper

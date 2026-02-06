@@ -161,8 +161,7 @@ func TestComputeAvailabilitySetIntegration(t *testing.T) {
 
 			avSetWrapper := manual.NewComputeAvailabilitySet(
 				clients.NewAvailabilitySetsClient(avSetClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := avSetWrapper.Scopes()[0]
 
@@ -201,8 +200,7 @@ func TestComputeAvailabilitySetIntegration(t *testing.T) {
 
 			avSetWrapper := manual.NewComputeAvailabilitySet(
 				clients.NewAvailabilitySetsClient(avSetClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := avSetWrapper.Scopes()[0]
 
@@ -249,8 +247,7 @@ func TestComputeAvailabilitySetIntegration(t *testing.T) {
 
 			avSetWrapper := manual.NewComputeAvailabilitySet(
 				clients.NewAvailabilitySetsClient(avSetClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := avSetWrapper.Scopes()[0]
 
@@ -313,8 +310,7 @@ func TestComputeAvailabilitySetIntegration(t *testing.T) {
 
 			avSetWrapper := manual.NewComputeAvailabilitySet(
 				clients.NewAvailabilitySetsClient(avSetClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := avSetWrapper.Scopes()[0]
 

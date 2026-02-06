@@ -80,7 +80,7 @@ func TestStorageFileShare(t *testing.T) {
 			}, nil)
 
 		testClient := &testFileSharesClient{MockFileSharesClient: mockClient}
-		wrapper := manual.NewStorageFileShare(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageFileShare(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Get requires storageAccountName and shareName as query parts
@@ -141,7 +141,7 @@ func TestStorageFileShare(t *testing.T) {
 		mockClient := mocks.NewMockFileSharesClient(ctrl)
 		testClient := &testFileSharesClient{MockFileSharesClient: mockClient}
 
-		wrapper := manual.NewStorageFileShare(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageFileShare(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (only storage account name)
@@ -192,7 +192,7 @@ func TestStorageFileShare(t *testing.T) {
 			pager:                mockPager,
 		}
 
-		wrapper := manual.NewStorageFileShare(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageFileShare(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -226,7 +226,7 @@ func TestStorageFileShare(t *testing.T) {
 		mockClient := mocks.NewMockFileSharesClient(ctrl)
 		testClient := &testFileSharesClient{MockFileSharesClient: mockClient}
 
-		wrapper := manual.NewStorageFileShare(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageFileShare(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Test Search directly with no query parts - should return error before calling List
 		_, qErr := wrapper.Search(ctx, wrapper.Scopes()[0])
@@ -262,7 +262,7 @@ func TestStorageFileShare(t *testing.T) {
 			pager:                mockPager,
 		}
 
-		wrapper := manual.NewStorageFileShare(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageFileShare(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -293,7 +293,7 @@ func TestStorageFileShare(t *testing.T) {
 			armstorage.FileSharesClientGetResponse{}, expectedErr)
 
 		testClient := &testFileSharesClient{MockFileSharesClient: mockClient}
-		wrapper := manual.NewStorageFileShare(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageFileShare(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := storageAccountName + shared.QuerySeparator + "nonexistent-share"
@@ -313,7 +313,7 @@ func TestStorageFileShare(t *testing.T) {
 			pager:                errorPager,
 		}
 
-		wrapper := manual.NewStorageFileShare(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageFileShare(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)

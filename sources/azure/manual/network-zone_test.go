@@ -40,7 +40,7 @@ func TestNetworkZone(t *testing.T) {
 				Zone: *zone,
 			}, nil)
 
-		wrapper := manual.NewNetworkZone(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkZone(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], zoneName, true)
@@ -141,7 +141,7 @@ func TestNetworkZone(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockZonesClient(ctrl)
 
-		wrapper := manual.NewNetworkZone(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkZone(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty name - the client will be called but will return an error
@@ -179,7 +179,7 @@ func TestNetworkZone(t *testing.T) {
 				Zone: *zone,
 			}, nil)
 
-		wrapper := manual.NewNetworkZone(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkZone(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], zoneName, true)
@@ -224,7 +224,7 @@ func TestNetworkZone(t *testing.T) {
 
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkZone(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkZone(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -285,7 +285,7 @@ func TestNetworkZone(t *testing.T) {
 
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkZone(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkZone(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -315,7 +315,7 @@ func TestNetworkZone(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-zone", nil).Return(
 			armdns.ZonesClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewNetworkZone(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkZone(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-zone", true)
@@ -339,7 +339,7 @@ func TestNetworkZone(t *testing.T) {
 
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkZone(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkZone(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -355,7 +355,7 @@ func TestNetworkZone(t *testing.T) {
 
 	t.Run("InterfaceCompliance", func(t *testing.T) {
 		mockClient := mocks.NewMockZonesClient(ctrl)
-		wrapper := manual.NewNetworkZone(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkZone(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Verify wrapper implements ListableWrapper interface
 		var _ = wrapper
@@ -454,7 +454,7 @@ func TestNetworkZone(t *testing.T) {
 				Zone: *zone,
 			}, nil)
 
-		wrapper := manual.NewNetworkZone(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkZone(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], zoneName, true)

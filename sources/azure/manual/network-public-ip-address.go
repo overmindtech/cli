@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
+	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
@@ -19,15 +21,14 @@ var NetworkPublicIPAddressLookupByName = shared.NewItemTypeLookup("name", azures
 type networkPublicIPAddressWrapper struct {
 	client clients.PublicIPAddressesClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewNetworkPublicIPAddress(client clients.PublicIPAddressesClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewNetworkPublicIPAddress(client clients.PublicIPAddressesClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &networkPublicIPAddressWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 			azureshared.NetworkPublicIPAddress,
 		),
@@ -37,11 +38,11 @@ func NewNetworkPublicIPAddress(client clients.PublicIPAddressesClient, subscript
 // reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/public-ip-addresses/list?view=rest-virtualnetwork-2025-03-01&tabs=HTTP
 // GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPAddresses?api-version=2025-03-01
 func (n networkPublicIPAddressWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	pager := n.client.List(ctx, resourceGroup)
+	pager := n.client.List(ctx, rgScope.ResourceGroup)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -66,6 +67,33 @@ func (n networkPublicIPAddressWrapper) List(ctx context.Context, scope string) (
 	return items, nil
 }
 
+func (n networkPublicIPAddressWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, n.Type()))
+		return
+	}
+	pager := n.client.List(ctx, rgScope.ResourceGroup)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, n.Type()))
+			return
+		}
+		for _, publicIPAddress := range page.Value {
+			if publicIPAddress.Name == nil {
+				continue
+			}
+			item, sdpErr := n.azurePublicIPAddressToSDPItem(publicIPAddress, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
+}
 // reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/public-ip-addresses/get?view=rest-virtualnetwork-2025-03-01&tabs=HTTP
 // GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/publicIPAddresses/{publicIpAddressName}?api-version=2025-03-01
 func (n networkPublicIPAddressWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
@@ -75,11 +103,11 @@ func (n networkPublicIPAddressWrapper) Get(ctx context.Context, scope string, qu
 
 	publicIPAddressName := queryParts[0]
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	publicIPAddress, err := n.client.Get(ctx, resourceGroup, publicIPAddressName)
+	publicIPAddress, err := n.client.Get(ctx, rgScope.ResourceGroup, publicIPAddressName)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, n.Type())
 	}

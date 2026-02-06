@@ -126,8 +126,7 @@ func TestNetworkPublicIPAddressIntegration(t *testing.T) {
 
 			publicIPWrapper := manual.NewNetworkPublicIPAddress(
 				clients.NewPublicIPAddressesClient(publicIPClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := publicIPWrapper.Scopes()[0]
 
@@ -178,8 +177,7 @@ func TestNetworkPublicIPAddressIntegration(t *testing.T) {
 
 			publicIPWrapper := manual.NewNetworkPublicIPAddress(
 				clients.NewPublicIPAddressesClient(publicIPClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := publicIPWrapper.Scopes()[0]
 
@@ -223,8 +221,7 @@ func TestNetworkPublicIPAddressIntegration(t *testing.T) {
 
 			publicIPWrapper := manual.NewNetworkPublicIPAddress(
 				clients.NewPublicIPAddressesClient(publicIPClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := publicIPWrapper.Scopes()[0]
 

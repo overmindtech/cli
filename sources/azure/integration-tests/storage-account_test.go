@@ -77,8 +77,7 @@ func TestStorageAccountIntegration(t *testing.T) {
 
 			saWrapper := manual.NewStorageAccount(
 				clients.NewStorageAccountsClient(saClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := saWrapper.Scopes()[0]
 
@@ -116,8 +115,7 @@ func TestStorageAccountIntegration(t *testing.T) {
 
 			saWrapper := manual.NewStorageAccount(
 				clients.NewStorageAccountsClient(saClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := saWrapper.Scopes()[0]
 
@@ -164,8 +162,7 @@ func TestStorageAccountIntegration(t *testing.T) {
 
 			saWrapper := manual.NewStorageAccount(
 				clients.NewStorageAccountsClient(saClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := saWrapper.Scopes()[0]
 

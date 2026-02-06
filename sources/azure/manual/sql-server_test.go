@@ -81,7 +81,7 @@ func TestSqlServer(t *testing.T) {
 			}, nil)
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
@@ -411,7 +411,7 @@ func TestSqlServer(t *testing.T) {
 			}, nil)
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
@@ -471,7 +471,7 @@ func TestSqlServer(t *testing.T) {
 			}, nil)
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
@@ -537,7 +537,7 @@ func TestSqlServer(t *testing.T) {
 			}, nil)
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
@@ -603,7 +603,7 @@ func TestSqlServer(t *testing.T) {
 			}, nil)
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
@@ -649,7 +649,7 @@ func TestSqlServer(t *testing.T) {
 			}, nil)
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
@@ -688,7 +688,7 @@ func TestSqlServer(t *testing.T) {
 			}, nil)
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], serverName, true)
@@ -720,7 +720,7 @@ func TestSqlServer(t *testing.T) {
 		mockClient := mocks.NewMockSqlServersClient(ctrl)
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
 
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (no server name)
@@ -750,7 +750,7 @@ func TestSqlServer(t *testing.T) {
 			pager:                mockPager,
 		}
 
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -811,7 +811,7 @@ func TestSqlServer(t *testing.T) {
 			pager:                mockPager,
 		}
 
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -854,7 +854,7 @@ func TestSqlServer(t *testing.T) {
 			pager:                mockPager,
 		}
 
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
@@ -905,7 +905,7 @@ func TestSqlServer(t *testing.T) {
 			armsql.ServersClientGetResponse{}, expectedErr)
 
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-server", true)
@@ -924,7 +924,7 @@ func TestSqlServer(t *testing.T) {
 			pager:                errorPager,
 		}
 
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -949,7 +949,7 @@ func TestSqlServer(t *testing.T) {
 			pager:                errorPager,
 		}
 
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		var errs []error
@@ -975,7 +975,7 @@ func TestSqlServer(t *testing.T) {
 	t.Run("InterfaceCompliance", func(t *testing.T) {
 		mockClient := mocks.NewMockSqlServersClient(ctrl)
 		testClient := &testSqlServersClient{MockSqlServersClient: mockClient}
-		wrapper := manual.NewSqlServer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewSqlServer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Cast to sources.Wrapper to access interface methods
 		w := wrapper.(sources.Wrapper)

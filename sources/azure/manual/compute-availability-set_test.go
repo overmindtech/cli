@@ -39,7 +39,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 				AvailabilitySet: *avSet,
 			}, nil)
 
-		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeAvailabilitySet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], availabilitySetName, true)
@@ -114,7 +114,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 				AvailabilitySet: *avSet,
 			}, nil)
 
-		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeAvailabilitySet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], availabilitySetName, true)
@@ -160,7 +160,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 				AvailabilitySet: *avSet,
 			}, nil)
 
-		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeAvailabilitySet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], availabilitySetName, true)
@@ -182,7 +182,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeAvailabilitySet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -219,7 +219,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeAvailabilitySet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
@@ -277,7 +277,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeAvailabilitySet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -303,7 +303,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-avset", nil).Return(
 			armcompute.AvailabilitySetsClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeAvailabilitySet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-avset", true)
@@ -315,7 +315,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 	t.Run("GetWithEmptyName", func(t *testing.T) {
 		mockClient := mocks.NewMockAvailabilitySetsClient(ctrl)
 
-		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeAvailabilitySet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
@@ -327,7 +327,7 @@ func TestComputeAvailabilitySet(t *testing.T) {
 	t.Run("GetWithInsufficientQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockAvailabilitySetsClient(ctrl)
 
-		wrapper := manual.NewComputeAvailabilitySet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeAvailabilitySet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		// Test the wrapper's Get method directly with insufficient query parts
 		_, qErr := wrapper.Get(ctx, wrapper.Scopes()[0])
 		if qErr == nil {

@@ -18,15 +18,14 @@ var ComputeVirtualMachineExtensionLookupByName = shared.NewItemTypeLookup("name"
 type computeVirtualMachineExtensionWrapper struct {
 	client clients.VirtualMachineExtensionsClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewComputeVirtualMachineExtension(client clients.VirtualMachineExtensionsClient, subscriptionID, resourceGroup string) sources.SearchableWrapper {
+func NewComputeVirtualMachineExtension(client clients.VirtualMachineExtensionsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.SearchableWrapper {
 	return &computeVirtualMachineExtensionWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			azureshared.ComputeVirtualMachineExtension,
 		),
@@ -46,11 +45,11 @@ func (c computeVirtualMachineExtensionWrapper) Get(ctx context.Context, scope st
 		return nil, azureshared.QueryError(fmt.Errorf("extensionName cannot be empty"), scope, c.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	resp, err := c.client.Get(ctx, resourceGroup, virtualMachineName, extensionName, nil)
+	resp, err := c.client.Get(ctx, rgScope.ResourceGroup, virtualMachineName, extensionName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
@@ -226,12 +225,12 @@ func (c computeVirtualMachineExtensionWrapper) Search(ctx context.Context, scope
 		return nil, azureshared.QueryError(fmt.Errorf("virtualMachineName cannot be empty"), scope, c.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
 
-	resp, err := c.client.List(ctx, resourceGroup, virtualMachineName, nil)
+	resp, err := c.client.List(ctx, rgScope.ResourceGroup, virtualMachineName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}

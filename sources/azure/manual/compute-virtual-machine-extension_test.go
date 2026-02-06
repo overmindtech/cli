@@ -39,7 +39,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 				VirtualMachineExtension: *extension,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		scope := subscriptionID + "." + resourceGroup
@@ -90,7 +90,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 				VirtualMachineExtension: *extension,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		scope := subscriptionID + "." + resourceGroup
@@ -156,7 +156,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 				VirtualMachineExtension: *extension,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		scope := subscriptionID + "." + resourceGroup
@@ -212,7 +212,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 				VirtualMachineExtension: *extension,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		scope := subscriptionID + "." + resourceGroup
@@ -271,7 +271,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 				VirtualMachineExtension: *extension,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		scope := subscriptionID + "." + resourceGroup
@@ -313,7 +313,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 				VirtualMachineExtension: *extension,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		scope := subscriptionID + "." + resourceGroup
@@ -360,7 +360,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 				VirtualMachineExtension: *extension,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		scope := subscriptionID + "." + resourceGroup
@@ -398,7 +398,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 		t.Run("InvalidQueryParts", func(t *testing.T) {
 			mockClient := mocks.NewMockVirtualMachineExtensionsClient(ctrl)
 
-			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			scope := subscriptionID + "." + resourceGroup
@@ -418,7 +418,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 
 		t.Run("EmptyVirtualMachineName", func(t *testing.T) {
 			mockClient := mocks.NewMockVirtualMachineExtensionsClient(ctrl)
-			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			scope := subscriptionID + "." + resourceGroup
@@ -430,7 +430,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 
 		t.Run("EmptyExtensionName", func(t *testing.T) {
 			mockClient := mocks.NewMockVirtualMachineExtensionsClient(ctrl)
-			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			scope := subscriptionID + "." + resourceGroup
@@ -446,7 +446,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 				armcompute.VirtualMachineExtensionsClientGetResponse{},
 				errors.New("client error"))
 
-			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			scope := subscriptionID + "." + resourceGroup
@@ -473,7 +473,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 				},
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -502,7 +502,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 		t.Run("InvalidQueryParts", func(t *testing.T) {
 			mockClient := mocks.NewMockVirtualMachineExtensionsClient(ctrl)
 
-			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -532,7 +532,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 				armcompute.VirtualMachineExtensionsClientListResponse{},
 				errors.New("client error"))
 
-			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -561,7 +561,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 					},
 				}, nil)
 
-			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -584,7 +584,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 
 	t.Run("PotentialLinks", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineExtensionsClient(ctrl)
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		links := wrapper.PotentialLinks()
 
@@ -605,7 +605,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 
 	t.Run("GetLookups", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineExtensionsClient(ctrl)
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		lookups := wrapper.GetLookups()
 		if len(lookups) != 2 {
@@ -625,7 +625,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 
 	t.Run("SearchLookups", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineExtensionsClient(ctrl)
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		searchLookups := wrapper.SearchLookups()
 		if len(searchLookups) != 1 {
@@ -644,7 +644,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 
 	t.Run("TerraformMappings", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineExtensionsClient(ctrl)
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		mappings := wrapper.TerraformMappings()
 		if len(mappings) != 1 {
@@ -662,7 +662,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 
 	t.Run("IAMPermissions", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineExtensionsClient(ctrl)
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		permissions := wrapper.IAMPermissions()
 		if len(permissions) != 1 {
@@ -677,7 +677,7 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 
 	t.Run("PredefinedRole", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineExtensionsClient(ctrl)
-		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineExtension(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// PredefinedRole is available on the wrapper, not the adapter
 		role := wrapper.(interface{ PredefinedRole() string }).PredefinedRole()

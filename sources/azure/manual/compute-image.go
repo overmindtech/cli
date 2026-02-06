@@ -20,15 +20,14 @@ var ComputeImageLookupByName = shared.NewItemTypeLookup("name", azureshared.Comp
 
 type computeImageWrapper struct {
 	client clients.ImagesClient
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewComputeImage(client clients.ImagesClient, subscriptionID, resourceGroup string) sources.ListStreamableWrapper {
+func NewComputeImage(client clients.ImagesClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListStreamableWrapper {
 	return &computeImageWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			azureshared.ComputeImage,
 		),
@@ -36,11 +35,11 @@ func NewComputeImage(client clients.ImagesClient, subscriptionID, resourceGroup 
 }
 
 func (c computeImageWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	pager := c.client.NewListByResourceGroupPager(resourceGroup, nil)
+	pager := c.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -63,11 +62,12 @@ func (c computeImageWrapper) List(ctx context.Context, scope string) ([]*sdp.Ite
 }
 
 func (c computeImageWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+		return
 	}
-	pager := c.client.NewListByResourceGroupPager(resourceGroup, nil)
+	pager := c.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -94,11 +94,11 @@ func (c computeImageWrapper) Get(ctx context.Context, scope string, queryParts .
 		return nil, azureshared.QueryError(errors.New("queryParts must be exactly 1 and be the image name"), scope, c.Type())
 	}
 	imageName := queryParts[0]
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	image, err := c.client.Get(ctx, resourceGroup, imageName, nil)
+	image, err := c.client.Get(ctx, rgScope.ResourceGroup, imageName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}

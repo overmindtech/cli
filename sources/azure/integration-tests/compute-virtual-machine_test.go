@@ -128,8 +128,7 @@ func TestComputeVirtualMachineIntegration(t *testing.T) {
 
 			vmWrapper := manual.NewComputeVirtualMachine(
 				clients.NewVirtualMachinesClient(vmClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := vmWrapper.Scopes()[0]
 
@@ -164,8 +163,7 @@ func TestComputeVirtualMachineIntegration(t *testing.T) {
 
 			vmWrapper := manual.NewComputeVirtualMachine(
 				clients.NewVirtualMachinesClient(vmClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := vmWrapper.Scopes()[0]
 
@@ -209,8 +207,7 @@ func TestComputeVirtualMachineIntegration(t *testing.T) {
 
 			vmWrapper := manual.NewComputeVirtualMachine(
 				clients.NewVirtualMachinesClient(vmClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := vmWrapper.Scopes()[0]
 

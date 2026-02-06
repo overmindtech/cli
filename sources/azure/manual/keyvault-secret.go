@@ -18,15 +18,14 @@ var KeyVaultSecretLookupByName = shared.NewItemTypeLookup("name", azureshared.Ke
 type keyvaultSecretWrapper struct {
 	client clients.SecretsClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewKeyVaultSecret(client clients.SecretsClient, subscriptionID, resourceGroup string) sources.SearchableWrapper {
+func NewKeyVaultSecret(client clients.SecretsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.SearchableWrapper {
 	return &keyvaultSecretWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 			azureshared.KeyVaultSecret,
 		),
@@ -48,11 +47,11 @@ func (k keyvaultSecretWrapper) Get(ctx context.Context, scope string, queryParts
 		return nil, azureshared.QueryError(errors.New("secretName cannot be empty"), scope, k.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = k.ResourceGroup()
+	rgScope, err := k.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
-	resp, err := k.client.Get(ctx, resourceGroup, vaultName, secretName, nil)
+	resp, err := k.client.Get(ctx, rgScope.ResourceGroup, vaultName, secretName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
@@ -71,11 +70,11 @@ func (k keyvaultSecretWrapper) Search(ctx context.Context, scope string, queryPa
 		return nil, azureshared.QueryError(errors.New("vaultName cannot be empty"), scope, k.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = k.ResourceGroup()
+	rgScope, err := k.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
-	pager := k.client.NewListPager(resourceGroup, vaultName, nil)
+	pager := k.client.NewListPager(rgScope.ResourceGroup, vaultName, nil)
 
 	var items []*sdp.Item
 	for pager.More() {

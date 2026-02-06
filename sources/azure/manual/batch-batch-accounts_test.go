@@ -55,7 +55,7 @@ func TestBatchAccount(t *testing.T) {
 				Account: *account,
 			}, nil)
 
-		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewBatchAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
@@ -211,7 +211,7 @@ func TestBatchAccount(t *testing.T) {
 	t.Run("Get_EmptyAccountName", func(t *testing.T) {
 		mockClient := mocks.NewMockBatchAccountsClient(ctrl)
 
-		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewBatchAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
@@ -223,7 +223,7 @@ func TestBatchAccount(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockBatchAccountsClient(ctrl)
 
-		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewBatchAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with no query parts
@@ -241,7 +241,7 @@ func TestBatchAccount(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, accountName).Return(
 			armbatch.AccountClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewBatchAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
@@ -267,7 +267,7 @@ func TestBatchAccount(t *testing.T) {
 
 		mockClient.EXPECT().ListByResourceGroup(ctx, resourceGroup).Return(mockPager)
 
-		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewBatchAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -313,7 +313,7 @@ func TestBatchAccount(t *testing.T) {
 
 		mockClient.EXPECT().ListByResourceGroup(ctx, resourceGroup).Return(mockPager)
 
-		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewBatchAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -344,7 +344,7 @@ func TestBatchAccount(t *testing.T) {
 
 		mockClient.EXPECT().ListByResourceGroup(ctx, resourceGroup).Return(mockPager)
 
-		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewBatchAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -360,7 +360,7 @@ func TestBatchAccount(t *testing.T) {
 
 	t.Run("GetLookups", func(t *testing.T) {
 		mockClient := mocks.NewMockBatchAccountsClient(ctrl)
-		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewBatchAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		lookups := wrapper.GetLookups()
 		if len(lookups) != 1 {
@@ -374,7 +374,7 @@ func TestBatchAccount(t *testing.T) {
 
 	t.Run("PotentialLinks", func(t *testing.T) {
 		mockClient := mocks.NewMockBatchAccountsClient(ctrl)
-		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewBatchAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		potentialLinks := wrapper.PotentialLinks()
 		expectedLinks := []shared.ItemType{
@@ -399,7 +399,7 @@ func TestBatchAccount(t *testing.T) {
 
 	t.Run("TerraformMappings", func(t *testing.T) {
 		mockClient := mocks.NewMockBatchAccountsClient(ctrl)
-		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewBatchAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		mappings := wrapper.TerraformMappings()
 		if len(mappings) != 1 {
@@ -417,7 +417,7 @@ func TestBatchAccount(t *testing.T) {
 
 	t.Run("IAMPermissions", func(t *testing.T) {
 		mockClient := mocks.NewMockBatchAccountsClient(ctrl)
-		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewBatchAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		permissions := wrapper.IAMPermissions()
 		expectedPermissions := []string{
@@ -437,7 +437,7 @@ func TestBatchAccount(t *testing.T) {
 
 	t.Run("PredefinedRole", func(t *testing.T) {
 		mockClient := mocks.NewMockBatchAccountsClient(ctrl)
-		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewBatchAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// PredefinedRole is available on the wrapper, not the adapter
 		role := wrapper.(interface{ PredefinedRole() string }).PredefinedRole()
@@ -466,7 +466,7 @@ func TestBatchAccount(t *testing.T) {
 				Account: *account,
 			}, nil)
 
-		wrapper := manual.NewBatchAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewBatchAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)

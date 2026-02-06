@@ -81,7 +81,7 @@ func TestKeyVaultVault(t *testing.T) {
 				Vault: *vault,
 			}, nil)
 
-		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultVault(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vaultName, true)
@@ -204,7 +204,7 @@ func TestKeyVaultVault(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockVaultsClient(ctrl)
 
-		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultVault(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty name
@@ -228,7 +228,7 @@ func TestKeyVaultVault(t *testing.T) {
 				Vault: *vault,
 			}, nil)
 
-		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultVault(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vaultName, true)
@@ -246,7 +246,7 @@ func TestKeyVaultVault(t *testing.T) {
 				Vault: *vault,
 			}, nil)
 
-		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultVault(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vaultName, true)
@@ -282,7 +282,7 @@ func TestKeyVaultVault(t *testing.T) {
 			pager:            mockPager,
 		}
 
-		wrapper := manual.NewKeyVaultVault(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultVault(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -321,7 +321,7 @@ func TestKeyVaultVault(t *testing.T) {
 			pager:            errorPager,
 		}
 
-		wrapper := manual.NewKeyVaultVault(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultVault(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -341,7 +341,7 @@ func TestKeyVaultVault(t *testing.T) {
 			armkeyvault.VaultsClientGetResponse{},
 			errors.New("client error"))
 
-		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultVault(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vaultName, true)
@@ -360,7 +360,7 @@ func TestKeyVaultVault(t *testing.T) {
 				Vault: *vault,
 			}, nil)
 
-		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultVault(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vaultName, true)
@@ -388,7 +388,7 @@ func TestKeyVaultVault(t *testing.T) {
 
 	t.Run("PotentialLinks", func(t *testing.T) {
 		mockClient := mocks.NewMockVaultsClient(ctrl)
-		wrapper := manual.NewKeyVaultVault(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultVault(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		links := wrapper.PotentialLinks()
 		if len(links) == 0 {

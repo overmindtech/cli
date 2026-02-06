@@ -11,6 +11,8 @@ import (
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
+	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/cli/sdpcache"
 )
 
 var StorageAccountLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageAccount)
@@ -18,15 +20,14 @@ var StorageAccountLookupByName = shared.NewItemTypeLookup("name", azureshared.St
 type storageAccountWrapper struct {
 	client clients.StorageAccountsClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewStorageAccount(client clients.StorageAccountsClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewStorageAccount(client clients.StorageAccountsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &storageAccountWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 			azureshared.StorageAccount,
 		),
@@ -34,11 +35,11 @@ func NewStorageAccount(client clients.StorageAccountsClient, subscriptionID, res
 }
 
 func (s storageAccountWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	pager := s.client.List(resourceGroup)
+	pager := s.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -63,6 +64,34 @@ func (s storageAccountWrapper) List(ctx context.Context, scope string) ([]*sdp.I
 	return items, nil
 }
 
+func (s storageAccountWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, s.Type()))
+		return
+	}
+	pager := s.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, s.Type()))
+			return
+		}
+		for _, account := range page.Value {
+			if account.Name == nil {
+				continue
+			}
+			item, sdpErr := s.azureStorageAccountToSDPItem(account, *account.Name, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+}
+}
+
 func (s storageAccountWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, &sdp.QueryError{
@@ -82,11 +111,11 @@ func (s storageAccountWrapper) Get(ctx context.Context, scope string, queryParts
 		}
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	resp, err := s.client.Get(ctx, resourceGroup, accountName)
+	resp, err := s.client.Get(ctx, rgScope.ResourceGroup, accountName)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, s.Type())
 	}

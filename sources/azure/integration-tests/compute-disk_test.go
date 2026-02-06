@@ -82,8 +82,7 @@ func TestComputeDiskIntegration(t *testing.T) {
 
 			diskWrapper := manual.NewComputeDisk(
 				clients.NewDisksClient(diskClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := diskWrapper.Scopes()[0]
 
@@ -118,8 +117,7 @@ func TestComputeDiskIntegration(t *testing.T) {
 
 			diskWrapper := manual.NewComputeDisk(
 				clients.NewDisksClient(diskClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := diskWrapper.Scopes()[0]
 
@@ -163,8 +161,7 @@ func TestComputeDiskIntegration(t *testing.T) {
 
 			diskWrapper := manual.NewComputeDisk(
 				clients.NewDisksClient(diskClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := diskWrapper.Scopes()[0]
 
@@ -205,8 +202,7 @@ func TestComputeDiskIntegration(t *testing.T) {
 
 			diskWrapper := manual.NewComputeDisk(
 				clients.NewDisksClient(diskClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := diskWrapper.Scopes()[0]
 

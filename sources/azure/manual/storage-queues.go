@@ -16,15 +16,14 @@ var StorageQueueLookupByName = shared.NewItemTypeLookup("name", azureshared.Stor
 type storageQueuesWrapper struct {
 	client clients.QueuesClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewStorageQueues(client clients.QueuesClient, subscriptionID, resourceGroup string) sources.SearchableWrapper {
+func NewStorageQueues(client clients.QueuesClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.SearchableWrapper {
 	return &storageQueuesWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 			azureshared.StorageQueue,
 		),
@@ -43,11 +42,11 @@ func (s storageQueuesWrapper) Get(ctx context.Context, scope string, queryParts 
 	storageAccountName := queryParts[0]
 	queueName := queryParts[1]
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	resp, err := s.client.Get(ctx, resourceGroup, storageAccountName, queueName)
+	resp, err := s.client.Get(ctx, rgScope.ResourceGroup, storageAccountName, queueName)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
@@ -119,11 +118,11 @@ func (s storageQueuesWrapper) Search(ctx context.Context, scope string, queryPar
 	}
 	storageAccountName := queryParts[0]
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	pager := s.client.List(ctx, resourceGroup, storageAccountName)
+	pager := s.client.List(ctx, rgScope.ResourceGroup, storageAccountName)
 
 	var items []*sdp.Item
 	for pager.More() {

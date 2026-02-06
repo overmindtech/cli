@@ -142,8 +142,7 @@ func TestNetworkApplicationGatewayIntegration(t *testing.T) {
 
 			agWrapper := manual.NewNetworkApplicationGateway(
 				clients.NewApplicationGatewaysClient(agClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := agWrapper.Scopes()[0]
 
@@ -182,8 +181,7 @@ func TestNetworkApplicationGatewayIntegration(t *testing.T) {
 
 			agWrapper := manual.NewNetworkApplicationGateway(
 				clients.NewApplicationGatewaysClient(agClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := agWrapper.Scopes()[0]
 
@@ -227,8 +225,7 @@ func TestNetworkApplicationGatewayIntegration(t *testing.T) {
 
 			agWrapper := manual.NewNetworkApplicationGateway(
 				clients.NewApplicationGatewaysClient(agClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := agWrapper.Scopes()[0]
 
@@ -267,8 +264,7 @@ func TestNetworkApplicationGatewayIntegration(t *testing.T) {
 
 			agWrapper := manual.NewNetworkApplicationGateway(
 				clients.NewApplicationGatewaysClient(agClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := agWrapper.Scopes()[0]
 

@@ -19,15 +19,14 @@ var ComputeDiskEncryptionSetLookupByName = shared.NewItemTypeLookup("name", azur
 
 type computeDiskEncryptionSetWrapper struct {
 	client clients.DiskEncryptionSetsClient
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewComputeDiskEncryptionSet(client clients.DiskEncryptionSetsClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewComputeDiskEncryptionSet(client clients.DiskEncryptionSetsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &computeDiskEncryptionSetWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 			azureshared.ComputeDiskEncryptionSet,
 		),
@@ -35,11 +34,11 @@ func NewComputeDiskEncryptionSet(client clients.DiskEncryptionSetsClient, subscr
 }
 
 func (c computeDiskEncryptionSetWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	pager := c.client.NewListByResourceGroupPager(resourceGroup, nil)
+	pager := c.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -62,11 +61,12 @@ func (c computeDiskEncryptionSetWrapper) List(ctx context.Context, scope string)
 }
 
 func (c computeDiskEncryptionSetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+		return
 	}
-	pager := c.client.NewListByResourceGroupPager(resourceGroup, nil)
+	pager := c.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -92,15 +92,15 @@ func (c computeDiskEncryptionSetWrapper) Get(ctx context.Context, scope string, 
 	if len(queryParts) < 1 {
 		return nil, azureshared.QueryError(errors.New("queryParts must be at least 1 and be the disk encryption set name"), scope, c.Type())
 	}
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
 	diskEncryptionSetName := queryParts[0]
 	if diskEncryptionSetName == "" {
 		return nil, azureshared.QueryError(errors.New("diskEncryptionSetName cannot be empty"), scope, c.Type())
 	}
-	diskEncryptionSet, err := c.client.Get(ctx, resourceGroup, diskEncryptionSetName, nil)
+	diskEncryptionSet, err := c.client.Get(ctx, rgScope.ResourceGroup, diskEncryptionSetName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}

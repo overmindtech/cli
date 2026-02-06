@@ -86,8 +86,7 @@ func TestComputeProximityPlacementGroupIntegration(t *testing.T) {
 
 			ppgWrapper := manual.NewComputeProximityPlacementGroup(
 				clients.NewProximityPlacementGroupsClient(ppgClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := ppgWrapper.Scopes()[0]
 
@@ -126,8 +125,7 @@ func TestComputeProximityPlacementGroupIntegration(t *testing.T) {
 
 			ppgWrapper := manual.NewComputeProximityPlacementGroup(
 				clients.NewProximityPlacementGroupsClient(ppgClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := ppgWrapper.Scopes()[0]
 
@@ -173,8 +171,7 @@ func TestComputeProximityPlacementGroupIntegration(t *testing.T) {
 
 			ppgWrapper := manual.NewComputeProximityPlacementGroup(
 				clients.NewProximityPlacementGroupsClient(ppgClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := ppgWrapper.Scopes()[0]
 
@@ -224,8 +221,7 @@ func TestComputeProximityPlacementGroupIntegration(t *testing.T) {
 
 			ppgWrapper := manual.NewComputeProximityPlacementGroup(
 				clients.NewProximityPlacementGroupsClient(ppgClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := ppgWrapper.Scopes()[0]
 

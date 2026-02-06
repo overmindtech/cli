@@ -11,6 +11,8 @@ import (
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
+	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/cli/discovery"
 )
 
 var NetworkNetworkInterfaceLookupByName = shared.NewItemTypeLookup("name", azureshared.NetworkNetworkInterface)
@@ -18,15 +20,14 @@ var NetworkNetworkInterfaceLookupByName = shared.NewItemTypeLookup("name", azure
 type networkNetworkInterfaceWrapper struct {
 	client clients.NetworkInterfacesClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewNetworkNetworkInterface(client clients.NetworkInterfacesClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewNetworkNetworkInterface(client clients.NetworkInterfacesClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &networkNetworkInterfaceWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 			azureshared.NetworkNetworkInterface,
 		),
@@ -34,11 +35,11 @@ func NewNetworkNetworkInterface(client clients.NetworkInterfacesClient, subscrip
 }
 
 func (n networkNetworkInterfaceWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	pager := n.client.List(ctx, resourceGroup)
+	pager := n.client.List(ctx, rgScope.ResourceGroup)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -59,6 +60,34 @@ func (n networkNetworkInterfaceWrapper) List(ctx context.Context, scope string) 
 	return items, nil
 }
 
+
+func (n networkNetworkInterfaceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, n.Type()))
+		return
+	}
+	pager := n.client.List(ctx, rgScope.ResourceGroup)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, n.Type()))
+			return
+		}
+		for _, networkInterface := range page.Value {
+			if networkInterface.Name == nil {
+				continue
+			}
+			item, sdpErr := n.azureNetworkInterfaceToSDPItem(networkInterface)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
+}
 // reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-interfaces/get?view=rest-virtualnetwork-2025-03-01&tabs=HTTP#response
 func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkInterface *armnetwork.Interface) (*sdp.Item, *sdp.QueryError) {
 	if networkInterface.Name == nil {
@@ -500,11 +529,11 @@ func (n networkNetworkInterfaceWrapper) Get(ctx context.Context, scope string, q
 	}
 	networkInterfaceName := queryParts[0]
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	networkInterface, err := n.client.Get(ctx, resourceGroup, networkInterfaceName)
+	networkInterface, err := n.client.Get(ctx, rgScope.ResourceGroup, networkInterfaceName)
 	if err != nil {
 		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
 	}

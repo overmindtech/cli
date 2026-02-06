@@ -15,7 +15,7 @@ type StorageAccountsPager = Pager[armstorage.AccountsClientListByResourceGroupRe
 // StorageAccountsClient is an interface for interacting with Azure storage accounts
 type StorageAccountsClient interface {
 	Get(ctx context.Context, resourceGroupName string, accountName string) (armstorage.AccountsClientGetPropertiesResponse, error)
-	List(resourceGroupName string) StorageAccountsPager
+	NewListByResourceGroupPager(resourceGroupName string, options *armstorage.AccountsClientListByResourceGroupOptions) StorageAccountsPager
 }
 
 type storageAccountsClient struct {
@@ -26,8 +26,8 @@ func (a *storageAccountsClient) Get(ctx context.Context, resourceGroupName strin
 	return a.client.GetProperties(ctx, resourceGroupName, accountName, nil)
 }
 
-func (a *storageAccountsClient) List(resourceGroupName string) StorageAccountsPager {
-	return a.client.NewListByResourceGroupPager(resourceGroupName, nil)
+func (a *storageAccountsClient) NewListByResourceGroupPager(resourceGroupName string, options *armstorage.AccountsClientListByResourceGroupOptions) StorageAccountsPager {
+	return a.client.NewListByResourceGroupPager(resourceGroupName, options)
 }
 
 // NewStorageAccountsClient creates a new StorageAccountsClient from the Azure SDK client

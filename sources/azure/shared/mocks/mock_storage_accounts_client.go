@@ -57,16 +57,16 @@ func (mr *MockStorageAccountsClientMockRecorder) Get(ctx, resourceGroupName, acc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockStorageAccountsClient)(nil).Get), ctx, resourceGroupName, accountName)
 }
 
-// List mocks base method.
-func (m *MockStorageAccountsClient) List(resourceGroupName string) clients.StorageAccountsPager {
+// NewListByResourceGroupPager mocks base method.
+func (m *MockStorageAccountsClient) NewListByResourceGroupPager(resourceGroupName string, options *armstorage.AccountsClientListByResourceGroupOptions) clients.StorageAccountsPager {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", resourceGroupName)
+	ret := m.ctrl.Call(m, "NewListByResourceGroupPager", resourceGroupName, options)
 	ret0, _ := ret[0].(clients.StorageAccountsPager)
 	return ret0
 }
 
-// List indicates an expected call of List.
-func (mr *MockStorageAccountsClientMockRecorder) List(resourceGroupName any) *gomock.Call {
+// NewListByResourceGroupPager indicates an expected call of NewListByResourceGroupPager.
+func (mr *MockStorageAccountsClientMockRecorder) NewListByResourceGroupPager(resourceGroupName, options any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockStorageAccountsClient)(nil).List), resourceGroupName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewListByResourceGroupPager", reflect.TypeOf((*MockStorageAccountsClient)(nil).NewListByResourceGroupPager), resourceGroupName, options)
 }

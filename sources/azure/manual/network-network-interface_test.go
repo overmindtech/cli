@@ -39,7 +39,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 				Interface: *nic,
 			}, nil)
 
-		wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkInterface(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], nicName, true)
@@ -122,7 +122,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 					Interface: *nicWithDNS,
 				}, nil)
 
-			wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
+			wrapper := manual.NewNetworkNetworkInterface(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 			adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 			sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], nicName, true)
@@ -200,7 +200,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockNetworkInterfacesClient(ctrl)
 
-		wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkInterface(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name - Get will still be called with empty string
@@ -235,7 +235,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 
 		mockClient.EXPECT().List(ctx, resourceGroup).Return(mockPager)
 
-		wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkInterface(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -306,7 +306,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 
 		mockClient.EXPECT().List(ctx, resourceGroup).Return(mockPager)
 
-		wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkInterface(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -328,7 +328,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-nic").Return(
 			armnetwork.InterfacesClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkInterface(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-nic", true)
@@ -352,7 +352,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 
 		mockClient.EXPECT().List(ctx, resourceGroup).Return(mockPager)
 
-		wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkInterface(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -368,7 +368,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 
 	t.Run("InterfaceCompliance", func(t *testing.T) {
 		mockClient := mocks.NewMockNetworkInterfacesClient(ctrl)
-		wrapper := manual.NewNetworkNetworkInterface(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkNetworkInterface(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Verify wrapper implements ListableWrapper interface
 		var _ = wrapper
