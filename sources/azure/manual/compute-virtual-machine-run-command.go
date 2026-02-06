@@ -19,15 +19,14 @@ var ComputeVirtualMachineRunCommandLookupByName = shared.NewItemTypeLookup("name
 type computeVirtualMachineRunCommandWrapper struct {
 	client clients.VirtualMachineRunCommandsClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewComputeVirtualMachineRunCommand(client clients.VirtualMachineRunCommandsClient, subscriptionID, resourceGroup string) sources.SearchableWrapper {
+func NewComputeVirtualMachineRunCommand(client clients.VirtualMachineRunCommandsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.SearchableWrapper {
 	return &computeVirtualMachineRunCommandWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			azureshared.ComputeVirtualMachineRunCommand,
 		),
@@ -56,12 +55,12 @@ func (s computeVirtualMachineRunCommandWrapper) Get(ctx context.Context, scope s
 		return nil, azureshared.QueryError(errors.New("runCommandName cannot be empty"), scope, s.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
 
-	resp, err := s.client.GetByVirtualMachine(ctx, resourceGroup, virtualMachineName, runCommandName, nil)
+	resp, err := s.client.GetByVirtualMachine(ctx, rgScope.ResourceGroup, virtualMachineName, runCommandName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
@@ -285,11 +284,11 @@ func (s computeVirtualMachineRunCommandWrapper) Search(ctx context.Context, scop
 		return nil, azureshared.QueryError(errors.New("virtualMachineName cannot be empty"), scope, s.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	pager := s.client.NewListByVirtualMachinePager(resourceGroup, virtualMachineName, nil)
+	pager := s.client.NewListByVirtualMachinePager(rgScope.ResourceGroup, virtualMachineName, nil)
 
 	var items []*sdp.Item
 	for pager.More() {

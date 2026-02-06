@@ -9,6 +9,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
@@ -22,6 +23,7 @@ import (
 	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
+	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 )
 
 // Adapters returns a slice of discovery.Adapter instances for Azure Source.
@@ -66,6 +68,12 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			"ovm.source.subscription_id":      subscriptionID,
 			"ovm.source.resource_group_count": len(resourceGroups),
 		}).Info("Discovered resource groups")
+
+		// Build resource group scopes for multi-scope adapters
+		resourceGroupScopes := make([]azureshared.ResourceGroupScope, 0, len(resourceGroups))
+		for _, rg := range resourceGroups {
+			resourceGroupScopes = append(resourceGroupScopes, azureshared.NewResourceGroupScope(subscriptionID, rg))
+		}
 
 		// Initialize Azure SDK clients
 		vmClient, err := armcompute.NewVirtualMachinesClient(subscriptionID, cred, nil)
@@ -226,278 +234,145 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create proximity placement groups client: %w", err)
 		}
 
-		// Create adapters for each resource group
-		for _, resourceGroup := range resourceGroups {
-			// Add Compute Virtual Machine adapter for this resource group
+		zonesClient, err := armdns.NewZonesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create zones client: %w", err)
+		}
+
+		// Multi-scope resource group adapters (one adapter per type handling all resource groups)
+		if len(resourceGroupScopes) > 0 {
 			adapters = append(adapters,
 				sources.WrapperToAdapter(NewComputeVirtualMachine(
 					clients.NewVirtualMachinesClient(vmClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add Storage Account adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewStorageAccount(
 					clients.NewStorageAccountsClient(storageAccountsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Storage Blob Container adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewStorageBlobContainer(
 					clients.NewBlobContainersClient(blobContainersClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add Storage File Share adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewStorageFileShare(
 					clients.NewFileSharesClient(fileSharesClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add Storage Queue adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewStorageQueues(
 					clients.NewQueuesClient(queuesClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Storage Table adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewStorageTable(
 					clients.NewTablesClient(tablesClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add Network Virtual Network adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewNetworkVirtualNetwork(
 					clients.NewVirtualNetworksClient(virtualNetworksClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add Network Network Interface adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewNetworkNetworkInterface(
 					clients.NewNetworkInterfacesClient(networkInterfacesClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add SQL Database adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewSqlDatabase(
 					clients.NewSqlDatabasesClient(sqlDatabasesClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add DocumentDB Database Account adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewDocumentDBDatabaseAccounts(
 					clients.NewDocumentDBDatabaseAccountsClient(documentDBDatabaseAccountsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add Key Vault Vault adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewKeyVaultVault(
 					clients.NewVaultsClient(keyVaultsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add Key Vault Managed HSM adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewKeyVaultManagedHSM(
 					clients.NewManagedHSMsClient(managedHSMsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add PostgreSQL Database adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewDBforPostgreSQLDatabase(
 					clients.NewPostgreSQLDatabasesClient(postgreSQLDatabasesClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add Network Public IP Address adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewNetworkPublicIPAddress(
 					clients.NewPublicIPAddressesClient(publicIPAddressesClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add Network Load Balancer adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewNetworkLoadBalancer(
 					clients.NewLoadBalancersClient(loadBalancersClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Batch Account adapter for this resource group
-			adapters = append(adapters,
+				sources.WrapperToAdapter(NewNetworkZone(
+					clients.NewZonesClient(zonesClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewBatchAccount(
 					clients.NewBatchAccountsClient(batchAccountsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Virtual Machine Scale Set adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewComputeVirtualMachineScaleSet(
 					clients.NewVirtualMachineScaleSetsClient(virtualMachineScaleSetsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Availability Set adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewComputeAvailabilitySet(
 					clients.NewAvailabilitySetsClient(availabilitySetsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Disk adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewComputeDisk(
 					clients.NewDisksClient(disksClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Network Security Group adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewNetworkNetworkSecurityGroup(
 					clients.NewNetworkSecurityGroupsClient(networkSecurityGroupsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Network Route Table adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewNetworkRouteTable(
 					clients.NewRouteTablesClient(routeTablesClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add Network Application Gateway adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewNetworkApplicationGateway(
 					clients.NewApplicationGatewaysClient(applicationGatewaysClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add SQL Server adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewSqlServer(
 					clients.NewSqlServersClient(sqlServersClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add PostgreSQL Flexible Server adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServer(
 					clients.NewPostgreSQLFlexibleServersClient(postgresqlFlexibleServersClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add Key Vault Secret adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewKeyVaultSecret(
 					clients.NewSecretsClient(secretsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-
-			// Add User Assigned Identity adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewManagedIdentityUserAssignedIdentity(
 					clients.NewUserAssignedIdentitiesClient(userAssignedIdentitiesClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Role Assignment adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewAuthorizationRoleAssignment(
 					clients.NewRoleAssignmentsClient(roleAssignmentsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Disk Encryption Set adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewComputeDiskEncryptionSet(
 					clients.NewDiskEncryptionSetsClient(diskEncryptionSetsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Image adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewComputeImage(
 					clients.NewImagesClient(imagesClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Virtual Machine Run Command adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewComputeVirtualMachineRunCommand(
 					clients.NewVirtualMachineRunCommandsClient(virtualMachineRunCommandsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Virtual Machine Extension adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewComputeVirtualMachineExtension(
 					clients.NewVirtualMachineExtensionsClient(virtualMachineExtensionsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
-			)
-			// Add Proximity Placement Group adapter for this resource group
-			adapters = append(adapters,
 				sources.WrapperToAdapter(NewComputeProximityPlacementGroup(
 					clients.NewProximityPlacementGroupsClient(proximityPlacementGroupsClient),
-					subscriptionID,
-					resourceGroup,
+					resourceGroupScopes,
 				), cache),
 			)
 		}
@@ -510,168 +385,43 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 	} else {
 		// For metadata registration only - no actual clients needed
 		// This is used to enumerate available adapter types for documentation
-		// Create placeholder adapters with nil clients for metadata registration
+		// Create placeholder adapters with nil clients and one placeholder scope
+		placeholderResourceGroupScopes := []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, "placeholder-resource-group")}
+		noOpCache := sdpcache.NewNoOpCache()
 		adapters = append(adapters,
-			sources.WrapperToAdapter(NewComputeVirtualMachine(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewStorageAccount(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewStorageBlobContainer(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewStorageFileShare(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewStorageQueues(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewStorageTable(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewNetworkVirtualNetwork(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewNetworkNetworkInterface(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewSqlDatabase(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewDocumentDBDatabaseAccounts(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewKeyVaultVault(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewDBforPostgreSQLDatabase(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewNetworkPublicIPAddress(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewNetworkLoadBalancer(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewBatchAccount(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewComputeVirtualMachineScaleSet(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewComputeAvailabilitySet(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewComputeDisk(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewNetworkNetworkSecurityGroup(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewNetworkRouteTable(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewNetworkApplicationGateway(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewKeyVaultManagedHSM(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewSqlServer(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServer(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewKeyVaultSecret(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewManagedIdentityUserAssignedIdentity(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewAuthorizationRoleAssignment(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewComputeDiskEncryptionSet(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewComputeImage(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewComputeVirtualMachineRunCommand(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewComputeVirtualMachineExtension(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
-			sources.WrapperToAdapter(NewComputeProximityPlacementGroup(
-				nil, // nil client is okay for metadata registration
-				subscriptionID,
-				"placeholder-resource-group",
-			), sdpcache.NewNoOpCache()), // no-op cache for metadata registration
+			sources.WrapperToAdapter(NewComputeVirtualMachine(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewStorageAccount(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewStorageBlobContainer(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewStorageFileShare(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewStorageQueues(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewStorageTable(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkVirtualNetwork(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkNetworkInterface(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewSqlDatabase(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewDocumentDBDatabaseAccounts(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewKeyVaultVault(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewKeyVaultManagedHSM(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewDBforPostgreSQLDatabase(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkPublicIPAddress(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkLoadBalancer(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkZone(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewBatchAccount(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeVirtualMachineScaleSet(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeAvailabilitySet(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeDisk(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkNetworkSecurityGroup(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkRouteTable(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkApplicationGateway(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewSqlServer(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServer(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewKeyVaultSecret(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewManagedIdentityUserAssignedIdentity(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewAuthorizationRoleAssignment(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeDiskEncryptionSet(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeImage(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeVirtualMachineRunCommand(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeVirtualMachineExtension(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeProximityPlacementGroup(nil, placeholderResourceGroupScopes), noOpCache),
 		)
 
 		_ = regions

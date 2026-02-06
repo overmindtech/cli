@@ -11,6 +11,8 @@ import (
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
+	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/cli/discovery"
 )
 
 var NetworkVirtualNetworkLookupByName = shared.NewItemTypeLookup("name", azureshared.NetworkVirtualNetwork)
@@ -18,16 +20,15 @@ var NetworkVirtualNetworkLookupByName = shared.NewItemTypeLookup("name", azuresh
 type networkVirtualNetworkWrapper struct {
 	client clients.VirtualNetworksClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
 // NewNetworkVirtualNetwork creates a new networkVirtualNetworkWrapper instance
-func NewNetworkVirtualNetwork(client clients.VirtualNetworksClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewNetworkVirtualNetwork(client clients.VirtualNetworksClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &networkVirtualNetworkWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 			azureshared.NetworkVirtualNetwork,
 		),
@@ -35,11 +36,11 @@ func NewNetworkVirtualNetwork(client clients.VirtualNetworksClient, subscription
 }
 
 func (n networkVirtualNetworkWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	pager := n.client.NewListPager(resourceGroup, nil)
+	pager := n.client.NewListPager(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -61,6 +62,35 @@ func (n networkVirtualNetworkWrapper) List(ctx context.Context, scope string) ([
 	return items, nil
 }
 
+func (n networkVirtualNetworkWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, n.Type()))
+		return
+	}
+	pager := n.client.NewListPager(rgScope.ResourceGroup, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, n.Type()))
+			return
+		}
+
+		for _, network := range page.Value {
+			if network.Name == nil {
+				continue
+			}
+			item, sdpErr := n.azureVirtualNetworkToSDPItem(network, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
+}
+
 func (n networkVirtualNetworkWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, &sdp.QueryError{
@@ -73,11 +103,11 @@ func (n networkVirtualNetworkWrapper) Get(ctx context.Context, scope string, que
 
 	virtualNetworkName := queryParts[0]
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	resp, err := n.client.Get(ctx, resourceGroup, virtualNetworkName, nil)
+	resp, err := n.client.Get(ctx, rgScope.ResourceGroup, virtualNetworkName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, n.Type())
 	}

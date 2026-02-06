@@ -39,7 +39,7 @@ func TestComputeProximityPlacementGroup(t *testing.T) {
 				ProximityPlacementGroup: *ppg,
 			}, nil)
 
-		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, scope, ppgName, true)
@@ -111,7 +111,7 @@ func TestComputeProximityPlacementGroup(t *testing.T) {
 				ProximityPlacementGroup: *ppg,
 			}, nil)
 
-		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, scope, ppgName, true)
@@ -152,7 +152,7 @@ func TestComputeProximityPlacementGroup(t *testing.T) {
 				ProximityPlacementGroup: *ppg,
 			}, nil)
 
-		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, scope, ppgName, true)
@@ -174,7 +174,7 @@ func TestComputeProximityPlacementGroup(t *testing.T) {
 
 		mockClient.EXPECT().ListByResourceGroup(ctx, resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -220,7 +220,7 @@ func TestComputeProximityPlacementGroup(t *testing.T) {
 
 		mockClient.EXPECT().ListByResourceGroup(ctx, resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -245,7 +245,7 @@ func TestComputeProximityPlacementGroup(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-ppg", nil).Return(
 			armcompute.ProximityPlacementGroupsClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, scope, "nonexistent-ppg", true)
@@ -259,7 +259,7 @@ func TestComputeProximityPlacementGroup(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "", nil).Return(
 			armcompute.ProximityPlacementGroupsClientGetResponse{}, errors.New("proximity placement group name is required"))
 
-		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeProximityPlacementGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, scope, "", true)

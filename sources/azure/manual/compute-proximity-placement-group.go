@@ -10,21 +10,22 @@ import (
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/cli/discovery"
 )
 
 var ComputeProximityPlacementGroupLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeProximityPlacementGroup)
 
 type computeProximityPlacementGroupWrapper struct {
 	client clients.ProximityPlacementGroupsClient
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewComputeProximityPlacementGroup(client clients.ProximityPlacementGroupsClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewComputeProximityPlacementGroup(client clients.ProximityPlacementGroupsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &computeProximityPlacementGroupWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			azureshared.ComputeProximityPlacementGroup,
 		),
@@ -33,11 +34,11 @@ func NewComputeProximityPlacementGroup(client clients.ProximityPlacementGroupsCl
 
 // ref: https://learn.microsoft.com/en-us/rest/api/compute/proximity-placement-groups/list-by-resource-group?view=rest-compute-2025-04-01&tabs=HTTP
 func (c computeProximityPlacementGroupWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	pager := c.client.ListByResourceGroup(ctx, resourceGroup, nil)
+	pager := c.client.ListByResourceGroup(ctx, rgScope.ResourceGroup, nil)
 	var items []*sdp.Item
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -58,17 +59,45 @@ func (c computeProximityPlacementGroupWrapper) List(ctx context.Context, scope s
 	return items, nil
 }
 
+func (c computeProximityPlacementGroupWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+		return
+	}
+	pager := c.client.ListByResourceGroup(ctx, rgScope.ResourceGroup, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+			return
+		}
+		for _, proximityPlacementGroup := range page.Value {
+			if proximityPlacementGroup.Name == nil {
+				continue
+			}
+			item, sdpErr := c.azureProximityPlacementGroupToSDPItem(proximityPlacementGroup, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
+}
+
 // ref: https://learn.microsoft.com/en-us/rest/api/compute/proximity-placement-groups/get?view=rest-compute-2025-04-01&tabs=HTTP
 func (c computeProximityPlacementGroupWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
 	if len(queryParts) < 1 {
 		return nil, azureshared.QueryError(errors.New("queryParts must be at least 1 and be the proximity placement group name"), scope, c.Type())
 	}
 	proximityPlacementGroupName := queryParts[0]
-	resp, err := c.client.Get(ctx, resourceGroup, proximityPlacementGroupName, nil)
+	resp, err := c.client.Get(ctx, rgScope.ResourceGroup, proximityPlacementGroupName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}

@@ -19,15 +19,14 @@ var StorageBlobContainerLookupByName = shared.NewItemTypeLookup("name", azuresha
 type storageBlobContainerWrapper struct {
 	client clients.BlobContainersClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewStorageBlobContainer(client clients.BlobContainersClient, subscriptionID, resourceGroup string) sources.SearchableWrapper {
+func NewStorageBlobContainer(client clients.BlobContainersClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.SearchableWrapper {
 	return &storageBlobContainerWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 			azureshared.StorageBlobContainer,
 		),
@@ -46,11 +45,11 @@ func (s storageBlobContainerWrapper) Get(ctx context.Context, scope string, quer
 	storageAccountName := queryParts[0]
 	containerName := queryParts[1]
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	resp, err := s.client.Get(ctx, resourceGroup, storageAccountName, containerName)
+	resp, err := s.client.Get(ctx, rgScope.ResourceGroup, storageAccountName, containerName)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
@@ -73,11 +72,11 @@ func (s storageBlobContainerWrapper) Search(ctx context.Context, scope string, q
 	if storageAccountName == "" {
 		return nil, azureshared.QueryError(fmt.Errorf("storageAccountName cannot be empty"), scope, s.Type())
 	}
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	pager := s.client.List(ctx, resourceGroup, storageAccountName)
+	pager := s.client.List(ctx, rgScope.ResourceGroup, storageAccountName)
 
 	var items []*sdp.Item
 	for pager.More() {

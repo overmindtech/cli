@@ -80,8 +80,7 @@ func TestDBforPostgreSQLFlexibleServerIntegration(t *testing.T) {
 
 			pgServerWrapper := manual.NewDBforPostgreSQLFlexibleServer(
 				clients.NewPostgreSQLFlexibleServersClient(postgreSQLServerClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := pgServerWrapper.Scopes()[0]
 
@@ -131,8 +130,7 @@ func TestDBforPostgreSQLFlexibleServerIntegration(t *testing.T) {
 
 			pgServerWrapper := manual.NewDBforPostgreSQLFlexibleServer(
 				clients.NewPostgreSQLFlexibleServersClient(postgreSQLServerClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := pgServerWrapper.Scopes()[0]
 
@@ -178,8 +176,7 @@ func TestDBforPostgreSQLFlexibleServerIntegration(t *testing.T) {
 
 			pgServerWrapper := manual.NewDBforPostgreSQLFlexibleServer(
 				clients.NewPostgreSQLFlexibleServersClient(postgreSQLServerClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := pgServerWrapper.Scopes()[0]
 
@@ -267,8 +264,7 @@ func TestDBforPostgreSQLFlexibleServerIntegration(t *testing.T) {
 
 			pgServerWrapper := manual.NewDBforPostgreSQLFlexibleServer(
 				clients.NewPostgreSQLFlexibleServersClient(postgreSQLServerClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := pgServerWrapper.Scopes()[0]
 

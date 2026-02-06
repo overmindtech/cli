@@ -95,8 +95,7 @@ func TestStorageFileShareIntegration(t *testing.T) {
 
 			fsWrapper := manual.NewStorageFileShare(
 				clients.NewFileSharesClient(fsClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := fsWrapper.Scopes()[0]
 
@@ -132,8 +131,7 @@ func TestStorageFileShareIntegration(t *testing.T) {
 
 			fsWrapper := manual.NewStorageFileShare(
 				clients.NewFileSharesClient(fsClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := fsWrapper.Scopes()[0]
 
@@ -177,8 +175,7 @@ func TestStorageFileShareIntegration(t *testing.T) {
 
 			fsWrapper := manual.NewStorageFileShare(
 				clients.NewFileSharesClient(fsClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := fsWrapper.Scopes()[0]
 

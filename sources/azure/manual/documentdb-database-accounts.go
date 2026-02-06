@@ -18,15 +18,14 @@ var DocumentDBDatabaseAccountsLookupByName = shared.NewItemTypeLookup("name", az
 type documentDBDatabaseAccountsWrapper struct {
 	client clients.DocumentDBDatabaseAccountsClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewDocumentDBDatabaseAccounts(client clients.DocumentDBDatabaseAccountsClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewDocumentDBDatabaseAccounts(client clients.DocumentDBDatabaseAccountsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &documentDBDatabaseAccountsWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 			azureshared.DocumentDBDatabaseAccounts,
 		),
@@ -34,11 +33,11 @@ func NewDocumentDBDatabaseAccounts(client clients.DocumentDBDatabaseAccountsClie
 }
 
 func (s documentDBDatabaseAccountsWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	pager := s.client.ListByResourceGroup(resourceGroup)
+	pager := s.client.ListByResourceGroup(rgScope.ResourceGroup)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -78,11 +77,11 @@ func (s documentDBDatabaseAccountsWrapper) Get(ctx context.Context, scope string
 		}
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	resp, err := s.client.Get(ctx, resourceGroup, accountName)
+	resp, err := s.client.Get(ctx, rgScope.ResourceGroup, accountName)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, s.Type())
 	}

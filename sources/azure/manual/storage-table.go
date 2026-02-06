@@ -17,15 +17,14 @@ var StorageTableLookupByName = shared.NewItemTypeLookup("name", azureshared.Stor
 type storageTablesWrapper struct {
 	client clients.TablesClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewStorageTable(client clients.TablesClient, subscriptionID, resourceGroup string) sources.SearchableWrapper {
+func NewStorageTable(client clients.TablesClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.SearchableWrapper {
 	return &storageTablesWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 			azureshared.StorageTable,
 		),
@@ -44,11 +43,11 @@ func (s storageTablesWrapper) Get(ctx context.Context, scope string, queryParts 
 	storageAccountName := queryParts[0]
 	tableName := queryParts[1]
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	resp, err := s.client.Get(ctx, resourceGroup, storageAccountName, tableName)
+	resp, err := s.client.Get(ctx, rgScope.ResourceGroup, storageAccountName, tableName)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
@@ -123,11 +122,11 @@ func (s storageTablesWrapper) Search(ctx context.Context, scope string, queryPar
 		return nil, azureshared.QueryError(fmt.Errorf("storageAccountName cannot be empty"), scope, s.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	pager := s.client.List(ctx, resourceGroup, storageAccountName)
+	pager := s.client.List(ctx, rgScope.ResourceGroup, storageAccountName)
 
 	var items []*sdp.Item
 	for pager.More() {

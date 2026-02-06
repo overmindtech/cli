@@ -94,27 +94,36 @@ Use when the Azure API supports both listing and searching:
 
 Choose the appropriate base struct based on Azure resource scope:
 
-### `ResourceGroupBase` - Resource Group Scoped Resources
+### `MultiResourceGroupBase` - Resource Group Scoped Resources (multi-scope)
 
-For resources scoped to a specific resource group:
+Resource-group-scoped adapters use **one adapter per resource type** that holds a slice of resource-group scopes. The engine calls List/Get once per scope; scope is resolved in each method via `ResourceGroupScopeFromScope(scope)`.
 
 ```go
 type computeVirtualMachineWrapper struct {
     client clients.VirtualMachinesClient
-    *azureshared.ResourceGroupBase
+    *azureshared.MultiResourceGroupBase
 }
 
-func NewComputeVirtualMachine(client clients.VirtualMachinesClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewComputeVirtualMachine(client clients.VirtualMachinesClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
     return &computeVirtualMachineWrapper{
         client: client,
-        ResourceGroupBase: azureshared.NewResourceGroupBase(
-            subscriptionID,
-            resourceGroup,
+        MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+            resourceGroupScopes,
             sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
             azureshared.ComputeVirtualMachine,
         ),
     }
 }
+```
+
+In Get/List/ListStream/Search, resolve scope to resource group (and subscription when needed) with:
+
+```go
+rgScope, err := c.ResourceGroupScopeFromScope(scope)
+if err != nil {
+    return nil, azureshared.QueryError(err, scope, c.Type())
+}
+// use rgScope.ResourceGroup and rgScope.SubscriptionID
 ```
 
 **Examples:** Compute Virtual Machines, Compute Disks, Network Interfaces, Network Security Groups
@@ -448,14 +457,14 @@ if err != nil {
 
 ### Pager Pattern
 
-Handle Azure SDK pagers consistently:
+Handle Azure SDK pagers consistently. For multi-scope resource group adapters, resolve scope first:
 
 ```go
-resourceGroup := azureshared.ResourceGroupFromScope(scope)
-if resourceGroup == "" {
-    resourceGroup = c.ResourceGroup()
+rgScope, err := c.ResourceGroupScopeFromScope(scope)
+if err != nil {
+    return nil, azureshared.QueryError(err, scope, c.Type())
 }
-pager := c.client.NewListPager(resourceGroup, nil)
+pager := c.client.NewListPager(rgScope.ResourceGroup, nil)
 for pager.More() {
     page, err := pager.NextPage(ctx)
     if err != nil {
@@ -501,7 +510,7 @@ func TestComputeVirtualMachine(t *testing.T) {
     resourceGroup := "test-resource-group"
 
     t.Run("Get", func(t *testing.T) {
-        wrapper := manual.NewComputeVirtualMachine(mockClient, subscriptionID, resourceGroup)
+        wrapper := manual.NewComputeVirtualMachine(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
         vm := createAzureVirtualMachine("test-vm", "Succeeded")
         mockClient.EXPECT().Get(ctx, resourceGroup, "test-vm", nil).Return(armcompute.VirtualMachinesClientGetResponse{
             VirtualMachine: *vm,
@@ -708,26 +717,33 @@ if resourceID != nil && *resourceID != "" {
 
 ### 8. Adapter Registration
 
-Register adapters in the main adapters file with proper scoping:
+Resource-group-scoped adapters are registered once per type with a slice of all resource group scopes. Build `resourceGroupScopes` after discovering resource groups, then pass it to each constructor:
 
 ```go
-// Register resource group scoped adapters
-for _, resourceGroup := range resourceGroups {
+// Build resource group scopes from discovered resource groups
+resourceGroupScopes := make([]azureshared.ResourceGroupScope, 0, len(resourceGroups))
+for _, rg := range resourceGroups {
+    resourceGroupScopes = append(resourceGroupScopes, azureshared.NewResourceGroupScope(subscriptionID, rg))
+}
+
+// Multi-scope resource group adapters (one adapter per type handling all resource groups)
+if len(resourceGroupScopes) > 0 {
     adapters = append(adapters,
         sources.WrapperToAdapter(NewComputeVirtualMachine(
             clients.NewVirtualMachinesClient(vmClient),
-            subscriptionID,
-            resourceGroup,
-        )),
+            resourceGroupScopes,
+        ), cache),
+        sources.WrapperToAdapter(NewStorageAccount(..., resourceGroupScopes), cache),
+        // ... one line per resource type (33 total)
     )
 }
 
-// Register subscription-level adapters
+// Subscription-level adapters are registered separately with subscriptionID
 adapters = append(adapters,
     sources.WrapperToAdapter(NewSubscription(
         clients.NewSubscriptionClient(subClient),
         subscriptionID,
-    )),
+    ), cache),
 )
 ```
 
@@ -759,7 +775,7 @@ Before submitting a new adapter, ensure:
 - [ ] File follows naming convention (`{resource-name}.go`)
 - [ ] Imports are properly organized and minimal
 - [ ] Wrapper type matches Azure API capabilities
-- [ ] Base struct matches resource scope (ResourceGroup/Subscription)
+- [ ] Base struct matches resource scope (MultiResourceGroupBase/Subscription)
 - [ ] All required methods implemented (IAMPermissions, PredefinedRole, PotentialLinks)
 - [ ] Terraform mappings are correct and include documentation URLs
 - [ ] Get/Search lookups match the resource's query parameters

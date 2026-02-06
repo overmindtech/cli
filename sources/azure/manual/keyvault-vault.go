@@ -6,7 +6,9 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
+	"github.com/overmindtech/cli/discovery"
 	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -19,15 +21,14 @@ var KeyVaultVaultLookupByName = shared.NewItemTypeLookup("name", azureshared.Key
 type keyvaultVaultWrapper struct {
 	client clients.VaultsClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewKeyVaultVault(client clients.VaultsClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewKeyVaultVault(client clients.VaultsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &keyvaultVaultWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 			azureshared.KeyVaultVault,
 		),
@@ -35,11 +36,11 @@ func NewKeyVaultVault(client clients.VaultsClient, subscriptionID, resourceGroup
 }
 
 func (k keyvaultVaultWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = k.ResourceGroup()
+	rgScope, err := k.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
-	pager := k.client.NewListByResourceGroupPager(resourceGroup, nil)
+	pager := k.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -64,6 +65,37 @@ func (k keyvaultVaultWrapper) List(ctx context.Context, scope string) ([]*sdp.It
 	return items, nil
 }
 
+
+func (k keyvaultVaultWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	rgScope, err := k.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, k.Type()))
+		return
+	}
+	pager := k.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, k.Type()))
+			return
+		}
+
+		for _, vault := range page.Value {
+			if vault.Name == nil {
+				continue
+			}
+			item, sdpErr := k.azureKeyVaultToSDPItem(vault, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
+}
+
 func (k keyvaultVaultWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
 		return nil, azureshared.QueryError(errors.New("Get requires 1 query part: vaultName"), scope, k.Type())
@@ -74,11 +106,11 @@ func (k keyvaultVaultWrapper) Get(ctx context.Context, scope string, queryParts 
 		return nil, azureshared.QueryError(errors.New("vaultName cannot be empty"), scope, k.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = k.ResourceGroup()
+	rgScope, err := k.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
-	resp, err := k.client.Get(ctx, resourceGroup, vaultName, nil)
+	resp, err := k.client.Get(ctx, rgScope.ResourceGroup, vaultName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, k.Type())
 	}

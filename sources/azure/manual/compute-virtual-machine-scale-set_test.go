@@ -39,7 +39,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 				VirtualMachineScaleSet: *scaleSet,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], scaleSetName, true)
@@ -331,7 +331,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineScaleSetsClient(ctrl)
 
-		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name
@@ -351,7 +351,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 				VirtualMachineScaleSet: *scaleSet,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-vmss", true)
@@ -416,7 +416,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 						VirtualMachineScaleSet: *scaleSet,
 					}, nil)
 
-				wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
+				wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-vmss", true)
@@ -452,7 +452,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -501,7 +501,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
@@ -551,7 +551,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-vmss", nil).Return(
 			armcompute.VirtualMachineScaleSetsClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-vmss", true)
@@ -575,7 +575,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)

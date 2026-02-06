@@ -88,8 +88,7 @@ func TestManagedIdentityUserAssignedIdentityIntegration(t *testing.T) {
 
 			identityWrapper := manual.NewManagedIdentityUserAssignedIdentity(
 				clients.NewUserAssignedIdentitiesClient(identityClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := identityWrapper.Scopes()[0]
 
@@ -129,8 +128,7 @@ func TestManagedIdentityUserAssignedIdentityIntegration(t *testing.T) {
 
 			identityWrapper := manual.NewManagedIdentityUserAssignedIdentity(
 				clients.NewUserAssignedIdentitiesClient(identityClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := identityWrapper.Scopes()[0]
 
@@ -183,8 +181,7 @@ func TestManagedIdentityUserAssignedIdentityIntegration(t *testing.T) {
 
 			identityWrapper := manual.NewManagedIdentityUserAssignedIdentity(
 				clients.NewUserAssignedIdentitiesClient(identityClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := identityWrapper.Scopes()[0]
 

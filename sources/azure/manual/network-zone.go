@@ -20,15 +20,14 @@ var NetworkZoneLookupByName = shared.NewItemTypeLookup("name", azureshared.Netwo
 type networkZoneWrapper struct {
 	client clients.ZonesClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewNetworkZone(client clients.ZonesClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewNetworkZone(client clients.ZonesClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &networkZoneWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 			azureshared.NetworkZone,
 		),
@@ -36,11 +35,11 @@ func NewNetworkZone(client clients.ZonesClient, subscriptionID, resourceGroup st
 }
 
 func (n networkZoneWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	pager := n.client.NewListByResourceGroupPager(resourceGroup, nil)
+	pager := n.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -66,11 +65,12 @@ func (n networkZoneWrapper) List(ctx context.Context, scope string) ([]*sdp.Item
 
 // ref: https://learn.microsoft.com/en-us/rest/api/dns/zones/list-by-resource-group?view=rest-dns-2018-05-01&tabs=HTTP
 func (n networkZoneWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, n.Type()))
+		return
 	}
-	pager := n.client.NewListByResourceGroupPager(resourceGroup, nil)
+	pager := n.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -245,11 +245,11 @@ func (n networkZoneWrapper) Get(ctx context.Context, scope string, queryParts ..
 	}
 	zoneName := queryParts[0]
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	zone, err := n.client.Get(ctx, resourceGroup, zoneName, nil)
+	zone, err := n.client.Get(ctx, rgScope.ResourceGroup, zoneName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, n.Type())
 	}

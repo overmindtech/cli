@@ -21,15 +21,14 @@ var ComputeVirtualMachineScaleSetLookupByName = shared.NewItemTypeLookup("name",
 type computeVirtualMachineScaleSetWrapper struct {
 	client clients.VirtualMachineScaleSetsClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewComputeVirtualMachineScaleSet(client clients.VirtualMachineScaleSetsClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewComputeVirtualMachineScaleSet(client clients.VirtualMachineScaleSetsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &computeVirtualMachineScaleSetWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			azureshared.ComputeVirtualMachineScaleSet,
 		),
@@ -38,11 +37,11 @@ func NewComputeVirtualMachineScaleSet(client clients.VirtualMachineScaleSetsClie
 
 // ref: https://linear.app/overmind/issue/ENG-2114/create-microsoftcomputevirtualmachinescalesets-adapter
 func (c computeVirtualMachineScaleSetWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	pager := c.client.NewListPager(resourceGroup, nil)
+	pager := c.client.NewListPager(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -63,11 +62,12 @@ func (c computeVirtualMachineScaleSetWrapper) List(ctx context.Context, scope st
 }
 
 func (c computeVirtualMachineScaleSetWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+		return
 	}
-	pager := c.client.NewListPager(resourceGroup, nil)
+	pager := c.client.NewListPager(rgScope.ResourceGroup, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -95,11 +95,11 @@ func (c computeVirtualMachineScaleSetWrapper) Get(ctx context.Context, scope str
 	if scaleSetName == "" {
 		return nil, azureshared.QueryError(errors.New("scaleSetName cannot be empty"), scope, c.Type())
 	}
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	scaleSet, err := c.client.Get(ctx, resourceGroup, scaleSetName, nil)
+	scaleSet, err := c.client.Get(ctx, rgScope.ResourceGroup, scaleSetName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}

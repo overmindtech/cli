@@ -110,8 +110,7 @@ func TestKeyVaultManagedHSMIntegration(t *testing.T) {
 
 			hsmWrapper := manual.NewKeyVaultManagedHSM(
 				clients.NewManagedHSMsClient(managedHSMClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := hsmWrapper.Scopes()[0]
 
@@ -151,8 +150,7 @@ func TestKeyVaultManagedHSMIntegration(t *testing.T) {
 
 			hsmWrapper := manual.NewKeyVaultManagedHSM(
 				clients.NewManagedHSMsClient(managedHSMClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := hsmWrapper.Scopes()[0]
 
@@ -195,8 +193,7 @@ func TestKeyVaultManagedHSMIntegration(t *testing.T) {
 
 			hsmWrapper := manual.NewKeyVaultManagedHSM(
 				clients.NewManagedHSMsClient(managedHSMClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := hsmWrapper.Scopes()[0]
 
@@ -241,8 +238,7 @@ func TestKeyVaultManagedHSMIntegration(t *testing.T) {
 
 			hsmWrapper := manual.NewKeyVaultManagedHSM(
 				clients.NewManagedHSMsClient(managedHSMClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := hsmWrapper.Scopes()[0]
 

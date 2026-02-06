@@ -20,15 +20,14 @@ var ComputeDiskLookupByName = shared.NewItemTypeLookup("name", azureshared.Compu
 
 type computeDiskWrapper struct {
 	client clients.DisksClient
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewComputeDisk(client clients.DisksClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewComputeDisk(client clients.DisksClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &computeDiskWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
 			azureshared.ComputeDisk,
 		),
@@ -36,11 +35,11 @@ func NewComputeDisk(client clients.DisksClient, subscriptionID, resourceGroup st
 }
 
 func (c computeDiskWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	pager := c.client.NewListByResourceGroupPager(resourceGroup, nil)
+	pager := c.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -63,11 +62,12 @@ func (c computeDiskWrapper) List(ctx context.Context, scope string) ([]*sdp.Item
 }
 
 func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+		return
 	}
-	pager := c.client.NewListByResourceGroupPager(resourceGroup, nil)
+	pager := c.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -94,11 +94,11 @@ func (c computeDiskWrapper) Get(ctx context.Context, scope string, queryParts ..
 		return nil, azureshared.QueryError(errors.New("queryParts must be at least 1 and be the disk name"), scope, c.Type())
 	}
 	diskName := queryParts[0]
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	disk, err := c.client.Get(ctx, resourceGroup, diskName, nil)
+	disk, err := c.client.Get(ctx, rgScope.ResourceGroup, diskName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}

@@ -66,8 +66,7 @@ func TestNetworkVirtualNetworkIntegration(t *testing.T) {
 
 			vnetWrapper := manual.NewNetworkVirtualNetwork(
 				clients.NewVirtualNetworksClient(vnetClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := vnetWrapper.Scopes()[0]
 
@@ -102,8 +101,7 @@ func TestNetworkVirtualNetworkIntegration(t *testing.T) {
 
 			vnetWrapper := manual.NewNetworkVirtualNetwork(
 				clients.NewVirtualNetworksClient(vnetClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := vnetWrapper.Scopes()[0]
 
@@ -144,8 +142,7 @@ func TestNetworkVirtualNetworkIntegration(t *testing.T) {
 
 			vnetWrapper := manual.NewNetworkVirtualNetwork(
 				clients.NewVirtualNetworksClient(vnetClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := vnetWrapper.Scopes()[0]
 

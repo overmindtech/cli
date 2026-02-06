@@ -83,7 +83,7 @@ func TestKeyVaultSecret(t *testing.T) {
 				Secret: *secret,
 			}, nil)
 
-		wrapper := manual.NewKeyVaultSecret(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Get requires vaultName and secretName as query parts
@@ -159,7 +159,7 @@ func TestKeyVaultSecret(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockSecretsClient(ctrl)
 
-		wrapper := manual.NewKeyVaultSecret(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (only vault name)
@@ -172,7 +172,7 @@ func TestKeyVaultSecret(t *testing.T) {
 	t.Run("Get_EmptyVaultName", func(t *testing.T) {
 		mockClient := mocks.NewMockSecretsClient(ctrl)
 
-		wrapper := manual.NewKeyVaultSecret(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty vault name
@@ -186,7 +186,7 @@ func TestKeyVaultSecret(t *testing.T) {
 	t.Run("Get_EmptySecretName", func(t *testing.T) {
 		mockClient := mocks.NewMockSecretsClient(ctrl)
 
-		wrapper := manual.NewKeyVaultSecret(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty secret name
@@ -208,7 +208,7 @@ func TestKeyVaultSecret(t *testing.T) {
 				Secret: *secret,
 			}, nil)
 
-		wrapper := manual.NewKeyVaultSecret(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := vaultName + shared.QuerySeparator + secretName
@@ -227,7 +227,7 @@ func TestKeyVaultSecret(t *testing.T) {
 				Secret: *secret,
 			}, nil)
 
-		wrapper := manual.NewKeyVaultSecret(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := vaultName + shared.QuerySeparator + secretName
@@ -279,7 +279,7 @@ func TestKeyVaultSecret(t *testing.T) {
 			pager:             mockPager,
 		}
 
-		wrapper := manual.NewKeyVaultSecret(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -311,7 +311,7 @@ func TestKeyVaultSecret(t *testing.T) {
 		mockClient := mocks.NewMockSecretsClient(ctrl)
 		testClient := &testSecretsClient{MockSecretsClient: mockClient}
 
-		wrapper := manual.NewKeyVaultSecret(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Test Search directly with no query parts - should return error before calling List
 		_, qErr := wrapper.Search(ctx, wrapper.Scopes()[0])
@@ -324,7 +324,7 @@ func TestKeyVaultSecret(t *testing.T) {
 		mockClient := mocks.NewMockSecretsClient(ctrl)
 		testClient := &testSecretsClient{MockSecretsClient: mockClient}
 
-		wrapper := manual.NewKeyVaultSecret(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Test Search directly with empty vault name
 		_, qErr := wrapper.Search(ctx, "")
@@ -365,7 +365,7 @@ func TestKeyVaultSecret(t *testing.T) {
 			pager:             mockPager,
 		}
 
-		wrapper := manual.NewKeyVaultSecret(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -396,7 +396,7 @@ func TestKeyVaultSecret(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, vaultName, "nonexistent-secret", nil).Return(
 			armkeyvault.SecretsClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewKeyVaultSecret(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := vaultName + shared.QuerySeparator + "nonexistent-secret"
@@ -418,7 +418,7 @@ func TestKeyVaultSecret(t *testing.T) {
 			pager:             errorPager,
 		}
 
-		wrapper := manual.NewKeyVaultSecret(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -437,7 +437,7 @@ func TestKeyVaultSecret(t *testing.T) {
 	t.Run("InterfaceCompliance", func(t *testing.T) {
 		mockClient := mocks.NewMockSecretsClient(ctrl)
 		testClient := &testSecretsClient{MockSecretsClient: mockClient}
-		wrapper := manual.NewKeyVaultSecret(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Verify wrapper implements SearchableWrapper (it's returned as this type)
 		if wrapper == nil {
@@ -455,7 +455,7 @@ func TestKeyVaultSecret(t *testing.T) {
 	t.Run("PotentialLinks", func(t *testing.T) {
 		mockClient := mocks.NewMockSecretsClient(ctrl)
 		testClient := &testSecretsClient{MockSecretsClient: mockClient}
-		wrapper := manual.NewKeyVaultSecret(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		links := wrapper.PotentialLinks()
 		if len(links) == 0 {
@@ -478,7 +478,7 @@ func TestKeyVaultSecret(t *testing.T) {
 	t.Run("TerraformMappings", func(t *testing.T) {
 		mockClient := mocks.NewMockSecretsClient(ctrl)
 		testClient := &testSecretsClient{MockSecretsClient: mockClient}
-		wrapper := manual.NewKeyVaultSecret(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		mappings := wrapper.TerraformMappings()
 		if len(mappings) == 0 {
@@ -509,7 +509,7 @@ func TestKeyVaultSecret(t *testing.T) {
 	t.Run("IAMPermissions", func(t *testing.T) {
 		mockClient := mocks.NewMockSecretsClient(ctrl)
 		testClient := &testSecretsClient{MockSecretsClient: mockClient}
-		wrapper := manual.NewKeyVaultSecret(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		permissions := wrapper.IAMPermissions()
 		if len(permissions) == 0 {
@@ -532,7 +532,7 @@ func TestKeyVaultSecret(t *testing.T) {
 	t.Run("PredefinedRole", func(t *testing.T) {
 		mockClient := mocks.NewMockSecretsClient(ctrl)
 		testClient := &testSecretsClient{MockSecretsClient: mockClient}
-		wrapper := manual.NewKeyVaultSecret(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// PredefinedRole is available on the wrapper, not the interface
 		// Use type assertion to access the concrete type
@@ -562,7 +562,7 @@ func TestKeyVaultSecret(t *testing.T) {
 				Secret: *secret,
 			}, nil)
 
-		wrapper := manual.NewKeyVaultSecret(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewKeyVaultSecret(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := vaultName + shared.QuerySeparator + secretName

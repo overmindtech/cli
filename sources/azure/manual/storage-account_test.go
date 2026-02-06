@@ -37,7 +37,7 @@ func TestStorageAccount(t *testing.T) {
 				Account: *account,
 			}, nil)
 
-		wrapper := manual.NewStorageAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], accountName, true)
@@ -171,7 +171,7 @@ func TestStorageAccount(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockStorageAccountsClient(ctrl)
 
-		wrapper := manual.NewStorageAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (empty)
@@ -200,9 +200,9 @@ func TestStorageAccount(t *testing.T) {
 			mockPager.EXPECT().More().Return(false),
 		)
 
-		mockClient.EXPECT().List(resourceGroup).Return(mockPager)
+		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewStorageAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -263,9 +263,9 @@ func TestStorageAccount(t *testing.T) {
 			mockPager.EXPECT().More().Return(false),
 		)
 
-		mockClient.EXPECT().List(resourceGroup).Return(mockPager)
+		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewStorageAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -299,7 +299,7 @@ func TestStorageAccount(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-account").Return(
 			armstorage.AccountsClientGetPropertiesResponse{}, expectedErr)
 
-		wrapper := manual.NewStorageAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-account", true)
@@ -321,9 +321,9 @@ func TestStorageAccount(t *testing.T) {
 				armstorage.AccountsClientListByResourceGroupResponse{}, expectedErr),
 		)
 
-		mockClient.EXPECT().List(resourceGroup).Return(mockPager)
+		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewStorageAccount(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageAccount(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)

@@ -109,8 +109,7 @@ func TestComputeImageIntegration(t *testing.T) {
 
 			imageWrapper := manual.NewComputeImage(
 				clients.NewImagesClient(imageClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := imageWrapper.Scopes()[0]
 
@@ -145,8 +144,7 @@ func TestComputeImageIntegration(t *testing.T) {
 
 			imageWrapper := manual.NewComputeImage(
 				clients.NewImagesClient(imageClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := imageWrapper.Scopes()[0]
 
@@ -190,8 +188,7 @@ func TestComputeImageIntegration(t *testing.T) {
 
 			imageWrapper := manual.NewComputeImage(
 				clients.NewImagesClient(imageClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := imageWrapper.Scopes()[0]
 
@@ -232,8 +229,7 @@ func TestComputeImageIntegration(t *testing.T) {
 
 			imageWrapper := manual.NewComputeImage(
 				clients.NewImagesClient(imageClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := imageWrapper.Scopes()[0]
 

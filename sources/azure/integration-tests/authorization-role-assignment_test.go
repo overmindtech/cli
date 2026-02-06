@@ -98,8 +98,7 @@ func TestAuthorizationRoleAssignmentIntegration(t *testing.T) {
 
 			roleAssignmentWrapper := manual.NewAuthorizationRoleAssignment(
 				clients.NewRoleAssignmentsClient(roleAssignmentsClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := roleAssignmentWrapper.Scopes()[0]
 
@@ -150,8 +149,7 @@ func TestAuthorizationRoleAssignmentIntegration(t *testing.T) {
 
 			roleAssignmentWrapper := manual.NewAuthorizationRoleAssignment(
 				clients.NewRoleAssignmentsClient(roleAssignmentsClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := roleAssignmentWrapper.Scopes()[0]
 
@@ -198,8 +196,7 @@ func TestAuthorizationRoleAssignmentIntegration(t *testing.T) {
 
 			roleAssignmentWrapper := manual.NewAuthorizationRoleAssignment(
 				clients.NewRoleAssignmentsClient(roleAssignmentsClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := roleAssignmentWrapper.Scopes()[0]
 
@@ -248,8 +245,7 @@ func TestAuthorizationRoleAssignmentIntegration(t *testing.T) {
 
 			roleAssignmentWrapper := manual.NewAuthorizationRoleAssignment(
 				clients.NewRoleAssignmentsClient(roleAssignmentsClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := roleAssignmentWrapper.Scopes()[0]
 

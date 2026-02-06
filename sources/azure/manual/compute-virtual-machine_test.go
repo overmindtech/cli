@@ -38,7 +38,7 @@ func TestComputeVirtualMachine(t *testing.T) {
 				VirtualMachine: *vm,
 			}, nil)
 
-		wrapper := manual.NewComputeVirtualMachine(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachine(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vmName, true)
@@ -196,7 +196,7 @@ func TestComputeVirtualMachine(t *testing.T) {
 						VirtualMachine: *vm,
 					}, nil)
 
-				wrapper := manual.NewComputeVirtualMachine(mockClient, subscriptionID, resourceGroup)
+				wrapper := manual.NewComputeVirtualMachine(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 				sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-vm", true)
@@ -232,7 +232,7 @@ func TestComputeVirtualMachine(t *testing.T) {
 
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeVirtualMachine(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachine(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -281,7 +281,7 @@ func TestComputeVirtualMachine(t *testing.T) {
 
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeVirtualMachine(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachine(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
@@ -331,7 +331,7 @@ func TestComputeVirtualMachine(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-vm", nil).Return(
 			armcompute.VirtualMachinesClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewComputeVirtualMachine(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeVirtualMachine(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-vm", true)

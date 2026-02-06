@@ -19,15 +19,14 @@ var ManagedIdentityUserAssignedIdentityLookupByName = shared.NewItemTypeLookup("
 type managedIdentityUserAssignedIdentityWrapper struct {
 	client clients.UserAssignedIdentitiesClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewManagedIdentityUserAssignedIdentity(client clients.UserAssignedIdentitiesClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewManagedIdentityUserAssignedIdentity(client clients.UserAssignedIdentitiesClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &managedIdentityUserAssignedIdentityWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 			azureshared.ManagedIdentityUserAssignedIdentity,
 		),
@@ -35,11 +34,11 @@ func NewManagedIdentityUserAssignedIdentity(client clients.UserAssignedIdentitie
 }
 
 func (m managedIdentityUserAssignedIdentityWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = m.ResourceGroup()
+	rgScope, err := m.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, m.Type())
 	}
-	pager := m.client.ListByResourceGroup(resourceGroup, nil)
+	pager := m.client.ListByResourceGroup(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -62,11 +61,12 @@ func (m managedIdentityUserAssignedIdentityWrapper) List(ctx context.Context, sc
 }
 
 func (m managedIdentityUserAssignedIdentityWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = m.ResourceGroup()
+	rgScope, err := m.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, m.Type()))
+		return
 	}
-	pager := m.client.ListByResourceGroup(resourceGroup, nil)
+	pager := m.client.ListByResourceGroup(rgScope.ResourceGroup, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -136,11 +136,11 @@ func (m managedIdentityUserAssignedIdentityWrapper) Get(ctx context.Context, sco
 	if name == "" {
 		return nil, azureshared.QueryError(errors.New("user assigned identity name cannot be empty"), scope, m.Type())
 	}
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = m.ResourceGroup()
+	rgScope, err := m.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, m.Type())
 	}
-	identity, err := m.client.Get(ctx, resourceGroup, name, nil)
+	identity, err := m.client.Get(ctx, rgScope.ResourceGroup, name, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, m.Type())
 	}

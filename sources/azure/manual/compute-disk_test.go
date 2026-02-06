@@ -39,7 +39,7 @@ func TestComputeDisk(t *testing.T) {
 				Disk: *disk,
 			}, nil)
 
-		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDisk(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], diskName, true)
@@ -74,7 +74,7 @@ func TestComputeDisk(t *testing.T) {
 				Disk: *disk,
 			}, nil)
 
-		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDisk(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], diskName, true)
@@ -309,7 +309,7 @@ func TestComputeDisk(t *testing.T) {
 				Disk: *disk,
 			}, nil)
 
-		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDisk(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], diskName, true)
@@ -347,7 +347,7 @@ func TestComputeDisk(t *testing.T) {
 				Disk: *disk,
 			}, nil)
 
-		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDisk(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], diskName, true)
@@ -382,7 +382,7 @@ func TestComputeDisk(t *testing.T) {
 
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDisk(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -419,7 +419,7 @@ func TestComputeDisk(t *testing.T) {
 
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDisk(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
@@ -477,7 +477,7 @@ func TestComputeDisk(t *testing.T) {
 
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDisk(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -503,7 +503,7 @@ func TestComputeDisk(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-disk", nil).Return(
 			armcompute.DisksClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDisk(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-disk", true)
@@ -518,7 +518,7 @@ func TestComputeDisk(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "", nil).Return(
 			armcompute.DisksClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDisk(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
@@ -530,7 +530,7 @@ func TestComputeDisk(t *testing.T) {
 	t.Run("GetWithInsufficientQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockDisksClient(ctrl)
 
-		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDisk(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		// Test the wrapper's Get method directly with insufficient query parts
 		_, qErr := wrapper.Get(ctx, wrapper.Scopes()[0])
 		if qErr == nil {
@@ -544,7 +544,7 @@ func TestComputeDisk(t *testing.T) {
 
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(errorPager)
 
-		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDisk(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -564,7 +564,7 @@ func TestComputeDisk(t *testing.T) {
 
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(errorPager)
 
-		wrapper := manual.NewComputeDisk(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDisk(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		var errs []error

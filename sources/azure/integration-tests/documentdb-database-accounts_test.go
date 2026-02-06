@@ -87,8 +87,7 @@ func TestDocumentDBDatabaseAccountsIntegration(t *testing.T) {
 
 			cosmosWrapper := manual.NewDocumentDBDatabaseAccounts(
 				clients.NewDocumentDBDatabaseAccountsClient(cosmosClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := cosmosWrapper.Scopes()[0]
 
@@ -128,8 +127,7 @@ func TestDocumentDBDatabaseAccountsIntegration(t *testing.T) {
 
 			cosmosWrapper := manual.NewDocumentDBDatabaseAccounts(
 				clients.NewDocumentDBDatabaseAccountsClient(cosmosClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := cosmosWrapper.Scopes()[0]
 

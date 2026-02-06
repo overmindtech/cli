@@ -11,6 +11,8 @@ import (
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
+	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/cli/discovery"
 )
 
 var NetworkRouteTableLookupByName = shared.NewItemTypeLookup("name", azureshared.NetworkRouteTable)
@@ -18,14 +20,13 @@ var NetworkRouteTableLookupByName = shared.NewItemTypeLookup("name", azureshared
 type networkRouteTableWrapper struct {
 	client clients.RouteTablesClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewNetworkRouteTable(client clients.RouteTablesClient, subscriptionID, resourceGroup string) *networkRouteTableWrapper {
+func NewNetworkRouteTable(client clients.RouteTablesClient, resourceGroupScopes []azureshared.ResourceGroupScope) *networkRouteTableWrapper {
 	return &networkRouteTableWrapper{
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 			azureshared.NetworkRouteTable,
 		),
@@ -34,11 +35,11 @@ func NewNetworkRouteTable(client clients.RouteTablesClient, subscriptionID, reso
 }
 
 func (n networkRouteTableWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	pager := n.client.List(resourceGroup, nil)
+	pager := n.client.List(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -58,6 +59,34 @@ func (n networkRouteTableWrapper) List(ctx context.Context, scope string) ([]*sd
 		}
 	}
 	return items, nil
+}
+
+func (n networkRouteTableWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, n.Type()))
+		return
+	}
+	pager := n.client.List(rgScope.ResourceGroup, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, n.Type()))
+			return
+		}
+		for _, routeTable := range page.Value {
+			if routeTable.Name == nil {
+				continue
+			}
+			item, sdpErr := n.azureRouteTableToSDPItem(routeTable)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
 }
 
 func (n networkRouteTableWrapper) azureRouteTableToSDPItem(routeTable *armnetwork.RouteTable) (*sdp.Item, *sdp.QueryError) {
@@ -172,11 +201,11 @@ func (n networkRouteTableWrapper) Get(ctx context.Context, scope string, queryPa
 	if routeTableName == "" {
 		return nil, azureshared.QueryError(errors.New("route table name is empty"), n.DefaultScope(), n.Type())
 	}
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	resp, err := n.client.Get(ctx, resourceGroup, routeTableName, nil)
+	resp, err := n.client.Get(ctx, rgScope.ResourceGroup, routeTableName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
 	}

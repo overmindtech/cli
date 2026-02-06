@@ -17,12 +17,11 @@ import (
 
 var SQLServerLookupByName = shared.NewItemTypeLookup("name", azureshared.SQLServer)
 
-func NewSqlServer(client clients.SqlServersClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewSqlServer(client clients.SqlServersClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &sqlServerWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 			azureshared.SQLServer,
 		),
@@ -32,15 +31,15 @@ func NewSqlServer(client clients.SqlServersClient, subscriptionID, resourceGroup
 type sqlServerWrapper struct {
 	client clients.SqlServersClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
 func (s sqlServerWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	pager := s.client.ListByResourceGroup(ctx, resourceGroup, nil)
+	pager := s.client.ListByResourceGroup(ctx, rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -64,11 +63,12 @@ func (s sqlServerWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, 
 }
 
 func (s sqlServerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, s.Type()))
+		return
 	}
-	pager := s.client.ListByResourceGroup(ctx, resourceGroup, nil)
+	pager := s.client.ListByResourceGroup(ctx, rgScope.ResourceGroup, nil)
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -100,11 +100,11 @@ func (s sqlServerWrapper) Get(ctx context.Context, scope string, queryParts ...s
 		return nil, azureshared.QueryError(errors.New("serverName is empty"), scope, s.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	resp, err := s.client.Get(ctx, resourceGroup, serverName, nil)
+	resp, err := s.client.Get(ctx, rgScope.ResourceGroup, serverName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, s.Type())
 	}

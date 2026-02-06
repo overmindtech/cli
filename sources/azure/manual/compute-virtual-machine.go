@@ -21,16 +21,15 @@ var ComputeVirtualMachineLookupByName = shared.NewItemTypeLookup("name", azuresh
 type computeVirtualMachineWrapper struct {
 	client clients.VirtualMachinesClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
 // NewComputeVirtualMachine creates a new computeVirtualMachineWrapper instance
-func NewComputeVirtualMachine(client clients.VirtualMachinesClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewComputeVirtualMachine(client clients.VirtualMachinesClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &computeVirtualMachineWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION,
 			azureshared.ComputeVirtualMachine,
 		),
@@ -105,11 +104,11 @@ func (c computeVirtualMachineWrapper) GetLookups() sources.ItemTypeLookups {
 func (c computeVirtualMachineWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	vmName := queryParts[0]
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	resp, err := c.client.Get(ctx, resourceGroup, vmName, nil)
+	resp, err := c.client.Get(ctx, rgScope.ResourceGroup, vmName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
@@ -127,11 +126,11 @@ func (c computeVirtualMachineWrapper) Get(ctx context.Context, scope string, que
 // List lists virtual machines in the resource group and converts them to sdp.Items.
 // Reference: https://learn.microsoft.com/en-us/rest/api/compute/virtual-machines/list
 func (c computeVirtualMachineWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	pager := c.client.NewListPager(resourceGroup, nil)
+	pager := c.client.NewListPager(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -156,11 +155,12 @@ func (c computeVirtualMachineWrapper) List(ctx context.Context, scope string) ([
 }
 
 func (c computeVirtualMachineWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = c.ResourceGroup()
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+		return
 	}
-	pager := c.client.NewListPager(resourceGroup, nil)
+	pager := c.client.NewListPager(rgScope.ResourceGroup, nil)
 
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
@@ -210,17 +210,17 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 		if vm.Properties.StorageProfile.OSDisk.ManagedDisk != nil && vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID != nil {
 			diskName := azureshared.ExtractResourceName(*vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID)
 			if diskName != "" {
-				scope := c.DefaultScope()
+				linkScope := scope
 				// Check if disk is in a different resource group
 				if extractedScope := azureshared.ExtractScopeFromResourceID(*vm.Properties.StorageProfile.OSDisk.ManagedDisk.ID); extractedScope != "" {
-					scope = extractedScope
+					linkScope = extractedScope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.ComputeDisk.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  diskName,
-						Scope:  scope,
+						Scope:  linkScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true, // If disk changes → VM affected (In: true)
@@ -233,16 +233,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 			if vm.Properties.StorageProfile.OSDisk.ManagedDisk.DiskEncryptionSet != nil && vm.Properties.StorageProfile.OSDisk.ManagedDisk.DiskEncryptionSet.ID != nil {
 				diskEncryptionSetName := azureshared.ExtractResourceName(*vm.Properties.StorageProfile.OSDisk.ManagedDisk.DiskEncryptionSet.ID)
 				if diskEncryptionSetName != "" {
-					scope := c.DefaultScope()
+					linkScope := scope
 					if extractedScope := azureshared.ExtractScopeFromResourceID(*vm.Properties.StorageProfile.OSDisk.ManagedDisk.DiskEncryptionSet.ID); extractedScope != "" {
-						scope = extractedScope
+						linkScope = extractedScope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.ComputeDiskEncryptionSet.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  diskEncryptionSetName,
-							Scope:  scope,
+							Scope:  linkScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If encryption set changes → disk encryption affected (In: true)
@@ -260,17 +260,17 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 			if dataDisk.ManagedDisk != nil && dataDisk.ManagedDisk.ID != nil {
 				diskName := azureshared.ExtractResourceName(*dataDisk.ManagedDisk.ID)
 				if diskName != "" {
-					scope := c.DefaultScope()
+					linkScope := scope
 					// Check if disk is in a different resource group
 					if extractedScope := azureshared.ExtractScopeFromResourceID(*dataDisk.ManagedDisk.ID); extractedScope != "" {
-						scope = extractedScope
+						linkScope = extractedScope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.ComputeDisk.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  diskName,
-							Scope:  scope,
+							Scope:  linkScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true, // If disk changes → VM affected (In: true)
@@ -283,16 +283,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 				if dataDisk.ManagedDisk.DiskEncryptionSet != nil && dataDisk.ManagedDisk.DiskEncryptionSet.ID != nil {
 					diskEncryptionSetName := azureshared.ExtractResourceName(*dataDisk.ManagedDisk.DiskEncryptionSet.ID)
 					if diskEncryptionSetName != "" {
-						scope := c.DefaultScope()
+						linkScope := scope
 						if extractedScope := azureshared.ExtractScopeFromResourceID(*dataDisk.ManagedDisk.DiskEncryptionSet.ID); extractedScope != "" {
-							scope = extractedScope
+							linkScope = extractedScope
 						}
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
 								Type:   azureshared.ComputeDiskEncryptionSet.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  diskEncryptionSetName,
-								Scope:  scope,
+								Scope:  linkScope,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
 								In:  true,  // If encryption set changes → disk encryption affected (In: true)
@@ -312,17 +312,17 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 			if nic.ID != nil {
 				nicName := azureshared.ExtractResourceName(*nic.ID)
 				if nicName != "" {
-					scope := c.DefaultScope()
+					linkScope := scope
 					// Check if NIC is in a different resource group
 					if extractedScope := azureshared.ExtractScopeFromResourceID(*nic.ID); extractedScope != "" {
-						scope = extractedScope
+						linkScope = extractedScope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.NetworkNetworkInterface.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  nicName,
-							Scope:  scope,
+							Scope:  linkScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If NIC changes → VM network connectivity affected (In: true)
@@ -339,17 +339,17 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 	if vm.Properties != nil && vm.Properties.AvailabilitySet != nil && vm.Properties.AvailabilitySet.ID != nil {
 		availabilitySetName := azureshared.ExtractResourceName(*vm.Properties.AvailabilitySet.ID)
 		if availabilitySetName != "" {
-			scope := c.DefaultScope()
+			linkScope := scope
 			// Check if availability set is in a different resource group
 			if extractedScope := azureshared.ExtractScopeFromResourceID(*vm.Properties.AvailabilitySet.ID); extractedScope != "" {
-				scope = extractedScope
+				linkScope = extractedScope
 			}
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.ComputeAvailabilitySet.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  availabilitySetName,
-					Scope:  scope,
+					Scope:  linkScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // If availability set changes → VM placement affected (In: true)
@@ -364,16 +364,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 	if vm.Properties != nil && vm.Properties.ProximityPlacementGroup != nil && vm.Properties.ProximityPlacementGroup.ID != nil {
 		proximityPlacementGroupName := azureshared.ExtractResourceName(*vm.Properties.ProximityPlacementGroup.ID)
 		if proximityPlacementGroupName != "" {
-			scope := c.DefaultScope()
+			linkScope := scope
 			if extractedScope := azureshared.ExtractScopeFromResourceID(*vm.Properties.ProximityPlacementGroup.ID); extractedScope != "" {
-				scope = extractedScope
+				linkScope = extractedScope
 			}
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.ComputeProximityPlacementGroup.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  proximityPlacementGroupName,
-					Scope:  scope,
+					Scope:  linkScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // If proximity placement group changes → VM placement affected (In: true)
@@ -388,16 +388,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 	if vm.Properties != nil && vm.Properties.HostGroup != nil && vm.Properties.HostGroup.ID != nil {
 		hostGroupName := azureshared.ExtractResourceName(*vm.Properties.HostGroup.ID)
 		if hostGroupName != "" {
-			scope := c.DefaultScope()
+			linkScope := scope
 			if extractedScope := azureshared.ExtractScopeFromResourceID(*vm.Properties.HostGroup.ID); extractedScope != "" {
-				scope = extractedScope
+				linkScope = extractedScope
 			}
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.ComputeDedicatedHostGroup.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  hostGroupName,
-					Scope:  scope,
+					Scope:  linkScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // If host group changes → VM host placement affected (In: true)
@@ -412,16 +412,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 	if vm.Properties != nil && vm.Properties.CapacityReservation != nil && vm.Properties.CapacityReservation.CapacityReservationGroup != nil && vm.Properties.CapacityReservation.CapacityReservationGroup.ID != nil {
 		capacityReservationGroupName := azureshared.ExtractResourceName(*vm.Properties.CapacityReservation.CapacityReservationGroup.ID)
 		if capacityReservationGroupName != "" {
-			scope := c.DefaultScope()
+			linkScope := scope
 			if extractedScope := azureshared.ExtractScopeFromResourceID(*vm.Properties.CapacityReservation.CapacityReservationGroup.ID); extractedScope != "" {
-				scope = extractedScope
+				linkScope = extractedScope
 			}
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.ComputeCapacityReservationGroup.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  capacityReservationGroupName,
-					Scope:  scope,
+					Scope:  linkScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // If capacity reservation group changes → VM capacity reservation affected (In: true)
@@ -436,16 +436,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 	if vm.Properties != nil && vm.Properties.VirtualMachineScaleSet != nil && vm.Properties.VirtualMachineScaleSet.ID != nil {
 		vmssName := azureshared.ExtractResourceName(*vm.Properties.VirtualMachineScaleSet.ID)
 		if vmssName != "" {
-			scope := c.DefaultScope()
+			linkScope := scope
 			if extractedScope := azureshared.ExtractScopeFromResourceID(*vm.Properties.VirtualMachineScaleSet.ID); extractedScope != "" {
-				scope = extractedScope
+				linkScope = extractedScope
 			}
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.ComputeVirtualMachineScaleSet.String(),
 					Method: sdp.QueryMethod_GET,
 					Query:  vmssName,
-					Scope:  scope,
+					Scope:  linkScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
 					In:  true,  // If VMSS changes → VM configuration affected (In: true)
@@ -462,16 +462,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 		if strings.Contains(*vm.ManagedBy, "/virtualMachineScaleSets/") {
 			vmssName := azureshared.ExtractPathParamsFromResourceID(*vm.ManagedBy, []string{"virtualMachineScaleSets"})
 			if len(vmssName) > 0 && vmssName[0] != "" {
-				scope := c.DefaultScope()
+				linkScope := scope
 				if extractedScope := azureshared.ExtractScopeFromResourceID(*vm.ManagedBy); extractedScope != "" {
-					scope = extractedScope
+					linkScope = extractedScope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.ComputeVirtualMachineScaleSet.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  vmssName[0],
-						Scope:  scope,
+						Scope:  linkScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,  // If VMSS changes → VM configuration affected (In: true)
@@ -496,16 +496,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 					galleryName := params[0]
 					imageName := params[1]
 					versionName := params[2]
-					scope := c.DefaultScope()
+					linkScope := scope
 					if extractedScope := azureshared.ExtractScopeFromResourceID(imageID); extractedScope != "" {
-						scope = extractedScope
+						linkScope = extractedScope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.ComputeSharedGalleryImage.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(galleryName, imageName, versionName),
-							Scope:  scope,
+							Scope:  linkScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If image version changes → VM image affected (In: true)
@@ -517,16 +517,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 				// Custom Image
 				imageName := azureshared.ExtractResourceName(imageID)
 				if imageName != "" {
-					scope := c.DefaultScope()
+					linkScope := scope
 					if extractedScope := azureshared.ExtractScopeFromResourceID(imageID); extractedScope != "" {
-						scope = extractedScope
+						linkScope = extractedScope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.ComputeImage.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  imageName,
-							Scope:  scope,
+							Scope:  linkScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If image changes → VM image affected (In: true)
@@ -544,16 +544,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 		for identityID := range vm.Identity.UserAssignedIdentities {
 			identityName := azureshared.ExtractResourceName(identityID)
 			if identityName != "" {
-				scope := c.DefaultScope()
+				linkScope := scope
 				if extractedScope := azureshared.ExtractScopeFromResourceID(identityID); extractedScope != "" {
-					scope = extractedScope
+					linkScope = extractedScope
 				}
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 						Method: sdp.QueryMethod_GET,
 						Query:  identityName,
-						Scope:  scope,
+						Scope:  linkScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
 						In:  true,  // If identity changes → VM identity access affected (In: true)
@@ -571,16 +571,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 			if secret.SourceVault != nil && secret.SourceVault.ID != nil {
 				vaultName := azureshared.ExtractResourceName(*secret.SourceVault.ID)
 				if vaultName != "" {
-					scope := c.DefaultScope()
+					linkScope := scope
 					if extractedScope := azureshared.ExtractScopeFromResourceID(*secret.SourceVault.ID); extractedScope != "" {
-						scope = extractedScope
+						linkScope = extractedScope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.KeyVaultVault.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  vaultName,
-							Scope:  scope,
+							Scope:  linkScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If Key Vault changes → VM secrets access affected (In: true)
@@ -601,16 +601,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 			if vm.Properties.StorageProfile.OSDisk.EncryptionSettings.DiskEncryptionKey != nil && vm.Properties.StorageProfile.OSDisk.EncryptionSettings.DiskEncryptionKey.SourceVault != nil && vm.Properties.StorageProfile.OSDisk.EncryptionSettings.DiskEncryptionKey.SourceVault.ID != nil {
 				vaultName := azureshared.ExtractResourceName(*vm.Properties.StorageProfile.OSDisk.EncryptionSettings.DiskEncryptionKey.SourceVault.ID)
 				if vaultName != "" {
-					scope := c.DefaultScope()
+					linkScope := scope
 					if extractedScope := azureshared.ExtractScopeFromResourceID(*vm.Properties.StorageProfile.OSDisk.EncryptionSettings.DiskEncryptionKey.SourceVault.ID); extractedScope != "" {
-						scope = extractedScope
+						linkScope = extractedScope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.KeyVaultVault.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  vaultName,
-							Scope:  scope,
+							Scope:  linkScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If Key Vault changes → disk encryption affected (In: true)
@@ -623,16 +623,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 			if vm.Properties.StorageProfile.OSDisk.EncryptionSettings.KeyEncryptionKey != nil && vm.Properties.StorageProfile.OSDisk.EncryptionSettings.KeyEncryptionKey.SourceVault != nil && vm.Properties.StorageProfile.OSDisk.EncryptionSettings.KeyEncryptionKey.SourceVault.ID != nil {
 				vaultName := azureshared.ExtractResourceName(*vm.Properties.StorageProfile.OSDisk.EncryptionSettings.KeyEncryptionKey.SourceVault.ID)
 				if vaultName != "" {
-					scope := c.DefaultScope()
+					linkScope := scope
 					if extractedScope := azureshared.ExtractScopeFromResourceID(*vm.Properties.StorageProfile.OSDisk.EncryptionSettings.KeyEncryptionKey.SourceVault.ID); extractedScope != "" {
-						scope = extractedScope
+						linkScope = extractedScope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.KeyVaultVault.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  vaultName,
-							Scope:  scope,
+							Scope:  linkScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If Key Vault changes → disk encryption affected (In: true)
@@ -656,16 +656,16 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 					galleryName := params[0]
 					appName := params[1]
 					versionName := params[2]
-					scope := c.DefaultScope()
+					linkScope := scope
 					if extractedScope := azureshared.ExtractScopeFromResourceID(packageRefID); extractedScope != "" {
-						scope = extractedScope
+						linkScope = extractedScope
 					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.ComputeSharedGalleryApplicationVersion.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(galleryName, appName, versionName),
-							Scope:  scope,
+							Scope:  linkScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
 							In:  true,  // If application version changes → VM application affected (In: true)

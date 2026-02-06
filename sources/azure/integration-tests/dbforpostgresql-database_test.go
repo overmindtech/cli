@@ -106,8 +106,7 @@ func TestDBforPostgreSQLDatabaseIntegration(t *testing.T) {
 
 			pgDbWrapper := manual.NewDBforPostgreSQLDatabase(
 				clients.NewPostgreSQLDatabasesClient(postgreSQLDatabaseClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := pgDbWrapper.Scopes()[0]
 
@@ -160,8 +159,7 @@ func TestDBforPostgreSQLDatabaseIntegration(t *testing.T) {
 
 			pgDbWrapper := manual.NewDBforPostgreSQLDatabase(
 				clients.NewPostgreSQLDatabasesClient(postgreSQLDatabaseClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := pgDbWrapper.Scopes()[0]
 
@@ -208,8 +206,7 @@ func TestDBforPostgreSQLDatabaseIntegration(t *testing.T) {
 
 			pgDbWrapper := manual.NewDBforPostgreSQLDatabase(
 				clients.NewPostgreSQLDatabasesClient(postgreSQLDatabaseClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := pgDbWrapper.Scopes()[0]
 

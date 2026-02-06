@@ -94,8 +94,7 @@ func TestStorageTableIntegration(t *testing.T) {
 
 			tableWrapper := manual.NewStorageTable(
 				clients.NewTablesClient(tableClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := tableWrapper.Scopes()[0]
 
@@ -132,8 +131,7 @@ func TestStorageTableIntegration(t *testing.T) {
 
 			tableWrapper := manual.NewStorageTable(
 				clients.NewTablesClient(tableClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := tableWrapper.Scopes()[0]
 
@@ -178,8 +176,7 @@ func TestStorageTableIntegration(t *testing.T) {
 
 			tableWrapper := manual.NewStorageTable(
 				clients.NewTablesClient(tableClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := tableWrapper.Scopes()[0]
 
@@ -221,8 +218,7 @@ func TestStorageTableIntegration(t *testing.T) {
 
 			tableWrapper := manual.NewStorageTable(
 				clients.NewTablesClient(tableClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := tableWrapper.Scopes()[0]
 

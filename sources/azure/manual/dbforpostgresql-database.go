@@ -17,15 +17,14 @@ var DBforPostgreSQLDatabaseLookupByName = shared.NewItemTypeLookup("name", azure
 type dbforPostgreSQLDatabaseWrapper struct {
 	client clients.PostgreSQLDatabasesClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewDBforPostgreSQLDatabase(client clients.PostgreSQLDatabasesClient, subscriptionID, resourceGroup string) sources.SearchableWrapper {
+func NewDBforPostgreSQLDatabase(client clients.PostgreSQLDatabasesClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.SearchableWrapper {
 	return &dbforPostgreSQLDatabaseWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_DATABASE,
 			azureshared.DBforPostgreSQLDatabase,
 		),
@@ -46,11 +45,11 @@ func (s dbforPostgreSQLDatabaseWrapper) Get(ctx context.Context, scope string, q
 	serverName := queryParts[0]
 	databaseName := queryParts[1]
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	resp, err := s.client.Get(ctx, resourceGroup, serverName, databaseName)
+	resp, err := s.client.Get(ctx, rgScope.ResourceGroup, serverName, databaseName)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
@@ -114,11 +113,11 @@ func (s dbforPostgreSQLDatabaseWrapper) Search(ctx context.Context, scope string
 	}
 	serverName := queryParts[0]
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = s.ResourceGroup()
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, s.Type())
 	}
-	pager := s.client.ListByServer(ctx, resourceGroup, serverName)
+	pager := s.client.ListByServer(ctx, rgScope.ResourceGroup, serverName)
 
 	var items []*sdp.Item
 	for pager.More() {

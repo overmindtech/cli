@@ -11,6 +11,8 @@ import (
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/cli/discovery"
 )
 
 var AuthorizationRoleAssignmentLookupByName = shared.NewItemTypeLookup("name", azureshared.AuthorizationRoleAssignment)
@@ -18,15 +20,14 @@ var AuthorizationRoleAssignmentLookupByName = shared.NewItemTypeLookup("name", a
 type authorizationRoleAssignmentWrapper struct {
 	client clients.RoleAssignmentsClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewAuthorizationRoleAssignment(client clients.RoleAssignmentsClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewAuthorizationRoleAssignment(client clients.RoleAssignmentsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &authorizationRoleAssignmentWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
 			azureshared.AuthorizationRoleAssignment,
 		),
@@ -37,11 +38,11 @@ func (a authorizationRoleAssignmentWrapper) List(ctx context.Context, scope stri
 	if scope == "" {
 		return nil, azureshared.QueryError(errors.New("scope cannot be empty"), scope, a.Type())
 	}
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = a.ResourceGroup()
+	rgScope, err := a.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, a.Type())
 	}
-	pager := a.client.ListForResourceGroup(resourceGroup, nil)
+	pager := a.client.ListForResourceGroup(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -61,6 +62,32 @@ func (a authorizationRoleAssignmentWrapper) List(ctx context.Context, scope stri
 	return items, nil
 }
 
+
+func (a authorizationRoleAssignmentWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	rgScope, err := a.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, a.Type()))
+		return
+	}
+	pager := a.client.ListForResourceGroup(rgScope.ResourceGroup, nil)
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, a.Type()))
+			return
+		}
+		for _, roleAssignment := range page.Value {
+			item, sdpErr := a.azureRoleAssignmentToSDPItem(roleAssignment, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
+}
 func (a authorizationRoleAssignmentWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if scope == "" {
 		return nil, azureshared.QueryError(errors.New("scope cannot be empty"), scope, a.Type())
@@ -74,8 +101,12 @@ func (a authorizationRoleAssignmentWrapper) Get(ctx context.Context, scope strin
 		return nil, azureshared.QueryError(errors.New("roleAssignmentName cannot be empty"), scope, a.Type())
 	}
 
+	rgScope, err := a.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, a.Type())
+	}
 	// Construct the Azure scope path from either subscription ID or resource group name
-	azureScope := azureshared.ConstructRoleAssignmentScope(scope, a.SubscriptionID())
+	azureScope := azureshared.ConstructRoleAssignmentScope(scope, rgScope.SubscriptionID)
 	if azureScope == "" {
 		return nil, azureshared.QueryError(errors.New("failed to construct Azure scope path"), scope, a.Type())
 	}
@@ -104,11 +135,11 @@ func (a authorizationRoleAssignmentWrapper) azureRoleAssignmentToSDPItem(roleAss
 		return nil, azureshared.QueryError(errors.New("role assignment name cannot be empty"), scope, a.Type())
 	}
 
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = a.ResourceGroup()
+	rgScope, err := a.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, a.Type())
 	}
-	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(resourceGroup, roleAssignmentName))
+	err = attributes.Set("uniqueAttr", shared.CompositeLookupKey(rgScope.ResourceGroup, roleAssignmentName))
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, a.Type())
 	}

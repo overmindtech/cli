@@ -75,8 +75,7 @@ func TestSQLServerIntegration(t *testing.T) {
 
 			sqlServerWrapper := manual.NewSqlServer(
 				clients.NewSqlServersClient(sqlServerClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := sqlServerWrapper.Scopes()[0]
 
@@ -126,8 +125,7 @@ func TestSQLServerIntegration(t *testing.T) {
 
 			sqlServerWrapper := manual.NewSqlServer(
 				clients.NewSqlServersClient(sqlServerClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := sqlServerWrapper.Scopes()[0]
 
@@ -173,8 +171,7 @@ func TestSQLServerIntegration(t *testing.T) {
 
 			sqlServerWrapper := manual.NewSqlServer(
 				clients.NewSqlServersClient(sqlServerClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := sqlServerWrapper.Scopes()[0]
 
@@ -268,8 +265,7 @@ func TestSQLServerIntegration(t *testing.T) {
 
 			sqlServerWrapper := manual.NewSqlServer(
 				clients.NewSqlServersClient(sqlServerClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := sqlServerWrapper.Scopes()[0]
 

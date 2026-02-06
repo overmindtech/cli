@@ -40,7 +40,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 			nil,
 		)
 
-		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], desName, true)
@@ -72,7 +72,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 			nil,
 		)
 
-		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], desName, true)
@@ -140,7 +140,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 			nil,
 		)
 
-		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], desName, true)
@@ -241,7 +241,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 			nil,
 		)
 
-		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], desName, true)
@@ -279,7 +279,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockDiskEncryptionSetsClient(ctrl)
-		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "", true)
@@ -290,7 +290,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 
 	t.Run("WrapperGet_MissingQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockDiskEncryptionSetsClient(ctrl)
-		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		defer func() {
 			if r := recover(); r != nil {
@@ -317,7 +317,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 			nil,
 		)
 
-		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], desName, true)
@@ -334,7 +334,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 		mockPager := newMockDiskEncryptionSetsPager(ctrl, []*armcompute.DiskEncryptionSet{des1, des2})
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -362,7 +362,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 		mockPager := newMockDiskEncryptionSetsPager(ctrl, []*armcompute.DiskEncryptionSet{des1, desNil})
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -384,7 +384,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 		mockPager := newErrorDiskEncryptionSetsPager(ctrl)
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -409,7 +409,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 		mockPager := newMockDiskEncryptionSetsPager(ctrl, []*armcompute.DiskEncryptionSet{des1, des2})
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		wg := &sync.WaitGroup{}
@@ -442,7 +442,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 		mockPager := newErrorDiskEncryptionSetsPager(ctrl)
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewComputeDiskEncryptionSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		errCh := make(chan error, 1)

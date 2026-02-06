@@ -81,7 +81,7 @@ func TestStorageBlobContainer(t *testing.T) {
 			}, nil)
 
 		testClient := &testBlobContainersClient{MockBlobContainersClient: mockClient}
-		wrapper := manual.NewStorageBlobContainer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageBlobContainer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Get requires storageAccountName and containerName as query parts
@@ -185,7 +185,7 @@ func TestStorageBlobContainer(t *testing.T) {
 			}, nil)
 
 		testClient := &testBlobContainersClient{MockBlobContainersClient: mockClient}
-		wrapper := manual.NewStorageBlobContainer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageBlobContainer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := storageAccountName + shared.QuerySeparator + containerName
@@ -231,7 +231,7 @@ func TestStorageBlobContainer(t *testing.T) {
 		mockClient := mocks.NewMockBlobContainersClient(ctrl)
 		testClient := &testBlobContainersClient{MockBlobContainersClient: mockClient}
 
-		wrapper := manual.NewStorageBlobContainer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageBlobContainer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (only storage account name)
@@ -282,7 +282,7 @@ func TestStorageBlobContainer(t *testing.T) {
 			pager:                    mockPager,
 		}
 
-		wrapper := manual.NewStorageBlobContainer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageBlobContainer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -316,7 +316,7 @@ func TestStorageBlobContainer(t *testing.T) {
 		mockClient := mocks.NewMockBlobContainersClient(ctrl)
 		testClient := &testBlobContainersClient{MockBlobContainersClient: mockClient}
 
-		wrapper := manual.NewStorageBlobContainer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageBlobContainer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Test Search directly with no query parts - should return error before calling List
 		_, qErr := wrapper.Search(ctx, wrapper.Scopes()[0])
@@ -352,7 +352,7 @@ func TestStorageBlobContainer(t *testing.T) {
 			pager:                    mockPager,
 		}
 
-		wrapper := manual.NewStorageBlobContainer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageBlobContainer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -383,7 +383,7 @@ func TestStorageBlobContainer(t *testing.T) {
 			armstorage.BlobContainersClientGetResponse{}, expectedErr)
 
 		testClient := &testBlobContainersClient{MockBlobContainersClient: mockClient}
-		wrapper := manual.NewStorageBlobContainer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageBlobContainer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := storageAccountName + shared.QuerySeparator + "nonexistent-container"
@@ -403,7 +403,7 @@ func TestStorageBlobContainer(t *testing.T) {
 			pager:                    errorPager,
 		}
 
-		wrapper := manual.NewStorageBlobContainer(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageBlobContainer(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)

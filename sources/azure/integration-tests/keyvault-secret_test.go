@@ -119,8 +119,7 @@ func TestKeyVaultSecretIntegration(t *testing.T) {
 
 			secretWrapper := manual.NewKeyVaultSecret(
 				clients.NewSecretsClient(secretsClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := secretWrapper.Scopes()[0]
 
@@ -165,8 +164,7 @@ func TestKeyVaultSecretIntegration(t *testing.T) {
 
 			secretWrapper := manual.NewKeyVaultSecret(
 				clients.NewSecretsClient(secretsClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := secretWrapper.Scopes()[0]
 
@@ -211,8 +209,7 @@ func TestKeyVaultSecretIntegration(t *testing.T) {
 
 			secretWrapper := manual.NewKeyVaultSecret(
 				clients.NewSecretsClient(secretsClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := secretWrapper.Scopes()[0]
 
@@ -254,8 +251,7 @@ func TestKeyVaultSecretIntegration(t *testing.T) {
 
 			secretWrapper := manual.NewKeyVaultSecret(
 				clients.NewSecretsClient(secretsClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := secretWrapper.Scopes()[0]
 

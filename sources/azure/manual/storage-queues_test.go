@@ -80,7 +80,7 @@ func TestStorageQueues(t *testing.T) {
 			}, nil)
 
 		testClient := &testQueuesClient{MockQueuesClient: mockClient}
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageQueues(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Get requires storageAccountName and queueName as query parts
@@ -142,7 +142,7 @@ func TestStorageQueues(t *testing.T) {
 		mockClient := mocks.NewMockQueuesClient(ctrl)
 		testClient := &testQueuesClient{MockQueuesClient: mockClient}
 
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageQueues(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with insufficient query parts (only storage account name)
@@ -189,7 +189,7 @@ func TestStorageQueues(t *testing.T) {
 			pager:            mockPager,
 		}
 
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageQueues(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -223,7 +223,7 @@ func TestStorageQueues(t *testing.T) {
 		mockClient := mocks.NewMockQueuesClient(ctrl)
 		testClient := &testQueuesClient{MockQueuesClient: mockClient}
 
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageQueues(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Test Search directly with no query parts - should return error before calling List
 		_, qErr := wrapper.Search(ctx, wrapper.Scopes()[0])
@@ -263,7 +263,7 @@ func TestStorageQueues(t *testing.T) {
 			pager:            mockPager,
 		}
 
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageQueues(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -295,7 +295,7 @@ func TestStorageQueues(t *testing.T) {
 			armstorage.QueueClientGetResponse{}, expectedErr)
 
 		testClient := &testQueuesClient{MockQueuesClient: mockClient}
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageQueues(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		query := storageAccountName + shared.QuerySeparator + "nonexistent-queue"
@@ -315,7 +315,7 @@ func TestStorageQueues(t *testing.T) {
 			pager:            errorPager,
 		}
 
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageQueues(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		searchable, ok := adapter.(discovery.SearchableAdapter)
@@ -334,7 +334,7 @@ func TestStorageQueues(t *testing.T) {
 	t.Run("InterfaceCompliance", func(t *testing.T) {
 		mockClient := mocks.NewMockQueuesClient(ctrl)
 		testClient := &testQueuesClient{MockQueuesClient: mockClient}
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageQueues(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Verify wrapper implements SearchableWrapper (it's returned as this type)
 		if wrapper == nil {
@@ -352,7 +352,7 @@ func TestStorageQueues(t *testing.T) {
 	t.Run("PotentialLinks", func(t *testing.T) {
 		mockClient := mocks.NewMockQueuesClient(ctrl)
 		testClient := &testQueuesClient{MockQueuesClient: mockClient}
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageQueues(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		links := wrapper.PotentialLinks()
 		if len(links) == 0 {
@@ -367,7 +367,7 @@ func TestStorageQueues(t *testing.T) {
 	t.Run("TerraformMappings", func(t *testing.T) {
 		mockClient := mocks.NewMockQueuesClient(ctrl)
 		testClient := &testQueuesClient{MockQueuesClient: mockClient}
-		wrapper := manual.NewStorageQueues(testClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewStorageQueues(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		mappings := wrapper.TerraformMappings()
 		if len(mappings) == 0 {

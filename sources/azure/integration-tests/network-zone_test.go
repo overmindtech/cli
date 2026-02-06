@@ -85,8 +85,7 @@ func TestNetworkZoneIntegration(t *testing.T) {
 
 			zoneWrapper := manual.NewNetworkZone(
 				clients.NewZonesClient(zonesClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := zoneWrapper.Scopes()[0]
 
@@ -136,8 +135,7 @@ func TestNetworkZoneIntegration(t *testing.T) {
 
 			zoneWrapper := manual.NewNetworkZone(
 				clients.NewZonesClient(zonesClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := zoneWrapper.Scopes()[0]
 
@@ -183,8 +181,7 @@ func TestNetworkZoneIntegration(t *testing.T) {
 
 			zoneWrapper := manual.NewNetworkZone(
 				clients.NewZonesClient(zonesClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := zoneWrapper.Scopes()[0]
 
@@ -225,8 +222,7 @@ func TestNetworkZoneIntegration(t *testing.T) {
 
 			zoneWrapper := manual.NewNetworkZone(
 				clients.NewZonesClient(zonesClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := zoneWrapper.Scopes()[0]
 

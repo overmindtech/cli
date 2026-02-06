@@ -125,8 +125,7 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 
 			lbWrapper := manual.NewNetworkLoadBalancer(
 				clients.NewLoadBalancersClient(lbClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := lbWrapper.Scopes()[0]
 
@@ -165,8 +164,7 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 
 			lbWrapper := manual.NewNetworkLoadBalancer(
 				clients.NewLoadBalancersClient(lbClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := lbWrapper.Scopes()[0]
 
@@ -221,8 +219,7 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 
 			lbWrapper := manual.NewNetworkLoadBalancer(
 				clients.NewLoadBalancersClient(lbClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := lbWrapper.Scopes()[0]
 
@@ -256,8 +253,7 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 
 			lbWrapper := manual.NewNetworkLoadBalancer(
 				clients.NewLoadBalancersClient(lbClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := lbWrapper.Scopes()[0]
 

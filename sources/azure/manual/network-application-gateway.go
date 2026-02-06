@@ -20,15 +20,14 @@ var NetworkApplicationGatewayLookupByName = shared.NewItemTypeLookup("name", azu
 type networkApplicationGatewayWrapper struct {
 	client clients.ApplicationGatewaysClient
 
-	*azureshared.ResourceGroupBase
+	*azureshared.MultiResourceGroupBase
 }
 
-func NewNetworkApplicationGateway(client clients.ApplicationGatewaysClient, subscriptionID, resourceGroup string) sources.ListableWrapper {
+func NewNetworkApplicationGateway(client clients.ApplicationGatewaysClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
 	return &networkApplicationGatewayWrapper{
 		client: client,
-		ResourceGroupBase: azureshared.NewResourceGroupBase(
-			subscriptionID,
-			resourceGroup,
+		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
+			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
 			azureshared.NetworkApplicationGateway,
 		),
@@ -36,11 +35,11 @@ func NewNetworkApplicationGateway(client clients.ApplicationGatewaysClient, subs
 }
 
 func (n networkApplicationGatewayWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	pager := n.client.List(resourceGroup, nil)
+	pager := n.client.List(rgScope.ResourceGroup, nil)
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -63,11 +62,12 @@ func (n networkApplicationGatewayWrapper) List(ctx context.Context, scope string
 }
 
 func (n networkApplicationGatewayWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, n.Type()))
+		return
 	}
-	pager := n.client.List(resourceGroup, nil)
+	pager := n.client.List(rgScope.ResourceGroup, nil)
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
@@ -776,11 +776,11 @@ func (n networkApplicationGatewayWrapper) Get(ctx context.Context, scope string,
 	if applicationGatewayName == "" {
 		return nil, azureshared.QueryError(errors.New("application gateway name cannot be empty"), n.DefaultScope(), n.Type())
 	}
-	resourceGroup := azureshared.ResourceGroupFromScope(scope)
-	if resourceGroup == "" {
-		resourceGroup = n.ResourceGroup()
+	rgScope, err := n.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		return nil, azureshared.QueryError(err, scope, n.Type())
 	}
-	resp, err := n.client.Get(ctx, resourceGroup, applicationGatewayName, nil)
+	resp, err := n.client.Get(ctx, rgScope.ResourceGroup, applicationGatewayName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, n.DefaultScope(), n.Type())
 	}

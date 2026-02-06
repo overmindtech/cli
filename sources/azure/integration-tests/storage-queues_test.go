@@ -94,8 +94,7 @@ func TestStorageQueuesIntegration(t *testing.T) {
 
 			queueWrapper := manual.NewStorageQueues(
 				clients.NewQueuesClient(queueClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := queueWrapper.Scopes()[0]
 
@@ -132,8 +131,7 @@ func TestStorageQueuesIntegration(t *testing.T) {
 
 			queueWrapper := manual.NewStorageQueues(
 				clients.NewQueuesClient(queueClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := queueWrapper.Scopes()[0]
 
@@ -178,8 +176,7 @@ func TestStorageQueuesIntegration(t *testing.T) {
 
 			queueWrapper := manual.NewStorageQueues(
 				clients.NewQueuesClient(queueClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := queueWrapper.Scopes()[0]
 
@@ -221,8 +218,7 @@ func TestStorageQueuesIntegration(t *testing.T) {
 
 			queueWrapper := manual.NewStorageQueues(
 				clients.NewQueuesClient(queueClient),
-				subscriptionID,
-				integrationTestResourceGroup,
+				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
 			)
 			scope := queueWrapper.Scopes()[0]
 

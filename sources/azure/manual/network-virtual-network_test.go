@@ -39,7 +39,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 				VirtualNetwork: *vnet,
 			}, nil)
 
-		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkVirtualNetwork(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vnetName, true)
@@ -103,7 +103,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 				VirtualNetwork: *vnet,
 			}, nil)
 
-		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkVirtualNetwork(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vnetName, true)
@@ -171,7 +171,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualNetworksClient(ctrl)
 
-		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkVirtualNetwork(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		// Test with empty string name - Get will still be called with empty string
@@ -206,7 +206,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkVirtualNetwork(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -272,7 +272,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkVirtualNetwork(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -294,7 +294,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent-vnet", nil).Return(
 			armnetwork.VirtualNetworksClientGetResponse{}, expectedErr)
 
-		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkVirtualNetwork(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		_, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "nonexistent-vnet", true)
@@ -318,7 +318,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 
 		mockClient.EXPECT().NewListPager(resourceGroup, nil).Return(mockPager)
 
-		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkVirtualNetwork(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
 		listable, ok := adapter.(discovery.ListableAdapter)
@@ -334,7 +334,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 
 	t.Run("InterfaceCompliance", func(t *testing.T) {
 		mockClient := mocks.NewMockVirtualNetworksClient(ctrl)
-		wrapper := manual.NewNetworkVirtualNetwork(mockClient, subscriptionID, resourceGroup)
+		wrapper := manual.NewNetworkVirtualNetwork(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Verify wrapper implements ListableWrapper interface
 		var _ = wrapper
