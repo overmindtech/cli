@@ -24,29 +24,32 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "azure-source",
-	Short: "Remote primary source for Azure",
+	Use:          "azure-source",
+	Short:        "Remote primary source for Azure",
+	SilenceUsage: true,
 	Long: `This sources looks for Azure resources in your account.
 `,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
 		defer tracing.LogRecoverToReturn(ctx, "azure-source.root")
 		healthCheckPort := viper.GetInt("health-check-port")
 
 		engineConfig, err := discovery.EngineConfigFromViper("azure", tracing.Version())
 		if err != nil {
-			log.WithError(err).Fatal("Could not create engine config")
+			log.WithError(err).Error("Could not create engine config")
+			return fmt.Errorf("could not create engine config: %w", err)
 		}
 
 		err = engineConfig.CreateClients()
 		if err != nil {
 			sentry.CaptureException(err)
-			log.WithError(err).Fatal("could not auth create clients")
+			log.WithError(err).Error("could not auth create clients")
 		}
 
 		e, err := proc.Initialize(ctx, engineConfig, nil)
 		if err != nil {
-			log.WithError(err).Fatal("Could not initialize Azure source")
+			log.WithError(err).Error("Could not initialize Azure source")
+			return fmt.Errorf("could not initialize Azure source: %w", err)
 		}
 
 		e.StartSendingHeartbeats(ctx)
@@ -55,10 +58,8 @@ var rootCmd = &cobra.Command{
 
 		err = e.Start(ctx)
 		if err != nil {
-			log.WithFields(log.Fields{
-				"ovm.source.type":  "azure",
-				"ovm.source.error": err,
-			}).Fatal("Could not start engine")
+			log.WithError(err).Error("Could not start engine")
+			return fmt.Errorf("could not start engine: %w", err)
 		}
 
 		sigs := make(chan os.Signal, 1)
@@ -72,16 +73,12 @@ var rootCmd = &cobra.Command{
 		err = e.Stop()
 
 		if err != nil {
-			log.WithFields(log.Fields{
-				"ovm.source.type":  "azure",
-				"ovm.source.error": err,
-			}).Error("Could not stop engine")
-
-			os.Exit(1)
+			log.WithError(err).Error("Could not stop engine")
+			return fmt.Errorf("could not stop engine: %w", err)
 		}
 		log.Info("Stopped")
 
-		os.Exit(0)
+		return nil
 	},
 }
 
@@ -127,7 +124,7 @@ func init() {
 	cobra.CheckErr(viper.BindPFlags(rootCmd.PersistentFlags()))
 
 	// Run this before we do anything to set up the loglevel
-	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if lvl, err := log.ParseLevel(logLevel); err == nil {
 			log.SetLevel(lvl)
 		} else {
@@ -140,23 +137,29 @@ func init() {
 		log.AddHook(TerminationLogHook{})
 
 		// Bind flags that haven't been set to the values from viper of we have them
+		var bindErr error
 		cmd.PersistentFlags().VisitAll(func(f *pflag.Flag) {
 			// Bind the flag to viper only if it has a non-empty default
 			if f.DefValue != "" || f.Changed {
-				err := viper.BindPFlag(f.Name, f)
-				if err != nil {
-					log.WithError(err).Fatal("could not bind flag to viper")
+				if err := viper.BindPFlag(f.Name, f); err != nil {
+					bindErr = err
 				}
 			}
 		})
+		if bindErr != nil {
+			log.WithError(bindErr).Error("could not bind flag to viper")
+			return fmt.Errorf("could not bind flag to viper: %w", bindErr)
+		}
 
 		if viper.GetBool("json-log") {
 			logging.ConfigureLogrusJSON(log.StandardLogger())
 		}
 
 		if err := tracing.InitTracerWithUpstreams("azure-source", viper.GetString("honeycomb-api-key"), viper.GetString("sentry-dsn")); err != nil {
-			log.Fatal(err)
+			log.WithError(err).Error("could not init tracer")
+			return fmt.Errorf("could not init tracer: %w", err)
 		}
+		return nil
 	}
 	// shut down tracing at the end of the process
 	rootCmd.PersistentPostRun = func(cmd *cobra.Command, args []string) {

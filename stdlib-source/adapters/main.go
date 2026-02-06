@@ -13,7 +13,6 @@ import (
 	"github.com/overmindtech/cli/sdp-go"
 	"github.com/overmindtech/cli/sdpcache"
 	"github.com/overmindtech/cli/stdlib-source/adapters/test"
-	log "github.com/sirupsen/logrus"
 
 	_ "embed"
 )
@@ -23,14 +22,12 @@ var Metadata = sdp.AdapterMetadataList{}
 // Cache duration for RDAP adapters, these things shouldn't change very often
 const RdapCacheDuration = 30 * time.Minute
 
-func InitializeEngine(ctx context.Context, ec *discovery.EngineConfig, reverseDNS bool) (*discovery.Engine, error) {
-	e, err := discovery.NewEngine(ec)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"error": err.Error(),
-		}).Fatal("Error initializing Engine")
-	}
-
+// InitializeAdapters adds stdlib adapters to an existing engine. This allows the engine
+// to be created and serve health probes even if adapter initialization fails.
+//
+// Stdlib adapters rarely fail during initialization, but this pattern maintains consistency
+// with other sources and allows for future error handling improvements.
+func InitializeAdapters(ctx context.Context, e *discovery.Engine, reverseDNS bool) error {
 	// Create a shared cache for all adapters in this source
 	sharedCache := sdpcache.NewCache(ctx)
 
@@ -79,9 +76,7 @@ func InitializeEngine(ctx context.Context, ec *discovery.EngineConfig, reverseDN
 		// },
 	}
 
-	err = e.AddAdapters(adapters...)
-
-	return e, err
+	return e.AddAdapters(adapters...)
 }
 
 // newRdapClient Creates a new RDAP client using otelhttp.DefaultClient. rdap is suspected to not be thread safe, so we create a new client for each request

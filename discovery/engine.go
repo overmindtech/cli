@@ -149,6 +149,17 @@ type Engine struct {
 	lastSuccessfulHeartbeat time.Time
 	lastHeartbeatError      error
 	heartbeatStatusMutex    sync.RWMutex
+
+	// initError stores configuration/credential/initialization failures that prevent
+	// adapters from being added to the engine. This includes:
+	// - AWS: AssumeRole failures, GetCallerIdentity errors, invalid credentials
+	// - K8s: Namespace listing failures, kubeconfig errors
+	// - Harness: API authentication failures, hierarchy discovery errors
+	// The error is surfaced via readiness checks (pod becomes 0/1 Ready) and
+	// heartbeats (visible in UI/API), allowing the pod to stay Running instead of
+	// CrashLoopBackOff so customers can diagnose and fix configuration issues.
+	initError      error
+	initErrorMutex sync.RWMutex
 }
 
 func NewEngine(engineConfig *EngineConfig) (*Engine, error) {
@@ -325,7 +336,8 @@ func (e *Engine) Start(ctx context.Context) error {
 
 	err := e.connect() //nolint:contextcheck // context is passed in through backgroundJobContext
 	if err != nil {
-		return e.SendHeartbeat(e.backgroundJobContext, err) //nolint:contextcheck
+		_ = e.SendHeartbeat(e.backgroundJobContext, err) //nolint:contextcheck
+		return fmt.Errorf("could not connect to NATS: %w", err)
 	}
 
 	// Start background jobs
@@ -484,6 +496,11 @@ func (e *Engine) ReadinessHealthCheck(ctx context.Context) error {
 	span.SetAttributes(
 		attribute.String("ovm.healthcheck.type", "readiness"),
 	)
+
+	// Check for persistent initialization errors first
+	if initErr := e.GetInitError(); initErr != nil {
+		return fmt.Errorf("source initialization failed: %w", initErr)
+	}
 
 	// Check adapter-specific health using the ReadinessCheck function
 	if e.EngineConfig.HeartbeatOptions != nil && e.EngineConfig.HeartbeatOptions.ReadinessCheck != nil {
@@ -715,6 +732,32 @@ func (e *Engine) GetAvailableScopesAndMetadata() ([]string, []*sdp.AdapterMetada
 // AdaptersByType returns adapters of the specified type. This is useful for health checks.
 func (e *Engine) AdaptersByType(typ string) []Adapter {
 	return e.sh.AdaptersByType(typ)
+}
+
+// SetInitError stores a persistent initialization error that will be reported via heartbeat and readiness checks.
+// This should be called when source initialization fails in a way that prevents adapters from being added,
+// but the process should continue running to serve probes and heartbeats (avoiding CrashLoopBackOff).
+//
+// Pass nil to clear a previously set error (e.g. after successful retry/restart).
+//
+// Example usage:
+//
+//	if err := initializeAdapters(); err != nil {
+//	    e.SetInitError(fmt.Errorf("adapter initialization failed: %w", err))
+//	    // Continue running - pod stays Running with readiness failing
+//	}
+func (e *Engine) SetInitError(err error) {
+	e.initErrorMutex.Lock()
+	defer e.initErrorMutex.Unlock()
+	e.initError = err
+}
+
+// GetInitError returns the persistent initialization error if any.
+// Returns nil if no init error is set or if it was cleared via SetInitError(nil).
+func (e *Engine) GetInitError() error {
+	e.initErrorMutex.RLock()
+	defer e.initErrorMutex.RUnlock()
+	return e.initError
 }
 
 // LivenessProbeHandlerFunc returns an HTTP handler function for liveness probes.

@@ -189,91 +189,102 @@ func run(_ *cobra.Command, _ []string) int {
 	restart := make(chan watch.Event, 1024)
 
 	// Get the initial starting point
-	list, err := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		sentry.CaptureException(err)
-		log.WithError(err).Error("could not list namespaces")
-
-		return 1
+	list, listErr := clientSet.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
+	if listErr != nil {
+		// Don't exit - store error and continue with degraded state
+		initErr := fmt.Errorf("could not list namespaces: %w", listErr)
+		log.WithError(initErr).Error("K8s source initialization failed - pod will stay running with error status")
+		e.SetInitError(initErr)
+		sentry.CaptureException(initErr)
 	}
 
-	// Watch namespaces from here
-	wi, err := clientSet.CoreV1().Namespaces().Watch(context.Background(), metav1.ListOptions{
-		ResourceVersion: list.ResourceVersion,
-	})
-	if err != nil {
-		sentry.CaptureException(err)
-		log.WithError(err).Error("could not start watching namespaces")
-
-		return 1
+	var wi watch.Interface
+	// Only try to watch if listing succeeded
+	if listErr == nil {
+		var watchErr error
+		wi, watchErr = clientSet.CoreV1().Namespaces().Watch(context.Background(), metav1.ListOptions{
+			ResourceVersion: list.ResourceVersion,
+		})
+		if watchErr != nil {
+			// Don't exit - store error and continue with degraded state
+			initErr := fmt.Errorf("could not start watching namespaces: %w", watchErr)
+			log.WithError(initErr).Error("K8s source initialization failed - pod will stay running with error status")
+			e.SetInitError(initErr)
+			sentry.CaptureException(initErr)
+			// Ensure watch interface is nil for safety
+			wi = nil
+		}
 	}
 
 	watchCtx, watchCancel := context.WithCancel(context.Background())
 	defer watchCancel()
 
-	go func() {
-		defer tracing.LogRecoverToReturn(watchCtx, "Namespace watch")
+	// Only start watch goroutine if we have a valid watcher
+	if wi != nil {
+		go func() {
+			defer tracing.LogRecoverToReturn(watchCtx, "Namespace watch")
 
-		attempts := 0
-		sleep := 1 * time.Second
+			attempts := 0
+			sleep := 1 * time.Second
 
-		for {
-			select {
-			case event, ok := <-wi.ResultChan():
-				if !ok {
-					// When the channel is closed then we need to restart the
-					// watch. This happens regularly on EKS.
-					log.Debug("Namespace watch channel closed, re-subscribing")
+			for {
+				select {
+				case event, ok := <-wi.ResultChan():
+					if !ok {
+						// When the channel is closed then we need to restart the
+						// watch. This happens regularly on EKS.
+						log.Debug("Namespace watch channel closed, re-subscribing")
 
-					wi, err = watchNamespaces(watchCtx, clientSet)
-					// Check for transient network errors
-					if err != nil {
-						var netErr *net.OpError
-						if errors.As(err, &netErr) {
-							// Mark a failure
-							attempts++
+						wi, err = watchNamespaces(watchCtx, clientSet)
+						// Check for transient network errors
+						if err != nil {
+							var netErr *net.OpError
+							if errors.As(err, &netErr) {
+								// Mark a failure
+								attempts++
 
-							// If we have had less than 3 failures then retry
-							if attempts < 4 {
-								// The watch interface will be nil if we
-								// couldn't connect, so create a fake watcher
-								// that is closed so that we end up in this loop
-								// again
-								wi = watch.NewFake()
-								wi.Stop()
+								// If we have had less than 3 failures then retry
+								if attempts < 4 {
+									// The watch interface will be nil if we
+									// couldn't connect, so create a fake watcher
+									// that is closed so that we end up in this loop
+									// again
+									wi = watch.NewFake()
+									wi.Stop()
 
-								jitter := time.Duration(rand.Int63n(int64(sleep))) //nolint:gosec // we don't need cryptographically secure randomness here
-								sleep = sleep + jitter/2
+									jitter := time.Duration(rand.Int63n(int64(sleep))) //nolint:gosec // we don't need cryptographically secure randomness here
+									sleep = sleep + jitter/2
 
-								log.WithError(err).Errorf("Transient network error, retrying in %v seconds", sleep.String())
-								time.Sleep(sleep)
-								continue
+									log.WithError(err).Errorf("Transient network error, retrying in %v seconds", sleep.String())
+									time.Sleep(sleep)
+									continue
+								}
 							}
+
+							sentry.CaptureException(err)
+							log.WithError(err).Error("could not list namespaces")
+
+							// Send a fatal event that will kill the main goroutine
+							restart <- watch.Event{
+								Type: watch.EventType("FATAL"),
+							}
+
+							return
 						}
 
-						sentry.CaptureException(err)
-						log.WithError(err).Error("could not list namespaces")
-
-						// Send a fatal event that will kill the main goroutine
-						restart <- watch.Event{
-							Type: watch.EventType("FATAL"),
-						}
-
-						return
+						// If it's worked, reset the failure counter
+						attempts = 0
+					} else {
+						// If a watch event is received then we need to restart the
+						// engine
+						restart <- event
 					}
-
-					// If it's worked, reset the failure counter
-					attempts = 0
-				} else {
-					// If a watch event is received then we need to restart the
-					// engine
-					restart <- event
+				case <-watchCtx.Done():
+					return
 				}
-			case <-watchCtx.Done():
-				return
 			}
-		}
-	}()
+		}()
+	}
 
 	start := func() error {
 		ctx := context.Background()
@@ -324,14 +335,16 @@ func run(_ *cobra.Command, _ []string) int {
 		return nil
 	}
 
-	// Start the service initially
-	err = start()
-	if err != nil {
-		err = fmt.Errorf("Could not start engine: %w", err)
-		sentry.CaptureException(err)
-		log.WithError(err)
-
-		return 1
+	// Start the service initially (only if no init error from namespace operations)
+	if e.GetInitError() == nil {
+		startErr := start()
+		if startErr != nil {
+			// Don't exit - store error and continue with degraded state
+			initErr := fmt.Errorf("could not start engine: %w", startErr)
+			log.WithError(initErr).Error("K8s source initialization failed - pod will stay running with error status")
+			e.SetInitError(initErr)
+			sentry.CaptureException(initErr)
+		}
 	}
 
 	defer func() {
@@ -360,27 +373,35 @@ func run(_ *cobra.Command, _ []string) int {
 				// represent anything and should be discarded
 				log.Debug("Discarding empty event")
 			case "FATAL":
-				// This is a custom event type that should signal the main
-				// goroutine to exit
-				log.Error("Fatal error in watch goroutine")
-				return 1
+				// This is a custom event type from permanent watch failures
+				// Don't exit - store error and continue in degraded state
+				fatalErr := fmt.Errorf("permanent failure in namespace watch after retries")
+				log.WithError(fatalErr).Error("K8s namespace watch failed permanently - pod will stay running with error status")
+				e.SetInitError(fatalErr)
+				sentry.CaptureException(fatalErr)
+				// Continue running without watch functionality
 			case "MODIFIED":
 				log.Debug("Namespace modified, ignoring")
 			default:
-				err = stop()
-				if err != nil {
-					sentry.CaptureException(err)
-					log.WithError(err).Error("Could not stop engine")
-
-					return 1
-				}
-
-				err = start()
-				if err != nil {
-					sentry.CaptureException(err)
-					log.WithError(err).Error("Could not start engine")
-
-					return 1
+				stopErr := stop()
+				if stopErr != nil {
+					sentry.CaptureException(stopErr)
+					log.WithError(stopErr).Error("Could not stop engine")
+					// Don't exit - continue running in degraded state
+					e.SetInitError(fmt.Errorf("could not stop engine: %w", stopErr))
+				} else {
+					startErr := start()
+					if startErr != nil {
+						// Don't exit - store error and continue with degraded state
+						initErr := fmt.Errorf("could not restart engine: %w", startErr)
+						log.WithError(initErr).Error("K8s source restart failed - pod will stay running with error status")
+						e.SetInitError(initErr)
+						sentry.CaptureException(initErr)
+					} else {
+						// Restart succeeded, clear any previous init error
+						e.SetInitError(nil)
+						log.Info("K8s source restarted successfully")
+					}
 				}
 			}
 		}
@@ -447,7 +468,7 @@ func init() {
 	cobra.CheckErr(viper.BindPFlags(rootCmd.PersistentFlags()))
 
 	// Run this before we do anything to set up the loglevel
-	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		if lvl, err := log.ParseLevel(logLevel); err == nil {
 			log.SetLevel(lvl)
 		} else {
@@ -475,8 +496,10 @@ func init() {
 		}
 
 		if err := tracing.InitTracerWithUpstreams("k8s-source", viper.GetString("honeycomb-api-key"), viper.GetString("sentry-dsn")); err != nil {
-			log.Fatal(err)
+			log.WithError(err).Error("could not init tracer")
+			return fmt.Errorf("could not init tracer: %w", err)
 		}
+		return nil
 	}
 
 	// shut down tracing at the end of the process

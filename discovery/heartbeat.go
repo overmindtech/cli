@@ -42,14 +42,24 @@ func (e *Engine) SendHeartbeat(ctx context.Context, customErr error) error {
 		return ErrNoHealthcheckDefined
 	}
 
+	// No-op when running without management API (e.g. ALLOW_UNAUTHENTICATED local dev)
 	if e.EngineConfig.HeartbeatOptions.ManagementClient == nil {
-		return errors.New("management client is not set")
+		log.WithFields(log.Fields{
+			"source_name": e.EngineConfig.SourceName,
+			"engine_type": e.EngineConfig.EngineType,
+		}).Info("Running in unauthenticated mode; no heartbeats will be sent")
+		return nil
 	}
 
 	// Collect all health check errors
 	var allErrors []error
 	if customErr != nil {
 		allErrors = append(allErrors, customErr)
+	}
+
+	// Check for persistent initialization errors first
+	if initErr := e.GetInitError(); initErr != nil {
+		allErrors = append(allErrors, initErr)
 	}
 
 	// Check adapter readiness (ReadinessCheck) - with timeout to prevent hanging

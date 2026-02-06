@@ -127,14 +127,15 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			MaxParallelExecutions: 2_000,
 			HeartbeatOptions:      heartbeatOptions(oi, token),
 		}
-		stdlibEngine, err := stdlibSource.InitializeEngine(
-			ctx,
-			&ec,
-			true,
-		)
+		stdlibEngine, err := discovery.NewEngine(&ec)
 		if err != nil {
-			stdlibSpinner.Fail("Failed to initialize stdlib source engine")
-			return nil, fmt.Errorf("failed to initialize stdlib source engine: %w", err)
+			stdlibSpinner.Fail("Failed to create stdlib source engine")
+			return nil, fmt.Errorf("failed to create stdlib source engine: %w", err)
+		}
+		err = stdlibSource.InitializeAdapters(ctx, stdlibEngine, true)
+		if err != nil {
+			stdlibSpinner.Fail("Failed to initialize stdlib source adapters")
+			return nil, fmt.Errorf("failed to initialize stdlib source adapters: %w", err)
 		}
 		// todo: pass in context with timeout to abort timely and allow Ctrl-C to work
 		err = stdlibEngine.Start(ctx)
@@ -213,20 +214,26 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			NATSOptions:           &natsOpts,
 			HeartbeatOptions:      heartbeatOptions(oi, token),
 		}
-		awsEngine, err := proc.InitializeAwsSourceEngine(
+		awsEngine, err := discovery.NewEngine(&ec)
+		if err != nil {
+			awsSpinner.Fail("Failed to create AWS source engine")
+			return nil, fmt.Errorf("failed to create AWS source engine: %w", err)
+		}
+
+		err = proc.InitializeAwsSourceAdapters(
 			ctx,
-			&ec,
+			awsEngine,
 			1, // Don't retry as we want the user to get notified immediately
 			configs...,
 		)
 		if err != nil {
 			if os.Getenv("AWS_PROFILE") == "" {
 				// look for the AWS_PROFILE env var and suggest setting it
-				awsSpinner.Fail("Failed to initialize AWS source engine. Consider setting AWS_PROFILE to use the default AWS CLI profile.")
+				awsSpinner.Fail("Failed to initialize AWS source adapters. Consider setting AWS_PROFILE to use the default AWS CLI profile.")
 			} else {
-				awsSpinner.Fail("Failed to initialize AWS source engine")
+				awsSpinner.Fail("Failed to initialize AWS source adapters")
 			}
-			return nil, fmt.Errorf("failed to initialize AWS source engine: %w", err)
+			return nil, fmt.Errorf("failed to initialize AWS source adapters: %w", err)
 		}
 
 		err = awsEngine.Start(ctx)
@@ -316,13 +323,23 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 				HeartbeatOptions:      heartbeatOptions(oi, token),
 			}
 
-			gcpEngine, err := gcpproc.Initialize(ctx, &ec, gcpConfig)
+			gcpEngine, err := discovery.NewEngine(&ec)
+			if err != nil {
+				if gcpConfig == nil {
+					statusArea.Println(fmt.Sprintf("Failed to create GCP source engine with default credentials: %s", err.Error()))
+				} else {
+					statusArea.Println(fmt.Sprintf("Failed to create GCP source engine for project %s: %s", gcpConfig.ProjectID, err.Error()))
+				}
+				continue // Skip this engine but continue with others
+			}
+
+			err = gcpproc.InitializeAdapters(ctx, gcpEngine, gcpConfig)
 			if err != nil {
 				if gcpConfig == nil {
 					// Default config failed
-					statusArea.Println(fmt.Sprintf("Failed to initialize GCP source with default credentials: %s", err.Error()))
+					statusArea.Println(fmt.Sprintf("Failed to initialize GCP source adapters with default credentials: %s", err.Error()))
 				} else {
-					statusArea.Println(fmt.Sprintf("Failed to initialize GCP source for project %s: %s", gcpConfig.ProjectID, err.Error()))
+					statusArea.Println(fmt.Sprintf("Failed to initialize GCP source adapters for project %s: %s", gcpConfig.ProjectID, err.Error()))
 				}
 				continue // Skip this engine but continue with others
 			}
