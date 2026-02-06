@@ -75,7 +75,7 @@ fetch:
 			}
 		}
 		// display the running entry
-		runningEntry, status, err := sdp.TimelineFindInProgressEntry(timeLine.GetEntries())
+		runningEntry, contentDescription, status, err := sdp.TimelineFindInProgressEntry(timeLine.GetEntries())
 		if err != nil {
 			return loggedError{
 				err:     err,
@@ -87,6 +87,7 @@ fetch:
 		log.WithContext(ctx).WithFields(log.Fields{
 			"status":  status.String(),
 			"running": runningEntry,
+			"content": contentDescription,
 		}).Info("Waiting for blast radius to be calculated")
 		// retry
 		time.Sleep(3 * time.Second)

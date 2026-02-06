@@ -391,31 +391,65 @@ func validateRoutineChangesConfig(routineChangesConfigYAML *RoutineChangesYAML) 
 	return nil
 }
 
+// TimelineEntryContentDescription returns a human-readable description of the
+// entry's content based on its type.
+func TimelineEntryContentDescription(entry *ChangeTimelineEntryV2) string {
+	switch c := entry.GetContent().(type) {
+	case *ChangeTimelineEntryV2_MappedItems:
+		return fmt.Sprintf("%d mapped items", len(c.MappedItems.GetMappedItems()))
+	case *ChangeTimelineEntryV2_CalculatedBlastRadius:
+		return fmt.Sprintf("%d items, %d edges", c.CalculatedBlastRadius.GetNumItems(), c.CalculatedBlastRadius.GetNumEdges())
+	case *ChangeTimelineEntryV2_CalculatedRisks:
+		return fmt.Sprintf("%d risks", len(c.CalculatedRisks.GetRisks()))
+	case *ChangeTimelineEntryV2_CalculatedLabels:
+		return fmt.Sprintf("%d labels", len(c.CalculatedLabels.GetLabels()))
+	case *ChangeTimelineEntryV2_ChangeValidation:
+		return fmt.Sprintf("%d validation categories", len(c.ChangeValidation.GetValidationChecklist()))
+	case *ChangeTimelineEntryV2_FormHypotheses:
+		return fmt.Sprintf("%d hypotheses", c.FormHypotheses.GetNumHypotheses())
+	case *ChangeTimelineEntryV2_InvestigateHypotheses:
+		return fmt.Sprintf("%d proven, %d disproven, %d investigating",
+			c.InvestigateHypotheses.GetNumProven(),
+			c.InvestigateHypotheses.GetNumDisproven(),
+			c.InvestigateHypotheses.GetNumInvestigating())
+	case *ChangeTimelineEntryV2_RecordObservations:
+		return fmt.Sprintf("%d observations", c.RecordObservations.GetNumObservations())
+	case *ChangeTimelineEntryV2_Error:
+		return c.Error
+	case *ChangeTimelineEntryV2_StatusMessage:
+		return c.StatusMessage
+	case *ChangeTimelineEntryV2_Empty, nil:
+		return ""
+	default:
+		return ""
+	}
+}
+
 // TimelineFindInProgressEntry returns the current running entry in the list of entries
 // The function handles the following cases:
 //   - If the input slice is nil or empty, it returns an error.
-//   - The first entry that has a status of IN_PROGRESS, PENDING, or ERROR, it returns the entry's name, status, and a nil error.
+//   - The first entry that has a status of IN_PROGRESS, PENDING, or ERROR, it returns the entry's name, content description, status, and a nil error.
 //   - If an entry has an unknown status, it returns an error.
-//   - If the timeline is complete it returns an empty string, DONE status, and a nil error.
-func TimelineFindInProgressEntry(entries []*ChangeTimelineEntryV2) (string, ChangeTimelineEntryStatus, error) {
+//   - If the timeline is complete it returns an empty string, empty content description, DONE status, and a nil error.
+func TimelineFindInProgressEntry(entries []*ChangeTimelineEntryV2) (string, string, ChangeTimelineEntryStatus, error) {
 	if entries == nil {
-		return "", ChangeTimelineEntryStatus_UNSPECIFIED, errors.New("entries is nil")
+		return "", "", ChangeTimelineEntryStatus_UNSPECIFIED, errors.New("entries is nil")
 	}
 	if len(entries) == 0 {
-		return "", ChangeTimelineEntryStatus_UNSPECIFIED, errors.New("entries is empty")
+		return "", "", ChangeTimelineEntryStatus_UNSPECIFIED, errors.New("entries is empty")
 	}
 
 	for _, entry := range entries {
 		switch entry.GetStatus() {
 		case ChangeTimelineEntryStatus_IN_PROGRESS, ChangeTimelineEntryStatus_PENDING, ChangeTimelineEntryStatus_ERROR:
 			// if the entry is in progress or about to start, or has an error(to be retried)
-			return entry.GetName(), entry.GetStatus(), nil
+			return entry.GetName(), TimelineEntryContentDescription(entry), entry.GetStatus(), nil
 		case ChangeTimelineEntryStatus_UNSPECIFIED, ChangeTimelineEntryStatus_DONE:
 			// do nothing
 		default:
-			return "", ChangeTimelineEntryStatus_UNSPECIFIED, fmt.Errorf("unknown status: %s", entry.GetStatus().String())
+			return "", "", ChangeTimelineEntryStatus_UNSPECIFIED, fmt.Errorf("unknown status: %s", entry.GetStatus().String())
 		}
 	}
 
-	return "", ChangeTimelineEntryStatus_DONE, nil
+	return "", "", ChangeTimelineEntryStatus_DONE, nil
 }
