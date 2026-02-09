@@ -77,6 +77,12 @@ const (
 	// ChangesServiceEndChangeProcedure is the fully-qualified name of the ChangesService's EndChange
 	// RPC.
 	ChangesServiceEndChangeProcedure = "/changes.ChangesService/EndChange"
+	// ChangesServiceStartChangeSimpleProcedure is the fully-qualified name of the ChangesService's
+	// StartChangeSimple RPC.
+	ChangesServiceStartChangeSimpleProcedure = "/changes.ChangesService/StartChangeSimple"
+	// ChangesServiceEndChangeSimpleProcedure is the fully-qualified name of the ChangesService's
+	// EndChangeSimple RPC.
+	ChangesServiceEndChangeSimpleProcedure = "/changes.ChangesService/EndChangeSimple"
 	// ChangesServiceListHomeChangesProcedure is the fully-qualified name of the ChangesService's
 	// ListHomeChanges RPC.
 	ChangesServiceListHomeChangesProcedure = "/changes.ChangesService/ListHomeChanges"
@@ -160,6 +166,12 @@ type ChangesServiceClient interface {
 	// the change diff and stores it as a list of DiffedItems and
 	// advances the change status to `STATUS_DONE`
 	EndChange(context.Context, *connect.Request[sdp_go.EndChangeRequest]) (*connect.ServerStreamForClient[sdp_go.EndChangeResponse], error)
+	// Simple version of StartChange that returns immediately after enqueuing the job.
+	// Use this instead of StartChange for non-streaming clients.
+	StartChangeSimple(context.Context, *connect.Request[sdp_go.StartChangeRequest]) (*connect.Response[sdp_go.StartChangeSimpleResponse], error)
+	// Simple version of EndChange that returns immediately after enqueuing the job.
+	// Use this instead of EndChange for non-streaming clients.
+	EndChangeSimple(context.Context, *connect.Request[sdp_go.EndChangeRequest]) (*connect.Response[sdp_go.EndChangeSimpleResponse], error)
 	// Lists all changes, designed for use in the changes home page
 	ListHomeChanges(context.Context, *connect.Request[sdp_go.ListHomeChangesRequest]) (*connect.Response[sdp_go.ListHomeChangesResponse], error)
 	// Start the change analysis process. This will calculate various things
@@ -284,6 +296,18 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(changesServiceMethods.ByName("EndChange")),
 			connect.WithClientOptions(opts...),
 		),
+		startChangeSimple: connect.NewClient[sdp_go.StartChangeRequest, sdp_go.StartChangeSimpleResponse](
+			httpClient,
+			baseURL+ChangesServiceStartChangeSimpleProcedure,
+			connect.WithSchema(changesServiceMethods.ByName("StartChangeSimple")),
+			connect.WithClientOptions(opts...),
+		),
+		endChangeSimple: connect.NewClient[sdp_go.EndChangeRequest, sdp_go.EndChangeSimpleResponse](
+			httpClient,
+			baseURL+ChangesServiceEndChangeSimpleProcedure,
+			connect.WithSchema(changesServiceMethods.ByName("EndChangeSimple")),
+			connect.WithClientOptions(opts...),
+		),
 		listHomeChanges: connect.NewClient[sdp_go.ListHomeChangesRequest, sdp_go.ListHomeChangesResponse](
 			httpClient,
 			baseURL+ChangesServiceListHomeChangesProcedure,
@@ -351,6 +375,8 @@ type changesServiceClient struct {
 	refreshState              *connect.Client[sdp_go.RefreshStateRequest, sdp_go.RefreshStateResponse]
 	startChange               *connect.Client[sdp_go.StartChangeRequest, sdp_go.StartChangeResponse]
 	endChange                 *connect.Client[sdp_go.EndChangeRequest, sdp_go.EndChangeResponse]
+	startChangeSimple         *connect.Client[sdp_go.StartChangeRequest, sdp_go.StartChangeSimpleResponse]
+	endChangeSimple           *connect.Client[sdp_go.EndChangeRequest, sdp_go.EndChangeSimpleResponse]
 	listHomeChanges           *connect.Client[sdp_go.ListHomeChangesRequest, sdp_go.ListHomeChangesResponse]
 	startChangeAnalysis       *connect.Client[sdp_go.StartChangeAnalysisRequest, sdp_go.StartChangeAnalysisResponse]
 	listChangingItemsSummary  *connect.Client[sdp_go.ListChangingItemsSummaryRequest, sdp_go.ListChangingItemsSummaryResponse]
@@ -431,6 +457,16 @@ func (c *changesServiceClient) EndChange(ctx context.Context, req *connect.Reque
 	return c.endChange.CallServerStream(ctx, req)
 }
 
+// StartChangeSimple calls changes.ChangesService.StartChangeSimple.
+func (c *changesServiceClient) StartChangeSimple(ctx context.Context, req *connect.Request[sdp_go.StartChangeRequest]) (*connect.Response[sdp_go.StartChangeSimpleResponse], error) {
+	return c.startChangeSimple.CallUnary(ctx, req)
+}
+
+// EndChangeSimple calls changes.ChangesService.EndChangeSimple.
+func (c *changesServiceClient) EndChangeSimple(ctx context.Context, req *connect.Request[sdp_go.EndChangeRequest]) (*connect.Response[sdp_go.EndChangeSimpleResponse], error) {
+	return c.endChangeSimple.CallUnary(ctx, req)
+}
+
 // ListHomeChanges calls changes.ChangesService.ListHomeChanges.
 func (c *changesServiceClient) ListHomeChanges(ctx context.Context, req *connect.Request[sdp_go.ListHomeChangesRequest]) (*connect.Response[sdp_go.ListHomeChangesResponse], error) {
 	return c.listHomeChanges.CallUnary(ctx, req)
@@ -508,6 +544,12 @@ type ChangesServiceHandler interface {
 	// the change diff and stores it as a list of DiffedItems and
 	// advances the change status to `STATUS_DONE`
 	EndChange(context.Context, *connect.Request[sdp_go.EndChangeRequest], *connect.ServerStream[sdp_go.EndChangeResponse]) error
+	// Simple version of StartChange that returns immediately after enqueuing the job.
+	// Use this instead of StartChange for non-streaming clients.
+	StartChangeSimple(context.Context, *connect.Request[sdp_go.StartChangeRequest]) (*connect.Response[sdp_go.StartChangeSimpleResponse], error)
+	// Simple version of EndChange that returns immediately after enqueuing the job.
+	// Use this instead of EndChange for non-streaming clients.
+	EndChangeSimple(context.Context, *connect.Request[sdp_go.EndChangeRequest]) (*connect.Response[sdp_go.EndChangeSimpleResponse], error)
 	// Lists all changes, designed for use in the changes home page
 	ListHomeChanges(context.Context, *connect.Request[sdp_go.ListHomeChangesRequest]) (*connect.Response[sdp_go.ListHomeChangesResponse], error)
 	// Start the change analysis process. This will calculate various things
@@ -628,6 +670,18 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 		connect.WithSchema(changesServiceMethods.ByName("EndChange")),
 		connect.WithHandlerOptions(opts...),
 	)
+	changesServiceStartChangeSimpleHandler := connect.NewUnaryHandler(
+		ChangesServiceStartChangeSimpleProcedure,
+		svc.StartChangeSimple,
+		connect.WithSchema(changesServiceMethods.ByName("StartChangeSimple")),
+		connect.WithHandlerOptions(opts...),
+	)
+	changesServiceEndChangeSimpleHandler := connect.NewUnaryHandler(
+		ChangesServiceEndChangeSimpleProcedure,
+		svc.EndChangeSimple,
+		connect.WithSchema(changesServiceMethods.ByName("EndChangeSimple")),
+		connect.WithHandlerOptions(opts...),
+	)
 	changesServiceListHomeChangesHandler := connect.NewUnaryHandler(
 		ChangesServiceListHomeChangesProcedure,
 		svc.ListHomeChanges,
@@ -706,6 +760,10 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 			changesServiceStartChangeHandler.ServeHTTP(w, r)
 		case ChangesServiceEndChangeProcedure:
 			changesServiceEndChangeHandler.ServeHTTP(w, r)
+		case ChangesServiceStartChangeSimpleProcedure:
+			changesServiceStartChangeSimpleHandler.ServeHTTP(w, r)
+		case ChangesServiceEndChangeSimpleProcedure:
+			changesServiceEndChangeSimpleHandler.ServeHTTP(w, r)
 		case ChangesServiceListHomeChangesProcedure:
 			changesServiceListHomeChangesHandler.ServeHTTP(w, r)
 		case ChangesServiceStartChangeAnalysisProcedure:
@@ -785,6 +843,14 @@ func (UnimplementedChangesServiceHandler) StartChange(context.Context, *connect.
 
 func (UnimplementedChangesServiceHandler) EndChange(context.Context, *connect.Request[sdp_go.EndChangeRequest], *connect.ServerStream[sdp_go.EndChangeResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.EndChange is not implemented"))
+}
+
+func (UnimplementedChangesServiceHandler) StartChangeSimple(context.Context, *connect.Request[sdp_go.StartChangeRequest]) (*connect.Response[sdp_go.StartChangeSimpleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.StartChangeSimple is not implemented"))
+}
+
+func (UnimplementedChangesServiceHandler) EndChangeSimple(context.Context, *connect.Request[sdp_go.EndChangeRequest]) (*connect.Response[sdp_go.EndChangeSimpleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.EndChangeSimple is not implemented"))
 }
 
 func (UnimplementedChangesServiceHandler) ListHomeChanges(context.Context, *connect.Request[sdp_go.ListHomeChangesRequest]) (*connect.Response[sdp_go.ListHomeChangesResponse], error) {
