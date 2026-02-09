@@ -51,6 +51,7 @@ func init() {
 		sdpcache.NewNoOpCache(), // no-op cache for metadata registration
 	)
 	if err != nil {
+		// docs generation should fail if there are errors creating adapters
 		panic(fmt.Errorf("error creating adapters: %w", err))
 	}
 
@@ -61,12 +62,11 @@ func init() {
 	log.Debug("Registered Azure source metadata", " with ", len(Metadata.AllAdapterMetadata()), " adapters")
 }
 
-func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *AzureConfig) (*discovery.Engine, error) {
-	engine, err := discovery.NewEngine(ec)
-	if err != nil {
-		return nil, fmt.Errorf("error initializing Engine: %w", err)
-	}
-
+// InitializeAdapters adds Azure adapters to an existing engine. This is a single-attempt
+// function; retry logic is handled by the caller via Engine.InitialiseAdapters.
+//
+// cfg must not be nil — call ConfigFromViper() first for config validation.
+func InitializeAdapters(ctx context.Context, engine *discovery.Engine, cfg *AzureConfig) error {
 	// ReadinessCheck verifies adapters are healthy by using a StorageAccount adapter
 	// Timeout is handled by SendHeartbeat, HTTP handlers rely on request context
 	engine.SetReadinessCheck(func(ctx context.Context) error {
@@ -95,106 +95,78 @@ func Initialize(ctx context.Context, ec *discovery.EngineConfig, cfg *AzureConfi
 	// Create a shared cache for all adapters in this source
 	sharedCache := sdpcache.NewCache(ctx)
 
-	err = func() error {
-		var logmsg string
-		// Use provided config, otherwise fall back to viper
-		if cfg != nil {
-			logmsg = "Using directly provided config"
-		} else {
-			var err error
-			cfg, err = readConfig()
-			if err != nil {
-				return fmt.Errorf("error creating config from command line: %w", err)
-			}
-			logmsg = "Using config from viper"
+	log.WithFields(log.Fields{
+		"ovm.source.type":            "azure",
+		"ovm.source.subscription_id": cfg.SubscriptionID,
+		"ovm.source.tenant_id":       cfg.TenantID,
+		"ovm.source.client_id":       cfg.ClientID,
+		"ovm.source.regions":         cfg.Regions,
+	}).Info("Got config")
 
-		}
-		log.WithFields(log.Fields{
-			"ovm.source.type":            "azure",
-			"ovm.source.subscription_id": cfg.SubscriptionID,
-			"ovm.source.tenant_id":       cfg.TenantID,
-			"ovm.source.client_id":       cfg.ClientID,
-			"ovm.source.regions":         cfg.Regions,
-		}).Info(logmsg)
-
-		// Regions are optional for Azure, but subscription ID is required
-		if cfg.SubscriptionID == "" {
-			return fmt.Errorf("Azure source must specify subscription ID")
-		}
-
-		// Set Azure SDK environment variables from viper config if not already set.
-		// The Azure SDK's DefaultAzureCredential reads AZURE_CLIENT_ID and AZURE_TENANT_ID
-		// directly from environment variables for federated authentication.
-		//
-		// When using Azure Workload Identity webhook, these env vars are already injected
-		// by the webhook, so we only set them if they're not present. This supports both:
-		// 1. Azure Workload Identity webhook (env vars already injected)
-		// 2. Manual configuration (env vars set from viper config)
-		//
-		// Reference: https://azure.github.io/azure-workload-identity/docs/
-		if os.Getenv("AZURE_CLIENT_ID") == "" && cfg.ClientID != "" {
-			os.Setenv("AZURE_CLIENT_ID", cfg.ClientID)
-		}
-		if os.Getenv("AZURE_TENANT_ID") == "" && cfg.TenantID != "" {
-			os.Setenv("AZURE_TENANT_ID", cfg.TenantID)
-		}
-
-		// Initialize Azure credentials
-		cred, err := azureshared.NewAzureCredential(ctx)
-		if err != nil {
-			return fmt.Errorf("error creating Azure credentials: %w", err)
-		}
-
-		// TODO: Implement linker when Azure dynamic adapters are available
-		var linker interface{} = nil
-
-		discoveryAdapters, err := adapters(ctx, cfg.SubscriptionID, cfg.TenantID, cfg.ClientID, cfg.Regions, cred, linker, true, sharedCache)
-		if err != nil {
-			return fmt.Errorf("error creating discovery adapters: %w", err)
-		}
-
-		// Verify subscription access before adding adapters
-		err = checkSubscriptionAccess(ctx, cfg.SubscriptionID, cred)
-		if err != nil {
-			log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-				"ovm.source.type":            "azure",
-				"ovm.source.subscription_id": cfg.SubscriptionID,
-			}).Error("Permission check failed for subscription")
-		} else {
-			log.WithContext(ctx).WithFields(log.Fields{
-				"ovm.source.type":            "azure",
-				"ovm.source.subscription_id": cfg.SubscriptionID,
-			}).Info("Permission check passed for subscription")
-		}
-
-		// Add the adapters to the engine
-		err = engine.AddAdapters(discoveryAdapters...)
-		if err != nil {
-			return fmt.Errorf("error adding adapters to engine: %w", err)
-		}
-
-		return nil
-	}()
-
-	if err != nil {
-		log.WithError(err).Debug("Error initializing Azure source")
-		return nil, fmt.Errorf("error initializing Azure source: %w", err)
+	// Regions are optional for Azure, but subscription ID is required
+	if cfg.SubscriptionID == "" {
+		return fmt.Errorf("Azure source must specify subscription ID")
 	}
 
-	// Start sending heartbeats after adapters are successfully added
-	// This ensures the first heartbeat has adapters available for readiness checks
-	engine.StartSendingHeartbeats(ctx)
-	brokenHeart := engine.SendHeartbeat(ctx, nil) // Send the error immediately through the custom health check func
-	if brokenHeart != nil {
-		log.WithError(brokenHeart).Error("Error sending heartbeat")
+	// Set Azure SDK environment variables from viper config if not already set.
+	// The Azure SDK's DefaultAzureCredential reads AZURE_CLIENT_ID and AZURE_TENANT_ID
+	// directly from environment variables for federated authentication.
+	//
+	// When using Azure Workload Identity webhook, these env vars are already injected
+	// by the webhook, so we only set them if they're not present. This supports both:
+	// 1. Azure Workload Identity webhook (env vars already injected)
+	// 2. Manual configuration (env vars set from viper config)
+	//
+	// Reference: https://azure.github.io/azure-workload-identity/docs/
+	if os.Getenv("AZURE_CLIENT_ID") == "" && cfg.ClientID != "" {
+		os.Setenv("AZURE_CLIENT_ID", cfg.ClientID)
+	}
+	if os.Getenv("AZURE_TENANT_ID") == "" && cfg.TenantID != "" {
+		os.Setenv("AZURE_TENANT_ID", cfg.TenantID)
+	}
+
+	// Initialize Azure credentials
+	cred, err := azureshared.NewAzureCredential(ctx)
+	if err != nil {
+		return fmt.Errorf("error creating Azure credentials: %w", err)
+	}
+
+	// TODO: Implement linker when Azure dynamic adapters are available
+	var linker interface{} = nil
+
+	discoveryAdapters, err := adapters(ctx, cfg.SubscriptionID, cfg.TenantID, cfg.ClientID, cfg.Regions, cred, linker, true, sharedCache)
+	if err != nil {
+		return fmt.Errorf("error creating discovery adapters: %w", err)
+	}
+
+	// Verify subscription access before adding adapters
+	err = checkSubscriptionAccess(ctx, cfg.SubscriptionID, cred)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
+			"ovm.source.type":            "azure",
+			"ovm.source.subscription_id": cfg.SubscriptionID,
+		}).Error("Permission check failed for subscription")
+	} else {
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.source.type":            "azure",
+			"ovm.source.subscription_id": cfg.SubscriptionID,
+		}).Info("Permission check passed for subscription")
+	}
+
+	// Add the adapters to the engine
+	err = engine.AddAdapters(discoveryAdapters...)
+	if err != nil {
+		return fmt.Errorf("error adding adapters to engine: %w", err)
 	}
 
 	log.Debug("Sources initialized")
-	// If there is no error then return the engine
-	return engine, nil
+	return nil
 }
 
-func readConfig() (*AzureConfig, error) {
+// ConfigFromViper reads and validates the Azure configuration from viper flags.
+// This performs local validation only (no API calls) and should be called
+// before InitializeAdapters to catch permanent config errors early.
+func ConfigFromViper() (*AzureConfig, error) {
 	subscriptionID := viper.GetString("azure-subscription-id")
 	if subscriptionID == "" {
 		return nil, fmt.Errorf("azure-subscription-id not set")

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"syscall"
 
@@ -32,9 +31,8 @@ var rootCmd = &cobra.Command{
 (usually) and able to be queried without authentication.
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := context.Background()
-		ctx, cancel := context.WithCancel(ctx)
-		defer cancel()
+		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+		defer stop()
 		defer tracing.LogRecoverToReturn(ctx, "stdlib-source.root")
 
 		// get engine config
@@ -49,27 +47,16 @@ var rootCmd = &cobra.Command{
 			"reverse-dns": reverseDNS,
 		}).Info("Got config")
 
-		// Validate the auth params and create a token client if we are using
-		// auth
-		err = engineConfig.CreateClients()
-		if err != nil {
-			sentry.CaptureException(err)
-			log.WithError(err).Error("could not create auth clients")
-		}
-
 		// Create a basic engine first
 		e, err := discovery.NewEngine(engineConfig)
 		if err != nil {
 			sentry.CaptureException(err)
 			log.WithError(err).Error("Could not create engine")
+			return fmt.Errorf("could not create engine: %w", err)
 		}
 
 		// Start HTTP server for health checks before initialization
-		healthCheckPort := viper.GetString("service-port")
-		healthCheckPortInt, err := strconv.Atoi(healthCheckPort)
-		if err != nil {
-			log.WithError(err).WithFields(log.Fields{"service-port": healthCheckPort}).Error("Invalid service-port")
-		}
+		healthCheckPort := viper.GetInt("health-check-port")
 
 		healthCheckDNSAdapter := adapters.NewDNSAdapterForHealthCheck()
 
@@ -88,33 +75,33 @@ var rootCmd = &cobra.Command{
 			return nil
 		})
 
-		e.ServeHealthProbes(healthCheckPortInt)
+		e.ServeHealthProbes(healthCheckPort)
 
-		// Try to initialize adapters - don't exit on failure
+		// Start the engine (NATS connection) before adapter init so heartbeats work
+		err = e.Start(ctx)
+		if err != nil {
+			sentry.CaptureException(err)
+			log.WithError(err).Error("Could not start engine")
+			return fmt.Errorf("could not start engine: %w", err)
+		}
+
+		// Stdlib adapters are all in-memory (no external API calls), so no
+		// InitialiseAdapters retry wrapper needed — just use SetInitError on failure.
 		err = adapters.InitializeAdapters(ctx, e, reverseDNS)
 		if err != nil {
 			initErr := fmt.Errorf("could not initialize stdlib adapters: %w", err)
 			log.WithError(initErr).Error("Stdlib source initialization failed - pod will stay running with error status")
 			e.SetInitError(initErr)
 			sentry.CaptureException(initErr)
+		} else {
+			e.StartSendingHeartbeats(ctx)
 		}
 
-		err = e.Start(ctx)
-		if err != nil {
-			log.WithError(err).Error("Could not start engine")
-			return fmt.Errorf("could not start engine: %w", err)
-		}
-
-		sigs := make(chan os.Signal, 1)
-
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		<-sigs
+		<-ctx.Done()
 
 		log.Info("Stopping engine")
 
 		err = e.Stop()
-
 		if err != nil {
 			log.WithError(err).Error("Could not stop engine")
 			return fmt.Errorf("could not stop engine: %w", err)
@@ -126,8 +113,9 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.add
-// This is called by main.main(). It only needs to happen once to the rootCmd.
+// Execute adds all child commands to the root command and sets flags
+// appropriately. This is called by main.main(). It only needs to happen once to
+// the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -152,8 +140,8 @@ func init() {
 	// engine config options
 	discovery.AddEngineFlags(rootCmd)
 
-	rootCmd.PersistentFlags().String("service-port", "8089", "the port to listen on")
-	cobra.CheckErr(viper.BindEnv("service-port", "STDLIB_SERVICE_PORT", "SERVICE_PORT")) // fallback to srcman config
+	rootCmd.PersistentFlags().IntP("health-check-port", "", 8089, "The port that the health check should run on")
+	cobra.CheckErr(viper.BindEnv("health-check-port", "STDLIB_HEALTH_CHECK_PORT", "HEALTH_CHECK_PORT", "STDLIB_SERVICE_PORT", "SERVICE_PORT")) // new names + backwards compat
 	// tracing
 	rootCmd.PersistentFlags().String("honeycomb-api-key", "", "If specified, configures opentelemetry libraries to submit traces to honeycomb")
 	cobra.CheckErr(viper.BindEnv("honeycomb-api-key", "STDLIB_HONEYCOMB_API_KEY", "HONEYCOMB_API_KEY")) // fallback to global config
@@ -164,10 +152,7 @@ func init() {
 	cobra.CheckErr(viper.BindEnv("json-log", "STDLIB_SOURCE_JSON_LOG", "JSON_LOG")) // fallback to global config
 
 	// Bind these to viper
-	if err := viper.BindPFlags(rootCmd.PersistentFlags()); err != nil {
-		log.WithError(err).Error("Could not bind flags to viper")
-		os.Exit(1)
-	}
+	cobra.CheckErr(viper.BindPFlags(rootCmd.PersistentFlags()))
 
 	// Run this before we do anything to set up the loglevel
 	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
@@ -238,8 +223,9 @@ func (t TerminationLogHook) Levels() []log.Level {
 }
 
 func (t TerminationLogHook) Fire(e *log.Entry) error {
-	tLog, err := os.OpenFile("/dev/termination-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-
+	// shutdown tracing first to ensure all spans are flushed
+	tracing.ShutdownTracer(context.Background())
+	tLog, err := os.OpenFile("/dev/termination-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return err
 	}

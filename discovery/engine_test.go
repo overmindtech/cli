@@ -31,6 +31,9 @@ func newEngine(t *testing.T, name string, no *auth.NATSOptions, eConn sdp.Encode
 	}
 	if no != nil {
 		ec.NATSOptions = no
+		if no.TokenClient == nil {
+			ec.Unauthenticated = true
+		}
 	} else if eConn == nil {
 		ec.NATSOptions = &auth.NATSOptions{
 			NumRetries:        5,
@@ -195,6 +198,7 @@ func TestNats(t *testing.T) {
 	ec := EngineConfig{
 		MaxParallelExecutions: 10,
 		SourceName:            "nats-test",
+		Unauthenticated:       true,
 		NATSOptions: &auth.NATSOptions{
 			NumRetries:        5,
 			RetryDelay:        time.Second,
@@ -294,6 +298,7 @@ func TestNatsCancel(t *testing.T) {
 	ec := EngineConfig{
 		MaxParallelExecutions: 1,
 		SourceName:            "nats-test",
+		Unauthenticated:       true,
 		NATSOptions: &auth.NATSOptions{
 			NumRetries:        5,
 			RetryDelay:        time.Second,
@@ -380,6 +385,7 @@ func TestNatsConnections(t *testing.T) {
 		ec := EngineConfig{
 			MaxParallelExecutions: 1,
 			SourceName:            "nats-test",
+			Unauthenticated:       true,
 			NATSOptions: &auth.NATSOptions{
 				Servers:           []string{"nats://bad.server"},
 				ConnectionName:    "test-disconnection",
@@ -420,6 +426,7 @@ func TestNatsConnections(t *testing.T) {
 		ec := EngineConfig{
 			MaxParallelExecutions: 1,
 			SourceName:            "nats-test",
+			Unauthenticated:       true,
 			NATSOptions: &auth.NATSOptions{
 				NumRetries:        5,
 				RetryDelay:        time.Second,
@@ -486,6 +493,7 @@ func TestNatsConnections(t *testing.T) {
 		ec := EngineConfig{
 			MaxParallelExecutions: 1,
 			SourceName:            "nats-test",
+			Unauthenticated:       true,
 			NATSOptions: &auth.NATSOptions{
 				NumRetries:        10,
 				RetryDelay:        time.Second,
@@ -540,6 +548,7 @@ func TestNATSFailureRestart(t *testing.T) {
 	ec := EngineConfig{
 		MaxParallelExecutions: 1,
 		SourceName:            "nats-test",
+		Unauthenticated:       true,
 		NATSOptions: &auth.NATSOptions{
 			NumRetries:        10,
 			RetryDelay:        time.Second,

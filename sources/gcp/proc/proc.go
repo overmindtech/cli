@@ -320,6 +320,7 @@ func init() {
 		sdpcache.NewNoOpCache(), // no-op cache for metadata registration
 	)
 	if err != nil {
+		// docs generation should fail if there are errors creating adapters
 		panic(fmt.Errorf("error creating adapters: %w", err))
 	}
 
@@ -330,14 +331,11 @@ func init() {
 	log.Debug("Registered GCP source metadata", " with ", len(Metadata.AllAdapterMetadata()), " adapters")
 }
 
-// InitializeAdapters adds GCP adapters to an existing engine. This allows the engine
-// to be created and serve health probes even if adapter initialization fails.
+// InitializeAdapters adds GCP adapters to an existing engine. This is a single-attempt
+// function; retry logic is handled by the caller via Engine.InitialiseAdapters.
 //
-// If initialization fails due to configuration errors (e.g. invalid credentials, project access denied),
-// the error is returned but the engine remains operational for health probes and heartbeats.
+// cfg must not be nil — call ConfigFromViper() first for config validation.
 func InitializeAdapters(ctx context.Context, engine *discovery.Engine, cfg *GCPConfig) error {
-	var healthChecker *ProjectHealthChecker
-
 	// ReadinessCheck verifies adapters are healthy by using a CloudResourceManagerProject adapter
 	// Timeout is handled by SendHeartbeat, HTTP handlers rely on request context
 	engine.SetReadinessCheck(func(ctx context.Context) error {
@@ -364,216 +362,186 @@ func InitializeAdapters(ctx context.Context, engine *discovery.Engine, cfg *GCPC
 	// Create a shared cache for all adapters in this source
 	sharedCache := sdpcache.NewCache(ctx)
 
-	initErr := func() error {
-		var logmsg string
-		// Use provided config, otherwise fall back to viper
-		if cfg != nil {
-			logmsg = "Using directly provided config"
-		} else {
-			var configErr error
-			cfg, configErr = readConfig()
-			if configErr != nil {
-				return fmt.Errorf("error creating config from command line: %w", configErr)
-			}
-			logmsg = "Using config from viper"
+	// Determine which projects to use based on the parent configuration
+	var projectIDs []string
+	if cfg.Parent == "" {
+		// No parent specified - discover all accessible projects
+		log.WithFields(log.Fields{
+			"ovm.source.type": "gcp",
+		}).Info("No parent specified, discovering all accessible projects")
 
+		discoveredProjects, err := discoverProjects(ctx, cfg.ImpersonationServiceAccountEmail)
+		if err != nil {
+			return fmt.Errorf("error discovering projects: %w", err)
 		}
 
-		// Determine which projects to use based on the parent configuration
-		var projectIDs []string
-		if cfg.Parent == "" {
-			// No parent specified - discover all accessible projects
-			log.WithFields(log.Fields{
-				"ovm.source.type": "gcp",
-			}).Info("No parent specified, discovering all accessible projects")
+		projectIDs = discoveredProjects
+	} else {
+		// Parent is specified - determine its type and discover accordingly
+		parentType, err := detectParentType(cfg.Parent)
+		if err != nil {
+			return fmt.Errorf("error detecting parent type: %w", err)
+		}
 
-			discoveredProjects, err := discoverProjects(ctx, cfg.ImpersonationServiceAccountEmail)
+		normalizedParent, err := normalizeParent(cfg.Parent, parentType)
+		if err != nil {
+			return fmt.Errorf("error normalizing parent: %w", err)
+		}
+
+		switch parentType {
+		case ParentTypeProject:
+			// Single project - no discovery needed
+			log.WithFields(log.Fields{
+				"ovm.source.type":       "gcp",
+				"ovm.source.parent":     cfg.Parent,
+				"ovm.source.project_id": normalizedParent,
+			}).Info("Using specified project")
+			projectIDs = []string{normalizedParent}
+
+		case ParentTypeOrganization, ParentTypeFolder:
+			// Organization or folder - discover all projects within it
+			log.WithFields(log.Fields{
+				"ovm.source.type":   "gcp",
+				"ovm.source.parent": cfg.Parent,
+				"parent_type":       parentType,
+			}).Info("Discovering projects under parent")
+
+			discoveredProjects, err := discoverProjectsUnderSpecificParent(ctx, cfg.Parent, cfg.ImpersonationServiceAccountEmail)
 			if err != nil {
-				return fmt.Errorf("error discovering projects: %w", err)
+				return fmt.Errorf("error discovering projects under parent %s: %w", cfg.Parent, err)
+			}
+
+			if len(discoveredProjects) == 0 {
+				return fmt.Errorf("no accessible projects found under parent %s. Please ensure the service account has the 'resourcemanager.projects.list' permission via the 'roles/browser' predefined GCP role", cfg.Parent)
 			}
 
 			projectIDs = discoveredProjects
-		} else {
-			// Parent is specified - determine its type and discover accordingly
-			parentType, err := detectParentType(cfg.Parent)
-			if err != nil {
-				return fmt.Errorf("error detecting parent type: %w", err)
-			}
 
-			normalizedParent, err := normalizeParent(cfg.Parent, parentType)
-			if err != nil {
-				return fmt.Errorf("error normalizing parent: %w", err)
-			}
+		case ParentTypeUnknown:
+			return fmt.Errorf("unknown parent type for parent: %s", cfg.Parent)
 
-			switch parentType {
-			case ParentTypeProject:
-				// Single project - no discovery needed
-				log.WithFields(log.Fields{
-					"ovm.source.type":       "gcp",
-					"ovm.source.parent":     cfg.Parent,
-					"ovm.source.project_id": normalizedParent,
-				}).Info("Using specified project")
-				projectIDs = []string{normalizedParent}
-
-			case ParentTypeOrganization, ParentTypeFolder:
-				// Organization or folder - discover all projects within it
-				log.WithFields(log.Fields{
-					"ovm.source.type":   "gcp",
-					"ovm.source.parent": cfg.Parent,
-					"parent_type":       parentType,
-				}).Info("Discovering projects under parent")
-
-				discoveredProjects, err := discoverProjectsUnderSpecificParent(ctx, cfg.Parent, cfg.ImpersonationServiceAccountEmail)
-				if err != nil {
-					return fmt.Errorf("error discovering projects under parent %s: %w", cfg.Parent, err)
-				}
-
-				if len(discoveredProjects) == 0 {
-					return fmt.Errorf("no accessible projects found under parent %s. Please ensure the service account has the 'resourcemanager.projects.list' permission via the 'roles/browser' predefined GCP role", cfg.Parent)
-				}
-
-				projectIDs = discoveredProjects
-
-			case ParentTypeUnknown:
-				return fmt.Errorf("unknown parent type for parent: %s", cfg.Parent)
-
-			default:
-				return fmt.Errorf("unknown parent type for parent: %s", cfg.Parent)
-			}
+		default:
+			return fmt.Errorf("unknown parent type for parent: %s", cfg.Parent)
 		}
-
-		logFields := log.Fields{
-			"ovm.source.type":                                "gcp",
-			"ovm.source.project_count":                       len(projectIDs),
-			"ovm.source.regions":                             cfg.Regions,
-			"ovm.source.zones":                               cfg.Zones,
-			"ovm.source.impersonation-service-account-email": cfg.ImpersonationServiceAccountEmail,
-		}
-		if cfg.Parent == "" {
-			logFields["ovm.source.parent"] = "<discover all projects>"
-		} else {
-			logFields["ovm.source.parent"] = cfg.Parent
-		}
-		if cfg.ProjectID != "" {
-			logFields["ovm.source.project_id"] = cfg.ProjectID
-		}
-		log.WithFields(logFields).Info(logmsg)
-
-		// If still no regions/zones this is no valid config.
-		if len(cfg.Regions) == 0 && len(cfg.Zones) == 0 {
-			return fmt.Errorf("GCP source must specify at least one region or zone")
-		}
-
-		linker := gcpshared.NewLinker()
-
-		// Build LocationInfo slices for all projects, regions, and zones
-		projectLocations := make([]gcpshared.LocationInfo, 0, len(projectIDs))
-		for _, projectID := range projectIDs {
-			projectLocations = append(projectLocations, gcpshared.NewProjectLocation(projectID))
-		}
-
-		regionLocations := make([]gcpshared.LocationInfo, 0, len(projectIDs)*len(cfg.Regions))
-		for _, projectID := range projectIDs {
-			for _, region := range cfg.Regions {
-				regionLocations = append(regionLocations, gcpshared.NewRegionalLocation(projectID, region))
-			}
-		}
-
-		zoneLocations := make([]gcpshared.LocationInfo, 0, len(projectIDs)*len(cfg.Zones))
-		for _, projectID := range projectIDs {
-			for _, zone := range cfg.Zones {
-				zoneLocations = append(zoneLocations, gcpshared.NewZonalLocation(projectID, zone))
-			}
-		}
-
-		// Create adapters once for all projects using pre-built LocationInfo
-		log.WithFields(log.Fields{
-			"ovm.source.type":          "gcp",
-			"ovm.source.project_count": len(projectIDs),
-		}).Debug("Creating multi-project adapters")
-
-		allAdapters, err := adapters(
-			ctx,
-			projectLocations,
-			regionLocations,
-			zoneLocations,
-			cfg.ImpersonationServiceAccountEmail,
-			linker,
-			true,
-			sharedCache,
-		)
-		if err != nil {
-			return fmt.Errorf("error creating discovery adapters: %w", err)
-		}
-
-		// Find the single multi-project CloudResourceManagerProject adapter
-		var cloudResourceManagerProjectAdapter discovery.Adapter
-		for _, adapter := range allAdapters {
-			if adapter.Type() == gcpshared.CloudResourceManagerProject.String() {
-				cloudResourceManagerProjectAdapter = adapter
-				break
-			}
-		}
-
-		if cloudResourceManagerProjectAdapter == nil {
-			return fmt.Errorf("cloud resource manager project adapter not found")
-		}
-
-		// Create health checker with single multi-project adapter and 5 minute cache duration
-		healthChecker = NewProjectHealthChecker(
-			projectIDs,
-			cloudResourceManagerProjectAdapter,
-			5*time.Minute,
-		)
-
-		// Run initial permission check before starting the source to fail fast if
-		// we don't have the required permissions. This validates that we can access
-		// the Cloud Resource Manager API for all configured projects.
-		result, err := healthChecker.Check(ctx)
-		if err != nil {
-			log.WithContext(ctx).WithError(err).WithFields(log.Fields{
-				"ovm.source.type":          "gcp",
-				"ovm.source.success_count": result.SuccessCount,
-				"ovm.source.failure_count": result.FailureCount,
-				"ovm.source.project_count": len(projectIDs),
-			}).Error("Permission check failed for some projects")
-		} else {
-			log.WithFields(log.Fields{
-				"ovm.source.type":          "gcp",
-				"ovm.source.success_count": result.SuccessCount,
-				"ovm.source.project_count": len(projectIDs),
-			}).Info("All projects passed permission checks")
-		}
-
-		// Add the adapters to the engine
-		err = engine.AddAdapters(allAdapters...)
-		if err != nil {
-			return fmt.Errorf("error adding adapters to engine: %w", err)
-		}
-
-		return nil
-	}()
-
-	if initErr != nil {
-		log.WithError(initErr).Debug("Error initializing GCP source")
-		// Attempt heartbeat so unauthenticated mode logs and management API sees init error
-		_ = engine.SendHeartbeat(ctx, initErr)
-		return fmt.Errorf("error initializing GCP source: %w", initErr)
 	}
 
-	// Start sending heartbeats after adapters are successfully added
-	// This ensures the first heartbeat has adapters available for readiness checks
-	engine.StartSendingHeartbeats(ctx)
-	brokenHeart := engine.SendHeartbeat(ctx, nil) // Send the error immediately through the custom health check func
-	if brokenHeart != nil {
-		log.WithError(brokenHeart).Error("Error sending heartbeat")
+	logFields := log.Fields{
+		"ovm.source.type":                                "gcp",
+		"ovm.source.project_count":                       len(projectIDs),
+		"ovm.source.regions":                             cfg.Regions,
+		"ovm.source.zones":                               cfg.Zones,
+		"ovm.source.impersonation-service-account-email": cfg.ImpersonationServiceAccountEmail,
+	}
+	if cfg.Parent == "" {
+		logFields["ovm.source.parent"] = "<discover all projects>"
+	} else {
+		logFields["ovm.source.parent"] = cfg.Parent
+	}
+	if cfg.ProjectID != "" {
+		logFields["ovm.source.project_id"] = cfg.ProjectID
+	}
+	log.WithFields(logFields).Info("Got config")
+
+	// If still no regions/zones this is no valid config.
+	if len(cfg.Regions) == 0 && len(cfg.Zones) == 0 {
+		return fmt.Errorf("GCP source must specify at least one region or zone")
+	}
+
+	linker := gcpshared.NewLinker()
+
+	// Build LocationInfo slices for all projects, regions, and zones
+	projectLocations := make([]gcpshared.LocationInfo, 0, len(projectIDs))
+	for _, projectID := range projectIDs {
+		projectLocations = append(projectLocations, gcpshared.NewProjectLocation(projectID))
+	}
+
+	regionLocations := make([]gcpshared.LocationInfo, 0, len(projectIDs)*len(cfg.Regions))
+	for _, projectID := range projectIDs {
+		for _, region := range cfg.Regions {
+			regionLocations = append(regionLocations, gcpshared.NewRegionalLocation(projectID, region))
+		}
+	}
+
+	zoneLocations := make([]gcpshared.LocationInfo, 0, len(projectIDs)*len(cfg.Zones))
+	for _, projectID := range projectIDs {
+		for _, zone := range cfg.Zones {
+			zoneLocations = append(zoneLocations, gcpshared.NewZonalLocation(projectID, zone))
+		}
+	}
+
+	// Create adapters once for all projects using pre-built LocationInfo
+	log.WithFields(log.Fields{
+		"ovm.source.type":          "gcp",
+		"ovm.source.project_count": len(projectIDs),
+	}).Debug("Creating multi-project adapters")
+
+	allAdapters, err := adapters(
+		ctx,
+		projectLocations,
+		regionLocations,
+		zoneLocations,
+		cfg.ImpersonationServiceAccountEmail,
+		linker,
+		true,
+		sharedCache,
+	)
+	if err != nil {
+		return fmt.Errorf("error creating discovery adapters: %w", err)
+	}
+
+	// Find the single multi-project CloudResourceManagerProject adapter
+	var cloudResourceManagerProjectAdapter discovery.Adapter
+	for _, adapter := range allAdapters {
+		if adapter.Type() == gcpshared.CloudResourceManagerProject.String() {
+			cloudResourceManagerProjectAdapter = adapter
+			break
+		}
+	}
+
+	if cloudResourceManagerProjectAdapter == nil {
+		return fmt.Errorf("cloud resource manager project adapter not found")
+	}
+
+	// Create health checker with single multi-project adapter and 5 minute cache duration
+	healthChecker := NewProjectHealthChecker(
+		projectIDs,
+		cloudResourceManagerProjectAdapter,
+		5*time.Minute,
+	)
+
+	// Run initial permission check before starting the source to fail fast if
+	// we don't have the required permissions. This validates that we can access
+	// the Cloud Resource Manager API for all configured projects.
+	result, err := healthChecker.Check(ctx)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
+			"ovm.source.type":          "gcp",
+			"ovm.source.success_count": result.SuccessCount,
+			"ovm.source.failure_count": result.FailureCount,
+			"ovm.source.project_count": len(projectIDs),
+		}).Error("Permission check failed for some projects")
+	} else {
+		log.WithFields(log.Fields{
+			"ovm.source.type":          "gcp",
+			"ovm.source.success_count": result.SuccessCount,
+			"ovm.source.project_count": len(projectIDs),
+		}).Info("All projects passed permission checks")
+	}
+
+	// Add the adapters to the engine
+	err = engine.AddAdapters(allAdapters...)
+	if err != nil {
+		return fmt.Errorf("error adding adapters to engine: %w", err)
 	}
 
 	log.Debug("Sources initialized")
 	return nil
 }
 
-func readConfig() (*GCPConfig, error) {
+// ConfigFromViper reads and validates the GCP configuration from viper flags.
+// This performs local validation only (no API calls) and should be called
+// before InitializeAdapters to catch permanent config errors early.
+func ConfigFromViper() (*GCPConfig, error) {
 	parent := viper.GetString("gcp-parent")
 	projectID := viper.GetString("gcp-project-id")
 

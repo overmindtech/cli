@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
 	"github.com/overmindtech/cli/sdp-go"
@@ -251,5 +252,114 @@ func TestSendHeartbeatWithInitErrorAndCustomError(t *testing.T) {
 		if !strings.Contains(errMsg, customErr.Error()) {
 			t.Errorf("expected heartbeat error to include custom error %q, got: %q", customErr.Error(), errMsg)
 		}
+	}
+}
+
+func TestInitialiseAdapters_Success(t *testing.T) {
+	ec := &EngineConfig{
+		EngineType: "test",
+		SourceName: "test-source",
+		HeartbeatOptions: &HeartbeatOptions{
+			Frequency: 0, // Disable automatic heartbeats from StartSendingHeartbeats
+		},
+	}
+	e, err := NewEngine(ec)
+	if err != nil {
+		t.Fatalf("failed to create engine: %v", err)
+	}
+
+	// Set an init error to verify it gets cleared on success
+	e.SetInitError(errors.New("previous error"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var called bool
+	e.InitialiseAdapters(ctx, func(ctx context.Context) error {
+		called = true
+		return nil
+	})
+
+	if !called {
+		t.Error("initFn was not called")
+	}
+	if err := e.GetInitError(); err != nil {
+		t.Errorf("expected init error to be cleared after success, got: %v", err)
+	}
+}
+
+func TestInitialiseAdapters_RetryThenSuccess(t *testing.T) {
+	ec := &EngineConfig{
+		EngineType: "test",
+		SourceName: "test-source",
+		HeartbeatOptions: &HeartbeatOptions{
+			Frequency: 0,
+		},
+	}
+	e, err := NewEngine(ec)
+	if err != nil {
+		t.Fatalf("failed to create engine: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	attempts := 0
+	e.InitialiseAdapters(ctx, func(ctx context.Context) error {
+		attempts++
+		if attempts < 3 {
+			return fmt.Errorf("transient error attempt %d", attempts)
+		}
+		return nil
+	})
+
+	if attempts < 3 {
+		t.Errorf("expected at least 3 attempts, got %d", attempts)
+	}
+	if err := e.GetInitError(); err != nil {
+		t.Errorf("expected init error to be cleared after eventual success, got: %v", err)
+	}
+}
+
+func TestInitialiseAdapters_ContextCancelled(t *testing.T) {
+	ec := &EngineConfig{
+		EngineType: "test",
+		SourceName: "test-source",
+		HeartbeatOptions: &HeartbeatOptions{
+			Frequency: 0,
+		},
+	}
+	e, err := NewEngine(ec)
+	if err != nil {
+		t.Fatalf("failed to create engine: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	var callCount int
+
+	// InitialiseAdapters blocks; cancel ctx after a short delay so it returns
+	time.AfterFunc(500*time.Millisecond, cancel)
+
+	done := make(chan struct{})
+	go func() {
+		e.InitialiseAdapters(ctx, func(ctx context.Context) error {
+			callCount++
+			return errors.New("always fails")
+		})
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		// InitialiseAdapters returned (ctx was cancelled)
+	case <-time.After(5 * time.Second):
+		t.Fatal("InitialiseAdapters did not return after context cancellation")
+	}
+
+	if callCount == 0 {
+		t.Error("expected initFn to be called at least once before context cancellation")
+	}
+	if err := e.GetInitError(); err == nil {
+		t.Error("expected init error to be set after context cancellation with failures")
 	}
 }

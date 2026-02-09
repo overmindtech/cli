@@ -226,73 +226,98 @@ func MapFromEngineConfig(ec *EngineConfig) map[string]any {
 	}
 }
 
-// CreateClients we need to have some checks, as it is called by the cli tool
+// CreateClients sets up NATS TokenClient and HeartbeatOptions.ManagementClient from config.
+// Each client is only created if not already set (idempotent), so callers like the CLI
+// can pre-configure clients without them being overwritten.
 func (ec *EngineConfig) CreateClients() error {
 	// If we are running in unauthenticated mode then do nothing here
 	if ec.Unauthenticated {
 		log.Warn("Using unauthenticated NATS as ALLOW_UNAUTHENTICATED is set")
-		log.WithFields(MapFromEngineConfig(ec)).Info("Engine config")
+		if ec.NATSOptions != nil {
+			log.WithFields(MapFromEngineConfig(ec)).Info("Engine config")
+		}
+		return nil
+	}
+
+	// If both clients are already configured (e.g. CLI), skip entirely
+	if ec.NATSOptions != nil && ec.NATSOptions.TokenClient != nil &&
+		ec.HeartbeatOptions != nil && ec.HeartbeatOptions.ManagementClient != nil {
 		return nil
 	}
 
 	switch ec.OvermindManagedSource {
 	case sdp.SourceManaged_LOCAL:
 		log.Info("Using API Key for authentication, heartbeats will be sent")
-		tokenClient, err := auth.NewAPIKeyClient(ec.APIServerURL, ec.ApiKey)
-		if err != nil {
-			err = fmt.Errorf("error creating API key client %w", err)
-			return err
+
+		if ec.NATSOptions != nil && ec.NATSOptions.TokenClient == nil {
+			tokenClient, err := auth.NewAPIKeyClient(ec.APIServerURL, ec.ApiKey)
+			if err != nil {
+				return fmt.Errorf("error creating API key client: %w", err)
+			}
+			ec.NATSOptions.TokenClient = tokenClient
 		}
-		tokenSource := auth.NewAPIKeyTokenSource(ec.ApiKey, ec.APIServerURL)
-		transport := oauth2.Transport{
-			Source: tokenSource,
-			Base:   http.DefaultTransport,
+
+		if ec.HeartbeatOptions == nil {
+			ec.HeartbeatOptions = &HeartbeatOptions{}
 		}
-		authenticatedClient := http.Client{
-			Transport: otelhttp.NewTransport(&transport),
-		}
-		heartbeatOptions := HeartbeatOptions{
-			ManagementClient: sdpconnect.NewManagementServiceClient(
+		if ec.HeartbeatOptions.ManagementClient == nil {
+			tokenSource := auth.NewAPIKeyTokenSource(ec.ApiKey, ec.APIServerURL)
+			transport := oauth2.Transport{
+				Source: tokenSource,
+				Base:   http.DefaultTransport,
+			}
+			authenticatedClient := http.Client{
+				Transport: otelhttp.NewTransport(&transport),
+			}
+			ec.HeartbeatOptions.ManagementClient = sdpconnect.NewManagementServiceClient(
 				&authenticatedClient,
 				ec.APIServerURL,
-			),
-			Frequency: time.Second * 30,
+			)
+			ec.HeartbeatOptions.Frequency = time.Second * 30
 		}
-		ec.HeartbeatOptions = &heartbeatOptions
-		ec.NATSOptions.TokenClient = tokenClient
-		// lets print out the config
-		log.WithFields(MapFromEngineConfig(ec)).Info("Engine config")
+
+		if ec.NATSOptions != nil {
+			log.WithFields(MapFromEngineConfig(ec)).Info("Engine config")
+		}
 		return nil
 	case sdp.SourceManaged_MANAGED:
 		log.Info("Using static token for authentication, heartbeats will be sent")
-		tokenClient, err := auth.NewStaticTokenClient(ec.APIServerURL, ec.SourceAccessToken, ec.SourceAccessTokenType)
-		if err != nil {
-			err = fmt.Errorf("error creating static token client %w", err)
-			sentry.CaptureException(err)
-			return err
+
+		if ec.NATSOptions != nil && ec.NATSOptions.TokenClient == nil {
+			tokenClient, err := auth.NewStaticTokenClient(ec.APIServerURL, ec.SourceAccessToken, ec.SourceAccessTokenType)
+			if err != nil {
+				err = fmt.Errorf("error creating static token client: %w", err)
+				sentry.CaptureException(err)
+				return err
+			}
+			ec.NATSOptions.TokenClient = tokenClient
 		}
-		tokenSource := oauth2.StaticTokenSource(&oauth2.Token{
-			AccessToken: ec.SourceAccessToken,
-			TokenType:   ec.SourceAccessTokenType,
-		})
-		transport := oauth2.Transport{
-			Source: tokenSource,
-			Base:   http.DefaultTransport,
+
+		if ec.HeartbeatOptions == nil {
+			ec.HeartbeatOptions = &HeartbeatOptions{}
 		}
-		authenticatedClient := http.Client{
-			Transport: otelhttp.NewTransport(&transport),
-		}
-		heartbeatOptions := HeartbeatOptions{
-			ManagementClient: sdpconnect.NewManagementServiceClient(
+		if ec.HeartbeatOptions.ManagementClient == nil {
+			tokenSource := oauth2.StaticTokenSource(&oauth2.Token{
+				AccessToken: ec.SourceAccessToken,
+				TokenType:   ec.SourceAccessTokenType,
+			})
+			transport := oauth2.Transport{
+				Source: tokenSource,
+				Base:   http.DefaultTransport,
+			}
+			authenticatedClient := http.Client{
+				Transport: otelhttp.NewTransport(&transport),
+			}
+			ec.HeartbeatOptions.ManagementClient = sdpconnect.NewManagementServiceClient(
 				&authenticatedClient,
 				ec.APIServerURL,
-			),
-			Frequency: time.Second * 30,
+			)
+			ec.HeartbeatOptions.Frequency = time.Second * 30
 		}
-		ec.NATSOptions.TokenClient = tokenClient
-		ec.HeartbeatOptions = &heartbeatOptions
-		// lets print out the config
-		log.WithFields(MapFromEngineConfig(ec)).Info("Engine config")
+
+		if ec.NATSOptions != nil {
+			log.WithFields(MapFromEngineConfig(ec)).Info("Engine config")
+		}
 		return nil
 	}
 

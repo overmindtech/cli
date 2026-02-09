@@ -361,6 +361,7 @@ func newBenchmarkEngine(adapters ...Adapter) (*Engine, error) {
 		MaxParallelExecutions: 2000,
 		SourceName:            "benchmark-engine",
 		NATSQueueName:         "",
+		Unauthenticated:       true,
 		// No NATSOptions - we don't need NATS for benchmarks
 	}
 

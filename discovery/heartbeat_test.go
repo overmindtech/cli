@@ -186,10 +186,11 @@ func TestHeartbeats(t *testing.T) {
 // (HeartbeatOptions set by SetReadinessCheck but ManagementClient nil) does not error.
 func TestSendHeartbeatNilManagementClient(t *testing.T) {
 	ec := EngineConfig{
-		SourceName: t.Name(),
-		SourceUUID: uuid.New(),
-		Version:    "v0.0.0-test",
-		EngineType: "aws",
+		SourceName:       t.Name(),
+		SourceUUID:       uuid.New(),
+		Version:          "v0.0.0-test",
+		EngineType:       "aws",
+		Unauthenticated:  true,
 		HeartbeatOptions: &HeartbeatOptions{
 			ManagementClient: nil, // e.g. ALLOW_UNAUTHENTICATED - no API to send to
 			Frequency:        time.Second * 30,

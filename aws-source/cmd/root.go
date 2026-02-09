@@ -29,26 +29,10 @@ var rootCmd = &cobra.Command{
 	Long: `This sources looks for AWS resources in your account.
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := context.Background()
+		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+		defer stop()
 		defer tracing.LogRecoverToReturn(ctx, "aws-source.root")
 		healthCheckPort := viper.GetInt("health-check-port")
-
-		awsAuthConfig := proc.AwsAuthConfig{
-			Strategy:        viper.GetString("aws-access-strategy"),
-			AccessKeyID:     viper.GetString("aws-access-key-id"),
-			SecretAccessKey: viper.GetString("aws-secret-access-key"),
-			ExternalID:      viper.GetString("aws-external-id"),
-			TargetRoleARN:   viper.GetString("aws-target-role-arn"),
-			Profile:         viper.GetString("aws-profile"),
-			AutoConfig:      viper.GetBool("auto-config"),
-		}
-
-		// Parse regions early so we can detect config errors before adapter init
-		var regionParseErr error
-		if err := viper.UnmarshalKey("aws-regions", &awsAuthConfig.Regions); err != nil {
-			regionParseErr = fmt.Errorf("could not parse aws-regions: %w", err)
-			log.WithError(err).Error("Could not parse aws-regions")
-		}
 
 		engineConfig, err := discovery.EngineConfigFromViper("aws", tracing.Version())
 		if err != nil {
@@ -56,83 +40,47 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("could not create engine config: %w", err)
 		}
 
-		log.WithFields(log.Fields{
-			"aws-regions":         awsAuthConfig.Regions,
-			"aws-access-strategy": awsAuthConfig.Strategy,
-			"aws-external-id":     awsAuthConfig.ExternalID,
-			"aws-target-role-arn": awsAuthConfig.TargetRoleARN,
-			"aws-profile":         awsAuthConfig.Profile,
-			"auto-config":         awsAuthConfig.AutoConfig,
-			"health-check-port":   healthCheckPort,
-		}).Info("Got config")
-
-		err = engineConfig.CreateClients()
-		if err != nil {
-			sentry.CaptureException(err)
-			log.WithError(err).Error("could not auth create clients")
-		}
-
-		rateLimitContext, rateLimitCancel := context.WithCancel(context.Background())
-		defer rateLimitCancel()
-
 		// Create a basic engine first so we can serve health probes and heartbeats even if init fails
 		e, err := discovery.NewEngine(engineConfig)
 		if err != nil {
 			sentry.CaptureException(err)
 			log.WithError(err).Error("Could not create engine")
+			return fmt.Errorf("could not create engine: %w", err)
 		}
 
 		// Serve health probes before initialization so they're available even on failure
 		e.ServeHealthProbes(healthCheckPort)
 
-		// If region parsing failed, surface the original error instead of letting
-		// CreateAWSConfigs fail later with a misleading "no regions specified" message.
-		if regionParseErr != nil {
-			log.WithError(regionParseErr).Error("AWS source initialization failed - pod will stay running with error status")
-			e.SetInitError(regionParseErr)
-			sentry.CaptureException(regionParseErr)
-		} else if configs, configErr := proc.CreateAWSConfigs(awsAuthConfig); configErr != nil {
-			// Don't exit - store error, serve probes, send heartbeats
-			initErr := fmt.Errorf("could not create AWS configs: %w", configErr)
-			log.WithError(initErr).Error("AWS source initialization failed - pod will stay running with error status")
-			e.SetInitError(initErr)
-			sentry.CaptureException(initErr)
-		} else {
-			// Initialize the AWS adapters
-			adapterErr := proc.InitializeAwsSourceAdapters(
-				rateLimitContext,
-				e,
-				999_999, // Very high max retries as it'll time out after 15min anyway
-				configs...,
-			)
-			if adapterErr != nil {
-				// Don't exit - store error, serve probes, send heartbeats
-				initErr := fmt.Errorf("could not initialize AWS source adapters: %w", adapterErr)
-				log.WithError(initErr).Error("AWS source initialization failed - pod will stay running with error status")
-				e.SetInitError(initErr)
-				sentry.CaptureException(initErr)
-			}
-		}
-
-		// Start the engine regardless of initialization success
-		// This ensures NATS connection and heartbeats work even if adapters failed to initialize
+		// Start the engine (NATS connection) before adapter init so heartbeats work
 		err = e.Start(ctx)
 		if err != nil {
-			// Only fatal errors during engine start should cause exit (NATS connection, etc.)
+			sentry.CaptureException(err)
 			log.WithError(err).Error("Could not start engine")
 			return fmt.Errorf("could not start engine: %w", err)
 		}
 
-		sigs := make(chan os.Signal, 1)
+		// Config validation (permanent errors — no retry, just idle with error)
+		configs, cfgErr := proc.ConfigFromViper()
+		if cfgErr != nil {
+			log.WithError(cfgErr).Error("AWS source config error - pod will stay running with error status")
+			e.SetInitError(cfgErr)
+			sentry.CaptureException(cfgErr)
+		} else {
+			log.WithFields(log.Fields{
+				"aws-regions":       len(configs),
+				"health-check-port": healthCheckPort,
+			}).Info("Got config")
+			// Adapter init (retryable errors — backoff capped at 5 min)
+			e.InitialiseAdapters(ctx, func(ctx context.Context) error {
+				return proc.InitializeAwsSourceAdapters(ctx, e, configs...)
+			})
+		}
 
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		<-sigs
+		<-ctx.Done()
 
 		log.Info("Stopping engine")
 
 		err = e.Stop()
-
 		if err != nil {
 			log.WithFields(log.Fields{
 				"error": err,
@@ -260,8 +208,7 @@ func (t TerminationLogHook) Levels() []log.Level {
 func (t TerminationLogHook) Fire(e *log.Entry) error {
 	// shutdown tracing first to ensure all spans are flushed
 	tracing.ShutdownTracer(context.Background())
-	tLog, err := os.OpenFile("/dev/termination-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-
+	tLog, err := os.OpenFile("/dev/termination-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return err
 	}
