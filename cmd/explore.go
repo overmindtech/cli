@@ -143,6 +143,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			stdlibSpinner.Fail("Failed to start stdlib source engine")
 			return nil, fmt.Errorf("failed to start stdlib source engine: %w", err)
 		}
+		stdlibEngine.StartSendingHeartbeats(ctx)
 		stdlibSpinner.Success("Stdlib source engine started")
 		return []*discovery.Engine{stdlibEngine}, nil
 	})
@@ -223,7 +224,6 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 		err = proc.InitializeAwsSourceAdapters(
 			ctx,
 			awsEngine,
-			1, // Don't retry as we want the user to get notified immediately
 			configs...,
 		)
 		if err != nil {
@@ -241,6 +241,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			awsSpinner.Fail("Failed to start AWS source engine")
 			return nil, fmt.Errorf("failed to start AWS source engine: %w", err)
 		}
+		awsEngine.StartSendingHeartbeats(ctx)
 
 		awsSpinner.Success("AWS source engine started")
 		foundCloudProvider = true
@@ -353,6 +354,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 				}
 				continue // Skip this engine but continue with others
 			}
+			gcpEngine.StartSendingHeartbeats(ctx)
 
 			gcpEngines = append(gcpEngines, gcpEngine)
 		}
@@ -477,9 +479,15 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 					HeartbeatOptions:      heartbeatOptions(oi, token),
 				}
 
-				azureEngine, err := azureproc.Initialize(ctx, &ec, azureConfig)
+				azureEngine, err := discovery.NewEngine(&ec)
 				if err != nil {
-					statusArea.Println(fmt.Sprintf("Failed to initialize Azure source for subscription %s: %s", azureConfig.SubscriptionID, err.Error()))
+					statusArea.Println(fmt.Sprintf("Failed to create Azure source engine for subscription %s: %s", azureConfig.SubscriptionID, err.Error()))
+					continue // Skip this engine but continue with others
+				}
+
+				err = azureproc.InitializeAdapters(ctx, azureEngine, azureConfig)
+				if err != nil {
+					statusArea.Println(fmt.Sprintf("Failed to initialize Azure source adapters for subscription %s: %s", azureConfig.SubscriptionID, err.Error()))
 					continue // Skip this engine but continue with others
 				}
 
@@ -488,6 +496,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 					statusArea.Println(fmt.Sprintf("Failed to start Azure source for subscription %s: %s", azureConfig.SubscriptionID, err.Error()))
 					continue // Skip this engine but continue with others
 				}
+				azureEngine.StartSendingHeartbeats(ctx)
 
 				azureEngines = append(azureEngines, azureEngine)
 			}

@@ -30,7 +30,8 @@ var rootCmd = &cobra.Command{
 	Long: `This sources looks for GCP resources in your account.
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := context.Background()
+		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+		defer stop()
 		defer tracing.LogRecoverToReturn(ctx, "gcp-source.root")
 		healthCheckPort := viper.GetInt("health-check-port")
 
@@ -40,47 +41,39 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("could not create engine config: %w", err)
 		}
 
-		err = engineConfig.CreateClients()
-		if err != nil {
-			sentry.CaptureException(err)
-			log.WithError(err).Error("could not auth create clients")
-		}
-
 		// Create a basic engine first so we can serve health probes and heartbeats even if init fails
 		e, err := discovery.NewEngine(engineConfig)
 		if err != nil {
 			sentry.CaptureException(err)
 			log.WithError(err).Error("Could not create engine")
+			return fmt.Errorf("could not create engine: %w", err)
 		}
 
 		// Serve health probes before initialization so they're available even on failure
 		e.ServeHealthProbes(healthCheckPort)
 
-		// Try to initialize GCP adapters
-		// If this fails, we'll store the error and continue running with no adapters
-		err = proc.InitializeAdapters(ctx, e, nil)
-		if err != nil {
-			// Don't exit - store error, serve probes, send heartbeats
-			initErr := fmt.Errorf("could not initialize GCP source adapters: %w", err)
-			log.WithError(initErr).Error("GCP source initialization failed - pod will stay running with error status")
-			e.SetInitError(initErr)
-			sentry.CaptureException(initErr)
-		}
-
-		// Start the engine regardless of initialization success
-		// This ensures NATS connection and heartbeats work even if adapters failed to initialize
+		// Start the engine (NATS connection) before adapter init so heartbeats work
 		err = e.Start(ctx)
 		if err != nil {
-			// Only fatal errors during engine start should cause exit (NATS connection, etc.)
+			sentry.CaptureException(err)
 			log.WithError(err).Error("Could not start engine")
 			return fmt.Errorf("could not start engine: %w", err)
 		}
 
-		sigs := make(chan os.Signal, 1)
+		// Config validation (permanent errors — no retry, just idle with error)
+		gcpCfg, cfgErr := proc.ConfigFromViper()
+		if cfgErr != nil {
+			log.WithError(cfgErr).Error("GCP source config error - pod will stay running with error status")
+			e.SetInitError(cfgErr)
+			sentry.CaptureException(cfgErr)
+		} else {
+			// Adapter init (retryable errors — backoff capped at 5 min)
+			e.InitialiseAdapters(ctx, func(ctx context.Context) error {
+				return proc.InitializeAdapters(ctx, e, gcpCfg)
+			})
+		}
 
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		<-sigs
+		<-ctx.Done()
 
 		log.Info("Stopping engine")
 

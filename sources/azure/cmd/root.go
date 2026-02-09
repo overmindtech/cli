@@ -30,7 +30,8 @@ var rootCmd = &cobra.Command{
 	Long: `This sources looks for Azure resources in your account.
 `,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		ctx := context.Background()
+		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+		defer stop()
 		defer tracing.LogRecoverToReturn(ctx, "azure-source.root")
 		healthCheckPort := viper.GetInt("health-check-port")
 
@@ -40,38 +41,43 @@ var rootCmd = &cobra.Command{
 			return fmt.Errorf("could not create engine config: %w", err)
 		}
 
-		err = engineConfig.CreateClients()
+		// Create a basic engine first so we can serve health probes and heartbeats even if init fails
+		e, err := discovery.NewEngine(engineConfig)
 		if err != nil {
 			sentry.CaptureException(err)
-			log.WithError(err).Error("could not auth create clients")
+			log.WithError(err).Error("Could not create engine")
+			return fmt.Errorf("could not create engine: %w", err)
 		}
 
-		e, err := proc.Initialize(ctx, engineConfig, nil)
-		if err != nil {
-			log.WithError(err).Error("Could not initialize Azure source")
-			return fmt.Errorf("could not initialize Azure source: %w", err)
-		}
-
-		e.StartSendingHeartbeats(ctx)
-
+		// Serve health probes before initialization so they're available even on failure
 		e.ServeHealthProbes(healthCheckPort)
 
+		// Start the engine (NATS connection) before adapter init so heartbeats work
 		err = e.Start(ctx)
 		if err != nil {
+			sentry.CaptureException(err)
 			log.WithError(err).Error("Could not start engine")
 			return fmt.Errorf("could not start engine: %w", err)
 		}
 
-		sigs := make(chan os.Signal, 1)
+		// Config validation (permanent errors — no retry, just idle with error)
+		azureCfg, cfgErr := proc.ConfigFromViper()
+		if cfgErr != nil {
+			log.WithError(cfgErr).Error("Azure source config error - pod will stay running with error status")
+			e.SetInitError(cfgErr)
+			sentry.CaptureException(cfgErr)
+		} else {
+			// Adapter init (retryable errors — backoff capped at 5 min)
+			e.InitialiseAdapters(ctx, func(ctx context.Context) error {
+				return proc.InitializeAdapters(ctx, e, azureCfg)
+			})
+		}
 
-		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-
-		<-sigs
+		<-ctx.Done()
 
 		log.Info("Stopping engine")
 
 		err = e.Stop()
-
 		if err != nil {
 			log.WithError(err).Error("Could not stop engine")
 			return fmt.Errorf("could not stop engine: %w", err)
@@ -192,8 +198,7 @@ func (t TerminationLogHook) Levels() []log.Level {
 func (t TerminationLogHook) Fire(e *log.Entry) error {
 	// shutdown tracing first to ensure all spans are flushed
 	tracing.ShutdownTracer(context.Background())
-	tLog, err := os.OpenFile("/dev/termination-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-
+	tLog, err := os.OpenFile("/dev/termination-log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return err
 	}

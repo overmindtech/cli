@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/cenkalti/backoff/v5"
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
@@ -163,6 +164,9 @@ type Engine struct {
 }
 
 func NewEngine(engineConfig *EngineConfig) (*Engine, error) {
+	if err := engineConfig.CreateClients(); err != nil {
+		return nil, fmt.Errorf("could not create auth clients: %w", err)
+	}
 	sh := NewAdapterHost()
 	return &Engine{
 		EngineConfig:            engineConfig,
@@ -758,6 +762,66 @@ func (e *Engine) GetInitError() error {
 	e.initErrorMutex.RLock()
 	defer e.initErrorMutex.RUnlock()
 	return e.initError
+}
+
+// InitialiseAdapters retries initFn with exponential backoff (capped at
+// 5 minutes) until it succeeds or ctx is cancelled. It blocks the caller.
+//
+// This is intended for adapter initialization that makes API calls to upstream
+// services and may fail transiently. Because it blocks, the caller can
+// safely set up namespace watches or other reload mechanisms after it returns
+// without racing against a background retry goroutine.
+//
+// On each attempt:
+//   - ClearAdapters() is called to remove any leftovers from previous attempts.
+//   - initFn is called. The init error is updated via SetInitError immediately
+//     (cleared on success, set on failure) and then a heartbeat is sent so the
+//     API/UI always reflects the current status.
+//   - On success, StartSendingHeartbeats is called and the function returns.
+//
+// The caller should have already called Start() before calling this.
+func (e *Engine) InitialiseAdapters(ctx context.Context, initFn func(ctx context.Context) error) {
+	b := backoff.NewExponentialBackOff()
+	b.MaxInterval = 5 * time.Minute
+	tick := backoff.NewTicker(b)
+	defer tick.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case _, ok := <-tick.C:
+			if !ok {
+				// Backoff exhausted (shouldn't happen with default MaxElapsedTime=0)
+				return
+			}
+
+			e.ClearAdapters()
+
+			err := initFn(ctx)
+
+			if err != nil {
+				e.SetInitError(fmt.Errorf("adapter initialisation failed: %w", err))
+				log.WithError(err).Warn("Adapter initialisation failed, will retry")
+			} else {
+				// Clear any previous init error before the heartbeat so the
+				// API/UI immediately sees the healthy status.
+				e.SetInitError(nil)
+			}
+
+			// Send heartbeat regardless of outcome so the API/UI reflects current status
+			if hbErr := e.SendHeartbeat(ctx, nil); hbErr != nil {
+				log.WithError(hbErr).Error("Error sending heartbeat during adapter initialisation")
+			}
+
+			if err != nil {
+				continue
+			}
+
+			e.StartSendingHeartbeats(ctx)
+			return
+		}
+	}
 }
 
 // LivenessProbeHandlerFunc returns an HTTP handler function for liveness probes.

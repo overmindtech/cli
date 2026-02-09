@@ -126,6 +126,7 @@ type TimedResults struct {
 func TimeQueries(t *testing.T, numQueries int, linkDepth int, numParallel int) TimedResults {
 	ec := EngineConfig{
 		MaxParallelExecutions: numParallel,
+		Unauthenticated:       true,
 		NATSOptions: &auth.NATSOptions{
 			NumRetries:        5,
 			RetryDelay:        time.Second,
