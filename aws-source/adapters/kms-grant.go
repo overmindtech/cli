@@ -97,15 +97,27 @@ func grantOutputMapper(ctx context.Context, _ *kms.Client, scope string, _ *kms.
 
 			dynamodb.us-west-2.amazonaws.com
 
-			The following are not supported
+			The following are not supported (we skip them silently):
 				- arn:aws:iam::account:root
 				- arn:aws:sts::account:federated-user/user-name
 				- arn:aws:sts::account:assumed-role/role-name/role-session-name
 				- arn:aws:sts::account:self
-				- dynamodb.us-west-2.amazonaws.com => this will cause an error in ARN parsing
+				- Service principals like dynamodb.us-west-2.amazonaws.com (not ARNs, not linkable)
 		*/
 
 		for _, principal := range principals {
+			// Skip AWS service principals (e.g. "rds.eu-west-2.amazonaws.com",
+			// "dynamodb.us-west-2.amazonaws.com"). These are DNS-style identifiers
+			// for AWS services, not ARNs, and are not linkable to other items.
+			if isAWSServicePrincipal(principal) {
+				log.WithFields(log.Fields{
+					"input": principal,
+					"scope": scope,
+				}).Debug("Skipping AWS service principal (not linkable)")
+
+				continue
+			}
+
 			lIQ := &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Method: sdp.QueryMethod_GET,
@@ -126,7 +138,7 @@ func grantOutputMapper(ctx context.Context, _ *kms.Client, scope string, _ *kms.
 					"error": errA,
 					"input": principal,
 					"scope": scope,
-				}).Error("Error parsing principal ARN")
+				}).Warn("Error parsing principal ARN")
 
 				continue
 			}
@@ -236,4 +248,25 @@ func iamSourceAndQuery(resource string) (string, string) {
 	query := strings.Join(tmp[1:], "/")
 
 	return adapter, query // user, user-name-with-path
+}
+
+// isAWSServicePrincipal returns true if the principal is an AWS service
+// principal (e.g. "rds.eu-west-2.amazonaws.com", "dynamodb.us-west-2.amazonaws.com").
+// These are DNS-style identifiers used by AWS services to assume roles or access
+// resources, and are not ARNs.
+func isAWSServicePrincipal(principal string) bool {
+	// Service principals don't start with "arn:" and end with a partition-specific
+	// DNS suffix.
+	if strings.HasPrefix(principal, "arn:") {
+		return false
+	}
+
+	// Check all AWS partition DNS suffixes using the shared list
+	for _, suffix := range GetAllAWSPartitionDNSSuffixes() {
+		if strings.HasSuffix(principal, "."+suffix) {
+			return true
+		}
+	}
+
+	return false
 }
