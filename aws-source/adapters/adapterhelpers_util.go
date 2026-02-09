@@ -176,23 +176,43 @@ func ParseARN(arnString string) (*ARN, error) {
 	}, nil
 }
 
+// awsPartitionDNSSuffixes maps AWS partition names to their DNS suffixes.
+// This is the single source of truth for all AWS partition DNS suffixes.
+// See: https://docs.aws.amazon.com/general/latest/gr/rande.html
+var awsPartitionDNSSuffixes = map[string]string{
+	"aws":        "amazonaws.com",
+	"aws-us-gov": "amazonaws.com",
+	"aws-cn":     "amazonaws.com.cn",
+	"aws-iso":    "c2s.ic.gov",
+	"aws-iso-b":  "sc2s.sgov.gov",
+	"aws-eu":     "amazonaws.eu",
+}
+
 // GetPartitionDNSSuffix returns the DNS suffix for a given AWS partition.
 // This is used to construct service URLs that work across all AWS partitions.
 func GetPartitionDNSSuffix(partition string) string {
-	switch partition {
-	case "aws-cn":
-		return "amazonaws.com.cn"
-	case "aws-iso":
-		return "c2s.ic.gov"
-	case "aws-iso-b":
-		return "sc2s.sgov.gov"
-	case "aws-eu":
-		return "amazonaws.eu"
-	case "aws", "aws-us-gov":
-		return "amazonaws.com"
-	default:
-		return "amazonaws.com" // Default to commercial partition
+	if suffix, ok := awsPartitionDNSSuffixes[partition]; ok {
+		return suffix
 	}
+	return "amazonaws.com" // Default to commercial partition
+}
+
+// GetAllAWSPartitionDNSSuffixes returns all known AWS partition DNS suffixes.
+// This is useful for checking if a string (like a service principal) belongs
+// to any AWS partition.
+func GetAllAWSPartitionDNSSuffixes() []string {
+	// Use a map to deduplicate (aws and aws-us-gov share the same suffix)
+	seen := make(map[string]bool)
+	suffixes := make([]string, 0, len(awsPartitionDNSSuffixes))
+
+	for _, suffix := range awsPartitionDNSSuffixes {
+		if !seen[suffix] {
+			seen[suffix] = true
+			suffixes = append(suffixes, suffix)
+		}
+	}
+
+	return suffixes
 }
 
 // WrapAWSError Wraps an AWS error in the appropriate SDP error
