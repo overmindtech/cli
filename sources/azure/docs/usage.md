@@ -331,10 +331,10 @@ The source exposes a health check endpoint:
 
 ```bash
 # Check health
-curl http://localhost:8080/healthz
+curl http://localhost:8080/healthz/alive
 
 # Response: "ok" (HTTP 200) if healthy
-# Response: Error message (HTTP 500) if unhealthy
+# Response: Error message (HTTP 503 Service Unavailable) if unhealthy
 ```
 
 The health check verifies:

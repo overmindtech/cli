@@ -383,7 +383,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "/etc/srcman/config/source.yaml", "config file path")
 	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "Set the log level. Valid values: panic, fatal, error, warn, info, debug, trace")
-	rootCmd.PersistentFlags().Int("health-check-port", 8080, "The port on which to serve health check endpoints (/healthz/alive, /healthz/ready, /healthz)")
+	rootCmd.PersistentFlags().Int("health-check-port", 8080, "The port on which to serve health check endpoints (/healthz/alive, /healthz/ready)")
 
 	// engine flags
 	discovery.AddEngineFlags(rootCmd)
