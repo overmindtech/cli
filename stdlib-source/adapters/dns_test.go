@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net"
 	"testing"
+	"time"
 
 	"github.com/overmindtech/workspace/discovery"
 	"github.com/overmindtech/workspace/sdp-go"
@@ -170,4 +171,124 @@ func TestDnsGet(t *testing.T) {
 
 		t.Log(item)
 	})
+}
+
+// TestGetTimeout verifies that Get enforces the maximum timeout by checking
+// that the adapter's timeout takes precedence over a longer caller timeout
+func TestGetTimeout(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping timeout test in short mode")
+	}
+
+	src := DNSAdapter{
+		cache: sdpcache.NewNoOpCache(),
+		// Use a non-existent DNS server to force timeout
+		Servers: []string{"192.0.2.1:53"}, // TEST-NET-1, guaranteed to be unroutable
+	}
+
+	// Create a context with a very long deadline to verify adapter's internal timeout takes precedence
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	start := time.Now()
+	_, err := src.Get(ctx, "global", "test.example.com", false)
+	elapsed := time.Since(start)
+
+	// The operation should fail (no response from DNS server)
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	// The operation should complete around the maxOperationTimeout (30s), not the caller's 10 minutes
+	// Allow generous buffer for CI variance and different network behaviors
+	if elapsed > 35*time.Second {
+		t.Errorf("Get took %v, expected around 30s (max 35s for variance), timeout may not be properly enforced", elapsed)
+	}
+
+	// Don't assert minimum duration as TEST-NET may fail fast in some environments
+	// The key assertion is that it completes in ~30s, not 10 minutes
+}
+
+// TestSearchTimeoutContext verifies that Search properly wraps the context with a timeout
+func TestSearchTimeoutContext(t *testing.T) {
+	t.Parallel()
+
+	src := DNSAdapter{
+		cache: sdpcache.NewNoOpCache(),
+	}
+
+	// Create a context with a very long deadline to ensure Search creates its own timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	// Use a valid, fast DNS query to verify the timeout wrapper doesn't break normal operation
+	items, err := src.Search(ctx, "global", "one.one.one.one", false)
+
+	// Should succeed with the fast query
+	if err != nil {
+		t.Errorf("expected no error for valid query, got: %v", err)
+	}
+
+	// Should return at least one item for this known DNS name
+	if len(items) == 0 {
+		t.Error("expected at least one DNS item for one.one.one.one")
+	}
+}
+
+// TestListBehavior verifies that List returns an empty slice without making DNS queries
+func TestListBehavior(t *testing.T) {
+	t.Parallel()
+
+	src := DNSAdapter{
+		cache: sdpcache.NewNoOpCache(),
+	}
+
+	ctx := context.Background()
+
+	// List should return an empty slice without making any DNS queries
+	items, err := src.List(ctx, "global", false)
+
+	// List should succeed with empty results
+	if err != nil {
+		t.Errorf("expected no error but got: %v", err)
+	}
+
+	if len(items) != 0 {
+		t.Errorf("expected empty list, got %d items", len(items))
+	}
+}
+
+// TestTimeoutShorterThanCaller verifies that a short caller timeout is respected
+func TestTimeoutShorterThanCaller(t *testing.T) {
+	t.Parallel()
+
+	src := DNSAdapter{
+		cache: sdpcache.NewNoOpCache(),
+		// Use a non-existent DNS server to force timeout
+		Servers: []string{"192.0.2.1:53"}, // TEST-NET-1, guaranteed to be unroutable
+	}
+
+	// Create a context with a 2s deadline (shorter than the adapter's 30s max)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	start := time.Now()
+	_, err := src.Get(ctx, "global", "test.example.com", false)
+	elapsed := time.Since(start)
+
+	// The operation should fail (no response from DNS server)
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	// The operation should complete in roughly 2 seconds (the caller's timeout), not 30s
+	// Allow some buffer for processing time (4s max)
+	if elapsed > 4*time.Second {
+		t.Errorf("Get took %v, expected around 2s (max 4s)", elapsed)
+	}
+
+	// Verify it's a context deadline exceeded error
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("expected context.DeadlineExceeded error, got: %v", err)
+	}
 }
