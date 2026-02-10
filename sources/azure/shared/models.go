@@ -46,6 +46,9 @@ const (
 
 	// Maintenance
 	Maintenance shared.API = "maintenance" // Microsoft.Maintenance
+
+	// Resources (subscriptions, resource groups)
+	Resources shared.API = "resources" // Microsoft.Resources
 )
 
 // Resources
@@ -63,6 +66,7 @@ const (
 	DedicatedHostGroup                  shared.Resource = "dedicated-host-group"
 	DedicatedHost                       shared.Resource = "dedicated-host"
 	CapacityReservationGroup            shared.Resource = "capacity-reservation-group"
+	CapacityReservation                 shared.Resource = "capacity-reservation"
 	Image                               shared.Resource = "image"
 	Snapshot                            shared.Resource = "snapshot"
 	DiskAccess                          shared.Resource = "disk-access"
