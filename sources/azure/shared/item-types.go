@@ -16,6 +16,7 @@ var (
 	ComputeDiskEncryptionSet                   = shared.NewItemType(Azure, Compute, DiskEncryptionSet)
 	ComputeProximityPlacementGroup             = shared.NewItemType(Azure, Compute, ProximityPlacementGroup)
 	ComputeDedicatedHostGroup                  = shared.NewItemType(Azure, Compute, DedicatedHostGroup)
+	ComputeDedicatedHost                       = shared.NewItemType(Azure, Compute, DedicatedHost)
 	ComputeCapacityReservationGroup            = shared.NewItemType(Azure, Compute, CapacityReservationGroup)
 	ComputeImage                               = shared.NewItemType(Azure, Compute, Image)
 	ComputeSnapshot                            = shared.NewItemType(Azure, Compute, Snapshot)
