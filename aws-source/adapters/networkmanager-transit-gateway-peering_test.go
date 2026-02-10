@@ -4,7 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"testing"
 
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 )
 
 func TestTransitGatewayPeeringOutputMapper(t *testing.T) {

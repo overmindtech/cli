@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope string, input *networkmanager.GetConnectPeerInput) (*sdp.Item, error) {

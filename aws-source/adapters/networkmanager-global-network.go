@@ -7,8 +7,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client, scope string, _ *networkmanager.DescribeGlobalNetworksInput, output *networkmanager.DescribeGlobalNetworksOutput) ([]*sdp.Item, error) {

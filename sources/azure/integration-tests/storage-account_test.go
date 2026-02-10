@@ -8,9 +8,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/discovery"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"

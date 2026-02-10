@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	"github.com/aws/aws-sdk-go-v2/service/route53/types"
 
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 type HealthCheck struct {

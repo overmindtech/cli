@@ -19,9 +19,9 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/discovery"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	_ "github.com/overmindtech/cli/sources/gcp/dynamic/adapters" // Import all adapters to register them
 	"github.com/overmindtech/cli/sources/gcp/manual"

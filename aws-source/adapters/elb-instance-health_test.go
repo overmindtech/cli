@@ -7,7 +7,7 @@ import (
 	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
 
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 )
 
 func TestInstanceHealthOutputMapper(t *testing.T) {

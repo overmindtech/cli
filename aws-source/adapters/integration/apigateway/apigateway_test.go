@@ -7,8 +7,8 @@ import (
 
 	"github.com/overmindtech/cli/aws-source/adapters"
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 func APIGateway(t *testing.T) {

@@ -3,9 +3,9 @@ package adapters
 import (
 	v2 "k8s.io/api/autoscaling/v2"
 
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/discovery"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 	"k8s.io/client-go/kubernetes"
 )
 

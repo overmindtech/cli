@@ -6,7 +6,7 @@ import (
 
 	"go.uber.org/mock/gomock"
 
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 	"github.com/overmindtech/cli/sources/example"
 	"github.com/overmindtech/cli/sources/example/mocks"
 	"github.com/overmindtech/cli/sources/shared"

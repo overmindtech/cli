@@ -6,8 +6,8 @@ import (
 	"net/url"
 
 	"github.com/openrdap/rdap"
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 type RdapEntityAdapter struct {

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/openrdap/rdap"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 func TestIpNetworkAdapterSearch(t *testing.T) {

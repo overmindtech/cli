@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 )
 
 // IPAdapter struct on which all methods are registered

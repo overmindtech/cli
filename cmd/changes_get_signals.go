@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 /*

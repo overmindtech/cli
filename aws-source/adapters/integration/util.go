@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/tracing"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/tracing"
 )
 
 const (

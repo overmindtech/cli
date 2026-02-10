@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/discovery"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 	"google.golang.org/protobuf/types/known/structpb"
 )
 

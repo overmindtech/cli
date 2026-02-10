@@ -14,9 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/overmindtech/cli/aws-source/adapters"
 	"github.com/overmindtech/cli/aws-source/adapters/integration"
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdpcache"
-	"github.com/overmindtech/cli/tracing"
+	"github.com/overmindtech/workspace/discovery"
+	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/workspace/tracing"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 )

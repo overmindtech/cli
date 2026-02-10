@@ -11,8 +11,8 @@ import (
 	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/discovery"
+	"github.com/overmindtech/workspace/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/gcp/shared"
 )

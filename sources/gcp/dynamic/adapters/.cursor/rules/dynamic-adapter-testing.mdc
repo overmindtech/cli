@@ -29,8 +29,8 @@ When writing unit tests for GCP dynamic adapters in the Overmind codebase, follo
       //   "cloud.google.com/go/bigtable/admin/apiv2/adminpb"      // BigTable Admin v2
       "cloud.google.com/go/yourservice/apiv1/yourservicepb"       // Replace with actual service
 
-      "github.com/overmindtech/cli/discovery"
-      "github.com/overmindtech/cli/sdp-go"
+      "github.com/overmindtech/workspace/discovery"
+      "github.com/overmindtech/workspace/sdp-go"
       "github.com/overmindtech/cli/sources/gcp/dynamic"
       gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
       "github.com/overmindtech/cli/sources/shared"

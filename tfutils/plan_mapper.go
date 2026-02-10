@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	awsAdapters "github.com/overmindtech/cli/aws-source/adapters"
 	k8sAdapters "github.com/overmindtech/cli/k8s-source/adapters"
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 	gcpAdapters "github.com/overmindtech/cli/sources/gcp/proc"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/attribute"

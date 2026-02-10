@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 var cronJobYAML = `

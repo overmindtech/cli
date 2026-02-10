@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 func linkOutputMapper(_ context.Context, _ *networkmanager.Client, scope string, _ *networkmanager.GetLinksInput, output *networkmanager.GetLinksOutput) ([]*sdp.Item, error) {

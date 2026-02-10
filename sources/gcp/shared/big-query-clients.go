@@ -8,8 +8,8 @@ import (
 	"cloud.google.com/go/bigquery"
 	"google.golang.org/api/iterator"
 
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/discovery"
+	"github.com/overmindtech/workspace/sdp-go"
 )
 
 type BigQueryRoutineClient interface {
@@ -75,7 +75,7 @@ func NewBigQueryRoutineClient(client *bigquery.Client) BigQueryRoutineClient {
 	}
 }
 
-//go:generate mockgen -destination=./mocks/mock_big_query_dataset_client.go -package=mocks -source=big-query-clients.go -imports=sdp=github.com/overmindtech/cli/sdp-go
+//go:generate mockgen -destination=./mocks/mock_big_query_dataset_client.go -package=mocks -source=big-query-clients.go -imports=sdp=github.com/overmindtech/workspace/sdp-go
 type BigQueryDatasetClient interface {
 	Get(ctx context.Context, projectID, datasetID string) (*bigquery.DatasetMetadata, error)
 	List(ctx context.Context, projectID string, toSDPItem func(ctx context.Context, dataset *bigquery.DatasetMetadata) (*sdp.Item, *sdp.QueryError)) ([]*sdp.Item, *sdp.QueryError)

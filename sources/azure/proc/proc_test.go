@@ -6,7 +6,7 @@ import (
 
 	// TODO: Uncomment when Azure dynamic adapters are implemented
 	// _ "github.com/overmindtech/cli/sources/azure/dynamic"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdpcache"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 )
 

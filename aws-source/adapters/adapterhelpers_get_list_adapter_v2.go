@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/discovery"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 // GetListAdapterV2 A adapter for AWS APIs where the Get and List functions both

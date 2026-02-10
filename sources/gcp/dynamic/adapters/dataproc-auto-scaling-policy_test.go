@@ -9,8 +9,8 @@ import (
 	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/discovery"
+	"github.com/overmindtech/workspace/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"

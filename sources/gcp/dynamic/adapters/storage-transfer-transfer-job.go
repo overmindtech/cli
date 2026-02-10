@@ -3,7 +3,7 @@ package adapters
 import (
 	"fmt"
 
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
 )
