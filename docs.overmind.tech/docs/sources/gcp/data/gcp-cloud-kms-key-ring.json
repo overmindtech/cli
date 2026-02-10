@@ -1,0 +1,17 @@
+{
+  "type": "gcp-cloud-kms-key-ring",
+  "category": 4,
+  "potentialLinks": ["gcp-cloud-kms-crypto-key"],
+  "descriptiveName": "GCP Cloud Kms Key Ring",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Cloud Kms Key Ring by \"gcp-cloud-kms-key-ring-location|gcp-cloud-kms-key-ring-name\"",
+    "search": true,
+    "searchDescription": "Search for GCP Cloud Kms Key Ring by \"gcp-cloud-kms-key-ring-location\""
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_kms_key_ring.name"
+    }
+  ]
+}

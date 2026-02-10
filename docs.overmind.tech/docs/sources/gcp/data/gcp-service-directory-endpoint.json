@@ -1,0 +1,18 @@
+{
+  "type": "gcp-service-directory-endpoint",
+  "category": 7,
+  "potentialLinks": ["gcp-compute-network"],
+  "descriptiveName": "GCP Service Directory Endpoint",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-service-directory-endpoint by its \"locations|namespaces|services|endpoints\"",
+    "search": true,
+    "searchDescription": "Search for endpoints by \"location|namespace_id|service_id\" or \"projects/[project_id]/locations/[location]/namespaces/[namespace_id]/services/[service_id]/endpoints/[endpoint_id]\" which is supported for terraform mappings."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_service_directory_endpoint.id"
+    }
+  ]
+}

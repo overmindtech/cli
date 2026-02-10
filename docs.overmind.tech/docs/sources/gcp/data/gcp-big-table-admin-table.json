@@ -1,0 +1,22 @@
+{
+  "type": "gcp-big-table-admin-table",
+  "category": 6,
+  "potentialLinks": [
+    "gcp-big-table-admin-backup",
+    "gcp-big-table-admin-instance",
+    "gcp-big-table-admin-table"
+  ],
+  "descriptiveName": "GCP Big Table Admin Table",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-big-table-admin-table by its \"instances|tables\"",
+    "search": true,
+    "searchDescription": "Search for BigTable tables in an instance. Use the format \"instance_name\" or \"projects/[project_id]/instances/[instance_name]/tables/[table_name]\" which is supported for terraform mappings."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_bigtable_table.id"
+    }
+  ]
+}

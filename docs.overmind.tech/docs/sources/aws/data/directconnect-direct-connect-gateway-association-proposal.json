@@ -1,0 +1,19 @@
+{
+  "type": "directconnect-direct-connect-gateway-association-proposal",
+  "category": 7,
+  "potentialLinks": ["directconnect-direct-connect-gateway-association"],
+  "descriptiveName": "Direct Connect Gateway Association Proposal",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Direct Connect Gateway Association Proposal by ID",
+    "list": true,
+    "listDescription": "List all Direct Connect Gateway Association Proposals",
+    "search": true,
+    "searchDescription": "Search Direct Connect Gateway Association Proposals by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_dx_gateway_association_proposal.id"
+    }
+  ]
+}

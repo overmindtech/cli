@@ -1,0 +1,15 @@
+{
+  "type": "rdap-domain",
+  "category": 3,
+  "potentialLinks": [
+    "dns",
+    "rdap-nameserver",
+    "rdap-entity",
+    "rdap-ip-network"
+  ],
+  "descriptiveName": "RDAP Domain",
+  "supportedQueryMethods": {
+    "search": true,
+    "searchDescription": "Search for a domain record by the domain name e.g. \"www.google.com\""
+  }
+}

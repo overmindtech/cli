@@ -1,0 +1,28 @@
+{
+  "type": "gcp-run-service",
+  "category": 1,
+  "potentialLinks": [
+    "gcp-artifact-registry-docker-image",
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-network",
+    "gcp-compute-subnetwork",
+    "gcp-iam-service-account",
+    "gcp-run-revision",
+    "gcp-secret-manager-secret",
+    "gcp-sql-admin-instance",
+    "gcp-storage-bucket"
+  ],
+  "descriptiveName": "GCP Run Service",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-run-service by its \"locations|services\"",
+    "search": true,
+    "searchDescription": "Search for gcp-run-service by its \"locations\""
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_cloud_run_v2_service.id"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "type": "ConfigMap",
+  "category": 7,
+  "descriptiveName": "Config Map",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Config Map by name",
+    "list": true,
+    "listDescription": "List all Config Maps",
+    "search": true,
+    "searchDescription": "Search for a Config Map using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_config_map_v1.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_config_map.metadata[0].name"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "type": "cloudwatch-alarm",
+  "category": 5,
+  "potentialLinks": ["cloudwatch-metric"],
+  "descriptiveName": "CloudWatch Alarm",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an alarm by name",
+    "list": true,
+    "listDescription": "List all alarms",
+    "search": true,
+    "searchDescription": "Search for alarms. This accepts JSON in the format of `cloudwatch.DescribeAlarmsForMetricInput`"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_cloudwatch_metric_alarm.alarm_name"
+    }
+  ]
+}

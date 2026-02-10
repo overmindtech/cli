@@ -1,0 +1,11 @@
+{
+  "type": "gcp-logging-saved-query",
+  "category": 5,
+  "descriptiveName": "GCP Logging Saved Query",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-logging-saved-query by its \"locations|savedQueries\"",
+    "search": true,
+    "searchDescription": "Search for gcp-logging-saved-query by its \"locations\""
+  }
+}

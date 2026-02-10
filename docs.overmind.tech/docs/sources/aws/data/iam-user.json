@@ -1,0 +1,23 @@
+{
+  "type": "iam-user",
+  "category": 4,
+  "potentialLinks": ["iam-group"],
+  "descriptiveName": "IAM User",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an IAM user by name",
+    "list": true,
+    "listDescription": "List all IAM users",
+    "search": true,
+    "searchDescription": "Search for IAM users by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_iam_user.arn"
+    },
+    {
+      "terraformQueryMap": "aws_iam_user_group_membership.user"
+    }
+  ]
+}

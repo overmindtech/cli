@@ -1,0 +1,10 @@
+{
+  "type": "gcp-compute-project",
+  "category": 7,
+  "potentialLinks": ["gcp-iam-service-account", "gcp-storage-bucket"],
+  "descriptiveName": "GCP Compute Project",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-project by its \"name\""
+  }
+}

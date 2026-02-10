@@ -1,0 +1,20 @@
+{
+  "type": "ecs-capacity-provider",
+  "category": 7,
+  "potentialLinks": ["autoscaling-auto-scaling-group"],
+  "descriptiveName": "Capacity Provider",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a capacity provider by its short name or full Amazon Resource Name (ARN).",
+    "list": true,
+    "listDescription": "List capacity providers.",
+    "search": true,
+    "searchDescription": "Search capacity providers by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_ecs_capacity_provider.arn"
+    }
+  ]
+}

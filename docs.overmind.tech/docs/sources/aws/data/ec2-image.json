@@ -1,0 +1,18 @@
+{
+  "type": "ec2-image",
+  "category": 1,
+  "descriptiveName": "Amazon Machine Image (AMI)",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an AMI by ID",
+    "list": true,
+    "listDescription": "List all AMIs",
+    "search": true,
+    "searchDescription": "Search AMIs by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_ami.id"
+    }
+  ]
+}

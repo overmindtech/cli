@@ -1,0 +1,21 @@
+{
+  "type": "LimitRange",
+  "category": 7,
+  "descriptiveName": "Limit Range",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Limit Range by name",
+    "list": true,
+    "listDescription": "List all Limit Ranges",
+    "search": true,
+    "searchDescription": "Search for a Limit Range using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_limit_range_v1.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_limit_range.metadata[0].name"
+    }
+  ]
+}

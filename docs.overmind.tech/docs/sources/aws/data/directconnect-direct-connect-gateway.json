@@ -1,0 +1,18 @@
+{
+  "type": "directconnect-direct-connect-gateway",
+  "category": 3,
+  "descriptiveName": "Direct Connect Gateway",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a direct connect gateway by ID",
+    "list": true,
+    "listDescription": "List all direct connect gateways",
+    "search": true,
+    "searchDescription": "Search direct connect gateway by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_dx_gateway.id"
+    }
+  ]
+}

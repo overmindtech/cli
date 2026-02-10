@@ -1,0 +1,13 @@
+{
+  "type": "directconnect-virtual-gateway",
+  "category": 3,
+  "descriptiveName": "Direct Connect Virtual Gateway",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a virtual gateway by ID",
+    "list": true,
+    "listDescription": "List all virtual gateways",
+    "search": true,
+    "searchDescription": "Search virtual gateways by ARN"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "type": "kms-alias",
+  "category": 4,
+  "potentialLinks": ["kms-key"],
+  "descriptiveName": "KMS Alias",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an alias by keyID/aliasName",
+    "list": true,
+    "listDescription": "List all aliases",
+    "search": true,
+    "searchDescription": "Search aliases by keyID"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_kms_alias.arn"
+    }
+  ]
+}

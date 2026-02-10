@@ -1,0 +1,22 @@
+{
+  "type": "ec2-address",
+  "category": 3,
+  "potentialLinks": ["ec2-instance", "ip", "ec2-network-interface"],
+  "descriptiveName": "EC2 Address",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an EC2 address by Public IP",
+    "list": true,
+    "listDescription": "List EC2 addresses",
+    "search": true,
+    "searchDescription": "Search for EC2 addresses by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_eip.public_ip"
+    },
+    {
+      "terraformQueryMap": "aws_eip_association.public_ip"
+    }
+  ]
+}

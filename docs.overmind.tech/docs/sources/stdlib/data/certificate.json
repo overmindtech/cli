@@ -1,0 +1,9 @@
+{
+  "type": "certificate",
+  "category": 3,
+  "descriptiveName": "Certificate",
+  "supportedQueryMethods": {
+    "search": true,
+    "searchDescription": "Takes a full certificate, or certificate bundle as input in PEM encoded format"
+  }
+}

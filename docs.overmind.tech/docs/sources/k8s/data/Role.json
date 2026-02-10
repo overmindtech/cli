@@ -1,0 +1,21 @@
+{
+  "type": "Role",
+  "category": 4,
+  "descriptiveName": "Role",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Role by name",
+    "list": true,
+    "listDescription": "List all Roles",
+    "search": true,
+    "searchDescription": "Search for a Role using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_role_v1.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_role.metadata[0].name"
+    }
+  ]
+}

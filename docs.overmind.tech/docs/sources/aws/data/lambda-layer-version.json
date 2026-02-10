@@ -1,0 +1,17 @@
+{
+  "type": "lambda-layer-version",
+  "category": 1,
+  "potentialLinks": ["signer-signing-job", "signer-signing-profile"],
+  "descriptiveName": "Lambda Layer Version",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a layer version by full name ({layerName}:{versionNumber})",
+    "search": true,
+    "searchDescription": "Search for layer versions by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_lambda_layer_version.arn"
+    }
+  ]
+}

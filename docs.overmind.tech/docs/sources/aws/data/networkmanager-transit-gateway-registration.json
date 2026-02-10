@@ -1,0 +1,14 @@
+{
+  "type": "networkmanager-transit-gateway-registration",
+  "category": 3,
+  "potentialLinks": ["networkmanager-global-network", "ec2-transit-gateway"],
+  "descriptiveName": "Networkmanager Transit Gateway Registrations",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Networkmanager Transit Gateway Registrations",
+    "list": true,
+    "listDescription": "List all Networkmanager Transit Gateway Registrations",
+    "search": true,
+    "searchDescription": "Search for Networkmanager Transit Gateway Registrations by GlobalNetworkId"
+  }
+}

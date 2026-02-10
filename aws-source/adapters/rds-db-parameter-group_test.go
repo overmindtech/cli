@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 func TestDBParameterGroupOutputMapper(t *testing.T) {

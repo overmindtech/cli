@@ -1,0 +1,21 @@
+{
+  "type": "networkmanager-connect-peer",
+  "category": 3,
+  "potentialLinks": [
+    "networkmanager-core-network",
+    "networkmanager-connect-attachment",
+    "ip",
+    "rdap-asn",
+    "ec2-subnet"
+  ],
+  "descriptiveName": "Networkmanager Connect Peer",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Networkmanager Connect Peer by id"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_networkmanager_connect_peer.id"
+    }
+  ]
+}

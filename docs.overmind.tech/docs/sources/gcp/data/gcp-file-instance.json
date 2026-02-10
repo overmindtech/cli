@@ -1,0 +1,18 @@
+{
+  "type": "gcp-file-instance",
+  "category": 2,
+  "potentialLinks": ["gcp-cloud-kms-crypto-key", "gcp-compute-network"],
+  "descriptiveName": "GCP File Instance",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-file-instance by its \"locations|instances\"",
+    "search": true,
+    "searchDescription": "Search for Filestore instances in a location. Use the location string or the full resource name supported for terraform mappings."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_filestore_instance.id"
+    }
+  ]
+}

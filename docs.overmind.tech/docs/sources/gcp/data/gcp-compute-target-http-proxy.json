@@ -1,0 +1,17 @@
+{
+  "type": "gcp-compute-target-http-proxy",
+  "category": 3,
+  "potentialLinks": ["gcp-compute-url-map"],
+  "descriptiveName": "GCP Compute Target Http Proxy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-target-http-proxy by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-target-http-proxy"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_target_http_proxy.name"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "type": "gcp-orgpolicy-policy",
+  "category": 7,
+  "descriptiveName": "GCP Orgpolicy Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-orgpolicy-policy by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-orgpolicy-policy",
+    "search": true,
+    "searchDescription": "Search with the full policy name: projects/[project]/policies/[constraint] (used for terraform mapping)."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_org_policy_policy.name"
+    }
+  ]
+}

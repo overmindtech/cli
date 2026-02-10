@@ -1,0 +1,22 @@
+{
+  "type": "route53-resource-record-set",
+  "category": 3,
+  "potentialLinks": ["dns", "route53-health-check"],
+  "descriptiveName": "Route53 Record Set",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Route53 record Set by name",
+    "search": true,
+    "searchDescription": "Search for a record set by hosted zone ID in the format \"/hostedzone/JJN928734JH7HV\" or \"JJN928734JH7HV\" or by terraform ID in the format \"{hostedZone}_{recordName}_{type}\""
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_route53_record.arn"
+    },
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_route53_record.id"
+    }
+  ]
+}

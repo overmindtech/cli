@@ -1,0 +1,19 @@
+{
+  "type": "ec2-internet-gateway",
+  "category": 3,
+  "potentialLinks": ["ec2-vpc"],
+  "descriptiveName": "Internet Gateway",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an internet gateway by ID",
+    "list": true,
+    "listDescription": "List all internet gateways",
+    "search": true,
+    "searchDescription": "Search internet gateways by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_internet_gateway.id"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "type": "iam-instance-profile",
+  "category": 4,
+  "potentialLinks": ["iam-role", "iam-policy"],
+  "descriptiveName": "IAM Instance Profile",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an IAM instance profile by name",
+    "list": true,
+    "listDescription": "List all IAM instance profiles",
+    "search": true,
+    "searchDescription": "Search IAM instance profiles by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_iam_instance_profile.arn"
+    }
+  ]
+}

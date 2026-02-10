@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 )
 
 func (n NetworkManagerTestClient) GetConnectPeer(ctx context.Context, params *networkmanager.GetConnectPeerInput, optFns ...func(*networkmanager.Options)) (*networkmanager.GetConnectPeerOutput, error) {

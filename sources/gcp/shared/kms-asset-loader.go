@@ -15,9 +15,9 @@ import (
 	"golang.org/x/sync/singleflight"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/discovery"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 	"github.com/overmindtech/cli/sources/shared"
 )
 

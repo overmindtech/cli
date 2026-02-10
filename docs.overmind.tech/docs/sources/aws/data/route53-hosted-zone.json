@@ -1,0 +1,25 @@
+{
+  "type": "route53-hosted-zone",
+  "category": 3,
+  "potentialLinks": ["route53-resource-record-set"],
+  "descriptiveName": "Hosted Zone",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a hosted zone by ID",
+    "list": true,
+    "listDescription": "List all hosted zones",
+    "search": true,
+    "searchDescription": "Search for a hosted zone by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_route53_hosted_zone_dnssec.id"
+    },
+    {
+      "terraformQueryMap": "aws_route53_zone.zone_id"
+    },
+    {
+      "terraformQueryMap": "aws_route53_zone_association.zone_id"
+    }
+  ]
+}

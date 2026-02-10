@@ -1,0 +1,19 @@
+{
+  "type": "rds-db-parameter-group",
+  "category": 6,
+  "descriptiveName": "RDS Parameter Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a parameter group by name",
+    "list": true,
+    "listDescription": "List all parameter groups",
+    "search": true,
+    "searchDescription": "Search for a parameter group by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_db_parameter_group.arn"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "type": "gcp-compute-url-map",
+  "category": 3,
+  "potentialLinks": ["gcp-compute-backend-service"],
+  "descriptiveName": "GCP Compute Url Map",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-url-map by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-url-map"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_url_map.name"
+    }
+  ]
+}

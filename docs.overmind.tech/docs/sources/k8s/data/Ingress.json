@@ -1,0 +1,19 @@
+{
+  "type": "Ingress",
+  "category": 3,
+  "potentialLinks": ["Service", "IngressClass", "dns"],
+  "descriptiveName": "Ingress",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Ingress by name",
+    "list": true,
+    "listDescription": "List all Ingresss",
+    "search": true,
+    "searchDescription": "Search for a Ingress using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_ingress_v1.metadata[0].name"
+    }
+  ]
+}

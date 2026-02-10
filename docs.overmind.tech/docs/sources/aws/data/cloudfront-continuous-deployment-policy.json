@@ -1,0 +1,14 @@
+{
+  "type": "cloudfront-continuous-deployment-policy",
+  "category": 7,
+  "potentialLinks": ["dns"],
+  "descriptiveName": "CloudFront Continuous Deployment Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a CloudFront Continuous Deployment Policy by ID",
+    "list": true,
+    "listDescription": "List CloudFront Continuous Deployment Policies",
+    "search": true,
+    "searchDescription": "Search CloudFront Continuous Deployment Policies by ARN"
+  }
+}

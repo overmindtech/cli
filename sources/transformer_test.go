@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 	aws "github.com/overmindtech/cli/sources/aws/shared"
 	gcp "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"

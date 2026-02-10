@@ -1,0 +1,19 @@
+{
+  "type": "networkmanager-transit-gateway-peering",
+  "category": 3,
+  "potentialLinks": [
+    "networkmanager-core-network",
+    "ec2-transit-gateway-peering-attachment",
+    "ec2-transit-gateway"
+  ],
+  "descriptiveName": "Networkmanager Transit Gateway Peering",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Networkmanager Transit Gateway Peering by id"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_networkmanager_transit_gateway_peering.id"
+    }
+  ]
+}

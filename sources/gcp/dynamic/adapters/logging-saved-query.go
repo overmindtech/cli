@@ -1,7 +1,7 @@
 package adapters
 
 import (
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
 

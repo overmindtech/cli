@@ -1,0 +1,16 @@
+{
+  "type": "apigateway-model",
+  "category": 7,
+  "descriptiveName": "API Gateway Model",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an API Gateway Model by its rest API ID and model name: rest-api-id/model-name",
+    "search": true,
+    "searchDescription": "Search for API Gateway Models by their rest API ID: rest-api-id"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_api_gateway_model.id"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "type": "PersistentVolume",
+  "category": 2,
+  "potentialLinks": ["ec2-volume", "efs-access-point", "StorageClass"],
+  "descriptiveName": "Persistent Volume",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a PersistentVolume by name",
+    "list": true,
+    "listDescription": "List all PersistentVolumes",
+    "search": true,
+    "searchDescription": "Search for a PersistentVolume using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_persistent_volume.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_persistent_volume_v1.metadata[0].name"
+    }
+  ]
+}

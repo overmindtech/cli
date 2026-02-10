@@ -1,0 +1,15 @@
+{
+  "type": "directconnect-direct-connect-gateway-attachment",
+  "category": 3,
+  "potentialLinks": [
+    "directconnect-direct-connect-gateway",
+    "directconnect-virtual-interface"
+  ],
+  "descriptiveName": "Direct Connect Gateway Attachment",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a direct connect gateway attachment by DirectConnectGatewayId/VirtualInterfaceId",
+    "search": true,
+    "searchDescription": "Search direct connect gateway attachments for given VirtualInterfaceId"
+  }
+}

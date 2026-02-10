@@ -1,0 +1,17 @@
+{
+  "type": "gcp-big-query-table",
+  "category": 6,
+  "potentialLinks": ["gcp-big-query-dataset", "gcp-cloud-kms-crypto-key"],
+  "descriptiveName": "GCP Big Query Table",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Big Query Table by \"gcp-big-query-dataset-id|gcp-big-query-table-id\"",
+    "search": true,
+    "searchDescription": "Search for GCP Big Query Table by \"gcp-big-query-dataset-id\""
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_bigquery_table.id"
+    }
+  ]
+}

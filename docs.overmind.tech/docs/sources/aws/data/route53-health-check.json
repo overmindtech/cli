@@ -1,0 +1,19 @@
+{
+  "type": "route53-health-check",
+  "category": 5,
+  "potentialLinks": ["cloudwatch-alarm"],
+  "descriptiveName": "Route53 Health Check",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get health check by ID",
+    "list": true,
+    "listDescription": "List all health checks",
+    "search": true,
+    "searchDescription": "Search for health checks by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_route53_health_check.id"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "type": "PersistentVolumeClaim",
+  "category": 2,
+  "potentialLinks": ["PersistentVolume"],
+  "descriptiveName": "Persistent Volume Claim",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a PersistentVolumeClaim by name",
+    "list": true,
+    "listDescription": "List all PersistentVolumeClaims",
+    "search": true,
+    "searchDescription": "Search for a PersistentVolumeClaim using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_persistent_volume_claim.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_persistent_volume_claim_v1.metadata[0].name"
+    }
+  ]
+}

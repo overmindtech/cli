@@ -8,8 +8,8 @@ import (
 
 	"google.golang.org/api/iam/v1"
 
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/discovery"
+	"github.com/overmindtech/workspace/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"

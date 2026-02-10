@@ -1,0 +1,17 @@
+{
+  "type": "gcp-spanner-instance",
+  "category": 6,
+  "potentialLinks": ["gcp-spanner-database"],
+  "descriptiveName": "GCP Spanner Instance",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-spanner-instance by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-spanner-instance"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_spanner_instance.name"
+    }
+  ]
+}

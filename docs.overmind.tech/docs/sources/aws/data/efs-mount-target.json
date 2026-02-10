@@ -1,0 +1,16 @@
+{
+  "type": "efs-mount-target",
+  "category": 2,
+  "descriptiveName": "EFS Mount Target",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an mount target by ID",
+    "search": true,
+    "searchDescription": "Search for mount targets by file system ID"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_efs_mount_target.id"
+    }
+  ]
+}

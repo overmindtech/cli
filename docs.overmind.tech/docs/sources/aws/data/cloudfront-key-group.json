@@ -1,0 +1,18 @@
+{
+  "type": "cloudfront-key-group",
+  "category": 7,
+  "descriptiveName": "CloudFront Key Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a CloudFront Key Group by ID",
+    "list": true,
+    "listDescription": "List CloudFront Key Groups",
+    "search": true,
+    "searchDescription": "Search CloudFront Key Groups by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_cloudfront_key_group.id"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "type": "network-firewall-firewall-policy",
+  "category": 3,
+  "potentialLinks": [
+    "network-firewall-rule-group",
+    "network-firewall-tls-inspection-configuration",
+    "kms-key"
+  ],
+  "descriptiveName": "Network Firewall Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Network Firewall Policy by name",
+    "list": true,
+    "listDescription": "List Network Firewall Policies",
+    "search": true,
+    "searchDescription": "Search for Network Firewall Policies by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_networkfirewall_firewall_policy.name"
+    }
+  ]
+}

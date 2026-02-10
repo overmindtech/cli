@@ -1,0 +1,23 @@
+{
+  "type": "gcp-compute-disk",
+  "category": 2,
+  "potentialLinks": [
+    "gcp-compute-disk",
+    "gcp-compute-image",
+    "gcp-compute-instance",
+    "gcp-compute-instant-snapshot",
+    "gcp-compute-snapshot"
+  ],
+  "descriptiveName": "GCP Compute Disk",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Compute Disk by \"gcp-compute-disk-name\"",
+    "list": true,
+    "listDescription": "List all GCP Compute Disk items"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_disk.name"
+    }
+  ]
+}

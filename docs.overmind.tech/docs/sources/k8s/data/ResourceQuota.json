@@ -1,0 +1,21 @@
+{
+  "type": "ResourceQuota",
+  "category": 7,
+  "descriptiveName": "Resource Quota",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Resource Quota by name",
+    "list": true,
+    "listDescription": "List all Resource Quotas",
+    "search": true,
+    "searchDescription": "Search for a Resource Quota using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_resource_quota_v1.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_resource_quota.metadata[0].name"
+    }
+  ]
+}

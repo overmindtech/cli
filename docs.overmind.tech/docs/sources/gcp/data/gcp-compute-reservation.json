@@ -1,0 +1,19 @@
+{
+  "type": "gcp-compute-reservation",
+  "category": 1,
+  "potentialLinks": [
+    "gcp-compute-region-commitment"
+  ],
+  "descriptiveName": "GCP Compute Reservation",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Compute Reservation by \"gcp-compute-reservation-name\"",
+    "list": true,
+    "listDescription": "List all GCP Compute Reservation items"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_reservation.name"
+    }
+  ]
+}

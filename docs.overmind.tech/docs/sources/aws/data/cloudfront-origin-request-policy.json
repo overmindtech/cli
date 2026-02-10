@@ -1,0 +1,18 @@
+{
+  "type": "cloudfront-origin-request-policy",
+  "category": 3,
+  "descriptiveName": "CloudFront Origin Request Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get Origin Request Policy by ID",
+    "list": true,
+    "listDescription": "List Origin Request Policies",
+    "search": true,
+    "searchDescription": "Origin Request Policy by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_cloudfront_origin_request_policy.id"
+    }
+  ]
+}

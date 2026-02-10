@@ -1,0 +1,21 @@
+{
+  "type": "gcp-compute-global-forwarding-rule",
+  "category": 3,
+  "potentialLinks": [
+    "gcp-compute-backend-service",
+    "gcp-compute-network",
+    "gcp-compute-subnetwork"
+  ],
+  "descriptiveName": "GCP Compute Global Forwarding Rule",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-global-forwarding-rule by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-global-forwarding-rule"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_global_forwarding_rule.name"
+    }
+  ]
+}

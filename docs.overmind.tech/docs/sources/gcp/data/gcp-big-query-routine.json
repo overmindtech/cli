@@ -1,0 +1,17 @@
+{
+  "type": "gcp-big-query-routine",
+  "category": 6,
+  "potentialLinks": ["gcp-big-query-dataset"],
+  "descriptiveName": "GCP Big Query Routine",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Big Query Routine by \"gcp-big-query-dataset-id|gcp-big-query-routine-id\"",
+    "search": true,
+    "searchDescription": "Search for GCP Big Query Routine by \"gcp-big-query-routine-id\""
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_bigquery_routine.routine_id"
+    }
+  ]
+}

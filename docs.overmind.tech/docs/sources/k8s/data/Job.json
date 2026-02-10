@@ -1,0 +1,22 @@
+{
+  "type": "Job",
+  "category": 1,
+  "potentialLinks": ["Pod"],
+  "descriptiveName": "Job",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Job by name",
+    "list": true,
+    "listDescription": "List all Jobs",
+    "search": true,
+    "searchDescription": "Search for a Job using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_job.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_job_v1.metadata[0].name"
+    }
+  ]
+}

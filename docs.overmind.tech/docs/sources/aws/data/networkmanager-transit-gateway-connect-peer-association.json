@@ -1,0 +1,18 @@
+{
+  "type": "networkmanager-transit-gateway-connect-peer-association",
+  "category": 3,
+  "potentialLinks": [
+    "networkmanager-global-network",
+    "networkmanager-device",
+    "networkmanager-link"
+  ],
+  "descriptiveName": "Networkmanager Transit Gateway Connect Peer Association",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Networkmanager Transit Gateway Connect Peer Association by id",
+    "list": true,
+    "listDescription": "List all Networkmanager Transit Gateway Connect Peer Associations",
+    "search": true,
+    "searchDescription": "Search for Networkmanager Transit Gateway Connect Peer Associations by GlobalNetworkId"
+  }
+}

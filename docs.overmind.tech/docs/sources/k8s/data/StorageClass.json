@@ -1,0 +1,21 @@
+{
+  "type": "StorageClass",
+  "category": 2,
+  "descriptiveName": "Storage Class",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Storage Class by name",
+    "list": true,
+    "listDescription": "List all Storage Classs",
+    "search": true,
+    "searchDescription": "Search for a Storage Class using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_storage_class.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_storage_class_v1.metadata[0].name"
+    }
+  ]
+}

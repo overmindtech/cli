@@ -1,0 +1,22 @@
+{
+  "type": "ReplicationController",
+  "category": 1,
+  "potentialLinks": ["Pod"],
+  "descriptiveName": "Replication Controller",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a ReplicationController by name",
+    "list": true,
+    "listDescription": "List all ReplicationControllers",
+    "search": true,
+    "searchDescription": "Search for a ReplicationController using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_replication_controller.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_replication_controller_v1.metadata[0].name"
+    }
+  ]
+}

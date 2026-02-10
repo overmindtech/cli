@@ -1,0 +1,21 @@
+{
+  "type": "PriorityClass",
+  "category": 7,
+  "descriptiveName": "Priority Class",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Priority Class by name",
+    "list": true,
+    "listDescription": "List all Priority Classs",
+    "search": true,
+    "searchDescription": "Search for a Priority Class using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_priority_class_v1.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_priority_class.metadata[0].name"
+    }
+  ]
+}

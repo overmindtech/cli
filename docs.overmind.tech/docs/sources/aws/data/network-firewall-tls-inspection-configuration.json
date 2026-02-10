@@ -1,0 +1,19 @@
+{
+  "type": "network-firewall-tls-inspection-configuration",
+  "category": 7,
+  "potentialLinks": [
+    "acm-certificate",
+    "acm-pca-certificate-authority",
+    "acm-pca-certificate-authority-certificate",
+    "network-firewall-encryption-configuration"
+  ],
+  "descriptiveName": "Network Firewall TLS Inspection Configuration",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Network Firewall TLS Inspection Configuration by name",
+    "list": true,
+    "listDescription": "List Network Firewall TLS Inspection Configurations",
+    "search": true,
+    "searchDescription": "Search for Network Firewall TLS Inspection Configurations by ARN"
+  }
+}

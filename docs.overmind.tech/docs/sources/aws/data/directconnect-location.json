@@ -1,0 +1,18 @@
+{
+  "type": "directconnect-location",
+  "category": 3,
+  "descriptiveName": "Direct Connect Location",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Location by its code",
+    "list": true,
+    "listDescription": "List all Direct Connect Locations",
+    "search": true,
+    "searchDescription": "Search Direct Connect Locations by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_dx_location.location_code"
+    }
+  ]
+}

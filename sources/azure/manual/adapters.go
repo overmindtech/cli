@@ -19,8 +19,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/discovery"
+	"github.com/overmindtech/workspace/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -238,6 +238,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 		if err != nil {
 			return nil, fmt.Errorf("failed to create zones client: %w", err)
 		}
+		diskAccessesClient, err := armcompute.NewDiskAccessesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create disk accesses client: %w", err)
+		}
 
 		// Multi-scope resource group adapters (one adapter per type handling all resource groups)
 		if len(resourceGroupScopes) > 0 {
@@ -374,6 +378,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewProximityPlacementGroupsClient(proximityPlacementGroupsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewComputeDiskAccess(
+					clients.NewDiskAccessesClient(diskAccessesClient),
+					resourceGroupScopes,
+				), cache),
 			)
 		}
 
@@ -422,6 +430,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewComputeVirtualMachineRunCommand(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeVirtualMachineExtension(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeProximityPlacementGroup(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeDiskAccess(nil, placeholderResourceGroupScopes), noOpCache),
 		)
 
 		_ = regions

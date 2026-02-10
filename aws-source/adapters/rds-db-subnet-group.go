@@ -5,8 +5,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 func dBSubnetGroupOutputMapper(ctx context.Context, client rdsClient, scope string, _ *rds.DescribeDBSubnetGroupsInput, output *rds.DescribeDBSubnetGroupsOutput) ([]*sdp.Item, error) {

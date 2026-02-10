@@ -1,0 +1,25 @@
+{
+  "type": "dynamodb-table",
+  "category": 6,
+  "potentialLinks": [
+    "kinesis-stream",
+    "backup-recovery-point",
+    "dynamodb-table",
+    "kms-key"
+  ],
+  "descriptiveName": "DynamoDB Table",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a DynamoDB table by name",
+    "list": true,
+    "listDescription": "List all DynamoDB tables",
+    "search": true,
+    "searchDescription": "Search for DynamoDB tables by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_dynamodb_table.arn"
+    }
+  ]
+}

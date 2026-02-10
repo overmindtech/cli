@@ -1,0 +1,25 @@
+{
+  "type": "ec2-vpc-peering-connection",
+  "category": 3,
+  "potentialLinks": ["ec2-vpc"],
+  "descriptiveName": "VPC Peering Connection",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a VPC Peering Connection by ID",
+    "list": true,
+    "listDescription": "List all VPC Peering Connections",
+    "search": true,
+    "searchDescription": "Search for VPC Peering Connections by their ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_vpc_peering_connection.id"
+    },
+    {
+      "terraformQueryMap": "aws_vpc_peering_connection_accepter.id"
+    },
+    {
+      "terraformQueryMap": "aws_vpc_peering_connection_options.vpc_peering_connection_id"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "type": "kms-key",
+  "category": 4,
+  "potentialLinks": ["kms-custom-key-store", "kms-key-policy", "kms-grant"],
+  "descriptiveName": "KMS Key",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a KMS Key by its ID",
+    "list": true,
+    "listDescription": "List all KMS Keys",
+    "search": true,
+    "searchDescription": "Search for KMS Keys by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_kms_key.key_id"
+    }
+  ]
+}

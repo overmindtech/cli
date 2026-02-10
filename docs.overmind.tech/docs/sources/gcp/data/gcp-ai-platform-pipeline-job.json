@@ -1,0 +1,17 @@
+{
+  "type": "gcp-ai-platform-pipeline-job",
+  "category": 8,
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-network",
+    "gcp-iam-service-account",
+    "gcp-storage-bucket"
+  ],
+  "descriptiveName": "GCP Ai Platform Pipeline Job",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-ai-platform-pipeline-job by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-ai-platform-pipeline-job"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "ClusterRoleBinding",
+  "category": 4,
+  "potentialLinks": ["ClusterRole", "ServiceAccount", "User", "Group"],
+  "descriptiveName": "Cluster Role Binding",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Cluster Role Binding by name",
+    "list": true,
+    "listDescription": "List all Cluster Role Bindings",
+    "search": true,
+    "searchDescription": "Search for a Cluster Role Binding using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_cluster_role_binding_v1.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_cluster_role_binding.metadata[0].name"
+    }
+  ]
+}

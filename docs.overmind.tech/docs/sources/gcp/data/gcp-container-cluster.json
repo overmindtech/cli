@@ -1,0 +1,26 @@
+{
+  "type": "gcp-container-cluster",
+  "category": 1,
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-network",
+    "gcp-compute-node-group",
+    "gcp-compute-subnetwork",
+    "gcp-container-node-pool",
+    "gcp-iam-service-account",
+    "gcp-pub-sub-topic"
+  ],
+  "descriptiveName": "GCP Container Cluster",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-container-cluster by its \"locations|clusters\"",
+    "search": true,
+    "searchDescription": "Search for GKE clusters in a location. Use the format \"location\" or the full resource name supported for terraform mappings."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_container_cluster.id"
+    }
+  ]
+}

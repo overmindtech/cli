@@ -1,0 +1,25 @@
+{
+  "type": "ecs-cluster",
+  "category": 1,
+  "potentialLinks": [
+    "ecs-container-instance",
+    "ecs-service",
+    "ecs-task",
+    "ecs-capacity-provider"
+  ],
+  "descriptiveName": "ECS Cluster",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a cluster by name",
+    "list": true,
+    "listDescription": "List all clusters",
+    "search": true,
+    "searchDescription": "Search for a cluster by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_ecs_cluster.arn"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "type": "gcp-compute-public-delegated-prefix",
+  "category": 3,
+  "potentialLinks": [
+    "gcp-cloud-resource-manager-project",
+    "gcp-compute-public-delegated-prefix"
+  ],
+  "descriptiveName": "GCP Compute Public Delegated Prefix",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-public-delegated-prefix by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-public-delegated-prefix",
+    "search": true,
+    "searchDescription": "Search with full ID: projects/[project]/regions/[region]/publicDelegatedPrefixes/[name] (used for terraform mapping)."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_compute_public_delegated_prefix.id"
+    }
+  ]
+}

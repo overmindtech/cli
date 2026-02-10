@@ -3,7 +3,7 @@ package adapters
 import (
 	"testing"
 
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 var secretYAML = `

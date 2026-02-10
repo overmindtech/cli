@@ -1,0 +1,14 @@
+{
+  "type": "ec2-snapshot",
+  "category": 2,
+  "potentialLinks": ["ec2-volume"],
+  "descriptiveName": "EC2 Snapshot",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a snapshot by ID",
+    "list": true,
+    "listDescription": "List all snapshots",
+    "search": true,
+    "searchDescription": "Search snapshots by ARN"
+  }
+}

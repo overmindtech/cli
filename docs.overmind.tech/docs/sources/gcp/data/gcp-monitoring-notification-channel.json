@@ -1,0 +1,18 @@
+{
+  "type": "gcp-monitoring-notification-channel",
+  "category": 5,
+  "descriptiveName": "GCP Monitoring Notification Channel",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-monitoring-notification-channel by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-monitoring-notification-channel",
+    "search": true,
+    "searchDescription": "Search by full resource name: projects/[project]/notificationChannels/[notificationChannel] (used for terraform mapping)."
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_monitoring_notification_channel.name"
+    }
+  ]
+}

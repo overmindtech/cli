@@ -3,7 +3,7 @@ package test
 import (
 	"context"
 
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 )
 
 // TestDogAdapter An adapter of `dog` items for automated tests.

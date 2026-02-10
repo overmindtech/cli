@@ -1,0 +1,35 @@
+{
+  "type": "lambda-function",
+  "category": 1,
+  "potentialLinks": [
+    "iam-role",
+    "s3-bucket",
+    "sns-topic",
+    "sqs-queue",
+    "lambda-function",
+    "events-event-bus",
+    "elbv2-target-group",
+    "vpc-lattice-target-group",
+    "logs-log-group"
+  ],
+  "descriptiveName": "Lambda Function",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a lambda function by name",
+    "list": true,
+    "listDescription": "List all lambda functions",
+    "search": true,
+    "searchDescription": "Search for lambda functions by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_lambda_function.arn"
+    },
+    {
+      "terraformQueryMap": "aws_lambda_function_event_invoke_config.id"
+    },
+    {
+      "terraformQueryMap": "aws_lambda_function_url.function_arn"
+    }
+  ]
+}

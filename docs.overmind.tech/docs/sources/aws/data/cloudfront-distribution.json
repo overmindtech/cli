@@ -1,0 +1,33 @@
+{
+  "type": "cloudfront-distribution",
+  "category": 3,
+  "potentialLinks": [
+    "cloudfront-key-group",
+    "cloudfront-cloud-front-origin-access-identity",
+    "cloudfront-continuous-deployment-policy",
+    "cloudfront-cache-policy",
+    "cloudfront-field-level-encryption",
+    "cloudfront-function",
+    "cloudfront-origin-request-policy",
+    "cloudfront-realtime-log-config",
+    "cloudfront-response-headers-policy",
+    "dns",
+    "lambda-function",
+    "s3-bucket"
+  ],
+  "descriptiveName": "CloudFront Distribution",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a distribution by ID",
+    "list": true,
+    "listDescription": "List all distributions",
+    "search": true,
+    "searchDescription": "Search distributions by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_cloudfront_distribution.arn"
+    }
+  ]
+}

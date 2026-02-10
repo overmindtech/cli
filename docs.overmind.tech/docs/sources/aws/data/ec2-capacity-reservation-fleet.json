@@ -1,0 +1,14 @@
+{
+  "type": "ec2-capacity-reservation-fleet",
+  "category": 7,
+  "potentialLinks": ["ec2-capacity-reservation"],
+  "descriptiveName": "Capacity Reservation Fleet",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a capacity reservation fleet by ID",
+    "list": true,
+    "listDescription": "List capacity reservation fleets",
+    "search": true,
+    "searchDescription": "Search capacity reservation fleets by ARN"
+  }
+}

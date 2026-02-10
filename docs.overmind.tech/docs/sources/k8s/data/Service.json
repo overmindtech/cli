@@ -1,0 +1,22 @@
+{
+  "type": "Service",
+  "category": 3,
+  "potentialLinks": ["Pod", "ip", "dns", "Endpoint"],
+  "descriptiveName": "Service",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Service by name",
+    "list": true,
+    "listDescription": "List all Services",
+    "search": true,
+    "searchDescription": "Search for a Service using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_service.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_service_v1.metadata[0].name"
+    }
+  ]
+}

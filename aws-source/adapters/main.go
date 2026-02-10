@@ -1,7 +1,7 @@
 package adapters
 
 import (
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 )
 
 var Metadata = sdp.AdapterMetadataList{}

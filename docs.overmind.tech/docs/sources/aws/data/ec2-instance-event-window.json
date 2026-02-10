@@ -1,0 +1,14 @@
+{
+  "type": "ec2-instance-event-window",
+  "category": 7,
+  "potentialLinks": ["ec2-host", "ec2-instance"],
+  "descriptiveName": "EC2 Instance Event Window",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an event window by ID",
+    "list": true,
+    "listDescription": "List all event windows",
+    "search": true,
+    "searchDescription": "Search for event windows by ARN"
+  }
+}

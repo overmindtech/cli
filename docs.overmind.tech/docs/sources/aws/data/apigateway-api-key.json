@@ -1,0 +1,18 @@
+{
+  "type": "apigateway-api-key",
+  "category": 4,
+  "descriptiveName": "API Key",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an API Key by ID",
+    "list": true,
+    "listDescription": "List all API Keys",
+    "search": true,
+    "searchDescription": "Search for API Keys by their name"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_api_gateway_api_key.id"
+    }
+  ]
+}

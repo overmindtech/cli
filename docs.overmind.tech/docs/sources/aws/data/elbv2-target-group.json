@@ -1,0 +1,24 @@
+{
+  "type": "elbv2-target-group",
+  "category": 3,
+  "potentialLinks": ["ec2-vpc", "elbv2-load-balancer", "elbv2-target-health"],
+  "descriptiveName": "Target Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a target group by name",
+    "list": true,
+    "listDescription": "List all target groups",
+    "search": true,
+    "searchDescription": "Search for target groups by load balancer ARN or target group ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_alb_target_group.arn"
+    },
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_lb_target_group.arn"
+    }
+  ]
+}

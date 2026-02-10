@@ -1,0 +1,18 @@
+{
+  "type": "networkmanager-core-network",
+  "category": 3,
+  "potentialLinks": [
+    "networkmanager-core-network-policy",
+    "networkmanager-connect-peer"
+  ],
+  "descriptiveName": "Networkmanager Core Network",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Networkmanager Core Network by id"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_networkmanager_core_network.id"
+    }
+  ]
+}

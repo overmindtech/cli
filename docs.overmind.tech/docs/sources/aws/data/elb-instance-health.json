@@ -1,0 +1,12 @@
+{
+  "type": "elb-instance-health",
+  "category": 5,
+  "potentialLinks": ["ec2-instance"],
+  "descriptiveName": "ELB Instance Health",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get instance health by ID ({LoadBalancerName}/{InstanceId})",
+    "list": true,
+    "listDescription": "List all instance healths"
+  }
+}

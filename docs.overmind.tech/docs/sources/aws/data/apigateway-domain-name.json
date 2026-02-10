@@ -1,0 +1,19 @@
+{
+  "type": "apigateway-domain-name",
+  "category": 1,
+  "potentialLinks": ["acm-certificate"],
+  "descriptiveName": "API Gateway Domain Name",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Domain Name by domain-name",
+    "list": true,
+    "listDescription": "List Domain Names",
+    "search": true,
+    "searchDescription": "Search Domain Names by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_api_gateway_domain_name.domain_name"
+    }
+  ]
+}

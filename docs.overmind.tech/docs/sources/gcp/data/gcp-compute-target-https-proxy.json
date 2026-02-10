@@ -1,0 +1,21 @@
+{
+  "type": "gcp-compute-target-https-proxy",
+  "category": 3,
+  "potentialLinks": [
+    "gcp-compute-ssl-certificate",
+    "gcp-compute-ssl-policy",
+    "gcp-compute-url-map"
+  ],
+  "descriptiveName": "GCP Compute Target Https Proxy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-target-https-proxy by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-target-https-proxy"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_target_https_proxy.name"
+    }
+  ]
+}

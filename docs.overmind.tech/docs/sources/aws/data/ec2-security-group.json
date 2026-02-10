@@ -1,0 +1,22 @@
+{
+  "type": "ec2-security-group",
+  "category": 4,
+  "potentialLinks": ["ec2-vpc"],
+  "descriptiveName": "Security Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a security group by ID",
+    "list": true,
+    "listDescription": "List all security groups",
+    "search": true,
+    "searchDescription": "Search for security groups by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_security_group.id"
+    },
+    {
+      "terraformQueryMap": "aws_security_group_rule.security_group_id"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "type": "apigateway-integration",
+  "category": 3,
+  "descriptiveName": "API Gateway Integration",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an Integration by rest-api id, resource id, and http-method",
+    "search": true,
+    "searchDescription": "Search Integrations by ARN"
+  }
+}

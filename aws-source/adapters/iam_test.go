@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/micahhausler/aws-iam-policy/policy"
-	"github.com/overmindtech/cli/tracing"
+	"github.com/overmindtech/workspace/tracing"
 )
 
 // TestIAMClient Test client that returns three pages

@@ -1,0 +1,19 @@
+{
+  "type": "iam-group",
+  "category": 4,
+  "descriptiveName": "IAM Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a group by name",
+    "list": true,
+    "listDescription": "List all IAM groups",
+    "search": true,
+    "searchDescription": "Search for a group by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_iam_group.arn"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "type": "gcp-compute-external-vpn-gateway",
+  "category": 3,
+  "descriptiveName": "GCP Compute External Vpn Gateway",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-external-vpn-gateway by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-external-vpn-gateway"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_external_vpn_gateway.name"
+    }
+  ]
+}

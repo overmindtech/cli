@@ -1,0 +1,21 @@
+{
+  "type": "StatefulSet",
+  "category": 1,
+  "descriptiveName": "Stateful Set",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Stateful Set by name",
+    "list": true,
+    "listDescription": "List all Stateful Sets",
+    "search": true,
+    "searchDescription": "Search for a Stateful Set using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_stateful_set_v1.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_stateful_set.metadata[0].name"
+    }
+  ]
+}

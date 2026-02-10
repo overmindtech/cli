@@ -1,0 +1,12 @@
+{
+  "type": "gcp-logging-link",
+  "category": 5,
+  "potentialLinks": ["gcp-big-query-dataset", "gcp-logging-bucket"],
+  "descriptiveName": "GCP Logging Link",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-logging-link by its \"locations|buckets|links\"",
+    "search": true,
+    "searchDescription": "Search for gcp-logging-link by its \"locations|buckets\""
+  }
+}

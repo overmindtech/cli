@@ -1,0 +1,15 @@
+{
+  "type": "gcp-big-table-admin-cluster",
+  "category": 7,
+  "potentialLinks": [
+    "gcp-big-table-admin-instance",
+    "gcp-cloud-kms-crypto-key"
+  ],
+  "descriptiveName": "GCP Big Table Admin Cluster",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-big-table-admin-cluster by its \"instances|clusters\"",
+    "search": true,
+    "searchDescription": "Search for gcp-big-table-admin-cluster by its \"instances\""
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "gcp-compute-image",
+  "category": 1,
+  "descriptiveName": "GCP Compute Image",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Compute Image by \"gcp-compute-image-name\"",
+    "list": true,
+    "listDescription": "List all GCP Compute Image items"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_image.name"
+    }
+  ]
+}

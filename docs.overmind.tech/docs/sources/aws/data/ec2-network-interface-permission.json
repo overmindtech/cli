@@ -1,0 +1,14 @@
+{
+  "type": "ec2-network-interface-permission",
+  "category": 4,
+  "potentialLinks": ["ec2-network-interface"],
+  "descriptiveName": "Network Interface Permission",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a network interface permission by ID",
+    "list": true,
+    "listDescription": "List all network interface permissions",
+    "search": true,
+    "searchDescription": "Search network interface permissions by ARN"
+  }
+}

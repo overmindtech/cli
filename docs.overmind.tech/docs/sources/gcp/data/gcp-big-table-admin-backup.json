@@ -1,0 +1,15 @@
+{
+  "type": "gcp-big-table-admin-backup",
+  "potentialLinks": [
+    "gcp-big-table-admin-backup",
+    "gcp-big-table-admin-cluster",
+    "gcp-big-table-admin-table"
+  ],
+  "descriptiveName": "GCP Big Table Admin Backup",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-big-table-admin-backup by its \"instances|clusters|backups\"",
+    "search": true,
+    "searchDescription": "Search for gcp-big-table-admin-backup by its \"instances|clusters\""
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "CronJob",
+  "category": 1,
+  "descriptiveName": "Cron Job",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Cron Job by name",
+    "list": true,
+    "listDescription": "List all Cron Jobs",
+    "search": true,
+    "searchDescription": "Search for a Cron Job using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_cron_job_v1.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_cron_job.metadata[0].name"
+    }
+  ]
+}

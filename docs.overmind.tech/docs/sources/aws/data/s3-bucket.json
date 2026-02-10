@@ -1,0 +1,82 @@
+{
+  "type": "s3-bucket",
+  "category": 2,
+  "potentialLinks": ["lambda-function", "sqs-queue", "sns-topic", "s3-bucket"],
+  "descriptiveName": "S3 Bucket",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an S3 bucket by name",
+    "list": true,
+    "listDescription": "List all S3 buckets",
+    "search": true,
+    "searchDescription": "Search for S3 buckets by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_s3_bucket_acl.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_analytics_configuration.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_cors_configuration.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_intelligent_tiering_configuration.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_inventory.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_lifecycle_configuration.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_logging.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_metric.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_notification.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_object_lock_configuration.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_object.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_ownership_controls.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_policy.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_public_access_block.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_replication_configuration.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_request_payment_configuration.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_server_side_encryption_configuration.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_versioning.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket_website_configuration.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_bucket.id"
+    },
+    {
+      "terraformQueryMap": "aws_s3_object_copy.bucket"
+    },
+    {
+      "terraformQueryMap": "aws_s3_object.bucket"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "type": "gcp-compute-node-group",
+  "category": 1,
+  "descriptiveName": "GCP Compute Node Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Compute Node Group by \"gcp-compute-node-group-name\"",
+    "list": true,
+    "listDescription": "List all GCP Compute Node Group items",
+    "search": true,
+    "searchDescription": "Search for GCP Compute Node Group by \"gcp-compute-node-group-nodeTemplateName\""
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_node_group.name"
+    },
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_compute_node_template.name"
+    }
+  ]
+}

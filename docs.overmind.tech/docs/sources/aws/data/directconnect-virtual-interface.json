@@ -1,0 +1,31 @@
+{
+  "type": "directconnect-virtual-interface",
+  "category": 3,
+  "potentialLinks": [
+    "directconnect-connection",
+    "directconnect-direct-connect-gateway",
+    "rdap-ip-network",
+    "directconnect-direct-connect-gateway-attachment",
+    "directconnect-virtual-interface"
+  ],
+  "descriptiveName": "Virtual Interface",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a virtual interface by ID",
+    "list": true,
+    "listDescription": "List all virtual interfaces",
+    "search": true,
+    "searchDescription": "Search virtual interfaces by connection ID"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_dx_private_virtual_interface.id"
+    },
+    {
+      "terraformQueryMap": "aws_dx_public_virtual_interface.id"
+    },
+    {
+      "terraformQueryMap": "aws_dx_transit_virtual_interface.id"
+    }
+  ]
+}

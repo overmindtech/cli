@@ -1,0 +1,18 @@
+{
+  "type": "ec2-placement-group",
+  "category": 1,
+  "descriptiveName": "Placement Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a placement group by ID",
+    "list": true,
+    "listDescription": "List all placement groups",
+    "search": true,
+    "searchDescription": "Search for placement groups by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_placement_group.id"
+    }
+  ]
+}

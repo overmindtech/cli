@@ -1,0 +1,17 @@
+{
+  "type": "gcp-ai-platform-model-deployment-monitoring-job",
+  "category": 8,
+  "potentialLinks": [
+    "gcp-ai-platform-endpoint",
+    "gcp-ai-platform-model",
+    "gcp-cloud-kms-crypto-key",
+    "gcp-monitoring-notification-channel"
+  ],
+  "descriptiveName": "GCP Ai Platform Model Deployment Monitoring Job",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-ai-platform-model-deployment-monitoring-job by its \"locations|modelDeploymentMonitoringJobs\"",
+    "search": true,
+    "searchDescription": "Search Model Deployment Monitoring Jobs within a location. Use the location name e.g., 'us-central1'"
+  }
+}

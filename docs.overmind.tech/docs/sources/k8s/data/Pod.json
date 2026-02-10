@@ -1,0 +1,31 @@
+{
+  "type": "Pod",
+  "category": 1,
+  "potentialLinks": [
+    "ConfigMap",
+    "ec2-volume",
+    "dns",
+    "ip",
+    "PersistentVolumeClaim",
+    "PriorityClass",
+    "Secret",
+    "ServiceAccount"
+  ],
+  "descriptiveName": "Pod",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Pod by name",
+    "list": true,
+    "listDescription": "List all Pods",
+    "search": true,
+    "searchDescription": "Search for a Pod using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_pod.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_pod_v1.metadata[0].name"
+    }
+  ]
+}

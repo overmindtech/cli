@@ -1,0 +1,17 @@
+{
+  "type": "gcp-logging-sink",
+  "category": 7,
+  "potentialLinks": [
+    "gcp-big-query-dataset",
+    "gcp-logging-bucket",
+    "gcp-pub-sub-topic",
+    "gcp-storage-bucket"
+  ],
+  "descriptiveName": "GCP Logging Sink",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Logging Sink by \"gcp-logging-sink-name\"",
+    "list": true,
+    "listDescription": "List all GCP Logging Sink items"
+  }
+}

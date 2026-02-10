@@ -1,0 +1,15 @@
+{
+  "type": "networkmanager-vpc-attachment",
+  "category": 3,
+  "potentialLinks": ["networkmanager-core-network"],
+  "descriptiveName": "Networkmanager VPC Attachment",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Networkmanager VPC Attachment by id"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_networkmanager_vpc_attachment.id"
+    }
+  ]
+}

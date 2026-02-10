@@ -1,0 +1,20 @@
+{
+  "type": "gcp-monitoring-alert-policy",
+  "category": 5,
+  "potentialLinks": ["gcp-monitoring-notification-channel"],
+  "descriptiveName": "GCP Monitoring Alert Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-monitoring-alert-policy by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-monitoring-alert-policy",
+    "search": true,
+    "searchDescription": "Search by full resource name: projects/[project]/alertPolicies/[alert_policy_id] (used for terraform mapping)."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_monitoring_alert_policy.id"
+    }
+  ]
+}

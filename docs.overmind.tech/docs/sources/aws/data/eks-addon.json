@@ -1,0 +1,16 @@
+{
+  "type": "eks-addon",
+  "category": 1,
+  "descriptiveName": "EKS Addon",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an addon by unique name ({clusterName}:{addonName})",
+    "search": true,
+    "searchDescription": "Search addons by cluster name"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_eks_addon.id"
+    }
+  ]
+}

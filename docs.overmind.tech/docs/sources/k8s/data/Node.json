@@ -1,0 +1,19 @@
+{
+  "type": "Node",
+  "category": 1,
+  "potentialLinks": ["dns", "ip", "ec2-volume"],
+  "descriptiveName": "Node",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Node by name",
+    "list": true,
+    "listDescription": "List all Nodes",
+    "search": true,
+    "searchDescription": "Search for a Node using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_node_taint.metadata[0].name"
+    }
+  ]
+}

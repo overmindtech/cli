@@ -1,0 +1,19 @@
+{
+  "type": "network-firewall-rule-group",
+  "category": 4,
+  "potentialLinks": ["kms-key", "sns-topic", "network-firewall-rule-group"],
+  "descriptiveName": "Network Firewall Rule Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Network Firewall Rule Group by name",
+    "list": true,
+    "listDescription": "List Network Firewall Rule Groups",
+    "search": true,
+    "searchDescription": "Search for Network Firewall Rule Groups by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_networkfirewall_rule_group.name"
+    }
+  ]
+}

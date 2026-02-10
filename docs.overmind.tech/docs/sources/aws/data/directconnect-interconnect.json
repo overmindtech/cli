@@ -1,0 +1,19 @@
+{
+  "type": "directconnect-interconnect",
+  "category": 3,
+  "potentialLinks": [
+    "directconnect-hosted-connection",
+    "directconnect-lag",
+    "directconnect-loa",
+    "directconnect-location"
+  ],
+  "descriptiveName": "Interconnect",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Interconnect by InterconnectId",
+    "list": true,
+    "listDescription": "List all Interconnects",
+    "search": true,
+    "searchDescription": "Search Interconnects by ARN"
+  }
+}

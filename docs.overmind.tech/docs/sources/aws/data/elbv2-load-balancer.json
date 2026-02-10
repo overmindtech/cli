@@ -1,0 +1,34 @@
+{
+  "type": "elbv2-load-balancer",
+  "category": 3,
+  "potentialLinks": [
+    "elbv2-target-group",
+    "elbv2-listener",
+    "dns",
+    "route53-hosted-zone",
+    "ec2-vpc",
+    "ec2-subnet",
+    "ec2-address",
+    "ip",
+    "ec2-security-group",
+    "ec2-coip-pool"
+  ],
+  "descriptiveName": "Elastic Load Balancer",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an ELB by name",
+    "list": true,
+    "listDescription": "List all ELBs",
+    "search": true,
+    "searchDescription": "Search for ELBs by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_lb.arn"
+    },
+    {
+      "terraformQueryMap": "aws_lb.id"
+    }
+  ]
+}

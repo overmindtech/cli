@@ -1,0 +1,22 @@
+{
+  "type": "Endpoints",
+  "category": 3,
+  "potentialLinks": ["Node", "ip", "Pod", "ExternalName", "DNS"],
+  "descriptiveName": "Endpoints",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Endpoints by name",
+    "list": true,
+    "listDescription": "List all Endpointss",
+    "search": true,
+    "searchDescription": "Search for a Endpoints using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_endpoints.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_endpoints_v1.metadata[0].name"
+    }
+  ]
+}

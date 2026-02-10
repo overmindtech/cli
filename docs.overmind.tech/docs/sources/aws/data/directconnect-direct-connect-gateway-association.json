@@ -1,0 +1,17 @@
+{
+  "type": "directconnect-direct-connect-gateway-association",
+  "category": 3,
+  "potentialLinks": ["directconnect-direct-connect-gateway"],
+  "descriptiveName": "Direct Connect Gateway Association",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a direct connect gateway association by direct connect gateway ID and virtual gateway ID",
+    "search": true,
+    "searchDescription": "Search direct connect gateway associations by direct connect gateway ID"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_dx_gateway_association.id"
+    }
+  ]
+}

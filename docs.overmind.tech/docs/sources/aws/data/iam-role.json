@@ -1,0 +1,20 @@
+{
+  "type": "iam-role",
+  "category": 4,
+  "potentialLinks": ["iam-policy"],
+  "descriptiveName": "IAM Role",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an IAM role by name",
+    "list": true,
+    "listDescription": "List all IAM roles",
+    "search": true,
+    "searchDescription": "Search for IAM roles by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_iam_role.arn"
+    }
+  ]
+}

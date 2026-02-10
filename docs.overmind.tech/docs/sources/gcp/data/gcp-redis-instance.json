@@ -1,0 +1,22 @@
+{
+  "type": "gcp-redis-instance",
+  "category": 6,
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-network",
+    "gcp-compute-ssl-certificate"
+  ],
+  "descriptiveName": "GCP Redis Instance",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-redis-instance by its \"locations|instances\"",
+    "search": true,
+    "searchDescription": "Search Redis instances in a location. Use the format \"location\" or \"projects/[project_id]/locations/[location]/instances/[instance_name]\" which is supported for terraform mappings."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_redis_instance.id"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "type": "eks-fargate-profile",
+  "category": 7,
+  "potentialLinks": ["iam-role", "ec2-subnet"],
+  "descriptiveName": "Fargate Profile",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a fargate profile by unique name ({clusterName}:{FargateProfileName})",
+    "search": true,
+    "searchDescription": "Search for fargate profiles by cluster name"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_eks_fargate_profile.id"
+    }
+  ]
+}

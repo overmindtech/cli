@@ -1,0 +1,17 @@
+{
+  "type": "gcp-compute-global-address",
+  "category": 3,
+  "potentialLinks": ["gcp-compute-network"],
+  "descriptiveName": "GCP Compute Global Address",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-global-address by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-global-address"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_global_address.name"
+    }
+  ]
+}

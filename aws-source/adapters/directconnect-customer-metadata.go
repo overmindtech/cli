@@ -5,8 +5,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdpcache"
 )
 
 func customerMetadataOutputMapper(_ context.Context, _ *directconnect.Client, scope string, _ *directconnect.DescribeCustomerMetadataInput, output *directconnect.DescribeCustomerMetadataOutput) ([]*sdp.Item, error) {

@@ -1,0 +1,21 @@
+{
+  "type": "DaemonSet",
+  "category": 1,
+  "descriptiveName": "Daemon Set",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Daemon Set by name",
+    "list": true,
+    "listDescription": "List all Daemon Sets",
+    "search": true,
+    "searchDescription": "Search for a Daemon Set using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_daemon_set_v1.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_daemonset.metadata[0].name"
+    }
+  ]
+}

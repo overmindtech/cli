@@ -1,0 +1,10 @@
+{
+  "type": "rdap-asn",
+  "category": 3,
+  "potentialLinks": ["rdap-entity"],
+  "descriptiveName": "Autonomous System Number (ASN)",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an ASN by handle i.e. \"AS15169\""
+  }
+}

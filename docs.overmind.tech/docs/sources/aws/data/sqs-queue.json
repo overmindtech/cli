@@ -1,0 +1,19 @@
+{
+  "type": "sqs-queue",
+  "category": 1,
+  "potentialLinks": ["http", "lambda-event-source-mapping"],
+  "descriptiveName": "SQS Queue",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an SQS queue attributes by its URL",
+    "list": true,
+    "listDescription": "List all SQS queue URLs",
+    "search": true,
+    "searchDescription": "Search SQS queue by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_sqs_queue.id"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "type": "gcp-container-node-pool",
+  "category": 1,
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-node-group",
+    "gcp-container-cluster",
+    "gcp-iam-service-account"
+  ],
+  "descriptiveName": "GCP Container Node Pool",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-container-node-pool by its \"locations|clusters|nodePools\"",
+    "search": true,
+    "searchDescription": "Search GKE Node Pools within a cluster. Use \"[location]|[cluster]\" or the full resource name supported by Terraform mappings: \"[project]/[location]/[cluster]/[node_pool_name]\""
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_container_node_pool.id"
+    }
+  ]
+}

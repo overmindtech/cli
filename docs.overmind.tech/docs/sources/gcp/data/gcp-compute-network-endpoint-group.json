@@ -1,0 +1,22 @@
+{
+  "type": "gcp-compute-network-endpoint-group",
+  "category": 3,
+  "potentialLinks": [
+    "gcp-cloud-functions-function",
+    "gcp-compute-network",
+    "gcp-compute-subnetwork",
+    "gcp-run-service"
+  ],
+  "descriptiveName": "GCP Compute Network Endpoint Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-network-endpoint-group by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-network-endpoint-group"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_network_endpoint_group.name"
+    }
+  ]
+}

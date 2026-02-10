@@ -1,0 +1,14 @@
+{
+  "type": "ReplicaSet",
+  "category": 1,
+  "potentialLinks": ["Pod"],
+  "descriptiveName": "Replica Set",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a ReplicaSet by name",
+    "list": true,
+    "listDescription": "List all ReplicaSets",
+    "search": true,
+    "searchDescription": "Search for a ReplicaSet using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  }
+}

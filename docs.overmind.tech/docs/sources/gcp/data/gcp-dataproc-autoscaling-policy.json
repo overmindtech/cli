@@ -1,0 +1,16 @@
+{
+  "type": "gcp-dataproc-autoscaling-policy",
+  "category": 7,
+  "descriptiveName": "GCP Dataproc Autoscaling Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-dataproc-autoscaling-policy by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-dataproc-autoscaling-policy"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_dataproc_autoscaling_policy.name"
+    }
+  ]
+}

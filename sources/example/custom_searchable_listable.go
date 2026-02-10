@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/shared"
 )

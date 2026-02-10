@@ -1,0 +1,14 @@
+{
+  "type": "NetworkPolicy",
+  "category": 4,
+  "potentialLinks": ["Pod"],
+  "descriptiveName": "Network Policy",
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_network_policy.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_network_policy_v1.metadata[0].name"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "type": "networkmanager-core-network-policy",
+  "category": 3,
+  "potentialLinks": ["networkmanager-core-network"],
+  "descriptiveName": "Networkmanager Core Network Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Networkmanager Core Network Policy by Core Network id"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_networkmanager_core_network_policy.core_network_id"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "type": "ec2-network-interface",
+  "category": 3,
+  "potentialLinks": [
+    "ec2-instance",
+    "ec2-security-group",
+    "ip",
+    "dns",
+    "ec2-subnet",
+    "ec2-vpc"
+  ],
+  "descriptiveName": "EC2 Network Interface",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a network interface by ID",
+    "list": true,
+    "listDescription": "List all network interfaces",
+    "search": true,
+    "searchDescription": "Search network interfaces by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_network_interface.id"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "type": "gcp-compute-ssl-policy",
+  "category": 4,
+  "descriptiveName": "GCP Compute Ssl Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-ssl-policy by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-ssl-policy"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_ssl_policy.name"
+    }
+  ]
+}

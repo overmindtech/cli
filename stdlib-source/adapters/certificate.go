@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 )
 
 // CertToName Returns the name of a cert as a string. This is in the format of:

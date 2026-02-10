@@ -1,0 +1,24 @@
+{
+  "type": "gcp-big-query-dataset",
+  "category": 6,
+  "potentialLinks": [
+    "gcp-big-query-dataset",
+    "gcp-big-query-model",
+    "gcp-big-query-routine",
+    "gcp-big-query-table",
+    "gcp-cloud-kms-crypto-key",
+    "gcp-iam-service-account"
+  ],
+  "descriptiveName": "GCP Big Query Dataset",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Big Query Dataset by \"gcp-big-query-dataset-id\"",
+    "list": true,
+    "listDescription": "List all GCP Big Query Dataset items"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_bigquery_dataset.dataset_id"
+    }
+  ]
+}
