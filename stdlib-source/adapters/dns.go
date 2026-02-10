@@ -41,6 +41,10 @@ func NewDNSAdapterForHealthCheck() *DNSAdapter {
 
 const dnsCacheDuration = 5 * time.Minute
 
+// maxOperationTimeout is the maximum time any single DNS Get/Search operation can take.
+// This prevents slow DNS queries from degrading overall system performance.
+const maxOperationTimeout = 30 * time.Second
+
 var DefaultServers = []string{
 	"169.254.169.253:53", // Route 53 default resolver. See https://docs.aws.amazon.com/vpc/latest/userguide/AmazonDNS-concepts.html#AmazonDNS
 	"1.1.1.1:53",
@@ -102,8 +106,13 @@ func (d *DNSAdapter) Scopes() []string {
 	}
 }
 
-// Gets a single item. This expects a DNS name
+// Get retrieves a single DNS item by name.
+// The operation is capped at maxOperationTimeout (30s) regardless of the caller's context deadline.
 func (d *DNSAdapter) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
+	// Enforce maximum timeout for this operation
+	ctx, cancel := context.WithTimeout(ctx, maxOperationTimeout)
+	defer cancel()
+
 	if scope != "global" {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOSCOPE,
@@ -186,12 +195,20 @@ type DNSRecord struct {
 	Type   string
 }
 
+// Search performs a DNS lookup for a name or reverse lookup for an IP.
+// The operation is capped at maxOperationTimeout (30s) regardless of the caller's context deadline.
 func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ignoreCache bool) ([]*sdp.Item, error) {
+	// Enforce maximum timeout for this operation
+	ctx, cancel := context.WithTimeout(ctx, maxOperationTimeout)
+	defer cancel()
+
 	if scope != "global" {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_NOSCOPE,
 			ErrorString: "DNS queries only supported in global scope",
 			Scope:       scope,
+			SourceName:  d.Name(),
+			ItemType:    d.Type(),
 		}
 	}
 
