@@ -102,7 +102,7 @@ INFO Sources initialized
 
 ```bash
 # Check health endpoint
-curl http://localhost:8080/healthz
+curl http://localhost:8080/healthz/alive
 # Expected: "ok"
 
 # Check logs for authentication method
@@ -187,7 +187,7 @@ INFO Successfully verified subscription access
 # Should use environment variables, not Azure CLI
 
 # Verify it still works after Azure CLI logout
-curl http://localhost:8080/healthz
+curl http://localhost:8080/healthz/alive
 ```
 
 ### Cleanup
@@ -388,7 +388,7 @@ kubectl logs -l app=azure-source --tail=50
 
 # Test health endpoint
 kubectl port-forward deployment/azure-source 8080:8080 &
-curl http://localhost:8080/healthz
+curl http://localhost:8080/healthz/alive
 ```
 
 ### Troubleshooting
@@ -580,7 +580,7 @@ kubectl logs -l app=azure-source --tail=50
 
 # Check health
 kubectl port-forward deployment/azure-source 8080:8080 &
-curl http://localhost:8080/healthz
+curl http://localhost:8080/healthz/alive
 
 # Verify GCP token is available
 kubectl exec -it deployment/azure-source -- env | grep GOOGLE
@@ -755,7 +755,7 @@ After completing any test scenario, perform these verification steps:
 kubectl port-forward deployment/azure-source 8080:8080 &
 
 # Check health
-curl http://localhost:8080/healthz
+curl http://localhost:8080/healthz/alive
 
 # Expected: "ok"
 ```
