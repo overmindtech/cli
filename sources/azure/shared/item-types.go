@@ -18,6 +18,7 @@ var (
 	ComputeDedicatedHostGroup                  = shared.NewItemType(Azure, Compute, DedicatedHostGroup)
 	ComputeDedicatedHost                       = shared.NewItemType(Azure, Compute, DedicatedHost)
 	ComputeCapacityReservationGroup            = shared.NewItemType(Azure, Compute, CapacityReservationGroup)
+	ComputeCapacityReservation                 = shared.NewItemType(Azure, Compute, CapacityReservation)
 	ComputeImage                               = shared.NewItemType(Azure, Compute, Image)
 	ComputeSnapshot                            = shared.NewItemType(Azure, Compute, Snapshot)
 	ComputeDiskAccess                          = shared.NewItemType(Azure, Compute, DiskAccess)
