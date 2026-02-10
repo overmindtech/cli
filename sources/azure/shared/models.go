@@ -61,6 +61,7 @@ const (
 	DiskEncryptionSet                   shared.Resource = "disk-encryption-set"
 	ProximityPlacementGroup             shared.Resource = "proximity-placement-group"
 	DedicatedHostGroup                  shared.Resource = "dedicated-host-group"
+	DedicatedHost                       shared.Resource = "dedicated-host"
 	CapacityReservationGroup            shared.Resource = "capacity-reservation-group"
 	Image                               shared.Resource = "image"
 	Snapshot                            shared.Resource = "snapshot"

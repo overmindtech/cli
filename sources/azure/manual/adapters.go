@@ -243,6 +243,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create disk accesses client: %w", err)
 		}
 
+		dedicatedHostGroupsClient, err := armcompute.NewDedicatedHostGroupsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create dedicated host groups client: %w", err)
+		}
+
 		// Multi-scope resource group adapters (one adapter per type handling all resource groups)
 		if len(resourceGroupScopes) > 0 {
 			adapters = append(adapters,
@@ -382,6 +387,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewDiskAccessesClient(diskAccessesClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewComputeDedicatedHostGroup(
+					clients.NewDedicatedHostGroupsClient(dedicatedHostGroupsClient),
+					resourceGroupScopes,
+				), cache),
 			)
 		}
 
@@ -431,6 +440,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewComputeVirtualMachineExtension(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeProximityPlacementGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeDiskAccess(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeDedicatedHostGroup(nil, placeholderResourceGroupScopes), noOpCache),
 		)
 
 		_ = regions
